@@ -37,6 +37,7 @@
     GENERAL,
     tagRoom,
     MESSAGE,
+    DEPRECATED_MESSAGE,
     getMembershipRoomsByUrl,
   } from "@app/state"
   import {setChecked} from "@app/notifications"
@@ -108,7 +109,7 @@
 
     pullConservatively({
       relays: [url],
-      filters: [{kinds: [MESSAGE, DELETE], "#~": [room]}],
+      filters: [{kinds: [MESSAGE, DEPRECATED_MESSAGE, DELETE], "#~": [room]}],
     })
 
     scroller = createScroller({
@@ -122,7 +123,7 @@
 
     unsub = subscribePersistent({
       relays: [url],
-      filters: [{kinds: [MESSAGE], "#~": [room], since: now()}],
+      filters: [{kinds: [MESSAGE, DEPRECATED_MESSAGE], "#~": [room], since: now()}],
     })
   })
 

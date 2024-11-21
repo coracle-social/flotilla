@@ -61,13 +61,21 @@ import type {AppSyncOpts} from "@welshman/app"
 import type {SubscribeRequestWithHandlers} from "@welshman/net"
 import {deriveEvents, deriveEventsMapped, withGetter, synced} from "@welshman/store"
 
-export const ROOM = "~"
+export const DEPRECATED_ROOM = "~"
 
-export const GENERAL = "general"
+export const ROOM = "h"
 
-export const MESSAGE = 209
+export const DEPRECATED_GENERAL = "general"
 
-export const THREAD = 309
+export const GENERAL = "_"
+
+export const DEPRECATED_MESSAGE = 209
+
+export const MESSAGE = 9
+
+export const DEPRECATED_THREAD = 309
+
+export const THREAD = 11
 
 export const COMMENT = 1111
 
@@ -396,7 +404,7 @@ export const readMessage = (event: TrustedEvent): Maybe<ChannelMessage> => {
 }
 
 export const channelMessages = deriveEventsMapped<ChannelMessage>(repository, {
-  filters: [{kinds: [MESSAGE]}],
+  filters: [{kinds: [MESSAGE, DEPRECATED_MESSAGE]}],
   eventToItem: readMessage,
   itemToEvent: item => item.event,
 })

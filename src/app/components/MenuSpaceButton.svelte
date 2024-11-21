@@ -13,6 +13,7 @@
     getMembershipRoomsByUrl,
     deriveEventsForUrl,
     MESSAGE,
+    DEPRECATED_MESSAGE,
     GENERAL,
   } from "@app/state"
   import {makeRoomPath, makeSpacePath} from "@app/routes"
@@ -22,7 +23,7 @@
 
   const openMenu = () => pushDrawer(MenuSpace, {url})
 
-  const events = deriveEventsForUrl(url, [{kinds: [MESSAGE]}])
+  const events = deriveEventsForUrl(url, [{kinds: [MESSAGE, DEPRECATED_MESSAGE]}])
 
   const threadsPath = makeSpacePath(url, "threads")
 

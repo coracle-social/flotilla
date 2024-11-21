@@ -6,7 +6,14 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
-  import {deriveEvent, entityLink, MESSAGE, THREAD} from "@app/state"
+  import {
+    deriveEvent,
+    entityLink,
+    MESSAGE,
+    DEPRECATED_MESSAGE,
+    THREAD,
+    DEPRECATED_THREAD,
+  } from "@app/state"
   import {makeThreadPath} from "@app/routes"
 
   export let value
@@ -50,11 +57,11 @@
       const [room, url] = $quote.tags.find(nthEq(0, "~"))?.slice(1) || []
 
       if (url && room) {
-        if ($quote.kind === THREAD) {
+        if ($quote.kind === THREAD || $quote.kind === DEPRECATED_THREAD) {
           return goto(makeThreadPath(url, $quote.id))
         }
 
-        if ($quote.kind === MESSAGE) {
+        if ($quote.kind === MESSAGE || $quote.kind === DEPRECATED_MESSAGE) {
           return scrollToEvent($quote.id)
         }
 
@@ -62,11 +69,11 @@
         const id = $quote.tags.find(nthEq(0, "E"))?.[1]
 
         if (id && kind) {
-          if (parseInt(kind) === THREAD) {
+          if (parseInt(kind) === THREAD || parseInt(kind) === DEPRECATED_THREAD) {
             return goto(makeThreadPath(url, id))
           }
 
-          if (parseInt(kind) === MESSAGE) {
+          if (parseInt(kind) === MESSAGE || parseInt(kind) === DEPRECATED_MESSAGE) {
             return scrollToEvent(id)
           }
         }

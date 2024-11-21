@@ -56,8 +56,10 @@
     ensureUnwrapped,
     canDecrypt,
     MESSAGE,
+    DEPRECATED_MESSAGE,
     COMMENT,
     THREAD,
+    DEPRECATED_THREAD,
     GENERAL,
   } from "@app/state"
   import {loadUserData, subscribePersistent} from "@app/commands"
@@ -206,9 +208,9 @@
         load({
           relays,
           filters: [
-            {kinds: [THREAD], limit: 1},
-            {kinds: [COMMENT], "#K": [String(THREAD)], limit: 1},
-            ...rooms.map(room => ({kinds: [MESSAGE], "#~": [room], limit: 1})),
+            {kinds: [THREAD, DEPRECATED_THREAD], limit: 1},
+            {kinds: [COMMENT], "#K": [String(THREAD), String(DEPRECATED_THREAD)], limit: 1},
+            ...rooms.map(room => ({kinds: [MESSAGE, DEPRECATED_MESSAGE], "#~": [room], limit: 1})),
           ],
         })
 
@@ -216,9 +218,9 @@
         unsubSpaces = subscribePersistent({
           relays,
           filters: [
-            {kinds: [THREAD], since},
-            {kinds: [COMMENT], "#K": [String(THREAD)], since},
-            {kinds: [MESSAGE], "#~": rooms, since},
+            {kinds: [THREAD, DEPRECATED_THREAD], since},
+            {kinds: [COMMENT], "#K": [String(THREAD), String(DEPRECATED_THREAD)], since},
+            {kinds: [MESSAGE, DEPRECATED_MESSAGE], "#~": rooms, since},
           ],
         })
       })

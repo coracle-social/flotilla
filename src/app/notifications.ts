@@ -8,7 +8,9 @@ import {DIRECT_MESSAGE} from "@welshman/util"
 import {makeSpacePath} from "@app/routes"
 import {
   MESSAGE,
+  DEPRECATED_MESSAGE,
   THREAD,
+  DEPRECATED_THREAD,
   COMMENT,
   deriveEventsForUrl,
   getMembershipUrls,
@@ -28,13 +30,15 @@ export const setChecked = (key: string, ts = now()) =>
 
 export const CHAT_FILTERS: Filter[] = [{kinds: [DIRECT_MESSAGE]}]
 
-export const SPACE_FILTERS: Filter[] = [{kinds: [THREAD, MESSAGE, COMMENT]}]
+export const SPACE_FILTERS: Filter[] = [
+  {kinds: [THREAD, DEPRECATED_THREAD, MESSAGE, DEPRECATED_MESSAGE, COMMENT]},
+]
 
-export const ROOM_FILTERS: Filter[] = [{kinds: [MESSAGE]}]
+export const ROOM_FILTERS: Filter[] = [{kinds: [MESSAGE, DEPRECATED_MESSAGE]}]
 
 export const THREAD_FILTERS: Filter[] = [
-  {kinds: [THREAD]},
-  {kinds: [COMMENT], "#K": [String(THREAD)]},
+  {kinds: [THREAD, DEPRECATED_THREAD]},
+  {kinds: [COMMENT], "#K": [String(THREAD), String(DEPRECATED_THREAD)]},
 ]
 
 export const getNotificationFilters = (since: number): Filter[] =>
