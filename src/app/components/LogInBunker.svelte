@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {Nip46Broker} from "@welshman/signer"
+  import {Nip46Broker, type Nip46BrokerParams} from "@welshman/signer"
   import {addSession} from "@welshman/app"
   import {slideAndFade} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -67,18 +67,30 @@
   let bunker = ""
   let loading = false
 
-  init.result.then(async pubkey => {
-    if (pubkey) {
+  // We only get the remoteSignerPubkey from the init, we have to get the userPubkey too as per NIP46
+  // This should be refactored.
+  init.result.then(async remoteSignerPubkey => {
+    if (remoteSignerPubkey) {
       loading = true
 
+      const params: Nip46BrokerParams = {
+        handler: {
+          pubkey: remoteSignerPubkey,
+          relays: SIGNER_RELAYS,
+        },
+        secret: init.clientSecret,
+      }
+      const broker = Nip46Broker.get(params)
+      const userPubkey = await broker.getPublicKey()
+
       addSession({
-        pubkey,
+        pubkey: userPubkey,
         method: "nip46",
         secret: init.clientSecret,
-        handler: {pubkey, relays: SIGNER_RELAYS},
+        handler: {pubkey: remoteSignerPubkey, relays: SIGNER_RELAYS},
       })
 
-      await loadUserData(pubkey)
+      await loadUserData(userPubkey)
 
       setChecked("*")
       clearModals()
