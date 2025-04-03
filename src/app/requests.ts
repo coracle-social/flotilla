@@ -204,8 +204,8 @@ export const makeCalendarFeed = ({
   initialEvents?: TrustedEvent[]
 }) => {
   let exhaustedScrollers = 0
-  let backwardWindow = [now() - MONTH, now()]
   let forwardWindow = [now(), now() + MONTH]
+  let backwardExhausted = false
 
   const getStart = (event: TrustedEvent) => parseInt(getTagValue("start", event.tags) || "")
 
@@ -267,17 +267,19 @@ export const makeCalendarFeed = ({
     }
   }
 
+  const ctrl = createFeedController({
+    useWindowing: true,
+    feed: makeIntersectionFeed(makeRelayFeed(...relays), feedFromFilters(feedFilters)),
+    onEvent: insertEvent,
+    onExhausted: () => (backwardExhausted = true),
+  })
+
   const backwardScroller = createScroller({
     element,
     reverse: true,
     onScroll: () => {
-      const [since, until] = backwardWindow
-
-      backwardWindow = [since - MONTH, since]
-
-      if (until > now() - int(2, YEAR)) {
-        loadTimeframe(since, until)
-      } else {
+      ctrl.load(500)
+      if (backwardExhausted) {
         backwardScroller.stop()
         maybeExhausted()
       }
