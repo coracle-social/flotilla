@@ -6,7 +6,7 @@
   import Button from "@lib/components/Button.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"
-  import {makeThreadPath, makeCalendarPath, makeRoomPath} from "@app/routes"
+  import {makeThreadPath, makeCalendarPath, makeRoomPath, makeSpacePath} from "@app/routes"
   import {
     hasNip29,
     deriveUserRooms,
@@ -25,6 +25,7 @@
   const relay = deriveRelay(url)
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url)
+  const chatPath = makeSpacePath(url, "chat")
   const threadsPath = makeThreadPath(url)
   const calendarPath = makeCalendarPath(url)
 
@@ -76,34 +77,48 @@
         {/if}
       </div>
     </Link>
-    {#if $userRooms.length + $otherRooms.length > 10}
-      <label class="input input-sm input-bordered flex flex-grow items-center gap-2">
-        <Icon icon="magnifer" size={4} />
-        <input bind:value={term} class="grow" type="text" placeholder="Search rooms..." />
-      </label>
-    {/if}
-    {#each filteredRooms() as room (room)}
-      {@const roomPath = makeRoomPath(url, room)}
-      {@const channel = $channelsById.get(makeChannelId(url, room))}
-      <Link href={roomPath} class="btn btn-neutral btn-sm relative w-full justify-start">
-        <div class="flex min-w-0 items-center gap-2 overflow-hidden text-nowrap">
-          {#if channel?.closed || channel?.private}
-            <Icon icon="lock" size={4} />
-          {:else}
-            <Icon icon="hashtag" />
-          {/if}
-          <ChannelName {url} {room} />
-        </div>
-        {#if $notifications.has(roomPath)}
-          <div class="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" transition:fade></div>
-        {/if}
-      </Link>
-    {/each}
     {#if hasNip29($relay)}
+      {#if $userRooms.length + $otherRooms.length > 10}
+        <label class="input input-sm input-bordered flex flex-grow items-center gap-2">
+          <Icon icon="magnifer" size={4} />
+          <input bind:value={term} class="grow" type="text" placeholder="Search rooms..." />
+        </label>
+      {/if}
+      {#each filteredRooms() as room (room)}
+        {@const roomPath = makeRoomPath(url, room)}
+        {@const channel = $channelsById.get(makeChannelId(url, room))}
+        <Link href={roomPath} class="btn btn-neutral btn-sm relative w-full justify-start">
+          <div class="flex min-w-0 items-center gap-2 overflow-hidden text-nowrap">
+            {#if channel?.closed || channel?.private}
+              <Icon icon="lock" size={4} />
+            {:else}
+              <Icon icon="hashtag" />
+            {/if}
+            <ChannelName {url} {room} />
+          </div>
+          {#if $notifications.has(roomPath)}
+            <div class="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" transition:fade>
+            </div>
+          {/if}
+        </Link>
+      {/each}
       <Button onclick={addRoom} class="btn btn-neutral btn-sm w-full justify-start">
         <Icon icon="add-circle" />
         Create Room
       </Button>
+    {:else}
+      <Link href={chatPath} class="btn btn-neutral w-full justify-start">
+        <div class="relative flex items-center gap-2">
+          <Icon icon="chat-round" />
+          Chat
+          {#if $notifications.has(chatPath)}
+            <div
+              class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-primary-content"
+              transition:fade>
+            </div>
+          {/if}
+        </div>
+      </Link>
     {/if}
   </div>
 </div>

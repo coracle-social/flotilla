@@ -1,5 +1,9 @@
 # Changelog
 
+# 1.1.1
+
+* Add chat quick link
+
 # 1.1.0
 
 * Add better theming support
