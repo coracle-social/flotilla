@@ -16,7 +16,7 @@
   import type {TrustedEvent, EventTemplate, EventContent} from "@welshman/util"
   import {parse, isLink} from "@welshman/content"
   import {
-    createEvent,
+    makeEvent,
     tagsFromIMeta,
     getTags,
     DIRECT_MESSAGE,
@@ -97,7 +97,7 @@
       content = content.trim()
 
       if (content) {
-        templates.push(createEvent(kind, {content, tags: [...tags, ...ptags]}))
+        templates.push(makeEvent(kind, {content, tags: [...tags, ...ptags]}))
       }
     }
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import {chunk, sleep, uniq} from "@welshman/lib"
   import {
-    createEvent,
+    makeEvent,
     createProfile,
     PROFILE,
     DELETE,
@@ -36,8 +36,8 @@
     }
 
     const chunks = chunk(500, repository.query([{authors: [$pubkey!]}]))
-    const profileEvent = createEvent(PROFILE, createProfile({name: "[deleted]"}))
-    const vanishEvent = createEvent(62, {tags: [["relay", "ALL_RELAYS"]]})
+    const profileEvent = makeEvent(PROFILE, createProfile({name: "[deleted]"}))
+    const vanishEvent = makeEvent(62, {tags: [["relay", "ALL_RELAYS"]]})
     const denominator = chunks.length + 2
     const relays = uniq([
       ...INDEXER_RELAYS,
@@ -75,7 +75,7 @@
         }
       }
 
-      await publishThunk({relays, event: createEvent(DELETE, {tags})})
+      await publishThunk({relays, event: makeEvent(DELETE, {tags})})
 
       await incrementProgress()
     }

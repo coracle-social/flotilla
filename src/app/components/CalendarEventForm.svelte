@@ -2,7 +2,7 @@
   import type {Snippet} from "svelte"
   import {writable} from "svelte/store"
   import {randomId, HOUR} from "@welshman/lib"
-  import {createEvent, EVENT_TIME} from "@welshman/util"
+  import {makeEvent, EVENT_TIME} from "@welshman/util"
   import {publishThunk} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import {daysBetween} from "@lib/util"
@@ -63,7 +63,7 @@
     }
 
     const ed = await editor
-    const event = createEvent(EVENT_TIME, {
+    const event = makeEvent(EVENT_TIME, {
       content: ed.getText({blockSeparator: "\n"}).trim(),
       tags: [
         ["d", initialValues?.d || randomId()],

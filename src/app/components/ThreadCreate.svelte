@@ -1,6 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
-  import {createEvent, THREAD} from "@welshman/util"
+  import {makeEvent, THREAD} from "@welshman/util"
   import {publishThunk} from "@welshman/app"
   import {isMobile, preventDefault} from "@lib/html"
   import Icon from "@lib/components/Icon.svelte"
@@ -45,7 +45,7 @@
 
     publishThunk({
       relays: [url],
-      event: createEvent(THREAD, {content, tags}),
+      event: makeEvent(THREAD, {content, tags}),
     })
 
     history.back()

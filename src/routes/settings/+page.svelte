@@ -2,7 +2,7 @@
   import {
     getListTags,
     tagger,
-    createEvent,
+    makeEvent,
     getPubkeyTagValues,
     getTagValues,
     MUTES,
@@ -38,17 +38,17 @@
     const relays = Router.get().FromUser().getUrls()
 
     publishThunk({
-      event: createEvent(SETTINGS, {content}),
+      event: makeEvent(SETTINGS, {content}),
       relays,
     })
 
     publishThunk({
-      event: createEvent(MUTES, {tags: mutedPubkeys.map(tagPubkey)}),
+      event: makeEvent(MUTES, {tags: mutedPubkeys.map(tagPubkey)}),
       relays,
     })
 
     publishThunk({
-      event: createEvent(BLOSSOM_SERVERS, {tags: blossomServers.map(tagger("server"))}),
+      event: makeEvent(BLOSSOM_SERVERS, {tags: blossomServers.map(tagger("server"))}),
       relays,
     })
 

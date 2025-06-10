@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {Profile} from "@welshman/util"
-  import {PROFILE, createProfile, makeProfile, createEvent} from "@welshman/util"
+  import {PROFILE, createProfile, makeProfile, makeEvent} from "@welshman/util"
   import {loginWithNip01, publishThunk} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
@@ -18,7 +18,7 @@
   }
 
   const onsubmit = ({profile, shouldBroadcast}: {profile: Profile; shouldBroadcast: boolean}) => {
-    const event = createEvent(PROFILE, createProfile(profile))
+    const event = makeEvent(PROFILE, createProfile(profile))
     const relays = shouldBroadcast ? INDEXER_RELAYS : []
 
     loginWithNip01(secret)

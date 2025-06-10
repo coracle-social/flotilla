@@ -2,7 +2,7 @@
   import type {Profile} from "@welshman/util"
   import {
     getTag,
-    createEvent,
+    makeEvent,
     makeProfile,
     editProfile,
     createProfile,
@@ -33,7 +33,7 @@
       template.tags = uniqTags([...template.tags, PROTECTED])
     }
 
-    const event = createEvent(template.kind, template)
+    const event = makeEvent(template.kind, template)
 
     publishThunk({event, relays})
     pushToast({message: "Your profile has been updated!"})

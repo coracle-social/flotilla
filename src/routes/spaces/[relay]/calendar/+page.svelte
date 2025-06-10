@@ -23,7 +23,7 @@
 
   const url = decodeRelay($page.params.relay)
 
-  const createEvent = () => pushModal(CalendarEventCreate, {url})
+  const makeEvent = () => pushModal(CalendarEventCreate, {url})
 
   const getStart = (event: TrustedEvent) => parseInt(getTagValue("start", event.tags) || "")
 
@@ -124,7 +124,7 @@
   {/snippet}
   {#snippet action()}
     <div class="row-2">
-      <Button class="btn btn-primary btn-sm" onclick={createEvent}>
+      <Button class="btn btn-primary btn-sm" onclick={makeEvent}>
         <Icon icon="calendar-add" />
         Create an Event
       </Button>
