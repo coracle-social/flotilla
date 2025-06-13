@@ -15,6 +15,7 @@
   import NoteCard from "@app/components/NoteCard.svelte"
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import ThreadActions from "@app/components/ThreadActions.svelte"
+  import CommentActions from "@app/components/CommentActions.svelte"
   import EventReply from "@app/components/EventReply.svelte"
   import {deriveEvent, decodeRelay} from "@app/state"
   import {setChecked} from "@app/notifications"
@@ -90,11 +91,11 @@
           </Button>
         </div>
       {/if}
-      {#each sortBy(e => -e.created_at, $replies).slice(0, showAll ? undefined : 4) as reply (reply.id)}
+      {#each sortBy(e => e.created_at, $replies).slice(0, showAll ? undefined : 4) as reply (reply.id)}
         <NoteCard event={reply} {url} class="card2 bg-alt z-feature w-full">
           <div class="col-3 ml-12">
             <Content showEntire event={reply} {url} />
-            <ThreadActions event={reply} {url} />
+            <CommentActions event={reply} {url} />
           </div>
         </NoteCard>
       {/each}
