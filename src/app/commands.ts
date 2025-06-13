@@ -12,10 +12,6 @@ import {
   FOLLOWS,
   REACTION,
   AUTH_JOIN,
-  GROUP_JOIN,
-  GROUP_LEAVE,
-  GROUP_CREATE,
-  GROUP_EDIT_META,
   GROUPS,
   COMMENT,
   isSignedEvent,
@@ -55,7 +51,6 @@ import {
   getThunkError,
 } from "@welshman/app"
 import {
-  tagRoom,
   PROTECTED,
   userMembership,
   INDEXER_RELAYS,
@@ -124,34 +119,6 @@ export const broadcastUserData = async (relays: string[]) => {
       await publishThunk({event, relays}).result
     }
   }
-}
-
-// NIP 29 stuff
-
-export const createRoom = (url: string, room: string) => {
-  const event = makeEvent(GROUP_CREATE, {tags: [tagRoom(room, url)]})
-
-  return publishThunk({event, relays: [url]})
-}
-
-export const editRoom = (url: string, room: string, meta: Record<string, string>) => {
-  const event = makeEvent(GROUP_EDIT_META, {
-    tags: [tagRoom(room, url), ...Object.entries(meta)],
-  })
-
-  return publishThunk({event, relays: [url]})
-}
-
-export const joinRoom = (url: string, room: string) => {
-  const event = makeEvent(GROUP_JOIN, {tags: [tagRoom(room, url)]})
-
-  return publishThunk({event, relays: [url]})
-}
-
-export const leaveRoom = (url: string, room: string) => {
-  const event = makeEvent(GROUP_LEAVE, {tags: [tagRoom(room, url)]})
-
-  return publishThunk({event, relays: [url]})
 }
 
 // List updates

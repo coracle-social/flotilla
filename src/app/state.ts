@@ -171,8 +171,6 @@ export const entityLink = (entity: string) => `https://coracle.social/${entity}`
 export const pubkeyLink = (pubkey: string, relays = Router.get().FromPubkeys([pubkey]).getUrls()) =>
   entityLink(nip19.nprofileEncode({pubkey, relays}))
 
-export const tagRoom = (room: string, url: string) => [ROOM, room]
-
 export const getDefaultPubkeys = () => {
   const appPubkeys = DEFAULT_PUBKEYS.split(",")
   const userPubkeys = shuffle(getPubkeyTagValues(getListTags(get(userFollows))))

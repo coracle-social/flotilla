@@ -9,7 +9,7 @@
     isPublishedProfile,
     uniqTags,
   } from "@welshman/util"
-  import {Router} from "@welshman/router"
+  import {Router, addMaximalFallbacks} from "@welshman/router"
   import {pubkey, profilesByPubkey, publishThunk} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
@@ -28,7 +28,11 @@
     const relays = [...getMembershipUrls($userMembership)]
 
     if (shouldBroadcast) {
-      relays.push(...Router.get().FromUser().getUrls())
+      const router = Router.get()
+
+      relays.push(
+        ...router.merge([router.FromUser(), router.Index()]).policy(addMaximalFallbacks).getUrls(),
+      )
     } else {
       template.tags = uniqTags([...template.tags, PROTECTED])
     }

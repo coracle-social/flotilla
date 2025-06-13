@@ -2,7 +2,7 @@
   import {goto} from "$app/navigation"
   import {randomId} from "@welshman/lib"
   import {displayRelayUrl} from "@welshman/util"
-  import {deriveRelay, getThunkError} from "@welshman/app"
+  import {deriveRelay, getThunkError, createRoom, editRoom, joinRoom} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Field from "@lib/components/Field.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -11,7 +11,6 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {hasNip29, loadChannel} from "@app/state"
-  import {createRoom, editRoom, joinRoom} from "@app/commands"
   import {makeSpacePath} from "@app/routes"
   import {pushToast} from "@app/toast"
 
