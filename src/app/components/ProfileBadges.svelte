@@ -5,7 +5,7 @@
   import type {Filter} from "@welshman/util"
   import {deriveEvents} from "@welshman/store"
   import {formatTimestampRelative} from "@welshman/lib"
-  import {NOTE, GROUPS, MESSAGE, THREAD, COMMENT, getRelayTags, getListTags} from "@welshman/util"
+  import {NOTE, ROOMS, MESSAGE, THREAD, COMMENT, getRelayTags, getListTags} from "@welshman/util"
   import {repository, loadRelaySelections} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
@@ -35,7 +35,7 @@
     // Load groups and at least one note, regardless of time frame
     load({
       filters: [
-        {authors: [pubkey], kinds: [GROUPS]},
+        {authors: [pubkey], kinds: [ROOMS]},
         {authors: [pubkey], limit: 1, kinds: [NOTE, MESSAGE, THREAD, COMMENT]},
       ],
       relays: Router.get().FromPubkeys([pubkey]).getUrls(),

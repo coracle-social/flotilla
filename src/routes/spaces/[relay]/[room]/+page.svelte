@@ -9,11 +9,12 @@
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {
     makeEvent,
+    makeRoomMeta,
     MESSAGE,
     DELETE,
     REACTION,
-    GROUP_ADD_USER,
-    GROUP_REMOVE_USER,
+    ROOM_ADD_USER,
+    ROOM_REMOVE_USER,
   } from "@welshman/util"
   import {pubkey, publishThunk, getThunkError, joinRoom, leaveRoom} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
@@ -61,7 +62,7 @@
     joining = true
 
     try {
-      const message = await getThunkError(joinRoom(url, room))
+      const message = await getThunkError(joinRoom(url, makeRoomMeta({id: room})))
 
       if (message && !message.startsWith("duplicate:")) {
         return pushToast({theme: "error", message})
@@ -77,7 +78,7 @@
   const leave = async () => {
     leaving = true
     try {
-      const message = await getThunkError(leaveRoom(url, room))
+      const message = await getThunkError(leaveRoom(url, makeRoomMeta({id: room})))
 
       if (message && !message.startsWith("duplicate:")) {
         pushToast({theme: "error", message})
@@ -244,7 +245,7 @@
       relays: [url],
       filters: [
         {
-          kinds: [GROUP_ADD_USER, GROUP_REMOVE_USER],
+          kinds: [ROOM_ADD_USER, ROOM_REMOVE_USER],
           "#p": [$pubkey!],
           "#h": [room],
           limit: 10,

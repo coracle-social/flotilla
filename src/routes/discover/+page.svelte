@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {addToMapKey, dec, gt} from "@welshman/lib"
-  import {GROUPS} from "@welshman/util"
+  import {ROOMS} from "@welshman/util"
   import {Router} from "@welshman/router"
   import {load} from "@welshman/net"
   import type {Relay} from "@welshman/app"
@@ -29,7 +29,7 @@
   const discoverRelays = () =>
     Promise.all([
       load({
-        filters: [{kinds: [GROUPS]}],
+        filters: [{kinds: [ROOMS]}],
         relays: Router.get().Index().getUrls(),
       }),
       ...getDefaultPubkeys().map(async pubkey => {

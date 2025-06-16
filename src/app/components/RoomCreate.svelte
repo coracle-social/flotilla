@@ -1,7 +1,7 @@
 <script lang="ts">
   import {goto} from "$app/navigation"
-  import {randomId} from "@welshman/lib"
-  import {displayRelayUrl} from "@welshman/util"
+  import {uniqBy, nth} from "@welshman/lib"
+  import {displayRelayUrl, makeRoomMeta} from "@welshman/util"
   import {deriveRelay, getThunkError, createRoom, editRoom, joinRoom} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Field from "@lib/components/Field.svelte"
@@ -16,19 +16,21 @@
 
   const {url} = $props()
 
-  const room = randomId()
+  const room = makeRoomMeta()
   const relay = deriveRelay(url)
 
   const back = () => history.back()
 
   const tryCreate = async () => {
+    room.tags = uniqBy(nth(0), [...room.tags, ["name", name]])
+
     const createMessage = await getThunkError(createRoom(url, room))
 
     if (createMessage && !createMessage.match(/^duplicate:|already a member/)) {
       return pushToast({theme: "error", message: createMessage})
     }
 
-    const editMessage = await getThunkError(editRoom(url, room, {name}))
+    const editMessage = await getThunkError(editRoom(url, room))
 
     if (editMessage) {
       return pushToast({theme: "error", message: editMessage})
@@ -40,9 +42,9 @@
       return pushToast({theme: "error", message: joinMessage})
     }
 
-    await loadChannel(url, room)
+    await loadChannel(url, room.id)
 
-    goto(makeSpacePath(url, room))
+    goto(makeSpacePath(url, room.id))
   }
 
   const create = async () => {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {nthEq} from "@welshman/lib"
   import type {Profile} from "@welshman/util"
   import {
     getTag,
@@ -29,10 +30,10 @@
 
     if (shouldBroadcast) {
       const router = Router.get()
+      const scenario = router.merge([router.FromUser(), router.Index()])
 
-      relays.push(
-        ...router.merge([router.FromUser(), router.Index()]).policy(addMaximalFallbacks).getUrls(),
-      )
+      relays.push(...scenario.policy(addMaximalFallbacks).getUrls())
+      template.tags = template.tags.filter(nthEq(0, "-"))
     } else {
       template.tags = uniqTags([...template.tags, PROTECTED])
     }
