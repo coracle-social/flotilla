@@ -44,6 +44,7 @@
   } from "@welshman/app"
   import * as lib from "@welshman/lib"
   import * as util from "@welshman/util"
+  import * as router from "@welshman/router"
   import * as welshmanSigner from "@welshman/signer"
   import * as net from "@welshman/net"
   import * as app from "@welshman/app"
@@ -81,6 +82,7 @@
       nip19,
       ...lib,
       ...welshmanSigner,
+      ...router,
       ...util,
       ...net,
       ...app,

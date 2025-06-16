@@ -7,7 +7,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {clearModals} from "@app/modal"
-  import {addSpaceMembership} from "@app/commands"
+  import {addSpaceMembership, broadcastUserData} from "@app/commands"
 
   const {url} = $props()
 
@@ -16,6 +16,7 @@
   const tryJoin = async () => {
     await addSpaceMembership(url)
 
+    broadcastUserData([url])
     clearModals()
   }
 

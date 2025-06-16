@@ -1,13 +1,26 @@
 <script module lang="ts">
   import {goto} from "$app/navigation"
+  import {ROOM_META} from "@welshman/util"
+  import {load} from "@welshman/net"
   import {makeSpacePath} from "@app/routes"
-  import {addSpaceMembership} from "@app/commands"
+  import {addSpaceMembership, broadcastUserData} from "@app/commands"
   import {pushToast} from "@app/toast"
 
   export const confirmSpaceJoin = async (url: string) => {
     await addSpaceMembership(url)
 
-    goto(makeSpacePath(url), {replaceState: true})
+    const path = makeSpacePath(url)
+
+    if (window.location.pathname === path) {
+      load({
+        relays: [url],
+        filters: [{kinds: [ROOM_META]}],
+      })
+    }
+
+    broadcastUserData([url])
+
+    goto(path, {replaceState: true})
 
     pushToast({
       message: "Welcome to the space!",

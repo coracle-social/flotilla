@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {nthEq} from "@welshman/lib"
+  import {nthNe} from "@welshman/lib"
   import type {Profile} from "@welshman/util"
   import {
     getTag,
@@ -10,7 +10,7 @@
     isPublishedProfile,
     uniqTags,
   } from "@welshman/util"
-  import {Router, addMaximalFallbacks} from "@welshman/router"
+  import {Router} from "@welshman/router"
   import {pubkey, profilesByPubkey, publishThunk} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
@@ -25,20 +25,19 @@
   const back = () => history.back()
 
   const onsubmit = ({profile, shouldBroadcast}: {profile: Profile; shouldBroadcast: boolean}) => {
+    const router = Router.get()
     const template = isPublishedProfile(profile) ? editProfile(profile) : createProfile(profile)
-    const relays = [...getMembershipUrls($userMembership)]
+    const scenarios = [router.FromRelays(getMembershipUrls($userMembership))]
 
     if (shouldBroadcast) {
-      const router = Router.get()
-      const scenario = router.merge([router.FromUser(), router.Index()])
-
-      relays.push(...scenario.policy(addMaximalFallbacks).getUrls())
-      template.tags = template.tags.filter(nthEq(0, "-"))
+      scenarios.push(router.FromUser(), router.Index())
+      template.tags = template.tags.filter(nthNe(0, "-"))
     } else {
       template.tags = uniqTags([...template.tags, PROTECTED])
     }
 
     const event = makeEvent(template.kind, template)
+    const relays = router.merge(scenarios).getUrls()
 
     publishThunk({event, relays})
     pushToast({message: "Your profile has been updated!"})
