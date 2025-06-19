@@ -41,8 +41,10 @@ import {
   ROOM_JOIN,
   ROOM_ADD_USER,
   ROOM_REMOVE_USER,
-  ALERT_REQUEST_EMAIL,
-  ALERT_REQUEST_PUSH,
+  ALERT_EMAIL,
+  ALERT_WEB,
+  ALERT_IOS,
+  ALERT_ANDROID,
   ALERT_STATUS,
   getGroupTags,
   getRelayTagValues,
@@ -90,6 +92,8 @@ export const PROTECTED = ["-"]
 export const NOTIFIER_PUBKEY = import.meta.env.VITE_NOTIFIER_PUBKEY
 
 export const NOTIFIER_RELAY = import.meta.env.VITE_NOTIFIER_RELAY
+
+export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
 export const INDEXER_RELAYS = fromCsv(import.meta.env.VITE_INDEXER_RELAYS)
 
@@ -343,7 +347,7 @@ export type Alert = {
 }
 
 export const alerts = deriveEventsMapped<Alert>(repository, {
-  filters: [{kinds: [ALERT_REQUEST_EMAIL, ALERT_REQUEST_PUSH]}],
+  filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]}],
   itemToEvent: item => item.event,
   eventToItem: async event => {
     const tags = parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, event.content))

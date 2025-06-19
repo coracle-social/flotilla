@@ -3,12 +3,12 @@
   import * as nip19 from "nostr-tools/nip19"
   import type {TrustedEvent} from "@welshman/util"
   import {Address, getIdFilters, getTagValue} from "@welshman/util"
+  import {LOCAL_RELAY_URL} from "@welshman/relay"
   import {load} from "@welshman/net"
   import {page} from "$app/stores"
   import {goto} from "$app/navigation"
-  import {scrollToEvent} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {makeRoomPath, makeThreadPath} from "@app/routes"
+  import {goToEvent} from "@app/routes"
 
   const {bech32} = $page.params
 
@@ -22,19 +22,11 @@
     let found = false
 
     load({
-      relays: data.relays,
+      relays: [LOCAL_RELAY_URL, ...data.relays],
       filters: getIdFilters([type === "nevent" ? data.id : Address.fromNaddr(bech32).toString()]),
       onEvent: (event: TrustedEvent) => {
         found = true
-
-        if (event.kind === 9) {
-          goto(makeRoomPath(data.relays[0], getTagValue("h", event.tags)!), {replaceState: true})
-          scrollToEvent(event.id)
-        } else if (event.kind === 11) {
-          goto(makeThreadPath(data.relays[0], event.id), {replaceState: true})
-        } else {
-          goto("/", {replaceState: true})
-        }
+        goToEvent(event, {replaceState: true})
       },
       onClose: () => {
         if (!found) {

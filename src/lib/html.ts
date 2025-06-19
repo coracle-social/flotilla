@@ -102,6 +102,7 @@ export const isIntersecting = async (element: Element) =>
 
 export const scrollToEvent = async (id: string, attempts = 3): Promise<boolean> => {
   const element = document.querySelector(`[data-event="${id}"]`) as any
+  const elements = Array.from(document.querySelectorAll("[data-event]"))
 
   if (element) {
     element.scrollIntoView({behavior: "smooth", block: "center"})
@@ -116,8 +117,8 @@ export const scrollToEvent = async (id: string, attempts = 3): Promise<boolean> 
     }, 800 + 400)
 
     return true
-  } else {
-    const lastElement = last(Array.from(document.querySelectorAll("[data-event]")))
+  } else if (elements.length > 0) {
+    const lastElement = last(elements)
 
     if (lastElement && !isIntersecting(lastElement)) {
       lastElement.scrollIntoView({behavior: "smooth", block: "center"})
@@ -131,4 +132,6 @@ export const scrollToEvent = async (id: string, attempts = 3): Promise<boolean> 
       return false
     }
   }
+
+  return false
 }

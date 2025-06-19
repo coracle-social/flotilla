@@ -67,9 +67,9 @@
 
   const addRoom = () => pushModal(RoomCreate, {url}, {replaceState})
 
-  const addAlert = () => pushModal(AlertAdd, {relay: url, channel: "push"})
+  const addAlert = () => pushModal(AlertAdd, {relay: url, channel: "push"}, {replaceState})
 
-  const deleteAlert = () => pushModal(AlertDelete, {alert})
+  const deleteAlert = () => pushModal(AlertDelete, {alert}, {replaceState})
 
   let showMenu = $state(false)
   let replaceState = $state(false)

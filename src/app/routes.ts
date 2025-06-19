@@ -61,34 +61,40 @@ export const getPrimaryNavItemIndex = ($page: Page) => {
   }
 }
 
-export const goToMessage = async (url: string, room: string | undefined, id: string) => {
-  await goto(room ? makeRoomPath(url, room) : makeSpacePath(url, "chat"))
-  await sleep(300)
-
-  return scrollToEvent(id)
-}
-
-export const goToEvent = async (event: TrustedEvent) => {
+export const goToEvent = async (event: TrustedEvent, options: Record<string, any> = {}) => {
   if (event.kind === DIRECT_MESSAGE || event.kind === DIRECT_MESSAGE_FILE) {
-    return await scrollToEvent(event.id)
+    await scrollToEvent(event.id)
   }
 
   const urls = Array.from(tracker.getRelays(event.id))
+  const path = await getEventPath(event, urls)
+
+  if (path.includes('://')) {
+    window.open(path)
+  } else {
+    goto(path, options)
+
+    await sleep(300)
+    await scrollToEvent(event.id)
+  }
+}
+
+export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
   const room = getTagValue(ROOM, event.tags)
 
   if (urls.length > 0) {
     const url = urls[0]
 
     if (event.kind === THREAD) {
-      return goto(makeThreadPath(url, event.id))
+      return makeThreadPath(url, event.id)
     }
 
     if (event.kind === EVENT_TIME) {
-      return goto(makeCalendarPath(url, event.id))
+      return makeCalendarPath(url, event.id)
     }
 
     if (event.kind === MESSAGE) {
-      return goToMessage(url, room, event.id)
+      return room ? makeRoomPath(url, room) : makeSpacePath(url, 'chat')
     }
 
     const kind = event.tags.find(nthEq(0, "K"))?.[1]
@@ -96,18 +102,18 @@ export const goToEvent = async (event: TrustedEvent) => {
 
     if (id && kind) {
       if (parseInt(kind) === THREAD) {
-        return goto(makeThreadPath(url, id))
+        return makeThreadPath(url, id)
       }
 
       if (parseInt(kind) === EVENT_TIME) {
-        return goto(makeCalendarPath(url, id))
+        return makeCalendarPath(url, id)
       }
 
       if (parseInt(kind) === MESSAGE) {
-        return goToMessage(url, room, id)
+        return room ? makeRoomPath(url, room) : makeSpacePath(url, 'chat')
       }
     }
   }
 
-  window.open(entityLink(nip19.neventEncode({id: event.id, relays: urls})))
+  return entityLink(nip19.neventEncode({id: event.id, relays: urls}))
 }

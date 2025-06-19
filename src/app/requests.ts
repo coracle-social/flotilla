@@ -25,8 +25,10 @@ import {
   EVENT_TIME,
   AUTH_INVITE,
   COMMENT,
-  ALERT_REQUEST_EMAIL,
-  ALERT_REQUEST_PUSH,
+  ALERT_EMAIL,
+  ALERT_WEB,
+  ALERT_IOS,
+  ALERT_ANDROID,
   ALERT_STATUS,
   matchFilters,
   getTagValues,
@@ -349,7 +351,7 @@ export const makeCalendarFeed = ({
 export const loadAlerts = (pubkey: string) =>
   load({
     relays: [NOTIFIER_RELAY],
-    filters: [{kinds: [ALERT_REQUEST_EMAIL, ALERT_REQUEST_PUSH], authors: [pubkey]}],
+    filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID], authors: [pubkey]}],
   })
 
 export const loadAlertStatuses = (pubkey: string) =>

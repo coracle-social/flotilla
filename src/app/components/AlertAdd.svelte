@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {onMount} from "svelte"
   import {preventDefault} from "@lib/html"
   import {randomInt, displayList, TIMEZONE, identity} from "@welshman/lib"
   import {displayRelayUrl, getTagValue, THREAD, MESSAGE, EVENT_TIME, COMMENT} from "@welshman/util"
@@ -13,7 +14,9 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {alerts, getMembershipUrls, getMembershipRoomsByUrl, userMembership} from "@app/state"
   import {loadAlertStatuses, requestRelayClaims} from "@app/requests"
-  import {publishEmailAlert, publishPushAlert} from "@app/commands"
+  import {publishAlert} from "@app/commands"
+  import type {AlertParams} from "@app/commands"
+  import {platform, canSendPushNotifications, getPushInfo} from "@app/push"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -45,7 +48,7 @@
   const back = () => history.back()
 
   const submit = async () => {
-    if (!email.includes("@")) {
+    if (channel === "email" && !email.includes("@")) {
       return pushToast({
         theme: "error",
         message: "Please provide an email address",
@@ -83,23 +86,45 @@
 
     if (notifyChat) {
       display.push("chat")
-      filters.push({
-        kinds: [MESSAGE],
-        "#h": getMembershipRoomsByUrl(relay, $userMembership),
-      })
+      filters.push({kinds: [MESSAGE]})
     }
 
     loading = true
 
     try {
       const claims = await requestRelayClaims([relay])
-      const cadence = cron?.endsWith("1") ? "Weekly" : "Daily"
-      const description = `${cadence} alert for ${displayList(display)} on ${displayRelayUrl(relay)}, sent via email.`
       const feed = makeIntersectionFeed(feedFromFilters(filters), makeRelayFeed(relay))
-      const thunk =
-        channel === "email"
-          ? await publishEmailAlert({cron, email, feed, claims, description})
-          : await publishPushAlert({feed, claims, description})
+      const description = `for ${displayList(display)} on ${displayRelayUrl(relay)}`
+      const params: AlertParams = {feed, claims, description}
+
+      if (channel === "email") {
+        const cadence = cron?.endsWith("1") ? "Weekly" : "Daily"
+
+        params.description = `${cadence} alert ${description}, sent via email.`
+        params.email = {
+          cron,
+          email,
+          handler: [
+            "31990:97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322:1737058597050",
+            "wss://relay.nostr.band/",
+            "web",
+          ],
+        }
+      } else {
+        try {
+          // @ts-ignore
+          params[platform] = await getPushInfo()
+        } catch (e: any) {
+          return pushToast({
+            theme: "error",
+            message: String(e),
+          })
+        }
+
+        params.description = `Push notification alert ${description}.`
+      }
+
+      const thunk = await publishAlert(params)
 
       await thunk.result
       await loadAlertStatuses($pubkey!)
@@ -110,6 +135,12 @@
       loading = false
     }
   }
+
+  onMount(() => {
+    if (!canSendPushNotifications()) {
+      channel = "email"
+    }
+  })
 </script>
 
 <form class="column gap-4" onsubmit={preventDefault(submit)}>
@@ -118,17 +149,19 @@
       Add an Alert
     {/snippet}
   </ModalHeader>
-  <FieldInline>
-    {#snippet label()}
-      <p>Alert Type*</p>
-    {/snippet}
-    {#snippet input()}
-      <select bind:value={channel} class="select select-bordered">
-        <option value="push">Push Notification</option>
-        <option value="email">Email Digest</option>
-      </select>
-    {/snippet}
-  </FieldInline>
+  {#if canSendPushNotifications()}
+    <FieldInline>
+      {#snippet label()}
+        <p>Alert Type*</p>
+      {/snippet}
+      {#snippet input()}
+        <select bind:value={channel} class="select select-bordered">
+          <option value="email">Email Digest</option>
+          <option value="push">Push Notification</option>
+        </select>
+      {/snippet}
+    </FieldInline>
+  {/if}
   {#if channel === "email"}
     <FieldInline>
       {#snippet label()}

@@ -44,6 +44,7 @@
   } from "@welshman/app"
   import * as lib from "@welshman/lib"
   import * as util from "@welshman/util"
+  import * as feeds from "@welshman/feeds"
   import * as router from "@welshman/router"
   import * as welshmanSigner from "@welshman/signer"
   import * as net from "@welshman/net"
@@ -84,12 +85,20 @@
       ...welshmanSigner,
       ...router,
       ...util,
+      ...feeds,
       ...net,
       ...app,
       ...appState,
       ...commands,
       ...requests,
       ...notifications,
+    })
+
+    // Listen for navigation messages from service worker
+    navigator.serviceWorker?.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'NAVIGATE') {
+        goto(event.data.url)
+      }
     })
 
     // Nstart login
