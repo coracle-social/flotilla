@@ -14,6 +14,8 @@ import {
   AUTH_JOIN,
   ROOMS,
   COMMENT,
+  ALERT_REQUEST_PUSH,
+  ALERT_REQUEST_EMAIL,
   isSignedEvent,
   makeEvent,
   displayProfile,
@@ -54,7 +56,6 @@ import {
   PROTECTED,
   userMembership,
   INDEXER_RELAYS,
-  ALERT,
   NOTIFIER_PUBKEY,
   NOTIFIER_RELAY,
   userRoomsByUrl,
@@ -368,7 +369,7 @@ export const makeComment = ({event, content, tags = []}: CommentParams) =>
 export const publishComment = ({relays, ...params}: CommentParams & {relays: string[]}) =>
   publishThunk({event: makeComment(params), relays})
 
-export type AlertParams = {
+export type EmailAlertParams = {
   feed: Feed
   cron: string
   email: string
@@ -376,7 +377,13 @@ export type AlertParams = {
   claims: Record<string, string>
 }
 
-export const makeAlert = async ({cron, email, feed, claims, description}: AlertParams) => {
+export const makeEmailAlert = async ({
+  cron,
+  email,
+  feed,
+  claims,
+  description,
+}: EmailAlertParams) => {
   const tags = [
     ["feed", JSON.stringify(feed)],
     ["cron", cron],
@@ -384,7 +391,6 @@ export const makeAlert = async ({cron, email, feed, claims, description}: AlertP
     ["locale", LOCALE],
     ["timezone", TIMEZONE],
     ["description", description],
-    ["channel", "email"],
     [
       "handler",
       "31990:97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322:1737058597050",
@@ -397,7 +403,7 @@ export const makeAlert = async ({cron, email, feed, claims, description}: AlertP
     tags.push(["claim", relay, claim])
   }
 
-  return makeEvent(ALERT, {
+  return makeEvent(ALERT_REQUEST_EMAIL, {
     content: await signer.get().nip44.encrypt(NOTIFIER_PUBKEY, JSON.stringify(tags)),
     tags: [
       ["d", randomId()],
@@ -406,5 +412,37 @@ export const makeAlert = async ({cron, email, feed, claims, description}: AlertP
   })
 }
 
-export const publishAlert = async (params: AlertParams) =>
-  publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})
+export const publishEmailAlert = async (params: EmailAlertParams) =>
+  publishThunk({event: await makeEmailAlert(params), relays: [NOTIFIER_RELAY]})
+
+export type PushAlertParams = {
+  feed: Feed
+  description: string
+  claims: Record<string, string>
+}
+
+export const makePushAlert = async ({feed, claims, description}: PushAlertParams) => {
+  const tags = [
+    ["feed", JSON.stringify(feed)],
+    ["locale", LOCALE],
+    ["timezone", TIMEZONE],
+    ["description", description],
+    ["token", ""],
+    ["platform", ""],
+  ]
+
+  for (const [relay, claim] of Object.entries(claims)) {
+    tags.push(["claim", relay, claim])
+  }
+
+  return makeEvent(ALERT_REQUEST_PUSH, {
+    content: await signer.get().nip44.encrypt(NOTIFIER_PUBKEY, JSON.stringify(tags)),
+    tags: [
+      ["d", randomId()],
+      ["p", NOTIFIER_PUBKEY],
+    ],
+  })
+}
+
+export const publishPushAlert = async (params: PushAlertParams) =>
+  publishThunk({event: await makePushAlert(params), relays: [NOTIFIER_RELAY]})

@@ -9,6 +9,7 @@
   import {switcher} from "@welshman/lib"
   import AddSquare from "@assets/icons/Add Square.svg?dataurl"
   import ArrowsALogout2 from "@assets/icons/Arrows ALogout 2.svg?dataurl"
+  import Bell from "@assets/icons/Bell.svg?dataurl"
   import Bookmark from "@assets/icons/Bookmark.svg?dataurl"
   import BillList from "@assets/icons/Bill List.svg?dataurl"
   import Code2 from "@assets/icons/Code 2.svg?dataurl"
@@ -108,6 +109,7 @@
   const data = switcher(icon, {
     "add-square": AddSquare,
     "arrows-a-logout-2": ArrowsALogout2,
+    bell: Bell,
     bookmark: Bookmark,
     "bill-list": BillList,
     "code-2": Code2,

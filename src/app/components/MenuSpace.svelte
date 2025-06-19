@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {displayRelayUrl} from "@welshman/util"
-  import {deriveRelay} from "@welshman/app"
+  import {displayRelayUrl, getTagValue} from "@welshman/util"
+  import {pubkey, deriveRelay} from "@welshman/app"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -13,6 +13,8 @@
   import SpaceExit from "@app/components/SpaceExit.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import ProfileList from "@app/components/ProfileList.svelte"
+  import AlertAdd from "@app/components/AlertAdd.svelte"
+  import AlertDelete from "@app/components/AlertDelete.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import MenuSpaceRoomItem from "@app/components/MenuSpaceRoomItem.svelte"
   import InfoMissingRooms from "@app/components/InfoMissingRooms.svelte"
@@ -23,7 +25,9 @@
     deriveUserRooms,
     deriveOtherRooms,
     hasNip29,
+    alerts,
   } from "@app/state"
+  import {loadAlerts} from "@app/requests"
   import {notifications} from "@app/notifications"
   import {pushModal} from "@app/modal"
   import {makeSpacePath} from "@app/routes"
@@ -36,6 +40,7 @@
   const calendarPath = makeSpacePath(url, "calendar")
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url)
+  const alert = $derived($alerts.find(a => getTagValue("feed", a.tags)?.includes(url)))
 
   const openMenu = () => {
     showMenu = true
@@ -62,6 +67,10 @@
 
   const addRoom = () => pushModal(RoomCreate, {url}, {replaceState})
 
+  const addAlert = () => pushModal(AlertAdd, {relay: url, channel: "push"})
+
+  const deleteAlert = () => pushModal(AlertDelete, {alert})
+
   let showMenu = $state(false)
   let replaceState = $state(false)
   let element: Element | undefined = $state()
@@ -72,6 +81,7 @@
 
   onMount(() => {
     replaceState = Boolean(element?.closest(".drawer"))
+    loadAlerts($pubkey!)
   })
 </script>
 
@@ -86,7 +96,7 @@
         <Popover hideOnClick onClose={toggleMenu}>
           <ul
             transition:fly
-            class="menu absolute z-popover mt-2 w-full rounded-box bg-base-100 p-2 shadow-xl">
+            class="menu absolute z-popover mt-2 w-full gap-1 rounded-box bg-base-100 p-2 shadow-xl">
             <li>
               <Button onclick={showMembers}>
                 <Icon icon="user-rounded" />
@@ -99,6 +109,21 @@
                 Create Invite
               </Button>
             </li>
+            {#if alert}
+              <li>
+                <Button onclick={deleteAlert}>
+                  <Icon icon="bell" />
+                  Disable alerts
+                </Button>
+              </li>
+            {:else}
+              <li>
+                <Button onclick={addAlert}>
+                  <Icon icon="bell" />
+                  Enable alerts
+                </Button>
+              </li>
+            {/if}
             <li>
               {#if $userRoomsByUrl.has(url)}
                 <Button onclick={leaveSpace} class="text-error">

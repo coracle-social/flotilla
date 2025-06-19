@@ -25,6 +25,9 @@ import {
   EVENT_TIME,
   AUTH_INVITE,
   COMMENT,
+  ALERT_REQUEST_EMAIL,
+  ALERT_REQUEST_PUSH,
+  ALERT_STATUS,
   matchFilters,
   getTagValues,
   getTagValue,
@@ -53,8 +56,6 @@ import {
 import {createScroller} from "@lib/html"
 import {daysBetween} from "@lib/util"
 import {
-  ALERT,
-  ALERT_STATUS,
   NOTIFIER_RELAY,
   INDEXER_RELAYS,
   getDefaultPubkeys,
@@ -348,7 +349,7 @@ export const makeCalendarFeed = ({
 export const loadAlerts = (pubkey: string) =>
   load({
     relays: [NOTIFIER_RELAY],
-    filters: [{kinds: [ALERT], authors: [pubkey]}],
+    filters: [{kinds: [ALERT_REQUEST_EMAIL, ALERT_REQUEST_PUSH], authors: [pubkey]}],
   })
 
 export const loadAlertStatuses = (pubkey: string) =>

@@ -13,8 +13,24 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {alerts, getMembershipUrls, getMembershipRoomsByUrl, userMembership} from "@app/state"
   import {loadAlertStatuses, requestRelayClaims} from "@app/requests"
-  import {publishAlert} from "@app/commands"
+  import {publishEmailAlert, publishPushAlert} from "@app/commands"
   import {pushToast} from "@app/toast"
+
+  type Props = {
+    channel?: string
+    relay?: string
+    notifyChat?: boolean
+    notifyThreads?: boolean
+    notifyCalendar?: boolean
+  }
+
+  let {
+    relay = "",
+    channel = "email",
+    notifyChat = true,
+    notifyThreads = true,
+    notifyCalendar = true,
+  }: Props = $props()
 
   const timezoneOffset = parseInt(TIMEZONE.slice(3)) / 100
   const minute = randomInt(0, 59)
@@ -22,13 +38,9 @@
   const WEEKLY = `0 ${minute} ${hour} * * 1`
   const DAILY = `0 ${minute} ${hour} * * *`
 
-  let loading = false
-  let cron = WEEKLY
-  let email = $alerts.map(a => getTagValue("email", a.tags)).filter(identity)[0] || ""
-  let relay = ""
-  let notifyThreads = true
-  let notifyCalendar = true
-  let notifyChat = false
+  let loading = $state(false)
+  let cron = $state(WEEKLY)
+  let email = $state($alerts.map(a => getTagValue("email", a.tags)).filter(identity)[0] || "")
 
   const back = () => history.back()
 
@@ -84,7 +96,10 @@
       const cadence = cron?.endsWith("1") ? "Weekly" : "Daily"
       const description = `${cadence} alert for ${displayList(display)} on ${displayRelayUrl(relay)}, sent via email.`
       const feed = makeIntersectionFeed(feedFromFilters(filters), makeRelayFeed(relay))
-      const thunk = await publishAlert({cron, email, feed, claims, description})
+      const thunk =
+        channel === "email"
+          ? await publishEmailAlert({cron, email, feed, claims, description})
+          : await publishPushAlert({feed, claims, description})
 
       await thunk.result
       await loadAlertStatuses($pubkey!)
@@ -105,25 +120,38 @@
   </ModalHeader>
   <FieldInline>
     {#snippet label()}
-      <p>Email Address*</p>
+      <p>Alert Type*</p>
     {/snippet}
     {#snippet input()}
-      <label class="input input-bordered flex w-full items-center gap-2">
-        <input placeholder="email@example.com" bind:value={email} />
-      </label>
-    {/snippet}
-  </FieldInline>
-  <FieldInline>
-    {#snippet label()}
-      <p>Frequency*</p>
-    {/snippet}
-    {#snippet input()}
-      <select bind:value={cron} class="select select-bordered">
-        <option value={WEEKLY}>Weekly</option>
-        <option value={DAILY}>Daily</option>
+      <select bind:value={channel} class="select select-bordered">
+        <option value="push">Push Notification</option>
+        <option value="email">Email Digest</option>
       </select>
     {/snippet}
   </FieldInline>
+  {#if channel === "email"}
+    <FieldInline>
+      {#snippet label()}
+        <p>Email Address*</p>
+      {/snippet}
+      {#snippet input()}
+        <label class="input input-bordered flex w-full items-center gap-2">
+          <input placeholder="email@example.com" bind:value={email} />
+        </label>
+      {/snippet}
+    </FieldInline>
+    <FieldInline>
+      {#snippet label()}
+        <p>Frequency*</p>
+      {/snippet}
+      {#snippet input()}
+        <select bind:value={cron} class="select select-bordered">
+          <option value={WEEKLY}>Weekly</option>
+          <option value={DAILY}>Daily</option>
+        </select>
+      {/snippet}
+    </FieldInline>
+  {/if}
   <FieldInline>
     {#snippet label()}
       <p>Space*</p>

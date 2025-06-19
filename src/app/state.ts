@@ -41,6 +41,9 @@ import {
   ROOM_JOIN,
   ROOM_ADD_USER,
   ROOM_REMOVE_USER,
+  ALERT_REQUEST_EMAIL,
+  ALERT_REQUEST_PUSH,
+  ALERT_STATUS,
   getGroupTags,
   getRelayTagValues,
   getPubkeyTagValues,
@@ -83,10 +86,6 @@ export const fromCsv = (s: string) => (s || "").split(",").filter(identity)
 export const ROOM = "h"
 
 export const PROTECTED = ["-"]
-
-export const ALERT = 32830
-
-export const ALERT_STATUS = 32831
 
 export const NOTIFIER_PUBKEY = import.meta.env.VITE_NOTIFIER_PUBKEY
 
@@ -344,7 +343,7 @@ export type Alert = {
 }
 
 export const alerts = deriveEventsMapped<Alert>(repository, {
-  filters: [{kinds: [ALERT]}],
+  filters: [{kinds: [ALERT_REQUEST_EMAIL, ALERT_REQUEST_PUSH]}],
   itemToEvent: item => item.event,
   eventToItem: async event => {
     const tags = parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, event.content))
