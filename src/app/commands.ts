@@ -1,6 +1,7 @@
 import * as nip19 from "nostr-tools/nip19"
 import {get} from "svelte/store"
-import {randomId, poll, uniq, equals, TIMEZONE, LOCALE} from "@welshman/lib"
+import {Capacitor} from "@capacitor/core"
+import {randomId, flatten, poll, uniq, equals, TIMEZONE, LOCALE} from "@welshman/lib"
 import type {Feed} from "@welshman/feeds"
 import type {TrustedEvent, EventContent} from "@welshman/util"
 import {
@@ -60,6 +61,7 @@ import {
   NOTIFIER_RELAY,
   userRoomsByUrl,
 } from "@app/state"
+import {getPushInfo} from "@app/push"
 
 // Utils
 
@@ -369,41 +371,45 @@ export const makeComment = ({event, content, tags = []}: CommentParams) =>
 export const publishComment = ({relays, ...params}: CommentParams & {relays: string[]}) =>
   publishThunk({event: makeComment(params), relays})
 
-export type EmailAlertParams = {
+export type AlertParams = {
   feed: Feed
-  cron: string
-  email: string
   description: string
   claims: Record<string, string>
+  push?: {
+    token: string
+    platform: string
+  }
+  email?: {
+    cron: string
+    email: string
+    handler: string[]
+  }
 }
 
-export const makeEmailAlert = async ({
-  cron,
-  email,
-  feed,
-  claims,
-  description,
-}: EmailAlertParams) => {
+export const makeAlert = async (params: AlertParams) => {
   const tags = [
-    ["feed", JSON.stringify(feed)],
-    ["cron", cron],
-    ["email", email],
+    ["feed", JSON.stringify(params.feed)],
     ["locale", LOCALE],
     ["timezone", TIMEZONE],
-    ["description", description],
-    [
-      "handler",
-      "31990:97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322:1737058597050",
-      "wss://relay.nostr.band/",
-      "web",
-    ],
+    ["description", params.description],
   ]
 
-  for (const [relay, claim] of Object.entries(claims)) {
+  for (const [relay, claim] of Object.entries(params.claims)) {
     tags.push(["claim", relay, claim])
   }
 
-  return makeEvent(ALERT_REQUEST_EMAIL, {
+  let kind: number
+  if (params.push) {
+    kind = ALERT_REQUEST_PUSH
+    tags.push(...Object.entries(params.push).map(flatten))
+  } else if (params.email) {
+    kind = ALERT_REQUEST_PUSH
+    tags.push(...Object.entries(params.email).map(flatten))
+  } else {
+    throw new Error("Alert must have either push or email params")
+  }
+
+  return makeEvent(kind, {
     content: await signer.get().nip44.encrypt(NOTIFIER_PUBKEY, JSON.stringify(tags)),
     tags: [
       ["d", randomId()],
@@ -412,37 +418,5 @@ export const makeEmailAlert = async ({
   })
 }
 
-export const publishEmailAlert = async (params: EmailAlertParams) =>
-  publishThunk({event: await makeEmailAlert(params), relays: [NOTIFIER_RELAY]})
-
-export type PushAlertParams = {
-  feed: Feed
-  description: string
-  claims: Record<string, string>
-}
-
-export const makePushAlert = async ({feed, claims, description}: PushAlertParams) => {
-  const tags = [
-    ["feed", JSON.stringify(feed)],
-    ["locale", LOCALE],
-    ["timezone", TIMEZONE],
-    ["description", description],
-    ["token", ""],
-    ["platform", ""],
-  ]
-
-  for (const [relay, claim] of Object.entries(claims)) {
-    tags.push(["claim", relay, claim])
-  }
-
-  return makeEvent(ALERT_REQUEST_PUSH, {
-    content: await signer.get().nip44.encrypt(NOTIFIER_PUBKEY, JSON.stringify(tags)),
-    tags: [
-      ["d", randomId()],
-      ["p", NOTIFIER_PUBKEY],
-    ],
-  })
-}
-
-export const publishPushAlert = async (params: PushAlertParams) =>
-  publishThunk({event: await makePushAlert(params), relays: [NOTIFIER_RELAY]})
+export const publishAlert = async (params: AlertParams) =>
+  publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})
