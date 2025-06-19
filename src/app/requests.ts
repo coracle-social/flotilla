@@ -13,12 +13,17 @@ import {
   sortBy,
   assoc,
   now,
+  removeNil,
+  isNotNil,
+  filterVals,
+  fromPairs,
 } from "@welshman/lib"
 import {
   MESSAGE,
   DELETE,
   THREAD,
   EVENT_TIME,
+  AUTH_INVITE,
   COMMENT,
   matchFilters,
   getTagValues,
@@ -429,4 +434,21 @@ export const discoverRelays = (lists: List[]) =>
     uniq(lists.flatMap($l => getRelaysFromList($l)))
       .filter(isShareableRelayUrl)
       .map(url => loadRelay(url)),
+  )
+
+export const requestRelayClaim = async (url: string) => {
+  const relay = await loadRelay(url)
+  const authors = removeNil([relay?.profile?.self, relay?.profile?.pubkey])
+  const filters = [{kinds: [AUTH_INVITE], authors, limit: 1}]
+  const events = await load({filters, relays: [url]})
+
+  if (events.length > 0) {
+    return getTagValue("claim", events[0].tags)
+  }
+}
+
+export const requestRelayClaims = async (urls: string[]) =>
+  filterVals(
+    isNotNil,
+    fromPairs(await Promise.all(urls.map(async url => [url, await requestRelayClaim(url)]))),
   )

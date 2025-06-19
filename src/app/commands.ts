@@ -372,12 +372,11 @@ export type AlertParams = {
   feed: Feed
   cron: string
   email: string
-  bunker: string
-  secret: string
   description: string
+  claims: Record<string, string>
 }
 
-export const makeAlert = async ({cron, email, feed, bunker, secret, description}: AlertParams) => {
+export const makeAlert = async ({cron, email, feed, claims, description}: AlertParams) => {
   const tags = [
     ["feed", JSON.stringify(feed)],
     ["cron", cron],
@@ -394,8 +393,8 @@ export const makeAlert = async ({cron, email, feed, bunker, secret, description}
     ],
   ]
 
-  if (bunker) {
-    tags.push(["nip46", secret, bunker])
+  for (const [relay, claim] of Object.entries(claims)) {
+    tags.push(["claim", relay, claim])
   }
 
   return makeEvent(ALERT, {
