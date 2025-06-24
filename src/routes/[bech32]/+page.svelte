@@ -2,7 +2,7 @@
   import {onMount} from "svelte"
   import * as nip19 from "nostr-tools/nip19"
   import type {TrustedEvent} from "@welshman/util"
-  import {Address, getIdFilters, getTagValue} from "@welshman/util"
+  import {Address, getIdFilters} from "@welshman/util"
   import {LOCAL_RELAY_URL} from "@welshman/relay"
   import {load} from "@welshman/net"
   import {page} from "$app/stores"

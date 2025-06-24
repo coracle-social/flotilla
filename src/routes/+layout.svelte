@@ -63,6 +63,7 @@
   } from "@app/state"
   import {loadUserData, listenForNotifications} from "@app/requests"
   import {theme} from "@app/theme"
+  import {initializePushNotifications} from "@app/push"
   import * as commands from "@app/commands"
   import * as requests from "@app/requests"
   import * as notifications from "@app/notifications"
@@ -72,6 +73,9 @@
   if ($session && !$signer) {
     dropSession($session.pubkey)
   }
+
+  // Initialize push notification handler asap
+  initializePushNotifications()
 
   const {children} = $props()
 
@@ -95,8 +99,8 @@
     })
 
     // Listen for navigation messages from service worker
-    navigator.serviceWorker?.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'NAVIGATE') {
+    navigator.serviceWorker?.addEventListener("message", event => {
+      if (event.data && event.data.type === "NAVIGATE") {
         goto(event.data.url)
       }
     })

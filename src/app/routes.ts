@@ -69,7 +69,7 @@ export const goToEvent = async (event: TrustedEvent, options: Record<string, any
   const urls = Array.from(tracker.getRelays(event.id))
   const path = await getEventPath(event, urls)
 
-  if (path.includes('://')) {
+  if (path.includes("://")) {
     window.open(path)
   } else {
     goto(path, options)
@@ -94,7 +94,7 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
     }
 
     if (event.kind === MESSAGE) {
-      return room ? makeRoomPath(url, room) : makeSpacePath(url, 'chat')
+      return room ? makeRoomPath(url, room) : makeSpacePath(url, "chat")
     }
 
     const kind = event.tags.find(nthEq(0, "K"))?.[1]
@@ -110,7 +110,7 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
       }
 
       if (parseInt(kind) === MESSAGE) {
-        return room ? makeRoomPath(url, room) : makeSpacePath(url, 'chat')
+        return room ? makeRoomPath(url, room) : makeSpacePath(url, "chat")
       }
     }
   }

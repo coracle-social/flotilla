@@ -1,18 +1,28 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {preventDefault} from "@lib/html"
-  import {randomInt, displayList, TIMEZONE, identity} from "@welshman/lib"
-  import {displayRelayUrl, getTagValue, THREAD, MESSAGE, EVENT_TIME, COMMENT} from "@welshman/util"
+  import {ucFirst} from "@lib/util"
+  import {decrypt} from "@welshman/signer"
+  import {randomInt, parseJson, fromPairs, displayList, TIMEZONE, identity} from "@welshman/lib"
+  import {
+    displayRelayUrl,
+    getTagValue,
+    getAddress,
+    THREAD,
+    MESSAGE,
+    EVENT_TIME,
+    COMMENT,
+  } from "@welshman/util"
   import type {Filter} from "@welshman/util"
   import {makeIntersectionFeed, makeRelayFeed, feedFromFilters} from "@welshman/feeds"
-  import {pubkey} from "@welshman/app"
+  import {pubkey, signer, getThunkError} from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {alerts, getMembershipUrls, getMembershipRoomsByUrl, userMembership} from "@app/state"
+  import {alerts, getMembershipUrls, userMembership, NOTIFIER_PUBKEY} from "@app/state"
   import {loadAlertStatuses, requestRelayClaims} from "@app/requests"
   import {publishAlert} from "@app/commands"
   import type {AlertParams} from "@app/commands"
@@ -114,20 +124,41 @@
         try {
           // @ts-ignore
           params[platform] = await getPushInfo()
+          params.description = `${ucFirst(platform)} push notification ${description}.`
         } catch (e: any) {
           return pushToast({
             theme: "error",
             message: String(e),
           })
         }
-
-        params.description = `Push notification alert ${description}.`
       }
 
-      const thunk = await publishAlert(params)
+      // If we don't do this we'll get an event rejection
+      await Pool.get().get(NOTIFIER_RELAY).auth.attemptAuth()
 
-      await thunk.result
-      await loadAlertStatuses($pubkey!)
+      const thunk = await publishAlert(params)
+      const error = await getThunkError(thunk)
+
+      if (error) {
+        return pushToast({
+          theme: "error",
+          message: `Failed to send your alert to the notification server (${error}).`,
+        })
+      }
+
+      // Fetch our new status to make sure it's active
+      const address = getAddress(thunk.event)
+      const statusEvents = await loadAlertStatuses($pubkey!)
+      const statusEvent = statusEvents.find(event => getTagValue("d", event.tags) === address)
+      const statusTags = statusEvent
+        ? parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, statusEvent.content))
+        : []
+      const {status = "error", message = "Your alert was not activated"}: Record<string, string> =
+        fromPairs(statusTags)
+
+      if (status === "error") {
+        return pushToast({theme: "error", message})
+      }
 
       pushToast({message: "Your alert has been successfully created!"})
       back()

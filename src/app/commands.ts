@@ -1,6 +1,5 @@
 import * as nip19 from "nostr-tools/nip19"
 import {get} from "svelte/store"
-import {Capacitor} from "@capacitor/core"
 import {randomId, flatten, poll, uniq, equals, TIMEZONE, LOCALE} from "@welshman/lib"
 import type {Feed} from "@welshman/feeds"
 import type {TrustedEvent, EventContent} from "@welshman/util"
@@ -21,6 +20,7 @@ import {
   ALERT_ANDROID,
   isSignedEvent,
   makeEvent,
+  getAddress,
   displayProfile,
   normalizeRelayUrl,
   makeList,
@@ -62,8 +62,8 @@ import {
   NOTIFIER_PUBKEY,
   NOTIFIER_RELAY,
   userRoomsByUrl,
+  deviceAlertAddresses,
 } from "@app/state"
-import {getPushInfo} from "@app/push"
 
 // Utils
 
@@ -388,10 +388,10 @@ export type AlertParams = {
     auth: string
   }
   ios?: {
-    nothing: string
+    device_token: string
   }
   android?: {
-    nothing: string
+    device_token: string
   }
 }
 
@@ -433,5 +433,10 @@ export const makeAlert = async (params: AlertParams) => {
   })
 }
 
-export const publishAlert = async (params: AlertParams) =>
-  publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})
+export const publishAlert = async (params: AlertParams) => {
+  const event = await signer.get().sign(await makeAlert(params))
+
+  deviceAlertAddresses.update($addresses => [...$addresses, getAddress(event)])
+
+  return publishThunk({event, relays: [NOTIFIER_RELAY]})
+}
