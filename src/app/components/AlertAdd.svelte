@@ -22,9 +22,15 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {alerts, getMembershipUrls, userMembership, NOTIFIER_PUBKEY} from "@app/state"
+  import {
+    alerts,
+    getMembershipUrls,
+    userMembership,
+    NOTIFIER_PUBKEY,
+    NOTIFIER_RELAY,
+  } from "@app/state"
   import {loadAlertStatuses, requestRelayClaims} from "@app/requests"
-  import {publishAlert} from "@app/commands"
+  import {publishAlert, attemptAuth} from "@app/commands"
   import type {AlertParams} from "@app/commands"
   import {platform, canSendPushNotifications, getPushInfo} from "@app/push"
   import {pushToast} from "@app/toast"
@@ -134,7 +140,7 @@
       }
 
       // If we don't do this we'll get an event rejection
-      await Pool.get().get(NOTIFIER_RELAY).auth.attemptAuth()
+      await attemptAuth(NOTIFIER_RELAY)
 
       const thunk = await publishAlert(params)
       const error = await getThunkError(thunk)

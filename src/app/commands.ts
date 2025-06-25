@@ -213,10 +213,15 @@ export const setInboxRelayPolicy = (url: string, enabled: boolean) => {
 
 // Relay access
 
+export const attemptAuth = (url: string) =>
+  Pool.get()
+    .get(url)
+    .auth.attemptAuth(e => signer.get()?.sign(e))
+
 export const checkRelayAccess = async (url: string, claim = "") => {
   const socket = Pool.get().get(url)
 
-  await socket.auth.attemptAuth(e => signer.get()?.sign(e))
+  await attemptAuth(url)
 
   const thunk = publishThunk({
     event: makeEvent(AUTH_JOIN, {tags: [["claim", claim]]}),
@@ -274,7 +279,7 @@ export const checkRelayAuth = async (url: string, timeout = 3000) => {
   const socket = Pool.get().get(url)
   const okStatuses = [AuthStatus.None, AuthStatus.Ok]
 
-  await socket.auth.attemptAuth(e => signer.get()?.sign(e))
+  await attemptAuth(url)
 
   // Only raise an error if it's not a timeout.
   // If it is, odds are the problem is with our signer, not the relay

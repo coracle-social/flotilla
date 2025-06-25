@@ -23,7 +23,7 @@ self.addEventListener("push", e => {
     if (data?.event) {
       url += nip19.neventEncode({
         id: data.event.id,
-        relays: data.relays || []
+        relays: data.relays || [],
       })
     }
 
