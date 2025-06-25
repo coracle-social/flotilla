@@ -35,6 +35,8 @@ export const makeChatPath = (pubkeys: string[]) => `/chat/${makeChatId(pubkeys)}
 
 export const makeRoomPath = (url: string, room: string) => `/spaces/${encodeRelay(url)}/${room}`
 
+export const makeSpaceChatPath = (url: string) => makeRoomPath(url, "chat")
+
 export const makeThreadPath = (url: string, eventId?: string) =>
   makeSpacePath(url, "threads", eventId)
 

@@ -9,6 +9,7 @@ import {
   makeChatPath,
   makeThreadPath,
   makeCalendarPath,
+  makeSpaceChatPath,
   makeRoomPath,
 } from "@app/routes"
 import {chats, getUrlsForEvent, userRoomsByUrl, repositoryStore} from "@app/state"
@@ -75,8 +76,10 @@ export const notifications = derived(
       const spacePath = makeSpacePath(url)
       const threadPath = makeThreadPath(url)
       const calendarPath = makeCalendarPath(url)
+      const messagesPath = makeSpaceChatPath(url)
       const threadEvents = allThreadEvents.filter(e => $getUrlsForEvent(e.id).includes(url))
       const calendarEvents = allCalendarEvents.filter(e => $getUrlsForEvent(e.id).includes(url))
+      const messagesEvents = allMessageEvents.filter(e => $getUrlsForEvent(e.id).includes(url))
 
       if (hasNotification(threadPath, threadEvents[0])) {
         paths.add(spacePath)
@@ -86,6 +89,11 @@ export const notifications = derived(
       if (hasNotification(calendarPath, calendarEvents[0])) {
         paths.add(spacePath)
         paths.add(calendarPath)
+      }
+
+      if (hasNotification(messagesPath, messagesEvents[0])) {
+        paths.add(spacePath)
+        paths.add(messagesPath)
       }
 
       const commentsByThreadId = groupBy(
