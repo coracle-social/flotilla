@@ -14,5 +14,8 @@ project(':capacitor-keyboard').projectDir = new File('../node_modules/.pnpm/@cap
 include ':capacitor-push-notifications'
 project(':capacitor-push-notifications').projectDir = new File('../node_modules/.pnpm/@capacitor+push-notifications@7.0.1_@capacitor+core@7.2.0/node_modules/@capacitor/push-notifications/android')
 
+include ':capawesome-capacitor-badge'
+project(':capawesome-capacitor-badge').projectDir = new File('../node_modules/.pnpm/@capawesome+capacitor-badge@7.0.1_@capacitor+core@7.2.0/node_modules/@capawesome/capacitor-badge/android')
+
 include ':nostr-signer-capacitor-plugin'
 project(':nostr-signer-capacitor-plugin').projectDir = new File('../node_modules/.pnpm/nostr-signer-capacitor-plugin@0.0.4_@capacitor+core@7.2.0/node_modules/nostr-signer-capacitor-plugin/android')

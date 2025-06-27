@@ -4,19 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@welshman/app': ../welshman/packages/app
-  '@welshman/content': ../welshman/packages/content
-  '@welshman/editor': ../welshman/packages/editor
-  '@welshman/feeds': ../welshman/packages/feeds
-  '@welshman/lib': ../welshman/packages/lib
-  '@welshman/net': ../welshman/packages/net
-  '@welshman/relay': ../welshman/packages/relay
-  '@welshman/router': ../welshman/packages/router
-  '@welshman/signer': ../welshman/packages/signer
-  '@welshman/store': ../welshman/packages/store
-  '@welshman/util': ../welshman/packages/util
-
 importers:
 
   .:
@@ -43,6 +30,9 @@ importers:
         specifier: ^7.0.0
         version: 7.0.1(@capacitor/core@7.2.0)
       '@capacitor/push-notifications':
+        specifier: ^7.0.1
+        version: 7.0.1(@capacitor/core@7.2.0)
+      '@capawesome/capacitor-badge':
         specifier: ^7.0.1
         version: 7.0.1(@capacitor/core@7.2.0)
       '@poppanator/sveltekit-svg':
@@ -755,6 +745,11 @@ packages:
 
   '@capacitor/push-notifications@7.0.1':
     resolution: {integrity: sha512-nSHsMSrTHX5pOkX1Khse75/uvSx/JTcXG+9aT6a66CvzalH6MCs0ha8Jv+xu0k9xW8caO+qSUMjfj5Oy82Uxmw==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+
+  '@capawesome/capacitor-badge@7.0.1':
+    resolution: {integrity: sha512-jhVieRRVLgGO1NU7PW8uWZmf3WD4IsYUlkrJ82KuoRgLFx1tbJGwHU1ro0sUJmEwfLO9vldhBnJJ/J5nHrjbQQ==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
 
@@ -5347,6 +5342,10 @@ snapshots:
       '@capacitor/core': 7.2.0
 
   '@capacitor/push-notifications@7.0.1(@capacitor/core@7.2.0)':
+    dependencies:
+      '@capacitor/core': 7.2.0
+
+  '@capawesome/capacitor-badge@7.0.1(@capacitor/core@7.2.0)':
     dependencies:
       '@capacitor/core': 7.2.0
 

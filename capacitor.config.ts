@@ -15,6 +15,10 @@ const config: CapacitorConfig = {
       style: "DARK",
       resizeOnFullScreen: true,
     },
+    Badge: {
+      persist: true,
+      autoClear: true
+    },
   },
   // Use this for live reload https://capacitorjs.com/docs/guides/live-reload
   // server: {

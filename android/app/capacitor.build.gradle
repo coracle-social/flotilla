@@ -13,6 +13,7 @@ dependencies {
     implementation project(':capacitor-app')
     implementation project(':capacitor-keyboard')
     implementation project(':capacitor-push-notifications')
+    implementation project(':capawesome-capacitor-badge')
     implementation project(':nostr-signer-capacitor-plugin')
 
 }
