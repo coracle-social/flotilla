@@ -20,8 +20,6 @@
     const convs = []
 
     for (const [room, messages] of groupBy(e => getTagValue("h", e.tags), $messages).entries()) {
-      if (!room) continue
-
       const avgTime = avg(overlappingPairs(messages).map(([a, b]) => a.created_at - b.created_at))
       const groups: TrustedEvent[][] = []
       const group: TrustedEvent[] = []
@@ -79,7 +77,7 @@
         {#if $messages.length > 0}
           {@const events = $messages.slice(0, 1)}
           {@const event = events[0]}
-          {@const room = getTagValue("h", event.tags)!}
+          {@const room = getTagValue("h", event.tags)}
           <ConversationCard
             {url}
             {room}

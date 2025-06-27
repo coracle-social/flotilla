@@ -11,7 +11,7 @@
 
   type Props = {
     url: string
-    room: string
+    room?: string
     events: TrustedEvent[]
     latest: TrustedEvent
     earliest: TrustedEvent
@@ -27,8 +27,12 @@
       <ProfileCircle pubkey={earliest.pubkey} size={10} />
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-2 text-sm opacity-70">
-          <span class="font-medium text-blue-400">#{displayChannel(url, room)}</span>
-          <span class="opacity-50">•</span>
+          {#if room}
+            <span class="font-medium text-blue-400">
+              #{displayChannel(url, room)}
+            </span>
+            <span class="opacity-50">•</span>
+          {/if}
           <span>{formatTimestamp(earliest.created_at)}</span>
         </div>
         <Content minimalQuote minLength={100} maxLength={400} event={earliest} />
