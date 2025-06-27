@@ -13,7 +13,6 @@ import {
   sortBy,
   assoc,
   now,
-  removeNil,
   isNotNil,
   filterVals,
   fromPairs,
@@ -442,9 +441,7 @@ export const discoverRelays = (lists: List[]) =>
   )
 
 export const requestRelayClaim = async (url: string) => {
-  const relay = await loadRelay(url)
-  const authors = removeNil([relay?.profile?.self, relay?.profile?.pubkey])
-  const filters = [{kinds: [AUTH_INVITE], authors, limit: 1}]
+  const filters = [{kinds: [AUTH_INVITE], limit: 1}]
   const events = await load({filters, relays: [url]})
 
   if (events.length > 0) {

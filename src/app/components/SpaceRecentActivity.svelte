@@ -62,8 +62,6 @@
   }
 
   let limit = $state(3)
-
-  $inspect($messages)
 </script>
 
 <div class="card2 bg-alt">

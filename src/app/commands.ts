@@ -306,20 +306,26 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
 
 // Actions
 
-export const makeDelete = ({event}: {event: TrustedEvent}) => {
-  const tags = [["k", String(event.kind)], ...tagEvent(event)]
+export const makeDelete = ({event, tags = []}: {event: TrustedEvent; tags?: string[][]}) => {
+  const thisTags = [["k", String(event.kind)], ...tagEvent(event), ...tags]
   const groupTag = getTag("h", event.tags)
 
   if (groupTag) {
-    tags.push(PROTECTED)
-    tags.push(groupTag)
+    thisTags.push(PROTECTED, groupTag)
   }
 
-  return makeEvent(DELETE, {tags})
+  return makeEvent(DELETE, {tags: thisTags})
 }
 
-export const publishDelete = ({relays, event}: {relays: string[]; event: TrustedEvent}) =>
-  publishThunk({event: makeDelete({event}), relays})
+export const publishDelete = ({
+  relays,
+  event,
+  tags = [],
+}: {
+  relays: string[]
+  event: TrustedEvent
+  tags?: string[][]
+}) => publishThunk({event: makeDelete({event, tags}), relays})
 
 export type ReportParams = {
   event: TrustedEvent

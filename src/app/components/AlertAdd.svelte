@@ -29,7 +29,7 @@
     NOTIFIER_PUBKEY,
     NOTIFIER_RELAY,
   } from "@app/state"
-  import {loadAlertStatuses, requestRelayClaims} from "@app/requests"
+  import {loadAlertStatuses, requestRelayClaim} from "@app/requests"
   import {publishAlert, attemptAuth} from "@app/commands"
   import type {AlertParams} from "@app/commands"
   import {platform, canSendPushNotifications, getPushInfo} from "@app/push"
@@ -59,6 +59,7 @@
 
   let loading = $state(false)
   let cron = $state(WEEKLY)
+  let claim = $state("")
   let email = $state($alerts.map(a => getTagValue("email", a.tags)).filter(identity)[0] || "")
 
   const back = () => history.back()
@@ -108,7 +109,7 @@
     loading = true
 
     try {
-      const claims = await requestRelayClaims([relay])
+      const claims = claim ? {[relay]: claim} : {}
       const feed = makeIntersectionFeed(feedFromFilters(filters), makeRelayFeed(relay))
       const description = `for ${displayList(display)} on ${displayRelayUrl(relay)}`
       const params: AlertParams = {feed, claims, description}
@@ -177,6 +178,12 @@
     if (!canSendPushNotifications()) {
       channel = "email"
     }
+
+    requestRelayClaim(relay).then(code => {
+      if (code) {
+        claim = code
+      }
+    })
   })
 </script>
 
@@ -254,6 +261,22 @@
           Chat
         </span>
       </div>
+    {/snippet}
+  </FieldInline>
+  <FieldInline>
+    {#snippet label()}
+      <p>Invite Code</p>
+    {/snippet}
+    {#snippet input()}
+      <label class="input input-bordered flex w-full items-center gap-2">
+        <input bind:value={claim} />
+      </label>
+    {/snippet}
+    {#snippet info()}
+      <p>
+        To get notifications from private spaces, please provide an invite code which grants access
+        to the space.
+      </p>
     {/snippet}
   </FieldInline>
   <ModalFooter>
