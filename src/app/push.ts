@@ -2,7 +2,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {Capacitor} from "@capacitor/core"
 import type {ActionPerformed, RegistrationError, Token} from "@capacitor/push-notifications"
 import {PushNotifications} from "@capacitor/push-notifications"
-import {sleep, parseJson} from "@welshman/lib"
+import {parseJson, poll} from "@welshman/lib"
 import {isSignedEvent} from "@welshman/util"
 import {goto} from "$app/navigation"
 import {VAPID_PUBLIC_KEY} from "@app/state"
@@ -69,6 +69,11 @@ export const getWebPushInfo = async () => {
   }
 }
 
+export type PushInfo = {
+  device_token: string
+  bundle_identifier?: string
+}
+
 export const getCapacitorPushInfo = async () => {
   let status = await PushNotifications.checkPermissions()
 
@@ -92,13 +97,22 @@ export const getCapacitorPushInfo = async () => {
   })
 
   await PushNotifications.register()
-  await sleep(100)
+  await poll({
+    condition: () => Boolean(device_token),
+    signal: AbortSignal.timeout(5000),
+  })
 
   if (!device_token) {
     throw new Error(error)
   }
 
-  return {device_token}
+  const info: PushInfo = {device_token}
+
+  if (platform === "ios") {
+    info.bundle_identifier = "social.flotilla"
+  }
+
+  return info
 }
 
 export const getPushInfo = (): Promise<Record<string, string>> => {

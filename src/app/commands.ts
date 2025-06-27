@@ -394,6 +394,7 @@ export type AlertParams = {
   }
   ios?: {
     device_token: string
+    bundle_identifier: string
   }
   android?: {
     device_token: string

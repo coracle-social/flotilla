@@ -112,9 +112,7 @@
           <Icon icon="chat-round" />
           Chat
           {#if $notifications.has(chatPath)}
-            <div
-              class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-primary-content"
-              transition:fade>
+            <div class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-primary" transition:fade>
             </div>
           {/if}
         </div>
