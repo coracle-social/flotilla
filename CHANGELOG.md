@@ -1,5 +1,15 @@
 # Changelog
 
+# 1.2.0
+
+* Fix sort order of thread comments
+* Fix link display when no title is available
+* Fix making profiles non-protected
+* Replace bunker url with relay claims for notifier auth
+* Add push notifications on all platforms
+* Add "mark all as read" on desktop
+* Re-design space dashboard
+
 # 1.1.1
 
 * Add chat quick link
