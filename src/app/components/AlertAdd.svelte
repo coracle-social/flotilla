@@ -41,6 +41,7 @@
     notifyChat?: boolean
     notifyThreads?: boolean
     notifyCalendar?: boolean
+    hideSpaceField?: boolean
   }
 
   let {
@@ -49,6 +50,7 @@
     notifyChat = true,
     notifyThreads = true,
     notifyCalendar = true,
+    hideSpaceField = false,
   }: Props = $props()
 
   const timezoneOffset = parseInt(TIMEZONE.slice(3)) / 100
@@ -229,19 +231,21 @@
       {/snippet}
     </FieldInline>
   {/if}
-  <FieldInline>
-    {#snippet label()}
-      <p>Space*</p>
-    {/snippet}
-    {#snippet input()}
-      <select bind:value={relay} class="select select-bordered">
-        <option value="" disabled selected>Choose a space URL</option>
-        {#each getMembershipUrls($userMembership) as url (url)}
-          <option value={url}>{displayRelayUrl(url)}</option>
-        {/each}
-      </select>
-    {/snippet}
-  </FieldInline>
+  {#if !hideSpaceField}
+    <FieldInline>
+      {#snippet label()}
+        <p>Space*</p>
+      {/snippet}
+      {#snippet input()}
+        <select bind:value={relay} class="select select-bordered">
+          <option value="" disabled selected>Choose a space URL</option>
+          {#each getMembershipUrls($userMembership) as url (url)}
+            <option value={url}>{displayRelayUrl(url)}</option>
+          {/each}
+        </select>
+      {/snippet}
+    </FieldInline>
+  {/if}
   <FieldInline>
     {#snippet label()}
       <p>Notifications*</p>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {displayRelayUrl, getTagValue} from "@welshman/util"
+  import {displayRelayUrl, getTagValue, MESSAGE, THREAD, EVENT_TIME} from "@welshman/util"
   import {pubkey, deriveRelay} from "@welshman/app"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
@@ -14,7 +14,6 @@
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import ProfileList from "@app/components/ProfileList.svelte"
   import AlertAdd from "@app/components/AlertAdd.svelte"
-  import AlertDelete from "@app/components/AlertDelete.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import MenuSpaceRoomItem from "@app/components/MenuSpaceRoomItem.svelte"
   import InfoMissingRooms from "@app/components/InfoMissingRooms.svelte"
@@ -40,7 +39,6 @@
   const calendarPath = makeSpacePath(url, "calendar")
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url)
-  const alert = $derived($deviceAlerts.find(a => getTagValue("feed", a.tags)?.includes(url)))
 
   const openMenu = () => {
     showMenu = true
@@ -67,9 +65,22 @@
 
   const addRoom = () => pushModal(RoomCreate, {url}, {replaceState})
 
-  const addAlert = () => pushModal(AlertAdd, {relay: url, channel: "push"}, {replaceState})
+  const addAlert = () => {
+    const alert = $deviceAlerts.find(a => getTagValue("feed", a.tags)?.includes(url))
+    const feed = getTagValue("feed", alert?.tags || [])
 
-  const deleteAlert = () => pushModal(AlertDelete, {alert}, {replaceState})
+    const props = {
+      relay: url,
+      channel: "push",
+      notifyChat: feed ? feed.includes(String(MESSAGE)) : true,
+      notifyThreads: feed ? feed.includes(String(THREAD)) : true,
+      notifyCalendar: feed ? feed.includes(String(EVENT_TIME)) : true,
+      removeDuplicates: true,
+      hideSpaceField: true,
+    }
+
+    pushModal(AlertAdd, props, {replaceState})
+  }
 
   let showMenu = $state(false)
   let replaceState = $state(false)
@@ -85,11 +96,13 @@
   })
 </script>
 
-<div bind:this={element}>
-  <SecondaryNavSection class="max-h-screen">
+<div bind:this={element} class="flex h-screen flex-col justify-between">
+  <SecondaryNavSection>
     <div>
       <SecondaryNavItem class="w-full !justify-between" onclick={openMenu}>
-        <strong class="ellipsize">{displayRelayUrl(url)}</strong>
+        <strong class="ellipsize flex items-center gap-3">
+          {displayRelayUrl(url)}
+        </strong>
         <Icon icon="alt-arrow-down" />
       </SecondaryNavItem>
       {#if showMenu}
@@ -109,21 +122,6 @@
                 Create Invite
               </Button>
             </li>
-            {#if alert}
-              <li>
-                <Button onclick={deleteAlert}>
-                  <Icon icon="bell" />
-                  Disable alerts
-                </Button>
-              </li>
-            {:else}
-              <li>
-                <Button onclick={addAlert}>
-                  <Icon icon="bell" />
-                  Enable alerts
-                </Button>
-              </li>
-            {/if}
             <li>
               {#if $userRoomsByUrl.has(url)}
                 <Button onclick={leaveSpace} class="text-error">
@@ -194,6 +192,11 @@
           Where did my rooms go?
         </Button>
       {/if}
-    </div>
-  </SecondaryNavSection>
+    </div></SecondaryNavSection>
+  <div class="p-4">
+    <button class="btn btn-neutral btn-sm w-full" onclick={addAlert}>
+      <Icon icon="bell" />
+      Manage Alerts
+    </button>
+  </div>
 </div>
