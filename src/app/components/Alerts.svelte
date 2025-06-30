@@ -1,20 +1,25 @@
 <script lang="ts">
-  import {onMount} from "svelte"
-  import {pubkey} from "@welshman/app"
+  import {getTagValue} from "@welshman/util"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import AlertAdd from "@app/components/AlertAdd.svelte"
   import AlertItem from "@app/components/AlertItem.svelte"
-  import {loadAlertStatuses, loadAlerts} from "@app/requests"
   import {pushModal} from "@app/modal"
   import {alerts} from "@app/state"
 
-  const startAlert = () => pushModal(AlertAdd)
+  type Props = {
+    url?: string
+    channel?: string
+    hideSpaceField?: boolean
+  }
 
-  onMount(() => {
-    loadAlertStatuses($pubkey!)
-    loadAlerts($pubkey!)
-  })
+  const {url = "", channel = "push", hideSpaceField = false}: Props = $props()
+
+  const startAlert = () => pushModal(AlertAdd, {url, channel, hideSpaceField})
+
+  const filteredAlerts = $derived(
+    url ? $alerts.filter(a => getTagValue("feed", a.tags)?.includes(url)) : $alerts,
+  )
 </script>
 
 <div class="card2 bg-alt flex flex-col gap-6 shadow-xl">
@@ -29,10 +34,10 @@
     </Button>
   </div>
   <div class="col-4">
-    {#each $alerts as alert (alert.event.id)}
+    {#each filteredAlerts as alert (alert.event.id)}
       <AlertItem {alert} />
     {:else}
-      <p class="text-center opacity-75 py-12">No alerts found</p>
+      <p class="text-center opacity-75 py-12">Nothing here yet!</p>
     {/each}
   </div>
 </div>

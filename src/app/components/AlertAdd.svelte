@@ -1,7 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {preventDefault} from "@lib/html"
-  import {ucFirst} from "@lib/util"
   import {decrypt} from "@welshman/signer"
   import {randomInt, parseJson, fromPairs, displayList, TIMEZONE, identity} from "@welshman/lib"
   import {
@@ -32,12 +31,12 @@
   import {loadAlertStatuses, requestRelayClaim} from "@app/requests"
   import {publishAlert, attemptAuth} from "@app/commands"
   import type {AlertParams} from "@app/commands"
-  import {platform, canSendPushNotifications, getPushInfo} from "@app/push"
+  import {platform, platformName, canSendPushNotifications, getPushInfo} from "@app/push"
   import {pushToast} from "@app/toast"
 
   type Props = {
+    url?: string
     channel?: string
-    relay?: string
     notifyChat?: boolean
     notifyThreads?: boolean
     notifyCalendar?: boolean
@@ -45,7 +44,7 @@
   }
 
   let {
-    relay = "",
+    url = "",
     channel = "email",
     notifyChat = true,
     notifyThreads = true,
@@ -74,7 +73,7 @@
       })
     }
 
-    if (!relay) {
+    if (!url) {
       return pushToast({
         theme: "error",
         message: "Please select a space",
@@ -111,9 +110,9 @@
     loading = true
 
     try {
-      const claims = claim ? {[relay]: claim} : {}
-      const feed = makeIntersectionFeed(feedFromFilters(filters), makeRelayFeed(relay))
-      const description = `for ${displayList(display)} on ${displayRelayUrl(relay)}`
+      const claims = claim ? {[url]: claim} : {}
+      const feed = makeIntersectionFeed(feedFromFilters(filters), makeRelayFeed(url))
+      const description = `for ${displayList(display)} on ${displayRelayUrl(url)}`
       const params: AlertParams = {feed, claims, description}
 
       if (channel === "email") {
@@ -133,7 +132,7 @@
         try {
           // @ts-ignore
           params[platform] = await getPushInfo()
-          params.description = `${ucFirst(platform)} push notification ${description}.`
+          params.description = `${platformName} push notification ${description}.`
         } catch (e: any) {
           return pushToast({
             theme: "error",
@@ -181,11 +180,13 @@
       channel = "email"
     }
 
-    requestRelayClaim(relay).then(code => {
-      if (code) {
-        claim = code
-      }
-    })
+    if (url) {
+      requestRelayClaim(url).then(code => {
+        if (code) {
+          claim = code
+        }
+      })
+    }
   })
 </script>
 
@@ -237,7 +238,7 @@
         <p>Space*</p>
       {/snippet}
       {#snippet input()}
-        <select bind:value={relay} class="select select-bordered">
+        <select bind:value={url} class="select select-bordered">
           <option value="" disabled selected>Choose a space URL</option>
           {#each getMembershipUrls($userMembership) as url (url)}
             <option value={url}>{displayRelayUrl(url)}</option>

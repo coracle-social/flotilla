@@ -20,7 +20,6 @@ import {
   ALERT_ANDROID,
   isSignedEvent,
   makeEvent,
-  getAddress,
   displayProfile,
   normalizeRelayUrl,
   makeList,
@@ -62,7 +61,6 @@ import {
   NOTIFIER_PUBKEY,
   NOTIFIER_RELAY,
   userRoomsByUrl,
-  deviceAlertAddresses,
 } from "@app/state"
 
 // Utils
@@ -445,10 +443,5 @@ export const makeAlert = async (params: AlertParams) => {
   })
 }
 
-export const publishAlert = async (params: AlertParams) => {
-  const event = await signer.get().sign(await makeAlert(params))
-
-  deviceAlertAddresses.update($addresses => [...$addresses, getAddress(event)])
-
-  return publishThunk({event, relays: [NOTIFIER_RELAY]})
-}
+export const publishAlert = async (params: AlertParams) =>
+  publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})

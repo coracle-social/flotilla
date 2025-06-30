@@ -65,7 +65,6 @@ import {
   getTag,
   getTagValue,
   getTagValues,
-  getAddress,
 } from "@welshman/util"
 import type {TrustedEvent, SignedEvent, PublishedList, List, Filter} from "@welshman/util"
 import {Nip59, decrypt} from "@welshman/signer"
@@ -349,27 +348,21 @@ export const {
 
 // Alerts
 
-export const deviceAlertAddresses = synced<string[]>("deviceAlertAddresses", [])
-
 export type Alert = {
   event: TrustedEvent
   tags: string[][]
 }
 
-export const alerts = deriveEventsMapped<Alert>(repository, {
-  filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]}],
-  itemToEvent: item => item.event,
-  eventToItem: async event => {
-    const tags = parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, event.content))
+export const alerts = withGetter(
+  deriveEventsMapped<Alert>(repository, {
+    filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]}],
+    itemToEvent: item => item.event,
+    eventToItem: async event => {
+      const tags = parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, event.content))
 
-    return {event, tags}
-  },
-})
-
-export const deviceAlerts = derived(
-  [deviceAlertAddresses, alerts],
-  ([$deviceAlertAddresses, $alerts]) =>
-    $alerts.filter(a => $deviceAlertAddresses.includes(getAddress(a.event))),
+      return {event, tags}
+    },
+  }),
 )
 
 // Alert Statuses
@@ -379,15 +372,17 @@ export type AlertStatus = {
   tags: string[][]
 }
 
-export const alertStatuses = deriveEventsMapped<AlertStatus>(repository, {
-  filters: [{kinds: [ALERT_STATUS]}],
-  itemToEvent: item => item.event,
-  eventToItem: async event => {
-    const tags = parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, event.content))
+export const alertStatuses = withGetter(
+  deriveEventsMapped<AlertStatus>(repository, {
+    filters: [{kinds: [ALERT_STATUS]}],
+    itemToEvent: item => item.event,
+    eventToItem: async event => {
+      const tags = parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, event.content))
 
-    return {event, tags}
-  },
-})
+      return {event, tags}
+    },
+  }),
+)
 
 export const deriveAlertStatus = (address: string) =>
   derived(alertStatuses, statuses => statuses.find(s => getTagValue("d", s.event.tags) === address))

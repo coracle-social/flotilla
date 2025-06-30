@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {displayRelayUrl, getTagValue, MESSAGE, THREAD, EVENT_TIME} from "@welshman/util"
-  import {pubkey, deriveRelay} from "@welshman/app"
+  import {displayRelayUrl, getTagValue} from "@welshman/util"
+  import {deriveRelay} from "@welshman/app"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -14,6 +14,7 @@
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import ProfileList from "@app/components/ProfileList.svelte"
   import AlertAdd from "@app/components/AlertAdd.svelte"
+  import Alerts from "@app/components/Alerts.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import MenuSpaceRoomItem from "@app/components/MenuSpaceRoomItem.svelte"
   import InfoMissingRooms from "@app/components/InfoMissingRooms.svelte"
@@ -23,10 +24,9 @@
     memberships,
     deriveUserRooms,
     deriveOtherRooms,
-    deviceAlerts,
     hasNip29,
+    alerts,
   } from "@app/state"
-  import {loadAlerts} from "@app/requests"
   import {notifications} from "@app/notifications"
   import {pushModal} from "@app/modal"
   import {makeSpacePath} from "@app/routes"
@@ -39,6 +39,7 @@
   const calendarPath = makeSpacePath(url, "calendar")
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url)
+  const hasAlerts = $derived($alerts.some(a => getTagValue("feed", a.tags)?.includes(url)))
 
   const openMenu = () => {
     showMenu = true
@@ -65,21 +66,11 @@
 
   const addRoom = () => pushModal(RoomCreate, {url}, {replaceState})
 
-  const addAlert = () => {
-    const alert = $deviceAlerts.find(a => getTagValue("feed", a.tags)?.includes(url))
-    const feed = getTagValue("feed", alert?.tags || [])
+  const manageAlerts = () => {
+    const component = hasAlerts ? Alerts : AlertAdd
+    const params = {url, channel: "push", hideSpaceField: true}
 
-    const props = {
-      relay: url,
-      channel: "push",
-      notifyChat: feed ? feed.includes(String(MESSAGE)) : true,
-      notifyThreads: feed ? feed.includes(String(THREAD)) : true,
-      notifyCalendar: feed ? feed.includes(String(EVENT_TIME)) : true,
-      removeDuplicates: true,
-      hideSpaceField: true,
-    }
-
-    pushModal(AlertAdd, props, {replaceState})
+    pushModal(component, params, {replaceState})
   }
 
   let showMenu = $state(false)
@@ -92,11 +83,10 @@
 
   onMount(() => {
     replaceState = Boolean(element?.closest(".drawer"))
-    loadAlerts($pubkey!)
   })
 </script>
 
-<div bind:this={element} class="flex h-screen flex-col justify-between">
+<div bind:this={element} class="flex h-full flex-col justify-between">
   <SecondaryNavSection>
     <div>
       <SecondaryNavItem class="w-full !justify-between" onclick={openMenu}>
@@ -192,9 +182,10 @@
           Where did my rooms go?
         </Button>
       {/if}
-    </div></SecondaryNavSection>
+    </div>
+  </SecondaryNavSection>
   <div class="p-4">
-    <button class="btn btn-neutral btn-sm w-full" onclick={addAlert}>
+    <button class="btn btn-neutral btn-sm w-full" onclick={manageAlerts}>
       <Icon icon="bell" />
       Manage Alerts
     </button>

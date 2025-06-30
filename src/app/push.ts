@@ -5,9 +5,12 @@ import {PushNotifications} from "@capacitor/push-notifications"
 import {parseJson, poll} from "@welshman/lib"
 import {isSignedEvent} from "@welshman/util"
 import {goto} from "$app/navigation"
+import {ucFirst} from "@lib/util"
 import {VAPID_PUBLIC_KEY} from "@app/state"
 
 export const platform = Capacitor.getPlatform()
+
+export const platformName = platform === "ios" ? "iOS" : ucFirst(platform)
 
 export const initializePushNotifications = () => {
   if (platform === "web") return
