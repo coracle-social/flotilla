@@ -6,7 +6,7 @@
   import ContentSearch from "@lib/components/ContentSearch.svelte"
   import ChatItem from "@app/components/ChatItem.svelte"
   import ChatStart from "@app/components/ChatStart.svelte"
-  import ChatMenuMobile from "@app/components/ChatMenuMobile.svelte"
+  import ChatMenu from "@app/components/ChatMenu.svelte"
   import {chatSearch} from "@app/state"
   import {pushModal} from "@app/modal"
   import {setChecked} from "@app/notifications"
@@ -15,7 +15,7 @@
 
   const startChat = () => pushModal(ChatStart)
 
-  const openMenu = () => pushModal(ChatMenuMobile)
+  const openMenu = () => pushModal(ChatMenu)
 
   const chats = $derived($chatSearch.searchOptions(term))
 

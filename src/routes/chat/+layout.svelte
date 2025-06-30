@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type {Snippet} from "svelte"
   import {page} from "$app/stores"
   import {WRAP} from "@welshman/util"
   import {Router} from "@welshman/router"
@@ -10,18 +11,19 @@
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import SecondaryNavHeader from "@lib/components/SecondaryNavHeader.svelte"
   import SecondaryNavSection from "@lib/components/SecondaryNavSection.svelte"
-  import ChatStart from "@app/components/ChatStart.svelte"
+  import ChatMenu from "@app/components/ChatMenu.svelte"
   import ChatItem from "@app/components/ChatItem.svelte"
   import {chatSearch} from "@app/state"
   import {pullConservatively} from "@app/requests"
   import {pushModal} from "@app/modal"
-  interface Props {
-    children?: import("svelte").Snippet
+
+  type Props = {
+    children?: Snippet
   }
 
   const {children}: Props = $props()
 
-  const startChat = () => pushModal(ChatStart)
+  const openMenu = () => pushModal(ChatMenu)
 
   const promise = pullConservatively({
     filters: [{kinds: [WRAP], "#p": [$pubkey!]}],
@@ -37,8 +39,8 @@
   <SecondaryNavSection>
     <SecondaryNavHeader>
       Chats
-      <Button onclick={startChat}>
-        <Icon icon="add-circle" />
+      <Button onclick={openMenu}>
+        <Icon icon="menu-dots" />
       </Button>
     </SecondaryNavHeader>
   </SecondaryNavSection>
