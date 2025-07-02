@@ -242,9 +242,7 @@ export const checkRelayAccess = async (url: string, claim = "") => {
     if (error?.startsWith("mute: ")) return
 
     // Ignore rejected empty claims
-    if (!claim && error?.includes("invite code")) {
-      return `failed to request access to relay`
-    }
+    if (!claim && error?.includes("invite code")) return
 
     return message
   }

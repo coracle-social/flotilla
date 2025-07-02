@@ -17,11 +17,11 @@
   import {pushModal} from "@app/modal"
   import {clip} from "@app/toast"
 
+  const npub = nip19.npubEncode($pubkey!)
   const profile = deriveProfile($pubkey!)
-
   const pubkeyDisplay = displayPubkey($pubkey!)
 
-  const copyNpub = () => clip(nip19.npubEncode($session!.pubkey))
+  const copyNpub = () => clip(npub)
 
   const copyNsec = () => clip(nip19.nsecEncode(hexToBytes($session!.secret!)))
 
@@ -93,7 +93,7 @@
         <label class="input input-bordered flex w-full items-center justify-between gap-2">
           <div class="row-2 flex-grow items-center">
             <Icon icon="link-round" />
-            <input readonly class="ellipsize flex-grow" value={$session?.pubkey} />
+            <input readonly class="ellipsize flex-grow" value={npub} />
           </div>
           <Button class="flex items-center" onclick={copyNpub}>
             <Icon icon="copy" />
