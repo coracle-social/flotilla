@@ -37,6 +37,7 @@ import {
   CLIENT_AUTH,
   AUTH_JOIN,
   REACTION,
+  ZAP_REQUEST,
   ZAP_RESPONSE,
   DIRECT_MESSAGE,
   DIRECT_MESSAGE_FILE,
@@ -134,7 +135,7 @@ export const REACTION_KINDS = [REACTION, ZAP_RESPONSE]
 
 export const NIP46_PERMS =
   "nip44_encrypt,nip44_decrypt," +
-  [CLIENT_AUTH, AUTH_JOIN, MESSAGE, THREAD, COMMENT, ROOMS, WRAP, REACTION]
+  [CLIENT_AUTH, AUTH_JOIN, MESSAGE, THREAD, COMMENT, ROOMS, WRAP, REACTION, ZAP_REQUEST]
     .map(k => `sign_event:${k}`)
     .join(",")
 
@@ -345,6 +346,39 @@ export const {
   getKey: settings => settings.event.pubkey,
   load: makeOutboxLoader(SETTINGS),
 })
+
+// Wallets
+
+export type WebLNInfo = {
+  methods?: string[]
+  supports?: string[]
+  version?: string
+  node?: {
+    alias: string
+  }
+}
+
+export type NWCInfo = {
+  lud16: string
+  secret: string
+  relayUrl: string
+  walletPubkey: string
+  nostrWalletConnectUrl: string
+}
+
+export type Wallet =
+  | {
+      type: "webln"
+      info: WebLNInfo
+    }
+  | {
+      type: "nwc"
+      info: NWCInfo
+    }
+
+export const wallet = synced<Wallet | undefined>("wallet", undefined)
+
+export const getWebLn = () => (window as any).webln
 
 // Alerts
 

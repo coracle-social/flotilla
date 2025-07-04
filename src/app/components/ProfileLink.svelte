@@ -9,14 +9,15 @@
   type Props = {
     pubkey: string
     url?: string
+    class?: string
     unstyled?: boolean
   }
 
-  const {pubkey, url, unstyled}: Props = $props()
+  const {pubkey, url, unstyled, ...props}: Props = $props()
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey, url})
 </script>
 
-<Button onclick={preventDefault(openProfile)} class={cx({"link-content": !unstyled})}>
+<Button onclick={preventDefault(openProfile)} class={cx(props.class, {"link-content": !unstyled})}>
   @<ProfileName {pubkey} {url} />
 </Button>

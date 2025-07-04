@@ -1,3 +1,4 @@
+import {nwc} from "@getalby/sdk"
 import * as nip19 from "nostr-tools/nip19"
 import {get} from "svelte/store"
 import {randomId, flatten, poll, uniq, equals, TIMEZONE, LOCALE} from "@welshman/lib"
@@ -55,6 +56,8 @@ import {
   getThunkError,
 } from "@welshman/app"
 import {
+  wallet,
+  getWebLn,
   PROTECTED,
   userMembership,
   INDEXER_RELAYS,
@@ -443,3 +446,19 @@ export const makeAlert = async (params: AlertParams) => {
 
 export const publishAlert = async (params: AlertParams) =>
   publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})
+
+export const payInvoice = async (invoice: string) => {
+  const $wallet = get(wallet)
+
+  if (!$wallet) {
+    throw new Error("No wallet is connected")
+  }
+
+  if ($wallet.type === "nwc") {
+    return new nwc.NWCClient($wallet.info).payInvoice({invoice})
+  } else if ($wallet.type === "webln") {
+    return getWebLn()
+      .enable()
+      .then(() => getWebLn().sendPayment(invoice))
+  }
+}

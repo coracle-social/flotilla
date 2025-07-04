@@ -11,6 +11,7 @@
   import ThunkStatus from "@app/components/ThunkStatus.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
+  import ChannelMessageZapButton from "@app/components/ChannelMessageZapButton.svelte"
   import ChannelMessageEmojiButton from "@app/components/ChannelMessageEmojiButton.svelte"
   import ChannelMessageMenuButton from "@app/components/ChannelMessageMenuButton.svelte"
   import ChannelMessageMenuMobile from "@app/components/ChannelMessageMenuMobile.svelte"
@@ -94,6 +95,7 @@
     <button
       class="join absolute right-1 top-1 border border-solid border-neutral text-xs opacity-0 transition-all"
       class:group-hover:opacity-100={!isMobile}>
+      <ChannelMessageZapButton {url} {event} />
       <ChannelMessageEmojiButton {url} {event} />
       {#if replyTo}
         <Button class="btn join-item btn-xs" onclick={reply}>

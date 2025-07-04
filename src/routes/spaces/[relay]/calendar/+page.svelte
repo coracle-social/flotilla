@@ -5,7 +5,7 @@
   import {page} from "$app/stores"
   import {now, last, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {REACTION, DELETE, EVENT_TIME, getTagValue} from "@welshman/util"
+  import {REACTION, ZAP_RESPONSE, DELETE, EVENT_TIME, getTagValue} from "@welshman/util"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -93,7 +93,9 @@
 
   onMount(() => {
     const feedFilters = [{kinds: [EVENT_TIME]}]
-    const subscriptionFilters = [{kinds: [DELETE, REACTION, EVENT_TIME], since: now()}]
+    const subscriptionFilters = [
+      {kinds: [DELETE, REACTION, ZAP_RESPONSE, EVENT_TIME], since: now()},
+    ]
 
     ;({events, cleanup} = makeCalendarFeed({
       element: element!,

@@ -68,6 +68,7 @@
   import Pallete2 from "@assets/icons/Pallete 2.svg?dataurl"
   import Paperclip from "@assets/icons/Paperclip.svg?dataurl"
   import Plain from "@assets/icons/Plain.svg?dataurl"
+  import QRCode from "@assets/icons/QR Code.svg?dataurl"
   import QuestionSquare from "@assets/icons/Question Square.svg?dataurl"
   import RemoteControllerMinimalistic from "@assets/icons/Remote Controller Minimalistic.svg?dataurl"
   import Rocket2 from "@assets/icons/Rocket 2.svg?dataurl"
@@ -90,6 +91,7 @@
   import UserHeart from "@assets/icons/User Heart.svg?dataurl"
   import UserCircle from "@assets/icons/User Circle.svg?dataurl"
   import UserRounded from "@assets/icons/User Rounded.svg?dataurl"
+  import Wallet from "@assets/icons/Wallet.svg?dataurl"
   import Widget from "@assets/icons/Widget.svg?dataurl"
   import WidgetAdd from "@assets/icons/Widget Add.svg?dataurl"
   import WiFiRouterRound from "@assets/icons/Wi-Fi Router Round.svg?dataurl"
@@ -168,6 +170,7 @@
     "pallete-2": Pallete2,
     paperclip: Paperclip,
     plain: Plain,
+    "qr-code": QRCode,
     "question-square": QuestionSquare,
     reply: Reply,
     "remote-controller-minimalistic": RemoteControllerMinimalistic,
@@ -190,6 +193,7 @@
     "user-heart": UserHeart,
     "user-circle": UserCircle,
     "user-rounded": UserRounded,
+    wallet: Wallet,
     widget: Widget,
     "widget-add": WidgetAdd,
     "wifi-router-round": WiFiRouterRound,

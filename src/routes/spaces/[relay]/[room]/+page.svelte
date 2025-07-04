@@ -13,6 +13,7 @@
     MESSAGE,
     DELETE,
     REACTION,
+    ZAP_RESPONSE,
     ROOM_ADD_USER,
     ROOM_REMOVE_USER,
   } from "@welshman/util"
@@ -226,7 +227,9 @@
       element: element!,
       relays: [url],
       feedFilters: [filter],
-      subscriptionFilters: [{kinds: [DELETE, REACTION, MESSAGE], "#h": [room], since: now()}],
+      subscriptionFilters: [
+        {kinds: [DELETE, REACTION, ZAP_RESPONSE, MESSAGE], "#h": [room], since: now()},
+      ],
       initialEvents: getEventsForUrl(url, [{...filter, limit: 20}]),
       onExhausted: () => {
         loadingEvents = false

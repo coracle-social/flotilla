@@ -5,7 +5,7 @@
   import type {Readable} from "svelte/store"
   import {now, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {makeEvent, MESSAGE, DELETE, REACTION} from "@welshman/util"
+  import {makeEvent, MESSAGE, DELETE, REACTION, ZAP_RESPONSE} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
@@ -174,7 +174,7 @@
       element: element!,
       relays: [url],
       feedFilters: [filter],
-      subscriptionFilters: [{kinds: [DELETE, REACTION, MESSAGE], since: now()}],
+      subscriptionFilters: [{kinds: [DELETE, REACTION, ZAP_RESPONSE, MESSAGE], since: now()}],
       initialEvents: getEventsForUrl(url, [{...filter, limit: 20}]),
       onExhausted: () => {
         loadingEvents = false

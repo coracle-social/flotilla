@@ -3,7 +3,15 @@
   import {page} from "$app/stores"
   import {sortBy, max, nthEq} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {THREAD, REACTION, DELETE, COMMENT, getListTags, getPubkeyTagValues} from "@welshman/util"
+  import {
+    THREAD,
+    REACTION,
+    ZAP_RESPONSE,
+    DELETE,
+    COMMENT,
+    getListTags,
+    getPubkeyTagValues,
+  } from "@welshman/util"
   import {userMutes} from "@welshman/app"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
@@ -49,7 +57,7 @@
       relays: [url],
       feedFilters: [{kinds: [THREAD, COMMENT]}],
       subscriptionFilters: [
-        {kinds: [THREAD, REACTION, DELETE]},
+        {kinds: [THREAD, REACTION, ZAP_RESPONSE, DELETE]},
         {kinds: [COMMENT], "#K": [String(THREAD)]},
       ],
       initialEvents: getEventsForUrl(url, [{kinds: [THREAD, COMMENT], limit: 10}]),

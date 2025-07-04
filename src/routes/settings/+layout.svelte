@@ -28,6 +28,11 @@
         <Icon icon="user-circle" /> Profile
       </SecondaryNavItem>
     </div>
+    <div in:fly|local>
+      <SecondaryNavItem href="/settings/wallet">
+        <Icon icon="wallet" /> Wallet
+      </SecondaryNavItem>
+    </div>
     <div in:fly|local={{delay: 50}}>
       <SecondaryNavItem href="/settings/relays">
         <Icon icon="server" /> Relays
