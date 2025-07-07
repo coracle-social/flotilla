@@ -86,6 +86,7 @@
   import SquareShareLine from "@assets/icons/Square Share Line.svg?dataurl"
   import SortVertical from "@assets/icons/Sort Vertical.svg?dataurl"
   import Star from "@assets/icons/Star.svg?dataurl"
+  import StarFallMinimalistic2 from "@assets/icons/Star Fall Minimalistic 2.svg?dataurl"
   import TrashBin2 from "@assets/icons/Trash Bin 2.svg?dataurl"
   import UFO3 from "@assets/icons/UFO 3.svg?dataurl"
   import UserHeart from "@assets/icons/User Heart.svg?dataurl"
@@ -190,6 +191,7 @@
     "square-share-line": SquareShareLine,
     "sort-vertical": SortVertical,
     star: Star,
+    "star-fall-minimalistic-2": StarFallMinimalistic2,
     "user-heart": UserHeart,
     "user-circle": UserCircle,
     "user-rounded": UserRounded,

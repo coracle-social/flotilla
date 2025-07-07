@@ -12,6 +12,7 @@ import {
   DIRECT_MESSAGE_FILE,
   MESSAGE,
   THREAD,
+  ZAP_GOAL,
   EVENT_TIME,
 } from "@welshman/util"
 import {makeChatId, entityLink, decodeRelay, encodeRelay, userRoomsByUrl, ROOM} from "@app/state"
@@ -36,6 +37,8 @@ export const makeChatPath = (pubkeys: string[]) => `/chat/${makeChatId(pubkeys)}
 export const makeRoomPath = (url: string, room: string) => `/spaces/${encodeRelay(url)}/${room}`
 
 export const makeSpaceChatPath = (url: string) => makeRoomPath(url, "chat")
+
+export const makeGoalPath = (url: string, eventId?: string) => makeSpacePath(url, "goals", eventId)
 
 export const makeThreadPath = (url: string, eventId?: string) =>
   makeSpacePath(url, "threads", eventId)
@@ -87,6 +90,10 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
   if (urls.length > 0) {
     const url = urls[0]
 
+    if (event.kind === ZAP_GOAL) {
+      return makeGoalPath(url, event.id)
+    }
+
     if (event.kind === THREAD) {
       return makeThreadPath(url, event.id)
     }
@@ -103,6 +110,10 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
     const id = event.tags.find(nthEq(0, "E"))?.[1]
 
     if (id && kind) {
+      if (parseInt(kind) === ZAP_GOAL) {
+        return makeGoalPath(url, id)
+      }
+
       if (parseInt(kind) === THREAD) {
         return makeThreadPath(url, id)
       }

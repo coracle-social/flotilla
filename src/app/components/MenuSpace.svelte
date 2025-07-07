@@ -34,6 +34,7 @@
 
   const relay = deriveRelay(url)
   const chatPath = makeSpacePath(url, "chat")
+  const goalsPath = makeSpacePath(url, "goals")
   const threadsPath = makeSpacePath(url, "threads")
   const calendarPath = makeSpacePath(url, "calendar")
   const userRooms = deriveUserRooms(url)
@@ -129,6 +130,12 @@
     <div class="flex min-h-0 flex-col gap-1 overflow-auto">
       <SecondaryNavItem {replaceState} href={makeSpacePath(url)}>
         <Icon icon="home-smile" /> Home
+      </SecondaryNavItem>
+      <SecondaryNavItem
+        {replaceState}
+        href={goalsPath}
+        notification={$notifications.has(goalsPath)}>
+        <Icon icon="star-fall-minimalistic-2" /> Goals
       </SecondaryNavItem>
       <SecondaryNavItem
         {replaceState}
