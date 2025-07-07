@@ -8,6 +8,7 @@
     getReplyFilters,
     getEmojiTags,
     getEmojiTag,
+    fromMsats,
     getTag,
     REPORT,
     DELETE,
@@ -84,12 +85,7 @@
     ),
   )
 
-  const groupedZaps = $derived(
-    groupBy(
-      e => getReactionKey(e.request),
-      uniqBy(e => `${e.request.pubkey}${getReactionKey(e.request)}`, $zaps),
-    ),
-  )
+  const groupedZaps = $derived(groupBy(e => getReactionKey(e.request), $zaps))
 
   onMount(() => {
     const controller = new AbortController()
@@ -128,8 +124,8 @@
       </button>
     {/if}
     {#each groupedZaps.entries() as [key, zaps]}
-      {@const amount = sum(zaps.map(zap => zap.invoiceAmount))}
-      {@const pubkeys = zaps.map(zap => zap.request.pubkey)}
+      {@const amount = fromMsats(sum(zaps.map(zap => zap.invoiceAmount)))}
+      {@const pubkeys = uniq(zaps.map(zap => zap.request.pubkey))}
       {@const isOwn = $pubkey && pubkeys.includes($pubkey)}
       {@const info = displayList(pubkeys.map(pubkey => displayProfileByPubkey(pubkey)))}
       {@const tooltip = `${info} zapped`}

@@ -1,7 +1,7 @@
 <script lang="ts">
   import {nwc} from "@getalby/sdk"
   import {LOCALE} from "@welshman/lib"
-  import {displayRelayUrl} from "@welshman/util"
+  import {displayRelayUrl, fromMsats} from "@welshman/util"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
@@ -22,7 +22,7 @@
         Wallet
       </strong>
       {#if $wallet}
-        <div class="flex items-center gap-2 text-sm">
+        <div class="flex items-center gap-2 text-sm text-success">
           <Icon icon="check-circle" size={4} />
           Connected
         </div>
@@ -42,14 +42,14 @@
               Connected to <strong>{node?.alias || version || "unknown wallet"}</strong>
               via <strong>{$wallet.type}</strong>
             </p>
-            <p class="flex items-center gap-2">
+            <p class="flex gap-2 whitespace-nowrap">
               Balance:
               {#await getWebLn()
                 ?.enable()
                 .then(() => getWebLn().getBalance())}
                 <span class="loading loading-spinner loading-sm"></span>
               {:then res}
-                {new Intl.NumberFormat(LOCALE).format(res?.balance || 0)}
+                {new Intl.NumberFormat(LOCALE).format(fromMsats(res?.balance || 0))}
               {:catch}
                 [unknown]
               {/await}
@@ -62,12 +62,12 @@
             <p>
               Connected to <strong>{lud16}</strong> via <strong>{displayRelayUrl(relayUrl)}</strong>
             </p>
-            <p class="flex items-center gap-2">
+            <p class="flex gap-2 whitespace-nowrap">
               Balance:
               {#await new nwc.NWCClient({nostrWalletConnectUrl}).getBalance()}
                 <span class="loading loading-spinner loading-sm"></span>
               {:then res}
-                {new Intl.NumberFormat(LOCALE).format(res?.balance || 0)}
+                {new Intl.NumberFormat(LOCALE).format(fromMsats(res?.balance || 0))}
               {:catch}
                 [unknown]
               {/await}

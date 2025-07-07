@@ -63,7 +63,6 @@
       const params = {pubkey, content, eventId, msats, relays, zapper}
       const event = await $signer!.sign(makeZapRequest(params))
       const res = await requestZap({zapper, event})
-      console.log({event, zapper, res})
 
       if (!res.invoice) {
         return pushToast({
