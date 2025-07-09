@@ -41,6 +41,7 @@
     loginWithNip01,
     loginWithNip46,
     EventsStorageAdapter,
+    loadRelaySelections,
   } from "@welshman/app"
   import * as lib from "@welshman/lib"
   import * as util from "@welshman/util"
@@ -168,12 +169,10 @@
       const unwrapper = new TaskQueue<TrustedEvent>({batchSize: 10, processItem: ensureUnwrapped})
 
       repository.on("update", ({added}) => {
-        if (!$canDecrypt) {
-          return
-        }
-
         for (const event of added) {
-          if (event.kind === WRAP) {
+          loadRelaySelections(event.pubkey)
+
+          if ($canDecrypt && event.kind === WRAP) {
             unwrapper.push(event)
           }
         }
