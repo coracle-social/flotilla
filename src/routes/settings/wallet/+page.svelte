@@ -49,7 +49,7 @@
                 .then(() => getWebLn().getBalance())}
                 <span class="loading loading-spinner loading-sm"></span>
               {:then res}
-                {new Intl.NumberFormat(LOCALE).format(fromMsats(res?.balance || 0))}
+                {new Intl.NumberFormat(LOCALE).format(res?.balance || 0)}
               {:catch}
                 [unknown]
               {/await}
