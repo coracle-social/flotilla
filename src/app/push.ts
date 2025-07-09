@@ -34,7 +34,7 @@ export const getWebPushInfo = async () => {
   }
 
   if (!("PushManager" in window)) {
-    throw new Error("Push messaging not supported")
+    throw new Error("Push notifications are not supported")
   }
 
   if (Notification.permission === "denied") {
