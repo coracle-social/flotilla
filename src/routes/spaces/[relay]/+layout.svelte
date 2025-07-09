@@ -62,7 +62,7 @@
       relays,
       filters: [
         {kinds: [ROOM_META]},
-        {kinds: [THREAD, EVENT_TIME], since},
+        {kinds: [THREAD, EVENT_TIME, MESSAGE], since},
         {kinds: [COMMENT], "#K": [String(THREAD), String(EVENT_TIME)], since},
         ...rooms.map(room => ({kinds: [MESSAGE], "#h": [room], since})),
       ],
