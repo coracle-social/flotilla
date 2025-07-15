@@ -30,6 +30,6 @@
     {#if showActivity}
       <EventActivity {url} {path} {event} />
     {/if}
-    <EventActions {url} {event} noun="Goal" />
+    <EventActions {url} {event} hideZap noun="Goal" />
   </div>
 </div>
