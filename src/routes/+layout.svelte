@@ -7,6 +7,7 @@
   import {App} from "@capacitor/app"
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
+  import {sync, localStorageProvider} from "@welshman/store"
   import {identity, memoize, sleep, defer, ago, WEEK, TaskQueue} from "@welshman/lib"
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
   import {
@@ -33,10 +34,11 @@
     initStorage,
     repository,
     pubkey,
-    defaultStorageAdapters,
     session,
+    sessions,
     signer,
     dropSession,
+    defaultStorageAdapters,
     userInboxRelaySelections,
     loginWithNip01,
     loginWithNip46,
@@ -176,6 +178,20 @@
             unwrapper.push(event)
           }
         }
+      })
+
+      // Sync current pubkey
+      sync({
+        key: "pubkey",
+        store: pubkey,
+        storage: localStorageProvider,
+      })
+
+      // Sync user sessions
+      sync({
+        key: "sessions",
+        store: sessions,
+        storage: localStorageProvider,
       })
 
       await initStorage("flotilla", 8, {

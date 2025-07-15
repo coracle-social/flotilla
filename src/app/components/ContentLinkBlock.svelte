@@ -52,7 +52,7 @@
               alt="Link preview"
               onerror={onError}
               src={imgproxy(preview.image)}
-              class="bg-alt max-h-72 object-contain object-center" />
+              class="bg-alt max-h-72 rounded-t-box object-contain object-center" />
           {/if}
           <div class="flex flex-col gap-2 p-4">
             <strong class="overflow-hidden text-ellipsis whitespace-nowrap"

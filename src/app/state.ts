@@ -30,6 +30,7 @@ import {
   deriveEventsMapped,
   withGetter,
   synced,
+  localStorageProvider,
 } from "@welshman/store"
 import {
   getIdFilters,
@@ -302,7 +303,11 @@ routerContext.getIndexerRelays = always(INDEXER_RELAYS)
 
 // Settings
 
-export const canDecrypt = synced("canDecrypt", false)
+export const canDecrypt = synced({
+  key: "canDecrypt",
+  defaultValue: false,
+  storage: localStorageProvider,
+})
 
 export const SETTINGS = 38489
 
@@ -376,7 +381,11 @@ export type Wallet =
       info: NWCInfo
     }
 
-export const wallet = synced<Wallet | undefined>("wallet", undefined)
+export const wallet = synced<Wallet | undefined>({
+  key: "wallet",
+  defaultValue: undefined,
+  storage: localStorageProvider,
+})
 
 export const getWebLn = () => (window as any).webln
 

@@ -33,18 +33,20 @@
   const onSubmit = async () => {
     if (controller.loading) return
 
-    const {signerPubkey, connectSecret, relays} = Nip46Broker.parseBunkerUrl(controller.bunker)
-
-    if (!signerPubkey || relays.length === 0) {
-      return pushToast({
-        theme: "error",
-        message: "Sorry, it looks like that's an invalid bunker link.",
-      })
-    }
-
-    controller.loading = true
-
     try {
+      const {signerPubkey, connectSecret, relays} = Nip46Broker.parseBunkerUrl(controller.bunker)
+
+      console.log({signerPubkey, connectSecret, relays})
+
+      if (!signerPubkey || relays.length === 0) {
+        return pushToast({
+          theme: "error",
+          message: "Sorry, it looks like that's an invalid bunker link.",
+        })
+      }
+
+      controller.loading = true
+
       const {clientSecret} = controller
       const broker = new Nip46Broker({relays, clientSecret, signerPubkey})
       const result = await broker.connect(connectSecret, NIP46_PERMS)
@@ -64,6 +66,13 @@
           message: "Something went wrong, please try again!",
         })
       }
+    } catch (e) {
+      console.error(e)
+
+      return pushToast({
+        theme: "error",
+        message: "Something went wrong, please try again!",
+      })
     } finally {
       controller.loading = false
     }
