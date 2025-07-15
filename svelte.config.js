@@ -25,4 +25,9 @@ export default {
       },
     },
   },
+  compilerOptions: {
+    warningFilter: (warning) => {
+      return !['a11y_media_has_caption'].includes(warning.code)
+    },
+  }
 }

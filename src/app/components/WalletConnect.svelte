@@ -1,9 +1,11 @@
 <script lang="ts">
+  import {debounce} from "throttle-debounce"
   import {nwc} from "@getalby/sdk"
   import {sleep} from "@welshman/lib"
   import Link from "@lib/components/Link.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Scanner from "@lib/components/Scanner.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Field from "@lib/components/Field.svelte"
   import Divider from "@lib/components/Divider.svelte"
@@ -77,7 +79,18 @@
     }
   }
 
+  const toggleScanner = () => {
+    showScanner = !showScanner
+  }
+
+  const onScan = debounce(1000, async (data: string) => {
+    showScanner = false
+    nostrWalletConnectUrl = data
+    await connectWithNWC()
+  })
+
   let nostrWalletConnectUrl = $state("")
+  let showScanner = $state(false)
   let loading = $state(false)
 </script>
 
@@ -121,7 +134,9 @@
           name="flotilla-nwc"
           class="grow"
           type="password" />
-        <Icon icon="qr-code" />
+        <Button onclick={toggleScanner}>
+          <Icon icon="qr-code" />
+        </Button>
       </label>
     {/snippet}
     {#snippet info()}
@@ -131,6 +146,9 @@
       >.
     {/snippet}
   </Field>
+  {#if showScanner}
+    <Scanner onscan={onScan} />
+  {/if}
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
       <Icon icon="alt-arrow-left" />
