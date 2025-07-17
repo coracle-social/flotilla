@@ -5,8 +5,10 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
+  import ZapButton from "@app/components/ZapButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
+  import {ENABLE_ZAPS} from "@app/state"
   import {publishReaction} from "@app/commands"
   import {pushModal} from "@app/modal"
 
@@ -40,6 +42,12 @@
     <Icon size={4} icon="smile-circle" />
     Send Reaction
   </Button>
+  {#if ENABLE_ZAPS}
+    <ZapButton replaceState {url} {event} class="btn btn-secondary w-full">
+      <Icon size={4} icon="bolt" />
+      Send Zap
+    </ZapButton>
+  {/if}
   <Button class="btn btn-neutral w-full" onclick={sendReply}>
     <Icon size={4} icon="reply" />
     Send Reply

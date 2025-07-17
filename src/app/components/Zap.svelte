@@ -116,7 +116,7 @@
       <div>To <ProfileLink {pubkey} class="!text-primary" /></div>
     {/snippet}
   </ModalHeader>
-  <FieldInline>
+  <FieldInline class="!grid-cols-3">
     {#snippet label()}
       Emoji Reaction
     {/snippet}
@@ -128,7 +128,7 @@
       </div>
     {/snippet}
   </FieldInline>
-  <FieldInline>
+  <FieldInline class="!grid-cols-3">
     {#snippet label()}
       Amount
     {/snippet}

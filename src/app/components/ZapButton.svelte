@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type {Snippet} from "svelte"
+  import type {TrustedEvent} from "@welshman/util"
   import {deriveZapperForPubkey} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import Zap from "@app/components/Zap.svelte"
@@ -7,17 +9,25 @@
   import {pushModal} from "@app/modal"
   import {wallet} from "@app/state"
 
-  const {url, event, children, ...props} = $props()
+  type Props = {
+    url: string
+    event: TrustedEvent
+    children: Snippet
+    replaceState?: boolean
+    class?: string
+  }
+
+  const {url, event, children, replaceState, ...props}: Props = $props()
 
   const zapper = deriveZapperForPubkey(event.pubkey)
 
   const onClick = () => {
     if (!$zapper?.allowsNostr) {
-      pushModal(InfoZapperError, {url, pubkey: event.pubkey, eventId: event.id})
+      pushModal(InfoZapperError, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
     } else if ($wallet) {
-      pushModal(Zap, {url, pubkey: event.pubkey, eventId: event.id})
+      pushModal(Zap, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
     } else {
-      pushModal(WalletConnect)
+      pushModal(WalletConnect, {}, {replaceState})
     }
   }
 </script>
