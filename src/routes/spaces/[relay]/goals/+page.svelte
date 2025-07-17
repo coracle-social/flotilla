@@ -81,7 +81,7 @@
     </div>
   {/snippet}
   {#snippet title()}
-    <strong>Fundraising Goals</strong>
+    <strong>Goals</strong>
   {/snippet}
   {#snippet action()}
     <div class="row-2">
