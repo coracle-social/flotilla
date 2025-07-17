@@ -15,7 +15,7 @@
   import ChannelMessageEmojiButton from "@app/components/ChannelMessageEmojiButton.svelte"
   import ChannelMessageMenuButton from "@app/components/ChannelMessageMenuButton.svelte"
   import ChannelMessageMenuMobile from "@app/components/ChannelMessageMenuMobile.svelte"
-  import {colors} from "@app/state"
+  import {colors, ENABLE_ZAPS} from "@app/state"
   import {publishDelete, publishReaction} from "@app/commands"
   import {pushModal} from "@app/modal"
 
@@ -95,7 +95,9 @@
     <button
       class="join absolute right-1 top-1 border border-solid border-neutral text-xs opacity-0 transition-all"
       class:group-hover:opacity-100={!isMobile}>
-      <ChannelMessageZapButton {url} {event} />
+      {#if ENABLE_ZAPS}
+        <ChannelMessageZapButton {url} {event} />
+      {/if}
       <ChannelMessageEmojiButton {url} {event} />
       {#if replyTo}
         <Button class="btn join-item btn-xs" onclick={reply}>

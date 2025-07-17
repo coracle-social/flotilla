@@ -12,8 +12,6 @@
     makeRoomMeta,
     MESSAGE,
     DELETE,
-    REACTION,
-    ZAP_RESPONSE,
     ROOM_ADD_USER,
     ROOM_REMOVE_USER,
   } from "@welshman/util"
@@ -38,6 +36,7 @@
     deriveUserMembershipStatus,
     deriveChannel,
     MembershipStatus,
+    REACTION_KINDS,
   } from "@app/state"
   import {setChecked, checked} from "@app/notifications"
   import {addRoomMembership, removeRoomMembership, prependParent} from "@app/commands"
@@ -228,7 +227,7 @@
       relays: [url],
       feedFilters: [filter],
       subscriptionFilters: [
-        {kinds: [DELETE, REACTION, ZAP_RESPONSE, MESSAGE], "#h": [room], since: now()},
+        {kinds: [DELETE, MESSAGE, ...REACTION_KINDS], "#h": [room], since: now()},
       ],
       initialEvents: getEventsForUrl(url, [{...filter, limit: 20}]),
       onExhausted: () => {

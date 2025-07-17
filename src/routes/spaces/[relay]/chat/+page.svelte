@@ -5,7 +5,7 @@
   import type {Readable} from "svelte/store"
   import {now, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {makeEvent, MESSAGE, DELETE, REACTION, ZAP_RESPONSE} from "@welshman/util"
+  import {makeEvent, MESSAGE, DELETE} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
@@ -21,7 +21,7 @@
   import {userSettingValues, decodeRelay, getEventsForUrl} from "@app/state"
   import {setChecked, checked} from "@app/notifications"
   import {prependParent} from "@app/commands"
-  import {PROTECTED} from "@app/state"
+  import {PROTECTED, REACTION_KINDS} from "@app/state"
   import {makeFeed} from "@app/requests"
   import {popKey} from "@app/implicit"
 
@@ -174,7 +174,7 @@
       element: element!,
       relays: [url],
       feedFilters: [filter],
-      subscriptionFilters: [{kinds: [DELETE, REACTION, ZAP_RESPONSE, MESSAGE], since: now()}],
+      subscriptionFilters: [{kinds: [DELETE, MESSAGE, ...REACTION_KINDS], since: now()}],
       initialEvents: getEventsForUrl(url, [{...filter, limit: 20}]),
       onExhausted: () => {
         loadingEvents = false

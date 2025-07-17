@@ -18,6 +18,7 @@
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import MenuSpaceRoomItem from "@app/components/MenuSpaceRoomItem.svelte"
   import {
+    ENABLE_ZAPS,
     userRoomsByUrl,
     hasMembershipUrl,
     memberships,
@@ -131,12 +132,14 @@
       <SecondaryNavItem {replaceState} href={makeSpacePath(url)}>
         <Icon icon="home-smile" /> Home
       </SecondaryNavItem>
-      <SecondaryNavItem
-        {replaceState}
-        href={goalsPath}
-        notification={$notifications.has(goalsPath)}>
-        <Icon icon="star-fall-minimalistic-2" /> Goals
-      </SecondaryNavItem>
+      {#if ENABLE_ZAPS}
+        <SecondaryNavItem
+          {replaceState}
+          href={goalsPath}
+          notification={$notifications.has(goalsPath)}>
+          <Icon icon="star-fall-minimalistic-2" /> Goals
+        </SecondaryNavItem>
+      {/if}
       <SecondaryNavItem
         {replaceState}
         href={threadsPath}

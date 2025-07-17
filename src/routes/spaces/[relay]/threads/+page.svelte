@@ -3,15 +3,7 @@
   import {page} from "$app/stores"
   import {sortBy, max, nthEq} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {
-    THREAD,
-    REACTION,
-    ZAP_RESPONSE,
-    DELETE,
-    COMMENT,
-    getListTags,
-    getPubkeyTagValues,
-  } from "@welshman/util"
+  import {THREAD, DELETE, COMMENT, getListTags, getPubkeyTagValues} from "@welshman/util"
   import {userMutes} from "@welshman/app"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
@@ -24,6 +16,7 @@
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {decodeRelay, getEventsForUrl} from "@app/state"
   import {setChecked} from "@app/notifications"
+  import {REACTION_KINDS} from "@app/state"
   import {makeFeed} from "@app/requests"
   import {pushModal} from "@app/modal"
 
@@ -57,7 +50,7 @@
       relays: [url],
       feedFilters: [{kinds: [THREAD, COMMENT]}],
       subscriptionFilters: [
-        {kinds: [THREAD, REACTION, ZAP_RESPONSE, DELETE]},
+        {kinds: [THREAD, DELETE, ...REACTION_KINDS]},
         {kinds: [COMMENT], "#K": [String(THREAD)]},
       ],
       initialEvents: getEventsForUrl(url, [{kinds: [THREAD, COMMENT], limit: 10}]),

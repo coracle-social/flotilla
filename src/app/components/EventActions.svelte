@@ -9,6 +9,7 @@
   import ZapButton from "@app/components/ZapButton.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import EventMenu from "@app/components/EventMenu.svelte"
+  import {ENABLE_ZAPS} from "@app/state"
   import {publishReaction} from "@app/commands"
 
   type Props = {
@@ -32,7 +33,7 @@
 </script>
 
 <Button class="join rounded-full">
-  {#if !hideZap}
+  {#if ENABLE_ZAPS && !hideZap}
     <ZapButton {url} {event} class="btn join-item btn-neutral btn-xs">
       <Icon icon="bolt" size={4} />
     </ZapButton>

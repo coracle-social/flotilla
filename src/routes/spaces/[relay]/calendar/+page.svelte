@@ -5,7 +5,7 @@
   import {page} from "$app/stores"
   import {now, last, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {REACTION, ZAP_RESPONSE, DELETE, EVENT_TIME, getTagValue} from "@welshman/util"
+  import {DELETE, EVENT_TIME, getTagValue} from "@welshman/util"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -17,7 +17,7 @@
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
   import {pushModal} from "@app/modal"
-  import {getEventsForUrl, decodeRelay} from "@app/state"
+  import {getEventsForUrl, decodeRelay, REACTION_KINDS} from "@app/state"
   import {makeCalendarFeed} from "@app/requests"
   import {setChecked} from "@app/notifications"
 
@@ -93,9 +93,7 @@
 
   onMount(() => {
     const feedFilters = [{kinds: [EVENT_TIME]}]
-    const subscriptionFilters = [
-      {kinds: [DELETE, REACTION, ZAP_RESPONSE, EVENT_TIME], since: now()},
-    ]
+    const subscriptionFilters = [{kinds: [DELETE, EVENT_TIME, ...REACTION_KINDS], since: now()}]
 
     ;({events, cleanup} = makeCalendarFeed({
       element: element!,

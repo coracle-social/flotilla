@@ -3,15 +3,7 @@
   import {page} from "$app/stores"
   import {sortBy, max, nthEq} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {
-    ZAP_GOAL,
-    REACTION,
-    ZAP_RESPONSE,
-    DELETE,
-    COMMENT,
-    getListTags,
-    getPubkeyTagValues,
-  } from "@welshman/util"
+  import {ZAP_GOAL, DELETE, COMMENT, getListTags, getPubkeyTagValues} from "@welshman/util"
   import {userMutes} from "@welshman/app"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
@@ -22,7 +14,7 @@
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
-  import {decodeRelay, getEventsForUrl} from "@app/state"
+  import {decodeRelay, getEventsForUrl, REACTION_KINDS} from "@app/state"
   import {setChecked} from "@app/notifications"
   import {makeFeed} from "@app/requests"
   import {pushModal} from "@app/modal"
@@ -57,7 +49,7 @@
       relays: [url],
       feedFilters: [{kinds: [ZAP_GOAL, COMMENT]}],
       subscriptionFilters: [
-        {kinds: [ZAP_GOAL, REACTION, ZAP_RESPONSE, DELETE]},
+        {kinds: [ZAP_GOAL, DELETE, ...REACTION_KINDS]},
         {kinds: [COMMENT], "#K": [String(ZAP_GOAL)]},
       ],
       initialEvents: getEventsForUrl(url, [{kinds: [ZAP_GOAL, COMMENT], limit: 10}]),

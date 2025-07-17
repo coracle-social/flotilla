@@ -21,6 +21,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Reaction from "@app/components/Reaction.svelte"
   import EventReportDetails from "@app/components/EventReportDetails.svelte"
+  import {REACTION_KINDS} from "@app/state"
   import {pushModal} from "@app/modal"
 
   interface Props {
@@ -94,7 +95,7 @@
       load({
         relays: [url],
         signal: controller.signal,
-        filters: getReplyFilters([event], {kinds: [REACTION, REPORT, DELETE, ZAP_RESPONSE]}),
+        filters: getReplyFilters([event], {kinds: [REPORT, DELETE, ...REACTION_KINDS]}),
         onEvent: batch(300, (events: TrustedEvent[]) => {
           load({
             relays: [url],

@@ -1,4 +1,5 @@
 import twColors from "tailwindcss/colors"
+import {Capacitor} from "@capacitor/core"
 import {get, derived} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {
@@ -98,6 +99,10 @@ export const ROOM = "h"
 
 export const PROTECTED = ["-"]
 
+export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios"
+
+export const REACTION_KINDS = ENABLE_ZAPS ? [REACTION, ZAP_RESPONSE] : [REACTION]
+
 export const NOTIFIER_PUBKEY = import.meta.env.VITE_NOTIFIER_PUBKEY
 
 export const NOTIFIER_RELAY = import.meta.env.VITE_NOTIFIER_RELAY
@@ -131,8 +136,6 @@ export const DEFAULT_PUBKEYS = import.meta.env.VITE_DEFAULT_PUBKEYS
 export const DUFFLEPUD_URL = "https://dufflepud.onrender.com"
 
 export const IMGPROXY_URL = "https://imgproxy.coracle.social"
-
-export const REACTION_KINDS = [REACTION, ZAP_RESPONSE]
 
 export const NIP46_PERMS =
   "nip44_encrypt,nip44_decrypt," +
