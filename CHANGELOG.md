@@ -1,5 +1,15 @@
 # Changelog
 
+# 1.2.1
+
+* Add zaps to chat, threads, and events
+* Add funding goals
+* Add NWC support
+* Add wallet settings page
+* Handle invalid bunker url
+* Fix sidebar overflow
+* Fix profile npub display
+
 # 1.2.0
 
 * Fix sort order of thread comments
