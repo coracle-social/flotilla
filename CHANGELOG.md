@@ -1,5 +1,10 @@
 # Changelog
 
+# 1.2.2
+
+* Fix phantom chat notifications
+* Fix zaps on mobile
+
 # 1.2.1
 
 * Add zaps to chat, threads, and events
