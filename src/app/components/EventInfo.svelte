@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as nip19 from "nostr-tools/nip19"
   import {Router} from "@welshman/router"
+  import {LOCALE, secondsToDate} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -22,6 +23,11 @@
   const copyLink = () => clip(nevent1)
   const copyPubkey = () => clip(npub1)
   const copyJson = () => clip(json)
+
+  const formatter = new Intl.DateTimeFormat(LOCALE, {
+    dateStyle: "long",
+    timeStyle: "long",
+  })
 </script>
 
 <div class="column gap-4">
@@ -33,6 +39,14 @@
       <div>The full details of this event are shown below.</div>
     {/snippet}
   </ModalHeader>
+  <FieldInline>
+    {#snippet label()}
+      <p>Created At</p>
+    {/snippet}
+    {#snippet input()}
+      <p>{formatter.format(secondsToDate(event.created_at))}</p>
+    {/snippet}
+  </FieldInline>
   <FieldInline>
     {#snippet label()}
       <p>Event Link</p>

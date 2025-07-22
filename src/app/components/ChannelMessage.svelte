@@ -83,7 +83,7 @@
       </div>
     </div>
   </div>
-  <div class="row-2 ml-10 mt-1">
+  <div class="row-2 ml-10 mt-1 pl-1">
     <ReactionSummary
       {url}
       {event}
