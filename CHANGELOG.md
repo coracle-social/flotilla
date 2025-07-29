@@ -1,5 +1,11 @@
 # Changelog
 
+# 1.2.3
+
+* Add `created_at` to event info dialog
+* Add signer status to profile page
+* Re-work bunker login flow
+
 # 1.2.2
 
 * Fix phantom chat notifications

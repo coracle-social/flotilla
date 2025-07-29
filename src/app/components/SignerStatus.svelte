@@ -1,0 +1,48 @@
+<script lang="ts">
+  import {spec, prop, avg} from "@welshman/lib"
+  import {signerLog, SignerLogEntryStatus} from "@welshman/app"
+  import Icon from "@lib/components/Icon.svelte"
+  import Button from "@lib/components/Button.svelte"
+  import LogOut from "@app/components/LogOut.svelte"
+  import {pushModal} from "@app/modal"
+
+  const {Pending, Success, Failure} = SignerLogEntryStatus
+  const pending = $derived($signerLog.filter(spec({status: Pending})).length)
+  const success = $derived($signerLog.filter(spec({status: Success})).length)
+  const failure = $derived($signerLog.filter(spec({status: Failure})).length)
+  const recent = $derived($signerLog.slice(-10))
+  const recentAvg = $derived(avg(recent.map(prop("duration"))))
+  const recentPending = $derived(recent.filter(spec({status: Pending})).length)
+  const recentSuccess = $derived(recent.filter(spec({status: Success})).length)
+  const recentFailure = $derived(recent.filter(spec({status: Failure})).length)
+  const isDisconnected = $derived(
+    recent.length > 0 && recentFailure + recentPending === recent.length,
+  )
+
+  const logout = () => pushModal(LogOut)
+</script>
+
+<div class="card2 bg-alt flex flex-col gap-4">
+  <div class="flex flex-col gap-2">
+    <div class="flex items-center justify-between">
+      <span class="text-xl font-bold">Signer Status</span>
+      <span class="flex items-center gap-2">
+        {#if isDisconnected}
+          <Icon icon="close-circle" class="text-error" size={4} /> Disconnected
+        {:else if recentFailure > 3}
+          <Icon icon="danger" class="text-warning" size={4} /> Partial Failure
+        {:else if recentAvg > 1000 || recentPending > 3}
+          <Icon icon="clock-circle" class="text-warning" size={4} /> Slow connection
+        {:else if recentSuccess === 0 && recentFailure > 0}{:else}
+          <Icon icon="check-circle" class="text-success" size={4} /> Ok
+        {/if}
+      </span>
+    </div>
+    <p class="text-sm opacity-75">
+      {success} requests succeeded, {failure} failed, {pending} pending
+    </p>
+  </div>
+  {#if isDisconnected}
+    <Button class="btn btn-outline btn-error" onclick={logout}>Logout to Reconnect</Button>
+  {/if}
+</div>

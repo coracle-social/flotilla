@@ -11,6 +11,7 @@
   import Content from "@app/components/Content.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileDelete from "@app/components/ProfileDelete.svelte"
+  import SignerStatus from "@app/components/SignerStatus.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
   import Alerts from "@app/components/Alerts.svelte"
   import {PLATFORM_NAME} from "@app/state"
@@ -129,6 +130,7 @@
         {/snippet}
       </FieldInline>
     {/if}
+    <SignerStatus />
   </div>
   <Alerts />
   <div class="card2 bg-alt shadow-xl">

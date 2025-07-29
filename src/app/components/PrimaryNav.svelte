@@ -77,7 +77,7 @@
           </PrimaryNavItem>
         {/if}
         <PrimaryNavItem title="Add Space" onclick={addSpace} class="tooltip-right">
-          <Avatar icon="settings-minimalistic" class="!h-10 !w-10" />
+          <Avatar icon="add-square" class="!h-10 !w-10" />
         </PrimaryNavItem>
       {/each}
     </div>
