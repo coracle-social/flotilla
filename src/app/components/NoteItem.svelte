@@ -6,17 +6,23 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import {publishDelete, publishReaction} from "@app/commands"
+  import {publishDelete, publishReaction, canEnforceNip70} from "@app/commands"
 
   const {url, event} = $props()
 
-  const deleteReaction = (event: TrustedEvent) => publishDelete({relays: [url], event})
+  const deleteReaction = async (event: TrustedEvent) =>
+    publishDelete({relays: [url], event, protect: await canEnforceNip70(url)})
 
-  const createReaction = (template: EventContent) =>
-    publishReaction({...template, event, relays: [url]})
+  const createReaction = async (template: EventContent) =>
+    publishReaction({...template, event, relays: [url], protect: await canEnforceNip70(url)})
 
-  const onEmoji = (emoji: NativeEmoji) =>
-    publishReaction({event, content: emoji.unicode, relays: [url]})
+  const onEmoji = async (emoji: NativeEmoji) =>
+    publishReaction({
+      event,
+      content: emoji.unicode,
+      relays: [url],
+      protect: await canEnforceNip70(url),
+    })
 </script>
 
 <NoteCard {event} {url} class="card2 bg-alt">

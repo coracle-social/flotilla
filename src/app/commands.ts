@@ -214,10 +214,19 @@ export const setInboxRelayPolicy = (url: string, enabled: boolean) => {
 
 // Relay access
 
-export const attemptAuth = (url: string) =>
-  Pool.get()
-    .get(url)
-    .auth.attemptAuth(e => signer.get()?.sign(e))
+export const attemptAuth = async (url: string) => {
+  const socket = Pool.get().get(url)
+
+  await socket.auth.attemptAuth(e => signer.get()?.sign(e))
+}
+
+export const canEnforceNip70 = async (url: string) => {
+  const socket = Pool.get().get(url)
+
+  await socket.auth.attemptAuth(e => signer.get()?.sign(e))
+
+  return socket.auth.status !== AuthStatus.None
+}
 
 export const checkRelayAccess = async (url: string, claim = "") => {
   const socket = Pool.get().get(url)
@@ -305,26 +314,29 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
 
 // Actions
 
-export const makeDelete = ({event, tags = []}: {event: TrustedEvent; tags?: string[][]}) => {
+export type DeleteParams = {
+  protect: boolean
+  event: TrustedEvent
+  tags?: string[][]
+}
+
+export const makeDelete = ({protect, event, tags = []}: DeleteParams) => {
   const thisTags = [["k", String(event.kind)], ...tagEvent(event), ...tags]
   const groupTag = getTag("h", event.tags)
 
   if (groupTag) {
-    thisTags.push(PROTECTED, groupTag)
+    thisTags.push(groupTag)
+  }
+
+  if (protect) {
+    thisTags.push(PROTECTED)
   }
 
   return makeEvent(DELETE, {tags: thisTags})
 }
 
-export const publishDelete = ({
-  relays,
-  event,
-  tags = [],
-}: {
-  relays: string[]
-  event: TrustedEvent
-  tags?: string[][]
-}) => publishThunk({event: makeDelete({event, tags}), relays})
+export const publishDelete = ({relays, ...params}: DeleteParams & {relays: string[]}) =>
+  publishThunk({event: makeDelete(params), relays})
 
 export type ReportParams = {
   event: TrustedEvent
@@ -350,19 +362,22 @@ export const publishReport = ({
   publishThunk({event: makeReport({event, reason, content}), relays})
 
 export type ReactionParams = {
+  protect: boolean
   event: TrustedEvent
   content: string
   tags?: string[][]
 }
 
-export const makeReaction = ({content, event, tags: paramTags = []}: ReactionParams) => {
+export const makeReaction = ({protect, content, event, tags: paramTags = []}: ReactionParams) => {
   const tags = [...paramTags, ...tagEventForReaction(event)]
-
   const groupTag = getTag("h", event.tags)
 
   if (groupTag) {
-    tags.push(PROTECTED)
     tags.push(groupTag)
+  }
+
+  if (protect) {
+    tags.push(PROTECTED)
   }
 
   return makeEvent(REACTION, {content, tags})

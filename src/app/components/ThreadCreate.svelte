@@ -12,6 +12,7 @@
   import {pushToast} from "@app/toast"
   import {PROTECTED} from "@app/state"
   import {makeEditor} from "@app/editor"
+  import {canEnforceNip70} from "@app/commands"
 
   const {url} = $props()
 
@@ -41,7 +42,11 @@
       })
     }
 
-    const tags = [...ed.storage.nostr.getEditorTags(), ["title", title], PROTECTED]
+    const tags = [...ed.storage.nostr.getEditorTags(), ["title", title]]
+
+    if (await canEnforceNip70(url)) {
+      tags.push(PROTECTED)
+    }
 
     publishThunk({
       relays: [url],

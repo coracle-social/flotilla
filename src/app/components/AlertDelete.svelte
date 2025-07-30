@@ -12,7 +12,10 @@
   const {alert}: Props = $props()
 
   const confirm = () => {
-    publishDelete({event: alert.event, relays: [NOTIFIER_RELAY], tags: [["p", NOTIFIER_PUBKEY]]})
+    const relays = [NOTIFIER_RELAY]
+    const tags = [["p", NOTIFIER_PUBKEY]]
+
+    publishDelete({event: alert.event, relays, tags, protect: false})
     pushToast({message: "Your alert has been deleted!"})
     history.back()
   }

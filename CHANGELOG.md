@@ -5,6 +5,7 @@
 * Add `created_at` to event info dialog
 * Add signer status to profile page
 * Re-work bunker login flow
+* Only protect events if relay authenticates
 
 # 1.2.2
 
@@ -25,7 +26,7 @@
 
 * Fix sort order of thread comments
 * Fix link display when no title is available
-* Fix making profiles non-protected
+* Fix making profiles non-protect
 * Replace bunker url with relay claims for notifier auth
 * Add push notifications on all platforms
 * Add "mark all as read" on desktop

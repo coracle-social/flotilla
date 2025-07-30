@@ -14,7 +14,7 @@
   const {event, pubkeys}: Props = $props()
 
   const onEmoji = (emoji: NativeEmoji) =>
-    sendWrapped({template: makeReaction({event, content: emoji.unicode}), pubkeys})
+    sendWrapped({template: makeReaction({event, content: emoji.unicode, protect: false}), pubkeys})
 </script>
 
 <EmojiButton {onEmoji} class="btn join-item btn-xs">

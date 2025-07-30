@@ -16,6 +16,7 @@
   import {PROTECTED} from "@app/state"
   import {makeEditor} from "@app/editor"
   import {pushToast} from "@app/toast"
+  import {canEnforceNip70} from "@app/commands"
 
   type Props = {
     url: string
@@ -63,19 +64,22 @@
     }
 
     const ed = await editor
-    const event = makeEvent(EVENT_TIME, {
-      content: ed.getText({blockSeparator: "\n"}).trim(),
-      tags: [
-        ["d", initialValues?.d || randomId()],
-        ["title", title],
-        ["location", location || ""],
-        ["start", start.toString()],
-        ["end", end.toString()],
-        ...daysBetween(start, end).map(D => ["D", D.toString()]),
-        ...ed.storage.nostr.getEditorTags(),
-        PROTECTED,
-      ],
-    })
+    const content = ed.getText({blockSeparator: "\n"}).trim()
+    const tags = [
+      ["d", initialValues?.d || randomId()],
+      ["title", title],
+      ["location", location || ""],
+      ["start", start.toString()],
+      ["end", end.toString()],
+      ...daysBetween(start, end).map(D => ["D", D.toString()]),
+      ...ed.storage.nostr.getEditorTags(),
+    ]
+
+    if (await canEnforceNip70(url)) {
+      tags.push(PROTECTED)
+    }
+
+    const event = makeEvent(EVENT_TIME, {content, tags})
 
     pushToast({message: "Your event has been saved!"})
     publishThunk({event, relays: [url]})

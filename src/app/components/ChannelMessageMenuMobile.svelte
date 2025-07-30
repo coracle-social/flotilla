@@ -9,7 +9,7 @@
   import EventInfo from "@app/components/EventInfo.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import {ENABLE_ZAPS} from "@app/state"
-  import {publishReaction} from "@app/commands"
+  import {publishReaction, canEnforceNip70} from "@app/commands"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -20,9 +20,14 @@
 
   const {url, event, reply}: Props = $props()
 
-  const onEmoji = ((event: TrustedEvent, url: string, emoji: NativeEmoji) => {
+  const onEmoji = (async (event: TrustedEvent, url: string, emoji: NativeEmoji) => {
     history.back()
-    publishReaction({event, relays: [url], content: emoji.unicode})
+    publishReaction({
+      event,
+      relays: [url],
+      content: emoji.unicode,
+      protect: await canEnforceNip70(url),
+    })
   }).bind(undefined, event, url)
 
   const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})

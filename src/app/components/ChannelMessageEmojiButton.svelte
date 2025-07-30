@@ -2,12 +2,17 @@
   import type {NativeEmoji} from "emoji-picker-element/shared"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import {publishReaction} from "@app/commands"
+  import {publishReaction, canEnforceNip70} from "@app/commands"
 
   const {url, event} = $props()
 
-  const onEmoji = (emoji: NativeEmoji) =>
-    publishReaction({event, relays: [url], content: emoji.unicode})
+  const onEmoji = async (emoji: NativeEmoji) =>
+    publishReaction({
+      event,
+      relays: [url],
+      content: emoji.unicode,
+      protect: await canEnforceNip70(url),
+    })
 </script>
 
 <EmojiButton {onEmoji} class="btn join-item btn-xs">

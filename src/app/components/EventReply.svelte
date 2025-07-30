@@ -7,7 +7,7 @@
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {publishComment} from "@app/commands"
+  import {publishComment, canEnforceNip70} from "@app/commands"
   import {PROTECTED} from "@app/state"
   import {makeEditor} from "@app/editor"
   import {pushToast} from "@app/toast"
@@ -23,7 +23,11 @@
 
     const ed = await editor
     const content = ed.getText({blockSeparator: "\n"}).trim()
-    const tags = [...ed.storage.nostr.getEditorTags(), PROTECTED]
+    const tags = ed.storage.nostr.getEditorTags()
+
+    if (await canEnforceNip70(url)) {
+      tags.push(PROTECTED)
+    }
 
     if (!content) {
       return pushToast({

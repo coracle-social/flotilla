@@ -20,7 +20,7 @@
   import ChannelComposeParent from "@app/components/ChannelComposeParent.svelte"
   import {userSettingValues, decodeRelay, getEventsForUrl} from "@app/state"
   import {setChecked, checked} from "@app/notifications"
-  import {prependParent} from "@app/commands"
+  import {prependParent, canEnforceNip70} from "@app/commands"
   import {PROTECTED, REACTION_KINDS} from "@app/state"
   import {makeFeed} from "@app/requests"
   import {popKey} from "@app/implicit"
@@ -43,8 +43,10 @@
     share = undefined
   }
 
-  const onSubmit = ({content, tags}: EventContent) => {
-    tags.push(PROTECTED)
+  const onSubmit = async ({content, tags}: EventContent) => {
+    if (await canEnforceNip70(url)) {
+      tags.push(PROTECTED)
+    }
 
     let template = {content, tags}
 

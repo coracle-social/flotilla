@@ -8,7 +8,7 @@
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
   import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
-  import {publishDelete, publishReaction} from "@app/commands"
+  import {publishDelete, publishReaction, canEnforceNip70} from "@app/commands"
   import {makeCalendarPath} from "@app/routes"
   import {pushModal} from "@app/modal"
 
@@ -26,10 +26,11 @@
 
   const editEvent = () => pushModal(CalendarEventEdit, {url, event})
 
-  const deleteReaction = (event: TrustedEvent) => publishDelete({relays: [url], event})
+  const deleteReaction = async (event: TrustedEvent) =>
+    publishDelete({relays: [url], event, protect: await canEnforceNip70(url)})
 
-  const createReaction = (template: EventContent) =>
-    publishReaction({...template, event, relays: [url]})
+  const createReaction = async (template: EventContent) =>
+    publishReaction({...template, event, relays: [url], protect: await canEnforceNip70(url)})
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-2">

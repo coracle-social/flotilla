@@ -39,7 +39,12 @@
     REACTION_KINDS,
   } from "@app/state"
   import {setChecked, checked} from "@app/notifications"
-  import {addRoomMembership, removeRoomMembership, prependParent} from "@app/commands"
+  import {
+    addRoomMembership,
+    canEnforceNip70,
+    removeRoomMembership,
+    prependParent,
+  } from "@app/commands"
   import {PROTECTED} from "@app/state"
   import {makeFeed} from "@app/requests"
   import {popKey} from "@app/implicit"
@@ -101,9 +106,12 @@
     share = undefined
   }
 
-  const onSubmit = ({content, tags}: EventContent) => {
+  const onSubmit = async ({content, tags}: EventContent) => {
     tags.push(["h", room])
-    tags.push(PROTECTED)
+
+    if (await canEnforceNip70(url)) {
+      tags.push(PROTECTED)
+    }
 
     let template = {content, tags}
 

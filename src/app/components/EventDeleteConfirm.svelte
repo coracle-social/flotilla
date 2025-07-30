@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {publishDelete} from "@app/commands"
+  import {publishDelete, canEnforceNip70} from "@app/commands"
   import {clearModals} from "@app/modal"
 
   type Props = {
@@ -12,7 +12,7 @@
   const {url, event}: Props = $props()
 
   const confirm = async () => {
-    await publishDelete({event, relays: [url]})
+    await publishDelete({event, relays: [url], protect: await canEnforceNip70(url)})
 
     clearModals()
   }

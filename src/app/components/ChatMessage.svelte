@@ -37,10 +37,10 @@
   const reply = () => replyTo(event)
 
   const deleteReaction = (event: TrustedEvent) =>
-    sendWrapped({template: makeDelete({event}), pubkeys})
+    sendWrapped({template: makeDelete({event, protect: false}), pubkeys})
 
   const createReaction = (template: EventContent) =>
-    sendWrapped({template: makeReaction({event, ...template}), pubkeys})
+    sendWrapped({template: makeReaction({event, protect: false, ...template}), pubkeys})
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey})
 

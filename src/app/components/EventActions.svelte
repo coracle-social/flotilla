@@ -10,7 +10,7 @@
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import EventMenu from "@app/components/EventMenu.svelte"
   import {ENABLE_ZAPS} from "@app/state"
-  import {publishReaction} from "@app/commands"
+  import {publishReaction, canEnforceNip70} from "@app/commands"
 
   type Props = {
     url: string
@@ -26,8 +26,13 @@
 
   const hidePopover = () => popover?.hide()
 
-  const onEmoji = (emoji: NativeEmoji) =>
-    publishReaction({event, content: emoji.unicode, relays: [url]})
+  const onEmoji = async (emoji: NativeEmoji) =>
+    publishReaction({
+      event,
+      content: emoji.unicode,
+      relays: [url],
+      protect: await canEnforceNip70(url),
+    })
 
   let popover: Instance | undefined = $state()
 </script>

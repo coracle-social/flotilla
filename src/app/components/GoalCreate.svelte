@@ -13,6 +13,7 @@
   import {pushToast} from "@app/toast"
   import {PROTECTED} from "@app/state"
   import {makeEditor} from "@app/editor"
+  import {canEnforceNip70} from "@app/commands"
 
   const {url} = $props()
 
@@ -47,8 +48,11 @@
       ["summary", summary],
       ["amount", String(amount)],
       ["relays", url],
-      PROTECTED,
     ]
+
+    if (await canEnforceNip70(url)) {
+      tags.push(PROTECTED)
+    }
 
     publishThunk({
       relays: [url],
