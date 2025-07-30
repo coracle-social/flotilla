@@ -234,7 +234,7 @@ export const checkRelayAccess = async (url: string, claim = "") => {
   if (error) {
     const message =
       socket.auth.details?.replace(/^\w+: /, "") ||
-      error?.replace(/^\w+: /, "") ||
+      error.replace(/^\w+: /, "") ||
       "join request rejected"
 
     // If it's a strict NIP 29 relay don't worry about requesting access

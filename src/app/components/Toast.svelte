@@ -4,6 +4,11 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import {toast, popToast} from "@app/toast"
+
+  const onActionClick = () => {
+    $toast!.action!.onclick()
+    popToast($toast!.id)
+  }
 </script>
 
 {#if $toast}
@@ -18,6 +23,11 @@
         class:alert-error={theme === "error"}>
         <p class="welshman-content-error">
           {@html renderAsHtml(parse({content: $toast.message}))}
+          {#if $toast.action}
+            <Button class="cursor-pointer underline" onclick={onActionClick}>
+              {$toast.action.message}
+            </Button>
+          {/if}
         </p>
         <Button class="flex items-center opacity-75" onclick={() => popToast($toast.id)}>
           <Icon icon="close-circle" />

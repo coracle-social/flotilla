@@ -26,7 +26,7 @@
 
   const rooms = Array.from($userRoomsByUrl.get(url) || [])
 
-  const checkConnection = async () => {
+  const checkConnection = async (signal: AbortSignal) => {
     const connectionError = await checkRelayConnection(url)
 
     if (connectionError) {
@@ -37,7 +37,7 @@
 
     const error = authError || accessError
 
-    if (error) {
+    if (error && !signal.aborted) {
       pushModal(SpaceAuthError, {url, error})
     }
   }
@@ -50,11 +50,11 @@
   })
 
   onMount(() => {
-    checkConnection()
-
     const relays = [url]
     const since = ago(MONTH)
     const controller = new AbortController()
+
+    checkConnection(controller.signal)
 
     // Load group meta, threads, calendar events, comments, and recent messages
     // for user rooms to help with a quick page transition

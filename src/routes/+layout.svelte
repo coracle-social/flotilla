@@ -1,6 +1,7 @@
 <script lang="ts">
   import "@src/app.css"
   import "@capacitor-community/safe-area"
+  import {throttle} from "throttle-debounce"
   import {onMount} from "svelte"
   import * as nip19 from "nostr-tools/nip19"
   import {get, derived} from "svelte/store"
@@ -8,7 +9,7 @@
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
   import {sync, localStorageProvider} from "@welshman/store"
-  import {identity, memoize, sleep, defer, ago, WEEK, TaskQueue} from "@welshman/lib"
+  import {identity, memoize, spec, sleep, defer, ago, WEEK, TaskQueue} from "@welshman/lib"
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
   import {
     WRAP,
@@ -37,6 +38,7 @@
     session,
     sessions,
     signer,
+    signerLog,
     dropSession,
     defaultStorageAdapters,
     userInboxRelaySelections,
@@ -44,6 +46,7 @@
     loginWithNip46,
     EventsStorageAdapter,
     loadRelaySelections,
+    SignerLogEntryStatus,
   } from "@welshman/app"
   import * as lib from "@welshman/lib"
   import * as util from "@welshman/util"
@@ -52,11 +55,11 @@
   import * as welshmanSigner from "@welshman/signer"
   import * as net from "@welshman/net"
   import * as app from "@welshman/app"
+  import {nsecDecode} from "@lib/util"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import {setupTracking} from "@app/tracking"
   import {setupAnalytics} from "@app/analytics"
-  import {nsecDecode} from "@lib/util"
   import {
     INDEXER_RELAYS,
     userMembership,
@@ -66,6 +69,7 @@
   } from "@app/state"
   import {loadUserData, listenForNotifications} from "@app/requests"
   import {theme} from "@app/theme"
+  import {toast, pushToast} from "@app/toast"
   import {initializePushNotifications} from "@app/push"
   import * as commands from "@app/commands"
   import * as requests from "@app/requests"
@@ -264,6 +268,27 @@
             })
           }
         },
+      )
+
+      // Listen for signer errors, report to user via toast
+      signerLog.subscribe(
+        throttle(10_000, $log => {
+          const recent = $log.slice(-10)
+          const success = recent.filter(spec({status: SignerLogEntryStatus.Success}))
+          const failure = recent.filter(spec({status: SignerLogEntryStatus.Failure}))
+
+          if (!$toast && failure.length > 5 && success.length === 0) {
+            pushToast({
+              theme: "error",
+              timeout: 60_000,
+              message: "Your signer appears to be unresponsive.",
+              action: {
+                message: "Details",
+                onclick: () => goto("/settings/profile"),
+              },
+            })
+          }
+        }),
       )
     }
   })

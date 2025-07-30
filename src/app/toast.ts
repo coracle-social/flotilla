@@ -6,6 +6,10 @@ export type ToastParams = {
   message: string
   timeout?: number
   theme?: "error"
+  action?: {
+    message: string
+    onclick: () => void
+  }
 }
 
 export type Toast = ToastParams & {
