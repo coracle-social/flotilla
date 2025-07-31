@@ -6,6 +6,7 @@
 * Add signer status to profile page
 * Re-work bunker login flow
 * Only protect events if relay authenticates
+* Filter out non-global chats from global chat
 
 # 1.2.2
 

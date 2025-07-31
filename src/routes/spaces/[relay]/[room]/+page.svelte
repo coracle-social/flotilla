@@ -281,7 +281,7 @@
   })
 
   onDestroy(() => {
-    cleanup()
+    cleanup?.()
 
     // Sveltekit calls onDestroy at the beginning of the page load for some reason
     setTimeout(() => {

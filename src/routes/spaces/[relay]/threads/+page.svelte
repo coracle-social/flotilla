@@ -69,7 +69,7 @@
     })
 
     return () => {
-      cleanup()
+      cleanup?.()
       setChecked($page.url.pathname)
     }
   })

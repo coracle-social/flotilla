@@ -1,11 +1,11 @@
 <script lang="ts">
-  import {readable} from "svelte/store"
   import {onMount, onDestroy} from "svelte"
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
+  import {readable} from "svelte/store"
   import {now, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {makeEvent, MESSAGE, DELETE} from "@welshman/util"
+  import {makeEvent, getTag, MESSAGE, DELETE} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
@@ -123,6 +123,10 @@
           continue
         }
 
+        if (getTag("h", event.tags)) {
+          continue
+        }
+
         const date = formatTimestampAsDate(event.created_at)
 
         if (
@@ -194,7 +198,7 @@
   })
 
   onDestroy(() => {
-    cleanup()
+    cleanup?.()
 
     // Sveltekit calls onDestroy at the beginning of the page load for some reason
     setTimeout(() => {

@@ -108,7 +108,7 @@
 
     return () => {
       setChecked($page.url.pathname)
-      cleanup()
+      cleanup?.()
     }
   })
 </script>
