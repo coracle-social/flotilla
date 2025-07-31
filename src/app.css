@@ -160,11 +160,11 @@
 }
 
 .card2 {
-  @apply rounded-box p-6 text-base-content;
+  @apply rounded-box p-4 text-base-content sm:p-6;
 }
 
 .card2.card2-sm {
-  @apply p-4 text-base-content;
+  @apply p-2 text-base-content sm:p-4;
 }
 
 .column {

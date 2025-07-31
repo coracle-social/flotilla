@@ -3,6 +3,7 @@
 
   import tippy from "tippy.js"
   import {onMount, mount} from "svelte"
+  import {isMobile} from "@lib/html"
 
   let {
     component,
@@ -23,6 +24,7 @@
       content: target,
       animation: "shift-away",
       appendTo: document.querySelector(".tippy-target")!,
+      trigger: isMobile ? "click" : "mouseenter focus",
       ...params,
     })
 
