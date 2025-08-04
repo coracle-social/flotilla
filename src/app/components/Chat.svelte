@@ -21,13 +21,12 @@
     getTags,
     DIRECT_MESSAGE,
     DIRECT_MESSAGE_FILE,
-    INBOX_RELAYS,
   } from "@welshman/util"
   import {
     pubkey,
     tagPubkey,
     sendWrapped,
-    loadUsingOutbox,
+    loadInboxRelaySelections,
     inboxRelaySelectionsByPubkey,
   } from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
@@ -168,13 +167,8 @@
   })
 
   onMount(() => {
-    // Don't use loadInboxRelaySelection because we want to force reload
     for (const pubkey of others) {
-      loadUsingOutbox({
-        pubkey,
-        kind: INBOX_RELAYS,
-        relays: INDEXER_RELAYS,
-      })
+      loadInboxRelaySelections(pubkey, INDEXER_RELAYS, true)
     }
 
     const observer = new ResizeObserver(() => {
