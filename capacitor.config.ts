@@ -7,6 +7,9 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: "https"
   },
+  android: {
+    adjustMarginsForEdgeToEdge: false,
+  },
   plugins: {
     SplashScreen: {
       androidSplashResourceName: "splash"
