@@ -1,7 +1,9 @@
 <script lang="ts">
   import {debounce} from "throttle-debounce"
   import {nwc} from "@getalby/sdk"
-  import {sleep} from "@welshman/lib"
+  import {sleep, assoc} from "@welshman/lib"
+  import type {NWCInfo} from "@welshman/util"
+  import {pubkey, updateSession} from "@welshman/app"
   import Link from "@lib/components/Link.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -11,8 +13,7 @@
   import Divider from "@lib/components/Divider.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import type {NWCInfo} from "@app/state"
-  import {wallet, getWebLn} from "@app/state"
+  import {getWebLn} from "@app/commands"
   import {pushToast} from "@app/toast"
 
   const back = () => history.back()
@@ -30,7 +31,7 @@
           message: "Your extension does not support lightning payments",
         })
       } else {
-        wallet.set({type: "webln", info})
+        updateSession($pubkey!, assoc("wallet", {type: "webln", info}))
         pushToast({message: "Wallet successfully connected!"})
 
         await sleep(400)
@@ -61,7 +62,10 @@
           message: "Wallet failed to connect",
         })
       } else {
-        wallet.set({type: "nwc", info: client.options as unknown as NWCInfo})
+        updateSession(
+          $pubkey!,
+          assoc("wallet", {type: "nwc", info: client.options as unknown as NWCInfo}),
+        )
         pushToast({message: "Wallet successfully connected!"})
 
         await sleep(400)

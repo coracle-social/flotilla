@@ -39,6 +39,7 @@ import {Router} from "@welshman/router"
 import {
   pubkey,
   signer,
+  session,
   repository,
   publishThunk,
   profilesByPubkey,
@@ -56,8 +57,6 @@ import {
   getThunkError,
 } from "@welshman/app"
 import {
-  wallet,
-  getWebLn,
   PROTECTED,
   userMembership,
   INDEXER_RELAYS,
@@ -462,16 +461,20 @@ export const makeAlert = async (params: AlertParams) => {
 export const publishAlert = async (params: AlertParams) =>
   publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})
 
-export const payInvoice = async (invoice: string) => {
-  const $wallet = get(wallet)
+// Lightning
 
-  if (!$wallet) {
+export const getWebLn = () => (window as any).webln
+
+export const payInvoice = async (invoice: string) => {
+  const $session = session.get()
+
+  if (!$session?.wallet) {
     throw new Error("No wallet is connected")
   }
 
-  if ($wallet.type === "nwc") {
-    return new nwc.NWCClient($wallet.info).payInvoice({invoice})
-  } else if ($wallet.type === "webln") {
+  if ($session.wallet.type === "nwc") {
+    return new nwc.NWCClient($session.wallet.info).payInvoice({invoice})
+  } else if ($session.wallet.type === "webln") {
     return getWebLn()
       .enable()
       .then(() => getWebLn().sendPayment(invoice))

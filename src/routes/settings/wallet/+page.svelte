@@ -2,12 +2,13 @@
   import {nwc} from "@getalby/sdk"
   import {LOCALE} from "@welshman/lib"
   import {displayRelayUrl, fromMsats} from "@welshman/util"
+  import {session} from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
   import {pushModal} from "@app/modal"
-  import {wallet, getWebLn} from "@app/state"
+  import {getWebLn} from "@app/commands"
 
   const connect = () => pushModal(WalletConnect)
 
@@ -21,7 +22,7 @@
         <Icon icon="wallet" />
         Wallet
       </strong>
-      {#if $wallet}
+      {#if $session?.wallet}
         <div class="flex items-center gap-2 text-sm text-success">
           <Icon icon="check-circle" size={4} />
           Connected
@@ -34,13 +35,13 @@
       {/if}
     </div>
     <div class="col-4">
-      {#if $wallet}
-        {#if $wallet?.type === "webln"}
-          {@const {node, version} = $wallet.info}
+      {#if $session?.wallet}
+        {#if $session.wallet.type === "webln"}
+          {@const {node, version} = $session.wallet.info}
           <div class="flex flex-col justify-between gap-2 lg:flex-row">
             <p>
               Connected to <strong>{node?.alias || version || "unknown wallet"}</strong>
-              via <strong>{$wallet.type}</strong>
+              via <strong>{$session.wallet.type}</strong>
             </p>
             <p class="flex gap-2 whitespace-nowrap">
               Balance:
@@ -56,8 +57,8 @@
               sats
             </p>
           </div>
-        {:else if $wallet.type === "nwc"}
-          {@const {lud16, relayUrl, nostrWalletConnectUrl} = $wallet.info}
+        {:else if $session.wallet.type === "nwc"}
+          {@const {lud16, relayUrl, nostrWalletConnectUrl} = $session.wallet.info}
           <div class="flex flex-col justify-between gap-2 lg:flex-row">
             <p>
               Connected to <strong>{lud16}</strong> via <strong>{displayRelayUrl(relayUrl)}</strong>

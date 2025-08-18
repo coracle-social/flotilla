@@ -355,43 +355,6 @@ export const {
   load: makeOutboxLoader(SETTINGS),
 })
 
-// Wallets
-
-export type WebLNInfo = {
-  methods?: string[]
-  supports?: string[]
-  version?: string
-  node?: {
-    alias: string
-  }
-}
-
-export type NWCInfo = {
-  lud16: string
-  secret: string
-  relayUrl: string
-  walletPubkey: string
-  nostrWalletConnectUrl: string
-}
-
-export type Wallet =
-  | {
-      type: "webln"
-      info: WebLNInfo
-    }
-  | {
-      type: "nwc"
-      info: NWCInfo
-    }
-
-export const wallet = synced<Wallet | undefined>({
-  key: "wallet",
-  defaultValue: undefined,
-  storage: localStorageProvider,
-})
-
-export const getWebLn = () => (window as any).webln
-
 // Alerts
 
 export type Alert = {

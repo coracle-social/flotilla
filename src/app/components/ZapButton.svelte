@@ -1,13 +1,12 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import type {TrustedEvent} from "@welshman/util"
-  import {deriveZapperForPubkey} from "@welshman/app"
+  import {session, deriveZapperForPubkey} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import Zap from "@app/components/Zap.svelte"
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import {pushModal} from "@app/modal"
-  import {wallet} from "@app/state"
 
   type Props = {
     url: string
@@ -24,7 +23,7 @@
   const onClick = () => {
     if (!$zapper?.allowsNostr) {
       pushModal(InfoZapperError, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
-    } else if ($wallet) {
+    } else if ($session?.wallet) {
       pushModal(Zap, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
     } else {
       pushModal(WalletConnect, {}, {replaceState})
