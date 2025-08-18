@@ -1,7 +1,6 @@
 <script lang="ts">
-  import {Capacitor} from "@capacitor/core"
   import {postJson} from "@welshman/lib"
-  import {isMobile, preventDefault} from "@lib/html"
+  import {preventDefault} from "@lib/html"
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -9,22 +8,11 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import InfoNostr from "@app/components/InfoNostr.svelte"
-  import SignUpKey from "@app/components/SignUpKey.svelte"
+  import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import SignUpSuccess from "@app/components/SignUpSuccess.svelte"
   import {pushModal} from "@app/modal"
-  import {BURROW_URL, PLATFORM_NAME, PLATFORM_ACCENT} from "@app/state"
+  import {BURROW_URL, PLATFORM_NAME} from "@app/state"
   import {pushToast} from "@app/toast"
-
-  const params = new URLSearchParams({
-    an: PLATFORM_NAME,
-    ac: window.location.origin,
-    at: isMobile ? "android" : "web",
-    aa: PLATFORM_ACCENT.slice(1),
-    am: "dark",
-    asf: "yes",
-  })
-
-  const nstart = `https://start.njump.me/?${params.toString()}`
 
   const login = () => pushModal(LogIn)
 
@@ -50,7 +38,7 @@
     }
   }
 
-  const useKey = () => pushModal(SignUpKey)
+  const next = () => pushModal(SignUpProfile)
 
   let email = $state("")
   let password = $state("")
@@ -61,8 +49,8 @@
   <h1 class="heading">Sign up with Nostr</h1>
   <p class="m-auto max-w-sm text-center">
     {PLATFORM_NAME} is built using the
-    <Button class="link" onclick={() => pushModal(InfoNostr)}>nostr protocol</Button>, which allows
-    you to own your social identity.
+    <Button class="link" onclick={() => pushModal(InfoNostr)}>nostr protocol</Button>, which gives
+    users control over their digital identity using <strong>cryptographic key pairs</strong>.
   </p>
   {#if BURROW_URL}
     <FieldInline>
@@ -98,17 +86,10 @@
     </p>
     <Divider>Or</Divider>
   {/if}
-  {#if Capacitor.isNativePlatform()}
-    <Button onclick={useKey} class="btn {email || password ? 'btn-neutral' : 'btn-primary'}">
-      <Icon icon="key" />
-      Generate a key
-    </Button>
-  {:else}
-    <a href={nstart} class="btn {email || password ? 'btn-neutral' : 'btn-primary'}">
-      <Icon icon="square-share-line" />
-      Create an account on Nstart
-    </a>
-  {/if}
+  <Button onclick={next} class="btn {email || password ? 'btn-neutral' : 'btn-primary'}">
+    <Icon icon="key" />
+    Generate a key
+  </Button>
   <div class="text-sm">
     Already have an account?
     <Button class="link" onclick={login}>Log in instead</Button>

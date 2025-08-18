@@ -18,11 +18,11 @@
   type Props = {
     initialValues: Values
     onsubmit: (values: Values) => void
-    hideAddress?: boolean
+    isSignup?: boolean
     footer: Snippet
   }
 
-  const {initialValues, hideAddress, onsubmit, footer}: Props = $props()
+  const {initialValues, isSignup, onsubmit, footer}: Props = $props()
 
   const values = $state(initialValues)
 
@@ -32,9 +32,25 @@
 </script>
 
 <form class="col-4" onsubmit={preventDefault(submit)}>
-  <div class="flex justify-center py-2">
-    <InputProfilePicture bind:file bind:url={values.profile.picture} />
-  </div>
+  {#if isSignup}
+    <div class="grid grid-cols-2">
+      <div class="flex flex-col gap-2">
+        <p class="text-2xl">Create a Profile</p>
+        <p class="text-sm">
+          Give people something to go on — but remember, privacy matters! Be careful about sharing
+          sensitive information.
+        </p>
+      </div>
+      <div class="flex flex-col items-center justify-center gap-2">
+        <InputProfilePicture bind:file bind:url={values.profile.picture} />
+        <p class="text-xs">Upload an Avatar</p>
+      </div>
+    </div>
+  {:else}
+    <div class="flex items-center justify-center py-4">
+      <InputProfilePicture bind:file bind:url={values.profile.picture} />
+    </div>
+  {/if}
   <Field>
     {#snippet label()}
       <p>Username</p>
@@ -63,7 +79,7 @@
       Give a brief introduction to why you're here.
     {/snippet}
   </Field>
-  {#if !hideAddress}
+  {#if !isSignup}
     <Field>
       {#snippet label()}
         <p>Nostr Address</p>
@@ -82,19 +98,24 @@
       {/snippet}
     </Field>
   {/if}
-  <FieldInline>
-    {#snippet label()}
-      <p>Broadcast Profile</p>
-    {/snippet}
-    {#snippet input()}
-      <input type="checkbox" class="toggle toggle-primary" bind:checked={values.shouldBroadcast} />
-    {/snippet}
-    {#snippet info()}
-      <p>
-        If enabled, changes will be published to the broader nostr network in addition to spaces you
-        are a member of.
-      </p>
-    {/snippet}
-  </FieldInline>
+  {#if !isSignup}
+    <FieldInline>
+      {#snippet label()}
+        <p>Broadcast Profile</p>
+      {/snippet}
+      {#snippet input()}
+        <input
+          type="checkbox"
+          class="toggle toggle-primary"
+          bind:checked={values.shouldBroadcast} />
+      {/snippet}
+      {#snippet info()}
+        <p>
+          If enabled, changes will be published to the broader nostr network in addition to spaces
+          you are a member of.
+        </p>
+      {/snippet}
+    </FieldInline>
+  {/if}
   {@render footer()}
 </form>
