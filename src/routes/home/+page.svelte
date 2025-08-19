@@ -6,11 +6,14 @@
   import Button from "@lib/components/Button.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
   import SpaceAdd from "@app/components/SpaceAdd.svelte"
+  import ChatEnable from "@app/components/ChatEnable.svelte"
   import {pushModal} from "@app/modal"
   import {makeSpacePath} from "@app/routes"
-  import {PLATFORM_NAME, PLATFORM_RELAYS} from "@app/state"
+  import {PLATFORM_NAME, PLATFORM_RELAYS, canDecrypt} from "@app/state"
 
   const addSpace = () => pushModal(SpaceAdd)
+
+  const openChat = () => ($canDecrypt ? goto("/chat") : pushModal(ChatEnable, {next: "/chat"}))
 
   onMount(() => {
     if (PLATFORM_RELAYS.length > 0) {
@@ -51,7 +54,7 @@
             {/snippet}
           </CardButton>
         </Link>
-        <Link href="/chat">
+        <Button onclick={openChat}>
           <CardButton>
             {#snippet icon()}
               <div><Icon icon="chat-round" size={7} /></div>
@@ -63,7 +66,7 @@
               <div>Use nostr's encrypted group chats to stay in touch.</div>
             {/snippet}
           </CardButton>
-        </Link>
+        </Button>
       </div>
     </div>
   </div>
