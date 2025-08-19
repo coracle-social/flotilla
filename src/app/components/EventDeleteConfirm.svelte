@@ -11,8 +11,10 @@
 
   const {url, event}: Props = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const confirm = async () => {
-    await publishDelete({event, relays: [url], protect: await canEnforceNip70(url)})
+    await publishDelete({event, relays: [url], protect: await shouldProtect})
 
     clearModals()
   }

@@ -20,13 +20,15 @@
 
   const {url, event, reply}: Props = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const onEmoji = (async (event: TrustedEvent, url: string, emoji: NativeEmoji) => {
     history.back()
     publishReaction({
       event,
       relays: [url],
       content: emoji.unicode,
-      protect: await canEnforceNip70(url),
+      protect: await shouldProtect,
     })
   }).bind(undefined, event, url)
 

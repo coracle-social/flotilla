@@ -23,6 +23,7 @@
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Divider from "@lib/components/Divider.svelte"
+  import ThunkToast from "@app/components/ThunkToast.svelte"
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"
   import ChannelMessage from "@app/components/ChannelMessage.svelte"
@@ -57,6 +58,7 @@
   const channel = deriveChannel(url, room)
   const filter = {kinds: [MESSAGE], "#h": [room]}
   const isFavorite = $derived($userRoomsByUrl.get(url)?.has(room))
+  const shouldProtect = canEnforceNip70(url)
   const membershipStatus = deriveUserMembershipStatus(url, room)
 
   const addFavorite = () => addRoomMembership(url, room)
@@ -109,7 +111,7 @@
   const onSubmit = async ({content, tags}: EventContent) => {
     tags.push(["h", room])
 
-    if (await canEnforceNip70(url)) {
+    if (await shouldProtect) {
       tags.push(PROTECTED)
     }
 
@@ -123,10 +125,18 @@
       template = prependParent(parent, template)
     }
 
-    publishThunk({
+    const thunk = publishThunk({
       relays: [url],
       event: makeEvent(MESSAGE, template),
       delay: $userSettingValues.send_delay,
+    })
+
+    pushToast({
+      timeout: 30_000,
+      children: {
+        component: ThunkToast,
+        props: {thunk},
+      },
     })
 
     clearParent()

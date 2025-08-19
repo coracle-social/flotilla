@@ -22,6 +22,8 @@
 
   const {url, noun, event, hideZap, customActions}: Props = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const showPopover = () => popover?.show()
 
   const hidePopover = () => popover?.hide()
@@ -31,7 +33,7 @@
       event,
       content: emoji.unicode,
       relays: [url],
-      protect: await canEnforceNip70(url),
+      protect: await shouldProtect,
     })
 
   let popover: Instance | undefined = $state()

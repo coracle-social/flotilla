@@ -26,9 +26,11 @@
     pubkey,
     tagPubkey,
     sendWrapped,
+    mergeThunks,
     loadInboxRelaySelections,
     inboxRelaySelectionsByPubkey,
   } from "@welshman/app"
+  import type {AbstractThunk} from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -44,6 +46,7 @@
   import ChatMessage from "@app/components/ChatMessage.svelte"
   import ChatCompose from "@app/components/ChatCompose.svelte"
   import ChatComposeParent from "@app/components/ChatComposeParent.svelte"
+  import ThunkToast from "@app/components/ThunkToast.svelte"
   import {
     INDEXER_RELAYS,
     userSettingValues,
@@ -53,6 +56,7 @@
   } from "@app/state"
   import {pushModal} from "@app/modal"
   import {prependParent} from "@app/commands"
+  import {pushToast} from "@app/toast"
 
   type Props = {
     id: string
@@ -121,11 +125,22 @@
 
     // Split the message into multiple pieces so that we can use kind 15 to send images per nip 17
     // Sleep 1 second between each one to make sure timestamps are distinct
+    const thunks: AbstractThunk[] = []
     for (let i = 0; i < templates.length; i++) {
       const template = templates[i]
 
-      await sendWrapped({pubkeys, template, delay: $userSettingValues.send_delay + ms(i)})
+      thunks.push(
+        await sendWrapped({pubkeys, template, delay: $userSettingValues.send_delay + ms(i)}),
+      )
     }
+
+    pushToast({
+      timeout: 30_000,
+      children: {
+        component: ThunkToast,
+        props: {thunk: mergeThunks(thunks)},
+      },
+    })
 
     clearParent()
   }

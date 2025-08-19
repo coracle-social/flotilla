@@ -17,6 +17,8 @@
 
   const {url} = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const uploading = writable(false)
 
   const back = () => history.back()
@@ -50,7 +52,7 @@
       ["relays", url],
     ]
 
-    if (await canEnforceNip70(url)) {
+    if (await shouldProtect) {
       tags.push(PROTECTED)
     }
 

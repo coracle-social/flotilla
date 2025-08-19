@@ -8,7 +8,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Content from "@app/components/Content.svelte"
-  import ThunkStatus from "@app/components/ThunkStatus.svelte"
+  import ThunkFailure from "@app/components/ThunkFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import ChannelMessageZapButton from "@app/components/ChannelMessageZapButton.svelte"
@@ -30,6 +30,7 @@
   const {url, event, replyTo = undefined, showPubkey = false, inert = false}: Props = $props()
 
   const thunk = $thunks[event.id]
+  const shouldProtect = canEnforceNip70(url)
   const today = formatTimestampAsDate(now())
   const profile = deriveProfile(event.pubkey, [url])
   const profileDisplay = deriveProfileDisplay(event.pubkey, [url])
@@ -42,10 +43,10 @@
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey, url})
 
   const deleteReaction = async (event: TrustedEvent) =>
-    publishDelete({relays: [url], event, protect: await canEnforceNip70(url)})
+    publishDelete({relays: [url], event, protect: await shouldProtect})
 
   const createReaction = async (template: EventContent) =>
-    publishReaction({...template, event, relays: [url], protect: await canEnforceNip70(url)})
+    publishReaction({...template, event, relays: [url], protect: await shouldProtect})
 </script>
 
 <TapTarget
@@ -79,7 +80,7 @@
       <div class="text-sm">
         <Content minimalQuote {event} {url} />
         {#if thunk}
-          <ThunkStatus {thunk} class="mt-2" />
+          <ThunkFailure showToastOnRetry {thunk} class="mt-2" />
         {/if}
       </div>
     </div>

@@ -6,12 +6,14 @@
 
   const {url, event} = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const onEmoji = async (emoji: NativeEmoji) =>
     publishReaction({
       event,
       relays: [url],
       content: emoji.unicode,
-      protect: await canEnforceNip70(url),
+      protect: await shouldProtect,
     })
 </script>
 

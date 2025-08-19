@@ -22,15 +22,17 @@
     showActivity?: boolean
   } = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const path = makeCalendarPath(url, event.id)
 
   const editEvent = () => pushModal(CalendarEventEdit, {url, event})
 
   const deleteReaction = async (event: TrustedEvent) =>
-    publishDelete({relays: [url], event, protect: await canEnforceNip70(url)})
+    publishDelete({relays: [url], event, protect: await shouldProtect})
 
   const createReaction = async (template: EventContent) =>
-    publishReaction({...template, event, relays: [url], protect: await canEnforceNip70(url)})
+    publishReaction({...template, event, relays: [url], protect: await shouldProtect})
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-2">

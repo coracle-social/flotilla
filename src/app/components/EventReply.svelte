@@ -14,6 +14,8 @@
 
   const {url, event, onClose, onSubmit} = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const uploading = writable(false)
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
@@ -25,7 +27,7 @@
     const content = ed.getText({blockSeparator: "\n"}).trim()
     const tags = ed.storage.nostr.getEditorTags()
 
-    if (await canEnforceNip70(url)) {
+    if (await shouldProtect) {
       tags.push(PROTECTED)
     }
 

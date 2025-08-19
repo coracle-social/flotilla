@@ -86,7 +86,7 @@ import {
   userFollows,
   ensurePlaintext,
   thunks,
-  walkThunks,
+  flattenThunks,
   signer,
   makeOutboxLoader,
   appContext,
@@ -260,7 +260,7 @@ export const getUrlsForEvent = derived([trackerStore, thunks], ([$tracker, $thun
   const getThunksByEventId = memoize(() => {
     const thunksByEventId = new Map<string, Thunk[]>()
 
-    for (const thunk of walkThunks(Object.values($thunks))) {
+    for (const thunk of flattenThunks(Object.values($thunks))) {
       pushToMapKey(thunksByEventId, thunk.event.id, thunk)
     }
 

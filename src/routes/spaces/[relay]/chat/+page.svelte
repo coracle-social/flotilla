@@ -14,14 +14,21 @@
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Divider from "@lib/components/Divider.svelte"
+  import ThunkToast from "@app/components/ThunkToast.svelte"
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import ChannelMessage from "@app/components/ChannelMessage.svelte"
   import ChannelCompose from "@app/components/ChannelCompose.svelte"
   import ChannelComposeParent from "@app/components/ChannelComposeParent.svelte"
-  import {userSettingValues, decodeRelay, getEventsForUrl} from "@app/state"
-  import {setChecked, checked} from "@app/notifications"
+  import {
+    userSettingValues,
+    decodeRelay,
+    getEventsForUrl,
+    PROTECTED,
+    REACTION_KINDS,
+  } from "@app/state"
   import {prependParent, canEnforceNip70} from "@app/commands"
-  import {PROTECTED, REACTION_KINDS} from "@app/state"
+  import {setChecked, checked} from "@app/notifications"
+  import {pushToast} from "@app/toast"
   import {makeFeed} from "@app/requests"
   import {popKey} from "@app/implicit"
 
@@ -29,6 +36,7 @@
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay($page.params.relay)
   const filter = {kinds: [MESSAGE]}
+  const shouldProtect = canEnforceNip70(url)
 
   const replyTo = (event: TrustedEvent) => {
     parent = event
@@ -44,7 +52,7 @@
   }
 
   const onSubmit = async ({content, tags}: EventContent) => {
-    if (await canEnforceNip70(url)) {
+    if (await shouldProtect) {
       tags.push(PROTECTED)
     }
 
@@ -58,10 +66,18 @@
       template = prependParent(parent, template)
     }
 
-    publishThunk({
+    const thunk = publishThunk({
       relays: [url],
       event: makeEvent(MESSAGE, template),
       delay: $userSettingValues.send_delay,
+    })
+
+    pushToast({
+      timeout: 30_000,
+      children: {
+        component: ThunkToast,
+        props: {thunk},
+      },
     })
 
     clearParent()

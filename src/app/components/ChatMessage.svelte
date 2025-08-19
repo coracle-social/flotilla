@@ -11,7 +11,7 @@
   import Avatar from "@lib/components/Avatar.svelte"
   import Content from "@app/components/Content.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import ThunkStatus from "@app/components/ThunkStatus.svelte"
+  import ThunkFailure from "@app/components/ThunkFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ChatMessageMenu from "@app/components/ChatMessageMenu.svelte"
   import ChatMessageMenuMobile from "@app/components/ChatMessageMenuMobile.svelte"
@@ -59,7 +59,7 @@
 </script>
 
 {#if thunk}
-  <ThunkStatus {thunk} class="mt-1" />
+  <ThunkFailure showToastOnRetry {thunk} class="mt-1" />
 {/if}
 <div
   data-event={event.id}

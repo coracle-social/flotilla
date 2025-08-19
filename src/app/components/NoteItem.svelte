@@ -10,18 +10,20 @@
 
   const {url, event} = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const deleteReaction = async (event: TrustedEvent) =>
-    publishDelete({relays: [url], event, protect: await canEnforceNip70(url)})
+    publishDelete({relays: [url], event, protect: await shouldProtect})
 
   const createReaction = async (template: EventContent) =>
-    publishReaction({...template, event, relays: [url], protect: await canEnforceNip70(url)})
+    publishReaction({...template, event, relays: [url], protect: await shouldProtect})
 
   const onEmoji = async (emoji: NativeEmoji) =>
     publishReaction({
       event,
       content: emoji.unicode,
       relays: [url],
-      protect: await canEnforceNip70(url),
+      protect: await shouldProtect,
     })
 </script>
 

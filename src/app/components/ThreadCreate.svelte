@@ -16,6 +16,8 @@
 
   const {url} = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const uploading = writable(false)
 
   const back = () => history.back()
@@ -44,7 +46,7 @@
 
     const tags = [...ed.storage.nostr.getEditorTags(), ["title", title]]
 
-    if (await canEnforceNip70(url)) {
+    if (await shouldProtect) {
       tags.push(PROTECTED)
     }
 

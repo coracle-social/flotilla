@@ -10,6 +10,8 @@
 
   const {url, event} = $props()
 
+  const shouldProtect = canEnforceNip70(url)
+
   const reports = deriveEvents(repository, {
     filters: [{kinds: [REPORT], "#e": [event.id]}],
   })
@@ -17,7 +19,7 @@
   const back = () => history.back()
 
   const deleteReport = async (report: TrustedEvent) => {
-    publishDelete({event: report, relays: [url], protect: await canEnforceNip70(url)})
+    publishDelete({event: report, relays: [url], protect: await shouldProtect})
 
     if ($reports.length === 0) {
       history.back()
