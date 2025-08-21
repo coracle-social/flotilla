@@ -22,7 +22,7 @@ If you're deploying a custom version of flotilla, be sure to remove the `plausib
 
 ## Development
 
-Run `pnpm run dev` to get a dev server, and `pnpm run check:watch` to watch for typescript errors. When you're ready to commit, a pre-commit hook will run to lint and typecheck your work.
+See [./CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Deployment
 

@@ -10,11 +10,11 @@
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import LogInBunker from "@app/components/LogInBunker.svelte"
   import LogInPassword from "@app/components/LogInPassword.svelte"
-  import {pushModal, clearModals} from "@app/modal"
-  import {PLATFORM_NAME, BURROW_URL} from "@app/state"
-  import {pushToast} from "@app/toast"
-  import {loadUserData} from "@app/requests"
-  import {setChecked} from "@app/notifications"
+  import {pushModal, clearModals} from "@app/util/modal"
+  import {PLATFORM_NAME, BURROW_URL} from "@app/core/state"
+  import {pushToast} from "@app/util/toast"
+  import {loadUserData} from "@app/core/requests"
+  import {setChecked} from "@app/util/notifications"
 
   let signers: any[] = $state([])
   let loading: string | undefined = $state()

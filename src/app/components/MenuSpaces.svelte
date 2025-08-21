@@ -5,8 +5,8 @@
   import CardButton from "@lib/components/CardButton.svelte"
   import MenuSpacesItem from "@app/components/MenuSpacesItem.svelte"
   import SpaceAdd from "@app/components/SpaceAdd.svelte"
-  import {userRoomsByUrl, PLATFORM_RELAYS} from "@app/state"
-  import {pushModal} from "@app/modal"
+  import {userRoomsByUrl, PLATFORM_RELAYS} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
 
   const addSpace = () => pushModal(SpaceAdd)
 </script>

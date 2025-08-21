@@ -6,7 +6,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ConversationCard from "@app/components/ConversationCard.svelte"
-  import {deriveEventsForUrl} from "@app/state"
+  import {deriveEventsForUrl} from "@app/core/state"
 
   type Props = {
     url: string

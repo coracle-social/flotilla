@@ -13,7 +13,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {makeChatPath} from "@app/routes"
+  import {makeChatPath} from "@app/util/routes"
 
   const back = () => history.back()
 

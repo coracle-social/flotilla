@@ -7,9 +7,9 @@
   import Collapse from "@lib/components/Collapse.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
   import RelayAdd from "@app/components/RelayAdd.svelte"
-  import {pushModal} from "@app/modal"
-  import {discoverRelays} from "@app/requests"
-  import {setRelayPolicy, setInboxRelayPolicy} from "@app/commands"
+  import {pushModal} from "@app/util/modal"
+  import {discoverRelays} from "@app/core/requests"
+  import {setRelayPolicy, setInboxRelayPolicy} from "@app/core/commands"
 
   const readRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Read)
   const writeRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Write)

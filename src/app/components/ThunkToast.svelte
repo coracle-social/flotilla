@@ -3,8 +3,8 @@
   import {thunkHasStatus, thunkIsComplete} from "@welshman/app"
   import {PublishStatus} from "@welshman/net"
   import ThunkPending from "@app/components/ThunkPending.svelte"
-  import type {Toast} from "@app/toast"
-  import {popToast} from "@app/toast"
+  import type {Toast} from "@app/util/toast"
+  import {popToast} from "@app/util/toast"
 
   type Props = {
     toast: Toast

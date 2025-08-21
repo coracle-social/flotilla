@@ -10,7 +10,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {clip} from "@app/toast"
+  import {clip} from "@app/util/toast"
 
   const {url} = $props()
 

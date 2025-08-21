@@ -2,7 +2,7 @@
   import {dissoc} from "@welshman/lib"
   import {pubkey, updateSession} from "@welshman/app"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {clearModals} from "@app/modal"
+  import {clearModals} from "@app/util/modal"
 
   const confirm = async () => {
     updateSession($pubkey!, dissoc("wallet"))

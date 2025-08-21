@@ -8,7 +8,7 @@
   import {page} from "$app/stores"
   import {goto} from "$app/navigation"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {goToEvent} from "@app/routes"
+  import {goToEvent} from "@app/util/routes"
 
   const {bech32} = $page.params
 

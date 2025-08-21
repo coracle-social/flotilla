@@ -2,8 +2,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ChatStart from "@app/components/ChatStart.svelte"
-  import {setChecked} from "@app/notifications"
-  import {pushModal} from "@app/modal"
+  import {setChecked} from "@app/util/notifications"
+  import {pushModal} from "@app/util/modal"
 
   const startChat = () => pushModal(ChatStart, {}, {replaceState: true})
 

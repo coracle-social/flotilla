@@ -2,7 +2,7 @@
   import {page} from "$app/stores"
   import Drawer from "@lib/components/Drawer.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
-  import {modals, clearModals} from "@app/modal"
+  import {modals, clearModals} from "@app/util/modal"
 
   const onKeyDown = (e: any) => {
     if (e.code === "Escape" && e.target === document.body) {

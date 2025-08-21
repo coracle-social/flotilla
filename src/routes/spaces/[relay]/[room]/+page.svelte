@@ -38,18 +38,18 @@
     deriveChannel,
     MembershipStatus,
     REACTION_KINDS,
-  } from "@app/state"
-  import {setChecked, checked} from "@app/notifications"
+  } from "@app/core/state"
+  import {setChecked, checked} from "@app/util/notifications"
   import {
     addRoomMembership,
     canEnforceNip70,
     removeRoomMembership,
     prependParent,
-  } from "@app/commands"
-  import {PROTECTED} from "@app/state"
-  import {makeFeed} from "@app/requests"
-  import {popKey} from "@app/implicit"
-  import {pushToast} from "@app/toast"
+  } from "@app/core/commands"
+  import {PROTECTED} from "@app/core/state"
+  import {makeFeed} from "@app/core/requests"
+  import {popKey} from "@lib/implicit"
+  import {pushToast} from "@app/util/toast"
 
   const {room} = $page.params
   const mounted = now()

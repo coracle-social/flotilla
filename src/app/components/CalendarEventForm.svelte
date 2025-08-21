@@ -13,10 +13,10 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {PROTECTED} from "@app/state"
+  import {PROTECTED} from "@app/core/state"
   import {makeEditor} from "@app/editor"
-  import {pushToast} from "@app/toast"
-  import {canEnforceNip70} from "@app/commands"
+  import {pushToast} from "@app/util/toast"
+  import {canEnforceNip70} from "@app/core/commands"
 
   type Props = {
     url: string

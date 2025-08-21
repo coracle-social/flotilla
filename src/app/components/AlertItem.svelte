@@ -5,9 +5,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import AlertDelete from "@app/components/AlertDelete.svelte"
-  import type {Alert} from "@app/state"
-  import {deriveAlertStatus} from "@app/state"
-  import {pushModal} from "@app/modal"
+  import type {Alert} from "@app/core/state"
+  import {deriveAlertStatus} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
 
   type Props = {
     alert: Alert

@@ -2,7 +2,7 @@
   import {onDestroy} from "svelte"
   import {page} from "$app/stores"
   import Chat from "@app/components/Chat.svelte"
-  import {setChecked} from "@app/notifications"
+  import {setChecked} from "@app/util/notifications"
 
   onDestroy(() => {
     setChecked($page.url.pathname)

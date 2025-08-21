@@ -7,7 +7,7 @@
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {PROTECTED} from "@app/state"
+  import {PROTECTED} from "@app/core/state"
 
   type Props = {
     secret: string

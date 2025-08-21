@@ -11,8 +11,8 @@ import {
   makeCalendarPath,
   makeSpaceChatPath,
   makeRoomPath,
-} from "@app/routes"
-import {chats, hasNip29, getUrlsForEvent, userRoomsByUrl, repositoryStore} from "@app/state"
+} from "@app/util/routes"
+import {chats, hasNip29, getUrlsForEvent, userRoomsByUrl, repositoryStore} from "@app/core/state"
 
 // Checked state
 

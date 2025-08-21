@@ -1,8 +1,8 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {publishDelete, canEnforceNip70} from "@app/commands"
-  import {clearModals} from "@app/modal"
+  import {publishDelete, canEnforceNip70} from "@app/core/commands"
+  import {clearModals} from "@app/util/modal"
 
   type Props = {
     url: string

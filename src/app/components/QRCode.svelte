@@ -2,7 +2,7 @@
   import QRCode from "qrcode"
   import {onMount} from "svelte"
   import Button from "@lib/components/Button.svelte"
-  import {clip} from "@app/toast"
+  import {clip} from "@app/util/toast"
 
   const {code, ...props} = $props()
 

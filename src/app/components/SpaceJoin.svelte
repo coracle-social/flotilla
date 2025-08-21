@@ -6,8 +6,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {clearModals} from "@app/modal"
-  import {addSpaceMembership, broadcastUserData} from "@app/commands"
+  import {clearModals} from "@app/util/modal"
+  import {addSpaceMembership, broadcastUserData} from "@app/core/commands"
 
   const {url} = $props()
 

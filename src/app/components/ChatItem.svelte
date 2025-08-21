@@ -9,8 +9,8 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {makeChatPath} from "@app/routes"
-  import {notifications} from "@app/notifications"
+  import {makeChatPath} from "@app/util/routes"
+  import {notifications} from "@app/util/notifications"
 
   interface Props {
     id: string

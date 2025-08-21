@@ -5,7 +5,7 @@
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ThreadActions from "@app/components/ThreadActions.svelte"
-  import {makeThreadPath} from "@app/routes"
+  import {makeThreadPath} from "@app/util/routes"
 
   type Props = {
     url: string

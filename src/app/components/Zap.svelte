@@ -12,8 +12,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import {payInvoice} from "@app/commands"
-  import {pushToast} from "@app/toast"
+  import {payInvoice} from "@app/core/commands"
+  import {pushToast} from "@app/util/toast"
 
   type Props = {
     url: string

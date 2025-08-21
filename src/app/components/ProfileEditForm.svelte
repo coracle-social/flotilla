@@ -8,7 +8,7 @@
   import Button from "@lib/components/Button.svelte"
   import InputProfilePicture from "@lib/components/InputProfilePicture.svelte"
   import InfoHandle from "@app/components/InfoHandle.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   type Values = {
     profile: Profile

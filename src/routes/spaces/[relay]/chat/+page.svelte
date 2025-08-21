@@ -25,12 +25,12 @@
     getEventsForUrl,
     PROTECTED,
     REACTION_KINDS,
-  } from "@app/state"
-  import {prependParent, canEnforceNip70} from "@app/commands"
-  import {setChecked, checked} from "@app/notifications"
-  import {pushToast} from "@app/toast"
-  import {makeFeed} from "@app/requests"
-  import {popKey} from "@app/implicit"
+  } from "@app/core/state"
+  import {prependParent, canEnforceNip70} from "@app/core/commands"
+  import {setChecked, checked} from "@app/util/notifications"
+  import {pushToast} from "@app/util/toast"
+  import {makeFeed} from "@app/core/requests"
+  import {popKey} from "@lib/implicit"
 
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]

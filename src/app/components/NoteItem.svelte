@@ -6,7 +6,7 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import {publishDelete, publishReaction, canEnforceNip70} from "@app/commands"
+  import {publishDelete, publishReaction, canEnforceNip70} from "@app/core/commands"
 
   const {url, event} = $props()
 

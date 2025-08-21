@@ -13,9 +13,9 @@
   import SecondaryNavSection from "@lib/components/SecondaryNavSection.svelte"
   import ChatMenu from "@app/components/ChatMenu.svelte"
   import ChatItem from "@app/components/ChatItem.svelte"
-  import {chatSearch} from "@app/state"
-  import {pullConservatively} from "@app/requests"
-  import {pushModal} from "@app/modal"
+  import {chatSearch} from "@app/core/state"
+  import {pullConservatively} from "@app/core/requests"
+  import {pushModal} from "@app/util/modal"
 
   type Props = {
     children?: Snippet

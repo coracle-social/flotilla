@@ -4,8 +4,8 @@
   import SpaceAvatar from "@app/components/SpaceAvatar.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
-  import {makeSpacePath} from "@app/routes"
-  import {notifications} from "@app/notifications"
+  import {makeSpacePath} from "@app/util/routes"
+  import {notifications} from "@app/util/notifications"
 
   const {url} = $props()
 

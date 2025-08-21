@@ -1,7 +1,7 @@
 <script lang="ts">
   import Spinner from "@lib/components/Spinner.svelte"
   import QRCode from "@app/components/QRCode.svelte"
-  import type {Nip46Controller} from "@app/nip46"
+  import type {Nip46Controller} from "@app/util/nip46"
 
   type Props = {
     controller: Nip46Controller

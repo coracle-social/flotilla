@@ -14,10 +14,10 @@
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
-  import {decodeRelay, getEventsForUrl, REACTION_KINDS} from "@app/state"
-  import {setChecked} from "@app/notifications"
-  import {makeFeed} from "@app/requests"
-  import {pushModal} from "@app/modal"
+  import {decodeRelay, getEventsForUrl, REACTION_KINDS} from "@app/core/state"
+  import {setChecked} from "@app/util/notifications"
+  import {makeFeed} from "@app/core/requests"
+  import {pushModal} from "@app/util/modal"
 
   const url = decodeRelay($page.params.relay)
   const mutedPubkeys = getPubkeyTagValues(getListTags($userMutes))

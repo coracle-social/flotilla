@@ -63,7 +63,7 @@ import {
   NOTIFIER_PUBKEY,
   NOTIFIER_RELAY,
   userRoomsByUrl,
-} from "@app/state"
+} from "@app/core/state"
 
 // Utils
 

@@ -23,8 +23,8 @@
     loadMembership,
     userRoomsByUrl,
     getDefaultPubkeys,
-  } from "@app/state"
-  import {pushModal} from "@app/modal"
+  } from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
 
   const discoverRelays = () =>
     Promise.all([

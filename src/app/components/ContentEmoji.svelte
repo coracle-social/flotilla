@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {ParsedEmojiValue} from "@welshman/content"
-  import {imgproxy} from "@app/state"
+  import {imgproxy} from "@app/core/state"
 
   export let value: ParsedEmojiValue
 

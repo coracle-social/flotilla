@@ -6,7 +6,7 @@ import {parseJson, poll} from "@welshman/lib"
 import {isSignedEvent} from "@welshman/util"
 import {goto} from "$app/navigation"
 import {ucFirst} from "@lib/util"
-import {VAPID_PUBLIC_KEY} from "@app/state"
+import {VAPID_PUBLIC_KEY} from "@app/core/state"
 
 export const platform = Capacitor.getPlatform()
 

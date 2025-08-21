@@ -6,16 +6,16 @@
   import Button from "@lib/components/Button.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"
-  import {makeThreadPath, makeCalendarPath, makeRoomPath, makeSpacePath} from "@app/routes"
+  import {makeThreadPath, makeCalendarPath, makeRoomPath, makeSpacePath} from "@app/util/routes"
   import {
     hasNip29,
     deriveUserRooms,
     deriveOtherRooms,
     makeChannelId,
     channelsById,
-  } from "@app/state"
-  import {notifications} from "@app/notifications"
-  import {pushModal} from "@app/modal"
+  } from "@app/core/state"
+  import {notifications} from "@app/util/notifications"
+  import {pushModal} from "@app/util/modal"
 
   type Props = {
     url: string

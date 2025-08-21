@@ -16,7 +16,7 @@ import type {FileAttributes} from "@welshman/editor"
 import {Editor, MentionSuggestion, WelshmanExtension} from "@welshman/editor"
 import {makeMentionNodeView} from "./MentionNodeView"
 import ProfileSuggestion from "./ProfileSuggestion.svelte"
-import {pushToast} from "@app/toast"
+import {pushToast} from "@app/util/toast"
 
 export const getBlossomServer = () => {
   const userUrls = getTagValues("server", getListTags(userBlossomServers.get()))

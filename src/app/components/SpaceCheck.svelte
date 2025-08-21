@@ -10,8 +10,8 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceVisitConfirm, {confirmSpaceVisit} from "@app/components/SpaceVisitConfirm.svelte"
-  import {attemptRelayAccess} from "@app/commands"
-  import {pushModal} from "@app/modal"
+  import {attemptRelayAccess} from "@app/core/commands"
+  import {pushModal} from "@app/util/modal"
 
   const {url} = $props()
 

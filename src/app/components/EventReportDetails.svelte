@@ -6,7 +6,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import Button from "@lib/components/Button.svelte"
   import Profile from "@app/components/Profile.svelte"
-  import {publishDelete, canEnforceNip70} from "@app/commands"
+  import {publishDelete, canEnforceNip70} from "@app/core/commands"
 
   const {url, event} = $props()
 

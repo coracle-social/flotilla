@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/browser"
-import {getSetting} from "@app/state"
+import {getSetting} from "@app/core/state"
 
 export const setupTracking = () => {
   if (import.meta.env.VITE_GLITCHTIP_API_KEY) {

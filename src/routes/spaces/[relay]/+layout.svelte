@@ -8,13 +8,13 @@
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import MenuSpace from "@app/components/MenuSpace.svelte"
   import SpaceAuthError from "@app/components/SpaceAuthError.svelte"
-  import {pushToast} from "@app/toast"
-  import {pushModal} from "@app/modal"
-  import {setChecked} from "@app/notifications"
-  import {checkRelayConnection, checkRelayAuth, checkRelayAccess} from "@app/commands"
-  import {decodeRelay, userRoomsByUrl} from "@app/state"
-  import {pullConservatively} from "@app/requests"
-  import {notifications} from "@app/notifications"
+  import {pushToast} from "@app/util/toast"
+  import {pushModal} from "@app/util/modal"
+  import {setChecked} from "@app/util/notifications"
+  import {checkRelayConnection, checkRelayAuth, checkRelayAccess} from "@app/core/commands"
+  import {decodeRelay, userRoomsByUrl} from "@app/core/state"
+  import {pullConservatively} from "@app/core/requests"
+  import {notifications} from "@app/util/notifications"
 
   type Props = {
     children?: Snippet

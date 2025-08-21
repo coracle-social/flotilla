@@ -8,7 +8,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   const {url, error} = $props()
 

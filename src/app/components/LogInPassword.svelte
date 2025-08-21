@@ -12,11 +12,17 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import PasswordResetRequest from "@app/components/PasswordResetRequest.svelte"
-  import {loadUserData} from "@app/requests"
-  import {clearModals, pushModal} from "@app/modal"
-  import {setChecked} from "@app/notifications"
-  import {pushToast} from "@app/toast"
-  import {NIP46_PERMS, BURROW_URL, PLATFORM_URL, PLATFORM_NAME, PLATFORM_LOGO} from "@app/state"
+  import {loadUserData} from "@app/core/requests"
+  import {clearModals, pushModal} from "@app/util/modal"
+  import {setChecked} from "@app/util/notifications"
+  import {pushToast} from "@app/util/toast"
+  import {
+    NIP46_PERMS,
+    BURROW_URL,
+    PLATFORM_URL,
+    PLATFORM_NAME,
+    PLATFORM_LOGO,
+  } from "@app/core/state"
 
   interface Props {
     email?: string

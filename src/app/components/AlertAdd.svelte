@@ -27,12 +27,12 @@
     userMembership,
     NOTIFIER_PUBKEY,
     NOTIFIER_RELAY,
-  } from "@app/state"
-  import {loadAlertStatuses, requestRelayClaim} from "@app/requests"
-  import {publishAlert, attemptAuth} from "@app/commands"
-  import type {AlertParams} from "@app/commands"
-  import {platform, platformName, canSendPushNotifications, getPushInfo} from "@app/push"
-  import {pushToast} from "@app/toast"
+  } from "@app/core/state"
+  import {loadAlertStatuses, requestRelayClaim} from "@app/core/requests"
+  import {publishAlert, attemptAuth} from "@app/core/commands"
+  import type {AlertParams} from "@app/core/commands"
+  import {platform, platformName, canSendPushNotifications, getPushInfo} from "@app/util/push"
+  import {pushToast} from "@app/util/toast"
 
   type Props = {
     url?: string

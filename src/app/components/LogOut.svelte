@@ -5,7 +5,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {logout} from "@app/commands"
+  import {logout} from "@app/core/commands"
 
   const back = () => history.back()
 

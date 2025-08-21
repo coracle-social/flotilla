@@ -13,8 +13,8 @@
   import Avatar from "@lib/components/Avatar.svelte"
   import WotScore from "@app/components/WotScore.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {pushModal} from "@app/modal"
-  import {clip} from "@app/toast"
+  import {pushModal} from "@app/util/modal"
+  import {clip} from "@app/util/toast"
 
   type Props = {
     pubkey: string

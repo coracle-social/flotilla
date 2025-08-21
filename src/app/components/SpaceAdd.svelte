@@ -6,7 +6,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import SpaceCreateExternal from "@app/components/SpaceCreateExternal.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   const startCreate = () => pushModal(SpaceCreateExternal)
 

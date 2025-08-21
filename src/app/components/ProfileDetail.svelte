@@ -9,9 +9,9 @@
   import ProfileInfo from "@app/components/ProfileInfo.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
   import ChatEnable from "@app/components/ChatEnable.svelte"
-  import {canDecrypt, pubkeyLink} from "@app/state"
-  import {pushModal} from "@app/modal"
-  import {makeChatPath} from "@app/routes"
+  import {canDecrypt, pubkeyLink} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
+  import {makeChatPath} from "@app/util/routes"
 
   export type Props = {
     pubkey: string

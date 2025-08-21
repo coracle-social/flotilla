@@ -4,7 +4,7 @@
   import {deriveProfileDisplay} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   type Props = {
     value: ProfilePointer

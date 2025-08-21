@@ -31,7 +31,7 @@
   import ContentQuote from "@app/components/ContentQuote.svelte"
   import ContentTopic from "@app/components/ContentTopic.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
-  import {entityLink, userSettingValues} from "@app/state"
+  import {entityLink, userSettingValues} from "@app/core/state"
 
   interface Props {
     event: any

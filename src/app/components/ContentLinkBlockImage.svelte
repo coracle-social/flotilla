@@ -3,7 +3,7 @@
   import {displayUrl} from "@welshman/lib"
   import {getTags, decryptFile, getTagValue, tagsFromIMeta} from "@welshman/util"
   import Icon from "@lib/components/Icon.svelte"
-  import {imgproxy} from "@app/state"
+  import {imgproxy} from "@app/core/state"
 
   const {value, event, ...props} = $props()
 

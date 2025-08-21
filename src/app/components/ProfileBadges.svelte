@@ -9,9 +9,9 @@
   import {repository, loadRelaySelections} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
-  import {membershipsByPubkey} from "@app/state"
-  import {goToEvent} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {membershipsByPubkey} from "@app/core/state"
+  import {goToEvent} from "@app/util/routes"
+  import {pushModal} from "@app/util/modal"
 
   type Props = {
     pubkey: string

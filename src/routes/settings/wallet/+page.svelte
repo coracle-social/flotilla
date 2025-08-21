@@ -7,8 +7,8 @@
   import Button from "@lib/components/Button.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
-  import {pushModal} from "@app/modal"
-  import {getWebLn} from "@app/commands"
+  import {pushModal} from "@app/util/modal"
+  import {getWebLn} from "@app/core/commands"
 
   const connect = () => pushModal(WalletConnect)
 

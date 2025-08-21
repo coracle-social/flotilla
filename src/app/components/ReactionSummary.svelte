@@ -21,8 +21,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import Reaction from "@app/components/Reaction.svelte"
   import EventReportDetails from "@app/components/EventReportDetails.svelte"
-  import {REACTION_KINDS} from "@app/state"
-  import {pushModal} from "@app/modal"
+  import {REACTION_KINDS} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
 
   interface Props {
     event: TrustedEvent

@@ -4,8 +4,8 @@
   import Button from "@lib/components/Button.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import {PLATFORM_NAME} from "@app/state"
-  import {pushModal} from "@app/modal"
+  import {PLATFORM_NAME} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
 
   const logout = () => pushModal(LogOut)
 </script>

@@ -6,7 +6,7 @@
   import Page from "@lib/components/Page.svelte"
   import ContentSearch from "@lib/components/ContentSearch.svelte"
   import PeopleItem from "@app/components/PeopleItem.svelte"
-  import {getDefaultPubkeys} from "@app/state"
+  import {getDefaultPubkeys} from "@app/core/state"
 
   const defaultPubkeys = getDefaultPubkeys()
 

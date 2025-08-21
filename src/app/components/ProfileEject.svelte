@@ -9,9 +9,9 @@
   import Field from "@lib/components/Field.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {PLATFORM_NAME, BURROW_URL} from "@app/state"
-  import {pushToast} from "@app/toast"
-  import {logout} from "@app/commands"
+  import {PLATFORM_NAME, BURROW_URL} from "@app/core/state"
+  import {pushToast} from "@app/util/toast"
+  import {logout} from "@app/core/commands"
 
   const email = $session?.email
 

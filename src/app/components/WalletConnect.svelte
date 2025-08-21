@@ -13,8 +13,8 @@
   import Divider from "@lib/components/Divider.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {getWebLn} from "@app/commands"
-  import {pushToast} from "@app/toast"
+  import {getWebLn} from "@app/core/commands"
+  import {pushToast} from "@app/util/toast"
 
   const back = () => history.back()
 

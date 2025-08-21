@@ -1,6 +1,6 @@
 <script module lang="ts">
   import {goto} from "$app/navigation"
-  import {makeSpacePath} from "@app/routes"
+  import {makeSpacePath} from "@app/util/routes"
 
   export const confirmSpaceVisit = (url: string) => {
     goto(makeSpacePath(url), {replaceState: true})

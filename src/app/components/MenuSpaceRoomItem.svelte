@@ -2,9 +2,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"
-  import {makeRoomPath} from "@app/routes"
-  import {deriveChannel} from "@app/state"
-  import {notifications} from "@app/notifications"
+  import {makeRoomPath} from "@app/util/routes"
+  import {deriveChannel} from "@app/core/state"
+  import {notifications} from "@app/util/notifications"
 
   interface Props {
     url: any

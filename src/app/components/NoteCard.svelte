@@ -12,7 +12,7 @@
   import Button from "@lib/components/Button.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {entityLink} from "@app/state"
+  import {entityLink} from "@app/core/state"
 
   const {
     event,

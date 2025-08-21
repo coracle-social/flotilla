@@ -7,8 +7,8 @@
   import PrimaryNav from "@app/components/PrimaryNav.svelte"
   import EmailConfirm from "@app/components/EmailConfirm.svelte"
   import PasswordReset from "@app/components/PasswordReset.svelte"
-  import {BURROW_URL} from "@app/state"
-  import {modals, pushModal} from "@app/modal"
+  import {BURROW_URL} from "@app/core/state"
+  import {modals, pushModal} from "@app/util/modal"
 
   interface Props {
     children: Snippet

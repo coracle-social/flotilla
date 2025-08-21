@@ -26,10 +26,10 @@
     deriveOtherRooms,
     hasNip29,
     alerts,
-  } from "@app/state"
-  import {notifications} from "@app/notifications"
-  import {pushModal} from "@app/modal"
-  import {makeSpacePath} from "@app/routes"
+  } from "@app/core/state"
+  import {notifications} from "@app/util/notifications"
+  import {pushModal} from "@app/util/modal"
+  import {makeSpacePath} from "@app/util/routes"
 
   const {url} = $props()
 

@@ -8,9 +8,9 @@
   import ZapButton from "@app/components/ZapButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
-  import {ENABLE_ZAPS} from "@app/state"
-  import {publishReaction, canEnforceNip70} from "@app/commands"
-  import {pushModal} from "@app/modal"
+  import {ENABLE_ZAPS} from "@app/core/state"
+  import {publishReaction, canEnforceNip70} from "@app/core/commands"
+  import {pushModal} from "@app/util/modal"
 
   type Props = {
     url: string

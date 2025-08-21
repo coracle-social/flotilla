@@ -7,9 +7,9 @@
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import LogInPassword from "@app/components/LogInPassword.svelte"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {BURROW_URL} from "@app/state"
+  import {pushModal} from "@app/util/modal"
+  import {pushToast} from "@app/util/toast"
+  import {BURROW_URL} from "@app/core/state"
 
   const {email, reset_token} = $props()
 

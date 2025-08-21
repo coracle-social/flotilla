@@ -4,8 +4,8 @@
   import Button from "@lib/components/Button.svelte"
   import AlertAdd from "@app/components/AlertAdd.svelte"
   import AlertItem from "@app/components/AlertItem.svelte"
-  import {pushModal} from "@app/modal"
-  import {alerts} from "@app/state"
+  import {pushModal} from "@app/util/modal"
+  import {alerts} from "@app/core/state"
 
   type Props = {
     url?: string

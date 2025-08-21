@@ -6,7 +6,7 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import GoalActions from "@app/components/GoalActions.svelte"
   import GoalSummary from "@app/components/GoalSummary.svelte"
-  import {makeGoalPath} from "@app/routes"
+  import {makeGoalPath} from "@app/util/routes"
 
   type Props = {
     url: string

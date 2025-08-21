@@ -6,7 +6,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
   import SignUpKey from "@app/components/SignUpKey.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   const initialValues = {
     profile: makeProfile(),

@@ -10,7 +10,7 @@
   import EventReport from "@app/components/EventReport.svelte"
   import EventShare from "@app/components/EventShare.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   type Props = {
     url: string

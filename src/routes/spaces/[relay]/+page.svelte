@@ -15,9 +15,9 @@
   import SpaceQuickLinks from "@app/components/SpaceQuickLinks.svelte"
   import SpaceRecentActivity from "@app/components/SpaceRecentActivity.svelte"
   import SpaceRelayStatus from "@app/components/SpaceRelayStatus.svelte"
-  import {decodeRelay, userRoomsByUrl} from "@app/state"
-  import {makeChatPath} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {decodeRelay, userRoomsByUrl} from "@app/core/state"
+  import {makeChatPath} from "@app/util/routes"
+  import {pushModal} from "@app/util/modal"
 
   const url = decodeRelay($page.params.relay)
   const relay = deriveRelay(url)

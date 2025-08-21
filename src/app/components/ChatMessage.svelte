@@ -15,9 +15,9 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ChatMessageMenu from "@app/components/ChatMessageMenu.svelte"
   import ChatMessageMenuMobile from "@app/components/ChatMessageMenuMobile.svelte"
-  import {colors} from "@app/state"
-  import {makeDelete, makeReaction} from "@app/commands"
-  import {pushModal} from "@app/modal"
+  import {colors} from "@app/core/state"
+  import {makeDelete, makeReaction} from "@app/core/commands"
+  import {pushModal} from "@app/util/modal"
 
   interface Props {
     event: TrustedEvent

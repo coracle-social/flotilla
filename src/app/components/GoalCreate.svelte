@@ -10,10 +10,10 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {pushToast} from "@app/toast"
-  import {PROTECTED} from "@app/state"
+  import {pushToast} from "@app/util/toast"
+  import {PROTECTED} from "@app/core/state"
   import {makeEditor} from "@app/editor"
-  import {canEnforceNip70} from "@app/commands"
+  import {canEnforceNip70} from "@app/core/commands"
 
   const {url} = $props()
 

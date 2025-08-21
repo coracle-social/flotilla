@@ -16,9 +16,9 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {pushToast} from "@app/toast"
-  import {logout} from "@app/commands"
-  import {INDEXER_RELAYS, PLATFORM_NAME, userMembership, getMembershipUrls} from "@app/state"
+  import {pushToast} from "@app/util/toast"
+  import {logout} from "@app/core/commands"
+  import {INDEXER_RELAYS, PLATFORM_NAME, userMembership, getMembershipUrls} from "@app/core/state"
 
   let progress: number | undefined = $state(undefined)
   let confirmText = $state("")

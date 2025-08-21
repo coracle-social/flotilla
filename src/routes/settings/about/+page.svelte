@@ -4,8 +4,8 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {PLATFORM_NAME} from "@app/state"
-  import {pushModal} from "@app/modal"
+  import {PLATFORM_NAME} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
 
   const hash = import.meta.env.VITE_BUILD_HASH
 

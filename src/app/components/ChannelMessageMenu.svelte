@@ -5,7 +5,7 @@
   import EventInfo from "@app/components/EventInfo.svelte"
   import EventReport from "@app/components/EventReport.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   const {url, event, onClick} = $props()
 

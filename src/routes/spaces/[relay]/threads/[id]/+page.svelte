@@ -17,8 +17,8 @@
   import ThreadActions from "@app/components/ThreadActions.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventReply from "@app/components/EventReply.svelte"
-  import {deriveEvent, decodeRelay} from "@app/state"
-  import {setChecked} from "@app/notifications"
+  import {deriveEvent, decodeRelay} from "@app/core/state"
+  import {setChecked} from "@app/util/notifications"
 
   const {relay, id} = $page.params
   const url = decodeRelay(relay)

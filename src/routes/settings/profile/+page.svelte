@@ -14,9 +14,9 @@
   import SignerStatus from "@app/components/SignerStatus.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
   import Alerts from "@app/components/Alerts.svelte"
-  import {PLATFORM_NAME} from "@app/state"
-  import {pushModal} from "@app/modal"
-  import {clip} from "@app/toast"
+  import {PLATFORM_NAME} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
+  import {clip} from "@app/util/toast"
 
   const npub = nip19.npubEncode($pubkey!)
   const profile = deriveProfile($pubkey!)

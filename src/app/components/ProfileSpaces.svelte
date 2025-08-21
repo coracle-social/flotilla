@@ -5,8 +5,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceAvatar from "@app/components/SpaceAvatar.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {makeSpacePath} from "@app/routes"
-  import {getMembershipUrls, membershipsByPubkey} from "@app/state"
+  import {makeSpacePath} from "@app/util/routes"
+  import {getMembershipUrls, membershipsByPubkey} from "@app/core/state"
 
   type Props = {
     pubkey: string

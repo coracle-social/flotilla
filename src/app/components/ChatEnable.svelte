@@ -8,8 +8,8 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {canDecrypt, PLATFORM_NAME, ensureUnwrapped} from "@app/state"
-  import {clearModals} from "@app/modal"
+  import {canDecrypt, PLATFORM_NAME, ensureUnwrapped} from "@app/core/state"
+  import {clearModals} from "@app/util/modal"
 
   const {next} = $props()
 

@@ -4,7 +4,7 @@
   import {sendWrapped} from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
-  import {makeReaction} from "@app/commands"
+  import {makeReaction} from "@app/core/commands"
 
   interface Props {
     event: TrustedEvent

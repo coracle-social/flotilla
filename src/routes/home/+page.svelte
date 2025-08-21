@@ -7,9 +7,9 @@
   import CardButton from "@lib/components/CardButton.svelte"
   import SpaceAdd from "@app/components/SpaceAdd.svelte"
   import ChatEnable from "@app/components/ChatEnable.svelte"
-  import {pushModal} from "@app/modal"
-  import {makeSpacePath} from "@app/routes"
-  import {PLATFORM_NAME, PLATFORM_RELAYS, canDecrypt} from "@app/state"
+  import {pushModal} from "@app/util/modal"
+  import {makeSpacePath} from "@app/util/routes"
+  import {PLATFORM_NAME, PLATFORM_RELAYS, canDecrypt} from "@app/core/state"
 
   const addSpace = () => pushModal(SpaceAdd)
 

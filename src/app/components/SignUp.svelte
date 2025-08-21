@@ -10,9 +10,9 @@
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import SignUpSuccess from "@app/components/SignUpSuccess.svelte"
-  import {pushModal} from "@app/modal"
-  import {BURROW_URL, PLATFORM_NAME} from "@app/state"
-  import {pushToast} from "@app/toast"
+  import {pushModal} from "@app/util/modal"
+  import {BURROW_URL, PLATFORM_NAME} from "@app/core/state"
+  import {pushToast} from "@app/util/toast"
 
   const login = () => pushModal(LogIn)
 

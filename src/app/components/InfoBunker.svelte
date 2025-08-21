@@ -2,7 +2,7 @@
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
-  import {PLATFORM_NAME} from "@app/state"
+  import {PLATFORM_NAME} from "@app/core/state"
 </script>
 
 <div class="column gap-4">

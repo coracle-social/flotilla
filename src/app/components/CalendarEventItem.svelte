@@ -4,7 +4,7 @@
   import CalendarEventActions from "@app/components/CalendarEventActions.svelte"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import {makeCalendarPath} from "@app/routes"
+  import {makeCalendarPath} from "@app/util/routes"
 
   type Props = {
     url: string

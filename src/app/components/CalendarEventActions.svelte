@@ -8,9 +8,9 @@
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
   import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
-  import {publishDelete, publishReaction, canEnforceNip70} from "@app/commands"
-  import {makeCalendarPath} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {publishDelete, publishReaction, canEnforceNip70} from "@app/core/commands"
+  import {makeCalendarPath} from "@app/util/routes"
+  import {pushModal} from "@app/util/modal"
 
   const {
     url,

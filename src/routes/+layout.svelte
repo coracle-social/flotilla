@@ -58,23 +58,23 @@
   import {nsecDecode} from "@lib/util"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
-  import {setupTracking} from "@app/tracking"
-  import {setupAnalytics} from "@app/analytics"
+  import {setupTracking} from "@app/util/tracking"
+  import {setupAnalytics} from "@app/util/analytics"
   import {
     INDEXER_RELAYS,
     userMembership,
     userSettingValues,
     ensureUnwrapped,
     canDecrypt,
-  } from "@app/state"
-  import {loadUserData, listenForNotifications} from "@app/requests"
-  import {theme} from "@app/theme"
-  import {toast, pushToast} from "@app/toast"
-  import {initializePushNotifications} from "@app/push"
-  import * as commands from "@app/commands"
-  import * as requests from "@app/requests"
-  import * as notifications from "@app/notifications"
-  import * as appState from "@app/state"
+  } from "@app/core/state"
+  import {loadUserData, listenForNotifications} from "@app/core/requests"
+  import {theme} from "@app/util/theme"
+  import {toast, pushToast} from "@app/util/toast"
+  import {initializePushNotifications} from "@app/util/push"
+  import * as commands from "@app/core/commands"
+  import * as requests from "@app/core/requests"
+  import * as notifications from "@app/util/notifications"
+  import * as appState from "@app/core/state"
 
   // Migration: old nostrtalk instance used different sessions
   if ($session && !$signer) {

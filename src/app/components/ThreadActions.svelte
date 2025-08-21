@@ -4,8 +4,8 @@
   import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
-  import {publishDelete, publishReaction, canEnforceNip70} from "@app/commands"
-  import {makeThreadPath} from "@app/routes"
+  import {publishDelete, publishReaction, canEnforceNip70} from "@app/core/commands"
+  import {makeThreadPath} from "@app/util/routes"
 
   interface Props {
     url: any

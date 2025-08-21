@@ -4,7 +4,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   const {Pending, Success, Failure} = SignerLogEntryStatus
   const pending = $derived($signerLog.filter(spec({status: Pending})).length)

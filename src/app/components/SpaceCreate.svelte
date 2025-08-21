@@ -8,7 +8,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InfoRelay from "@app/components/InfoRelay.svelte"
   import SpaceCreateFinish from "@app/components/SpaceCreateFinish.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   const back = () => history.back()
 

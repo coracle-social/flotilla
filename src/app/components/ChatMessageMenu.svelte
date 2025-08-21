@@ -3,7 +3,7 @@
   import Button from "@lib/components/Button.svelte"
   import ChatMessageEmojiButton from "@app/components/ChatMessageEmojiButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   const {event, pubkeys, popover, replyTo} = $props()
 

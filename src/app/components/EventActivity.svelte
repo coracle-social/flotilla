@@ -6,7 +6,7 @@
   import {deriveEvents} from "@welshman/store"
   import type {TrustedEvent} from "@welshman/util"
   import {repository} from "@welshman/app"
-  import {notifications} from "@app/notifications"
+  import {notifications} from "@app/util/notifications"
   import Icon from "@lib/components/Icon.svelte"
 
   const {url, path, event}: {url: string; path: string; event: TrustedEvent} = $props()

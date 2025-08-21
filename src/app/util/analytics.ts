@@ -1,7 +1,7 @@
 /* eslint prefer-rest-params: 0 */
 
 import {page} from "$app/stores"
-import {getSetting} from "@app/state"
+import {getSetting} from "@app/core/state"
 
 const w = window as any
 

@@ -10,9 +10,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {hasNip29, loadChannel} from "@app/state"
-  import {makeSpacePath} from "@app/routes"
-  import {pushToast} from "@app/toast"
+  import {hasNip29, loadChannel} from "@app/core/state"
+  import {makeSpacePath} from "@app/util/routes"
+  import {pushToast} from "@app/util/toast"
 
   const {url} = $props()
 

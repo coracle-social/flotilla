@@ -4,8 +4,8 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import LogInPassword from "@app/components/LogInPassword.svelte"
-  import {pushModal} from "@app/modal"
-  import {BURROW_URL} from "@app/state"
+  import {pushModal} from "@app/util/modal"
+  import {BURROW_URL} from "@app/core/state"
 
   const {email, confirm_token} = $props()
 

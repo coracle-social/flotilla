@@ -1,6 +1,6 @@
 <script lang="ts">
   import {AuthStatus, SocketStatus} from "@welshman/net"
-  import {deriveSocket} from "@app/state"
+  import {deriveSocket} from "@app/core/state"
   import StatusIndicator from "@lib/components/StatusIndicator.svelte"
 
   type Props = {

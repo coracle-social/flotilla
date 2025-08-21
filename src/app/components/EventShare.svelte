@@ -7,9 +7,9 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"
-  import {channelsByUrl} from "@app/state"
-  import {makeRoomPath} from "@app/routes"
-  import {setKey} from "@app/implicit"
+  import {channelsByUrl} from "@app/core/state"
+  import {makeRoomPath} from "@app/util/routes"
+  import {setKey} from "@lib/implicit"
 
   const {url, noun, event}: {url: string; noun: string; event: TrustedEvent} = $props()
 

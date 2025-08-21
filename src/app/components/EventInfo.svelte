@@ -8,8 +8,8 @@
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
-  import {trackerStore} from "@app/state"
-  import {clip} from "@app/toast"
+  import {trackerStore} from "@app/core/state"
+  import {clip} from "@app/util/toast"
 
   type Props = {
     url?: string

@@ -6,8 +6,8 @@
   import CardButton from "@lib/components/CardButton.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import SignUp from "@app/components/SignUp.svelte"
-  import {PLATFORM_TERMS, PLATFORM_PRIVACY, PLATFORM_NAME} from "@app/state"
-  import {pushModal} from "@app/modal"
+  import {PLATFORM_TERMS, PLATFORM_PRIVACY, PLATFORM_NAME} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
 
   const logIn = () => pushModal(LogIn)
 

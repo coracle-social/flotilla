@@ -9,9 +9,9 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceJoinConfirm, {confirmSpaceJoin} from "@app/components/SpaceJoinConfirm.svelte"
-  import {pushToast} from "@app/toast"
-  import {pushModal} from "@app/modal"
-  import {attemptRelayAccess} from "@app/commands"
+  import {pushToast} from "@app/util/toast"
+  import {pushModal} from "@app/util/modal"
+  import {attemptRelayAccess} from "@app/core/commands"
 
   type Props = {
     url: string

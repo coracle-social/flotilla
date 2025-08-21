@@ -6,8 +6,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {pushToast} from "@app/toast"
-  import {publishReport} from "@app/commands"
+  import {pushToast} from "@app/util/toast"
+  import {publishReport} from "@app/core/commands"
 
   const {url, event} = $props()
 

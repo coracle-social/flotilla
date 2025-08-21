@@ -6,8 +6,8 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileEject from "@app/components/ProfileEject.svelte"
-  import {PLATFORM_NAME} from "@app/state"
-  import {pushModal} from "@app/modal"
+  import {PLATFORM_NAME} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
 
   const back = () => history.back()
 

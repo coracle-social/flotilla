@@ -11,7 +11,7 @@
   import ProfileSuggestion from "@app/editor/ProfileSuggestion.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/util/modal"
 
   interface Props {
     value: string[]

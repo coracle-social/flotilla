@@ -64,7 +64,7 @@ import {
   getUrlsForEvent,
   loadMembership,
   loadSettings,
-} from "@app/state"
+} from "@app/core/state"
 
 // Utils
 

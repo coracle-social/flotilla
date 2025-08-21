@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {channelsById, makeChannelId} from "@app/state"
+  import {channelsById, makeChannelId} from "@app/core/state"
 
   const {url, room} = $props()
 </script>
