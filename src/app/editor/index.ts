@@ -1,7 +1,7 @@
 import {mount} from "svelte"
 import type {Writable} from "svelte/store"
 import {get} from "svelte/store"
-import {sha256} from "@welshman/lib"
+import {sha256, parseJson} from "@welshman/lib"
 import {
   getTagValues,
   encryptFile,
@@ -100,7 +100,9 @@ export const makeEditor = async ({
                   ["encryption-algorithm", algorithm],
                 ]
 
-                file = new File([new Blob([ciphertext])], attrs.file.name, {type: attrs.file.type})
+                file = new File([new Blob([ciphertext])], attrs.file.name, {
+                  type: "application/octet-stream",
+                })
 
                 const server = getBlossomServer()
                 const hashes = [await sha256(await file.arrayBuffer())]
@@ -110,10 +112,12 @@ export const makeEditor = async ({
 
                 try {
                   const res = await uploadBlob(server, file, {authEvent})
-                  let {uploaded, url, ...task} = await res.json()
+                  const text = await res.text()
+
+                  let {uploaded, url, ...task} = parseJson(text) || {}
 
                   if (!uploaded) {
-                    return {error: "Server refused to process the file"}
+                    return {error: text}
                   }
 
                   // Always append file extension if missing
@@ -137,7 +141,7 @@ export const makeEditor = async ({
               },
               onUploadError(currentEditor, task) {
                 currentEditor.commands.removeFailedUploads()
-                pushToast({theme: "error", message: "Failed to upload file"})
+                pushToast({theme: "error", message: task.error})
                 uploading?.set(false)
               },
             },
