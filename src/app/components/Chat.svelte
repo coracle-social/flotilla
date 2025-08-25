@@ -170,7 +170,7 @@
         id,
         type: "note",
         value: event,
-        showPubkey: created_at - previousCreatedAt > int(15, MINUTE) || previousPubkey !== pubkey,
+        showPubkey: created_at - previousCreatedAt > int(2, MINUTE) || previousPubkey !== pubkey,
       })
 
       previousDate = date

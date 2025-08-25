@@ -59,6 +59,11 @@
         {/if}
       </div>
       <p class="overflow-hidden text-ellipsis whitespace-nowrap text-sm">
+        <span class="opacity-50">
+          {#if props.messages[0].pubkey === $pubkey}
+            You:
+          {/if}
+        </span>
         {props.messages[0].content}
       </p>
     </div>
