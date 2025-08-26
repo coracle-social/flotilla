@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "social.flotilla",
+      "sha256_cert_fingerprints": [
+        "D0:2A:2E:82:75:92:4D:E2:13:E8:46:B8:EA:09:15:17:7F:46:7B:D1:49:E3:12:60:F0:01:D3:EF:42:9B:A2:DA",
+        "6D:AF:68:3E:1C:A8:3A:4C:D8:85:73:E9:73:9E:2A:A9:44:C8:5D:56:15:4E:34:42:30:55:7C:FF:ED:4A:D7:8C"
+      ]
+    }
+  }
+]
