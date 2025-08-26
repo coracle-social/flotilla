@@ -110,21 +110,8 @@
 
     // Listen for deep link events
     App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
-      console.log(event)
       const url = new URL(event.url)
       const target = `${url.pathname}${url.search}${url.hash}`
-      goto(target, {replaceState: false, noScroll: false})
-    })
-
-    // TEMP: Since the capacitor event won't fire in web, dropping equivalent implementation here for testing navigation
-    //
-    // Event can be manually triggered in web console with: `window.dispatchEvent(new CustomEvent("appUrlOpen", { detail: { url: "foobar:///.well-known/apple-app-site-association" } }) );`
-    window.addEventListener("appUrlOpen", (_event: Event) => {
-      console.log(_event)
-      const event = _event as CustomEvent<{url: string}>
-      const url = new URL(event.detail.url)
-      const target = `${url.pathname}${url.search}${url.hash}`
-      console.log(target)
       goto(target, {replaceState: false, noScroll: false})
     })
 
