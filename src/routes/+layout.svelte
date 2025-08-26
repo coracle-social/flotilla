@@ -4,7 +4,7 @@
   import {onMount} from "svelte"
   import * as nip19 from "nostr-tools/nip19"
   import {get, derived} from "svelte/store"
-  import {App} from "@capacitor/app"
+  import {App, type URLOpenListenerEvent} from "@capacitor/app"
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
   import {sync, localStorageProvider} from "@welshman/store"
@@ -106,6 +106,13 @@
       if (event.data && event.data.type === "NAVIGATE") {
         goto(event.data.url)
       }
+    })
+
+    // Listen for deep link events
+    App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
+      const url = new URL(event.url)
+      const target = `${url.pathname}${url.search}${url.hash}`
+      goto(target, {replaceState: false, noScroll: false})
     })
 
     // Nstart login
