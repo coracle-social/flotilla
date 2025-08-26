@@ -5,8 +5,13 @@
 * Add `created_at` to event info dialog
 * Add signer status to profile page
 * Re-work bunker login flow
+* Add in-app onboarding flow
 * Only protect events if relay authenticates
 * Filter out non-global chats from global chat
+* Improve publish status indicator
+* Fix encrypted upload content type
+* Add relays to event details dialog
+* Add universal link handler for apps
 
 # 1.2.2
 
@@ -27,7 +32,7 @@
 
 * Fix sort order of thread comments
 * Fix link display when no title is available
-* Fix making profiles non-protect
+* Fix making profiles non-protected
 * Replace bunker url with relay claims for notifier auth
 * Add push notifications on all platforms
 * Add "mark all as read" on desktop
