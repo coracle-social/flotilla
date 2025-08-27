@@ -24,6 +24,7 @@
     PROFILE,
     RELAYS,
     BLOSSOM_SERVERS,
+    ROOMS,
     getRelaysFromList,
   } from "@welshman/util"
   import {Nip46Broker, makeSecret} from "@welshman/signer"
@@ -212,7 +213,11 @@
           limit: 10_000,
           repository,
           rankEvent: (e: TrustedEvent) => {
-            if ([PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, INBOX_RELAYS].includes(e.kind)) {
+            if (
+              [PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, INBOX_RELAYS, ROOMS].includes(
+                e.kind,
+              )
+            ) {
               return 1
             }
 
