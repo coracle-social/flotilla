@@ -2,7 +2,7 @@ import {type StorageProvider, type SyncConfig} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
 
 export class PreferencesStorageProvider implements StorageProvider {
-  get = async (key: string): Promise<any> => {
+  get = async <T>(key: string): Promise<T | undefined> => {
     const result = await Preferences.get({key})
     if (!result.value) return undefined
     try {
@@ -12,7 +12,7 @@ export class PreferencesStorageProvider implements StorageProvider {
     }
   }
 
-  set = async (key: string, value: any): Promise<void> => {
+  set = async <T>(key: string, value: T): Promise<void> => {
     await Preferences.set({key, value: JSON.stringify(value)})
   }
 }
