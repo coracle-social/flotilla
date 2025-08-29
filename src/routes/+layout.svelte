@@ -10,18 +10,18 @@
   import {goto} from "$app/navigation"
   import {sync, localStorageProvider} from "@welshman/store"
   import {
-    identity,
-    call,
-    memoize,
-    spec,
-    sleep,
-    on,
-    defer,
     ago,
-    WEEK,
-    TaskQueue,
     assoc,
+    call,
+    defer,
     dissoc,
+    identity,
+    memoize,
+    on,
+    sleep,
+    spec,
+    TaskQueue,
+    WEEK,
   } from "@welshman/lib"
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
   import {
@@ -82,6 +82,7 @@
   import * as net from "@welshman/net"
   import * as app from "@welshman/app"
   import {nsecDecode} from "@lib/util"
+  import {preferencesStorageProvider} from "@lib/storage"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import {setupTracking} from "@app/util/tracking"
@@ -133,6 +134,44 @@
       ...requests,
       ...notifications,
     })
+
+    // migrate from localStorage to capacitor Preferences storage if needed
+    const runMigration = async () => {
+      const isSome = (item: any) => {
+        return item !== undefined && item !== null && item !== ""
+      }
+
+      const localStoragePubKey = await localStorageProvider.get("pubkey")
+      if (isSome(localStoragePubKey)) {
+        await preferencesStorageProvider.set("pubkey", localStoragePubKey)
+        localStorage.removeItem("pubkey")
+      }
+
+      const localStorageSessions = await localStorageProvider.get("sessions")
+      if (isSome(localStorageSessions)) {
+        await preferencesStorageProvider.set("sessions", localStorageSessions)
+        localStorage.removeItem("sessions")
+      }
+
+      const localStorageCanDecrypt = await localStorageProvider.get("canDecrypt")
+      if (isSome(localStorageCanDecrypt)) {
+        await preferencesStorageProvider.set("canDecrypt", localStorageCanDecrypt)
+        localStorage.removeItem("canDecrypt")
+      }
+
+      const localStorageChecked = await localStorageProvider.get("checked")
+      if (isSome(localStorageChecked)) {
+        await preferencesStorageProvider.set("checked", localStorageChecked)
+        localStorage.removeItem("checked")
+      }
+
+      const localStorageTheme = await localStorageProvider.get("theme")
+      if (isSome(localStorageTheme)) {
+        await preferencesStorageProvider.set("theme", localStorageTheme)
+        localStorage.removeItem("theme")
+      }
+    }
+    await runMigration()
 
     // Listen for navigation messages from service worker
     navigator.serviceWorker?.addEventListener("message", event => {
@@ -221,17 +260,17 @@
       })
 
       // Sync current pubkey
-      sync({
+      await sync({
         key: "pubkey",
         store: pubkey,
-        storage: localStorageProvider,
+        storage: preferencesStorageProvider,
       })
 
       // Sync user sessions
-      sync({
+      await sync({
         key: "sessions",
         store: sessions,
-        storage: localStorageProvider,
+        storage: preferencesStorageProvider,
       })
 
       await initStorage("flotilla", 8, {
