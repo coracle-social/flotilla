@@ -8,7 +8,6 @@
   import {App, type URLOpenListenerEvent} from "@capacitor/app"
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
-  import {sync, localStorageProvider} from "@welshman/store"
   import {identity, memoize, spec, sleep, defer, ago, WEEK, TaskQueue} from "@welshman/lib"
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
   import {
@@ -75,6 +74,7 @@
   import * as requests from "@app/core/requests"
   import * as notifications from "@app/util/notifications"
   import * as appState from "@app/core/state"
+  import {preferencesStorageProvider, sync} from "@src/lib/storage"
 
   // Migration: old nostrtalk instance used different sessions
   if ($session && !$signer) {
@@ -192,17 +192,17 @@
       })
 
       // Sync current pubkey
-      sync({
+      await sync({
         key: "pubkey",
         store: pubkey,
-        storage: localStorageProvider,
+        storage: preferencesStorageProvider,
       })
 
       // Sync user sessions
-      sync({
+      await sync({
         key: "sessions",
         store: sessions,
-        storage: localStorageProvider,
+        storage: preferencesStorageProvider,
       })
 
       await initStorage("flotilla", 8, {
