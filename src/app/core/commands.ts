@@ -78,6 +78,7 @@ import {
   userRoomsByUrl,
   userSettingsValues,
 } from "@app/core/state"
+import {preferencesStorageProvider} from "@src/lib/storage"
 
 // Utils
 
@@ -124,6 +125,7 @@ export const logout = async () => {
   await clearStorage()
 
   localStorage.clear()
+  await preferencesStorageProvider.clear()
 }
 
 // Synchronization

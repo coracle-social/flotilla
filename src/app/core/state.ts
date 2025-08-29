@@ -31,7 +31,6 @@ import {
   deriveEventsMapped,
   withGetter,
   synced,
-  localStorageProvider,
 } from "@welshman/store"
 import {
   getIdFilters,
@@ -97,6 +96,7 @@ import {
   publishThunk,
 } from "@welshman/app"
 import type {Thunk, Relay} from "@welshman/app"
+import {preferencesStorageProvider} from "@src/lib/storage"
 
 export const fromCsv = (s: string) => (s || "").split(",").filter(identity)
 
@@ -317,7 +317,7 @@ netContext.isEventValid = (event: TrustedEvent, url: string) =>
 export const canDecrypt = synced({
   key: "canDecrypt",
   defaultValue: false,
-  storage: localStorageProvider,
+  storage: preferencesStorageProvider,
 })
 
 export const SETTINGS = "flotilla/settings"
