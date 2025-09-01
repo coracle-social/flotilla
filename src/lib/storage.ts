@@ -12,8 +12,11 @@ export class PreferencesStorageProvider implements StorageProvider {
     }
   }
 
+  p = Promise.resolve()
   set = async <T>(key: string, value: T): Promise<void> => {
-    await Preferences.set({key, value: JSON.stringify(value)})
+    await this.p
+    this.p = Preferences.set({key, value: JSON.stringify(value)})
+    await this.p
   }
 }
 
