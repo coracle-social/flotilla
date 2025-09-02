@@ -1,5 +1,6 @@
-import {type StorageProvider, type SyncConfig} from "@welshman/store"
+import {type StorageProvider, type SyncConfig, type SyncedConfig} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
+import {writable} from "svelte/store"
 
 export class PreferencesStorageProvider implements StorageProvider {
   get = async <T>(key: string): Promise<T | undefined> => {
@@ -34,4 +35,13 @@ export const sync = async <T>({key, store, storage}: SyncConfig<T>) => {
   store.subscribe(async (value: T) => {
     await storage.set(key, value)
   })
+}
+
+// Temporary implementation of synced function to fix race condition
+export const synced = async <T>({key, storage, defaultValue}: SyncedConfig<T>) => {
+  const store = writable<T>(defaultValue)
+
+  await sync({key, store, storage})
+
+  return store
 }

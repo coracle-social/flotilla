@@ -30,7 +30,6 @@ import {
   deriveEvents,
   deriveEventsMapped,
   withGetter,
-  synced,
   localStorageProvider,
 } from "@welshman/store"
 import {
@@ -92,6 +91,7 @@ import {
   appContext,
 } from "@welshman/app"
 import type {Thunk, Relay} from "@welshman/app"
+import {synced} from "@src/lib/storage"
 
 export const fromCsv = (s: string) => (s || "").split(",").filter(identity)
 
@@ -306,7 +306,7 @@ routerContext.getIndexerRelays = always(INDEXER_RELAYS)
 
 // Settings
 
-export const canDecrypt = synced({
+export const canDecrypt = await synced({
   key: "canDecrypt",
   defaultValue: false,
   storage: localStorageProvider,
