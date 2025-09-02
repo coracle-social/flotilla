@@ -53,7 +53,7 @@
   {/if}
   <Field>
     {#snippet label()}
-      <p>Username</p>
+      <p>Nickname</p>
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
