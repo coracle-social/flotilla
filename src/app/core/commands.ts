@@ -1,7 +1,17 @@
 import {nwc} from "@getalby/sdk"
 import * as nip19 from "nostr-tools/nip19"
 import {get} from "svelte/store"
-import {randomId, flatten, poll, uniq, equals, TIMEZONE, LOCALE} from "@welshman/lib"
+import {
+  randomId,
+  append,
+  remove,
+  flatten,
+  poll,
+  uniq,
+  equals,
+  TIMEZONE,
+  LOCALE,
+} from "@welshman/lib"
 import type {Feed} from "@welshman/feeds"
 import type {TrustedEvent, EventContent} from "@welshman/util"
 import {
@@ -19,6 +29,7 @@ import {
   ALERT_WEB,
   ALERT_IOS,
   ALERT_ANDROID,
+  APP_DATA,
   isSignedEvent,
   makeEvent,
   displayProfile,
@@ -56,13 +67,16 @@ import {
   tagEventForQuote,
   getThunkError,
 } from "@welshman/app"
+import type {SettingsValues} from "@app/core/state"
 import {
+  SETTINGS,
   PROTECTED,
   userMembership,
   INDEXER_RELAYS,
   NOTIFIER_PUBKEY,
   NOTIFIER_RELAY,
   userRoomsByUrl,
+  userSettingsValues,
 } from "@app/core/state"
 
 // Utils
@@ -460,6 +474,25 @@ export const makeAlert = async (params: AlertParams) => {
 
 export const publishAlert = async (params: AlertParams) =>
   publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})
+
+// Settings
+
+export const makeSettings = async (params: Partial<SettingsValues>) => {
+  const json = JSON.stringify({...userSettingsValues.get(), ...params})
+  const content = await signer.get().nip44.encrypt(pubkey.get()!, json)
+  const tags = [["d", SETTINGS]]
+
+  return makeEvent(APP_DATA, {content, tags})
+}
+
+export const publishSettings = async (params: Partial<SettingsValues>) =>
+  publishThunk({event: await makeSettings(params), relays: Router.get().FromUser().getUrls()})
+
+export const addTrustedRelay = async (url: string) =>
+  publishSettings({trusted_relays: append(url, userSettingsValues.get().trusted_relays)})
+
+export const removeTrustedRelay = async (url: string) =>
+  publishSettings({trusted_relays: remove(url, userSettingsValues.get().trusted_relays)})
 
 // Lightning
 

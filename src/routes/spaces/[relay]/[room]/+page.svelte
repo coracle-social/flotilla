@@ -31,7 +31,7 @@
   import ChannelComposeParent from "@app/components/ChannelComposeParent.svelte"
   import {
     userRoomsByUrl,
-    userSettingValues,
+    userSettingsValues,
     decodeRelay,
     getEventsForUrl,
     deriveUserMembershipStatus,
@@ -128,7 +128,7 @@
     const thunk = publishThunk({
       relays: [url],
       event: makeEvent(MESSAGE, template),
-      delay: $userSettingValues.send_delay,
+      delay: $userSettingsValues.send_delay,
     })
 
     pushToast({

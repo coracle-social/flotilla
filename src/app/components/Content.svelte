@@ -31,7 +31,7 @@
   import ContentQuote from "@app/components/ContentQuote.svelte"
   import ContentTopic from "@app/components/ContentTopic.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
-  import {entityLink, userSettingValues} from "@app/core/state"
+  import {entityLink, userSettingsValues} from "@app/core/state"
 
   interface Props {
     event: any
@@ -68,7 +68,7 @@
 
     if (!parsed || hideMediaAtDepth <= depth) return false
 
-    if (isLink(parsed) && $userSettingValues.show_media && isStartOrEnd(i)) {
+    if (isLink(parsed) && $userSettingsValues.show_media && isStartOrEnd(i)) {
       return true
     }
 
@@ -101,7 +101,7 @@
   }
 
   let warning = $state(
-    $userSettingValues.hide_sensitive && event.tags.find(nthEq(0, "content-warning"))?.[1],
+    $userSettingsValues.hide_sensitive && event.tags.find(nthEq(0, "content-warning"))?.[1],
   )
 
   const shortContent = $derived(
