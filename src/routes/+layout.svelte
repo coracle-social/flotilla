@@ -20,6 +20,8 @@
     ago,
     WEEK,
     TaskQueue,
+    assoc,
+    dissoc,
   } from "@welshman/lib"
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
   import {
@@ -40,13 +42,18 @@
     getRelaysFromList,
   } from "@welshman/util"
   import {Nip46Broker, makeSecret} from "@welshman/signer"
-  import type {Socket, RelayMessage} from "@welshman/net"
+  import type {Socket, RelayMessage, ClientMessage} from "@welshman/net"
   import {
     request,
     defaultSocketPolicies,
     makeSocketPolicyAuth,
     SocketEvent,
     isRelayEvent,
+    isRelayOk,
+    isRelayClosed,
+    isClientReq,
+    isClientEvent,
+    isClientClose,
   } from "@welshman/net"
   import {
     loadRelay,
@@ -87,6 +94,7 @@
     ensureUnwrapped,
     canDecrypt,
     getSetting,
+    relaysMostlyRestricted,
   } from "@app/core/state"
   import {loadUserData, listenForNotifications} from "@app/core/requests"
   import {theme} from "@app/util/theme"
@@ -292,6 +300,71 @@
                     relaysPendingTrust.update($r => [...$r, socket.url])
                   }
                 }
+              }
+            }),
+          ]
+
+          return () => {
+            unsubscribers.forEach(call)
+          }
+        },
+        function monitorRestrictedResponses(socket: Socket) {
+          let total = 0
+          let restricted = 0
+          let error = ""
+
+          const pending = new Set<string>()
+
+          const updateStatus = () =>
+            relaysMostlyRestricted.update(
+              restricted > total / 2 ? assoc(socket.url, error) : dissoc(socket.url),
+            )
+
+          const unsubscribers = [
+            on(socket, SocketEvent.Receive, (message: RelayMessage) => {
+              if (isRelayOk(message)) {
+                const [_, id, ok, details = ""] = message
+
+                if (pending.has(id)) {
+                  pending.delete(id)
+
+                  if (!ok && details.startsWith("restricted: ")) {
+                    restricted++
+                    error = details
+                    updateStatus()
+                  }
+                }
+              }
+
+              if (isRelayClosed(message)) {
+                const [_, id, details = ""] = message
+
+                if (pending.has(id)) {
+                  pending.delete(id)
+
+                  if (details.startsWith("restricted: ")) {
+                    restricted++
+                    error = details
+                    updateStatus()
+                  }
+                }
+              }
+            }),
+            on(socket, SocketEvent.Send, (message: ClientMessage) => {
+              if (isClientReq(message)) {
+                total++
+                pending.add(message[1])
+                updateStatus()
+              }
+
+              if (isClientEvent(message)) {
+                total++
+                pending.add(message[1].id)
+                updateStatus()
+              }
+
+              if (isClientClose(message)) {
+                pending.delete(message[1])
               }
             }),
           ]

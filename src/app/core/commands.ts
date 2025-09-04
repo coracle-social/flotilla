@@ -246,11 +246,7 @@ export const checkRelayAccess = async (url: string, claim = "") => {
 
   await attemptAuth(url)
 
-  const thunk = publishThunk({
-    event: makeEvent(AUTH_JOIN, {tags: [["claim", claim]]}),
-    relays: [url],
-  })
-
+  const thunk = publishJoinRequest({url, claim})
   const error = await getThunkError(thunk)
 
   if (error) {
@@ -296,7 +292,7 @@ export const checkRelayConnection = async (url: string) => {
   }
 }
 
-export const checkRelayAuth = async (url: string, timeout = 3000) => {
+export const checkRelayAuth = async (url: string) => {
   const socket = Pool.get().get(url)
   const okStatuses = [AuthStatus.None, AuthStatus.Ok]
 
@@ -325,7 +321,7 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
   }
 }
 
-// Actions
+// Deletions
 
 export type DeleteParams = {
   protect: boolean
@@ -351,6 +347,8 @@ export const makeDelete = ({protect, event, tags = []}: DeleteParams) => {
 export const publishDelete = ({relays, ...params}: DeleteParams & {relays: string[]}) =>
   publishThunk({event: makeDelete(params), relays})
 
+// Reports
+
 export type ReportParams = {
   event: TrustedEvent
   content: string
@@ -373,6 +371,8 @@ export const publishReport = ({
   content,
 }: ReportParams & {relays: string[]}) =>
   publishThunk({event: makeReport({event, reason, content}), relays})
+
+// Reactions
 
 export type ReactionParams = {
   protect: boolean
@@ -399,6 +399,8 @@ export const makeReaction = ({protect, content, event, tags: paramTags = []}: Re
 export const publishReaction = ({relays, ...params}: ReactionParams & {relays: string[]}) =>
   publishThunk({event: makeReaction(params), relays})
 
+// Comments
+
 export type CommentParams = {
   event: TrustedEvent
   content: string
@@ -410,6 +412,8 @@ export const makeComment = ({event, content, tags = []}: CommentParams) =>
 
 export const publishComment = ({relays, ...params}: CommentParams & {relays: string[]}) =>
   publishThunk({event: makeComment(params), relays})
+
+// Alerts
 
 export type AlertParams = {
   feed: Feed
@@ -493,6 +497,19 @@ export const addTrustedRelay = async (url: string) =>
 
 export const removeTrustedRelay = async (url: string) =>
   publishSettings({trusted_relays: remove(url, userSettingsValues.get().trusted_relays)})
+
+// Join request
+
+export type JoinRequestParams = {
+  url: string
+  claim: string
+}
+
+export const makeJoinRequest = (params: JoinRequestParams) =>
+  makeEvent(AUTH_JOIN, {tags: [["claim", params.claim]]})
+
+export const publishJoinRequest = (params: JoinRequestParams) =>
+  publishThunk({event: makeJoinRequest(params), relays: [params.url]})
 
 // Lightning
 

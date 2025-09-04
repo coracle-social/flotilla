@@ -70,6 +70,7 @@ import {
   getTagValue,
   getTagValues,
   verifyEvent,
+  makeEvent,
 } from "@welshman/util"
 import type {TrustedEvent, SignedEvent, PublishedList, List, Filter} from "@welshman/util"
 import {Nip59, decrypt} from "@welshman/signer"
@@ -92,6 +93,8 @@ import {
   signer,
   makeOutboxLoader,
   appContext,
+  getThunkError,
+  publishThunk,
 } from "@welshman/app"
 import type {Thunk, Relay} from "@welshman/app"
 
@@ -367,6 +370,10 @@ export const {
 // Relays sending events with empty signatures that the user has to choose to trust
 
 export const relaysPendingTrust = writable<string[]>([])
+
+// Relays that mostly send restricted responses to requests and events
+
+export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
 // Alerts
 
@@ -738,3 +745,51 @@ export const deriveSocket = (url: string) =>
 
     return () => subs.forEach(call)
   })
+
+export const deriveTimeout = (timeout: number) => {
+  const store = writable<boolean>(false)
+
+  setTimeout(() => store.set(true), timeout)
+
+  return derived(store, identity)
+}
+
+export const deriveRelayAuthError = (url: string, claim = "") => {
+  const $signer = signer.get()
+  const socket = Pool.get().get(url)
+  const stripPrefix = (m: string) => m.replace(/^\w+: /, "")
+
+  // Kick off the auth process
+  socket.auth.attemptAuth($signer.sign)
+
+  // Attempt to join the relay
+  const thunk = publishThunk({
+    event: makeEvent(AUTH_JOIN, {tags: [["claim", claim]]}),
+    relays: [url],
+  })
+
+  return derived(
+    [relaysMostlyRestricted, deriveSocket(url)],
+    ([$relaysMostlyRestricted, $socket]) => {
+      if ($socket.auth.details) {
+        return stripPrefix($socket.auth.details)
+      }
+
+      if ($relaysMostlyRestricted[url]) {
+        return stripPrefix($relaysMostlyRestricted[url])
+      }
+
+      const error = getThunkError(thunk)
+
+      if (error) {
+        const isIgnored = error.startsWith("mute: ")
+        const isEmptyInvite = !claim && error.includes("invite code")
+        const isStrictNip29Relay = error.includes("missing group (`h`) tag")
+
+        if (!isStrictNip29Relay && !isIgnored && !isEmptyInvite && !isStrictNip29Relay) {
+          return stripPrefix(error) || "join request rejected"
+        }
+      }
+    },
+  )
+}

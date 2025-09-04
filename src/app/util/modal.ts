@@ -1,7 +1,8 @@
 import type {Component} from "svelte"
-import {writable} from "svelte/store"
+import {derived, writable} from "svelte/store"
 import {randomId, always, assoc, Emitter} from "@welshman/lib"
 import {goto} from "$app/navigation"
+import {page} from "$app/stores"
 
 export type ModalOptions = {
   drawer?: boolean
@@ -20,6 +21,10 @@ export type Modal = {
 export const emitter = new Emitter()
 
 export const modals = writable<Record<string, Modal>>({})
+
+export const modal = derived([page, modals], ([$page, $modals]) => {
+  return $modals[$page.url.hash.slice(1)]
+})
 
 export const pushModal = (
   component: Component<any>,

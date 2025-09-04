@@ -2,8 +2,9 @@
   import type {Snippet} from "svelte"
   import {onMount} from "svelte"
   import {page} from "$app/stores"
-  import {ago, MONTH} from "@welshman/lib"
-  import {ROOM_META, EVENT_TIME, THREAD, COMMENT, MESSAGE} from "@welshman/util"
+  import {ago, sleep, once, MONTH} from "@welshman/lib"
+  import {ROOM_META, EVENT_TIME, THREAD, COMMENT, MESSAGE, displayRelayUrl} from "@welshman/util"
+  import {SocketStatus} from "@welshman/net"
   import Page from "@lib/components/Page.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
@@ -13,8 +14,13 @@
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
-  import {checkRelayConnection, checkRelayAuth, checkRelayAccess} from "@app/core/commands"
-  import {decodeRelay, userRoomsByUrl, relaysPendingTrust} from "@app/core/state"
+  import {
+    decodeRelay,
+    deriveRelayAuthError,
+    relaysPendingTrust,
+    deriveSocket,
+    userRoomsByUrl,
+  } from "@app/core/state"
   import {pullConservatively} from "@app/core/requests"
   import {notifications} from "@app/util/notifications"
 
@@ -28,21 +34,11 @@
 
   const rooms = Array.from($userRoomsByUrl.get(url) || [])
 
-  const checkConnection = async (signal: AbortSignal) => {
-    const connectionError = await checkRelayConnection(url)
+  const socket = deriveSocket(url)
 
-    if (connectionError) {
-      return pushToast({theme: "error", message: connectionError})
-    }
+  const authError = deriveRelayAuthError(url)
 
-    const [authError, accessError] = await Promise.all([checkRelayAuth(url), checkRelayAccess(url)])
-
-    const error = authError || accessError
-
-    if (error && !signal.aborted) {
-      pushModal(SpaceAuthError, {url, error})
-    }
-  }
+  const showAuthError = once(() => pushModal(SpaceAuthError, {url, error: $authError}))
 
   // We have to watch this one, since on mobile the badge will be visible when active
   $effect(() => {
@@ -51,17 +47,29 @@
     }
   })
 
-  onMount(() => {
-    const relays = [url]
-    const since = ago(MONTH)
-    const controller = new AbortController()
+  // Watch for relay errors and notify the user
+  $effect(() => {
+    if ($authError) {
+      showAuthError()
+    }
+  })
 
-    checkConnection(controller.signal)
+  onMount(() => {
+    const since = ago(MONTH)
+
+    sleep(2000).then(() => {
+      if ($socket.status !== SocketStatus.Open) {
+        pushToast({
+          theme: "error",
+          message: `Failed to connect to ${displayRelayUrl(url)}`,
+        })
+      }
+    })
 
     // Load group meta, threads, calendar events, comments, and recent messages
     // for user rooms to help with a quick page transition
     pullConservatively({
-      relays,
+      relays: [url],
       filters: [
         {kinds: [ROOM_META]},
         {kinds: [THREAD, EVENT_TIME, MESSAGE], since},
@@ -69,10 +77,6 @@
         ...rooms.map(room => ({kinds: [MESSAGE], "#h": [room], since})),
       ],
     })
-
-    return () => {
-      controller.abort()
-    }
   })
 </script>
 
