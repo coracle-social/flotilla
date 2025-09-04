@@ -9,11 +9,23 @@
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
   import {sync, localStorageProvider} from "@welshman/store"
-  import {identity, memoize, spec, sleep, defer, ago, WEEK, TaskQueue} from "@welshman/lib"
+  import {
+    identity,
+    call,
+    memoize,
+    spec,
+    sleep,
+    on,
+    defer,
+    ago,
+    WEEK,
+    TaskQueue,
+  } from "@welshman/lib"
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
   import {
     WRAP,
     EVENT_TIME,
+    APP_DATA,
     THREAD,
     MESSAGE,
     INBOX_RELAYS,
@@ -28,8 +40,14 @@
     getRelaysFromList,
   } from "@welshman/util"
   import {Nip46Broker, makeSecret} from "@welshman/signer"
-  import type {Socket} from "@welshman/net"
-  import {request, defaultSocketPolicies, makeSocketPolicyAuth} from "@welshman/net"
+  import type {Socket, RelayMessage} from "@welshman/net"
+  import {
+    request,
+    defaultSocketPolicies,
+    makeSocketPolicyAuth,
+    SocketEvent,
+    isRelayEvent,
+  } from "@welshman/net"
   import {
     loadRelay,
     db,
@@ -64,9 +82,11 @@
   import {
     INDEXER_RELAYS,
     userMembership,
-    userSettingValues,
+    userSettingsValues,
+    relaysPendingTrust,
     ensureUnwrapped,
     canDecrypt,
+    getSetting,
   } from "@app/core/state"
   import {loadUserData, listenForNotifications} from "@app/core/requests"
   import {theme} from "@app/util/theme"
@@ -162,9 +182,9 @@
     })
 
     // Sync font size
-    userSettingValues.subscribe($userSettingValues => {
+    userSettingsValues.subscribe($userSettingsValues => {
       // @ts-ignore
-      document.documentElement.style["font-size"] = `${$userSettingValues.font_size}rem`
+      document.documentElement.style["font-size"] = `${$userSettingsValues.font_size}rem`
     })
 
     if (!db) {
@@ -214,9 +234,16 @@
           repository,
           rankEvent: (e: TrustedEvent) => {
             if (
-              [PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, INBOX_RELAYS, ROOMS].includes(
-                e.kind,
-              )
+              [
+                PROFILE,
+                FOLLOWS,
+                MUTES,
+                RELAYS,
+                BLOSSOM_SERVERS,
+                INBOX_RELAYS,
+                ROOMS,
+                APP_DATA,
+              ].includes(e.kind)
             ) {
               return 1
             }
@@ -239,6 +266,40 @@
           sign: (event: StampedEvent) => signer.get()?.sign(event),
           shouldAuth: (socket: Socket) => true,
         }),
+        (socket: Socket) => {
+          const buffer: RelayMessage[] = []
+
+          const unsubscribers = [
+            // When the socket goes from untrusted to trusted, receive all buffered messages
+            userSettingsValues.subscribe($settings => {
+              if ($settings.trusted_relays.includes(socket.url)) {
+                for (const message of buffer.splice(0)) {
+                  socket._recvQueue.push(message)
+                }
+              }
+            }),
+            // When we get an event with no signature from an untrusted relay, remove it from
+            // the receive queue. If trust status is undefined, buffer it for later.
+            on(socket, SocketEvent.Receiving, (message: RelayMessage) => {
+              if (isRelayEvent(message) && !message[2]?.sig) {
+                const isTrusted = getSetting<string[]>("trusted_relays").includes(socket.url)
+
+                if (!isTrusted) {
+                  socket._recvQueue.remove(message)
+                  buffer.push(message)
+
+                  if (!$relaysPendingTrust.includes(socket.url)) {
+                    relaysPendingTrust.update($r => [...$r, socket.url])
+                  }
+                }
+              }
+            }),
+          ]
+
+          return () => {
+            unsubscribers.forEach(call)
+          }
+        },
       )
 
       // Load relay info

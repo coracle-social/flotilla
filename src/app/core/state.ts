@@ -1,6 +1,6 @@
 import twColors from "tailwindcss/colors"
 import {Capacitor} from "@capacitor/core"
-import {get, derived} from "svelte/store"
+import {get, derived, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {
   on,
@@ -23,7 +23,7 @@ import {
   always,
 } from "@welshman/lib"
 import type {Socket} from "@welshman/net"
-import {Pool, load, AuthStateEvent, SocketEvent} from "@welshman/net"
+import {Pool, load, AuthStateEvent, SocketEvent, netContext} from "@welshman/net"
 import {
   collection,
   custom,
@@ -56,6 +56,7 @@ import {
   ALERT_IOS,
   ALERT_ANDROID,
   ALERT_STATUS,
+  APP_DATA,
   getGroupTags,
   getRelayTagValues,
   getPubkeyTagValues,
@@ -68,6 +69,7 @@ import {
   getTag,
   getTagValue,
   getTagValues,
+  verifyEvent,
 } from "@welshman/util"
 import type {TrustedEvent, SignedEvent, PublishedList, List, Filter} from "@welshman/util"
 import {Nip59, decrypt} from "@welshman/signer"
@@ -304,6 +306,9 @@ appContext.dufflepudUrl = DUFFLEPUD_URL
 
 routerContext.getIndexerRelays = always(INDEXER_RELAYS)
 
+netContext.isEventValid = (event: TrustedEvent, url: string) =>
+  getSetting<string[]>("trusted_relays").includes(url) || verifyEvent(event)
+
 // Settings
 
 export const canDecrypt = synced({
@@ -312,23 +317,27 @@ export const canDecrypt = synced({
   storage: localStorageProvider,
 })
 
-export const SETTINGS = 38489
+export const SETTINGS = "flotilla/settings"
+
+export type SettingsValues = {
+  show_media: boolean
+  hide_sensitive: boolean
+  trusted_relays: string[]
+  report_usage: boolean
+  report_errors: boolean
+  send_delay: number
+  font_size: number
+}
 
 export type Settings = {
   event: TrustedEvent
-  values: {
-    show_media: boolean
-    hide_sensitive: boolean
-    report_usage: boolean
-    report_errors: boolean
-    send_delay: number
-    font_size: number
-  }
+  values: SettingsValues
 }
 
 export const defaultSettings = {
   show_media: true,
   hide_sensitive: true,
+  trusted_relays: [],
   report_usage: true,
   report_errors: true,
   send_delay: 3000,
@@ -336,7 +345,7 @@ export const defaultSettings = {
 }
 
 export const settings = deriveEventsMapped<Settings>(repository, {
-  filters: [{kinds: [SETTINGS]}],
+  filters: [{kinds: [APP_DATA], "#d": [SETTINGS]}],
   itemToEvent: item => item.event,
   eventToItem: async (event: TrustedEvent) => ({
     event,
@@ -352,8 +361,12 @@ export const {
   name: "settings",
   store: settings,
   getKey: settings => settings.event.pubkey,
-  load: makeOutboxLoader(SETTINGS),
+  load: makeOutboxLoader(APP_DATA, {"#d": [SETTINGS]}),
 })
+
+// Relays sending events with empty signatures that the user has to choose to trust
+
+export const relaysPendingTrust = writable<string[]>([])
 
 // Alerts
 
@@ -610,11 +623,11 @@ export const userSettings = withGetter(
   }),
 )
 
-export const userSettingValues = withGetter(
+export const userSettingsValues = withGetter(
   derived(userSettings, $s => $s?.values || defaultSettings),
 )
 
-export const getSetting = <T>(key: keyof Settings["values"]) => userSettingValues.get()[key] as T
+export const getSetting = <T>(key: keyof Settings["values"]) => userSettingsValues.get()[key] as T
 
 export const userMembership = withGetter(
   derived([pubkey, membershipsByPubkey], ([$pubkey, $membershipsByPubkey]) => {

@@ -5,14 +5,16 @@
   import {ago, MONTH} from "@welshman/lib"
   import {ROOM_META, EVENT_TIME, THREAD, COMMENT, MESSAGE} from "@welshman/util"
   import Page from "@lib/components/Page.svelte"
+  import Dialog from "@lib/components/Dialog.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import MenuSpace from "@app/components/MenuSpace.svelte"
   import SpaceAuthError from "@app/components/SpaceAuthError.svelte"
+  import SpaceTrustRelay from "@app/components/SpaceTrustRelay.svelte"
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {checkRelayConnection, checkRelayAuth, checkRelayAccess} from "@app/core/commands"
-  import {decodeRelay, userRoomsByUrl} from "@app/core/state"
+  import {decodeRelay, userRoomsByUrl, relaysPendingTrust} from "@app/core/state"
   import {pullConservatively} from "@app/core/requests"
   import {notifications} from "@app/util/notifications"
 
@@ -82,3 +84,9 @@
     {@render children?.()}
   {/key}
 </Page>
+
+{#if $relaysPendingTrust.includes(url)}
+  <Dialog>
+    <SpaceTrustRelay {url} />
+  </Dialog>
+{/if}

@@ -9,14 +9,7 @@
     BLOSSOM_SERVERS,
   } from "@welshman/util"
   import {Router} from "@welshman/router"
-  import {
-    pubkey,
-    signer,
-    userMutes,
-    tagPubkey,
-    publishThunk,
-    userBlossomServers,
-  } from "@welshman/app"
+  import {userMutes, tagPubkey, publishThunk, userBlossomServers} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Field from "@lib/components/Field.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -24,38 +17,32 @@
   import Button from "@lib/components/Button.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {pushToast} from "@app/util/toast"
-  import {SETTINGS, PLATFORM_NAME, userSettingValues} from "@app/core/state"
+  import {PLATFORM_NAME, userSettingsValues} from "@app/core/state"
+  import {publishSettings} from "@app/core/commands"
 
   const reset = () => {
-    settings = {...$userSettingValues}
+    settings = {...$userSettingsValues}
     mutedPubkeys = getPubkeyTagValues(getListTags($userMutes))
     blossomServers = getTagValues("server", getListTags($userBlossomServers))
   }
 
   const onsubmit = preventDefault(async () => {
-    const json = JSON.stringify($state.snapshot(settings))
-    const content = await $signer!.nip44.encrypt($pubkey!, json)
-    const relays = Router.get().FromUser().getUrls()
-
-    publishThunk({
-      event: makeEvent(SETTINGS, {content}),
-      relays,
-    })
+    await publishSettings($state.snapshot(settings))
 
     publishThunk({
       event: makeEvent(MUTES, {tags: mutedPubkeys.map(tagPubkey)}),
-      relays,
+      relays: Router.get().FromUser().getUrls(),
     })
 
     publishThunk({
       event: makeEvent(BLOSSOM_SERVERS, {tags: blossomServers.map(tagger("server"))}),
-      relays,
+      relays: Router.get().FromUser().getUrls(),
     })
 
     pushToast({message: "Your settings have been saved!"})
   })
 
-  let settings = $state({...$userSettingValues})
+  let settings = $state({...$userSettingsValues})
   let mutedPubkeys = $state(getPubkeyTagValues(getListTags($userMutes)))
   let blossomServers = $state(getTagValues("server", getListTags($userBlossomServers)))
 </script>
