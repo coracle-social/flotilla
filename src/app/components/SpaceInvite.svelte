@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {sleep, identity, nthEq} from "@welshman/lib"
+  import {sleep, nthEq} from "@welshman/lib"
   import {request} from "@welshman/net"
   import {displayRelayUrl, AUTH_INVITE} from "@welshman/util"
   import {slide} from "@lib/transition"
@@ -11,6 +11,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {clip} from "@app/util/toast"
+  import {PLATFORM_URL} from "@app/core/state"
 
   const {url} = $props()
 
@@ -24,7 +25,10 @@
   let invite = $state("")
 
   $effect(() => {
-    invite = [displayRelayUrl(url), claim].filter(identity).join("|")
+    const relay = displayRelayUrl(url)
+    const params = new URLSearchParams({r: relay, c: claim}).toString()
+
+    invite = PLATFORM_URL + "/join?" + params
   })
 
   onMount(async () => {
@@ -57,7 +61,7 @@
   <div>
     {#if loading}
       <p class="center" out:slide>
-        <Spinner {loading}>Requesting an invite code...</Spinner>
+        <Spinner {loading}>Requesting an invite link...</Spinner>
       </p>
     {:else}
       <div in:slide>

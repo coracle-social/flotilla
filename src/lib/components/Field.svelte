@@ -27,7 +27,7 @@
   </div>
   {@render input?.()}
   {#if info}
-    <p class="text-sm">
+    <p class="text-sm opacity-50">
       {@render info()}
     </p>
   {/if}
