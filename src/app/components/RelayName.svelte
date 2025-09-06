@@ -3,7 +3,7 @@
 
   const {url} = $props()
 
-  const display = deriveRelayDisplay(url)
+  const display = $derived(deriveRelayDisplay(url))
 </script>
 
 {$display}

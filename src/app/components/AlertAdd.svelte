@@ -14,7 +14,7 @@
   } from "@welshman/util"
   import type {Filter} from "@welshman/util"
   import {makeIntersectionFeed, makeRelayFeed, feedFromFilters} from "@welshman/feeds"
-  import {pubkey, signer, getThunkError} from "@welshman/app"
+  import {pubkey, signer, waitForThunkError} from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -145,7 +145,7 @@
       await attemptAuth(NOTIFIER_RELAY)
 
       const thunk = await publishAlert(params)
-      const error = await getThunkError(thunk)
+      const error = await waitForThunkError(thunk)
 
       if (error) {
         return pushToast({

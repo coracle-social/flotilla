@@ -59,7 +59,7 @@ import {daysBetween} from "@lib/util"
 import {
   NOTIFIER_RELAY,
   INDEXER_RELAYS,
-  getDefaultPubkeys,
+  defaultPubkeys,
   userRoomsByUrl,
   getUrlsForEvent,
   loadMembership,
@@ -416,7 +416,7 @@ export const loadUserData = async (pubkey: string, relays: string[] = []) => {
   // Load followed profiles slowly in the background without clogging other stuff up. Only use a single
   // indexer relay to avoid too many redundant validations, which slow things down and eat bandwidth
   promise.then(async () => {
-    for (const pubkeys of chunk(50, getDefaultPubkeys())) {
+    for (const pubkeys of chunk(50, get(defaultPubkeys))) {
       const relays = sample(1, INDEXER_RELAYS)
 
       await sleep(1000)

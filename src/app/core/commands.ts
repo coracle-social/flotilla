@@ -65,7 +65,7 @@ import {
   dropSession,
   tagEventForComment,
   tagEventForQuote,
-  getThunkError,
+  waitForThunkError,
 } from "@welshman/app"
 import type {SettingsValues} from "@app/core/state"
 import {
@@ -249,7 +249,7 @@ export const checkRelayAccess = async (url: string, claim = "") => {
   await attemptAuth(url)
 
   const thunk = publishJoinRequest({url, claim})
-  const error = await getThunkError(thunk)
+  const error = await waitForThunkError(thunk)
 
   if (error) {
     const message =

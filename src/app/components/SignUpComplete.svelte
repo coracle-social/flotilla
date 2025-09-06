@@ -7,6 +7,7 @@
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import {clearModals} from "@app/util/modal"
   import {PROTECTED} from "@app/core/state"
 
   type Props = {
@@ -31,6 +32,8 @@
 
     // Don't publish anywhere yet, wait until they join a space
     publishThunk({event, relays: []})
+
+    clearModals()
   }
 </script>
 
