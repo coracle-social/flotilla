@@ -15,7 +15,7 @@
     ROOM_ADD_USER,
     ROOM_REMOVE_USER,
   } from "@welshman/util"
-  import {pubkey, publishThunk, getThunkError, joinRoom, leaveRoom} from "@welshman/app"
+  import {pubkey, publishThunk, waitForThunkError, joinRoom, leaveRoom} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -69,7 +69,7 @@
     joining = true
 
     try {
-      const message = await getThunkError(joinRoom(url, makeRoomMeta({id: room})))
+      const message = await waitForThunkError(joinRoom(url, makeRoomMeta({id: room})))
 
       if (message && !message.startsWith("duplicate:")) {
         return pushToast({theme: "error", message})
@@ -85,7 +85,7 @@
   const leave = async () => {
     leaving = true
     try {
-      const message = await getThunkError(leaveRoom(url, makeRoomMeta({id: room})))
+      const message = await waitForThunkError(leaveRoom(url, makeRoomMeta({id: room})))
 
       if (message && !message.startsWith("duplicate:")) {
         pushToast({theme: "error", message})
