@@ -191,12 +191,12 @@ export const entityLink = (entity: string) => `https://coracle.social/${entity}`
 export const pubkeyLink = (pubkey: string, relays = Router.get().FromPubkeys([pubkey]).getUrls()) =>
   entityLink(nip19.nprofileEncode({pubkey, relays}))
 
-export const getDefaultPubkeys = () => {
+export const defaultPubkeys = derived(userFollows, $userFollows => {
   const appPubkeys = DEFAULT_PUBKEYS.split(",")
-  const userPubkeys = shuffle(getPubkeyTagValues(getListTags(get(userFollows))))
+  const userPubkeys = shuffle(getPubkeyTagValues(getListTags($userFollows)))
 
   return userPubkeys.length > 5 ? userPubkeys : [...userPubkeys, ...appPubkeys]
-}
+})
 
 const failedUnwraps = new Set()
 
@@ -458,6 +458,21 @@ export const {
   getKey: list => list.event.pubkey,
   load: makeOutboxLoader(ROOMS),
 })
+
+export const membersByUrl = derived(
+  [defaultPubkeys, membershipsByPubkey],
+  ([$defaultPubkeys, $membershipsByPubkey]) => {
+    const $membersByUrl = new Map<string, Set<string>>()
+
+    for (const pubkey of $defaultPubkeys) {
+      for (const url of getMembershipUrls($membershipsByPubkey.get(pubkey))) {
+        addToMapKey($membersByUrl, url, pubkey)
+      }
+    }
+
+    return $membersByUrl
+  },
+)
 
 // Chats
 

@@ -1,52 +1,44 @@
 <script lang="ts">
-  import {tryCatch, first, removeNil} from "@welshman/lib"
+  import type {Snippet} from "svelte"
+  import {tryCatch, fromPairs} from "@welshman/lib"
   import {isRelayUrl, normalizeRelayUrl} from "@welshman/util"
   import {Pool, AuthStatus} from "@welshman/net"
   import {preventDefault} from "@lib/html"
+  import {slideAndFade} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
   import Field from "@lib/components/Field.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import InfoRelay from "@app/components/InfoRelay.svelte"
+  import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceJoinConfirm, {confirmSpaceJoin} from "@app/components/SpaceJoinConfirm.svelte"
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
   import {attemptRelayAccess} from "@app/core/commands"
 
+  type Props = {
+    invite: string
+    abortAction?: Snippet
+  }
+
+  let {invite = "", abortAction}: Props = $props()
+
   const back = () => history.back()
 
   const joinRelay = async () => {
-    const promises: Promise<string | undefined>[] = []
+    const {url, claim} = inviteData!
 
-    const [rawUrl, rawClaim] = url.split("|")
-    const normalizedUrl = normalizeRelayUrl(rawUrl)
-
-    if (claim) {
-      promises.push(attemptRelayAccess(normalizedUrl, claim))
-    }
-
-    if (rawClaim) {
-      promises.push(attemptRelayAccess(normalizedUrl, rawClaim))
-    }
-
-    if (promises.length === 0) {
-      promises.push(attemptRelayAccess(normalizedUrl, ""))
-    }
-
-    const error = first(removeNil(await Promise.all(promises)))
+    const error = await attemptRelayAccess(url, claim)
 
     if (error) {
       return pushToast({theme: "error", message: error, timeout: 30_000})
     }
 
-    const socket = Pool.get().get(normalizedUrl)
-
-    if (socket.auth.status === AuthStatus.None) {
-      pushModal(SpaceJoinConfirm, {url: normalizedUrl}, {replaceState: true})
+    if (Pool.get().get(url).auth.status === AuthStatus.None) {
+      pushModal(SpaceJoinConfirm, {url}, {replaceState: true})
     } else {
-      await confirmSpaceJoin(normalizedUrl)
+      await confirmSpaceJoin(url)
     }
   }
 
@@ -60,12 +52,25 @@
     }
   }
 
-  let url = $state("")
-  let claim = $state("")
   let loading = $state(false)
 
-  const linkIsValid = $derived(
-    Boolean(tryCatch(() => isRelayUrl(normalizeRelayUrl(url.split("|")[0])))),
+  const inviteData = $derived.by(
+    () =>
+      tryCatch(() => {
+        const {r: relay = "", c: claim = ""} = fromPairs(Array.from(new URL(invite).searchParams))
+        const url = normalizeRelayUrl(relay)
+
+        if (isRelayUrl(url)) {
+          return {url, claim}
+        }
+      }) ||
+      tryCatch(() => {
+        const url = normalizeRelayUrl(invite)
+
+        if (isRelayUrl(url)) {
+          return {url, claim: ""}
+        }
+      }),
   )
 </script>
 
@@ -75,46 +80,40 @@
       <div>Join a Space</div>
     {/snippet}
     {#snippet info()}
-      <div>Enter a relay URL below to join an existing space.</div>
+      <div>Enter a relay URL or invite link below to join an existing space.</div>
     {/snippet}
   </ModalHeader>
   <Field>
     {#snippet label()}
-      <p>Relay URL*</p>
+      <p>Invite Link*</p>
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
         <Icon icon="link-round" />
-        <input bind:value={url} class="grow" type="text" />
+        <input bind:value={invite} class="grow" type="text" />
       </label>
     {/snippet}
-    {#snippet info()}
-      <p>
-        Enter the URL of the relay that hosts the space you'd like to join.
-        <Button class="link" onclick={() => pushModal(InfoRelay)}>What is a relay?</Button>
-      </p>
-    {/snippet}
   </Field>
-  <Field>
-    {#snippet label()}
-      <p>Invite Code (optional)</p>
-    {/snippet}
-    {#snippet input()}
-      <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="ticket" />
-        <input bind:value={claim} class="grow" type="text" />
-      </label>
-    {/snippet}
-    {#snippet info()}
-      <p>If you have an invite code, enter it here to get access.</p>
-    {/snippet}
-  </Field>
+  <div class="-my-4">
+    {#if inviteData}
+      <div transition:slideAndFade class="flex flex-col gap-4 py-4">
+        <div class="card2 bg-alt flex flex-col gap-4">
+          <p class="opacity-75">You're about to join:</p>
+          <RelaySummary url={inviteData.url} />
+        </div>
+      </div>
+    {/if}
+  </div>
   <ModalFooter>
-    <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
-      Go back
-    </Button>
-    <Button type="submit" class="btn btn-primary" disabled={!linkIsValid || loading}>
+    {#if abortAction}
+      {@render abortAction?.()}
+    {:else}
+      <Button class="btn btn-link" onclick={back}>
+        <Icon icon="alt-arrow-left" />
+        Go back
+      </Button>
+    {/if}
+    <Button type="submit" class="btn btn-primary" disabled={!inviteData || loading}>
       <Spinner {loading}>Join Space</Spinner>
       <Icon icon="alt-arrow-right" />
     </Button>
