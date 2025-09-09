@@ -6,8 +6,8 @@
   import {relaySearch} from "@welshman/app"
   import {createScroller} from "@lib/html"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
-import AddCircle from "@assets/icons/add-circle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
 

@@ -10,7 +10,7 @@
   } from "@welshman/app"
   import type {Thunk} from "@welshman/app"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import ThunkStatusDetail from "@app/components/ThunkStatusDetail.svelte"

@@ -1,7 +1,7 @@
 <script lang="ts">
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
-import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"

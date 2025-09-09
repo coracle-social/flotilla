@@ -1,6 +1,6 @@
 <script lang="ts">
   import Server from "@assets/icons/server.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import {displayUrl} from "@welshman/lib"
   import {displayRelayUrl} from "@welshman/util"

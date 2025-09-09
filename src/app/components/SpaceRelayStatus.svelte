@@ -1,7 +1,7 @@
 <script lang="ts">
   import {deriveRelay} from "@welshman/app"
   import Server from "@assets/icons/server.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import SocketStatusIndicator from "@lib/components/SocketStatusIndicator.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
 

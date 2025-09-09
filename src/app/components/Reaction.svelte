@@ -1,8 +1,8 @@
 <script lang="ts">
   import {parse, isEmoji, renderAsHtml} from "@welshman/content"
   import Heart from "@assets/icons/heart-angle.svg?dataurl"
-import ThumbsDown from "@assets/icons/dislike.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import ThumbsDown from "@assets/icons/dislike.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import ContentEmoji from "@app/components/ContentEmoji.svelte"
 
   export let event

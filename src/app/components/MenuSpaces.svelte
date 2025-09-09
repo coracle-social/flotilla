@@ -1,6 +1,6 @@
 <script lang="ts">
   import Login from "@assets/icons/login-2.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import CardButton from "@lib/components/CardButton.svelte"

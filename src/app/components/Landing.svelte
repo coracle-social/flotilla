@@ -1,7 +1,7 @@
 <script lang="ts">
   import Login from "@assets/icons/login-2.svg?dataurl"
-import AddCircle from "@assets/icons/add-circle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Link from "@lib/components/Link.svelte"
   import Dialog from "@lib/components/Dialog.svelte"

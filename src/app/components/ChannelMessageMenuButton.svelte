@@ -2,7 +2,7 @@
   import {type Instance} from "tippy.js"
   import {between} from "@welshman/lib"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
   import ChannelMessageMenu from "@app/components/ChannelMessageMenu.svelte"

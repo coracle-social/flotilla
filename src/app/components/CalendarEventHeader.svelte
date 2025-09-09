@@ -7,7 +7,7 @@
   } from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
 
   type Props = {
     event: TrustedEvent

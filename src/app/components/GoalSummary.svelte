@@ -5,7 +5,7 @@
   import {deriveEventsMapped} from "@welshman/store"
   import {repository, getValidZap} from "@welshman/app"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
 
   type Props = {

@@ -4,6 +4,8 @@
   import Settings from "@assets/icons/settings-minimalistic.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
   import Exit from "@assets/icons/logout-3.svg?dataurl"
+  import Bell from "@assets/icons/bell.svg?dataurl"
+  import Wallet from "@assets/icons/wallet.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -29,6 +31,32 @@
       {/snippet}
     </CardButton>
   </Link>
+  <Link replaceState href="/settings/alerts">
+    <CardButton>
+      {#snippet icon()}
+        <div><Icon icon={Bell} size={7} /></div>
+      {/snippet}
+      {#snippet title()}
+        <div>Alerts</div>
+      {/snippet}
+      {#snippet info()}
+        <div>Set up email digests and push notifications</div>
+      {/snippet}
+    </CardButton>
+  </Link>
+  <Link replaceState href="/settings/wallet">
+    <CardButton>
+      {#snippet icon()}
+        <div><Icon icon={Wallet} size={7} /></div>
+      {/snippet}
+      {#snippet title()}
+        <div>Wallet</div>
+      {/snippet}
+      {#snippet info()}
+        <div>Connect a bitcoin wallet for sending social tips</div>
+      {/snippet}
+    </CardButton>
+  </Link>
   <Link replaceState href="/settings/relays">
     <CardButton>
       {#snippet icon()}
@@ -42,7 +70,7 @@
       {/snippet}
     </CardButton>
   </Link>
-  <Link replaceState href="/settings">
+  <Link replaceState href="/settings/content">
     <CardButton>
       {#snippet icon()}
         <div><Icon icon={Settings} size={7} /></div>

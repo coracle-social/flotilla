@@ -32,7 +32,7 @@
   } from "@welshman/app"
   import type {AbstractThunk} from "@welshman/app"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import PageBar from "@lib/components/PageBar.svelte"

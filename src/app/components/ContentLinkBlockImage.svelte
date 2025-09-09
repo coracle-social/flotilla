@@ -3,7 +3,7 @@
   import {displayUrl} from "@welshman/lib"
   import {getTags, decryptFile, getTagValue, tagsFromIMeta} from "@welshman/util"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import {imgproxy} from "@app/core/state"
 
   const {value, event, ...props} = $props()

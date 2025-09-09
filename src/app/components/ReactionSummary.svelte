@@ -19,7 +19,7 @@
   import {pubkey, repository, getValidZap, displayProfileByPubkey} from "@welshman/app"
   import {isMobile, preventDefault, stopPropagation} from "@lib/html"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Reaction from "@app/components/Reaction.svelte"
   import EventReportDetails from "@app/components/EventReportDetails.svelte"
   import {REACTION_KINDS} from "@app/core/state"

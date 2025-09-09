@@ -4,7 +4,7 @@
   import {isMobile, preventDefault} from "@lib/html"
   import {fly} from "@lib/transition"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"

@@ -2,7 +2,7 @@
   import {displayUrl} from "@welshman/lib"
   import {preventDefault} from "@lib/html"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import {pushModal} from "@app/util/modal"

@@ -3,7 +3,7 @@
   import {displayProfileByPubkey} from "@welshman/app"
   import {slide} from "@lib/transition"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
 

@@ -2,7 +2,7 @@
   import {parse, renderAsHtml} from "@welshman/content"
   import {fly} from "@lib/transition"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import {toast, popToast} from "@app/util/toast"
 

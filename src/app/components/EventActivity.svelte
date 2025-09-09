@@ -8,7 +8,7 @@
   import {repository} from "@welshman/app"
   import {notifications} from "@app/util/notifications"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
 
   const {url, path, event}: {url: string; path: string; event: TrustedEvent} = $props()
 

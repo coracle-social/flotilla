@@ -1,8 +1,8 @@
 <script lang="ts">
   import Compass from "@assets/icons/compass-big.svg?dataurl"
-import Login from "@assets/icons/login-2.svg?dataurl"
-import AddCircle from "@assets/icons/add-circle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Login from "@assets/icons/login-2.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import CardButton from "@lib/components/CardButton.svelte"

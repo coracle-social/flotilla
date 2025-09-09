@@ -1,8 +1,8 @@
 <script lang="ts">
   import {goto} from "$app/navigation"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
-import Letter from "@assets/icons/letter-opened.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Letter from "@assets/icons/letter-opened.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import Avatar from "@lib/components/Avatar.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"

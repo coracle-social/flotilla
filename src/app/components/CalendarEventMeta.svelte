@@ -2,8 +2,8 @@
   import {fromPairs} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
-import MapPoint from "@assets/icons/map-point.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import MapPoint from "@assets/icons/map-point.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
 
   type Props = {

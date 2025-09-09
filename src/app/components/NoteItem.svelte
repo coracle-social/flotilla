@@ -2,7 +2,7 @@
   import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
-import Icon from "@lib/components/Icon.svelte"
+  import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
