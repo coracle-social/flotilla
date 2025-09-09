@@ -22,7 +22,6 @@
   import ProfileDelete from "@app/components/ProfileDelete.svelte"
   import SignerStatus from "@app/components/SignerStatus.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
-  import Alerts from "@app/components/Alerts.svelte"
   import {PLATFORM_NAME} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {clip} from "@app/util/toast"
@@ -141,7 +140,6 @@
     {/if}
     <SignerStatus />
   </div>
-  <Alerts />
   <div class="card2 bg-alt shadow-xl">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3">

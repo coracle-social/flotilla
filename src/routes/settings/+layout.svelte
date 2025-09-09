@@ -8,6 +8,8 @@
   import Moon from "@assets/icons/moon.svg?dataurl"
   import InfoSquare from "@assets/icons/info-square.svg?dataurl"
   import Exit from "@assets/icons/logout-3.svg?dataurl"
+  import GalleryMinimalistic from "@assets/icons/gallery-minimalistic.svg?dataurl"
+  import Bell from "@assets/icons/bell.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
@@ -30,37 +32,45 @@
 
 <SecondaryNav>
   <SecondaryNavSection>
+    <SecondaryNavItem class="w-full !justify-between">
+      <strong class="ellipsize flex items-center gap-3"> Your Settings </strong>
+    </SecondaryNavItem>
     <div in:fly|local>
       <SecondaryNavItem href="/settings/profile">
         <Icon icon={UserCircle} /> Profile
       </SecondaryNavItem>
     </div>
-    <div in:fly|local>
+    <div in:fly|local={{delay: 50}}>
+      <SecondaryNavItem href="/settings/alerts">
+        <Icon icon={Bell} /> Alerts
+      </SecondaryNavItem>
+    </div>
+    <div in:fly|local={{delay: 100}}>
       <SecondaryNavItem href="/settings/wallet">
         <Icon icon={Wallet} /> Wallet
       </SecondaryNavItem>
     </div>
-    <div in:fly|local={{delay: 50}}>
+    <div in:fly|local={{delay: 150}}>
       <SecondaryNavItem href="/settings/relays">
         <Icon icon={Server} /> Relays
       </SecondaryNavItem>
     </div>
-    <div in:fly|local={{delay: 100}}>
-      <SecondaryNavItem href="/settings">
-        <Icon icon={Settings} /> Settings
+    <div in:fly|local={{delay: 200}}>
+      <SecondaryNavItem href="/settings/content">
+        <Icon icon={GalleryMinimalistic} /> Content
       </SecondaryNavItem>
     </div>
-    <div in:fly|local={{delay: 150}}>
+    <div in:fly|local={{delay: 250}}>
       <SecondaryNavItem onclick={toggleTheme}>
         <Icon icon={Moon} /> Theme
       </SecondaryNavItem>
     </div>
-    <div in:fly|local={{delay: 200}}>
+    <div in:fly|local={{delay: 300}}>
       <SecondaryNavItem href="/settings/about">
         <Icon icon={InfoSquare} /> About
       </SecondaryNavItem>
     </div>
-    <div in:fly|local={{delay: 250}}>
+    <div in:fly|local={{delay: 350}}>
       <SecondaryNavItem class="text-error hover:text-error" onclick={logout}>
         <Icon icon={Exit} /> Log Out
       </SecondaryNavItem>
