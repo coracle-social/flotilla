@@ -5,8 +5,9 @@ import type {Unsubscriber} from "svelte/store"
 import {onZapper, zappers} from "@welshman/app"
 import {type Zapper} from "@welshman/util"
 import {batch} from "@welshman/lib"
+import type {DatabaseService} from "./DatabaseService"
 
-export interface IZappersDbService {
+export interface IZappersDbService extends DatabaseService {
   initializeDatabase(): Promise<void>
   initializeState(): Promise<void>
   sync(): Unsubscriber
@@ -16,7 +17,7 @@ export interface IZappersDbService {
   getDatabaseVersion(): number
 }
 
-class ZappersDbService implements IZappersDbService {
+export class ZappersDbService implements IZappersDbService {
   databaseName: string = "zappers.db"
   versionUpgrades = ZappersMigrationStatements
   loadToVersion = ZappersMigrationStatements[ZappersMigrationStatements.length - 1].toVersion

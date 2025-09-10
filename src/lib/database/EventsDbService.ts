@@ -5,8 +5,9 @@ import type {Repository, RepositoryUpdate} from "@welshman/relay"
 import type {TrustedEvent} from "@welshman/util"
 import type {Unsubscriber} from "svelte/store"
 import {sortBy} from "@welshman/lib"
+import type {DatabaseService} from "./DatabaseService"
 
-export interface IEventsDbService {
+export interface IEventsDbService extends DatabaseService {
   initializeDatabase(): Promise<void>
   initializeState(): Promise<void>
   sync(): Unsubscriber
@@ -17,7 +18,7 @@ export interface IEventsDbService {
   getDatabaseVersion(): number
 }
 
-class EventsDbService implements IEventsDbService {
+export class EventsDbService implements IEventsDbService {
   databaseName: string = "events.db"
   versionUpgrades = EventsMigrationStatements
   loadToVersion = EventsMigrationStatements[EventsMigrationStatements.length - 1].toVersion

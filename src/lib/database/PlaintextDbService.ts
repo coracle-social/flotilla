@@ -4,10 +4,11 @@ import {sqliteService} from "./SQLiteService"
 import type {Unsubscriber} from "svelte/store"
 import {plaintext} from "@welshman/app"
 import {fromPairs} from "@welshman/lib"
+import type {DatabaseService} from "./DatabaseService"
 
 type KV = {key: string; value: any}
 
-export interface IPlaintextDbService {
+export interface IPlaintextDbService extends DatabaseService {
   initializeDatabase(): Promise<void>
   initializeState(): Promise<void>
   sync(): Unsubscriber
@@ -17,7 +18,7 @@ export interface IPlaintextDbService {
   getDatabaseVersion(): number
 }
 
-class PlaintextDbService implements IPlaintextDbService {
+export class PlaintextDbService implements IPlaintextDbService {
   databaseName: string = "plaintext.db"
   versionUpgrades = PlaintextMigrationStatements
   loadToVersion = PlaintextMigrationStatements[PlaintextMigrationStatements.length - 1].toVersion

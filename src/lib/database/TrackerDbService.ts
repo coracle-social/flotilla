@@ -3,10 +3,11 @@ import {TrackerMigrationStatements} from "./migrations/tracker.migration.stateme
 import {sqliteService} from "./SQLiteService"
 import type {Tracker} from "@welshman/net"
 import type {Unsubscriber} from "svelte/store"
+import type {DatabaseService} from "./DatabaseService"
 
 type Entry = {id: string; relays: string[]}
 
-export interface ITrackerDbService {
+export interface ITrackerDbService extends DatabaseService {
   initializeDatabase(): Promise<void>
   initializeState(): Promise<void>
   sync(): Unsubscriber
@@ -16,7 +17,7 @@ export interface ITrackerDbService {
   getDatabaseVersion(): number
 }
 
-class TrackerDbService implements ITrackerDbService {
+export class TrackerDbService implements ITrackerDbService {
   databaseName: string = "tracker.db"
   versionUpgrades = TrackerMigrationStatements
   loadToVersion = TrackerMigrationStatements[TrackerMigrationStatements.length - 1].toVersion

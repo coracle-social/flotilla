@@ -31,7 +31,6 @@
   import {
     loadRelay,
     db,
-    initStorage,
     repository,
     pubkey,
     session,
@@ -39,11 +38,9 @@
     signer,
     signerLog,
     dropSession,
-    defaultStorageAdapters,
     userInboxRelaySelections,
     loginWithNip01,
     loginWithNip46,
-    EventsStorageAdapter,
     loadRelaySelections,
     SignerLogEntryStatus,
   } from "@welshman/app"
@@ -74,7 +71,13 @@
   import * as requests from "@app/core/requests"
   import * as notifications from "@app/util/notifications"
   import * as appState from "@app/core/state"
-  import {preferencesStorageProvider, sync} from "@src/lib/storage"
+  import {
+    defaultDatabaseServices,
+    initDatabaseStorage,
+    preferencesStorageProvider,
+    sync,
+  } from "@src/lib/storage"
+  import {EventsDbService} from "@src/lib/database/EventsDbService"
 
   // Migration: old nostrtalk instance used different sessions
   if ($session && !$signer) {
@@ -205,25 +208,18 @@
         storage: preferencesStorageProvider,
       })
 
-      await initStorage("flotilla", 8, {
-        ...defaultStorageAdapters,
-        events: new EventsStorageAdapter({
-          name: "events",
-          limit: 10_000,
-          repository,
-          rankEvent: (e: TrustedEvent) => {
-            if ([PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, INBOX_RELAYS].includes(e.kind)) {
-              return 1
-            }
+      await initDatabaseStorage({
+        ...defaultDatabaseServices,
+        events: new EventsDbService(10_000, repository, (e: TrustedEvent) => {
+          if ([PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, INBOX_RELAYS].includes(e.kind)) {
+            return 1
+          }
 
-            if (
-              [EVENT_TIME, THREAD, MESSAGE, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(e.kind)
-            ) {
-              return 0.9
-            }
+          if ([EVENT_TIME, THREAD, MESSAGE, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(e.kind)) {
+            return 0.9
+          }
 
-            return 0
-          },
+          return 0
         }),
       })
 

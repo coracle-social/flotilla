@@ -21,7 +21,7 @@ export interface ISQLiteService {
   isConnection(dbName: string, readOnly: boolean): Promise<boolean>
 }
 
-class SQLiteService implements ISQLiteService {
+export class SQLiteService implements ISQLiteService {
   platform = Capacitor.getPlatform()
   sqlitePlugin = CapacitorSQLite
   sqliteConnection = new SQLiteConnection(CapacitorSQLite)

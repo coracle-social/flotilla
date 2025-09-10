@@ -4,10 +4,11 @@ import {sqliteService} from "./SQLiteService"
 import {freshness} from "@welshman/store"
 import {fromPairs} from "@welshman/lib"
 import type {Unsubscriber} from "svelte/store"
+import type {DatabaseService} from "./DatabaseService"
 
 type KV = {key: string; value: any}
 
-export interface IFreshnessDbService {
+export interface IFreshnessDbService extends DatabaseService {
   initializeDatabase(): Promise<void>
   initializeState(): Promise<void>
   sync(): Unsubscriber
@@ -17,7 +18,7 @@ export interface IFreshnessDbService {
   getDatabaseVersion(): number
 }
 
-class FreshnessDbService implements IFreshnessDbService {
+export class FreshnessDbService implements IFreshnessDbService {
   databaseName: string = "freshness.db"
   versionUpgrades = FreshnessMigrationStatements
   loadToVersion = FreshnessMigrationStatements[FreshnessMigrationStatements.length - 1].toVersion

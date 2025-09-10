@@ -4,8 +4,9 @@ import {sqliteService} from "./SQLiteService"
 import {relays, type Relay} from "@welshman/app"
 import {throttled} from "@welshman/store"
 import type {Unsubscriber} from "svelte/store"
+import type {DatabaseService} from "./DatabaseService"
 
-export interface IRelaysDbService {
+export interface IRelaysDbService extends DatabaseService {
   initializeDatabase(): Promise<void>
   initializeState(): Promise<void>
   sync(): Unsubscriber
@@ -15,7 +16,7 @@ export interface IRelaysDbService {
   getDatabaseVersion(): number
 }
 
-class RelaysDbService implements IRelaysDbService {
+export class RelaysDbService implements IRelaysDbService {
   databaseName: string = "relays.db"
   versionUpgrades = RelaysMigrationStatements
   loadToVersion = RelaysMigrationStatements[RelaysMigrationStatements.length - 1].toVersion

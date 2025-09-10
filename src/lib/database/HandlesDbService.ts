@@ -4,8 +4,9 @@ import {sqliteService} from "./SQLiteService"
 import {handles, onHandle, type Handle} from "@welshman/app"
 import type {Unsubscriber} from "svelte/store"
 import {batch} from "@welshman/lib"
+import type {DatabaseService} from "./DatabaseService"
 
-export interface IHandlesDbService {
+export interface IHandlesDbService extends DatabaseService {
   initializeDatabase(): Promise<void>
   initializeState(): Promise<void>
   sync(): Unsubscriber
@@ -15,7 +16,7 @@ export interface IHandlesDbService {
   getDatabaseVersion(): number
 }
 
-class HandlesDbService implements IHandlesDbService {
+export class HandlesDbService implements IHandlesDbService {
   databaseName: string = "handles.db"
   versionUpgrades = HandlesMigrationStatements
   loadToVersion = HandlesMigrationStatements[HandlesMigrationStatements.length - 1].toVersion
