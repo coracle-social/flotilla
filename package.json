@@ -39,6 +39,7 @@
   "type": "module",
   "dependencies": {
     "@capacitor-community/safe-area": "7.0.0-alpha.1",
+    "@capacitor-community/sqlite": "^7.0.1",
     "@capacitor/android": "^7.0.0",
     "@capacitor/app": "^7.0.0",
     "@capacitor/cli": "^7.0.0",
@@ -76,11 +77,13 @@
     "fuse.js": "^7.0.0",
     "husky": "^9.1.6",
     "idb": "^8.0.0",
+    "jeep-sqlite": "^2.8.0",
     "nostr-signer-capacitor-plugin": "^0.0.4",
     "nostr-tools": "^2.14.2",
     "prettier-plugin-tailwindcss": "^0.6.5",
     "qr-scanner": "^1.4.2",
     "qrcode": "^1.5.4",
+    "sql.js": "^1.13.0",
     "throttle-debounce": "^5.0.2",
     "tippy.js": "^6.3.7"
   },

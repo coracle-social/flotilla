@@ -22,6 +22,21 @@ const config: CapacitorConfig = {
       persist: true,
       autoClear: true
     },
+    CapacitorSQLite: {
+      iosDatabaseLocation: 'Library/CapacitorDatabase',
+      iosIsEncryption: true,
+      iosKeychainPrefix: 'flotilla-sqlite',
+      iosBiometric: {
+        biometricAuth: false,
+        biometricTitle : "Biometric login for capacitor sqlite"
+      },
+      androidIsEncryption: true,
+      androidBiometric: {
+        biometricAuth : false,
+        biometricTitle : "Biometric login for capacitor sqlite",
+        biometricSubTitle : "Log in using your biometric"
+      },
+    }
   },
   // Use this for live reload https://capacitorjs.com/docs/guides/live-reload
   // server: {

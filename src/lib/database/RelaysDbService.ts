@@ -1,0 +1,82 @@
+import {SQLiteDBConnection} from "@capacitor-community/sqlite"
+import {RelaysMigrationStatements} from "./migrations/relays.migration.statements"
+import {sqliteService} from "./SQLiteService"
+import {relays, type Relay} from "@welshman/app"
+import {throttled} from "@welshman/store"
+import type {Unsubscriber} from "svelte/store"
+
+export interface IRelaysDbService {
+  initializeDatabase(): Promise<void>
+  initializeState(): Promise<void>
+  sync(): Unsubscriber
+  getRelays(): Promise<Relay[]>
+  updateRelays(relays: Relay[]): Promise<void>
+  getDatabaseName(): string
+  getDatabaseVersion(): number
+}
+
+class RelaysDbService implements IRelaysDbService {
+  databaseName: string = "relays.db"
+  versionUpgrades = RelaysMigrationStatements
+  loadToVersion = RelaysMigrationStatements[RelaysMigrationStatements.length - 1].toVersion
+  db!: SQLiteDBConnection
+  platform = sqliteService.getPlatform()
+
+  async initializeDatabase(): Promise<void> {
+    try {
+      await sqliteService.addUpgradeStatement({
+        database: this.databaseName,
+        upgrade: this.versionUpgrades,
+      })
+
+      if (this.db) {
+        throw new Error("Database already initialized")
+      }
+
+      this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
+
+      await sqliteService.saveToStore(this.databaseName)
+    } catch (err) {
+      const msg = (err as Error).message ? (err as Error).message : err
+      throw new Error(`relaysDbService.initializeDatabase: ${msg}`)
+    }
+  }
+
+  async initializeState(): Promise<void> {
+    relays.set(await this.getRelays())
+  }
+
+  sync(): Unsubscriber {
+    return throttled(3000, relays).subscribe($relays => this.updateRelays($relays))
+  }
+
+  async getRelays(): Promise<Relay[]> {
+    const relays = (await this.db.query("SELECT data FROM relays")).values
+
+    if (relays) {
+      return relays.map(relay => JSON.parse(relay) as Relay)
+    } else {
+      return []
+    }
+  }
+
+  async updateRelays(relays: Relay[]): Promise<void> {
+    const valuesPlaceholder = relays.map(() => "(?, ?)").join(", ")
+    const values = relays.flatMap(relay => [relay.url, JSON.stringify(relay)])
+    await this.db.run(
+      `INSERT INTO relays (url, data) VALUES ${valuesPlaceholder} ON CONFLICT(url) DO UPDATE SET data = excluded.data WHERE relays.data IS NOT excluded.data;`,
+      values,
+      true,
+    )
+  }
+
+  getDatabaseName(): string {
+    return this.databaseName
+  }
+
+  getDatabaseVersion(): number {
+    return this.loadToVersion
+  }
+}
+
+export const relaysDbService = new RelaysDbService()
