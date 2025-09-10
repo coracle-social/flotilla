@@ -19,7 +19,7 @@ export interface IPlaintextDbService extends DatabaseService {
 }
 
 export class PlaintextDbService implements IPlaintextDbService {
-  databaseName: string = "plaintext.db"
+  databaseName = "plaintext.db"
   versionUpgrades = PlaintextMigrationStatements
   loadToVersion = PlaintextMigrationStatements[PlaintextMigrationStatements.length - 1].toVersion
   db!: SQLiteDBConnection

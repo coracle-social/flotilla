@@ -19,7 +19,7 @@ export interface IFreshnessDbService extends DatabaseService {
 }
 
 export class FreshnessDbService implements IFreshnessDbService {
-  databaseName: string = "freshness.db"
+  databaseName = "freshness.db"
   versionUpgrades = FreshnessMigrationStatements
   loadToVersion = FreshnessMigrationStatements[FreshnessMigrationStatements.length - 1].toVersion
   db!: SQLiteDBConnection

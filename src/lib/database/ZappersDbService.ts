@@ -18,7 +18,7 @@ export interface IZappersDbService extends DatabaseService {
 }
 
 export class ZappersDbService implements IZappersDbService {
-  databaseName: string = "zappers.db"
+  databaseName = "zappers.db"
   versionUpgrades = ZappersMigrationStatements
   loadToVersion = ZappersMigrationStatements[ZappersMigrationStatements.length - 1].toVersion
   db!: SQLiteDBConnection
