@@ -11,7 +11,8 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --check src && eslint src",
     "format": "prettier --write src",
-    "prepare": "husky"
+    "prepare": "husky",
+    "copy:sql:wasm": "cp node_modules/sql.js/dist/sql-wasm.wasm static/assets"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
