@@ -9,6 +9,9 @@ import {TrackerDbService} from "./database/TrackerDbService"
 import {EventsDbService} from "./database/EventsDbService"
 import {repository, tracker, unsubscribers} from "@welshman/app"
 import type {DatabaseService} from "./database/DatabaseService"
+import {sqliteService} from "./database/SQLiteService"
+import {Capacitor} from "@capacitor/core"
+import {defineCustomElements as jeepSqlite} from "jeep-sqlite/loader"
 
 export class PreferencesStorageProvider implements StorageProvider {
   get = async <T>(key: string): Promise<T | undefined> => {
@@ -35,6 +38,26 @@ export class PreferencesStorageProvider implements StorageProvider {
 
 // singleton instance of PreferencesStorageProvider
 export const preferencesStorageProvider = new PreferencesStorageProvider()
+
+export const initSqlPlugin = async () => {
+  const platform = Capacitor.getPlatform()
+
+  if (window !== undefined) {
+    jeepSqlite(window)
+
+    if (platform === "web") {
+      const jeepEl = document.createElement("jeep-sqlite")
+      document.body.appendChild(jeepEl)
+    }
+  }
+
+  try {
+    if (platform === "web") await sqliteService.initWebStore()
+  } catch (error) {
+    const msg = (error as Error).message ? (error as Error).message : error
+    throw new Error(`Error while initializing SQL plugin: ${msg}`)
+  }
+}
 
 export const defaultDatabaseServices = {
   relays: relaysDbService,
