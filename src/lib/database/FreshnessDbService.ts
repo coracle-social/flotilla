@@ -1,10 +1,10 @@
 import {SQLiteDBConnection} from "@capacitor-community/sqlite"
-import {FreshnessMigrationStatements} from "./migrations/freshness.migration.statements"
-import {sqliteService} from "./SQLiteService"
+import {FreshnessMigrationStatements} from "@lib/database/migrations/freshness"
+import {sqliteService} from "@lib/database/SQLiteService"
 import {freshness} from "@welshman/store"
 import {fromPairs} from "@welshman/lib"
 import type {Unsubscriber} from "svelte/store"
-import type {DatabaseService} from "./DatabaseService"
+import type {DatabaseService} from "@lib/database/DatabaseService"
 
 type KV = {key: string; value: any}
 

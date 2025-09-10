@@ -1,11 +1,11 @@
 import {SQLiteDBConnection} from "@capacitor-community/sqlite"
-import {EventsMigrationStatements} from "./migrations/events.migration.statements"
-import {sqliteService} from "./SQLiteService"
+import {EventsMigrationStatements} from "@lib/database/migrations/events"
+import {sqliteService} from "@lib/database/SQLiteService"
 import type {Repository, RepositoryUpdate} from "@welshman/relay"
 import type {TrustedEvent} from "@welshman/util"
 import type {Unsubscriber} from "svelte/store"
 import {sortBy} from "@welshman/lib"
-import type {DatabaseService} from "./DatabaseService"
+import type {DatabaseService} from "@lib/database/DatabaseService"
 
 export interface IEventsDbService extends DatabaseService {
   initializeDatabase(): Promise<void>

@@ -1,11 +1,11 @@
 import {SQLiteDBConnection} from "@capacitor-community/sqlite"
-import {ZappersMigrationStatements} from "./migrations/zappers.migration.statements"
-import {sqliteService} from "./SQLiteService"
+import {ZappersMigrationStatements} from "@lib/database/migrations/zappers"
+import {sqliteService} from "@lib/database/SQLiteService"
 import type {Unsubscriber} from "svelte/store"
 import {onZapper, zappers} from "@welshman/app"
 import {type Zapper} from "@welshman/util"
 import {batch} from "@welshman/lib"
-import type {DatabaseService} from "./DatabaseService"
+import type {DatabaseService} from "@lib/database/DatabaseService"
 
 export interface IZappersDbService extends DatabaseService {
   initializeDatabase(): Promise<void>

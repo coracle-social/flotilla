@@ -1,9 +1,9 @@
 import {SQLiteDBConnection} from "@capacitor-community/sqlite"
-import {TrackerMigrationStatements} from "./migrations/tracker.migration.statements"
-import {sqliteService} from "./SQLiteService"
+import {TrackerMigrationStatements} from "@lib/database/migrations/tracker"
+import {sqliteService} from "@lib/database/SQLiteService"
 import type {Tracker} from "@welshman/net"
 import type {Unsubscriber} from "svelte/store"
-import type {DatabaseService} from "./DatabaseService"
+import type {DatabaseService} from "@lib/database/DatabaseService"
 
 type Entry = {id: string; relays: string[]}
 

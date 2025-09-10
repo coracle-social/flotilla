@@ -1,10 +1,10 @@
 import {SQLiteDBConnection} from "@capacitor-community/sqlite"
-import {HandlesMigrationStatements} from "./migrations/handles.migration.statements"
-import {sqliteService} from "./SQLiteService"
+import {HandlesMigrationStatements} from "@lib/database/migrations/handles"
+import {sqliteService} from "@lib/database/SQLiteService"
 import {handles, onHandle, type Handle} from "@welshman/app"
 import type {Unsubscriber} from "svelte/store"
 import {batch} from "@welshman/lib"
-import type {DatabaseService} from "./DatabaseService"
+import type {DatabaseService} from "@lib/database/DatabaseService"
 
 export interface IHandlesDbService extends DatabaseService {
   initializeDatabase(): Promise<void>

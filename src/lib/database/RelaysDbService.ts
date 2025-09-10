@@ -1,10 +1,10 @@
 import {SQLiteDBConnection} from "@capacitor-community/sqlite"
-import {RelaysMigrationStatements} from "./migrations/relays.migration.statements"
-import {sqliteService} from "./SQLiteService"
+import {RelaysMigrationStatements} from "@lib/database/migrations/relays"
+import {sqliteService} from "@lib/database/SQLiteService"
 import {relays, type Relay} from "@welshman/app"
 import {throttled} from "@welshman/store"
 import type {Unsubscriber} from "svelte/store"
-import type {DatabaseService} from "./DatabaseService"
+import type {DatabaseService} from "@lib/database/DatabaseService"
 
 export interface IRelaysDbService extends DatabaseService {
   initializeDatabase(): Promise<void>
