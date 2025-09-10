@@ -314,7 +314,7 @@ netContext.isEventValid = (event: TrustedEvent, url: string) =>
 
 // Settings
 
-export const canDecrypt = await synced({
+export const canDecrypt = synced({
   key: "canDecrypt",
   defaultValue: false,
   storage: preferencesStorageProvider,
