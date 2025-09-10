@@ -1,14 +1,15 @@
 <script lang="ts">
+  import {throttled} from "@welshman/store"
   import {AuthStatus, SocketStatus} from "@welshman/net"
-  import {deriveSocket} from "@app/core/state"
   import StatusIndicator from "@lib/components/StatusIndicator.svelte"
+  import {deriveSocket, relaysMostlyRestricted} from "@app/core/state"
 
   type Props = {
     url: string
   }
 
   const {url}: Props = $props()
-  const socket = deriveSocket(url)
+  const socket = throttled(800, deriveSocket(url))
 </script>
 
 {#if $socket.status === SocketStatus.Open}
@@ -22,7 +23,7 @@
     <StatusIndicator class="bg-red-500">Failed to Authenticate</StatusIndicator>
   {:else if $socket.auth.status === AuthStatus.PendingResponse}
     <StatusIndicator class="bg-yellow-500">Authenticating</StatusIndicator>
-  {:else if $socket.auth.status === AuthStatus.Forbidden}
+  {:else if $socket.auth.status === AuthStatus.Forbidden || $relaysMostlyRestricted[url]}
     <StatusIndicator class="bg-red-500">Access Denied</StatusIndicator>
   {:else if $socket.auth.status === AuthStatus.Ok}
     <StatusIndicator class="bg-green-500">Connected</StatusIndicator>

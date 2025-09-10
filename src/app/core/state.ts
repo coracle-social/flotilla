@@ -1,6 +1,6 @@
 import twColors from "tailwindcss/colors"
 import {Capacitor} from "@capacitor/core"
-import {get, derived} from "svelte/store"
+import {get, derived, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {
   on,
@@ -23,14 +23,14 @@ import {
   always,
 } from "@welshman/lib"
 import type {Socket} from "@welshman/net"
-import {Pool, load, AuthStateEvent, SocketEvent} from "@welshman/net"
+import {Pool, load, AuthStateEvent, SocketEvent, netContext} from "@welshman/net"
 import {
   collection,
   custom,
   deriveEvents,
   deriveEventsMapped,
   withGetter,
-  localStorageProvider,
+  synced,
 } from "@welshman/store"
 import {
   getIdFilters,
@@ -55,6 +55,7 @@ import {
   ALERT_IOS,
   ALERT_ANDROID,
   ALERT_STATUS,
+  APP_DATA,
   getGroupTags,
   getRelayTagValues,
   getPubkeyTagValues,
@@ -67,6 +68,8 @@ import {
   getTag,
   getTagValue,
   getTagValues,
+  verifyEvent,
+  makeEvent,
 } from "@welshman/util"
 import type {TrustedEvent, SignedEvent, PublishedList, List, Filter} from "@welshman/util"
 import {Nip59, decrypt} from "@welshman/signer"
@@ -89,9 +92,11 @@ import {
   signer,
   makeOutboxLoader,
   appContext,
+  getThunkError,
+  publishThunk,
 } from "@welshman/app"
 import type {Thunk, Relay} from "@welshman/app"
-import {synced} from "@src/lib/storage"
+import {preferencesStorageProvider} from "@src/lib/storage"
 
 export const fromCsv = (s: string) => (s || "").split(",").filter(identity)
 
@@ -119,7 +124,7 @@ export const PLATFORM_TERMS = import.meta.env.VITE_PLATFORM_TERMS
 
 export const PLATFORM_PRIVACY = import.meta.env.VITE_PLATFORM_PRIVACY
 
-export const PLATFORM_LOGO = PLATFORM_URL + "/pwa-192x192.png"
+export const PLATFORM_LOGO = PLATFORM_URL + "/logo.png"
 
 export const PLATFORM_NAME = import.meta.env.VITE_PLATFORM_NAME
 
@@ -186,12 +191,12 @@ export const entityLink = (entity: string) => `https://coracle.social/${entity}`
 export const pubkeyLink = (pubkey: string, relays = Router.get().FromPubkeys([pubkey]).getUrls()) =>
   entityLink(nip19.nprofileEncode({pubkey, relays}))
 
-export const getDefaultPubkeys = () => {
+export const defaultPubkeys = derived(userFollows, $userFollows => {
   const appPubkeys = DEFAULT_PUBKEYS.split(",")
-  const userPubkeys = shuffle(getPubkeyTagValues(getListTags(get(userFollows))))
+  const userPubkeys = shuffle(getPubkeyTagValues(getListTags($userFollows)))
 
   return userPubkeys.length > 5 ? userPubkeys : [...userPubkeys, ...appPubkeys]
-}
+})
 
 const failedUnwraps = new Set()
 
@@ -304,31 +309,38 @@ appContext.dufflepudUrl = DUFFLEPUD_URL
 
 routerContext.getIndexerRelays = always(INDEXER_RELAYS)
 
+netContext.isEventValid = (event: TrustedEvent, url: string) =>
+  getSetting<string[]>("trusted_relays").includes(url) || verifyEvent(event)
+
 // Settings
 
 export const canDecrypt = await synced({
   key: "canDecrypt",
   defaultValue: false,
-  storage: localStorageProvider,
+  storage: preferencesStorageProvider,
 })
 
-export const SETTINGS = 38489
+export const SETTINGS = "flotilla/settings"
+
+export type SettingsValues = {
+  show_media: boolean
+  hide_sensitive: boolean
+  trusted_relays: string[]
+  report_usage: boolean
+  report_errors: boolean
+  send_delay: number
+  font_size: number
+}
 
 export type Settings = {
   event: TrustedEvent
-  values: {
-    show_media: boolean
-    hide_sensitive: boolean
-    report_usage: boolean
-    report_errors: boolean
-    send_delay: number
-    font_size: number
-  }
+  values: SettingsValues
 }
 
 export const defaultSettings = {
   show_media: true,
   hide_sensitive: true,
+  trusted_relays: [],
   report_usage: true,
   report_errors: true,
   send_delay: 3000,
@@ -336,7 +348,7 @@ export const defaultSettings = {
 }
 
 export const settings = deriveEventsMapped<Settings>(repository, {
-  filters: [{kinds: [SETTINGS]}],
+  filters: [{kinds: [APP_DATA], "#d": [SETTINGS]}],
   itemToEvent: item => item.event,
   eventToItem: async (event: TrustedEvent) => ({
     event,
@@ -352,8 +364,16 @@ export const {
   name: "settings",
   store: settings,
   getKey: settings => settings.event.pubkey,
-  load: makeOutboxLoader(SETTINGS),
+  load: makeOutboxLoader(APP_DATA, {"#d": [SETTINGS]}),
 })
+
+// Relays sending events with empty signatures that the user has to choose to trust
+
+export const relaysPendingTrust = writable<string[]>([])
+
+// Relays that mostly send restricted responses to requests and events
+
+export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
 // Alerts
 
@@ -438,6 +458,21 @@ export const {
   getKey: list => list.event.pubkey,
   load: makeOutboxLoader(ROOMS),
 })
+
+export const membersByUrl = derived(
+  [defaultPubkeys, membershipsByPubkey],
+  ([$defaultPubkeys, $membershipsByPubkey]) => {
+    const $membersByUrl = new Map<string, Set<string>>()
+
+    for (const pubkey of $defaultPubkeys) {
+      for (const url of getMembershipUrls($membershipsByPubkey.get(pubkey))) {
+        addToMapKey($membersByUrl, url, pubkey)
+      }
+    }
+
+    return $membersByUrl
+  },
+)
 
 // Chats
 
@@ -610,11 +645,11 @@ export const userSettings = withGetter(
   }),
 )
 
-export const userSettingValues = withGetter(
+export const userSettingsValues = withGetter(
   derived(userSettings, $s => $s?.values || defaultSettings),
 )
 
-export const getSetting = <T>(key: keyof Settings["values"]) => userSettingValues.get()[key] as T
+export const getSetting = <T>(key: keyof Settings["values"]) => userSettingsValues.get()[key] as T
 
 export const userMembership = withGetter(
   derived([pubkey, membershipsByPubkey], ([$pubkey, $membershipsByPubkey]) => {
@@ -725,3 +760,51 @@ export const deriveSocket = (url: string) =>
 
     return () => subs.forEach(call)
   })
+
+export const deriveTimeout = (timeout: number) => {
+  const store = writable<boolean>(false)
+
+  setTimeout(() => store.set(true), timeout)
+
+  return derived(store, identity)
+}
+
+export const deriveRelayAuthError = (url: string, claim = "") => {
+  const $signer = signer.get()
+  const socket = Pool.get().get(url)
+  const stripPrefix = (m: string) => m.replace(/^\w+: /, "")
+
+  // Kick off the auth process
+  socket.auth.attemptAuth($signer.sign)
+
+  // Attempt to join the relay
+  const thunk = publishThunk({
+    event: makeEvent(AUTH_JOIN, {tags: [["claim", claim]]}),
+    relays: [url],
+  })
+
+  return derived(
+    [relaysMostlyRestricted, deriveSocket(url)],
+    ([$relaysMostlyRestricted, $socket]) => {
+      if ($socket.auth.details) {
+        return stripPrefix($socket.auth.details)
+      }
+
+      if ($relaysMostlyRestricted[url]) {
+        return stripPrefix($relaysMostlyRestricted[url])
+      }
+
+      const error = getThunkError(thunk)
+
+      if (error) {
+        const isIgnored = error.startsWith("mute: ")
+        const isEmptyInvite = !claim && error.includes("invite code")
+        const isStrictNip29Relay = error.includes("missing group (`h`) tag")
+
+        if (!isStrictNip29Relay && !isIgnored && !isEmptyInvite && !isStrictNip29Relay) {
+          return stripPrefix(error) || "join request rejected"
+        }
+      }
+    },
+  )
+}

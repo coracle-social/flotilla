@@ -1,6 +1,7 @@
 <script lang="ts">
   import {displayUrl} from "@welshman/lib"
-  import {Pool, AuthStatus} from "@welshman/net"
+  import {AuthStatus} from "@welshman/net"
+  import {waitForThunkError} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -11,7 +12,8 @@
   import SpaceJoinConfirm, {confirmSpaceJoin} from "@app/components/SpaceJoinConfirm.svelte"
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
-  import {attemptRelayAccess} from "@app/core/commands"
+  import {publishJoinRequest} from "@app/core/commands"
+  import {deriveSocket} from "@app/core/state"
 
   type Props = {
     url: string
@@ -21,27 +23,24 @@
 
   const back = () => history.back()
 
-  const joinRelay = async () => {
-    const error = await attemptRelayAccess(url, claim)
-
-    if (error) {
-      return pushToast({theme: "error", message: error, timeout: 30_000})
-    }
-
-    const socket = Pool.get().get(url)
-
-    if (socket.auth.status === AuthStatus.None) {
-      pushModal(SpaceJoinConfirm, {url}, {replaceState: true})
-    } else {
-      await confirmSpaceJoin(url)
-    }
-  }
+  const socket = deriveSocket(url)
 
   const join = async () => {
     loading = true
 
     try {
-      await joinRelay()
+      const thunk = publishJoinRequest({url, claim})
+      const error = await waitForThunkError(thunk)
+
+      if (error) {
+        return pushToast({theme: "error", message: error, timeout: 30_000})
+      }
+
+      if ($socket.auth.status === AuthStatus.None) {
+        pushModal(SpaceJoinConfirm, {url}, {replaceState: true})
+      } else {
+        await confirmSpaceJoin(url)
+      }
     } finally {
       loading = false
     }

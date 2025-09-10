@@ -55,7 +55,7 @@
 
 <div
   class="ml-sai mt-sai mb-sai relative z-nav hidden w-14 flex-shrink-0 bg-base-200 pt-4 md:block">
-  <div class="flex h-full flex-col justify-between">
+  <div class="flex h-full flex-col" class:justify-between={PLATFORM_RELAYS.length === 0}>
     <div>
       {#each PLATFORM_RELAYS as url (url)}
         <PrimaryNavItemSpace {url} />
@@ -81,6 +81,9 @@
         </PrimaryNavItem>
       {/each}
     </div>
+    {#if PLATFORM_RELAYS.length > 0}
+      <Divider />
+    {/if}
     <div>
       <PrimaryNavItem
         title="Settings"

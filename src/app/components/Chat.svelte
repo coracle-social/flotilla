@@ -49,7 +49,7 @@
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import {
     INDEXER_RELAYS,
-    userSettingValues,
+    userSettingsValues,
     deriveChat,
     splitChatId,
     PLATFORM_NAME,
@@ -130,7 +130,7 @@
       const template = templates[i]
 
       thunks.push(
-        await sendWrapped({pubkeys, template, delay: $userSettingValues.send_delay + ms(i)}),
+        await sendWrapped({pubkeys, template, delay: $userSettingsValues.send_delay + ms(i)}),
       )
     }
 

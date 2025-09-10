@@ -27,8 +27,8 @@
   </p>
   <p>
     On <Link external href="https://nostr.com/">Nostr</Link>, <strong>you</strong> control your own
-    identity and social data, through the magic of crytography. The basic idea is that you have a
-    <strong>public key</strong>, which acts as your user id, and a
+    identity and social data, through the magic of cryptography. The basic idea is that you have a
+    <strong>public key</strong>, which acts as your user ID, and a
     <strong>private key</strong> which allows you to prove your identity.
   </p>
   {#if $session?.email}

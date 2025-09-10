@@ -1,7 +1,17 @@
 import {nwc} from "@getalby/sdk"
 import * as nip19 from "nostr-tools/nip19"
 import {get} from "svelte/store"
-import {randomId, flatten, poll, uniq, equals, TIMEZONE, LOCALE} from "@welshman/lib"
+import {
+  randomId,
+  append,
+  remove,
+  flatten,
+  poll,
+  uniq,
+  equals,
+  TIMEZONE,
+  LOCALE,
+} from "@welshman/lib"
 import type {Feed} from "@welshman/feeds"
 import type {TrustedEvent, EventContent} from "@welshman/util"
 import {
@@ -19,6 +29,7 @@ import {
   ALERT_WEB,
   ALERT_IOS,
   ALERT_ANDROID,
+  APP_DATA,
   isSignedEvent,
   makeEvent,
   displayProfile,
@@ -54,16 +65,20 @@ import {
   dropSession,
   tagEventForComment,
   tagEventForQuote,
-  getThunkError,
+  waitForThunkError,
 } from "@welshman/app"
+import type {SettingsValues} from "@app/core/state"
 import {
+  SETTINGS,
   PROTECTED,
   userMembership,
   INDEXER_RELAYS,
   NOTIFIER_PUBKEY,
   NOTIFIER_RELAY,
   userRoomsByUrl,
+  userSettingsValues,
 } from "@app/core/state"
+import {preferencesStorageProvider} from "@src/lib/storage"
 
 // Utils
 
@@ -110,6 +125,7 @@ export const logout = async () => {
   await clearStorage()
 
   localStorage.clear()
+  await preferencesStorageProvider.clear()
 }
 
 // Synchronization
@@ -232,12 +248,8 @@ export const checkRelayAccess = async (url: string, claim = "") => {
 
   await attemptAuth(url)
 
-  const thunk = publishThunk({
-    event: makeEvent(AUTH_JOIN, {tags: [["claim", claim]]}),
-    relays: [url],
-  })
-
-  const error = await getThunkError(thunk)
+  const thunk = publishJoinRequest({url, claim})
+  const error = await waitForThunkError(thunk)
 
   if (error) {
     const message =
@@ -282,7 +294,7 @@ export const checkRelayConnection = async (url: string) => {
   }
 }
 
-export const checkRelayAuth = async (url: string, timeout = 3000) => {
+export const checkRelayAuth = async (url: string) => {
   const socket = Pool.get().get(url)
   const okStatuses = [AuthStatus.None, AuthStatus.Ok]
 
@@ -311,7 +323,7 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
   }
 }
 
-// Actions
+// Deletions
 
 export type DeleteParams = {
   protect: boolean
@@ -337,6 +349,8 @@ export const makeDelete = ({protect, event, tags = []}: DeleteParams) => {
 export const publishDelete = ({relays, ...params}: DeleteParams & {relays: string[]}) =>
   publishThunk({event: makeDelete(params), relays})
 
+// Reports
+
 export type ReportParams = {
   event: TrustedEvent
   content: string
@@ -359,6 +373,8 @@ export const publishReport = ({
   content,
 }: ReportParams & {relays: string[]}) =>
   publishThunk({event: makeReport({event, reason, content}), relays})
+
+// Reactions
 
 export type ReactionParams = {
   protect: boolean
@@ -385,6 +401,8 @@ export const makeReaction = ({protect, content, event, tags: paramTags = []}: Re
 export const publishReaction = ({relays, ...params}: ReactionParams & {relays: string[]}) =>
   publishThunk({event: makeReaction(params), relays})
 
+// Comments
+
 export type CommentParams = {
   event: TrustedEvent
   content: string
@@ -396,6 +414,8 @@ export const makeComment = ({event, content, tags = []}: CommentParams) =>
 
 export const publishComment = ({relays, ...params}: CommentParams & {relays: string[]}) =>
   publishThunk({event: makeComment(params), relays})
+
+// Alerts
 
 export type AlertParams = {
   feed: Feed
@@ -460,6 +480,38 @@ export const makeAlert = async (params: AlertParams) => {
 
 export const publishAlert = async (params: AlertParams) =>
   publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})
+
+// Settings
+
+export const makeSettings = async (params: Partial<SettingsValues>) => {
+  const json = JSON.stringify({...userSettingsValues.get(), ...params})
+  const content = await signer.get().nip44.encrypt(pubkey.get()!, json)
+  const tags = [["d", SETTINGS]]
+
+  return makeEvent(APP_DATA, {content, tags})
+}
+
+export const publishSettings = async (params: Partial<SettingsValues>) =>
+  publishThunk({event: await makeSettings(params), relays: Router.get().FromUser().getUrls()})
+
+export const addTrustedRelay = async (url: string) =>
+  publishSettings({trusted_relays: append(url, userSettingsValues.get().trusted_relays)})
+
+export const removeTrustedRelay = async (url: string) =>
+  publishSettings({trusted_relays: remove(url, userSettingsValues.get().trusted_relays)})
+
+// Join request
+
+export type JoinRequestParams = {
+  url: string
+  claim: string
+}
+
+export const makeJoinRequest = (params: JoinRequestParams) =>
+  makeEvent(AUTH_JOIN, {tags: [["claim", params.claim]]})
+
+export const publishJoinRequest = (params: JoinRequestParams) =>
+  publishThunk({event: makeJoinRequest(params), relays: [params.url]})
 
 // Lightning
 

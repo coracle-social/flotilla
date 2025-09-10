@@ -8,7 +8,21 @@
   import {App, type URLOpenListenerEvent} from "@capacitor/app"
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
-  import {identity, memoize, spec, sleep, defer, ago, WEEK, TaskQueue} from "@welshman/lib"
+  import {sync, localStorageProvider} from "@welshman/store"
+  import {
+    ago,
+    assoc,
+    call,
+    defer,
+    dissoc,
+    identity,
+    memoize,
+    on,
+    sleep,
+    spec,
+    TaskQueue,
+    WEEK,
+  } from "@welshman/lib"
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
   import {
     WRAP,
@@ -26,8 +40,19 @@
     getRelaysFromList,
   } from "@welshman/util"
   import {Nip46Broker, makeSecret} from "@welshman/signer"
-  import type {Socket} from "@welshman/net"
-  import {request, defaultSocketPolicies, makeSocketPolicyAuth} from "@welshman/net"
+  import type {Socket, RelayMessage, ClientMessage} from "@welshman/net"
+  import {
+    request,
+    defaultSocketPolicies,
+    makeSocketPolicyAuth,
+    SocketEvent,
+    isRelayEvent,
+    isRelayOk,
+    isRelayClosed,
+    isClientReq,
+    isClientEvent,
+    isClientClose,
+  } from "@welshman/net"
   import {
     loadRelay,
     db,
@@ -59,9 +84,12 @@
   import {
     INDEXER_RELAYS,
     userMembership,
-    userSettingValues,
+    userSettingsValues,
+    relaysPendingTrust,
     ensureUnwrapped,
     canDecrypt,
+    getSetting,
+    relaysMostlyRestricted,
   } from "@app/core/state"
   import {loadUserData, listenForNotifications} from "@app/core/requests"
   import {theme} from "@app/util/theme"
@@ -75,7 +103,6 @@
     defaultDatabaseServices,
     initDatabaseStorage,
     preferencesStorageProvider,
-    sync,
   } from "@src/lib/storage"
   import {EventsDbService} from "@src/lib/database/EventsDbService"
 
@@ -107,6 +134,44 @@
       ...requests,
       ...notifications,
     })
+
+    // migrate from localStorage to capacitor Preferences storage if needed
+    const runMigration = async () => {
+      const isSome = (item: any) => {
+        return item !== undefined && item !== null && item !== ""
+      }
+
+      const localStoragePubKey = await localStorageProvider.get("pubkey")
+      if (isSome(localStoragePubKey)) {
+        await preferencesStorageProvider.set("pubkey", localStoragePubKey)
+        localStorage.removeItem("pubkey")
+      }
+
+      const localStorageSessions = await localStorageProvider.get("sessions")
+      if (isSome(localStorageSessions)) {
+        await preferencesStorageProvider.set("sessions", localStorageSessions)
+        localStorage.removeItem("sessions")
+      }
+
+      const localStorageCanDecrypt = await localStorageProvider.get("canDecrypt")
+      if (isSome(localStorageCanDecrypt)) {
+        await preferencesStorageProvider.set("canDecrypt", localStorageCanDecrypt)
+        localStorage.removeItem("canDecrypt")
+      }
+
+      const localStorageChecked = await localStorageProvider.get("checked")
+      if (isSome(localStorageChecked)) {
+        await preferencesStorageProvider.set("checked", localStorageChecked)
+        localStorage.removeItem("checked")
+      }
+
+      const localStorageTheme = await localStorageProvider.get("theme")
+      if (isSome(localStorageTheme)) {
+        await preferencesStorageProvider.set("theme", localStorageTheme)
+        localStorage.removeItem("theme")
+      }
+    }
+    await runMigration()
 
     // Listen for navigation messages from service worker
     navigator.serviceWorker?.addEventListener("message", event => {
@@ -164,9 +229,9 @@
     })
 
     // Sync font size
-    userSettingValues.subscribe($userSettingValues => {
+    userSettingsValues.subscribe($userSettingsValues => {
       // @ts-ignore
-      document.documentElement.style["font-size"] = `${$userSettingValues.font_size}rem`
+      document.documentElement.style["font-size"] = `${$userSettingsValues.font_size}rem`
     })
 
     if (!db) {
@@ -230,6 +295,105 @@
           sign: (event: StampedEvent) => signer.get()?.sign(event),
           shouldAuth: (socket: Socket) => true,
         }),
+        (socket: Socket) => {
+          const buffer: RelayMessage[] = []
+
+          const unsubscribers = [
+            // When the socket goes from untrusted to trusted, receive all buffered messages
+            userSettingsValues.subscribe($settings => {
+              if ($settings.trusted_relays.includes(socket.url)) {
+                for (const message of buffer.splice(0)) {
+                  socket._recvQueue.push(message)
+                }
+              }
+            }),
+            // When we get an event with no signature from an untrusted relay, remove it from
+            // the receive queue. If trust status is undefined, buffer it for later.
+            on(socket, SocketEvent.Receiving, (message: RelayMessage) => {
+              if (isRelayEvent(message) && !message[2]?.sig) {
+                const isTrusted = getSetting<string[]>("trusted_relays").includes(socket.url)
+
+                if (!isTrusted) {
+                  socket._recvQueue.remove(message)
+                  buffer.push(message)
+
+                  if (!$relaysPendingTrust.includes(socket.url)) {
+                    relaysPendingTrust.update($r => [...$r, socket.url])
+                  }
+                }
+              }
+            }),
+          ]
+
+          return () => {
+            unsubscribers.forEach(call)
+          }
+        },
+        function monitorRestrictedResponses(socket: Socket) {
+          let total = 0
+          let restricted = 0
+          let error = ""
+
+          const pending = new Set<string>()
+
+          const updateStatus = () =>
+            relaysMostlyRestricted.update(
+              restricted > total / 2 ? assoc(socket.url, error) : dissoc(socket.url),
+            )
+
+          const unsubscribers = [
+            on(socket, SocketEvent.Receive, (message: RelayMessage) => {
+              if (isRelayOk(message)) {
+                const [_, id, ok, details = ""] = message
+
+                if (pending.has(id)) {
+                  pending.delete(id)
+
+                  if (!ok && details.startsWith("restricted: ")) {
+                    restricted++
+                    error = details
+                    updateStatus()
+                  }
+                }
+              }
+
+              if (isRelayClosed(message)) {
+                const [_, id, details = ""] = message
+
+                if (pending.has(id)) {
+                  pending.delete(id)
+
+                  if (details.startsWith("restricted: ")) {
+                    restricted++
+                    error = details
+                    updateStatus()
+                  }
+                }
+              }
+            }),
+            on(socket, SocketEvent.Send, (message: ClientMessage) => {
+              if (isClientReq(message)) {
+                total++
+                pending.add(message[1])
+                updateStatus()
+              }
+
+              if (isClientEvent(message)) {
+                total++
+                pending.add(message[1].id)
+                updateStatus()
+              }
+
+              if (isClientClose(message)) {
+                pending.delete(message[1])
+              }
+            }),
+          ]
+
+          return () => {
+            unsubscribers.forEach(call)
+          }
+        },
       )
 
       // Load relay info

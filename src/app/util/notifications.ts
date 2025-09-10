@@ -1,5 +1,5 @@
 import {derived} from "svelte/store"
-import {localStorageProvider, throttled} from "@welshman/store"
+import {synced, throttled} from "@welshman/store"
 import {pubkey, relaysByUrl} from "@welshman/app"
 import {prop, spec, identity, now, groupBy} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
@@ -13,14 +13,14 @@ import {
   makeRoomPath,
 } from "@app/util/routes"
 import {chats, hasNip29, getUrlsForEvent, userRoomsByUrl, repositoryStore} from "@app/core/state"
-import {synced} from "@src/lib/storage"
+import {preferencesStorageProvider} from "@src/lib/storage"
 
 // Checked state
 
-export const checked = await synced<Record<string, number>>({
+export const checked = synced<Record<string, number>>({
   key: "checked",
   defaultValue: {},
-  storage: localStorageProvider,
+  storage: preferencesStorageProvider,
 })
 
 export const deriveChecked = (key: string) => derived(checked, prop(key))

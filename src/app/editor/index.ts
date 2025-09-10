@@ -79,7 +79,6 @@ export const makeEditor = async ({
                     new Compressor(file, {
                       maxWidth: 1024,
                       maxHeight: 1024,
-                      convertSize: 2 * 1024 * 1024,
                       success: resolve,
                       error: e => {
                         // Non-images break compressor
