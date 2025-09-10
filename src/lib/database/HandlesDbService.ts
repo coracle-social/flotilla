@@ -37,9 +37,8 @@ export class HandlesDbService implements IHandlesDbService {
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
       await sqliteService.saveToStore(this.databaseName)
-    } catch (err) {
-      const msg = (err as Error).message ? (err as Error).message : err
-      throw new Error(`handlesDbService.initializeDatabase: ${msg}`)
+    } catch (err: any) {
+      throw new Error(`handlesDbService.initializeDatabase: ${err.message || err}`)
     }
   }
 

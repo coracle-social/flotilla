@@ -44,9 +44,8 @@ export class TrackerDbService implements ITrackerDbService {
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
       await sqliteService.saveToStore(this.databaseName)
-    } catch (err) {
-      const msg = (err as Error).message ? (err as Error).message : err
-      throw new Error(`trackerDbService.initializeDatabase: ${msg}`)
+    } catch (err: any) {
+      throw new Error(`trackerDbService.initializeDatabase: ${err.message || err}`)
     }
   }
 
