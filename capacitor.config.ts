@@ -23,7 +23,7 @@ const config: CapacitorConfig = {
       autoClear: true
     },
     CapacitorSQLite: {
-      iosDatabaseLocation: 'Library/CapacitorDatabase',
+      iosDatabaseLocation: 'Library/Flotilla',
       iosIsEncryption: true,
       iosKeychainPrefix: 'flotilla-sqlite',
       iosBiometric: {
