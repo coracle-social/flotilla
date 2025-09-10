@@ -4,7 +4,7 @@ import {sqliteService} from "@lib/database/SQLiteService"
 import type {Repository, RepositoryUpdate} from "@welshman/relay"
 import type {TrustedEvent} from "@welshman/util"
 import type {Unsubscriber} from "svelte/store"
-import {last, sortBy} from "@welshman/lib"
+import {last, on, sortBy} from "@welshman/lib"
 import type {DatabaseService} from "@lib/database/DatabaseService"
 
 export interface IEventsDbService extends DatabaseService {
@@ -98,9 +98,7 @@ export class EventsDbService implements IEventsDbService {
       this.eventCount = this.eventCount + keep.length - removed.size
     }
 
-    this.repository.on("update", onUpdate)
-
-    return () => this.repository.off("update", onUpdate)
+    return on(this.repository, "update", onUpdate)
   }
 
   async getEvents(): Promise<TrustedEvent[]> {
