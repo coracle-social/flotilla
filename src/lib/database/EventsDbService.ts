@@ -81,8 +81,6 @@ export class EventsDbService implements IEventsDbService {
 
       // If we're well above our retention limit, drop lowest-ranked events
       if (this.eventCount > this.limit * 1.5) {
-        removed = new Set(removed)
-
         for (const event of sortBy(e => -this.rankEvent(e), await this.getEvents()).slice(
           this.limit,
         )) {
