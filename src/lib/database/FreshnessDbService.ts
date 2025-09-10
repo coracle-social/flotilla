@@ -23,11 +23,11 @@ export class FreshnessDbService implements IFreshnessDbService {
   versionUpgrades = FreshnessMigrationStatements
   loadToVersion = last(FreshnessMigrationStatements).toVersion
   db!: SQLiteDBConnection
-  platform = sqliteService.getPlatform()
+  platform = sqliteService.platform
 
   async initializeDatabase(): Promise<void> {
     try {
-      await sqliteService.addUpgradeStatement({
+      await sqliteService.sqlitePlugin.addUpgradeStatement({
         database: this.databaseName,
         upgrade: this.versionUpgrades,
       })

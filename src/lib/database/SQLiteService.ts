@@ -1,15 +1,7 @@
-import {
-  CapacitorSQLite,
-  SQLiteConnection,
-  SQLiteDBConnection,
-  type capSQLiteUpgradeOptions,
-} from "@capacitor-community/sqlite"
+import {CapacitorSQLite, SQLiteConnection, SQLiteDBConnection} from "@capacitor-community/sqlite"
 import {Capacitor} from "@capacitor/core"
 
 export interface ISQLiteService {
-  getPlatform(): string
-  initWebStore(): Promise<void>
-  addUpgradeStatement(options: capSQLiteUpgradeOptions): Promise<void>
   openDatabase(
     dbName: string,
     loadToVersion: number,
@@ -26,30 +18,6 @@ export class SQLiteService implements ISQLiteService {
   sqlitePlugin = CapacitorSQLite
   sqliteConnection = new SQLiteConnection(CapacitorSQLite)
   dbNameVersionDict: Map<string, number> = new Map()
-
-  getPlatform(): string {
-    return this.platform
-  }
-
-  async initWebStore(): Promise<void> {
-    try {
-      await this.sqliteConnection.initWebStore()
-    } catch (err) {
-      const msg = (err as Error).message ? (err as Error).message : err
-      throw new Error(`sqliteService.initWebStore: ${msg}`)
-    }
-    return
-  }
-
-  async addUpgradeStatement(options: capSQLiteUpgradeOptions): Promise<void> {
-    try {
-      await this.sqlitePlugin.addUpgradeStatement(options)
-    } catch (err) {
-      const msg = (err as Error).message ? (err as Error).message : err
-      throw new Error(`sqliteService.addUpgradeStatement: ${msg}`)
-    }
-    return
-  }
 
   async openDatabase(
     dbName: string,
@@ -111,7 +79,6 @@ export class SQLiteService implements ISQLiteService {
       if (isConn) {
         await this.sqliteConnection.closeConnection(dbName, readOnly)
       }
-      return
     } catch (err) {
       const msg = (err as Error).message ? (err as Error).message : err
       throw new Error(`sqliteService.closeDatabase: ${msg}`)
@@ -125,7 +92,6 @@ export class SQLiteService implements ISQLiteService {
 
     try {
       await this.sqliteConnection.saveToStore(dbName)
-      return
     } catch (err) {
       const msg = (err as Error).message ? (err as Error).message : err
       throw new Error(`sqliteService.saveToStore: ${msg}`)
@@ -135,7 +101,6 @@ export class SQLiteService implements ISQLiteService {
   async saveToLocalDisk(dbName: string): Promise<void> {
     try {
       await this.sqliteConnection.saveToLocalDisk(dbName)
-      return
     } catch (err) {
       const msg = (err as Error).message ? (err as Error).message : err
       throw new Error(`sqliteService.saveToLocalDisk: ${msg}`)

@@ -22,11 +22,11 @@ export class RelaysDbService implements IRelaysDbService {
   versionUpgrades = RelaysMigrationStatements
   loadToVersion = last(RelaysMigrationStatements).toVersion
   db!: SQLiteDBConnection
-  platform = sqliteService.getPlatform()
+  platform = sqliteService.platform
 
   async initializeDatabase(): Promise<void> {
     try {
-      await sqliteService.addUpgradeStatement({
+      await sqliteService.sqlitePlugin.addUpgradeStatement({
         database: this.databaseName,
         upgrade: this.versionUpgrades,
       })

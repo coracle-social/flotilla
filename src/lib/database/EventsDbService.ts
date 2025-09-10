@@ -23,7 +23,7 @@ export class EventsDbService implements IEventsDbService {
   versionUpgrades = EventsMigrationStatements
   loadToVersion = last(EventsMigrationStatements).toVersion
   db!: SQLiteDBConnection
-  platform = sqliteService.getPlatform()
+  platform = sqliteService.platform
   limit: number
   repository: Repository
   rankEvent: (event: TrustedEvent) => number
@@ -45,7 +45,7 @@ export class EventsDbService implements IEventsDbService {
 
   async initializeDatabase(): Promise<void> {
     try {
-      await sqliteService.addUpgradeStatement({
+      await sqliteService.sqlitePlugin.addUpgradeStatement({
         database: this.databaseName,
         upgrade: this.versionUpgrades,
       })

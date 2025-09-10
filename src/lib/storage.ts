@@ -52,7 +52,7 @@ export const initSqlPlugin = async () => {
   }
 
   try {
-    if (platform === "web") await sqliteService.initWebStore()
+    if (platform === "web") await sqliteService.sqliteConnection.initWebStore()
   } catch (error) {
     const msg = (error as Error).message ? (error as Error).message : error
     throw new Error(`Error while initializing SQL plugin: ${msg}`)
