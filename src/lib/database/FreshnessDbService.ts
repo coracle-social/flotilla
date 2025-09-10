@@ -2,7 +2,7 @@ import {SQLiteDBConnection} from "@capacitor-community/sqlite"
 import {FreshnessMigrationStatements} from "@lib/database/migrations/freshness"
 import {sqliteService} from "@lib/database/SQLiteService"
 import {freshness} from "@welshman/store"
-import {fromPairs} from "@welshman/lib"
+import {fromPairs, last} from "@welshman/lib"
 import type {Unsubscriber} from "svelte/store"
 import type {DatabaseService} from "@lib/database/DatabaseService"
 
@@ -21,7 +21,7 @@ export interface IFreshnessDbService extends DatabaseService {
 export class FreshnessDbService implements IFreshnessDbService {
   databaseName = "freshness.db"
   versionUpgrades = FreshnessMigrationStatements
-  loadToVersion = FreshnessMigrationStatements[FreshnessMigrationStatements.length - 1].toVersion
+  loadToVersion = last(FreshnessMigrationStatements).toVersion
   db!: SQLiteDBConnection
   platform = sqliteService.getPlatform()
 

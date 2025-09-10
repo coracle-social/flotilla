@@ -4,6 +4,7 @@ import {sqliteService} from "@lib/database/SQLiteService"
 import type {Tracker} from "@welshman/net"
 import type {Unsubscriber} from "svelte/store"
 import type {DatabaseService} from "@lib/database/DatabaseService"
+import {last} from "@welshman/lib"
 
 type Entry = {id: string; relays: string[]}
 
@@ -20,7 +21,7 @@ export interface ITrackerDbService extends DatabaseService {
 export class TrackerDbService implements ITrackerDbService {
   databaseName = "tracker.db"
   versionUpgrades = TrackerMigrationStatements
-  loadToVersion = TrackerMigrationStatements[TrackerMigrationStatements.length - 1].toVersion
+  loadToVersion = last(TrackerMigrationStatements).toVersion
   db!: SQLiteDBConnection
   platform = sqliteService.getPlatform()
   tracker: Tracker

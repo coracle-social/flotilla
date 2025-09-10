@@ -3,7 +3,7 @@ import {HandlesMigrationStatements} from "@lib/database/migrations/handles"
 import {sqliteService} from "@lib/database/SQLiteService"
 import {handles, onHandle, type Handle} from "@welshman/app"
 import type {Unsubscriber} from "svelte/store"
-import {batch} from "@welshman/lib"
+import {batch, last} from "@welshman/lib"
 import type {DatabaseService} from "@lib/database/DatabaseService"
 
 export interface IHandlesDbService extends DatabaseService {
@@ -19,7 +19,7 @@ export interface IHandlesDbService extends DatabaseService {
 export class HandlesDbService implements IHandlesDbService {
   databaseName = "handles.db"
   versionUpgrades = HandlesMigrationStatements
-  loadToVersion = HandlesMigrationStatements[HandlesMigrationStatements.length - 1].toVersion
+  loadToVersion = last(HandlesMigrationStatements).toVersion
   db!: SQLiteDBConnection
   platform = sqliteService.getPlatform()
 

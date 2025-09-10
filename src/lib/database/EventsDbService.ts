@@ -4,7 +4,7 @@ import {sqliteService} from "@lib/database/SQLiteService"
 import type {Repository, RepositoryUpdate} from "@welshman/relay"
 import type {TrustedEvent} from "@welshman/util"
 import type {Unsubscriber} from "svelte/store"
-import {sortBy} from "@welshman/lib"
+import {last, sortBy} from "@welshman/lib"
 import type {DatabaseService} from "@lib/database/DatabaseService"
 
 export interface IEventsDbService extends DatabaseService {
@@ -21,7 +21,7 @@ export interface IEventsDbService extends DatabaseService {
 export class EventsDbService implements IEventsDbService {
   databaseName = "events.db"
   versionUpgrades = EventsMigrationStatements
-  loadToVersion = EventsMigrationStatements[EventsMigrationStatements.length - 1].toVersion
+  loadToVersion = last(EventsMigrationStatements).toVersion
   db!: SQLiteDBConnection
   platform = sqliteService.getPlatform()
   limit: number

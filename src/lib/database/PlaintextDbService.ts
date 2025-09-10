@@ -3,7 +3,7 @@ import {PlaintextMigrationStatements} from "@lib/database/migrations/plaintext"
 import {sqliteService} from "@lib/database/SQLiteService"
 import type {Unsubscriber} from "svelte/store"
 import {plaintext} from "@welshman/app"
-import {fromPairs} from "@welshman/lib"
+import {fromPairs, last} from "@welshman/lib"
 import type {DatabaseService} from "@lib/database/DatabaseService"
 
 type KV = {key: string; value: any}
@@ -21,7 +21,7 @@ export interface IPlaintextDbService extends DatabaseService {
 export class PlaintextDbService implements IPlaintextDbService {
   databaseName = "plaintext.db"
   versionUpgrades = PlaintextMigrationStatements
-  loadToVersion = PlaintextMigrationStatements[PlaintextMigrationStatements.length - 1].toVersion
+  loadToVersion = last(PlaintextMigrationStatements).toVersion
   db!: SQLiteDBConnection
   platform = sqliteService.getPlatform()
 

@@ -4,7 +4,7 @@ import {sqliteService} from "@lib/database/SQLiteService"
 import type {Unsubscriber} from "svelte/store"
 import {onZapper, zappers} from "@welshman/app"
 import {type Zapper} from "@welshman/util"
-import {batch} from "@welshman/lib"
+import {batch, last} from "@welshman/lib"
 import type {DatabaseService} from "@lib/database/DatabaseService"
 
 export interface IZappersDbService extends DatabaseService {
@@ -20,7 +20,7 @@ export interface IZappersDbService extends DatabaseService {
 export class ZappersDbService implements IZappersDbService {
   databaseName = "zappers.db"
   versionUpgrades = ZappersMigrationStatements
-  loadToVersion = ZappersMigrationStatements[ZappersMigrationStatements.length - 1].toVersion
+  loadToVersion = last(ZappersMigrationStatements).toVersion
   db!: SQLiteDBConnection
   platform = sqliteService.getPlatform()
 
