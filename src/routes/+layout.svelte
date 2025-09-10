@@ -37,6 +37,8 @@
     PROFILE,
     RELAYS,
     BLOSSOM_SERVERS,
+    ROOMS,
+    APP_DATA,
     getRelaysFromList,
   } from "@welshman/util"
   import {Nip46Broker, makeSecret} from "@welshman/signer"
@@ -276,7 +278,18 @@
       await initDatabaseStorage({
         ...defaultDatabaseServices,
         events: new EventsDbService(10_000, repository, (e: TrustedEvent) => {
-          if ([PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, INBOX_RELAYS].includes(e.kind)) {
+          if (
+            [
+              PROFILE,
+              FOLLOWS,
+              MUTES,
+              RELAYS,
+              BLOSSOM_SERVERS,
+              INBOX_RELAYS,
+              ROOMS,
+              APP_DATA,
+            ].includes(e.kind)
+          ) {
             return 1
           }
 
