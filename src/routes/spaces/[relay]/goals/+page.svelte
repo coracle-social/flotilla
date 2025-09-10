@@ -6,6 +6,7 @@
   import {ZAP_GOAL, DELETE, COMMENT, getListTags, getPubkeyTagValues} from "@welshman/util"
   import {userMutes} from "@welshman/app"
   import {fly} from "@lib/transition"
+  import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
@@ -77,7 +78,7 @@
 <PageBar>
   {#snippet icon()}
     <div class="center">
-      <Icon icon="notes-minimalistic" />
+      <Icon icon={NotesMinimalistic} />
     </div>
   {/snippet}
   {#snippet title()}
@@ -86,7 +87,7 @@
   {#snippet action()}
     <div class="row-2">
       <Button class="btn btn-primary btn-sm" onclick={createGoal}>
-        <Icon icon="notes-minimalistic" />
+        <Icon icon={NotesMinimalistic} />
         Create a Goal
       </Button>
       <MenuSpaceButton {url} />

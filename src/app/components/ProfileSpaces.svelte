@@ -1,5 +1,7 @@
 <script lang="ts">
-  import Icon from "@lib/components/Icon.svelte"
+  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
@@ -33,7 +35,7 @@
       </div>
       <Link class="btn btn-primary" href={makeSpacePath(url)}>
         Go to space
-        <Icon icon="alt-arrow-right" />
+        <Icon icon={AltArrowRight} />
       </Link>
     </div>
   {:else}
@@ -43,7 +45,7 @@
   {/each}
   <ModalFooter>
     <Button onclick={back} class="hidden md:btn md:btn-link">
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
   </ModalFooter>

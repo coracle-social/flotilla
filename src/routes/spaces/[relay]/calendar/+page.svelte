@@ -7,6 +7,8 @@
   import type {TrustedEvent} from "@welshman/util"
   import {DELETE, EVENT_TIME, getTagValue} from "@welshman/util"
   import {fly} from "@lib/transition"
+  import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
+  import CalendarAdd from "@assets/icons/calendar-add.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -116,7 +118,7 @@
 <PageBar>
   {#snippet icon()}
     <div class="center">
-      <Icon icon="calendar-minimalistic" />
+      <Icon icon={CalendarMinimalistic} />
     </div>
   {/snippet}
   {#snippet title()}
@@ -125,7 +127,7 @@
   {#snippet action()}
     <div class="row-2">
       <Button class="btn btn-primary btn-sm" onclick={makeEvent}>
-        <Icon icon="calendar-add" />
+        <Icon icon={CalendarAdd} />
         Create an Event
       </Button>
       <MenuSpaceButton {url} />

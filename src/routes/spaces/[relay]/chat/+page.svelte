@@ -8,6 +8,8 @@
   import {makeEvent, getTag, MESSAGE, DELETE} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
+  import ChatRound from "@assets/icons/chat-round.svg?dataurl"
+  import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -226,7 +228,7 @@
 <PageBar>
   {#snippet icon()}
     <div class="center">
-      <Icon icon="chat-round" />
+      <Icon icon={ChatRound} />
     </div>
   {/snippet}
   {#snippet title()}
@@ -285,7 +287,7 @@
 {#if showScrollButton}
   <div in:fade class="chat__scroll-down">
     <Button class="btn btn-circle btn-neutral" onclick={scrollToBottom}>
-      <Icon icon="alt-arrow-down" />
+      <Icon icon={AltArrowDown} />
     </Button>
   </div>
 {/if}

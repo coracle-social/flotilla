@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   interface Props {
     icon?: import("svelte").Snippet
@@ -25,6 +26,6 @@
     </div>
   </div>
   <div class="hidden h-14 w-14 items-center justify-end sm:flex">
-    <Icon size={7} icon="alt-arrow-right" />
+    <Icon size={7} icon={AltArrowRight} />
   </div>
 </div>

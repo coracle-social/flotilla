@@ -4,6 +4,15 @@
   import {displayPubkey, displayProfile} from "@welshman/util"
   import {pubkey, session, displayNip05, deriveProfile} from "@welshman/app"
   import {slideAndFade} from "@lib/transition"
+  import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import Key from "@assets/icons/key-minimalistic.svg?dataurl"
+  import LinkRound from "@assets/icons/link-round.svg?dataurl"
+  import Copy from "@assets/icons/copy.svg?dataurl"
+  import Settings from "@assets/icons/settings-minimalistic.svg?dataurl"
+  import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
+  import AltArrowUp from "@assets/icons/alt-arrow-up.svg?dataurl"
+  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -54,7 +63,7 @@
         </div>
       </div>
       <Button class="center btn btn-circle btn-neutral -mr-4 -mt-4 h-12 w-12" onclick={startEdit}>
-        <Icon icon="pen-new-square" />
+        <Icon icon={PenNewSquare} />
       </Button>
     </div>
     {#key $profile?.about}
@@ -69,7 +78,7 @@
         {/snippet}
         {#snippet input()}
           <label class="input input-bordered flex w-full items-center gap-2">
-            <Icon icon="user-rounded" />
+            <Icon icon={UserRounded} />
             <input readonly value={$session.email} class="grow" />
           </label>
         {/snippet}
@@ -86,18 +95,18 @@
     <FieldInline>
       {#snippet label()}
         <p class="flex items-center gap-3">
-          <Icon icon="key" />
+          <Icon icon={Key} />
           Public Key
         </p>
       {/snippet}
       {#snippet input()}
         <label class="input input-bordered flex w-full items-center justify-between gap-2">
           <div class="row-2 flex-grow items-center">
-            <Icon icon="link-round" />
+            <Icon icon={LinkRound} />
             <input readonly class="ellipsize flex-grow" value={npub} />
           </div>
           <Button class="flex items-center" onclick={copyNpub}>
-            <Icon icon="copy" />
+            <Icon icon={Copy} />
           </Button>
         </label>
       {/snippet}
@@ -112,16 +121,16 @@
       <FieldInline>
         {#snippet label()}
           <p class="flex items-center gap-3">
-            <Icon icon="key" />
+            <Icon icon={Key} />
             Private Key
           </p>
         {/snippet}
         {#snippet input()}
           <label class="input input-bordered flex w-full items-center gap-2">
-            <Icon icon="link-round" />
+            <Icon icon={LinkRound} />
             <input readonly value={$session.secret} class="grow" type="password" />
             <Button class="flex items-center" onclick={copyNsec}>
-              <Icon icon="copy" />
+              <Icon icon={Copy} />
             </Button>
           </label>
         {/snippet}
@@ -136,21 +145,21 @@
   <div class="card2 bg-alt shadow-xl">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3">
-        <Icon icon="settings" />
+        <Icon icon={Settings} />
         Advanced
       </strong>
       <Button onclick={() => (showAdvanced = !showAdvanced)}>
         {#if showAdvanced}
-          <Icon icon="alt-arrow-down" />
+          <Icon icon={AltArrowDown} />
         {:else}
-          <Icon icon="alt-arrow-up" />
+          <Icon icon={AltArrowUp} />
         {/if}
       </Button>
     </div>
     {#if showAdvanced}
       <div transition:slideAndFade class="flex flex-col gap-2 pt-4">
         <Button class="btn btn-outline btn-error" onclick={startDelete}>
-          <Icon icon="trash-bin-2" />
+          <Icon icon={TrashBin2} />
           Delete your profile
         </Button>
       </div>

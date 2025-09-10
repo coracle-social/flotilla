@@ -1,6 +1,9 @@
 <script lang="ts">
   import {randomId} from "@welshman/lib"
   import {preventDefault, stopPropagation} from "@lib/html"
+  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
 
   interface Props {
@@ -84,14 +87,14 @@
           tabindex="-1"
           onmousedown={stopPropagation(onClear)}
           ontouchstart={stopPropagation(onClear)}>
-          <Icon icon="close-circle" class="scale-150 !bg-base-300" />
+          <Icon icon={CloseCircle} class="scale-150 !bg-base-300" />
         </span>
       {:else}
-        <Icon icon="add-circle" class="scale-150 !bg-base-300" />
+        <Icon icon={AddCircle} class="scale-150 !bg-base-300" />
       {/if}
     </div>
     {#if !file}
-      <Icon icon="gallery-send" size={7} />
+      <Icon icon={GallerySend} size={7} />
     {/if}
   </label>
 </form>

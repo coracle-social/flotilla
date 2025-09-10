@@ -1,6 +1,10 @@
 <script lang="ts">
   import {page} from "$app/stores"
   import {onDestroy} from "svelte"
+  import InfoCircle from "@assets/icons/info-circle.svg?dataurl"
+  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
+  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ContentSearch from "@lib/components/ContentSearch.svelte"
@@ -27,7 +31,7 @@
 <div class="hidden min-h-screen md:hero">
   <div class="col-2 hero-content text-center">
     <p class="row-2 text-lg">
-      <Icon icon="info-circle" />
+      <Icon icon={InfoCircle} />
       No conversation selected.
     </p>
     <p>
@@ -42,7 +46,7 @@
   {#snippet input()}
     <div class="row-2 min-w-0 flex-grow items-center">
       <label class="input input-bordered flex flex-grow items-center gap-2">
-        <Icon icon="magnifer" />
+        <Icon icon={Magnifier} />
         <input
           bind:value={term}
           class="grow"
@@ -50,7 +54,7 @@
           placeholder="Search for conversations..." />
       </label>
       <Button class="btn btn-primary" onclick={openMenu}>
-        <Icon icon="menu-dots" />
+        <Icon icon={MenuDots} />
       </Button>
     </div>
   {/snippet}
@@ -62,7 +66,7 @@
         <div class="py-20 max-w-sm col-4 items-center m-auto text-center">
           <p>No chats found! Try starting one up.</p>
           <Button class="btn btn-primary" onclick={startChat}>
-            <Icon icon="add-circle" />
+            <Icon icon={AddCircle} />
             Start a Chat
           </Button>
         </div>

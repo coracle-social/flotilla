@@ -1,6 +1,13 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {fly} from "@lib/transition"
+  import UserCircle from "@assets/icons/user-circle.svg?dataurl"
+  import Wallet from "@assets/icons/wallet.svg?dataurl"
+  import Server from "@assets/icons/server.svg?dataurl"
+  import Settings from "@assets/icons/settings.svg?dataurl"
+  import Moon from "@assets/icons/moon.svg?dataurl"
+  import InfoSquare from "@assets/icons/info-square.svg?dataurl"
+  import Exit from "@assets/icons/logout-3.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
@@ -25,37 +32,37 @@
   <SecondaryNavSection>
     <div in:fly|local>
       <SecondaryNavItem href="/settings/profile">
-        <Icon icon="user-circle" /> Profile
+        <Icon icon={UserCircle} /> Profile
       </SecondaryNavItem>
     </div>
     <div in:fly|local>
       <SecondaryNavItem href="/settings/wallet">
-        <Icon icon="wallet" /> Wallet
+        <Icon icon={Wallet} /> Wallet
       </SecondaryNavItem>
     </div>
     <div in:fly|local={{delay: 50}}>
       <SecondaryNavItem href="/settings/relays">
-        <Icon icon="server" /> Relays
+        <Icon icon={Server} /> Relays
       </SecondaryNavItem>
     </div>
     <div in:fly|local={{delay: 100}}>
       <SecondaryNavItem href="/settings">
-        <Icon icon="settings" /> Settings
+        <Icon icon={Settings} /> Settings
       </SecondaryNavItem>
     </div>
     <div in:fly|local={{delay: 150}}>
       <SecondaryNavItem onclick={toggleTheme}>
-        <Icon icon="moon" /> Theme
+        <Icon icon={Moon} /> Theme
       </SecondaryNavItem>
     </div>
     <div in:fly|local={{delay: 200}}>
       <SecondaryNavItem href="/settings/about">
-        <Icon icon="info-square" /> About
+        <Icon icon={InfoSquare} /> About
       </SecondaryNavItem>
     </div>
     <div in:fly|local={{delay: 250}}>
       <SecondaryNavItem class="text-error hover:text-error" onclick={logout}>
-        <Icon icon="exit" /> Log Out
+        <Icon icon={Exit} /> Log Out
       </SecondaryNavItem>
     </div>
   </SecondaryNavSection>

@@ -3,7 +3,10 @@
   import {session} from "@welshman/app"
   import {slideAndFade} from "@lib/transition"
   import Link from "@lib/components/Link.svelte"
-  import Icon from "@lib/components/Icon.svelte"
+  import Key from "@assets/icons/key-minimalistic.svg?dataurl"
+import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Field from "@lib/components/Field.svelte"
@@ -81,7 +84,7 @@
         {/snippet}
         {#snippet input()}
           <label class="input input-bordered flex w-full items-center gap-2">
-            <Icon icon="key" />
+            <Icon icon={Key} />
             <input type="password" disabled={loading} bind:value={password} class="grow" />
           </label>
         {/snippet}
@@ -90,17 +93,17 @@
   {/if}
   <ModalFooter>
     <Button class="btn btn-link" disabled={loading || success} onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     {#if success}
       <Button class="btn btn-primary" disabled={loading} onclick={reload}>
-        <Icon icon="check-circle" />
+        <Icon icon={CheckCircle} />
         <Spinner {loading}>Refresh the page</Spinner>
       </Button>
     {:else}
       <Button class="btn btn-error" disabled={loading} onclick={confirm}>
-        <Icon icon="check-circle" />
+        <Icon icon={CheckCircle} />
         <Spinner {loading}>I understand, send me my private key</Spinner>
       </Button>
     {/if}

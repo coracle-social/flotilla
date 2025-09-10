@@ -1,7 +1,8 @@
 <script lang="ts">
   import {parse, renderAsHtml} from "@welshman/content"
   import {fly} from "@lib/transition"
-  import Icon from "@lib/components/Icon.svelte"
+  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import {toast, popToast} from "@app/util/toast"
 
@@ -35,7 +36,7 @@
           {/if}
         </p>
         <Button class="flex items-center opacity-75" onclick={() => popToast($toast.id)}>
-          <Icon icon="close-circle" />
+          <Icon icon={CloseCircle} />
         </Button>
       </div>
     {/key}

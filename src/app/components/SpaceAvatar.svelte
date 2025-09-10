@@ -2,6 +2,7 @@
   import {displayRelayUrl} from "@welshman/util"
   import Avatar from "@lib/components/Avatar.svelte"
   import {deriveRelay} from "@welshman/app"
+  import RemoteControllerMinimalistic from "@assets/icons/remote-controller-minimalistic.svg?dataurl"
 
   interface Props {
     url?: string
@@ -13,7 +14,7 @@
 </script>
 
 <Avatar
-  icon="remote-controller-minimalistic"
+  icon={RemoteControllerMinimalistic}
   class="!h-10 !w-10"
   alt={displayRelayUrl(url)}
   src={$relay?.profile?.icon} />

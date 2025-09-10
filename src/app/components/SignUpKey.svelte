@@ -5,7 +5,11 @@
   import {makeSecret} from "@welshman/signer"
   import type {Profile} from "@welshman/util"
   import {preventDefault, downloadText} from "@lib/html"
-  import Icon from "@lib/components/Icon.svelte"
+  import Key from "@assets/icons/key-minimalistic.svg?dataurl"
+import ArrowDown from "@assets/icons/arrow-down.svg?dataurl"
+import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -129,7 +133,7 @@
       {/snippet}
       {#snippet input()}
         <label class="input input-bordered flex w-full items-center gap-2">
-          <Icon icon="key" />
+          <Icon icon={Key} />
           <input bind:value={password} onchange={onPasswordChange} class="grow" type="password" />
         </label>
       {/snippet}
@@ -141,7 +145,7 @@
   <div class="flex flex-col">
     <Button class="btn {didDownload ? 'btn-neutral' : 'btn-primary'}" onclick={downloadKey}>
       Download my key
-      <Icon icon="arrow-down" />
+      <Icon icon={ArrowDown} />
     </Button>
     <Button class="btn btn-link no-underline" onclick={toggleUsePassword}>
       {#if usePassword}
@@ -153,12 +157,12 @@
   </div>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button disabled={!didDownload} class="btn btn-primary" type="submit">
       Continue
-      <Icon icon="alt-arrow-right" />
+      <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
 </form>

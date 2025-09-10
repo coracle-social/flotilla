@@ -1,7 +1,9 @@
 <script lang="ts">
   import {postJson, sleep} from "@welshman/lib"
   import {preventDefault} from "@lib/html"
-  import Icon from "@lib/components/Icon.svelte"
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -55,7 +57,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="user-rounded" />
+        <Icon icon={UserRounded} />
         <input bind:value={email} class="grow" />
       </label>
     {/snippet}
@@ -65,7 +67,7 @@
   </FieldInline>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary" disabled={loading}>

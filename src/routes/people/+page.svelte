@@ -2,6 +2,7 @@
   import {onMount} from "svelte"
   import {createScroller, isMobile} from "@lib/html"
   import {profileSearch} from "@welshman/app"
+  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
   import ContentSearch from "@lib/components/ContentSearch.svelte"
@@ -30,7 +31,7 @@
   <ContentSearch>
     {#snippet input()}
       <label class="row-2 input input-bordered">
-        <Icon icon="magnifer" />
+        <Icon icon={Magnifier} />
         <!-- svelte-ignore a11y_autofocus -->
         <input
           autofocus={!isMobile}

@@ -2,7 +2,9 @@
   import {preventDefault} from "@lib/html"
   import Button from "@lib/components/Button.svelte"
   import Link from "@lib/components/Link.svelte"
-  import Icon from "@lib/components/Icon.svelte"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
@@ -43,12 +45,12 @@
   </p>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary">
       Let's go
-      <Icon icon="alt-arrow-right" />
+      <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
 </form>

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import Icon from "@lib/components/Icon.svelte"
+  import Login from "@assets/icons/login-2.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
@@ -24,7 +25,7 @@
     <Button onclick={addSpace}>
       <CardButton>
         {#snippet icon()}
-          <div><Icon icon="login-2" size={7} /></div>
+          <div><Icon icon={Login} size={7} /></div>
         {/snippet}
         {#snippet title()}
           <div>Add a space</div>

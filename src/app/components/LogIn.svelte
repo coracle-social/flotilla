@@ -3,7 +3,11 @@
   import {Capacitor} from "@capacitor/core"
   import {getNip07, getNip55, Nip55Signer} from "@welshman/signer"
   import {addSession, type Session, makeNip07Session, makeNip55Session} from "@welshman/app"
-  import Icon from "@lib/components/Icon.svelte"
+  import Widget from "@assets/icons/widget-2.svg?dataurl"
+import Key from "@assets/icons/key-minimalistic.svg?dataurl"
+import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
+import Compass from "@assets/icons/compass-big.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import SignUp from "@app/components/SignUp.svelte"
@@ -96,7 +100,7 @@
       {#if loading === "nip07"}
         <span class="loading loading-spinner mr-3"></span>
       {:else}
-        <Icon icon="widget" />
+        <Icon icon={Widget} />
       {/if}
       Log in with Extension
     </Button>
@@ -116,7 +120,7 @@
       {#if loading === "password"}
         <span class="loading loading-spinner mr-3"></span>
       {:else}
-        <Icon icon="key" />
+        <Icon icon={Key} />
       {/if}
       Log in with Password
     </Button>
@@ -125,7 +129,7 @@
     onclick={loginWithBunker}
     {disabled}
     class="btn {hasSigner || BURROW_URL ? 'btn-neutral' : 'btn-primary'}">
-    <Icon icon="cpu" />
+    <Icon icon={Cpu} />
     Log in with Remote Signer
   </Button>
   {#if BURROW_URL && hasSigner}
@@ -133,7 +137,7 @@
       {#if loading === "password"}
         <span class="loading loading-spinner mr-3"></span>
       {:else}
-        <Icon icon="key" />
+        <Icon icon={Key} />
       {/if}
       Log in with Password
     </Button>
@@ -144,7 +148,7 @@
       {disabled}
       href="https://nostrapps.com#signers"
       class="btn {hasSigner || BURROW_URL ? '' : 'btn-neutral'}">
-      <Icon icon="compass" />
+      <Icon icon={Compass} />
       Browse Signer Apps
     </Link>
   {/if}

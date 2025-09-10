@@ -10,6 +10,11 @@
   import {pushModal} from "@app/util/modal"
   import {discoverRelays} from "@app/core/requests"
   import {setRelayPolicy, setInboxRelayPolicy} from "@app/core/commands"
+  import Globus from "@assets/icons/globus.svg?dataurl"
+  import Inbox from "@assets/icons/inbox.svg?dataurl"
+  import Mailbox from "@assets/icons/mailbox.svg?dataurl"
+  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
 
   const readRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Read)
   const writeRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Write)
@@ -48,7 +53,7 @@
   <Collapse class="card2 bg-alt column gap-4">
     {#snippet title()}
       <h2 class="flex items-center gap-3 text-xl">
-        <Icon icon="earth" />
+        <Icon icon={Globus} />
         Outbox Relays
       </h2>
     {/snippet}
@@ -66,14 +71,14 @@
             class="tooltip flex items-center"
             data-tip="Stop using this relay"
             onclick={() => removeWriteRelay(url)}>
-            <Icon icon="close-circle" />
+            <Icon icon={CloseCircle} />
           </Button>
         </RelayItem>
       {:else}
         <p class="text-center text-sm">No relays found</p>
       {/each}
       <Button class="btn btn-primary mt-2" onclick={addWriteRelay}>
-        <Icon icon="add-circle" />
+        <Icon icon={AddCircle} />
         Add Relay
       </Button>
     </div>
@@ -81,7 +86,7 @@
   <Collapse class="card2 bg-alt column gap-4">
     {#snippet title()}
       <h2 class="flex items-center gap-3 text-xl">
-        <Icon icon="inbox" />
+        <Icon icon={Inbox} />
         Inbox Relays
       </h2>
     {/snippet}
@@ -98,14 +103,14 @@
             class="tooltip flex items-center"
             data-tip="Stop using this relay"
             onclick={() => removeReadRelay(url)}>
-            <Icon icon="close-circle" />
+            <Icon icon={CloseCircle} />
           </Button>
         </RelayItem>
       {:else}
         <p class="text-center text-sm">No relays found</p>
       {/each}
       <Button class="btn btn-primary mt-2" onclick={addReadRelay}>
-        <Icon icon="add-circle" />
+        <Icon icon={AddCircle} />
         Add Relay
       </Button>
     </div>
@@ -113,7 +118,7 @@
   <Collapse class="card2 bg-alt column gap-4">
     {#snippet title()}
       <h2 class="flex items-center gap-3 text-xl">
-        <Icon icon="mailbox" />
+        <Icon icon={Mailbox} />
         Messaging Relays
       </h2>
     {/snippet}
@@ -131,14 +136,14 @@
             class="tooltip flex items-center"
             data-tip="Stop using this relay"
             onclick={() => removeInboxRelay(url)}>
-            <Icon icon="close-circle" />
+            <Icon icon={CloseCircle} />
           </Button>
         </RelayItem>
       {:else}
         <p class="text-center text-sm">No relays found</p>
       {/each}
       <Button class="btn btn-primary mt-2" onclick={addInboxRelay}>
-        <Icon icon="add-circle" />
+        <Icon icon={AddCircle} />
         Add Relay
       </Button>
     </div>

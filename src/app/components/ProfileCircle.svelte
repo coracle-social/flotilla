@@ -2,6 +2,7 @@
   import Avatar from "@lib/components/Avatar.svelte"
   import {removeNil} from "@welshman/lib"
   import {deriveProfile} from "@welshman/app"
+  import UserCircle from "@assets/icons/user-circle.svg?dataurl"
 
   type Props = {
     pubkey: string
@@ -13,4 +14,4 @@
   const profile = deriveProfile(pubkey, removeNil([url]))
 </script>
 
-<Avatar src={$profile?.picture} icon="user-circle" {...props} />
+<Avatar src={$profile?.picture} icon={UserCircle} {...props} />

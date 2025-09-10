@@ -3,7 +3,9 @@
   import {createProfile, PROFILE, makeEvent} from "@welshman/util"
   import {publishThunk, loginWithNip01} from "@welshman/app"
   import {preventDefault} from "@lib/html"
-  import Icon from "@lib/components/Icon.svelte"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
@@ -53,11 +55,11 @@
   </p>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button class="btn btn-primary" type="submit">
-      <Icon icon="home-smile" />
+      <Icon icon={HomeSmile} />
       Go to Dashboard
     </Button>
   </ModalFooter>

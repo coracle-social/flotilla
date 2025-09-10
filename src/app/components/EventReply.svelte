@@ -3,7 +3,8 @@
   import {writable} from "svelte/store"
   import {isMobile, preventDefault} from "@lib/html"
   import {fly} from "@lib/transition"
-  import Icon from "@lib/components/Icon.svelte"
+  import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
@@ -81,7 +82,7 @@
         {#if $uploading}
           <span class="loading loading-spinner loading-xs"></span>
         {:else}
-          <Icon icon="paperclip" size={3} />
+          <Icon icon={Paperclip} size={3} />
         {/if}
       </Button>
     </div>

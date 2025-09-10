@@ -8,6 +8,7 @@
   import {relays, createSearch, loadRelay, loadRelaySelections} from "@welshman/app"
   import {createScroller} from "@lib/html"
   import {fly} from "@lib/transition"
+  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -85,7 +86,7 @@
       {/snippet}
     </PageHeader>
     <label class="input input-bordered flex w-full items-center gap-2">
-      <Icon icon="magnifer" />
+      <Icon icon={Magnifier} />
       <input bind:value={term} class="grow" type="text" placeholder="Search for spaces..." />
     </label>
     {#each relaySearch.searchOptions(term).slice(0, limit) as relay (relay.url)}

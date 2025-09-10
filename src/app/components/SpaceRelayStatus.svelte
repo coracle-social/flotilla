@@ -1,6 +1,7 @@
 <script lang="ts">
   import {deriveRelay} from "@welshman/app"
-  import Icon from "@lib/components/Icon.svelte"
+  import Server from "@assets/icons/server.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import SocketStatusIndicator from "@lib/components/SocketStatusIndicator.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
 
@@ -17,7 +18,7 @@
 <div class="card2 bg-alt flex flex-col gap-4">
   <div class="flex items-center justify-between">
     <h3 class="flex items-center gap-2 text-lg font-semibold">
-      <Icon icon="server" />
+      <Icon icon={Server} />
       Relay Details
     </h3>
     <SocketStatusIndicator {url} />

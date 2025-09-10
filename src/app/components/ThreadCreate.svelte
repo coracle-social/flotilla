@@ -3,7 +3,9 @@
   import {makeEvent, THREAD} from "@welshman/util"
   import {publishThunk} from "@welshman/app"
   import {isMobile, preventDefault} from "@lib/html"
-  import Icon from "@lib/components/Icon.svelte"
+  import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
+import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -106,13 +108,13 @@
       {#if $uploading}
         <span class="loading loading-spinner loading-xs"></span>
       {:else}
-        <Icon icon="paperclip" size={3} />
+        <Icon icon={Paperclip} size={3} />
       {/if}
     </Button>
   </div>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary">Create Thread</Button>

@@ -1,5 +1,7 @@
 <script lang="ts">
   import {getTagValue} from "@welshman/util"
+  import Inbox from "@assets/icons/inbox.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import AlertAdd from "@app/components/AlertAdd.svelte"
@@ -25,11 +27,11 @@
 <div class="card2 bg-alt flex flex-col gap-6 shadow-xl">
   <div class="flex items-center justify-between">
     <strong class="flex items-center gap-3">
-      <Icon icon="inbox" />
+      <Icon icon={Inbox} />
       Alerts
     </strong>
     <Button class="btn btn-primary btn-sm" onclick={startAlert}>
-      <Icon icon="add-circle" />
+      <Icon icon={AddCircle} />
       Add Alert
     </Button>
   </div>
