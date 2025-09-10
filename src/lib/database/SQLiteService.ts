@@ -53,9 +53,8 @@ export class SQLiteService implements ISQLiteService {
       }
 
       return db
-    } catch (err) {
-      const msg = (err as Error).message ? (err as Error).message : err
-      throw new Error(`sqliteService.openDatabase: ${msg}`)
+    } catch (err: any) {
+      throw new Error(`sqliteService.openDatabase: ${err.message || err}`)
     }
   }
 
@@ -67,9 +66,8 @@ export class SQLiteService implements ISQLiteService {
       } else {
         throw new Error(`sqliteService.isConnection undefined`)
       }
-    } catch (err) {
-      const msg = (err as Error).message ? (err as Error).message : err
-      throw new Error(`sqliteService.isConnection: ${msg}`)
+    } catch (err: any) {
+      throw new Error(`sqliteService.isConnection: ${err.message || err}`)
     }
   }
 
@@ -79,9 +77,8 @@ export class SQLiteService implements ISQLiteService {
       if (isConn) {
         await this.sqliteConnection.closeConnection(dbName, readOnly)
       }
-    } catch (err) {
-      const msg = (err as Error).message ? (err as Error).message : err
-      throw new Error(`sqliteService.closeDatabase: ${msg}`)
+    } catch (err: any) {
+      throw new Error(`sqliteService.closeDatabase: ${err.message || err}`)
     }
   }
 
@@ -92,18 +89,16 @@ export class SQLiteService implements ISQLiteService {
 
     try {
       await this.sqliteConnection.saveToStore(dbName)
-    } catch (err) {
-      const msg = (err as Error).message ? (err as Error).message : err
-      throw new Error(`sqliteService.saveToStore: ${msg}`)
+    } catch (err: any) {
+      throw new Error(`sqliteService.saveToStore: ${err.message || err}`)
     }
   }
 
   async saveToLocalDisk(dbName: string): Promise<void> {
     try {
       await this.sqliteConnection.saveToLocalDisk(dbName)
-    } catch (err) {
-      const msg = (err as Error).message ? (err as Error).message : err
-      throw new Error(`sqliteService.saveToLocalDisk: ${msg}`)
+    } catch (err: any) {
+      throw new Error(`sqliteService.saveToLocalDisk: ${err.message || err}`)
     }
   }
 }
