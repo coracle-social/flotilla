@@ -29,7 +29,15 @@ export class EventsDbService implements IEventsDbService {
   rankEvent: (event: TrustedEvent) => number
   eventCount: number = 0
 
-  constructor(limit: number, repository: Repository, rankEvent: (event: TrustedEvent) => number) {
+  constructor({
+    limit,
+    repository,
+    rankEvent,
+  }: {
+    limit: number
+    repository: Repository
+    rankEvent: (event: TrustedEvent) => number
+  }) {
     this.limit = limit
     this.repository = repository
     this.rankEvent = rankEvent

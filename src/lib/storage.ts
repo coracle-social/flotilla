@@ -65,8 +65,8 @@ export const defaultDatabaseServices = {
   zappers: zappersDbService,
   freshness: freshnessDbService,
   plaintext: plaintextDbService,
-  tracker: new TrackerDbService(tracker),
-  events: new EventsDbService(10_000, repository, () => 1),
+  tracker: new TrackerDbService({tracker}),
+  events: new EventsDbService({limit: 10_000, repository, rankEvent: () => 1}),
 }
 
 export const initDatabaseStorage = async (databaseServices: Record<string, DatabaseService>) => {

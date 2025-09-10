@@ -280,27 +280,33 @@
 
       await initDatabaseStorage({
         ...defaultDatabaseServices,
-        events: new EventsDbService(10_000, repository, (e: TrustedEvent) => {
-          if (
-            [
-              PROFILE,
-              FOLLOWS,
-              MUTES,
-              RELAYS,
-              BLOSSOM_SERVERS,
-              INBOX_RELAYS,
-              ROOMS,
-              APP_DATA,
-            ].includes(e.kind)
-          ) {
-            return 1
-          }
+        events: new EventsDbService({
+          limit: 10_000,
+          repository,
+          rankEvent: (e: TrustedEvent) => {
+            if (
+              [
+                PROFILE,
+                FOLLOWS,
+                MUTES,
+                RELAYS,
+                BLOSSOM_SERVERS,
+                INBOX_RELAYS,
+                ROOMS,
+                APP_DATA,
+              ].includes(e.kind)
+            ) {
+              return 1
+            }
 
-          if ([EVENT_TIME, THREAD, MESSAGE, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(e.kind)) {
-            return 0.9
-          }
+            if (
+              [EVENT_TIME, THREAD, MESSAGE, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(e.kind)
+            ) {
+              return 0.9
+            }
 
-          return 0
+            return 0
+          },
         }),
       })
 

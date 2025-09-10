@@ -25,7 +25,7 @@ export class TrackerDbService implements ITrackerDbService {
   platform = sqliteService.getPlatform()
   tracker: Tracker
 
-  constructor(tracker: Tracker) {
+  constructor({tracker}: {tracker: Tracker}) {
     this.tracker = tracker
   }
 
