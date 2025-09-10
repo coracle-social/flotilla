@@ -4,6 +4,8 @@
   import {Pool, AuthStatus} from "@welshman/net"
   import {displayRelayUrl} from "@welshman/util"
   import {preventDefault} from "@lib/html"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -64,12 +66,12 @@
   </div>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary" disabled={loading}>
       Go to Space
-      <Icon icon="alt-arrow-right" />
+      <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
 </form>

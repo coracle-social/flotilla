@@ -1,5 +1,6 @@
 <script lang="ts">
   import {slide} from "@lib/transition"
+  import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   interface Props {
     title?: import("svelte").Snippet
@@ -23,7 +24,7 @@
     class="absolute right-8 top-8 h-4 w-4 cursor-pointer transition-all"
     class:rotate-90={!isOpen}
     onclick={toggle}>
-    <Icon icon="alt-arrow-down" />
+    <Icon icon={AltArrowDown} />
   </button>
   {@render props.title?.()}
   {@render props.description?.()}

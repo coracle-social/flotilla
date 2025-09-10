@@ -3,6 +3,8 @@
   import {remove} from "@welshman/lib"
   import {displayRelayUrl} from "@welshman/util"
   import {preventDefault} from "@lib/html"
+  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+  import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -72,13 +74,13 @@
   <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-between">
     <Button class="btn btn-neutral" onclick={untrustSpace} disabled={loading}>
       {#if !loading}
-        <Icon icon="close-circle" />
+        <Icon icon={CloseCircle} />
       {/if}
       <Spinner {loading}>I don't trust this space</Spinner>
     </Button>
     <Button type="submit" class="btn btn-primary" disabled={loading}>
       {#if !loading}
-        <Icon icon="check-circle" />
+        <Icon icon={CheckCircle} />
       {/if}
       <Spinner {loading}>I trust this space, continue</Spinner>
     </Button>

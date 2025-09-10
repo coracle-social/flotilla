@@ -6,6 +6,9 @@
   import {publishThunk} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import {daysBetween} from "@lib/util"
+  import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
+  import MapPoint from "@assets/icons/map-point.svg?dataurl"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -131,7 +134,7 @@
           {#if $uploading}
             <span class="loading loading-spinner loading-xs"></span>
           {:else}
-            <Icon icon="gallery-send" />
+            <Icon icon={GallerySend} />
           {/if}
         </Button>
       </div>
@@ -159,14 +162,14 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="map-point" />
+        <Icon icon={MapPoint} />
         <input bind:value={location} class="grow" type="text" />
       </label>
     {/snippet}
   </Field>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary" disabled={$uploading}>

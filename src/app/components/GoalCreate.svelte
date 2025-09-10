@@ -3,6 +3,9 @@
   import {makeEvent, ZAP_GOAL} from "@welshman/util"
   import {publishThunk} from "@welshman/app"
   import {isMobile, preventDefault} from "@lib/html"
+  import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
+  import Bolt from "@assets/icons/bolt.svg?dataurl"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Field from "@lib/components/Field.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -114,7 +117,7 @@
         {#if $uploading}
           <span class="loading loading-spinner loading-xs"></span>
         {:else}
-          <Icon icon="paperclip" size={3} />
+          <Icon icon={Paperclip} size={3} />
         {/if}
       </Button>
     </div>
@@ -126,7 +129,7 @@
         {#snippet input()}
           <div class="flex flex-grow justify-end">
             <label class="input input-bordered flex items-center gap-2">
-              <Icon icon="bolt" />
+              <Icon icon={Bolt} />
               <input bind:value={amount} type="number" class="w-28" />
               <p class="opacity-50">sats</p>
             </label>
@@ -144,7 +147,7 @@
   </div>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary">Create Goal</Button>

@@ -7,6 +7,8 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
+  import LinkRound from "@assets/icons/link-round.svg?dataurl"
+  import Copy from "@assets/icons/copy.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
@@ -68,10 +70,10 @@
         <Field>
           {#snippet input()}
             <label class="input input-bordered flex w-full items-center gap-2">
-              <Icon icon="link-round" />
+              <Icon icon={LinkRound} />
               <input bind:value={invite} class="grow" type="text" />
               <Button onclick={copyInvite}>
-                <Icon icon="copy" />
+                <Icon icon={Copy} />
               </Button>
             </label>
           {/snippet}

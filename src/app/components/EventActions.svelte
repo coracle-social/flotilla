@@ -3,6 +3,9 @@
   import type {Instance} from "tippy.js"
   import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent} from "@welshman/util"
+  import Bolt from "@assets/icons/bolt.svg?dataurl"
+  import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
+  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -42,11 +45,11 @@
 <Button class="join rounded-full">
   {#if ENABLE_ZAPS && !hideZap}
     <ZapButton {url} {event} class="btn join-item btn-neutral btn-xs">
-      <Icon icon="bolt" size={4} />
+      <Icon icon={Bolt} size={4} />
     </ZapButton>
   {/if}
   <EmojiButton {onEmoji} class="btn join-item btn-neutral btn-xs">
-    <Icon icon="smile-circle" size={4} />
+    <Icon icon={SmileCircle} size={4} />
   </EmojiButton>
   <Tippy
     bind:popover
@@ -54,7 +57,7 @@
     props={{url, noun, event, customActions, onClick: hidePopover}}
     params={{trigger: "manual", interactive: true}}>
     <Button class="btn join-item btn-neutral btn-xs" onclick={showPopover}>
-      <Icon icon="menu-dots" size={4} />
+      <Icon icon={MenuDots} size={4} />
     </Button>
   </Tippy>
 </Button>

@@ -9,6 +9,10 @@
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
   import {pushModal} from "@app/util/modal"
   import {getWebLn} from "@app/core/commands"
+  import Wallet2 from "@assets/icons/wallet.svg?dataurl"
+  import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
 
   const connect = () => pushModal(WalletConnect)
 
@@ -19,17 +23,17 @@
   <div class="card2 bg-alt flex flex-col gap-6 shadow-xl">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3">
-        <Icon icon="wallet" />
+        <Icon icon={Wallet2} />
         Wallet
       </strong>
       {#if $session?.wallet}
         <div class="flex items-center gap-2 text-sm text-success">
-          <Icon icon="check-circle" size={4} />
+          <Icon icon={CheckCircle} size={4} />
           Connected
         </div>
       {:else}
         <Button class="btn btn-primary btn-sm" onclick={connect}>
-          <Icon icon="add-circle" />
+          <Icon icon={AddCircle} />
           Connect Wallet
         </Button>
       {/if}
@@ -77,7 +81,7 @@
           </div>
         {/if}
         <Button class="btn btn-neutral btn-sm" onclick={disconnect}>
-          <Icon icon="close-circle" />
+          <Icon icon={CloseCircle} />
           Disconnect Wallet
         </Button>
       {:else}

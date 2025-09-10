@@ -11,6 +11,7 @@
   import {publishDelete, publishReaction, canEnforceNip70} from "@app/core/commands"
   import {makeCalendarPath} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
+  import Pen2 from "@assets/icons/pen-2.svg?dataurl"
 
   const {
     url,
@@ -47,7 +48,7 @@
         {#if event.pubkey === $pubkey}
           <li>
             <Button onclick={editEvent}>
-              <Icon size={4} icon="pen" />
+              <Icon size={4} icon={Pen2} />
               Edit Event
             </Button>
           </li>

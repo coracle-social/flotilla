@@ -1,5 +1,7 @@
 <script lang="ts">
   import {goto} from "$app/navigation"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Avatar from "@lib/components/Avatar.svelte"
   import Link from "@lib/components/Link.svelte"
@@ -33,7 +35,7 @@
   <ProfileBadges {pubkey} {url} />
   <ModalFooter>
     <Button onclick={back} class="hidden md:btn md:btn-link">
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <div class="flex gap-2">
@@ -42,7 +44,7 @@
         Open in Coracle
       </Link>
       <Button onclick={openChat} class="btn btn-primary">
-        <Icon icon="letter" />
+        <Icon icon={Letter} />
         Open Chat
       </Button>
     </div>

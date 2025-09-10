@@ -6,6 +6,7 @@
     formatTimestampAsTime,
   } from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
+  import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
 
   type Props = {
@@ -24,7 +25,7 @@
 <div class="flex flex-grow flex-wrap justify-between gap-2">
   <p class="text-xl">{meta.title || meta.name}</p>
   <div class="flex items-center gap-2 text-sm">
-    <Icon icon="clock-circle" size={4} />
+    <Icon icon={ClockCircle} size={4} />
     <span class="sm:hidden">{formatTimestampAsDate(start)}</span>
     {formatTimestampAsTime(start)} — {isSingleDay
       ? formatTimestampAsTime(end)

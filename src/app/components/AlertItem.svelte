@@ -2,6 +2,7 @@
   import {parseJson} from "@welshman/lib"
   import {displayFeeds} from "@welshman/feeds"
   import {getAddress, getTagValue, getTagValues} from "@welshman/util"
+  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import AlertDelete from "@app/components/AlertDelete.svelte"
@@ -34,7 +35,7 @@
 <div class="flex items-start justify-between gap-4">
   <div class="flex items-start gap-4">
     <Button class="py-1" onclick={startDelete}>
-      <Icon icon="trash-bin-2" />
+      <Icon icon={TrashBin2} />
     </Button>
     <div class="flex-inline gap-1">{description}</div>
   </div>

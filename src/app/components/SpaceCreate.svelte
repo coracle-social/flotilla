@@ -3,6 +3,10 @@
   import InputProfilePicture from "@lib/components/InputProfilePicture.svelte"
   import Button from "@lib/components/Button.svelte"
   import Field from "@lib/components/Field.svelte"
+  import FireMinimalistic from "@assets/icons/fire-minimalistic.svg?dataurl"
+  import Server from "@assets/icons/server.svg?dataurl"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
@@ -37,7 +41,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="fire-minimalistic" />
+        <Icon icon={FireMinimalistic} />
         <input bind:value={name} class="grow" type="text" />
       </label>
     {/snippet}
@@ -48,7 +52,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="server" />
+        <Icon icon={Server} />
         <input bind:value={relay} class="grow" type="text" />
       </label>
     {/snippet}
@@ -61,12 +65,12 @@
   </Field>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary">
       Next
-      <Icon icon="alt-arrow-right" />
+      <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
 </form>

@@ -3,6 +3,8 @@
   import {preventDefault} from "@lib/html"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -49,7 +51,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="user-rounded" />
+        <Icon icon={UserRounded} />
         <input readonly value={email} class="grow" />
       </label>
     {/snippet}
@@ -60,7 +62,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="key" />
+        <Icon icon={Key} />
         <input bind:value={password} class="grow" type="password" />
       </label>
     {/snippet}

@@ -4,6 +4,9 @@
   import {LOCALE, secondsToDate} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {displayRelayUrl} from "@welshman/util"
+  import FileText from "@assets/icons/file-text.svg?dataurl"
+  import Copy from "@assets/icons/copy.svg?dataurl"
+  import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -56,10 +59,10 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="file" />
+        <Icon icon={FileText} />
         <input type="text" class="ellipsize min-w-0 grow" value={nevent1} />
         <Button onclick={copyLink} class="flex items-center">
-          <Icon icon="copy" />
+          <Icon icon={Copy} />
         </Button>
       </label>
     {/snippet}
@@ -70,10 +73,10 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="user-circle" />
+        <Icon icon={UserCircle} />
         <input type="text" class="ellipsize min-w-0 grow" value={npub1} />
         <Button onclick={copyPubkey} class="flex items-center">
-          <Icon icon="copy" />
+          <Icon icon={Copy} />
         </Button>
       </label>
     {/snippet}
@@ -98,7 +101,7 @@
     <pre class="card2 card2-sm bg-alt overflow-auto text-xs"><code>{json}</code></pre>
     <p class="absolute right-2 top-2 flex flex-grow items-center justify-between">
       <Button onclick={copyJson} class="btn btn-neutral btn-sm flex items-center">
-        <Icon icon="copy" /> Copy
+        <Icon icon={Copy} /> Copy
       </Button>
     </p>
   </div>

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import Compass from "@assets/icons/compass-big.svg?dataurl"
+  import Login from "@assets/icons/login-2.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -25,7 +28,7 @@
   <Link href="/discover">
     <CardButton class="!btn-primary">
       {#snippet icon()}
-        <div><Icon icon="compass" size={7} /></div>
+        <div><Icon icon={Compass} size={7} /></div>
       {/snippet}
       {#snippet title()}
         <div>Discover spaces</div>
@@ -38,7 +41,7 @@
   <Button onclick={startJoin}>
     <CardButton>
       {#snippet icon()}
-        <div><Icon icon="login-2" size={7} /></div>
+        <div><Icon icon={Login} size={7} /></div>
       {/snippet}
       {#snippet title()}
         <div>Join a space</div>
@@ -51,7 +54,7 @@
   <Button onclick={startCreate}>
     <CardButton>
       {#snippet icon()}
-        <div><Icon icon="add-circle" size={7} /></div>
+        <div><Icon icon={AddCircle} size={7} /></div>
       {/snippet}
       {#snippet title()}
         <div>Create a space</div>

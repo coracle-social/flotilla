@@ -1,6 +1,7 @@
 <script lang="ts">
   import {type Instance} from "tippy.js"
   import {between} from "@welshman/lib"
+  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
@@ -29,7 +30,7 @@
 
 <div class="flex">
   <Button class="btn join-item btn-xs" onclick={open}>
-    <Icon icon="menu-dots" size={4} />
+    <Icon icon={MenuDots} size={4} />
   </Button>
   <Tippy
     bind:popover

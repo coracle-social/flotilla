@@ -1,4 +1,9 @@
 <script lang="ts">
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import Server from "@assets/icons/server.svg?dataurl"
+  import Settings from "@assets/icons/settings-minimalistic.svg?dataurl"
+  import Code2 from "@assets/icons/code-2.svg?dataurl"
+  import Exit from "@assets/icons/logout-3.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -14,7 +19,7 @@
   <Link replaceState href="/settings/profile">
     <CardButton>
       {#snippet icon()}
-        <div><Icon icon="user-rounded" size={7} /></div>
+        <div><Icon icon={UserRounded} size={7} /></div>
       {/snippet}
       {#snippet title()}
         <div>Profile</div>
@@ -27,7 +32,7 @@
   <Link replaceState href="/settings/relays">
     <CardButton>
       {#snippet icon()}
-        <div><Icon icon="server" size={7} /></div>
+        <div><Icon icon={Server} size={7} /></div>
       {/snippet}
       {#snippet title()}
         <div>Relays</div>
@@ -40,7 +45,7 @@
   <Link replaceState href="/settings">
     <CardButton>
       {#snippet icon()}
-        <div><Icon icon="settings" size={7} /></div>
+        <div><Icon icon={Settings} size={7} /></div>
       {/snippet}
       {#snippet title()}
         <div>Settings</div>
@@ -53,7 +58,7 @@
   <Link replaceState href="/settings/about">
     <CardButton>
       {#snippet icon()}
-        <div><Icon icon="code-2" size={7} /></div>
+        <div><Icon icon={Code2} size={7} /></div>
       {/snippet}
       {#snippet title()}
         <div>About</div>
@@ -64,6 +69,6 @@
     </CardButton>
   </Link>
   <Button onclick={logout} class="btn btn-neutral">
-    <Icon icon="exit" /> Log Out
+    <Icon icon={Exit} /> Log Out
   </Button>
 </div>

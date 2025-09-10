@@ -15,6 +15,8 @@
   import type {Filter} from "@welshman/util"
   import {makeIntersectionFeed, makeRelayFeed, feedFromFilters} from "@welshman/feeds"
   import {pubkey, signer, waitForThunkError} from "@welshman/app"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -262,12 +264,12 @@
   </FieldInline>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary" disabled={loading}>
       <Spinner {loading}>Confirm</Spinner>
-      <Icon icon="alt-arrow-right" />
+      <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
 </form>

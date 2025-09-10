@@ -1,6 +1,8 @@
 <script lang="ts">
   import {gt} from "@welshman/lib"
   import {deriveRelay} from "@welshman/app"
+  import Ghost from "@assets/icons/ghost-smile.svg?dataurl"
+  import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
@@ -25,7 +27,7 @@
             {#if $relay?.profile?.icon}
               <img alt="" src={$relay.profile.icon} />
             {:else}
-              <Icon icon="ghost" size={5} />
+              <Icon icon={Ghost} size={5} />
             {/if}
           </div>
         </div>
@@ -33,7 +35,7 @@
           <div
             class="tooltip absolute -right-1 -top-1 h-5 w-5 rounded-full bg-primary"
             data-tip="You are already a member of this space.">
-            <Icon icon="check-circle" class="scale-110" />
+            <Icon icon={CheckCircle} class="scale-110" />
           </div>
         {/if}
       </div>

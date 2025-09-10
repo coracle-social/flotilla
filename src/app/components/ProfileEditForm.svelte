@@ -2,6 +2,8 @@
   import type {Snippet} from "svelte"
   import type {Profile} from "@welshman/util"
   import {preventDefault} from "@lib/html"
+  import UserCircle from "@assets/icons/user-circle.svg?dataurl"
+  import MapPoint from "@assets/icons/map-point.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Field from "@lib/components/Field.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -57,7 +59,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="user-circle" />
+        <Icon icon={UserCircle} />
         <input bind:value={values.profile.name} class="grow" type="text" />
       </label>
     {/snippet}
@@ -86,7 +88,7 @@
       {/snippet}
       {#snippet input()}
         <label class="input input-bordered flex w-full items-center gap-2">
-          <Icon icon="map-point" />
+          <Icon icon={MapPoint} />
           <input bind:value={values.profile.nip05} class="grow" type="text" />
         </label>
       {/snippet}
