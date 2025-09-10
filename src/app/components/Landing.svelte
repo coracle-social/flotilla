@@ -1,5 +1,7 @@
 <script lang="ts">
-  import Icon from "@lib/components/Icon.svelte"
+  import Login from "@assets/icons/login-2.svg?dataurl"
+import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Link from "@lib/components/Link.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
@@ -23,7 +25,7 @@
     <Button onclick={logIn}>
       <CardButton class="!btn-primary">
         {#snippet icon()}
-          <div><Icon icon="login-2" size={7} /></div>
+          <div><Icon icon={Login} size={7} /></div>
         {/snippet}
         {#snippet title()}
           <div>Log in</div>
@@ -36,7 +38,7 @@
     <Button onclick={signUp}>
       <CardButton>
         {#snippet icon()}
-          <div><Icon icon="add-circle" size={7} /></div>
+          <div><Icon icon={AddCircle} size={7} /></div>
         {/snippet}
         {#snippet title()}
           <div>Create an account</div>

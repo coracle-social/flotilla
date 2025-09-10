@@ -8,7 +8,10 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
   import Field from "@lib/components/Field.svelte"
-  import Icon from "@lib/components/Icon.svelte"
+  import LinkRound from "@assets/icons/link-round.svg?dataurl"
+import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelaySummary from "@app/components/RelaySummary.svelte"
@@ -89,7 +92,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="link-round" />
+        <Icon icon={LinkRound} />
         <input bind:value={invite} class="grow" type="text" />
       </label>
     {/snippet}
@@ -109,13 +112,13 @@
       {@render abortAction?.()}
     {:else}
       <Button class="btn btn-link" onclick={back}>
-        <Icon icon="alt-arrow-left" />
+        <Icon icon={AltArrowLeft} />
         Go back
       </Button>
     {/if}
     <Button type="submit" class="btn btn-primary" disabled={!inviteData || loading}>
       <Spinner {loading}>Join Space</Spinner>
-      <Icon icon="alt-arrow-right" />
+      <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
 </form>

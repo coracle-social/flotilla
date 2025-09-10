@@ -15,6 +15,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {pushModal} from "@app/util/modal"
   import {clip} from "@app/util/toast"
+  import Copy from "@assets/icons/copy.svg?dataurl"
 
   type Props = {
     pubkey: string
@@ -55,7 +56,7 @@
       <div class="flex items-center gap-1 overflow-hidden text-ellipsis text-xs opacity-60">
         {displayPubkey(pubkey)}
         <Button onclick={copyPubkey} class="pt-1">
-          <Icon size={3} icon="copy" />
+          <Icon size={3} icon={Copy} />
         </Button>
       </div>
     {/if}

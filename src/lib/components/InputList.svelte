@@ -2,6 +2,9 @@
   import type {Snippet} from "svelte"
   import {append, removeAt, replaceAt, insertAt} from "@welshman/lib"
   import Button from "@lib/components/Button.svelte"
+  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
+  import HamburgerMenu from "@assets/icons/hamburger-menu.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
 
   type Props = {
@@ -56,7 +59,7 @@
       ondragover={e => handleDragOver(e, index)}
       ondragend={handleDragEnd}>
       <Button onclick={() => removeItem(index)}>
-        <Icon icon="trash-bin-2" />
+        <Icon icon={TrashBin2} />
       </Button>
       <input
         type="text"
@@ -65,12 +68,12 @@
         {placeholder}
         oninput={e => updateItem(index, e.currentTarget.value)} />
       <div class="cursor-move" role="button" aria-label="Drag handle">
-        <Icon icon="hamburger-menu" />
+        <Icon icon={HamburgerMenu} />
       </div>
     </div>
   {/each}
   <Button onclick={addItem} class="btn btn-link w-fit px-0">
-    <Icon icon="add-circle" size={5} />
+    <Icon icon={AddCircle} size={5} />
     {#if addLabel}
       {@render addLabel?.()}
     {:else}

@@ -3,7 +3,9 @@
   import {groupBy, ago, MONTH, first, last, uniq, avg, overlappingPairs} from "@welshman/lib"
   import {MESSAGE, getTagValue} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import Icon from "@lib/components/Icon.svelte"
+  import ChatRound from "@assets/icons/chat-round.svg?dataurl"
+import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ConversationCard from "@app/components/ConversationCard.svelte"
   import {deriveEventsForUrl} from "@app/core/state"
@@ -67,7 +69,7 @@
 <div class="card2 bg-alt">
   <div class="flex flex-col gap-4">
     <h3 class="flex items-center gap-2 text-lg font-semibold">
-      <Icon icon="chat-round" />
+      <Icon icon={ChatRound} />
       Recent Conversations
     </h3>
     <div class="flex flex-col gap-4">
@@ -95,7 +97,7 @@
         {#if $conversations.length > limit}
           <Button class="btn btn-primary" onclick={viewMore}>
             View more conversations
-            <Icon icon="alt-arrow-down" />
+            <Icon icon={AltArrowDown} />
           </Button>
         {/if}
       {/if}

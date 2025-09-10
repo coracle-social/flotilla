@@ -2,6 +2,8 @@
   import {writable} from "svelte/store"
   import type {EventContent} from "@welshman/util"
   import {isMobile, preventDefault} from "@lib/html"
+  import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
+  import Plane from "@assets/icons/plane-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
@@ -54,7 +56,7 @@
     {#if $uploading}
       <span class="loading loading-spinner loading-xs"></span>
     {:else}
-      <Icon icon="gallery-send" />
+      <Icon icon={GallerySend} />
     {/if}
   </Button>
   <div class="chat-editor flex-grow overflow-hidden">
@@ -65,6 +67,6 @@
     class="center tooltip tooltip-left absolute right-4 h-10 w-10 min-w-10 rounded-full"
     disabled={$uploading}
     onclick={submit}>
-    <Icon icon="plain" />
+    <Icon icon={Plane} />
   </Button>
 </form>

@@ -1,5 +1,7 @@
 <script lang="ts">
-  import Icon from "@lib/components/Icon.svelte"
+  import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
+import Hashtag from "@assets/icons/hashtag-circle.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"
   import {makeRoomPath} from "@app/util/routes"
@@ -24,9 +26,9 @@
   {replaceState}
   notification={notify ? $notifications.has(path) : false}>
   {#if $channel?.closed || $channel?.private}
-    <Icon icon="lock" size={4} />
+    <Icon icon={Lock} size={4} />
   {:else}
-    <Icon icon="hashtag" />
+    <Icon icon={Hashtag} />
   {/if}
   <div class="min-w-0 overflow-hidden text-ellipsis">
     <ChannelName {url} {room} />

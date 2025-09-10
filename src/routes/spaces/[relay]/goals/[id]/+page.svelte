@@ -6,6 +6,9 @@
   import {repository} from "@welshman/app"
   import {request} from "@welshman/net"
   import {deriveEvents} from "@welshman/store"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import SortVertical from "@assets/icons/sort-vertical.svg?dataurl"
+  import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -61,7 +64,7 @@
   {#snippet icon()}
     <div>
       <Button class="btn btn-neutral btn-sm flex-nowrap whitespace-nowrap" onclick={back}>
-        <Icon icon="alt-arrow-left" />
+        <Icon icon={AltArrowLeft} />
         <span class="hidden sm:inline">Go back</span>
       </Button>
     </div>
@@ -89,7 +92,7 @@
       {#if !showAll && $replies.length > 4}
         <div class="flex justify-center">
           <Button class="btn btn-link" onclick={expand}>
-            <Icon icon="sort-vertical" />
+            <Icon icon={SortVertical} />
             Show all {$replies.length} replies
           </Button>
         </div>
@@ -108,7 +111,7 @@
     {:else}
       <div class="flex justify-end p-2">
         <Button class="btn btn-primary" onclick={openReply}>
-          <Icon icon="reply" />
+          <Icon icon={Reply} />
           Comment on this goal
         </Button>
       </div>

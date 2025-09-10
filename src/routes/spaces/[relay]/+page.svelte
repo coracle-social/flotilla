@@ -2,6 +2,13 @@
   import {page} from "$app/stores"
   import {displayRelayUrl} from "@welshman/util"
   import {deriveRelay} from "@welshman/app"
+  import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
+  import Login2 from "@assets/icons/login-2.svg?dataurl"
+  import Letter from "@assets/icons/letter-opened.svg?dataurl"
+  import Ghost from "@assets/icons/ghost-smile.svg?dataurl"
+  import BillList from "@assets/icons/bill-list.svg?dataurl"
+  import ShieldUser from "@assets/icons/shield-user.svg?dataurl"
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -29,7 +36,7 @@
 <PageBar>
   {#snippet icon()}
     <div class="center">
-      <Icon icon="home-smile" />
+      <Icon icon={HomeSmile} />
     </div>
   {/snippet}
   {#snippet title()}
@@ -39,12 +46,12 @@
     <div class="row-2">
       {#if !$userRoomsByUrl.has(url)}
         <Button class="btn btn-primary btn-sm" onclick={joinSpace}>
-          <Icon icon="login-2" />
+          <Icon icon={Login2} />
           Join Space
         </Button>
       {:else if owner}
         <Link class="btn btn-primary btn-sm" href={makeChatPath([owner])}>
-          <Icon icon="letter" />
+          <Icon icon={Letter} />
           Contact Owner
         </Link>
       {/if}
@@ -63,7 +70,7 @@
             {#if $relay?.profile?.icon}
               <img alt="" src={$relay.profile.icon} />
             {:else}
-              <Icon icon="ghost" size={6} />
+              <Icon icon={Ghost} size={6} />
             {/if}
           </div>
         </div>
@@ -80,13 +87,13 @@
       <div class="flex gap-3">
         {#if $relay.profile.terms_of_service}
           <Link href={$relay.profile.terms_of_service} class="badge badge-neutral flex gap-2">
-            <Icon icon="bill-list" size={4} />
+            <Icon icon={BillList} size={4} />
             Terms of Service
           </Link>
         {/if}
         {#if $relay.profile.privacy_policy}
           <Link href={$relay?.profile?.privacy_policy} class="badge badge-neutral flex gap-2">
-            <Icon icon="shield-user" size={4} />
+            <Icon icon={ShieldUser} size={4} />
             Privacy Policy
           </Link>
         {/if}
@@ -103,7 +110,7 @@
       {#if owner}
         <div class="card2 bg-alt">
           <h3 class="mb-4 flex items-center gap-2 text-lg font-semibold">
-            <Icon icon="user-rounded" />
+            <Icon icon={UserRounded} />
             Latest Updates
           </h3>
           <ProfileLatest {url} pubkey={owner}>

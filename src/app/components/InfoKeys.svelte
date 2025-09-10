@@ -1,7 +1,9 @@
 <script lang="ts">
   import {session} from "@welshman/app"
   import Link from "@lib/components/Link.svelte"
-  import Icon from "@lib/components/Icon.svelte"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
+import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
@@ -39,11 +41,11 @@
     <p>If you'd like to switch to self-custody, please click below to get started.</p>
     <ModalFooter>
       <Button class="btn btn-link" onclick={back}>
-        <Icon icon="alt-arrow-left" />
+        <Icon icon={AltArrowLeft} />
         Go back
       </Button>
       <Button class="btn btn-primary" onclick={startEject}>
-        <Icon icon="check-circle" />
+        <Icon icon={CheckCircle} />
         I want to hold my own keys
       </Button>
     </ModalFooter>
