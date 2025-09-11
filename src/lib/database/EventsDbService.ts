@@ -19,7 +19,7 @@ export interface IEventsDbService extends DatabaseService {
 }
 
 export class EventsDbService implements IEventsDbService {
-  databaseName = "events.db"
+  databaseName = "events"
   versionUpgrades = EventsMigrationStatements
   loadToVersion = last(EventsMigrationStatements).toVersion
   db!: SQLiteDBConnection

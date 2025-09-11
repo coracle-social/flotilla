@@ -17,7 +17,7 @@ export interface IHandlesDbService extends DatabaseService {
 }
 
 export class HandlesDbService implements IHandlesDbService {
-  databaseName = "handles.db"
+  databaseName = "handles"
   versionUpgrades = HandlesMigrationStatements
   loadToVersion = last(HandlesMigrationStatements).toVersion
   db!: SQLiteDBConnection

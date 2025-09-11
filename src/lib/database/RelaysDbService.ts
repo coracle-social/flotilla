@@ -18,7 +18,7 @@ export interface IRelaysDbService extends DatabaseService {
 }
 
 export class RelaysDbService implements IRelaysDbService {
-  databaseName = "relays.db"
+  databaseName = "relays"
   versionUpgrades = RelaysMigrationStatements
   loadToVersion = last(RelaysMigrationStatements).toVersion
   db!: SQLiteDBConnection

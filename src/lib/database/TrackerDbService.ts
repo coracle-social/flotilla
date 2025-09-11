@@ -19,7 +19,7 @@ export interface ITrackerDbService extends DatabaseService {
 }
 
 export class TrackerDbService implements ITrackerDbService {
-  databaseName = "tracker.db"
+  databaseName = "tracker"
   versionUpgrades = TrackerMigrationStatements
   loadToVersion = last(TrackerMigrationStatements).toVersion
   db!: SQLiteDBConnection
