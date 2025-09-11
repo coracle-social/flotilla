@@ -1,5 +1,17 @@
 import {type StorageProvider} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
+import {relaysDbService} from "@lib/database/RelaysDbService"
+import {handlesDbService} from "@lib/database/HandlesDbService"
+import {zappersDbService} from "@lib/database/ZappersDbService"
+import {freshnessDbService} from "@lib/database/FreshnessDbService"
+import {plaintextDbService} from "@lib/database/PlaintextDbService"
+import {TrackerDbService} from "@lib/database/TrackerDbService"
+import {EventsDbService} from "@lib/database/EventsDbService"
+import {repository, tracker, unsubscribers} from "@welshman/app"
+import type {DatabaseService} from "@lib/database/DatabaseService"
+import {sqliteService} from "@lib/database/SQLiteService"
+import {Capacitor} from "@capacitor/core"
+import {defineCustomElements as jeepSqlite} from "jeep-sqlite/loader"
 
 export class PreferencesStorageProvider implements StorageProvider {
   get = async <T>(key: string): Promise<T | undefined> => {
@@ -26,3 +38,42 @@ export class PreferencesStorageProvider implements StorageProvider {
 
 // singleton instance of PreferencesStorageProvider
 export const preferencesStorageProvider = new PreferencesStorageProvider()
+
+export const initSqlPlugin = async () => {
+  const platform = Capacitor.getPlatform()
+
+  if (window !== undefined) {
+    jeepSqlite(window)
+
+    if (platform === "web") {
+      const jeepEl = document.createElement("jeep-sqlite")
+      document.body.appendChild(jeepEl)
+    }
+  }
+
+  try {
+    if (platform === "web") await sqliteService.sqliteConnection.initWebStore()
+  } catch (err: any) {
+    throw new Error(`Error while initializing SQL plugin: ${err.message || err}`)
+  }
+}
+
+export const defaultDatabaseServices = {
+  relays: relaysDbService,
+  handles: handlesDbService,
+  zappers: zappersDbService,
+  freshness: freshnessDbService,
+  plaintext: plaintextDbService,
+  tracker: new TrackerDbService({tracker}),
+  events: new EventsDbService({limit: 10_000, repository, rankEvent: () => 1}),
+}
+
+export const initDatabaseStorage = async (databaseServices: Record<string, DatabaseService>) => {
+  await Promise.all(
+    Object.values(databaseServices).map(async service => {
+      await service.initializeDatabase()
+      await service.initializeState()
+      unsubscribers.push(service.sync())
+    }),
+  )
+}

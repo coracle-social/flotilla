@@ -27,7 +27,6 @@
   import {
     WRAP,
     EVENT_TIME,
-    APP_DATA,
     THREAD,
     MESSAGE,
     INBOX_RELAYS,
@@ -39,6 +38,7 @@
     RELAYS,
     BLOSSOM_SERVERS,
     ROOMS,
+    APP_DATA,
     getRelaysFromList,
   } from "@welshman/util"
   import {Nip46Broker, makeSecret} from "@welshman/signer"
@@ -58,7 +58,6 @@
   import {
     loadRelay,
     db,
-    initStorage,
     repository,
     pubkey,
     session,
@@ -66,11 +65,9 @@
     signer,
     signerLog,
     dropSession,
-    defaultStorageAdapters,
     userInboxRelaySelections,
     loginWithNip01,
     loginWithNip46,
-    EventsStorageAdapter,
     loadRelaySelections,
     SignerLogEntryStatus,
   } from "@welshman/app"
@@ -82,7 +79,6 @@
   import * as net from "@welshman/net"
   import * as app from "@welshman/app"
   import {nsecDecode} from "@lib/util"
-  import {preferencesStorageProvider} from "@lib/storage"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import {setupTracking} from "@app/util/tracking"
@@ -105,6 +101,13 @@
   import * as requests from "@app/core/requests"
   import * as notifications from "@app/util/notifications"
   import * as appState from "@app/core/state"
+  import {
+    defaultDatabaseServices,
+    initDatabaseStorage,
+    initSqlPlugin,
+    preferencesStorageProvider,
+  } from "@src/lib/storage"
+  import {EventsDbService} from "@src/lib/database/EventsDbService"
 
   // Migration: old nostrtalk instance used different sessions
   if ($session && !$signer) {
@@ -273,10 +276,11 @@
         storage: preferencesStorageProvider,
       })
 
-      await initStorage("flotilla", 8, {
-        ...defaultStorageAdapters,
-        events: new EventsStorageAdapter({
-          name: "events",
+      await initSqlPlugin()
+
+      await initDatabaseStorage({
+        ...defaultDatabaseServices,
+        events: new EventsDbService({
           limit: 10_000,
           repository,
           rankEvent: (e: TrustedEvent) => {
