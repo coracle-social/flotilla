@@ -4,7 +4,7 @@ import {sqliteService} from "@lib/database/SQLiteService"
 import type {Tracker} from "@welshman/net"
 import type {Unsubscriber} from "svelte/store"
 import type {DatabaseService} from "@lib/database/DatabaseService"
-import {last} from "@welshman/lib"
+import {call, last, on} from "@welshman/lib"
 
 type Entry = {id: string; relays: string[]}
 
@@ -71,16 +71,15 @@ export class TrackerDbService implements ITrackerDbService {
         })),
       )
 
-    this.tracker.on("add", updateOne)
-    this.tracker.on("remove", updateOne)
-    this.tracker.on("load", updateAll)
-    this.tracker.on("clear", updateAll)
+    const unsubscribers = [
+      on(this.tracker, "add", updateOne),
+      on(this.tracker, "remove", updateOne),
+      on(this.tracker, "load", updateAll),
+      on(this.tracker, "clear", updateAll),
+    ]
 
     return () => {
-      this.tracker.off("add", updateOne)
-      this.tracker.off("remove", updateOne)
-      this.tracker.off("load", updateAll)
-      this.tracker.off("clear", updateAll)
+      unsubscribers.forEach(call)
     }
   }
 
