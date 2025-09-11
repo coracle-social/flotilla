@@ -104,7 +104,6 @@
   import {
     defaultDatabaseServices,
     initDatabaseStorage,
-    initSqlPlugin,
     preferencesStorageProvider,
   } from "@src/lib/storage"
   import {EventsDbService} from "@src/lib/database/EventsDbService"
@@ -275,8 +274,6 @@
         store: sessions,
         storage: preferencesStorageProvider,
       })
-
-      await initSqlPlugin()
 
       await initDatabaseStorage({
         ...defaultDatabaseServices,

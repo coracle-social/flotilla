@@ -38,7 +38,7 @@ export class FreshnessDbService implements IFreshnessDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      await sqliteService.saveToStore(this.databaseName)
+      // await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`freshnessDbService.initializeDatabase: ${err.message || err}`)
     }
@@ -74,7 +74,6 @@ export class FreshnessDbService implements IFreshnessDbService {
     await this.db.run(
       `INSERT INTO freshness (key, data) VALUES ${valuesPlaceholder} ON CONFLICT(key) DO UPDATE SET data = excluded.data WHERE freshness.data IS NOT excluded.data;`,
       values,
-      true,
     )
   }
 

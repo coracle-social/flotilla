@@ -39,7 +39,7 @@ export class PreferencesStorageProvider implements StorageProvider {
 // singleton instance of PreferencesStorageProvider
 export const preferencesStorageProvider = new PreferencesStorageProvider()
 
-export const initSqlPlugin = async () => {
+const initSqlPlugin = async () => {
   const platform = Capacitor.getPlatform()
 
   if (window !== undefined) {
@@ -48,11 +48,15 @@ export const initSqlPlugin = async () => {
     if (platform === "web") {
       const jeepEl = document.createElement("jeep-sqlite")
       document.body.appendChild(jeepEl)
+      await customElements.whenDefined("jeep-sqlite")
+      jeepEl.autoSave = true
     }
   }
 
   try {
-    if (platform === "web") await sqliteService.sqliteConnection.initWebStore()
+    if (platform === "web") {
+      await sqliteService.sqliteConnection.initWebStore()
+    }
   } catch (err: any) {
     throw new Error(`Error while initializing SQL plugin: ${err.message || err}`)
   }
@@ -69,6 +73,7 @@ export const defaultDatabaseServices = {
 }
 
 export const initDatabaseStorage = async (databaseServices: Record<string, DatabaseService>) => {
+  await initSqlPlugin()
   await Promise.all(
     Object.values(databaseServices).map(async service => {
       await service.initializeDatabase()

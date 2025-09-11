@@ -38,7 +38,7 @@ export class PlaintextDbService implements IPlaintextDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      await sqliteService.saveToStore(this.databaseName)
+      // await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`plaintextDbService.initializeDatabase: ${err.message || err}`)
     }
@@ -74,7 +74,6 @@ export class PlaintextDbService implements IPlaintextDbService {
     await this.db.run(
       `INSERT INTO plaintext (key, data) VALUES ${valuesPlaceholder} ON CONFLICT(key) DO UPDATE SET data = excluded.data WHERE plaintext.data IS NOT excluded.data;`,
       values,
-      true,
     )
   }
 

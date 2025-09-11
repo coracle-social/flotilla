@@ -43,7 +43,7 @@ export class TrackerDbService implements ITrackerDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      await sqliteService.saveToStore(this.databaseName)
+      // await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`trackerDbService.initializeDatabase: ${err.message || err}`)
     }
@@ -99,7 +99,6 @@ export class TrackerDbService implements ITrackerDbService {
     await this.db.run(
       `INSERT INTO trackers (id, data) VALUES ${valuesPlaceholder} ON CONFLICT(id) DO UPDATE SET data = excluded.data WHERE trackers.data IS NOT excluded.data;`,
       values,
-      true,
     )
   }
 

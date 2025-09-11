@@ -37,7 +37,7 @@ export class RelaysDbService implements IRelaysDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      await sqliteService.saveToStore(this.databaseName)
+      // await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`relaysDbService.initializeDatabase: ${err.message || err}`)
     }
@@ -67,7 +67,6 @@ export class RelaysDbService implements IRelaysDbService {
     await this.db.run(
       `INSERT INTO relays (url, data) VALUES ${valuesPlaceholder} ON CONFLICT(url) DO UPDATE SET data = excluded.data WHERE relays.data IS NOT excluded.data;`,
       values,
-      true,
     )
   }
 

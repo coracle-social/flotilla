@@ -56,7 +56,7 @@ export class EventsDbService implements IEventsDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      await sqliteService.saveToStore(this.databaseName)
+      // await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`eventsDbService.initializeDatabase: ${err.message || err}`)
     }
@@ -114,13 +114,12 @@ export class EventsDbService implements IEventsDbService {
     await this.db.run(
       `INSERT INTO events (id, data) VALUES ${valuesPlaceholder} ON CONFLICT(id) DO UPDATE SET data = excluded.data WHERE events.data IS NOT excluded.data;`,
       values,
-      true,
     )
   }
 
   async deleteEvents(eventIds: string[]): Promise<void> {
     const valuesPlaceholder = eventIds.map(() => "?").join(", ")
-    await this.db.run(`DELETE FROM events WHERE id IN (${valuesPlaceholder});`, eventIds, true)
+    await this.db.run(`DELETE FROM events WHERE id IN (${valuesPlaceholder});`, eventIds)
   }
 
   getDatabaseName(): string {

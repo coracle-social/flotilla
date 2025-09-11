@@ -17,14 +17,12 @@ export class SQLiteService implements ISQLiteService {
   platform = Capacitor.getPlatform()
   sqlitePlugin = CapacitorSQLite
   sqliteConnection = new SQLiteConnection(CapacitorSQLite)
-  dbNameVersionDict: Map<string, number> = new Map()
 
   async openDatabase(
     dbName: string,
     loadToVersion: number,
     readOnly: boolean,
   ): Promise<SQLiteDBConnection> {
-    this.dbNameVersionDict.set(dbName, loadToVersion)
     const encrypted = false
     const mode = encrypted ? "secret" : "no-encryption"
 

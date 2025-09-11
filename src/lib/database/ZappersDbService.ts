@@ -37,7 +37,7 @@ export class ZappersDbService implements IZappersDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      await sqliteService.saveToStore(this.databaseName)
+      // await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`zappersDbService.initializeDatabase: ${err.message || err}`)
     }
@@ -67,7 +67,6 @@ export class ZappersDbService implements IZappersDbService {
     await this.db.run(
       `INSERT INTO zappers (lnurl, data) VALUES ${valuesPlaceholder} ON CONFLICT(lnurl) DO UPDATE SET data = excluded.data WHERE zappers.data IS NOT excluded.data;`,
       values,
-      true,
     )
   }
 
