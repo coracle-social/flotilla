@@ -13,7 +13,7 @@
 </script>
 
 <Link replaceState href={path}>
-  <CardButton>
+  <CardButton class="dark:btn-neutral">
     {#snippet icon()}
       <div><SpaceAvatar {url} /></div>
     {/snippet}

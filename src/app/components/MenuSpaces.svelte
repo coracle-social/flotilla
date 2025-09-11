@@ -23,7 +23,7 @@
       <Divider />
     {/if}
     <Button onclick={addSpace}>
-      <CardButton>
+      <CardButton class="dark:btn-neutral">
         {#snippet icon()}
           <div><Icon icon={Login} size={7} /></div>
         {/snippet}

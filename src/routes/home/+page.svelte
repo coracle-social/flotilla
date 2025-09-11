@@ -32,7 +32,7 @@
       <h1 class="mb-4 text-center text-5xl font-bold uppercase">{PLATFORM_NAME}</h1>
       <div class="col-3">
         <Button onclick={addSpace}>
-          <CardButton>
+          <CardButton class="dark:btn-neutral">
             {#snippet icon()}
               <div><Icon icon={AddCircle} size={7} /></div>
             {/snippet}
@@ -45,7 +45,7 @@
           </CardButton>
         </Button>
         <Link href="/discover">
-          <CardButton>
+          <CardButton class="dark:btn-neutral">
             {#snippet icon()}
               <div><Icon icon={Compass} size={7} /></div>
             {/snippet}
@@ -58,7 +58,7 @@
           </CardButton>
         </Link>
         <Button onclick={openChat}>
-          <CardButton>
+          <CardButton class="dark:btn-neutral">
             {#snippet icon()}
               <div><Icon icon={ChatRound} size={7} /></div>
             {/snippet}

@@ -19,7 +19,7 @@
 
 <div class="column menu gap-2">
   <Link replaceState href="/settings/profile">
-    <CardButton>
+    <CardButton class="dark:btn-neutral">
       {#snippet icon()}
         <div><Icon icon={UserRounded} size={7} /></div>
       {/snippet}
@@ -32,7 +32,7 @@
     </CardButton>
   </Link>
   <Link replaceState href="/settings/alerts">
-    <CardButton>
+    <CardButton class="dark:btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Bell} size={7} /></div>
       {/snippet}
@@ -45,7 +45,7 @@
     </CardButton>
   </Link>
   <Link replaceState href="/settings/wallet">
-    <CardButton>
+    <CardButton class="dark:btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Wallet} size={7} /></div>
       {/snippet}
@@ -58,7 +58,7 @@
     </CardButton>
   </Link>
   <Link replaceState href="/settings/relays">
-    <CardButton>
+    <CardButton class="dark:btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Server} size={7} /></div>
       {/snippet}
@@ -71,7 +71,7 @@
     </CardButton>
   </Link>
   <Link replaceState href="/settings/content">
-    <CardButton>
+    <CardButton class="dark:btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Settings} size={7} /></div>
       {/snippet}
@@ -84,7 +84,7 @@
     </CardButton>
   </Link>
   <Link replaceState href="/settings/about">
-    <CardButton>
+    <CardButton class="dark:btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Code2} size={7} /></div>
       {/snippet}

@@ -26,7 +26,7 @@
     {/snippet}
   </ModalHeader>
   <Link href="/discover">
-    <CardButton class="!btn-primary">
+    <CardButton class="btn-primary">
       {#snippet icon()}
         <div><Icon icon={Compass} size={7} /></div>
       {/snippet}
@@ -39,7 +39,7 @@
     </CardButton>
   </Link>
   <Button onclick={startJoin}>
-    <CardButton>
+    <CardButton class="dark:btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Login} size={7} /></div>
       {/snippet}
@@ -52,7 +52,7 @@
     </CardButton>
   </Button>
   <Button onclick={startCreate}>
-    <CardButton>
+    <CardButton class="dark:btn-neutral">
       {#snippet icon()}
         <div><Icon icon={AddCircle} size={7} /></div>
       {/snippet}

@@ -35,6 +35,9 @@ importers:
       '@capacitor/push-notifications':
         specifier: ^7.0.1
         version: 7.0.1(@capacitor/core@7.2.0)
+      '@capawesome/capacitor-android-dark-mode-support':
+        specifier: ^7.0.0
+        version: 7.0.0(@capacitor/core@7.2.0)
       '@capawesome/capacitor-badge':
         specifier: ^7.0.1
         version: 7.0.1(@capacitor/core@7.2.0)
@@ -768,6 +771,11 @@ packages:
 
   '@capacitor/push-notifications@7.0.1':
     resolution: {integrity: sha512-nSHsMSrTHX5pOkX1Khse75/uvSx/JTcXG+9aT6a66CvzalH6MCs0ha8Jv+xu0k9xW8caO+qSUMjfj5Oy82Uxmw==}
+    peerDependencies:
+      '@capacitor/core': '>=7.0.0'
+
+  '@capawesome/capacitor-android-dark-mode-support@7.0.0':
+    resolution: {integrity: sha512-xLa988v9MEnFZj7Aje3v2vvYbs5U3zk8vaO24OioXUV1ZPjGy4R2VkdoKG8fTsSYRdF6s4/8DpCuos8JLJqpjw==}
     peerDependencies:
       '@capacitor/core': '>=7.0.0'
 
@@ -5606,6 +5614,10 @@ snapshots:
       '@capacitor/core': 7.2.0
 
   '@capacitor/push-notifications@7.0.1(@capacitor/core@7.2.0)':
+    dependencies:
+      '@capacitor/core': 7.2.0
+
+  '@capawesome/capacitor-android-dark-mode-support@7.0.0(@capacitor/core@7.2.0)':
     dependencies:
       '@capacitor/core': 7.2.0
 

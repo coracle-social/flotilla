@@ -3,6 +3,6 @@ import {synced} from "@welshman/store"
 
 export const theme = synced({
   key: "theme",
-  defaultValue: "dark",
+  defaultValue: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
   storage: preferencesStorageProvider,
 })

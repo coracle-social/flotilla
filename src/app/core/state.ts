@@ -24,7 +24,7 @@ import {
   tryCatch,
 } from "@welshman/lib"
 import type {Socket} from "@welshman/net"
-import {Pool, load, AuthStateEvent, SocketEvent, netContext} from "@welshman/net"
+import {Pool, load, AuthStateEvent, AuthStatus, SocketEvent, netContext} from "@welshman/net"
 import {
   collection,
   custom,
@@ -815,7 +815,7 @@ export const deriveRelayAuthError = (url: string, claim = "") => {
   return derived(
     [relaysMostlyRestricted, deriveSocket(url)],
     ([$relaysMostlyRestricted, $socket]) => {
-      if ($socket.auth.details) {
+      if ($socket.auth.status === AuthStatus.Forbidden && $socket.auth.details) {
         return stripPrefix($socket.auth.details)
       }
 

@@ -126,6 +126,7 @@
     Object.assign(window, {
       get,
       nip19,
+      theme,
       ...lib,
       ...welshmanSigner,
       ...router,

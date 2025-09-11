@@ -14,6 +14,7 @@ import {
   LOCALE,
   parseJson,
   fromPairs,
+  last,
 } from "@welshman/lib"
 import {decrypt} from "@welshman/signer"
 import type {Feed} from "@welshman/feeds"
@@ -314,8 +315,12 @@ export const checkRelayAuth = async (url: string) => {
 
   // Only raise an error if it's not a timeout.
   // If it is, odds are the problem is with our signer, not the relay
-  if (!okStatuses.includes(socket.auth.status) && socket.auth.details) {
-    return `Failed to authenticate (${socket.auth.details})`
+  if (!okStatuses.includes(socket.auth.status)) {
+    if (socket.auth.details) {
+      return `Failed to authenticate (${socket.auth.details})`
+    } else {
+      return `Failed to authenticate (${last(socket.auth.status.split(":"))})`
+    }
   }
 }
 

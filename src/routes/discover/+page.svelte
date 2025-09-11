@@ -91,7 +91,7 @@
     </label>
     {#each relaySearch.searchOptions(term).slice(0, limit) as relay (relay.url)}
       <Button
-        class="card2 bg-alt shadow-xl transition-all hover:shadow-2xl hover:brightness-[1.1]"
+        class="card2 bg-alt shadow-xl transition-all hover:shadow-2xl hover:dark:brightness-[1.1]"
         onclick={() => openSpace(relay.url)}>
         <RelaySummary url={relay.url} />
       </Button>
