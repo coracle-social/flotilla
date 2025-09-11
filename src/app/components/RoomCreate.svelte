@@ -7,7 +7,7 @@
   import Field from "@lib/components/Field.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Hashtag from "@assets/icons/hashtag-circle.svg?dataurl"
+  import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"

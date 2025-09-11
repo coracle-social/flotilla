@@ -1,6 +1,6 @@
 <script lang="ts">
   import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
-  import Hashtag from "@assets/icons/hashtag-circle.svg?dataurl"
+  import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"

@@ -1,7 +1,7 @@
 <script lang="ts">
   import {parseJson} from "@welshman/lib"
   import {displayFeeds} from "@welshman/feeds"
-  import {getAddress, getTagValue, getTagValues} from "@welshman/util"
+  import {getTagValue, getTagValues} from "@welshman/util"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"

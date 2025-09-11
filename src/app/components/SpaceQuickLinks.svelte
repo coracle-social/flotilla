@@ -6,7 +6,7 @@
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
-  import Hashtag from "@assets/icons/hashtag-circle.svg?dataurl"
+  import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"

@@ -4,7 +4,6 @@
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import Server from "@assets/icons/server.svg?dataurl"
-  import Settings from "@assets/icons/settings.svg?dataurl"
   import Moon from "@assets/icons/moon.svg?dataurl"
   import InfoSquare from "@assets/icons/info-square.svg?dataurl"
   import Exit from "@assets/icons/logout-3.svg?dataurl"
