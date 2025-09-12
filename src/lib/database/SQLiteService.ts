@@ -82,7 +82,7 @@ export class SQLiteService implements ISQLiteService {
 
   async saveToStore(dbName: string): Promise<void> {
     if (this.platform !== "web") {
-      throw new Error(`sqliteService.saveToStore: Not supported on ${this.platform}`)
+      return
     }
 
     try {
