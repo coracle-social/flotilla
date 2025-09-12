@@ -62,6 +62,9 @@ export class ZappersDbService implements IZappersDbService {
   }
 
   async updateZappers(zappers: Zapper[]): Promise<void> {
+    if (zappers.length === 0) {
+      return
+    }
     const valuesPlaceholder = zappers.map(() => "(?, ?)").join(", ")
     const values = zappers.flatMap(zapper => [zapper.lnurl, JSON.stringify(zapper)])
     await this.db.run(

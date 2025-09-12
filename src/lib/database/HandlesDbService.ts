@@ -61,6 +61,10 @@ export class HandlesDbService implements IHandlesDbService {
   }
 
   async updateHandles(handles: Handle[]): Promise<void> {
+    if (handles.length === 0) {
+      return
+    }
+
     const valuesPlaceholder = handles.map(() => "(?, ?)").join(", ")
     const values = handles.flatMap(handle => [handle.nip05, JSON.stringify(handle)])
     await this.db.run(

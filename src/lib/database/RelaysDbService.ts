@@ -62,6 +62,10 @@ export class RelaysDbService implements IRelaysDbService {
   }
 
   async updateRelays(relays: Relay[]): Promise<void> {
+    if (relays.length === 0) {
+      return
+    }
+
     const valuesPlaceholder = relays.map(() => "(?, ?)").join(", ")
     const values = relays.flatMap(relay => [relay.url, JSON.stringify(relay)])
     await this.db.run(

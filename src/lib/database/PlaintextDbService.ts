@@ -69,6 +69,11 @@ export class PlaintextDbService implements IPlaintextDbService {
 
   async updatePlaintext(plaintext: Record<string, any>): Promise<void> {
     const kvs = Object.entries(plaintext).map(([key, value]) => ({key, value}))
+
+    if (kvs.length === 0) {
+      return
+    }
+
     const valuesPlaceholder = kvs.map(() => "(?, ?)").join(", ")
     const values = kvs.flatMap(kv => [kv.key, JSON.stringify(kv)])
     await this.db.run(

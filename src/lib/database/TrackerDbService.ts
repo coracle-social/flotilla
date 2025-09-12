@@ -94,6 +94,10 @@ export class TrackerDbService implements ITrackerDbService {
   }
 
   async updateTrackers(entries: Entry[]): Promise<void> {
+    if (entries.length === 0) {
+      return
+    }
+
     const valuesPlaceholder = entries.map(() => "(?, ?)").join(", ")
     const values = entries.flatMap(entry => [entry.id, JSON.stringify(entry)])
     await this.db.run(

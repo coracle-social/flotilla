@@ -69,6 +69,11 @@ export class FreshnessDbService implements IFreshnessDbService {
 
   async updateFreshness(freshness: Record<string, any>): Promise<void> {
     const kvs = Object.entries(freshness).map(([key, value]) => ({key, value}))
+
+    if (kvs.length === 0) {
+      return
+    }
+
     const valuesPlaceholder = kvs.map(() => "(?, ?)").join(", ")
     const values = kvs.flatMap(kv => [kv.key, JSON.stringify(kv)])
     await this.db.run(

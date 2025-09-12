@@ -109,6 +109,10 @@ export class EventsDbService implements IEventsDbService {
   }
 
   async updateEvents(events: TrustedEvent[]): Promise<void> {
+    if (events.length === 0) {
+      return
+    }
+
     const valuesPlaceholder = events.map(() => "(?, ?)").join(", ")
     const values = events.flatMap(event => [event.id, JSON.stringify(event)])
     await this.db.run(
