@@ -37,7 +37,7 @@ export class ZappersDbService implements IZappersDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      // await sqliteService.saveToStore(this.databaseName)
+      await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`zappersDbService.initializeDatabase: ${err.message || err}`)
     }

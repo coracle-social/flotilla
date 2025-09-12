@@ -56,7 +56,7 @@ export class EventsDbService implements IEventsDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      // await sqliteService.saveToStore(this.databaseName)
+      await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`eventsDbService.initializeDatabase: ${err.message || err}`)
     }

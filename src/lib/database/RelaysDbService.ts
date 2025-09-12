@@ -37,7 +37,7 @@ export class RelaysDbService implements IRelaysDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      // await sqliteService.saveToStore(this.databaseName)
+      await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`relaysDbService.initializeDatabase: ${err.message || err}`)
     }

@@ -38,7 +38,7 @@ export class PlaintextDbService implements IPlaintextDbService {
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
-      // await sqliteService.saveToStore(this.databaseName)
+      await sqliteService.saveToStore(this.databaseName)
     } catch (err: any) {
       throw new Error(`plaintextDbService.initializeDatabase: ${err.message || err}`)
     }
