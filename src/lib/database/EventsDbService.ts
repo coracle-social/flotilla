@@ -28,6 +28,7 @@ export class EventsDbService implements IEventsDbService {
   repository: Repository
   rankEvent: (event: TrustedEvent) => number
   eventCount: number = 0
+  isDeleting = false
 
   constructor({
     limit,
@@ -79,16 +80,22 @@ export class EventsDbService implements IEventsDbService {
       }
 
       // If we're well above our retention limit, drop lowest-ranked events
-      if (this.eventCount > this.limit * 1.5) {
-        for (const event of sortBy(e => -this.rankEvent(e), await this.getEvents()).slice(
-          this.limit,
-        )) {
-          removed.add(event.id)
-        }
-      }
+      if (!this.isDeleting && this.eventCount > this.limit * 1.5) {
+        try {
+          this.isDeleting = true
 
-      if (removed.size > 0) {
-        await this.deleteEvents(Array.from(removed))
+          for (const event of sortBy(e => -this.rankEvent(e), await this.getEvents()).slice(
+            this.limit,
+          )) {
+            removed.add(event.id)
+          }
+
+          if (removed.size > 0) {
+            await this.deleteEvents(Array.from(removed))
+          }
+        } finally {
+          this.isDeleting = false
+        }
       }
 
       // Keep track of our total number of events. This isn't strictly accurate, but it's close enough
