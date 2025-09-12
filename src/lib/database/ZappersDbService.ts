@@ -65,7 +65,7 @@ export class ZappersDbService implements IZappersDbService {
     const valuesPlaceholder = zappers.map(() => "(?, ?)").join(", ")
     const values = zappers.flatMap(zapper => [zapper.lnurl, JSON.stringify(zapper)])
     await this.db.run(
-      `INSERT INTO zappers (lnurl, data) VALUES ${valuesPlaceholder} ON CONFLICT(lnurl) DO UPDATE SET data = excluded.data WHERE zappers.data IS NOT excluded.data;`,
+      `INSERT OR REPLACE INTO zappers (lnurl, data) VALUES ${valuesPlaceholder}`,
       values,
     )
   }

@@ -112,14 +112,14 @@ export class EventsDbService implements IEventsDbService {
     const valuesPlaceholder = events.map(() => "(?, ?)").join(", ")
     const values = events.flatMap(event => [event.id, JSON.stringify(event)])
     await this.db.run(
-      `INSERT INTO events (id, data) VALUES ${valuesPlaceholder} ON CONFLICT(id) DO UPDATE SET data = excluded.data WHERE events.data IS NOT excluded.data;`,
+      `INSERT OR REPLACE INTO events (id, data) VALUES ${valuesPlaceholder}`,
       values,
     )
   }
 
   async deleteEvents(eventIds: string[]): Promise<void> {
     const valuesPlaceholder = eventIds.map(() => "?").join(", ")
-    await this.db.run(`DELETE FROM events WHERE id IN (${valuesPlaceholder});`, eventIds)
+    await this.db.run(`DELETE FROM events WHERE id IN (${valuesPlaceholder})`, eventIds)
   }
 
   getDatabaseName(): string {

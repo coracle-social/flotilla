@@ -72,7 +72,7 @@ export class FreshnessDbService implements IFreshnessDbService {
     const valuesPlaceholder = kvs.map(() => "(?, ?)").join(", ")
     const values = kvs.flatMap(kv => [kv.key, JSON.stringify(kv)])
     await this.db.run(
-      `INSERT INTO freshness (key, data) VALUES ${valuesPlaceholder} ON CONFLICT(key) DO UPDATE SET data = excluded.data WHERE freshness.data IS NOT excluded.data;`,
+      `INSERT OR REPLACE INTO freshness (key, data) VALUES ${valuesPlaceholder}`,
       values,
     )
   }

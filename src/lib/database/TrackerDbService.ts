@@ -97,7 +97,7 @@ export class TrackerDbService implements ITrackerDbService {
     const valuesPlaceholder = entries.map(() => "(?, ?)").join(", ")
     const values = entries.flatMap(entry => [entry.id, JSON.stringify(entry)])
     await this.db.run(
-      `INSERT INTO trackers (id, data) VALUES ${valuesPlaceholder} ON CONFLICT(id) DO UPDATE SET data = excluded.data WHERE trackers.data IS NOT excluded.data;`,
+      `INSERT OR REPLACE INTO trackers (id, data) VALUES ${valuesPlaceholder}`,
       values,
     )
   }

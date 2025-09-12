@@ -72,7 +72,7 @@ export class PlaintextDbService implements IPlaintextDbService {
     const valuesPlaceholder = kvs.map(() => "(?, ?)").join(", ")
     const values = kvs.flatMap(kv => [kv.key, JSON.stringify(kv)])
     await this.db.run(
-      `INSERT INTO plaintext (key, data) VALUES ${valuesPlaceholder} ON CONFLICT(key) DO UPDATE SET data = excluded.data WHERE plaintext.data IS NOT excluded.data;`,
+      `INSERT OR REPLACE INTO plaintext (key, data) VALUES ${valuesPlaceholder}`,
       values,
     )
   }

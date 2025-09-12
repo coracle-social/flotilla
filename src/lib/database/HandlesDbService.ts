@@ -64,7 +64,7 @@ export class HandlesDbService implements IHandlesDbService {
     const valuesPlaceholder = handles.map(() => "(?, ?)").join(", ")
     const values = handles.flatMap(handle => [handle.nip05, JSON.stringify(handle)])
     await this.db.run(
-      `INSERT INTO handles (nip05, data) VALUES ${valuesPlaceholder} ON CONFLICT(nip05) DO UPDATE SET data = excluded.data WHERE handles.data IS NOT excluded.data;`,
+      `INSERT OR REPLACE INTO handles (nip05, data) VALUES ${valuesPlaceholder}`,
       values,
     )
   }

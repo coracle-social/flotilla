@@ -65,7 +65,7 @@ export class RelaysDbService implements IRelaysDbService {
     const valuesPlaceholder = relays.map(() => "(?, ?)").join(", ")
     const values = relays.flatMap(relay => [relay.url, JSON.stringify(relay)])
     await this.db.run(
-      `INSERT INTO relays (url, data) VALUES ${valuesPlaceholder} ON CONFLICT(url) DO UPDATE SET data = excluded.data WHERE relays.data IS NOT excluded.data;`,
+      `INSERT OR REPLACE INTO relays (url, data) VALUES ${valuesPlaceholder}`,
       values,
     )
   }
