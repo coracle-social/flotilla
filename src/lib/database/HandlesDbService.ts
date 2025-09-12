@@ -54,7 +54,7 @@ export class HandlesDbService implements IHandlesDbService {
     const handles = (await this.db.query("SELECT data FROM handles")).values
 
     if (handles) {
-      return handles.map(handle => JSON.parse(handle) as Handle)
+      return handles.map(handle => JSON.parse(handle.data) as Handle)
     } else {
       return []
     }

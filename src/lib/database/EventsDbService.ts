@@ -102,7 +102,7 @@ export class EventsDbService implements IEventsDbService {
     const events = (await this.db.query("SELECT data FROM events")).values
 
     if (events) {
-      return events.map(event => JSON.parse(event) as TrustedEvent)
+      return events.map(event => JSON.parse(event.data) as TrustedEvent)
     } else {
       return []
     }

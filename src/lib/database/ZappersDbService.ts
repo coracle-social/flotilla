@@ -55,7 +55,7 @@ export class ZappersDbService implements IZappersDbService {
     const zappers = (await this.db.query("SELECT data FROM zappers")).values
 
     if (zappers) {
-      return zappers.map(zapper => JSON.parse(zapper) as Zapper)
+      return zappers.map(zapper => JSON.parse(zapper.data) as Zapper)
     } else {
       return []
     }

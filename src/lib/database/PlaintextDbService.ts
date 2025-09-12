@@ -61,7 +61,7 @@ export class PlaintextDbService implements IPlaintextDbService {
     const plaintext = (await this.db.query("SELECT data FROM plaintext")).values
 
     if (plaintext) {
-      return plaintext.map(kv => JSON.parse(kv) as KV)
+      return plaintext.map(kv => JSON.parse(kv.data) as KV)
     } else {
       return []
     }

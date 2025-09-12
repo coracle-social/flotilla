@@ -55,7 +55,7 @@ export class RelaysDbService implements IRelaysDbService {
     const relays = (await this.db.query("SELECT data FROM relays")).values
 
     if (relays) {
-      return relays.map(relay => JSON.parse(relay) as Relay)
+      return relays.map(relay => JSON.parse(relay.data) as Relay)
     } else {
       return []
     }

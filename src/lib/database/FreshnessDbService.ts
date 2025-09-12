@@ -61,7 +61,7 @@ export class FreshnessDbService implements IFreshnessDbService {
     const freshness = (await this.db.query("SELECT data FROM freshness")).values
 
     if (freshness) {
-      return freshness.map(kv => JSON.parse(kv) as KV)
+      return freshness.map(kv => JSON.parse(kv.data) as KV)
     } else {
       return []
     }
