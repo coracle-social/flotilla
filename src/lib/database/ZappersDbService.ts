@@ -26,14 +26,14 @@ export class ZappersDbService implements IZappersDbService {
 
   async initializeDatabase(): Promise<void> {
     try {
+      if (this.db) {
+        throw new Error("Database already initialized")
+      }
+
       await sqliteService.sqlitePlugin.addUpgradeStatement({
         database: this.databaseName,
         upgrade: this.versionUpgrades,
       })
-
-      if (this.db) {
-        throw new Error("Database already initialized")
-      }
 
       this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
 
