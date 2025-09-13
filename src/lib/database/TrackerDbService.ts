@@ -1,52 +1,20 @@
-import {SQLiteDBConnection} from "@capacitor-community/sqlite"
 import {TrackerMigrationStatements} from "@lib/database/migrations/tracker"
-import {sqliteService} from "@lib/database/SQLiteService"
 import type {Tracker} from "@welshman/net"
 import type {Unsubscriber} from "svelte/store"
-import type {DatabaseService} from "@lib/database/DatabaseService"
+import {DatabaseService} from "@lib/database/DatabaseService"
 import {call, last, on} from "@welshman/lib"
 
 type Entry = {id: string; relays: string[]}
 
-export interface ITrackerDbService extends DatabaseService {
-  initializeDatabase(): Promise<void>
-  initializeState(): Promise<void>
-  sync(): Unsubscriber
-  getTrackers(): Promise<Entry[]>
-  updateTrackers(entries: Entry[]): Promise<void>
-  getDatabaseName(): string
-  getDatabaseVersion(): number
-}
-
-export class TrackerDbService implements ITrackerDbService {
+export class TrackerDbService extends DatabaseService {
   databaseName = "tracker"
   versionUpgrades = TrackerMigrationStatements
   loadToVersion = last(TrackerMigrationStatements).toVersion
-  db!: SQLiteDBConnection
-  platform = sqliteService.platform
   tracker: Tracker
 
   constructor({tracker}: {tracker: Tracker}) {
+    super()
     this.tracker = tracker
-  }
-
-  async initializeDatabase(): Promise<void> {
-    try {
-      if (this.db) {
-        throw new Error("Database already initialized")
-      }
-
-      await sqliteService.sqlitePlugin.addUpgradeStatement({
-        database: this.databaseName,
-        upgrade: this.versionUpgrades,
-      })
-
-      this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
-
-      await sqliteService.saveToStore(this.databaseName)
-    } catch (err: any) {
-      throw new Error(`trackerDbService.initializeDatabase: ${err.message || err}`)
-    }
   }
 
   async initializeState(): Promise<void> {
@@ -104,13 +72,5 @@ export class TrackerDbService implements ITrackerDbService {
       `INSERT OR REPLACE INTO trackers (id, data) VALUES ${valuesPlaceholder}`,
       values,
     )
-  }
-
-  getDatabaseName(): string {
-    return this.databaseName
-  }
-
-  getDatabaseVersion(): number {
-    return this.loadToVersion
   }
 }

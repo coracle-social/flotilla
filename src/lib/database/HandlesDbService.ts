@@ -1,46 +1,13 @@
-import {SQLiteDBConnection} from "@capacitor-community/sqlite"
 import {HandlesMigrationStatements} from "@lib/database/migrations/handles"
-import {sqliteService} from "@lib/database/SQLiteService"
 import {handles, onHandle, type Handle} from "@welshman/app"
 import type {Unsubscriber} from "svelte/store"
 import {batch, last} from "@welshman/lib"
-import type {DatabaseService} from "@lib/database/DatabaseService"
+import {DatabaseService} from "@lib/database/DatabaseService"
 
-export interface IHandlesDbService extends DatabaseService {
-  initializeDatabase(): Promise<void>
-  initializeState(): Promise<void>
-  sync(): Unsubscriber
-  getHandles(): Promise<Handle[]>
-  updateHandles(handles: Handle[]): Promise<void>
-  getDatabaseName(): string
-  getDatabaseVersion(): number
-}
-
-export class HandlesDbService implements IHandlesDbService {
+export class HandlesDbService extends DatabaseService {
   databaseName = "handles"
   versionUpgrades = HandlesMigrationStatements
   loadToVersion = last(HandlesMigrationStatements).toVersion
-  db!: SQLiteDBConnection
-  platform = sqliteService.platform
-
-  async initializeDatabase(): Promise<void> {
-    try {
-      if (this.db) {
-        throw new Error("Database already initialized")
-      }
-
-      await sqliteService.sqlitePlugin.addUpgradeStatement({
-        database: this.databaseName,
-        upgrade: this.versionUpgrades,
-      })
-
-      this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
-
-      await sqliteService.saveToStore(this.databaseName)
-    } catch (err: any) {
-      throw new Error(`handlesDbService.initializeDatabase: ${err.message || err}`)
-    }
-  }
 
   async initializeState(): Promise<void> {
     handles.set(await this.getHandles())
@@ -71,14 +38,6 @@ export class HandlesDbService implements IHandlesDbService {
       `INSERT OR REPLACE INTO handles (nip05, data) VALUES ${valuesPlaceholder}`,
       values,
     )
-  }
-
-  getDatabaseName(): string {
-    return this.databaseName
-  }
-
-  getDatabaseVersion(): number {
-    return this.loadToVersion
   }
 }
 

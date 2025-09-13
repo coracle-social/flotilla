@@ -1,47 +1,14 @@
-import {SQLiteDBConnection} from "@capacitor-community/sqlite"
 import {ZappersMigrationStatements} from "@lib/database/migrations/zappers"
-import {sqliteService} from "@lib/database/SQLiteService"
 import type {Unsubscriber} from "svelte/store"
 import {onZapper, zappers} from "@welshman/app"
 import {type Zapper} from "@welshman/util"
 import {batch, last} from "@welshman/lib"
-import type {DatabaseService} from "@lib/database/DatabaseService"
+import {DatabaseService} from "@lib/database/DatabaseService"
 
-export interface IZappersDbService extends DatabaseService {
-  initializeDatabase(): Promise<void>
-  initializeState(): Promise<void>
-  sync(): Unsubscriber
-  getZappers(): Promise<Zapper[]>
-  updateZappers(zappers: Zapper[]): Promise<void>
-  getDatabaseName(): string
-  getDatabaseVersion(): number
-}
-
-export class ZappersDbService implements IZappersDbService {
+export class ZappersDbService extends DatabaseService {
   databaseName = "zappers"
   versionUpgrades = ZappersMigrationStatements
   loadToVersion = last(ZappersMigrationStatements).toVersion
-  db!: SQLiteDBConnection
-  platform = sqliteService.platform
-
-  async initializeDatabase(): Promise<void> {
-    try {
-      if (this.db) {
-        throw new Error("Database already initialized")
-      }
-
-      await sqliteService.sqlitePlugin.addUpgradeStatement({
-        database: this.databaseName,
-        upgrade: this.versionUpgrades,
-      })
-
-      this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
-
-      await sqliteService.saveToStore(this.databaseName)
-    } catch (err: any) {
-      throw new Error(`zappersDbService.initializeDatabase: ${err.message || err}`)
-    }
-  }
 
   async initializeState(): Promise<void> {
     zappers.set(await this.getZappers())
@@ -71,14 +38,6 @@ export class ZappersDbService implements IZappersDbService {
       `INSERT OR REPLACE INTO zappers (lnurl, data) VALUES ${valuesPlaceholder}`,
       values,
     )
-  }
-
-  getDatabaseName(): string {
-    return this.databaseName
-  }
-
-  getDatabaseVersion(): number {
-    return this.loadToVersion
   }
 }
 

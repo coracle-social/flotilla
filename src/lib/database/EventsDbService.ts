@@ -1,29 +1,14 @@
-import {SQLiteDBConnection} from "@capacitor-community/sqlite"
 import {EventsMigrationStatements} from "@lib/database/migrations/events"
-import {sqliteService} from "@lib/database/SQLiteService"
 import type {Repository, RepositoryUpdate} from "@welshman/relay"
 import type {TrustedEvent} from "@welshman/util"
 import type {Unsubscriber} from "svelte/store"
 import {last, on, sortBy} from "@welshman/lib"
-import type {DatabaseService} from "@lib/database/DatabaseService"
+import {DatabaseService} from "@lib/database/DatabaseService"
 
-export interface IEventsDbService extends DatabaseService {
-  initializeDatabase(): Promise<void>
-  initializeState(): Promise<void>
-  sync(): Unsubscriber
-  getEvents(): Promise<TrustedEvent[]>
-  updateEvents(events: TrustedEvent[]): Promise<void>
-  deleteEvents(eventIds: string[]): Promise<void>
-  getDatabaseName(): string
-  getDatabaseVersion(): number
-}
-
-export class EventsDbService implements IEventsDbService {
+export class EventsDbService extends DatabaseService {
   databaseName = "events"
   versionUpgrades = EventsMigrationStatements
   loadToVersion = last(EventsMigrationStatements).toVersion
-  db!: SQLiteDBConnection
-  platform = sqliteService.platform
   limit: number
   repository: Repository
   rankEvent: (event: TrustedEvent) => number
@@ -39,28 +24,10 @@ export class EventsDbService implements IEventsDbService {
     repository: Repository
     rankEvent: (event: TrustedEvent) => number
   }) {
+    super()
     this.limit = limit
     this.repository = repository
     this.rankEvent = rankEvent
-  }
-
-  async initializeDatabase(): Promise<void> {
-    try {
-      if (this.db) {
-        throw new Error("Database already initialized")
-      }
-
-      await sqliteService.sqlitePlugin.addUpgradeStatement({
-        database: this.databaseName,
-        upgrade: this.versionUpgrades,
-      })
-
-      this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
-
-      await sqliteService.saveToStore(this.databaseName)
-    } catch (err: any) {
-      throw new Error(`eventsDbService.initializeDatabase: ${err.message || err}`)
-    }
   }
 
   async initializeState(): Promise<void> {
@@ -131,13 +98,5 @@ export class EventsDbService implements IEventsDbService {
   async deleteEvents(eventIds: string[]): Promise<void> {
     const valuesPlaceholder = eventIds.map(() => "?").join(", ")
     await this.db.run(`DELETE FROM events WHERE id IN (${valuesPlaceholder})`, eventIds)
-  }
-
-  getDatabaseName(): string {
-    return this.databaseName
-  }
-
-  getDatabaseVersion(): number {
-    return this.loadToVersion
   }
 }

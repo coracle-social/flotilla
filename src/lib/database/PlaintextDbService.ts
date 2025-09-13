@@ -1,48 +1,15 @@
-import {SQLiteDBConnection} from "@capacitor-community/sqlite"
 import {PlaintextMigrationStatements} from "@lib/database/migrations/plaintext"
-import {sqliteService} from "@lib/database/SQLiteService"
 import type {Unsubscriber} from "svelte/store"
 import {plaintext} from "@welshman/app"
 import {fromPairs, last} from "@welshman/lib"
-import type {DatabaseService} from "@lib/database/DatabaseService"
+import {DatabaseService} from "@lib/database/DatabaseService"
 
 type KV = {key: string; value: any}
 
-export interface IPlaintextDbService extends DatabaseService {
-  initializeDatabase(): Promise<void>
-  initializeState(): Promise<void>
-  sync(): Unsubscriber
-  getPlaintext(): Promise<KV[]>
-  updatePlaintext(plaintext: Record<string, any>): Promise<void>
-  getDatabaseName(): string
-  getDatabaseVersion(): number
-}
-
-export class PlaintextDbService implements IPlaintextDbService {
+export class PlaintextDbService extends DatabaseService {
   databaseName = "plaintext"
   versionUpgrades = PlaintextMigrationStatements
   loadToVersion = last(PlaintextMigrationStatements).toVersion
-  db!: SQLiteDBConnection
-  platform = sqliteService.platform
-
-  async initializeDatabase(): Promise<void> {
-    try {
-      if (this.db) {
-        throw new Error("Database already initialized")
-      }
-
-      await sqliteService.sqlitePlugin.addUpgradeStatement({
-        database: this.databaseName,
-        upgrade: this.versionUpgrades,
-      })
-
-      this.db = await sqliteService.openDatabase(this.databaseName, this.loadToVersion, false)
-
-      await sqliteService.saveToStore(this.databaseName)
-    } catch (err: any) {
-      throw new Error(`plaintextDbService.initializeDatabase: ${err.message || err}`)
-    }
-  }
 
   async initializeState(): Promise<void> {
     const items = await this.getPlaintext()
@@ -80,14 +47,6 @@ export class PlaintextDbService implements IPlaintextDbService {
       `INSERT OR REPLACE INTO plaintext (key, data) VALUES ${valuesPlaceholder}`,
       values,
     )
-  }
-
-  getDatabaseName(): string {
-    return this.databaseName
-  }
-
-  getDatabaseVersion(): number {
-    return this.loadToVersion
   }
 }
 
