@@ -20,6 +20,7 @@
   } from "@welshman/content"
   import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
+  import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ContentToken from "@app/components/ContentToken.svelte"
@@ -122,7 +123,7 @@
 <div class="relative">
   {#if warning}
     <div class="card2 card2-sm bg-alt row-2">
-      <Icon icon="danger" />
+      <Icon icon={Danger} />
       <p>
         This note has been flagged by the author as "{warning}".<br />
         <Button class="link" onclick={ignoreWarning}>Show anyway</Button>

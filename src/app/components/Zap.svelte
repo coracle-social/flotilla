@@ -4,6 +4,8 @@
   import {load} from "@welshman/net"
   import {Router} from "@welshman/router"
   import {requestZap, makeZapRequest, getZapResponseFilter} from "@welshman/util"
+  import Bolt from "@assets/icons/bolt.svg?dataurl"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -135,7 +137,7 @@
     {#snippet input()}
       <div class="flex flex-grow justify-end">
         <label class="input input-bordered flex items-center gap-2">
-          <Icon icon="bolt" />
+          <Icon icon={Bolt} />
           <input bind:value={amount} type="number" class="w-24" />
         </label>
       </div>
@@ -149,14 +151,14 @@
     bind:value={pos} />
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button class="btn btn-primary" onclick={sendZap} disabled={loading}>
       <Spinner {loading}>
         <div class="flex items-center gap-2">
           {#if !loading}
-            <Icon icon="bolt" />
+            <Icon icon={Bolt} />
           {/if}
           Send Zap
         </div>

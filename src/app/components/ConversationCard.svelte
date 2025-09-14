@@ -1,6 +1,7 @@
 <script lang="ts">
   import {formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Content from "@app/components/Content.svelte"
@@ -40,7 +41,7 @@
     </div>
     <div class="ml-13 flex items-center justify-between">
       <div class="flex gap-1">
-        <Icon icon="alt-arrow-left" />
+        <Icon icon={AltArrowLeft} />
         <span class="text-sm opacity-70">
           {events.length}
           {events.length === 1 ? "message" : "messages"}

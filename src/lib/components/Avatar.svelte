@@ -1,8 +1,9 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import Icon from "@lib/components/Icon.svelte"
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
 
-  const {src = "", size = 7, icon = "user-rounded", style = "", ...restProps} = $props()
+  const {src = "", size = 7, icon = UserRounded, style = "", ...restProps} = $props()
 
   let element: HTMLElement
 

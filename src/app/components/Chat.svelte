@@ -31,6 +31,7 @@
     inboxRelaySelectionsByPubkey,
   } from "@welshman/app"
   import type {AbstractThunk} from "@welshman/app"
+  import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -250,7 +251,7 @@
         <div
           class="row-2 badge badge-error badge-lg tooltip tooltip-left cursor-pointer"
           data-tip="{count} {label} not configured.">
-          <Icon icon="danger" />
+          <Icon icon={Danger} />
           {count}
         </div>
       {/if}
@@ -264,7 +265,7 @@
     <div class="py-12">
       <div class="card2 col-2 m-auto max-w-md items-center text-center">
         <p class="row-2 text-lg text-error">
-          <Icon icon="danger" />
+          <Icon icon={Danger} />
           Your inbox is not configured.
         </p>
         <p>
@@ -277,7 +278,7 @@
     <div class="py-12">
       <div class="card2 col-2 m-auto max-w-md items-center text-center">
         <p class="row-2 text-lg text-error">
-          <Icon icon="danger" />
+          <Icon icon={Danger} />
           {missingInboxes.length}
           {missingInboxes.length > 1 ? "inboxes are" : "inbox is"} not configured.
         </p>

@@ -4,6 +4,7 @@
   import {getTagValue, fromMsats, ZAP_RESPONSE} from "@welshman/util"
   import {deriveEventsMapped} from "@welshman/store"
   import {repository, getValidZap} from "@welshman/app"
+  import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
 
@@ -43,7 +44,7 @@
   </div>
   <progress class="progress progress-primary" value={zapAmount} max={goalAmount}></progress>
   <ZapButton {url} {event} class="btn btn-primary lg:m-auto lg:px-20">
-    <Icon icon="bolt" />
+    <Icon icon={Bolt} />
     Contribute to this goal
   </ZapButton>
 </div>

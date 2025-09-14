@@ -2,7 +2,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {Capacitor} from "@capacitor/core"
 import type {ActionPerformed, RegistrationError, Token} from "@capacitor/push-notifications"
 import {PushNotifications} from "@capacitor/push-notifications"
-import {parseJson, poll} from "@welshman/lib"
+import {parseJson, sleep, poll} from "@welshman/lib"
 import {isSignedEvent} from "@welshman/util"
 import {goto} from "$app/navigation"
 import {ucFirst} from "@lib/util"
@@ -50,6 +50,8 @@ export const getWebPushInfo = async () => {
   }
 
   const registration = await navigator.serviceWorker.ready
+
+  // This will hang on firefox in development builds, but works in production
   let subscription = await registration.pushManager.getSubscription()
 
   if (!subscription) {
@@ -118,14 +120,19 @@ export const getCapacitorPushInfo = async () => {
   return info
 }
 
-export const getPushInfo = (): Promise<Record<string, string>> => {
-  switch (platform) {
-    case "web":
-      return getWebPushInfo()
-    case "ios":
-    case "android":
-      return getCapacitorPushInfo()
-    default:
-      throw new Error(`Invalid push platform: ${platform}`)
-  }
-}
+export const getPushInfo = (): Promise<Record<string, string>> =>
+  new Promise((resolve, reject) => {
+    sleep(3000).then(() => reject("Failed to request notification permissions"))
+
+    switch (platform) {
+      case "web":
+        getWebPushInfo().then(resolve, reject)
+        break
+      case "ios":
+      case "android":
+        getCapacitorPushInfo().then(resolve, reject)
+        break
+      default:
+        reject(`Invalid push platform: ${platform}`)
+    }
+  })

@@ -6,6 +6,10 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {PLATFORM_NAME} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
+  import Code from "@assets/icons/code-2.svg?dataurl"
+  import Global from "@assets/icons/global.svg?dataurl"
+  import Pen from "@assets/icons/pen.svg?dataurl"
+  import HeadphonesRound from "@assets/icons/headphones-round.svg?dataurl"
 
   const hash = import.meta.env.VITE_BUILD_HASH
 
@@ -51,7 +55,7 @@
             Icons by <Link
               external
               class="link"
-              href="https://www.figma.com/community/file/1166831539721848736">480 Design</Link>
+              href="https://www.figma.com/community/file/1396367368966571051">480 Design</Link>
           </p>
           {#if hash}
             <p class="text-xs">Running build {hash.slice(0, 8)}</p>
@@ -60,22 +64,22 @@
         <div class="flex justify-center gap-4">
           <div class="tooltip" data-tip="Source Code">
             <Link external href="https://github.com/coracle-social/flotilla">
-              <Icon icon="code-2" />
+              <Icon icon={Code} />
             </Link>
           </div>
           <div class="tooltip" data-tip="About the Developer">
             <Link external href="https://coracle.tools">
-              <Icon icon="earth" />
+              <Icon icon={Global} />
             </Link>
           </div>
           <div class="tooltip" data-tip="Dev Blog">
             <Link external href="https://hodlbod.npub.pro/">
-              <Icon icon="pen" />
+              <Icon icon={Pen} />
             </Link>
           </div>
           <div class="tooltip" data-tip="Podcast">
             <Link external href="https://fountain.fm/show/vnmoRQQ50siLFRE8k061">
-              <Icon icon="headphones-round" />
+              <Icon icon={HeadphonesRound} />
             </Link>
           </div>
         </div>

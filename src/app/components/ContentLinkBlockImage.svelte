@@ -2,6 +2,7 @@
   import {onMount, onDestroy} from "svelte"
   import {displayUrl} from "@welshman/lib"
   import {getTags, decryptFile, getTagValue, tagsFromIMeta} from "@welshman/util"
+  import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import {imgproxy} from "@app/core/state"
 
@@ -44,7 +45,7 @@
 
 {#if hasError}
   <a href={url} class="link-content whitespace-nowrap">
-    <Icon icon="link-round" size={3} class="inline-block" />
+    <Icon icon={LinkRound} size={3} class="inline-block" />
     {displayUrl(url)}
   </a>
 {:else}

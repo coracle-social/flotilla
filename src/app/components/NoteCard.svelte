@@ -8,6 +8,7 @@
   import {Router} from "@welshman/router"
   import {userMutes} from "@welshman/app"
   import Link from "@lib/components/Link.svelte"
+  import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Profile from "@app/components/Profile.svelte"
@@ -44,7 +45,7 @@
   {#if muted}
     <div class="flex items-center justify-between">
       <div class="row-2 relative">
-        <Icon icon="danger" class="mt-1" />
+        <Icon icon={Danger} class="mt-1" />
         <p>You have muted this person.</p>
       </div>
       <Button class="link ml-8" onclick={ignoreMute}>Show anyway</Button>

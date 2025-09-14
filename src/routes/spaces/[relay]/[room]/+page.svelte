@@ -17,6 +17,12 @@
   } from "@welshman/util"
   import {pubkey, publishThunk, waitForThunkError, joinRoom, leaveRoom} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
+  import Hashtag from "@assets/icons/hashtag.svg?dataurl"
+  import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
+  import Login2 from "@assets/icons/login-2.svg?dataurl"
+  import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
+  import Logout2 from "@assets/icons/logout-3.svg?dataurl"
+  import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -303,7 +309,7 @@
 <PageBar>
   {#snippet icon()}
     <div class="center">
-      <Icon icon="hashtag" />
+      <Icon icon={Hashtag} />
     </div>
   {/snippet}
   {#snippet title()}
@@ -322,14 +328,14 @@
           {#if joining}
             <span class="loading loading-spinner loading-sm"></span>
           {:else}
-            <Icon size={4} icon="login-2" />
+            <Icon size={4} icon={Login2} />
           {/if}
         </Button>
       {:else if $membershipStatus === MembershipStatus.Pending}
         <Button
           class="btn btn-neutral btn-sm tooltip tooltip-left"
           data-tip="Membership is pending">
-          <Icon size={4} icon="clock-circle" />
+          <Icon size={4} icon={ClockCircle} />
         </Button>
       {:else}
         <Button
@@ -337,14 +343,14 @@
           data-tip="Request to be removed from member list"
           disabled={leaving}
           onclick={leave}>
-          <Icon size={4} icon="arrows-a-logout-2" />
+          <Icon size={4} icon={Logout2} />
         </Button>
       {/if}
       <Button
         class="btn btn-neutral btn-sm tooltip tooltip-left"
         data-tip={isFavorite ? "Remove Favorite" : "Add Favorite"}
         onclick={isFavorite ? removeFavorite : addFavorite}>
-        <Icon size={4} icon="bookmark" class={cx({"text-primary": isFavorite})} />
+        <Icon size={4} icon={Bookmark} class={cx({"text-primary": isFavorite})} />
       </Button>
       <MenuSpaceButton {url} />
     </div>
@@ -359,7 +365,7 @@
         <p class="row-2">You aren't currently a member of this room.</p>
         {#if $membershipStatus === MembershipStatus.Pending}
           <Button class="btn btn-neutral btn-sm" disabled={leaving} onclick={leave}>
-            <Icon icon="clock-circle" />
+            <Icon icon={ClockCircle} />
             Access Pending
           </Button>
         {:else}
@@ -367,7 +373,7 @@
             {#if joining}
               <span class="loading loading-spinner loading-sm"></span>
             {:else}
-              <Icon icon="login-2" />
+              <Icon icon={Login2} />
             {/if}
             Join Room
           </Button>
@@ -415,7 +421,7 @@
       <p>Only members are allowed to post to this room.</p>
       {#if $membershipStatus === MembershipStatus.Pending}
         <Button class="btn btn-neutral btn-sm" disabled={leaving} onclick={leave}>
-          <Icon icon="clock-circle" />
+          <Icon icon={ClockCircle} />
           Access Pending
         </Button>
       {:else}
@@ -423,7 +429,7 @@
           {#if joining}
             <span class="loading loading-spinner loading-sm"></span>
           {:else}
-            <Icon icon="login-2" />
+            <Icon icon={Login2} />
           {/if}
           Ask to Join
         </Button>
@@ -445,7 +451,7 @@
 {#if showScrollButton}
   <div in:fade class="chat__scroll-down">
     <Button class="btn btn-circle btn-neutral" onclick={scrollToBottom}>
-      <Icon icon="alt-arrow-down" />
+      <Icon icon={AltArrowDown} />
     </Button>
   </div>
 {/if}

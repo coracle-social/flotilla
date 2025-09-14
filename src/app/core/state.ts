@@ -21,9 +21,10 @@ import {
   identity,
   groupBy,
   always,
+  tryCatch,
 } from "@welshman/lib"
 import type {Socket} from "@welshman/net"
-import {Pool, load, AuthStateEvent, SocketEvent, netContext} from "@welshman/net"
+import {Pool, load, AuthStateEvent, AuthStatus, SocketEvent, netContext} from "@welshman/net"
 import {
   collection,
   custom,
@@ -32,6 +33,7 @@ import {
   withGetter,
   synced,
 } from "@welshman/store"
+import {isKindFeed, findFeed} from "@welshman/feeds"
 import {
   getIdFilters,
   WRAP,
@@ -70,6 +72,8 @@ import {
   getTagValues,
   verifyEvent,
   makeEvent,
+  RelayMode,
+  getRelaysFromList,
 } from "@welshman/util"
 import type {TrustedEvent, SignedEvent, PublishedList, List, Filter} from "@welshman/util"
 import {Nip59, decrypt} from "@welshman/signer"
@@ -94,6 +98,8 @@ import {
   appContext,
   getThunkError,
   publishThunk,
+  userRelaySelections,
+  userInboxRelaySelections,
 } from "@welshman/app"
 import type {Thunk, Relay} from "@welshman/app"
 import {preferencesStorageProvider} from "@src/lib/storage"
@@ -375,6 +381,18 @@ export const relaysPendingTrust = writable<string[]>([])
 
 export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
+// Relay selections
+
+export const userReadRelays = derived(userRelaySelections, $l =>
+  getRelaysFromList($l, RelayMode.Read),
+)
+
+export const userWriteRelays = derived(userRelaySelections, $l =>
+  getRelaysFromList($l, RelayMode.Write),
+)
+
+export const userInboxRelays = derived(userInboxRelaySelections, $l => getRelaysFromList($l))
+
 // Alerts
 
 export type Alert = {
@@ -391,6 +409,17 @@ export const alerts = withGetter(
 
       return {event, tags}
     },
+  }),
+)
+
+export const getAlertFeed = (alert: Alert) =>
+  tryCatch(() => JSON.parse(getTagValue("feed", alert.tags)!))
+
+export const dmAlert = derived(alerts, $alerts =>
+  $alerts.find(alert => {
+    const feed = getAlertFeed(alert)
+
+    return findFeed(feed, f => isKindFeed(f) && f.includes(WRAP))
   }),
 )
 
@@ -786,7 +815,7 @@ export const deriveRelayAuthError = (url: string, claim = "") => {
   return derived(
     [relaysMostlyRestricted, deriveSocket(url)],
     ([$relaysMostlyRestricted, $socket]) => {
-      if ($socket.auth.details) {
+      if ($socket.auth.status === AuthStatus.Forbidden && $socket.auth.details) {
         return stripPrefix($socket.auth.details)
       }
 

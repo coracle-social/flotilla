@@ -8,6 +8,7 @@
   import {relays, createSearch, loadRelay, loadRelaySelections} from "@welshman/app"
   import {createScroller} from "@lib/html"
   import {fly} from "@lib/transition"
+  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -85,12 +86,12 @@
       {/snippet}
     </PageHeader>
     <label class="input input-bordered flex w-full items-center gap-2">
-      <Icon icon="magnifer" />
+      <Icon icon={Magnifier} />
       <input bind:value={term} class="grow" type="text" placeholder="Search for spaces..." />
     </label>
     {#each relaySearch.searchOptions(term).slice(0, limit) as relay (relay.url)}
       <Button
-        class="card2 bg-alt shadow-xl transition-all hover:shadow-2xl hover:brightness-[1.1]"
+        class="card2 bg-alt shadow-xl transition-all hover:shadow-2xl hover:dark:brightness-[1.1]"
         onclick={() => openSpace(relay.url)}>
         <RelaySummary url={relay.url} />
       </Button>

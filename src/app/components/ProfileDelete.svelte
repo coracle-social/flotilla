@@ -7,10 +7,11 @@
     DELETE,
     isReplaceable,
     getAddress,
-    getRelaysFromList,
   } from "@welshman/util"
-  import {pubkey, userRelaySelections, publishThunk, repository} from "@welshman/app"
+  import {pubkey, publishThunk, repository} from "@welshman/app"
   import {preventDefault} from "@lib/html"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -18,7 +19,13 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {pushToast} from "@app/util/toast"
   import {logout} from "@app/core/commands"
-  import {INDEXER_RELAYS, PLATFORM_NAME, userMembership, getMembershipUrls} from "@app/core/state"
+  import {
+    INDEXER_RELAYS,
+    PLATFORM_NAME,
+    userMembership,
+    getMembershipUrls,
+    userWriteRelays,
+  } from "@app/core/state"
 
   let progress: number | undefined = $state(undefined)
   let confirmText = $state("")
@@ -41,7 +48,7 @@
     const denominator = chunks.length + 2
     const relays = uniq([
       ...INDEXER_RELAYS,
-      ...getRelaysFromList($userRelaySelections),
+      ...$userWriteRelays,
       ...getMembershipUrls($userMembership),
     ])
 
@@ -136,12 +143,12 @@
   {/if}
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-error" disabled={showProgress || !confirmOk}>
       <Spinner loading={progress !== undefined}>Confirm</Spinner>
-      <Icon icon="alt-arrow-right" />
+      <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
 </form>

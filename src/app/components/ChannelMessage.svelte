@@ -5,6 +5,7 @@
   import {isMobile} from "@lib/html"
   import TapTarget from "@lib/components/TapTarget.svelte"
   import Avatar from "@lib/components/Avatar.svelte"
+  import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Content from "@app/components/Content.svelte"
@@ -103,7 +104,7 @@
       <ChannelMessageEmojiButton {url} {event} />
       {#if replyTo}
         <Button class="btn join-item btn-xs" onclick={reply}>
-          <Icon icon="reply" size={4} />
+          <Icon icon={Reply} size={4} />
         </Button>
       {/if}
       <ChannelMessageMenuButton {url} {event} />

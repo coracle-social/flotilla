@@ -5,6 +5,8 @@
   import {append, remove, uniq} from "@welshman/lib"
   import {profileSearch} from "@welshman/app"
   import Suggestions from "@lib/components/Suggestions.svelte"
+  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -61,7 +63,7 @@
       {@const onClick = () => pushModal(ProfileDetail, {pubkey})}
       <div class="flex-inline badge badge-neutral mr-1 gap-1">
         <Button class="flex items-center" onclick={() => removePubkey(pubkey)}>
-          <Icon icon="close-circle" size={4} class="-ml-1 mt-px" />
+          <Icon icon={CloseCircle} size={4} class="-ml-1 mt-px" />
         </Button>
         <Button onclick={onClick}>
           <ProfileName {pubkey} />
@@ -70,7 +72,7 @@
     {/each}
   </div>
   <label class="input input-bordered flex w-full items-center gap-2" bind:this={input}>
-    <Icon icon="magnifer" />
+    <Icon icon={Magnifier} />
     <!-- svelte-ignore a11y_autofocus -->
     <input
       {autofocus}

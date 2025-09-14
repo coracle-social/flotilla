@@ -26,6 +26,11 @@
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
   import {
     WRAP,
+    ALERT_STATUS,
+    ALERT_EMAIL,
+    ALERT_WEB,
+    ALERT_IOS,
+    ALERT_ANDROID,
     EVENT_TIME,
     THREAD,
     MESSAGE,
@@ -66,6 +71,7 @@
     signerLog,
     dropSession,
     userInboxRelaySelections,
+    defaultStorageAdapters,
     loginWithNip01,
     loginWithNip46,
     loadRelaySelections,
@@ -92,6 +98,7 @@
     canDecrypt,
     getSetting,
     relaysMostlyRestricted,
+    userInboxRelays,
   } from "@app/core/state"
   import {loadUserData, listenForNotifications} from "@app/core/requests"
   import {theme} from "@app/util/theme"
@@ -124,6 +131,7 @@
     Object.assign(window, {
       get,
       nip19,
+      theme,
       ...lib,
       ...welshmanSigner,
       ...router,
@@ -291,6 +299,11 @@
                 INBOX_RELAYS,
                 ROOMS,
                 APP_DATA,
+                ALERT_STATUS,
+                ALERT_EMAIL,
+                ALERT_WEB,
+                ALERT_IOS,
+                ALERT_ANDROID,
               ].includes(e.kind)
             ) {
               return 1
@@ -438,19 +451,19 @@
       // Listen for chats, populate chat-based notifications
       let controller: AbortController
 
-      derived([pubkey, canDecrypt, userInboxRelaySelections], identity).subscribe(
-        ([$pubkey, $canDecrypt, $userInboxRelaySelections]) => {
+      derived([pubkey, canDecrypt, userInboxRelays], identity).subscribe(
+        ([$pubkey, $canDecrypt, $userInboxRelays]) => {
           controller?.abort()
           controller = new AbortController()
 
           if ($pubkey && $canDecrypt) {
             request({
               signal: controller.signal,
+              relays: $userInboxRelays,
               filters: [
                 {kinds: [WRAP], "#p": [$pubkey], since: ago(WEEK, 2)},
                 {kinds: [WRAP], "#p": [$pubkey], limit: 100},
               ],
-              relays: getRelaysFromList($userInboxRelaySelections),
             })
           }
         },

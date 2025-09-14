@@ -5,6 +5,8 @@
   import {isShareableRelayUrl, normalizeRelayUrl} from "@welshman/util"
   import {relaySearch} from "@welshman/app"
   import {createScroller} from "@lib/html"
+  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
@@ -38,14 +40,14 @@
 </script>
 
 <label class="input input-bordered flex w-full items-center gap-2">
-  <Icon icon="magnifer" />
+  <Icon icon={Magnifier} />
   <input bind:value={term} class="grow" type="text" placeholder="Search for relays..." />
 </label>
 <div class="column -m-6 mt-0 h-[50vh] gap-2 overflow-auto p-6 pt-2" bind:this={element}>
   {#if customUrl && isShareableRelayUrl(customUrl) && !$relays.includes(normalizeRelayUrl(customUrl))}
     <RelayItem url={term}>
       <Button class="btn btn-outline btn-sm flex items-center" onclick={() => addRelay(customUrl)}>
-        <Icon icon="add-circle" />
+        <Icon icon={AddCircle} />
         Add Relay
       </Button>
     </RelayItem>
@@ -56,7 +58,7 @@
     .slice(0, limit) as url (url)}
     <RelayItem {url}>
       <Button class="btn btn-outline btn-sm flex items-center" onclick={() => addRelay(url)}>
-        <Icon icon="add-circle" />
+        <Icon icon={AddCircle} />
         Add Relay
       </Button>
     </RelayItem>

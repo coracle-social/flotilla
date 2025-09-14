@@ -4,6 +4,7 @@
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {thunks, pubkey, deriveProfile, deriveProfileDisplay, sendWrapped} from "@welshman/app"
   import {isMobile} from "@lib/html"
+  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
@@ -87,7 +88,7 @@
         class="opacity-0 transition-all"
         class:group-hover:opacity-100={!isMobile}
         onclick={togglePopover}>
-        <Icon icon="menu-dots" size={4} />
+        <Icon icon={MenuDots} size={4} />
       </button>
     </Tippy>
   {/if}

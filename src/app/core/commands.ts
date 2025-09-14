@@ -1,6 +1,7 @@
 import {nwc} from "@getalby/sdk"
 import * as nip19 from "nostr-tools/nip19"
 import {get} from "svelte/store"
+import type {Override, MakeOptional} from "@welshman/lib"
 import {
   randomId,
   append,
@@ -11,10 +12,16 @@ import {
   equals,
   TIMEZONE,
   LOCALE,
+  parseJson,
+  fromPairs,
+  last,
 } from "@welshman/lib"
+import {decrypt} from "@welshman/signer"
 import type {Feed} from "@welshman/feeds"
+import {makeIntersectionFeed, feedFromFilters, makeRelayFeed} from "@welshman/feeds"
 import type {TrustedEvent, EventContent} from "@welshman/util"
 import {
+  WRAP,
   DELETE,
   REPORT,
   PROFILE,
@@ -44,6 +51,8 @@ import {
   toNostrURI,
   getRelaysFromList,
   RelayMode,
+  getAddress,
+  getTagValue,
 } from "@welshman/util"
 import {Pool, AuthStatus, SocketStatus} from "@welshman/net"
 import {Router} from "@welshman/router"
@@ -54,7 +63,6 @@ import {
   repository,
   publishThunk,
   profilesByPubkey,
-  relaySelectionsByPubkey,
   tagEvent,
   tagEventForReaction,
   userRelaySelections,
@@ -66,8 +74,9 @@ import {
   tagEventForComment,
   tagEventForQuote,
   waitForThunkError,
+  getPubkeyRelays,
 } from "@welshman/app"
-import type {SettingsValues} from "@app/core/state"
+import type {SettingsValues, Alert} from "@app/core/state"
 import {
   SETTINGS,
   PROTECTED,
@@ -77,14 +86,18 @@ import {
   NOTIFIER_RELAY,
   userRoomsByUrl,
   userSettingsValues,
+  canDecrypt,
+  ensureUnwrapped,
+  userInboxRelays,
 } from "@app/core/state"
+import {loadAlertStatuses} from "@app/core/requests"
+import {platform, platformName, getPushInfo} from "@app/util/push"
 import {preferencesStorageProvider} from "@src/lib/storage"
 
 // Utils
 
 export const getPubkeyHints = (pubkey: string) => {
-  const selections = relaySelectionsByPubkey.get().get(pubkey)
-  const relays = selections ? getRelaysFromList(selections, RelayMode.Write) : []
+  const relays = getPubkeyRelays(pubkey, RelayMode.Write)
   const hints = relays.length ? relays : INDEXER_RELAYS
 
   return hints
@@ -302,8 +315,12 @@ export const checkRelayAuth = async (url: string) => {
 
   // Only raise an error if it's not a timeout.
   // If it is, odds are the problem is with our signer, not the relay
-  if (!okStatuses.includes(socket.auth.status) && socket.auth.details) {
-    return `Failed to authenticate (${socket.auth.details})`
+  if (!okStatuses.includes(socket.auth.status)) {
+    if (socket.auth.details) {
+      return `Failed to authenticate (${socket.auth.details})`
+    } else {
+      return `Failed to authenticate (${last(socket.auth.status.split(":"))})`
+    }
   }
 }
 
@@ -417,27 +434,35 @@ export const publishComment = ({relays, ...params}: CommentParams & {relays: str
 
 // Alerts
 
+export type AlertParamsEmail = {
+  cron: string
+  email: string
+  handler: string[]
+}
+
+export type AlertParamsWeb = {
+  endpoint: string
+  p256dh: string
+  auth: string
+}
+
+export type AlertParamsIos = {
+  device_token: string
+  bundle_identifier: string
+}
+
+export type AlertParamsAndroid = {
+  device_token: string
+}
+
 export type AlertParams = {
   feed: Feed
   description: string
-  claims: Record<string, string>
-  email?: {
-    cron: string
-    email: string
-    handler: string[]
-  }
-  web?: {
-    endpoint: string
-    p256dh: string
-    auth: string
-  }
-  ios?: {
-    device_token: string
-    bundle_identifier: string
-  }
-  android?: {
-    device_token: string
-  }
+  claims?: Record<string, string>
+  email?: AlertParamsEmail
+  web?: AlertParamsWeb
+  ios?: AlertParamsIos
+  android?: AlertParamsAndroid
 }
 
 export const makeAlert = async (params: AlertParams) => {
@@ -448,7 +473,7 @@ export const makeAlert = async (params: AlertParams) => {
     ["description", params.description],
   ]
 
-  for (const [relay, claim] of Object.entries(params.claims)) {
+  for (const [relay, claim] of Object.entries(params.claims || [])) {
     tags.push(["claim", relay, claim])
   }
 
@@ -480,6 +505,88 @@ export const makeAlert = async (params: AlertParams) => {
 
 export const publishAlert = async (params: AlertParams) =>
   publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})
+
+export const deleteAlert = (alert: Alert) => {
+  const relays = [NOTIFIER_RELAY]
+  const tags = [["p", NOTIFIER_PUBKEY]]
+
+  return publishDelete({event: alert.event, relays, tags, protect: false})
+}
+
+export type CreateAlertParams = Override<
+  AlertParams,
+  {
+    email?: MakeOptional<AlertParamsEmail, "handler">
+  }
+>
+
+export type CreateAlertResult = {
+  ok?: true
+  error?: string
+}
+
+export const createAlert = async (params: CreateAlertParams): Promise<CreateAlertResult> => {
+  if (params.email) {
+    const cadence = params.email.cron.endsWith("1") ? "Weekly" : "Daily"
+    const handler = [
+      "31990:97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322:1737058597050",
+      "wss://relay.nostr.band/",
+      "web",
+    ]
+
+    params.email = {handler, ...params.email}
+    params.description = `${cadence} alert ${params.description}, sent via email.`
+  } else {
+    try {
+      // @ts-ignore
+      params[platform] = await getPushInfo()
+      params.description = `${platformName} push notification ${params.description}.`
+    } catch (e: any) {
+      return {error: String(e)}
+    }
+  }
+
+  // If we don't do this we'll get an event rejection
+  await attemptAuth(NOTIFIER_RELAY)
+
+  const thunk = await publishAlert(params as AlertParams)
+  const error = await waitForThunkError(thunk)
+
+  if (error) {
+    return {error}
+  }
+
+  // Fetch our new status to make sure it's active
+  const $pubkey = pubkey.get()!
+  const address = getAddress(thunk.event)
+  const statusEvents = await loadAlertStatuses($pubkey!)
+  const statusEvent = statusEvents.find(event => getTagValue("d", event.tags) === address)
+  const statusTags = statusEvent
+    ? parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, statusEvent.content))
+    : []
+  const {status = "error", message = "Your alert was not activated"}: Record<string, string> =
+    fromPairs(statusTags)
+
+  if (status === "error") {
+    return {error: message}
+  }
+
+  return {ok: true}
+}
+
+export const createDmAlert = async () => {
+  if (!get(canDecrypt)) {
+    enableGiftWraps()
+  }
+
+  return createAlert({
+    description: `for direct messages.`,
+    feed: makeIntersectionFeed(
+      feedFromFilters([{kinds: [WRAP], "#p": [pubkey.get()!]}]),
+      makeRelayFeed(...get(userInboxRelays)),
+    ),
+  })
+}
 
 // Settings
 
@@ -530,5 +637,15 @@ export const payInvoice = async (invoice: string) => {
     return getWebLn()
       .enable()
       .then(() => getWebLn().sendPayment(invoice))
+  }
+}
+
+// Gift Wraps
+
+export const enableGiftWraps = () => {
+  canDecrypt.set(true)
+
+  for (const event of repository.query([{kinds: [WRAP]}])) {
+    ensureUnwrapped(event)
   }
 }

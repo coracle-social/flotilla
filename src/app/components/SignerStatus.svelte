@@ -1,6 +1,10 @@
 <script lang="ts">
   import {spec, prop, avg} from "@welshman/lib"
   import {signerLog, SignerLogEntryStatus} from "@welshman/app"
+  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+  import Danger from "@assets/icons/danger-triangle.svg?dataurl"
+  import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
+  import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import LogOut from "@app/components/LogOut.svelte"
@@ -28,13 +32,13 @@
       <span class="text-xl font-bold">Signer Status</span>
       <span class="flex items-center gap-2">
         {#if isDisconnected}
-          <Icon icon="close-circle" class="text-error" size={4} /> Disconnected
+          <Icon icon={CloseCircle} class="text-error" size={4} /> Disconnected
         {:else if recentFailure > 3}
-          <Icon icon="danger" class="text-warning" size={4} /> Partial Failure
+          <Icon icon={Danger} class="text-warning" size={4} /> Partial Failure
         {:else if recentAvg > 1000 || recentPending > 3}
-          <Icon icon="clock-circle" class="text-warning" size={4} /> Slow connection
+          <Icon icon={ClockCircle} class="text-warning" size={4} /> Slow connection
         {:else if recentSuccess === 0 && recentFailure > 0}{:else}
-          <Icon icon="check-circle" class="text-success" size={4} /> Ok
+          <Icon icon={CheckCircle} class="text-success" size={4} /> Ok
         {/if}
       </span>
     </div>

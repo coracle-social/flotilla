@@ -25,6 +25,7 @@
       class="underline transition-all"
       class:link={isSending}
       class:opacity-25={!isSending}
+      class:pointer-events-none={!isSending}
       onclick={stopPropagation(abort)}>
       Cancel
     </button>

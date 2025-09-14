@@ -1,6 +1,9 @@
 <script lang="ts">
   import {postJson} from "@welshman/lib"
   import {preventDefault} from "@lib/html"
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import Key from "@assets/icons/key-minimalistic.svg?dataurl"
+  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -59,7 +62,7 @@
       {/snippet}
       {#snippet input()}
         <label class="input input-bordered flex w-full items-center gap-2">
-          <Icon icon="user-rounded" />
+          <Icon icon={UserRounded} />
           <input bind:value={email} />
         </label>
       {/snippet}
@@ -70,14 +73,14 @@
       {/snippet}
       {#snippet input()}
         <label class="input input-bordered flex w-full items-center gap-2">
-          <Icon icon="key" />
+          <Icon icon={Key} />
           <input bind:value={password} type="password" />
         </label>
       {/snippet}
     </FieldInline>
     <Button type="submit" class="btn btn-primary" disabled={loading || !email || !password}>
       <Spinner {loading}>Sign Up</Spinner>
-      <Icon icon="alt-arrow-right" />
+      <Icon icon={AltArrowRight} />
     </Button>
     <p class="text-sm opacity-75">
       Note that your email and password will only work to log in to {PLATFORM_NAME}. To use your key
@@ -87,7 +90,7 @@
     <Divider>Or</Divider>
   {/if}
   <Button onclick={next} class="btn {email || password ? 'btn-neutral' : 'btn-primary'}">
-    <Icon icon="key" />
+    <Icon icon={Key} />
     Generate a key
   </Button>
   <div class="text-sm">

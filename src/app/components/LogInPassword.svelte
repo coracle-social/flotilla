@@ -8,6 +8,10 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import Key from "@assets/icons/key-minimalistic.svg?dataurl"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
@@ -121,7 +125,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="user-rounded" />
+        <Icon icon={UserRounded} />
         <input bind:value={email} />
       </label>
     {/snippet}
@@ -132,7 +136,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon="key" />
+        <Icon icon={Key} />
         <input bind:value={password} type="password" />
       </label>
     {/snippet}
@@ -144,12 +148,12 @@
   </p>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back} disabled={loading}>
-      <Icon icon="alt-arrow-left" />
+      <Icon icon={AltArrowLeft} />
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary" disabled={loading || !email || !password}>
       <Spinner {loading}>Next</Spinner>
-      <Icon icon="alt-arrow-right" />
+      <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
 </form>

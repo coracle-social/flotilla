@@ -1,6 +1,9 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {goto} from "$app/navigation"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import Compass from "@assets/icons/compass.svg?dataurl"
+  import ChatRound from "@assets/icons/chat-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -29,9 +32,9 @@
       <h1 class="mb-4 text-center text-5xl font-bold uppercase">{PLATFORM_NAME}</h1>
       <div class="col-3">
         <Button onclick={addSpace}>
-          <CardButton>
+          <CardButton class="dark:btn-neutral">
             {#snippet icon()}
-              <div><Icon icon="add-circle" size={7} /></div>
+              <div><Icon icon={AddCircle} size={7} /></div>
             {/snippet}
             {#snippet title()}
               <div>Add a space</div>
@@ -42,9 +45,9 @@
           </CardButton>
         </Button>
         <Link href="/discover">
-          <CardButton>
+          <CardButton class="dark:btn-neutral">
             {#snippet icon()}
-              <div><Icon icon="compass" size={7} /></div>
+              <div><Icon icon={Compass} size={7} /></div>
             {/snippet}
             {#snippet title()}
               <div>Browse the network</div>
@@ -55,9 +58,9 @@
           </CardButton>
         </Link>
         <Button onclick={openChat}>
-          <CardButton>
+          <CardButton class="dark:btn-neutral">
             {#snippet icon()}
-              <div><Icon icon="chat-round" size={7} /></div>
+              <div><Icon icon={ChatRound} size={7} /></div>
             {/snippet}
             {#snippet title()}
               <div>Start a conversation</div>

@@ -1,6 +1,8 @@
 <script lang="ts">
   import {DateInput} from "date-picker-svelte"
   import {secondsToDate, dateToSeconds} from "@welshman/lib"
+  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+  import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
 
@@ -72,11 +74,11 @@
     <div class="absolute right-2 top-0 flex h-12 cursor-pointer items-center gap-2">
       {#if date}
         <Button onclick={clear} class="h-5">
-          <Icon icon="close-circle" />
+          <Icon icon={CloseCircle} />
         </Button>
       {:else}
         <Button onclick={focusDate} class="h-5">
-          <Icon icon="calendar-minimalistic" />
+          <Icon icon={CalendarMinimalistic} />
         </Button>
       {/if}
     </div>
