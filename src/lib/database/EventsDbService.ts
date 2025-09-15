@@ -99,4 +99,8 @@ export class EventsDbService extends DatabaseService {
     const valuesPlaceholder = eventIds.map(() => "?").join(", ")
     await this.db.run(`DELETE FROM events WHERE id IN (${valuesPlaceholder})`, eventIds)
   }
+
+  async clearStorage(): Promise<void> {
+    await this.db.execute("DELETE FROM events")
+  }
 }

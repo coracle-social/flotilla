@@ -73,4 +73,8 @@ export class TrackerDbService extends DatabaseService {
       values,
     )
   }
+
+  async clearStorage(): Promise<void> {
+    await this.db.execute("DELETE FROM trackers")
+  }
 }
