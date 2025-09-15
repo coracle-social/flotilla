@@ -40,5 +40,3 @@ export class ZappersDbService extends DatabaseService {
     )
   }
 }
-
-export const zappersDbService = new ZappersDbService()

@@ -49,5 +49,3 @@ export class FreshnessDbService extends DatabaseService {
     )
   }
 }
-
-export const freshnessDbService = new FreshnessDbService()

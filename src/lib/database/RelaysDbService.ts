@@ -41,5 +41,3 @@ export class RelaysDbService extends DatabaseService {
     )
   }
 }
-
-export const relaysDbService = new RelaysDbService()

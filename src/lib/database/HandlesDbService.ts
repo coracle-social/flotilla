@@ -40,5 +40,3 @@ export class HandlesDbService extends DatabaseService {
     )
   }
 }
-
-export const handlesDbService = new HandlesDbService()

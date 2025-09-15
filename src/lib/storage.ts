@@ -1,10 +1,5 @@
 import {type StorageProvider} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
-import {relaysDbService} from "@lib/database/RelaysDbService"
-import {handlesDbService} from "@lib/database/HandlesDbService"
-import {zappersDbService} from "@lib/database/ZappersDbService"
-import {freshnessDbService} from "@lib/database/FreshnessDbService"
-import {plaintextDbService} from "@lib/database/PlaintextDbService"
 import {TrackerDbService} from "@lib/database/TrackerDbService"
 import {EventsDbService} from "@lib/database/EventsDbService"
 import {repository, tracker, unsubscribers} from "@welshman/app"
@@ -12,6 +7,11 @@ import type {DatabaseService} from "@lib/database/DatabaseService"
 import {sqliteService} from "@lib/database/SQLiteService"
 import {Capacitor} from "@capacitor/core"
 import {defineCustomElements as jeepSqlite} from "jeep-sqlite/loader"
+import {RelaysDbService} from "./database/RelaysDbService"
+import {HandlesDbService} from "./database/HandlesDbService"
+import {ZappersDbService} from "./database/ZappersDbService"
+import {FreshnessDbService} from "./database/FreshnessDbService"
+import {PlaintextDbService} from "./database/PlaintextDbService"
 
 export class PreferencesStorageProvider implements StorageProvider {
   get = async <T>(key: string): Promise<T | undefined> => {
@@ -63,11 +63,11 @@ const initSqlPlugin = async () => {
 }
 
 export const defaultDatabaseServices = {
-  relays: relaysDbService,
-  handles: handlesDbService,
-  zappers: zappersDbService,
-  freshness: freshnessDbService,
-  plaintext: plaintextDbService,
+  relays: new RelaysDbService(),
+  handles: new HandlesDbService(),
+  zappers: new ZappersDbService(),
+  freshness: new FreshnessDbService(),
+  plaintext: new PlaintextDbService(),
   tracker: new TrackerDbService({tracker}),
   events: new EventsDbService({limit: 10_000, repository, rankEvent: () => 1}),
 }

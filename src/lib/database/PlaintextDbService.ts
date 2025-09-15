@@ -49,5 +49,3 @@ export class PlaintextDbService extends DatabaseService {
     )
   }
 }
-
-export const plaintextDbService = new PlaintextDbService()
