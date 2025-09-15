@@ -17,6 +17,7 @@ import {Editor, MentionSuggestion, WelshmanExtension} from "@welshman/editor"
 import {makeMentionNodeView} from "./MentionNodeView"
 import ProfileSuggestion from "./ProfileSuggestion.svelte"
 import {pushToast} from "@app/util/toast"
+import {stripExifData} from "@src/lib/html"
 
 export const getBlossomServer = () => {
   const userUrls = getTagValues("server", getListTags(userBlossomServers.get()))
@@ -73,23 +74,7 @@ export const makeEditor = async ({
                 let file: Blob = attrs.file
 
                 if (!file.type.match("image/(webp|gif)")) {
-                  const {default: Compressor} = await import("compressorjs")
-
-                  file = await new Promise((resolve, _reject) => {
-                    new Compressor(file, {
-                      maxWidth: 1024,
-                      maxHeight: 1024,
-                      success: resolve,
-                      error: e => {
-                        // Non-images break compressor
-                        if (e.toString().includes("File or Blob")) {
-                          return resolve(file)
-                        }
-
-                        _reject(e)
-                      },
-                    })
-                  })
+                  file = await stripExifData(file)
                 }
 
                 const {ciphertext, key, nonce, algorithm} = await encryptFile(file)
