@@ -1,22 +1,13 @@
 <script lang="ts">
-  import {nthNe} from "@welshman/lib"
   import type {Profile} from "@welshman/util"
-  import {
-    getTag,
-    makeEvent,
-    makeProfile,
-    editProfile,
-    createProfile,
-    isPublishedProfile,
-    uniqTags,
-  } from "@welshman/util"
-  import {Router} from "@welshman/router"
-  import {pubkey, profilesByPubkey, publishThunk} from "@welshman/app"
+  import {getTag, makeProfile} from "@welshman/util"
+  import {pubkey, profilesByPubkey} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
   import {clearModals} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
-  import {PROTECTED, getMembershipUrls, userMembership} from "@app/core/state"
+  import {PROTECTED} from "@app/core/state"
+  import {updateProfile} from "../core/commands"
 
   const profile = $profilesByPubkey.get($pubkey!) || makeProfile()
   const shouldBroadcast = !getTag(PROTECTED, profile.event?.tags || [])
@@ -25,21 +16,7 @@
   const back = () => history.back()
 
   const onsubmit = ({profile, shouldBroadcast}: {profile: Profile; shouldBroadcast: boolean}) => {
-    const router = Router.get()
-    const template = isPublishedProfile(profile) ? editProfile(profile) : createProfile(profile)
-    const scenarios = [router.FromRelays(getMembershipUrls($userMembership))]
-
-    if (shouldBroadcast) {
-      scenarios.push(router.FromUser(), router.Index())
-      template.tags = template.tags.filter(nthNe(0, "-"))
-    } else {
-      template.tags = uniqTags([...template.tags, PROTECTED])
-    }
-
-    const event = makeEvent(template.kind, template)
-    const relays = router.merge(scenarios).getUrls()
-
-    publishThunk({event, relays})
+    updateProfile({profile, shouldBroadcast})
     pushToast({message: "Your profile has been updated!"})
     clearModals()
   }

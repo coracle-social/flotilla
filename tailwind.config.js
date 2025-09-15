@@ -37,6 +37,7 @@ export default {
         light: {
           ...themes["winter"],
           neutral: '#F2F7FF',
+          warning: '#FD8D0B',
           primary: process.env.VITE_PLATFORM_ACCENT,
           "primary-content": process.env.VITE_PLATFORM_ACCENT_CONTENT || "#EAE7FF",
           secondary: process.env.VITE_PLATFORM_SECONDARY,

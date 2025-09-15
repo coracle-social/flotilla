@@ -3,7 +3,8 @@
   import {nwc} from "@getalby/sdk"
   import {sleep, assoc} from "@welshman/lib"
   import type {NWCInfo} from "@welshman/util"
-  import {pubkey, updateSession} from "@welshman/app"
+  import {pubkey, userProfile, updateSession, profilesByPubkey} from "@welshman/app"
+  import {makeProfile} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
   import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
   import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
@@ -15,11 +16,13 @@
   import Scanner from "@lib/components/Scanner.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Field from "@lib/components/Field.svelte"
-  import Divider from "@lib/components/Divider.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {getWebLn} from "@app/core/commands"
   import {pushToast} from "@app/util/toast"
+  import {pushModal} from "@app/util/modal"
+  import WalletAsReceivingAddress from "@app/components/WalletAsReceivingAddress.svelte"
+  import Divider from "@src/lib/components/Divider.svelte"
 
   const back = () => history.back()
 
@@ -76,6 +79,10 @@
         await sleep(400)
 
         back()
+
+        if (info.lud16 && info.lud16 !== $userProfile?.lud16) {
+          pushModal(WalletAsReceivingAddress)
+        }
       }
     } catch (e) {
       console.error(e)
@@ -109,7 +116,7 @@
       <div>Connect a Wallet</div>
     {/snippet}
     {#snippet info()}
-      Use Nostr Wallet Connect to send Bitcoin payments over Bolt.
+      Use Nostr Wallet Connect to send Bitcoin payments over lightning.
     {/snippet}
   </ModalHeader>
   {#if getWebLn()}

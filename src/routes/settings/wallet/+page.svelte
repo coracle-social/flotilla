@@ -1,22 +1,32 @@
 <script lang="ts">
   import {nwc} from "@getalby/sdk"
   import {LOCALE} from "@welshman/lib"
-  import {displayRelayUrl, fromMsats} from "@welshman/util"
-  import {session} from "@welshman/app"
+  import {displayRelayUrl, isNWCWallet, fromMsats} from "@welshman/util"
+  import {session, pubkey, profilesByPubkey} from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
+  import WalletUpdateReceivingAddress from "@app/components/WalletUpdateReceivingAddress.svelte"
   import {pushModal} from "@app/util/modal"
   import {getWebLn} from "@app/core/commands"
   import Wallet2 from "@assets/icons/wallet.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+  import InfoCircle from "@assets/icons/info-circle.svg?dataurl"
 
   const connect = () => pushModal(WalletConnect)
 
   const disconnect = () => pushModal(WalletDisconnect)
+
+  const updateReceivingAddress = () => pushModal(WalletUpdateReceivingAddress)
+
+  const profile = $derived($profilesByPubkey.get($pubkey || ""))
+  const profileLightningAddress = $derived(profile?.lud16)
+  const walletLud16 = $derived(
+    $session?.wallet && isNWCWallet($session.wallet) ? $session.wallet.info.lud16 : undefined,
+  )
 </script>
 
 <div class="content column gap-4">
@@ -88,5 +98,24 @@
         <p class="py-12 text-center opacity-75">No wallet connected</p>
       {/if}
     </div>
+  </div>
+  <div
+    class="card2 bg-alt flex flex-col shadow-xl"
+    class:gap-6={profileLightningAddress && walletLud16 && profile?.lud16 !== walletLud16}>
+    <div class="flex items-center justify-between">
+      <strong>Lightning Address</strong>
+      <div class="flex items-center gap-2">
+        <span class={profileLightningAddress ? "" : "text-warning"}>
+          {profileLightningAddress ? profileLightningAddress : "Not set"}
+        </span>
+        <Button class="btn btn-neutral btn-xs ml-3" onclick={updateReceivingAddress}>Update</Button>
+      </div>
+    </div>
+    {#if profileLightningAddress && walletLud16 && profile?.lud16 !== walletLud16}
+      <div class="card2 bg-alt flex items-center gap-2 text-xs">
+        <Icon icon={InfoCircle} size={4} />
+        Your profile has a different lightning address than your connected wallet.
+      </div>
+    {/if}
   </div>
 </div>
