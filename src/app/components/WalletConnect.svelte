@@ -2,8 +2,11 @@
   import {debounce} from "throttle-debounce"
   import {nwc} from "@getalby/sdk"
   import {sleep, assoc} from "@welshman/lib"
-  import type {NWCInfo} from "@welshman/util"
-  import {pubkey, updateSession} from "@welshman/app"
+  import type {NWCInfo, Profile} from "@welshman/util"
+  import {pubkey, updateSession, profilesByPubkey, publishThunk} from "@welshman/app"
+  import {editProfile, getTag, isPublishedProfile, makeEvent} from "@welshman/util"
+  import {Router} from "@welshman/router"
+  import {getMembershipUrls, PROTECTED, userMembership} from "@app/core/state"
   import Link from "@lib/components/Link.svelte"
   import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
   import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
@@ -22,6 +25,44 @@
 
   const back = () => history.back()
 
+  const updateProfileWithLightningAddress = async (lightningAddress: string) => {
+    if (!$pubkey) return
+
+    try {
+      const currentProfile = $profilesByPubkey.get($pubkey)
+
+      if (!currentProfile) {
+        throw new Error("No published profile found for pubkey")
+      }
+
+      const updatedProfile: Profile = {
+        ...currentProfile,
+        lud16: lightningAddress,
+      }
+
+      if (!isPublishedProfile(updatedProfile)) {
+        throw new Error("Profile is not published")
+      }
+
+      const shouldBroadcast = !getTag(PROTECTED, updatedProfile.event?.tags || [])
+
+      const router = Router.get()
+      const template = editProfile(updatedProfile)
+      const scenarios = [router.FromRelays(getMembershipUrls($userMembership))]
+
+      if (shouldBroadcast) {
+        scenarios.push(router.FromUser(), router.Index())
+      }
+
+      const event = makeEvent(template.kind, template)
+      const relays = router.merge(scenarios).getUrls()
+
+      await publishThunk({event, relays}).result
+    } catch (e) {
+      console.error("Failed to update profile with lightning address:", e)
+    }
+  }
+
   const connectWithWebLn = async () => {
     loading = true
 
@@ -37,6 +78,10 @@
       } else {
         updateSession($pubkey!, assoc("wallet", {type: "webln", info}))
         pushToast({message: "Wallet successfully connected!"})
+
+        if (setReceivingAddress) {
+          // TODO: Is there a way to get a lud16 address from from webln? It seemed like not to me
+        }
 
         await sleep(400)
 
@@ -71,6 +116,18 @@
           assoc("wallet", {type: "nwc", info: client.options as unknown as NWCInfo}),
         )
         pushToast({message: "Wallet successfully connected!"})
+
+        if (setReceivingAddress) {
+          const lightningAddress = info.lud16
+          if (lightningAddress) {
+            await updateProfileWithLightningAddress(lightningAddress)
+            pushToast({message: "Profile updated with receiving address!"})
+          } else {
+            pushToast({
+              message: "Wallet doesn't support receiving addresses",
+            })
+          }
+        }
 
         await sleep(400)
 
@@ -148,7 +205,7 @@
       </label>
       <span class="my-3 flex gap-3">
         <input type="checkbox" class="checkbox" bind:checked={setReceivingAddress} />
-        Use wallet as recieving address (if supported)
+        Use wallet as receiving address (if supported)
       </span>
     {/snippet}
     {#snippet info()}

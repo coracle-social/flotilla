@@ -4,6 +4,7 @@
   import {preventDefault} from "@lib/html"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import MapPoint from "@assets/icons/map-point.svg?dataurl"
+  import Wallet from "@assets/icons/wallet.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Field from "@lib/components/Field.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -11,6 +12,7 @@
   import InputProfilePicture from "@lib/components/InputProfilePicture.svelte"
   import InfoHandle from "@app/components/InfoHandle.svelte"
   import {pushModal} from "@app/util/modal"
+  import {session} from "@welshman/app"
 
   type Values = {
     profile: Profile
@@ -31,6 +33,19 @@
   const submit = () => onsubmit($state.snapshot(values))
 
   let file: File | undefined = $state()
+
+  const connectedWalletAddress = $derived(
+    $session?.wallet?.type === "nwc" ? $session.wallet.info.lud16 : null,
+  )
+  const canUseWalletAddress = $derived(
+    Boolean(connectedWalletAddress && connectedWalletAddress !== values.profile.lud16),
+  )
+
+  const useWalletAddress = () => {
+    if (connectedWalletAddress) {
+      values.profile.lud16 = connectedWalletAddress
+    }
+  }
 </script>
 
 <form class="col-4" onsubmit={preventDefault(submit)}>
@@ -97,6 +112,31 @@
           <Button class="link" onclick={() => pushModal(InfoHandle)}
             >What is a nostr address?</Button>
         </p>
+      {/snippet}
+    </Field>
+    <Field>
+      {#snippet label()}
+        <p>Lightning Address</p>
+      {/snippet}
+      {#snippet input()}
+        <label class="input input-bordered flex w-full items-center gap-2">
+          <Icon icon={Wallet} />
+          <input
+            bind:value={values.profile.lud16}
+            class="grow"
+            type="text"
+            placeholder="username@wallet.com" />
+        </label>
+      {/snippet}
+      {#snippet info()}
+        <div class="flex flex-col gap-2">
+          <p>Your lightning address for receiving Bitcoin payments.</p>
+          {#if canUseWalletAddress}
+            <Button class="btn btn-outline btn-sm" onclick={useWalletAddress}>
+              Use connected wallet address ({connectedWalletAddress})
+            </Button>
+          {/if}
+        </div>
       {/snippet}
     </Field>
   {/if}

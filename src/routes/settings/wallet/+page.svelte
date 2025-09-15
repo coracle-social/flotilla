@@ -2,7 +2,7 @@
   import {nwc} from "@getalby/sdk"
   import {LOCALE} from "@welshman/lib"
   import {displayRelayUrl, fromMsats} from "@welshman/util"
-  import {session} from "@welshman/app"
+  import {session, pubkey, profilesByPubkey} from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
@@ -17,6 +17,9 @@
   const connect = () => pushModal(WalletConnect)
 
   const disconnect = () => pushModal(WalletDisconnect)
+
+  const profile = $derived($profilesByPubkey.get($pubkey!))
+  const profileHasLightningAddress = $derived(Boolean(profile?.lud16))
 </script>
 
 <div class="content column gap-4">
@@ -80,10 +83,26 @@
             </p>
           </div>
         {/if}
-        <Button class="btn btn-neutral btn-sm" onclick={disconnect}>
-          <Icon icon={CloseCircle} />
-          Disconnect Wallet
-        </Button>
+        <div class="flex flex-col gap-3">
+          {#if $session.wallet.type === "nwc" && $session.wallet.info.lud16}
+            <div class="flex items-center justify-between text-sm">
+              <span>Profile receiving address:</span>
+              <span class={profileHasLightningAddress ? "text-success" : "text-warning"}>
+                {profileHasLightningAddress ? "✓ Set" : "Not set"}
+              </span>
+            </div>
+            {#if profileHasLightningAddress && profile?.lud16 !== $session.wallet.info.lud16}
+              <div class="alert alert-info text-xs">
+                <span
+                  >Your profile has a different lightning address than your connected wallet.</span>
+              </div>
+            {/if}
+          {/if}
+          <Button class="btn btn-neutral btn-sm" onclick={disconnect}>
+            <Icon icon={CloseCircle} />
+            Disconnect Wallet
+          </Button>
+        </div>
       {:else}
         <p class="py-12 text-center opacity-75">No wallet connected</p>
       {/if}
