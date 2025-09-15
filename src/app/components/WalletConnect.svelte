@@ -15,7 +15,6 @@
   import Scanner from "@lib/components/Scanner.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Field from "@lib/components/Field.svelte"
-  import Divider from "@lib/components/Divider.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {getWebLn} from "@app/core/commands"
@@ -101,6 +100,7 @@
   let nostrWalletConnectUrl = $state("")
   let showScanner = $state(false)
   let loading = $state(false)
+  let setReceivingAddress = $state(false)
 </script>
 
 <div class="column gap-4">
@@ -128,7 +128,6 @@
         {/if}
       </Spinner>
     </Button>
-    <Divider>Or</Divider>
   {/if}
   <Field>
     {#snippet label()}
@@ -147,6 +146,10 @@
           <Icon icon={QrCode} />
         </Button>
       </label>
+      <span class="my-3 flex gap-3">
+        <input type="checkbox" class="checkbox" bind:checked={setReceivingAddress} />
+        Use wallet as recieving address (if supported)
+      </span>
     {/snippet}
     {#snippet info()}
       You can find this in any wallet that supports
