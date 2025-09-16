@@ -2,7 +2,7 @@
   import {debounce} from "throttle-debounce"
   import {nwc} from "@getalby/sdk"
   import {sleep, assoc} from "@welshman/lib"
-  import type {NWCInfo} from "@welshman/util"
+  import type {NWCInfo, Profile} from "@welshman/util"
   import {pubkey, updateSession, profilesByPubkey} from "@welshman/app"
   import {getTag, makeProfile} from "@welshman/util"
   import {PROTECTED} from "@app/core/state"
@@ -21,15 +21,16 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {getWebLn, updateProfile} from "@app/core/commands"
   import {pushToast} from "@app/util/toast"
+  import {pushModal} from "@app/util/modal"
+  import WalletAsReceivingAddress from "@app/components/WalletAsReceivingAddress.svelte"
   import Divider from "@src/lib/components/Divider.svelte"
 
   const back = () => history.back()
 
-  const updateProfileWithLightningAddress = async (lightningAddress: string) => {
+  const updateProfileWithLightningAddress = async (profile: Profile, lightningAddress: string) => {
     if (!$pubkey) return
 
     try {
-      const profile = $profilesByPubkey.get($pubkey) || makeProfile()
       profile.lud16 = lightningAddress
 
       const shouldBroadcast = !getTag(PROTECTED, profile.event?.tags || [])
@@ -77,6 +78,7 @@
     try {
       const client = new nwc.NWCClient({nostrWalletConnectUrl})
       const [_, info] = await Promise.all([sleep(800), client.getInfo()])
+      const profile = $profilesByPubkey.get($pubkey || "") || makeProfile()
 
       if (!info) {
         pushToast({
@@ -84,6 +86,22 @@
           message: "Wallet failed to connect",
         })
       } else {
+        let confirmationResolve
+        const confirmationPromise = new Promise(resolve => {
+          confirmationResolve = resolve
+        })
+
+        if (info.lud16 && info.lud16 !== profile.lud16) {
+          pushModal(WalletAsReceivingAddress, {
+            alreadyHasLightingAddress: profile.lud16 || profile.lud06,
+            onSetReceivingAddress: (value: boolean) => {
+              setReceivingAddress = value
+            },
+            confirmationResolve,
+          })
+          await confirmationPromise
+        }
+
         updateSession(
           $pubkey!,
           assoc("wallet", {type: "nwc", info: client.options as unknown as NWCInfo}),
@@ -93,7 +111,7 @@
         if (setReceivingAddress) {
           const lightningAddress = info.lud16
           if (lightningAddress) {
-            await updateProfileWithLightningAddress(lightningAddress)
+            await updateProfileWithLightningAddress(profile, lightningAddress)
             pushToast({message: "Profile updated with receiving address!"})
           } else {
             pushToast({
