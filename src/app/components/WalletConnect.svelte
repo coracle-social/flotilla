@@ -1,20 +1,11 @@
 <script lang="ts">
   import {debounce} from "throttle-debounce"
   import {nwc} from "@getalby/sdk"
-  import {sleep, assoc, nthNe} from "@welshman/lib"
+  import {sleep, assoc} from "@welshman/lib"
   import type {NWCInfo} from "@welshman/util"
-  import {pubkey, updateSession, profilesByPubkey, publishThunk} from "@welshman/app"
-  import {
-    createProfile,
-    editProfile,
-    getTag,
-    isPublishedProfile,
-    makeEvent,
-    makeProfile,
-    uniqTags,
-  } from "@welshman/util"
-  import {Router} from "@welshman/router"
-  import {getMembershipUrls, PROTECTED, userMembership} from "@app/core/state"
+  import {pubkey, updateSession, profilesByPubkey} from "@welshman/app"
+  import {getTag, makeProfile} from "@welshman/util"
+  import {PROTECTED} from "@app/core/state"
   import Link from "@lib/components/Link.svelte"
   import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
   import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
@@ -28,7 +19,7 @@
   import Field from "@lib/components/Field.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {getWebLn} from "@app/core/commands"
+  import {getWebLn, updateProfile} from "@app/core/commands"
   import {pushToast} from "@app/util/toast"
 
   const back = () => history.back()
@@ -42,21 +33,7 @@
 
       const shouldBroadcast = !getTag(PROTECTED, profile.event?.tags || [])
 
-      const router = Router.get()
-      const template = isPublishedProfile(profile) ? editProfile(profile) : createProfile(profile)
-      const scenarios = [router.FromRelays(getMembershipUrls($userMembership))]
-
-      if (shouldBroadcast) {
-        scenarios.push(router.FromUser(), router.Index())
-        template.tags = template.tags.filter(nthNe(0, "-"))
-      } else {
-        template.tags = uniqTags([...template.tags, PROTECTED])
-      }
-
-      const event = makeEvent(template.kind, template)
-      const relays = router.merge(scenarios).getUrls()
-
-      await publishThunk({event, relays}).result
+      await updateProfile({profile, shouldBroadcast})
     } catch (e) {
       console.error("Failed to update profile with lightning address:", e)
     }

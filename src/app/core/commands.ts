@@ -15,11 +15,12 @@ import {
   parseJson,
   fromPairs,
   last,
+  nthNe,
 } from "@welshman/lib"
 import {decrypt} from "@welshman/signer"
 import type {Feed} from "@welshman/feeds"
 import {makeIntersectionFeed, feedFromFilters, makeRelayFeed} from "@welshman/feeds"
-import type {TrustedEvent, EventContent} from "@welshman/util"
+import type {TrustedEvent, EventContent, Profile} from "@welshman/util"
 import {
   WRAP,
   DELETE,
@@ -53,6 +54,10 @@ import {
   RelayMode,
   getAddress,
   getTagValue,
+  isPublishedProfile,
+  editProfile,
+  createProfile,
+  uniqTags,
 } from "@welshman/util"
 import {Pool, AuthStatus, SocketStatus} from "@welshman/net"
 import {Router} from "@welshman/router"
@@ -89,6 +94,7 @@ import {
   canDecrypt,
   ensureUnwrapped,
   userInboxRelays,
+  getMembershipUrls,
 } from "@app/core/state"
 import {loadAlertStatuses} from "@app/core/requests"
 import {platform, platformName, getPushInfo} from "@app/util/push"
@@ -648,4 +654,30 @@ export const enableGiftWraps = () => {
   for (const event of repository.query([{kinds: [WRAP]}])) {
     ensureUnwrapped(event)
   }
+}
+
+// Update Profile
+
+export const updateProfile = async ({
+  profile,
+  shouldBroadcast,
+}: {
+  profile: Profile
+  shouldBroadcast: boolean
+}) => {
+  const router = Router.get()
+  const template = isPublishedProfile(profile) ? editProfile(profile) : createProfile(profile)
+  const scenarios = [router.FromRelays(getMembershipUrls(userMembership.get()))]
+
+  if (shouldBroadcast) {
+    scenarios.push(router.FromUser(), router.Index())
+    template.tags = template.tags.filter(nthNe(0, "-"))
+  } else {
+    template.tags = uniqTags([...template.tags, PROTECTED])
+  }
+
+  const event = makeEvent(template.kind, template)
+  const relays = router.merge(scenarios).getUrls()
+
+  await publishThunk({event, relays}).result
 }
