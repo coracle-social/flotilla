@@ -1,10 +1,18 @@
 <script lang="ts">
   import {debounce} from "throttle-debounce"
   import {nwc} from "@getalby/sdk"
-  import {sleep, assoc} from "@welshman/lib"
-  import type {NWCInfo, Profile} from "@welshman/util"
+  import {sleep, assoc, nthNe} from "@welshman/lib"
+  import type {NWCInfo} from "@welshman/util"
   import {pubkey, updateSession, profilesByPubkey, publishThunk} from "@welshman/app"
-  import {editProfile, getTag, isPublishedProfile, makeEvent} from "@welshman/util"
+  import {
+    createProfile,
+    editProfile,
+    getTag,
+    isPublishedProfile,
+    makeEvent,
+    makeProfile,
+    uniqTags,
+  } from "@welshman/util"
   import {Router} from "@welshman/router"
   import {getMembershipUrls, PROTECTED, userMembership} from "@app/core/state"
   import Link from "@lib/components/Link.svelte"
@@ -29,29 +37,20 @@
     if (!$pubkey) return
 
     try {
-      const currentProfile = $profilesByPubkey.get($pubkey)
+      const profile = $profilesByPubkey.get($pubkey) || makeProfile()
+      profile.lud16 = lightningAddress
 
-      if (!currentProfile) {
-        throw new Error("No published profile found for pubkey")
-      }
-
-      const updatedProfile: Profile = {
-        ...currentProfile,
-        lud16: lightningAddress,
-      }
-
-      if (!isPublishedProfile(updatedProfile)) {
-        throw new Error("Profile is not published")
-      }
-
-      const shouldBroadcast = !getTag(PROTECTED, updatedProfile.event?.tags || [])
+      const shouldBroadcast = !getTag(PROTECTED, profile.event?.tags || [])
 
       const router = Router.get()
-      const template = editProfile(updatedProfile)
+      const template = isPublishedProfile(profile) ? editProfile(profile) : createProfile(profile)
       const scenarios = [router.FromRelays(getMembershipUrls($userMembership))]
 
       if (shouldBroadcast) {
         scenarios.push(router.FromUser(), router.Index())
+        template.tags = template.tags.filter(nthNe(0, "-"))
+      } else {
+        template.tags = uniqTags([...template.tags, PROTECTED])
       }
 
       const event = makeEvent(template.kind, template)
