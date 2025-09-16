@@ -21,6 +21,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {getWebLn, updateProfile} from "@app/core/commands"
   import {pushToast} from "@app/util/toast"
+  import Divider from "@src/lib/components/Divider.svelte"
 
   const back = () => history.back()
 
@@ -54,10 +55,6 @@
       } else {
         updateSession($pubkey!, assoc("wallet", {type: "webln", info}))
         pushToast({message: "Wallet successfully connected!"})
-
-        if (setReceivingAddress) {
-          // TODO: Is there a way to get a lud16 address from from webln? It seemed like not to me
-        }
 
         await sleep(400)
 
@@ -161,6 +158,7 @@
         {/if}
       </Spinner>
     </Button>
+    <Divider>Or</Divider>
   {/if}
   <Field>
     {#snippet label()}
@@ -179,10 +177,6 @@
           <Icon icon={QrCode} />
         </Button>
       </label>
-      <span class="my-3 flex gap-3">
-        <input type="checkbox" class="checkbox" bind:checked={setReceivingAddress} />
-        Use wallet as receiving address (if supported)
-      </span>
     {/snippet}
     {#snippet info()}
       You can find this in any wallet that supports
