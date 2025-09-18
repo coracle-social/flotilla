@@ -7,6 +7,7 @@
   import Button from "@lib/components/Button.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
+  import WalletUpdateReceivingAddress from "@app/components/WalletUpdateReceivingAddress.svelte"
   import {pushModal} from "@app/util/modal"
   import {getWebLn} from "@app/core/commands"
   import Wallet2 from "@assets/icons/wallet.svg?dataurl"
@@ -17,6 +18,13 @@
   const connect = () => pushModal(WalletConnect)
 
   const disconnect = () => pushModal(WalletDisconnect)
+
+  const updateReceivingAddress = () => {
+    pushModal(WalletUpdateReceivingAddress, {
+      profile,
+      session: $session,
+    })
+  }
 
   const profile = $derived($profilesByPubkey.get($pubkey || ""))
   const profileLightningAddress = $derived(profile?.lud16)
@@ -97,20 +105,22 @@
       {/if}
     </div>
   </div>
-  <div class="card2 bg-alt flex flex-col gap-6 shadow-xl">
-    <div class="flex flex-col gap-3">
-      <div class="flex items-center justify-between text-sm">
-        <span>Profile receiving address:</span>
+  <div
+    class="card2 bg-alt flex flex-col shadow-xl"
+    class:gap-6={profileLightningAddress && walletLud16 && profile?.lud16 !== walletLud16}>
+    <div class="flex items-center justify-between">
+      <strong>Lightning Address</strong>
+      <div class="flex items-center gap-2">
         <span class={profileLightningAddress ? "" : "text-warning"}>
           {profileLightningAddress ? profileLightningAddress : "Not set"}
         </span>
+        <Button class="btn btn-neutral btn-xs ml-3" onclick={updateReceivingAddress}>Update</Button>
       </div>
-      {#if profileLightningAddress && walletLud16 && profile?.lud16 !== walletLud16}
-        <div class="alert alert-info text-xs">
-          <span>Your profile has a different lightning address than your connected wallet.</span>
-        </div>
-      {/if}
     </div>
+    {#if profileLightningAddress && walletLud16 && profile?.lud16 !== walletLud16}
+      <div class="alert alert-info text-xs">
+        <span>Your profile has a different lightning address than your connected wallet.</span>
+      </div>
+    {/if}
   </div>
-  <!-- TODO: Add call to action for updating receiving address, and that modal will have option to grab receiving address from wallet -->
 </div>
