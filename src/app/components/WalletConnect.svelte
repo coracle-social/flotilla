@@ -2,7 +2,7 @@
   import {debounce} from "throttle-debounce"
   import {nwc} from "@getalby/sdk"
   import {sleep, assoc} from "@welshman/lib"
-  import type {NWCInfo, Profile} from "@welshman/util"
+  import type {NWCInfo} from "@welshman/util"
   import {pubkey, updateSession, profilesByPubkey} from "@welshman/app"
   import {makeProfile} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
@@ -18,20 +18,13 @@
   import Field from "@lib/components/Field.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {getWebLn, updateProfile} from "@app/core/commands"
+  import {getWebLn} from "@app/core/commands"
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
   import WalletAsReceivingAddress from "@app/components/WalletAsReceivingAddress.svelte"
   import Divider from "@src/lib/components/Divider.svelte"
 
   const back = () => history.back()
-
-  const updateProfileWithLightningAddress = async (profile: Profile, lightningAddress: string) => {
-    if (!$pubkey) return
-
-    profile.lud16 = lightningAddress
-    await updateProfile({profile})
-  }
 
   const connectWithWebLn = async () => {
     loading = true
@@ -78,43 +71,19 @@
           message: "Wallet failed to connect",
         })
       } else {
-        let confirmationResolve
-        const confirmationPromise = new Promise(resolve => {
-          confirmationResolve = resolve
-        })
-
-        if (info.lud16 && info.lud16 !== profile.lud16) {
-          pushModal(WalletAsReceivingAddress, {
-            alreadyHasLightingAddress: profile.lud16 || profile.lud06,
-            onSetReceivingAddress: (value: boolean) => {
-              setReceivingAddress = value
-            },
-            confirmationResolve,
-          })
-          await confirmationPromise
-        }
-
         updateSession(
           $pubkey!,
           assoc("wallet", {type: "nwc", info: client.options as unknown as NWCInfo}),
         )
         pushToast({message: "Wallet successfully connected!"})
 
-        if (setReceivingAddress) {
-          const lightningAddress = info.lud16
-          if (lightningAddress) {
-            await updateProfileWithLightningAddress(profile, lightningAddress)
-            pushToast({message: "Profile updated with receiving address!"})
-          } else {
-            pushToast({
-              message: "Wallet doesn't support receiving addresses",
-            })
-          }
-        }
-
         await sleep(400)
 
         back()
+
+        if (info.lud16 && info.lud16 !== profile.lud16) {
+          pushModal(WalletAsReceivingAddress, {profile, newLightingAddress: info.lud16})
+        }
       }
     } catch (e) {
       console.error(e)
@@ -140,7 +109,6 @@
   let nostrWalletConnectUrl = $state("")
   let showScanner = $state(false)
   let loading = $state(false)
-  let setReceivingAddress = $state(false)
 </script>
 
 <div class="column gap-4">

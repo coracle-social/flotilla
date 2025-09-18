@@ -6,27 +6,29 @@
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
+  import {type Profile} from "@welshman/util"
+  import {updateProfile} from "@app/core/commands"
 
   interface Props {
-    alreadyHasLightingAddress: boolean
-    onSetReceivingAddress: (value: boolean) => void
-    confirmationResolve: () => void
+    profile: Profile
+    newLightningAddress: string
   }
 
-  const {alreadyHasLightingAddress, onSetReceivingAddress, confirmationResolve}: Props = $props()
+  const {profile, newLightningAddress}: Props = $props()
+
+  const updateProfileWithLightningAddress = async (lightningAddress: string) => {
+    await updateProfile({profile: {...profile, lud16: lightningAddress}})
+  }
 
   const back = () => history.back()
 
-  const confirm = () => {
-    onSetReceivingAddress(true)
+  const confirm = async () => {
+    await updateProfileWithLightningAddress(newLightningAddress)
     back()
-    confirmationResolve()
   }
 
   const cancel = () => {
-    onSetReceivingAddress(false)
     back()
-    confirmationResolve()
   }
 
   const infoMessage =
@@ -46,7 +48,7 @@
     {/snippet}
   </ModalHeader>
 
-  {#if alreadyHasLightingAddress}
+  {#if profile.lud16 || profile.lud06}
     <div class="flex items-start gap-3">
       <Icon icon={CloseCircle} class="mt-1 text-warning" />
       <div class="column gap-2">
