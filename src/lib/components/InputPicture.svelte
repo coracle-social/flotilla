@@ -1,6 +1,6 @@
 <script lang="ts">
   import {randomId} from "@welshman/lib"
-  import {preventDefault, stopPropagation, stripExifData} from "@lib/html"
+  import {preventDefault, stopPropagation, compressFile} from "@lib/html"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
@@ -30,11 +30,11 @@
   const onDrop = async (e: any) => {
     active = false
 
-    file = await stripExifData(e.dataTransfer.files[0])
+    file = await compressFile(e.dataTransfer.files[0])
   }
 
   const onChange = async (e: any) => {
-    file = await stripExifData(e.target.files[0])
+    file = await compressFile(e.target.files[0])
   }
 
   const onClear = () => {
