@@ -3,6 +3,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {get} from "svelte/store"
 import type {Override, MakeOptional} from "@welshman/lib"
 import {
+  sha256,
   randomId,
   append,
   remove,
@@ -16,7 +17,8 @@ import {
   fromPairs,
   last,
 } from "@welshman/lib"
-import {decrypt} from "@welshman/signer"
+import {decrypt, Nip01Signer} from "@welshman/signer"
+import type {UploadTask} from "@welshman/editor"
 import type {Feed} from "@welshman/feeds"
 import {makeIntersectionFeed, feedFromFilters, makeRelayFeed} from "@welshman/feeds"
 import type {TrustedEvent, EventContent} from "@welshman/util"
@@ -53,6 +55,10 @@ import {
   RelayMode,
   getAddress,
   getTagValue,
+  getTagValues,
+  uploadBlob,
+  encryptFile,
+  makeBlossomAuthEvent,
 } from "@welshman/util"
 import {Pool, AuthStatus, SocketStatus} from "@welshman/net"
 import {Router} from "@welshman/router"
@@ -75,7 +81,9 @@ import {
   tagEventForQuote,
   waitForThunkError,
   getPubkeyRelays,
+  userBlossomServers,
 } from "@welshman/app"
+import {compressFile} from "@src/lib/html"
 import type {SettingsValues, Alert} from "@app/core/state"
 import {
   SETTINGS,
@@ -647,5 +655,79 @@ export const enableGiftWraps = () => {
 
   for (const event of repository.query([{kinds: [WRAP]}])) {
     ensureUnwrapped(event)
+  }
+}
+
+// File upload
+
+export const getBlossomServer = () => {
+  const userUrls = getTagValues("server", getListTags(userBlossomServers.get()))
+
+  for (const url of userUrls) {
+    return url.replace(/^ws/, "http")
+  }
+
+  return "https://cdn.satellite.earth"
+}
+
+export type UploadFileOptions = {
+  encrypt?: boolean
+}
+
+export type UploadFileResult = {
+  error?: string
+  result?: UploadTask
+}
+
+export const uploadFile = async (file: File, options: UploadFileOptions = {}) => {
+  const {name, type} = file
+
+  if (!type.match("image/(webp|gif)")) {
+    file = await compressFile(file)
+  }
+
+  const tags: string[][] = []
+
+  if (options.encrypt) {
+    const {ciphertext, key, nonce, algorithm} = await encryptFile(file)
+
+    tags.push(
+      ["decryption-key", key],
+      ["decryption-nonce", nonce],
+      ["encryption-algorithm", algorithm],
+    )
+
+    file = new File([new Blob([ciphertext])], name, {
+      type: "application/octet-stream",
+    })
+  }
+
+  const server = getBlossomServer()
+  const hashes = [await sha256(await file.arrayBuffer())]
+  const $signer = signer.get() || Nip01Signer.ephemeral()
+  const authTemplate = makeBlossomAuthEvent({action: "upload", server, hashes})
+  const authEvent = await $signer.sign(authTemplate)
+
+  try {
+    const res = await uploadBlob(server, file, {authEvent})
+    const text = await res.text()
+
+    let {uploaded, url, ...task} = parseJson(text) || {}
+
+    if (!uploaded) {
+      return {error: text}
+    }
+
+    // Always append file extension if missing
+    if (new URL(url).pathname.split(".").length === 1) {
+      url += "." + type.split("/")[1]
+    }
+
+    const result = {...task, tags, url}
+
+    return {result}
+  } catch (e: any) {
+    console.error(e)
+    return {error: e.toString()}
   }
 }

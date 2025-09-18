@@ -1,6 +1,5 @@
 <script lang="ts">
   import {preventDefault} from "@lib/html"
-  import InputProfilePicture from "@lib/components/InputProfilePicture.svelte"
   import Button from "@lib/components/Button.svelte"
   import Field from "@lib/components/Field.svelte"
   import FireMinimalistic from "@assets/icons/fire-minimalistic.svg?dataurl"
@@ -11,6 +10,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InfoRelay from "@app/components/InfoRelay.svelte"
+  import InputProfilePicture from "@app/components/InputProfilePicture.svelte"
   import SpaceCreateFinish from "@app/components/SpaceCreateFinish.svelte"
   import {pushModal} from "@app/util/modal"
 

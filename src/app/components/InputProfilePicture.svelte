@@ -1,10 +1,11 @@
 <script lang="ts">
-  import {randomId} from "@welshman/lib"
+  import {randomId, call} from "@welshman/lib"
   import {preventDefault, stopPropagation, compressFile} from "@lib/html"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
+  import {uploadFile} from "@app/core/commands"
 
   interface Props {
     file?: File | undefined
@@ -47,20 +48,29 @@
   let initialUrl = $state(url)
 
   $effect(() => {
-    if (file) {
-      const reader = new FileReader()
+    call(async () => {
+      if (file) {
+        const {result} = await uploadFile(file)
 
-      reader.addEventListener(
-        "load",
-        () => {
-          url = reader.result as string
-        },
-        false,
-      )
-      reader.readAsDataURL(file)
-    } else {
-      url = initialUrl
-    }
+        if (result?.url) {
+          url = result.url
+        } else {
+          const reader = new FileReader()
+
+          reader.addEventListener(
+            "load",
+            () => {
+              url = reader.result as string
+            },
+            false,
+          )
+
+          reader.readAsDataURL(file)
+        }
+      } else {
+        url = initialUrl
+      }
+    })
   })
 </script>
 
