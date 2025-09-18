@@ -1,5 +1,9 @@
 # Changelog
 
+# 1.2.5
+
+* Fix icons in build
+
 # 1.2.4
 
 * Add direct message alerts
