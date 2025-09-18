@@ -1,5 +1,17 @@
 # Changelog
 
+# 1.2.4
+
+* Add direct message alerts
+* Add alert settings page
+* Add instructions to key download
+* Add option that allows relays to strip signatures
+* Detect relays that mostly refuse to serve requests
+* Compress and upload profile images
+* Use system theme by default
+* Switch icon set, refactor how they're included
+* Use capacitor's preferences for storage instead of localStorage
+
 # 1.2.3
 
 * Add `created_at` to event info dialog
