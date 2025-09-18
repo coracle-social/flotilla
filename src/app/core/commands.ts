@@ -660,10 +660,10 @@ export const enableGiftWraps = () => {
 
 export const updateProfile = async ({
   profile,
-  shouldBroadcast,
+  shouldBroadcast = !getTag(PROTECTED, profile.event?.tags || []),
 }: {
   profile: Profile
-  shouldBroadcast: boolean
+  shouldBroadcast?: boolean
 }) => {
   const router = Router.get()
   const template = isPublishedProfile(profile) ? editProfile(profile) : createProfile(profile)

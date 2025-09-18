@@ -4,8 +4,7 @@
   import {sleep, assoc} from "@welshman/lib"
   import type {NWCInfo, Profile} from "@welshman/util"
   import {pubkey, updateSession, profilesByPubkey} from "@welshman/app"
-  import {getTag, makeProfile} from "@welshman/util"
-  import {PROTECTED} from "@app/core/state"
+  import {makeProfile} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
   import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
   import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
@@ -30,15 +29,8 @@
   const updateProfileWithLightningAddress = async (profile: Profile, lightningAddress: string) => {
     if (!$pubkey) return
 
-    try {
-      profile.lud16 = lightningAddress
-
-      const shouldBroadcast = !getTag(PROTECTED, profile.event?.tags || [])
-
-      await updateProfile({profile, shouldBroadcast})
-    } catch (e) {
-      console.error("Failed to update profile with lightning address:", e)
-    }
+    profile.lud16 = lightningAddress
+    await updateProfile({profile})
   }
 
   const connectWithWebLn = async () => {
