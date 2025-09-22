@@ -15,6 +15,7 @@ dependencies {
     implementation project(':capacitor-keyboard')
     implementation project(':capacitor-preferences')
     implementation project(':capacitor-push-notifications')
+    implementation project(':capawesome-capacitor-android-dark-mode-support')
     implementation project(':capawesome-capacitor-badge')
     implementation project(':nostr-signer-capacitor-plugin')
 

@@ -37,8 +37,11 @@ export class HandlesDbService extends DatabaseService {
     await this.db.run(
       `INSERT OR REPLACE INTO handles (nip05, data) VALUES ${valuesPlaceholder}`,
       values,
+      false,
     )
   }
-}
 
-export const handlesDbService = new HandlesDbService()
+  async clearStorage(): Promise<void> {
+    await this.db.execute("DELETE FROM handles", false)
+  }
+}

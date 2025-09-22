@@ -71,6 +71,11 @@ export class TrackerDbService extends DatabaseService {
     await this.db.run(
       `INSERT OR REPLACE INTO trackers (id, data) VALUES ${valuesPlaceholder}`,
       values,
+      false,
     )
+  }
+
+  async clearStorage(): Promise<void> {
+    await this.db.execute("DELETE FROM trackers", false)
   }
 }

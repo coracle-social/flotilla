@@ -6,6 +6,7 @@ export type IDatabaseService = {
   initializeDatabase(): Promise<void>
   initializeState(): Promise<void>
   sync(): Unsubscriber
+  clearStorage(): Promise<void>
 }
 
 export type VersionUpgrades = {
@@ -46,4 +47,6 @@ export abstract class DatabaseService implements IDatabaseService {
   abstract initializeState(): Promise<void>
 
   abstract sync(): Unsubscriber
+
+  abstract clearStorage(): Promise<void>
 }

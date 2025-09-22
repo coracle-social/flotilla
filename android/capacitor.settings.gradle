@@ -20,6 +20,9 @@ project(':capacitor-preferences').projectDir = new File('../node_modules/.pnpm/@
 include ':capacitor-push-notifications'
 project(':capacitor-push-notifications').projectDir = new File('../node_modules/.pnpm/@capacitor+push-notifications@7.0.1_@capacitor+core@7.2.0/node_modules/@capacitor/push-notifications/android')
 
+include ':capawesome-capacitor-android-dark-mode-support'
+project(':capawesome-capacitor-android-dark-mode-support').projectDir = new File('../node_modules/.pnpm/@capawesome+capacitor-android-dark-mode-support@7.0.0_@capacitor+core@7.2.0/node_modules/@capawesome/capacitor-android-dark-mode-support/android')
+
 include ':capawesome-capacitor-badge'
 project(':capawesome-capacitor-badge').projectDir = new File('../node_modules/.pnpm/@capawesome+capacitor-badge@7.0.1_@capacitor+core@7.2.0/node_modules/@capawesome/capacitor-badge/android')
 

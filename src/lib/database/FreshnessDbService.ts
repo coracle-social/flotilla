@@ -46,8 +46,11 @@ export class FreshnessDbService extends DatabaseService {
     await this.db.run(
       `INSERT OR REPLACE INTO freshness (key, data) VALUES ${valuesPlaceholder}`,
       values,
+      false,
     )
   }
-}
 
-export const freshnessDbService = new FreshnessDbService()
+  async clearStorage(): Promise<void> {
+    await this.db.execute("DELETE FROM freshness", false)
+  }
+}

@@ -46,8 +46,11 @@ export class PlaintextDbService extends DatabaseService {
     await this.db.run(
       `INSERT OR REPLACE INTO plaintext (key, data) VALUES ${valuesPlaceholder}`,
       values,
+      false,
     )
   }
-}
 
-export const plaintextDbService = new PlaintextDbService()
+  async clearStorage(): Promise<void> {
+    await this.db.execute("DELETE FROM plaintext", false)
+  }
+}

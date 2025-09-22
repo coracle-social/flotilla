@@ -92,7 +92,7 @@ import {
 } from "@app/core/state"
 import {loadAlertStatuses} from "@app/core/requests"
 import {platform, platformName, getPushInfo} from "@app/util/push"
-import {preferencesStorageProvider} from "@src/lib/storage"
+import {clearDatabaseStorage, preferencesStorageProvider} from "@src/lib/storage"
 
 // Utils
 
@@ -139,6 +139,8 @@ export const logout = async () => {
 
   localStorage.clear()
   await preferencesStorageProvider.clear()
+
+  await clearDatabaseStorage()
 }
 
 // Synchronization
