@@ -680,35 +680,34 @@ export type UploadFileResult = {
 }
 
 export const uploadFile = async (file: File, options: UploadFileOptions = {}) => {
-  const {name, type} = file
-
-  if (!type.match("image/(webp|gif)")) {
-    file = await compressFile(file)
-  }
-
-  const tags: string[][] = []
-
-  if (options.encrypt) {
-    const {ciphertext, key, nonce, algorithm} = await encryptFile(file)
-
-    tags.push(
-      ["decryption-key", key],
-      ["decryption-nonce", nonce],
-      ["encryption-algorithm", algorithm],
-    )
-
-    file = new File([new Blob([ciphertext])], name, {
-      type: "application/octet-stream",
-    })
-  }
-
-  const server = getBlossomServer()
-  const hashes = [await sha256(await file.arrayBuffer())]
-  const $signer = signer.get() || Nip01Signer.ephemeral()
-  const authTemplate = makeBlossomAuthEvent({action: "upload", server, hashes})
-  const authEvent = await $signer.sign(authTemplate)
-
   try {
+    const {name, type} = file
+
+    if (!type.match("image/(webp|gif)")) {
+      file = await compressFile(file)
+    }
+
+    const tags: string[][] = []
+
+    if (options.encrypt) {
+      const {ciphertext, key, nonce, algorithm} = await encryptFile(file)
+
+      tags.push(
+        ["decryption-key", key],
+        ["decryption-nonce", nonce],
+        ["encryption-algorithm", algorithm],
+      )
+
+      file = new File([new Blob([ciphertext])], name, {
+        type: "application/octet-stream",
+      })
+    }
+
+    const server = getBlossomServer()
+    const hashes = [await sha256(await file.arrayBuffer())]
+    const $signer = signer.get() || Nip01Signer.ephemeral()
+    const authTemplate = makeBlossomAuthEvent({action: "upload", server, hashes})
+    const authEvent = await $signer.sign(authTemplate)
     const res = await uploadBlob(server, file, {authEvent})
     const text = await res.text()
 
@@ -727,7 +726,8 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
 
     return {result}
   } catch (e: any) {
-    console.error(e)
+    console.error("Error caught when uploading file:", e)
+
     return {error: e.toString()}
   }
 }
