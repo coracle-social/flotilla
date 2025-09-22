@@ -1,7 +1,6 @@
 <script lang="ts">
   import {displayUrl} from "@welshman/lib"
   import {AuthStatus} from "@welshman/net"
-  import {waitForThunkError} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -15,7 +14,7 @@
   import SpaceJoinConfirm, {confirmSpaceJoin} from "@app/components/SpaceJoinConfirm.svelte"
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
-  import {publishJoinRequest} from "@app/core/commands"
+  import {checkRelayAccess} from "@app/core/commands"
   import {deriveSocket} from "@app/core/state"
 
   type Props = {
@@ -32,11 +31,10 @@
     loading = true
 
     try {
-      const thunk = publishJoinRequest({url, claim})
-      const error = await waitForThunkError(thunk)
+      const message = await checkRelayAccess(url, claim)
 
-      if (error) {
-        return pushToast({theme: "error", message: error, timeout: 30_000})
+      if (message) {
+        return pushToast({theme: "error", message, timeout: 30_000})
       }
 
       if ($socket.auth.status === AuthStatus.None) {
