@@ -1,9 +1,7 @@
 <script lang="ts">
-  import Compass from "@assets/icons/compass-big.svg?dataurl"
   import Login from "@assets/icons/login-3.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -25,21 +23,8 @@
       <div>Spaces are places where communities come together to work, play, and hang out.</div>
     {/snippet}
   </ModalHeader>
-  <Link href="/discover">
-    <CardButton class="btn-primary">
-      {#snippet icon()}
-        <div><Icon icon={Compass} size={7} /></div>
-      {/snippet}
-      {#snippet title()}
-        <div>Discover spaces</div>
-      {/snippet}
-      {#snippet info()}
-        <div>Browse spaces on the discover page.</div>
-      {/snippet}
-    </CardButton>
-  </Link>
   <Button onclick={startJoin}>
-    <CardButton class="dark:btn-neutral">
+    <CardButton class="btn-primary">
       {#snippet icon()}
         <div><Icon icon={Login} size={7} /></div>
       {/snippet}

@@ -1,15 +1,11 @@
 <script lang="ts">
-  import Login from "@assets/icons/login-3.svg?dataurl"
+  import Compass from "@assets/icons/compass.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Button from "@lib/components/Button.svelte"
+  import Link from "@lib/components/Link.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
   import MenuSpacesItem from "@app/components/MenuSpacesItem.svelte"
-  import SpaceAdd from "@app/components/SpaceAdd.svelte"
   import {userRoomsByUrl, PLATFORM_RELAYS} from "@app/core/state"
-  import {pushModal} from "@app/util/modal"
-
-  const addSpace = () => pushModal(SpaceAdd)
 </script>
 
 <div class="column menu gap-2">
@@ -22,18 +18,18 @@
       {/each}
       <Divider />
     {/if}
-    <Button onclick={addSpace}>
+    <Link href="/discover">
       <CardButton class="dark:btn-neutral">
         {#snippet icon()}
-          <div><Icon icon={Login} size={7} /></div>
+          <div><Icon icon={Compass} size={7} /></div>
         {/snippet}
         {#snippet title()}
-          <div>Add a space</div>
+          <div>Explore Spaces</div>
         {/snippet}
         {#snippet info()}
-          <div>Join or create a new space</div>
+          <div>Join create, or browse spaces</div>
         {/snippet}
       </CardButton>
-    </Button>
+    </Link>
   {/each}
 </div>
