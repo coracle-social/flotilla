@@ -82,7 +82,7 @@
         back()
 
         if (info.lud16 && info.lud16 !== profile.lud16) {
-          pushModal(WalletAsReceivingAddress, {profile, newLightingAddress: info.lud16})
+          pushModal(WalletAsReceivingAddress)
         }
       }
     } catch (e) {

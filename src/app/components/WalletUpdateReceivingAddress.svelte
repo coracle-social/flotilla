@@ -24,10 +24,6 @@
   let isLoading = $state(false)
   let validationError = $state("")
 
-  $effect(() => {
-    validateLightningAddress(lightningAddress)
-  })
-
   const walletLud16 = $derived(
     session?.wallet?.info && "lud16" in session.wallet.info ? session.wallet.info.lud16 : undefined,
   )
@@ -61,6 +57,7 @@
       await updateProfile({
         profile: {
           ...profile,
+          lud06: undefined,
           lud16: address.trim() || undefined,
         },
       })
@@ -74,13 +71,11 @@
 
   const handleSave = async () => {
     if (!validateLightningAddress(lightningAddress)) {
+      pushToast({theme: "error", message: "Invalid lightning address"})
       return
     }
     await updateProfileWithLightningAddress(lightningAddress)
   }
-
-  const infoMessage =
-    "Update your lightning address for receiving payments. You can enter one manually or use your connected wallet's address (if available)."
 </script>
 
 <div class="column gap-4">
@@ -89,7 +84,7 @@
       Update Lightning Address
     {/snippet}
     {#snippet info()}
-      {infoMessage}
+      Update your lightning address for receiving payments.
     {/snippet}
   </ModalHeader>
 
@@ -105,7 +100,10 @@
       {#if validationError}
         <p class="text-xs text-error">{validationError}</p>
       {/if}
-      <p class="text-xs opacity-75">Leave empty to remove your lightning address</p>
+      <p class="text-xs opacity-75">
+        You can enter one manually or use your connected wallet's address (if available). Leave
+        empty to remove your lightning address
+      </p>
     </div>
 
     {#if walletLud16 && walletLud16 !== lightningAddress}

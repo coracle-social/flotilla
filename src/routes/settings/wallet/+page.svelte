@@ -29,9 +29,7 @@
   const profile = $derived($profilesByPubkey.get($pubkey || ""))
   const profileLightningAddress = $derived(profile?.lud16)
   const walletLud16 = $derived(
-    $session?.wallet?.info && "lud16" in $session.wallet.info
-      ? $session.wallet.info.lud16
-      : undefined,
+    $session?.wallet?.info?.lud16 ? $session.wallet.info.lud16 : undefined,
   )
 </script>
 
