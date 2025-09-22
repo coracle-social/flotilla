@@ -3,6 +3,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {get} from "svelte/store"
 import type {Override, MakeOptional} from "@welshman/lib"
 import {
+  first,
   sha256,
   randomId,
   append,
@@ -16,6 +17,8 @@ import {
   parseJson,
   fromPairs,
   last,
+  simpleCache,
+  normalizeUrl,
 } from "@welshman/lib"
 import {decrypt, Nip01Signer} from "@welshman/signer"
 import type {UploadTask} from "@welshman/editor"
@@ -57,6 +60,7 @@ import {
   getTagValue,
   getTagValues,
   uploadBlob,
+  canUploadBlob,
   encryptFile,
   makeBlossomAuthEvent,
 } from "@welshman/util"
@@ -92,6 +96,7 @@ import {
   INDEXER_RELAYS,
   NOTIFIER_PUBKEY,
   NOTIFIER_RELAY,
+  DEFAULT_BLOSSOM_SERVERS,
   userRoomsByUrl,
   userSettingsValues,
   canDecrypt,
@@ -660,17 +665,53 @@ export const enableGiftWraps = () => {
 
 // File upload
 
-export const getBlossomServer = () => {
+export const normalizeBlossomUrl = (url: string) => normalizeUrl(url.replace(/^ws/, "http"))
+
+export const hasBlossomSupport = simpleCache(async ([url]: [string]) => {
+  const server = normalizeBlossomUrl(url)
+  const $signer = signer.get() || Nip01Signer.ephemeral()
+  const headers: Record<string, string> = {
+    "X-Content-Type": "text/plain",
+    "X-Content-Length": "1",
+    "X-SHA-256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+  }
+
+  try {
+    const authEvent = await $signer.sign(makeBlossomAuthEvent({action: "upload", server}))
+    const res = await canUploadBlob(server, {authEvent, headers})
+
+    return res.status === 200
+  } catch (e) {
+    if (!String(e).match(/Failed to fetch|NetworkError/)) {
+      console.error(e)
+    }
+  }
+
+  return false
+})
+
+export type GetBlossomServerOptions = {
+  url?: string
+}
+
+export const getBlossomServer = async (options: GetBlossomServerOptions = {}) => {
+  if (options.url) {
+    if (await hasBlossomSupport(options.url)) {
+      return normalizeBlossomUrl(options.url)
+    }
+  }
+
   const userUrls = getTagValues("server", getListTags(userBlossomServers.get()))
 
   for (const url of userUrls) {
-    return url.replace(/^ws/, "http")
+    return normalizeBlossomUrl(url)
   }
 
-  return "https://cdn.satellite.earth"
+  return first(DEFAULT_BLOSSOM_SERVERS)!
 }
 
 export type UploadFileOptions = {
+  url?: string
   encrypt?: boolean
 }
 
@@ -703,7 +744,7 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
       })
     }
 
-    const server = getBlossomServer()
+    const server = await getBlossomServer(options)
     const hashes = [await sha256(await file.arrayBuffer())]
     const $signer = signer.get() || Nip01Signer.ephemeral()
     const authTemplate = makeBlossomAuthEvent({action: "upload", server, hashes})

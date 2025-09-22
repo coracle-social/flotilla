@@ -51,7 +51,7 @@ export const makeEditor = async ({
           },
           fileUpload: {
             config: {
-              upload: (attrs: FileAttributes) => uploadFile(attrs.file, {encrypt: true}),
+              upload: (attrs: FileAttributes) => uploadFile(attrs.file, {url, encrypt: true}),
               onDrop: () => uploading?.set(true),
               onComplete: () => uploading?.set(false),
               onUploadError(currentEditor, task) {

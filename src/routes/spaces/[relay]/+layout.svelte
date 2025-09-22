@@ -22,6 +22,7 @@
     userRoomsByUrl,
   } from "@app/core/state"
   import {pullConservatively} from "@app/core/requests"
+  import {hasBlossomSupport} from "@app/core/commands"
   import {notifications} from "@app/util/notifications"
 
   type Props = {
@@ -65,6 +66,9 @@
         })
       }
     })
+
+    // Prime our cache so we can upload images quicker
+    hasBlossomSupport(url)
 
     // Load group meta, threads, calendar events, comments, and recent messages
     // for user rooms to help with a quick page transition
