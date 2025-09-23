@@ -109,6 +109,7 @@
   import * as requests from "@app/core/requests"
   import * as notifications from "@app/util/notifications"
   import * as appState from "@app/core/state"
+  import {badgeCount, handleBadgeCountChanges} from "@app/util/notifications"
 
   // Migration: old nostrtalk instance used different sessions
   if ($session && !$signer) {
@@ -464,6 +465,9 @@
           }
         },
       )
+
+      // subscribe to badge count for changes
+      badgeCount.subscribe(handleBadgeCountChanges)
 
       // Listen for signer errors, report to user via toast
       signerLog.subscribe(

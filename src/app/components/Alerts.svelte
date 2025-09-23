@@ -20,6 +20,7 @@
     playAlertSound,
   } from "@app/core/state"
   import {deleteAlert, createDmAlert} from "@app/core/commands"
+  import {clearBadges} from "../util/notifications"
 
   type Props = {
     url?: string
@@ -74,6 +75,10 @@
 
   const onShowBadgeOnUnreadToggle = async () => {
     $showUnreadBadge = !$showUnreadBadge
+
+    if (!$showUnreadBadge) {
+      clearBadges()
+    }
   }
 
   const onDirectMessagesNotificationSoundToggle = async () => {
