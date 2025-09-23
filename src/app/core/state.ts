@@ -425,6 +425,18 @@ export const dmAlert = derived(alerts, $alerts =>
   }),
 )
 
+export const showUnreadBadge = synced({
+  key: "showUnreadBadge",
+  defaultValue: true,
+  storage: preferencesStorageProvider,
+})
+
+export const playAlertSound = synced({
+  key: "playAlertSound",
+  defaultValue: true,
+  storage: preferencesStorageProvider,
+})
+
 // Alert Statuses
 
 export type AlertStatus = {

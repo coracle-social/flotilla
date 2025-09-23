@@ -10,7 +10,15 @@
   import AlertItem from "@app/components/AlertItem.svelte"
   import {pushModal} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
-  import {alerts, dmAlert, deriveAlertStatus, userInboxRelays, getAlertFeed} from "@app/core/state"
+  import {
+    alerts,
+    dmAlert,
+    deriveAlertStatus,
+    userInboxRelays,
+    getAlertFeed,
+    showUnreadBadge,
+    playAlertSound,
+  } from "@app/core/state"
   import {deleteAlert, createDmAlert} from "@app/core/commands"
 
   type Props = {
@@ -42,11 +50,11 @@
   const uncheckDmAlert = async (message: string) => {
     await sleep(100)
 
-    toggle.checked = false
+    directMessagesNotificationToggle.checked = false
     pushToast({theme: "error", message})
   }
 
-  const onToggle = async () => {
+  const onDirectMessagesNotificationToggle = async () => {
     if ($dmAlert) {
       deleteAlert($dmAlert)
     } else {
@@ -64,7 +72,15 @@
     }
   }
 
-  let toggle: HTMLInputElement
+  const onShowBadgeOnUnreadToggle = async () => {
+    $showUnreadBadge = !$showUnreadBadge
+  }
+
+  const onDirectMessagesNotificationSoundToggle = async () => {
+    $playAlertSound = !$playAlertSound
+  }
+
+  let directMessagesNotificationToggle: HTMLInputElement
 </script>
 
 <div class="col-4">
@@ -93,9 +109,25 @@
       <input
         type="checkbox"
         class="toggle toggle-primary"
-        bind:this={toggle}
+        bind:this={directMessagesNotificationToggle}
         checked={Boolean($dmAlert)}
-        oninput={onToggle} />
+        oninput={onDirectMessagesNotificationToggle} />
+    </div>
+    <div class="flex justify-between">
+      <p>Show badge for unread direct messages</p>
+      <input
+        type="checkbox"
+        class="toggle toggle-primary"
+        checked={Boolean($showUnreadBadge)}
+        oninput={onShowBadgeOnUnreadToggle} />
+    </div>
+    <div class="flex justify-between">
+      <p>Play sound for new direct messages</p>
+      <input
+        type="checkbox"
+        class="toggle toggle-primary"
+        checked={Boolean($playAlertSound)}
+        oninput={onDirectMessagesNotificationSoundToggle} />
     </div>
     {#if $dmStatus}
       {@const status = getTagValue("status", $dmStatus.tags) || "error"}
