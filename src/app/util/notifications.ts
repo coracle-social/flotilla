@@ -1,4 +1,4 @@
-import {derived} from "svelte/store"
+import {derived, get} from "svelte/store"
 import {synced, throttled} from "@welshman/store"
 import {pubkey, relaysByUrl} from "@welshman/app"
 import {prop, spec, identity, now, groupBy} from "@welshman/lib"
@@ -12,8 +12,16 @@ import {
   makeSpaceChatPath,
   makeRoomPath,
 } from "@app/util/routes"
-import {chats, hasNip29, getUrlsForEvent, userRoomsByUrl, repositoryStore} from "@app/core/state"
+import {
+  chats,
+  hasNip29,
+  getUrlsForEvent,
+  userRoomsByUrl,
+  repositoryStore,
+  showUnreadBadge,
+} from "@app/core/state"
 import {preferencesStorageProvider} from "@src/lib/storage"
+import {Badge} from "@capawesome/capacitor-badge"
 
 // Checked state
 
@@ -57,6 +65,7 @@ export const notifications = derived(
       return true
     }
 
+    // can update to tuple of (path, event_type) if later filtering is desired
     const paths = new Set<string>()
 
     for (const {pubkeys, messages} of $chats) {
@@ -150,3 +159,20 @@ export const notifications = derived(
     return paths
   },
 )
+
+export const badgeCount = derived(notifications, notifications => {
+  // do filtering as desired?
+  return notifications.size
+})
+
+export const handleBadgeCountChanges = (count: number) => {
+  if (get(showUnreadBadge)) {
+    Badge.set({count})
+  } else {
+    clearBadges()
+  }
+}
+
+export const clearBadges = () => {
+  Badge.clear()
+}
