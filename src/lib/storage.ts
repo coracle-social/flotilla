@@ -12,7 +12,6 @@ import {HandlesDbService} from "./database/HandlesDbService"
 import {ZappersDbService} from "./database/ZappersDbService"
 import {FreshnessDbService} from "./database/FreshnessDbService"
 import {PlaintextDbService} from "./database/PlaintextDbService"
-import {Database} from "emoji-picker-element"
 
 export class PreferencesStorageProvider implements StorageProvider {
   get = async <T>(key: string): Promise<T | undefined> => {
