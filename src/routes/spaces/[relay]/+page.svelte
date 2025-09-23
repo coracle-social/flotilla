@@ -3,7 +3,7 @@
   import {displayRelayUrl} from "@welshman/util"
   import {deriveRelay} from "@welshman/app"
   import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
-  import Login2 from "@assets/icons/login-2.svg?dataurl"
+  import Login2 from "@assets/icons/login-3.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import Ghost from "@assets/icons/ghost-smile.svg?dataurl"
   import BillList from "@assets/icons/bill-list.svg?dataurl"

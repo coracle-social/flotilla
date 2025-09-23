@@ -45,7 +45,7 @@
     idea is that you have a public key, which acts as your user ID, and a private key which allows you to
     prove your identity.
 
-    It's very important to keep your private key safe because it grants permanent and complete access to your
+    It's very important to keep your private key secret because it grants permanent and complete access to your
     account.
     `
 

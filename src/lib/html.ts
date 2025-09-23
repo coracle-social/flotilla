@@ -1,4 +1,4 @@
-import {sleep, last} from "@welshman/lib"
+import {sleep, last, randomId} from "@welshman/lib"
 export {preventDefault, stopPropagation} from "svelte/legacy"
 
 export const copyToClipboard = (text: string) => {
@@ -134,4 +134,29 @@ export const scrollToEvent = async (id: string, attempts = 3): Promise<boolean> 
   }
 
   return false
+}
+
+export const compressFile = async (file: File | Blob): Promise<File> => {
+  const {default: Compressor} = await import("compressorjs")
+
+  return new Promise<File>((resolve, _reject) => {
+    new Compressor(file, {
+      maxWidth: 2048,
+      maxHeight: 2048,
+      convertSize: 10 * 1024 * 1024,
+      success: result => resolve(result as File),
+      error: e => {
+        // Non-images break compressor, return the original file
+        if (e.toString().includes("File or Blob")) {
+          if (file instanceof Blob) {
+            file = new File([file], `${randomId()}.${file.type}`, {type: file.type})
+          }
+
+          return resolve(file as File)
+        }
+
+        _reject(e)
+      },
+    })
+  })
 }

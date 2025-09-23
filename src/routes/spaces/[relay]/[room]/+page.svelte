@@ -19,7 +19,7 @@
   import {slide, fade, fly} from "@lib/transition"
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
-  import Login2 from "@assets/icons/login-2.svg?dataurl"
+  import Login2 from "@assets/icons/login-3.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import Logout2 from "@assets/icons/logout-3.svg?dataurl"
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"

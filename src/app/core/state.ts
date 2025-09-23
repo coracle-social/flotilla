@@ -140,6 +140,8 @@ export const PLATFORM_ACCENT = import.meta.env.VITE_PLATFORM_ACCENT
 
 export const PLATFORM_DESCRIPTION = import.meta.env.VITE_PLATFORM_DESCRIPTION
 
+export const DEFAULT_BLOSSOM_SERVERS = fromCsv(import.meta.env.VITE_DEFAULT_BLOSSOM_SERVERS)
+
 export const BURROW_URL = import.meta.env.VITE_BURROW_URL
 
 export const DEFAULT_PUBKEYS = import.meta.env.VITE_DEFAULT_PUBKEYS

@@ -62,6 +62,8 @@
   --primary-content: oklch(var(--pc));
   --secondary: oklch(var(--s));
   --secondary-content: oklch(var(--sc));
+  --neutral: oklch(var(--n));
+  --neutral-content: oklch(var(--nc));
 }
 
 /* safe area insets */
@@ -278,8 +280,8 @@
 }
 
 .tiptap {
-  --tiptap-object-bg: var(--base-100);
-  --tiptap-object-fg: var(--base-content);
+  --tiptap-object-bg: var(--neutral);
+  --tiptap-object-fg: var(--neutral-content);
   --tiptap-active-bg: var(--primary);
   --tiptap-active-fg: var(--primary-content);
 }

@@ -49,7 +49,7 @@
 </script>
 
 <div class="flex flex-col gap-2" role="list">
-  {#each value as item, index (item)}
+  {#each value as item, index}
     <div
       class="flex items-center gap-2"
       draggable="true"

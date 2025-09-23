@@ -3,15 +3,15 @@
   import {sleep, nthEq} from "@welshman/lib"
   import {request} from "@welshman/net"
   import {displayRelayUrl, AUTH_INVITE} from "@welshman/util"
-  import {slide} from "@lib/transition"
+  import LinkRound from "@assets/icons/link-round.svg?dataurl"
+  import Copy from "@assets/icons/copy.svg?dataurl"
   import Spinner from "@lib/components/Spinner.svelte"
   import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
-  import LinkRound from "@assets/icons/link-round.svg?dataurl"
-  import Copy from "@assets/icons/copy.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import QRCode from "@app/components/QRCode.svelte"
   import {clip} from "@app/util/toast"
   import {PLATFORM_URL} from "@app/core/state"
 
@@ -62,11 +62,12 @@
   </ModalHeader>
   <div>
     {#if loading}
-      <p class="center" out:slide>
+      <p class="center">
         <Spinner {loading}>Requesting an invite link...</Spinner>
       </p>
     {:else}
-      <div in:slide>
+      <div class="flex flex-col items-center gap-6">
+        <QRCode code={invite} />
         <Field>
           {#snippet input()}
             <label class="input input-bordered flex w-full items-center gap-2">

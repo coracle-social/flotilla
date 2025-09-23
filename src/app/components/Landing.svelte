@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Login from "@assets/icons/login-2.svg?dataurl"
+  import Login from "@assets/icons/login-3.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"

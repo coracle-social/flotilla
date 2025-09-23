@@ -7,7 +7,7 @@
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Exit from "@assets/icons/logout-3.svg?dataurl"
-  import Login from "@assets/icons/login-2.svg?dataurl"
+  import Login from "@assets/icons/login-3.svg?dataurl"
   import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
   import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic-2.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"

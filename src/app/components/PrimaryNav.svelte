@@ -18,7 +18,7 @@
   import {makeSpacePath} from "@app/util/routes"
   import {notifications} from "@app/util/notifications"
   import Widget from "@assets/icons/widget.svg?dataurl"
-  import AddSquare from "@assets/icons/add-square.svg?dataurl"
+  import Compass from "@assets/icons/compass.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
@@ -30,8 +30,6 @@
   }
 
   const {children}: Props = $props()
-
-  const addSpace = () => pushModal(SpaceAdd)
 
   const showSpacesMenu = () => (spaceUrls.length > 0 ? pushModal(MenuSpaces) : pushModal(SpaceAdd))
 
@@ -83,8 +81,8 @@
             <Avatar icon={Widget} class="!h-10 !w-10" />
           </PrimaryNavItem>
         {/if}
-        <PrimaryNavItem title="Add Space" onclick={addSpace} class="tooltip-right">
-          <Avatar icon={AddSquare} class="!h-10 !w-10" />
+        <PrimaryNavItem title="Add a Space" href="/discover" class="tooltip-right">
+          <Avatar icon={Compass} class="!h-10 !w-10" />
         </PrimaryNavItem>
       {/each}
     </div>

@@ -26,8 +26,8 @@
   })
 </script>
 
-<Button class="max-w-full {props.class}" onclick={copy}>
-  <div bind:this={wrapper} style={`height: ${height}px`}>
+<Button class="flex w-full justify-center {props.class}" onclick={copy}>
+  <div bind:this={wrapper} class="w-md" style={`height: ${height}px`}>
     <canvas
       class="rounded-box"
       bind:this={canvas}

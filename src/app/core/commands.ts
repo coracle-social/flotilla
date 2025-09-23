@@ -3,6 +3,8 @@ import * as nip19 from "nostr-tools/nip19"
 import {get} from "svelte/store"
 import type {Override, MakeOptional} from "@welshman/lib"
 import {
+  first,
+  sha256,
   randomId,
   append,
   remove,
@@ -16,8 +18,11 @@ import {
   fromPairs,
   last,
   nthNe,
+  simpleCache,
+  normalizeUrl,
 } from "@welshman/lib"
-import {decrypt} from "@welshman/signer"
+import {decrypt, Nip01Signer} from "@welshman/signer"
+import type {UploadTask} from "@welshman/editor"
 import type {Feed} from "@welshman/feeds"
 import {makeIntersectionFeed, feedFromFilters, makeRelayFeed} from "@welshman/feeds"
 import type {TrustedEvent, EventContent, Profile} from "@welshman/util"
@@ -58,6 +63,11 @@ import {
   editProfile,
   createProfile,
   uniqTags,
+  getTagValues,
+  uploadBlob,
+  canUploadBlob,
+  encryptFile,
+  makeBlossomAuthEvent,
 } from "@welshman/util"
 import {Pool, AuthStatus, SocketStatus} from "@welshman/net"
 import {Router} from "@welshman/router"
@@ -80,7 +90,9 @@ import {
   tagEventForQuote,
   waitForThunkError,
   getPubkeyRelays,
+  userBlossomServers,
 } from "@welshman/app"
+import {compressFile} from "@src/lib/html"
 import type {SettingsValues, Alert} from "@app/core/state"
 import {
   SETTINGS,
@@ -89,6 +101,7 @@ import {
   INDEXER_RELAYS,
   NOTIFIER_PUBKEY,
   NOTIFIER_RELAY,
+  DEFAULT_BLOSSOM_SERVERS,
   userRoomsByUrl,
   userSettingsValues,
   canDecrypt,
@@ -680,4 +693,114 @@ export const updateProfile = async ({
   const relays = router.merge(scenarios).getUrls()
 
   await publishThunk({event, relays}).result
+}
+
+// File upload
+
+export const normalizeBlossomUrl = (url: string) => normalizeUrl(url.replace(/^ws/, "http"))
+
+export const hasBlossomSupport = simpleCache(async ([url]: [string]) => {
+  const server = normalizeBlossomUrl(url)
+  const $signer = signer.get() || Nip01Signer.ephemeral()
+  const headers: Record<string, string> = {
+    "X-Content-Type": "text/plain",
+    "X-Content-Length": "1",
+    "X-SHA-256": "73cb3858a687a8494ca3323053016282f3dad39d42cf62ca4e79dda2aac7d9ac",
+  }
+
+  try {
+    const authEvent = await $signer.sign(makeBlossomAuthEvent({action: "upload", server}))
+    const res = await canUploadBlob(server, {authEvent, headers})
+
+    return res.status === 200
+  } catch (e) {
+    if (!String(e).match(/Failed to fetch|NetworkError/)) {
+      console.error(e)
+    }
+  }
+
+  return false
+})
+
+export type GetBlossomServerOptions = {
+  url?: string
+}
+
+export const getBlossomServer = async (options: GetBlossomServerOptions = {}) => {
+  if (options.url) {
+    if (await hasBlossomSupport(options.url)) {
+      return normalizeBlossomUrl(options.url)
+    }
+  }
+
+  const userUrls = getTagValues("server", getListTags(userBlossomServers.get()))
+
+  for (const url of userUrls) {
+    return normalizeBlossomUrl(url)
+  }
+
+  return first(DEFAULT_BLOSSOM_SERVERS)!
+}
+
+export type UploadFileOptions = {
+  url?: string
+  encrypt?: boolean
+}
+
+export type UploadFileResult = {
+  error?: string
+  result?: UploadTask
+}
+
+export const uploadFile = async (file: File, options: UploadFileOptions = {}) => {
+  try {
+    const {name, type} = file
+
+    if (!type.match("image/(webp|gif)")) {
+      file = await compressFile(file)
+    }
+
+    const tags: string[][] = []
+
+    if (options.encrypt) {
+      const {ciphertext, key, nonce, algorithm} = await encryptFile(file)
+
+      tags.push(
+        ["decryption-key", key],
+        ["decryption-nonce", nonce],
+        ["encryption-algorithm", algorithm],
+      )
+
+      file = new File([new Blob([ciphertext])], name, {
+        type: "application/octet-stream",
+      })
+    }
+
+    const server = await getBlossomServer(options)
+    const hashes = [await sha256(await file.arrayBuffer())]
+    const $signer = signer.get() || Nip01Signer.ephemeral()
+    const authTemplate = makeBlossomAuthEvent({action: "upload", server, hashes})
+    const authEvent = await $signer.sign(authTemplate)
+    const res = await uploadBlob(server, file, {authEvent})
+    const text = await res.text()
+
+    let {uploaded, url, ...task} = parseJson(text) || {}
+
+    if (!uploaded) {
+      return {error: text}
+    }
+
+    // Always append file extension if missing
+    if (new URL(url).pathname.split(".").length === 1) {
+      url += "." + type.split("/")[1]
+    }
+
+    const result = {...task, tags, url}
+
+    return {result}
+  } catch (e: any) {
+    console.error("Error caught when uploading file:", e)
+
+    return {error: e.toString()}
+  }
 }

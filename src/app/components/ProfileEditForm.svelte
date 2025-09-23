@@ -8,7 +8,7 @@
   import Field from "@lib/components/Field.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
-  import InputProfilePicture from "@lib/components/InputProfilePicture.svelte"
+  import InputProfilePicture from "@app/components/InputProfilePicture.svelte"
   import InfoHandle from "@app/components/InfoHandle.svelte"
   import {pushModal} from "@app/util/modal"
 

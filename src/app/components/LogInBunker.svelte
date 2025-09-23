@@ -48,10 +48,17 @@
     try {
       const {signerPubkey, connectSecret, relays} = Nip46Broker.parseBunkerUrl($bunker)
 
-      if (!signerPubkey || relays.length === 0) {
+      if (!signerPubkey) {
         return pushToast({
           theme: "error",
           message: "Sorry, it looks like that's an invalid bunker link.",
+        })
+      }
+
+      if (relays.length === 0) {
+        return pushToast({
+          theme: "error",
+          message: "That bunker link does not include any relays.",
         })
       }
 
@@ -91,6 +98,7 @@
   }
 
   const selectConnect = () => {
+    controller.loading.set(false)
     mode = "connect"
   }
 
