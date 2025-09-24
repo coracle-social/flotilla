@@ -77,7 +77,7 @@
     $showUnreadBadge = !$showUnreadBadge
 
     if (!$showUnreadBadge) {
-      clearBadges()
+      await clearBadges()
     }
   }
 

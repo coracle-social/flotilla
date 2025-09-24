@@ -156,6 +156,8 @@ export const notifications = derived(
       }
     }
 
+    paths.add("pls")
+
     return paths
   },
 )
@@ -165,14 +167,14 @@ export const badgeCount = derived(notifications, notifications => {
   return notifications.size
 })
 
-export const handleBadgeCountChanges = (count: number) => {
+export const handleBadgeCountChanges = async (count: number) => {
   if (get(showUnreadBadge)) {
-    Badge.set({count})
+    await Badge.set({count})
   } else {
-    clearBadges()
+    await clearBadges()
   }
 }
 
-export const clearBadges = () => {
-  Badge.clear()
+export const clearBadges = async () => {
+  await Badge.clear()
 }
