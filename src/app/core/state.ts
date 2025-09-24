@@ -351,7 +351,7 @@ export const defaultSettings = {
   trusted_relays: [],
   report_usage: true,
   report_errors: true,
-  send_delay: 3000,
+  send_delay: 0,
   font_size: 1,
 }
 
