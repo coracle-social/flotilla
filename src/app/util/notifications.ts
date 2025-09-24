@@ -18,7 +18,7 @@ import {
   getUrlsForEvent,
   userRoomsByUrl,
   repositoryStore,
-  showUnreadBadge,
+  userSettingsValues,
 } from "@app/core/state"
 import {preferencesStorageProvider} from "@src/lib/storage"
 import {Badge} from "@capawesome/capacitor-badge"
@@ -168,7 +168,7 @@ export const badgeCount = derived(notifications, notifications => {
 })
 
 export const handleBadgeCountChanges = async (count: number) => {
-  if (get(showUnreadBadge)) {
+  if (get(userSettingsValues).show_notifications_badge) {
     await Badge.set({count})
   } else {
     await clearBadges()

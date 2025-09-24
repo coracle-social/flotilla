@@ -16,8 +16,7 @@
     deriveAlertStatus,
     userInboxRelays,
     getAlertFeed,
-    showUnreadBadge,
-    playAlertSound,
+    userSettingsValues,
   } from "@app/core/state"
   import {deleteAlert, createDmAlert} from "@app/core/commands"
   import {clearBadges} from "../util/notifications"
@@ -74,15 +73,15 @@
   }
 
   const onShowBadgeOnUnreadToggle = async () => {
-    $showUnreadBadge = !$showUnreadBadge
+    $userSettingsValues.show_notifications_badge = !$userSettingsValues.show_notifications_badge
 
-    if (!$showUnreadBadge) {
+    if (!$userSettingsValues.show_notifications_badge) {
       await clearBadges()
     }
   }
 
   const onDirectMessagesNotificationSoundToggle = async () => {
-    $playAlertSound = !$playAlertSound
+    $userSettingsValues.play_notification_sound = !$userSettingsValues.play_notification_sound
   }
 
   let directMessagesNotificationToggle: HTMLInputElement
@@ -123,7 +122,7 @@
       <input
         type="checkbox"
         class="toggle toggle-primary"
-        checked={Boolean($showUnreadBadge)}
+        checked={Boolean($userSettingsValues.show_notifications_badge)}
         oninput={onShowBadgeOnUnreadToggle} />
     </div>
     <div class="flex justify-between">
@@ -131,7 +130,7 @@
       <input
         type="checkbox"
         class="toggle toggle-primary"
-        checked={Boolean($playAlertSound)}
+        checked={Boolean($userSettingsValues.play_notification_sound)}
         oninput={onDirectMessagesNotificationSoundToggle} />
     </div>
     {#if $dmStatus}

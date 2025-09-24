@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {playAlertSound} from "@app/core/state"
+  import {userSettingsValues} from "@app/core/state"
   import {notifications} from "../util/notifications"
 
   let audioElement: HTMLAudioElement
@@ -8,7 +8,7 @@
   let notificationCount = $state($notifications.size)
 
   const playSound = () => {
-    if ($playAlertSound) {
+    if ($userSettingsValues.play_notification_sound) {
       audioElement.play()
     }
   }
