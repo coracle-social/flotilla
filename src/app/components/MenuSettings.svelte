@@ -23,7 +23,7 @@
 
 <div class="column menu gap-2">
   <Link replaceState href="/settings/profile">
-    <CardButton class="dark:btn-neutral">
+    <CardButton class="btn-neutral">
       {#snippet icon()}
         <div><Icon icon={UserRounded} size={7} /></div>
       {/snippet}
@@ -36,7 +36,7 @@
     </CardButton>
   </Link>
   <Link replaceState href="/settings/alerts">
-    <CardButton class="dark:btn-neutral">
+    <CardButton class="btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Bell} size={7} /></div>
       {/snippet}
@@ -49,7 +49,7 @@
     </CardButton>
   </Link>
   <Link replaceState href="/settings/wallet">
-    <CardButton class="dark:btn-neutral">
+    <CardButton class="btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Wallet} size={7} /></div>
       {/snippet}
@@ -62,7 +62,7 @@
     </CardButton>
   </Link>
   <Link replaceState href="/settings/relays">
-    <CardButton class="dark:btn-neutral">
+    <CardButton class="btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Server} size={7} /></div>
       {/snippet}
@@ -75,7 +75,7 @@
     </CardButton>
   </Link>
   <Link replaceState href="/settings/content">
-    <CardButton class="dark:btn-neutral">
+    <CardButton class="btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Settings} size={7} /></div>
       {/snippet}
@@ -88,7 +88,7 @@
     </CardButton>
   </Link>
   <Button onclick={toggleTheme}>
-    <CardButton class="dark:btn-neutral">
+    <CardButton class="btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Moon} size={7} /></div>
       {/snippet}
@@ -101,7 +101,7 @@
     </CardButton>
   </Button>
   <Link replaceState href="/settings/about">
-    <CardButton class="dark:btn-neutral">
+    <CardButton class="btn-neutral">
       {#snippet icon()}
         <div><Icon icon={Code2} size={7} /></div>
       {/snippet}

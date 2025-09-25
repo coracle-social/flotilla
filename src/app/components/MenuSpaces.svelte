@@ -19,7 +19,7 @@
       <Divider />
     {/if}
     <Link href="/discover">
-      <CardButton class="dark:btn-neutral">
+      <CardButton class="btn-neutral">
         {#snippet icon()}
           <div><Icon icon={Compass} size={7} /></div>
         {/snippet}

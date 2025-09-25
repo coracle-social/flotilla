@@ -3,6 +3,7 @@
   import {fade} from "@lib/transition"
   import CompassBig from "@assets/icons/compass-big.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
+  import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic.svg?dataurl"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
@@ -64,7 +65,7 @@
   <div class="flex flex-col gap-2">
     <Link href={goalsPath} class="btn btn-neutral w-full justify-start">
       <div class="relative flex items-center gap-2">
-        <Icon icon={NotesMinimalistic} />
+        <Icon icon={StarFallMinimalistic} />
         Goals
         {#if $notifications.has(goalsPath)}
           <div

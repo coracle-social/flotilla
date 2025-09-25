@@ -35,7 +35,7 @@
         {/snippet}
       </CardButton>
     </Button>
-    <Button onclick={signUp} class="dark:btn-neutral">
+    <Button onclick={signUp} class="btn-neutral">
       <CardButton>
         {#snippet icon()}
           <div><Icon icon={AddCircle} size={7} /></div>
