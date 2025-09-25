@@ -69,11 +69,11 @@
 
     if (!parsed || hideMediaAtDepth <= depth) return false
 
-    if (isLink(parsed) && $userSettingsValues.show_media && isStartOrEnd(i)) {
+    if (isLink(parsed) && $userSettingsValues.show_media && isStartAndEnd(i)) {
       return true
     }
 
-    if ((isEvent(parsed) || isAddress(parsed)) && isStartOrEnd(i)) {
+    if ((isEvent(parsed) || isAddress(parsed)) && isStartAndEnd(i)) {
       return true
     }
 
@@ -94,8 +94,6 @@
   const isEnd = (i: number) => isBoundary(i + 1)
 
   const isStartAndEnd = (i: number) => isStart(i) && isEnd(i)
-
-  const isStartOrEnd = (i: number) => isStart(i) || isEnd(i)
 
   const ignoreWarning = () => {
     warning = null
