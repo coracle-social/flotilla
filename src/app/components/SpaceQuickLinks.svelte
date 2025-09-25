@@ -14,7 +14,7 @@
   import Button from "@lib/components/Button.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"
-  import {makeThreadPath, makeCalendarPath, makeRoomPath, makeSpacePath} from "@app/util/routes"
+  import {makeRoomPath, makeSpacePath} from "@app/util/routes"
   import {
     hasNip29,
     deriveUserRooms,
@@ -34,8 +34,9 @@
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url)
   const chatPath = makeSpacePath(url, "chat")
-  const threadsPath = makeThreadPath(url)
-  const calendarPath = makeCalendarPath(url)
+  const goalsPath = makeSpacePath(url, "goals")
+  const threadsPath = makeSpacePath(url, "threads")
+  const calendarPath = makeSpacePath(url, "calendar")
 
   const addRoom = () => pushModal(RoomCreate, {url})
 
@@ -61,7 +62,19 @@
     Quick Links
   </h3>
   <div class="flex flex-col gap-2">
-    <Link href={threadsPath} class="btn btn-primary w-full justify-start">
+    <Link href={goalsPath} class="btn btn-neutral w-full justify-start">
+      <div class="relative flex items-center gap-2">
+        <Icon icon={NotesMinimalistic} />
+        Goals
+        {#if $notifications.has(goalsPath)}
+          <div
+            class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-primary-content"
+            transition:fade>
+          </div>
+        {/if}
+      </div>
+    </Link>
+    <Link href={threadsPath} class="btn btn-neutral w-full justify-start">
       <div class="relative flex items-center gap-2">
         <Icon icon={NotesMinimalistic} />
         Threads
@@ -73,7 +86,7 @@
         {/if}
       </div>
     </Link>
-    <Link href={calendarPath} class="btn btn-secondary w-full justify-start">
+    <Link href={calendarPath} class="btn btn-neutral w-full justify-start">
       <div class="relative flex items-center gap-2">
         <Icon icon={CalendarMinimalistic} />
         Calendar
