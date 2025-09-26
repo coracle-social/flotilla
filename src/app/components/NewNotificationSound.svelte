@@ -5,10 +5,19 @@
 
   let audioElement: HTMLAudioElement
 
+  let enabled = $state(false)
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      enabled = true
+    } else {
+      enabled = false
+    }
+  })
   let notificationCount = $state($notifications.size)
 
   const playSound = () => {
-    if ($userSettingsValues.play_notification_sound) {
+    if (enabled && $userSettingsValues.play_notification_sound) {
       audioElement.play()
     }
   }
