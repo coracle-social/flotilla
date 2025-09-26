@@ -338,6 +338,8 @@ export type SettingsValues = {
   report_errors: boolean
   send_delay: number
   font_size: number
+  play_notification_sound: boolean
+  show_notifications_badge: boolean
 }
 
 export type Settings = {
@@ -353,6 +355,8 @@ export const defaultSettings = {
   report_errors: true,
   send_delay: 0,
   font_size: 1,
+  play_notification_sound: true,
+  show_notifications_badge: true,
 }
 
 export const settings = deriveEventsMapped<Settings>(repository, {

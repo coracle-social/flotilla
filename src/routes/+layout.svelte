@@ -109,6 +109,8 @@
   import * as requests from "@app/core/requests"
   import * as notifications from "@app/util/notifications"
   import * as appState from "@app/core/state"
+  import {badgeCount, handleBadgeCountChanges} from "@app/util/notifications"
+  import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
 
   // Migration: old nostrtalk instance used different sessions
   if ($session && !$signer) {
@@ -465,6 +467,9 @@
         },
       )
 
+      // subscribe to badge count for changes
+      badgeCount.subscribe(handleBadgeCountChanges)
+
       // Listen for signer errors, report to user via toast
       signerLog.subscribe(
         throttle(10_000, $log => {
@@ -504,5 +509,6 @@
     </AppContainer>
     <ModalContainer />
     <div class="tippy-target"></div>
+    <NewNotificationSound />
   </div>
 {/await}
