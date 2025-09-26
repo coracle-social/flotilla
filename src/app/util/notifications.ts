@@ -65,7 +65,6 @@ export const notifications = derived(
       return true
     }
 
-    // can update to tuple of (path, event_type) if later filtering is desired
     const paths = new Set<string>()
 
     for (const {pubkeys, messages} of $chats) {
@@ -156,14 +155,11 @@ export const notifications = derived(
       }
     }
 
-    paths.add("pls")
-
     return paths
   },
 )
 
 export const badgeCount = derived(notifications, notifications => {
-  // do filtering as desired?
   return notifications.size
 })
 
