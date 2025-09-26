@@ -1,5 +1,7 @@
 import {type StorageProvider} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
+import type {Unsubscriber} from "svelte/store"
+import {Encoding, Filesystem, type Directory} from "@capacitor/filesystem"
 
 export class PreferencesStorageProvider implements StorageProvider {
   get = async <T>(key: string): Promise<T | undefined> => {
@@ -26,3 +28,34 @@ export class PreferencesStorageProvider implements StorageProvider {
 
 // singleton instance of PreferencesStorageProvider
 export const preferencesStorageProvider = new PreferencesStorageProvider()
+
+export interface FilesystemStorageProvider {
+  initializeState(): Promise<void>
+  sync(): Unsubscriber
+  clearStorage(): Promise<void>
+}
+
+export const getAllFromFile = async <T>(
+  filepath: string,
+  directory: Directory,
+  encoding: Encoding,
+): Promise<T[]> => {
+  try {
+    const contents = (
+      await Filesystem.readFile({
+        path: filepath,
+        directory,
+        encoding,
+      })
+    ).data.toString()
+
+    if (!contents || contents == "") {
+      return []
+    }
+
+    return JSON.parse(contents)
+  } catch (err) {
+    // file doesn't exist
+    return []
+  }
+}
