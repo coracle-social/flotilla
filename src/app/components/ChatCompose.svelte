@@ -10,11 +10,10 @@
   import {makeEditor} from "@app/editor"
 
   type Props = {
-    url?: string
     onSubmit: (event: EventContent) => void
   }
 
-  const {onSubmit, url}: Props = $props()
+  const {onSubmit}: Props = $props()
 
   const autofocus = !isMobile
 
@@ -39,11 +38,11 @@
   }
 
   const editor = makeEditor({
-    url,
     autofocus,
     submit,
     uploading,
     aggressive: true,
+    encryptFiles: true,
   })
 </script>
 

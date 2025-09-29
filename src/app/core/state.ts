@@ -148,8 +148,6 @@ export const DEFAULT_PUBKEYS = import.meta.env.VITE_DEFAULT_PUBKEYS
 
 export const DUFFLEPUD_URL = "https://dufflepud.onrender.com"
 
-export const IMGPROXY_URL = "https://imgproxy.coracle.social"
-
 export const NIP46_PERMS =
   "nip44_encrypt,nip44_decrypt," +
   [CLIENT_AUTH, AUTH_JOIN, MESSAGE, THREAD, COMMENT, ROOMS, WRAP, REACTION, ZAP_REQUEST]
@@ -179,20 +177,6 @@ export const colors = [
 ]
 
 export const dufflepud = (path: string) => DUFFLEPUD_URL + "/" + path
-
-export const imgproxy = (url: string, {w = 640, h = 1024} = {}) => {
-  if (!url || url.match("gif$")) {
-    return url
-  }
-
-  url = url.split("?")[0]
-
-  try {
-    return url ? `${IMGPROXY_URL}/x/s:${w}:${h}/${btoa(url)}` : url
-  } catch (e) {
-    return url
-  }
-}
 
 export const entityLink = (entity: string) => `https://coracle.social/${entity}`
 
@@ -533,6 +517,11 @@ export const chats = derived(
     const messagesByChatId = new Map<string, TrustedEvent[]>()
 
     for (const message of $messages) {
+      // Filter out messages we sent but aren't addressed to the user
+      if (!getPubkeyTagValues(message.wrap?.tags || []).includes($pubkey!)) {
+        continue
+      }
+
       const chatId = makeChatId(getPubkeyTagValues(message.tags).concat(message.pubkey))
 
       pushToMapKey(messagesByChatId, chatId, message)

@@ -11,6 +11,7 @@ import {uploadFile} from "@app/core/commands"
 import {pushToast} from "@app/util/toast"
 
 export const makeEditor = async ({
+  encryptFiles = false,
   aggressive = false,
   autofocus = false,
   charCount,
@@ -21,6 +22,7 @@ export const makeEditor = async ({
   uploading,
   wordCount,
 }: {
+  encryptFiles?: boolean
   aggressive?: boolean
   autofocus?: boolean
   charCount?: Writable<number>
@@ -51,7 +53,8 @@ export const makeEditor = async ({
           },
           fileUpload: {
             config: {
-              upload: (attrs: FileAttributes) => uploadFile(attrs.file, {url, encrypt: true}),
+              upload: (attrs: FileAttributes) =>
+                uploadFile(attrs.file, {url, encrypt: encryptFiles}),
               onDrop: () => uploading?.set(true),
               onComplete: () => uploading?.set(false),
               onUploadError(currentEditor, task) {

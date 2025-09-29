@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {ParsedEmojiValue} from "@welshman/content"
-  import {imgproxy} from "@app/core/state"
 
   export let value: ParsedEmojiValue
 
@@ -8,10 +7,7 @@
 </script>
 
 {#if value.url}
-  <img
-    {alt}
-    src={imgproxy(value.url, {w: 24, h: 24})}
-    class="-mt-0.5 inline h-[1em] min-w-[1em] align-middle" />
+  <img {alt} src={value.url} class="-mt-0.5 inline h-[1em] min-w-[1em] align-middle" />
 {:else}
   {alt}
 {/if}

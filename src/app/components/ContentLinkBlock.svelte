@@ -1,6 +1,6 @@
 <script lang="ts">
   import {ellipsize, displayUrl, postJson} from "@welshman/lib"
-  import {dufflepud, imgproxy} from "@app/core/state"
+  import {dufflepud} from "@app/core/state"
   import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
@@ -51,7 +51,7 @@
             <img
               alt="Link preview"
               onerror={onError}
-              src={imgproxy(preview.image)}
+              src={preview.image}
               class="bg-alt max-h-72 rounded-t-box object-contain object-center" />
           {/if}
           <div class="flex flex-col gap-2 p-4">
