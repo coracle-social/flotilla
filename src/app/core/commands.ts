@@ -750,6 +750,7 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
       })
     }
 
+    const ext = "." + type.split("/")[1]
     const server = await getBlossomServer(options)
     const hashes = [await sha256(await file.arrayBuffer())]
     const $signer = signer.get() || Nip01Signer.ephemeral()
@@ -764,9 +765,11 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
       return {error: text}
     }
 
-    // Always append file extension if missing
-    if (new URL(url).pathname.split(".").length === 1) {
-      url += "." + type.split("/")[1]
+    // Always append correct file extension if we encrypted the file, or if it's missing
+    if (options.encrypt) {
+      url = url.replace(/\.\w+$/, "") + ext
+    } else if (new URL(url).pathname.split(".").length === 1) {
+      url += ext
     }
 
     const result = {...task, tags, url}
