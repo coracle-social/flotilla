@@ -58,9 +58,9 @@
     }
 
     const tags = [
+      ...ed.storage.nostr.getEditorTags(),
       ["d", values.d || randomId()],
       ["title", title],
-      ...ed.storage.nostr.getEditorTags(),
     ]
 
     if (await shouldProtect) {
