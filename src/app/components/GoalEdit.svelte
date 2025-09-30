@@ -6,6 +6,7 @@
   import ThreadForm, {type Values} from "@app/components/ThreadForm.svelte"
   import Button from "@lib/components/Button.svelte"
   import GoalForm from "@app/components/GoalForm.svelte"
+  import {ensureNumber} from "@welshman/lib"
 
   type Props = {
     url: string
@@ -18,8 +19,9 @@
 
   const initialValues = {
     d: getTagValue("d", event.tags)!,
-    title: getTagValue("title", event.tags)!,
-    content: event.content,
+    title: event.content,
+    summary: getTagValue("summary", event.tags)!,
+    amount: ensureNumber(getTagValue("amount", event.tags)!),
   }
 </script>
 
@@ -27,14 +29,14 @@
   {#snippet header()}
     <ModalHeader>
       {#snippet title()}
-        <div>Edit Thread</div>
+        <div>Edit Goal</div>
       {/snippet}
     </ModalHeader>
   {/snippet}
   {#snippet footer()}
     <div class="mt-4 flex flex-row items-center justify-between gap-4">
       <Button class="btn btn-neutral" onclick={back}>Discard Changes</Button>
-      <Button type="submit" class="btn btn-primary">Edit Thread</Button>
+      <Button type="submit" class="btn btn-primary">Edit Goal</Button>
     </div>
   {/snippet}
 </GoalForm>

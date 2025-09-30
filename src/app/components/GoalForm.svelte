@@ -19,6 +19,9 @@
 
   export type Values = {
     d?: string,
+    title?: string,
+    summary?: string,
+    amount?: number,
   }
 
   type Props = {
@@ -43,7 +46,7 @@
   const submit = async () => {
     if ($uploading) return
 
-    if (!content) {
+    if (!title) {
       return pushToast({
         theme: "error",
         message: "Please provide a title for your funding goal.",
@@ -72,7 +75,7 @@
       tags.push(PROTECTED)
     }
 
-    const event = makeEvent(ZAP_GOAL, {content, tags})
+    const event = makeEvent(ZAP_GOAL, {content: title, tags})
 
     publishThunk({
       relays: [url],
@@ -82,10 +85,10 @@
     back()
   }
 
-  const editor = makeEditor({url, submit, uploading, placeholder: "What's on your mind?"})
+  const editor = makeEditor({url, submit, uploading, content: values.summary, placeholder: "What's on your mind?"})
 
-  let content = $state("")
-  let amount = $state(1000)
+  let title = $state(values.title || "")
+  let amount = $state(values.amount || 1000)
 </script>
 
 <form class="column gap-4" onsubmit={preventDefault(submit)}>
@@ -100,7 +103,7 @@
           <!-- svelte-ignore a11y_autofocus -->
           <input
             autofocus={!isMobile}
-            bind:value={content}
+            bind:value={title}
             class="grow"
             type="text"
             placeholder="What do funds go towards?" />

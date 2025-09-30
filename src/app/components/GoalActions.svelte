@@ -1,11 +1,17 @@
 <script lang="ts">
   import type {TrustedEvent, EventContent} from "@welshman/util"
+  import {pubkey} from "@welshman/app"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
   import {publishDelete, publishReaction, canEnforceNip70} from "@app/core/commands"
   import {makeGoalPath} from "@app/util/routes"
+  import {pushModal} from "@app/util/modal"
+  import Button from "@lib/components/Button.svelte"
+  import Icon from "@lib/components/Icon.svelte"
+  import Pen2 from "@assets/icons/pen-2.svg?dataurl"
+  import GoalEdit from "@app/components/GoalEdit.svelte"
 
   interface Props {
     url: any
@@ -18,6 +24,8 @@
   const shouldProtect = canEnforceNip70(url)
 
   const path = makeGoalPath(url, event.id)
+
+  const editEvent = () => pushModal(GoalEdit, {url, event})
 
   const deleteReaction = async (event: TrustedEvent) =>
     publishDelete({relays: [url], event, protect: await shouldProtect})
@@ -33,6 +41,17 @@
     {#if showActivity}
       <EventActivity {url} {path} {event} />
     {/if}
-    <EventActions {url} {event} hideZap noun="Goal" />
+    <EventActions {url} {event} hideZap noun="Goal">
+      {#snippet customActions()}
+        {#if event.pubkey === $pubkey}
+          <li>
+            <Button onclick={editEvent}>
+              <Icon size={4} icon={Pen2} />
+              Edit Event
+            </Button>
+          </li>
+        {/if}
+      {/snippet}
+    </EventActions>
   </div>
 </div>
