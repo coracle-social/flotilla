@@ -7,7 +7,6 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
-  import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import {updateProfile} from "@app/core/commands"
   import {pushToast} from "@app/util/toast"
 

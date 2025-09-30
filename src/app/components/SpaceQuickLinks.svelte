@@ -69,7 +69,7 @@
         Goals
         {#if $notifications.has(goalsPath)}
           <div
-            class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-primary-content"
+            class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-neutral-content"
             transition:fade>
           </div>
         {/if}
@@ -81,7 +81,7 @@
         Threads
         {#if $notifications.has(threadsPath)}
           <div
-            class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-primary-content"
+            class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-neutral-content"
             transition:fade>
           </div>
         {/if}
@@ -93,7 +93,7 @@
         Calendar
         {#if $notifications.has(calendarPath)}
           <div
-            class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-primary-content"
+            class="absolute -right-3 -top-1 h-2 w-2 rounded-full bg-neutral-content"
             transition:fade>
           </div>
         {/if}

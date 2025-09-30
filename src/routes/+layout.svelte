@@ -24,27 +24,7 @@
     WEEK,
   } from "@welshman/lib"
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
-  import {
-    WRAP,
-    ALERT_STATUS,
-    ALERT_EMAIL,
-    ALERT_WEB,
-    ALERT_IOS,
-    ALERT_ANDROID,
-    EVENT_TIME,
-    APP_DATA,
-    THREAD,
-    MESSAGE,
-    INBOX_RELAYS,
-    DIRECT_MESSAGE,
-    DIRECT_MESSAGE_FILE,
-    MUTES,
-    FOLLOWS,
-    PROFILE,
-    RELAYS,
-    BLOSSOM_SERVERS,
-    ROOMS,
-  } from "@welshman/util"
+  import {WRAP} from "@welshman/util"
   import {Nip46Broker, makeSecret} from "@welshman/signer"
   import type {Socket, RelayMessage, ClientMessage} from "@welshman/net"
   import {
@@ -61,7 +41,6 @@
   } from "@welshman/net"
   import {
     loadRelay,
-    db,
     repository,
     pubkey,
     session,
@@ -71,7 +50,6 @@
     dropSession,
     loginWithNip01,
     loginWithNip46,
-    EventsStorageAdapter,
     loadRelaySelections,
     SignerLogEntryStatus,
   } from "@welshman/app"
@@ -83,7 +61,7 @@
   import * as net from "@welshman/net"
   import * as app from "@welshman/app"
   import {nsecDecode} from "@lib/util"
-  import {defaultStorageProviders, initFileStorage, preferencesStorageProvider} from "@lib/storage"
+  import {preferencesStorageProvider} from "@lib/storage"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import {setupTracking} from "@app/util/tracking"
@@ -105,11 +83,13 @@
   import {initializePushNotifications} from "@app/util/push"
   import * as commands from "@app/core/commands"
   import * as requests from "@app/core/requests"
-  import * as notifications from "@app/util/notifications"
   import * as appState from "@app/core/state"
-  import {badgeCount, handleBadgeCountChanges} from "@app/util/notifications"
+  import * as notifications from "@app/util/notifications"
+  import * as storage from "@app/util/storage"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
-  import {EventsStorageProvider} from "@lib/storage/events"
+
+  // Migration: delete old indexeddb database
+  indexedDB?.deleteDatabase('flotilla')
 
   // Migration: old nostrtalk instance used different sessions
   if ($session && !$signer) {
@@ -122,6 +102,8 @@
   const {children} = $props()
 
   const ready = $state(defer<void>())
+
+  let initialized = false
 
   onMount(async () => {
     Object.assign(window, {
@@ -240,7 +222,8 @@
       document.documentElement.style["font-size"] = `${$userSettingsValues.font_size}rem`
     })
 
-    if (!db) {
+    if (!initialized) {
+      initialized = true
       setupTracking()
       setupAnalytics()
 
@@ -279,42 +262,10 @@
         storage: preferencesStorageProvider,
       })
 
-      await initFileStorage({...defaultStorageProviders,
-        events: new EventsStorageProvider({
-          limit: 10_000,
-          repository,
-          rankEvent: (e: TrustedEvent) => {
-            if (
-              [
-                PROFILE,
-                FOLLOWS,
-                MUTES,
-                RELAYS,
-                BLOSSOM_SERVERS,
-                INBOX_RELAYS,
-                ROOMS,
-                APP_DATA,
-                ALERT_STATUS,
-                ALERT_EMAIL,
-                ALERT_WEB,
-                ALERT_IOS,
-                ALERT_ANDROID,
-              ].includes(e.kind)
-            ) {
-              return 1
-            }
+      // Sync application data (relay, events, etc)
+      await storage.syncDataStores()
 
-            if (
-              [EVENT_TIME, THREAD, MESSAGE, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(e.kind)
-            ) {
-              return 0.9
-            }
-
-            return 0
-          },
-        }),
-      })
-
+      // Wait 300 ms for any throttled stores to finish
       sleep(300).then(() => ready.resolve())
 
       defaultSocketPolicies.push(
@@ -465,7 +416,7 @@
       )
 
       // subscribe to badge count for changes
-      badgeCount.subscribe(handleBadgeCountChanges)
+      notifications.badgeCount.subscribe(notifications.handleBadgeCountChanges)
 
       // Listen for signer errors, report to user via toast
       signerLog.subscribe(

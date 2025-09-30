@@ -7,7 +7,7 @@
   import {updateProfile} from "@app/core/commands"
   import {clearModals} from "@app/util/modal"
   import {userProfile, session} from "@welshman/app"
-  import {makeProfile, type NWCInfo} from "@welshman/util"
+  import {makeProfile} from "@welshman/util"
 
   const lud16 = getWalletAddress($session!.wallet!)
 
