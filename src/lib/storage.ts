@@ -1,17 +1,11 @@
+import {parseJson} from "@welshman/lib"
 import {type StorageProvider} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
-import type {Unsubscriber} from "svelte/store"
-import {Encoding, Filesystem, type Directory} from "@capacitor/filesystem"
-import {EventsStorageProvider} from "@lib/storage/events"
-import {FreshnessStorageProvider} from "@lib/storage/freshness"
-import {HandlesStorageProvider} from "@lib/storage/handles"
-import {PlaintextStorageProvider} from "@lib/storage/plaintext"
-import {RelaysStorageProvider} from "@lib/storage/relays"
-import {TrackerStorageProvider} from "@lib/storage/tracker"
-import {ZappersStorageProvider} from "@lib/storage/zappers"
-import {repository, tracker, unsubscribers} from "@welshman/app"
+import {Encoding, Filesystem, Directory} from "@capacitor/filesystem"
 
 export class PreferencesStorageProvider implements StorageProvider {
+  p = Promise.resolve()
+
   get = async <T>(key: string): Promise<T | undefined> => {
     const result = await Preferences.get({key})
     if (!result.value) return undefined
@@ -22,74 +16,94 @@ export class PreferencesStorageProvider implements StorageProvider {
     }
   }
 
-  p = Promise.resolve()
   set = async <T>(key: string, value: T): Promise<void> => {
-    this.p = this.p.then(async () => await Preferences.set({key, value: JSON.stringify(value)}))
+    this.p = this.p.then(() => Preferences.set({key, value: JSON.stringify(value)}))
+
+    await this.p
+  }
+
+  clear = async () => {
+    this.p = this.p.then(() => Preferences.clear())
+
+    await this.p
+  }
+}
+
+export const preferencesStorageProvider = new PreferencesStorageProvider()
+
+export class CollectionStorageProvider implements StorageProvider {
+  p = Promise.resolve()
+
+  get = async <T>(key: string): Promise<T[]> => {
+    try {
+      const file = await Filesystem.readFile({
+        path: key + ".json",
+        directory: Directory.Data,
+        encoding: Encoding.UTF8,
+      })
+
+      const items: T[] = []
+      for (const line of file.data.toString().split("\n")) {
+        const item = parseJson(line)
+
+        if (item) {
+          items.push(item)
+        }
+      }
+
+      return items
+    } catch (err) {
+      // file doesn't exist, or isn't valid json
+      return []
+    }
+  }
+
+  set = async <T>(key: string, value: T[]): Promise<void> => {
+    this.p = this.p.then(async () => {
+      await Filesystem.writeFile({
+        path: key + ".json",
+        directory: Directory.Data,
+        encoding: Encoding.UTF8,
+        data: value.map(v => JSON.stringify(v)).join("\n"),
+      })
+    })
+
+    await this.p
+  }
+
+  add = async <T>(key: string, value: T[]): Promise<void> => {
+    this.p = this.p.then(async () => {
+      await Filesystem.appendFile({
+        path: key + ".json",
+        directory: Directory.Data,
+        encoding: Encoding.UTF8,
+        data: value.map(v => JSON.stringify(v)).join("\n"),
+      })
+    })
+
     await this.p
   }
 
   clear = async (): Promise<void> => {
-    await Preferences.clear()
-    this.p = Promise.resolve()
+    this.p = this.p.then(async () => {
+      try {
+        const res = await Filesystem.readdir({path: "./", directory: Directory.Data})
+
+        await Promise.all(
+          res.files.map(file =>
+            Filesystem.deleteFile({
+              path: file.name + ".json",
+              directory: Directory.Data,
+            }),
+          ),
+        )
+      } catch (e) {
+        // Directory might not have been created
+      }
+    })
+
+    await this.p
   }
 }
 
-// singleton instance of PreferencesStorageProvider
-export const preferencesStorageProvider = new PreferencesStorageProvider()
-
-export interface FilesystemStorageProvider {
-  initializeState(): Promise<void>
-  sync(): Unsubscriber
-}
-
-export const getAllFromFile = async <T>(
-  filepath: string,
-  directory: Directory,
-  encoding: Encoding,
-): Promise<T[]> => {
-  try {
-    const contents = (
-      await Filesystem.readFile({
-        path: filepath,
-        directory,
-        encoding,
-      })
-    ).data.toString()
-
-    if (!contents || contents == "") {
-      return []
-    }
-
-    return JSON.parse(contents)
-  } catch (err) {
-    // file doesn't exist
-    return []
-  }
-}
-
-export const defaultStorageProviders = {
-  relays: new RelaysStorageProvider(),
-  handles: new RelaysStorageProvider(),
-  zappers: new ZappersStorageProvider(),
-  freshness: new FreshnessStorageProvider(),
-  plaintext: new PlaintextStorageProvider(),
-  tracker: new TrackerStorageProvider({tracker}),
-  events: new EventsStorageProvider({limit: 10_000, repository, rankEvent: () => 1}),
-}
-
-export const initFileStorage = async (storageProviders: Record<string, FilesystemStorageProvider>) => {
-  await Promise.all(Object.values(storageProviders).map(async provider => {
-    await provider.initializeState()
-    unsubscribers.push(provider.sync())
-  }))
-}
-
-export const clearFileStorage = async (): Promise<void> => {
-  await EventsStorageProvider.clearStorage()
-  await FreshnessStorageProvider.clearStorage()
-  await HandlesStorageProvider.clearStorage()
-  await PlaintextStorageProvider.clearStorage()
-  await RelaysStorageProvider.clearStorage()
-  await TrackerStorageProvider.clearStorage()
-  await ZappersStorageProvider.clearStorage()
-}
+export const collectionStorageProvider = new CollectionStorageProvider()

@@ -84,7 +84,6 @@ import {
   userInboxRelaySelections,
   nip44EncryptToSelf,
   loadRelay,
-  clearStorage,
   dropSession,
   tagEventForComment,
   tagEventForQuote,
@@ -111,7 +110,7 @@ import {
 } from "@app/core/state"
 import {loadAlertStatuses} from "@app/core/requests"
 import {platform, platformName, getPushInfo} from "@app/util/push"
-import {clearFileStorage, preferencesStorageProvider} from "@src/lib/storage"
+import {preferencesStorageProvider, collectionStorageProvider} from "@src/lib/storage"
 
 // Utils
 
@@ -154,12 +153,10 @@ export const logout = async () => {
     dropSession($pubkey)
   }
 
-  await clearStorage()
-
   localStorage.clear()
-  await preferencesStorageProvider.clear()
 
-  await clearFileStorage()
+  await preferencesStorageProvider.clear()
+  await collectionStorageProvider.clear()
 }
 
 // Synchronization
