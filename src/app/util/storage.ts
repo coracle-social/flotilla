@@ -138,7 +138,10 @@ const syncTracker = async () => {
 
   const updateAll = throttle(3000, () => {
     p = p.then(() => {
-      collectionStorageProvider.set("tracker", Array.from(tracker.relaysById.entries()))
+      collectionStorageProvider.set(
+        "tracker",
+        Array.from(tracker.relaysById.entries()).map(([id, relays]) => [id, Array.from(relays)]),
+      )
     })
   })
 

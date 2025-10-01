@@ -1,4 +1,3 @@
-import {parseJson} from "@welshman/lib"
 import {type StorageProvider} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
 import {Encoding, Filesystem, Directory} from "@capacitor/filesystem"
@@ -44,10 +43,10 @@ export class CollectionStorageProvider implements StorageProvider {
 
       const items: T[] = []
       for (const line of file.data.toString().split("\n")) {
-        const item = parseJson(line)
-
-        if (item) {
-          items.push(item)
+        try {
+          items.push(JSON.parse(line))
+        } catch (e) {
+          // pass
         }
       }
 
@@ -77,7 +76,7 @@ export class CollectionStorageProvider implements StorageProvider {
         path: key + ".json",
         directory: Directory.Data,
         encoding: Encoding.UTF8,
-        data: value.map(v => JSON.stringify(v)).join("\n"),
+        data: "\n" + value.map(v => JSON.stringify(v)).join("\n"),
       })
     })
 
@@ -98,7 +97,7 @@ export class CollectionStorageProvider implements StorageProvider {
           ),
         )
       } catch (e) {
-        // Directory might not have been created
+        // Directory might not have been created yet
       }
     })
 

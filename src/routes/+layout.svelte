@@ -89,7 +89,7 @@
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
 
   // Migration: delete old indexeddb database
-  indexedDB?.deleteDatabase('flotilla')
+  indexedDB?.deleteDatabase("flotilla")
 
   // Migration: old nostrtalk instance used different sessions
   if ($session && !$signer) {
