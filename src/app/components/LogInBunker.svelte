@@ -32,9 +32,10 @@
     onNostrConnect: async (response: Nip46ResponseWithResult) => {
       const pubkey = await controller.broker.getPublicKey()
 
+      loginWithNip46(pubkey, controller.clientSecret, response.event.pubkey, SIGNER_RELAYS)
+
       await loadUserData(pubkey)
 
-      loginWithNip46(pubkey, controller.clientSecret, response.event.pubkey, SIGNER_RELAYS)
       setChecked("*")
       clearModals()
     },

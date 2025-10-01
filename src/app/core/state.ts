@@ -395,9 +395,13 @@ export const alerts = withGetter(
     filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]}],
     itemToEvent: item => item.event,
     eventToItem: async event => {
-      const tags = parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, event.content))
+      const $signer = signer.get()
 
-      return {event, tags}
+      if ($signer) {
+        const tags = parseJson(await decrypt($signer, NOTIFIER_PUBKEY, event.content))
+
+        return {event, tags}
+      }
     },
   }),
 )
@@ -425,9 +429,13 @@ export const alertStatuses = withGetter(
     filters: [{kinds: [ALERT_STATUS]}],
     itemToEvent: item => item.event,
     eventToItem: async event => {
-      const tags = parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, event.content))
+      const $signer = signer.get()
 
-      return {event, tags}
+      if ($signer) {
+        const tags = parseJson(await decrypt($signer, NOTIFIER_PUBKEY, event.content))
+
+        return {event, tags}
+      }
     },
   }),
 )
