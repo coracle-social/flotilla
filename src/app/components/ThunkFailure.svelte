@@ -46,8 +46,7 @@
 
 {#if showFailure}
   {@const url = failedUrls[0]}
-  {@const status = $thunk.status[url]}
-  {@const message = $thunk.details[url]}
+  {@const {status, detail: message} = $thunk.results[url]}
   <button
     class="flex w-full justify-end px-1 text-xs {restProps.class}"
     onclick={stopPropagation(noop)}>

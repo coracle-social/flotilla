@@ -168,7 +168,7 @@ export const broadcastUserData = async (relays: string[]) => {
 
   for (const event of events) {
     if (isSignedEvent(event)) {
-      await publishThunk({event, relays}).result
+      await publishThunk({event, relays}).complete
     }
   }
 }
@@ -804,5 +804,5 @@ export const updateProfile = async ({
   const event = makeEvent(template.kind, template)
   const relays = router.merge(scenarios).getUrls()
 
-  await publishThunk({event, relays}).result
+  await publishThunk({event, relays}).complete
 }
