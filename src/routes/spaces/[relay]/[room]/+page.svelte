@@ -137,13 +137,15 @@
       delay: $userSettingsValues.send_delay,
     })
 
-    pushToast({
-      timeout: 30_000,
-      children: {
-        component: ThunkToast,
-        props: {thunk},
-      },
-    })
+    if ($userSettingsValues.send_delay) {
+      pushToast({
+        timeout: 30_000,
+        children: {
+          component: ThunkToast,
+          props: {thunk},
+        },
+      })
+    }
 
     clearParent()
     clearShare()
