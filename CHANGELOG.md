@@ -1,5 +1,19 @@
 # Changelog
 
+# 1.3.0
+
+* Add optional badge and sound for notifications
+* Improve link rendering
+* Remove imgproxy
+* Bring back blossom feature detection for spaces
+* Improve light theme
+* Add more info to signer status
+* Simplify navigation for adding a space
+* Add ability to scan QR code for invite links
+* Streamline wallet setup and move receive address setting
+* Remove indexeddb on mobile, use capacitor file storage API
+* Fix duplicate DMs showing up
+
 # 1.2.5
 
 * Fix icons in build

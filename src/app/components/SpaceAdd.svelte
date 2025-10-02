@@ -32,7 +32,7 @@
         <div>Join a space</div>
       {/snippet}
       {#snippet info()}
-        <div>Enter an invite code or url to join an existing space.</div>
+        <div>Enter an invite link to join an existing space.</div>
       {/snippet}
     </CardButton>
   </Button>
