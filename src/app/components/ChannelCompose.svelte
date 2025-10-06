@@ -11,10 +11,11 @@
 
   type Props = {
     url?: string
+    content?: string
     onSubmit: (event: EventContent) => void
   }
 
-  const {onSubmit, url}: Props = $props()
+  const {content, onSubmit, url}: Props = $props()
 
   const autofocus = !isMobile
 
@@ -38,7 +39,7 @@
     ed.chain().clearContent().run()
   }
 
-  const editor = makeEditor({url, autofocus, submit, uploading, aggressive: true})
+  const editor = makeEditor({url, autofocus, content, submit, uploading, aggressive: true})
 </script>
 
 <form class="relative z-feature flex gap-2 p-2" onsubmit={preventDefault(submit)}>

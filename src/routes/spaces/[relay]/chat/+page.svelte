@@ -281,7 +281,8 @@
       <ChannelComposeParent event={share} clear={clearShare} verb="Sharing" />
     {/if}
   </div>
-  <ChannelCompose bind:this={compose} {onSubmit} {url} />
+<!--  TODO: Here is -->
+  <ChannelCompose bind:this={compose} content="channel chat test" {onSubmit} {url} />
 </div>
 
 {#if showScrollButton}

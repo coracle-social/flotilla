@@ -318,5 +318,6 @@
       <ChatComposeParent event={parent} clear={clearParent} verb="Replying to" />
     {/if}
   </div>
-  <ChatCompose bind:this={compose} {onSubmit} />
+  <!-- TODO: Pass in a handler for onEditPrevious -->
+  <ChatCompose bind:this={compose} content="new something hmr" {onSubmit} />
 </div>
