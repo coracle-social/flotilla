@@ -9,11 +9,12 @@
   import ZapButton from "@app/components/ZapButton.svelte"
 
   type Props = {
-    url: string
+    url?: string
     event: TrustedEvent
+    class?: string
   }
 
-  const {url, event}: Props = $props()
+  const {url, event, ...props}: Props = $props()
 
   const zaps = deriveEventsMapped<Zap>(repository, {
     filters: [{kinds: [ZAP_RESPONSE], "#e": [event.id]}],
@@ -27,7 +28,7 @@
   const daysOld = Math.ceil((now() - event.created_at) / DAY)
 </script>
 
-<div class="card2 bg-alt flex flex-col gap-8">
+<div class="flex flex-col gap-8 {props.class}">
   <div class="flex gap-8">
     <div>
       <p class="text-xl text-primary">{zapAmount} sats</p>

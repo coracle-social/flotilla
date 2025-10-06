@@ -6,20 +6,17 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
-  import NoteContent from "@app/components/NoteContent.svelte"
+  import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import {deriveEvent, entityLink} from "@app/core/state"
   import {goToEvent} from "@app/util/routes"
 
   type Props = {
     value: any
-    hideMediaAtDepth: number
     event: TrustedEvent
-    depth: number
     url?: string
-    minimal?: boolean
   }
 
-  const {value, event, depth, hideMediaAtDepth, url, minimal}: Props = $props()
+  const {value, event, url}: Props = $props()
 
   const {id, identifier, kind, pubkey, relays = []} = value
   const idOrAddress = id || new Address(kind, pubkey, identifier).toString()
@@ -43,17 +40,17 @@
   }
 </script>
 
-<Button class="my-2 block max-w-full text-left" {onclick}>
+<Button class="my-2 block w-full max-w-full text-left" {onclick}>
   {#if $quote}
-    {#if minimal && $quote.kind === MESSAGE}
+    {#if $quote.kind === MESSAGE}
       <div
         class="border-l-2 border-solid border-l-primary py-1 pl-2 opacity-90"
         style="background-color: color-mix(in srgb, var(--primary) 10%, var(--base-300) 90%);">
-        <NoteContent {hideMediaAtDepth} {url} event={$quote} depth={depth + 1} />
+        <NoteContentMinimal trimParent {url} event={$quote} />
       </div>
     {:else}
       <NoteCard event={$quote} {url} class="bg-alt rounded-box p-4">
-        <NoteContent {hideMediaAtDepth} {url} event={$quote} depth={depth + 1} />
+        <NoteContentMinimal {url} event={$quote} />
       </NoteCard>
     {/if}
   {:else}

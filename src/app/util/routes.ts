@@ -3,7 +3,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {goto} from "$app/navigation"
 import {nthEq, sleep} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
-import {tracker} from "@welshman/app"
+import {tracker, relaysByUrl} from "@welshman/app"
 import {scrollToEvent} from "@lib/html"
 import {identity} from "@welshman/lib"
 import {
@@ -23,6 +23,7 @@ import {
   decodeRelay,
   encodeRelay,
   userRoomsByUrl,
+  hasNip29,
   ROOM,
 } from "@app/core/state"
 
@@ -36,6 +37,14 @@ export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => 
         .filter(identity)
         .map(s => encodeURIComponent(s as string))
         .join("/")
+  } else {
+    const relay = relaysByUrl.get().get(url)
+
+    if (hasNip29(relay)) {
+      path += "/recent"
+    } else {
+      path += "/chat"
+    }
   }
 
   return path
@@ -142,4 +151,15 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
   }
 
   return entityLink(nip19.neventEncode({id: event.id, relays: urls}))
+}
+
+export const getChannelItemPath = (url: string, event: TrustedEvent) => {
+  switch (event.kind) {
+    case THREAD:
+      return makeThreadPath(url, event.id)
+    case ZAP_GOAL:
+      return makeGoalPath(url, event.id)
+    case EVENT_TIME:
+      return makeCalendarPath(url, event.id)
+  }
 }

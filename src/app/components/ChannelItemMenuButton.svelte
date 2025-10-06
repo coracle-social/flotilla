@@ -5,7 +5,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
-  import ChannelMessageMenu from "@app/components/ChannelMessageMenu.svelte"
+  import ChannelItemMenu from "@app/components/ChannelItemMenu.svelte"
 
   const {url, event} = $props()
 
@@ -34,7 +34,7 @@
   </Button>
   <Tippy
     bind:popover
-    component={ChannelMessageMenu}
+    component={ChannelItemMenu}
     props={{url, event, onClick}}
     params={{trigger: "manual", interactive: true}} />
 </div>

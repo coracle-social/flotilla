@@ -14,12 +14,10 @@
     isLink,
     isProfile,
     isEvent,
-    isEllipsis,
     isAddress,
     isNewline,
   } from "@welshman/content"
   import type {Parsed} from "@welshman/content"
-  import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -28,54 +26,20 @@
   import ContentEmoji from "@app/components/ContentEmoji.svelte"
   import ContentCode from "@app/components/ContentCode.svelte"
   import ContentLinkInline from "@app/components/ContentLinkInline.svelte"
-  import ContentLinkBlock from "@app/components/ContentLinkBlock.svelte"
   import ContentNewline from "@app/components/ContentNewline.svelte"
-  import ContentQuote from "@app/components/ContentQuote.svelte"
   import ContentTopic from "@app/components/ContentTopic.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
   import {entityLink, userSettingsValues} from "@app/core/state"
 
   interface Props {
     event: any
-    minLength?: number
-    maxLength?: number
-    showEntire?: boolean
-    expandMode?: string
     trimParent?: boolean
     url?: string
   }
 
-  let {
-    event,
-    minLength = 500,
-    maxLength = 700,
-    showEntire = $bindable(false),
-    expandMode = "block",
-    trimParent = false,
-    url,
-  }: Props = $props()
+  const {event, trimParent = false, url}: Props = $props()
 
   const fullContent = parse(event)
-
-  const expand = () => {
-    showEntire = true
-  }
-
-  const isBlock = (i: number) => {
-    const parsed = fullContent[i]
-
-    if (!parsed) return false
-
-    if (isLink(parsed) && $userSettingsValues.show_media && isStartAndEnd(i)) {
-      return true
-    }
-
-    if (isQuote(parsed) && isStartAndEnd(i)) {
-      return true
-    }
-
-    return false
-  }
 
   const isBoundary = (i: number) => {
     const parsed = fullContent[i]
@@ -123,20 +87,8 @@
       result = dropWhile(p => isQuote(p) || isNewline(p), result)
     }
 
-    if (!showEntire) {
-      result = truncate(result, {
-        minLength,
-        maxLength,
-        mediaLength: 200,
-      })
-    }
-
-    return result
+    return truncate(result, {minLength: 200, maxLength: 300, mediaLength: 20})
   })
-
-  const hasEllipsis = $derived(shortContent.some(isEllipsis))
-  const expandInline = $derived(hasEllipsis && expandMode === "inline")
-  const expandBlock = $derived(hasEllipsis && expandMode === "block")
 </script>
 
 <div class="relative">
@@ -149,11 +101,9 @@
       </p>
     </div>
   {:else}
-    <div
-      class="overflow-hidden text-ellipsis break-words"
-      style={expandBlock ? "mask-image: linear-gradient(0deg, transparent 0px, black 100px)" : ""}>
+    <div class="overflow-hidden text-ellipsis break-words">
       {#each shortContent as parsed, i}
-        {#if isNewline(parsed) && !isBlock(i - 1)}
+        {#if isNewline(parsed)}
           <ContentNewline value={parsed.value} />
         {:else if isTopic(parsed)}
           <ContentTopic value={parsed.value} />
@@ -166,41 +116,20 @@
         {:else if isCashu(parsed) || isInvoice(parsed)}
           <ContentToken value={parsed.value} />
         {:else if isLink(parsed)}
-          {#if isBlock(i)}
-            <ContentLinkBlock value={parsed.value} {event} />
-          {:else}
-            <ContentLinkInline value={parsed.value} />
-          {/if}
+          <ContentLinkInline value={parsed.value} />
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />
         {:else if isQuote(parsed)}
-          {#if isBlock(i)}
-            <ContentQuote {url} value={parsed.value} {event} />
-          {:else}
-            <Link
-              external
-              class="overflow-hidden text-ellipsis whitespace-nowrap underline"
-              href={entityLink(parsed.raw)}>
-              {fromNostrURI(parsed.raw).slice(0, 16) + "…"}
-            </Link>
-          {/if}
-        {:else if isEllipsis(parsed) && expandInline}
-          {@html renderAsHtml(parsed)}
-          <button type="button" class="text-sm underline"> Read more </button>
+          <Link
+            external
+            class="overflow-hidden text-ellipsis whitespace-nowrap underline"
+            href={entityLink(parsed.raw)}>
+            {fromNostrURI(parsed.raw).slice(0, 16) + "…"}
+          </Link>
         {:else}
           {@html renderAsHtml(parsed)}
         {/if}
       {/each}
     </div>
-    {#if expandBlock}
-      <div class="relative z-feature -mt-6 flex justify-center py-2">
-        <button
-          type="button"
-          class="btn btn-neutral"
-          onclick={stopPropagation(preventDefault(expand))}>
-          See more
-        </button>
-      </div>
-    {/if}
   {/if}
 </div>

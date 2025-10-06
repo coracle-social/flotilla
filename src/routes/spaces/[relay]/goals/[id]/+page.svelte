@@ -87,7 +87,7 @@
         <div class="col-3 ml-12">
           <Content showEntire event={{...$event, content: summary}} {url} />
           <GoalSummary event={$event} {url} />
-          <GoalActions event={$event} {url} />
+          <GoalActions showRoom event={$event} {url} />
         </div>
       </NoteCard>
       {#if !showAll && $replies.length > 4}

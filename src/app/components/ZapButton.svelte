@@ -9,7 +9,7 @@
   import {pushModal} from "@app/util/modal"
 
   type Props = {
-    url: string
+    url?: string
     event: TrustedEvent
     children: Snippet
     replaceState?: boolean

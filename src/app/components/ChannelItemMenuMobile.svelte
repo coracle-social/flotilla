@@ -2,7 +2,14 @@
   import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent} from "@welshman/util"
   import {pubkey} from "@welshman/app"
+  import Bolt from "@assets/icons/bolt.svg?dataurl"
+  import Reply from "@assets/icons/reply-2.svg?dataurl"
+  import Code2 from "@assets/icons/code-2.svg?dataurl"
+  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
+  import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
+  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
+  import Link from "@lib/components/Link.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
@@ -10,12 +17,8 @@
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import {ENABLE_ZAPS} from "@app/core/state"
   import {publishReaction, canEnforceNip70} from "@app/core/commands"
+  import {getChannelItemPath} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
-  import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
-  import Bolt from "@assets/icons/bolt.svg?dataurl"
-  import Reply from "@assets/icons/reply-2.svg?dataurl"
-  import Code2 from "@assets/icons/code-2.svg?dataurl"
-  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
 
   type Props = {
     url: string
@@ -24,6 +27,8 @@
   }
 
   const {url, event, reply}: Props = $props()
+
+  const path = getChannelItemPath(url, event)
 
   const shouldProtect = canEnforceNip70(url)
 
@@ -49,29 +54,35 @@
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 </script>
 
-<div class="col-2">
-  <Button class="btn btn-primary w-full" onclick={showEmojiPicker}>
-    <Icon size={4} icon={SmileCircle} />
-    Send Reaction
-  </Button>
-  {#if ENABLE_ZAPS}
-    <ZapButton replaceState {url} {event} class="btn btn-secondary w-full">
-      <Icon size={4} icon={Bolt} />
-      Send Zap
-    </ZapButton>
-  {/if}
-  <Button class="btn btn-neutral w-full" onclick={sendReply}>
-    <Icon size={4} icon={Reply} />
-    Send Reply
-  </Button>
-  <Button class="btn btn-neutral" onclick={showInfo}>
-    <Icon size={4} icon={Code2} />
-    Message Details
-  </Button>
+<div class="flex flex-col gap-2">
   {#if event.pubkey === $pubkey}
     <Button class="btn btn-neutral text-error" onclick={showDelete}>
       <Icon size={4} icon={TrashBin2} />
-      Delete Message
+      Delete
     </Button>
+  {/if}
+  <Button class="btn btn-neutral" onclick={showInfo}>
+    <Icon size={4} icon={Code2} />
+    Show JSON
+  </Button>
+  {#if path}
+    <Link class="btn btn-neutral" href={path}>
+      <Icon size={4} icon={MenuDots} />
+      View Details
+    </Link>
+  {/if}
+  <Button class="btn btn-outline btn-neutral w-full" onclick={sendReply}>
+    <Icon size={4} icon={Reply} />
+    Reply
+  </Button>
+  <Button class="btn btn-secondary w-full" onclick={showEmojiPicker}>
+    <Icon size={4} icon={SmileCircle} />
+    React
+  </Button>
+  {#if ENABLE_ZAPS}
+    <ZapButton replaceState {url} {event} class="btn btn-primary w-full">
+      <Icon size={4} icon={Bolt} />
+      Zap
+    </ZapButton>
   {/if}
 </div>

@@ -18,6 +18,8 @@
   const openProfile = () => pushModal(ProfileDetail, {pubkey, url})
 </script>
 
-<Button onclick={preventDefault(openProfile)} class={cx(props.class, {"link-content": !unstyled})}>
+<Button
+  onclick={preventDefault(openProfile)}
+  class={cx(props.class, {"link-content bg-alt": !unstyled})}>
   @<ProfileName {pubkey} {url} />
 </Button>

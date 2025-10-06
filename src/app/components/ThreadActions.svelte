@@ -1,23 +1,27 @@
 <script lang="ts">
   import type {TrustedEvent, EventContent} from "@welshman/util"
+  import {getTagValue} from "@welshman/util"
+  import Link from "@lib/components/Link.svelte"
+  import ChannelName from "@app/components/ChannelName.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
   import {publishDelete, publishReaction, canEnforceNip70} from "@app/core/commands"
-  import {makeThreadPath} from "@app/util/routes"
+  import {makeThreadPath, makeSpacePath} from "@app/util/routes"
 
   interface Props {
-    url: any
-    event: any
+    url: string
+    event: TrustedEvent
+    showRoom?: boolean
     showActivity?: boolean
   }
 
-  const {url, event, showActivity = false}: Props = $props()
-
-  const shouldProtect = canEnforceNip70(url)
+  const {url, event, showRoom, showActivity}: Props = $props()
 
   const path = makeThreadPath(url, event.id)
+  const room = getTagValue("h", event.tags)
+  const shouldProtect = canEnforceNip70(url)
 
   const deleteReaction = async (event: TrustedEvent) =>
     publishDelete({relays: [url], event, protect: await shouldProtect})
@@ -26,13 +30,16 @@
     publishReaction({...template, event, relays: [url], protect: await shouldProtect})
 </script>
 
-<div class="flex flex-wrap items-center justify-between gap-2">
-  <div class="flex flex-grow flex-wrap justify-end gap-2">
-    <ReactionSummary {url} {event} {deleteReaction} {createReaction} reactionClass="tooltip-left" />
-    <ThunkStatusOrDeleted {event} />
-    {#if showActivity}
-      <EventActivity {url} {path} {event} />
-    {/if}
-    <EventActions {url} {event} noun="Thread" />
-  </div>
+<div class="flex flex-grow flex-wrap justify-end gap-2">
+  {#if room && showRoom}
+    <Link href={makeSpacePath(url, room)} class="btn btn-neutral btn-xs rounded-full">
+      Posted in #<ChannelName {room} {url} />
+    </Link>
+  {/if}
+  <ReactionSummary {url} {event} {deleteReaction} {createReaction} reactionClass="tooltip-left" />
+  <ThunkStatusOrDeleted {event} />
+  {#if showActivity}
+    <EventActivity {url} {path} {event} />
+  {/if}
+  <EventActions {url} {event} noun="Thread" />
 </div>

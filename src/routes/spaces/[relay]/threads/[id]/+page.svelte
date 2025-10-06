@@ -84,7 +84,7 @@
       <NoteCard event={$event} {url} class="card2 bg-alt z-feature w-full">
         <div class="col-3 ml-12">
           <Content showEntire event={$event} {url} />
-          <ThreadActions event={$event} {url} />
+          <ThreadActions showRoom event={$event} {url} />
         </div>
       </NoteCard>
       {#if !showAll && $replies.length > 4}

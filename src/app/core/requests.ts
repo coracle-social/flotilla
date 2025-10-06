@@ -1,10 +1,6 @@
 import {get, writable} from "svelte/store"
 import {
   partition,
-  chunk,
-  sample,
-  sleep,
-  shuffle,
   uniq,
   int,
   YEAR,
@@ -18,12 +14,9 @@ import {
   fromPairs,
 } from "@welshman/lib"
 import {
-  MESSAGE,
   DELETE,
-  THREAD,
   EVENT_TIME,
   AUTH_INVITE,
-  COMMENT,
   ALERT_EMAIL,
   ALERT_WEB,
   ALERT_IOS,
@@ -47,24 +40,10 @@ import {
   thunkQueue,
   makeFeedController,
   loadRelay,
-  loadMutes,
-  loadFollows,
-  loadProfile,
-  loadBlossomServers,
-  loadRelaySelections,
-  loadInboxRelaySelections,
 } from "@welshman/app"
 import {createScroller} from "@lib/html"
 import {daysBetween} from "@lib/util"
-import {
-  NOTIFIER_RELAY,
-  INDEXER_RELAYS,
-  defaultPubkeys,
-  userRoomsByUrl,
-  getUrlsForEvent,
-  loadMembership,
-  loadSettings,
-} from "@app/core/state"
+import {NOTIFIER_RELAY, getUrlsForEvent} from "@app/core/state"
 
 // Utils
 
@@ -358,80 +337,6 @@ export const loadAlertStatuses = (pubkey: string) =>
     relays: [NOTIFIER_RELAY],
     filters: [{kinds: [ALERT_STATUS], "#p": [pubkey]}],
   })
-
-// Application requests
-
-export const listenForNotifications = () => {
-  const controller = new AbortController()
-
-  for (const [url, allRooms] of userRoomsByUrl.get()) {
-    // Limit how many rooms we load at a time, since we have to send a separate filter
-    // for each one due to relay29 being picky
-    const rooms = shuffle(Array.from(allRooms)).slice(0, 30)
-
-    load({
-      signal: controller.signal,
-      relays: [url],
-      filters: [
-        {kinds: [THREAD], limit: 1},
-        {kinds: [MESSAGE], limit: 1},
-        {kinds: [COMMENT], "#K": [String(THREAD)], limit: 1},
-        ...rooms.map(room => ({kinds: [MESSAGE], "#h": [room], limit: 1})),
-      ],
-    })
-
-    request({
-      signal: controller.signal,
-      relays: [url],
-      filters: [
-        {kinds: [THREAD], since: now()},
-        {kinds: [MESSAGE], since: now()},
-        {kinds: [COMMENT], "#K": [String(THREAD)], since: now()},
-        ...rooms.map(room => ({kinds: [MESSAGE], "#h": [room], since: now()})),
-      ],
-    })
-  }
-
-  return () => controller.abort()
-}
-
-export const loadUserData = async (pubkey: string, relays: string[] = []) => {
-  await Promise.race([sleep(3000), loadRelaySelections(pubkey, relays)])
-
-  const promise = Promise.race([
-    sleep(3000),
-    Promise.all([
-      loadInboxRelaySelections(pubkey, relays),
-      loadBlossomServers(pubkey, relays),
-      loadMembership(pubkey, relays),
-      loadSettings(pubkey, relays),
-      loadProfile(pubkey, relays),
-      loadFollows(pubkey, relays),
-      loadMutes(pubkey, relays),
-      loadAlertStatuses(pubkey),
-      loadAlerts(pubkey),
-    ]),
-  ])
-
-  // Load followed profiles slowly in the background without clogging other stuff up. Only use a single
-  // indexer relay to avoid too many redundant validations, which slow things down and eat bandwidth
-  promise.then(async () => {
-    for (const pubkeys of chunk(50, get(defaultPubkeys))) {
-      const relays = sample(1, INDEXER_RELAYS)
-
-      await sleep(1000)
-
-      for (const pubkey of pubkeys) {
-        loadMembership(pubkey, relays)
-        loadProfile(pubkey, relays)
-        loadFollows(pubkey, relays)
-        loadMutes(pubkey, relays)
-      }
-    }
-  })
-
-  return promise
-}
 
 export const discoverRelays = (lists: List[]) =>
   Promise.all(

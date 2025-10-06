@@ -4,7 +4,7 @@
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Content from "@app/components/Content.svelte"
+  import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {goToEvent} from "@app/util/routes"
@@ -36,7 +36,7 @@
           {/if}
           <span class="text-nowrap">{formatTimestamp(earliest.created_at)}</span>
         </div>
-        <Content minimalQuote minLength={100} maxLength={400} event={earliest} />
+        <NoteContentMinimal event={earliest} />
       </div>
     </div>
     <div class="ml-13 flex items-center justify-between">
@@ -67,7 +67,7 @@
               {formatTimestamp(latest.created_at)}
             </span>
           </div>
-          <Content minimalQuote minLength={100} maxLength={400} event={latest} />
+          <NoteContentMinimal event={latest} />
         </div>
       </Button>
     {/if}

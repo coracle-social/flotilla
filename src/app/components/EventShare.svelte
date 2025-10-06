@@ -4,6 +4,7 @@
   import {preventDefault} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+  import {setKey} from "@lib/implicit"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -11,7 +12,6 @@
   import ChannelName from "@app/components/ChannelName.svelte"
   import {channelsByUrl} from "@app/core/state"
   import {makeRoomPath} from "@app/util/routes"
-  import {setKey} from "@lib/implicit"
 
   const {url, noun, event}: {url: string; noun: string; event: TrustedEvent} = $props()
 

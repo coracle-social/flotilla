@@ -3,10 +3,11 @@ import {synced, throttled} from "@welshman/store"
 import {pubkey, relaysByUrl} from "@welshman/app"
 import {prop, spec, identity, now, groupBy} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
-import {EVENT_TIME, MESSAGE, THREAD, COMMENT, getTagValue} from "@welshman/util"
+import {ZAP_GOAL, EVENT_TIME, MESSAGE, THREAD, COMMENT, getTagValue} from "@welshman/util"
 import {
   makeSpacePath,
   makeChatPath,
+  makeGoalPath,
   makeThreadPath,
   makeCalendarPath,
   makeSpaceChatPath,
@@ -76,45 +77,52 @@ export const notifications = derived(
       }
     }
 
-    const allThreadEvents = $repository.query([
-      {kinds: [THREAD]},
-      {kinds: [COMMENT], "#K": [String(THREAD)]},
-    ])
+    const allGoalComments = $repository.query([{kinds: [COMMENT], "#K": [String(ZAP_GOAL)]}])
 
-    const allCalendarEvents = $repository.query([
-      {kinds: [EVENT_TIME]},
-      {kinds: [COMMENT], "#K": [String(EVENT_TIME)]},
-    ])
+    const allThreadComments = $repository.query([{kinds: [COMMENT], "#K": [String(THREAD)]}])
 
-    const allMessageEvents = $repository.query([{kinds: [MESSAGE]}])
+    const allCalendarComments = $repository.query([{kinds: [COMMENT], "#K": [String(EVENT_TIME)]}])
+
+    const allMessages = $repository.query([{kinds: [MESSAGE, THREAD, ZAP_GOAL, EVENT_TIME]}])
 
     for (const [url, rooms] of $userRoomsByUrl.entries()) {
       const spacePath = makeSpacePath(url)
+      const goalPath = makeGoalPath(url)
       const threadPath = makeThreadPath(url)
       const calendarPath = makeCalendarPath(url)
       const messagesPath = makeSpaceChatPath(url)
-      const threadEvents = allThreadEvents.filter(e => $getUrlsForEvent(e.id).includes(url))
-      const calendarEvents = allCalendarEvents.filter(e => $getUrlsForEvent(e.id).includes(url))
-      const messagesEvents = allMessageEvents.filter(e => $getUrlsForEvent(e.id).includes(url))
+      const goalComments = allGoalComments.filter(e => $getUrlsForEvent(e.id).includes(url))
+      const threadComments = allThreadComments.filter(e => $getUrlsForEvent(e.id).includes(url))
+      const calendarComments = allCalendarComments.filter(e => $getUrlsForEvent(e.id).includes(url))
+      const messages = allMessages.filter(e => $getUrlsForEvent(e.id).includes(url))
 
-      if (hasNotification(threadPath, threadEvents[0])) {
-        paths.add(spacePath)
-        paths.add(threadPath)
-      }
+      const commentsByGoalId = groupBy(
+        e => getTagValue("E", e.tags),
+        goalComments.filter(spec({kind: COMMENT})),
+      )
 
-      if (hasNotification(calendarPath, calendarEvents[0])) {
-        paths.add(spacePath)
-        paths.add(calendarPath)
+      for (const [goalId, [comment]] of commentsByGoalId.entries()) {
+        const goalItemPath = makeGoalPath(url, goalId)
+
+        if (hasNotification(goalPath, comment)) {
+          paths.add(goalPath)
+        }
+        if (hasNotification(goalItemPath, comment)) {
+          paths.add(goalItemPath)
+        }
       }
 
       const commentsByThreadId = groupBy(
         e => getTagValue("E", e.tags),
-        threadEvents.filter(spec({kind: COMMENT})),
+        threadComments.filter(spec({kind: COMMENT})),
       )
 
       for (const [threadId, [comment]] of commentsByThreadId.entries()) {
         const threadItemPath = makeThreadPath(url, threadId)
 
+        if (hasNotification(threadPath, comment)) {
+          paths.add(threadPath)
+        }
         if (hasNotification(threadItemPath, comment)) {
           paths.add(threadItemPath)
         }
@@ -122,24 +130,26 @@ export const notifications = derived(
 
       const commentsByEventId = groupBy(
         e => getTagValue("E", e.tags),
-        calendarEvents.filter(spec({kind: COMMENT})),
+        calendarComments.filter(spec({kind: COMMENT})),
       )
 
       for (const [eventId, [comment]] of commentsByEventId.entries()) {
-        const calendarEventPath = makeCalendarPath(url, eventId)
+        const calendarItemPath = makeCalendarPath(url, eventId)
 
-        if (hasNotification(calendarEventPath, comment)) {
-          paths.add(calendarEventPath)
+        if (hasNotification(calendarPath, comment)) {
+          paths.add(calendarPath)
+        }
+
+        if (hasNotification(calendarItemPath, comment)) {
+          paths.add(calendarItemPath)
         }
       }
 
       if (hasNip29($relaysByUrl.get(url))) {
         for (const room of rooms) {
           const roomPath = makeRoomPath(url, room)
-          const latestEvent = allMessageEvents.find(
-            e =>
-              $getUrlsForEvent(e.id).includes(url) &&
-              e.tags.find(t => t[0] === "h" && t[1] === room),
+          const latestEvent = allMessages.find(
+            e => $getUrlsForEvent(e.id).includes(url) && e.tags.find(spec(["h", room])),
           )
 
           if (hasNotification(roomPath, latestEvent)) {
@@ -148,7 +158,7 @@ export const notifications = derived(
           }
         }
       } else {
-        if (hasNotification(messagesPath, messagesEvents[0])) {
+        if (hasNotification(messagesPath, messages[0])) {
           paths.add(spacePath)
           paths.add(messagesPath)
         }
