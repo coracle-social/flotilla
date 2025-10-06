@@ -1,7 +1,8 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import {derived} from "svelte/store"
   import {displayRelayUrl, getTagValue, EVENT_TIME, ZAP_GOAL, THREAD} from "@welshman/util"
-  import {deriveRelay, repository} from "@welshman/app"
+  import {deriveRelay} from "@welshman/app"
   import {fly} from "@lib/transition"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import RemoteControllerMinimalistic from "@assets/icons/remote-controller-minimalistic.svg?dataurl"
@@ -36,12 +37,13 @@
   import MenuSpaceRoomItem from "@app/components/MenuSpaceRoomItem.svelte"
   import {
     ENABLE_ZAPS,
+    MESSAGE_FILTER,
     userRoomsByUrl,
     hasMembershipUrl,
     memberships,
+    deriveEventsForUrl,
     deriveUserRooms,
     deriveOtherRooms,
-    trackerStore,
     hasNip29,
     alerts,
     deriveUserCanCreateRoom,
@@ -62,16 +64,9 @@
   const owner = $derived($relay?.profile?.pubkey)
   const hasAlerts = $derived($alerts.some(a => getTagValue("feed", a.tags)?.includes(url)))
 
-  const spaceKinds = $derived(
-    Array.from($trackerStore.getIds(url)).reduce((kinds, id) => {
-      const event = repository.getEvent(id)
-
-      if (event) {
-        kinds.add(event.kind)
-      }
-
-      return kinds
-    }, new Set()),
+  const spaceKinds = derived(
+    deriveEventsForUrl(url, [MESSAGE_FILTER]),
+    $events => new Set($events.map(e => e.kind)),
   )
 
   const openMenu = () => {
@@ -196,7 +191,7 @@
           <Icon icon={ChatRound} /> Chat
         </SecondaryNavItem>
       {/if}
-      {#if ENABLE_ZAPS && spaceKinds.has(ZAP_GOAL)}
+      {#if ENABLE_ZAPS && $spaceKinds.has(ZAP_GOAL)}
         <SecondaryNavItem
           {replaceState}
           href={goalsPath}
@@ -204,7 +199,7 @@
           <Icon icon={StarFallMinimalistic} /> Goals
         </SecondaryNavItem>
       {/if}
-      {#if spaceKinds.has(THREAD)}
+      {#if $spaceKinds.has(THREAD)}
         <SecondaryNavItem
           {replaceState}
           href={threadsPath}
@@ -212,7 +207,7 @@
           <Icon icon={NotesMinimalistic} /> Threads
         </SecondaryNavItem>
       {/if}
-      {#if spaceKinds.has(EVENT_TIME)}
+      {#if $spaceKinds.has(EVENT_TIME)}
         <SecondaryNavItem
           {replaceState}
           href={calendarPath}

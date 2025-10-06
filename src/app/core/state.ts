@@ -5,6 +5,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {
   on,
   call,
+  assoc,
   remove,
   uniqBy,
   sortBy,
@@ -38,6 +39,7 @@ import {isKindFeed, findFeed} from "@welshman/feeds"
 import {
   getIdFilters,
   WRAP,
+  DELETE,
   CLIENT_AUTH,
   AUTH_JOIN,
   REACTION,
@@ -50,6 +52,7 @@ import {
   ROOMS,
   THREAD,
   COMMENT,
+  REPORT,
   ROOM_JOIN,
   ROOM_ADD_USER,
   ROOM_REMOVE_USER,
@@ -60,6 +63,8 @@ import {
   ALERT_ANDROID,
   ALERT_STATUS,
   APP_DATA,
+  ZAP_GOAL,
+  EVENT_TIME,
   getGroupTags,
   getRelayTagValues,
   getPubkeyTagValues,
@@ -113,8 +118,6 @@ export const ROOM = "h"
 export const PROTECTED = ["-"]
 
 export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios"
-
-export const REACTION_KINDS = ENABLE_ZAPS ? [REACTION, ZAP_RESPONSE] : [REACTION]
 
 export const NOTIFIER_PUBKEY = import.meta.env.VITE_NOTIFIER_PUBKEY
 
@@ -280,22 +283,27 @@ export const getUrlsForEvent = derived([trackerStore, thunks], ([$tracker, $thun
 })
 
 export const getEventsForUrl = (url: string, filters: Filter[]) => {
-  const $getUrlsForEvent = get(getUrlsForEvent)
-  const $events = repository.query(filters)
+  const ids = uniq([
+    ...tracker.getIds(url),
+    ...Array.from(flattenThunks(Object.values(get(thunks))))
+      .filter(t => t.options.relays.includes(url))
+      .map(t => t.event.id),
+  ])
 
-  return sortBy(
-    e => -e.created_at,
-    $events.filter(e => $getUrlsForEvent(e.id).includes(url)),
-  )
+  return repository.query(filters.map(assoc("ids", ids)))
 }
 
 export const deriveEventsForUrl = (url: string, filters: Filter[]) =>
-  derived([deriveEvents(repository, {filters}), getUrlsForEvent], ([$events, $getUrlsForEvent]) =>
-    sortBy(
-      e => -e.created_at,
-      $events.filter(e => $getUrlsForEvent(e.id).includes(url)),
-    ),
-  )
+  derived([trackerStore, thunks], ([$tracker, $thunks]) => {
+    const ids = uniq([
+      ...$tracker.getIds(url),
+      ...Array.from(flattenThunks(Object.values($thunks)))
+        .filter(t => t.options.relays.includes(url))
+        .map(t => t.event.id),
+    ])
+
+    return repository.query(filters.map(assoc("ids", ids)))
+  })
 
 // Context
 
@@ -305,6 +313,26 @@ routerContext.getIndexerRelays = always(INDEXER_RELAYS)
 
 netContext.isEventValid = (event: TrustedEvent, url: string) =>
   getSetting<string[]>("trusted_relays").includes(url) || verifyEvent(event)
+
+// Filters
+
+export const makeCommentFilter = (kinds: number[], extra: Filter = {}) => ({
+  kinds: [COMMENT],
+  "#K": kinds.map(String),
+  ...extra,
+})
+
+export const REACTION_KINDS = [REPORT, DELETE, REACTION]
+
+if (ENABLE_ZAPS) {
+  REACTION_KINDS.push(ZAP_RESPONSE)
+}
+
+export const MESSAGE_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD, MESSAGE]
+
+export const MESSAGE_FILTER = {kinds: MESSAGE_KINDS}
+
+export const COMMENT_FILTER = makeCommentFilter(MESSAGE_KINDS)
 
 // Settings
 

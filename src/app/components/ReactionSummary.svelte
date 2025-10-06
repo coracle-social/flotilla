@@ -3,6 +3,7 @@
   import type {Snippet} from "svelte"
   import {groupBy, sum, uniq, uniqBy, batch, displayList} from "@welshman/lib"
   import {
+    REPORT,
     REACTION,
     ZAP_RESPONSE,
     getReplyFilters,
@@ -10,7 +11,6 @@
     getEmojiTag,
     fromMsats,
     getTag,
-    REPORT,
     DELETE,
   } from "@welshman/util"
   import type {TrustedEvent, EventContent, Zap} from "@welshman/util"
@@ -96,7 +96,7 @@
       load({
         relays: [url],
         signal: controller.signal,
-        filters: getReplyFilters([event], {kinds: [REPORT, DELETE, ...REACTION_KINDS]}),
+        filters: getReplyFilters([event], {kinds: REACTION_KINDS}),
         onEvent: batch(300, (events: TrustedEvent[]) => {
           load({
             relays: [url],

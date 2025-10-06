@@ -6,19 +6,8 @@
   import type {Readable} from "svelte/store"
   import type {MakeNonOptional} from "@welshman/lib"
   import {now, formatTimestampAsDate, ago, MINUTE} from "@welshman/lib"
-  import {request} from "@welshman/net"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {
-    makeEvent,
-    makeRoomMeta,
-    MESSAGE,
-    DELETE,
-    THREAD,
-    EVENT_TIME,
-    ZAP_GOAL,
-    ROOM_ADD_USER,
-    ROOM_REMOVE_USER,
-  } from "@welshman/util"
+  import {makeEvent, makeRoomMeta, MESSAGE} from "@welshman/util"
   import {pubkey, publishThunk, waitForThunkError, joinRoom, leaveRoom} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
@@ -43,11 +32,11 @@
     userRoomsByUrl,
     userSettingsValues,
     decodeRelay,
-    getEventsForUrl,
     deriveUserMembershipStatus,
     deriveChannel,
     MembershipStatus,
-    REACTION_KINDS,
+    PROTECTED,
+    MESSAGE_KINDS,
   } from "@app/core/state"
   import {setChecked, checked} from "@app/util/notifications"
   import {
@@ -57,7 +46,6 @@
     prependParent,
     publishDelete,
   } from "@app/core/commands"
-  import {PROTECTED} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
   import {popKey} from "@lib/implicit"
   import {pushToast} from "@app/util/toast"
@@ -68,7 +56,6 @@
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay(relay)
   const channel = deriveChannel(url, room)
-  const filter = {kinds: [MESSAGE, THREAD, EVENT_TIME, ZAP_GOAL], "#h": [room]}
   const isFavorite = $derived($userRoomsByUrl.get(url)?.has(room))
   const shouldProtect = canEnforceNip70(url)
   const membershipStatus = deriveUserMembershipStatus(url, room)
@@ -267,13 +254,9 @@
     cleanup?.()
 
     const feed = makeFeed({
+      url,
       element: element!,
-      relays: [url],
-      feedFilters: [filter],
-      subscriptionFilters: [
-        {kinds: [DELETE, MESSAGE, ...REACTION_KINDS], "#h": [room], since: now()},
-      ],
-      initialEvents: getEventsForUrl(url, [{...filter, limit: 20}]),
+      filters: [{kinds: MESSAGE_KINDS, "#h": [room]}],
       onExhausted: () => {
         loadingEvents = false
       },
@@ -301,21 +284,6 @@
   }
 
   onMount(() => {
-    const controller = new AbortController()
-
-    request({
-      signal: controller.signal,
-      relays: [url],
-      filters: [
-        {
-          kinds: [ROOM_ADD_USER, ROOM_REMOVE_USER],
-          "#p": [$pubkey!],
-          "#h": [room],
-          limit: 10,
-        },
-      ],
-    })
-
     const observer = new ResizeObserver(() => {
       if (dynamicPadding && chatCompose) {
         dynamicPadding!.style.minHeight = `${chatCompose!.offsetHeight}px`
@@ -327,7 +295,6 @@
     start()
 
     return () => {
-      controller.abort()
       observer.unobserve(chatCompose!)
       observer.unobserve(dynamicPadding!)
     }

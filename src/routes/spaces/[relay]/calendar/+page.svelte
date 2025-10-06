@@ -5,7 +5,7 @@
   import {page} from "$app/stores"
   import {now, last, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {DELETE, EVENT_TIME, getTagValue} from "@welshman/util"
+  import {EVENT_TIME, getTagValue} from "@welshman/util"
   import {fly} from "@lib/transition"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import CalendarAdd from "@assets/icons/calendar-add.svg?dataurl"
@@ -19,7 +19,7 @@
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
   import {pushModal} from "@app/util/modal"
-  import {getEventsForUrl, decodeRelay, REACTION_KINDS} from "@app/core/state"
+  import {decodeRelay, makeCommentFilter} from "@app/core/state"
   import {makeCalendarFeed} from "@app/core/requests"
   import {setChecked} from "@app/util/notifications"
 
@@ -31,7 +31,6 @@
 
   let element: HTMLElement | undefined = $state()
   let loading = $state(true)
-  let cleanup: () => void
   let events: Readable<TrustedEvent[]> = $state(readable([]))
 
   type Item = {
@@ -96,23 +95,20 @@
   })
 
   onMount(() => {
-    const feedFilters = [{kinds: [EVENT_TIME]}]
-    const subscriptionFilters = [{kinds: [DELETE, EVENT_TIME, ...REACTION_KINDS], since: now()}]
-
-    ;({events, cleanup} = makeCalendarFeed({
+    const feed = makeCalendarFeed({
+      url,
       element: element!,
-      relays: [url],
-      feedFilters,
-      subscriptionFilters,
-      initialEvents: getEventsForUrl(url, feedFilters),
+      filters: [{kinds: [EVENT_TIME]}, makeCommentFilter([EVENT_TIME])],
       onExhausted: () => {
         loading = false
       },
-    }))
+    })
+
+    events = feed.events
 
     return () => {
+      feed.cleanup()
       setChecked($page.url.pathname)
-      cleanup?.()
     }
   })
 </script>

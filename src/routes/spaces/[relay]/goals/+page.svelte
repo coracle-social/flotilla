@@ -1,10 +1,11 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import {readable} from "svelte/store"
+  import type {Readable} from "svelte/store"
   import {page} from "$app/stores"
-  import {sortBy, max, nthEq} from "@welshman/lib"
+  import {sortBy, partition, spec, pushToMapKey, max} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {ZAP_GOAL, DELETE, COMMENT, getListTags, getPubkeyTagValues} from "@welshman/util"
-  import {userMutes} from "@welshman/app"
+  import {ZAP_GOAL, getTagValue} from "@welshman/util"
   import {fly} from "@lib/transition"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -15,61 +16,48 @@
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
-  import {decodeRelay, getEventsForUrl, REACTION_KINDS} from "@app/core/state"
+  import {decodeRelay, makeCommentFilter} from "@app/core/state"
   import {setChecked} from "@app/util/notifications"
   import {makeFeed} from "@app/core/requests"
   import {pushModal} from "@app/util/modal"
 
   const url = decodeRelay($page.params.relay!)
-  const mutedPubkeys = getPubkeyTagValues(getListTags($userMutes))
-  const goals: TrustedEvent[] = $state([])
-  const comments: TrustedEvent[] = $state([])
 
   let loading = $state(true)
   let element: HTMLElement | undefined = $state()
+  let events: Readable<TrustedEvent[]> = $state(readable([]))
 
   const createGoal = () => pushModal(GoalCreate, {url})
 
-  const events = $derived.by(() => {
-    const scores = new Map<string, number>()
+  const items = $derived.by(() => {
+    const scores = new Map<string, number[]>()
+    const [goals, comments] = partition(spec({kind: ZAP_GOAL}), $events)
 
     for (const comment of comments) {
-      const id = comment.tags.find(nthEq(0, "E"))?.[1]
+      const id = getTagValue("E", comment.tags)
 
       if (id) {
-        scores.set(id, max([scores.get(id), comment.created_at]))
+        pushToMapKey(scores, id, comment.created_at)
       }
     }
 
-    return sortBy(e => -max([scores.get(e.id), e.created_at]), goals)
+    return sortBy(e => -max([...(scores.get(e.id) || []), e.created_at]), goals)
   })
 
   onMount(() => {
-    const {cleanup} = makeFeed({
+    const feed = makeFeed({
+      url,
       element: element!,
-      relays: [url],
-      feedFilters: [{kinds: [ZAP_GOAL, COMMENT]}],
-      subscriptionFilters: [
-        {kinds: [ZAP_GOAL, DELETE, ...REACTION_KINDS]},
-        {kinds: [COMMENT], "#K": [String(ZAP_GOAL)]},
-      ],
-      initialEvents: getEventsForUrl(url, [{kinds: [ZAP_GOAL, COMMENT], limit: 10}]),
-      onEvent: event => {
-        if (event.kind === ZAP_GOAL && !mutedPubkeys.includes(event.pubkey)) {
-          goals.push(event)
-        }
-
-        if (event.kind === COMMENT) {
-          comments.push(event)
-        }
-      },
+      filters: [{kinds: [ZAP_GOAL]}, makeCommentFilter([ZAP_GOAL])],
       onExhausted: () => {
         loading = false
       },
     })
 
+    events = feed.events
+
     return () => {
-      cleanup?.()
+      feed.cleanup()
       setChecked($page.url.pathname)
     }
   })
@@ -96,7 +84,7 @@
 </PageBar>
 
 <PageContent bind:element class="flex flex-col gap-2 p-2 pt-4">
-  {#each events as event (event.id)}
+  {#each items as event (event.id)}
     <div in:fly>
       <GoalItem {url} event={$state.snapshot(event)} />
     </div>
@@ -105,7 +93,7 @@
     <Spinner {loading}>
       {#if loading}
         Looking for goals...
-      {:else if events.length === 0}
+      {:else if items.length === 0}
         No goals found.
       {:else}
         That's all!

@@ -5,11 +5,11 @@
   import type {Filter} from "@welshman/util"
   import {deriveEvents} from "@welshman/store"
   import {formatTimestampRelative} from "@welshman/lib"
-  import {NOTE, ROOMS, MESSAGE, THREAD, COMMENT, getRelayTags, getListTags} from "@welshman/util"
+  import {NOTE, ROOMS, COMMENT, getRelayTags, getListTags} from "@welshman/util"
   import {repository, loadRelaySelections} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
-  import {membershipsByPubkey} from "@app/core/state"
+  import {membershipsByPubkey, MESSAGE_KINDS} from "@app/core/state"
   import {goToEvent} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
 
@@ -36,7 +36,7 @@
     load({
       filters: [
         {authors: [pubkey], kinds: [ROOMS]},
-        {authors: [pubkey], limit: 1, kinds: [NOTE, MESSAGE, THREAD, COMMENT]},
+        {authors: [pubkey], limit: 1, kinds: [NOTE, COMMENT, ...MESSAGE_KINDS]},
       ],
       relays: Router.get().FromPubkeys([pubkey]).getUrls(),
     })

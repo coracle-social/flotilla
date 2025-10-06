@@ -14,11 +14,12 @@
       enabled = false
     }
   })
+
   let notificationCount = $state($notifications.size)
 
   const playSound = () => {
     if (enabled && $userSettingsValues.play_notification_sound) {
-      audioElement.play()
+      audioElement?.play()
     }
   }
 
