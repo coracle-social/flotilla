@@ -16,7 +16,6 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import PasswordResetRequest from "@app/components/PasswordResetRequest.svelte"
-  import {loadUserData} from "@app/core/requests"
   import {clearModals, pushModal} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
@@ -95,8 +94,6 @@
 
       const pubkey = await broker.getPublicKey()
       const session = makeNip46Session(pubkey, clientSecret, response.event.pubkey, relays)
-
-      await loadUserData(pubkey)
 
       addSession({...session, email})
       broker.cleanup()

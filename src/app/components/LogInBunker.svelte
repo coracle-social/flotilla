@@ -14,7 +14,6 @@
   import BunkerConnect from "@app/components/BunkerConnect.svelte"
   import BunkerUrl from "@app/components/BunkerUrl.svelte"
   import {Nip46Controller} from "@app/util/nip46"
-  import {loadUserData} from "@app/core/requests"
   import {clearModals} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
@@ -33,9 +32,6 @@
       const pubkey = await controller.broker.getPublicKey()
 
       loginWithNip46(pubkey, controller.clientSecret, response.event.pubkey, SIGNER_RELAYS)
-
-      await loadUserData(pubkey)
-
       setChecked("*")
       clearModals()
     },
@@ -74,8 +70,6 @@
       if (pubkey && ["ack", connectSecret].includes(result)) {
         broker.cleanup()
         controller.stop()
-
-        await loadUserData(pubkey)
 
         loginWithNip46(pubkey, clientSecret, signerPubkey, relays)
       } else {
