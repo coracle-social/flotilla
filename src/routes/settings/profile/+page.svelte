@@ -17,7 +17,7 @@
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
   import Avatar from "@lib/components/Avatar.svelte"
-  import Content from "@app/components/Content.svelte"
+  import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileDelete from "@app/components/ProfileDelete.svelte"
   import SignerStatus from "@app/components/SignerStatus.svelte"
@@ -66,7 +66,7 @@
       </Button>
     </div>
     {#key $profile?.about}
-      <Content event={{content: $profile?.about || "", tags: []}} hideMediaAtDepth={0} />
+      <ContentMinimal event={{content: $profile?.about || "", tags: []}} />
     {/key}
   </div>
   {#if $session?.email}

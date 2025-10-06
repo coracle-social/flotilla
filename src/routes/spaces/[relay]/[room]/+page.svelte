@@ -13,6 +13,9 @@
     makeRoomMeta,
     MESSAGE,
     DELETE,
+    THREAD,
+    EVENT_TIME,
+    ZAP_GOAL,
     ROOM_ADD_USER,
     ROOM_REMOVE_USER,
   } from "@welshman/util"
@@ -33,7 +36,7 @@
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"
-  import ChannelMessage from "@app/components/ChannelMessage.svelte"
+  import ChannelItem from "@app/components/ChannelItem.svelte"
   import ChannelCompose from "@app/components/ChannelCompose.svelte"
   import ChannelComposeParent from "@app/components/ChannelComposeParent.svelte"
   import {
@@ -65,7 +68,7 @@
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay(relay)
   const channel = deriveChannel(url, room)
-  const filter = {kinds: [MESSAGE], "#h": [room]}
+  const filter = {kinds: [MESSAGE, THREAD, EVENT_TIME, ZAP_GOAL], "#h": [room]}
   const isFavorite = $derived($userRoomsByUrl.get(url)?.has(room))
   const shouldProtect = canEnforceNip70(url)
   const membershipStatus = deriveUserMembershipStatus(url, room)
@@ -429,7 +432,7 @@
         <Divider>{value}</Divider>
       {:else}
         <div in:slide class:-mt-1={!showPubkey}>
-          <ChannelMessage
+          <ChannelItem
             {url}
             {replyTo}
             event={$state.snapshot(value as TrustedEvent)}
@@ -485,11 +488,12 @@
     </div>
     {#key eventToEdit}
       <ChannelCompose
-        bind:this={compose}
-        content={eventToEdit?.content}
-        {onSubmit}
         {url}
-        {onEditPrevious} />
+        {room}
+        {onSubmit}
+        {onEditPrevious}
+        content={eventToEdit?.content}
+        bind:this={compose} />
     {/key}
   {/if}
 </div>

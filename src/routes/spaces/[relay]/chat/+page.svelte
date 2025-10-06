@@ -5,7 +5,7 @@
   import {readable} from "svelte/store"
   import {now, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {makeEvent, MESSAGE, DELETE} from "@welshman/util"
+  import {makeEvent, MESSAGE, DELETE, THREAD, EVENT_TIME, ZAP_GOAL} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
@@ -18,7 +18,7 @@
   import Divider from "@lib/components/Divider.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
-  import ChannelMessage from "@app/components/ChannelMessage.svelte"
+  import ChannelItem from "@app/components/ChannelItem.svelte"
   import ChannelCompose from "@app/components/ChannelCompose.svelte"
   import ChannelComposeParent from "@app/components/ChannelComposeParent.svelte"
   import {
@@ -38,7 +38,7 @@
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay($page.params.relay!)
-  const filter = {kinds: [MESSAGE]}
+  const filter = {kinds: [MESSAGE, THREAD, EVENT_TIME, ZAP_GOAL]}
   const shouldProtect = canEnforceNip70(url)
 
   const replyTo = (event: TrustedEvent) => {
@@ -282,11 +282,12 @@
     {:else if type === "date"}
       <Divider>{value}</Divider>
     {:else}
+      {@const event = $state.snapshot(value as TrustedEvent)}
       <div in:slide class:-mt-1={!showPubkey}>
-        <ChannelMessage
+        <ChannelItem
           {url}
+          {event}
           {replyTo}
-          event={$state.snapshot(value as TrustedEvent)}
           {showPubkey}
           canEdit={canEditEvent}
           onEdit={onEditEvent} />
@@ -316,11 +317,11 @@
   </div>
   {#key eventToEdit}
     <ChannelCompose
-      bind:this={compose}
-      content={eventToEdit?.content}
-      {onSubmit}
       {url}
-      {onEditPrevious} />
+      {onSubmit}
+      {onEditPrevious}
+      content={eventToEdit?.content}
+      bind:this={compose} />
   {/key}
 </div>
 

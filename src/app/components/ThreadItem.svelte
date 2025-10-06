@@ -1,10 +1,12 @@
 <script lang="ts">
-  import {nthEq, formatTimestamp} from "@welshman/lib"
+  import {formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
+  import {getTagValue} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ThreadActions from "@app/components/ThreadActions.svelte"
+  import ChannelLink from "@app/components/ChannelLink.svelte"
   import {makeThreadPath} from "@app/util/routes"
 
   type Props = {
@@ -14,7 +16,8 @@
 
   const {url, event}: Props = $props()
 
-  const title = event.tags.find(nthEq(0, "title"))?.[1]
+  const title = getTagValue("title", event.tags)
+  const room = getTagValue("h", event.tags)
 </script>
 
 <Link class="col-2 card2 bg-alt w-full cursor-pointer" href={makeThreadPath(url, event.id)}>
@@ -33,7 +36,11 @@
   <Content {event} {url} expandMode="inline" />
   <div class="flex w-full flex-col items-end justify-between gap-2 sm:flex-row">
     <span class="whitespace-nowrap py-1 text-sm opacity-75">
-      Posted by <ProfileLink pubkey={event.pubkey} {url} />
+      Posted by
+      <ProfileLink pubkey={event.pubkey} {url} />
+      {#if room}
+        in <ChannelLink {url} {room} />
+      {/if}
     </span>
     <ThreadActions showActivity {url} {event} />
   </div>

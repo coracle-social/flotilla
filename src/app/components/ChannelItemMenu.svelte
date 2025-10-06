@@ -1,16 +1,23 @@
 <script lang="ts">
+  import type {TrustedEvent} from "@welshman/util"
   import {pubkey} from "@welshman/app"
+  import Code2 from "@assets/icons/code-2.svg?dataurl"
+  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
+  import Danger from "@assets/icons/danger.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import EventReport from "@app/components/EventReport.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import {pushModal} from "@app/util/modal"
-  import Code2 from "@assets/icons/code-2.svg?dataurl"
-  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
-  import Danger from "@assets/icons/danger.svg?dataurl"
 
-  const {url, event, onClick} = $props()
+  type Props = {
+    url: string
+    event: TrustedEvent
+    onClick: () => void
+  }
+
+  const {url, event, onClick}: Props = $props()
 
   const report = () => {
     onClick()
@@ -32,7 +39,7 @@
   <li>
     <Button onclick={showInfo}>
       <Icon size={4} icon={Code2} />
-      Message Details
+      Show JSON
     </Button>
   </li>
   {#if event.pubkey === $pubkey}

@@ -1,20 +1,24 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import type {Snippet} from "svelte"
+  import {goto} from "$app/navigation"
   import type {TrustedEvent} from "@welshman/util"
   import {COMMENT} from "@welshman/util"
-  import {pubkey} from "@welshman/app"
+  import {pubkey, relaysByUrl} from "@welshman/app"
+  import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
+  import Code2 from "@assets/icons/code-2.svg?dataurl"
+  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
+  import Danger from "@assets/icons/danger.svg?dataurl"
+  import {setKey} from "@lib/implicit"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import EventReport from "@app/components/EventReport.svelte"
   import EventShare from "@app/components/EventShare.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
+  import {hasNip29} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
-  import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
-  import Code2 from "@assets/icons/code-2.svg?dataurl"
-  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
-  import Danger from "@assets/icons/danger.svg?dataurl"
+  import {makeSpaceChatPath} from "@app/util/routes"
 
   type Props = {
     url: string
@@ -32,7 +36,14 @@
 
   const showInfo = () => pushModal(EventInfo, {url, event})
 
-  const share = () => pushModal(EventShare, {url, event})
+  const share = async () => {
+    if (hasNip29($relaysByUrl.get(url))) {
+      pushModal(EventShare, {url, event})
+    } else {
+      setKey("share", event)
+      goto(makeSpaceChatPath(url))
+    }
+  }
 
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 

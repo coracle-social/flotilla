@@ -118,7 +118,7 @@
       <button
         type="button"
         data-tip={`This content has been reported as "${displayList(reportReasons)}".`}
-        class="btn btn-error btn-xs tooltip-right flex items-center gap-1 rounded-full"
+        class="btn btn-error btn-xs tooltip-right flex items-center gap-1 rounded-full font-normal"
         class:tooltip={!noTooltip && !isMobile}
         onclick={stopPropagation(preventDefault(onReportClick))}>
         <Icon icon={Danger} />
@@ -134,11 +134,10 @@
       <button
         type="button"
         data-tip={tooltip}
-        class="flex-inline btn btn-neutral btn-xs gap-1 rounded-full {reactionClass}"
+        class="flex-inline btn btn-neutral btn-xs gap-1 rounded-full text-xs font-normal {reactionClass}"
         class:tooltip={!noTooltip && !isMobile}
-        class:border={isOwn}
-        class:border-solid={isOwn}
-        class:border-primary={isOwn}>
+        class:btn-neutral={!isOwn}
+        class:btn-primary={isOwn}>
         <Reaction event={zaps[0].request} />
         <span>{amount}</span>
       </button>
@@ -152,11 +151,10 @@
       <button
         type="button"
         data-tip={tooltip}
-        class="flex-inline btn btn-neutral btn-xs gap-1 rounded-full {reactionClass}"
+        class="flex-inline btn btn-neutral btn-xs gap-1 rounded-full font-normal {reactionClass}"
         class:tooltip={!noTooltip && !isMobile}
-        class:border={isOwn}
-        class:border-solid={isOwn}
-        class:border-primary={isOwn}
+        class:btn-neutral={!isOwn}
+        class:btn-primary={isOwn}
         onclick={stopPropagation(preventDefault(onClick))}>
         <Reaction event={events[0]} />
         {#if events.length > 1}

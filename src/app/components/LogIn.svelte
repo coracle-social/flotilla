@@ -17,7 +17,6 @@
   import {pushModal, clearModals} from "@app/util/modal"
   import {PLATFORM_NAME, BURROW_URL} from "@app/core/state"
   import {pushToast} from "@app/util/toast"
-  import {loadUserData} from "@app/core/requests"
   import {setChecked} from "@app/util/notifications"
 
   let signers: any[] = $state([])
@@ -27,9 +26,7 @@
 
   const signUp = () => pushModal(SignUp)
 
-  const onSuccess = async (session: Session, relays: string[] = []) => {
-    await loadUserData(session.pubkey, relays)
-
+  const onSuccess = async (session: Session) => {
     addSession(session)
     pushToast({message: "Successfully logged in!"})
     setChecked("*")

@@ -93,7 +93,7 @@
         </div>
       </div>
       <div class="flex w-full flex-col justify-end sm:flex-row">
-        <CalendarEventActions {url} event={$event} />
+        <CalendarEventActions showRoom {url} event={$event} />
       </div>
     </div>
     {#if !showAll && $replies.length > 4}

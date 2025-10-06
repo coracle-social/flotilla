@@ -4,31 +4,17 @@
   import {throttle} from "throttle-debounce"
   import {onMount} from "svelte"
   import * as nip19 from "nostr-tools/nip19"
-  import {get, derived} from "svelte/store"
+  import {get} from "svelte/store"
   import {App, type URLOpenListenerEvent} from "@capacitor/app"
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
   import {sync, localStorageProvider} from "@welshman/store"
-  import {
-    ago,
-    assoc,
-    call,
-    defer,
-    dissoc,
-    identity,
-    memoize,
-    on,
-    sleep,
-    spec,
-    TaskQueue,
-    WEEK,
-  } from "@welshman/lib"
+  import {assoc, call, defer, dissoc, on, sleep, spec, TaskQueue} from "@welshman/lib"
   import type {TrustedEvent, StampedEvent} from "@welshman/util"
   import {WRAP} from "@welshman/util"
   import {Nip46Broker, makeSecret} from "@welshman/signer"
   import type {Socket, RelayMessage, ClientMessage} from "@welshman/net"
   import {
-    request,
     defaultSocketPolicies,
     makeSocketPolicyAuth,
     SocketEvent,
@@ -40,7 +26,6 @@
     isClientClose,
   } from "@welshman/net"
   import {
-    loadRelay,
     repository,
     pubkey,
     session,
@@ -64,20 +49,18 @@
   import {preferencesStorageProvider} from "@lib/storage"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
+  import {setupHistory} from "@app/util/history"
   import {setupTracking} from "@app/util/tracking"
   import {setupAnalytics} from "@app/util/analytics"
   import {
-    INDEXER_RELAYS,
-    userMembership,
     userSettingsValues,
     relaysPendingTrust,
     ensureUnwrapped,
     canDecrypt,
     getSetting,
     relaysMostlyRestricted,
-    userInboxRelays,
   } from "@app/core/state"
-  import {loadUserData, listenForNotifications} from "@app/core/requests"
+  import {syncApplicationData} from "@app/core/sync"
   import {theme} from "@app/util/theme"
   import {toast, pushToast} from "@app/util/toast"
   import {initializePushNotifications} from "@app/util/push"
@@ -192,8 +175,6 @@
 
           // TODO: remove ack result
           if (pubkey && ["ack", connectSecret].includes(result)) {
-            await loadUserData(pubkey)
-
             loginWithNip46(pubkey, clientSecret, signerPubkey, relays)
             broker.cleanup()
             success = true
@@ -224,6 +205,7 @@
 
     if (!initialized) {
       initialized = true
+      setupHistory()
       setupTracking()
       setupAnalytics()
 
@@ -374,46 +356,8 @@
         },
       )
 
-      // Load relay info
-      for (const url of INDEXER_RELAYS) {
-        loadRelay(url)
-      }
-
-      // Load user data
-      if ($pubkey) {
-        await loadUserData($pubkey)
-      }
-
-      // Listen for space data, populate space-based notifications
-      let unsubSpaces: any
-
-      userMembership.subscribe(
-        memoize($membership => {
-          unsubSpaces?.()
-          unsubSpaces = listenForNotifications()
-        }),
-      )
-
-      // Listen for chats, populate chat-based notifications
-      let controller: AbortController
-
-      derived([pubkey, canDecrypt, userInboxRelays], identity).subscribe(
-        ([$pubkey, $canDecrypt, $userInboxRelays]) => {
-          controller?.abort()
-          controller = new AbortController()
-
-          if ($pubkey && $canDecrypt) {
-            request({
-              signal: controller.signal,
-              relays: $userInboxRelays,
-              filters: [
-                {kinds: [WRAP], "#p": [$pubkey], since: ago(WEEK, 2)},
-                {kinds: [WRAP], "#p": [$pubkey], limit: 100},
-              ],
-            })
-          }
-        },
-      )
+      // Load user data, listen for messages, etc
+      syncApplicationData()
 
       // subscribe to badge count for changes
       notifications.badgeCount.subscribe(notifications.handleBadgeCountChanges)

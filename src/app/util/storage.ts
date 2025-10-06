@@ -167,20 +167,14 @@ const syncTracker = async () => {
 
   tracker.load(relaysById)
 
-  let p = Promise.resolve()
-
   const updateOne = batch(3000, (ids: string[]) => {
-    p = p.then(() => {
-      collection.add(ids.map(id => [id, Array.from(tracker.getRelays(id))]))
-    })
+    collection.add(ids.map(id => [id, Array.from(tracker.getRelays(id))]))
   })
 
   const updateAll = throttle(3000, () => {
-    p = p.then(() => {
-      collection.set(
-        Array.from(tracker.relaysById.entries()).map(([id, relays]) => [id, Array.from(relays)]),
-      )
-    })
+    collection.set(
+      Array.from(tracker.relaysById.entries()).map(([id, relays]) => [id, Array.from(relays)]),
+    )
   })
 
   tracker.on("add", updateOne)

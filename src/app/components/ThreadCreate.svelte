@@ -16,7 +16,12 @@
   import {makeEditor} from "@app/editor"
   import {canEnforceNip70} from "@app/core/commands"
 
-  const {url} = $props()
+  type Props = {
+    url: string
+    room?: string
+  }
+
+  const {url, room}: Props = $props()
 
   const shouldProtect = canEnforceNip70(url)
 
@@ -50,6 +55,10 @@
 
     if (await shouldProtect) {
       tags.push(PROTECTED)
+    }
+
+    if (room) {
+      tags.push(["h", room])
     }
 
     publishThunk({

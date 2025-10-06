@@ -1,9 +1,11 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
+  import {getTagValue} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
   import CalendarEventActions from "@app/components/CalendarEventActions.svelte"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
+  import ChannelLink from "@app/components/ChannelLink.svelte"
   import {makeCalendarPath} from "@app/util/routes"
 
   type Props = {
@@ -12,6 +14,8 @@
   }
 
   const {url, event}: Props = $props()
+
+  const room = getTagValue("h", event.tags)
 </script>
 
 <Link class="col-3 card2 bg-alt w-full cursor-pointer" href={makeCalendarPath(url, event.id)}>
@@ -19,6 +23,9 @@
   <div class="flex w-full flex-col items-end justify-between gap-2 sm:flex-row">
     <span class="whitespace-nowrap py-1 text-sm opacity-75">
       Posted by <ProfileLink pubkey={event.pubkey} {url} />
+      {#if room}
+        in <ChannelLink {url} {room} />
+      {/if}
     </span>
     <CalendarEventActions showActivity {url} {event} />
   </div>

@@ -46,17 +46,19 @@
     let haveISeenTheFuture = false
     let prevDateDisplay: string
 
-    return $events.map<Item>(event => {
-      const newDateDisplay = formatTimestampAsDate(getStart(event))
-      const dateDisplay = prevDateDisplay === newDateDisplay ? undefined : newDateDisplay
-      const isFuture = todayDateDisplay === newDateDisplay || event.created_at > now()
-      const isFirstFutureEvent = !haveISeenTheFuture && isFuture
+    return $events
+      .filter(event => !isNaN(getStart(event)))
+      .map<Item>(event => {
+        const newDateDisplay = formatTimestampAsDate(getStart(event))
+        const dateDisplay = prevDateDisplay === newDateDisplay ? undefined : newDateDisplay
+        const isFuture = todayDateDisplay === newDateDisplay || event.created_at > now()
+        const isFirstFutureEvent = !haveISeenTheFuture && isFuture
 
-      prevDateDisplay = newDateDisplay
-      haveISeenTheFuture = isFuture
+        prevDateDisplay = newDateDisplay
+        haveISeenTheFuture = isFuture
 
-      return {event, dateDisplay, isFirstFutureEvent}
-    })
+        return {event, dateDisplay, isFirstFutureEvent}
+      })
   })
 
   let previousScrollHeight = 0
