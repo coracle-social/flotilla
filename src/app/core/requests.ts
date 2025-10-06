@@ -1,20 +1,18 @@
 import {get, writable} from "svelte/store"
 import {
-  partition,
   uniq,
   int,
   YEAR,
   DAY,
   insertAt,
   sortBy,
-  assoc,
   now,
+  on,
   isNotNil,
   filterVals,
   fromPairs,
 } from "@welshman/lib"
 import {
-  DELETE,
   EVENT_TIME,
   AUTH_INVITE,
   ALERT_EMAIL,
@@ -23,7 +21,6 @@ import {
   ALERT_ANDROID,
   ALERT_STATUS,
   matchFilters,
-  getTagValues,
   getTagValue,
   getAddress,
   isShareableRelayUrl,
@@ -32,73 +29,36 @@ import {
 import type {TrustedEvent, Filter, List} from "@welshman/util"
 import {feedFromFilters, makeRelayFeed, makeIntersectionFeed} from "@welshman/feeds"
 import {load, request} from "@welshman/net"
-import type {AppSyncOpts, Thunk} from "@welshman/app"
-import {
-  repository,
-  pull,
-  hasNegentropy,
-  thunkQueue,
-  makeFeedController,
-  loadRelay,
-} from "@welshman/app"
+import {repository, makeFeedController, loadRelay} from "@welshman/app"
 import {createScroller} from "@lib/html"
 import {daysBetween} from "@lib/util"
-import {NOTIFIER_RELAY, getUrlsForEvent} from "@app/core/state"
+import {NOTIFIER_RELAY, getEventsForUrl} from "@app/core/state"
 
 // Utils
 
-export const pullConservatively = ({relays, filters}: AppSyncOpts) => {
-  const $getUrlsForEvent = get(getUrlsForEvent)
-  const [smart, dumb] = partition(hasNegentropy, relays)
-  const promises = [pull({relays: smart, filters})]
-  const allEvents = repository.query(filters, {shouldSort: false})
-
-  // Since pulling from relays without negentropy is expensive, limit how many
-  // duplicates we repeatedly download
-  for (const url of dumb) {
-    const events = allEvents.filter(e => $getUrlsForEvent(e.id).includes(url))
-
-    if (events.length > 100) {
-      filters = filters.map(assoc("since", events[10]!.created_at))
-    }
-
-    promises.push(pull({relays: [url], filters}))
-  }
-
-  return Promise.all(promises)
-}
-
 export const makeFeed = ({
-  relays,
-  feedFilters,
-  subscriptionFilters,
+  url,
+  filters,
   element,
-  onEvent,
   onExhausted,
-  initialEvents = [],
 }: {
-  relays: string[]
-  feedFilters: Filter[]
-  subscriptionFilters: Filter[]
+  url: string
+  filters: Filter[]
   element: HTMLElement
-  onEvent?: (event: TrustedEvent) => void
   onExhausted?: () => void
-  initialEvents?: TrustedEvent[]
 }) => {
-  const seen = new Set<string>()
-  const buffer = writable<TrustedEvent[]>([])
-  const events = writable(initialEvents)
+  const initialEvents = getEventsForUrl(url, filters)
+  const seen = new Set(initialEvents.map(e => e.id))
   const controller = new AbortController()
-
-  const markEvent = (event: TrustedEvent) => {
-    if (!seen.has(event.id)) {
-      seen.add(event.id)
-      onEvent?.(event)
-    }
-  }
+  const buffer = writable(initialEvents)
+  const events = writable<TrustedEvent[]>([])
 
   const insertEvent = (event: TrustedEvent) => {
     let handled = false
+
+    if (seen.has(event.id)) {
+      return
+    }
 
     events.update($events => {
       for (let i = 0; i < $events.length; i++) {
@@ -123,47 +83,27 @@ export const makeFeed = ({
       })
     }
 
-    markEvent(event)
+    seen.add(event.id)
   }
 
-  const removeEvents = (ids: string[]) => {
-    buffer.update($buffer => $buffer.filter(e => !ids.includes(e.id)))
-    events.update($events => $events.filter(e => !ids.includes(e.id)))
-  }
-
-  const handleDelete = (e: TrustedEvent) => removeEvents(getTagValues(["e", "a"], e.tags))
-
-  const onThunk = (thunk: Thunk) => {
-    if (matchFilters(feedFilters, thunk.event)) {
-      insertEvent(thunk.event)
-
-      thunk.controller.signal.addEventListener("abort", () => {
-        removeEvents([thunk.event.id])
-      })
-    } else if (thunk.event.kind === DELETE) {
-      handleDelete(thunk.event)
+  const unsubscribe = on(repository, "update", ({added, removed}) => {
+    if (removed.size > 0) {
+      buffer.update($buffer => $buffer.filter(e => !removed.has(e.id)))
+      events.update($events => $events.filter(e => !removed.has(e.id)))
     }
-  }
+
+    for (const event of added) {
+      if (matchFilters(filters, event)) {
+        insertEvent(event)
+      }
+    }
+  })
 
   const ctrl = makeFeedController({
     useWindowing: true,
-    feed: makeIntersectionFeed(makeRelayFeed(...relays), feedFromFilters(feedFilters)),
-    onEvent: insertEvent,
-    onExhausted,
-  })
-
-  for (const event of initialEvents) {
-    markEvent(event)
-  }
-
-  request({
-    relays,
     signal: controller.signal,
-    filters: subscriptionFilters,
-    onEvent: (e: TrustedEvent) => {
-      if (matchFilters(feedFilters, e)) insertEvent(e)
-      if (e.kind === DELETE) handleDelete(e)
-    },
+    feed: makeIntersectionFeed(makeRelayFeed(url), feedFromFilters(filters)),
+    onExhausted,
   })
 
   const scroller = createScroller({
@@ -173,15 +113,13 @@ export const makeFeed = ({
     onScroll: async () => {
       const $buffer = get(buffer)
 
-      events.update($events => sortBy(e => -e.created_at, [...$events, ...$buffer.splice(0, 100)]))
+      events.update($events => [...$events, ...$buffer.splice(0, 100)])
 
       if ($buffer.length < 100) {
         ctrl.load(100)
       }
     },
   })
-
-  const unsubscribe = thunkQueue.subscribe(onThunk)
 
   return {
     events,
@@ -194,22 +132,19 @@ export const makeFeed = ({
 }
 
 export const makeCalendarFeed = ({
-  relays,
-  feedFilters,
-  subscriptionFilters,
+  url,
+  filters,
   element,
   onExhausted,
-  initialEvents = [],
 }: {
-  relays: string[]
-  feedFilters: Filter[]
-  subscriptionFilters: Filter[]
+  url: string
+  filters: Filter[]
   element: HTMLElement
   onExhausted?: () => void
-  initialEvents?: TrustedEvent[]
 }) => {
   const interval = int(5, DAY)
   const controller = new AbortController()
+  const initialEvents = getEventsForUrl(url, filters)
 
   let exhaustedScrollers = 0
   let backwardWindow = [now() - interval, now()]
@@ -237,38 +172,26 @@ export const makeCalendarFeed = ({
     })
   }
 
-  const removeEvents = (ids: string[]) => {
-    events.update($events => $events.filter(e => !ids.includes(e.id)))
-  }
-
-  const onThunk = (thunk: Thunk) => {
-    if (matchFilters(feedFilters, thunk.event)) {
-      insertEvent(thunk.event)
-
-      thunk.controller.signal.addEventListener("abort", () => {
-        removeEvents([thunk.event.id])
-      })
+  const unsubscribe = on(repository, "update", ({added, removed}) => {
+    if (removed.size > 0) {
+      events.update($events => $events.filter(e => !removed.has(e.id)))
     }
-  }
 
-  request({
-    relays,
-    signal: controller.signal,
-    filters: subscriptionFilters,
-    onEvent: (e: TrustedEvent) => {
-      if (matchFilters(feedFilters, e)) insertEvent(e)
-    },
+    for (const event of added) {
+      if (matchFilters(filters, event)) {
+        insertEvent(event)
+      }
+    }
   })
 
   const loadTimeframe = (since: number, until: number) => {
     const hashes = daysBetween(since, until).map(String)
 
     request({
-      relays,
-      signal: controller.signal,
+      relays: [url],
       autoClose: true,
+      signal: controller.signal,
       filters: [{kinds: [EVENT_TIME], "#D": hashes}],
-      onEvent: insertEvent,
     })
   }
 
@@ -310,8 +233,6 @@ export const makeCalendarFeed = ({
       }
     },
   })
-
-  const unsubscribe = thunkQueue.subscribe(onThunk)
 
   return {
     events,

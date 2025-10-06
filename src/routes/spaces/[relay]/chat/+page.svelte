@@ -1,11 +1,11 @@
 <script lang="ts">
-  import {onMount, onDestroy} from "svelte"
+  import {onMount} from "svelte"
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
   import {now, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {makeEvent, MESSAGE, DELETE, THREAD, EVENT_TIME, ZAP_GOAL} from "@welshman/util"
+  import {makeEvent, MESSAGE} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
@@ -21,13 +21,7 @@
   import ChannelItem from "@app/components/ChannelItem.svelte"
   import ChannelCompose from "@app/components/ChannelCompose.svelte"
   import ChannelComposeParent from "@app/components/ChannelComposeParent.svelte"
-  import {
-    userSettingsValues,
-    decodeRelay,
-    getEventsForUrl,
-    PROTECTED,
-    REACTION_KINDS,
-  } from "@app/core/state"
+  import {userSettingsValues, decodeRelay, MESSAGE_FILTER, PROTECTED} from "@app/core/state"
   import {prependParent, canEnforceNip70, publishDelete} from "@app/core/commands"
   import {setChecked, checked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
@@ -38,7 +32,6 @@
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay($page.params.relay!)
-  const filter = {kinds: [MESSAGE, THREAD, EVENT_TIME, ZAP_GOAL]}
   const shouldProtect = canEnforceNip70(url)
 
   const replyTo = (event: TrustedEvent) => {
@@ -223,11 +216,9 @@
     observer.observe(dynamicPadding!)
 
     const feed = makeFeed({
+      url,
       element: element!,
-      relays: [url],
-      feedFilters: [filter],
-      subscriptionFilters: [{kinds: [DELETE, MESSAGE, ...REACTION_KINDS], since: now()}],
-      initialEvents: getEventsForUrl(url, [{...filter, limit: 20}]),
+      filters: [MESSAGE_FILTER],
       onExhausted: () => {
         loadingEvents = false
       },
@@ -237,19 +228,16 @@
     cleanup = feed.cleanup
 
     return () => {
+      cleanup()
       controller.abort()
       observer.unobserve(chatCompose!)
       observer.unobserve(dynamicPadding!)
+
+      // Sveltekit calls onDestroy at the beginning of the page load for some reason
+      setTimeout(() => {
+        setChecked($page.url.pathname)
+      }, 800)
     }
-  })
-
-  onDestroy(() => {
-    cleanup?.()
-
-    // Sveltekit calls onDestroy at the beginning of the page load for some reason
-    setTimeout(() => {
-      setChecked($page.url.pathname)
-    }, 800)
   })
 </script>
 

@@ -87,6 +87,7 @@ export const notifications = derived(
 
     for (const [url, rooms] of $userRoomsByUrl.entries()) {
       const spacePath = makeSpacePath(url)
+      const spacePathMobile = spacePath + ":mobile"
       const goalPath = makeGoalPath(url)
       const threadPath = makeThreadPath(url)
       const calendarPath = makeCalendarPath(url)
@@ -104,9 +105,14 @@ export const notifications = derived(
       for (const [goalId, [comment]] of commentsByGoalId.entries()) {
         const goalItemPath = makeGoalPath(url, goalId)
 
+        if (hasNotification(spacePathMobile, comment)) {
+          paths.add(spacePathMobile)
+        }
+
         if (hasNotification(goalPath, comment)) {
           paths.add(goalPath)
         }
+
         if (hasNotification(goalItemPath, comment)) {
           paths.add(goalItemPath)
         }
@@ -120,9 +126,14 @@ export const notifications = derived(
       for (const [threadId, [comment]] of commentsByThreadId.entries()) {
         const threadItemPath = makeThreadPath(url, threadId)
 
+        if (hasNotification(spacePathMobile, comment)) {
+          paths.add(spacePathMobile)
+        }
+
         if (hasNotification(threadPath, comment)) {
           paths.add(threadPath)
         }
+
         if (hasNotification(threadItemPath, comment)) {
           paths.add(threadItemPath)
         }
@@ -135,6 +146,10 @@ export const notifications = derived(
 
       for (const [eventId, [comment]] of commentsByEventId.entries()) {
         const calendarItemPath = makeCalendarPath(url, eventId)
+
+        if (hasNotification(spacePathMobile, comment)) {
+          paths.add(spacePathMobile)
+        }
 
         if (hasNotification(calendarPath, comment)) {
           paths.add(calendarPath)
@@ -153,12 +168,14 @@ export const notifications = derived(
           )
 
           if (hasNotification(roomPath, latestEvent)) {
+            paths.add(spacePathMobile)
             paths.add(spacePath)
             paths.add(roomPath)
           }
         }
       } else {
         if (hasNotification(messagesPath, messages[0])) {
+          paths.add(spacePathMobile)
           paths.add(spacePath)
           paths.add(messagesPath)
         }

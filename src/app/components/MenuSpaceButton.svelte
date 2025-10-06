@@ -9,7 +9,7 @@
 
   const {url} = $props()
 
-  const path = makeSpacePath(url)
+  const path = makeSpacePath(url) + ":mobile"
 
   const openMenu = () => pushDrawer(MenuSpace, {url})
 </script>

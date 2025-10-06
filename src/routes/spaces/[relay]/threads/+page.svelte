@@ -1,10 +1,11 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import {readable} from "svelte/store"
+  import type {Readable} from "svelte/store"
   import {page} from "$app/stores"
-  import {sortBy, max, nthEq} from "@welshman/lib"
+  import {sortBy, partition, spec, max, pushToMapKey} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {THREAD, DELETE, COMMENT, getListTags, getPubkeyTagValues} from "@welshman/util"
-  import {userMutes} from "@welshman/app"
+  import {THREAD, getTagValue} from "@welshman/util"
   import {fly} from "@lib/transition"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -15,62 +16,49 @@
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import ThreadItem from "@app/components/ThreadItem.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import {decodeRelay, getEventsForUrl} from "@app/core/state"
+  import {decodeRelay} from "@app/core/state"
   import {setChecked} from "@app/util/notifications"
-  import {REACTION_KINDS} from "@app/core/state"
+  import {makeCommentFilter} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
   import {pushModal} from "@app/util/modal"
 
   const url = decodeRelay($page.params.relay!)
-  const mutedPubkeys = getPubkeyTagValues(getListTags($userMutes))
-  const threads: TrustedEvent[] = $state([])
-  const comments: TrustedEvent[] = $state([])
 
   let loading = $state(true)
   let element: HTMLElement | undefined = $state()
+  let events: Readable<TrustedEvent[]> = $state(readable([]))
 
   const createThread = () => pushModal(ThreadCreate, {url})
 
-  const events = $derived.by(() => {
-    const scores = new Map<string, number>()
+  const items = $derived.by(() => {
+    const scores = new Map<string, number[]>()
+    const [goals, comments] = partition(spec({kind: THREAD}), $events)
 
     for (const comment of comments) {
-      const id = comment.tags.find(nthEq(0, "E"))?.[1]
+      const id = getTagValue("E", comment.tags)
 
       if (id) {
-        scores.set(id, max([scores.get(id), comment.created_at]))
+        pushToMapKey(scores, id, comment.created_at)
       }
     }
 
-    return sortBy(e => -max([scores.get(e.id), e.created_at]), threads)
+    return sortBy(e => -max([...(scores.get(e.id) || []), e.created_at]), goals)
   })
 
   onMount(() => {
-    const {cleanup} = makeFeed({
+    const feed = makeFeed({
+      url,
       element: element!,
-      relays: [url],
-      feedFilters: [{kinds: [THREAD, COMMENT]}],
-      subscriptionFilters: [
-        {kinds: [THREAD, DELETE, ...REACTION_KINDS]},
-        {kinds: [COMMENT], "#K": [String(THREAD)]},
-      ],
-      initialEvents: getEventsForUrl(url, [{kinds: [THREAD, COMMENT], limit: 10}]),
-      onEvent: event => {
-        if (event.kind === THREAD && !mutedPubkeys.includes(event.pubkey)) {
-          threads.push(event)
-        }
-
-        if (event.kind === COMMENT) {
-          comments.push(event)
-        }
-      },
+      filters: [{kinds: [THREAD]}, makeCommentFilter([THREAD])],
       onExhausted: () => {
         loading = false
       },
     })
 
+    events = feed.events
+
     return () => {
-      cleanup?.()
+      feed.cleanup()
       setChecked($page.url.pathname)
     }
   })
@@ -97,7 +85,7 @@
 </PageBar>
 
 <PageContent bind:element class="flex flex-col gap-2 p-2 pt-4">
-  {#each events as event (event.id)}
+  {#each items as event (event.id)}
     <div in:fly>
       <ThreadItem {url} event={$state.snapshot(event)} />
     </div>
@@ -106,7 +94,7 @@
     <Spinner {loading}>
       {#if loading}
         Looking for threads...
-      {:else if events.length === 0}
+      {:else if items.length === 0}
         No threads found.
       {:else}
         That's all!

@@ -1,8 +1,6 @@
 <script module lang="ts">
   import {goto} from "$app/navigation"
   import {dissoc} from "@welshman/lib"
-  import {ROOM_META} from "@welshman/util"
-  import {load} from "@welshman/net"
   import {pushToast} from "@app/util/toast"
   import {makeSpacePath} from "@app/util/routes"
   import {addSpaceMembership, broadcastUserData} from "@app/core/commands"
@@ -11,17 +9,8 @@
   export const confirmSpaceJoin = async (url: string) => {
     await addSpaceMembership(url)
 
-    const path = makeSpacePath(url)
-
-    if (window.location.pathname === path) {
-      load({
-        relays: [url],
-        filters: [{kinds: [ROOM_META]}],
-      })
-    }
-
     broadcastUserData([url])
-    goto(path, {replaceState: true})
+    goto(makeSpacePath(url), {replaceState: true})
     relaysMostlyRestricted.update(dissoc(url))
     pushToast({message: "Welcome to the space!"})
   }

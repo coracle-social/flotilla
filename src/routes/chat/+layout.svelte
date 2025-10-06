@@ -1,9 +1,7 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {page} from "$app/stores"
-  import {WRAP} from "@welshman/util"
-  import {Router} from "@welshman/router"
-  import {pubkey} from "@welshman/app"
+  import {sleep} from "@welshman/lib"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -16,7 +14,6 @@
   import ChatMenu from "@app/components/ChatMenu.svelte"
   import ChatItem from "@app/components/ChatItem.svelte"
   import {chatSearch} from "@app/core/state"
-  import {pullConservatively} from "@app/core/requests"
   import {pushModal} from "@app/util/modal"
 
   type Props = {
@@ -27,14 +24,11 @@
 
   const openMenu = () => pushModal(ChatMenu)
 
-  const promise = pullConservatively({
-    filters: [{kinds: [WRAP], "#p": [$pubkey!]}],
-    relays: Router.get().UserInbox().getUrls(),
-  })
-
   let term = $state("")
 
   const chats = $derived($chatSearch.searchOptions(term))
+
+  const promise = sleep(10000)
 </script>
 
 <SecondaryNav>

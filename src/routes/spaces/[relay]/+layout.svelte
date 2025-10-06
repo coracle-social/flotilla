@@ -2,8 +2,8 @@
   import type {Snippet} from "svelte"
   import {onMount} from "svelte"
   import {page} from "$app/stores"
-  import {ago, sleep, once, MONTH} from "@welshman/lib"
-  import {ROOM_META, EVENT_TIME, THREAD, COMMENT, MESSAGE, displayRelayUrl} from "@welshman/util"
+  import {sleep, once} from "@welshman/lib"
+  import {displayRelayUrl} from "@welshman/util"
   import {SocketStatus} from "@welshman/net"
   import Page from "@lib/components/Page.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
@@ -19,10 +19,7 @@
     deriveRelayAuthError,
     relaysPendingTrust,
     deriveSocket,
-    userRoomsByUrl,
   } from "@app/core/state"
-  import {pullConservatively} from "@app/core/requests"
-  import {hasBlossomSupport} from "@app/core/commands"
   import {notifications} from "@app/util/notifications"
 
   type Props = {
@@ -32,8 +29,6 @@
   const {children}: Props = $props()
 
   const url = decodeRelay($page.params.relay!)
-
-  const rooms = Array.from($userRoomsByUrl.get(url) || [])
 
   const socket = deriveSocket(url)
 
@@ -56,8 +51,6 @@
   })
 
   onMount(() => {
-    const since = ago(MONTH)
-
     sleep(2000).then(() => {
       if ($socket.status !== SocketStatus.Open) {
         pushToast({
@@ -65,21 +58,6 @@
           message: `Failed to connect to ${displayRelayUrl(url)}`,
         })
       }
-    })
-
-    // Prime our cache so we can upload images quicker
-    hasBlossomSupport(url)
-
-    // Load group meta, threads, calendar events, comments, and recent messages
-    // for user rooms to help with a quick page transition
-    pullConservatively({
-      relays: [url],
-      filters: [
-        {kinds: [ROOM_META]},
-        {kinds: [THREAD, EVENT_TIME, MESSAGE], since},
-        {kinds: [COMMENT], "#K": [String(THREAD), String(EVENT_TIME)], since},
-        ...rooms.map(room => ({kinds: [MESSAGE], "#h": [room], since})),
-      ],
     })
   })
 </script>
