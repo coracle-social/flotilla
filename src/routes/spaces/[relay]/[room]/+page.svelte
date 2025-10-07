@@ -446,7 +446,7 @@
         <ChannelComposeParent event={share} clear={clearShare} verb="Sharing" />
       {/if}
     </div>
-    <ChannelCompose bind:this={compose} {onSubmit} {url} />
+    <ChannelCompose bind:this={compose} {onSubmit} {room} {url} />
   {/if}
 </div>
 
