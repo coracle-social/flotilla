@@ -1,4 +1,16 @@
-import {on, throttle, fromPairs, batch, sortBy, concat} from "@welshman/lib"
+import {verifiedSymbol} from "nostr-tools/pure"
+import {
+  always,
+  on,
+  hash,
+  last,
+  groupBy,
+  throttle,
+  fromPairs,
+  batch,
+  sortBy,
+  concat,
+} from "@welshman/lib"
 import {throttled, freshness} from "@welshman/store"
 import {
   PROFILE,
@@ -33,10 +45,23 @@ import {
   onZapper,
   onHandle,
 } from "@welshman/app"
-import {collectionStorageProvider} from "@lib/storage"
+import {Collection} from "@lib/storage"
 
 const syncEvents = async () => {
-  repository.load(await collectionStorageProvider.get<TrustedEvent>("events"))
+  const collection = new Collection<TrustedEvent>({
+    table: "events",
+    shards: Array.from("0123456789abcdef"),
+    getShard: (event: TrustedEvent) => last(event.id),
+  })
+
+  const initialEvents = await collection.get()
+
+  // Mark events verified to avoid re-verification of signatures
+  for (const event of initialEvents) {
+    event[verifiedSymbol] = true
+  }
+
+  repository.load(initialEvents)
 
   const rankEvent = (event: TrustedEvent) => {
     switch (event.kind) {
@@ -102,24 +127,36 @@ const syncEvents = async () => {
         }
       }
 
-      if (added.length > 0) {
-        let events = concat(await collectionStorageProvider.get<TrustedEvent>("events"), added)
+      if (removed.size > 0) {
+        for (const [shard, chunk] of groupBy(last, Array.from(removed))) {
+          const current = await collection.getShard(shard)
+          const modified = concat(
+            current.filter(e => !chunk.includes(e.id)),
+            added,
+          )
+          const pruned = sortBy(e => -rankEvent(e), modified).slice(0, 10_000)
 
-        // If we're well above our retention limit, drop lowest-ranked events
-        if (events.length > 15_000) {
-          events = sortBy(e => -rankEvent(e), events).slice(10_000)
+          await collection.setShard(shard, pruned)
         }
-
-        await collectionStorageProvider.set("events", events)
+      } else if (added.length > 0) {
+        await collection.add(added)
       }
     }),
   )
 }
 
+type TrackerItem = [string, string[]]
+
 const syncTracker = async () => {
+  const collection = new Collection<TrackerItem>({
+    table: "tracker",
+    shards: Array.from("0123456789abcdef"),
+    getShard: (item: TrackerItem) => last(item[0]),
+  })
+
   const relaysById = new Map<string, Set<string>>()
 
-  for (const [id, relays] of await collectionStorageProvider.get<[string, string[]]>("tracker")) {
+  for (const [id, relays] of await collection.get()) {
     relaysById.set(id, new Set(relays))
   }
 
@@ -129,17 +166,13 @@ const syncTracker = async () => {
 
   const updateOne = batch(3000, (ids: string[]) => {
     p = p.then(() => {
-      collectionStorageProvider.add(
-        "tracker",
-        ids.map(id => [id, Array.from(tracker.getRelays(id))]),
-      )
+      collection.add(ids.map(id => [id, Array.from(tracker.getRelays(id))]))
     })
   })
 
   const updateAll = throttle(3000, () => {
     p = p.then(() => {
-      collectionStorageProvider.set(
-        "tracker",
+      collection.set(
         Array.from(tracker.relaysById.entries()).map(([id, relays]) => [id, Array.from(relays)]),
       )
     })
@@ -159,46 +192,70 @@ const syncTracker = async () => {
 }
 
 const syncRelays = async () => {
-  relays.set(await collectionStorageProvider.get<Relay>("relays"))
-
-  return throttled(3000, relays).subscribe($relays => {
-    collectionStorageProvider.set("relays", $relays)
+  const collection = new Collection<Relay>({
+    table: "relays",
+    shards: Array.from("0123456789"),
+    getShard: (item: Relay) => last(hash(item.url)),
   })
+
+  relays.set(await collection.get())
+
+  return throttled(3000, relays).subscribe(collection.set)
 }
 
 const syncHandles = async () => {
-  handles.set(await collectionStorageProvider.get<Handle>("handles"))
+  const collection = new Collection<Handle>({
+    table: "handles",
+    shards: Array.from("0123456789"),
+    getShard: (item: Handle) => last(hash(item.nip05)),
+  })
 
-  return onHandle(
-    batch(3000, async $handles => {
-      await collectionStorageProvider.add("handles", $handles)
-    }),
-  )
+  handles.set(await collection.get())
+
+  return onHandle(batch(3000, collection.add))
 }
 
 const syncZappers = async () => {
-  zappers.set(await collectionStorageProvider.get<Zapper>("zappers"))
+  const collection = new Collection<Zapper>({
+    table: "zappers",
+    shards: Array.from("0123456789"),
+    getShard: (item: Zapper) => last(hash(item.lnurl)),
+  })
 
-  return onZapper(
-    batch(3000, async $zappers => {
-      await collectionStorageProvider.add("zappers", $zappers)
-    }),
-  )
+  zappers.set(await collection.get())
+
+  return onZapper(batch(3000, collection.add))
 }
 
+type FreshnessItem = [string, number]
+
 const syncFreshness = async () => {
-  freshness.set(fromPairs(await collectionStorageProvider.get<[string, number]>("freshness")))
+  const collection = new Collection<FreshnessItem>({
+    table: "freshness",
+    shards: ["0"],
+    getShard: always("0"),
+  })
+
+  freshness.set(fromPairs(await collection.get()))
 
   return throttled(3000, freshness).subscribe($freshness => {
-    collectionStorageProvider.set("freshness", Object.entries($freshness))
+    collection.set(Object.entries($freshness))
   })
 }
 
+type PlaintextItem = [string, string]
+
 const syncPlaintext = async () => {
-  plaintext.set(fromPairs(await collectionStorageProvider.get<[string, string]>("plaintext")))
+  const collection = new Collection<PlaintextItem>({
+    table: "plaintext",
+    shards: ["0"],
+    getShard: always("0"),
+  })
+
+  plaintext.set(fromPairs(await collection.get()))
 
   return throttled(3000, plaintext).subscribe($plaintext => {
-    collectionStorageProvider.set("plaintext", Object.entries($plaintext))
+    collection.set(Object.entries($plaintext))
   })
 }
 
