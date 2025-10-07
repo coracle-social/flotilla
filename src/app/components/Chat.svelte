@@ -182,6 +182,15 @@
     return elements.reverse()
   })
 
+  const onEditPrevious = () => {
+    // TODO: Make sure its not more than 5 minutes past message posting
+    // TODO: Need to somehow get previous sent event from this pubkey
+    // TODO: Need to delete old message and republish message with same timestamp
+    //
+    // TODO: I think I can search the `elements` for previous messsage
+    return
+  }
+
   onMount(() => {
     for (const pubkey of others) {
       loadInboxRelaySelections(pubkey, INDEXER_RELAYS, true)
@@ -318,6 +327,7 @@
       <ChatComposeParent event={parent} clear={clearParent} verb="Replying to" />
     {/if}
   </div>
-  <!-- TODO: Pass in a handler for onEditPrevious -->
-  <ChatCompose bind:this={compose} content="new something hmr" {onSubmit} />
+  <!-- TODO: Somewhere we need to add edit button to menu -->
+  <!-- TODO: Populate content with previous message if the edit previous state was set -->
+  <ChatCompose bind:this={compose} content="new something hmr" {onSubmit} {onEditPrevious} />
 </div>
