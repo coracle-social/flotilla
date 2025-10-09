@@ -25,9 +25,11 @@
     replyTo: (event: TrustedEvent) => void
     pubkeys: string[]
     showPubkey?: boolean
+    canEdit: (event: TrustedEvent) => boolean
+    onEdit: (event: TrustedEvent) => void
   }
 
-  const {event, replyTo, pubkeys, showPubkey = false}: Props = $props()
+  const {event, replyTo, pubkeys, showPubkey = false, canEdit, onEdit}: Props = $props()
 
   const thunk = $thunks[event.id]
   const isOwn = event.pubkey === $pubkey
@@ -36,6 +38,7 @@
   const [_, colorValue] = colors[parseInt(hash(event.pubkey)) % colors.length]
 
   const reply = () => replyTo(event)
+  const edit = canEdit(event) ? () => onEdit(event) : undefined
 
   const deleteReaction = (event: TrustedEvent) =>
     sendWrapped({template: makeDelete({event, protect: false}), pubkeys})
@@ -45,7 +48,7 @@
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey})
 
-  const showMobileMenu = () => pushModal(ChatMessageMenuMobile, {event, pubkeys, reply})
+  const showMobileMenu = () => pushModal(ChatMessageMenuMobile, {event, pubkeys, reply, edit})
 
   const togglePopover = () => {
     if (popoverIsVisible) {
@@ -72,7 +75,7 @@
     <Tippy
       bind:popover
       component={ChatMessageMenu}
-      props={{event, pubkeys, popover, replyTo}}
+      props={{event, pubkeys, popover, replyTo, edit}}
       params={{
         interactive: true,
         trigger: "manual",
