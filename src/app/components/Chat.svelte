@@ -95,7 +95,7 @@
     if (eventToEdit) {
       // Delete previous message, to be republished with same timestamp
       created_at = eventToEdit.created_at
-      publishDelete({relays: Router.get().FromUser().getUrls(), event: eventToEdit, protect: false})
+      publishDelete({relays: Router.get().FromUser().getUrls(), event: eventToEdit, protect: true})
     }
 
     // Remove p tags since they result in forking the conversation
@@ -381,5 +381,7 @@
         verb={eventToEdit ? "Editing previous message" : "Replying to"} />
     </div>
   {/if}
-  <ChatCompose bind:this={compose} content={eventToEdit?.content} {onSubmit} {onEditPrevious} />
+  {#key eventToEdit}
+    <ChatCompose bind:this={compose} content={eventToEdit?.content} {onSubmit} {onEditPrevious} />
+  {/key}
 </div>

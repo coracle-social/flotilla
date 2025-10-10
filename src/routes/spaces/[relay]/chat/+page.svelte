@@ -63,7 +63,7 @@
     if (eventToEdit) {
       // Delete previous message, to be republished with same timestamp
       created_at = eventToEdit.created_at
-      publishDelete({relays: [url], event: eventToEdit, protect: false})
+      publishDelete({relays: [url], event: eventToEdit, protect: await shouldProtect})
     }
 
     if (await shouldProtect) {
@@ -342,12 +342,14 @@
         verb="Editing previous message" />
     {/if}
   </div>
-  <ChannelCompose
-    bind:this={compose}
-    content={eventToEdit?.content}
-    {onSubmit}
-    {url}
-    {onEditPrevious} />
+  {#key eventToEdit}
+    <ChannelCompose
+      bind:this={compose}
+      content={eventToEdit?.content}
+      {onSubmit}
+      {url}
+      {onEditPrevious} />
+  {/key}
 </div>
 
 {#if showScrollButton}
