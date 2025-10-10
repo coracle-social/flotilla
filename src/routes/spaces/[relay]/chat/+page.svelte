@@ -214,7 +214,7 @@
   }
 
   const onEditEvent = (event: TrustedEvent) => {
-    if (parent) {
+    if (parent || share) {
       return
     }
 
@@ -328,25 +328,26 @@
 </PageContent>
 
 <div class="chat__compose bg-base-200" bind:this={chatCompose}>
-  {#if eventToEdit}
-    <div>
+  <div>
+    {#if parent}
+      <ChannelComposeParent event={parent} clear={clearParent} verb="Replying to" />
+    {/if}
+    {#if share}
+      <ChannelComposeParent event={share} clear={clearShare} verb="Sharing" />
+    {/if}
+    {#if eventToEdit}
       <ChannelComposeParent
         event={eventToEdit}
         clear={clearEventToEdit}
         verb="Editing previous message" />
-    </div>
-    <ChannelCompose bind:this={compose} content={eventToEdit?.content} {onSubmit} {url} />
-  {:else}
-    <div>
-      {#if parent}
-        <ChannelComposeParent event={parent} clear={clearParent} verb="Replying to" />
-      {/if}
-      {#if share}
-        <ChannelComposeParent event={share} clear={clearShare} verb="Sharing" />
-      {/if}
-    </div>
-    <ChannelCompose bind:this={compose} {onSubmit} {url} {onEditPrevious} />
-  {/if}
+    {/if}
+  </div>
+  <ChannelCompose
+    bind:this={compose}
+    content={eventToEdit?.content}
+    {onSubmit}
+    {url}
+    {onEditPrevious} />
 </div>
 
 {#if showScrollButton}
