@@ -94,8 +94,8 @@
 
     if (eventToEdit) {
       // Delete previous message, to be republished with same timestamp
-      publishDelete({relays: Router.get().FromUser().getUrls(), event: eventToEdit, protect: false})
       created_at = eventToEdit.created_at
+      publishDelete({relays: Router.get().FromUser().getUrls(), event: eventToEdit, protect: false})
     }
 
     // Remove p tags since they result in forking the conversation

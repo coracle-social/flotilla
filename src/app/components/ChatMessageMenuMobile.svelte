@@ -19,7 +19,7 @@
     pubkeys: string[]
     event: TrustedEvent
     reply: () => void
-    edit: () => void | undefined
+    edit?: () => void
   }
 
   const {event, pubkeys, reply, edit}: Props = $props()

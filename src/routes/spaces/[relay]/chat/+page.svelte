@@ -3,7 +3,7 @@
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
-  import {now, formatTimestampAsDate} from "@welshman/lib"
+  import {now, formatTimestampAsDate, int, MINUTE, sortBy} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {makeEvent, getTag, MESSAGE, DELETE} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
@@ -28,7 +28,7 @@
     PROTECTED,
     REACTION_KINDS,
   } from "@app/core/state"
-  import {prependParent, canEnforceNip70} from "@app/core/commands"
+  import {prependParent, canEnforceNip70, publishDelete} from "@app/core/commands"
   import {setChecked, checked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
   import {makeFeed} from "@app/core/requests"
@@ -49,11 +49,23 @@
     parent = undefined
   }
 
+  const clearEventToEdit = () => {
+    eventToEdit = undefined
+  }
+
   const clearShare = () => {
     share = undefined
   }
 
   const onSubmit = async ({content, tags}: EventContent) => {
+    let created_at = undefined
+
+    if (eventToEdit) {
+      // Delete previous message, to be republished with same timestamp
+      created_at = eventToEdit.created_at
+      publishDelete({relays: [url], event: eventToEdit, protect: false})
+    }
+
     if (await shouldProtect) {
       tags.push(PROTECTED)
     }
@@ -70,7 +82,7 @@
 
     const thunk = publishThunk({
       relays: [url],
-      event: makeEvent(MESSAGE, template),
+      event: makeEvent(MESSAGE, {...template, created_at}),
       delay: $userSettingsValues.send_delay,
     })
 
@@ -84,6 +96,7 @@
 
     clearParent()
     clearShare()
+    clearEventToEdit()
   }
 
   const onScroll = () => {
@@ -120,6 +133,7 @@
   let cleanup: () => void
   let events: Readable<TrustedEvent[]> = $state(readable([]))
   let compose: ChannelCompose | undefined = $state()
+  let eventToEdit: TrustedEvent | undefined = $state()
 
   const elements = $derived.by(() => {
     const elements = []
@@ -181,6 +195,45 @@
 
     return elements
   })
+
+  const findPreviousOwnedMessage = () => {
+    return sortBy(e => e.created_at, $events || [])
+      .reverse()
+      .find(e => e.pubkey === $pubkey)
+  }
+
+  const canEditEvent = (event: TrustedEvent) => {
+    if (event.pubkey !== $pubkey) {
+      return false
+    }
+
+    const nowSeconds = Date.now() / 1000
+    const editLimit = nowSeconds - int(5, MINUTE)
+
+    return event.created_at >= editLimit
+  }
+
+  const onEditEvent = (event: TrustedEvent) => {
+    if (parent) {
+      return
+    }
+
+    if (!canEditEvent(event)) {
+      return
+    }
+
+    eventToEdit = event
+  }
+
+  const onEditPrevious = () => {
+    const previousMessage = findPreviousOwnedMessage()
+
+    if (!previousMessage) {
+      return
+    }
+
+    onEditEvent(previousMessage)
+  }
 
   onMount(() => {
     const controller = new AbortController()
@@ -259,7 +312,9 @@
           {url}
           {replyTo}
           event={$state.snapshot(value as TrustedEvent)}
-          {showPubkey} />
+          {showPubkey}
+          canEdit={canEditEvent}
+          onEdit={onEditEvent} />
       </div>
     {/if}
   {/each}
@@ -273,16 +328,25 @@
 </PageContent>
 
 <div class="chat__compose bg-base-200" bind:this={chatCompose}>
-  <div>
-    {#if parent}
-      <ChannelComposeParent event={parent} clear={clearParent} verb="Replying to" />
-    {/if}
-    {#if share}
-      <ChannelComposeParent event={share} clear={clearShare} verb="Sharing" />
-    {/if}
-  </div>
-<!--  TODO: Here is -->
-  <ChannelCompose bind:this={compose} content="channel chat test" {onSubmit} {url} />
+  {#if eventToEdit}
+    <div>
+      <ChannelComposeParent
+        event={eventToEdit}
+        clear={clearEventToEdit}
+        verb="Editing previous message" />
+    </div>
+    <ChannelCompose bind:this={compose} content={eventToEdit?.content} {onSubmit} {url} />
+  {:else}
+    <div>
+      {#if parent}
+        <ChannelComposeParent event={parent} clear={clearParent} verb="Replying to" />
+      {/if}
+      {#if share}
+        <ChannelComposeParent event={share} clear={clearShare} verb="Sharing" />
+      {/if}
+    </div>
+    <ChannelCompose bind:this={compose} {onSubmit} {url} {onEditPrevious} />
+  {/if}
 </div>
 
 {#if showScrollButton}
