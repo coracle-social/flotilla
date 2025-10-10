@@ -167,6 +167,7 @@
   let chatCompose: HTMLElement | undefined = $state()
   let dynamicPadding: HTMLElement | undefined = $state()
   let eventToEdit: TrustedEvent | undefined = $state()
+  let showComposeParent = $state(false)
 
   const elements = $derived.by(() => {
     const elements = []
@@ -371,22 +372,14 @@
 </PageContent>
 
 <div class="chat__compose bg-base-200" bind:this={chatCompose}>
-  {#if eventToEdit}
-    <!-- TODO: There is an animation bug when clearing out of edit mode -->
+  {#if eventToEdit || parent}
     <div>
       <ChatComposeParent
-        event={eventToEdit}
-        showParentPubkey={false}
-        clear={clearEventToEdit}
-        verb="Editing previous message" />
+        event={eventToEdit || parent!}
+        showParentPubkey={!eventToEdit}
+        clear={eventToEdit ? clearEventToEdit : clearParent}
+        verb={eventToEdit ? "Editing previous message" : "Replying to"} />
     </div>
-    <ChatCompose bind:this={compose} content={eventToEdit?.content} {onSubmit} />
-  {:else}
-    <div>
-      {#if parent}
-        <ChatComposeParent event={parent} clear={clearParent} verb="Replying to" />
-      {/if}
-    </div>
-    <ChatCompose bind:this={compose} {onSubmit} {onEditPrevious} />
   {/if}
+  <ChatCompose bind:this={compose} content={eventToEdit?.content} {onSubmit} {onEditPrevious} />
 </div>
