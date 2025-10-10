@@ -10,10 +10,12 @@
   const {
     verb,
     event,
+    showParentPubkey = true,
     clear,
   }: {
     verb: string
     event: TrustedEvent
+    showParentPubkey?: boolean
     clear: () => void
   } = $props()
 </script>
@@ -21,7 +23,9 @@
 <div
   class="relative border-l-2 border-solid border-primary bg-base-300 px-2 py-1 pr-8 text-xs"
   transition:slide>
-  <p class="text-primary">{verb} @{displayProfileByPubkey(event.pubkey)}</p>
+  <p class="text-primary">
+    {verb} <span hidden={!showParentPubkey}>@{displayProfileByPubkey(event.pubkey)}</span>
+  </p>
   {#key event.id}
     <NoteContent
       {event}

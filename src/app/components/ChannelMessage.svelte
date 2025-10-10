@@ -6,6 +6,7 @@
   import TapTarget from "@lib/components/TapTarget.svelte"
   import Avatar from "@lib/components/Avatar.svelte"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
+  import Pen from "@assets/icons/pen.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Content from "@app/components/Content.svelte"
@@ -26,9 +27,19 @@
     replyTo?: (event: TrustedEvent) => void
     showPubkey?: boolean
     inert?: boolean
+    canEdit: (event: TrustedEvent) => boolean
+    onEdit: (event: TrustedEvent) => void
   }
 
-  const {url, event, replyTo = undefined, showPubkey = false, inert = false}: Props = $props()
+  const {
+    url,
+    event,
+    replyTo = undefined,
+    showPubkey = false,
+    inert = false,
+    canEdit,
+    onEdit,
+  }: Props = $props()
 
   const thunk = $thunks[event.id]
   const shouldProtect = canEnforceNip70(url)
@@ -38,8 +49,9 @@
   const [_, colorValue] = colors[parseInt(hash(event.pubkey)) % colors.length]
 
   const reply = () => replyTo!(event)
+  const edit = canEdit(event) ? () => onEdit(event) : undefined
 
-  const onTap = () => pushModal(ChannelMessageMenuMobile, {url, event, reply})
+  const onTap = () => pushModal(ChannelMessageMenuMobile, {url, event, reply, edit})
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey, url})
 
@@ -105,6 +117,11 @@
       {#if replyTo}
         <Button class="btn join-item btn-xs" onclick={reply}>
           <Icon icon={Reply} size={4} />
+        </Button>
+      {/if}
+      {#if edit}
+        <Button class="btn join-item btn-xs" onclick={edit}>
+          <Icon icon={Pen} size={4} />
         </Button>
       {/if}
       <ChannelMessageMenuButton {url} {event} />

@@ -56,8 +56,9 @@
     PLATFORM_NAME,
   } from "@app/core/state"
   import {pushModal} from "@app/util/modal"
-  import {prependParent} from "@app/core/commands"
+  import {prependParent, publishDelete} from "@app/core/commands"
   import {pushToast} from "@app/util/toast"
+  import {Router} from "@welshman/router"
 
   type Props = {
     id: string
@@ -83,8 +84,19 @@
     parent = undefined
   }
 
+  const clearEventToEdit = () => {
+    eventToEdit = undefined
+  }
+
   const onSubmit = async (params: EventContent) => {
     const ptags = remove($pubkey!, pubkeys).map(tagPubkey)
+    let created_at = undefined
+
+    if (eventToEdit) {
+      // Delete previous message, to be republished with same timestamp
+      created_at = eventToEdit.created_at
+      publishDelete({relays: Router.get().FromUser().getUrls(), event: eventToEdit, protect: true})
+    }
 
     // Remove p tags since they result in forking the conversation
     params.tags = params.tags.filter(nthNe(0, "p"))
@@ -101,7 +113,7 @@
       content = content.trim()
 
       if (content) {
-        templates.push(makeEvent(kind, {content, tags: [...tags, ...ptags]}))
+        templates.push(makeEvent(kind, {content, tags: [...tags, ...ptags], created_at}))
       }
     }
 
@@ -126,6 +138,8 @@
 
     // Split the message into multiple pieces so that we can use kind 15 to send images per nip 17
     // Sleep 1 second between each one to make sure timestamps are distinct
+    // TODO: Does the above comment about sending 1 second apart for distinct timestamps, conflict with
+    // explicitly setting the created_at timestamp above?
     const thunks: AbstractThunk[] = []
     for (let i = 0; i < templates.length; i++) {
       const template = templates[i]
@@ -144,6 +158,7 @@
     })
 
     clearParent()
+    clearEventToEdit()
   }
 
   let loading = $state(true)
@@ -151,6 +166,8 @@
   let parent: TrustedEvent | undefined = $state()
   let chatCompose: HTMLElement | undefined = $state()
   let dynamicPadding: HTMLElement | undefined = $state()
+  let eventToEdit: TrustedEvent | undefined = $state()
+  let showComposeParent = $state(false)
 
   const elements = $derived.by(() => {
     const elements = []
@@ -181,6 +198,45 @@
 
     return elements.reverse()
   })
+
+  const findPreviousOwnedMessage = () => {
+    return sortBy(e => e.created_at, $chat?.messages || [])
+      .reverse()
+      .find(e => e.pubkey === $pubkey)
+  }
+
+  const canEditEvent = (event: TrustedEvent) => {
+    if (event.pubkey !== $pubkey) {
+      return false
+    }
+
+    const nowSeconds = Date.now() / 1000
+    const editLimit = nowSeconds - int(5, MINUTE)
+
+    return event.created_at >= editLimit
+  }
+
+  const onEditEvent = (event: TrustedEvent) => {
+    if (parent) {
+      return
+    }
+
+    if (!canEditEvent(event)) {
+      return
+    }
+
+    eventToEdit = event
+  }
+
+  const onEditPrevious = () => {
+    const previousMessage = findPreviousOwnedMessage()
+
+    if (!previousMessage) {
+      return
+    }
+
+    onEditEvent(previousMessage)
+  }
 
   onMount(() => {
     for (const pubkey of others) {
@@ -289,6 +345,7 @@
       </div>
     </div>
   {/if}
+  <!-- TODO: Editing a message that is within the 5 minute window, but not the most recent one, does not preserve display ordering -->
   {#each elements as { type, id, value, showPubkey } (id)}
     {#if type === "date"}
       <Divider>{value}</Divider>
@@ -297,7 +354,9 @@
         event={$state.snapshot(value as TrustedEvent)}
         {pubkeys}
         {showPubkey}
-        {replyTo} />
+        {replyTo}
+        canEdit={canEditEvent}
+        onEdit={onEditEvent} />
     {/if}
   {/each}
   <p class="m-auto flex h-10 max-w-sm flex-col items-center justify-center gap-4 py-20 text-center">
@@ -313,10 +372,16 @@
 </PageContent>
 
 <div class="chat__compose bg-base-200" bind:this={chatCompose}>
-  <div>
-    {#if parent}
-      <ChatComposeParent event={parent} clear={clearParent} verb="Replying to" />
-    {/if}
-  </div>
-  <ChatCompose bind:this={compose} {onSubmit} />
+  {#if eventToEdit || parent}
+    <div>
+      <ChatComposeParent
+        event={eventToEdit || parent!}
+        showParentPubkey={!eventToEdit}
+        clear={eventToEdit ? clearEventToEdit : clearParent}
+        verb={eventToEdit ? "Editing previous message" : "Replying to"} />
+    </div>
+  {/if}
+  {#key eventToEdit}
+    <ChatCompose bind:this={compose} content={eventToEdit?.content} {onSubmit} {onEditPrevious} />
+  {/key}
 </div>

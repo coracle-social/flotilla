@@ -6,8 +6,9 @@
   import {pushModal} from "@app/util/modal"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
+  import Pen from "@assets/icons/pen.svg?dataurl"
 
-  const {event, pubkeys, popover, replyTo} = $props()
+  const {event, pubkeys, popover, replyTo, edit} = $props()
 
   const reply = () => replyTo(event)
 
@@ -27,4 +28,9 @@
   <Button class="btn join-item btn-xs" onclick={showInfo}>
     <Icon size={4} icon={Code2} />
   </Button>
+  {#if edit}
+    <Button class="btn join-item btn-xs" onclick={edit}>
+      <Icon size={4} icon={Pen} />
+    </Button>
+  {/if}
 </div>
