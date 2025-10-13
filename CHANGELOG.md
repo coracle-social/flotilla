@@ -1,5 +1,10 @@
 # Changelog
 
+# 1.3.1
+
+* Fix memory leak in storage adapter
+* Show fewer annoying toast messages
+
 # 1.3.0
 
 * Add optional badge and sound for notifications

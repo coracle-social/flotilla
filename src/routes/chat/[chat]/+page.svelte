@@ -1,6 +1,6 @@
 <script lang="ts">
   import {page} from "$app/stores"
-  import type {MakeNonOptional} from '@welshman/lib'
+  import type {MakeNonOptional} from "@welshman/lib"
   import Chat from "@app/components/Chat.svelte"
   import {notifications, setChecked} from "@app/util/notifications"
 

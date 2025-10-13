@@ -1,4 +1,4 @@
-import {flatten, noop, identity, groupBy} from "@welshman/lib"
+import {flatten, identity, groupBy} from "@welshman/lib"
 import {type StorageProvider} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
 import {Encoding, Filesystem, Directory} from "@capacitor/filesystem"
