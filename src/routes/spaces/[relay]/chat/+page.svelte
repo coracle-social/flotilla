@@ -36,7 +36,7 @@
 
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
-  const url = decodeRelay($page.params.relay)
+  const url = decodeRelay($page.params.relay!)
   const filter = {kinds: [MESSAGE]}
   const shouldProtect = canEnforceNip70(url)
 

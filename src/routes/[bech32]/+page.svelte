@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import * as nip19 from "nostr-tools/nip19"
+  import type {MakeNonOptional} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {Address, getIdFilters} from "@welshman/util"
   import {LOCAL_RELAY_URL} from "@welshman/relay"
@@ -10,7 +11,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import {goToEvent} from "@app/util/routes"
 
-  const {bech32} = $page.params
+  const {bech32} = $page.params as MakeNonOptional<typeof $page.params>
 
   const attemptToNavigate = async () => {
     const {type, data} = nip19.decode(bech32) as any

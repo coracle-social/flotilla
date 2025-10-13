@@ -1,4 +1,4 @@
-import {flatten, identity, groupBy} from "@welshman/lib"
+import {flatten, noop, identity, groupBy} from "@welshman/lib"
 import {type StorageProvider} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
 import {Encoding, Filesystem, Directory} from "@capacitor/filesystem"
@@ -38,7 +38,7 @@ export type CollectionOptions<T> = {
 }
 
 export class Collection<T> {
-  p = Promise.resolve()
+  #promises = new Map<string, Promise<any>>()
 
   constructor(readonly options: CollectionOptions<T>) {}
 
@@ -58,36 +58,38 @@ export class Collection<T> {
     )
   }
 
-  #then = async (f: () => Promise<void>) => {
-    this.p = this.p.then(f).catch(e => {
-      console.error(e)
-    })
+  #then = <R>(shard: string, f: () => Promise<R>) => {
+    const oldPromise = this.#promises.get(shard) || Promise.resolve()
+    const newPromise = oldPromise.then(f)
 
-    await this.p
+    this.#promises.set(shard, newPromise)
+
+    return newPromise
   }
 
   #path = (shard: string) => `collection_${this.options.table}_${shard}.json`
 
-  getShard = async (shard: string): Promise<T[]> => {
-    try {
-      const file = await Filesystem.readFile({
-        path: this.#path(shard),
-        directory: Directory.Data,
-        encoding: Encoding.UTF8,
-      })
+  getShard = (shard: string): Promise<T[]> =>
+    this.#then(shard, async () => {
+      try {
+        const file = await Filesystem.readFile({
+          path: this.#path(shard),
+          directory: Directory.Data,
+          encoding: Encoding.UTF8,
+        })
 
-      // Speed things up by parsing only once
-      return JSON.parse("[" + file.data.toString().split("\n").filter(identity).join(",") + "]")
-    } catch (err) {
-      // file doesn't exist, or isn't valid json
-      return []
-    }
-  }
+        // Speed things up by parsing only once
+        return JSON.parse("[" + file.data.toString().split("\n").filter(identity).join(",") + "]")
+      } catch (err) {
+        // file doesn't exist, or isn't valid json
+        return []
+      }
+    })
 
   get = async (): Promise<T[]> => flatten(await Promise.all(this.options.shards.map(this.getShard)))
 
   setShard = (shard: string, items: T[]) =>
-    this.#then(async () => {
+    this.#then(shard, async () => {
       await Filesystem.writeFile({
         path: this.#path(shard),
         directory: Directory.Data,
@@ -104,7 +106,7 @@ export class Collection<T> {
     )
 
   addToShard = (shard: string, items: T[]) =>
-    this.#then(async () => {
+    this.#then(shard, async () => {
       await Filesystem.appendFile({
         path: this.#path(shard),
         directory: Directory.Data,

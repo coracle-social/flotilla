@@ -23,7 +23,7 @@
   import {makeCalendarFeed} from "@app/core/requests"
   import {setChecked} from "@app/util/notifications"
 
-  const url = decodeRelay($page.params.relay)
+  const url = decodeRelay($page.params.relay!)
 
   const makeEvent = () => pushModal(CalendarEventCreate, {url})
 

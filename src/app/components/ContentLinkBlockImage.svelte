@@ -56,7 +56,7 @@
         const ciphertext = new Uint8Array(await response.arrayBuffer())
         const decryptedData = await decryptFile({ciphertext, key, nonce, algorithm})
 
-        src = URL.createObjectURL(new Blob([decryptedData]))
+        src = URL.createObjectURL(new Blob([new Uint8Array(decryptedData)]))
       }
     } else {
       src = url

@@ -5,6 +5,7 @@
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
   import {now, formatTimestampAsDate} from "@welshman/lib"
+  import type {MakeNonOptional} from "@welshman/lib"
   import {request} from "@welshman/net"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {
@@ -57,10 +58,10 @@
   import {popKey} from "@lib/implicit"
   import {pushToast} from "@app/util/toast"
 
-  const {room} = $page.params
+  const {room, relay} = $page.params as MakeNonOptional<typeof $page.params>
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
-  const url = decodeRelay($page.params.relay)
+  const url = decodeRelay(relay)
   const channel = deriveChannel(url, room)
   const filter = {kinds: [MESSAGE], "#h": [room]}
   const isFavorite = $derived($userRoomsByUrl.get(url)?.has(room))

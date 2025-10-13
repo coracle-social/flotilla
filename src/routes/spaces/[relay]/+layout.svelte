@@ -31,7 +31,7 @@
 
   const {children}: Props = $props()
 
-  const url = decodeRelay($page.params.relay)
+  const url = decodeRelay($page.params.relay!)
 
   const rooms = Array.from($userRoomsByUrl.get(url) || [])
 

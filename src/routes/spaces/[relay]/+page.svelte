@@ -26,7 +26,7 @@
   import {makeChatPath} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
 
-  const url = decodeRelay($page.params.relay)
+  const url = decodeRelay($page.params.relay!)
   const relay = deriveRelay(url)
   const joinSpace = () => pushModal(SpaceJoin, {url})
 

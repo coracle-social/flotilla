@@ -64,7 +64,7 @@ export const getPrimaryNavItemIndex = ($page: Page) => {
     case "discover":
       return urls.length + 2
     case "spaces": {
-      const routeUrl = decodeRelay($page.params.relay)
+      const routeUrl = decodeRelay($page.params.relay || "")
 
       return urls.findIndex(url => url === routeUrl) + 1
     }

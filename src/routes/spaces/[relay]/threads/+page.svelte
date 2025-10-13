@@ -21,7 +21,7 @@
   import {makeFeed} from "@app/core/requests"
   import {pushModal} from "@app/util/modal"
 
-  const url = decodeRelay($page.params.relay)
+  const url = decodeRelay($page.params.relay!)
   const mutedPubkeys = getPubkeyTagValues(getListTags($userMutes))
   const threads: TrustedEvent[] = $state([])
   const comments: TrustedEvent[] = $state([])

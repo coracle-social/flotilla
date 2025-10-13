@@ -2,6 +2,7 @@
   import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {sortBy, sleep} from "@welshman/lib"
+  import type {MakeNonOptional} from "@welshman/lib"
   import {COMMENT, getTagValue} from "@welshman/util"
   import {request} from "@welshman/net"
   import {repository} from "@welshman/app"
@@ -25,7 +26,7 @@
   import {deriveEvent, decodeRelay} from "@app/core/state"
   import {setChecked} from "@app/util/notifications"
 
-  const {relay, id} = $page.params
+  const {relay, id} = $page.params as MakeNonOptional<typeof $page.params>
   const url = decodeRelay(relay)
   const event = deriveEvent(id)
   const filters = [{kinds: [COMMENT], "#E": [id]}]
