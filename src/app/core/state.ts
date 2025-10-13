@@ -22,6 +22,7 @@ import {
   groupBy,
   always,
   tryCatch,
+  last,
 } from "@welshman/lib"
 import type {Socket} from "@welshman/net"
 import {Pool, load, AuthStateEvent, AuthStatus, SocketEvent, netContext} from "@welshman/net"
@@ -759,6 +760,17 @@ export const deriveUserMembershipStatus = (url: string, room: string) =>
       return status
     },
   )
+
+export const deriveUserCanCreateRoom = (url: string) =>
+  derived([pubkey, deriveEventsForUrl(url, [{kinds: [39004]}])], ([$pubkey, $events]) => {
+    const latest = last($events)
+
+    if (!latest) {
+      return true
+    }
+
+    return getTagValues("p", latest.tags).includes($pubkey!)
+  })
 
 // Other utils
 
