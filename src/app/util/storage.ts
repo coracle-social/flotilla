@@ -1,4 +1,3 @@
-import {verifiedSymbol} from "nostr-tools/pure"
 import {
   always,
   on,
@@ -31,6 +30,7 @@ import {
   MESSAGE,
   DIRECT_MESSAGE,
   DIRECT_MESSAGE_FILE,
+  verifiedSymbol,
 } from "@welshman/util"
 import type {Zapper, TrustedEvent} from "@welshman/util"
 import type {RepositoryUpdate} from "@welshman/relay"
@@ -122,19 +122,24 @@ const syncEvents = async () => {
         }
 
         for (const id of update.removed) {
-          added = added.filter(event => !update.removed.has(event.id))
           removed.add(id)
         }
       }
 
       if (removed.size > 0) {
-        for (const [shard, chunk] of groupBy(last, Array.from(removed))) {
+        added = added.filter(e => !removed.has(e.id))
+
+        const removedByShard = groupBy(id => last(id), removed)
+        const addedByShard = groupBy(e => last(e.id), added)
+        const shards = new Set([...removedByShard.keys(), ...addedByShard.keys()])
+
+        for (const shard of shards) {
+          const removedInShard = removedByShard.get(shard)
+          const addedInShard = addedByShard.get(shard) || []
           const current = await collection.getShard(shard)
-          const modified = concat(
-            current.filter(e => !chunk.includes(e.id)),
-            added,
-          )
-          const pruned = sortBy(e => -rankEvent(e), modified).slice(0, 10_000)
+          const filtered = current.filter(e => !removedInShard?.includes(e.id))
+          const sorted = sortBy(e => -rankEvent(e), concat(filtered, addedInShard))
+          const pruned = sorted.slice(0, 10_000)
 
           await collection.setShard(shard, pruned)
         }
