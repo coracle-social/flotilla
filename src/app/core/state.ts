@@ -53,6 +53,7 @@ import {
   ROOM_JOIN,
   ROOM_ADD_USER,
   ROOM_REMOVE_USER,
+  ROOM_CREATE_PERMISSION,
   ALERT_EMAIL,
   ALERT_WEB,
   ALERT_IOS,
@@ -762,15 +763,18 @@ export const deriveUserMembershipStatus = (url: string, room: string) =>
   )
 
 export const deriveUserCanCreateRoom = (url: string) =>
-  derived([pubkey, deriveEventsForUrl(url, [{kinds: [39004]}])], ([$pubkey, $events]) => {
-    const latest = last($events)
+  derived(
+    [pubkey, deriveEventsForUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}])],
+    ([$pubkey, $events]) => {
+      const latest = last($events)
 
-    if (!latest) {
-      return true
-    }
+      if (!latest) {
+        return true
+      }
 
-    return getTagValues("p", latest.tags).includes($pubkey!)
-  })
+      return getTagValues("p", latest.tags).includes($pubkey!)
+    },
+  )
 
 // Other utils
 
