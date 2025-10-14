@@ -14,10 +14,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {deriveUserCanCreateRoom, hasNip29, loadChannel} from "@app/core/state"
+  import {hasNip29, loadChannel} from "@app/core/state"
   import {makeSpacePath} from "@app/util/routes"
   import {pushToast} from "@app/util/toast"
-  import {get} from "svelte/store"
 
   const {url} = $props()
 
@@ -51,8 +50,6 @@
 
     goto(makeSpacePath(url, room.id))
   }
-
-  const canCreateRoom = get<boolean>(deriveUserCanCreateRoom(url))
 
   const create = async () => {
     loading = true
@@ -102,10 +99,7 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button
-      type="submit"
-      class="btn btn-primary"
-      disabled={!name || loading || !hasNip29($relay) || !canCreateRoom}>
+    <Button type="submit" class="btn btn-primary" disabled={!name || loading || !hasNip29($relay)}>
       <Spinner {loading}>Create Room</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
