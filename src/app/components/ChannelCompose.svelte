@@ -8,19 +8,31 @@
   import Button from "@lib/components/Button.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {makeEditor} from "@app/editor"
+  import {onDestroy, onMount} from "svelte"
 
   type Props = {
     url?: string
+    content?: string
+    onEditPrevious?: () => void
     onSubmit: (event: EventContent) => void
   }
 
-  const {onSubmit, url}: Props = $props()
+  const {content, onEditPrevious, onSubmit, url}: Props = $props()
 
   const autofocus = !isMobile
 
   const uploading = writable(false)
 
   export const focus = () => editor.then(ed => ed.chain().focus().run())
+
+  export const canEnterEditPrevious = () =>
+    editor.then(ed => ed.getText({blockSeparator: "\n"}) === "")
+
+  const handleKeyDown = async (event: KeyboardEvent) => {
+    if (event.key === "ArrowUp" && (await canEnterEditPrevious())) {
+      onEditPrevious?.()
+    }
+  }
 
   const uploadFiles = () => editor.then(ed => ed.chain().selectFiles().run())
 
@@ -38,7 +50,17 @@
     ed.chain().clearContent().run()
   }
 
-  const editor = makeEditor({url, autofocus, submit, uploading, aggressive: true})
+  const editor = makeEditor({url, autofocus, content, submit, uploading, aggressive: true})
+
+  onMount(async () => {
+    const ed = await editor
+    ed.view.dom.addEventListener("keydown", handleKeyDown)
+  })
+
+  onDestroy(async () => {
+    const ed = await editor
+    ed?.view?.dom.removeEventListener("keydown", handleKeyDown)
+  })
 </script>
 
 <form class="relative z-feature flex gap-2 p-2" onsubmit={preventDefault(submit)}>
