@@ -760,14 +760,14 @@ export const deriveUserMembershipStatus = (url: string, room: string) =>
     },
   )
 
-// temp
+// TEMP
 const GROUP_MEMBERS = 39002
 
 export const deriveRoomMembership = (url: string, room: string) =>
   derived(
     [
       deriveEventsForUrl(url, [
-        {kinds: [ROOM_JOIN, ROOM_ADD_USER, ROOM_REMOVE_USER, GROUP_MEMBERS], "#h": [room]},
+        {kinds: [ROOM_ADD_USER, ROOM_REMOVE_USER, GROUP_MEMBERS], "#h": [room]},
       ]),
     ],
     ([events]) => {
@@ -785,6 +785,46 @@ export const deriveRoomMembership = (url: string, room: string) =>
             membershipList.add(getTagValue("p", event.tags))
             break
           case ROOM_REMOVE_USER:
+            membershipList.delete(getTagValue("p", event.tags))
+            break
+          default:
+            break
+        }
+      }
+
+      return membershipList
+    },
+  )
+
+// TEMP
+const RELAY_MEMBERS = 13534
+const RELAY_ADD_USER = 8000
+const RELAY_REMOVE_USER = 8000
+
+export const deriveRelayMembership = (url: string) =>
+  derived(
+    [
+      deriveEventsForUrl(url, [
+        {
+          kinds: [RELAY_ADD_USER, RELAY_REMOVE_USER, RELAY_MEMBERS],
+        },
+      ]),
+    ],
+    ([events]) => {
+      const latestMemberList = events.findLast(event => event.kind === RELAY_MEMBERS)
+
+      if (latestMemberList) {
+        return getTagValues("member", latestMemberList.tags)
+      }
+
+      const membershipList = new Set()
+
+      for (const event of events) {
+        switch (event.kind) {
+          case RELAY_ADD_USER:
+            membershipList.add(getTagValue("p", event.tags))
+            break
+          case RELAY_REMOVE_USER:
             membershipList.delete(getTagValue("p", event.tags))
             break
           default:
