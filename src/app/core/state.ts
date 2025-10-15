@@ -637,6 +637,26 @@ export const channels = derived(
 
 export const channelsByUrl = derived(channels, $channels => groupBy(c => c.url, $channels))
 
+// Discover rooms from messages with h tags (for rooms without metadata events)
+export const discoveredRoomsByUrl = derived(
+  [deriveEvents(repository, {filters: [{kinds: [MESSAGE]}]}), getUrlsForEvent],
+  ([$messages, $getUrlsForEvent]) => {
+    const $discoveredRooms = new Map<string, Set<string>>()
+
+    for (const message of $messages) {
+      const room = getTagValue("h", message.tags)
+
+      if (room) {
+        for (const url of $getUrlsForEvent(message.id)) {
+          addToMapKey($discoveredRooms, url, room)
+        }
+      }
+    }
+
+    return $discoveredRooms
+  },
+)
+
 export const {
   indexStore: channelsById,
   deriveItem: _deriveChannel,
@@ -718,11 +738,22 @@ export const deriveUserRooms = (url: string) =>
   )
 
 export const deriveOtherRooms = (url: string) =>
-  derived([deriveUserRooms(url), channelsByUrl], ([$userRooms, $channelsByUrl]) =>
-    sortBy(
-      roomComparator(url),
-      ($channelsByUrl.get(url) || []).filter(c => !$userRooms.includes(c.room)).map(c => c.room),
-    ),
+  derived(
+    [deriveUserRooms(url), channelsByUrl, discoveredRoomsByUrl],
+    ([$userRooms, $channelsByUrl, $discoveredRoomsByUrl]) => {
+      // Get rooms from metadata events
+      const metadataRooms = ($channelsByUrl.get(url) || [])
+        .filter(c => !$userRooms.includes(c.room))
+        .map(c => c.room)
+
+      // Get rooms from discovered messages
+      const discoveredRooms = Array.from($discoveredRoomsByUrl.get(url) || []).filter(
+        r => !$userRooms.includes(r),
+      )
+
+      // Combine and deduplicate
+      return sortBy(roomComparator(url), uniq([...metadataRooms, ...discoveredRooms]))
+    },
   )
 
 export enum MembershipStatus {
