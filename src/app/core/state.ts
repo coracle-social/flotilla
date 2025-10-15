@@ -760,6 +760,42 @@ export const deriveUserMembershipStatus = (url: string, room: string) =>
     },
   )
 
+// temp
+const GROUP_MEMBERS = 39002
+
+export const deriveRoomMembership = (url: string, room: string) =>
+  derived(
+    [
+      deriveEventsForUrl(url, [
+        {kinds: [ROOM_JOIN, ROOM_ADD_USER, ROOM_REMOVE_USER, GROUP_MEMBERS], "#h": [room]},
+      ]),
+    ],
+    ([events]) => {
+      const latestMemberList = events.findLast(event => event.kind === GROUP_MEMBERS)
+
+      if (latestMemberList) {
+        return getTagValues("p", latestMemberList.tags)
+      }
+
+      const membershipList = new Set()
+
+      for (const event of events) {
+        switch (event.kind) {
+          case ROOM_ADD_USER:
+            membershipList.add(getTagValue("p", event.tags))
+            break
+          case ROOM_REMOVE_USER:
+            membershipList.delete(getTagValue("p", event.tags))
+            break
+          default:
+            break
+        }
+      }
+
+      return membershipList
+    },
+  )
+
 // Other utils
 
 export const encodeRelay = (url: string) =>
