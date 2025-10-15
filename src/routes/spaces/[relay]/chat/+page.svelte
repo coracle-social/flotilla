@@ -3,7 +3,7 @@
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
-  import {now, formatTimestampAsDate} from "@welshman/lib"
+  import {now, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {makeEvent, getTag, MESSAGE, DELETE} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
@@ -28,11 +28,12 @@
     PROTECTED,
     REACTION_KINDS,
   } from "@app/core/state"
-  import {prependParent, canEnforceNip70} from "@app/core/commands"
+  import {prependParent, canEnforceNip70, publishDelete} from "@app/core/commands"
   import {setChecked, checked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
   import {makeFeed} from "@app/core/requests"
   import {popKey} from "@lib/implicit"
+  import ChannelComposeEdit from "@src/app/components/ChannelComposeEdit.svelte"
 
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
@@ -49,16 +50,26 @@
     parent = undefined
   }
 
+  const clearEventToEdit = () => {
+    eventToEdit = undefined
+  }
+
   const clearShare = () => {
     share = undefined
   }
 
   const onSubmit = async ({content, tags}: EventContent) => {
+    let template: EventContent & {created_at?: number} = {content, tags}
+
+    if (eventToEdit) {
+      // Delete previous message, to be republished with same timestamp
+      template.created_at = eventToEdit.created_at
+      publishDelete({relays: [url], event: eventToEdit, protect: await shouldProtect})
+    }
+
     if (await shouldProtect) {
       tags.push(PROTECTED)
     }
-
-    let template = {content, tags}
 
     if (share) {
       template = prependParent(share, template)
@@ -86,6 +97,7 @@
 
     clearParent()
     clearShare()
+    clearEventToEdit()
   }
 
   const onScroll = () => {
@@ -122,6 +134,7 @@
   let cleanup: () => void
   let events: Readable<TrustedEvent[]> = $state(readable([]))
   let compose: ChannelCompose | undefined = $state()
+  let eventToEdit: TrustedEvent | undefined = $state()
 
   const elements = $derived.by(() => {
     const elements = []
@@ -183,6 +196,23 @@
 
     return elements
   })
+
+  const canEditEvent = (event: TrustedEvent) =>
+    event.pubkey === $pubkey && event.created_at >= ago(5, MINUTE)
+
+  const onEditEvent = (event: TrustedEvent) => {
+    clearParent()
+    clearShare()
+    eventToEdit = event
+  }
+
+  const onEditPrevious = () => {
+    const prev = $events.find(e => e.pubkey === $pubkey)
+
+    if (prev && canEditEvent(prev)) {
+      onEditEvent(prev)
+    }
+  }
 
   onMount(() => {
     const controller = new AbortController()
@@ -261,7 +291,9 @@
           {url}
           {replyTo}
           event={$state.snapshot(value as TrustedEvent)}
-          {showPubkey} />
+          {showPubkey}
+          canEdit={canEditEvent}
+          onEdit={onEditEvent} />
       </div>
     {/if}
   {/each}
@@ -282,8 +314,18 @@
     {#if share}
       <ChannelComposeParent event={share} clear={clearShare} verb="Sharing" />
     {/if}
+    {#if eventToEdit}
+      <ChannelComposeEdit clear={clearEventToEdit} />
+    {/if}
   </div>
-  <ChannelCompose bind:this={compose} {onSubmit} {url} />
+  {#key eventToEdit}
+    <ChannelCompose
+      bind:this={compose}
+      content={eventToEdit?.content}
+      {onSubmit}
+      {url}
+      {onEditPrevious} />
+  {/key}
 </div>
 
 {#if showScrollButton}
