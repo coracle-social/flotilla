@@ -9,6 +9,10 @@ config({path: ".env.template"})
 export default {
   content: ["./src/**/*.{html,js,svelte,ts}"],
   darkMode: ['selector', '[data-theme="dark"]'],
+  safelist: [
+    'bg-success',
+    'bg-warning',
+  ],
   theme: {
     extend: {},
     zIndex: {

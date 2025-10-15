@@ -14,7 +14,7 @@ import {
 } from "@welshman/lib"
 import {
   EVENT_TIME,
-  AUTH_INVITE,
+  RELAY_INVITE,
   ALERT_EMAIL,
   ALERT_WEB,
   ALERT_IOS,
@@ -29,7 +29,7 @@ import {
 import type {TrustedEvent, Filter, List} from "@welshman/util"
 import {feedFromFilters, makeRelayFeed, makeIntersectionFeed} from "@welshman/feeds"
 import {load, request} from "@welshman/net"
-import {repository, makeFeedController, loadRelay} from "@welshman/app"
+import {repository, makeFeedController, loadRelay, tracker} from "@welshman/app"
 import {createScroller} from "@lib/html"
 import {daysBetween} from "@lib/util"
 import {NOTIFIER_RELAY, getEventsForUrl} from "@app/core/state"
@@ -93,7 +93,7 @@ export const makeFeed = ({
     }
 
     for (const event of added) {
-      if (matchFilters(filters, event)) {
+      if (matchFilters(filters, event) && tracker.getRelays(event.id).has(url)) {
         insertEvent(event)
       }
     }
@@ -267,7 +267,7 @@ export const discoverRelays = (lists: List[]) =>
   )
 
 export const requestRelayClaim = async (url: string) => {
-  const filters = [{kinds: [AUTH_INVITE], limit: 1}]
+  const filters = [{kinds: [RELAY_INVITE], limit: 1}]
   const events = await load({filters, relays: [url]})
 
   if (events.length > 0) {

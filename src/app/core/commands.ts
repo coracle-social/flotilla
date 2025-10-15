@@ -35,7 +35,7 @@ import {
   RELAYS,
   FOLLOWS,
   REACTION,
-  AUTH_JOIN,
+  RELAY_JOIN,
   ROOMS,
   COMMENT,
   ALERT_EMAIL,
@@ -97,15 +97,14 @@ import type {SettingsValues, Alert} from "@app/core/state"
 import {
   SETTINGS,
   PROTECTED,
-  userMembership,
   INDEXER_RELAYS,
   NOTIFIER_PUBKEY,
   NOTIFIER_RELAY,
   DEFAULT_BLOSSOM_SERVERS,
-  userRoomsByUrl,
+  userSpaceUrls,
   userSettingsValues,
   userInboxRelays,
-  getMembershipUrls,
+  userGroupSelections,
 } from "@app/core/state"
 import {loadAlertStatuses} from "@app/core/requests"
 import {platform, platformName, getPushInfo} from "@app/util/push"
@@ -175,7 +174,7 @@ export const broadcastUserData = async (relays: string[]) => {
 // List updates
 
 export const addSpaceMembership = async (url: string) => {
-  const list = get(userMembership) || makeList({kind: ROOMS})
+  const list = get(userGroupSelections) || makeList({kind: ROOMS})
   const event = await addToListPublicly(list, ["r", url]).reconcile(nip44EncryptToSelf)
   const relays = uniq([...Router.get().FromUser().getUrls(), ...getRelayTagValues(event.tags)])
 
@@ -183,7 +182,7 @@ export const addSpaceMembership = async (url: string) => {
 }
 
 export const removeSpaceMembership = async (url: string) => {
-  const list = get(userMembership) || makeList({kind: ROOMS})
+  const list = get(userGroupSelections) || makeList({kind: ROOMS})
   const pred = (t: string[]) => t[t[0] === "r" ? 1 : 2] === url
   const event = await removeFromListByPredicate(list, pred).reconcile(nip44EncryptToSelf)
   const relays = uniq([url, ...Router.get().FromUser().getUrls(), ...getRelayTagValues(event.tags)])
@@ -192,7 +191,7 @@ export const removeSpaceMembership = async (url: string) => {
 }
 
 export const addRoomMembership = async (url: string, room: string) => {
-  const list = get(userMembership) || makeList({kind: ROOMS})
+  const list = get(userGroupSelections) || makeList({kind: ROOMS})
   const newTags = [
     ["r", url],
     ["group", room, url],
@@ -204,7 +203,7 @@ export const addRoomMembership = async (url: string, room: string) => {
 }
 
 export const removeRoomMembership = async (url: string, room: string) => {
-  const list = get(userMembership) || makeList({kind: ROOMS})
+  const list = get(userGroupSelections) || makeList({kind: ROOMS})
   const pred = (t: string[]) => equals(["group", room, url], t.slice(0, 3))
   const event = await removeFromListByPredicate(list, pred).reconcile(nip44EncryptToSelf)
   const relays = uniq([url, ...Router.get().FromUser().getUrls(), ...getRelayTagValues(event.tags)])
@@ -226,12 +225,7 @@ export const setRelayPolicy = (url: string, read: boolean, write: boolean) => {
 
   return publishThunk({
     event: makeEvent(list.kind, {tags}),
-    relays: [
-      url,
-      ...INDEXER_RELAYS,
-      ...Router.get().FromUser().getUrls(),
-      ...userRoomsByUrl.get().keys(),
-    ],
+    relays: [url, ...INDEXER_RELAYS, ...Router.get().FromUser().getUrls(), ...get(userSpaceUrls)],
   })
 }
 
@@ -248,11 +242,7 @@ export const setInboxRelayPolicy = (url: string, enabled: boolean) => {
 
     return publishThunk({
       event: makeEvent(list.kind, {tags}),
-      relays: [
-        ...INDEXER_RELAYS,
-        ...Router.get().FromUser().getUrls(),
-        ...userRoomsByUrl.get().keys(),
-      ],
+      relays: [...INDEXER_RELAYS, ...Router.get().FromUser().getUrls(), ...get(userSpaceUrls)],
     })
   }
 }
@@ -632,7 +622,7 @@ export type JoinRequestParams = {
 }
 
 export const makeJoinRequest = (params: JoinRequestParams) =>
-  makeEvent(AUTH_JOIN, {tags: [["claim", params.claim]]})
+  makeEvent(RELAY_JOIN, {tags: [["claim", params.claim]]})
 
 export const publishJoinRequest = (params: JoinRequestParams) =>
   publishThunk({event: makeJoinRequest(params), relays: [params.url]})
@@ -781,7 +771,7 @@ export const updateProfile = async ({
 }) => {
   const router = Router.get()
   const template = isPublishedProfile(profile) ? editProfile(profile) : createProfile(profile)
-  const scenarios = [router.FromRelays(getMembershipUrls(userMembership.get()))]
+  const scenarios = [router.FromRelays(get(userSpaceUrls))]
 
   if (shouldBroadcast) {
     scenarios.push(router.FromUser(), router.Index())

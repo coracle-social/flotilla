@@ -6,7 +6,7 @@
   import {Router} from "@welshman/router"
   import {load} from "@welshman/net"
   import type {Relay} from "@welshman/app"
-  import {relays, createSearch, loadRelay, loadRelaySelections} from "@welshman/app"
+  import {relays, createSearch, loadRelay} from "@welshman/app"
   import {createScroller} from "@lib/html"
   import {fly} from "@lib/transition"
   import QrCode from "@assets/icons/qr-code.svg?dataurl"
@@ -23,7 +23,12 @@
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceCheck from "@app/components/SpaceCheck.svelte"
-  import {getMembershipUrls, loadMembership, defaultPubkeys, membersByUrl} from "@app/core/state"
+  import {
+    bootstrapPubkeys,
+    loadGroupSelections,
+    getSpaceUrlsFromGroupSelections,
+    groupSelectionsPubkeysByUrl,
+  } from "@app/core/state"
   import {pushModal} from "@app/util/modal"
 
   const openMenu = () => pushModal(SpaceAdd)
@@ -45,11 +50,9 @@
         filters: [{kinds: [ROOMS]}],
         relays: Router.get().Index().getUrls(),
       }),
-      ...$defaultPubkeys.map(async pubkey => {
-        await loadRelaySelections(pubkey)
-
-        const membership = await loadMembership(pubkey)
-        const urls = getMembershipUrls(membership)
+      ...$bootstrapPubkeys.map(async pubkey => {
+        const list = await loadGroupSelections(pubkey)
+        const urls = getSpaceUrlsFromGroupSelections(list)
 
         await Promise.all(urls.map(url => loadRelay(url)))
       }),
@@ -57,13 +60,13 @@
 
   const relaySearch = $derived(
     createSearch(
-      $relays.filter(r => $membersByUrl.has(r.url) && r.url !== termUrl),
+      $relays.filter(r => $groupSelectionsPubkeysByUrl.has(r.url) && r.url !== termUrl),
       {
         getValue: (relay: Relay) => relay.url,
         sortFn: ({score, item}) => {
           if (score && score > 0.1) return -score!
 
-          const wotScore = $membersByUrl.get(item.url)?.size || 0
+          const wotScore = $groupSelectionsPubkeysByUrl.get(item.url)!.size
 
           return score ? dec(score) * wotScore : -wotScore
         },

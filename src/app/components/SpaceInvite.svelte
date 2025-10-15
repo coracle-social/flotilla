@@ -2,7 +2,7 @@
   import {onMount} from "svelte"
   import {sleep, nthEq} from "@welshman/lib"
   import {request} from "@welshman/net"
-  import {displayRelayUrl, AUTH_INVITE} from "@welshman/util"
+  import {displayRelayUrl, RELAY_INVITE} from "@welshman/util"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Copy from "@assets/icons/copy.svg?dataurl"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -38,7 +38,7 @@
       request({
         relays: [url],
         autoClose: true,
-        filters: [{kinds: [AUTH_INVITE]}],
+        filters: [{kinds: [RELAY_INVITE]}],
       }),
       sleep(2000),
     ])
@@ -83,7 +83,7 @@
               This invite link can be used by clicking "Add Space" and pasting it there.
               {#if !claim}
                 This space did not issue a claim for this link, so additional steps might be
-                required for people using this invite link.
+                required.
               {/if}
             </p>
           {/snippet}

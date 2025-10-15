@@ -19,10 +19,9 @@ import {
   getRelayTagValues,
   WRAP,
   ROOM_META,
-  ROOM_ADD_USER,
-  ROOM_REMOVE_USER,
+  ROOM_ADD_MEMBER,
+  ROOM_REMOVE_MEMBER,
   isSignedEvent,
-  normalizeRelayUrl,
 } from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {request, load, pull} from "@welshman/net"
@@ -45,13 +44,14 @@ import {
 import {
   MESSAGE_FILTER,
   COMMENT_FILTER,
+  MEMBERSHIP_FILTER,
   INDEXER_RELAYS,
   REACTION_KINDS,
   loadSettings,
-  userMembership,
-  defaultPubkeys,
+  loadGroupSelections,
+  userSpaceUrls,
+  bootstrapPubkeys,
   decodeRelay,
-  loadMembership,
   getUrlsForEvent,
 } from "@app/core/state"
 import {loadAlerts, loadAlertStatuses} from "@app/core/requests"
@@ -102,15 +102,15 @@ const syncRelays = () => {
     }
   })
 
-  const unsubscribeMembership = userMembership.subscribe($l => {
-    for (const url of getRelayTagValues(getListTags($l))) {
+  const unsubscribeSpaceUrls = userSpaceUrls.subscribe(urls => {
+    for (const url of urls) {
       loadRelay(url)
     }
   })
 
   return () => {
     unsubscribePage()
-    unsubscribeMembership()
+    unsubscribeSpaceUrls()
   }
 }
 
@@ -131,7 +131,7 @@ const syncUserData = () => {
       loadAlertStatuses($pubkey)
       loadBlossomServers($pubkey)
       loadFollows($pubkey)
-      loadMembership($pubkey)
+      loadGroupSelections($pubkey)
       loadMutes($pubkey)
       loadProfile($pubkey)
       loadSettings($pubkey)
@@ -139,13 +139,13 @@ const syncUserData = () => {
   })
 
   const unsubscribeFollows = userFollows.subscribe(async $l => {
-    for (const pubkeys of chunk(10, get(defaultPubkeys))) {
+    for (const pubkeys of chunk(10, get(bootstrapPubkeys))) {
       // This isn't urgent, avoid clogging other stuff up
       await sleep(1000)
 
       for (const pk of pubkeys) {
         loadRelaySelections(pk).then(() => {
-          loadMembership(pk)
+          loadGroupSelections(pk)
           loadProfile(pk)
           loadFollows(pk)
           loadMutes(pk)
@@ -177,14 +177,14 @@ const syncMembership = (url: string) => {
   pullConservatively({
     relays: [url],
     signal: controller.signal,
-    filters: [MESSAGE_FILTER, COMMENT_FILTER].map(assoc("since", ago(MONTH))),
+    filters: [MESSAGE_FILTER, COMMENT_FILTER, MEMBERSHIP_FILTER].map(assoc("since", ago(MONTH))),
   })
 
   // Listen for new events
   request({
     relays: [url],
     signal: controller.signal,
-    filters: [MESSAGE_FILTER, COMMENT_FILTER].map(assoc("since", now())),
+    filters: [MESSAGE_FILTER, COMMENT_FILTER, MEMBERSHIP_FILTER].map(assoc("since", now())),
   })
 
   return () => controller.abort()
@@ -193,9 +193,7 @@ const syncMembership = (url: string) => {
 const syncMemberships = () => {
   const unsubscribersByUrl = new Map<string, Unsubscriber>()
 
-  const unsubscribeMembership = userMembership.subscribe($l => {
-    const urls = getRelayTagValues(getListTags($l)).map(normalizeRelayUrl)
-
+  const unsubscribeSpaceUrls = userSpaceUrls.subscribe(urls => {
     // stop syncing removed spaces
     for (const [url, unsubscribe] of unsubscribersByUrl.entries()) {
       if (!urls.includes(url)) {
@@ -214,7 +212,7 @@ const syncMemberships = () => {
 
   return () => {
     Array.from(unsubscribersByUrl.values()).forEach(call)
-    unsubscribeMembership()
+    unsubscribeSpaceUrls()
   }
 }
 
@@ -231,7 +229,7 @@ const syncSpace = (url: string) => {
       signal: controller.signal,
       filters: [
         {
-          kinds: [ROOM_ADD_USER, ROOM_REMOVE_USER],
+          kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER],
           "#p": [$pubkey],
         },
       ],
@@ -244,7 +242,7 @@ const syncSpace = (url: string) => {
     signal: controller.signal,
     filters: [
       {
-        kinds: [ROOM_ADD_USER, ROOM_REMOVE_USER, ...REACTION_KINDS],
+        kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER, ...REACTION_KINDS],
         since: now(),
       },
     ],

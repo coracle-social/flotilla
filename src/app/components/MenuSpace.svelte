@@ -39,9 +39,7 @@
   import {
     ENABLE_ZAPS,
     MESSAGE_FILTER,
-    userRoomsByUrl,
-    hasMembershipUrl,
-    memberships,
+    deriveSpaceMembers,
     deriveEventsForUrl,
     deriveUserRooms,
     deriveOtherRooms,
@@ -62,6 +60,7 @@
   const calendarPath = makeSpacePath(url, "calendar")
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url)
+  const members = deriveSpaceMembers(url)
   const owner = $derived($relay?.profile?.pubkey)
   const hasAlerts = $derived($alerts.some(a => getTagValue("feed", a.tags)?.includes(url)))
 
@@ -83,7 +82,7 @@
   const showMembers = () =>
     pushModal(
       ProfileList,
-      {url, pubkeys: members, title: `Members of`, subtitle: displayRelayUrl(url)},
+      {url, pubkeys: $members, title: `Members of`, subtitle: displayRelayUrl(url)},
       {replaceState},
     )
 
@@ -107,10 +106,6 @@
   let showMenu = $state(false)
   let replaceState = $state(false)
   let element: Element | undefined = $state()
-
-  const members = $derived(
-    $memberships.filter(l => hasMembershipUrl(l, url)).map(l => l.event.pubkey),
-  )
 
   onMount(() => {
     replaceState = Boolean(element?.closest(".drawer"))
@@ -151,7 +146,7 @@
             <li>
               <Button onclick={showMembers}>
                 <Icon icon={UserRounded} />
-                View Members ({members.length})
+                View Members ({$members.length})
               </Button>
             </li>
             {#if owner}
@@ -163,7 +158,7 @@
               </li>
             {/if}
             <li>
-              {#if $userRoomsByUrl.has(url)}
+              {#if $userRooms.includes(url)}
                 <Button onclick={leaveSpace} class="text-error">
                   <Icon icon={Exit} />
                   Leave Space
