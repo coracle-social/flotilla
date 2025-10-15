@@ -774,7 +774,7 @@ export const deriveRoomMembership = (url: string, room: string) =>
       const latestMemberList = events.findLast(event => event.kind === GROUP_MEMBERS)
 
       if (latestMemberList) {
-        return getTagValues("p", latestMemberList.tags)
+        return getPubkeyTagValues(latestMemberList.tags)
       }
 
       const membershipList = new Set()
@@ -814,7 +814,9 @@ export const deriveRelayMembership = (url: string) =>
       const latestMemberList = events.findLast(event => event.kind === RELAY_MEMBERS)
 
       if (latestMemberList) {
-        return getTagValues("member", latestMemberList.tags)
+        return latestMemberList.tags
+          .filter(t => ["member"].includes(t[0]) && t[1].length === 64)
+          .map(nth(1))
       }
 
       const membershipList = new Set()
