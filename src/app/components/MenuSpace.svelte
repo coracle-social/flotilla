@@ -43,7 +43,6 @@
   import {notifications} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
   import {makeSpacePath} from "@app/util/routes"
-  import {get} from "svelte/store"
 
   const {url} = $props()
 
@@ -71,7 +70,7 @@
       {replaceState},
     )
 
-  const canCreateRoom = get<boolean>(deriveUserCanCreateRoom(url))
+  const canCreateRoom = deriveUserCanCreateRoom(url)
 
   const createInvite = () => pushModal(SpaceInvite, {url}, {replaceState})
 
@@ -189,7 +188,7 @@
         {#each $otherRooms as room, i (room)}
           <MenuSpaceRoomItem {replaceState} {url} {room} />
         {/each}
-        {#if canCreateRoom}
+        {#if $canCreateRoom}
           <SecondaryNavItem {replaceState} onclick={addRoom}>
             <Icon icon={AddCircle} />
             Create room
