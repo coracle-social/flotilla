@@ -4,7 +4,9 @@ import {get, derived, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {
   on,
+  spec,
   call,
+  first,
   assoc,
   remove,
   uniqBy,
@@ -12,9 +14,7 @@ import {
   sort,
   prop,
   uniq,
-  nth,
   pushToMapKey,
-  nthEq,
   shuffle,
   parseJson,
   fromPairs,
@@ -24,7 +24,6 @@ import {
   groupBy,
   always,
   tryCatch,
-  last,
 } from "@welshman/lib"
 import type {Socket} from "@welshman/net"
 import {
@@ -46,49 +45,56 @@ import {
 } from "@welshman/store"
 import {isKindFeed, findFeed} from "@welshman/feeds"
 import {
-  getIdFilters,
-  WRAP,
-  DELETE,
+  ALERT_ANDROID,
+  ALERT_EMAIL,
+  ALERT_IOS,
+  ALERT_STATUS,
+  ALERT_WEB,
+  APP_DATA,
   CLIENT_AUTH,
-  AUTH_JOIN,
-  REACTION,
-  ZAP_REQUEST,
-  ZAP_RESPONSE,
-  DIRECT_MESSAGE,
+  COMMENT,
+  DELETE,
   DIRECT_MESSAGE_FILE,
-  ROOM_META,
+  DIRECT_MESSAGE,
+  EVENT_TIME,
   MESSAGE,
+  REACTION,
+  RELAY_ADD_MEMBER,
+  RELAY_JOIN,
+  RELAY_LEAVE,
+  RELAY_MEMBERS,
+  RELAY_REMOVE_MEMBER,
+  REPORT,
+  ROOM_ADD_MEMBER,
+  ROOM_CREATE_PERMISSION,
+  ROOM_JOIN,
+  ROOM_LEAVE,
+  ROOM_MEMBERS,
+  ROOM_META,
+  ROOM_REMOVE_MEMBER,
   ROOMS,
   THREAD,
-  COMMENT,
-  REPORT,
-  ROOM_JOIN,
-  ROOM_ADD_USER,
-  ROOM_REMOVE_USER,
-  ROOM_CREATE_PERMISSION,
-  ALERT_EMAIL,
-  ALERT_WEB,
-  ALERT_IOS,
-  ALERT_ANDROID,
-  ALERT_STATUS,
-  APP_DATA,
+  WRAP,
   ZAP_GOAL,
-  EVENT_TIME,
-  getGroupTags,
-  getRelayTagValues,
-  getPubkeyTagValues,
-  displayProfile,
-  readList,
-  getListTags,
+  ZAP_REQUEST,
+  ZAP_RESPONSE,
   asDecryptedEvent,
-  normalizeRelayUrl,
+  displayProfile,
+  getGroupTags,
+  getIdFilters,
+  getListTags,
+  getPubkeyTagValues,
+  getRelaysFromList,
+  getRelayTagValues,
   getTag,
   getTagValue,
   getTagValues,
-  verifyEvent,
+  isRelayUrl,
   makeEvent,
+  normalizeRelayUrl,
+  readList,
   RelayMode,
-  getRelaysFromList,
+  verifyEvent,
 } from "@welshman/util"
 import type {TrustedEvent, PublishedList, List, Filter} from "@welshman/util"
 import {decrypt} from "@welshman/signer"
@@ -111,6 +117,9 @@ import {
   publishThunk,
   userRelaySelections,
   userInboxRelaySelections,
+  deriveRelay,
+  makeUserData,
+  makeUserLoader,
 } from "@welshman/app"
 import type {Thunk, Relay} from "@welshman/app"
 
@@ -158,7 +167,7 @@ export const DUFFLEPUD_URL = "https://dufflepud.onrender.com"
 
 export const NIP46_PERMS =
   "nip44_encrypt,nip44_decrypt," +
-  [CLIENT_AUTH, AUTH_JOIN, MESSAGE, THREAD, COMMENT, ROOMS, WRAP, REACTION, ZAP_REQUEST]
+  [CLIENT_AUTH, RELAY_JOIN, MESSAGE, THREAD, COMMENT, ROOMS, WRAP, REACTION, ZAP_REQUEST]
     .map(k => `sign_event:${k}`)
     .join(",")
 
@@ -191,7 +200,7 @@ export const entityLink = (entity: string) => `https://coracle.social/${entity}`
 export const pubkeyLink = (pubkey: string, relays = Router.get().FromPubkeys([pubkey]).getUrls()) =>
   entityLink(nip19.nprofileEncode({pubkey, relays}))
 
-export const defaultPubkeys = derived(userFollows, $userFollows => {
+export const bootstrapPubkeys = derived(userFollows, $userFollows => {
   const appPubkeys = DEFAULT_PUBKEYS.split(",")
   const userPubkeys = shuffle(getPubkeyTagValues(getListTags($userFollows)))
 
@@ -221,29 +230,31 @@ export const deriveEvent = (idOrAddress: string, hints: string[] = []) => {
   )
 }
 
-export const getUrlsForEvent = derived([trackerStore, thunks], ([$tracker, $thunks]) => {
-  const getThunksByEventId = memoize(() => {
-    const thunksByEventId = new Map<string, Thunk[]>()
+export const getUrlsForEvent = withGetter(
+  derived([trackerStore, thunks], ([$tracker, $thunks]) => {
+    const getThunksByEventId = memoize(() => {
+      const thunksByEventId = new Map<string, Thunk[]>()
 
-    for (const thunk of $thunks) {
-      pushToMapKey(thunksByEventId, thunk.event.id, thunk)
-    }
-
-    return thunksByEventId
-  })
-
-  return (id: string) => {
-    const urls = Array.from($tracker.getRelays(id))
-
-    for (const thunk of getThunksByEventId().get(id) || []) {
-      for (const url of thunk.options.relays) {
-        urls.push(url)
+      for (const thunk of $thunks) {
+        pushToMapKey(thunksByEventId, thunk.event.id, thunk)
       }
-    }
 
-    return uniq(urls)
-  }
-})
+      return thunksByEventId
+    })
+
+    return (id: string) => {
+      const urls = Array.from($tracker.getRelays(id))
+
+      for (const thunk of getThunksByEventId().get(id) || []) {
+        for (const url of thunk.options.relays) {
+          urls.push(url)
+        }
+      }
+
+      return uniq(urls)
+    }
+  }),
+)
 
 export const getEventsForUrl = (url: string, filters: Filter[]) => {
   const ids = uniq([
@@ -265,6 +276,11 @@ export const deriveEventsForUrl = (url: string, filters: Filter[]) =>
 
     return repository.query(filters.map(assoc("ids", ids)))
   })
+
+export const deriveSignedEventsForUrl = (url: string, filters: Filter[]) =>
+  derived([deriveEventsForUrl(url, filters), deriveRelay(url)], ([$events, $relay]) =>
+    $relay?.profile ? $events.filter(spec({pubkey: $relay.profile.self})) : [],
+  )
 
 // Context
 
@@ -294,6 +310,15 @@ export const MESSAGE_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD, MESSAGE]
 export const MESSAGE_FILTER = {kinds: MESSAGE_KINDS}
 
 export const COMMENT_FILTER = makeCommentFilter(MESSAGE_KINDS)
+
+export const MEMBERSHIP_KINDS = [
+  ROOM_ADD_MEMBER,
+  ROOM_REMOVE_MEMBER,
+  RELAY_ADD_MEMBER,
+  RELAY_REMOVE_MEMBER,
+]
+
+export const MEMBERSHIP_FILTER = {kinds: MEMBERSHIP_KINDS}
 
 // Settings
 
@@ -347,6 +372,19 @@ export const {
   getKey: settings => settings.event.pubkey,
   load: makeOutboxLoader(APP_DATA, {"#d": [SETTINGS]}),
 })
+
+export const userSettings = makeUserData({
+  mapStore: settingsByPubkey,
+  loadItem: loadSettings,
+})
+
+export const loadUserSettings = makeUserLoader(loadSettings)
+
+export const userSettingsValues = withGetter(
+  derived(userSettings, $s => $s?.values || defaultSettings),
+)
+
+export const getSetting = <T>(key: keyof Settings["values"]) => userSettingsValues.get()[key] as T
 
 // Relays sending events with empty signatures that the user has to choose to trust
 
@@ -428,64 +466,6 @@ export const alertStatuses = withGetter(
 export const deriveAlertStatus = (address: string) =>
   derived(alertStatuses, statuses => statuses.find(s => getTagValue("d", s.event.tags) === address))
 
-// Membership
-
-export const hasMembershipUrl = (list: List | undefined, url: string) =>
-  getListTags(list).some(t => {
-    if (t[0] === "r") return t[1] === url
-    if (t[0] === "group") return t[2] === url
-
-    return false
-  })
-
-export const getMembershipUrls = (list?: List) => {
-  const tags = getListTags(list)
-
-  return sort(
-    uniq([...getRelayTagValues(tags), ...getGroupTags(tags).map(nth(2))]).map(url =>
-      normalizeRelayUrl(url),
-    ),
-  )
-}
-
-export const getMembershipRooms = (list?: List) =>
-  getGroupTags(getListTags(list)).map(([_, room, url, name = ""]) => ({url, room, name}))
-
-export const getMembershipRoomsByUrl = (url: string, list?: List) =>
-  sort(getGroupTags(getListTags(list)).filter(nthEq(2, url)).map(nth(1)))
-
-export const memberships = deriveEventsMapped<PublishedList>(repository, {
-  filters: [{kinds: [ROOMS]}],
-  itemToEvent: item => item.event,
-  eventToItem: (event: TrustedEvent) => readList(asDecryptedEvent(event)),
-})
-
-export const {
-  indexStore: membershipsByPubkey,
-  deriveItem: deriveMembership,
-  loadItem: loadMembership,
-} = collection({
-  name: "memberships",
-  store: memberships,
-  getKey: list => list.event.pubkey,
-  load: makeOutboxLoader(ROOMS),
-})
-
-export const membersByUrl = derived(
-  [defaultPubkeys, membershipsByPubkey],
-  ([$defaultPubkeys, $membershipsByPubkey]) => {
-    const $membersByUrl = new Map<string, Set<string>>()
-
-    for (const pubkey of $defaultPubkeys) {
-      for (const url of getMembershipUrls($membershipsByPubkey.get(pubkey))) {
-        addToMapKey($membersByUrl, url, pubkey)
-      }
-    }
-
-    return $membersByUrl
-  },
-)
-
 // Chats
 
 export const chatMessages = deriveEvents(repository, {
@@ -556,11 +536,9 @@ export const chatSearch = derived(chats, $chats =>
   }),
 )
 
-// Messages
+// Channels
 
 export const messages = deriveEvents(repository, {filters: [{kinds: [MESSAGE]}]})
-
-// Channels
 
 export type Channel = {
   id: string
@@ -645,65 +623,183 @@ export const displayChannel = (url: string, room: string) =>
 export const roomComparator = (url: string) => (room: string) =>
   displayChannel(url, room).toLowerCase()
 
-// User stuff
+// User space/room selections
 
-export const userSettings = withGetter(
-  derived([pubkey, settingsByPubkey], ([$pubkey, $settingsByPubkey]) => {
-    if (!$pubkey) return undefined
+export const groupSelections = deriveEventsMapped<PublishedList>(repository, {
+  filters: [{kinds: [ROOMS]}],
+  itemToEvent: item => item.event,
+  eventToItem: (event: TrustedEvent) => readList(asDecryptedEvent(event)),
+})
 
-    loadSettings($pubkey)
+export const {
+  indexStore: groupSelectionsByPubkey,
+  deriveItem: deriveGroupSelections,
+  loadItem: loadGroupSelections,
+} = collection({
+  name: "groupSelections",
+  store: groupSelections,
+  getKey: list => list.event.pubkey,
+  load: makeOutboxLoader(ROOMS),
+})
 
-    return $settingsByPubkey.get($pubkey)
-  }),
-)
+export const groupSelectionsPubkeysByUrl = derived(groupSelections, $groupSelections => {
+  const result = new Map<string, Set<string>>()
 
-export const userSettingsValues = withGetter(
-  derived(userSettings, $s => $s?.values || defaultSettings),
-)
-
-export const getSetting = <T>(key: keyof Settings["values"]) => userSettingsValues.get()[key] as T
-
-export const userMembership = withGetter(
-  derived([pubkey, membershipsByPubkey], ([$pubkey, $membershipsByPubkey]) => {
-    if (!$pubkey) return undefined
-
-    loadMembership($pubkey)
-
-    return $membershipsByPubkey.get($pubkey)
-  }),
-)
-
-export const userRoomsByUrl = withGetter(
-  derived([userMembership, channelsById], ([$userMembership, $channelsById]) => {
-    const tags = getListTags($userMembership)
-    const $userRoomsByUrl = new Map<string, Set<string>>()
+  for (const list of $groupSelections) {
+    const tags = getListTags(list)
 
     for (const url of getRelayTagValues(tags)) {
-      $userRoomsByUrl.set(normalizeRelayUrl(url), new Set())
+      addToMapKey(result, url, list.event.pubkey)
     }
 
-    for (const [_, room, url] of getGroupTags(tags)) {
+    for (const tag of getGroupTags(tags)) {
+      const url = tag[2] || ""
+
+      if (isRelayUrl(url)) {
+        addToMapKey(result, url, list.event.pubkey)
+      }
+    }
+  }
+
+  return result
+})
+
+export const getSpaceUrlsFromGroupSelections = ($groupSelections: List | undefined) => {
+  const tags = getListTags($groupSelections)
+  const urls = getRelayTagValues(tags)
+
+  for (const tag of getGroupTags(tags)) {
+    const url = tag[2] || ""
+
+    if (isRelayUrl(url)) {
+      urls.push(url)
+    }
+  }
+
+  return uniq(urls.map(normalizeRelayUrl))
+}
+
+export const getSpaceRoomsFromGroupSelections = (
+  url: string,
+  $groupSelections: List | undefined,
+) => {
+  const rooms: string[] = []
+
+  for (const [_, room, relay] of getGroupTags(getListTags($groupSelections))) {
+    if (url === relay) {
+      rooms.push(room)
+    }
+  }
+
+  return sortBy(roomComparator(url), rooms)
+}
+
+export const userGroupSelections = makeUserData({
+  mapStore: groupSelectionsByPubkey,
+  loadItem: loadGroupSelections,
+})
+
+export const loadUserGroupSelections = makeUserLoader(loadGroupSelections)
+
+export const userSpaceUrls = derived(userGroupSelections, getSpaceUrlsFromGroupSelections)
+
+export const deriveUserRooms = (url: string) =>
+  derived([userGroupSelections, channelsById], ([$userGroupSelections, $channelsById]) => {
+    const rooms: string[] = []
+
+    for (const room of getSpaceRoomsFromGroupSelections(url, $userGroupSelections)) {
       if ($channelsById.has(makeChannelId(url, room))) {
-        addToMapKey($userRoomsByUrl, normalizeRelayUrl(url), room)
+        rooms.push(room)
       }
     }
 
-    return $userRoomsByUrl
-  }),
-)
-
-export const deriveUserRooms = (url: string) =>
-  derived(userRoomsByUrl, $userRoomsByUrl =>
-    sortBy(roomComparator(url), uniq(Array.from($userRoomsByUrl.get(url) || []))),
-  )
+    return sortBy(roomComparator(url), rooms)
+  })
 
 export const deriveOtherRooms = (url: string) =>
-  derived([deriveUserRooms(url), channelsByUrl], ([$userRooms, $channelsByUrl]) =>
-    sortBy(
-      roomComparator(url),
-      ($channelsByUrl.get(url) || []).filter(c => !$userRooms.includes(c.room)).map(c => c.room),
-    ),
+  derived([deriveUserRooms(url), channelsByUrl], ([$userRooms, $channelsByUrl]) => {
+    const rooms: string[] = []
+
+    for (const {room} of $channelsByUrl.get(url) || []) {
+      if (!$userRooms.includes(room)) {
+        rooms.push(room)
+      }
+    }
+
+    return sortBy(roomComparator(url), rooms)
+  })
+
+// Space/room memberships
+
+export const deriveSpaceMembers = (url: string) =>
+  derived(
+    deriveSignedEventsForUrl(url, [
+      {kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS]},
+    ]),
+    $events => {
+      const membersEvent = $events.find(spec({kind: RELAY_MEMBERS}))
+
+      if (membersEvent) {
+        return getTagValues("member", membersEvent.tags)
+      }
+
+      const members = new Set()
+
+      for (const event of $events) {
+        const pubkeys = getPubkeyTagValues(event.tags)
+
+        if (event.kind === RELAY_ADD_MEMBER) {
+          for (const pubkey of pubkeys) {
+            members.add(pubkey)
+          }
+        }
+
+        if (event.kind === RELAY_REMOVE_MEMBER) {
+          for (const pubkey of pubkeys) {
+            members.delete(pubkey)
+          }
+        }
+      }
+
+      return Array.from(members)
+    },
   )
+
+export const deriveRoomMembers = (url: string, room: string) =>
+  derived(
+    deriveEventsForUrl(url, [
+      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER, ROOM_MEMBERS], "#h": [room]},
+    ]),
+    $events => {
+      const membersEvent = $events.find(spec({kind: ROOM_MEMBERS}))
+
+      if (membersEvent) {
+        return getPubkeyTagValues(membersEvent.tags)
+      }
+
+      const members = new Set()
+
+      for (const event of $events) {
+        const pubkeys = getPubkeyTagValues(event.tags)
+
+        if (event.kind === ROOM_ADD_MEMBER) {
+          for (const pubkey of pubkeys) {
+            members.add(pubkey)
+          }
+        }
+
+        if (event.kind === ROOM_REMOVE_MEMBER) {
+          for (const pubkey of pubkeys) {
+            members.delete(pubkey)
+          }
+        }
+      }
+
+      return Array.from(members)
+    },
+  )
+
+// User membership status
 
 export enum MembershipStatus {
   Initial,
@@ -711,32 +807,59 @@ export enum MembershipStatus {
   Granted,
 }
 
-export const deriveUserMembershipStatus = (url: string, room: string) =>
+export const deriveUserSpaceMembershipStatus = (url: string) =>
   derived(
     [
       pubkey,
-      deriveEventsForUrl(url, [
-        {kinds: [ROOM_JOIN, ROOM_ADD_USER, ROOM_REMOVE_USER], "#h": [room]},
-      ]),
+      deriveSpaceMembers(url),
+      deriveEventsForUrl(url, [{kinds: [RELAY_JOIN, RELAY_LEAVE]}]),
     ],
-    ([$pubkey, $events]) => {
-      let status = MembershipStatus.Initial
+    ([$pubkey, $members, $events]) => {
+      const isMember = $members.includes($pubkey)
 
       for (const event of $events) {
-        if (event.kind === ROOM_JOIN && event.pubkey === $pubkey) {
-          status = MembershipStatus.Pending
+        if (event.pubkey !== $pubkey) {
+          continue
         }
 
-        if (event.kind === ROOM_REMOVE_USER && getTagValues("p", event.tags).includes($pubkey!)) {
-          break
+        if (event.kind === RELAY_JOIN) {
+          return isMember ? MembershipStatus.Granted : MembershipStatus.Pending
         }
 
-        if (event.kind === ROOM_ADD_USER && getTagValues("p", event.tags).includes($pubkey!)) {
-          return MembershipStatus.Granted
+        if (event.kind === RELAY_LEAVE) {
+          return MembershipStatus.Initial
         }
       }
 
-      return status
+      return isMember ? MembershipStatus.Granted : MembershipStatus.Initial
+    },
+  )
+
+export const deriveUserRoomMembershipStatus = (url: string, room: string) =>
+  derived(
+    [
+      pubkey,
+      deriveRoomMembers(url, room),
+      deriveEventsForUrl(url, [{kinds: [ROOM_JOIN, ROOM_LEAVE], "#h": [room]}]),
+    ],
+    ([$pubkey, $members, $events]) => {
+      const isMember = $members.includes($pubkey)
+
+      for (const event of $events) {
+        if (event.pubkey !== $pubkey) {
+          continue
+        }
+
+        if (event.kind === ROOM_JOIN) {
+          return isMember ? MembershipStatus.Granted : MembershipStatus.Pending
+        }
+
+        if (event.kind === ROOM_LEAVE) {
+          return MembershipStatus.Initial
+        }
+      }
+
+      return isMember ? MembershipStatus.Granted : MembershipStatus.Initial
     },
   )
 
@@ -744,13 +867,9 @@ export const deriveUserCanCreateRoom = (url: string) =>
   derived(
     [pubkey, deriveEventsForUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}])],
     ([$pubkey, $events]) => {
-      const latest = last($events)
+      const event = first($events)
 
-      if (!latest) {
-        return true
-      }
-
-      return getTagValues("p", latest.tags).includes($pubkey!)
+      return event ? getPubkeyTagValues(event.tags).includes($pubkey!) : true
     },
   )
 
@@ -853,7 +972,7 @@ export const deriveRelayAuthError = (url: string, claim = "") => {
 
   // Attempt to join the relay
   const thunk = publishThunk({
-    event: makeEvent(AUTH_JOIN, {tags: [["claim", claim]]}),
+    event: makeEvent(RELAY_JOIN, {tags: [["claim", claim]]}),
     relays: [url],
   })
 

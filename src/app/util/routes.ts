@@ -1,4 +1,5 @@
 import type {Page} from "@sveltejs/kit"
+import {get} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {goto} from "$app/navigation"
 import {nthEq, sleep} from "@welshman/lib"
@@ -21,7 +22,7 @@ import {
   entityLink,
   decodeRelay,
   encodeRelay,
-  userRoomsByUrl,
+  userSpaceUrls,
   hasNip29,
   ROOM,
 } from "@app/core/state"
@@ -66,7 +67,7 @@ export const makeCalendarPath = (url: string, eventId?: string) =>
 export const getPrimaryNavItem = ($page: Page) => $page.route?.id?.split("/")[1]
 
 export const getPrimaryNavItemIndex = ($page: Page) => {
-  const urls = Array.from(userRoomsByUrl.get().keys())
+  const urls = get(userSpaceUrls)
 
   switch (getPrimaryNavItem($page)) {
     case "discover":

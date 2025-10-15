@@ -5,11 +5,15 @@
   import type {Filter} from "@welshman/util"
   import {deriveEvents} from "@welshman/store"
   import {formatTimestampRelative} from "@welshman/lib"
-  import {NOTE, ROOMS, COMMENT, getRelayTags, getListTags} from "@welshman/util"
+  import {NOTE, ROOMS, COMMENT} from "@welshman/util"
   import {repository, loadRelaySelections} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
-  import {membershipsByPubkey, MESSAGE_KINDS} from "@app/core/state"
+  import {
+    deriveGroupSelections,
+    getSpaceUrlsFromGroupSelections,
+    MESSAGE_KINDS,
+  } from "@app/core/state"
   import {goToEvent} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
 
@@ -21,8 +25,8 @@
   const {pubkey, url}: Props = $props()
   const filters: Filter[] = [{authors: [pubkey], limit: 1}]
   const events = deriveEvents(repository, {filters})
-  const membership = $derived($membershipsByPubkey.get(pubkey))
-  const relays = $derived(getRelayTags(getListTags(membership)))
+  const selections = deriveGroupSelections(pubkey)
+  const spaceUrls = $derived(getSpaceUrlsFromGroupSelections($selections))
 
   const viewEvent = () => goToEvent($events[0]!)
 
@@ -49,10 +53,10 @@
       Last active {formatTimestampRelative($events[0].created_at)}
     </Button>
   {/if}
-  {#if relays.length > 0}
+  {#if spaceUrls.length > 0}
     <Button onclick={openSpaces} class="badge badge-neutral">
-      {relays.length}
-      {relays.length === 1 ? "space" : "spaces"}
+      {spaceUrls.length}
+      {spaceUrls.length === 1 ? "space" : "spaces"}
     </Button>
   {/if}
 </div>

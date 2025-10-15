@@ -5,15 +5,15 @@
   import Divider from "@lib/components/Divider.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
   import MenuSpacesItem from "@app/components/MenuSpacesItem.svelte"
-  import {userRoomsByUrl, PLATFORM_RELAYS} from "@app/core/state"
+  import {userSpaceUrls, PLATFORM_RELAYS} from "@app/core/state"
 </script>
 
 <div class="column menu gap-2">
   {#each PLATFORM_RELAYS as url (url)}
     <MenuSpacesItem {url} />
   {:else}
-    {#if $userRoomsByUrl.size > 0}
-      {#each $userRoomsByUrl.keys() as url (url)}
+    {#if $userSpaceUrls.length > 0}
+      {#each $userSpaceUrls as url (url)}
         <MenuSpacesItem {url} />
       {/each}
       <Divider />

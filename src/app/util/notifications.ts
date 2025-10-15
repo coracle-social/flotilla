@@ -17,9 +17,11 @@ import {
   chats,
   hasNip29,
   getUrlsForEvent,
-  userRoomsByUrl,
   repositoryStore,
   userSettingsValues,
+  userGroupSelections,
+  getSpaceUrlsFromGroupSelections,
+  getSpaceRoomsFromGroupSelections,
 } from "@app/core/state"
 import {preferencesStorageProvider} from "@src/lib/storage"
 import {Badge} from "@capawesome/capacitor-badge"
@@ -42,11 +44,19 @@ export const notifications = derived(
   throttled(
     1000,
     derived(
-      [pubkey, checked, chats, userRoomsByUrl, repositoryStore, getUrlsForEvent, relaysByUrl],
+      [pubkey, checked, chats, userGroupSelections, repositoryStore, getUrlsForEvent, relaysByUrl],
       identity,
     ),
   ),
-  ([$pubkey, $checked, $chats, $userRoomsByUrl, $repository, $getUrlsForEvent, $relaysByUrl]) => {
+  ([
+    $pubkey,
+    $checked,
+    $chats,
+    $userGroupSelections,
+    $repository,
+    $getUrlsForEvent,
+    $relaysByUrl,
+  ]) => {
     const hasNotification = (path: string, latestEvent: TrustedEvent | undefined) => {
       if (!latestEvent || latestEvent.pubkey === $pubkey) {
         return false
@@ -85,7 +95,7 @@ export const notifications = derived(
 
     const allMessages = $repository.query([{kinds: [MESSAGE, THREAD, ZAP_GOAL, EVENT_TIME]}])
 
-    for (const [url, rooms] of $userRoomsByUrl.entries()) {
+    for (const url of getSpaceUrlsFromGroupSelections($userGroupSelections)) {
       const spacePath = makeSpacePath(url)
       const spacePathMobile = spacePath + ":mobile"
       const goalPath = makeGoalPath(url)
@@ -161,7 +171,7 @@ export const notifications = derived(
       }
 
       if (hasNip29($relaysByUrl.get(url))) {
-        for (const room of rooms) {
+        for (const room of getSpaceRoomsFromGroupSelections(url, $userGroupSelections)) {
           const roomPath = makeRoomPath(url, room)
           const latestEvent = allMessages.find(
             e => $getUrlsForEvent(e.id).includes(url) && e.tags.find(spec(["h", room])),

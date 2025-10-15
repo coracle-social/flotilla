@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {gt} from "@welshman/lib"
   import {deriveRelay} from "@welshman/app"
   import Ghost from "@assets/icons/ghost-smile.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
@@ -7,7 +6,7 @@
   import RelayName from "@app/components/RelayName.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {membersByUrl, userRoomsByUrl} from "@app/core/state"
+  import {deriveSpaceMembers, deriveUserRooms} from "@app/core/state"
 
   type Props = {
     url: string
@@ -15,6 +14,8 @@
 
   const {url}: Props = $props()
   const relay = deriveRelay(url)
+  const rooms = deriveUserRooms(url)
+  const members = deriveSpaceMembers(url)
 </script>
 
 <div class="col-4 text-left">
@@ -31,7 +32,7 @@
             {/if}
           </div>
         </div>
-        {#if $userRoomsByUrl.has(url)}
+        {#if $rooms.includes(url)}
           <div
             class="tooltip absolute -right-1 -top-1 h-5 w-5 rounded-full bg-primary"
             data-tip="You are already a member of this space.">
@@ -48,10 +49,10 @@
     </div>
     <RelayDescription {url} />
   </div>
-  {#if gt($membersByUrl.get(url)?.size, 0)}
+  {#if $members.length > 0}
     <div class="row-2 card2 card2-sm bg-alt">
       Members:
-      <ProfileCircles pubkeys={Array.from($membersByUrl.get(url) || [])} />
+      <ProfileCircles pubkeys={$members} />
     </div>
   {/if}
 </div>

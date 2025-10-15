@@ -7,13 +7,13 @@
   import Page from "@lib/components/Page.svelte"
   import ContentSearch from "@lib/components/ContentSearch.svelte"
   import PeopleItem from "@app/components/PeopleItem.svelte"
-  import {defaultPubkeys} from "@app/core/state"
+  import {bootstrapPubkeys} from "@app/core/state"
 
   let term = $state("")
   let limit = $state(10)
   let element: Element | undefined = $state()
 
-  const pubkeys = $derived(term ? $profileSearch.searchValues(term) : $defaultPubkeys)
+  const pubkeys = $derived(term ? $profileSearch.searchValues(term) : $bootstrapPubkeys)
 
   onMount(() => {
     const scroller = createScroller({

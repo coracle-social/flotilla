@@ -13,7 +13,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {alerts, getMembershipUrls, userMembership} from "@app/core/state"
+  import {alerts, userSpaceUrls} from "@app/core/state"
   import {requestRelayClaim} from "@app/core/requests"
   import {createAlert} from "@app/core/commands"
   import {canSendPushNotifications} from "@app/util/push"
@@ -174,7 +174,7 @@
       {#snippet input()}
         <select bind:value={url} class="select select-bordered">
           <option value="" disabled selected>Choose a space URL</option>
-          {#each getMembershipUrls($userMembership) as url (url)}
+          {#each $userSpaceUrls as url (url)}
             <option value={url}>{displayRelayUrl(url)}</option>
           {/each}
         </select>

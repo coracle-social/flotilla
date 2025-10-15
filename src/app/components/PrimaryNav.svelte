@@ -13,7 +13,7 @@
   import MenuOtherSpaces from "@app/components/MenuOtherSpaces.svelte"
   import MenuSettings from "@app/components/MenuSettings.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
-  import {userRoomsByUrl, PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/state"
+  import {userSpaceUrls, PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {makeSpacePath} from "@app/util/routes"
   import {notifications} from "@app/util/notifications"
@@ -31,7 +31,8 @@
 
   const {children}: Props = $props()
 
-  const showSpacesMenu = () => (spaceUrls.length > 0 ? pushModal(MenuSpaces) : pushModal(SpaceAdd))
+  const showSpacesMenu = () =>
+    $userSpaceUrls.length > 0 ? pushModal(MenuSpaces) : pushModal(SpaceAdd)
 
   const showOtherSpacesMenu = () => pushModal(MenuOtherSpaces, {urls: secondarySpaceUrls})
 
@@ -50,9 +51,8 @@
   const itemHeight = 56
   const navPadding = 6 * itemHeight
   const itemLimit = $derived((windowHeight - navPadding) / itemHeight)
-  const spaceUrls = $derived(Array.from($userRoomsByUrl.keys()))
-  const [primarySpaceUrls, secondarySpaceUrls] = $derived(splitAt(itemLimit, spaceUrls))
-  const anySpaceNotifications = $derived(spaceUrls.some(hasNotification))
+  const [primarySpaceUrls, secondarySpaceUrls] = $derived(splitAt(itemLimit, $userSpaceUrls))
+  const anySpaceNotifications = $derived($userSpaceUrls.some(hasNotification))
   const otherSpaceNotifications = $derived(secondarySpaceUrls.some(hasNotification))
 </script>
 

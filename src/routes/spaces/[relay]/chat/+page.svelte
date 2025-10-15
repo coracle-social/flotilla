@@ -5,9 +5,9 @@
   import {readable} from "svelte/store"
   import {now, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {makeEvent, MESSAGE} from "@welshman/util"
+  import {makeEvent, MESSAGE, RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
-  import {slide, fade, fly} from "@lib/transition"
+  import {fade, fly} from "@lib/transition"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -19,15 +19,17 @@
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import ChannelItem from "@app/components/ChannelItem.svelte"
+  import ChannelItemAddMember from "@src/app/components/ChannelItemAddMember.svelte"
+  import ChannelItemRemoveMember from "@src/app/components/ChannelItemRemoveMember.svelte"
   import ChannelCompose from "@app/components/ChannelCompose.svelte"
+  import ChannelComposeEdit from "@src/app/components/ChannelComposeEdit.svelte"
   import ChannelComposeParent from "@app/components/ChannelComposeParent.svelte"
-  import {userSettingsValues, decodeRelay, MESSAGE_FILTER, PROTECTED} from "@app/core/state"
+  import {userSettingsValues, decodeRelay, PROTECTED, MESSAGE_KINDS} from "@app/core/state"
   import {prependParent, canEnforceNip70, publishDelete} from "@app/core/commands"
   import {setChecked, checked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
   import {makeFeed} from "@app/core/requests"
   import {popKey} from "@lib/implicit"
-  import ChannelComposeEdit from "@src/app/components/ChannelComposeEdit.svelte"
 
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
@@ -218,7 +220,7 @@
     const feed = makeFeed({
       url,
       element: element!,
-      filters: [MESSAGE_FILTER],
+      filters: [{kinds: [...MESSAGE_KINDS, RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]}],
       onExhausted: () => {
         loadingEvents = false
       },
@@ -271,15 +273,21 @@
       <Divider>{value}</Divider>
     {:else}
       {@const event = $state.snapshot(value as TrustedEvent)}
-      <div in:slide class:-mt-1={!showPubkey}>
-        <ChannelItem
-          {url}
-          {event}
-          {replyTo}
-          {showPubkey}
-          canEdit={canEditEvent}
-          onEdit={onEditEvent} />
-      </div>
+      {#if event.kind === RELAY_ADD_MEMBER}
+        <ChannelItemAddMember {url} {event} />
+      {:else if event.kind === RELAY_REMOVE_MEMBER}
+        <ChannelItemRemoveMember {url} {event} />
+      {:else}
+        <div class:-mt-1={!showPubkey}>
+          <ChannelItem
+            {url}
+            {event}
+            {replyTo}
+            {showPubkey}
+            canEdit={canEditEvent}
+            onEdit={onEditEvent} />
+        </div>
+      {/if}
     {/if}
   {/each}
   <p class="flex h-10 items-center justify-center py-20">
