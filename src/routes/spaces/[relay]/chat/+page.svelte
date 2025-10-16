@@ -5,7 +5,7 @@
   import {readable} from "svelte/store"
   import {now, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {makeEvent, MESSAGE, DELETE, THREAD, EVENT_TIME, ZAP_GOAL} from "@welshman/util"
+  import {makeEvent, MESSAGE, DELETE} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
