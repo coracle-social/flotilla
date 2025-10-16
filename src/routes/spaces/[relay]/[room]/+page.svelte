@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {readable} from "svelte/store"
+  import {get, readable} from "svelte/store"
   import {onMount, onDestroy} from "svelte"
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
@@ -16,7 +16,14 @@
     ROOM_ADD_USER,
     ROOM_REMOVE_USER,
   } from "@welshman/util"
-  import {pubkey, publishThunk, waitForThunkError, joinRoom, leaveRoom} from "@welshman/app"
+  import {
+    pubkey,
+    publishThunk,
+    waitForThunkError,
+    joinRoom,
+    leaveRoom,
+    deriveProfileDisplay,
+  } from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
@@ -57,13 +64,14 @@
   import {makeFeed} from "@app/core/requests"
   import {popKey} from "@lib/implicit"
   import {pushToast} from "@app/util/toast"
+  import ChannelJoin from "@src/app/components/ChannelJoin.svelte"
 
   const {room, relay} = $page.params as MakeNonOptional<typeof $page.params>
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay(relay)
   const channel = deriveChannel(url, room)
-  const filter = {kinds: [MESSAGE], "#h": [room]}
+  const filter = {kinds: [MESSAGE, ROOM_ADD_USER], "#h": [room]}
   const isFavorite = $derived($userRoomsByUrl.get(url)?.has(room))
   const shouldProtect = canEnforceNip70(url)
   const membershipStatus = deriveUserMembershipStatus(url, room)
@@ -226,12 +234,22 @@
           elements.push({type: "date", value: date, id: date, showPubkey: false})
         }
 
-        elements.push({
-          id: event.id,
-          type: "note",
-          value: event,
-          showPubkey: date !== previousDate || previousPubkey !== event.pubkey,
-        })
+        if (event.kind === MESSAGE) {
+          elements.push({
+            id: event.id,
+            type: "note",
+            value: event,
+            showPubkey: date !== previousDate || previousPubkey !== event.pubkey,
+          })
+        } else if (event.kind === ROOM_ADD_USER) {
+          elements.push({
+            type: "new-user",
+            id: "new-user",
+            value: event,
+            showPubkey: true,
+            pubkey: event.pubkey,
+          })
+        }
 
         previousDate = date
         previousPubkey = event.pubkey
@@ -254,7 +272,7 @@
       relays: [url],
       feedFilters: [filter],
       subscriptionFilters: [
-        {kinds: [DELETE, MESSAGE, ...REACTION_KINDS], "#h": [room], since: now()},
+        {kinds: [DELETE, MESSAGE, ROOM_ADD_USER, ...REACTION_KINDS], "#h": [room], since: now()},
       ],
       initialEvents: getEventsForUrl(url, [{...filter, limit: 20}]),
       onExhausted: () => {
@@ -384,7 +402,7 @@
       </div>
     </div>
   {:else}
-    {#each elements as { type, id, value, showPubkey } (id)}
+    {#each elements as { type, id, value, showPubkey, pubkey } (id)}
       {#if type === "new-messages"}
         <div
           bind:this={newMessages}
@@ -393,6 +411,10 @@
           <div class="h-px flex-grow bg-primary"></div>
           <p class="rounded-full bg-primary px-2 py-1 text-primary-content">New Messages</p>
           <div class="h-px flex-grow bg-primary"></div>
+        </div>
+      {:else if type === "new-user"}
+        <div>
+          <ChannelJoin url event={value as TrustedEvent} />
         </div>
       {:else if type === "date"}
         <Divider>{value}</Divider>

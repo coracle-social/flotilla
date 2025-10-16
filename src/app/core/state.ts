@@ -770,8 +770,8 @@ export const deriveRoomMembership = (url: string, room: string) =>
         {kinds: [ROOM_ADD_USER, ROOM_REMOVE_USER, GROUP_MEMBERS], "#h": [room]},
       ]),
     ],
-    ([events]) => {
-      const latestMemberList = events.findLast(event => event.kind === GROUP_MEMBERS)
+    ([$events]) => {
+      const latestMemberList = $events.findLast(event => event.kind === GROUP_MEMBERS)
 
       if (latestMemberList) {
         return getPubkeyTagValues(latestMemberList.tags)
@@ -779,7 +779,7 @@ export const deriveRoomMembership = (url: string, room: string) =>
 
       const membershipList = new Set()
 
-      for (const event of events) {
+      for (const event of $events) {
         switch (event.kind) {
           case ROOM_ADD_USER:
             membershipList.add(getTagValue("p", event.tags))
@@ -810,8 +810,8 @@ export const deriveRelayMembership = (url: string) =>
         },
       ]),
     ],
-    ([events]) => {
-      const latestMemberList = events.findLast(event => event.kind === RELAY_MEMBERS)
+    ([$events]) => {
+      const latestMemberList = $events.findLast(event => event.kind === RELAY_MEMBERS)
 
       if (latestMemberList) {
         return latestMemberList.tags
@@ -821,7 +821,7 @@ export const deriveRelayMembership = (url: string) =>
 
       const membershipList = new Set()
 
-      for (const event of events) {
+      for (const event of $events) {
         switch (event.kind) {
           case RELAY_ADD_USER:
             membershipList.add(getTagValue("p", event.tags))
