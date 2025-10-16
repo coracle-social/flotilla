@@ -5,7 +5,7 @@
   import {readable} from "svelte/store"
   import {now, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {makeEvent, getTag, MESSAGE, DELETE} from "@welshman/util"
+  import {makeEvent, MESSAGE, DELETE} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
@@ -153,10 +153,6 @@
 
       for (const event of $events.toReversed()) {
         if (seen.has(event.id)) {
-          continue
-        }
-
-        if (getTag("h", event.tags)) {
           continue
         }
 
