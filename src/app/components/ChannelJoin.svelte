@@ -70,8 +70,7 @@
         </div>
       {/if}
       <div class="text-sm">
-        <!-- <Content minimalQuote {event} {url} /> -->
-        <span class="text-red-500">joined {roomName || "the conversation"}</span>
+        <span class="italic">{roomName ? `joined #${roomName}` : "joined the conversation"}</span>
         {#if thunk}
           <ThunkFailure showToastOnRetry {thunk} class="mt-2" />
         {/if}

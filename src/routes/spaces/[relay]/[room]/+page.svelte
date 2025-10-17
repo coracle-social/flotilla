@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {get, readable} from "svelte/store"
+  import {readable} from "svelte/store"
   import {onMount, onDestroy} from "svelte"
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
@@ -16,14 +16,7 @@
     ROOM_ADD_USER,
     ROOM_REMOVE_USER,
   } from "@welshman/util"
-  import {
-    pubkey,
-    publishThunk,
-    waitForThunkError,
-    joinRoom,
-    leaveRoom,
-    deriveProfileDisplay,
-  } from "@welshman/app"
+  import {pubkey, publishThunk, waitForThunkError, joinRoom, leaveRoom} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
@@ -244,7 +237,7 @@
         } else if (event.kind === ROOM_ADD_USER) {
           elements.push({
             type: "new-user",
-            id: "new-user",
+            id: event.id,
             value: event,
             showPubkey: true,
             pubkey: event.pubkey,
@@ -414,7 +407,7 @@
         </div>
       {:else if type === "new-user"}
         <div>
-          <ChannelJoin url event={value as TrustedEvent} />
+          <ChannelJoin {url} event={value as TrustedEvent} roomName={$channel?.name} {showPubkey} />
         </div>
       {:else if type === "date"}
         <Divider>{value}</Divider>
