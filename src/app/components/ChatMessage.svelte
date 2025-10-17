@@ -2,7 +2,14 @@
   import {type Instance} from "tippy.js"
   import {hash, formatTimestampAsTime} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {thunks, pubkey, deriveProfile, deriveProfileDisplay, sendWrapped} from "@welshman/app"
+  import {
+    thunks,
+    mergeThunks,
+    pubkey,
+    deriveProfile,
+    deriveProfileDisplay,
+    sendWrapped,
+  } from "@welshman/app"
   import {isMobile} from "@lib/html"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -29,19 +36,19 @@
 
   const {event, replyTo, pubkeys, showPubkey = false}: Props = $props()
 
-  const thunk = $thunks[event.id]
   const isOwn = event.pubkey === $pubkey
   const profile = deriveProfile(event.pubkey)
   const profileDisplay = deriveProfileDisplay(event.pubkey)
+  const thunk = mergeThunks($thunks.filter(t => t.event.id === event.id))
   const [_, colorValue] = colors[parseInt(hash(event.pubkey)) % colors.length]
 
   const reply = () => replyTo(event)
 
   const deleteReaction = (event: TrustedEvent) =>
-    sendWrapped({template: makeDelete({event, protect: false}), pubkeys})
+    sendWrapped({event: makeDelete({event, protect: false}), recipients: pubkeys})
 
   const createReaction = (template: EventContent) =>
-    sendWrapped({template: makeReaction({event, protect: false, ...template}), pubkeys})
+    sendWrapped({event: makeReaction({event, protect: false, ...template}), recipients: pubkeys})
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey})
 

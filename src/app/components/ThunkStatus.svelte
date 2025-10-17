@@ -1,11 +1,11 @@
 <script lang="ts">
-  import {MergedThunk, thunkIsComplete, getFailedThunkUrls} from "@welshman/app"
-  import type {Thunk} from "@welshman/app"
+  import type {AbstractThunk} from "@welshman/app"
+  import {thunkIsComplete, getFailedThunkUrls} from "@welshman/app"
   import ThunkFailure from "@app/components/ThunkFailure.svelte"
   import ThunkPending from "@app/components/ThunkPending.svelte"
 
   interface Props {
-    thunk: Thunk | MergedThunk
+    thunk: AbstractThunk
     class?: string
   }
 

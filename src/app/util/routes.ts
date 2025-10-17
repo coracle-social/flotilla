@@ -17,7 +17,6 @@ import {
   getPubkeyTagValues,
 } from "@welshman/util"
 import {
-  ensureUnwrapped,
   makeChatId,
   entityLink,
   decodeRelay,
@@ -85,20 +84,16 @@ export const getPrimaryNavItemIndex = ($page: Page) => {
 }
 
 export const goToEvent = async (event: TrustedEvent, options: Record<string, any> = {}) => {
-  const unwrapped = await ensureUnwrapped(event)
+  const urls = Array.from(tracker.getRelays(event.id))
+  const path = await getEventPath(event, urls)
 
-  if (unwrapped) {
-    const urls = Array.from(tracker.getRelays(unwrapped.id))
-    const path = await getEventPath(unwrapped, urls)
+  if (path.includes("://")) {
+    window.open(path)
+  } else {
+    goto(path, options)
 
-    if (path.includes("://")) {
-      window.open(path)
-    } else {
-      goto(path, options)
-
-      await sleep(300)
-      await scrollToEvent(unwrapped.id)
-    }
+    await sleep(300)
+    await scrollToEvent(event.id)
   }
 }
 

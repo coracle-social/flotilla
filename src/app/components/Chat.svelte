@@ -11,6 +11,7 @@
     MINUTE,
     sortBy,
     remove,
+    enumerate,
     formatTimestampAsDate,
   } from "@welshman/lib"
   import type {TrustedEvent, EventTemplate, EventContent} from "@welshman/util"
@@ -30,7 +31,6 @@
     loadInboxRelaySelections,
     inboxRelaySelectionsByPubkey,
   } from "@welshman/app"
-  import type {AbstractThunk} from "@welshman/app"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
@@ -126,14 +126,13 @@
 
     // Split the message into multiple pieces so that we can use kind 15 to send images per nip 17
     // Sleep 1 second between each one to make sure timestamps are distinct
-    const thunks: AbstractThunk[] = []
-    for (let i = 0; i < templates.length; i++) {
-      const template = templates[i]
-
-      thunks.push(
-        await sendWrapped({pubkeys, template, delay: $userSettingsValues.send_delay + ms(i)}),
-      )
-    }
+    const thunks = Array.from(enumerate(templates)).map(([i, event]) =>
+      sendWrapped({
+        event,
+        recipients: pubkeys,
+        delay: $userSettingsValues.send_delay + ms(i),
+      }),
+    )
 
     pushToast({
       timeout: 30_000,

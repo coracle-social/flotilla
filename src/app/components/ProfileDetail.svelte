@@ -1,5 +1,6 @@
 <script lang="ts">
   import {goto} from "$app/navigation"
+  import {shouldUnwrap} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -11,7 +12,7 @@
   import ProfileInfo from "@app/components/ProfileInfo.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
   import ChatEnable from "@app/components/ChatEnable.svelte"
-  import {canDecrypt, pubkeyLink} from "@app/core/state"
+  import {pubkeyLink} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {makeChatPath} from "@app/util/routes"
 
@@ -26,7 +27,7 @@
 
   const chatPath = makeChatPath([pubkey])
 
-  const openChat = () => ($canDecrypt ? goto(chatPath) : pushModal(ChatEnable, {next: chatPath}))
+  const openChat = () => ($shouldUnwrap ? goto(chatPath) : pushModal(ChatEnable, {next: chatPath}))
 </script>
 
 <div class="flex flex-col gap-4">

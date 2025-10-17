@@ -27,14 +27,7 @@ import {
 } from "@welshman/lib"
 import type {Socket} from "@welshman/net"
 import {Pool, load, AuthStateEvent, AuthStatus, SocketEvent, netContext} from "@welshman/net"
-import {
-  collection,
-  custom,
-  deriveEvents,
-  deriveEventsMapped,
-  withGetter,
-  synced,
-} from "@welshman/store"
+import {collection, custom, deriveEvents, deriveEventsMapped, withGetter} from "@welshman/store"
 import {isKindFeed, findFeed} from "@welshman/feeds"
 import {
   getIdFilters,
@@ -68,7 +61,6 @@ import {
   getGroupTags,
   getRelayTagValues,
   getPubkeyTagValues,
-  isHashedEvent,
   displayProfile,
   readList,
   getListTags,
@@ -82,8 +74,8 @@ import {
   RelayMode,
   getRelaysFromList,
 } from "@welshman/util"
-import type {TrustedEvent, SignedEvent, PublishedList, List, Filter} from "@welshman/util"
-import {Nip59, decrypt} from "@welshman/signer"
+import type {TrustedEvent, PublishedList, List, Filter} from "@welshman/util"
+import {decrypt} from "@welshman/signer"
 import {routerContext, Router} from "@welshman/router"
 import {
   pubkey,
@@ -92,14 +84,10 @@ import {
   tracker,
   makeTrackerStore,
   makeRepositoryStore,
-  relay,
-  getSession,
-  getSigner,
   createSearch,
   userFollows,
   ensurePlaintext,
   thunks,
-  flattenThunks,
   signer,
   makeOutboxLoader,
   appContext,
@@ -109,7 +97,6 @@ import {
   userInboxRelaySelections,
 } from "@welshman/app"
 import type {Thunk, Relay} from "@welshman/app"
-import {preferencesStorageProvider} from "@src/lib/storage"
 
 export const fromCsv = (s: string) => (s || "").split(",").filter(identity)
 
@@ -195,46 +182,6 @@ export const defaultPubkeys = derived(userFollows, $userFollows => {
   return userPubkeys.length > 5 ? userPubkeys : [...userPubkeys, ...appPubkeys]
 })
 
-const failedUnwraps = new Set()
-
-export const ensureUnwrapped = async (event: TrustedEvent) => {
-  if (event.kind !== WRAP) {
-    return event
-  }
-
-  let rumor = repository.eventsByWrap.get(event.id)
-
-  if (rumor || failedUnwraps.has(event.id)) {
-    return rumor
-  }
-
-  for (const recipient of getPubkeyTagValues(event.tags)) {
-    const session = getSession(recipient)
-    const signer = getSigner(session)
-
-    if (signer) {
-      try {
-        rumor = await Nip59.fromSigner(signer).unwrap(event as SignedEvent)
-        break
-      } catch (e) {
-        // pass
-      }
-    }
-  }
-
-  if (rumor && isHashedEvent(rumor)) {
-    // Copy urls over to the rumor
-    tracker.copy(event.id, rumor.id)
-
-    // Send the rumor via our relay so listeners get updated
-    relay.send("EVENT", rumor)
-  } else {
-    failedUnwraps.add(event.id)
-  }
-
-  return rumor
-}
-
 export const trackerStore = makeTrackerStore()
 
 export const repositoryStore = makeRepositoryStore()
@@ -262,7 +209,7 @@ export const getUrlsForEvent = derived([trackerStore, thunks], ([$tracker, $thun
   const getThunksByEventId = memoize(() => {
     const thunksByEventId = new Map<string, Thunk[]>()
 
-    for (const thunk of flattenThunks(Object.values($thunks))) {
+    for (const thunk of $thunks) {
       pushToMapKey(thunksByEventId, thunk.event.id, thunk)
     }
 
@@ -285,7 +232,7 @@ export const getUrlsForEvent = derived([trackerStore, thunks], ([$tracker, $thun
 export const getEventsForUrl = (url: string, filters: Filter[]) => {
   const ids = uniq([
     ...tracker.getIds(url),
-    ...Array.from(flattenThunks(Object.values(get(thunks))))
+    ...get(thunks)
       .filter(t => t.options.relays.includes(url))
       .map(t => t.event.id),
   ])
@@ -297,9 +244,7 @@ export const deriveEventsForUrl = (url: string, filters: Filter[]) =>
   derived([trackerStore, thunks], ([$tracker, $thunks]) => {
     const ids = uniq([
       ...$tracker.getIds(url),
-      ...Array.from(flattenThunks(Object.values($thunks)))
-        .filter(t => t.options.relays.includes(url))
-        .map(t => t.event.id),
+      ...$thunks.filter(t => t.options.relays.includes(url)).map(t => t.event.id),
     ])
 
     return repository.query(filters.map(assoc("ids", ids)))
@@ -335,12 +280,6 @@ export const MESSAGE_FILTER = {kinds: MESSAGE_KINDS}
 export const COMMENT_FILTER = makeCommentFilter(MESSAGE_KINDS)
 
 // Settings
-
-export const canDecrypt = synced({
-  key: "canDecrypt",
-  defaultValue: false,
-  storage: preferencesStorageProvider,
-})
 
 export const SETTINGS = "flotilla/settings"
 
@@ -555,11 +494,6 @@ export const chats = derived(
     const messagesByChatId = new Map<string, TrustedEvent[]>()
 
     for (const message of $messages) {
-      // Filter out messages we sent but aren't addressed to the user
-      if (!getPubkeyTagValues(message.wrap?.tags || []).includes($pubkey!)) {
-        continue
-      }
-
       const chatId = makeChatId(getPubkeyTagValues(message.tags).concat(message.pubkey))
 
       pushToMapKey(messagesByChatId, chatId, message)

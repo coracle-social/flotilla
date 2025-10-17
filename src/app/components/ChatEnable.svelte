@@ -1,6 +1,7 @@
 <script lang="ts">
   import {goto} from "$app/navigation"
   import {preventDefault} from "@lib/html"
+  import {shouldUnwrap} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -9,7 +10,6 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {PLATFORM_NAME} from "@app/core/state"
-  import {enableGiftWraps} from "@app/core/commands"
   import {clearModals} from "@app/util/modal"
 
   const {next} = $props()
@@ -18,17 +18,13 @@
 
   let loading = $state(false)
 
-  const enableChat = async () => {
-    enableGiftWraps()
-    clearModals()
-    goto(nextUrl)
-  }
-
   const submit = async () => {
     loading = true
 
     try {
-      await enableChat()
+      shouldUnwrap.set(true)
+      clearModals()
+      goto(nextUrl)
     } finally {
       loading = false
     }

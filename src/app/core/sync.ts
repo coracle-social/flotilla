@@ -39,6 +39,7 @@ import {
   loadMutes,
   loadProfile,
   repository,
+  shouldUnwrap,
   hasNegentropy,
 } from "@welshman/app"
 import {
@@ -46,7 +47,6 @@ import {
   COMMENT_FILTER,
   INDEXER_RELAYS,
   REACTION_KINDS,
-  canDecrypt,
   loadSettings,
   userMembership,
   defaultPubkeys,
@@ -334,14 +334,14 @@ const syncDMs = () => {
   }
 
   // When pubkey changes, re-sync
-  const unsubscribePubkey = derived([pubkey, canDecrypt], identity).subscribe(
-    ([$pubkey, $canDecrypt]) => {
+  const unsubscribePubkey = derived([pubkey, shouldUnwrap], identity).subscribe(
+    ([$pubkey, $shouldUnwrap]) => {
       if ($pubkey !== currentPubkey) {
         unsubscribeAll()
       }
 
       // If we have a pubkey, refresh our user's relay selections then sync our subscriptions
-      if ($pubkey && $canDecrypt) {
+      if ($pubkey && $shouldUnwrap) {
         loadRelaySelections($pubkey)
           .then(() => loadInboxRelaySelections($pubkey))
           .then($l => subscribeAll($pubkey, getRelayTagValues(getListTags($l))))
@@ -352,11 +352,12 @@ const syncDMs = () => {
   )
 
   // When user inbox relays change, update synchronization
-  const unsubscribeSelections = userInboxRelaySelections.subscribe($l => {
+  const unsubscribeSelections = userInboxRelaySelections.subscribe($userInboxRelaySelections => {
     const $pubkey = pubkey.get()
+    const $shouldUnwrap = shouldUnwrap.get()
 
-    if ($pubkey && $l) {
-      subscribeAll($pubkey, getRelayTagValues(getListTags($l)))
+    if ($pubkey && $shouldUnwrap) {
+      subscribeAll($pubkey, getRelayTagValues(getListTags($userInboxRelaySelections)))
     }
   })
 

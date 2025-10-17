@@ -3,7 +3,7 @@
   import {page} from "$app/stores"
   import {goto} from "$app/navigation"
   import {splitAt} from "@welshman/lib"
-  import {userProfile} from "@welshman/app"
+  import {userProfile, shouldUnwrap} from "@welshman/app"
   import Avatar from "@lib/components/Avatar.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
@@ -13,7 +13,7 @@
   import MenuOtherSpaces from "@app/components/MenuOtherSpaces.svelte"
   import MenuSettings from "@app/components/MenuSettings.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
-  import {userRoomsByUrl, canDecrypt, PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/state"
+  import {userRoomsByUrl, PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {makeSpacePath} from "@app/util/routes"
   import {notifications} from "@app/util/notifications"
@@ -37,7 +37,7 @@
 
   const showSettingsMenu = () => pushModal(MenuSettings)
 
-  const openChat = () => ($canDecrypt ? goto("/chat") : pushModal(ChatEnable, {next: "/chat"}))
+  const openChat = () => ($shouldUnwrap ? goto("/chat") : pushModal(ChatEnable, {next: "/chat"}))
 
   const hasNotification = (url: string) => {
     const path = makeSpacePath(url)

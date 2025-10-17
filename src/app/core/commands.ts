@@ -90,6 +90,7 @@ import {
   waitForThunkError,
   getPubkeyRelays,
   userBlossomServers,
+  shouldUnwrap,
 } from "@welshman/app"
 import {compressFile} from "@src/lib/html"
 import type {SettingsValues, Alert} from "@app/core/state"
@@ -103,8 +104,6 @@ import {
   DEFAULT_BLOSSOM_SERVERS,
   userRoomsByUrl,
   userSettingsValues,
-  canDecrypt,
-  ensureUnwrapped,
   userInboxRelays,
   getMembershipUrls,
 } from "@app/core/state"
@@ -593,8 +592,8 @@ export const createAlert = async (params: CreateAlertParams): Promise<CreateAler
 }
 
 export const createDmAlert = async () => {
-  if (!get(canDecrypt)) {
-    enableGiftWraps()
+  if (!shouldUnwrap.get()) {
+    shouldUnwrap.set(true)
   }
 
   return createAlert({
@@ -655,16 +654,6 @@ export const payInvoice = async (invoice: string) => {
     return getWebLn()
       .enable()
       .then(() => getWebLn().sendPayment(invoice))
-  }
-}
-
-// Gift Wraps
-
-export const enableGiftWraps = () => {
-  canDecrypt.set(true)
-
-  for (const event of repository.query([{kinds: [WRAP]}])) {
-    ensureUnwrapped(event)
   }
 }
 

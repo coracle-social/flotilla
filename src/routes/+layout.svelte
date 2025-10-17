@@ -8,10 +8,9 @@
   import {App, type URLOpenListenerEvent} from "@capacitor/app"
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
-  import {sync, localStorageProvider} from "@welshman/store"
-  import {assoc, call, defer, dissoc, on, sleep, spec, TaskQueue} from "@welshman/lib"
-  import type {TrustedEvent, StampedEvent} from "@welshman/util"
-  import {WRAP} from "@welshman/util"
+  import {sync} from "@welshman/store"
+  import {assoc, call, defer, dissoc, on, sleep, spec} from "@welshman/lib"
+  import type {StampedEvent} from "@welshman/util"
   import {Nip46Broker, makeSecret} from "@welshman/signer"
   import type {Socket, RelayMessage, ClientMessage} from "@welshman/net"
   import {
@@ -33,6 +32,7 @@
     signer,
     signerLog,
     dropSession,
+    shouldUnwrap,
     loginWithNip01,
     loginWithNip46,
     loadRelaySelections,
@@ -55,8 +55,6 @@
   import {
     userSettingsValues,
     relaysPendingTrust,
-    ensureUnwrapped,
-    canDecrypt,
     getSetting,
     relaysMostlyRestricted,
   } from "@app/core/state"
@@ -105,44 +103,6 @@
       ...requests,
       ...notifications,
     })
-
-    // migrate from localStorage to capacitor Preferences storage if needed
-    const runMigration = async () => {
-      const isSome = (item: any) => {
-        return item !== undefined && item !== null && item !== ""
-      }
-
-      const localStoragePubKey = await localStorageProvider.get("pubkey")
-      if (isSome(localStoragePubKey)) {
-        await preferencesStorageProvider.set("pubkey", localStoragePubKey)
-        localStorage.removeItem("pubkey")
-      }
-
-      const localStorageSessions = await localStorageProvider.get("sessions")
-      if (isSome(localStorageSessions)) {
-        await preferencesStorageProvider.set("sessions", localStorageSessions)
-        localStorage.removeItem("sessions")
-      }
-
-      const localStorageCanDecrypt = await localStorageProvider.get("canDecrypt")
-      if (isSome(localStorageCanDecrypt)) {
-        await preferencesStorageProvider.set("canDecrypt", localStorageCanDecrypt)
-        localStorage.removeItem("canDecrypt")
-      }
-
-      const localStorageChecked = await localStorageProvider.get("checked")
-      if (isSome(localStorageChecked)) {
-        await preferencesStorageProvider.set("checked", localStorageChecked)
-        localStorage.removeItem("checked")
-      }
-
-      const localStorageTheme = await localStorageProvider.get("theme")
-      if (isSome(localStorageTheme)) {
-        await preferencesStorageProvider.set("theme", localStorageTheme)
-        localStorage.removeItem("theme")
-      }
-    }
-    await runMigration()
 
     // Listen for navigation messages from service worker
     navigator.serviceWorker?.addEventListener("message", event => {
@@ -217,16 +177,9 @@
         }
       })
 
-      // Unwrap gift wraps as they come in, but throttled
-      const unwrapper = new TaskQueue<TrustedEvent>({batchSize: 10, processItem: ensureUnwrapped})
-
       repository.on("update", ({added}) => {
         for (const event of added) {
           loadRelaySelections(event.pubkey)
-
-          if ($canDecrypt && event.kind === WRAP) {
-            unwrapper.push(event)
-          }
         }
       })
 
@@ -241,6 +194,13 @@
       await sync({
         key: "sessions",
         store: sessions,
+        storage: preferencesStorageProvider,
+      })
+
+      // Sync shouldUnwrap
+      await sync({
+        key: "shouldUnwrap",
+        store: shouldUnwrap,
         storage: preferencesStorageProvider,
       })
 

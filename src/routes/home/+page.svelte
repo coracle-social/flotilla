@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {goto} from "$app/navigation"
+  import {shouldUnwrap} from "@welshman/app"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Compass from "@assets/icons/compass.svg?dataurl"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
@@ -12,11 +13,11 @@
   import ChatEnable from "@app/components/ChatEnable.svelte"
   import {pushModal} from "@app/util/modal"
   import {makeSpacePath} from "@app/util/routes"
-  import {PLATFORM_NAME, PLATFORM_RELAYS, canDecrypt} from "@app/core/state"
+  import {PLATFORM_NAME, PLATFORM_RELAYS} from "@app/core/state"
 
   const addSpace = () => pushModal(SpaceAdd)
 
-  const openChat = () => ($canDecrypt ? goto("/chat") : pushModal(ChatEnable, {next: "/chat"}))
+  const openChat = () => ($shouldUnwrap ? goto("/chat") : pushModal(ChatEnable, {next: "/chat"}))
 
   onMount(() => {
     if (PLATFORM_RELAYS.length > 0) {

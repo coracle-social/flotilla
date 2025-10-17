@@ -33,7 +33,7 @@ import {
   verifiedSymbol,
 } from "@welshman/util"
 import type {Zapper, TrustedEvent} from "@welshman/util"
-import type {RepositoryUpdate} from "@welshman/relay"
+import type {RepositoryUpdate, WrapItem} from "@welshman/net"
 import type {Handle, Relay} from "@welshman/app"
 import {
   plaintext,
@@ -44,6 +44,7 @@ import {
   zappers,
   onZapper,
   onHandle,
+  wrapManager,
 } from "@welshman/app"
 import {Collection} from "@lib/storage"
 
@@ -258,6 +259,28 @@ const syncPlaintext = async () => {
   })
 }
 
+const syncWrapManager = async () => {
+  const collection = new Collection<WrapItem>({
+    table: "wraps",
+    shards: Array.from("0123456789abcdef"),
+    getShard: (item: WrapItem) => last(hash(item.id)),
+  })
+
+  wrapManager.load(await collection.get())
+
+  const addOne = batch(3000, (wrapItems: WrapItem[]) => collection.add(wrapItems))
+
+  const updateAll = throttle(3000, () => collection.set(wrapManager.dump()))
+
+  wrapManager.on("add", addOne)
+  wrapManager.on("remove", updateAll)
+
+  return () => {
+    wrapManager.off("add", addOne)
+    wrapManager.off("remove", updateAll)
+  }
+}
+
 export const syncDataStores = () =>
   Promise.all([
     syncEvents(),
@@ -267,4 +290,5 @@ export const syncDataStores = () =>
     syncZappers(),
     syncFreshness(),
     syncPlaintext(),
+    syncWrapManager(),
   ])

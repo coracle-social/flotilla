@@ -1,14 +1,8 @@
 <script lang="ts">
   import {stopPropagation} from "svelte/legacy"
   import {noop} from "@welshman/lib"
-  import {
-    MergedThunk,
-    publishThunk,
-    isMergedThunk,
-    thunkIsComplete,
-    getFailedThunkUrls,
-  } from "@welshman/app"
-  import type {Thunk} from "@welshman/app"
+  import type {AbstractThunk} from "@welshman/app"
+  import {retryThunk, thunkIsComplete, getFailedThunkUrls} from "@welshman/app"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
@@ -17,7 +11,7 @@
   import {pushToast} from "@app/util/toast"
 
   interface Props {
-    thunk: Thunk | MergedThunk
+    thunk: AbstractThunk
     showToastOnRetry?: boolean
     class?: string
   }
@@ -25,9 +19,7 @@
   let {thunk, showToastOnRetry, ...restProps}: Props = $props()
 
   const retry = () => {
-    thunk = isMergedThunk(thunk)
-      ? new MergedThunk(thunk.thunks.map(t => publishThunk(t.options)))
-      : publishThunk(thunk.options)
+    thunk = retryThunk(thunk)
 
     if (showToastOnRetry) {
       pushToast({

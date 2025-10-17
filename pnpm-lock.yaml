@@ -72,38 +72,35 @@ importers:
         specifier: ^0.6.8
         version: 0.6.8(@sveltejs/kit@2.46.5(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.39.12)(vite@5.4.20(@types/node@24.7.2)(terser@5.44.0)))(svelte@5.39.12)(vite@5.4.20(@types/node@24.7.2)(terser@5.44.0)))(@vite-pwa/assets-generator@0.2.6)(vite-plugin-pwa@0.21.2(@vite-pwa/assets-generator@0.2.6)(vite@5.4.20(@types/node@24.7.2)(terser@5.44.0))(workbox-build@7.3.0)(workbox-window@7.3.0))
       '@welshman/app':
-        specifier: ^0.5.3
-        version: 0.5.3(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
+        specifier: ^0.6.0
+        version: 0.6.0(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
       '@welshman/content':
-        specifier: ^0.5.3
-        version: 0.5.3(typescript@5.9.3)
+        specifier: ^0.6.0
+        version: 0.6.0(typescript@5.9.3)
       '@welshman/editor':
-        specifier: ^0.5.3
-        version: 0.5.3(@tiptap/extension-image@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))(@tiptap/extension-link@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))(@tiptap/pm@2.26.3))(linkifyjs@4.3.2)(prosemirror-markdown@1.13.2)(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.3)(tiptap-markdown@0.8.10(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))(typescript@5.9.3)
+        specifier: ^0.6.0
+        version: 0.6.0(@tiptap/extension-image@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))(@tiptap/extension-link@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))(@tiptap/pm@2.26.3))(linkifyjs@4.3.2)(prosemirror-markdown@1.13.2)(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.3)(tiptap-markdown@0.8.10(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))(typescript@5.9.3)
       '@welshman/feeds':
-        specifier: ^0.5.3
-        version: 0.5.3(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
+        specifier: ^0.6.0
+        version: 0.6.0(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
       '@welshman/lib':
-        specifier: ^0.5.3
-        version: 0.5.3
+        specifier: ^0.6.0
+        version: 0.6.0
       '@welshman/net':
-        specifier: ^0.5.3
-        version: 0.5.3(typescript@5.9.3)(ws@8.18.3)
-      '@welshman/relay':
-        specifier: ^0.5.3
-        version: 0.5.3(typescript@5.9.3)
+        specifier: ^0.6.0
+        version: 0.6.0(typescript@5.9.3)(ws@8.18.3)
       '@welshman/router':
-        specifier: ^0.5.3
-        version: 0.5.3(typescript@5.9.3)
+        specifier: ^0.6.0
+        version: 0.6.0(typescript@5.9.3)(ws@8.18.3)
       '@welshman/signer':
-        specifier: ^0.5.3
-        version: 0.5.3(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
+        specifier: ^0.6.0
+        version: 0.6.0(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
       '@welshman/store':
-        specifier: ^0.5.3
-        version: 0.5.3(typescript@5.9.3)
+        specifier: ^0.6.0
+        version: 0.6.0(typescript@5.9.3)(ws@8.18.3)
       '@welshman/util':
-        specifier: ^0.5.3
-        version: 0.5.3(typescript@5.9.3)
+        specifier: ^0.6.0
+        version: 0.6.0(typescript@5.9.3)
       compressorjs:
         specifier: ^1.2.1
         version: 1.2.1
@@ -132,7 +129,7 @@ importers:
         specifier: ^0.0.4
         version: 0.0.4(@capacitor/core@7.4.3)
       nostr-tools:
-        specifier: ^2.17.0
+        specifier: ^2.14.2
         version: 2.17.0(typescript@5.9.3)
       prettier-plugin-tailwindcss:
         specifier: ^0.6.14
@@ -1695,41 +1692,38 @@ packages:
       '@vite-pwa/assets-generator':
         optional: true
 
-  '@welshman/app@0.5.3':
-    resolution: {integrity: sha512-uygqUotknMYPEE7jkpBEWJXEfwHrowbMYuR1TygdqqKIWv/BzlZ7HO/infIHZHWy1xuR/9gEFhEY1sukxkNEow==}
+  '@welshman/app@0.6.0':
+    resolution: {integrity: sha512-izbI6581NvadR8ACLGnqzyS0iTl7qLwv+hHodsoNSqEQ3/Wo0fEyOyxPhgQkJv1BgVRLPgJ1x31dNsSGl6sCsw==}
 
-  '@welshman/content@0.5.3':
-    resolution: {integrity: sha512-o4zQReYP0dcE6ofom0nEbYqSBe+dlNdQAQ3LcaRY2Bgm+IG8mPtT8FZ6SFnAHJOG215MW5uQ8eUuqOtSKzlYcg==}
+  '@welshman/content@0.6.0':
+    resolution: {integrity: sha512-Db3NdHk8oyITtH1YjTHIlcMfnfCqEuwmMTTDqwMwJ+Lj1yrLHzd+D36+MS36gVfUgxYu/CvV2LP8Hui25J/RDA==}
 
-  '@welshman/editor@0.5.3':
-    resolution: {integrity: sha512-rIm3WquSVcBDwaa0tI9ppBHnEEHifPWAy6kTks1M2ZLUNrhyBMMCqsjEIJiWEmP7uVuzvsSH3LDk/Bs+tYUPcg==}
+  '@welshman/editor@0.6.0':
+    resolution: {integrity: sha512-JQURL22IE4sbjD7PnLVscY9WIXFQMoXL9JblNsVh+NHR/YtCSH8n++NxW2k4wqWeCbp/gEZYrBIVEIwBuvONbw==}
 
-  '@welshman/feeds@0.5.3':
-    resolution: {integrity: sha512-ilE6Ui+nKlV+fyk8MDd+3fx5xU/K5hOLM5p0idE+cLeA0th2IanKm4JRS5vz9p/Niox4XhyvuaCxVNRLxXZ4zg==}
+  '@welshman/feeds@0.6.0':
+    resolution: {integrity: sha512-NmNQDKQrKrEsa5q3TqPgHUkdvIbtq9jo1kN6HCZr8A+sK7vteuOZuwm7YGdNRlfJOwoDG1Edc0HKzNmtQA/wHA==}
 
-  '@welshman/lib@0.5.3':
-    resolution: {integrity: sha512-XElYDyJhuHLHwJdaoTKdq9a+evUoFxqguTh18cIOpsp55f8FOVcmF67PN3YZ7p/PTt6d3kWh7jQ2AIo3yJIPQg==}
+  '@welshman/lib@0.6.0':
+    resolution: {integrity: sha512-clW0W7hqo0/HyoCd8xYAWmAMuWEZQERVmnyYA/6os5ZJDZYq9oSDL/AanYQnB8rme2XoZjxUgDZEhRz8cPFvRQ==}
     engines: {node: '>=12.0.0'}
 
-  '@welshman/net@0.5.3':
-    resolution: {integrity: sha512-XhGwkG35LuLo38pFJmkEa1/D0DaMP83KziZ9F0VMVDNOSgSCkLBuANbcCeZWcNuKNb/EwlvzJZLWA0ywqyq+1g==}
+  '@welshman/net@0.6.0':
+    resolution: {integrity: sha512-ZNyIKaDfZd2gpoVLVPnvuFsqM+bhgSA7XTlT0KHytTeRHQ8aYAkTMKGUgxASAISAqwX84HcNhoKQODP+4YgFow==}
 
-  '@welshman/relay@0.5.3':
-    resolution: {integrity: sha512-AWWDQ01TPMsakuET+hkarBQeeqk20mcKk4fmeR/bEUZWSGCDbCK6pD1L1ozilJ5dQKTmWrSzHGe+jJU4sFvZNw==}
+  '@welshman/router@0.6.0':
+    resolution: {integrity: sha512-6g/pPQrSwDW0LXvGlrg+TvLkpJ7zNkW/qrnPKQYH591dOqB+z6LQ6hstI4m+FJBBB9a9qjx2gnzptUMKkesHow==}
 
-  '@welshman/router@0.5.3':
-    resolution: {integrity: sha512-abowfhW14vDBZFcDZuTAj4ktIJyfmOkAWlkXAD3g1mu2amoJ0LZ2jDro8GEFa+qUv2dnxLh0yILdv/89SzUguA==}
-
-  '@welshman/signer@0.5.3':
-    resolution: {integrity: sha512-XlXtVpF5Mj4bmYtf32p1eRCsBK3o8e+lfBFJ7kXIU0FWmZHVtOnl7+ZjU5SCRqREG4zmzn6Ad0G/JA4kYJMIWw==}
+  '@welshman/signer@0.6.0':
+    resolution: {integrity: sha512-uQqapz9kMm0CaUrvXxDHo5Hao/jmUQLnd9dEoBJ1a6WbNolzCu9eaa3fue78MIxujEHBq3KKGPsp1KFH6MXBhg==}
     peerDependencies:
       nostr-signer-capacitor-plugin: ~0.0.4
 
-  '@welshman/store@0.5.3':
-    resolution: {integrity: sha512-VB2r0NASwnFxzm/Io1qZ73yD3lHA8wEEjmlHOnH0FXNp/UNlJKGREWsgsjbLH/A+04lCjsMv2QmlkW2NqCBS/A==}
+  '@welshman/store@0.6.0':
+    resolution: {integrity: sha512-sCxIrBPw9lOtvM0C3cm+a62LmgAJZkLtoZOzHgU7WQU5z4xIskYUwCzFIT6YuZdewRXNV86JF6uOfWC6Ff+J4w==}
 
-  '@welshman/util@0.5.3':
-    resolution: {integrity: sha512-avMOK1AcO3V9qTQP+oAl4pgTdquD86Fkey74f1WOOu3BZRVgWN7LjBQCecszW9BQMg/TH4mUk2PuSqSoPy8zSw==}
+  '@welshman/util@0.6.0':
+    resolution: {integrity: sha512-ll4mOff5ujIN55FhvvrFnHNrVmEepswmuDaEW9HC/UlIgmEc3By6wq83OX8/fdJxUhU98wXV6XXHsM14UCpMZg==}
 
   '@xml-tools/parser@1.0.11':
     resolution: {integrity: sha512-aKqQ077XnR+oQtHJlrAflaZaL7qZsulWc/i/ZEooar5JiWj1eLt0+Wg28cpa+XLney107wXqneC+oG1IZvxkTA==}
@@ -6210,12 +6204,12 @@ snapshots:
   '@scure/bip32@1.3.1':
     dependencies:
       '@noble/curves': 1.1.0
-      '@noble/hashes': 1.3.1
+      '@noble/hashes': 1.3.2
       '@scure/base': 1.1.1
 
   '@scure/bip39@1.2.1':
     dependencies:
-      '@noble/hashes': 1.3.1
+      '@noble/hashes': 1.3.2
       '@scure/base': 1.1.1
 
   '@sentry-internal/browser-utils@8.55.0':
@@ -6657,17 +6651,16 @@ snapshots:
     optionalDependencies:
       '@vite-pwa/assets-generator': 0.2.6
 
-  '@welshman/app@0.5.3(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)':
+  '@welshman/app@0.6.0(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)':
     dependencies:
       '@types/throttle-debounce': 5.0.2
-      '@welshman/feeds': 0.5.3(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
-      '@welshman/lib': 0.5.3
-      '@welshman/net': 0.5.3(typescript@5.9.3)(ws@8.18.3)
-      '@welshman/relay': 0.5.3(typescript@5.9.3)
-      '@welshman/router': 0.5.3(typescript@5.9.3)
-      '@welshman/signer': 0.5.3(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
-      '@welshman/store': 0.5.3(typescript@5.9.3)
-      '@welshman/util': 0.5.3(typescript@5.9.3)
+      '@welshman/feeds': 0.6.0(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/lib': 0.6.0
+      '@welshman/net': 0.6.0(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/router': 0.6.0(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/signer': 0.6.0(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/store': 0.6.0(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/util': 0.6.0(typescript@5.9.3)
       fuse.js: 7.1.0
       svelte: 4.2.20
       throttle-debounce: 5.0.2
@@ -6676,14 +6669,14 @@ snapshots:
       - typescript
       - ws
 
-  '@welshman/content@0.5.3(typescript@5.9.3)':
+  '@welshman/content@0.6.0(typescript@5.9.3)':
     dependencies:
       '@braintree/sanitize-url': 7.1.1
       nostr-tools: 2.17.0(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
-  '@welshman/editor@0.5.3(@tiptap/extension-image@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))(@tiptap/extension-link@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))(@tiptap/pm@2.26.3))(linkifyjs@4.3.2)(prosemirror-markdown@1.13.2)(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.3)(tiptap-markdown@0.8.10(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))(typescript@5.9.3)':
+  '@welshman/editor@0.6.0(@tiptap/extension-image@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))(@tiptap/extension-link@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))(@tiptap/pm@2.26.3))(linkifyjs@4.3.2)(prosemirror-markdown@1.13.2)(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.3)(tiptap-markdown@0.8.10(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))(typescript@5.9.3)':
     dependencies:
       '@tiptap/core': 2.26.3(@tiptap/pm@2.26.3)
       '@tiptap/extension-code': 2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))
@@ -6698,8 +6691,8 @@ snapshots:
       '@tiptap/extension-text': 2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))
       '@tiptap/pm': 2.26.3
       '@tiptap/suggestion': 2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))(@tiptap/pm@2.26.3)
-      '@welshman/lib': 0.5.3
-      '@welshman/util': 0.5.3(typescript@5.9.3)
+      '@welshman/lib': 0.6.0
+      '@welshman/util': 0.6.0(typescript@5.9.3)
       nostr-editor: 1.0.1(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))(@tiptap/extension-image@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))(@tiptap/extension-link@2.26.3(@tiptap/core@2.26.3(@tiptap/pm@2.26.3))(@tiptap/pm@2.26.3))(@tiptap/pm@2.26.3)(linkifyjs@4.3.2)(nostr-tools@2.17.0(typescript@5.9.3))(prosemirror-markdown@1.13.2)(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.3)(tiptap-markdown@0.8.10(@tiptap/core@2.26.3(@tiptap/pm@2.26.3)))
       nostr-tools: 2.17.0(typescript@5.9.3)
       tippy.js: 6.3.7
@@ -6714,78 +6707,71 @@ snapshots:
       - tiptap-markdown
       - typescript
 
-  '@welshman/feeds@0.5.3(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)':
+  '@welshman/feeds@0.6.0(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)':
     dependencies:
-      '@welshman/lib': 0.5.3
-      '@welshman/net': 0.5.3(typescript@5.9.3)(ws@8.18.3)
-      '@welshman/relay': 0.5.3(typescript@5.9.3)
-      '@welshman/router': 0.5.3(typescript@5.9.3)
-      '@welshman/signer': 0.5.3(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
-      '@welshman/util': 0.5.3(typescript@5.9.3)
+      '@welshman/lib': 0.6.0
+      '@welshman/net': 0.6.0(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/router': 0.6.0(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/signer': 0.6.0(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/util': 0.6.0(typescript@5.9.3)
       trava: 1.2.1
     transitivePeerDependencies:
       - nostr-signer-capacitor-plugin
       - typescript
       - ws
 
-  '@welshman/lib@0.5.3':
+  '@welshman/lib@0.6.0':
     dependencies:
       '@scure/base': 1.2.6
       '@types/events': 3.0.3
       events: 3.3.0
 
-  '@welshman/net@0.5.3(typescript@5.9.3)(ws@8.18.3)':
+  '@welshman/net@0.6.0(typescript@5.9.3)(ws@8.18.3)':
     dependencies:
-      '@welshman/lib': 0.5.3
-      '@welshman/relay': 0.5.3(typescript@5.9.3)
-      '@welshman/util': 0.5.3(typescript@5.9.3)
+      '@welshman/lib': 0.6.0
+      '@welshman/util': 0.6.0(typescript@5.9.3)
       events: 3.3.0
       isomorphic-ws: 5.0.0(ws@8.18.3)
     transitivePeerDependencies:
       - typescript
       - ws
 
-  '@welshman/relay@0.5.3(typescript@5.9.3)':
+  '@welshman/router@0.6.0(typescript@5.9.3)(ws@8.18.3)':
     dependencies:
-      '@welshman/lib': 0.5.3
-      '@welshman/util': 0.5.3(typescript@5.9.3)
+      '@welshman/lib': 0.6.0
+      '@welshman/net': 0.6.0(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/util': 0.6.0(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
+      - ws
 
-  '@welshman/router@0.5.3(typescript@5.9.3)':
-    dependencies:
-      '@welshman/lib': 0.5.3
-      '@welshman/relay': 0.5.3(typescript@5.9.3)
-      '@welshman/util': 0.5.3(typescript@5.9.3)
-    transitivePeerDependencies:
-      - typescript
-
-  '@welshman/signer@0.5.3(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)':
+  '@welshman/signer@0.6.0(nostr-signer-capacitor-plugin@0.0.4(@capacitor/core@7.4.3))(typescript@5.9.3)(ws@8.18.3)':
     dependencies:
       '@noble/curves': 1.9.7
       '@noble/hashes': 1.8.0
-      '@welshman/lib': 0.5.3
-      '@welshman/net': 0.5.3(typescript@5.9.3)(ws@8.18.3)
-      '@welshman/util': 0.5.3(typescript@5.9.3)
+      '@welshman/lib': 0.6.0
+      '@welshman/net': 0.6.0(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/util': 0.6.0(typescript@5.9.3)
       nostr-signer-capacitor-plugin: 0.0.4(@capacitor/core@7.4.3)
       nostr-tools: 2.17.0(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
       - ws
 
-  '@welshman/store@0.5.3(typescript@5.9.3)':
+  '@welshman/store@0.6.0(typescript@5.9.3)(ws@8.18.3)':
     dependencies:
-      '@welshman/lib': 0.5.3
-      '@welshman/relay': 0.5.3(typescript@5.9.3)
-      '@welshman/util': 0.5.3(typescript@5.9.3)
+      '@welshman/lib': 0.6.0
+      '@welshman/net': 0.6.0(typescript@5.9.3)(ws@8.18.3)
+      '@welshman/util': 0.6.0(typescript@5.9.3)
       svelte: 4.2.20
     transitivePeerDependencies:
       - typescript
+      - ws
 
-  '@welshman/util@0.5.3(typescript@5.9.3)':
+  '@welshman/util@0.6.0(typescript@5.9.3)':
     dependencies:
       '@types/ws': 8.18.1
-      '@welshman/lib': 0.5.3
+      '@welshman/lib': 0.6.0
       js-base64: 3.7.8
       nostr-tools: 2.17.0(typescript@5.9.3)
       nostr-wasm: 0.1.0
