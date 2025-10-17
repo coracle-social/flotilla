@@ -32,16 +32,16 @@
   import {
     ENABLE_ZAPS,
     userRoomsByUrl,
-    hasMembershipUrl,
-    memberships,
     deriveUserRooms,
     deriveOtherRooms,
     hasNip29,
     alerts,
+    deriveRelayMembership,
   } from "@app/core/state"
   import {notifications} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
   import {makeSpacePath} from "@app/util/routes"
+  import Spinner from "@src/lib/components/Spinner.svelte"
 
   const {url} = $props()
 
@@ -65,7 +65,7 @@
   const showMembers = () =>
     pushModal(
       ProfileList,
-      {url, pubkeys: members, title: `Members of`, subtitle: displayRelayUrl(url)},
+      {url, pubkeys: $members, title: `Members of`, subtitle: displayRelayUrl(url)},
       {replaceState},
     )
 
@@ -88,10 +88,7 @@
   let replaceState = $state(false)
   let element: Element | undefined = $state()
 
-  // TODO: Replace with new membership logic
-  const members = $derived(
-    $memberships.filter(l => hasMembershipUrl(l, url)).map(l => l.event.pubkey),
-  )
+  const members = deriveRelayMembership(url)
 
   onMount(() => {
     replaceState = Boolean(element?.closest(".drawer"))
@@ -113,11 +110,13 @@
             transition:fly
             class="menu absolute z-popover mt-2 w-full gap-1 rounded-box bg-base-100 p-2 shadow-xl">
             <li>
-              <Button onclick={showMembers}>
-                <Icon icon={UserRounded} />
-                <!-- TODO: Show spinners on members length until members is loaded -->
-                View Members ({members.length})
-              </Button>
+              <!-- TODO: This probably shouldn't be length 0, but not sure what to wait on -->
+              <Spinner loading={$members.length === 0}>
+                <Button onclick={showMembers}>
+                  <Icon icon={UserRounded} />
+                  View Members ({$members.length})
+                </Button>
+              </Spinner>
             </li>
             <li>
               <Button onclick={createInvite}>

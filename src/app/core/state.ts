@@ -777,29 +777,29 @@ export const deriveRoomMembership = (url: string, room: string) =>
         return getPubkeyTagValues(latestMemberList.tags)
       }
 
-      const membershipList = new Set()
+      const membershipList = new Set<string>()
 
-      for (const event of $events) {
+      for (const event of $events.reverse()) {
         switch (event.kind) {
           case ROOM_ADD_USER:
-            membershipList.add(getTagValue("p", event.tags))
+            membershipList.add(getTagValue("p", event.tags)!)
             break
           case ROOM_REMOVE_USER:
-            membershipList.delete(getTagValue("p", event.tags))
+            membershipList.delete(getTagValue("p", event.tags)!)
             break
           default:
             break
         }
       }
 
-      return membershipList
+      return [...membershipList]
     },
   )
 
 // TEMP
 export const RELAY_MEMBERS = 13534
 export const RELAY_ADD_USER = 8000
-export const RELAY_REMOVE_USER = 8000
+export const RELAY_REMOVE_USER = 8001
 
 export const deriveRelayMembership = (url: string) =>
   derived(
@@ -819,22 +819,22 @@ export const deriveRelayMembership = (url: string) =>
           .map(nth(1))
       }
 
-      const membershipList = new Set()
+      const membershipList = new Set<string>()
 
-      for (const event of $events) {
+      for (const event of $events.reverse()) {
         switch (event.kind) {
           case RELAY_ADD_USER:
-            membershipList.add(getTagValue("p", event.tags))
+            membershipList.add(getTagValue("p", event.tags)!)
             break
           case RELAY_REMOVE_USER:
-            membershipList.delete(getTagValue("p", event.tags))
+            membershipList.delete(getTagValue("p", event.tags)!)
             break
           default:
             break
         }
       }
 
-      return membershipList
+      return [...membershipList]
     },
   )
 
