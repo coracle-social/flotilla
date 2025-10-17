@@ -88,6 +88,7 @@
   let replaceState = $state(false)
   let element: Element | undefined = $state()
 
+  // TODO: Replace with new membership logic
   const members = $derived(
     $memberships.filter(l => hasMembershipUrl(l, url)).map(l => l.event.pubkey),
   )
@@ -114,6 +115,7 @@
             <li>
               <Button onclick={showMembers}>
                 <Icon icon={UserRounded} />
+                <!-- TODO: Show spinners on members length until members is loaded -->
                 View Members ({members.length})
               </Button>
             </li>
