@@ -395,7 +395,7 @@
       </div>
     </div>
   {:else}
-    {#each elements as { type, id, value, showPubkey, pubkey } (id)}
+    {#each elements as { type, id, value, showPubkey } (id)}
       {#if type === "new-messages"}
         <div
           bind:this={newMessages}

@@ -797,9 +797,9 @@ export const deriveRoomMembership = (url: string, room: string) =>
   )
 
 // TEMP
-const RELAY_MEMBERS = 13534
-const RELAY_ADD_USER = 8000
-const RELAY_REMOVE_USER = 8000
+export const RELAY_MEMBERS = 13534
+export const RELAY_ADD_USER = 8000
+export const RELAY_REMOVE_USER = 8000
 
 export const deriveRelayMembership = (url: string) =>
   derived(

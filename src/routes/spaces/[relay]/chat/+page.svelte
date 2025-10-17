@@ -27,17 +27,19 @@
     getEventsForUrl,
     PROTECTED,
     REACTION_KINDS,
+    RELAY_ADD_USER,
   } from "@app/core/state"
   import {prependParent, canEnforceNip70} from "@app/core/commands"
   import {setChecked, checked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
   import {makeFeed} from "@app/core/requests"
   import {popKey} from "@lib/implicit"
+  import ChannelJoin from "@src/app/components/ChannelJoin.svelte"
 
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay($page.params.relay!)
-  const filter = {kinds: [MESSAGE]}
+  const filter = {kinds: [MESSAGE, RELAY_ADD_USER]}
   const shouldProtect = canEnforceNip70(url)
 
   const replyTo = (event: TrustedEvent) => {
@@ -164,12 +166,22 @@
           elements.push({type: "date", value: date, id: date, showPubkey: false})
         }
 
-        elements.push({
-          id: event.id,
-          type: "note",
-          value: event,
-          showPubkey: date !== previousDate || previousPubkey !== event.pubkey,
-        })
+        if (event.kind === MESSAGE) {
+          elements.push({
+            id: event.id,
+            type: "note",
+            value: event,
+            showPubkey: date !== previousDate || previousPubkey !== event.pubkey,
+          })
+        } else if (event.kind === RELAY_ADD_USER) {
+          elements.push({
+            type: "new-user",
+            id: event.id,
+            value: event,
+            showPubkey: true,
+            pubkey: event.pubkey,
+          })
+        }
 
         previousDate = date
         previousPubkey = event.pubkey
@@ -200,7 +212,9 @@
       element: element!,
       relays: [url],
       feedFilters: [filter],
-      subscriptionFilters: [{kinds: [DELETE, MESSAGE, ...REACTION_KINDS], since: now()}],
+      subscriptionFilters: [
+        {kinds: [DELETE, MESSAGE, RELAY_ADD_USER, ...REACTION_KINDS], since: now()},
+      ],
       initialEvents: getEventsForUrl(url, [{...filter, limit: 20}]),
       onExhausted: () => {
         loadingEvents = false
@@ -252,6 +266,10 @@
         <div class="h-px flex-grow bg-primary"></div>
         <p class="rounded-full bg-primary px-2 py-1 text-primary-content">New Messages</p>
         <div class="h-px flex-grow bg-primary"></div>
+      </div>
+    {:else if type === "new-user"}
+      <div>
+        <ChannelJoin {url} event={value as TrustedEvent} {showPubkey} />
       </div>
     {:else if type === "date"}
       <Divider>{value}</Divider>
