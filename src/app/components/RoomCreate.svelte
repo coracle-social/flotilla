@@ -3,20 +3,24 @@
   import {uniqBy, nth} from "@welshman/lib"
   import {displayRelayUrl, makeRoomMeta} from "@welshman/util"
   import {deriveRelay, waitForThunkError, createRoom, editRoom, joinRoom} from "@welshman/app"
-  import {preventDefault} from "@lib/html"
-  import Field from "@lib/components/Field.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
-  import Button from "@lib/components/Button.svelte"
+  import StickerSmileSquare from "@assets/icons/sticker-smile-square.svg?dataurl"
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+  import UploadMinimalistic from "@assets/icons/upload-minimalistic.svg?dataurl"
+  import {preventDefault, compressFile} from "@lib/html"
+  import FieldInline from "@lib/components/FieldInline.svelte"
+  import Spinner from "@lib/components/Spinner.svelte"
+  import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import IconPickerButton from "@lib/components/IconPickerButton.svelte"
   import {hasNip29, loadChannel} from "@app/core/state"
   import {makeSpacePath} from "@app/util/routes"
   import {pushToast} from "@app/util/toast"
+  import {uploadFile} from "@app/core/commands"
 
   const {url} = $props()
 
@@ -27,6 +31,18 @@
 
   const tryCreate = async () => {
     room.tags = uniqBy(nth(0), [...room.tags, ["name", name]])
+
+    if (imageFile) {
+      const {error, result} = await uploadFile(imageFile)
+
+      if (error) {
+        return pushToast({theme: "error", message: error})
+      }
+
+      room.tags.push(["picture", result.url, ...result.tags])
+    } else if (selectedIcon) {
+      room.tags.push(["picture", selectedIcon])
+    }
 
     const createMessage = await waitForThunkError(createRoom(url, room))
 
@@ -63,6 +79,32 @@
 
   let name = $state("")
   let loading = $state(false)
+  let imageFile = $state<File | undefined>()
+  let imagePreview = $state<string | undefined>()
+  let selectedIcon = $state<string | undefined>()
+
+  const handleImageUpload = async (event: Event) => {
+    const file = (event.target as HTMLInputElement).files?.[0]
+
+    if (file && file.type.startsWith("image/")) {
+      selectedIcon = undefined
+      imageFile = await compressFile(file, {maxWidth: 64, maxHeight: 64})
+
+      const reader = new FileReader()
+
+      reader.onload = e => {
+        imagePreview = e.target?.result as string
+      }
+
+      reader.readAsDataURL(imageFile)
+    }
+  }
+
+  const handleIconSelect = (iconUrl: string) => {
+    imageFile = undefined
+    imagePreview = undefined
+    selectedIcon = iconUrl
+  }
 </script>
 
 <form class="column gap-4" onsubmit={preventDefault(create)}>
@@ -77,7 +119,7 @@
     {/snippet}
   </ModalHeader>
   {#if hasNip29($relay)}
-    <Field>
+    <FieldInline>
       {#snippet label()}
         <p>Room Name</p>
       {/snippet}
@@ -87,7 +129,39 @@
           <input bind:value={name} class="grow" type="text" />
         </label>
       {/snippet}
-    </Field>
+    </FieldInline>
+    <div class="flex items-center justify-between">
+      <p class="font-bold">Room Icon</p>
+      <div class="flex items-center gap-4">
+        {#if imagePreview}
+          <div class="flex items-center gap-2">
+            <span class="text-sm opacity-75">Selected:</span>
+            <img
+              src={imagePreview}
+              alt="Room icon preview"
+              class="h-8 w-8 rounded-lg object-cover" />
+          </div>
+        {:else if selectedIcon}
+          <div class="flex items-center gap-2">
+            <span class="text-sm opacity-75">Selected:</span>
+            <Icon icon={selectedIcon} class="h-8 w-8" />
+          </div>
+        {:else}
+          <span class="text-sm opacity-75">No icon selected</span>
+        {/if}
+        <div class="flex gap-2">
+          <IconPickerButton onSelect={handleIconSelect} class="btn btn-primary btn-sm">
+            <Icon icon={StickerSmileSquare} size={4} />
+            Select
+          </IconPickerButton>
+          <label class="btn btn-neutral btn-sm cursor-pointer">
+            <Icon icon={UploadMinimalistic} size={4} />
+            Upload
+            <input type="file" accept="image/*" class="hidden" onchange={handleImageUpload} />
+          </label>
+        </div>
+      </div>
+    </div>
   {:else}
     <p class="bg-alt card2 row-2">
       <Icon icon={Danger} />

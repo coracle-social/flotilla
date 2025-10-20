@@ -1,11 +1,11 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="12" cy="12.0005" r="10" stroke="#1C274C" stroke-width="1.5"/>
-<circle cx="12" cy="12.0005" r="6" stroke="#1C274C" stroke-width="1.5"/>
-<circle cx="12" cy="12.0005" r="2" stroke="#1C274C" stroke-width="1.5"/>
-<path d="M6 12.0005L10 12.0005" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M14 12.0005L18 12.0005" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M9 17.1968L11 13.7327" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M12.9999 10.2686L14.9999 6.80445" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M15 17.1968L13 13.7327" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M11 10.2686L9 6.80445" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="12" cy="12.0005" r="10" stroke="#000000" stroke-width="1.5"/>
+<circle cx="12" cy="12.0005" r="6" stroke="#000000" stroke-width="1.5"/>
+<circle cx="12" cy="12.0005" r="2" stroke="#000000" stroke-width="1.5"/>
+<path d="M6 12.0005L10 12.0005" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M14 12.0005L18 12.0005" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M9 17.1968L11 13.7327" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M12.9999 10.2686L14.9999 6.80445" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M15 17.1968L13 13.7327" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M11 10.2686L9 6.80445" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

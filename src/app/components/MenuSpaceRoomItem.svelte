@@ -25,8 +25,10 @@
   href={path}
   {replaceState}
   notification={notify ? $notifications.has(path) : false}>
-  {#if $channel?.closed || $channel?.private}
-    <Icon icon={Lock} size={4} />
+  {#if $channel?.picture}
+    <Icon icon={$channel.picture} />
+  {:else if $channel?.closed || $channel?.private}
+    <Icon icon={Lock} />
   {:else}
     <Icon icon={Hashtag} />
   {/if}
