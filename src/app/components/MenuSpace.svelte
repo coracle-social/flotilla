@@ -136,6 +136,12 @@
             transition:fly
             class="menu absolute z-popover mt-2 w-full gap-1 rounded-box bg-base-100 p-2 shadow-xl">
             <li>
+              <Button onclick={createInvite}>
+                <Icon icon={LinkRound} />
+                Create Invite
+              </Button>
+            </li>
+            <li>
               <Button onclick={showDetail}>
                 <Icon icon={RemoteControllerMinimalistic} />
                 Space Information
@@ -145,12 +151,6 @@
               <Button onclick={showMembers}>
                 <Icon icon={UserRounded} />
                 View Members ({members.length})
-              </Button>
-            </li>
-            <li>
-              <Button onclick={createInvite}>
-                <Icon icon={LinkRound} />
-                Create Invite
               </Button>
             </li>
             {#if owner}
