@@ -1,10 +1,10 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M2 11.0001C2 7.22889 2 5.34327 3.17157 4.17169C4.34315 3.00012 6.22876 3.00012 10 3.00012H14C17.7712 3.00012 19.6569 3.00012 20.8284 4.17169C22 5.34327 22 7.22889 22 11.0001V13.0001C22 16.7714 22 18.657 20.8284 19.8285C19.6569 21.0001 17.7712 21.0001 14 21.0001H10C6.22876 21.0001 4.34315 21.0001 3.17157 19.8285C2 18.657 2 16.7714 2 13.0001V11.0001Z" stroke="#1C274C" stroke-width="1.5"/>
-<path d="M2 12.0001H22" stroke="#1C274C" stroke-width="1.5"/>
-<path d="M13.5 16.5001H18" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M13.5 7.50012L18 7.50012" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M6 17.5001L6 15.5001" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M6 8.50012L6 6.50012" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M9 17.5001L9 15.5001" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M9 8.50012L9 6.50012" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M2 11.0001C2 7.22889 2 5.34327 3.17157 4.17169C4.34315 3.00012 6.22876 3.00012 10 3.00012H14C17.7712 3.00012 19.6569 3.00012 20.8284 4.17169C22 5.34327 22 7.22889 22 11.0001V13.0001C22 16.7714 22 18.657 20.8284 19.8285C19.6569 21.0001 17.7712 21.0001 14 21.0001H10C6.22876 21.0001 4.34315 21.0001 3.17157 19.8285C2 18.657 2 16.7714 2 13.0001V11.0001Z" stroke="#000000" stroke-width="1.5"/>
+<path d="M2 12.0001H22" stroke="#000000" stroke-width="1.5"/>
+<path d="M13.5 16.5001H18" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M13.5 7.50012L18 7.50012" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M6 17.5001L6 15.5001" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M6 8.50012L6 6.50012" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M9 17.5001L9 15.5001" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
+<path d="M9 8.50012L9 6.50012" stroke="#000000" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

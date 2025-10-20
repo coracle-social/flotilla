@@ -136,7 +136,10 @@ export const scrollToEvent = async (id: string, attempts = 3): Promise<boolean> 
   return false
 }
 
-export const compressFile = async (file: File | Blob): Promise<File> => {
+export const compressFile = async (
+  file: File | Blob,
+  options: Record<string, any> = {},
+): Promise<File> => {
   const {default: Compressor} = await import("compressorjs")
 
   return new Promise<File>((resolve, _reject) => {
@@ -144,6 +147,7 @@ export const compressFile = async (file: File | Blob): Promise<File> => {
       maxWidth: 2048,
       maxHeight: 2048,
       convertSize: 10 * 1024 * 1024,
+      ...options,
       success: result => resolve(result as File),
       error: e => {
         // Non-images break compressor, return the original file
