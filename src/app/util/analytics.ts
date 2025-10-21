@@ -11,10 +11,9 @@ w.plausible =
     ;(w.plausible.q = w.plausible.q || []).push(arguments)
   }
 
-export const setupAnalytics = () => {
+export const setupAnalytics = () =>
   page.subscribe($page => {
     if ($page.route && getSetting("report_usage")) {
       w.plausible("pageview", {u: $page.route.id})
     }
   })
-}

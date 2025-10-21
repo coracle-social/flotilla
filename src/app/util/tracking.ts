@@ -1,3 +1,4 @@
+import {noop} from "@welshman/lib"
 import * as Sentry from "@sentry/browser"
 import {getSetting} from "@app/core/state"
 
@@ -17,4 +18,6 @@ export const setupTracking = () => {
       },
     })
   }
+
+  return noop
 }

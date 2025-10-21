@@ -349,7 +349,7 @@ export const {
 
 // Relays sending events with empty signatures that the user has to choose to trust
 
-export const relaysPendingTrust = writable<string[]>([])
+export const relaysPendingTrust = withGetter(writable<string[]>([]))
 
 // Relays that mostly send restricted responses to requests and events
 

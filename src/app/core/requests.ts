@@ -113,7 +113,7 @@ export const makeFeed = ({
     onScroll: async () => {
       const $buffer = get(buffer)
 
-      events.update($events => [...$events, ...$buffer.splice(0, 100)])
+      events.update($events => [...$events, ...$buffer.splice(0, 30)])
 
       if ($buffer.length < 100) {
         ctrl.load(100)

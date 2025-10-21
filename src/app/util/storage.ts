@@ -1,5 +1,6 @@
 import {
   always,
+  call,
   on,
   hash,
   last,
@@ -281,8 +282,8 @@ const syncWrapManager = async () => {
   }
 }
 
-export const syncDataStores = () =>
-  Promise.all([
+export const syncDataStores = async () => {
+  const unsubscribers = await Promise.all([
     syncEvents(),
     syncTracker(),
     syncRelays(),
@@ -292,3 +293,6 @@ export const syncDataStores = () =>
     syncPlaintext(),
     syncWrapManager(),
   ])
+
+  return () => unsubscribers.forEach(call)
+}
