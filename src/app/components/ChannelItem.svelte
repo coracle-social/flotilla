@@ -59,7 +59,7 @@
   const profile = deriveProfile(event.pubkey, [url])
   const profileDisplay = deriveProfileDisplay(event.pubkey, [url])
   const thunk = mergeThunks($thunks.filter(t => t.event.id === event.id))
-  const [_, colorValue] = colors[parseInt(hash(event.pubkey)) % colors.length]
+  const [_, colorValue] = colors[hash(event.pubkey) % colors.length]
   const comments = deriveEventsForUrl(url, [{kinds: [COMMENT], "#e": [event.id]}])
 
   const reply = () => replyTo!(event)

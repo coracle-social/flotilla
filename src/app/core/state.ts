@@ -10,6 +10,7 @@ import {
   uniqBy,
   sortBy,
   sort,
+  prop,
   uniq,
   nth,
   pushToMapKey,
@@ -524,7 +525,7 @@ export const chats = derived(
       c => -c.last_activity,
       Array.from(messagesByChatId.entries()).map(([id, events]): Chat => {
         const pubkeys = remove($pubkey!, splitChatId(id))
-        const messages = sortBy(e => -e.created_at, events)
+        const messages = sortBy(e => -e.created_at, uniqBy(prop("id"), events))
         const last_activity = messages[0].created_at
         const search_text =
           pubkeys.length === 0

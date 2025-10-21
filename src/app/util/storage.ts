@@ -1,16 +1,4 @@
-import {
-  always,
-  call,
-  on,
-  hash,
-  last,
-  groupBy,
-  throttle,
-  fromPairs,
-  batch,
-  sortBy,
-  concat,
-} from "@welshman/lib"
+import {prop, first, call, on, groupBy, throttle, fromPairs, batch, sortBy, concat} from "@welshman/lib"
 import {throttled, freshness} from "@welshman/store"
 import {
   PROFILE,
@@ -50,11 +38,7 @@ import {
 import {Collection} from "@lib/storage"
 
 const syncEvents = async () => {
-  const collection = new Collection<TrustedEvent>({
-    table: "events",
-    shards: Array.from("0123456789abcdef"),
-    getShard: (event: TrustedEvent) => last(event.id),
-  })
+  const collection = new Collection<TrustedEvent>({table: "events", getId: prop("id")})
 
   const initialEvents = await collection.get()
 
@@ -131,8 +115,8 @@ const syncEvents = async () => {
       if (removed.size > 0) {
         added = added.filter(e => !removed.has(e.id))
 
-        const removedByShard = groupBy(id => last(id), removed)
-        const addedByShard = groupBy(e => last(e.id), added)
+        const removedByShard = groupBy(id => collection.getShardId(id), removed)
+        const addedByShard = groupBy(collection.getShardIdFromItem, added)
         const shards = new Set([...removedByShard.keys(), ...addedByShard.keys()])
 
         for (const shard of shards) {
@@ -141,7 +125,7 @@ const syncEvents = async () => {
           const current = await collection.getShard(shard)
           const filtered = current.filter(e => !removedInShard?.includes(e.id))
           const sorted = sortBy(e => -rankEvent(e), concat(filtered, addedInShard))
-          const pruned = sorted.slice(0, 10_000)
+          const pruned = sorted.slice(0, 1000)
 
           await collection.setShard(shard, pruned)
         }
@@ -155,11 +139,7 @@ const syncEvents = async () => {
 type TrackerItem = [string, string[]]
 
 const syncTracker = async () => {
-  const collection = new Collection<TrackerItem>({
-    table: "tracker",
-    shards: Array.from("0123456789abcdef"),
-    getShard: (item: TrackerItem) => last(item[0]),
-  })
+  const collection = new Collection<TrackerItem>({table: "tracker", getId: first})
 
   const relaysById = new Map<string, Set<string>>()
 
@@ -193,11 +173,7 @@ const syncTracker = async () => {
 }
 
 const syncRelays = async () => {
-  const collection = new Collection<Relay>({
-    table: "relays",
-    shards: Array.from("0123456789"),
-    getShard: (item: Relay) => last(hash(item.url)),
-  })
+  const collection = new Collection<Relay>({table: "relays", getId: prop("url")})
 
   relays.set(await collection.get())
 
@@ -205,11 +181,7 @@ const syncRelays = async () => {
 }
 
 const syncHandles = async () => {
-  const collection = new Collection<Handle>({
-    table: "handles",
-    shards: Array.from("0123456789"),
-    getShard: (item: Handle) => last(hash(item.nip05)),
-  })
+  const collection = new Collection<Handle>({table: "handles", getId: prop("nip05")})
 
   handles.set(await collection.get())
 
@@ -217,11 +189,7 @@ const syncHandles = async () => {
 }
 
 const syncZappers = async () => {
-  const collection = new Collection<Zapper>({
-    table: "zappers",
-    shards: Array.from("0123456789"),
-    getShard: (item: Zapper) => last(hash(item.lnurl)),
-  })
+  const collection = new Collection<Zapper>({table: "zappers", getId: prop("lnurl")})
 
   zappers.set(await collection.get())
 
@@ -231,11 +199,7 @@ const syncZappers = async () => {
 type FreshnessItem = [string, number]
 
 const syncFreshness = async () => {
-  const collection = new Collection<FreshnessItem>({
-    table: "freshness",
-    shards: ["0"],
-    getShard: always("0"),
-  })
+  const collection = new Collection<FreshnessItem>({table: "freshness", getId: first})
 
   freshness.set(fromPairs(await collection.get()))
 
@@ -247,11 +211,7 @@ const syncFreshness = async () => {
 type PlaintextItem = [string, string]
 
 const syncPlaintext = async () => {
-  const collection = new Collection<PlaintextItem>({
-    table: "plaintext",
-    shards: ["0"],
-    getShard: always("0"),
-  })
+  const collection = new Collection<PlaintextItem>({table: "plaintext", getId: first})
 
   plaintext.set(fromPairs(await collection.get()))
 
@@ -261,11 +221,7 @@ const syncPlaintext = async () => {
 }
 
 const syncWrapManager = async () => {
-  const collection = new Collection<WrapItem>({
-    table: "wraps",
-    shards: Array.from("0123456789abcdef"),
-    getShard: (item: WrapItem) => last(hash(item.id)),
-  })
+  const collection = new Collection<WrapItem>({table: "wraps", getId: prop("id")})
 
   wrapManager.load(await collection.get())
 
@@ -283,15 +239,16 @@ const syncWrapManager = async () => {
 }
 
 export const syncDataStores = async () => {
+  const t = Date.now()
   const unsubscribers = await Promise.all([
-    syncEvents(),
-    syncTracker(),
-    syncRelays(),
-    syncHandles(),
-    syncZappers(),
-    syncFreshness(),
-    syncPlaintext(),
-    syncWrapManager(),
+    syncEvents().then(f => console.log("syncEvents", Date.now() - t) || f),
+    syncTracker().then(f => console.log("syncTracker", Date.now() - t) || f),
+    syncRelays().then(f => console.log("syncRelays", Date.now() - t) || f),
+    syncHandles().then(f => console.log("syncHandles", Date.now() - t) || f),
+    syncZappers().then(f => console.log("syncZappers", Date.now() - t) || f),
+    syncFreshness().then(f => console.log("syncFreshness", Date.now() - t) || f),
+    syncPlaintext().then(f => console.log("syncPlaintext", Date.now() - t) || f),
+    syncWrapManager().then(f => console.log("syncWrapManager", Date.now() - t) || f),
   ])
 
   return () => unsubscribers.forEach(call)

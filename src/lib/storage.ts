@@ -1,4 +1,4 @@
-import {flatten, identity, groupBy} from "@welshman/lib"
+import {hash, range, reject, flatten, identity, groupBy} from "@welshman/lib"
 import {type StorageProvider} from "@welshman/store"
 import {Preferences} from "@capacitor/preferences"
 import {Encoding, Filesystem, Directory} from "@capacitor/filesystem"
@@ -33,12 +33,11 @@ export const preferencesStorageProvider = new PreferencesStorageProvider()
 
 export type CollectionOptions<T> = {
   table: string
-  shards: string[]
-  getShard: (item: T) => string
+  getId: (item: T) => string
 }
 
 export class Collection<T> {
-  #promises = new Map<string, Promise<any>>()
+  #shardCount = 1000
 
   constructor(readonly options: CollectionOptions<T>) {}
 
@@ -58,67 +57,72 @@ export class Collection<T> {
     )
   }
 
-  #then = <R>(shard: string, f: () => Promise<R>) => {
-    const oldPromise = this.#promises.get(shard) || Promise.resolve()
-    const newPromise = oldPromise.then(f)
+  getShardIds = () => Array.from(range(0, this.#shardCount))
 
-    this.#promises.set(shard, newPromise)
+  getShardId = (id: string) => String(hash(id) % this.#shardCount)
 
-    return newPromise
-  }
+  getShardIdFromItem = (item: T) => this.getShardId(this.options.getId(item))
 
   #path = (shard: string) => `collection_${this.options.table}_${shard}.json`
 
-  getShard = (shard: string): Promise<T[]> =>
-    this.#then(shard, async () => {
-      try {
-        const file = await Filesystem.readFile({
-          path: this.#path(shard),
-          directory: Directory.Data,
-          encoding: Encoding.UTF8,
-        })
-
-        // Speed things up by parsing only once
-        return JSON.parse("[" + file.data.toString().split("\n").filter(identity).join(",") + "]")
-      } catch (err) {
-        // file doesn't exist, or isn't valid json
-        return []
-      }
-    })
-
-  get = async (): Promise<T[]> => flatten(await Promise.all(this.options.shards.map(this.getShard)))
-
-  setShard = (shard: string, items: T[]) =>
-    this.#then(shard, async () => {
-      await Filesystem.writeFile({
+  getShard = async (shard: string): Promise<T[]> => {
+    try {
+      const file = await Filesystem.readFile({
         path: this.#path(shard),
         directory: Directory.Data,
         encoding: Encoding.UTF8,
-        data: items.map(v => JSON.stringify(v)).join("\n"),
       })
+
+      // Speed things up by parsing only once
+      return JSON.parse("[" + file.data.toString().split("\n").filter(identity).join(",") + "]")
+    } catch (err) {
+      // file doesn't exist, or isn't valid json
+      return []
+    }
+  }
+
+  get = async (): Promise<T[]> => flatten(await Promise.all(this.getShardIds().map(id => this.getShard(id))))
+
+  setShard = async (shard: string, items: T[]) =>
+    Filesystem.writeFile({
+      path: this.#path(shard),
+      directory: Directory.Data,
+      encoding: Encoding.UTF8,
+      data: items.map(v => JSON.stringify(v)).join("\n"),
     })
 
   set = (items: T[]) =>
     Promise.all(
-      Array.from(groupBy(this.options.getShard, items)).map(([shard, chunk]) =>
+      Array.from(groupBy(this.getShardIdFromItem, items)).map(([shard, chunk]) =>
         this.setShard(shard, chunk),
       ),
     )
 
   addToShard = (shard: string, items: T[]) =>
-    this.#then(shard, async () => {
-      await Filesystem.appendFile({
-        path: this.#path(shard),
-        directory: Directory.Data,
-        encoding: Encoding.UTF8,
-        data: "\n" + items.map(v => JSON.stringify(v)).join("\n"),
-      })
+    Filesystem.appendFile({
+      path: this.#path(shard),
+      directory: Directory.Data,
+      encoding: Encoding.UTF8,
+      data: "\n" + items.map(v => JSON.stringify(v)).join("\n"),
     })
 
   add = (items: T[]) =>
     Promise.all(
-      Array.from(groupBy(this.options.getShard, items)).map(([shard, chunk]) =>
+      Array.from(groupBy(this.getShardIdFromItem, items)).map(([shard, chunk]) =>
         this.addToShard(shard, chunk),
+      ),
+    )
+
+  removeFromShard = async (shard: string, ids: Set<string>) =>
+    this.setShard(
+      shard,
+      reject(item => ids.has(this.options.getId(item)), await this.getShard(shard)),
+    )
+
+  remove = (ids: Iterable<string>) =>
+    Promise.all(
+      Array.from(groupBy(this.getShardId, ids)).map(([shard, chunk]) =>
+        this.removeFromShard(shard, new Set(chunk)),
       ),
     )
 }

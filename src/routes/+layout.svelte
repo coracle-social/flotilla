@@ -147,9 +147,7 @@
     document.documentElement.style["font-size"] = `${$userSettingsValues.font_size}rem`
   })
 
-  let unsubscribeStorage: () => void
-
-  const ready = call(async () => {
+  const unsubscribeStorage = call(async () => {
     // Sync stuff to localstorage
     await Promise.all([
       sync({
@@ -170,7 +168,7 @@
     ])
 
     // Sync stuff to indexeddb
-    unsubscribeStorage = await storage.syncDataStores()
+    return await storage.syncDataStores()
   })
 
   // Default socket policies
@@ -190,7 +188,7 @@
     unsubscribeSignerLog()
     unsubscribeTheme()
     unsubscribeSettings()
-    unsubscribeStorage?.()
+    unsubscribeStorage.then(call)
     defaultSocketPolicies.splice(-additionalPolicies.length)
   })
 </script>
@@ -201,8 +199,8 @@
   {/if}
 </svelte:head>
 
-{#await ready}
-  <div></div>
+{#await unsubscribeStorage}
+  <!-- pass -->
 {:then}
   <div>
     <AppContainer>
