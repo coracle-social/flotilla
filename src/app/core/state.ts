@@ -26,8 +26,23 @@ import {
   last,
 } from "@welshman/lib"
 import type {Socket} from "@welshman/net"
-import {Pool, load, AuthStateEvent, AuthStatus, SocketEvent, netContext} from "@welshman/net"
-import {collection, custom, deriveEvents, deriveEventsMapped, withGetter} from "@welshman/store"
+import {
+  Pool,
+  load,
+  SocketStatus,
+  AuthStateEvent,
+  AuthStatus,
+  SocketEvent,
+  netContext,
+} from "@welshman/net"
+import {
+  collection,
+  custom,
+  throttled,
+  deriveEvents,
+  deriveEventsMapped,
+  withGetter,
+} from "@welshman/store"
 import {isKindFeed, findFeed} from "@welshman/feeds"
 import {
   getIdFilters,
@@ -770,6 +785,54 @@ export const deriveSocket = (url: string) =>
 
     return () => subs.forEach(call)
   })
+
+export const deriveSocketStatus = (url: string) =>
+  throttled(
+    800,
+    derived([deriveSocket(url), relaysMostlyRestricted], ([$socket, $relaysMostlyRestricted]) => {
+      if ($socket.status === SocketStatus.Opening) {
+        return {theme: "warning", title: "Connecting"}
+      }
+
+      if ($socket.status === SocketStatus.Closing) {
+        return {theme: "gray-500", title: "Not Connected"}
+      }
+
+      if ($socket.status === SocketStatus.Closed) {
+        return {theme: "gray-500", title: "Not Connected"}
+      }
+
+      if ($socket.status === SocketStatus.Error) {
+        return {theme: "error", title: "Failed to Connect"}
+      }
+
+      if ($socket.auth.status === AuthStatus.Requested) {
+        return {theme: "warning", title: "Authenticating"}
+      }
+
+      if ($socket.auth.status === AuthStatus.PendingSignature) {
+        return {theme: "warning", title: "Authenticating"}
+      }
+
+      if ($socket.auth.status === AuthStatus.DeniedSignature) {
+        return {theme: "error", title: "Failed to Authenticate"}
+      }
+
+      if ($socket.auth.status === AuthStatus.PendingResponse) {
+        return {theme: "warning", title: "Authenticating"}
+      }
+
+      if ($socket.auth.status === AuthStatus.Forbidden) {
+        return {theme: "error", title: "Access Denied"}
+      }
+
+      if ($relaysMostlyRestricted[url]) {
+        return {theme: "error", title: "Access Denied"}
+      }
+
+      return {theme: "success", title: "Connected"}
+    }),
+  )
 
 export const deriveTimeout = (timeout: number) => {
   const store = writable<boolean>(false)

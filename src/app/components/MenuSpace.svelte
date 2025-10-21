@@ -35,6 +35,7 @@
   import Alerts from "@app/components/Alerts.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import MenuSpaceRoomItem from "@app/components/MenuSpaceRoomItem.svelte"
+  import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
   import {
     ENABLE_ZAPS,
     MESSAGE_FILTER,
@@ -123,7 +124,7 @@
         class="flex w-full flex-col rounded-xl p-3 transition-all hover:bg-base-100"
         onclick={openMenu}>
         <div class="flex items-center justify-between">
-          <strong class="ellipsize flex items-center gap-3">
+          <strong class="ellipsize flex items-center gap-1">
             <RelayName {url} />
           </strong>
           <Icon icon={AltArrowDown} />
@@ -245,10 +246,13 @@
       {/if}
     </div>
   </SecondaryNavSection>
-  <div class="p-4">
-    <button class="btn btn-neutral btn-sm w-full" onclick={manageAlerts}>
+  <div class="flex flex-col gap-2 p-4">
+    <Button class="btn btn-neutral btn-sm" onclick={showDetail}>
+      <SocketStatusIndicator {url} />
+    </Button>
+    <Button class="btn btn-neutral btn-sm" onclick={manageAlerts}>
       <Icon icon={Bell} />
       Manage Alerts
-    </button>
+    </Button>
   </div>
 </div>
