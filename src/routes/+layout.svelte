@@ -3,6 +3,7 @@
   import "@capacitor-community/safe-area"
   import {throttle} from "throttle-debounce"
   import * as nip19 from "nostr-tools/nip19"
+  import type {Unsubscriber} from "svelte/store"
   import {get} from "svelte/store"
   import {App, type URLOpenListenerEvent} from "@capacitor/app"
   import {dev} from "$app/environment"
@@ -46,6 +47,8 @@
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
 
   const {children} = $props()
+
+  const policies = [authPolicy, trustPolicy, mostlyRestrictedPolicy]
 
   // Add stuff to window for convenience
   Object.assign(window, {
@@ -91,63 +94,9 @@
     }
   })
 
-  // Listen to navigation changes
-  const unsubscribeHistory = setupHistory()
+  const unsubscribe = call(async () => {
+    const unsubscribers: Unsubscriber[] = []
 
-  // Report usage on navigation change
-  const unsubscribeAnalytics = setupAnalytics()
-
-  // Bug tracking
-  const unsubscribeTracking = setupTracking()
-
-  // Load user data, listen for messages, etc
-  const unsubscribeApplicationData = syncApplicationData()
-
-  // Whenever we see a new pubkey, load their outbox event
-  const unsubscribeRepository = on(repository, "update", ({added}) => {
-    for (const event of added) {
-      loadRelaySelections(event.pubkey)
-    }
-  })
-
-  // Subscribe to badge count for changes
-  const unsubscribeBadgeCount = notifications.badgeCount.subscribe(
-    notifications.handleBadgeCountChanges,
-  )
-
-  // Listen for signer errors, report to user via toast
-  const unsubscribeSignerLog = signerLog.subscribe(
-    throttle(10_000, $log => {
-      const recent = $log.slice(-10)
-      const success = recent.filter(spec({status: SignerLogEntryStatus.Success}))
-      const failure = recent.filter(spec({status: SignerLogEntryStatus.Failure}))
-
-      if (!$toast && failure.length > 5 && success.length === 0) {
-        pushToast({
-          theme: "error",
-          timeout: 60_000,
-          message: "Your signer appears to be unresponsive.",
-          action: {
-            message: "Details",
-            onclick: () => goto("/settings/profile"),
-          },
-        })
-      }
-    }),
-  )
-
-  // Sync theme
-  const unsubscribeTheme = theme.subscribe($theme => {
-    document.body.setAttribute("data-theme", $theme)
-  })
-
-  // Sync font size
-  const unsubscribeSettings = userSettingsValues.subscribe($userSettingsValues => {
-    // @ts-ignore
-    document.documentElement.style["font-size"] = `${$userSettingsValues.font_size}rem`
-  })
-
-  const unsubscribeStorage = call(async () => {
     // Sync stuff to localstorage
     await Promise.all([
       sync({
@@ -167,29 +116,71 @@
       }),
     ])
 
-    // Sync stuff to indexeddb
-    return await storage.syncDataStores()
+    // Wait until data storage is initialized before syncing other stuff
+    unsubscribers.push(await storage.syncDataStores())
+
+    // Add our extra policies now that we're set up
+    defaultSocketPolicies.push(...policies)
+
+    // Remove policies when we're done
+    unsubscribers.push(() => defaultSocketPolicies.splice(-policies.length))
+
+    // History, navigation, bug tracking, application data
+    unsubscribers.push(setupHistory(), setupAnalytics(), setupTracking(), syncApplicationData())
+
+    // Whenever we see a new pubkey, load their outbox event
+    unsubscribers.push(
+      on(repository, "update", ({added}) => {
+        for (const event of added) {
+          loadRelaySelections(event.pubkey)
+        }
+      }),
+    )
+
+    // Subscribe to badge count for changes
+    unsubscribers.push(notifications.badgeCount.subscribe(notifications.handleBadgeCountChanges))
+
+    // Listen for signer errors, report to user via toast
+    unsubscribers.push(
+      signerLog.subscribe(
+        throttle(10_000, $log => {
+          const recent = $log.slice(-10)
+          const success = recent.filter(spec({status: SignerLogEntryStatus.Success}))
+          const failure = recent.filter(spec({status: SignerLogEntryStatus.Failure}))
+
+          if (!$toast && failure.length > 5 && success.length === 0) {
+            pushToast({
+              theme: "error",
+              timeout: 60_000,
+              message: "Your signer appears to be unresponsive.",
+              action: {
+                message: "Details",
+                onclick: () => goto("/settings/profile"),
+              },
+            })
+          }
+        }),
+      ),
+    )
+
+    // Sync theme and font size
+    unsubscribers.push(
+      theme.subscribe($theme => {
+        document.body.setAttribute("data-theme", $theme)
+      }),
+      userSettingsValues.subscribe($userSettingsValues => {
+        // @ts-ignore
+        document.documentElement.style["font-size"] = `${$userSettingsValues.font_size}rem`
+      }),
+    )
+
+    return () => unsubscribers.forEach(call)
   })
-
-  // Default socket policies
-  const additionalPolicies = [authPolicy, trustPolicy, mostlyRestrictedPolicy]
-
-  defaultSocketPolicies.push(...additionalPolicies)
 
   // Cleanup on hot reload
   import.meta.hot?.dispose(() => {
     App.removeAllListeners()
-    unsubscribeHistory()
-    unsubscribeAnalytics()
-    unsubscribeTracking()
-    unsubscribeApplicationData()
-    unsubscribeRepository()
-    unsubscribeBadgeCount()
-    unsubscribeSignerLog()
-    unsubscribeTheme()
-    unsubscribeSettings()
-    unsubscribeStorage.then(call)
-    defaultSocketPolicies.splice(-additionalPolicies.length)
+    unsubscribe.then(call)
   })
 </script>
 
@@ -199,7 +190,7 @@
   {/if}
 </svelte:head>
 
-{#await unsubscribeStorage}
+{#await unsubscribe}
   <!-- pass -->
 {:then}
   <div>

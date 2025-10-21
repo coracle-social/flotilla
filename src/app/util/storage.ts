@@ -1,4 +1,4 @@
-import {prop, first, call, on, groupBy, throttle, fromPairs, batch, sortBy, concat} from "@welshman/lib"
+import {prop, call, on, throttle, fromPairs, batch} from "@welshman/lib"
 import {throttled, freshness} from "@welshman/store"
 import {
   PROFILE,
@@ -96,42 +96,23 @@ const syncEvents = async () => {
     repository,
     "update",
     batch(3000, async (updates: RepositoryUpdate[]) => {
-      let added: TrustedEvent[] = []
-      const removed = new Set<string>()
+      const add: TrustedEvent[] = []
+      const remove = new Set<string>()
 
       for (const update of updates) {
         for (const event of update.added) {
           if (rankEvent(event) > 0) {
-            added.push(event)
-            removed.delete(event.id)
+            add.push(event)
+            remove.delete(event.id)
           }
         }
 
         for (const id of update.removed) {
-          removed.add(id)
+          remove.add(id)
         }
       }
 
-      if (removed.size > 0) {
-        added = added.filter(e => !removed.has(e.id))
-
-        const removedByShard = groupBy(id => collection.getShardId(id), removed)
-        const addedByShard = groupBy(collection.getShardIdFromItem, added)
-        const shards = new Set([...removedByShard.keys(), ...addedByShard.keys()])
-
-        for (const shard of shards) {
-          const removedInShard = removedByShard.get(shard)
-          const addedInShard = addedByShard.get(shard) || []
-          const current = await collection.getShard(shard)
-          const filtered = current.filter(e => !removedInShard?.includes(e.id))
-          const sorted = sortBy(e => -rankEvent(e), concat(filtered, addedInShard))
-          const pruned = sorted.slice(0, 1000)
-
-          await collection.setShard(shard, pruned)
-        }
-      } else if (added.length > 0) {
-        await collection.add(added)
-      }
+      await collection.update({add, remove})
     }),
   )
 }
@@ -139,7 +120,10 @@ const syncEvents = async () => {
 type TrackerItem = [string, string[]]
 
 const syncTracker = async () => {
-  const collection = new Collection<TrackerItem>({table: "tracker", getId: first})
+  const collection = new Collection<TrackerItem>({
+    table: "tracker",
+    getId: (item: TrackerItem) => item[0],
+  })
 
   const relaysById = new Map<string, Set<string>>()
 
@@ -199,7 +183,10 @@ const syncZappers = async () => {
 type FreshnessItem = [string, number]
 
 const syncFreshness = async () => {
-  const collection = new Collection<FreshnessItem>({table: "freshness", getId: first})
+  const collection = new Collection<FreshnessItem>({
+    table: "freshness",
+    getId: (item: FreshnessItem) => item[0],
+  })
 
   freshness.set(fromPairs(await collection.get()))
 
@@ -211,7 +198,10 @@ const syncFreshness = async () => {
 type PlaintextItem = [string, string]
 
 const syncPlaintext = async () => {
-  const collection = new Collection<PlaintextItem>({table: "plaintext", getId: first})
+  const collection = new Collection<PlaintextItem>({
+    table: "plaintext",
+    getId: (item: PlaintextItem) => item[0],
+  })
 
   plaintext.set(fromPairs(await collection.get()))
 
@@ -239,16 +229,15 @@ const syncWrapManager = async () => {
 }
 
 export const syncDataStores = async () => {
-  const t = Date.now()
   const unsubscribers = await Promise.all([
-    syncEvents().then(f => console.log("syncEvents", Date.now() - t) || f),
-    syncTracker().then(f => console.log("syncTracker", Date.now() - t) || f),
-    syncRelays().then(f => console.log("syncRelays", Date.now() - t) || f),
-    syncHandles().then(f => console.log("syncHandles", Date.now() - t) || f),
-    syncZappers().then(f => console.log("syncZappers", Date.now() - t) || f),
-    syncFreshness().then(f => console.log("syncFreshness", Date.now() - t) || f),
-    syncPlaintext().then(f => console.log("syncPlaintext", Date.now() - t) || f),
-    syncWrapManager().then(f => console.log("syncWrapManager", Date.now() - t) || f),
+    syncEvents(),
+    syncTracker(),
+    syncRelays(),
+    syncHandles(),
+    syncZappers(),
+    syncFreshness(),
+    syncPlaintext(),
+    syncWrapManager(),
   ])
 
   return () => unsubscribers.forEach(call)
