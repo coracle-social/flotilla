@@ -10,7 +10,8 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --check src && eslint src",
-    "format": "prettier --write src",
+    "format": "git diff head --name-only --diff-filter d | grep -E '(js|ts|svelte)$' | xargs -r prettier --write",
+    "format:all": "prettier --write src",
     "prepare": "husky"
   },
   "devDependencies": {

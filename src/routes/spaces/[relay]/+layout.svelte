@@ -1,25 +1,16 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {onMount} from "svelte"
   import {page} from "$app/stores"
-  import {sleep, once} from "@welshman/lib"
-  import {displayRelayUrl} from "@welshman/util"
-  import {SocketStatus} from "@welshman/net"
+  import {once} from "@welshman/lib"
   import Page from "@lib/components/Page.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import MenuSpace from "@app/components/MenuSpace.svelte"
   import SpaceAuthError from "@app/components/SpaceAuthError.svelte"
   import SpaceTrustRelay from "@app/components/SpaceTrustRelay.svelte"
-  import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
-  import {
-    decodeRelay,
-    deriveRelayAuthError,
-    relaysPendingTrust,
-    deriveSocket,
-  } from "@app/core/state"
+  import {decodeRelay, deriveRelayAuthError, relaysPendingTrust} from "@app/core/state"
   import {notifications} from "@app/util/notifications"
 
   type Props = {
@@ -29,8 +20,6 @@
   const {children}: Props = $props()
 
   const url = decodeRelay($page.params.relay!)
-
-  const socket = deriveSocket(url)
 
   const authError = deriveRelayAuthError(url)
 
@@ -48,17 +37,6 @@
     if ($authError) {
       showAuthError()
     }
-  })
-
-  onMount(() => {
-    sleep(2000).then(() => {
-      if ($socket.status !== SocketStatus.Open) {
-        pushToast({
-          theme: "error",
-          message: `Failed to connect to ${displayRelayUrl(url)}`,
-        })
-      }
-    })
   })
 </script>
 
