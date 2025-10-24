@@ -70,7 +70,9 @@ import {
   ROOM_JOIN,
   ROOM_LEAVE,
   ROOM_MEMBERS,
+  ROOM_ADMINS,
   ROOM_META,
+  ROOM_DELETE,
   ROOM_REMOVE_MEMBER,
   ROOMS,
   THREAD,
@@ -278,8 +280,11 @@ export const deriveEventsForUrl = (url: string, filters: Filter[]) =>
   })
 
 export const deriveSignedEventsForUrl = (url: string, filters: Filter[]) =>
-  derived([deriveEventsForUrl(url, filters), deriveRelay(url)], ([$events, $relay]) =>
-    $relay?.self ? $events.filter(spec({pubkey: $relay.self})) : [],
+  derived(
+    [deriveEventsForUrl(url, filters), deriveRelay(url)],
+    ([$events, $relay]) => $events,
+    // Disable this check for now since khatru doesn't support self
+    // $relay?.self ? $events.filter(spec({pubkey: $relay.self})) : [],
   )
 
 // Context
@@ -559,37 +564,43 @@ export const splitChannelId = (id: string) => id.split("'")
 export const hasNip29 = (relay?: RelayProfile) =>
   relay?.supported_nips?.map?.(String)?.includes?.("29")
 
-export const channelEvents = deriveEvents(repository, {filters: [{kinds: [ROOM_META]}]})
-
 export const channels = derived(
-  [channelEvents, getUrlsForEvent],
-  ([$channelEvents, $getUrlsForEvent]) => {
-    const $channels: Channel[] = []
+  [deriveEvents(repository, {filters: [{kinds: [ROOM_META, ROOM_DELETE]}]}), getUrlsForEvent],
+  ([$events, $getUrlsForEvent]) => {
+    const result = new Map<string, Channel>()
 
-    for (const event of $channelEvents) {
-      const meta = fromPairs(event.tags)
-      const room = meta.d
+    for (const event of sortBy(e => e.created_at, $events)) {
+      for (const url of $getUrlsForEvent(event.id)) {
+        if (event.kind === ROOM_META) {
+          const meta = fromPairs(event.tags)
+          const room = meta.d
 
-      if (room) {
-        for (const url of $getUrlsForEvent(event.id)) {
-          const id = makeChannelId(url, room)
+          if (room) {
+            const id = makeChannelId(url, room)
 
-          $channels.push({
-            id,
-            url,
-            room,
-            event,
-            name: meta.name || room,
-            closed: Boolean(getTag("closed", event.tags)),
-            private: Boolean(getTag("private", event.tags)),
-            picture: meta.picture,
-            about: meta.about,
-          })
+            result.set(id, {
+              id,
+              url,
+              room,
+              event,
+              name: meta.name || room,
+              closed: Boolean(getTag("closed", event.tags)),
+              private: Boolean(getTag("private", event.tags)),
+              picture: meta.picture,
+              about: meta.about,
+            })
+          }
+        }
+
+        if (event.kind === ROOM_DELETE) {
+          for (const room of getTagValues("h", event.tags)) {
+            result.delete(makeChannelId(url, room))
+          }
         }
       }
     }
 
-    return uniqBy(c => c.id, $channels)
+    return Array.from(result.values())
   },
 )
 
@@ -745,7 +756,7 @@ export const deriveSpaceMembers = (url: string) =>
 
       const members = new Set()
 
-      for (const event of $events) {
+      for (const event of sortBy(e => e.created_at, $events)) {
         const pubkeys = getPubkeyTagValues(event.tags)
 
         if (event.kind === RELAY_ADD_MEMBER) {
@@ -768,7 +779,8 @@ export const deriveSpaceMembers = (url: string) =>
 export const deriveRoomMembers = (url: string, room: string) =>
   derived(
     deriveEventsForUrl(url, [
-      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER, ROOM_MEMBERS], "#h": [room]},
+      {kinds: [ROOM_MEMBERS], "#d": [room]},
+      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [room]},
     ]),
     $events => {
       const membersEvent = $events.find(spec({kind: ROOM_MEMBERS}))
@@ -779,7 +791,7 @@ export const deriveRoomMembers = (url: string, room: string) =>
 
       const members = new Set()
 
-      for (const event of $events) {
+      for (const event of sortBy(e => -e.created_at, $events)) {
         const pubkeys = getPubkeyTagValues(event.tags)
 
         if (event.kind === ROOM_ADD_MEMBER) {
@@ -798,6 +810,17 @@ export const deriveRoomMembers = (url: string, room: string) =>
       return Array.from(members)
     },
   )
+
+export const deriveRoomAdmins = (url: string, room: string) =>
+  derived(deriveEventsForUrl(url, [{kinds: [ROOM_ADMINS], "#d": [room]}]), $events => {
+    const adminsEvent = first($events)
+
+    if (adminsEvent) {
+      return getPubkeyTagValues(adminsEvent.tags)
+    }
+
+    return []
+  })
 
 // User membership status
 
@@ -872,6 +895,9 @@ export const deriveUserCanCreateRoom = (url: string) =>
       return event ? getPubkeyTagValues(event.tags).includes($pubkey!) : true
     },
   )
+
+export const deriveUserIsRoomAdmin = (url: string, room: string) =>
+  derived([pubkey, deriveRoomAdmins(url, room)], ([$pubkey, $admins]) => $admins.includes($pubkey!))
 
 // Other utils
 

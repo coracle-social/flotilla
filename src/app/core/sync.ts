@@ -19,8 +19,13 @@ import {
   getRelayTagValues,
   WRAP,
   ROOM_META,
+  ROOM_DELETE,
+  ROOM_ADMINS,
+  ROOM_MEMBERS,
   ROOM_ADD_MEMBER,
   ROOM_REMOVE_MEMBER,
+  ROOM_CREATE_PERMISSION,
+  RELAY_MEMBERS,
   isSignedEvent,
 } from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
@@ -165,12 +170,14 @@ const syncUserData = () => {
 
 const syncMembership = (url: string) => {
   const controller = new AbortController()
+  const relayFilter = {kinds: [RELAY_MEMBERS, ROOM_CREATE_PERMISSION]}
+  const roomsFilter = {kinds: [ROOM_ADMINS, ROOM_MEMBERS, ROOM_META, ROOM_DELETE]}
 
-  // Load group metadata
+  // Load group metadata and member lists
   pullConservatively({
     relays: [url],
     signal: controller.signal,
-    filters: [{kinds: [ROOM_META]}],
+    filters: [relayFilter, roomsFilter],
   })
 
   // Load historical data from up to a month ago for quick page loading
@@ -184,7 +191,9 @@ const syncMembership = (url: string) => {
   request({
     relays: [url],
     signal: controller.signal,
-    filters: [MESSAGE_FILTER, COMMENT_FILTER, MEMBERSHIP_FILTER].map(assoc("since", now())),
+    filters: [relayFilter, roomsFilter, MESSAGE_FILTER, COMMENT_FILTER, MEMBERSHIP_FILTER].map(
+      assoc("since", now()),
+    ),
   })
 
   return () => controller.abort()

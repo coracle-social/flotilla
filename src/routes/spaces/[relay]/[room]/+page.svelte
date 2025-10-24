@@ -3,6 +3,7 @@
   import {readable} from "svelte/store"
   import {onMount, onDestroy} from "svelte"
   import {page} from "$app/stores"
+  import {goto} from "$app/navigation"
   import type {Readable} from "svelte/store"
   import type {MakeNonOptional} from "@welshman/lib"
   import {now, formatTimestampAsDate, ago, MINUTE} from "@welshman/lib"
@@ -14,11 +15,20 @@
     ROOM_ADD_MEMBER,
     ROOM_REMOVE_MEMBER,
   } from "@welshman/util"
-  import {pubkey, publishThunk, waitForThunkError, joinRoom, leaveRoom} from "@welshman/app"
+  import {
+    pubkey,
+    publishThunk,
+    waitForThunkError,
+    deleteRoom,
+    joinRoom,
+    leaveRoom,
+    repository,
+  } from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
   import Login2 from "@assets/icons/login-3.svg?dataurl"
+  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import Logout2 from "@assets/icons/logout-3.svg?dataurl"
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"
@@ -28,6 +38,7 @@
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Divider from "@lib/components/Divider.svelte"
+  import Confirm from "@lib/components/Confirm.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import ChannelName from "@app/components/ChannelName.svelte"
@@ -46,6 +57,7 @@
     MembershipStatus,
     PROTECTED,
     MESSAGE_KINDS,
+    deriveUserIsRoomAdmin,
   } from "@app/core/state"
   import {setChecked, checked} from "@app/util/notifications"
   import {
@@ -58,6 +70,8 @@
   import {makeFeed} from "@app/core/requests"
   import {popKey} from "@lib/implicit"
   import {pushToast} from "@app/util/toast"
+  import {pushModal} from "@app/util/modal"
+  import {makeSpacePath} from "@app/util/routes"
 
   const {room, relay} = $page.params as MakeNonOptional<typeof $page.params>
   const mounted = now()
@@ -66,6 +80,7 @@
   const channel = deriveChannel(url, room)
   const shouldProtect = canEnforceNip70(url)
   const userRooms = deriveUserRooms(url)
+  const userIsAdmin = deriveUserIsRoomAdmin(url, room)
   const isFavorite = $derived($userRooms.includes(room))
   const membershipStatus = deriveUserRoomMembershipStatus(url, room)
 
@@ -292,6 +307,24 @@
     }
   }
 
+  const startDelete = () =>
+    pushModal(Confirm, {
+      title: "Are you sure you want to delete this room?",
+      message:
+        "This room will no longer be accessible to space members, and all messages posted to it will be deleted.",
+      confirm: async () => {
+        const thunk = deleteRoom(url, makeRoomMeta({id: room}))
+        const message = await waitForThunkError(thunk)
+
+        if (message) {
+          repository.removeEvent(thunk.event.id)
+          pushToast({theme: "error", message})
+        } else {
+          goto(makeSpacePath(url))
+        }
+      },
+    })
+
   onMount(() => {
     const observer = new ResizeObserver(() => {
       if (dynamicPadding && chatCompose) {
@@ -332,7 +365,14 @@
   {/snippet}
   {#snippet action()}
     <div class="row-2">
-      {#if $membershipStatus === MembershipStatus.Initial}
+      {#if $userIsAdmin || true}
+        <Button
+          class="btn btn-neutral btn-sm tooltip tooltip-left"
+          data-tip="Delete this room"
+          onclick={startDelete}>
+          <Icon size={4} icon={TrashBin2} />
+        </Button>
+      {:else if $membershipStatus === MembershipStatus.Initial}
         <Button
           class="btn btn-neutral btn-sm tooltip tooltip-left"
           data-tip="Request to be added to the member list"

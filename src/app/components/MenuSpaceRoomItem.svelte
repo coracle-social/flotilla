@@ -26,7 +26,12 @@
   {replaceState}
   notification={notify ? $notifications.has(path) : false}>
   {#if $channel?.picture}
-    <Icon icon={$channel.picture} />
+    {@const src = $channel.picture}
+    {#if src.match("\.(png|svg)$") || src.match("image/(png|svg)")}
+      <Icon icon={src} />
+    {:else}
+      <img alt="Room icon" {src} class="h-6 w-6 rounded-lg" />
+    {/if}
   {:else if $channel?.closed || $channel?.private}
     <Icon icon={Lock} />
   {:else}

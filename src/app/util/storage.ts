@@ -1,24 +1,35 @@
 import {prop, call, on, throttle, fromPairs, batch} from "@welshman/lib"
 import {throttled, freshness} from "@welshman/store"
 import {
-  PROFILE,
-  FOLLOWS,
-  MUTES,
-  RELAYS,
-  BLOSSOM_SERVERS,
-  INBOX_RELAYS,
-  ROOMS,
-  APP_DATA,
-  ALERT_STATUS,
-  ALERT_EMAIL,
-  ALERT_WEB,
-  ALERT_IOS,
   ALERT_ANDROID,
-  EVENT_TIME,
-  THREAD,
-  MESSAGE,
-  DIRECT_MESSAGE,
+  ALERT_EMAIL,
+  ALERT_IOS,
+  ALERT_STATUS,
+  ALERT_WEB,
+  APP_DATA,
+  BLOSSOM_SERVERS,
   DIRECT_MESSAGE_FILE,
+  DIRECT_MESSAGE,
+  EVENT_TIME,
+  FOLLOWS,
+  INBOX_RELAYS,
+  MESSAGE,
+  MUTES,
+  PROFILE,
+  RELAY_ADD_MEMBER,
+  RELAY_JOIN,
+  RELAY_LEAVE,
+  RELAY_MEMBERS,
+  RELAY_REMOVE_MEMBER,
+  RELAYS,
+  ROOM_ADD_MEMBER,
+  ROOM_CREATE_PERMISSION,
+  ROOM_MEMBERS,
+  ROOM_META,
+  ROOM_REMOVE_MEMBER,
+  ROOMS,
+  THREAD,
+  ZAP_GOAL,
   verifiedSymbol,
 } from "@welshman/util"
 import type {Zapper, TrustedEvent, RelayProfile} from "@welshman/util"
@@ -50,47 +61,34 @@ const syncEvents = async () => {
 
   repository.load(initialEvents)
 
+  const metaKinds = [
+    PROFILE,
+    FOLLOWS,
+    MUTES,
+    RELAYS,
+    BLOSSOM_SERVERS,
+    INBOX_RELAYS,
+    APP_DATA,
+    ROOMS,
+  ]
+  const alertKinds = [ALERT_STATUS, ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]
+  const spaceKinds = [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS, RELAY_JOIN, RELAY_LEAVE]
+  const roomKinds = [
+    ROOM_META,
+    ROOM_MEMBERS,
+    ROOM_ADD_MEMBER,
+    ROOM_REMOVE_MEMBER,
+    ROOM_CREATE_PERMISSION,
+  ]
+  const contentKinds = [EVENT_TIME, THREAD, MESSAGE, ZAP_GOAL, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]
+
   const rankEvent = (event: TrustedEvent) => {
-    switch (event.kind) {
-      case PROFILE:
-        return 1
-      case FOLLOWS:
-        return 1
-      case MUTES:
-        return 1
-      case RELAYS:
-        return 1
-      case BLOSSOM_SERVERS:
-        return 1
-      case INBOX_RELAYS:
-        return 1
-      case ROOMS:
-        return 1
-      case APP_DATA:
-        return 1
-      case ALERT_STATUS:
-        return 1
-      case ALERT_EMAIL:
-        return 1
-      case ALERT_WEB:
-        return 1
-      case ALERT_IOS:
-        return 1
-      case ALERT_ANDROID:
-        return 1
-      case EVENT_TIME:
-        return 0.9
-      case THREAD:
-        return 0.9
-      case MESSAGE:
-        return 0.9
-      case DIRECT_MESSAGE:
-        return 0.9
-      case DIRECT_MESSAGE_FILE:
-        return 0.9
-      default:
-        return 0
-    }
+    if (metaKinds.includes(event.kind)) return 9
+    if (alertKinds.includes(event.kind)) return 8
+    if (spaceKinds.includes(event.kind)) return 7
+    if (roomKinds.includes(event.kind)) return 6
+    if (contentKinds.includes(event.kind)) return 5
+    return 0
   }
 
   return on(

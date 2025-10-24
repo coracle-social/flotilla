@@ -14,7 +14,7 @@
   let instance: any | undefined
 
   onMount(() => {
-    modal.subscribe($modal => {
+    return modal.subscribe($modal => {
       if (instance) {
         unmount(instance, {outro: true})
         instance = undefined

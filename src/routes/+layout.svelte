@@ -9,21 +9,14 @@
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
   import {sync} from "@welshman/store"
-  import {call, on, spec} from "@welshman/lib"
+  import {call, spec} from "@welshman/lib"
   import {defaultSocketPolicies} from "@welshman/net"
-  import {
-    repository,
-    pubkey,
-    sessions,
-    signerLog,
-    shouldUnwrap,
-    loadRelaySelections,
-    SignerLogEntryStatus,
-  } from "@welshman/app"
+  import {pubkey, sessions, signerLog, shouldUnwrap, SignerLogEntryStatus} from "@welshman/app"
   import * as lib from "@welshman/lib"
   import * as util from "@welshman/util"
   import * as feeds from "@welshman/feeds"
   import * as router from "@welshman/router"
+  import * as store from "@welshman/store"
   import * as welshmanSigner from "@welshman/signer"
   import * as net from "@welshman/net"
   import * as app from "@welshman/app"
@@ -58,6 +51,7 @@
     ...lib,
     ...welshmanSigner,
     ...router,
+    ...store,
     ...util,
     ...feeds,
     ...net,
@@ -127,15 +121,6 @@
 
     // History, navigation, bug tracking, application data
     unsubscribers.push(setupHistory(), setupAnalytics(), setupTracking(), syncApplicationData())
-
-    // Whenever we see a new pubkey, load their outbox event
-    unsubscribers.push(
-      on(repository, "update", ({added}) => {
-        for (const event of added) {
-          loadRelaySelections(event.pubkey)
-        }
-      }),
-    )
 
     // Subscribe to badge count for changes
     unsubscribers.push(notifications.badgeCount.subscribe(notifications.handleBadgeCountChanges))
