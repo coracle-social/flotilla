@@ -12,7 +12,6 @@
   const {url}: Props = $props()
 
   const relay = deriveRelay(url)
-  const owner = $derived($relay?.profile?.pubkey)
 </script>
 
 <div class="card2 bg-alt flex flex-col gap-4">
@@ -23,17 +22,17 @@
     </h3>
     <SocketStatusIndicator {url} />
   </div>
-  {#if $relay?.profile}
-    {@const {software, version, supported_nips, limitation} = $relay.profile}
+  {#if $relay}
+    {@const {pubkey, software, version, supported_nips, limitation} = $relay}
     <div class="flex flex-wrap gap-1">
-      {#if owner}
+      {#if pubkey}
         <div class="badge badge-neutral">
-          <span class="ellipsize">Administrator: <ProfileLink unstyled pubkey={owner} /></span>
+          <span class="ellipsize">Administrator: <ProfileLink unstyled {pubkey} /></span>
         </div>
       {/if}
-      {#if $relay?.profile?.contact}
+      {#if $relay?.contact}
         <div class="badge badge-neutral">
-          <span class="ellipsize">Contact: {$relay.profile.contact}</span>
+          <span class="ellipsize">Contact: {$relay.contact}</span>
         </div>
       {/if}
       {#if software}

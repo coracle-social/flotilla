@@ -6,6 +6,6 @@
   const relay = deriveRelay(props.url)
 </script>
 
-{#if $relay?.profile?.description}
-  <p class={props.class}>{$relay?.profile.description}</p>
+{#if $relay?.description}
+  <p class={props.class}>{$relay.description}</p>
 {/if}

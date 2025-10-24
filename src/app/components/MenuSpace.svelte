@@ -61,7 +61,6 @@
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url)
   const members = deriveSpaceMembers(url)
-  const owner = $derived($relay?.profile?.pubkey)
   const hasAlerts = $derived($alerts.some(a => getTagValue("feed", a.tags)?.includes(url)))
 
   const spaceKinds = derived(
@@ -149,9 +148,9 @@
                 View Members ({$members.length})
               </Button>
             </li>
-            {#if owner}
+            {#if $relay?.pubkey}
               <li>
-                <Link href={makeChatPath([owner])}>
+                <Link href={makeChatPath([$relay.pubkey])}>
                   <Icon icon={Letter} />
                   Contact Owner
                 </Link>

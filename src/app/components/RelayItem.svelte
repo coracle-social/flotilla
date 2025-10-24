@@ -4,13 +4,13 @@
   import Link from "@lib/components/Link.svelte"
   import {displayUrl} from "@welshman/lib"
   import {displayRelayUrl} from "@welshman/util"
-  import {deriveRelay} from "@welshman/app"
+  import {deriveRelay, deriveRelayStats} from "@welshman/app"
 
   const {url, children} = $props()
 
   const relay = deriveRelay(url)
-
-  const connections = $derived($relay?.stats?.open_count || 0)
+  const relayStats = deriveRelayStats(url)
+  const connections = $derived($relayStats?.open_count || 0)
 </script>
 
 <div class="card2 card2-sm bg-alt column gap-2">
@@ -21,20 +21,20 @@
     </div>
     {@render children?.()}
   </div>
-  {#if $relay?.profile?.description}
-    <p class="ellipsize">{$relay?.profile.description}</p>
+  {#if $relay?.description}
+    <p class="ellipsize">{$relay.description}</p>
   {/if}
   <span class="flex items-center gap-1 whitespace-nowrap text-sm">
-    {#if $relay?.profile?.contact}
-      <Link external class="ellipsize underline" href={$relay.profile.contact}
-        >{displayUrl($relay.profile.contact)}</Link>
+    {#if $relay?.contact}
+      <Link external class="ellipsize underline" href={$relay.contact}
+        >{displayUrl($relay.contact)}</Link>
       &bull;
     {/if}
-    {#if Array.isArray($relay?.profile?.supported_nips)}
+    {#if Array.isArray($relay?.supported_nips)}
       <span
         class="tooltip cursor-pointer underline"
-        data-tip="NIPs supported: {$relay.profile.supported_nips.join(', ')}">
-        {$relay.profile.supported_nips.length} NIPs
+        data-tip="NIPs supported: {$relay.supported_nips.join(', ')}">
+        {$relay.supported_nips.length} NIPs
       </span>
       &bull;
     {/if}

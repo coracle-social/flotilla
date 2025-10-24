@@ -96,7 +96,7 @@ import {
   RelayMode,
   verifyEvent,
 } from "@welshman/util"
-import type {TrustedEvent, PublishedList, List, Filter} from "@welshman/util"
+import type {TrustedEvent, RelayProfile, PublishedList, List, Filter} from "@welshman/util"
 import {decrypt} from "@welshman/signer"
 import {routerContext, Router} from "@welshman/router"
 import {
@@ -121,7 +121,7 @@ import {
   makeUserData,
   makeUserLoader,
 } from "@welshman/app"
-import type {Thunk, Relay} from "@welshman/app"
+import type {Thunk} from "@welshman/app"
 
 export const fromCsv = (s: string) => (s || "").split(",").filter(identity)
 
@@ -279,7 +279,7 @@ export const deriveEventsForUrl = (url: string, filters: Filter[]) =>
 
 export const deriveSignedEventsForUrl = (url: string, filters: Filter[]) =>
   derived([deriveEventsForUrl(url, filters), deriveRelay(url)], ([$events, $relay]) =>
-    $relay?.profile ? $events.filter(spec({pubkey: $relay.profile.self})) : [],
+    $relay?.self ? $events.filter(spec({pubkey: $relay.self})) : [],
   )
 
 // Context
@@ -556,8 +556,8 @@ export const makeChannelId = (url: string, room: string) => `${url}'${room}`
 
 export const splitChannelId = (id: string) => id.split("'")
 
-export const hasNip29 = (relay?: Relay) =>
-  relay?.profile?.supported_nips?.map?.(String)?.includes?.("29")
+export const hasNip29 = (relay?: RelayProfile) =>
+  relay?.supported_nips?.map?.(String)?.includes?.("29")
 
 export const channelEvents = deriveEvents(repository, {filters: [{kinds: [ROOM_META]}]})
 

@@ -17,4 +17,4 @@
   icon={RemoteControllerMinimalistic}
   class="!h-10 !w-10"
   alt={displayRelayUrl(url)}
-  src={$relay?.profile?.icon} />
+  src={$relay?.icon} />

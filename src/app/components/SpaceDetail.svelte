@@ -19,7 +19,7 @@
 
   const {url}: Props = $props()
   const relay = deriveRelay(url)
-  const owner = $derived($relay?.profile?.pubkey)
+  const owner = $derived($relay?.pubkey)
 
   const back = () => history.back()
 </script>
@@ -30,8 +30,8 @@
       <div class="avatar relative">
         <div
           class="center !flex h-16 w-16 min-w-16 rounded-full border-2 border-solid border-base-300 bg-base-300">
-          {#if $relay?.profile?.icon}
-            <img alt="" src={$relay.profile.icon} />
+          {#if $relay?.icon}
+            <img alt="" src={$relay.icon} />
           {:else}
             <Icon icon={Ghost} size={6} />
           {/if}
@@ -46,16 +46,16 @@
     </div>
   </div>
   <RelayDescription {url} />
-  {#if $relay?.profile?.terms_of_service || $relay?.profile?.privacy_policy}
+  {#if $relay?.terms_of_service || $relay?.privacy_policy}
     <div class="flex gap-3">
-      {#if $relay.profile.terms_of_service}
-        <Link href={$relay.profile.terms_of_service} class="badge badge-neutral flex gap-2">
+      {#if $relay.terms_of_service}
+        <Link href={$relay.terms_of_service} class="badge badge-neutral flex gap-2">
           <Icon icon={BillList} size={4} />
           Terms of Service
         </Link>
       {/if}
-      {#if $relay.profile.privacy_policy}
-        <Link href={$relay?.profile?.privacy_policy} class="badge badge-neutral flex gap-2">
+      {#if $relay.privacy_policy}
+        <Link href={$relay.privacy_policy} class="badge badge-neutral flex gap-2">
           <Icon icon={ShieldUser} size={4} />
           Privacy Policy
         </Link>

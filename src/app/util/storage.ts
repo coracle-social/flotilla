@@ -21,13 +21,14 @@ import {
   DIRECT_MESSAGE_FILE,
   verifiedSymbol,
 } from "@welshman/util"
-import type {Zapper, TrustedEvent} from "@welshman/util"
+import type {Zapper, TrustedEvent, RelayProfile} from "@welshman/util"
 import type {RepositoryUpdate, WrapItem} from "@welshman/net"
-import type {Handle, Relay} from "@welshman/app"
+import type {Handle, RelayStats} from "@welshman/app"
 import {
   plaintext,
   tracker,
   relays,
+  relayStats,
   repository,
   handles,
   zappers,
@@ -157,11 +158,19 @@ const syncTracker = async () => {
 }
 
 const syncRelays = async () => {
-  const collection = new Collection<Relay>({table: "relays", getId: prop("url")})
+  const collection = new Collection<RelayProfile>({table: "relays", getId: prop("url")})
 
   relays.set(await collection.get())
 
   return throttled(3000, relays).subscribe(collection.set)
+}
+
+const syncRelayStats = async () => {
+  const collection = new Collection<RelayStats>({table: "relayStats", getId: prop("url")})
+
+  relayStats.set(await collection.get())
+
+  return throttled(3000, relayStats).subscribe(collection.set)
 }
 
 const syncHandles = async () => {
@@ -233,6 +242,7 @@ export const syncDataStores = async () => {
     syncEvents(),
     syncTracker(),
     syncRelays(),
+    syncRelayStats(),
     syncHandles(),
     syncZappers(),
     syncFreshness(),

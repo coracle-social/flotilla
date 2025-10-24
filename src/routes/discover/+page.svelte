@@ -2,10 +2,10 @@
   import {onMount} from "svelte"
   import {debounce} from "throttle-debounce"
   import {dec, tryCatch} from "@welshman/lib"
+  import type {RelayProfile} from "@welshman/util"
   import {ROOMS, normalizeRelayUrl, isRelayUrl} from "@welshman/util"
   import {Router} from "@welshman/router"
   import {load} from "@welshman/net"
-  import type {Relay} from "@welshman/app"
   import {relays, createSearch, loadRelay} from "@welshman/app"
   import {createScroller} from "@lib/html"
   import {fly} from "@lib/transition"
@@ -62,7 +62,7 @@
     createSearch(
       $relays.filter(r => $groupSelectionsPubkeysByUrl.has(r.url) && r.url !== termUrl),
       {
-        getValue: (relay: Relay) => relay.url,
+        getValue: (relay: RelayProfile) => relay.url,
         sortFn: ({score, item}) => {
           if (score && score > 0.1) return -score!
 
