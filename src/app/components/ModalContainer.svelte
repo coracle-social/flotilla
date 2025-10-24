@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {onMount, mount, unmount, createRawSnippet} from "svelte"
   import Drawer from "@lib/components/Drawer.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
   import {modal, clearModals} from "@app/util/modal"
@@ -9,21 +10,39 @@
     }
   }
 
-  const m = $derived($modal)
+  let element: HTMLElement
+  let instance: any | undefined
+
+  onMount(() => {
+    modal.subscribe($modal => {
+      if (instance) {
+        unmount(instance, {outro: true})
+        instance = undefined
+      }
+
+      if ($modal) {
+        const {options, component, props} = $modal
+        const wrapper = options.drawer ? Drawer : Dialog
+
+        instance = mount(wrapper as any, {
+          target: element,
+          props: {
+            onClose: clearModals,
+            children: createRawSnippet(() => ({
+              render: () => "<div></div>",
+              setup: (target: Element) => {
+                const child = mount(component, {target, props})
+
+                return () => unmount(child)
+              },
+            })),
+          },
+        })
+      }
+    })
+  })
 </script>
 
 <svelte:window onkeydown={onKeyDown} />
 
-{#if m?.options?.drawer}
-  <Drawer onClose={clearModals} {...m.options}>
-    {#key m.id}
-      <m.component {...m.props} />
-    {/key}
-  </Drawer>
-{:else if m}
-  <Dialog onClose={clearModals} {...m.options}>
-    {#key m.id}
-      <m.component {...m.props} />
-    {/key}
-  </Dialog>
-{/if}
+<div bind:this={element}></div>
