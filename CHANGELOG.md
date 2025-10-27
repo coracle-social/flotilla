@@ -1,5 +1,21 @@
 # Changelog
 
+# 1.4.0
+
+* Allow "editing" chat messages
+* Check for room create permission
+* Re-work space navigation
+* Show all messages in non-nip29 chat
+* Improve synchronization logic
+* Add connection status to space menu
+* Add icon picker to room create component
+* Improve mention suggestions
+* Improve storage adapter and relay list performance
+* Fix modals
+* Add room deletion
+* Fix zapper loading
+* Add support for relay/group member lists and join/leave events
+
 # 1.3.1
 
 * Fix memory leak in storage adapter
