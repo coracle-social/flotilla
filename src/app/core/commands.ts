@@ -36,6 +36,7 @@ import {
   FOLLOWS,
   REACTION,
   RELAY_JOIN,
+  RELAY_LEAVE,
   ROOMS,
   COMMENT,
   ALERT_EMAIL,
@@ -626,6 +627,15 @@ export const makeJoinRequest = (params: JoinRequestParams) =>
 
 export const publishJoinRequest = (params: JoinRequestParams) =>
   publishThunk({event: makeJoinRequest(params), relays: [params.url]})
+
+// Leave request
+
+export type LeaveRequestParams = {
+  url: string
+}
+
+export const publishLeaveRequest = (params: LeaveRequestParams) =>
+  publishThunk({event: makeEvent(RELAY_LEAVE), relays: [params.url]})
 
 // Lightning
 

@@ -43,6 +43,7 @@
     deriveEventsForUrl,
     deriveUserRooms,
     deriveOtherRooms,
+    userSpaceUrls,
     hasNip29,
     alerts,
     deriveUserCanCreateRoom,
@@ -157,7 +158,7 @@
               </li>
             {/if}
             <li>
-              {#if $userRooms.includes(url)}
+              {#if $userSpaceUrls.includes(url)}
                 <Button onclick={leaveSpace} class="text-error">
                   <Icon icon={Exit} />
                   Leave Space
