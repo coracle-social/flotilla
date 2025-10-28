@@ -8,8 +8,8 @@ If you would like to be interoperable with Flotilla, please check out this guide
 
 You can also optionally create an `.env` file and populate it with the following environment variables (see `.env` for examples):
 
-- `VITE_DEFAULT_PUBKEYS` - A comma-separated list of hex pubkeys for bootstrapping web of trust.
-- `VITE_PLATFORM_URL` - The url where the app will be hosted. This is only used for build-time population of meta tags.
+- `VITE_DEFAULT_PUBKEYS` - A comma-separated list of hex pubkeys for bootstrapping web of trust
+- `VITE_PLATFORM_URL` - The url where the app will be hosted
 - `VITE_PLATFORM_NAME` - The name of the app
 - `VITE_PLATFORM_LOGO` - A logo url for the app
 - `VITE_PLATFORM_RELAYS` - A list of comma-separated relay urls that will make flotilla operate in "platform mode". Disables all space browse/add/select functionality and makes the first platform relay the home page.
