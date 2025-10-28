@@ -1,5 +1,9 @@
 # Changelog
 
+# 1.4.1
+
+* Improve data synchronization
+
 # 1.4.0
 
 * Allow "editing" chat messages
