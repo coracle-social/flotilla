@@ -86,8 +86,17 @@ const pullWithFallback = ({relays, filters, signal}: PullOpts) => {
 }
 
 const pullAndListen = ({relays, filters, signal}: PullOpts) => {
-  pullWithFallback({relays, signal, filters: filters.map(assoc("limit", 30))})
-  request({relays, signal, filters: filters.map(assoc("limit", 0))})
+  pullWithFallback({
+    relays,
+    signal,
+    filters: filters.map(f => ({limit: 100, ...f})),
+  })
+
+  request({
+    relays,
+    signal,
+    filters: filters.map(assoc("limit", 0)),
+  })
 }
 
 // Relays
@@ -254,6 +263,7 @@ const syncSpace = (url: string) => {
     signal: controller.signal,
     filters: [
       {kinds: [RELAY_MEMBERS]},
+      {kinds: [ROOM_META]},
       {kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]},
       ...CONTENT_KINDS.map(kind => ({kinds: [kind]})),
       makeCommentFilter(CONTENT_KINDS),
@@ -320,8 +330,6 @@ const syncSpaces = () => {
 const syncSpaceChat = (url: string) => {
   const controller = new AbortController()
 
-  console.log(url)
-
   pullAndListen({
     relays: [url],
     signal: controller.signal,
@@ -338,7 +346,7 @@ const syncRoomChat = (url: string, room: string) => {
     relays: [url],
     signal: controller.signal,
     filters: [
-      {kinds: [ROOM_ADMINS, ROOM_MEMBERS, ROOM_META], "#d": [room]},
+      {kinds: [ROOM_ADMINS, ROOM_MEMBERS], "#d": [room]},
       {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [room]},
       {kinds: [ROOM_DELETE], "#h": [room]},
       {kinds: [MESSAGE], "#h": [room]},
