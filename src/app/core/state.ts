@@ -143,7 +143,7 @@ export const INDEXER_RELAYS = fromCsv(import.meta.env.VITE_INDEXER_RELAYS)
 
 export const SIGNER_RELAYS = fromCsv(import.meta.env.VITE_SIGNER_RELAYS)
 
-export const PLATFORM_URL = window.location.origin
+export const PLATFORM_URL = import.meta.env.VITE_PLATFORM_URL
 
 export const PLATFORM_TERMS = import.meta.env.VITE_PLATFORM_TERMS
 

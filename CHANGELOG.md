@@ -3,6 +3,7 @@
 # 1.4.1
 
 * Improve data synchronization
+* Fix app url on capacitor deployments
 
 # 1.4.0
 
