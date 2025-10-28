@@ -38,7 +38,7 @@
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
   import {
     ENABLE_ZAPS,
-    MESSAGE_FILTER,
+    CONTENT_KINDS,
     deriveSpaceMembers,
     deriveEventsForUrl,
     deriveUserRooms,
@@ -65,7 +65,7 @@
   const hasAlerts = $derived($alerts.some(a => getTagValue("feed", a.tags)?.includes(url)))
 
   const spaceKinds = derived(
-    deriveEventsForUrl(url, [MESSAGE_FILTER]),
+    deriveEventsForUrl(url, [{kinds: CONTENT_KINDS}]),
     $events => new Set($events.map(e => e.kind)),
   )
 
