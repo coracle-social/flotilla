@@ -39,6 +39,7 @@ import {
   relaysByUrl,
 } from "@welshman/app"
 import {
+  MESSAGE_KINDS,
   CONTENT_KINDS,
   INDEXER_RELAYS,
   loadSettings,
@@ -265,7 +266,7 @@ const syncSpace = (url: string) => {
       {kinds: [RELAY_MEMBERS]},
       {kinds: [ROOM_META]},
       {kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]},
-      ...CONTENT_KINDS.map(kind => ({kinds: [kind]})),
+      ...MESSAGE_KINDS.map(kind => ({kinds: [kind]})),
       makeCommentFilter(CONTENT_KINDS),
     ],
   })
@@ -327,18 +328,6 @@ const syncSpaces = () => {
 
 // Chat
 
-const syncSpaceChat = (url: string) => {
-  const controller = new AbortController()
-
-  pullAndListen({
-    relays: [url],
-    signal: controller.signal,
-    filters: [{kinds: [MESSAGE]}],
-  })
-
-  return () => controller.abort()
-}
-
 const syncRoomChat = (url: string, room: string) => {
   const controller = new AbortController()
 
@@ -376,12 +365,6 @@ const syncRooms = () => {
 
             keys.add(id)
           }
-        } else {
-          if (!unsubscribersByKey.has(url)) {
-            newUnsubscribersByKey.set(url, syncSpaceChat(url))
-          }
-
-          keys.add(url)
         }
       }
 
