@@ -9,7 +9,7 @@
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Copy from "@assets/icons/copy.svg?dataurl"
-  import Settings from "@assets/icons/settings-minimalistic.svg?dataurl"
+  import Settings from "@assets/icons/settings.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import AltArrowUp from "@assets/icons/alt-arrow-up.svg?dataurl"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"

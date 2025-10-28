@@ -7,9 +7,7 @@
   import Avatar from "@lib/components/Avatar.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
-  import SpaceAdd from "@app/components/SpaceAdd.svelte"
   import ChatEnable from "@app/components/ChatEnable.svelte"
-  import MenuSpaces from "@app/components/MenuSpaces.svelte"
   import MenuOtherSpaces from "@app/components/MenuOtherSpaces.svelte"
   import MenuSettings from "@app/components/MenuSettings.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
@@ -30,9 +28,6 @@
   }
 
   const {children}: Props = $props()
-
-  const showSpacesMenu = () =>
-    $userSpaceUrls.length > 0 ? pushModal(MenuSpaces) : pushModal(SpaceAdd)
 
   const showOtherSpacesMenu = () => pushModal(MenuOtherSpaces, {urls: secondarySpaceUrls})
 
@@ -118,7 +113,7 @@
 <div
   class="border-top bottom-sai fixed left-0 right-0 z-nav h-14 border border-base-200 bg-base-100 md:hidden">
   <div class="content-padding-x content-sizing flex justify-between px-2">
-    <div class="flex gap-2 sm:gap-8">
+    <div class="flex gap-2 sm:gap-6">
       <PrimaryNavItem title="Home" href="/home">
         <Avatar icon={HomeSmile} class="!h-10 !w-10" />
       </PrimaryNavItem>
@@ -129,10 +124,7 @@
         <Avatar icon={Letter} class="!h-10 !w-10" />
       </PrimaryNavItem>
       {#if PLATFORM_RELAYS.length !== 1}
-        <PrimaryNavItem
-          title="Spaces"
-          onclick={showSpacesMenu}
-          notification={anySpaceNotifications}>
+        <PrimaryNavItem title="Spaces" href="/spaces" notification={anySpaceNotifications}>
           <Avatar icon={SettingsMinimalistic} class="!h-10 !w-10" />
         </PrimaryNavItem>
       {/if}

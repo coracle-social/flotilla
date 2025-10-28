@@ -31,7 +31,7 @@
   } from "@app/core/state"
   import {pushModal} from "@app/util/modal"
 
-  const openMenu = () => pushModal(SpaceAdd)
+  const openMenu = () => pushModal(SpaceAdd, {hideDiscover: true})
 
   const termUrl = $derived(tryCatch(() => normalizeRelayUrl(term)) || "")
 
@@ -121,6 +121,7 @@
           </label>
           <Button class="btn btn-primary" onclick={openMenu}>
             <Icon icon={AddCircle} />
+            <span class="hidden sm:inline">Add Space</span>
           </Button>
         </div>
         {#if showScanner}
