@@ -7,7 +7,7 @@
   import Button from "@lib/components/Button.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
-  import SpaceCreateExternal from "@app/components/SpaceCreateExternal.svelte"
+  import SpaceCreate from "@app/components/SpaceCreate.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import {pushModal} from "@app/util/modal"
 
@@ -17,7 +17,7 @@
 
   const {hideDiscover}: Props = $props()
 
-  const startCreate = () => pushModal(SpaceCreateExternal)
+  const startCreate = () => pushModal(SpaceCreate)
 
   const startJoin = () => pushModal(SpaceInviteAccept)
 </script>

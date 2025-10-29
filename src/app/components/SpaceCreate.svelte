@@ -1,76 +1,92 @@
 <script lang="ts">
-  import {preventDefault} from "@lib/html"
-  import Button from "@lib/components/Button.svelte"
-  import Field from "@lib/components/Field.svelte"
-  import FireMinimalistic from "@assets/icons/fire-minimalistic.svg?dataurl"
   import Server from "@assets/icons/server.svg?dataurl"
+  import ArrowRight from "@assets/icons/arrow-right.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
-  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+  import Link from "@lib/components/Link.svelte"
+  import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import InfoRelay from "@app/components/InfoRelay.svelte"
-  import InputProfilePicture from "@app/components/InputProfilePicture.svelte"
-  import SpaceCreateFinish from "@app/components/SpaceCreateFinish.svelte"
-  import {pushModal} from "@app/util/modal"
 
   const back = () => history.back()
-
-  const next = () => pushModal(SpaceCreateFinish)
-
-  let file: File | undefined = $state()
-  let name = $state("")
-  let relay = $state("")
 </script>
 
-<form class="column gap-4" onsubmit={preventDefault(next)}>
+<div class="column gap-4">
   <ModalHeader>
     {#snippet title()}
-      <div>Customize your Space</div>
+      <div>Create your own Space</div>
     {/snippet}
     {#snippet info()}
-      <div>Give people a few details to go on. You can always change this later.</div>
+      <p>Get started with one of our trusted partners, or learn how to host your own space.</p>
     {/snippet}
   </ModalHeader>
-  <div class="flex justify-center py-2">
-    <InputProfilePicture bind:file />
+  <div class="card2 bg-alt flex flex-col gap-4">
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <img alt="Coracle Logo" src="/coracle.png" class="h-7 w-7" />
+          <h3 class="text-lg font-bold">Coracle Hosting</h3>
+        </div>
+        <div class="badge badge-primary self-start">Recommended</div>
+      </div>
+      <ul class="flex list-inside list-disc flex-col gap-1 text-sm opacity-70">
+        <li>Simple setup, support included</li>
+        <li>Free and open source software — no vendor lock-in</li>
+        <li>Advanced access controls and relay policies</li>
+        <li>Full-featured admin dashboard</li>
+      </ul>
+    </div>
+    <Link class="btn btn-primary" href="https://info.coracle.social">
+      Get Started
+      <Icon icon={ArrowRight} />
+    </Link>
   </div>
-  <Field>
-    {#snippet label()}
-      <p>Space Name</p>
-    {/snippet}
-    {#snippet input()}
-      <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon={FireMinimalistic} />
-        <input bind:value={name} class="grow" type="text" />
-      </label>
-    {/snippet}
-  </Field>
-  <Field>
-    {#snippet label()}
-      <p>Relay</p>
-    {/snippet}
-    {#snippet input()}
-      <label class="input input-bordered flex w-full items-center gap-2">
+  <div class="card2 bg-alt flex flex-col gap-4">
+    <div class="flex flex-col gap-4">
+      <div class="self-start">
+        <img
+          alt="Relay Tools"
+          src="https://relay.tools/17.svg"
+          class="-my-20 -ml-2 hidden h-48 dark:block"
+          style="filter: contrast(50%)" />
+        <img
+          alt="Relay Tools"
+          src="https://relay.tools/19.svg"
+          class="-my-20 -ml-2 h-48 dark:hidden"
+          style="filter: contrast(50%)" />
+      </div>
+      <ul class="flex list-inside list-disc flex-col gap-1 text-sm opacity-70">
+        <li>Customizable relay policies</li>
+        <li>Simple management dashboard</li>
+        <li>Support available</li>
+      </ul>
+    </div>
+    <Link class="btn btn-neutral" href="https://relay.tools/signup">
+      Get Started
+      <Icon icon={ArrowRight} />
+    </Link>
+  </div>
+  <div class="card2 bg-alt flex flex-col gap-4">
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center gap-3">
         <Icon icon={Server} />
-        <input bind:value={relay} class="grow" type="text" />
-      </label>
-    {/snippet}
-    {#snippet info()}
-      <p>
-        This can be any nostr relay where you'd like to host your space.
-        <Button class="link" onclick={() => pushModal(InfoRelay)}>What is a relay?</Button>
-      </p>
-    {/snippet}
-  </Field>
+        <h3 class="text-lg font-bold">Self-Hosted</h3>
+      </div>
+      <ul class="flex list-inside list-disc flex-col gap-1 text-sm opacity-70">
+        <li>Unlimited customization and control</li>
+        <li>Free and open source software</li>
+        <li>Full-featured admin dashboards available</li>
+      </ul>
+    </div>
+    <Link class="btn btn-neutral" href="https://github.com/coracle-social/zooid">
+      Get Started
+      <Icon icon={ArrowRight} />
+    </Link>
+  </div>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="btn btn-primary">
-      Next
-      <Icon icon={AltArrowRight} />
-    </Button>
   </ModalFooter>
-</form>
+</div>
