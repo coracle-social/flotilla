@@ -7,7 +7,6 @@
   import Button from "@lib/components/Button.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
-  import SpaceCreate from "@app/components/SpaceCreate.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import {pushModal} from "@app/util/modal"
 
@@ -16,8 +15,6 @@
   }
 
   const {hideDiscover}: Props = $props()
-
-  const startCreate = () => pushModal(SpaceCreate)
 
   const startJoin = () => pushModal(SpaceInviteAccept)
 </script>
@@ -59,7 +56,7 @@
       {/snippet}
     </CardButton>
   </Button>
-  <Button onclick={startCreate}>
+  <Link href="/spaces/create">
     <CardButton class="btn-neutral">
       {#snippet icon()}
         <div><Icon icon={AddCircle} size={7} /></div>
@@ -71,5 +68,5 @@
         <div>Just a few questions and you'll be on your way.</div>
       {/snippet}
     </CardButton>
-  </Button>
+  </Link>
 </div>
