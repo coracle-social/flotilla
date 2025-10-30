@@ -12,10 +12,10 @@
 </script>
 
 <div
-  class="relative border-l-2 border-solid border-primary bg-base-300 px-2 py-1 pr-8 text-xs"
+  class="relative flex h-8 items-center justify-between border-l-2 border-solid border-primary bg-base-300 px-2 pr-7 text-xs"
   transition:slide>
   <p class="text-primary">Editing message</p>
-  <Button class="absolute right-2 top-2 cursor-pointer" onclick={clear}>
+  <Button onclick={clear} class="flex items-center">
     <Icon icon={CloseCircle} />
   </Button>
 </div>

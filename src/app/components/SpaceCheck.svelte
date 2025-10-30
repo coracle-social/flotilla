@@ -8,7 +8,6 @@
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceVisitConfirm, {confirmSpaceVisit} from "@app/components/SpaceVisitConfirm.svelte"
@@ -49,7 +48,10 @@
   </ModalHeader>
   <div class="m-auto flex flex-col gap-4">
     {#if loading}
-      <Spinner loading>Hold tight, we're checking your connection.</Spinner>
+      <p class="flex items-center gap-3">
+        <span class="loading loading-spinner"></span>
+        Hold tight, we're checking your connection.
+      </p>
     {:else if error}
       <p>Oops! We ran into some problems:</p>
       <p class="card2 bg-alt">{error}</p>

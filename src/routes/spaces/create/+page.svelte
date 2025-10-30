@@ -35,7 +35,7 @@
             <li>Full-featured admin dashboard</li>
           </ul>
         </div>
-        <Link class="btn btn-primary" href="https://info.coracle.social">
+        <Link external class="btn btn-primary" href="https://hosting.coracle.social">
           Get Started
           <Icon icon={ArrowRight} />
         </Link>
