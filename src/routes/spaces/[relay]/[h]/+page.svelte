@@ -386,7 +386,7 @@
 
 <PageContent bind:element onscroll={onScroll} class="flex flex-col-reverse pt-4">
   <div bind:this={dynamicPadding}></div>
-  {#if $room?.private && $membershipStatus !== MembershipStatus.Granted}
+  {#if $room?.isPrivate && $membershipStatus !== MembershipStatus.Granted}
     <div class="py-20">
       <div class="card2 col-8 m-auto max-w-md items-center text-center">
         <p class="row-2">You aren't currently a member of this room.</p>
@@ -450,9 +450,9 @@
 </PageContent>
 
 <div class="chat__compose bg-base-200" bind:this={chatCompose}>
-  {#if $room?.private && $membershipStatus !== MembershipStatus.Granted}
+  {#if $room?.isPrivate && $membershipStatus !== MembershipStatus.Granted}
     <!-- pass -->
-  {:else if $room?.closed && $membershipStatus !== MembershipStatus.Granted}
+  {:else if $room?.isClosed && $membershipStatus !== MembershipStatus.Granted}
     <div class="bg-alt card m-4 flex flex-row items-center justify-between px-4 py-3">
       <p>Only members are allowed to post to this room.</p>
       {#if $membershipStatus === MembershipStatus.Pending}

@@ -4,6 +4,8 @@ import {get, derived, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {
   on,
+  gt,
+  max,
   spec,
   call,
   first,
@@ -17,7 +19,6 @@ import {
   pushToMapKey,
   shuffle,
   parseJson,
-  fromPairs,
   memoize,
   addToMapKey,
   identity,
@@ -88,7 +89,6 @@ import {
   getPubkeyTagValues,
   getRelaysFromList,
   getRelayTagValues,
-  getTag,
   getTagValue,
   getTagValues,
   isRelayUrl,
@@ -97,8 +97,16 @@ import {
   readList,
   RelayMode,
   verifyEvent,
+  readRoomMeta,
 } from "@welshman/util"
-import type {TrustedEvent, RelayProfile, PublishedList, List, Filter} from "@welshman/util"
+import type {
+  TrustedEvent,
+  RelayProfile,
+  PublishedList,
+  PublishedRoomMeta,
+  List,
+  Filter,
+} from "@welshman/util"
 import {decrypt} from "@welshman/signer"
 import {routerContext, Router} from "@welshman/router"
 import {
@@ -534,16 +542,9 @@ export const chatSearch = derived(chats, $chats =>
 
 export const messages = deriveEvents(repository, {filters: [{kinds: [MESSAGE]}]})
 
-export type Room = {
+export type Room = PublishedRoomMeta & {
   id: string
   url: string
-  h: string
-  name: string
-  event: TrustedEvent
-  closed: boolean
-  private: boolean
-  picture?: string
-  about?: string
 }
 
 export const makeRoomId = (url: string, h: string) => `${url}'${h}`
@@ -553,39 +554,37 @@ export const splitRoomId = (id: string) => id.split("'")
 export const hasNip29 = (relay?: RelayProfile) =>
   relay?.supported_nips?.map?.(String)?.includes?.("29")
 
+export const roomMetas = deriveEventsMapped<PublishedRoomMeta>(repository, {
+  filters: [{kinds: [ROOM_META]}],
+  itemToEvent: item => item.event,
+  eventToItem: readRoomMeta,
+})
+
+export const roomDeletes = deriveEvents(repository, {
+  filters: [{kinds: [ROOM_DELETE]}],
+})
+
 export const rooms = derived(
-  [deriveEvents(repository, {filters: [{kinds: [ROOM_META, ROOM_DELETE]}]}), getUrlsForEvent],
-  ([$events, $getUrlsForEvent]) => {
+  [roomMetas, roomDeletes, getUrlsForEvent],
+  ([$roomMetas, $roomDeletes, $getUrlsForEvent]) => {
     const result = new Map<string, Room>()
+    const deletedByH = new Map<string, number>()
 
-    for (const event of sortBy(e => e.created_at, $events)) {
-      for (const url of $getUrlsForEvent(event.id)) {
-        if (event.kind === ROOM_META) {
-          const meta = fromPairs(event.tags)
-          const h = meta.d
+    for (const event of $roomDeletes) {
+      for (const h of getTagValues("h", event.tags)) {
+        deletedByH.set(h, max([deletedByH.get(h), event.created_at]))
+      }
+    }
 
-          if (h) {
-            const id = makeRoomId(url, h)
+    for (const meta of $roomMetas) {
+      if (gt(deletedByH.get(meta.h), meta.event.created_at)) {
+        continue
+      }
 
-            result.set(id, {
-              id,
-              url,
-              h,
-              event,
-              name: meta.name || h,
-              closed: Boolean(getTag("closed", event.tags)),
-              private: Boolean(getTag("private", event.tags)),
-              picture: meta.picture,
-              about: meta.about,
-            })
-          }
-        }
+      for (const url of $getUrlsForEvent(meta.event.id)) {
+        const id = makeRoomId(url, meta.h)
 
-        if (event.kind === ROOM_DELETE) {
-          for (const h of getTagValues("h", event.tags)) {
-            result.delete(makeRoomId(url, h))
-          }
-        }
+        result.set(id, {...meta, url, id})
       }
     }
 

@@ -22,7 +22,7 @@
   {:else}
     <img alt="Room icon" {src} class="h-6 w-6 rounded-lg" />
   {/if}
-{:else if $room?.closed || $room?.private}
+{:else if $room?.isClosed || $room?.isPrivate}
   <Icon icon={Lock} />
 {:else}
   <Icon icon={Hashtag} />
