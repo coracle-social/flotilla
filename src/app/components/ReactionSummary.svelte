@@ -1,4 +1,5 @@
 <script lang="ts">
+  import cx from "classnames"
   import {onMount} from "svelte"
   import type {Snippet} from "svelte"
   import {groupBy, sum, uniq, uniqBy, batch, displayList} from "@welshman/lib"
@@ -134,10 +135,15 @@
       <button
         type="button"
         data-tip={tooltip}
-        class="flex-inline btn btn-neutral btn-xs gap-1 rounded-full text-xs font-normal {reactionClass}"
-        class:tooltip={!noTooltip && !isMobile}
-        class:btn-neutral={!isOwn}
-        class:btn-primary={isOwn}>
+        class={cx(
+          reactionClass,
+          "flex-inline btn btn-outline btn-neutral btn-xs gap-1 rounded-full text-xs font-normal",
+          {
+            tooltip: !noTooltip && !isMobile,
+            "border-neutral-content/20": !isOwn,
+            "btn-primary": isOwn,
+          },
+        )}>
         <Reaction event={zaps[0].request} />
         <span>{amount}</span>
       </button>
@@ -151,10 +157,15 @@
       <button
         type="button"
         data-tip={tooltip}
-        class="flex-inline btn btn-neutral btn-xs gap-1 rounded-full font-normal {reactionClass}"
-        class:tooltip={!noTooltip && !isMobile}
-        class:btn-neutral={!isOwn}
-        class:btn-primary={isOwn}
+        class={cx(
+          reactionClass,
+          "flex-inline btn btn-outline btn-neutral btn-xs gap-1 rounded-full font-normal",
+          {
+            tooltip: !noTooltip && !isMobile,
+            "border-neutral-content/20": !isOwn,
+            "btn-primary": isOwn,
+          },
+        )}
         onclick={stopPropagation(preventDefault(onClick))}>
         <Reaction event={events[0]} />
         {#if events.length > 1}
