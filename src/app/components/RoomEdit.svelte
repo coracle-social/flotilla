@@ -12,7 +12,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RoomForm from "@app/components/RoomForm.svelte"
-  import {deriveChannel} from "@app/core/state"
+  import {deriveRoom} from "@app/core/state"
   import {makeSpacePath} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
@@ -24,8 +24,8 @@
 
   const {url, h}: Props = $props()
 
-  const channel = deriveChannel(url, h)
-  const initialValues = $channel ? readRoomMeta($channel.event) : makeRoomMeta({h})
+  const room = deriveRoom(url, h)
+  const initialValues = $room ? readRoomMeta($room.event) : makeRoomMeta({h})
 
   const back = () => history.back()
 

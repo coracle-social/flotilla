@@ -5,11 +5,11 @@
   import {isMobile} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
-  import {getChannelItemPath} from "@app/util/routes"
+  import {getRoomItemPath} from "@app/util/routes"
 
   const props: ComponentProps<typeof NoteContent> = $props()
 
-  const path = getChannelItemPath(props.url!, props.event)
+  const path = getRoomItemPath(props.url!, props.event)
 </script>
 
 <div class={cx("text-sm", {"card2 card2-sm bg-alt": props.event.kind !== MESSAGE})}>

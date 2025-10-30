@@ -18,12 +18,12 @@
   import Divider from "@lib/components/Divider.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
-  import ChannelItem from "@app/components/ChannelItem.svelte"
-  import ChannelItemAddMember from "@src/app/components/ChannelItemAddMember.svelte"
-  import ChannelItemRemoveMember from "@src/app/components/ChannelItemRemoveMember.svelte"
-  import ChannelCompose from "@app/components/ChannelCompose.svelte"
-  import ChannelComposeEdit from "@src/app/components/ChannelComposeEdit.svelte"
-  import ChannelComposeParent from "@app/components/ChannelComposeParent.svelte"
+  import RoomItem from "@app/components/RoomItem.svelte"
+  import RoomItemAddMember from "@src/app/components/RoomItemAddMember.svelte"
+  import RoomItemRemoveMember from "@src/app/components/RoomItemRemoveMember.svelte"
+  import RoomCompose from "@app/components/RoomCompose.svelte"
+  import RoomComposeEdit from "@src/app/components/RoomComposeEdit.svelte"
+  import RoomComposeParent from "@app/components/RoomComposeParent.svelte"
   import {userSettingsValues, decodeRelay, PROTECTED, MESSAGE_KINDS} from "@app/core/state"
   import {prependParent, canEnforceNip70, publishDelete} from "@app/core/commands"
   import {setChecked, checked} from "@app/util/notifications"
@@ -128,7 +128,7 @@
   let showScrollButton = $state(false)
   let cleanup: () => void
   let events: Readable<TrustedEvent[]> = $state(readable([]))
-  let compose: ChannelCompose | undefined = $state()
+  let compose: RoomCompose | undefined = $state()
   let eventToEdit: TrustedEvent | undefined = $state()
 
   const elements = $derived.by(() => {
@@ -274,12 +274,12 @@
     {:else}
       {@const event = $state.snapshot(value as TrustedEvent)}
       {#if event.kind === RELAY_ADD_MEMBER}
-        <ChannelItemAddMember {url} {event} />
+        <RoomItemAddMember {url} {event} />
       {:else if event.kind === RELAY_REMOVE_MEMBER}
-        <ChannelItemRemoveMember {url} {event} />
+        <RoomItemRemoveMember {url} {event} />
       {:else}
         <div class:-mt-1={!showPubkey}>
-          <ChannelItem
+          <RoomItem
             {url}
             {event}
             {replyTo}
@@ -302,17 +302,17 @@
 <div class="chat__compose bg-base-200" bind:this={chatCompose}>
   <div>
     {#if parent}
-      <ChannelComposeParent event={parent} clear={clearParent} verb="Replying to" />
+      <RoomComposeParent event={parent} clear={clearParent} verb="Replying to" />
     {/if}
     {#if share}
-      <ChannelComposeParent event={share} clear={clearShare} verb="Sharing" />
+      <RoomComposeParent event={share} clear={clearShare} verb="Sharing" />
     {/if}
     {#if eventToEdit}
-      <ChannelComposeEdit clear={clearEventToEdit} />
+      <RoomComposeEdit clear={clearEventToEdit} />
     {/if}
   </div>
   {#key eventToEdit}
-    <ChannelCompose
+    <RoomCompose
       {url}
       {onSubmit}
       {onEditPrevious}

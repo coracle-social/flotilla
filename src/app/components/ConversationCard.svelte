@@ -8,7 +8,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {goToEvent} from "@app/util/routes"
-  import {displayChannel} from "@app/core/state"
+  import {displayRoom} from "@app/core/state"
 
   type Props = {
     url: string
@@ -30,7 +30,7 @@
         <div class="flex items-center gap-2 text-sm opacity-70">
           {#if h}
             <span class="truncate font-medium text-blue-400">
-              #{displayChannel(url, h)}
+              #{displayRoom(url, h)}
             </span>
             <span class="opacity-50">•</span>
           {/if}

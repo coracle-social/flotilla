@@ -24,11 +24,11 @@
 
   type Props = {
     url?: string
-    channel?: string
+    room?: string
     hideSpaceField?: boolean
   }
 
-  const {url = "", channel = "push", hideSpaceField = false}: Props = $props()
+  const {url = "", room = "push", hideSpaceField = false}: Props = $props()
 
   const dmStatus = $derived($dmAlert ? deriveAlertStatus(getAddress($dmAlert.event)) : undefined)
 
@@ -46,7 +46,7 @@
     }),
   )
 
-  const startAlert = () => pushModal(AlertAdd, {url, channel, hideSpaceField})
+  const startAlert = () => pushModal(AlertAdd, {url, room, hideSpaceField})
 
   const uncheckDmAlert = async (message: string) => {
     await sleep(100)

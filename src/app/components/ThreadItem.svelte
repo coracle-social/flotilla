@@ -6,7 +6,7 @@
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ThreadActions from "@app/components/ThreadActions.svelte"
-  import ChannelLink from "@app/components/ChannelLink.svelte"
+  import RoomLink from "@app/components/RoomLink.svelte"
   import {makeThreadPath} from "@app/util/routes"
 
   type Props = {
@@ -39,7 +39,7 @@
       Posted by
       <ProfileLink pubkey={event.pubkey} {url} />
       {#if h}
-        in <ChannelLink {url} {h} />
+        in <RoomLink {url} {h} />
       {/if}
     </span>
     <ThreadActions showActivity {url} {event} />

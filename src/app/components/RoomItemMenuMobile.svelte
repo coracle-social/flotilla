@@ -17,7 +17,7 @@
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import {ENABLE_ZAPS} from "@app/core/state"
   import {publishReaction, canEnforceNip70} from "@app/core/commands"
-  import {getChannelItemPath} from "@app/util/routes"
+  import {getRoomItemPath} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
 
   type Props = {
@@ -28,7 +28,7 @@
 
   const {url, event, reply}: Props = $props()
 
-  const path = getChannelItemPath(url, event)
+  const path = getRoomItemPath(url, event)
 
   const shouldProtect = canEnforceNip70(url)
 

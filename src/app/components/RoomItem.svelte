@@ -23,14 +23,14 @@
   import ThunkFailure from "@app/components/ThunkFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import ChannelItemZapButton from "@app/components/ChannelItemZapButton.svelte"
-  import ChannelItemEmojiButton from "@app/components/ChannelItemEmojiButton.svelte"
-  import ChannelItemMenuButton from "@app/components/ChannelItemMenuButton.svelte"
-  import ChannelItemMenuMobile from "@app/components/ChannelItemMenuMobile.svelte"
-  import ChannelItemContent from "@app/components/ChannelItemContent.svelte"
+  import RoomItemZapButton from "@app/components/RoomItemZapButton.svelte"
+  import RoomItemEmojiButton from "@app/components/RoomItemEmojiButton.svelte"
+  import RoomItemMenuButton from "@app/components/RoomItemMenuButton.svelte"
+  import RoomItemMenuMobile from "@app/components/RoomItemMenuMobile.svelte"
+  import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import {colors, ENABLE_ZAPS, deriveEventsForUrl} from "@app/core/state"
   import {publishDelete, publishReaction, canEnforceNip70} from "@app/core/commands"
-  import {getChannelItemPath} from "@app/util/routes"
+  import {getRoomItemPath} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
 
   interface Props {
@@ -53,7 +53,7 @@
     onEdit,
   }: Props = $props()
 
-  const path = getChannelItemPath(url, event)
+  const path = getRoomItemPath(url, event)
   const shouldProtect = canEnforceNip70(url)
   const today = formatTimestampAsDate(now())
   const profile = deriveProfile(event.pubkey, [url])
@@ -65,7 +65,7 @@
   const reply = () => replyTo!(event)
   const edit = canEdit(event) ? () => onEdit(event) : undefined
 
-  const onTap = () => pushModal(ChannelItemMenuMobile, {url, event, reply, edit})
+  const onTap = () => pushModal(RoomItemMenuMobile, {url, event, reply, edit})
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey, url})
 
@@ -105,7 +105,7 @@
         </div>
       {/if}
       <div class:mt-2={showPubkey && event.kind !== MESSAGE}>
-        <ChannelItemContent {url} {event} />
+        <RoomItemContent {url} {event} />
         {#if thunk}
           <ThunkFailure showToastOnRetry {thunk} class="mt-2 text-sm" />
         {/if}
@@ -142,9 +142,9 @@
       class="join absolute right-1 top-1 border border-solid border-neutral text-xs opacity-0 transition-all"
       class:group-hover:opacity-100={!isMobile}>
       {#if ENABLE_ZAPS}
-        <ChannelItemZapButton {url} {event} />
+        <RoomItemZapButton {url} {event} />
       {/if}
-      <ChannelItemEmojiButton {url} {event} />
+      <RoomItemEmojiButton {url} {event} />
       {#if replyTo}
         <Button class="btn join-item btn-xs" onclick={reply}>
           <Icon icon={Reply} size={4} />
@@ -155,7 +155,7 @@
           <Icon icon={Pen} size={4} />
         </Button>
       {/if}
-      <ChannelItemMenuButton {url} {event} />
+      <RoomItemMenuButton {url} {event} />
     </button>
   {/if}
 </TapTarget>

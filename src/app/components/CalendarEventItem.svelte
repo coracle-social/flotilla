@@ -5,7 +5,7 @@
   import CalendarEventActions from "@app/components/CalendarEventActions.svelte"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import ChannelLink from "@app/components/ChannelLink.svelte"
+  import RoomLink from "@app/components/RoomLink.svelte"
   import {makeCalendarPath} from "@app/util/routes"
 
   type Props = {
@@ -24,7 +24,7 @@
     <span class="whitespace-nowrap py-1 text-sm opacity-75">
       Posted by <ProfileLink pubkey={event.pubkey} {url} />
       {#if h}
-        in <ChannelLink {url} {h} />
+        in <RoomLink {url} {h} />
       {/if}
     </span>
     <CalendarEventActions showActivity {url} {event} />

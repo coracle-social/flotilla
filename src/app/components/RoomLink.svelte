@@ -1,7 +1,7 @@
 <script lang="ts">
   import cx from "classnames"
   import Link from "@lib/components/Link.svelte"
-  import ChannelName from "@app/components/ChannelName.svelte"
+  import RoomName from "@app/components/RoomName.svelte"
   import {makeSpacePath} from "@app/util/routes"
 
   type Props = {
@@ -17,5 +17,5 @@
 </script>
 
 <Link href={path} class={cx(props.class, {"link-content bg-alt": !unstyled})}>
-  #<ChannelName {h} {url} />
+  #<RoomName {h} {url} />
 </Link>

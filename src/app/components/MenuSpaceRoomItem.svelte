@@ -1,6 +1,6 @@
 <script lang="ts">
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
-  import ChannelNameWithImage from "@app/components/ChannelNameWithImage.svelte"
+  import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import {makeRoomPath} from "@app/util/routes"
   import {notifications} from "@app/util/notifications"
 
@@ -20,5 +20,5 @@
   href={path}
   {replaceState}
   notification={notify ? $notifications.has(path) : false}>
-  <ChannelNameWithImage {url} {h} />
+  <RoomNameWithImage {url} {h} />
 </SecondaryNavItem>

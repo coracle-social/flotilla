@@ -6,7 +6,7 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import GoalActions from "@app/components/GoalActions.svelte"
   import GoalSummary from "@app/components/GoalSummary.svelte"
-  import ChannelLink from "@app/components/ChannelLink.svelte"
+  import RoomLink from "@app/components/RoomLink.svelte"
   import {makeGoalPath} from "@app/util/routes"
 
   type Props = {
@@ -33,7 +33,7 @@
     <span class="whitespace-nowrap py-1 text-sm opacity-75">
       Posted by <ProfileLink pubkey={event.pubkey} {url} />
       {#if h}
-        in <ChannelLink {url} {h} />
+        in <RoomLink {url} {h} />
       {/if}
     </span>
     <GoalActions showActivity {url} {event} />

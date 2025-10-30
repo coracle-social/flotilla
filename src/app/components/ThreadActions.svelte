@@ -2,7 +2,7 @@
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {getTagValue} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
-  import ChannelName from "@app/components/ChannelName.svelte"
+  import RoomName from "@app/components/RoomName.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
@@ -33,7 +33,7 @@
 <div class="flex flex-grow flex-wrap justify-end gap-2">
   {#if h && showRoom}
     <Link href={makeSpacePath(url, h)} class="btn btn-neutral btn-xs rounded-full">
-      Posted in #<ChannelName {h} {url} />
+      Posted in #<RoomName {h} {url} />
     </Link>
   {/if}
   <ReactionSummary {url} {event} {deleteReaction} {createReaction} reactionClass="tooltip-left" />

@@ -149,7 +149,7 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
   return entityLink(nip19.neventEncode({id: event.id, relays: urls}))
 }
 
-export const getChannelItemPath = (url: string, event: TrustedEvent) => {
+export const getRoomItemPath = (url: string, event: TrustedEvent) => {
   switch (event.kind) {
     case THREAD:
       return makeThreadPath(url, event.id)
