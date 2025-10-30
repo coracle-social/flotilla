@@ -20,10 +20,10 @@
 
   type Props = {
     url: string
-    room?: string
+    h?: string
   }
 
-  const {url, room}: Props = $props()
+  const {url, h}: Props = $props()
 
   const shouldProtect = canEnforceNip70(url)
 
@@ -64,8 +64,8 @@
       tags.push(PROTECTED)
     }
 
-    if (room) {
-      tags.push(["h", room])
+    if (h) {
+      tags.push(["h", h])
     }
 
     publishThunk({

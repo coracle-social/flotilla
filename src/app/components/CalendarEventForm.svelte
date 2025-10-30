@@ -23,7 +23,7 @@
 
   type Props = {
     url: string
-    room?: string
+    h?: string
     header: Snippet
     initialValues?: {
       d: string
@@ -35,7 +35,7 @@
     }
   }
 
-  const {url, room, header, initialValues}: Props = $props()
+  const {url, h, header, initialValues}: Props = $props()
 
   const shouldProtect = canEnforceNip70(url)
 
@@ -85,8 +85,8 @@
       tags.push(PROTECTED)
     }
 
-    if (room) {
-      tags.push(["h", room])
+    if (h) {
+      tags.push(["h", h])
     }
 
     const event = makeEvent(EVENT_TIME, {content, tags})

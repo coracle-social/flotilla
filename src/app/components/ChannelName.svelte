@@ -1,7 +1,7 @@
 <script lang="ts">
   import {channelsById, makeChannelId} from "@app/core/state"
 
-  const {url, room} = $props()
+  const {url, h} = $props()
 </script>
 
-{$channelsById.get(makeChannelId(url, room))?.name || room}
+{$channelsById.get(makeChannelId(url, h))?.name || h}

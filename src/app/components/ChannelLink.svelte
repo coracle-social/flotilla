@@ -5,17 +5,17 @@
   import {makeSpacePath} from "@app/util/routes"
 
   type Props = {
-    room: string
+    h: string
     url: string
     class?: string
     unstyled?: boolean
   }
 
-  const {room, url, unstyled, ...props}: Props = $props()
+  const {h, url, unstyled, ...props}: Props = $props()
 
-  const path = makeSpacePath(url, room)
+  const path = makeSpacePath(url, h)
 </script>
 
 <Link href={path} class={cx(props.class, {"link-content bg-alt": !unstyled})}>
-  #<ChannelName {room} {url} />
+  #<ChannelName {h} {url} />
 </Link>

@@ -63,26 +63,26 @@
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
 
-  const {room, relay} = $page.params as MakeNonOptional<typeof $page.params>
+  const {h, relay} = $page.params as MakeNonOptional<typeof $page.params>
   const mounted = now()
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay(relay)
-  const channel = deriveChannel(url, room)
+  const channel = deriveChannel(url, h)
   const shouldProtect = canEnforceNip70(url)
   const userRooms = deriveUserRooms(url)
-  const userIsAdmin = deriveUserIsRoomAdmin(url, room)
-  const isFavorite = $derived($userRooms.includes(room))
-  const membershipStatus = deriveUserRoomMembershipStatus(url, room)
+  const userIsAdmin = deriveUserIsRoomAdmin(url, h)
+  const isFavorite = $derived($userRooms.includes(h))
+  const membershipStatus = deriveUserRoomMembershipStatus(url, h)
 
-  const addFavorite = () => addRoomMembership(url, room)
+  const addFavorite = () => addRoomMembership(url, h)
 
-  const removeFavorite = () => removeRoomMembership(url, room)
+  const removeFavorite = () => removeRoomMembership(url, h)
 
   const join = async () => {
     joining = true
 
     try {
-      const message = await waitForThunkError(joinRoom(url, makeRoomMeta({h: room})))
+      const message = await waitForThunkError(joinRoom(url, makeRoomMeta({h})))
 
       if (message && !message.startsWith("duplicate:")) {
         return pushToast({theme: "error", message})
@@ -98,7 +98,7 @@
   const leave = async () => {
     leaving = true
     try {
-      const message = await waitForThunkError(leaveRoom(url, makeRoomMeta({h: room})))
+      const message = await waitForThunkError(leaveRoom(url, makeRoomMeta({h})))
 
       if (message && !message.startsWith("duplicate:")) {
         pushToast({theme: "error", message})
@@ -126,7 +126,7 @@
   }
 
   const onSubmit = async ({content, tags}: EventContent) => {
-    tags.push(["h", room])
+    tags.push(["h", h])
 
     if (await shouldProtect) {
       tags.push(PROTECTED)
@@ -270,7 +270,7 @@
     const feed = makeFeed({
       url,
       element: element!,
-      filters: [{kinds: [...MESSAGE_KINDS, ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [room]}],
+      filters: [{kinds: [...MESSAGE_KINDS, ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [h]}],
       onExhausted: () => {
         loadingEvents = false
       },
@@ -297,7 +297,7 @@
     }
   }
 
-  const startEdit = () => pushModal(RoomEdit, {url, room})
+  const startEdit = () => pushModal(RoomEdit, {url, h})
 
   onMount(() => {
     const observer = new ResizeObserver(() => {
@@ -334,7 +334,7 @@
   {/snippet}
   {#snippet title()}
     <strong class="ellipsize">
-      <ChannelName {url} {room} />
+      <ChannelName {url} {h} />
     </strong>
   {/snippet}
   {#snippet action()}
@@ -486,7 +486,7 @@
     {#key eventToEdit}
       <ChannelCompose
         {url}
-        {room}
+        {h}
         {onSubmit}
         {onEditPrevious}
         content={eventToEdit?.content}

@@ -25,7 +25,7 @@
 
   const {url, event, showRoom, showActivity}: Props = $props()
 
-  const room = getTagValue("h", event.tags)
+  const h = getTagValue("h", event.tags)
   const path = makeCalendarPath(url, event.id)
   const shouldProtect = canEnforceNip70(url)
 
@@ -39,9 +39,9 @@
 </script>
 
 <div class="flex flex-grow flex-wrap justify-end gap-2">
-  {#if room && showRoom}
-    <Link href={makeSpacePath(url, room)} class="btn btn-neutral btn-xs rounded-full">
-      Posted in #<ChannelName {room} {url} />
+  {#if h && showRoom}
+    <Link href={makeSpacePath(url, h)} class="btn btn-neutral btn-xs rounded-full">
+      Posted in #<ChannelName {h} {url} />
     </Link>
   {/if}
   <ReactionSummary {url} {event} {deleteReaction} {createReaction} reactionClass="tooltip-left" />

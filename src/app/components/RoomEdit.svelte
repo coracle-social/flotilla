@@ -19,13 +19,13 @@
 
   type Props = {
     url: string
-    room: string
+    h: string
   }
 
-  const {url, room}: Props = $props()
+  const {url, h}: Props = $props()
 
-  const channel = deriveChannel(url, room)
-  const initialValues = $channel ? readRoomMeta($channel.event) : makeRoomMeta({h: room})
+  const channel = deriveChannel(url, h)
+  const initialValues = $channel ? readRoomMeta($channel.event) : makeRoomMeta({h})
 
   const back = () => history.back()
 
@@ -37,7 +37,7 @@
       message:
         "This room will no longer be accessible to space members, and all messages posted to it will be deleted.",
       confirm: async () => {
-        const thunk = deleteRoom(url, makeRoomMeta({h: room}))
+        const thunk = deleteRoom(url, makeRoomMeta({h}))
         const message = await waitForThunkError(thunk)
 
         if (message) {

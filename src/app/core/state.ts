@@ -537,7 +537,7 @@ export const messages = deriveEvents(repository, {filters: [{kinds: [MESSAGE]}]}
 export type Channel = {
   id: string
   url: string
-  room: string
+  h: string
   name: string
   event: TrustedEvent
   closed: boolean
@@ -546,7 +546,7 @@ export type Channel = {
   about?: string
 }
 
-export const makeChannelId = (url: string, room: string) => `${url}'${room}`
+export const makeChannelId = (url: string, h: string) => `${url}'${h}`
 
 export const splitChannelId = (id: string) => id.split("'")
 
@@ -562,17 +562,17 @@ export const channels = derived(
       for (const url of $getUrlsForEvent(event.id)) {
         if (event.kind === ROOM_META) {
           const meta = fromPairs(event.tags)
-          const room = meta.d
+          const h = meta.d
 
-          if (room) {
-            const id = makeChannelId(url, room)
+          if (h) {
+            const id = makeChannelId(url, h)
 
             result.set(id, {
               id,
               url,
-              room,
+              h,
               event,
-              name: meta.name || room,
+              name: meta.name || h,
               closed: Boolean(getTag("closed", event.tags)),
               private: Boolean(getTag("private", event.tags)),
               picture: meta.picture,
@@ -582,8 +582,8 @@ export const channels = derived(
         }
 
         if (event.kind === ROOM_DELETE) {
-          for (const room of getTagValues("h", event.tags)) {
-            result.delete(makeChannelId(url, room))
+          for (const h of getTagValues("h", event.tags)) {
+            result.delete(makeChannelId(url, h))
           }
         }
       }
@@ -604,24 +604,21 @@ export const {
   store: channels,
   getKey: channel => channel.id,
   load: async (id: string) => {
-    const [url, room] = splitChannelId(id)
+    const [url, h] = splitChannelId(id)
 
     await load({
       relays: [url],
-      filters: [{kinds: [ROOM_META], "#d": [room]}],
+      filters: [{kinds: [ROOM_META], "#d": [h]}],
     })
   },
 })
 
-export const deriveChannel = (url: string, room: string) => _deriveChannel(makeChannelId(url, room))
+export const deriveChannel = (url: string, h: string) => _deriveChannel(makeChannelId(url, h))
 
-export const loadChannel = (url: string, room: string) => _loadChannel(makeChannelId(url, room))
+export const displayChannel = (url: string, h: string) =>
+  channelsById.get().get(makeChannelId(url, h))?.name || h
 
-export const displayChannel = (url: string, room: string) =>
-  channelsById.get().get(makeChannelId(url, room))?.name || room
-
-export const roomComparator = (url: string) => (room: string) =>
-  displayChannel(url, room).toLowerCase()
+export const roomComparator = (url: string) => (h: string) => displayChannel(url, h).toLowerCase()
 
 // User space/room selections
 
@@ -685,9 +682,9 @@ export const getSpaceRoomsFromGroupSelections = (
 ) => {
   const rooms: string[] = []
 
-  for (const [_, room, relay] of getGroupTags(getListTags($groupSelections))) {
+  for (const [_, h, relay] of getGroupTags(getListTags($groupSelections))) {
     if (url === relay) {
-      rooms.push(room)
+      rooms.push(h)
     }
   }
 
@@ -707,9 +704,9 @@ export const deriveUserRooms = (url: string) =>
   derived([userGroupSelections, channelsById], ([$userGroupSelections, $channelsById]) => {
     const rooms: string[] = []
 
-    for (const room of getSpaceRoomsFromGroupSelections(url, $userGroupSelections)) {
-      if ($channelsById.has(makeChannelId(url, room))) {
-        rooms.push(room)
+    for (const h of getSpaceRoomsFromGroupSelections(url, $userGroupSelections)) {
+      if ($channelsById.has(makeChannelId(url, h))) {
+        rooms.push(h)
       }
     }
 
@@ -720,9 +717,9 @@ export const deriveOtherRooms = (url: string) =>
   derived([deriveUserRooms(url), channelsByUrl], ([$userRooms, $channelsByUrl]) => {
     const rooms: string[] = []
 
-    for (const {room} of $channelsByUrl.get(url) || []) {
-      if (!$userRooms.includes(room)) {
-        rooms.push(room)
+    for (const {h} of $channelsByUrl.get(url) || []) {
+      if (!$userRooms.includes(h)) {
+        rooms.push(h)
       }
     }
 
@@ -765,11 +762,11 @@ export const deriveSpaceMembers = (url: string) =>
     },
   )
 
-export const deriveRoomMembers = (url: string, room: string) =>
+export const deriveRoomMembers = (url: string, h: string) =>
   derived(
     deriveEventsForUrl(url, [
-      {kinds: [ROOM_MEMBERS], "#d": [room]},
-      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [room]},
+      {kinds: [ROOM_MEMBERS], "#d": [h]},
+      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [h]},
     ]),
     $events => {
       const membersEvent = $events.find(spec({kind: ROOM_MEMBERS}))
@@ -800,8 +797,8 @@ export const deriveRoomMembers = (url: string, room: string) =>
     },
   )
 
-export const deriveRoomAdmins = (url: string, room: string) =>
-  derived(deriveEventsForUrl(url, [{kinds: [ROOM_ADMINS], "#d": [room]}]), $events => {
+export const deriveRoomAdmins = (url: string, h: string) =>
+  derived(deriveEventsForUrl(url, [{kinds: [ROOM_ADMINS], "#d": [h]}]), $events => {
     const adminsEvent = first($events)
 
     if (adminsEvent) {
@@ -847,12 +844,12 @@ export const deriveUserSpaceMembershipStatus = (url: string) =>
     },
   )
 
-export const deriveUserRoomMembershipStatus = (url: string, room: string) =>
+export const deriveUserRoomMembershipStatus = (url: string, h: string) =>
   derived(
     [
       pubkey,
-      deriveRoomMembers(url, room),
-      deriveEventsForUrl(url, [{kinds: [ROOM_JOIN, ROOM_LEAVE], "#h": [room]}]),
+      deriveRoomMembers(url, h),
+      deriveEventsForUrl(url, [{kinds: [ROOM_JOIN, ROOM_LEAVE], "#h": [h]}]),
     ],
     ([$pubkey, $members, $events]) => {
       const isMember = $members.includes($pubkey)
@@ -885,8 +882,8 @@ export const deriveUserCanCreateRoom = (url: string) =>
     },
   )
 
-export const deriveUserIsRoomAdmin = (url: string, room: string) =>
-  derived([pubkey, deriveRoomAdmins(url, room)], ([$pubkey, $admins]) => $admins.includes($pubkey!))
+export const deriveUserIsRoomAdmin = (url: string, h: string) =>
+  derived([pubkey, deriveRoomAdmins(url, h)], ([$pubkey, $admins]) => $admins.includes($pubkey!))
 
 // Other utils
 

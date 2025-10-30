@@ -15,7 +15,7 @@
 
   const {url, event}: Props = $props()
 
-  const room = getTagValue("h", event.tags)
+  const h = getTagValue("h", event.tags)
 </script>
 
 <Link class="col-3 card2 bg-alt w-full cursor-pointer" href={makeCalendarPath(url, event.id)}>
@@ -23,8 +23,8 @@
   <div class="flex w-full flex-col items-end justify-between gap-2 sm:flex-row">
     <span class="whitespace-nowrap py-1 text-sm opacity-75">
       Posted by <ProfileLink pubkey={event.pubkey} {url} />
-      {#if room}
-        in <ChannelLink {url} {room} />
+      {#if h}
+        in <ChannelLink {url} {h} />
       {/if}
     </span>
     <CalendarEventActions showActivity {url} {event} />

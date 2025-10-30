@@ -17,7 +17,7 @@
   const {url, event}: Props = $props()
 
   const title = getTagValue("title", event.tags)
-  const room = getTagValue("h", event.tags)
+  const h = getTagValue("h", event.tags)
 </script>
 
 <Link class="col-2 card2 bg-alt w-full cursor-pointer" href={makeThreadPath(url, event.id)}>
@@ -38,8 +38,8 @@
     <span class="whitespace-nowrap py-1 text-sm opacity-75">
       Posted by
       <ProfileLink pubkey={event.pubkey} {url} />
-      {#if room}
-        in <ChannelLink {url} {room} />
+      {#if h}
+        in <ChannelLink {url} {h} />
       {/if}
     </span>
     <ThreadActions showActivity {url} {event} />

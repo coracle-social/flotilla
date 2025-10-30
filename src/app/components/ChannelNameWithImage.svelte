@@ -7,12 +7,12 @@
 
   interface Props {
     url: any
-    room: any
+    h: any
   }
 
-  const {url, room}: Props = $props()
+  const {url, h}: Props = $props()
 
-  const channel = deriveChannel(url, room)
+  const channel = deriveChannel(url, h)
 </script>
 
 {#if $channel?.picture}
@@ -28,5 +28,5 @@
   <Icon icon={Hashtag} />
 {/if}
 <div class="min-w-0 overflow-hidden text-ellipsis">
-  <ChannelName {url} {room} />
+  <ChannelName {url} {h} />
 </div>

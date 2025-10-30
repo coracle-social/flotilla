@@ -113,7 +113,10 @@
           {#if imagePreview}
             <div class="flex items-center gap-2">
               <span class="text-sm opacity-75">Selected:</span>
-              <img src={imagePreview} alt="Room icon preview" class="h-5 w-5 rounded-lg object-cover" />
+              <img
+                src={imagePreview}
+                alt="Room icon preview"
+                class="h-5 w-5 rounded-lg object-cover" />
             </div>
           {:else if selectedIcon}
             <div class="flex items-center gap-2">
@@ -161,7 +164,7 @@
     {/snippet}
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
-        <input bind:value={values.description} class="grow" type="text" />
+        <input bind:value={values.about} class="grow" type="text" />
       </label>
     {/snippet}
   </FieldInline>

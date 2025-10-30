@@ -6,19 +6,19 @@
 
   interface Props {
     url: any
-    room: any
+    h: any
     notify?: boolean
     replaceState?: boolean
   }
 
-  const {url, room, notify = false, replaceState = false}: Props = $props()
+  const {url, h, notify = false, replaceState = false}: Props = $props()
 
-  const path = makeRoomPath(url, room)
+  const path = makeRoomPath(url, h)
 </script>
 
 <SecondaryNavItem
   href={path}
   {replaceState}
   notification={notify ? $notifications.has(path) : false}>
-  <ChannelNameWithImage {url} {room} />
+  <ChannelNameWithImage {url} {h} />
 </SecondaryNavItem>

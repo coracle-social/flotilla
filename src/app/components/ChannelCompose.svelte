@@ -16,13 +16,13 @@
 
   type Props = {
     url?: string
-    room?: string
+    h?: string
     content?: string
     onEditPrevious?: () => void
     onSubmit: (event: EventContent) => void
   }
 
-  const {url, room, content, onEditPrevious, onSubmit}: Props = $props()
+  const {url, h, content, onEditPrevious, onSubmit}: Props = $props()
 
   const autofocus = !isMobile
 
@@ -90,7 +90,7 @@
     <Tippy
       bind:popover
       component={ComposeMenu}
-      props={{url, room, onClick: hidePopover}}
+      props={{url, h, onClick: hidePopover}}
       params={{trigger: "manual", interactive: true}}>
       <Button
         data-tip="More options"

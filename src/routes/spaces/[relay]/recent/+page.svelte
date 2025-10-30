@@ -21,7 +21,7 @@
   const conversations = derived(messages, $messages => {
     const convs = []
 
-    for (const [room, messages] of groupBy(e => getTagValue("h", e.tags), $messages).entries()) {
+    for (const [h, messages] of groupBy(e => getTagValue("h", e.tags), $messages).entries()) {
       const avgTime = avg(overlappingPairs(messages).map(([a, b]) => a.created_at - b.created_at))
       const groups: TrustedEvent[][] = []
       const group: TrustedEvent[] = []
@@ -52,7 +52,7 @@
         const earliest = last(events)!
         const participants = uniq(events.map(msg => msg.pubkey))
 
-        convs.push({room, events, latest, earliest, participants})
+        convs.push({h, events, latest, earliest, participants})
       }
     }
 
@@ -96,10 +96,10 @@
       {#if $messages.length > 0}
         {@const events = $messages.slice(0, 1)}
         {@const event = events[0]}
-        {@const room = getTagValue("h", event.tags)}
+        {@const h = getTagValue("h", event.tags)}
         <ConversationCard
+          {h}
           {url}
-          {room}
           {events}
           latest={event}
           earliest={event}
@@ -110,8 +110,8 @@
         </div>
       {/if}
     {:else}
-      {#each $conversations.slice(0, limit) as { room, events, latest, earliest, participants } (latest.id)}
-        <ConversationCard {url} {room} {events} {latest} {earliest} {participants} />
+      {#each $conversations.slice(0, limit) as { h, events, latest, earliest, participants } (latest.id)}
+        <ConversationCard {h} {url} {events} {latest} {earliest} {participants} />
       {/each}
     {/if}
   </PageContent>

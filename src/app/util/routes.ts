@@ -52,7 +52,7 @@ export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => 
 
 export const makeChatPath = (pubkeys: string[]) => `/chat/${makeChatId(pubkeys)}`
 
-export const makeRoomPath = (url: string, room: string) => `/spaces/${encodeRelay(url)}/${room}`
+export const makeRoomPath = (url: string, h: string) => `/spaces/${encodeRelay(url)}/${h}`
 
 export const makeSpaceChatPath = (url: string) => makeRoomPath(url, "chat")
 
@@ -103,7 +103,7 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
     return makeChatPath([event.pubkey, ...getPubkeyTagValues(event.tags)])
   }
 
-  const room = getTagValue(ROOM, event.tags)
+  const h = getTagValue(ROOM, event.tags)
 
   if (urls.length > 0) {
     const url = urls[0]
@@ -121,7 +121,7 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
     }
 
     if (event.kind === MESSAGE) {
-      return room ? makeRoomPath(url, room) : makeSpacePath(url, "chat")
+      return h ? makeRoomPath(url, h) : makeSpacePath(url, "chat")
     }
 
     const kind = event.tags.find(nthEq(0, "K"))?.[1]
@@ -141,7 +141,7 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
       }
 
       if (parseInt(kind) === MESSAGE) {
-        return room ? makeRoomPath(url, room) : makeSpacePath(url, "chat")
+        return h ? makeRoomPath(url, h) : makeSpacePath(url, "chat")
       }
     }
   }

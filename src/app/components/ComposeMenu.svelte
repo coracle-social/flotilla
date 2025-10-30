@@ -13,16 +13,16 @@
   type Props = {
     url: string
     onClick: () => void
-    room?: string
+    h?: string
   }
 
-  const {url, room, onClick}: Props = $props()
+  const {url, h, onClick}: Props = $props()
 
-  const createGoal = () => pushModal(GoalCreate, {url, room})
+  const createGoal = () => pushModal(GoalCreate, {url, h})
 
-  const createCalendarEvent = () => pushModal(CalendarEventCreate, {url, room})
+  const createCalendarEvent = () => pushModal(CalendarEventCreate, {url, h})
 
-  const createThread = () => pushModal(ThreadCreate, {url, room})
+  const createThread = () => pushModal(ThreadCreate, {url, h})
 
   let ul: Element
 

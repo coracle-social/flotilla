@@ -150,7 +150,7 @@ const syncUserSpaceMembership = (url: string) => {
   return () => controller.abort()
 }
 
-const syncUserRoomMembership = (url: string, room: string) => {
+const syncUserRoomMembership = (url: string, h: string) => {
   const $pubkey = pubkey.get()
   const controller = new AbortController()
 
@@ -162,7 +162,7 @@ const syncUserRoomMembership = (url: string, room: string) => {
         {
           kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER],
           "#p": [$pubkey],
-          "#h": [room],
+          "#h": [h],
         },
       ],
     })
@@ -187,11 +187,11 @@ const syncUserData = () => {
 
         keys.add(url)
 
-        for (const room of getSpaceRoomsFromGroupSelections(url, $l)) {
-          const key = `${url}'${room}`
+        for (const h of getSpaceRoomsFromGroupSelections(url, $l)) {
+          const key = `${url}'${h}`
 
           if (!unsubscribersByKey.has(key)) {
-            unsubscribersByKey.set(key, syncUserRoomMembership(url, room))
+            unsubscribersByKey.set(key, syncUserRoomMembership(url, h))
           }
 
           keys.add(key)
@@ -328,16 +328,16 @@ const syncSpaces = () => {
 
 // Chat
 
-const syncRoomChat = (url: string, room: string) => {
+const syncRoomChat = (url: string, h: string) => {
   const controller = new AbortController()
 
   pullAndListen({
     relays: [url],
     signal: controller.signal,
     filters: [
-      {kinds: [ROOM_ADMINS, ROOM_MEMBERS], "#d": [room]},
-      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [room]},
-      {kinds: [MESSAGE], "#h": [room]},
+      {kinds: [ROOM_ADMINS, ROOM_MEMBERS], "#d": [h]},
+      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [h]},
+      {kinds: [MESSAGE], "#h": [h]},
     ],
   })
 
@@ -355,11 +355,11 @@ const syncRooms = () => {
       // Add new subscriptions, depending on whether nip 29 is supported
       for (const url of getRelayTagValues(getListTags($l))) {
         if (hasNip29($relaysByUrl.get(url))) {
-          for (const room of getSpaceRoomsFromGroupSelections(url, $l)) {
-            const key = `${url}'${room}`
+          for (const h of getSpaceRoomsFromGroupSelections(url, $l)) {
+            const key = `${url}'${h}`
 
             if (!unsubscribersByKey.has(key)) {
-              newUnsubscribersByKey.set(key, syncRoomChat(url, room))
+              newUnsubscribersByKey.set(key, syncRoomChat(url, h))
             }
 
             keys.add(key)

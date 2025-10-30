@@ -22,8 +22,8 @@
     goto(makeRoomPath(url, selection), {replaceState: true})
   }
 
-  const toggleRoom = (room: string) => {
-    selection = room === selection ? "" : room
+  const toggleRoom = (h: string) => {
+    selection = h === selection ? "" : h
   }
 
   let selection = $state("")
@@ -39,13 +39,13 @@
     {/snippet}
   </ModalHeader>
   <div class="grid grid-cols-3 gap-2">
-    {#each $channelsByUrl.get(url) || [] as channel (channel.room)}
+    {#each $channelsByUrl.get(url) || [] as channel (channel.h)}
       <button
         type="button"
         class="btn"
-        class:btn-neutral={selection !== channel.room}
-        class:btn-primary={selection === channel.room}
-        onclick={() => toggleRoom(channel.room)}>
+        class:btn-neutral={selection !== channel.h}
+        class:btn-primary={selection === channel.h}
+        onclick={() => toggleRoom(channel.h)}>
         #<ChannelName {...channel} />
       </button>
     {/each}

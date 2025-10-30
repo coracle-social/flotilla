@@ -4,13 +4,13 @@
 
   type Props = {
     url: string
-    room?: string
+    h?: string
   }
 
-  const {url, room}: Props = $props()
+  const {url, h}: Props = $props()
 </script>
 
-<CalendarEventForm {url} {room}>
+<CalendarEventForm {url} {h}>
   {#snippet header()}
     <ModalHeader>
       {#snippet title()}

@@ -216,8 +216,8 @@
           <div class="h-2"></div>
           <SecondaryNavHeader>Your Rooms</SecondaryNavHeader>
         {/if}
-        {#each $userRooms as room, i (room)}
-          <MenuSpaceRoomItem {replaceState} notify {url} {room} />
+        {#each $userRooms as h, i (h)}
+          <MenuSpaceRoomItem {replaceState} notify {url} {h} />
         {/each}
         {#if $otherRooms.length > 0}
           <div class="h-2"></div>
@@ -229,8 +229,8 @@
             {/if}
           </SecondaryNavHeader>
         {/if}
-        {#each $otherRooms as room, i (room)}
-          <MenuSpaceRoomItem {replaceState} {url} {room} />
+        {#each $otherRooms as h, i (h)}
+          <MenuSpaceRoomItem {replaceState} {url} {h} />
         {/each}
         {#if $canCreateRoom}
           <SecondaryNavItem {replaceState} onclick={addRoom}>

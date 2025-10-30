@@ -12,14 +12,14 @@
 
   type Props = {
     url: string
-    room?: string
+    h?: string
     events: TrustedEvent[]
     latest: TrustedEvent
     earliest: TrustedEvent
     participants: string[]
   }
 
-  const {url, room, events, latest, earliest, participants}: Props = $props()
+  const {url, h, events, latest, earliest, participants}: Props = $props()
 </script>
 
 <Button class="card2 bg-alt" onclick={() => goToEvent(earliest)}>
@@ -28,9 +28,9 @@
       <ProfileCircle pubkey={earliest.pubkey} size={10} />
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-2 text-sm opacity-70">
-          {#if room}
+          {#if h}
             <span class="truncate font-medium text-blue-400">
-              #{displayChannel(url, room)}
+              #{displayChannel(url, h)}
             </span>
             <span class="opacity-50">•</span>
           {/if}
