@@ -357,13 +357,13 @@ const syncRooms = () => {
       for (const url of getRelayTagValues(getListTags($l))) {
         if (hasNip29($relaysByUrl.get(url))) {
           for (const room of getSpaceRoomsFromGroupSelections(url, $l)) {
-            const id = `${url}'${room}`
+            const key = `${url}'${room}`
 
-            if (!unsubscribersByKey.has(id)) {
-              newUnsubscribersByKey.set(url, syncRoomChat(url, room))
+            if (!unsubscribersByKey.has(key)) {
+              newUnsubscribersByKey.set(key, syncRoomChat(url, room))
             }
 
-            keys.add(id)
+            keys.add(key)
           }
         }
       }
