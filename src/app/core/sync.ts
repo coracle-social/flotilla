@@ -264,7 +264,7 @@ const syncSpace = (url: string) => {
     signal: controller.signal,
     filters: [
       {kinds: [RELAY_MEMBERS]},
-      {kinds: [ROOM_META]},
+      {kinds: [ROOM_META, ROOM_DELETE]},
       {kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]},
       ...MESSAGE_KINDS.map(kind => ({kinds: [kind]})),
       makeCommentFilter(CONTENT_KINDS),
@@ -337,7 +337,6 @@ const syncRoomChat = (url: string, room: string) => {
     filters: [
       {kinds: [ROOM_ADMINS, ROOM_MEMBERS], "#d": [room]},
       {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [room]},
-      {kinds: [ROOM_DELETE], "#h": [room]},
       {kinds: [MESSAGE], "#h": [room]},
     ],
   })

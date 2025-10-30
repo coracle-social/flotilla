@@ -16,7 +16,7 @@
   <div class="col-span-2 flex items-center gap-2">
     {@render props.input?.()}
   </div>
-  <p class="flex-end text-sm md:col-span-3">
+  <p class="flex-end text-sm opacity-70 md:col-span-3">
     {#if props.info}
       {@render props.info?.()}
     {/if}
