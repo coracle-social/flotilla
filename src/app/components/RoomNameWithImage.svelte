@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import RoomName from "@app/components/RoomName.svelte"
@@ -22,8 +21,6 @@
   {:else}
     <img alt="Room icon" {src} class="h-6 w-6 rounded-lg" />
   {/if}
-{:else if $room?.isClosed || $room?.isPrivate}
-  <Icon icon={Lock} />
 {:else}
   <Icon icon={Hashtag} />
 {/if}

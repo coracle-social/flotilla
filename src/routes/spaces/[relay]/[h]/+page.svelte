@@ -389,7 +389,7 @@
   {#if $room?.isPrivate && $membershipStatus !== MembershipStatus.Granted}
     <div class="py-20">
       <div class="card2 col-8 m-auto max-w-md items-center text-center">
-        <p class="row-2">You aren't currently a member of this room.</p>
+        <p class="opacity-75">You aren't currently a member of this room.</p>
         {#if $membershipStatus === MembershipStatus.Pending}
           <Button class="btn btn-neutral btn-sm" disabled={leaving} onclick={leave}>
             <Icon icon={ClockCircle} />
