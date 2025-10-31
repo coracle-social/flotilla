@@ -1,7 +1,7 @@
 <script lang="ts">
   import {goto} from "$app/navigation"
   import type {RoomMeta} from "@welshman/util"
-  import {displayRelayUrl, makeRoomMeta, readRoomMeta} from "@welshman/util"
+  import {displayRelayUrl} from "@welshman/util"
   import {deleteRoom, waitForThunkError, repository} from "@welshman/app"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -25,11 +25,10 @@
   const {url, h}: Props = $props()
 
   const room = deriveRoom(url, h)
-  const initialValues = $room ? readRoomMeta($room.event) : makeRoomMeta({h})
 
   const back = () => history.back()
 
-  const onsubmit = (room: RoomMeta) => goto(makeSpacePath(url, room.h))
+  const onsubmit = (room: RoomMeta) => goto(makeSpacePath(url, h))
 
   const startDelete = () =>
     pushModal(Confirm, {
@@ -37,7 +36,7 @@
       message:
         "This room will no longer be accessible to space members, and all messages posted to it will be deleted.",
       confirm: async () => {
-        const thunk = deleteRoom(url, makeRoomMeta({h}))
+        const thunk = deleteRoom(url, $room)
         const message = await waitForThunkError(thunk)
 
         if (message) {
@@ -50,7 +49,7 @@
     })
 </script>
 
-<RoomForm {url} {onsubmit} {initialValues}>
+<RoomForm {url} {onsubmit} initialValues={$room}>
   {#snippet header()}
     <ModalHeader>
       {#snippet title()}

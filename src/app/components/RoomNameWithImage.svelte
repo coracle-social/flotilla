@@ -1,6 +1,7 @@
 <script lang="ts">
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
+  import ImageIcon from "@lib/components/ImageIcon.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {deriveRoom} from "@app/core/state"
 
@@ -14,13 +15,9 @@
   const room = deriveRoom(url, h)
 </script>
 
-{#if $room?.picture}
+{#if $room.picture}
   {@const src = $room.picture}
-  {#if src.match("\.(png|svg)$") || src.match("image/(png|svg)")}
-    <Icon icon={src} />
-  {:else}
-    <img alt="Room icon" {src} class="h-6 w-6 rounded-lg" />
-  {/if}
+  <ImageIcon {src} alt="Room icon" />
 {:else}
   <Icon icon={Hashtag} />
 {/if}

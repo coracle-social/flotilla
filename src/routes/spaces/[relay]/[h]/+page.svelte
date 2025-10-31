@@ -386,11 +386,11 @@
 
 <PageContent bind:element onscroll={onScroll} class="flex flex-col-reverse pt-4">
   <div bind:this={dynamicPadding}></div>
-  {#if $room?.isPrivate && $membershipStatus !== MembershipStatus.Granted}
+  {#if $room.isPrivate && $membershipStatus !== MembershipStatus.Granted}
     <div class="py-20">
       <div class="card2 col-8 m-auto max-w-md items-center text-center">
         <p class="opacity-75">You aren't currently a member of this room.</p>
-        {#if !$room?.isClosed}
+        {#if !$room.isClosed}
           {#if $membershipStatus === MembershipStatus.Pending}
             <Button class="btn btn-neutral btn-sm" disabled={leaving} onclick={leave}>
               <Icon icon={ClockCircle} />
@@ -452,12 +452,12 @@
 </PageContent>
 
 <div class="chat__compose bg-base-200" bind:this={chatCompose}>
-  {#if $room?.isPrivate && $membershipStatus !== MembershipStatus.Granted}
+  {#if $room.isPrivate && $membershipStatus !== MembershipStatus.Granted}
     <!-- pass -->
-  {:else if $room?.isRestricted && $membershipStatus !== MembershipStatus.Granted}
+  {:else if $room.isRestricted && $membershipStatus !== MembershipStatus.Granted}
     <div class="bg-alt card m-4 flex flex-row items-center justify-between px-4 py-3">
       <p>Only members are allowed to post to this room.</p>
-      {#if !$room?.isClosed}
+      {#if !$room.isClosed}
         {#if $membershipStatus === MembershipStatus.Pending}
           <Button class="btn btn-neutral btn-sm" disabled={leaving} onclick={leave}>
             <Icon icon={ClockCircle} />

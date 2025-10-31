@@ -9,6 +9,7 @@
   import {preventDefault, compressFile} from "@lib/html"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Icon from "@lib/components/Icon.svelte"
+  import ImageIcon from "@lib/components/ImageIcon.svelte"
   import IconPickerButton from "@lib/components/IconPickerButton.svelte"
   import {pushToast} from "@app/util/toast"
   import {uploadFile} from "@app/core/commands"
@@ -113,10 +114,7 @@
           {#if imagePreview}
             <div class="flex items-center gap-2">
               <span class="text-sm opacity-75">Selected:</span>
-              <img
-                src={imagePreview}
-                alt="Room icon preview"
-                class="h-5 w-5 rounded-lg object-cover" />
+              <ImageIcon src={imagePreview} alt="Room icon preview" />
             </div>
           {:else if selectedIcon}
             <div class="flex items-center gap-2">
@@ -148,7 +146,7 @@
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
         {#if imagePreview}
-          <img src={imagePreview} alt="Room icon preview" class="h-5 w-5 rounded-lg object-cover" />
+          <ImageIcon src={imagePreview} alt="Room icon preview" />
         {:else if selectedIcon}
           <Icon icon={selectedIcon} class="h-8 w-8" />
         {:else}
