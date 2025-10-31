@@ -98,7 +98,7 @@
 
   const manageAlerts = () => {
     const component = hasAlerts ? Alerts : AlertAdd
-    const params = {url, room: "push", hideSpaceField: true}
+    const params = {url, channel: "push", hideSpaceField: true}
 
     pushModal(component, params, {replaceState})
   }

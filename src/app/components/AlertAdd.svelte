@@ -21,7 +21,7 @@
 
   type Props = {
     url?: string
-    room?: string
+    channel?: string
     notifyChat?: boolean
     notifyThreads?: boolean
     notifyCalendar?: boolean
@@ -30,7 +30,7 @@
 
   let {
     url = "",
-    room = "email",
+    channel = "email",
     notifyChat = true,
     notifyThreads = true,
     notifyCalendar = true,
@@ -50,7 +50,7 @@
   const back = () => history.back()
 
   const submit = async () => {
-    if (room === "email" && !email.includes("@")) {
+    if (channel === "email" && !email.includes("@")) {
       return pushToast({
         theme: "error",
         message: "Please provide an email address",
@@ -100,7 +100,7 @@
         feed: makeIntersectionFeed(feedFromFilters(filters), makeRelayFeed(url)),
         claims: claim ? {[url]: claim} : {},
         description: `for ${displayList(display)} on ${displayRelayUrl(url)}`,
-        email: room === "email" ? {cron, email} : undefined,
+        email: channel === "email" ? {cron, email} : undefined,
       })
 
       if (error) {
@@ -116,7 +116,7 @@
 
   onMount(() => {
     if (!canSendPushNotifications()) {
-      room = "email"
+      channel = "email"
     }
   })
 </script>
@@ -136,14 +136,14 @@
         <p>Alert Type*</p>
       {/snippet}
       {#snippet input()}
-        <select bind:value={room} class="select select-bordered">
+        <select bind:value={channel} class="select select-bordered">
           <option value="email">Email Digest</option>
           <option value="push">Push Notification</option>
         </select>
       {/snippet}
     </FieldInline>
   {/if}
-  {#if room === "email"}
+  {#if channel === "email"}
     <FieldInline>
       {#snippet label()}
         <p>Email Address*</p>
