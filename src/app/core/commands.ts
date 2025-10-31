@@ -84,7 +84,6 @@ import {
   userRelaySelections,
   userInboxRelaySelections,
   nip44EncryptToSelf,
-  loadRelay,
   dropSession,
   tagEventForComment,
   tagEventForQuote,
@@ -264,43 +263,7 @@ export const canEnforceNip70 = async (url: string) => {
   return socket.auth.status !== AuthStatus.None
 }
 
-export const checkRelayAccess = async (url: string, claim = "") => {
-  const socket = Pool.get().get(url)
-
-  await attemptAuth(url)
-
-  const thunk = publishJoinRequest({url, claim})
-  const error = await waitForThunkError(thunk)
-
-  if (error) {
-    const message =
-      socket.auth.details?.replace(/^\w+: /, "") ||
-      error.replace(/^\w+: /, "") ||
-      "join request rejected"
-
-    // If it's a strict NIP 29 relay don't worry about requesting access
-    // TODO: remove this if relay29 ever gets less strict
-    if (message === "missing group (`h`) tag") return
-
-    // Ignore messages about the relay ignoring ours
-    if (error?.startsWith("mute: ")) return
-
-    // Ignore rejected empty claims
-    if (!claim && error?.includes("invite code")) return
-
-    return message
-  }
-}
-
-export const checkRelayProfile = async (url: string) => {
-  const relay = await loadRelay(url)
-
-  if (!relay) {
-    return "Sorry, we weren't able to find that relay."
-  }
-}
-
-export const checkRelayConnection = async (url: string) => {
+export const attemptRelayAccess = async (url: string, claim = "") => {
   const socket = Pool.get().get(url)
 
   socket.attemptToOpen()
@@ -313,39 +276,30 @@ export const checkRelayConnection = async (url: string) => {
   if (socket.status !== SocketStatus.Open) {
     return `Failed to connect`
   }
-}
-
-export const checkRelayAuth = async (url: string) => {
-  const socket = Pool.get().get(url)
-  const okStatuses = [AuthStatus.None, AuthStatus.Ok]
 
   await attemptAuth(url)
 
   // Only raise an error if it's not a timeout.
   // If it is, odds are the problem is with our signer, not the relay
-  if (!okStatuses.includes(socket.auth.status)) {
+  if (![AuthStatus.None, AuthStatus.Ok].includes(socket.auth.status)) {
     if (socket.auth.details) {
       return `Failed to authenticate (${socket.auth.details})`
     } else {
       return `Failed to authenticate (${last(socket.auth.status.split(":"))})`
     }
   }
-}
 
-export const attemptRelayAccess = async (url: string, claim = "") => {
-  const checks = [
-    () => checkRelayConnection(url),
-    () => checkRelayAccess(url, claim),
-    () => checkRelayAuth(url),
-  ]
+  const thunk = publishJoinRequest({url, claim})
+  const error = await waitForThunkError(thunk)
 
-  for (const check of checks) {
-    const error = await check()
+  // Ignore messages about the relay ignoring our messages
+  if (error?.startsWith("mute: ")) return
 
-    if (error) {
-      return error
-    }
-  }
+  // If it's a strict NIP 29 relay don't worry about requesting access
+  // TODO: remove this if relay29 ever gets less strict
+  if (error?.includes("missing group (`h`) tag")) return
+
+  return error?.replace(/^\w+: /, "")
 }
 
 // Deletions

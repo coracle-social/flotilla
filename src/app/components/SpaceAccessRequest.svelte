@@ -14,7 +14,7 @@
   import SpaceJoinConfirm, {confirmSpaceJoin} from "@app/components/SpaceJoinConfirm.svelte"
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
-  import {checkRelayAccess} from "@app/core/commands"
+  import {attemptRelayAccess} from "@app/core/commands"
   import {deriveSocket} from "@app/core/state"
 
   type Props = {
@@ -31,7 +31,7 @@
     loading = true
 
     try {
-      const message = await checkRelayAccess(url, claim)
+      const message = await attemptRelayAccess(url, claim)
 
       if (message) {
         return pushToast({theme: "error", message, timeout: 30_000})

@@ -170,26 +170,38 @@
   </FieldInline>
   <FieldInline>
     {#snippet label()}
-      <p>Access Control</p>
+      <strong>Restricted</strong>
     {/snippet}
     {#snippet input()}
-      <div class="flex items-center justify-end gap-4">
-        <span class="flex gap-3">
-          <input type="checkbox" class="checkbox" bind:checked={values.isClosed} />
-          Closed
-        </span>
-        <span class="flex gap-3">
-          <input type="checkbox" class="checkbox" bind:checked={values.isPrivate} />
-          Private
-        </span>
-        <span class="flex gap-3">
-          <input type="checkbox" class="checkbox" bind:checked={values.isHidden} />
-          Hidden
-        </span>
-      </div>
+      <input type="checkbox" class="checkbox" bind:checked={values.isRestricted} />
+      <span class="text-sm opacity-75">Only allow members to send messages</span>
     {/snippet}
-    {#snippet info()}
-      <p>Only members can send messages to closed groups and read messages from private groups.</p>
+  </FieldInline>
+  <FieldInline>
+    {#snippet label()}
+      <strong>Private</strong>
+    {/snippet}
+    {#snippet input()}
+      <input type="checkbox" class="checkbox" bind:checked={values.isPrivate} />
+      <span class="text-sm opacity-75">Only allow members to read messages</span>
+    {/snippet}
+  </FieldInline>
+  <FieldInline>
+    {#snippet label()}
+      <strong>Hidden</strong>
+    {/snippet}
+    {#snippet input()}
+      <input type="checkbox" class="checkbox" bind:checked={values.isHidden} />
+      <span class="text-sm opacity-75">Hide this group from non-members</span>
+    {/snippet}
+  </FieldInline>
+  <FieldInline>
+    {#snippet label()}
+      <strong>Closed</strong>
+    {/snippet}
+    {#snippet input()}
+      <input type="checkbox" class="checkbox" bind:checked={values.isClosed} />
+      <span class="text-sm opacity-75">Ignore requests to join</span>
     {/snippet}
   </FieldInline>
   {@render footer({loading})}
