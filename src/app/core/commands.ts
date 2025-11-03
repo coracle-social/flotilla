@@ -103,6 +103,7 @@ import {
   DEFAULT_BLOSSOM_SERVERS,
   userSpaceUrls,
   userSettingsValues,
+  getSetting,
   userInboxRelays,
   userGroupSelections,
 } from "@app/core/state"
@@ -549,7 +550,7 @@ export const createDmAlert = async () => {
 // Settings
 
 export const makeSettings = async (params: Partial<SettingsValues>) => {
-  const json = JSON.stringify({...userSettingsValues.get(), ...params})
+  const json = JSON.stringify({...get(userSettingsValues), ...params})
   const content = await signer.get().nip44.encrypt(pubkey.get()!, json)
   const tags = [["d", SETTINGS]]
 
@@ -560,10 +561,10 @@ export const publishSettings = async (params: Partial<SettingsValues>) =>
   publishThunk({event: await makeSettings(params), relays: Router.get().FromUser().getUrls()})
 
 export const addTrustedRelay = async (url: string) =>
-  publishSettings({trusted_relays: append(url, userSettingsValues.get().trusted_relays)})
+  publishSettings({trusted_relays: append(url, getSetting<string[]>("trusted_relays"))})
 
 export const removeTrustedRelay = async (url: string) =>
-  publishSettings({trusted_relays: remove(url, userSettingsValues.get().trusted_relays)})
+  publishSettings({trusted_relays: remove(url, getSetting<string[]>("trusted_relays"))})
 
 // Join request
 

@@ -36,14 +36,7 @@ import {
   SocketEvent,
   netContext,
 } from "@welshman/net"
-import {
-  collection,
-  custom,
-  throttled,
-  deriveEvents,
-  deriveEventsMapped,
-  withGetter,
-} from "@welshman/store"
+import {collection, custom, throttled, deriveEvents, deriveEventsMapped} from "@welshman/store"
 import {isKindFeed, findFeed} from "@welshman/feeds"
 import {
   ALERT_ANDROID,
@@ -241,31 +234,29 @@ export const deriveEvent = (idOrAddress: string, hints: string[] = []) => {
   )
 }
 
-export const getUrlsForEvent = withGetter(
-  derived([trackerStore, thunks], ([$tracker, $thunks]) => {
-    const getThunksByEventId = memoize(() => {
-      const thunksByEventId = new Map<string, Thunk[]>()
+export const getUrlsForEvent = derived([trackerStore, thunks], ([$tracker, $thunks]) => {
+  const getThunksByEventId = memoize(() => {
+    const thunksByEventId = new Map<string, Thunk[]>()
 
-      for (const thunk of $thunks) {
-        pushToMapKey(thunksByEventId, thunk.event.id, thunk)
-      }
-
-      return thunksByEventId
-    })
-
-    return (id: string) => {
-      const urls = Array.from($tracker.getRelays(id))
-
-      for (const thunk of getThunksByEventId().get(id) || []) {
-        for (const url of thunk.options.relays) {
-          urls.push(url)
-        }
-      }
-
-      return uniq(urls)
+    for (const thunk of $thunks) {
+      pushToMapKey(thunksByEventId, thunk.event.id, thunk)
     }
-  }),
-)
+
+    return thunksByEventId
+  })
+
+  return (id: string) => {
+    const urls = Array.from($tracker.getRelays(id))
+
+    for (const thunk of getThunksByEventId().get(id) || []) {
+      for (const url of thunk.options.relays) {
+        urls.push(url)
+      }
+    }
+
+    return uniq(urls)
+  }
+})
 
 export const getEventsForUrl = (url: string, filters: Filter[]) => {
   const ids = uniq([
@@ -383,15 +374,13 @@ export const userSettings = makeUserData({
 
 export const loadUserSettings = makeUserLoader(loadSettings)
 
-export const userSettingsValues = withGetter(
-  derived(userSettings, $s => $s?.values || defaultSettings),
-)
+export const userSettingsValues = derived(userSettings, $s => $s?.values || defaultSettings)
 
-export const getSetting = <T>(key: keyof Settings["values"]) => userSettingsValues.get()[key] as T
+export const getSetting = <T>(key: keyof Settings["values"]) => get(userSettingsValues)[key] as T
 
 // Relays sending events with empty signatures that the user has to choose to trust
 
-export const relaysPendingTrust = withGetter(writable<string[]>([]))
+export const relaysPendingTrust = writable<string[]>([])
 
 // Relays that mostly send restricted responses to requests and events
 
@@ -416,21 +405,19 @@ export type Alert = {
   tags: string[][]
 }
 
-export const alerts = withGetter(
-  deriveEventsMapped<Alert>(repository, {
-    filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]}],
-    itemToEvent: item => item.event,
-    eventToItem: async event => {
-      const $signer = signer.get()
+export const alerts = deriveEventsMapped<Alert>(repository, {
+  filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]}],
+  itemToEvent: item => item.event,
+  eventToItem: async event => {
+    const $signer = signer.get()
 
-      if ($signer) {
-        const tags = parseJson(await decrypt($signer, NOTIFIER_PUBKEY, event.content))
+    if ($signer) {
+      const tags = parseJson(await decrypt($signer, NOTIFIER_PUBKEY, event.content))
 
-        return {event, tags}
-      }
-    },
-  }),
-)
+      return {event, tags}
+    }
+  },
+})
 
 export const getAlertFeed = (alert: Alert) =>
   tryCatch(() => JSON.parse(getTagValue("feed", alert.tags)!))
@@ -450,21 +437,19 @@ export type AlertStatus = {
   tags: string[][]
 }
 
-export const alertStatuses = withGetter(
-  deriveEventsMapped<AlertStatus>(repository, {
-    filters: [{kinds: [ALERT_STATUS]}],
-    itemToEvent: item => item.event,
-    eventToItem: async event => {
-      const $signer = signer.get()
+export const alertStatuses = deriveEventsMapped<AlertStatus>(repository, {
+  filters: [{kinds: [ALERT_STATUS]}],
+  itemToEvent: item => item.event,
+  eventToItem: async event => {
+    const $signer = signer.get()
 
-      if ($signer) {
-        const tags = parseJson(await decrypt($signer, NOTIFIER_PUBKEY, event.content))
+    if ($signer) {
+      const tags = parseJson(await decrypt($signer, NOTIFIER_PUBKEY, event.content))
 
-        return {event, tags}
-      }
-    },
-  }),
-)
+      return {event, tags}
+    }
+  },
+})
 
 export const deriveAlertStatus = (address: string) =>
   derived(alertStatuses, statuses => statuses.find(s => getTagValue("d", s.event.tags) === address))
