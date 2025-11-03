@@ -1,11 +1,6 @@
 import {prop, call, on, throttle, fromPairs, batch} from "@welshman/lib"
 import {throttled, freshness} from "@welshman/store"
 import {
-  ALERT_ANDROID,
-  ALERT_EMAIL,
-  ALERT_IOS,
-  ALERT_STATUS,
-  ALERT_WEB,
   APP_DATA,
   BLOSSOM_SERVERS,
   DIRECT_MESSAGE_FILE,
@@ -50,6 +45,7 @@ import {
   wrapManager,
 } from "@welshman/app"
 import {Collection} from "@lib/storage"
+import {isMobile} from "@lib/html"
 
 const syncEvents = async () => {
   const collection = new Collection<TrustedEvent>({table: "events", getId: prop("id")})
@@ -73,7 +69,6 @@ const syncEvents = async () => {
     APP_DATA,
     ROOMS,
   ]
-  const alertKinds = [ALERT_STATUS, ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]
   const spaceKinds = [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS, RELAY_JOIN, RELAY_LEAVE]
   const roomKinds = [
     ROOM_META,
@@ -88,10 +83,9 @@ const syncEvents = async () => {
 
   const rankEvent = (event: TrustedEvent) => {
     if (metaKinds.includes(event.kind)) return 9
-    if (alertKinds.includes(event.kind)) return 8
-    if (spaceKinds.includes(event.kind)) return 7
-    if (roomKinds.includes(event.kind)) return 6
-    if (contentKinds.includes(event.kind)) return 5
+    if (spaceKinds.includes(event.kind)) return 8
+    if (roomKinds.includes(event.kind)) return 7
+    if (!isMobile && contentKinds.includes(event.kind)) return 6
     return 0
   }
 
@@ -240,17 +234,21 @@ const syncWrapManager = async () => {
 }
 
 export const syncDataStores = async () => {
-  const unsubscribers = await Promise.all([
+  const promises = [
     syncEvents(),
     syncTracker(),
     syncRelays(),
-    syncRelayStats(),
     syncHandles(),
     syncZappers(),
-    syncFreshness(),
     syncPlaintext(),
     syncWrapManager(),
-  ])
+  ]
+
+  if (!isMobile) {
+    promises.push(syncFreshness(), syncRelayStats())
+  }
+
+  const unsubscribers = await Promise.all(promises)
 
   return () => unsubscribers.forEach(call)
 }

@@ -173,9 +173,7 @@ export const notifications = derived(
       if (hasNip29($relaysByUrl.get(url))) {
         for (const h of getSpaceRoomsFromGroupSelections(url, $userGroupSelections)) {
           const roomPath = makeRoomPath(url, h)
-          const latestEvent = allMessages.find(
-            e => $getUrlsForEvent(e.id).includes(url) && e.tags.find(spec(["h", h])),
-          )
+          const latestEvent = messages.find(e => e.tags.some(spec(["h", h])))
 
           if (hasNotification(roomPath, latestEvent)) {
             paths.add(spacePathMobile)
