@@ -249,12 +249,6 @@ export const setInboxRelayPolicy = (url: string, enabled: boolean) => {
 
 // Relay access
 
-export const attemptAuth = async (url: string) => {
-  const socket = Pool.get().get(url)
-
-  await socket.auth.attemptAuth(e => signer.get()?.sign(e))
-}
-
 export const canEnforceNip70 = async (url: string) => {
   const socket = Pool.get().get(url)
 
@@ -277,7 +271,7 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
     return `Failed to connect`
   }
 
-  await attemptAuth(url)
+  await socket.auth.attemptAuth(e => signer.get()?.sign(e))
 
   // Only raise an error if it's not a timeout.
   // If it is, odds are the problem is with our signer, not the relay
@@ -299,7 +293,7 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
   // TODO: remove this if relay29 ever gets less strict
   if (error?.includes("missing group (`h`) tag")) return
 
-  return error?.replace(/^\w+: /, "")
+  return claim ? error?.replace(/^\w+: /, "") : ""
 }
 
 // Deletions
@@ -509,7 +503,9 @@ export const createAlert = async (params: CreateAlertParams): Promise<CreateAler
   }
 
   // If we don't do this we'll get an event rejection
-  await attemptAuth(NOTIFIER_RELAY)
+  await Pool.get()
+    .get(NOTIFIER_RELAY)
+    .auth.attemptAuth(e => signer.get()?.sign(e))
 
   const thunk = await publishAlert(params as AlertParams)
   const error = await waitForThunkError(thunk)
