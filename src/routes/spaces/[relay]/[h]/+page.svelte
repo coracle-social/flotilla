@@ -339,7 +339,7 @@
   {/snippet}
   {#snippet action()}
     <div class="row-2">
-      {#if $userIsAdmin || true}
+      {#if $userIsAdmin}
         <Button
           class="btn btn-neutral btn-sm tooltip tooltip-left"
           data-tip="Edit room information"
@@ -456,7 +456,7 @@
     <!-- pass -->
   {:else if $room.isRestricted && $membershipStatus !== MembershipStatus.Granted}
     <div class="bg-alt card m-4 flex flex-row items-center justify-between px-4 py-3">
-      <p>Only members are allowed to post to this room.</p>
+      <p class="opacity-75">Only members are allowed to post to this room.</p>
       {#if !$room.isClosed}
         {#if $membershipStatus === MembershipStatus.Pending}
           <Button class="btn btn-neutral btn-sm" disabled={leaving} onclick={leave}>

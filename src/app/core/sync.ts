@@ -265,6 +265,7 @@ const syncSpace = (url: string) => {
     filters: [
       {kinds: [RELAY_MEMBERS]},
       {kinds: [ROOM_META, ROOM_DELETE]},
+      {kinds: [ROOM_ADMINS, ROOM_MEMBERS]},
       {kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]},
       ...MESSAGE_KINDS.map(kind => ({kinds: [kind]})),
       makeCommentFilter(CONTENT_KINDS),
@@ -328,7 +329,7 @@ const syncSpaces = () => {
 
 // Chat
 
-const syncRoomChat = (url: string, h: string) => {
+const syncRoom = (url: string, h: string) => {
   const controller = new AbortController()
 
   pullAndListen({
@@ -359,7 +360,7 @@ const syncRooms = () => {
             const key = `${url}'${h}`
 
             if (!unsubscribersByKey.has(key)) {
-              newUnsubscribersByKey.set(key, syncRoomChat(url, h))
+              newUnsubscribersByKey.set(key, syncRoom(url, h))
             }
 
             keys.add(key)

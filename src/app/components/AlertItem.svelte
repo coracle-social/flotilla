@@ -17,14 +17,14 @@
   const {alert}: Props = $props()
 
   const cron = $derived(getTagValue("cron", alert.tags))
-  const room = $derived(getTagValue("room", alert.tags))
+  const channel = $derived(getTagValue("channel", alert.tags))
   const feeds = $derived(getTagValues("feed", alert.tags))
   const description = $derived(
     getTagValue("description", alert.tags) ||
       [
         `${cron?.endsWith("1") ? "Weekly" : "Daily"} alert for events`,
         displayFeeds(feeds.map(parseJson)),
-        `sent via ${room}.`,
+        `sent via ${channel}.`,
       ].join(" "),
   )
 

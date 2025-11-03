@@ -25,6 +25,7 @@ import {
   ROOM_ADD_MEMBER,
   ROOM_CREATE_PERMISSION,
   ROOM_MEMBERS,
+  ROOM_ADMINS,
   ROOM_META,
   ROOM_DELETE,
   ROOM_REMOVE_MEMBER,
@@ -77,6 +78,7 @@ const syncEvents = async () => {
   const roomKinds = [
     ROOM_META,
     ROOM_DELETE,
+    ROOM_ADMINS,
     ROOM_MEMBERS,
     ROOM_ADD_MEMBER,
     ROOM_REMOVE_MEMBER,
