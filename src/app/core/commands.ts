@@ -74,6 +74,7 @@ import {Pool, AuthStatus, SocketStatus} from "@welshman/net"
 import {Router} from "@welshman/router"
 import {
   pubkey,
+  sign,
   signer,
   session,
   repository,
@@ -253,7 +254,7 @@ export const setInboxRelayPolicy = (url: string, enabled: boolean) => {
 export const canEnforceNip70 = async (url: string) => {
   const socket = Pool.get().get(url)
 
-  await socket.auth.attemptAuth(e => signer.get()?.sign(e))
+  await socket.auth.attemptAuth(sign)
 
   return socket.auth.status !== AuthStatus.None
 }
@@ -272,7 +273,7 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
     return `Failed to connect`
   }
 
-  await socket.auth.attemptAuth(e => signer.get()?.sign(e))
+  await socket.auth.attemptAuth(sign)
 
   // Only raise an error if it's not a timeout.
   // If it is, odds are the problem is with our signer, not the relay
@@ -504,9 +505,7 @@ export const createAlert = async (params: CreateAlertParams): Promise<CreateAler
   }
 
   // If we don't do this we'll get an event rejection
-  await Pool.get()
-    .get(NOTIFIER_RELAY)
-    .auth.attemptAuth(e => signer.get()?.sign(e))
+  await Pool.get().get(NOTIFIER_RELAY).auth.attemptAuth(sign)
 
   const thunk = await publishAlert(params as AlertParams)
   const error = await waitForThunkError(thunk)

@@ -114,6 +114,7 @@ import {
   userFollows,
   ensurePlaintext,
   thunks,
+  sign,
   signer,
   makeOutboxLoader,
   appContext,
@@ -961,12 +962,10 @@ export const deriveTimeout = (timeout: number) => {
 }
 
 export const deriveRelayAuthError = (url: string, claim = "") => {
-  const $signer = signer.get()
-  const socket = Pool.get().get(url)
   const stripPrefix = (m: string) => m.replace(/^\w+: /, "")
 
   // Kick off the auth process
-  socket.auth.attemptAuth($signer.sign)
+  Pool.get().get(url).auth.attemptAuth(sign)
 
   // Attempt to join the relay
   const thunk = publishThunk({
@@ -989,10 +988,17 @@ export const deriveRelayAuthError = (url: string, claim = "") => {
 
       if (error) {
         const isIgnored = error.startsWith("mute: ")
+        const isAborted = error.includes("Signing was aborted")
         const isEmptyInvite = !claim && error.includes("invite code")
         const isStrictNip29Relay = error.includes("missing group (`h`) tag")
 
-        if (!isStrictNip29Relay && !isIgnored && !isEmptyInvite && !isStrictNip29Relay) {
+        if (
+          !isStrictNip29Relay &&
+          !isIgnored &&
+          !isAborted &&
+          !isEmptyInvite &&
+          !isStrictNip29Relay
+        ) {
           return stripPrefix(error) || "join request rejected"
         }
       }

@@ -1,5 +1,4 @@
-import {on, call, dissoc, assoc, uniq} from "@welshman/lib"
-import type {StampedEvent} from "@welshman/util"
+import {on, always, call, dissoc, assoc, uniq} from "@welshman/lib"
 import type {Socket, RelayMessage, ClientMessage} from "@welshman/net"
 import {
   makeSocketPolicyAuth,
@@ -11,7 +10,7 @@ import {
   isClientEvent,
   isClientClose,
 } from "@welshman/net"
-import {signer} from "@welshman/app"
+import {sign} from "@welshman/app"
 import {
   userSettingsValues,
   getSetting,
@@ -19,10 +18,7 @@ import {
   relaysMostlyRestricted,
 } from "@app/core/state"
 
-export const authPolicy = makeSocketPolicyAuth({
-  sign: (event: StampedEvent) => signer.get()?.sign(event),
-  shouldAuth: (socket: Socket) => true,
-})
+export const authPolicy = makeSocketPolicyAuth({sign, shouldAuth: always(true)})
 
 export const trustPolicy = (socket: Socket) => {
   const buffer: RelayMessage[] = []
