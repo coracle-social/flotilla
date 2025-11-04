@@ -248,13 +248,15 @@ export const makeCalendarFeed = ({
 // Domain specific
 
 export const loadAlerts = (pubkey: string) =>
-  load({
+  request({
+    autoClose: true,
     relays: [NOTIFIER_RELAY],
     filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID], authors: [pubkey]}],
   })
 
 export const loadAlertStatuses = (pubkey: string) =>
-  load({
+  request({
+    autoClose: true,
     relays: [NOTIFIER_RELAY],
     filters: [{kinds: [ALERT_STATUS], "#p": [pubkey]}],
   })
