@@ -107,6 +107,7 @@ import {
   getSetting,
   userInboxRelays,
   userGroupSelections,
+  shouldIgnoreError,
 } from "@app/core/state"
 import {loadAlertStatuses} from "@app/core/requests"
 import {platform, platformName, getPushInfo} from "@app/util/push"
@@ -288,14 +289,14 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
   const thunk = publishJoinRequest({url, claim})
   const error = await waitForThunkError(thunk)
 
-  // Ignore messages about the relay ignoring our messages
-  if (error?.startsWith("mute: ")) return
+  if (shouldIgnoreError(error)) return
 
-  // If it's a strict NIP 29 relay don't worry about requesting access
-  // TODO: remove this if relay29 ever gets less strict
-  if (error?.includes("missing group (`h`) tag")) return
+  if (claim) {
+    const ignoreClaimError =
+      error.includes("invalid invite code size") || error.includes("failed to validate invite code")
 
-  return claim ? error?.replace(/^\w+: /, "") : ""
+    if (!ignoreClaimError) return error?.replace(/^\w+: /, "")
+  }
 }
 
 // Deletions

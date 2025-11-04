@@ -961,6 +961,14 @@ export const deriveTimeout = (timeout: number) => {
   return derived(store, identity)
 }
 
+export const shouldIgnoreError = (error: string) => {
+  const isIgnored = error.startsWith("mute: ")
+  const isAborted = error.includes("Signing was aborted")
+  const isStrictNip29Relay = error.includes("missing group (`h`) tag")
+
+  return isIgnored || isAborted || isStrictNip29Relay
+}
+
 export const deriveRelayAuthError = (url: string, claim = "") => {
   const stripPrefix = (m: string) => m.replace(/^\w+: /, "")
 
@@ -987,18 +995,9 @@ export const deriveRelayAuthError = (url: string, claim = "") => {
       const error = getThunkError(thunk)
 
       if (error) {
-        const isIgnored = error.startsWith("mute: ")
-        const isAborted = error.includes("Signing was aborted")
         const isEmptyInvite = !claim && error.includes("invite code")
-        const isStrictNip29Relay = error.includes("missing group (`h`) tag")
 
-        if (
-          !isStrictNip29Relay &&
-          !isIgnored &&
-          !isAborted &&
-          !isEmptyInvite &&
-          !isStrictNip29Relay
-        ) {
+        if (!shouldIgnoreError(error) && !isEmptyInvite) {
           return stripPrefix(error) || "join request rejected"
         }
       }

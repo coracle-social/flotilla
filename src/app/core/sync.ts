@@ -18,6 +18,7 @@ import {
   RELAY_ADD_MEMBER,
   RELAY_REMOVE_MEMBER,
   isSignedEvent,
+  unionFilters,
 } from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {request, load, pull} from "@welshman/net"
@@ -96,7 +97,7 @@ const pullAndListen = ({relays, filters, signal}: PullOpts) => {
   request({
     relays,
     signal,
-    filters: filters.map(assoc("limit", 0)),
+    filters: unionFilters(filters).map(assoc("limit", 0)),
   })
 }
 

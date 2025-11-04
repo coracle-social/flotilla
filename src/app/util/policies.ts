@@ -6,9 +6,12 @@ import {
   isRelayEvent,
   isRelayOk,
   isRelayClosed,
+  isRelayNegErr,
   isClientReq,
   isClientEvent,
   isClientClose,
+  isClientNegOpen,
+  isClientNegClose,
 } from "@welshman/net"
 import {sign} from "@welshman/app"
 import {
@@ -59,10 +62,11 @@ export const mostlyRestrictedPolicy = (socket: Socket) => {
 
   const pending = new Set<string>()
 
-  const updateStatus = () =>
+  const updateStatus = () => {
     relaysMostlyRestricted.update(
       restricted > total / 2 ? assoc(socket.url, error) : dissoc(socket.url),
     )
+  }
 
   const unsubscribers = [
     on(socket, SocketEvent.Receive, (message: RelayMessage) => {
@@ -72,19 +76,31 @@ export const mostlyRestrictedPolicy = (socket: Socket) => {
         if (pending.has(id)) {
           pending.delete(id)
 
-          if (!ok && details.startsWith("restricted: ")) {
-            restricted++
-            error = details
-            updateStatus()
+          if (!ok) {
+            if (details.startsWith("auth-required: ")) {
+              total--
+              updateStatus()
+            }
+
+            if (details.startsWith("restricted: ")) {
+              restricted++
+              error = details
+              updateStatus()
+            }
           }
         }
       }
 
-      if (isRelayClosed(message)) {
+      if (isRelayClosed(message) || isRelayNegErr(message)) {
         const [_, id, details = ""] = message
 
         if (pending.has(id)) {
           pending.delete(id)
+
+          if (details.startsWith("auth-required: ")) {
+            total--
+            updateStatus()
+          }
 
           if (details.startsWith("restricted: ")) {
             restricted++
@@ -95,10 +111,12 @@ export const mostlyRestrictedPolicy = (socket: Socket) => {
       }
     }),
     on(socket, SocketEvent.Send, (message: ClientMessage) => {
-      if (isClientReq(message)) {
-        total++
-        pending.add(message[1])
-        updateStatus()
+      if (isClientReq(message) || isClientNegOpen(message)) {
+        if (!pending.has(message[1])) {
+          total++
+          pending.add(message[1])
+          updateStatus()
+        }
       }
 
       if (isClientEvent(message)) {
@@ -107,7 +125,7 @@ export const mostlyRestrictedPolicy = (socket: Socket) => {
         updateStatus()
       }
 
-      if (isClientClose(message)) {
+      if (isClientClose(message) || isClientNegClose(message)) {
         pending.delete(message[1])
       }
     }),
