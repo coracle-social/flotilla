@@ -6,10 +6,6 @@ if [ -f .env.template ]; then
   source .env.template
 fi
 
-if [ -f .env ]; then
-  source .env
-fi
-
 # Avoid overwriting env vars provided directly
 # https://stackoverflow.com/a/69127685/1467342
 eval "$temp_env"
