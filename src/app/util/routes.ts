@@ -51,7 +51,7 @@ export const goToSpace = async (url: string) => {
   } else if (hasNip29(await loadRelay(url))) {
     goto(makeSpacePath(url, "recent"))
   } else {
-    goto(makeSpacePath("chat"))
+    goto(makeSpacePath(url, "chat"))
   }
 }
 
