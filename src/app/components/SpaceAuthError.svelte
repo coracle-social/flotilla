@@ -12,12 +12,29 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import {pushModal} from "@app/util/modal"
+  import {removeSpaceMembership, publishLeaveRequest, removeTrustedRelay} from "@app/core/commands"
 
   const {url, error} = $props()
 
   const back = () => goto("/home")
 
   const requestAccess = () => pushModal(SpaceAccessRequest, {url})
+
+  const leaveSpace = async () => {
+    loading = true
+
+    try {
+      await removeSpaceMembership(url)
+      await publishLeaveRequest({url})
+      await removeTrustedRelay(url)
+    } finally {
+      loading = false
+    }
+
+    goto("/home")
+  }
+
+  let loading = $state(false)
 </script>
 
 <form class="column gap-4" onsubmit={preventDefault(requestAccess)}>
@@ -40,9 +57,14 @@
       <Icon icon={AltArrowLeft} />
       Go Home
     </Button>
-    <Button type="submit" class="btn btn-primary">
-      Request Access
-      <Icon icon={AltArrowRight} />
-    </Button>
+    <div class="flex gap-2">
+      <Button class="btn btn-outline btn-error" onclick={leaveSpace} disabled={loading}>
+        Leave Space
+      </Button>
+      <Button type="submit" class="btn btn-primary" disabled={loading}>
+        Request Access
+        <Icon icon={AltArrowRight} />
+      </Button>
+    </div>
   </ModalFooter>
 </form>

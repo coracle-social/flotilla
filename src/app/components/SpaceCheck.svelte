@@ -10,19 +10,24 @@
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import SpaceVisitConfirm, {confirmSpaceVisit} from "@app/components/SpaceVisitConfirm.svelte"
+  import SpaceJoinConfirm, {confirmSpaceJoin} from "@app/components/SpaceJoinConfirm.svelte"
   import {attemptRelayAccess} from "@app/core/commands"
   import {pushModal} from "@app/util/modal"
+  import {pushToast} from "@app/util/toast"
 
   const {url} = $props()
 
   const back = () => history.back()
 
-  const next = () => {
-    if (!error && Pool.get().get(url).auth.status === AuthStatus.None) {
-      pushModal(SpaceVisitConfirm, {url}, {replaceState: true})
+  const next = async () => {
+    if (error) {
+      return pushToast({theme: "error", message: error, timeout: 30_000})
+    }
+
+    if (Pool.get().get(url).auth.status === AuthStatus.None) {
+      pushModal(SpaceJoinConfirm, {url}, {replaceState: true})
     } else {
-      confirmSpaceVisit(url)
+      await confirmSpaceJoin(url)
     }
   }
 
@@ -72,7 +77,7 @@
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary" disabled={loading}>
-      Go to Space
+      Join Space
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
