@@ -79,7 +79,7 @@
   })
 </script>
 
-<form class="relative z-feature flex gap-2 p-2" onsubmit={preventDefault(submit)}>
+<form class="relative flex gap-2 p-2" onsubmit={preventDefault(submit)}>
   <div class="join">
     <Button
       data-tip="Add an image"

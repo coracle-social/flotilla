@@ -22,7 +22,7 @@
   const {url, h, events, latest, earliest, participants}: Props = $props()
 </script>
 
-<Button class="card2 bg-alt" onclick={() => goToEvent(earliest)}>
+<Button class="card2 bg-alt shadow-lg" onclick={() => goToEvent(earliest)}>
   <div class="flex flex-col gap-3">
     <div class="flex items-start gap-3">
       <ProfileCircle pubkey={earliest.pubkey} size={10} />

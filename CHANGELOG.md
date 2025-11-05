@@ -1,5 +1,20 @@
 # Changelog
 
+# 1.5.0
+
+* Restyle mobile dialogs
+* Add room membership lists
+* Add space membership lists
+* Add edit room form
+* Support closed/private/restricted/hidden rooms
+* Add hosting services page
+* Improve performance and UI
+* Fix push notifications
+* Improve error detection and handling
+* Support invite links on discover page
+* Add link to landlubber if user is admin
+* Clear reply/share/edit on escape
+
 # 1.4.1
 
 * Improve data synchronization

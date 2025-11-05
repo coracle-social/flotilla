@@ -395,7 +395,7 @@ progress[value]::-webkit-progress-value {
 /* chat view */
 
 .chat__compose {
-  @apply cb cw fixed;
+  @apply cb cw fixed z-compose;
 }
 
 .chat__scroll-down {

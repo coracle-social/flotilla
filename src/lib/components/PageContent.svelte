@@ -14,6 +14,6 @@
   {...props}
   bind:this={element}
   data-component="PageContent"
-  class="scroll-container cw md:bottom-sai fixed bottom-[calc(var(--saib)+3.5rem)] top-[calc(var(--sait)+3rem)] overflow-y-auto overflow-x-hidden {props.class}">
+  class="scroll-container cw md:bottom-sai fixed bottom-[calc(var(--saib)+3.5rem)] top-[calc(var(--sait)+3rem)] z-feature overflow-y-auto overflow-x-hidden {props.class}">
   {@render children?.()}
 </div>

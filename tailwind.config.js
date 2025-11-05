@@ -8,11 +8,8 @@ config({path: ".env.template"})
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./src/**/*.{html,js,svelte,ts}"],
-  darkMode: ['selector', '[data-theme="dark"]'],
-  safelist: [
-    'bg-success',
-    'bg-warning',
-  ],
+  darkMode: ["selector", '[data-theme="dark"]'],
+  safelist: ["bg-success", "bg-warning"],
   theme: {
     extend: {},
     zIndex: {
@@ -20,11 +17,12 @@ export default {
       "nav-active": 1,
       "nav-item": 2,
       feature: 3,
-      nav: 4,
-      popover: 5,
-      modal: 6,
-      "modal-feature": 7,
-      toast: 8,
+      compose: 4,
+      nav: 5,
+      popover: 6,
+      modal: 7,
+      "modal-feature": 8,
+      toast: 9,
     },
   },
   plugins: [daisyui],
@@ -40,8 +38,8 @@ export default {
         },
         light: {
           ...themes["winter"],
-          neutral: '#F2F7FF',
-          warning: '#FD8D0B',
+          neutral: "#F2F7FF",
+          warning: "#FD8D0B",
           primary: process.env.VITE_PLATFORM_ACCENT,
           "primary-content": process.env.VITE_PLATFORM_ACCENT_CONTENT || "#EAE7FF",
           secondary: process.env.VITE_PLATFORM_SECONDARY,
