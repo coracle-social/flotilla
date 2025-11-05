@@ -48,7 +48,7 @@
 </script>
 
 <form class="content column gap-4" {onsubmit}>
-  <div class="card2 bg-alt col-4 shadow-xl">
+  <div class="card2 bg-alt col-4 shadow-md">
     <strong class="text-lg">Content Settings</strong>
     <FieldInline>
       {#snippet label()}

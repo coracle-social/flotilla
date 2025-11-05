@@ -133,7 +133,7 @@
         <Popover hideOnClick onClose={toggleMenu}>
           <ul
             transition:fly
-            class="menu absolute z-popover mt-2 w-full gap-1 rounded-box bg-base-100 p-2 shadow-xl">
+            class="menu absolute z-popover mt-2 w-full gap-1 rounded-box bg-base-100 p-2 shadow-md">
             <li>
               <Button onclick={createInvite}>
                 <Icon icon={LinkRound} />

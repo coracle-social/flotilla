@@ -14,7 +14,7 @@
   const extraClass = $derived(
     !fullscreen &&
       cx(
-        "bg-alt text-base-content overflow-auto text-base-content shadow-xl",
+        "bg-alt text-base-content overflow-auto text-base-content shadow-md",
         "px-4 py-6 bottom-0 left-0 right-0 top-20 rounded-t-box absolute",
         "sm:p-6 sm:max-h-[90vh] sm:w-[520px] sm:rounded-box sm:relative sm:top-0",
       ),

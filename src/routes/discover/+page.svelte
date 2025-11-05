@@ -145,7 +145,7 @@
         {#if inviteData}
           {#key inviteData.url}
             <Button
-              class="card2 bg-alt shadow-xl transition-all hover:shadow-2xl hover:dark:brightness-[1.1]"
+              class="card2 bg-alt shadow-md transition-all hover:shadow-lg hover:dark:brightness-[1.1]"
               onclick={() => openSpace(inviteData.url, inviteData.claim)}>
               <RelaySummary url={inviteData.url} />
             </Button>
@@ -153,7 +153,7 @@
         {/if}
         {#each relaySearch.searchOptions(term).slice(0, limit) as relay (relay.url)}
           <Button
-            class="card2 bg-alt shadow-xl transition-all hover:shadow-2xl hover:dark:brightness-[1.1]"
+            class="card2 bg-alt shadow-md transition-all hover:shadow-lg hover:dark:brightness-[1.1]"
             onclick={() => openSpace(relay.url)}>
             <RelaySummary url={relay.url} />
           </Button>

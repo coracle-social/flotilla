@@ -35,7 +35,7 @@
   }
 </script>
 
-<ul class="menu whitespace-nowrap rounded-box bg-base-100 p-2 shadow-xl">
+<ul class="menu whitespace-nowrap rounded-box bg-base-100 p-2 shadow-md">
   <li>
     <Button onclick={showInfo}>
       <Icon size={4} icon={Code2} />

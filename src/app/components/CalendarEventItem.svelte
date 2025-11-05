@@ -19,7 +19,7 @@
 </script>
 
 <Link
-  class="col-3 card2 bg-alt w-full cursor-pointer shadow-xl"
+  class="col-3 card2 bg-alt w-full cursor-pointer shadow-md"
   href={makeCalendarPath(url, event.id)}>
   <CalendarEventHeader {event} />
   <div class="flex w-full flex-col items-end justify-between gap-2 sm:flex-row">

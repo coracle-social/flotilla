@@ -89,7 +89,7 @@
 </script>
 
 <div class="col-4">
-  <div class="card2 bg-alt flex flex-col gap-6 shadow-xl">
+  <div class="card2 bg-alt flex flex-col gap-6 shadow-md">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3">
         <Icon icon={Inbox} />
@@ -108,7 +108,7 @@
       {/each}
     </div>
   </div>
-  <div class="card2 bg-alt flex flex-col gap-4 shadow-xl">
+  <div class="card2 bg-alt flex flex-col gap-4 shadow-md">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3">
         <Icon icon={Bell} />

@@ -18,7 +18,7 @@
   const openProfile = () => pushModal(ProfileDetail, {pubkey, url})
 </script>
 
-<div class="card2 bg-alt flex flex-col gap-4 shadow-xl">
+<div class="card2 bg-alt flex flex-col gap-4 shadow-md">
   <div class="flex justify-between">
     <Profile {pubkey} {url} />
     <Button onclick={openProfile} class="btn btn-primary hidden sm:flex">

@@ -54,7 +54,7 @@
   })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-box bg-base-100 p-2 shadow-xl" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-box bg-base-100 p-2 shadow-md" bind:this={ul}>
   {#if isRoot}
     <li>
       <Button onclick={share}>

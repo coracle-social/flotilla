@@ -25,7 +25,7 @@
       <h1 class="mb-4 text-center text-5xl font-bold uppercase">{PLATFORM_NAME}</h1>
       <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
         {#if Capacitor.getPlatform() !== "ios"}
-          <div class="card2 bg-alt flex flex-col gap-2 text-center shadow-2xl">
+          <div class="card2 bg-alt flex flex-col gap-2 text-center shadow-lg">
             <h3 class="text-2xl sm:h-12">Donate</h3>
             <p class="sm:h-16">Funds will be used to support development.</p>
             <Link external href="https://geyser.fund/project/flotilla" class="btn btn-primary">
@@ -33,7 +33,7 @@
             </Link>
           </div>
         {/if}
-        <div class="card2 bg-alt flex flex-col gap-2 text-center shadow-2xl">
+        <div class="card2 bg-alt flex flex-col gap-2 text-center shadow-lg">
           <h3 class="text-2xl sm:h-12">Get in touch</h3>
           <p class="sm:h-16">Having problems? Let us know.</p>
           <Link

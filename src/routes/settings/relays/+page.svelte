@@ -50,7 +50,7 @@
 </script>
 
 <div class="content column gap-4">
-  <Collapse class="card2 bg-alt column gap-4 shadow-xl">
+  <Collapse class="card2 bg-alt column gap-4 shadow-md">
     {#snippet title()}
       <h2 class="flex items-center gap-3 text-xl">
         <Icon icon={Globus} />
@@ -83,7 +83,7 @@
       </Button>
     </div>
   </Collapse>
-  <Collapse class="card2 bg-alt column gap-4 shadow-xl">
+  <Collapse class="card2 bg-alt column gap-4 shadow-md">
     {#snippet title()}
       <h2 class="flex items-center gap-3 text-xl">
         <Icon icon={Inbox} />
@@ -115,7 +115,7 @@
       </Button>
     </div>
   </Collapse>
-  <Collapse class="card2 bg-alt column gap-4 shadow-xl">
+  <Collapse class="card2 bg-alt column gap-4 shadow-md">
     {#snippet title()}
       <h2 class="flex items-center gap-3 text-xl">
         <Icon icon={Mailbox} />

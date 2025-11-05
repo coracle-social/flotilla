@@ -44,7 +44,7 @@
 </script>
 
 <div class="content column gap-4">
-  <div class="card2 bg-alt shadow-xl">
+  <div class="card2 bg-alt shadow-md">
     <div class="flex justify-between gap-2">
       <div class="flex max-w-full gap-3">
         <div class="py-1">
@@ -70,7 +70,7 @@
     {/key}
   </div>
   {#if $session?.email}
-    <div class="card2 bg-alt col-4 shadow-xl">
+    <div class="card2 bg-alt col-4 shadow-md">
       <FieldInline>
         {#snippet label()}
           <p>Email Address</p>
@@ -90,7 +90,7 @@
       </FieldInline>
     </div>
   {/if}
-  <div class="card2 bg-alt col-4 shadow-xl">
+  <div class="card2 bg-alt col-4 shadow-md">
     <FieldInline>
       {#snippet label()}
         <p class="flex items-center gap-3">
@@ -140,7 +140,7 @@
     {/if}
     <SignerStatus />
   </div>
-  <div class="card2 bg-alt shadow-xl">
+  <div class="card2 bg-alt shadow-md">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3">
         <Icon icon={Settings} />

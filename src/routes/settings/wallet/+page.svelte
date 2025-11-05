@@ -30,7 +30,7 @@
 </script>
 
 <div class="content column gap-4">
-  <div class="card2 bg-alt flex flex-col gap-6 shadow-xl">
+  <div class="card2 bg-alt flex flex-col gap-6 shadow-md">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3">
         <Icon icon={Wallet2} />
@@ -100,7 +100,7 @@
     </div>
   </div>
   <div
-    class="card2 bg-alt flex flex-col shadow-xl"
+    class="card2 bg-alt flex flex-col shadow-md"
     class:gap-6={profileLightningAddress && walletLud16 && profile?.lud16 !== walletLud16}>
     <div class="flex items-center justify-between">
       <strong>Lightning Address</strong>
