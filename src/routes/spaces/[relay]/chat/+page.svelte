@@ -188,6 +188,12 @@
     return elements
   })
 
+  const onEscape = () => {
+    clearParent()
+    clearShare()
+    eventToEdit = undefined
+  }
+
   const canEditEvent = (event: TrustedEvent) =>
     event.pubkey === $pubkey && event.created_at >= ago(5, MINUTE)
 
@@ -315,6 +321,7 @@
     <RoomCompose
       {url}
       {onSubmit}
+      {onEscape}
       {onEditPrevious}
       content={eventToEdit?.content}
       bind:this={compose} />

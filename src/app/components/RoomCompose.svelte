@@ -18,11 +18,12 @@
     url?: string
     h?: string
     content?: string
+    onEscape?: () => void
     onEditPrevious?: () => void
     onSubmit: (event: EventContent) => void
   }
 
-  const {url, h, content, onEditPrevious, onSubmit}: Props = $props()
+  const {url, h, content, onEscape, onEditPrevious, onSubmit}: Props = $props()
 
   const autofocus = !isMobile
 
@@ -34,6 +35,10 @@
     editor.then(ed => ed.getText({blockSeparator: "\n"}) === "")
 
   const handleKeyDown = async (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      onEscape?.()
+    }
+
     if (event.key === "ArrowUp" && (await canEnterEditPrevious())) {
       onEditPrevious?.()
     }
