@@ -1,5 +1,9 @@
 # Changelog
 
+# 1.5.2
+
+* Fix negentropy room syncing
+
 # 1.5.1
 
 * Fix chat path link
