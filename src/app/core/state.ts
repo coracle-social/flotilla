@@ -93,6 +93,7 @@ import {
   verifyEvent,
   readRoomMeta,
   makeRoomMeta,
+  ManagementMethod,
 } from "@welshman/util"
 import type {
   TrustedEvent,
@@ -126,6 +127,7 @@ import {
   deriveRelay,
   makeUserData,
   makeUserLoader,
+  manageRelay,
 } from "@welshman/app"
 import type {Thunk} from "@welshman/app"
 
@@ -872,6 +874,16 @@ export const deriveUserCanCreateRoom = (url: string) =>
 
 export const deriveUserIsRoomAdmin = (url: string, h: string) =>
   derived([pubkey, deriveRoomAdmins(url, h)], ([$pubkey, $admins]) => $admins.includes($pubkey!))
+
+export const deriveUserIsSpaceAdmin = (url: string) => {
+  const store = writable(false)
+
+  manageRelay(url, {method: ManagementMethod.SupportedMethods, params: []}).then(res =>
+    store.set(Boolean(res.result?.length)),
+  )
+
+  return store
+}
 
 // Other utils
 

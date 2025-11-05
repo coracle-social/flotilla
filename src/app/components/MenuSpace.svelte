@@ -12,6 +12,7 @@
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Login from "@assets/icons/login-3.svg?dataurl"
   import History from "@assets/icons/history.svg?dataurl"
+  import Tuning2 from "@assets/icons/tuning-2.svg?dataurl"
   import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic-2.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
@@ -47,6 +48,7 @@
     hasNip29,
     alerts,
     deriveUserCanCreateRoom,
+    deriveUserIsSpaceAdmin,
   } from "@app/core/state"
   import {notifications} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
@@ -63,6 +65,7 @@
   const otherRooms = deriveOtherRooms(url)
   const members = deriveSpaceMembers(url)
   const hasAlerts = $derived($alerts.some(a => getTagValue("feed", a.tags)?.includes(url)))
+  const userIsAdmin = deriveUserIsSpaceAdmin(url)
 
   const spaceKinds = derived(
     deriveEventsForUrl(url, [{kinds: CONTENT_KINDS}]),
@@ -149,7 +152,14 @@
                 View Members ({$members.length})
               </Button>
             </li>
-            {#if $relay?.pubkey}
+            {#if $userIsAdmin}
+              <li>
+                <Link external href="https://landlubber.coracle.social">
+                  <Icon icon={Tuning2} />
+                  Manage Space
+                </Link>
+              </li>
+            {:else if $relay?.pubkey}
               <li>
                 <Link href={makeChatPath([$relay.pubkey])}>
                   <Icon icon={Letter} />
