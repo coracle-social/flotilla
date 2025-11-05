@@ -1,6 +1,11 @@
 import {prop, call, on, throttle, fromPairs, batch} from "@welshman/lib"
 import {throttled, freshness} from "@welshman/store"
 import {
+  ALERT_ANDROID,
+  ALERT_EMAIL,
+  ALERT_IOS,
+  ALERT_STATUS,
+  ALERT_WEB,
   APP_DATA,
   BLOSSOM_SERVERS,
   DIRECT_MESSAGE_FILE,
@@ -69,6 +74,7 @@ const syncEvents = async () => {
     APP_DATA,
     ROOMS,
   ]
+  const alertKinds = [ALERT_STATUS, ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]
   const spaceKinds = [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS, RELAY_JOIN, RELAY_LEAVE]
   const roomKinds = [
     ROOM_META,
@@ -83,9 +89,10 @@ const syncEvents = async () => {
 
   const rankEvent = (event: TrustedEvent) => {
     if (metaKinds.includes(event.kind)) return 9
-    if (spaceKinds.includes(event.kind)) return 8
-    if (roomKinds.includes(event.kind)) return 7
-    if (!isMobile && contentKinds.includes(event.kind)) return 6
+    if (alertKinds.includes(event.kind)) return 8
+    if (spaceKinds.includes(event.kind)) return 7
+    if (roomKinds.includes(event.kind)) return 6
+    if (!isMobile && contentKinds.includes(event.kind)) return 5
     return 0
   }
 
