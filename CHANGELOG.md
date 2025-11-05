@@ -1,5 +1,9 @@
 # Changelog
 
+# 1.5.1
+
+* Fix chat path link
+
 # 1.5.0
 
 * Restyle mobile dialogs
