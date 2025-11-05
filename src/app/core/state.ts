@@ -25,6 +25,7 @@ import {
   groupBy,
   always,
   tryCatch,
+  fromPairs,
 } from "@welshman/lib"
 import type {Socket} from "@welshman/net"
 import {
@@ -1004,3 +1005,22 @@ export const deriveRelayAuthError = (url: string, claim = "") => {
     },
   )
 }
+
+export type InviteData = {url: string; claim: string}
+
+export const parseInviteLink = (invite: string): InviteData | undefined =>
+  tryCatch(() => {
+    const {r: relay = "", c: claim = ""} = fromPairs(Array.from(new URL(invite).searchParams))
+    const url = normalizeRelayUrl(relay)
+
+    if (isRelayUrl(url)) {
+      return {url, claim}
+    }
+  }) ||
+  tryCatch(() => {
+    const url = normalizeRelayUrl(invite)
+
+    if (isRelayUrl(url)) {
+      return {url, claim: ""}
+    }
+  })

@@ -1,7 +1,5 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {tryCatch, fromPairs} from "@welshman/lib"
-  import {isRelayUrl, normalizeRelayUrl} from "@welshman/util"
   import {Pool, AuthStatus} from "@welshman/net"
   import {preventDefault} from "@lib/html"
   import {slideAndFade} from "@lib/transition"
@@ -19,6 +17,7 @@
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
   import {attemptRelayAccess} from "@app/core/commands"
+  import {parseInviteLink} from "@app/core/state"
 
   type Props = {
     invite: string
@@ -57,24 +56,7 @@
 
   let loading = $state(false)
 
-  const inviteData = $derived.by(
-    () =>
-      tryCatch(() => {
-        const {r: relay = "", c: claim = ""} = fromPairs(Array.from(new URL(invite).searchParams))
-        const url = normalizeRelayUrl(relay)
-
-        if (isRelayUrl(url)) {
-          return {url, claim}
-        }
-      }) ||
-      tryCatch(() => {
-        const url = normalizeRelayUrl(invite)
-
-        if (isRelayUrl(url)) {
-          return {url, claim: ""}
-        }
-      }),
-  )
+  const inviteData = $derived(parseInviteLink(invite))
 </script>
 
 <form class="column gap-4" onsubmit={preventDefault(join)}>

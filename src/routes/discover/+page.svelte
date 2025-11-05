@@ -1,9 +1,9 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {debounce} from "throttle-debounce"
-  import {dec, tryCatch} from "@welshman/lib"
+  import {dec} from "@welshman/lib"
   import type {RelayProfile} from "@welshman/util"
-  import {ROOMS, normalizeRelayUrl, isRelayUrl} from "@welshman/util"
+  import {ROOMS} from "@welshman/util"
   import {Router} from "@welshman/router"
   import {load} from "@welshman/net"
   import {relays, createSearch, loadRelay} from "@welshman/app"
@@ -28,12 +28,11 @@
     loadGroupSelections,
     getSpaceUrlsFromGroupSelections,
     groupSelectionsPubkeysByUrl,
+    parseInviteLink,
   } from "@app/core/state"
   import {pushModal} from "@app/util/modal"
 
   const openMenu = () => pushModal(SpaceAdd, {hideDiscover: true})
-
-  const termUrl = $derived(tryCatch(() => normalizeRelayUrl(term)) || "")
 
   const toggleScanner = () => {
     showScanner = !showScanner
@@ -60,7 +59,7 @@
 
   const relaySearch = $derived(
     createSearch(
-      $relays.filter(r => $groupSelectionsPubkeysByUrl.has(r.url) && r.url !== termUrl),
+      $relays.filter(r => $groupSelectionsPubkeysByUrl.has(r.url) && r.url !== inviteData?.url),
       {
         getValue: (relay: RelayProfile) => relay.url,
         sortFn: ({score, item}) => {
@@ -78,12 +77,20 @@
     ),
   )
 
-  const openSpace = (url: string) => pushModal(SpaceCheck, {url})
+  const openSpace = (url: string, claim = "") => {
+    if (claim) {
+      pushModal(SpaceInviteAccept, {invite: term})
+    } else {
+      pushModal(SpaceCheck, {url})
+    }
+  }
 
   let term = $state("")
   let limit = $state(20)
   let showScanner = $state(false)
   let element: Element
+
+  const inviteData = $derived(parseInviteLink(term))
 
   onMount(() => {
     const scroller = createScroller({
@@ -114,7 +121,11 @@
         <div class="row-2 min-w-0 flex-grow items-center">
           <label class="input input-bordered flex flex-grow items-center gap-2">
             <Icon icon={Magnifier} />
-            <input bind:value={term} class="grow" type="text" placeholder="Search for spaces..." />
+            <input
+              bind:value={term}
+              class="grow"
+              type="text"
+              placeholder="Search for spaces or paste invite link..." />
             <Button onclick={toggleScanner} class="center">
               <Icon icon={QrCode} />
             </Button>
@@ -131,15 +142,15 @@
     {/snippet}
     {#snippet content()}
       <div class="col-2 scroll-container" bind:this={element}>
-        {#key termUrl}
-          {#if isRelayUrl(termUrl)}
+        {#if inviteData}
+          {#key inviteData.url}
             <Button
               class="card2 bg-alt shadow-xl transition-all hover:shadow-2xl hover:dark:brightness-[1.1]"
-              onclick={() => openSpace(termUrl)}>
-              <RelaySummary url={termUrl} />
+              onclick={() => openSpace(inviteData.url, inviteData.claim)}>
+              <RelaySummary url={inviteData.url} />
             </Button>
-          {/if}
-        {/key}
+          {/key}
+        {/if}
         {#each relaySearch.searchOptions(term).slice(0, limit) as relay (relay.url)}
           <Button
             class="card2 bg-alt shadow-xl transition-all hover:shadow-2xl hover:dark:brightness-[1.1]"
