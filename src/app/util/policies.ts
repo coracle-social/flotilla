@@ -62,11 +62,10 @@ export const mostlyRestrictedPolicy = (socket: Socket) => {
 
   const pending = new Set<string>()
 
-  const updateStatus = () => {
+  const updateStatus = () =>
     relaysMostlyRestricted.update(
       restricted > total / 2 ? assoc(socket.url, error) : dissoc(socket.url),
     )
-  }
 
   const unsubscribers = [
     on(socket, SocketEvent.Receive, (message: RelayMessage) => {

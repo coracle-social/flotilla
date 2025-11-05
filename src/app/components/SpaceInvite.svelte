@@ -1,8 +1,8 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {sleep, nthEq} from "@welshman/lib"
+  import {sleep} from "@welshman/lib"
   import {request} from "@welshman/net"
-  import {displayRelayUrl, RELAY_INVITE} from "@welshman/util"
+  import {displayRelayUrl, getTagValue, RELAY_INVITE} from "@welshman/util"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Copy from "@assets/icons/copy.svg?dataurl"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -13,9 +13,11 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import QRCode from "@app/components/QRCode.svelte"
   import {clip} from "@app/util/toast"
-  import {PLATFORM_URL} from "@app/core/state"
+  import {PLATFORM_URL, deriveRelayAuthError} from "@app/core/state"
 
   const {url} = $props()
+
+  const authError = deriveRelayAuthError(url)
 
   const back = () => history.back()
 
@@ -38,12 +40,13 @@
       request({
         relays: [url],
         autoClose: true,
+        signal: AbortSignal.timeout(3000),
         filters: [{kinds: [RELAY_INVITE]}],
       }),
       sleep(2000),
     ])
 
-    claim = event?.tags.find(nthEq(0, "claim"))?.[1] || ""
+    claim = getTagValue("claim", event?.tags || []) || ""
     loading = false
   })
 </script>
@@ -65,6 +68,8 @@
       <p class="center">
         <Spinner {loading}>Requesting an invite link...</Spinner>
       </p>
+    {:else if $authError}
+      <p class="center">Oops! It looks like you're not a member of this relay.</p>
     {:else}
       <div class="flex flex-col items-center gap-6">
         <QRCode code={invite} />

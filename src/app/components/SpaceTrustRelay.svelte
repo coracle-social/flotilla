@@ -28,7 +28,7 @@
     try {
       await removeSpaceMembership(url)
       await removeTrustedRelay(url)
-      goto("/")
+      goto("/home")
     } finally {
       loading = false
     }

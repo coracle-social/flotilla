@@ -3,7 +3,6 @@
   import {page} from "$app/stores"
   import {once} from "@welshman/lib"
   import Page from "@lib/components/Page.svelte"
-  import Dialog from "@lib/components/Dialog.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import MenuSpace from "@app/components/MenuSpace.svelte"
   import SpaceAuthError from "@app/components/SpaceAuthError.svelte"
@@ -23,7 +22,11 @@
 
   const authError = deriveRelayAuthError(url)
 
-  const showAuthError = once(() => pushModal(SpaceAuthError, {url, error: $authError}))
+  const showAuthError = once(() =>
+    pushModal(SpaceAuthError, {url, error: $authError}, {noEscape: true}),
+  )
+
+  const showPendingTrust = once(() => pushModal(SpaceTrustRelay, {url}, {noEscape: true}))
 
   // We have to watch this one, since on mobile the badge will be visible when active
   $effect(() => {
@@ -36,6 +39,8 @@
   $effect(() => {
     if ($authError) {
       showAuthError()
+    } else if ($relaysPendingTrust.includes(url)) {
+      showPendingTrust()
     }
   })
 </script>
@@ -48,9 +53,3 @@
     {@render children?.()}
   {/key}
 </Page>
-
-{#if $relaysPendingTrust.includes(url)}
-  <Dialog>
-    <SpaceTrustRelay {url} />
-  </Dialog>
-{/if}

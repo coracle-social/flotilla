@@ -982,8 +982,8 @@ export const deriveRelayAuthError = (url: string, claim = "") => {
   })
 
   return derived(
-    [relaysMostlyRestricted, deriveSocket(url)],
-    ([$relaysMostlyRestricted, $socket]) => {
+    [thunk, relaysMostlyRestricted, deriveSocket(url)],
+    ([$thunk, $relaysMostlyRestricted, $socket]) => {
       if ($socket.auth.status === AuthStatus.Forbidden && $socket.auth.details) {
         return stripPrefix($socket.auth.details)
       }
@@ -992,7 +992,7 @@ export const deriveRelayAuthError = (url: string, claim = "") => {
         return stripPrefix($relaysMostlyRestricted[url])
       }
 
-      const error = getThunkError(thunk)
+      const error = getThunkError($thunk)
 
       if (error) {
         const isEmptyInvite = !claim && error.includes("invite code")

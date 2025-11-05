@@ -4,9 +4,15 @@
   import Dialog from "@lib/components/Dialog.svelte"
   import {modal, clearModals} from "@app/util/modal"
 
+  const closeModals = () => {
+    if ($modal && !$modal.options.noEscape) {
+      clearModals()
+    }
+  }
+
   const onKeyDown = (e: any) => {
     if (e.code === "Escape" && e.target === document.body) {
-      clearModals()
+      closeModals()
     }
   }
 
@@ -27,7 +33,7 @@
         instance = mount(wrapper as any, {
           target: element,
           props: {
-            onClose: clearModals,
+            onClose: closeModals,
             children: createRawSnippet(() => ({
               render: () => "<div></div>",
               setup: (target: Element) => {

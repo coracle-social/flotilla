@@ -6,6 +6,7 @@ import {page} from "$app/stores"
 
 export type ModalOptions = {
   drawer?: boolean
+  noEscape?: boolean
   fullscreen?: boolean
   replaceState?: boolean
   path?: string

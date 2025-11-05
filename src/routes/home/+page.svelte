@@ -12,16 +12,16 @@
   import SpaceAdd from "@app/components/SpaceAdd.svelte"
   import ChatEnable from "@app/components/ChatEnable.svelte"
   import {pushModal} from "@app/util/modal"
-  import {makeSpacePath} from "@app/util/routes"
+  import {goToSpace} from "@app/util/routes"
   import {PLATFORM_NAME, PLATFORM_RELAYS} from "@app/core/state"
 
   const addSpace = () => pushModal(SpaceAdd)
 
   const openChat = () => ($shouldUnwrap ? goto("/chat") : pushModal(ChatEnable, {next: "/chat"}))
 
-  onMount(() => {
+  onMount(async () => {
     if (PLATFORM_RELAYS.length > 0) {
-      goto(makeSpacePath(PLATFORM_RELAYS[0]))
+      goToSpace(PLATFORM_RELAYS[0])
     }
   })
 </script>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {goto} from "$app/navigation"
   import {displayRelayUrl} from "@welshman/util"
   import {parse, renderAsHtml} from "@welshman/content"
   import Button from "@lib/components/Button.svelte"
@@ -14,7 +15,7 @@
 
   const {url, error} = $props()
 
-  const back = () => history.back()
+  const back = () => goto("/home")
 
   const requestAccess = () => pushModal(SpaceAccessRequest, {url})
 </script>
@@ -37,7 +38,7 @@
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
       <Icon icon={AltArrowLeft} />
-      Go back
+      Go Home
     </Button>
     <Button type="submit" class="btn btn-primary">
       Request Access

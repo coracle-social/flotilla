@@ -4,7 +4,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {goto} from "$app/navigation"
 import {nthEq, sleep} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
-import {tracker, relaysByUrl} from "@welshman/app"
+import {tracker, loadRelay} from "@welshman/app"
 import {scrollToEvent} from "@lib/html"
 import {identity} from "@welshman/lib"
 import {
@@ -26,6 +26,7 @@ import {
   hasNip29,
   ROOM,
 } from "@app/core/state"
+import {lastPageBySpaceUrl} from "@app/util/history"
 
 export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => {
   let path = `/spaces/${encodeRelay(url)}`
@@ -37,17 +38,21 @@ export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => 
         .filter(identity)
         .map(s => encodeURIComponent(s as string))
         .join("/")
-  } else {
-    const relay = relaysByUrl.get().get(url)
-
-    if (hasNip29(relay)) {
-      path += "/recent"
-    } else {
-      path += "/chat"
-    }
   }
 
   return path
+}
+
+export const goToSpace = async (url: string) => {
+  const prevPath = lastPageBySpaceUrl.get(encodeRelay(url))
+
+  if (prevPath) {
+    goto(prevPath)
+  } else if (hasNip29(await loadRelay(url))) {
+    goto(makeSpacePath(url, "recent"))
+  } else {
+    goto(makeSpacePath("chat"))
+  }
 }
 
 export const makeChatPath = (pubkeys: string[]) => `/chat/${makeChatId(pubkeys)}`
