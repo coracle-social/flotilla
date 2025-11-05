@@ -8,7 +8,7 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import MenuSpacesItem from "@app/components/MenuSpacesItem.svelte"
   import SpaceAdd from "@app/components/SpaceAdd.svelte"
-  import {userSpaceUrls, PLATFORM_RELAYS} from "@app/core/state"
+  import {userSpaceUrls, loadUserGroupSelections, PLATFORM_RELAYS} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
 
   const addSpace = () => pushModal(SpaceAdd)
@@ -37,17 +37,24 @@
     {#each PLATFORM_RELAYS as url (url)}
       <MenuSpacesItem {url} />
     {:else}
-      {#each $userSpaceUrls as url (url)}
-        <MenuSpacesItem {url} />
-      {:else}
-        <div class="flex flex-col gap-8 items-center py-20">
-          <p>You haven't added any spaces yet!</p>
-          <Button class="btn btn-primary" onclick={addSpace}>
-            <Icon icon={AddCircle} />
-            Add a Space
-          </Button>
+      {#await loadUserGroupSelections()}
+        <div class="flex justify-center items-center py-20">
+          <span class="loading loading-spinner mr-3"></span>
+          Loading your spaces...
         </div>
-      {/each}
+      {:then}
+        {#each $userSpaceUrls as url (url)}
+          <MenuSpacesItem {url} />
+        {:else}
+          <div class="flex flex-col gap-8 items-center py-20">
+            <p>You haven't added any spaces yet!</p>
+            <Button class="btn btn-primary" onclick={addSpace}>
+              <Icon icon={AddCircle} />
+              Add a Space
+            </Button>
+          </div>
+        {/each}
+      {/await}
     {/each}
   </PageContent>
 </Page>
