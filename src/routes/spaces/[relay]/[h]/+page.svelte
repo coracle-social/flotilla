@@ -16,7 +16,6 @@
   } from "@welshman/util"
   import {pubkey, publishThunk, waitForThunkError, joinRoom, leaveRoom} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
-  import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
   import Login2 from "@assets/icons/login-3.svg?dataurl"
@@ -33,6 +32,8 @@
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
   import RoomEdit from "@app/components/RoomEdit.svelte"
   import RoomName from "@app/components/RoomName.svelte"
+  import RoomAccess from "@app/components/RoomAccess.svelte"
+  import RoomImage from "@app/components/RoomImage.svelte"
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@src/app/components/RoomItemAddMember.svelte"
   import RoomItemRemoveMember from "@src/app/components/RoomItemRemoveMember.svelte"
@@ -334,17 +335,14 @@
 
 <PageBar>
   {#snippet icon()}
-    <div class="center">
-      <Icon icon={Hashtag} />
-    </div>
+    <RoomImage {url} {h} />
   {/snippet}
   {#snippet title()}
-    <strong class="ellipsize">
-      <RoomName {url} {h} />
-    </strong>
+    <RoomName {url} {h} />
   {/snippet}
   {#snippet action()}
     <div class="row-2">
+      <RoomAccess {url} {h} />
       {#if $userIsAdmin}
         <Button
           class="btn btn-neutral btn-sm tooltip tooltip-left"

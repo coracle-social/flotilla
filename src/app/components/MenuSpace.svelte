@@ -8,6 +8,7 @@
   import RemoteControllerMinimalistic from "@assets/icons/remote-controller-minimalistic.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
+  import SquareTopDown from "@assets/icons/square-top-down.svg?dataurl"
   import Exit from "@assets/icons/logout-3.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Login from "@assets/icons/login-3.svg?dataurl"
@@ -157,6 +158,7 @@
                 <Link external href="https://landlubber.coracle.social">
                   <Icon icon={Tuning2} />
                   Manage Space
+                  <Icon icon={SquareTopDown} size={4} class="opacity-50" />
                 </Link>
               </li>
             {:else if $relay?.pubkey}
@@ -184,7 +186,7 @@
         </Popover>
       {/if}
     </div>
-    <div class="flex max-h-[calc(100vh-150px)] min-h-0 flex-col gap-1 overflow-auto">
+    <div class="flex max-h-[calc(100vh-250px)] min-h-0 flex-col gap-1 overflow-auto">
       {#if hasNip29($relay)}
         <SecondaryNavItem {replaceState} href={makeSpacePath(url, "recent")}>
           <Icon icon={History} /> Recent Activity

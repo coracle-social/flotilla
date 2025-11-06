@@ -43,7 +43,7 @@
   }
 </script>
 
-<div class="w-96 rounded-box bg-base-100 p-4 shadow-lg">
+<div class="w-96 rounded-box bg-base-100 p-4 shadow-2xl">
   <label class="input input-bordered flex w-full items-center gap-2">
     <Icon icon={Magnifier} />
     <input bind:value={searchTerm} class="grow" type="text" placeholder="Search icons..." />

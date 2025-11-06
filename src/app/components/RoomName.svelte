@@ -4,4 +4,6 @@
   const {url, h} = $props()
 </script>
 
-{$roomsById.get(makeRoomId(url, h))?.name || h}
+<span class="ellipsize">
+  {$roomsById.get(makeRoomId(url, h))?.name || h}
+</span>
