@@ -36,7 +36,7 @@
             <li>Requires some technical skills</li>
           </ul>
         </div>
-        <Link class="btn btn-primary" href="https://github.com/coracle-social/zooid">
+        <Link external class="btn btn-primary" href="https://github.com/coracle-social/zooid">
           Get Started
           <Icon icon={ArrowRight} />
         </Link>
@@ -101,7 +101,7 @@
             <li>Support available</li>
           </ul>
         </div>
-        <Link class="btn btn-neutral" href="https://relay.tools/signup">
+        <Link external class="btn btn-neutral" href="https://relay.tools/signup">
           Get Started
           <Icon icon={ArrowRight} />
         </Link>
