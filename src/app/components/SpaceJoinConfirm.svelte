@@ -10,8 +10,8 @@
     await addSpaceMembership(url)
 
     broadcastUserData([url])
-    goto(makeSpacePath(url), {replaceState: true})
     relaysMostlyRestricted.update(dissoc(url))
+    goto(makeSpacePath(url), {replaceState: true})
     pushToast({message: "Welcome to the space!"})
   }
 </script>

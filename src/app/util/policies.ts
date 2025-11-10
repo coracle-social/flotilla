@@ -58,14 +58,18 @@ export const trustPolicy = (socket: Socket) => {
 export const mostlyRestrictedPolicy = (socket: Socket) => {
   let total = 0
   let restricted = 0
-  let error = ""
 
   const pending = new Set<string>()
 
-  const updateStatus = () =>
-    relaysMostlyRestricted.update(
-      restricted > total / 2 ? assoc(socket.url, error) : dissoc(socket.url),
-    )
+  const updateStatus = (error?: string) => {
+    if (restricted > total / 2) {
+      if (error) {
+        return relaysMostlyRestricted.update(assoc(socket.url, error))
+      }
+    } else {
+      relaysMostlyRestricted.update(dissoc(socket.url))
+    }
+  }
 
   const unsubscribers = [
     on(socket, SocketEvent.Receive, (message: RelayMessage) => {
@@ -83,8 +87,7 @@ export const mostlyRestrictedPolicy = (socket: Socket) => {
 
             if (details.startsWith("restricted: ")) {
               restricted++
-              error = details
-              updateStatus()
+              updateStatus(details)
             }
           }
         }
@@ -103,8 +106,7 @@ export const mostlyRestrictedPolicy = (socket: Socket) => {
 
           if (details.startsWith("restricted: ")) {
             restricted++
-            error = details
-            updateStatus()
+            updateStatus(details)
           }
         }
       }
