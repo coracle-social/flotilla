@@ -16,11 +16,10 @@
   } from "@welshman/util"
   import {pubkey, publishThunk, waitForThunkError, joinRoom, leaveRoom} from "@welshman/app"
   import {slide, fade, fly} from "@lib/transition"
-  import Pen from "@assets/icons/pen.svg?dataurl"
+  import InfoCircle from "@assets/icons/info-circle.svg?dataurl"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
   import Login2 from "@assets/icons/login-3.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
-  import Logout2 from "@assets/icons/logout-3.svg?dataurl"
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -30,10 +29,9 @@
   import Divider from "@lib/components/Divider.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
-  import RoomEdit from "@app/components/RoomEdit.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import RoomAccess from "@app/components/RoomAccess.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
+  import RoomDetail from "@app/components/RoomDetail.svelte"
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@src/app/components/RoomItemAddMember.svelte"
   import RoomItemRemoveMember from "@src/app/components/RoomItemRemoveMember.svelte"
@@ -49,7 +47,6 @@
     MembershipStatus,
     PROTECTED,
     MESSAGE_KINDS,
-    deriveUserIsRoomAdmin,
   } from "@app/core/state"
   import {setChecked, checked} from "@app/util/notifications"
   import {
@@ -71,9 +68,10 @@
   const room = deriveRoom(url, h)
   const shouldProtect = canEnforceNip70(url)
   const userRooms = deriveUserRooms(url)
-  const userIsAdmin = deriveUserIsRoomAdmin(url, h)
   const isFavorite = $derived($userRooms.includes(h))
   const membershipStatus = deriveUserRoomMembershipStatus(url, h)
+
+  const showRoomDetail = () => pushModal(RoomDetail, {url, h})
 
   const addFavorite = () => addRoomMembership(url, h)
 
@@ -304,8 +302,6 @@
     }
   }
 
-  const startEdit = () => pushModal(RoomEdit, {url, h})
-
   onMount(() => {
     const observer = new ResizeObserver(() => {
       if (dynamicPadding && chatCompose) {
@@ -342,46 +338,17 @@
   {/snippet}
   {#snippet action()}
     <div class="row-2">
-      <RoomAccess {url} {h} />
-      {#if $userIsAdmin}
-        <Button
-          class="btn btn-neutral btn-sm tooltip tooltip-left"
-          data-tip="Edit room information"
-          onclick={startEdit}>
-          <Icon size={4} icon={Pen} />
-        </Button>
-      {:else if $membershipStatus === MembershipStatus.Initial}
-        <Button
-          class="btn btn-neutral btn-sm tooltip tooltip-left"
-          data-tip="Request to be added to the member list"
-          disabled={joining}
-          onclick={join}>
-          {#if joining}
-            <span class="loading loading-spinner loading-sm"></span>
-          {:else}
-            <Icon size={4} icon={Login2} />
-          {/if}
-        </Button>
-      {:else if $membershipStatus === MembershipStatus.Pending}
-        <Button
-          class="btn btn-neutral btn-sm tooltip tooltip-left"
-          data-tip="Membership is pending">
-          <Icon size={4} icon={ClockCircle} />
-        </Button>
-      {:else}
-        <Button
-          class="btn btn-neutral btn-sm tooltip tooltip-left"
-          data-tip="Request to be removed from member list"
-          disabled={leaving}
-          onclick={leave}>
-          <Icon size={4} icon={Logout2} />
-        </Button>
-      {/if}
       <Button
         class="btn btn-neutral btn-sm tooltip tooltip-left"
         data-tip={isFavorite ? "Remove Favorite" : "Add Favorite"}
         onclick={isFavorite ? removeFavorite : addFavorite}>
         <Icon size={4} icon={Bookmark} class={cx({"text-primary": isFavorite})} />
+      </Button>
+      <Button
+        class="btn btn-neutral btn-sm tooltip tooltip-left"
+        data-tip="Room information"
+        onclick={showRoomDetail}>
+        <Icon size={4} icon={InfoCircle} />
       </Button>
       <MenuSpaceButton {url} />
     </div>

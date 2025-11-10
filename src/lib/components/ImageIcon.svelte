@@ -4,13 +4,14 @@
   type Props = {
     src: string
     alt: string
+    size?: number
   }
 
-  const {src, alt}: Props = $props()
+  const {src, alt, size = 5}: Props = $props()
 </script>
 
 {#if src.includes("image/svg") || src.endsWith(".svg")}
-  <Icon icon={src} />
+  <Icon icon={src} {size} />
 {:else}
-  <img {src} {alt} class="h-5 w-5 rounded-lg object-cover" />
+  <img {src} {alt} class="h-{size} w-{size} rounded-lg object-cover" />
 {/if}

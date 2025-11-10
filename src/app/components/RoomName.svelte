@@ -1,9 +1,17 @@
 <script lang="ts">
-  import {roomsById, makeRoomId} from "@app/core/state"
+  import {deriveRoom} from "@app/core/state"
 
-  const {url, h} = $props()
+  type Props = {
+    url: string
+    h: string
+    class?: string
+  }
+
+  const {url, h, ...props}: Props = $props()
+
+  const room = deriveRoom(url, h)
 </script>
 
-<span class="ellipsize">
-  {$roomsById.get(makeRoomId(url, h))?.name || h}
+<span class="ellipsize {props.class}">
+  {$room?.name || h}
 </span>

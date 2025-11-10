@@ -806,18 +806,29 @@ export enum MembershipStatus {
   Granted,
 }
 
+export const deriveUserIsSpaceAdmin = (url: string) => {
+  const store = writable(false)
+
+  manageRelay(url, {method: ManagementMethod.SupportedMethods, params: []}).then(res =>
+    store.set(Boolean(res.result?.length)),
+  )
+
+  return store
+}
+
 export const deriveUserSpaceMembershipStatus = (url: string) =>
   derived(
     [
       pubkey,
       deriveSpaceMembers(url),
       deriveEventsForUrl(url, [{kinds: [RELAY_JOIN, RELAY_LEAVE]}]),
+      deriveUserIsSpaceAdmin(url),
     ],
-    ([$pubkey, $members, $events]) => {
-      const isMember = $members.includes($pubkey)
+    ([$pubkey, $members, $events, $isAdmin]) => {
+      const isMember = $members.includes($pubkey) || $isAdmin
 
       for (const event of $events) {
-        if (!getPubkeyTagValues(event.tags).includes($pubkey!)) {
+        if (event.pubkey !== $pubkey) {
           continue
         }
 
@@ -834,18 +845,25 @@ export const deriveUserSpaceMembershipStatus = (url: string) =>
     },
   )
 
+export const deriveUserIsRoomAdmin = (url: string, h: string) =>
+  derived(
+    [pubkey, deriveRoomAdmins(url, h), deriveUserIsSpaceAdmin(url)],
+    ([$pubkey, $admins, $isSpaceAdmin]) => $isSpaceAdmin || $admins.includes($pubkey!),
+  )
+
 export const deriveUserRoomMembershipStatus = (url: string, h: string) =>
   derived(
     [
       pubkey,
       deriveRoomMembers(url, h),
       deriveEventsForUrl(url, [{kinds: [ROOM_JOIN, ROOM_LEAVE], "#h": [h]}]),
+      deriveUserIsRoomAdmin(url, h),
     ],
-    ([$pubkey, $members, $events]) => {
-      const isMember = $members.includes($pubkey)
+    ([$pubkey, $members, $events, $isAdmin]) => {
+      const isMember = $members.includes($pubkey) || $isAdmin
 
       for (const event of $events) {
-        if (!getPubkeyTagValues(event.tags).includes($pubkey!)) {
+        if (event.pubkey !== $pubkey) {
           continue
         }
 
@@ -871,19 +889,6 @@ export const deriveUserCanCreateRoom = (url: string) =>
       return event ? getPubkeyTagValues(event.tags).includes($pubkey!) : true
     },
   )
-
-export const deriveUserIsRoomAdmin = (url: string, h: string) =>
-  derived([pubkey, deriveRoomAdmins(url, h)], ([$pubkey, $admins]) => $admins.includes($pubkey!))
-
-export const deriveUserIsSpaceAdmin = (url: string) => {
-  const store = writable(false)
-
-  manageRelay(url, {method: ManagementMethod.SupportedMethods, params: []}).then(res =>
-    store.set(Boolean(res.result?.length)),
-  )
-
-  return store
-}
 
 // Other utils
 

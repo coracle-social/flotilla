@@ -5,17 +5,18 @@
   import {deriveRoom} from "@app/core/state"
 
   interface Props {
-    h: any
-    url: any
+    h: string
+    url: string
+    size?: number
   }
 
-  const {url, h}: Props = $props()
+  const {url, h, size = 5}: Props = $props()
 
   const room = deriveRoom(url, h)
 </script>
 
 {#if $room.picture}
-  <ImageIcon src={$room.picture} alt="Room icon" />
+  <ImageIcon src={$room.picture} {size} alt="Room icon" />
 {:else}
-  <Icon icon={Hashtag} />
+  <Icon icon={Hashtag} {size} />
 {/if}
