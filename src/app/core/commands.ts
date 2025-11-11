@@ -612,7 +612,7 @@ export const payInvoice = async (invoice: string) => {
 
 export const normalizeBlossomUrl = (url: string) => normalizeUrl(url.replace(/^ws/, "http"))
 
-export const hasBlossomSupport = simpleCache(async ([url]: [string]) => {
+export const fetchHasBlossomSupport = async (url: string) => {
   const server = normalizeBlossomUrl(url)
   const $signer = signer.get() || Nip01Signer.ephemeral()
   const headers: Record<string, string> = {
@@ -633,7 +633,9 @@ export const hasBlossomSupport = simpleCache(async ([url]: [string]) => {
   }
 
   return false
-})
+}
+
+export const hasBlossomSupport = simpleCache(([url]: [string]) => fetchHasBlossomSupport(url))
 
 export type GetBlossomServerOptions = {
   url?: string
@@ -701,7 +703,7 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
     let {uploaded, url, ...task} = parseJson(text) || {}
 
     if (!uploaded) {
-      return {error: text}
+      return {error: text || `Failed to upload file (HTTP ${res.status})`}
     }
 
     // Always append correct file extension if we encrypted the file, or if it's missing
