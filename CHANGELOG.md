@@ -1,5 +1,16 @@
 # Changelog
 
+# 1.5.3
+
+* Add space edit form
+* Improve room syncing
+* Return better blossom errors
+* Fix access restricted bugs
+* Add room detail dialog
+* Fix broken link to self hosting
+* Tweak shadows
+* Always join spaces when visiting them
+
 # 1.5.2
 
 * Fix negentropy room syncing
