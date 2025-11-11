@@ -1,13 +1,7 @@
 import {writable} from "svelte/store"
 import type {Nip46ResponseWithResult} from "@welshman/signer"
 import {Nip46Broker, makeSecret} from "@welshman/signer"
-import {
-  NIP46_PERMS,
-  PLATFORM_URL,
-  PLATFORM_NAME,
-  PLATFORM_LOGO,
-  SIGNER_RELAYS,
-} from "@app/core/state"
+import {PLATFORM_URL, PLATFORM_NAME, PLATFORM_LOGO, SIGNER_RELAYS} from "@app/core/state"
 import {pushToast} from "@app/util/toast"
 
 export class Nip46Controller {
@@ -25,7 +19,6 @@ export class Nip46Controller {
 
   async start() {
     const url = await this.broker.makeNostrconnectUrl({
-      perms: NIP46_PERMS,
       url: PLATFORM_URL,
       name: PLATFORM_NAME,
       image: PLATFORM_LOGO,

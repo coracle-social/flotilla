@@ -1,7 +1,7 @@
 <script lang="ts">
   import {displayRelayUrl} from "@welshman/util"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
-  import SpaceAvatar from "@app/components/SpaceAvatar.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
   import {makeSpacePath, goToSpace} from "@app/util/routes"
   import {notifications} from "@app/util/notifications"
 
@@ -15,5 +15,5 @@
   title={displayRelayUrl(url)}
   class="tooltip-right"
   notification={$notifications.has(makeSpacePath(url))}>
-  <SpaceAvatar {url} />
+  <RelayIcon {url} size={10} class="rounded-full" />
 </PrimaryNavItem>

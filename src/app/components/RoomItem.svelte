@@ -7,7 +7,6 @@
     thunks,
     pubkey,
     mergeThunks,
-    deriveProfile,
     deriveProfileDisplay,
     displayProfileByPubkey,
   } from "@welshman/app"
@@ -16,12 +15,12 @@
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import ReplyAlt from "@assets/icons/reply.svg?dataurl"
   import TapTarget from "@lib/components/TapTarget.svelte"
-  import Avatar from "@lib/components/Avatar.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import ThunkFailure from "@app/components/ThunkFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import RoomItemZapButton from "@app/components/RoomItemZapButton.svelte"
   import RoomItemEmojiButton from "@app/components/RoomItemEmojiButton.svelte"
@@ -56,7 +55,6 @@
   const path = getRoomItemPath(url, event)
   const shouldProtect = canEnforceNip70(url)
   const today = formatTimestampAsDate(now())
-  const profile = deriveProfile(event.pubkey, [url])
   const profileDisplay = deriveProfileDisplay(event.pubkey, [url])
   const thunk = mergeThunks($thunks.filter(t => t.event.id === event.id))
   const [_, colorValue] = colors[hash(event.pubkey) % colors.length]
@@ -83,7 +81,10 @@
   <div class="flex w-full gap-3 overflow-auto">
     {#if showPubkey}
       <Button onclick={openProfile} class="flex items-start">
-        <Avatar src={$profile?.picture} class="border border-solid border-base-content" size={8} />
+        <ProfileCircle
+          pubkey={event.pubkey}
+          class="border border-solid border-base-content"
+          size={8} />
       </Button>
     {:else}
       <div class="w-8 min-w-8 max-w-8"></div>

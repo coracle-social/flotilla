@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {removeNil} from "@welshman/lib"
+  import {removeUndefined} from "@welshman/lib"
   import {displayPubkey} from "@welshman/util"
   import {deriveHandleForPubkey, displayHandle, deriveProfileDisplay} from "@welshman/app"
   import WotScore from "@app/components/WotScore.svelte"
@@ -13,7 +13,7 @@
   const {value, url}: Props = $props()
 
   const pubkey = value
-  const profileDisplay = deriveProfileDisplay(pubkey, removeNil([url]))
+  const profileDisplay = deriveProfileDisplay(pubkey, removeUndefined([url]))
   const handle = deriveHandleForPubkey(pubkey)
 </script>
 

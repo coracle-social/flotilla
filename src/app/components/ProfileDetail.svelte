@@ -4,7 +4,7 @@
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Avatar from "@lib/components/Avatar.svelte"
+  import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
@@ -41,7 +41,7 @@
     </Button>
     <div class="flex gap-2">
       <Link external href={pubkeyLink(pubkey)} class="btn btn-neutral">
-        <Avatar src="/coracle.png" />
+        <ImageIcon alt="Open in Coracle" src="/coracle.png" />
         Open in Coracle
       </Link>
       <Button onclick={openChat} class="btn btn-primary">

@@ -1,7 +1,11 @@
 <script lang="ts">
   import {deriveRelayDisplay} from "@welshman/app"
 
-  const {url} = $props()
+  type Props = {
+    url: string
+  }
+
+  const {url}: Props = $props()
 
   const display = $derived(deriveRelayDisplay(url))
 </script>

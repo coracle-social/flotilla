@@ -5,7 +5,7 @@
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import SpaceAvatar from "@app/components/SpaceAvatar.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {makeSpacePath} from "@app/util/routes"
   import {deriveGroupSelections, getSpaceUrlsFromGroupSelections} from "@app/core/state"
@@ -26,7 +26,7 @@
   {#each spaceUrls as url (url)}
     <div class="card2 bg-alt flex flex-row items-center gap-2">
       <div class="flex-shrink-0">
-        <SpaceAvatar {url} />
+        <RelayIcon {url} size={12} />
       </div>
       <div class="flex flex-grow flex-col">
         <RelayName {url} />

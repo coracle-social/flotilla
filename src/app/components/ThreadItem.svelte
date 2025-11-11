@@ -21,7 +21,7 @@
 </script>
 
 <Link
-  class="col-2 card2 bg-alt w-full cursor-pointer shadow-md"
+  class="col-2 card2 bg-alt w-full cursor-pointer shadow-xl"
   href={makeThreadPath(url, event.id)}>
   {#if title}
     <div class="flex w-full items-center justify-between gap-2">

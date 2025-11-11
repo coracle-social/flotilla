@@ -35,7 +35,7 @@
         <Button onclick={addSpace}>
           <CardButton class="btn-neutral">
             {#snippet icon()}
-              <div><Icon icon={AddCircle} size={7} /></div>
+              <Icon icon={AddCircle} size={7} />
             {/snippet}
             {#snippet title()}
               <div>Add a space</div>
@@ -48,7 +48,7 @@
         <Link href="/discover">
           <CardButton class="btn-neutral">
             {#snippet icon()}
-              <div><Icon icon={Compass} size={7} /></div>
+              <Icon icon={Compass} size={7} />
             {/snippet}
             {#snippet title()}
               <div>Browse the network</div>
@@ -61,7 +61,7 @@
         <Button onclick={openChat}>
           <CardButton class="btn-neutral">
             {#snippet icon()}
-              <div><Icon icon={ChatRound} size={7} /></div>
+              <Icon icon={ChatRound} size={7} />
             {/snippet}
             {#snippet title()}
               <div>Start a conversation</div>

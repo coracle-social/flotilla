@@ -2,16 +2,22 @@
   import {displayRelayUrl} from "@welshman/util"
   import {deriveRelay} from "@welshman/app"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import Pen from "@assets/icons/pen.svg?dataurl"
   import ShieldUser from "@assets/icons/shield-user.svg?dataurl"
   import BillList from "@assets/icons/bill-list.svg?dataurl"
   import Ghost from "@assets/icons/ghost-smile.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
+  import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Button from "@lib/components/Button.svelte"
   import RelayName from "@app/components/RelayName.svelte"
+  import SpaceEdit from "@app/components/SpaceEdit.svelte"
   import SpaceRelayStatus from "@app/components/SpaceRelayStatus.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
   import ProfileLatest from "@app/components/ProfileLatest.svelte"
+  import {deriveUserIsSpaceAdmin} from "@app/core/state"
+  import {pushModal} from "@app/util/modal"
 
   type Props = {
     url: string
@@ -20,8 +26,11 @@
   const {url}: Props = $props()
   const relay = deriveRelay(url)
   const owner = $derived($relay?.pubkey)
+  const userIsAdmin = deriveUserIsSpaceAdmin(url)
 
   const back = () => history.back()
+
+  const startEdit = () => pushModal(SpaceEdit, {url, initialValues: $relay})
 </script>
 
 <div class="column gap-4">
@@ -78,5 +87,18 @@
       </div>
     {/if}
   </div>
-  <Button class="btn btn-primary" onclick={back}>Got it</Button>
+  {#if $userIsAdmin}
+    <ModalFooter>
+      <Button class="btn btn-link" onclick={back}>
+        <Icon icon={AltArrowLeft} />
+        Go back
+      </Button>
+      <Button class="btn btn-primary" onclick={startEdit}>
+        <Icon icon={Pen} />
+        Edit Space
+      </Button>
+    </ModalFooter>
+  {:else}
+    <Button class="btn btn-primary" onclick={back}>Got it</Button>
+  {/if}
 </div>

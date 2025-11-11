@@ -1,16 +1,11 @@
 <script lang="ts">
   import * as nip19 from "nostr-tools/nip19"
-  import {removeNil} from "@welshman/lib"
+  import {removeUndefined} from "@welshman/lib"
   import {displayPubkey} from "@welshman/util"
-  import {
-    deriveHandleForPubkey,
-    displayHandle,
-    deriveProfile,
-    deriveProfileDisplay,
-  } from "@welshman/app"
+  import {deriveHandleForPubkey, displayHandle, deriveProfileDisplay} from "@welshman/app"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Avatar from "@lib/components/Avatar.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import WotScore from "@app/components/WotScore.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {pushModal} from "@app/util/modal"
@@ -26,8 +21,7 @@
 
   const {pubkey, url, showPubkey, avatarSize = 10}: Props = $props()
 
-  const relays = removeNil([url])
-  const profile = deriveProfile(pubkey, relays)
+  const relays = removeUndefined([url])
   const profileDisplay = deriveProfileDisplay(pubkey, relays)
   const handle = deriveHandleForPubkey(pubkey)
 
@@ -38,7 +32,7 @@
 
 <div class="flex max-w-full items-start gap-3">
   <Button onclick={openProfile} class="py-1">
-    <Avatar src={$profile?.picture} size={avatarSize} />
+    <ProfileCircle {pubkey} size={avatarSize} />
   </Button>
   <div class="flex min-w-0 flex-col">
     <div class="flex items-center gap-2">

@@ -1,17 +1,24 @@
 <script lang="ts">
-  import Avatar from "@lib/components/Avatar.svelte"
-  import {removeNil} from "@welshman/lib"
+  import cx from "classnames"
+  import {removeUndefined} from "@welshman/lib"
   import {deriveProfile} from "@welshman/app"
-  import UserCircle from "@assets/icons/user-circle.svg?dataurl"
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import ImageIcon from "@lib/components/ImageIcon.svelte"
 
   type Props = {
     pubkey: string
+    class?: string
+    size?: number
     url?: string
-  } & Record<string, any>
+  }
 
-  const {pubkey, url, ...props}: Props = $props()
+  const {pubkey, url, size = 7, ...props}: Props = $props()
 
-  const profile = deriveProfile(pubkey, removeNil([url]))
+  const profile = deriveProfile(pubkey, removeUndefined([url]))
 </script>
 
-<Avatar src={$profile?.picture} icon={UserCircle} {...props} />
+<ImageIcon
+  {size}
+  class={cx(props.class, "rounded-full")}
+  src={$profile?.picture || UserRounded}
+  alt="Profile picture" />

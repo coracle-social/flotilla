@@ -8,7 +8,7 @@ import {
   sortBy,
   now,
   on,
-  isNotNil,
+  isDefined,
   filterVals,
   fromPairs,
 } from "@welshman/lib"
@@ -279,6 +279,6 @@ export const requestRelayClaim = async (url: string) => {
 
 export const requestRelayClaims = async (urls: string[]) =>
   filterVals(
-    isNotNil,
+    isDefined,
     fromPairs(await Promise.all(urls.map(async url => [url, await requestRelayClaim(url)]))),
   )

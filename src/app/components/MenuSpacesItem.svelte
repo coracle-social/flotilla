@@ -1,7 +1,7 @@
 <script lang="ts">
   import Link from "@lib/components/Link.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
-  import SpaceAvatar from "@app/components/SpaceAvatar.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
   import {makeSpacePath} from "@app/util/routes"
@@ -15,7 +15,7 @@
 <Link replaceState href={path}>
   <CardButton class="btn-neutral shadow-md">
     {#snippet icon()}
-      <div><SpaceAvatar {url} /></div>
+      <RelayIcon {url} size={12} />
     {/snippet}
     {#snippet title()}
       <div class="flex gap-1">

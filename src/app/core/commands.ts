@@ -660,6 +660,8 @@ export const getBlossomServer = async (options: GetBlossomServerOptions = {}) =>
 export type UploadFileOptions = {
   url?: string
   encrypt?: boolean
+  maxWidth?: number
+  maxHeight?: number
 }
 
 export type UploadFileResult = {
@@ -671,8 +673,8 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
   try {
     const {name, type} = file
 
-    if (!type.match("image/(webp|gif)")) {
-      file = await compressFile(file)
+    if (!type.match("image/(webp|gif|svg)")) {
+      file = await compressFile(file, options)
     }
 
     const tags: string[][] = []

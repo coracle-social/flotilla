@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {removeNil} from "@welshman/lib"
+  import {removeUndefined} from "@welshman/lib"
   import type {ProfilePointer} from "@welshman/content"
   import {deriveProfileDisplay} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
@@ -13,7 +13,7 @@
 
   const {value, url}: Props = $props()
 
-  const display = deriveProfileDisplay(value.pubkey, removeNil([url]))
+  const display = deriveProfileDisplay(value.pubkey, removeUndefined([url]))
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: value.pubkey, url})
 </script>

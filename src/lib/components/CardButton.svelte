@@ -12,8 +12,8 @@
 </script>
 
 <div class="btn flex h-[unset] w-full flex-nowrap py-4 text-left {props.class}">
-  <div class="flex flex-grow flex-row items-start gap-1 sm:pl-2">
-    <div class="flex h-14 w-12 flex-shrink-0 items-center">
+  <div class="flex flex-grow flex-row items-start gap-4">
+    <div class="flex h-14 w-12 flex-shrink-0 items-center justify-center">
       {@render props.icon?.()}
     </div>
     <div class="flex flex-col gap-1">

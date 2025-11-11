@@ -18,7 +18,7 @@
 {#if href}
   <a {href} class="relative z-nav-item flex h-14 w-14 items-center justify-center">
     <div
-      class="avatar cursor-pointer rounded-full p-1 {restProps.class} transition-colors hover:bg-base-300"
+      class="avatar cursor-pointer rounded-full p-2 {restProps.class} transition-colors hover:bg-base-300"
       class:bg-base-300={active}
       class:tooltip={title}
       data-tip={title}>
@@ -31,7 +31,7 @@
 {:else}
   <Button {onclick} class="relative z-nav-item flex h-14 w-14 items-center justify-center">
     <div
-      class="avatar cursor-pointer rounded-full p-1 {restProps.class} transition-colors hover:bg-base-300"
+      class="avatar cursor-pointer rounded-full p-2 {restProps.class} transition-colors hover:bg-base-300"
       class:bg-base-300={active}
       class:tooltip={title}
       data-tip={title}>

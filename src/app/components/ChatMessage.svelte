@@ -2,21 +2,14 @@
   import {type Instance} from "tippy.js"
   import {hash, formatTimestampAsTime} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {
-    thunks,
-    mergeThunks,
-    pubkey,
-    deriveProfile,
-    deriveProfileDisplay,
-    sendWrapped,
-  } from "@welshman/app"
+  import {thunks, mergeThunks, pubkey, deriveProfileDisplay, sendWrapped} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
   import TapTarget from "@lib/components/TapTarget.svelte"
-  import Avatar from "@lib/components/Avatar.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import Content from "@app/components/Content.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import ThunkFailure from "@app/components/ThunkFailure.svelte"
@@ -37,7 +30,6 @@
   const {event, replyTo, pubkeys, showPubkey = false}: Props = $props()
 
   const isOwn = event.pubkey === $pubkey
-  const profile = deriveProfile(event.pubkey)
   const profileDisplay = deriveProfileDisplay(event.pubkey)
   const thunk = mergeThunks($thunks.filter(t => t.event.id === event.id))
   const [_, colorValue] = colors[hash(event.pubkey) % colors.length]
@@ -107,8 +99,8 @@
         <div class="flex items-center gap-2">
           {#if !isOwn}
             <Button onclick={openProfile} class="flex items-center gap-1">
-              <Avatar
-                src={$profile?.picture}
+              <ProfileCircle
+                pubkey={event.pubkey}
                 class="border border-solid border-base-content"
                 size={4} />
               <div class="flex items-center gap-2">

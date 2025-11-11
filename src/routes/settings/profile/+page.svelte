@@ -16,7 +16,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Avatar from "@lib/components/Avatar.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileDelete from "@app/components/ProfileDelete.svelte"
@@ -48,7 +48,7 @@
     <div class="flex justify-between gap-2">
       <div class="flex max-w-full gap-3">
         <div class="py-1">
-          <Avatar src={$profile?.picture} size={10} />
+          <ProfileCircle pubkey={$pubkey!} size={10} />
         </div>
         <div class="flex min-w-0 flex-col">
           <div class="flex items-center gap-2">

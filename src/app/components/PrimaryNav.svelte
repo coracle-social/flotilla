@@ -4,7 +4,15 @@
   import {goto} from "$app/navigation"
   import {splitAt} from "@welshman/lib"
   import {userProfile, shouldUnwrap} from "@welshman/app"
-  import Avatar from "@lib/components/Avatar.svelte"
+  import Widget from "@assets/icons/widget.svg?dataurl"
+  import Compass from "@assets/icons/compass.svg?dataurl"
+  import Letter from "@assets/icons/letter.svg?dataurl"
+  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
+  import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
+  import SettingsMinimalistic from "@assets/icons/settings-minimalistic.svg?dataurl"
+  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import Settings from "@assets/icons/settings.svg?dataurl"
+  import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import ChatEnable from "@app/components/ChatEnable.svelte"
@@ -15,13 +23,6 @@
   import {pushModal} from "@app/util/modal"
   import {makeSpacePath} from "@app/util/routes"
   import {notifications} from "@app/util/notifications"
-  import Widget from "@assets/icons/widget.svg?dataurl"
-  import Compass from "@assets/icons/compass.svg?dataurl"
-  import Letter from "@assets/icons/letter.svg?dataurl"
-  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
-  import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
-  import SettingsMinimalistic from "@assets/icons/settings-minimalistic.svg?dataurl"
-  import Settings from "@assets/icons/settings.svg?dataurl"
 
   type Props = {
     children?: Snippet
@@ -61,7 +62,7 @@
         <PrimaryNavItemSpace {url} />
       {:else}
         <PrimaryNavItem title="Home" href="/home" class="tooltip-right">
-          <Avatar src={PLATFORM_LOGO} class="!h-10 !w-10" />
+          <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" />
         </PrimaryNavItem>
         <Divider />
         {#each primarySpaceUrls as url (url)}
@@ -73,11 +74,11 @@
             class="tooltip-right"
             onclick={showOtherSpacesMenu}
             notification={otherSpaceNotifications}>
-            <Avatar icon={Widget} class="!h-10 !w-10" />
+            <ImageIcon alt="Other Spaces" src={Widget} />
           </PrimaryNavItem>
         {/if}
         <PrimaryNavItem title="Add a Space" href="/discover" class="tooltip-right">
-          <Avatar icon={Compass} class="!h-10 !w-10" />
+          <ImageIcon alt="Add a Space" src={Compass} size={7} />
         </PrimaryNavItem>
       {/each}
     </div>
@@ -90,17 +91,17 @@
         href="/settings/profile"
         prefix="/settings"
         class="tooltip-right">
-        <Avatar src={$userProfile?.picture} class="!h-10 !w-10" />
+        <ImageIcon alt="Settings" src={$userProfile?.picture || UserRounded} class="rounded-full" />
       </PrimaryNavItem>
       <PrimaryNavItem
         title="Messages"
         onclick={openChat}
         class="tooltip-right"
         notification={$notifications.has("/chat")}>
-        <Avatar icon={Letter} class="!h-10 !w-10" />
+        <ImageIcon alt="Messages" src={Letter} size={7} />
       </PrimaryNavItem>
       <PrimaryNavItem title="Search" href="/people" class="tooltip-right">
-        <Avatar icon={Magnifier} class="!h-10 !w-10" />
+        <ImageIcon alt="Search" src={Magnifier} size={7} />
       </PrimaryNavItem>
     </div>
   </div>
@@ -115,22 +116,26 @@
   <div class="content-padding-x content-sizing flex justify-between px-2">
     <div class="flex gap-2 sm:gap-6">
       <PrimaryNavItem title="Home" href="/home">
-        <Avatar icon={HomeSmile} class="!h-10 !w-10" />
+        <ImageIcon alt="Home" src={HomeSmile} size={7} />
       </PrimaryNavItem>
       <PrimaryNavItem
         title="Messages"
         onclick={openChat}
         notification={$notifications.has("/chat")}>
-        <Avatar icon={Letter} class="!h-10 !w-10" />
+        <ImageIcon alt="Messages" src={Letter} size={7} />
       </PrimaryNavItem>
       {#if PLATFORM_RELAYS.length !== 1}
         <PrimaryNavItem title="Spaces" href="/spaces" notification={anySpaceNotifications}>
-          <Avatar icon={SettingsMinimalistic} class="!h-10 !w-10" />
+          <ImageIcon alt="Spaces" src={SettingsMinimalistic} size={7} />
         </PrimaryNavItem>
       {/if}
     </div>
     <PrimaryNavItem title="Settings" onclick={showSettingsMenu}>
-      <Avatar icon={Settings} src={$userProfile?.picture} class="!h-10 !w-10" />
+      <ImageIcon
+        alt="Settings"
+        src={$userProfile?.picture || Settings}
+        size={7}
+        class="rounded-full" />
     </PrimaryNavItem>
   </div>
 </div>

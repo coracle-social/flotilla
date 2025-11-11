@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {removeNil} from "@welshman/lib"
+  import {removeUndefined} from "@welshman/lib"
   import {deriveProfile} from "@welshman/app"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
 
@@ -10,7 +10,7 @@
 
   const {pubkey, url}: Props = $props()
 
-  const profile = deriveProfile(pubkey, removeNil([url]))
+  const profile = deriveProfile(pubkey, removeUndefined([url]))
 </script>
 
 {#if $profile}

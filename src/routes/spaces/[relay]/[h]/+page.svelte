@@ -85,10 +85,10 @@
 
       if (message && !message.startsWith("duplicate:")) {
         return pushToast({theme: "error", message})
-      } else {
-        // Restart the feed now that we're a member
-        start()
       }
+
+      // Restart the feed now that we're a member
+      start()
     } finally {
       joining = false
     }
