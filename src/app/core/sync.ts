@@ -6,7 +6,6 @@ import {
   getListTags,
   getRelayTagValues,
   WRAP,
-  MESSAGE,
   ROOM_META,
   ROOM_DELETE,
   ROOM_ADMINS,
@@ -37,9 +36,9 @@ import {
   repository,
   shouldUnwrap,
   hasNegentropy,
-  relaysByUrl,
 } from "@welshman/app"
 import {
+  REACTION_KINDS,
   MESSAGE_KINDS,
   CONTENT_KINDS,
   INDEXER_RELAYS,
@@ -50,7 +49,6 @@ import {
   bootstrapPubkeys,
   decodeRelay,
   getUrlsForEvent,
-  hasNip29,
   getSpaceUrlsFromGroupSelections,
   getSpaceRoomsFromGroupSelections,
   makeCommentFilter,
@@ -267,9 +265,11 @@ const syncSpace = (url: string) => {
       {kinds: [RELAY_MEMBERS]},
       {kinds: [ROOM_META, ROOM_DELETE]},
       {kinds: [ROOM_ADMINS, ROOM_MEMBERS]},
+      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER]},
       {kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]},
       ...MESSAGE_KINDS.map(kind => ({kinds: [kind]})),
       makeCommentFilter(CONTENT_KINDS),
+      {kinds: REACTION_KINDS, limit: 0},
     ],
   })
 
@@ -325,68 +325,6 @@ const syncSpaces = () => {
     Array.from(pageUnsubscribersByUrl.values()).forEach(call)
     unsubscribeSpaceUrls()
     unsubscribePage()
-  }
-}
-
-// Chat
-
-const syncRoom = (url: string, h: string) => {
-  const controller = new AbortController()
-
-  pullAndListen({
-    relays: [url],
-    signal: controller.signal,
-    filters: [
-      {kinds: [ROOM_ADMINS, ROOM_MEMBERS], "#d": [h]},
-      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [h]},
-      {kinds: [MESSAGE], "#h": [h]},
-    ],
-  })
-
-  return () => controller.abort()
-}
-
-const syncRooms = () => {
-  const unsubscribersByKey = new Map<string, Unsubscriber>()
-
-  const unsubscribeSpaceUrls = derived([userGroupSelections, relaysByUrl], identity).subscribe(
-    ([$l, $relaysByUrl]) => {
-      const keys = new Set<string>()
-      const newUnsubscribersByKey = new Map<string, Unsubscriber>()
-
-      // Add new subscriptions, depending on whether nip 29 is supported
-      for (const url of getRelayTagValues(getListTags($l))) {
-        if (hasNip29($relaysByUrl.get(url))) {
-          for (const h of getSpaceRoomsFromGroupSelections(url, $l)) {
-            const key = `${url}'${h}`
-
-            if (!unsubscribersByKey.has(key)) {
-              newUnsubscribersByKey.set(key, syncRoom(url, h))
-            }
-
-            keys.add(key)
-          }
-        }
-      }
-
-      // Stop syncing removed selections
-      for (const [key, unsubscribe] of unsubscribersByKey.entries()) {
-        if (!keys.has(key)) {
-          unsubscribersByKey.delete(key)
-          unsubscribe()
-        }
-      }
-
-      // Start syncing newly added spaces
-      for (const [key, unsubscriber] of newUnsubscribersByKey.entries()) {
-        unsubscribersByKey.set(key, unsubscriber)
-      }
-    },
-  )
-
-  return () => {
-    Array.from(unsubscribersByKey.values()).forEach(call)
-    unsubscribeSpaceUrls()
   }
 }
 
@@ -479,7 +417,7 @@ const syncDMs = () => {
 // Merge all synchronization functions
 
 export const syncApplicationData = () => {
-  const unsubscribers = [syncRelays(), syncUserData(), syncSpaces(), syncRooms(), syncDMs()]
+  const unsubscribers = [syncRelays(), syncUserData(), syncSpaces(), syncDMs()]
 
   return () => unsubscribers.forEach(call)
 }
