@@ -6,12 +6,12 @@
   import Pen from "@assets/icons/pen.svg?dataurl"
   import ShieldUser from "@assets/icons/shield-user.svg?dataurl"
   import BillList from "@assets/icons/bill-list.svg?dataurl"
-  import Ghost from "@assets/icons/ghost-smile.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Button from "@lib/components/Button.svelte"
   import RelayName from "@app/components/RelayName.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
   import SpaceEdit from "@app/components/SpaceEdit.svelte"
   import SpaceRelayStatus from "@app/components/SpaceRelayStatus.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
@@ -39,11 +39,7 @@
       <div class="avatar relative">
         <div
           class="center !flex h-16 w-16 min-w-16 rounded-full border-2 border-solid border-base-300 bg-base-300">
-          {#if $relay?.icon}
-            <img alt="" src={$relay.icon} />
-          {:else}
-            <Icon icon={Ghost} size={6} />
-          {/if}
+          <RelayIcon {url} size={10} />
         </div>
       </div>
     </div>

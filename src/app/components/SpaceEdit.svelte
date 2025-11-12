@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {uniqBy, prop, append, ifLet} from "@welshman/lib"
+  import {uniqBy, prop, ifLet} from "@welshman/lib"
   import type {RelayProfile} from "@welshman/util"
   import {displayRelayUrl, ManagementMethod} from "@welshman/util"
   import {manageRelay, relays, fetchRelayProfileDirectly} from "@welshman/app"
@@ -72,8 +72,8 @@
     }
 
     // Force-reload the relay
-    ifLet(await fetchRelayProfileDirectly(url), relay => {
-      relays.update($relays => uniqBy(prop("url"), append(relay, $relays)))
+    ifLet(await fetchRelayProfileDirectly(url), profile => {
+      relays.update($relays => uniqBy(prop("url"), [{...profile, url}, ...$relays]))
     })
 
     pushToast({message: "Your changes have been saved!"})

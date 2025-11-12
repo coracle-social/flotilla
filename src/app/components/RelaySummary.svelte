@@ -1,9 +1,8 @@
 <script lang="ts">
-  import {deriveRelay} from "@welshman/app"
-  import Ghost from "@assets/icons/ghost-smile.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {deriveSpaceMembers, deriveUserRooms} from "@app/core/state"
@@ -13,7 +12,6 @@
   }
 
   const {url}: Props = $props()
-  const relay = deriveRelay(url)
   const rooms = deriveUserRooms(url)
   const members = deriveSpaceMembers(url)
 </script>
@@ -25,11 +23,7 @@
         <div class="avatar relative">
           <div
             class="center !flex h-12 w-12 min-w-12 rounded-full border-2 border-solid border-base-300 bg-base-300">
-            {#if $relay?.icon}
-              <img alt="" src={$relay.icon} />
-            {:else}
-              <Icon icon={Ghost} size={5} />
-            {/if}
+            <RelayIcon {url} />
           </div>
         </div>
         {#if $rooms.includes(url)}
