@@ -16,7 +16,7 @@
 </script>
 
 {#if $room.picture}
-  <ImageIcon src={$room.picture} {size} alt="Room icon" />
+  <ImageIcon src={$room.picture} {size} alt="Room icon" class="rounded-lg" />
 {:else}
   <Icon icon={Hashtag} {size} />
 {/if}

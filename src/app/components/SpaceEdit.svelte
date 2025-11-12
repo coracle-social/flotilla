@@ -57,8 +57,6 @@
     if (imageFile) {
       const {error, result} = await uploadFile(imageFile, {maxWidth: 128, maxHeight: 128})
 
-      console.log(imageFile, result)
-
       if (error) {
         return pushToast({theme: "error", message: error})
       }

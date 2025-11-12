@@ -6,7 +6,7 @@
   import StickerSmileSquare from "@assets/icons/sticker-smile-square.svg?dataurl"
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import UploadMinimalistic from "@assets/icons/upload-minimalistic.svg?dataurl"
-  import {preventDefault, compressFile} from "@lib/html"
+  import {preventDefault} from "@lib/html"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
@@ -30,7 +30,7 @@
     const room = $state.snapshot(values)
 
     if (imageFile) {
-      const {error, result} = await uploadFile(imageFile)
+      const {error, result} = await uploadFile(imageFile, {maxWidth: 128, maxHeight: 128})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -38,8 +38,6 @@
 
       room.picture = result.url
       room.pictureMeta = result.tags
-    } else if (selectedIcon) {
-      room.picture = selectedIcon
     }
 
     const createMessage = await waitForThunkError(createRoom(url, room))
@@ -76,29 +74,34 @@
   let loading = $state(false)
   let imageFile = $state<File | undefined>()
   let imagePreview = $state(initialValues.picture)
-  let selectedIcon = $state<string | undefined>()
 
   const handleImageUpload = async (event: Event) => {
     const file = (event.target as HTMLInputElement).files?.[0]
 
     if (file && file.type.startsWith("image/")) {
-      selectedIcon = undefined
-      imageFile = await compressFile(file, {maxWidth: 64, maxHeight: 64})
-
       const reader = new FileReader()
 
       reader.onload = e => {
+        imageFile = file
         imagePreview = e.target?.result as string
       }
 
-      reader.readAsDataURL(imageFile)
+      reader.readAsDataURL(file)
     }
   }
 
   const handleIconSelect = (iconUrl: string) => {
-    imageFile = undefined
-    imagePreview = undefined
-    selectedIcon = iconUrl
+    imagePreview = iconUrl
+
+    const parts = iconUrl.split(",")
+    const imageData = atob(parts[1])
+    const result = new Uint8Array(imageData.length)
+
+    for (let n = 0; n < imageData.length; n++) {
+      result[n] = imageData.charCodeAt(n)
+    }
+
+    imageFile = new File([result], `icon.svg`, {type: "image/svg+xml"})
   }
 </script>
 
@@ -115,11 +118,6 @@
             <div class="flex items-center gap-2">
               <span class="text-sm opacity-75">Selected:</span>
               <ImageIcon src={imagePreview} alt="Room icon preview" />
-            </div>
-          {:else if selectedIcon}
-            <div class="flex items-center gap-2">
-              <span class="text-sm opacity-75">Selected:</span>
-              <Icon icon={selectedIcon} class="h-8 w-8" />
             </div>
           {:else}
             <span class="text-sm opacity-75">No icon selected</span>
@@ -147,8 +145,6 @@
       <label class="input input-bordered flex w-full items-center gap-2">
         {#if imagePreview}
           <ImageIcon src={imagePreview} alt="Room icon preview" />
-        {:else if selectedIcon}
-          <Icon icon={selectedIcon} class="h-8 w-8" />
         {:else}
           <Icon icon={Hashtag} />
         {/if}
