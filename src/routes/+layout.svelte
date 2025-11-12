@@ -20,21 +20,21 @@
   import * as welshmanSigner from "@welshman/signer"
   import * as net from "@welshman/net"
   import * as app from "@welshman/app"
-  import {preferencesStorageProvider} from "@lib/storage"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import {setupHistory} from "@app/util/history"
   import {setupTracking} from "@app/util/tracking"
   import {setupAnalytics} from "@app/util/analytics"
   import {authPolicy, trustPolicy, mostlyRestrictedPolicy} from "@app/util/policies"
+  import {kv, db} from "@app/core/storage"
   import {userSettingsValues} from "@app/core/state"
   import {syncApplicationData} from "@app/core/sync"
-  import {theme} from "@app/util/theme"
-  import {toast, pushToast} from "@app/util/toast"
-  import {initializePushNotifications} from "@app/util/push"
   import * as commands from "@app/core/commands"
   import * as requests from "@app/core/requests"
   import * as appState from "@app/core/state"
+  import {theme} from "@app/util/theme"
+  import {toast, pushToast} from "@app/util/toast"
+  import {initializePushNotifications} from "@app/util/push"
   import * as notifications from "@app/util/notifications"
   import * as storage from "@app/util/storage"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
@@ -96,22 +96,28 @@
       sync({
         key: "pubkey",
         store: pubkey,
-        storage: preferencesStorageProvider,
+        storage: kv,
       }),
       sync({
         key: "sessions",
         store: sessions,
-        storage: preferencesStorageProvider,
+        storage: kv,
       }),
       sync({
         key: "shouldUnwrap",
         store: shouldUnwrap,
-        storage: preferencesStorageProvider,
+        storage: kv,
       }),
     ])
 
     // Wait until data storage is initialized before syncing other stuff
-    unsubscribers.push(await storage.syncDataStores())
+    await db.init(storage.adapters)
+
+    // Close DB and restart when we're done
+    unsubscribers.push(() => {
+      db.close()
+      db.reset()
+    })
 
     // Add our extra policies now that we're set up
     defaultSocketPolicies.push(...policies)

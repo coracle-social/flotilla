@@ -21,7 +21,7 @@
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
   import WalletAsReceivingAddress from "@app/components/WalletAsReceivingAddress.svelte"
-  import Divider from "@src/lib/components/Divider.svelte"
+  import Divider from "@lib/components/Divider.svelte"
 
   const back = () => history.back()
 

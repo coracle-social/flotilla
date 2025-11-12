@@ -1,4 +1,5 @@
 import {derived, get} from "svelte/store"
+import {Badge} from "@capawesome/capacitor-badge"
 import {synced, throttled} from "@welshman/store"
 import {pubkey, relaysByUrl} from "@welshman/app"
 import {prop, spec, identity, now, groupBy} from "@welshman/lib"
@@ -23,15 +24,14 @@ import {
   getSpaceUrlsFromGroupSelections,
   getSpaceRoomsFromGroupSelections,
 } from "@app/core/state"
-import {preferencesStorageProvider} from "@src/lib/storage"
-import {Badge} from "@capawesome/capacitor-badge"
+import {kv} from "@app/core/storage"
 
 // Checked state
 
 export const checked = synced<Record<string, number>>({
   key: "checked",
   defaultValue: {},
-  storage: preferencesStorageProvider,
+  storage: kv,
 })
 
 export const deriveChecked = (key: string) => derived(checked, prop(key))

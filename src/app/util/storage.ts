@@ -48,35 +48,16 @@ import {
   onZapper,
   onHandle,
   wrapManager,
+  onRelay,
 } from "@welshman/app"
-import {Collection} from "@lib/storage"
 import {isMobile} from "@lib/html"
+import type {IDBTable} from "@lib/indexeddb"
 
-const syncEvents = async () => {
-  const collection = new Collection<TrustedEvent>({table: "events", getId: prop("id")})
-
-  const initialEvents = await collection.get()
-
-  // Mark events verified to avoid re-verification of signatures
-  for (const event of initialEvents) {
-    event[verifiedSymbol] = true
-  }
-
-  repository.load(initialEvents)
-
-  const metaKinds = [
-    PROFILE,
-    FOLLOWS,
-    MUTES,
-    RELAYS,
-    BLOSSOM_SERVERS,
-    INBOX_RELAYS,
-    APP_DATA,
-    ROOMS,
-  ]
-  const alertKinds = [ALERT_STATUS, ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]
-  const spaceKinds = [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS, RELAY_JOIN, RELAY_LEAVE]
-  const roomKinds = [
+const kinds = {
+  meta: [PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, INBOX_RELAYS, APP_DATA, ROOMS],
+  alert: [ALERT_STATUS, ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID],
+  space: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS, RELAY_JOIN, RELAY_LEAVE],
+  room: [
     ROOM_META,
     ROOM_DELETE,
     ROOM_ADMINS,
@@ -84,178 +65,222 @@ const syncEvents = async () => {
     ROOM_ADD_MEMBER,
     ROOM_REMOVE_MEMBER,
     ROOM_CREATE_PERMISSION,
-  ]
-  const contentKinds = [EVENT_TIME, THREAD, MESSAGE, ZAP_GOAL, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]
+  ],
+  content: [EVENT_TIME, THREAD, MESSAGE, ZAP_GOAL, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE],
+}
 
-  const rankEvent = (event: TrustedEvent) => {
-    if (metaKinds.includes(event.kind)) return 9
-    if (alertKinds.includes(event.kind)) return 8
-    if (spaceKinds.includes(event.kind)) return 7
-    if (roomKinds.includes(event.kind)) return 6
-    if (!isMobile && contentKinds.includes(event.kind)) return 5
-    return 0
-  }
+const rankEvent = (event: TrustedEvent) => {
+  if (kinds.meta.includes(event.kind)) return 9
+  if (kinds.alert.includes(event.kind)) return 8
+  if (kinds.space.includes(event.kind)) return 7
+  if (kinds.room.includes(event.kind)) return 6
+  if (!isMobile && kinds.content.includes(event.kind)) return 5
+  return 0
+}
 
-  return on(
-    repository,
-    "update",
-    batch(3000, async (updates: RepositoryUpdate[]) => {
-      const add: TrustedEvent[] = []
-      const remove = new Set<string>()
+const eventsAdapter = {
+  name: "events",
+  keyPath: ["id"],
+  init: async (table: IDBTable<TrustedEvent>) => {
+    const initialEvents = await table.getAll()
 
-      for (const update of updates) {
-        for (const event of update.added) {
-          if (rankEvent(event) > 0) {
-            add.push(event)
-            remove.delete(event.id)
+    // Mark events verified to avoid re-verification of signatures
+    for (const event of initialEvents) {
+      event[verifiedSymbol] = true
+    }
+
+    repository.load(initialEvents)
+
+    return on(
+      repository,
+      "update",
+      batch(3000, async (updates: RepositoryUpdate[]) => {
+        const add: TrustedEvent[] = []
+        const remove = new Set<string>()
+
+        for (const update of updates) {
+          for (const event of update.added) {
+            if (rankEvent(event) > 0) {
+              add.push(event)
+              remove.delete(event.id)
+            }
+          }
+
+          for (const id of update.removed) {
+            remove.add(id)
           }
         }
 
-        for (const id of update.removed) {
-          remove.add(id)
+        if (add.length > 0) {
+          await table.bulkPut(add)
         }
+
+        if (remove.size > 0) {
+          await table.bulkDelete(remove)
+        }
+      }),
+    )
+  },
+}
+
+type TrackerItem = {id: string; relays: string[]}
+
+const trackerAdapter = {
+  name: "tracker",
+  keyPath: ["id"],
+  init: async (table: IDBTable<TrackerItem>) => {
+    const relaysById = new Map<string, Set<string>>()
+
+    for (const {id, relays} of await table.getAll()) {
+      relaysById.set(id, new Set(relays))
+    }
+
+    tracker.load(relaysById)
+
+    const _onAdd = async (ids: Iterable<string>) => {
+      const items: TrackerItem[] = []
+
+      for (const id of ids) {
+        const event = repository.getEvent(id)
+
+        if (!event || rankEvent(event) === 0) continue
+
+        const relays = Array.from(tracker.getRelays(id))
+
+        if (relays.length === 0) continue
+
+        items.push({id, relays})
       }
 
-      await collection.update({add, remove})
-    }),
-  )
+      await table.bulkPut(items)
+    }
+
+    const _onRemove = async (ids: Iterable<string>) => {
+      await table.bulkDelete(Array.from(ids))
+    }
+
+    const onAdd = batch(3000, _onAdd)
+
+    const onRemove = batch(3000, _onRemove)
+
+    const onLoad = () => _onAdd(tracker.relaysById.keys())
+
+    const onClear = () => _onRemove(tracker.relaysById.keys())
+
+    tracker.on("add", onAdd)
+    tracker.on("remove", onRemove)
+    tracker.on("load", onLoad)
+    tracker.on("clear", onClear)
+
+    return () => {
+      tracker.off("add", onAdd)
+      tracker.off("remove", onRemove)
+      tracker.off("load", onLoad)
+      tracker.off("clear", onClear)
+    }
+  },
 }
 
-type TrackerItem = [string, string[]]
+const relaysAdapter = {
+  name: "relays",
+  keyPath: ["url"],
+  init: async (table: IDBTable<RelayProfile>) => {
+    relays.set(await table.getAll())
 
-const syncTracker = async () => {
-  const collection = new Collection<TrackerItem>({
-    table: "tracker",
-    getId: (item: TrackerItem) => item[0],
-  })
-
-  const relaysById = new Map<string, Set<string>>()
-
-  for (const [id, relays] of await collection.get()) {
-    relaysById.set(id, new Set(relays))
-  }
-
-  tracker.load(relaysById)
-
-  const updateOne = batch(3000, (ids: string[]) => {
-    collection.add(ids.map(id => [id, Array.from(tracker.getRelays(id))]))
-  })
-
-  const updateAll = throttle(3000, () => {
-    collection.set(
-      Array.from(tracker.relaysById.entries()).map(([id, relays]) => [id, Array.from(relays)]),
-    )
-  })
-
-  tracker.on("add", updateOne)
-  tracker.on("remove", updateOne)
-  tracker.on("load", updateAll)
-  tracker.on("clear", updateAll)
-
-  return () => {
-    tracker.off("add", updateOne)
-    tracker.off("remove", updateOne)
-    tracker.off("load", updateAll)
-    tracker.off("clear", updateAll)
-  }
+    return onRelay(batch(3000, table.bulkPut))
+  },
 }
 
-const syncRelays = async () => {
-  const collection = new Collection<RelayProfile>({table: "relays", getId: prop("url")})
+const relayStatsAdapter = {
+  name: "relayStats",
+  keyPath: ["url"],
+  init: async (table: IDBTable<RelayStats>) => {
+    relayStats.set(await table.getAll())
 
-  relays.set(await collection.get())
-
-  return throttled(3000, relays).subscribe(collection.set)
+    return throttled(3000, relayStats).subscribe(table.bulkPut)
+  },
 }
 
-const syncRelayStats = async () => {
-  const collection = new Collection<RelayStats>({table: "relayStats", getId: prop("url")})
+const handlesAdapter = {
+  name: "handles",
+  keyPath: ["nip05"],
+  init: async (table: IDBTable<Handle>) => {
+    handles.set(await table.getAll())
 
-  relayStats.set(await collection.get())
-
-  return throttled(3000, relayStats).subscribe(collection.set)
+    return onHandle(batch(3000, table.bulkPut))
+  },
 }
 
-const syncHandles = async () => {
-  const collection = new Collection<Handle>({table: "handles", getId: prop("nip05")})
+const zappersAdapter = {
+  name: "zappers",
+  keyPath: ["lnurl"],
+  init: async (table: IDBTable<Zapper>) => {
+    zappers.set(await table.getAll())
 
-  handles.set(await collection.get())
-
-  return onHandle(batch(3000, collection.add))
+    return onZapper(batch(3000, table.bulkPut))
+  },
 }
 
-const syncZappers = async () => {
-  const collection = new Collection<Zapper>({table: "zappers", getId: prop("lnurl")})
+type FreshnessItem = {key: string; value: number}
 
-  zappers.set(await collection.get())
+const freshnessAdapter = {
+  name: "freshness",
+  keyPath: ["key"],
+  init: async (table: IDBTable<FreshnessItem>) => {
+    const initialRecords = await table.getAll()
 
-  return onZapper(batch(3000, collection.add))
+    freshness.set(fromPairs(initialRecords.map(({key, value}) => [key, value])))
+
+    return throttled(3000, freshness).subscribe($freshness => {
+      table.bulkPut(Object.entries($freshness).map(([key, value]) => ({key, value})))
+    })
+  },
 }
 
-type FreshnessItem = [string, number]
+type PlaintextItem = {key: string; value: string}
 
-const syncFreshness = async () => {
-  const collection = new Collection<FreshnessItem>({
-    table: "freshness",
-    getId: (item: FreshnessItem) => item[0],
-  })
+const plaintextAdapter = {
+  name: "plaintext",
+  keyPath: ["key"],
+  init: async (table: IDBTable<PlaintextItem>) => {
+    const initialRecords = await table.getAll()
 
-  freshness.set(fromPairs(await collection.get()))
+    plaintext.set(fromPairs(initialRecords.map(({key, value}) => [key, value])))
 
-  return throttled(3000, freshness).subscribe($freshness => {
-    collection.set(Object.entries($freshness))
-  })
+    return throttled(3000, plaintext).subscribe($plaintext => {
+      table.bulkPut(Object.entries($plaintext).map(([key, value]) => ({key, value})))
+    })
+  },
 }
 
-type PlaintextItem = [string, string]
+const wrapManagerAdapter = {
+  name: "wrapManager",
+  keyPath: ["id"],
+  init: async (table: IDBTable<WrapItem>) => {
+    wrapManager.load(await table.getAll())
 
-const syncPlaintext = async () => {
-  const collection = new Collection<PlaintextItem>({
-    table: "plaintext",
-    getId: (item: PlaintextItem) => item[0],
-  })
+    const addOne = batch(3000, table.bulkPut)
 
-  plaintext.set(fromPairs(await collection.get()))
+    const removeOne = throttle(3000, table.bulkDelete)
 
-  return throttled(3000, plaintext).subscribe($plaintext => {
-    collection.set(Object.entries($plaintext))
-  })
+    wrapManager.on("add", addOne)
+    wrapManager.on("remove", removeOne)
+
+    return () => {
+      wrapManager.off("add", addOne)
+      wrapManager.off("remove", removeOne)
+    }
+  },
 }
 
-const syncWrapManager = async () => {
-  const collection = new Collection<WrapItem>({table: "wraps", getId: prop("id")})
-
-  wrapManager.load(await collection.get())
-
-  const addOne = batch(3000, (wrapItems: WrapItem[]) => collection.add(wrapItems))
-
-  const updateAll = throttle(3000, () => collection.set(wrapManager.dump()))
-
-  wrapManager.on("add", addOne)
-  wrapManager.on("remove", updateAll)
-
-  return () => {
-    wrapManager.off("add", addOne)
-    wrapManager.off("remove", updateAll)
-  }
-}
-
-export const syncDataStores = async () => {
-  const promises = [
-    syncEvents(),
-    syncTracker(),
-    syncRelays(),
-    syncHandles(),
-    syncZappers(),
-    syncPlaintext(),
-    syncWrapManager(),
-  ]
-
-  if (!isMobile) {
-    promises.push(syncFreshness(), syncRelayStats())
-  }
-
-  const unsubscribers = await Promise.all(promises)
-
-  return () => unsubscribers.forEach(call)
-}
+export const adapters = [
+  eventsAdapter,
+  trackerAdapter,
+  relaysAdapter,
+  relayStatsAdapter,
+  handlesAdapter,
+  zappersAdapter,
+  freshnessAdapter,
+  plaintextAdapter,
+  wrapManagerAdapter,
+]

@@ -93,7 +93,8 @@ import {
   userBlossomServers,
   shouldUnwrap,
 } from "@welshman/app"
-import {compressFile} from "@src/lib/html"
+import {compressFile} from "@lib/html"
+import {kv, db} from "@app/core/storage"
 import type {SettingsValues, Alert} from "@app/core/state"
 import {
   SETTINGS,
@@ -111,7 +112,6 @@ import {
 } from "@app/core/state"
 import {loadAlertStatuses} from "@app/core/requests"
 import {platform, platformName, getPushInfo} from "@app/util/push"
-import {preferencesStorageProvider, Collection} from "@src/lib/storage"
 
 // Utils
 
@@ -156,8 +156,8 @@ export const logout = async () => {
 
   localStorage.clear()
 
-  await preferencesStorageProvider.clear()
-  await Collection.clearAll()
+  await kv.clear()
+  await db.clear()
 }
 
 // Synchronization
