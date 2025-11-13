@@ -250,15 +250,15 @@ export const getUrlsForEvent = derived([trackerStore, thunks], ([$tracker, $thun
   })
 
   return (id: string) => {
-    const urls = Array.from($tracker.getRelays(id))
+    const urls = $tracker.getRelays(id)
 
     for (const thunk of getThunksByEventId().get(id) || []) {
       for (const url of thunk.options.relays) {
-        urls.push(url)
+        urls.add(url)
       }
     }
 
-    return uniq(urls)
+    return Array.from(urls)
   }
 })
 
