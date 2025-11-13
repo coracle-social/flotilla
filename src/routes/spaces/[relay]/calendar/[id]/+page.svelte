@@ -17,7 +17,7 @@
   import Button from "@lib/components/Button.svelte"
   import Content from "@app/components/Content.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
-  import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
+  import SpaceMenuButton from "@app/components/SpaceMenuButton.svelte"
   import CalendarEventActions from "@app/components/CalendarEventActions.svelte"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import CalendarEventMeta from "@app/components/CalendarEventMeta.svelte"
@@ -74,7 +74,7 @@
     <h1 class="text-xl">{getTagValue("title", $event?.tags || []) || ""}</h1>
   {/snippet}
   {#snippet action()}
-    <MenuSpaceButton {url} />
+    <SpaceMenuButton {url} />
   {/snippet}
 </PageBar>
 

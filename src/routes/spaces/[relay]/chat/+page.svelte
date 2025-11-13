@@ -17,7 +17,7 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
-  import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
+  import SpaceMenuButton from "@app/components/SpaceMenuButton.svelte"
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@src/app/components/RoomItemAddMember.svelte"
   import RoomItemRemoveMember from "@src/app/components/RoomItemRemoveMember.svelte"
@@ -259,7 +259,7 @@
     <strong>Chat</strong>
   {/snippet}
   {#snippet action()}
-    <MenuSpaceButton {url} />
+    <SpaceMenuButton {url} />
   {/snippet}
 </PageBar>
 

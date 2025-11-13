@@ -4,7 +4,7 @@
   import {once} from "@welshman/lib"
   import Page from "@lib/components/Page.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
-  import MenuSpace from "@app/components/MenuSpace.svelte"
+  import SpaceMenu from "@app/components/SpaceMenu.svelte"
   import SpaceAuthError from "@app/components/SpaceAuthError.svelte"
   import SpaceTrustRelay from "@app/components/SpaceTrustRelay.svelte"
   import {pushModal} from "@app/util/modal"
@@ -46,7 +46,7 @@
 </script>
 
 <SecondaryNav>
-  <MenuSpace {url} />
+  <SpaceMenu {url} />
 </SecondaryNav>
 <Page>
   {#key $page.url.pathname}

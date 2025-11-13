@@ -13,7 +13,7 @@
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
+  import SpaceMenuButton from "@app/components/SpaceMenuButton.svelte"
   import ThreadItem from "@app/components/ThreadItem.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {decodeRelay} from "@app/core/state"
@@ -79,7 +79,7 @@
         <Icon icon={NotesMinimalistic} />
         Create a Thread
       </Button>
-      <MenuSpaceButton {url} />
+      <SpaceMenuButton {url} />
     </div>
   {/snippet}
 </PageBar>

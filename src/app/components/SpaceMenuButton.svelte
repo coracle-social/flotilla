@@ -2,7 +2,7 @@
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import MenuSpace from "@app/components/MenuSpace.svelte"
+  import SpaceMenu from "@app/components/SpaceMenu.svelte"
   import {notifications} from "@app/util/notifications"
   import {makeSpacePath} from "@app/util/routes"
   import {pushDrawer} from "@app/util/modal"
@@ -14,7 +14,7 @@
 
   const status = deriveSocketStatus(url)
 
-  const openMenu = () => pushDrawer(MenuSpace, {url})
+  const openMenu = () => pushDrawer(SpaceMenu, {url})
 </script>
 
 <Button onclick={openMenu} class="btn btn-neutral btn-sm relative md:hidden">

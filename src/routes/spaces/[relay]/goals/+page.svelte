@@ -13,7 +13,7 @@
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
+  import SpaceMenuButton from "@app/components/SpaceMenuButton.svelte"
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
   import {decodeRelay, makeCommentFilter} from "@app/core/state"
@@ -78,7 +78,7 @@
         <Icon icon={NotesMinimalistic} />
         Create a Goal
       </Button>
-      <MenuSpaceButton {url} />
+      <SpaceMenuButton {url} />
     </div>
   {/snippet}
 </PageBar>

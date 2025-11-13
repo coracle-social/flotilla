@@ -28,7 +28,7 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
-  import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
+  import SpaceMenuButton from "@app/components/SpaceMenuButton.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
   import RoomDetail from "@app/components/RoomDetail.svelte"
@@ -350,7 +350,7 @@
         onclick={showRoomDetail}>
         <Icon size={4} icon={InfoCircle} />
       </Button>
-      <MenuSpaceButton {url} />
+      <SpaceMenuButton {url} />
     </div>
   {/snippet}
 </PageBar>

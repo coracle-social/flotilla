@@ -17,7 +17,7 @@
   import Button from "@lib/components/Button.svelte"
   import Content from "@app/components/Content.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
-  import MenuSpaceButton from "@app/components/MenuSpaceButton.svelte"
+  import SpaceMenuButton from "@app/components/SpaceMenuButton.svelte"
   import GoalSummary from "@app/components/GoalSummary.svelte"
   import GoalActions from "@app/components/GoalActions.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
@@ -75,7 +75,7 @@
   {/snippet}
   {#snippet action()}
     <div>
-      <MenuSpaceButton {url} />
+      <SpaceMenuButton {url} />
     </div>
   {/snippet}
 </PageBar>
