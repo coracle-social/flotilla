@@ -32,7 +32,7 @@
   import SpaceExit from "@app/components/SpaceExit.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import ProfileList from "@app/components/ProfileList.svelte"
+  import SpaceMembers from "@app/components/SpaceMembers.svelte"
   import AlertAdd from "@app/components/AlertAdd.svelte"
   import Alerts from "@app/components/Alerts.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
@@ -83,12 +83,7 @@
 
   const showDetail = () => pushModal(SpaceDetail, {url}, {replaceState})
 
-  const showMembers = () =>
-    pushModal(
-      ProfileList,
-      {url, pubkeys: $members, title: `Members of`, subtitle: displayRelayUrl(url)},
-      {replaceState},
-    )
+  const showMembers = () => pushModal(SpaceMembers, {url}, {replaceState})
 
   const canCreateRoom = deriveUserCanCreateRoom(url)
 

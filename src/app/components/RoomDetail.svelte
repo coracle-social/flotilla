@@ -18,7 +18,7 @@
   import Confirm from "@lib/components/Confirm.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import ProfileList from "@app/components/ProfileList.svelte"
+  import RoomMembers from "@app/components/RoomMembers.svelte"
   import RoomEdit from "@app/components/RoomEdit.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
@@ -67,12 +67,7 @@
 
   const leave = () => handleLoading(leaveRoom)
 
-  const showMembers = () =>
-    pushModal(ProfileList, {
-      title: "Members",
-      subtitle: `of ${$room?.name || h}`,
-      pubkeys: $members,
-    })
+  const showMembers = () => pushModal(RoomMembers, {url, h})
 
   const startDelete = () =>
     pushModal(Confirm, {
@@ -139,12 +134,12 @@
     <p>{$room.about}</p>
   {/if}
   {#if $members.length > 0}
-    <div class="card2 card2-sm bg-alt flex gap-4">
-      <span>Members:</span>
-      <Button onclick={showMembers}>
+    <Button onclick={showMembers}>
+      <div class="card2 card2-sm bg-alt flex items-center gap-4">
+        <span>Members:</span>
         <ProfileCircles pubkeys={$members} />
-      </Button>
-    </div>
+      </div>
+    </Button>
   {/if}
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>

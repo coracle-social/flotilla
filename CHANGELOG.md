@@ -4,6 +4,7 @@
 
 * Switch back to indexeddb to fix memory and performance
 * Add pay invoice functionality
+* Add room membership management and bans
 
 # 1.5.3
 

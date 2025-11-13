@@ -16,7 +16,7 @@
       cx(
         "bg-alt text-base-content overflow-auto text-base-content shadow-md",
         "px-4 py-6 bottom-0 left-0 right-0 top-20 rounded-t-box absolute",
-        "sm:p-6 sm:max-h-[90vh] sm:w-[520px] sm:rounded-box sm:relative sm:top-0",
+        "sm:p-6 sm:max-h-[90vh] sm:w-[520px] sm:rounded-box sm:relative sm:top-0 sm:relative",
       ),
   )
 </script>
@@ -28,7 +28,7 @@
     transition:fade={{duration: 300}}
     onclick={onClose}>
   </button>
-  <div class="scroll-container relative {extraClass}" transition:fly={{duration: 300}}>
+  <div class="scroll-container {extraClass}" transition:fly={{duration: 300}}>
     {@render children?.()}
   </div>
 </div>

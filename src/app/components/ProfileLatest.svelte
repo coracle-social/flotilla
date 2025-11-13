@@ -2,8 +2,6 @@
   import type {Snippet} from "svelte"
   import {load} from "@welshman/net"
   import {NOTE} from "@welshman/util"
-  import {fly} from "@lib/transition"
-  import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
 
   interface Props {
@@ -24,16 +22,16 @@
 <div class="col-4">
   <div class="flex flex-col gap-2">
     {#await events}
-      <p class="center my-12 flex">
-        <Spinner loading />
+      <p class="center flex min-h-6">
+        <span class="loading loading-spinner"></span>
       </p>
     {:then events}
       {#each events as event (event.id)}
-        <div in:fly>
-          <NoteItem {url} {event} />
-        </div>
+        <NoteItem {url} {event} />
       {:else}
-        {@render fallback?.()}
+        <div class="min-h-6">
+          {@render fallback?.()}
+        </div>
       {/each}
     {/await}
   </div>

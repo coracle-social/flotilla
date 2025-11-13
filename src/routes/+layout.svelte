@@ -113,12 +113,6 @@
     // Wait until data storage is initialized before syncing other stuff
     await db.init(storage.adapters)
 
-    // Close DB and restart when we're done
-    unsubscribers.push(() => {
-      db.close()
-      db.reset()
-    })
-
     // Add our extra policies now that we're set up
     defaultSocketPolicies.push(...policies)
 

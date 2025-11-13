@@ -43,7 +43,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import ProfileList from "@app/components/ProfileList.svelte"
+  import ChatMembers from "@app/components/ChatMembers.svelte"
   import ChatMessage from "@app/components/ChatMessage.svelte"
   import ChatCompose from "@app/components/ChatCompose.svelte"
   import ChatComposeParent from "@app/components/ChatComposeParent.svelte"
@@ -72,7 +72,9 @@
   const missingInboxes = $derived(pubkeys.filter(pk => !$inboxRelaySelectionsByPubkey.has(pk)))
 
   const showMembers = () =>
-    pushModal(ProfileList, {pubkeys: others, title: `People in this conversation`})
+    others.length === 1
+      ? pushModal(ProfileDetail, {pubkey: others[0]})
+      : pushModal(ChatMembers, {pubkeys: others})
 
   const replyTo = (event: TrustedEvent) => {
     parent = event
@@ -208,19 +210,17 @@
 
 <PageBar>
   {#snippet title()}
-    <div class="flex flex-col gap-1 sm:flex-row sm:gap-2">
+    <Button class="flex flex-col gap-1 sm:flex-row sm:gap-2" onclick={showMembers}>
       {#if others.length === 0}
         <div class="row-2">
           <ProfileCircle pubkey={$pubkey!} size={5} />
           <ProfileName pubkey={$pubkey!} />
         </div>
       {:else if others.length === 1}
-        {@const pubkey = others[0]}
-        {@const onClick = () => pushModal(ProfileDetail, {pubkey})}
-        <Button onclick={onClick} class="row-2">
-          <ProfileCircle {pubkey} size={5} />
-          <ProfileName {pubkey} />
-        </Button>
+        <div class="row-2">
+          <ProfileCircle pubkey={others[0]} size={5} />
+          <ProfileName pubkey={others[0]} />
+        </div>
       {:else}
         <div class="flex items-center gap-2">
           <ProfileCircles pubkeys={others} size={5} />
@@ -235,26 +235,20 @@
             {/if}
           </p>
         </div>
-        {#if others.length > 2}
-          <Button onclick={showMembers} class="btn btn-link hidden sm:block"
-            >Show all members</Button>
-        {/if}
       {/if}
-    </div>
+    </Button>
   {/snippet}
   {#snippet action()}
-    <div>
-      {#if remove($pubkey, missingInboxes).length > 0}
-        {@const count = remove($pubkey, missingInboxes).length}
-        {@const label = count > 1 ? "inboxes are" : "inbox is"}
-        <div
-          class="row-2 badge badge-error badge-lg tooltip tooltip-left cursor-pointer"
-          data-tip="{count} {label} not configured.">
-          <Icon icon={Danger} />
-          {count}
-        </div>
-      {/if}
-    </div>
+    {#if remove($pubkey, missingInboxes).length > 0}
+      {@const count = remove($pubkey, missingInboxes).length}
+      {@const label = count > 1 ? "inboxes are" : "inbox is"}
+      <div
+        class="row-2 badge badge-error badge-lg tooltip tooltip-left cursor-pointer"
+        data-tip="{count} {label} not configured.">
+        <Icon icon={Danger} />
+        {count}
+      </div>
+    {/if}
   {/snippet}
 </PageBar>
 

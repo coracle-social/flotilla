@@ -27,15 +27,14 @@ export type IDBOptions = {
 
 export class IDB {
   idbp: Maybe<Promise<IDBPDatabase>>
-  ready: Maybe<Promise<void>>
   unsubscribers: Maybe<Unsubscriber[]>
   status = IDBStatus.Initial
 
   constructor(readonly options: IDBOptions) {}
 
-  init(adapters: IDBAdapters) {
-    if (this.status !== IDBStatus.Initial) {
-      throw new Error(`Database re-initialized while ${this.status}`)
+  async init(adapters: IDBAdapters) {
+    if (this.idbp) {
+      await this.close()
     }
 
     this.status = IDBStatus.Opening
@@ -62,7 +61,7 @@ export class IDB {
       blocking() {},
     })
 
-    this.ready = this.idbp.then(async idbp => {
+    return this.idbp.then(async idbp => {
       window.addEventListener("beforeunload", () => idbp.close())
 
       this.unsubscribers = await Promise.all(adapters.map(({name, init}) => init(this.table(name))))
@@ -132,13 +131,9 @@ export class IDB {
 
       await idbp.close()
 
-      // Allow the caller to call reset and re-init immediately
-      if (this.status === IDBStatus.Closing) {
-        this.idbp = undefined
-        this.ready = undefined
-        this.unsubscribers = undefined
-        this.status = IDBStatus.Closed
-      }
+      this.idbp = undefined
+      this.unsubscribers = undefined
+      this.status = IDBStatus.Closed
     })
 
   clear = async () => {
@@ -146,14 +141,6 @@ export class IDB {
     await deleteDB(this.options.name, {
       blocked() {},
     })
-  }
-
-  reset = () => {
-    if (![IDBStatus.Closing, IDBStatus.Closed].includes(this.status)) {
-      throw new Error("Database reset when not closed")
-    }
-
-    this.status = IDBStatus.Initial
   }
 }
 

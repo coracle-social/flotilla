@@ -752,6 +752,24 @@ export const deriveSpaceMembers = (url: string) =>
     },
   )
 
+export type BannedPubkeyItem = {
+  pubkey: string
+  reason: string
+}
+
+export const spaceBannedPubkeyItems = new Map<string, BannedPubkeyItem[]>()
+
+export const deriveSpaceBannedPubkeyItems = (url: string) => {
+  const store = writable(spaceBannedPubkeyItems.get(url) || [])
+
+  manageRelay(url, {method: ManagementMethod.ListBannedPubkeys, params: []}).then(res => {
+    spaceBannedPubkeyItems.set(url, res.result)
+    store.set(res.result)
+  })
+
+  return store
+}
+
 export const deriveRoomMembers = (url: string, h: string) =>
   derived(
     deriveEventsForUrl(url, [
@@ -806,7 +824,7 @@ export enum MembershipStatus {
   Granted,
 }
 
-export const deriveUserIsSpaceAdmin = (url: string) => {
+export const deriveUserIsSpaceAdmin = memoize((url: string) => {
   const store = writable(false)
 
   manageRelay(url, {method: ManagementMethod.SupportedMethods, params: []}).then(res =>
@@ -814,7 +832,7 @@ export const deriveUserIsSpaceAdmin = (url: string) => {
   )
 
   return store
-}
+})
 
 export const deriveUserSpaceMembershipStatus = (url: string) =>
   derived(
