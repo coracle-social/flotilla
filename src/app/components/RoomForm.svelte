@@ -117,7 +117,7 @@
           {#if imagePreview}
             <div class="flex items-center gap-2">
               <span class="text-sm opacity-75">Selected:</span>
-              <ImageIcon src={imagePreview} alt="Room icon preview" />
+              <ImageIcon src={imagePreview} alt="" />
             </div>
           {:else}
             <span class="text-sm opacity-75">No icon selected</span>
@@ -144,7 +144,7 @@
     {#snippet input()}
       <label class="input input-bordered flex w-full items-center gap-2">
         {#if imagePreview}
-          <ImageIcon src={imagePreview} alt="Room icon preview" />
+          <ImageIcon src={imagePreview} alt="" />
         {:else}
           <Icon icon={Hashtag} />
         {/if}

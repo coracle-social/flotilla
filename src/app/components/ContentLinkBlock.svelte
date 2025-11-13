@@ -49,7 +49,7 @@
         <div class="bg-alt flex max-w-xl flex-col leading-normal">
           {#if preview.image && !hideImage}
             <img
-              alt="Link preview"
+              alt=""
               onerror={onError}
               src={preview.image}
               class="bg-alt max-h-72 rounded-t-box object-contain object-center" />

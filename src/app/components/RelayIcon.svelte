@@ -14,8 +14,4 @@
   const relay = deriveRelay(url)
 </script>
 
-<ImageIcon
-  {size}
-  src={$relay?.icon || RemoteControllerMinimalistic}
-  alt="Relay image"
-  class={props.class} />
+<ImageIcon {size} alt="" src={$relay?.icon || RemoteControllerMinimalistic} class={props.class} />

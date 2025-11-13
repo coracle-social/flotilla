@@ -41,7 +41,7 @@
     </Button>
     <div class="flex gap-2">
       <Link external href={pubkeyLink(pubkey)} class="btn btn-neutral">
-        <ImageIcon alt="Open in Coracle" src="/coracle.png" />
+        <ImageIcon alt="" src="/coracle.png" />
         Open in Coracle
       </Link>
       <Button onclick={openChat} class="btn btn-primary">

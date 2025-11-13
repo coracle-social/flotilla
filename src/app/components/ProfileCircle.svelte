@@ -19,6 +19,6 @@
 
 <ImageIcon
   {size}
+  alt=""
   class={cx(props.class, "rounded-full")}
-  src={$profile?.picture || UserRounded}
-  alt="Profile picture" />
+  src={$profile?.picture || UserRounded} />
