@@ -882,11 +882,19 @@ export const deriveUserRoomMembershipStatus = (url: string, h: string) =>
 
 export const deriveUserCanCreateRoom = (url: string) =>
   derived(
-    [pubkey, deriveEventsForUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}])],
-    ([$pubkey, $events]) => {
-      const event = first($events)
+    [
+      pubkey,
+      deriveEventsForUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}]),
+      deriveUserIsSpaceAdmin(url),
+    ],
+    ([$pubkey, $events, $isAdmin]) => {
+      for (const event of $events) {
+        if (getPubkeyTagValues(event.tags).includes($pubkey!)) {
+          return true
+        }
+      }
 
-      return event ? getPubkeyTagValues(event.tags).includes($pubkey!) : true
+      return $isAdmin
     },
   )
 

@@ -34,6 +34,7 @@
           target: element,
           props: {
             onClose: closeModals,
+            fullscreen: options.fullscreen,
             children: createRawSnippet(() => ({
               render: () => "<div></div>",
               setup: (target: Element) => {
