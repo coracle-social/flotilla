@@ -824,12 +824,14 @@ export enum MembershipStatus {
   Granted,
 }
 
-export const deriveUserIsSpaceAdmin = memoize((url: string) => {
+export const deriveUserIsSpaceAdmin = memoize((url?: string) => {
   const store = writable(false)
 
-  manageRelay(url, {method: ManagementMethod.SupportedMethods, params: []}).then(res =>
-    store.set(Boolean(res.result?.length)),
-  )
+  if (url) {
+    manageRelay(url, {method: ManagementMethod.SupportedMethods, params: []}).then(res =>
+      store.set(Boolean(res.result?.length)),
+    )
+  }
 
   return store
 })

@@ -30,3 +30,5 @@ The project follows a strict dependency hierarchy:
 ## Development Conventions
 
 When creating components related to a given space or room, parameterize them only with the entity's identifier (i.e., `url` and `h`). Only pass additional props if they can't be derived from the identifiers. For example, a room's `members` should be derived inside the child component, not passed in by the parent.
+
+Do not use null, only undefined.
