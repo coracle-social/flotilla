@@ -134,12 +134,13 @@
     <p>{$room.about}</p>
   {/if}
   {#if $members.length > 0}
-    <Button onclick={showMembers}>
-      <div class="card2 card2-sm bg-alt flex items-center gap-4">
+    <div class="card2 card2-sm bg-alt flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
         <span>Members:</span>
         <ProfileCircles pubkeys={$members} />
       </div>
-    </Button>
+      <Button class="btn btn-neutral btn-sm" onclick={showMembers}>View All</Button>
+    </div>
   {/if}
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>

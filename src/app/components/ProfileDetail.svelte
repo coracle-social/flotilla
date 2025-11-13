@@ -1,8 +1,10 @@
 <script lang="ts">
   import {goto} from "$app/navigation"
+  import {removeUndefined} from "@welshman/lib"
   import {ManagementMethod} from "@welshman/util"
-  import {shouldUnwrap, manageRelay} from "@welshman/app"
+  import {shouldUnwrap, manageRelay, deriveProfile} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import Code2 from "@assets/icons/code-2.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
@@ -16,6 +18,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileInfo from "@app/components/ProfileInfo.svelte"
+  import EventInfo from "@app/components/EventInfo.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
   import ChatEnable from "@app/components/ChatEnable.svelte"
   import {pubkeyLink, deriveUserIsSpaceAdmin} from "@app/core/state"
@@ -30,11 +33,15 @@
 
   const {pubkey, url}: Props = $props()
 
+  const profile = deriveProfile(pubkey, removeUndefined([url]))
+
   const userIsAdmin = deriveUserIsSpaceAdmin(url)
 
   const back = () => history.back()
 
   const chatPath = makeChatPath([pubkey])
+
+  const showInfo = () => pushModal(EventInfo, {url, event: $profile!.event})
 
   const openChat = () => ($shouldUnwrap ? goto(chatPath) : pushModal(ChatEnable, {next: chatPath}))
 
@@ -71,7 +78,7 @@
 <div class="flex flex-col gap-4">
   <div class="flex justify-between">
     <Profile showPubkey avatarSize={14} {pubkey} {url} />
-    {#if $userIsAdmin}
+    {#if $profile || $userIsAdmin}
       <div class="relative">
         <Button class="btn btn-circle btn-ghost btn-sm" onclick={() => toggleMenu(pubkey)}>
           <Icon icon={MenuDots} />
@@ -81,12 +88,22 @@
             <ul
               transition:fly
               class="bg-alt menu absolute right-0 z-popover w-48 gap-1 rounded-box p-2 shadow-md">
-              <li>
-                <Button class="text-error" onclick={banMember}>
-                  <Icon icon={MinusCircle} />
-                  Ban User
-                </Button>
-              </li>
+              {#if $profile}
+                <li>
+                  <Button onclick={showInfo}>
+                    <Icon icon={Code2} />
+                    User Details
+                  </Button>
+                </li>
+              {/if}
+              {#if $userIsAdmin}
+                <li>
+                  <Button class="text-error" onclick={banMember}>
+                    <Icon icon={MinusCircle} />
+                    Ban User
+                  </Button>
+                </li>
+              {/if}
             </ul>
           </Popover>
         {/if}

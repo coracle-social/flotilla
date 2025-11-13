@@ -1,6 +1,5 @@
 <script lang="ts">
-  import {displayRelayUrl, ManagementMethod} from "@welshman/util"
-  import {manageRelay} from "@welshman/app"
+  import {addRoomMember, waitForThunkError} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -8,14 +7,19 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import RoomName from "@app/components/RoomName.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {pushToast} from "@app/util/toast"
+  import {deriveRoom} from "@app/core/state"
 
   interface Props {
     url: string
+    h: string
   }
 
-  const {url}: Props = $props()
+  const {url, h}: Props = $props()
+
+  const room = deriveRoom(url, h)
 
   const back = () => history.back()
 
@@ -23,18 +27,13 @@
     loading = true
 
     try {
-      const results = await Promise.all(
-        pubkeys.map(pubkey =>
-          manageRelay(url, {
-            method: ManagementMethod.AllowPubkey,
-            params: [pubkey],
-          }),
-        ),
+      const errors = await Promise.all(
+        pubkeys.map(pubkey => waitForThunkError(addRoomMember(url, $room, pubkey))),
       )
 
-      for (const {error} of results) {
+      for (const error of errors) {
         if (error) {
-          return pushToast({theme: "error", message: error})
+          return pushToast({theme: "error", message: errors[0]})
         }
       }
 
@@ -55,7 +54,7 @@
       <div>Add Members</div>
     {/snippet}
     {#snippet info()}
-      <div>to {displayRelayUrl(url)}</div>
+      <div>to <RoomName {url} {h} /></div>
     {/snippet}
   </ModalHeader>
   <Field>
