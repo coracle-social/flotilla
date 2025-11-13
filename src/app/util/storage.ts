@@ -1,4 +1,4 @@
-import {prop, call, on, throttle, fromPairs, batch} from "@welshman/lib"
+import {on, throttle, fromPairs, batch} from "@welshman/lib"
 import {throttled, freshness} from "@welshman/store"
 import {
   ALERT_ANDROID,

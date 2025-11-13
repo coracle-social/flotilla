@@ -44,6 +44,9 @@ importers:
       '@capawesome/capacitor-badge':
         specifier: ^7.0.1
         version: 7.0.1(@capacitor/core@7.4.3)
+      '@getalby/lightning-tools':
+        specifier: ^6.0.0
+        version: 6.0.0
       '@getalby/sdk':
         specifier: ^5.1.2
         version: 5.1.2(typescript@5.9.3)
@@ -984,6 +987,10 @@ packages:
 
   '@getalby/lightning-tools@5.2.1':
     resolution: {integrity: sha512-dxOmJLJAh6qJ8rsbA5/Bwj7MSI9X3RkxxqmCedl5rfP+yKwNSdfu8i4EiCZN/tk2hNBJb8GHSCcPRNZfwfmEHg==}
+    engines: {node: '>=14'}
+
+  '@getalby/lightning-tools@6.0.0':
+    resolution: {integrity: sha512-jpTO+7o1N1KhV5qT6qetPK+et6ZQshCzUMCRV8+Ek1NVlVU4ITIqOWRQ3kOrb0PhSxkbGN5G3d60HCi535hbDw==}
     engines: {node: '>=14'}
 
   '@getalby/sdk@5.1.2':
@@ -5838,6 +5845,8 @@ snapshots:
       levn: 0.4.1
 
   '@getalby/lightning-tools@5.2.1': {}
+
+  '@getalby/lightning-tools@6.0.0': {}
 
   '@getalby/sdk@5.1.2(typescript@5.9.3)':
     dependencies:

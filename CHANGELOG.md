@@ -1,5 +1,10 @@
 # Changelog
 
+# Current
+
+* Switch back to indexeddb to fix memory and performance
+* Add pay invoice functionality
+
 # 1.5.3
 
 * Add space edit form

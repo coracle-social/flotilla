@@ -51,6 +51,7 @@
     "@capacitor/push-notifications": "^7.0.3",
     "@capawesome/capacitor-android-dark-mode-support": "^7.0.0",
     "@capawesome/capacitor-badge": "^7.0.1",
+    "@getalby/lightning-tools": "^6.0.0",
     "@getalby/sdk": "^5.1.2",
     "@poppanator/sveltekit-svg": "^4.2.1",
     "@sentry/browser": "^8.55.0",

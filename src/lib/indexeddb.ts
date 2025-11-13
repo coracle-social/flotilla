@@ -1,10 +1,8 @@
 import {openDB, deleteDB} from "idb"
 import type {IDBPDatabase} from "idb"
-import {writable} from "svelte/store"
 import type {Unsubscriber} from "svelte/store"
-import {call, defer} from "@welshman/lib"
+import {call} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {withGetter} from "@welshman/store"
 
 export type IDBAdapter = {
   name: string
@@ -83,11 +81,11 @@ export class IDB {
     // If we're closing, ignore any lingering requests
     if ([IDBStatus.Closed, IDBStatus.Closing].includes(this.status)) return
 
-    return f(await this.idbp)
+    return f(await this.idbp!)
   }
 
-  getAll = async <T>(table: string): Promise<T[]> =>
-    this._withIDBP(async idbp => {
+  getAll = async <T>(table: string): Promise<T[]> => {
+    const result = await this._withIDBP(async idbp => {
       const tx = idbp.transaction(table, "readwrite")
       const store = tx.objectStore(table)
       const result = await store.getAll()
@@ -96,6 +94,9 @@ export class IDB {
 
       return result
     })
+
+    return result || []
+  }
 
   bulkPut = async <T>(table: string, data: Iterable<T>) =>
     this._withIDBP(async idbp => {

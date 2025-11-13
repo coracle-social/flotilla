@@ -592,7 +592,7 @@ export const publishLeaveRequest = (params: LeaveRequestParams) =>
 
 export const getWebLn = () => (window as any).webln
 
-export const payInvoice = async (invoice: string) => {
+export const payInvoice = async (invoice: string, msats?: number) => {
   const $session = session.get()
 
   if (!$session?.wallet) {
@@ -600,8 +600,11 @@ export const payInvoice = async (invoice: string) => {
   }
 
   if ($session.wallet.type === "nwc") {
-    return new nwc.NWCClient($session.wallet.info).payInvoice({invoice})
+    const params: {invoice: string; amount?: number} = {invoice}
+    if (msats) params.amount = msats
+    return new nwc.NWCClient($session.wallet.info).payInvoice(params)
   } else if ($session.wallet.type === "webln") {
+    if (msats) throw new Error("Unable to pay zero invoices with webln")
     return getWebLn()
       .enable()
       .then(() => getWebLn().sendPayment(invoice))

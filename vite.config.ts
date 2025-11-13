@@ -10,6 +10,15 @@ config({path: ".env.template"})
 export default defineConfig({
   server: {
     port: 1847,
+    // host: "0.0.0.0",
+    // strictPort: true,
+    // allowedHosts: ["coracle-client.ngrok.io"],
+    // hmr: {
+    //   protocol: "wss",
+    //   host: "coracle-client.ngrok.io",
+    //   clientPort: 443,
+    // },
+    // cors: true,
   },
   build: {
     sourcemap: true,

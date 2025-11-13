@@ -3,8 +3,10 @@
   import {LOCALE} from "@welshman/lib"
   import {displayRelayUrl, isNWCWallet, fromMsats} from "@welshman/util"
   import {session, pubkey, profilesByPubkey} from "@welshman/app"
+  import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import WalletPay from "@app/components/WalletPay.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
   import WalletUpdateReceivingAddress from "@app/components/WalletUpdateReceivingAddress.svelte"
@@ -27,6 +29,8 @@
   const walletLud16 = $derived(
     $session?.wallet && isNWCWallet($session.wallet) ? $session.wallet.info.lud16 : undefined,
   )
+
+  const pay = () => pushModal(WalletPay)
 </script>
 
 <div class="content column gap-4">
@@ -117,5 +121,11 @@
         Your profile has a different lightning address than your connected wallet.
       </div>
     {/if}
+  </div>
+  <div class="flex justify-center py-12">
+    <Button class="btn btn-primary" onclick={pay}>
+      <Icon icon={Bolt} />
+      Pay With Lightning
+    </Button>
   </div>
 </div>

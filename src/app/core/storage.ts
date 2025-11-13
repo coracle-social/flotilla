@@ -1,6 +1,6 @@
-import {reject, call, identity} from "@welshman/lib"
+import {call} from "@welshman/lib"
 import {Preferences} from "@capacitor/preferences"
-import {Encoding, Filesystem, Directory} from "@capacitor/filesystem"
+import {Filesystem, Directory} from "@capacitor/filesystem"
 import {IDB} from "@lib/indexeddb"
 
 export const kv = call(() => {
