@@ -2,18 +2,16 @@
   import {onMount} from "svelte"
   import {derived} from "svelte/store"
   import {displayRelayUrl, getTagValue, EVENT_TIME, ZAP_GOAL, THREAD} from "@welshman/util"
-  import {deriveRelay} from "@welshman/app"
+  import {deriveRelay, pubkey} from "@welshman/app"
   import {fly} from "@lib/transition"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import RemoteControllerMinimalistic from "@assets/icons/remote-controller-minimalistic.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
-  import SquareTopDown from "@assets/icons/square-top-down.svg?dataurl"
   import Exit from "@assets/icons/logout-3.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Login from "@assets/icons/login-3.svg?dataurl"
   import History from "@assets/icons/history.svg?dataurl"
-  import Tuning2 from "@assets/icons/tuning-2.svg?dataurl"
   import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic-2.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
@@ -49,7 +47,6 @@
     hasNip29,
     alerts,
     deriveUserCanCreateRoom,
-    deriveUserIsSpaceAdmin,
   } from "@app/core/state"
   import {notifications} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
@@ -66,7 +63,6 @@
   const otherRooms = deriveOtherRooms(url)
   const members = deriveSpaceMembers(url)
   const hasAlerts = $derived($alerts.some(a => getTagValue("feed", a.tags)?.includes(url)))
-  const userIsAdmin = deriveUserIsSpaceAdmin(url)
 
   const spaceKinds = derived(
     deriveEventsForUrl(url, [{kinds: CONTENT_KINDS}]),
@@ -148,15 +144,7 @@
                 View Members ({$members.length})
               </Button>
             </li>
-            {#if $userIsAdmin}
-              <li>
-                <Link external href="https://landlubber.coracle.social">
-                  <Icon icon={Tuning2} />
-                  Manage Space
-                  <Icon icon={SquareTopDown} size={4} class="opacity-50" />
-                </Link>
-              </li>
-            {:else if $relay?.pubkey}
+            {#if $relay?.pubkey && $relay.pubkey !== $pubkey}
               <li>
                 <Link href={makeChatPath([$relay.pubkey])}>
                   <Icon icon={Letter} />
