@@ -6,7 +6,7 @@ import type {Maybe} from "@welshman/lib"
 
 export type IDBAdapter = {
   name: string
-  keyPath: string[]
+  keyPath: string
   init: (table: IDBTable<any>) => Promise<Unsubscriber>
 }
 

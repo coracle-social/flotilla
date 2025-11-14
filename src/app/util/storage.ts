@@ -80,7 +80,7 @@ const rankEvent = (event: TrustedEvent) => {
 
 const eventsAdapter = {
   name: "events",
-  keyPath: ["id"],
+  keyPath: "id",
   init: async (table: IDBTable<TrustedEvent>) => {
     const initialEvents = await table.getAll()
 
@@ -127,7 +127,7 @@ type TrackerItem = {id: string; relays: string[]}
 
 const trackerAdapter = {
   name: "tracker",
-  keyPath: ["id"],
+  keyPath: "id",
   init: async (table: IDBTable<TrackerItem>) => {
     const relaysById = new Map<string, Set<string>>()
 
@@ -183,7 +183,7 @@ const trackerAdapter = {
 
 const relaysAdapter = {
   name: "relays",
-  keyPath: ["url"],
+  keyPath: "url",
   init: async (table: IDBTable<RelayProfile>) => {
     relays.set(await table.getAll())
 
@@ -193,7 +193,7 @@ const relaysAdapter = {
 
 const relayStatsAdapter = {
   name: "relayStats",
-  keyPath: ["url"],
+  keyPath: "url",
   init: async (table: IDBTable<RelayStats>) => {
     relayStats.set(await table.getAll())
 
@@ -203,7 +203,7 @@ const relayStatsAdapter = {
 
 const handlesAdapter = {
   name: "handles",
-  keyPath: ["nip05"],
+  keyPath: "nip05",
   init: async (table: IDBTable<Handle>) => {
     handles.set(await table.getAll())
 
@@ -213,7 +213,7 @@ const handlesAdapter = {
 
 const zappersAdapter = {
   name: "zappers",
-  keyPath: ["lnurl"],
+  keyPath: "lnurl",
   init: async (table: IDBTable<Zapper>) => {
     zappers.set(await table.getAll())
 
@@ -225,7 +225,7 @@ type FreshnessItem = {key: string; value: number}
 
 const freshnessAdapter = {
   name: "freshness",
-  keyPath: ["key"],
+  keyPath: "key",
   init: async (table: IDBTable<FreshnessItem>) => {
     const initialRecords = await table.getAll()
 
@@ -241,7 +241,7 @@ type PlaintextItem = {key: string; value: string}
 
 const plaintextAdapter = {
   name: "plaintext",
-  keyPath: ["key"],
+  keyPath: "key",
   init: async (table: IDBTable<PlaintextItem>) => {
     const initialRecords = await table.getAll()
 
@@ -255,7 +255,7 @@ const plaintextAdapter = {
 
 const wrapManagerAdapter = {
   name: "wrapManager",
-  keyPath: ["id"],
+  keyPath: "id",
   init: async (table: IDBTable<WrapItem>) => {
     wrapManager.load(await table.getAll())
 
