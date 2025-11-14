@@ -1,6 +1,6 @@
 <script lang="ts">
   import {displayRelayUrl, ManagementMethod} from "@welshman/util"
-  import {manageRelay} from "@welshman/app"
+  import {manageRelay, displayProfileByPubkey} from "@welshman/app"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
@@ -35,11 +35,11 @@
   const back = () => history.back()
 
   const toggleMenu = (pubkey: string) => {
-    menuPubkey = menuPubkey === pubkey ? null : pubkey
+    menuPubkey = menuPubkey === pubkey ? undefined : pubkey
   }
 
   const closeMenu = () => {
-    menuPubkey = null
+    menuPubkey = undefined
   }
 
   const showBannedPubkeyItems = () => pushModal(SpaceMembersBanned, {url})
@@ -49,7 +49,7 @@
   const banMember = (pubkey: string) =>
     pushModal(Confirm, {
       title: "Ban User",
-      message: "Are you sure you want to ban this user from the space?",
+      message: `Are you sure you want to ban @${displayProfileByPubkey(pubkey)} from the space?`,
       confirm: async () => {
         const {error} = await manageRelay(url, {
           method: ManagementMethod.BanPubkey,
@@ -65,7 +65,7 @@
       },
     })
 
-  let menuPubkey = $state<string | null>(null)
+  let menuPubkey = $state<string | undefined>()
 </script>
 
 <div class="column gap-4">

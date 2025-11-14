@@ -2,7 +2,7 @@
   import {goto} from "$app/navigation"
   import {removeUndefined} from "@welshman/lib"
   import {ManagementMethod} from "@welshman/util"
-  import {shouldUnwrap, manageRelay, deriveProfile} from "@welshman/app"
+  import {shouldUnwrap, manageRelay, deriveProfile, displayProfileByPubkey} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
@@ -56,7 +56,7 @@
   const banMember = () =>
     pushModal(Confirm, {
       title: "Ban User",
-      message: "Are you sure you want to ban this user from the space?",
+      message: `Are you sure you want to ban @${displayProfileByPubkey(pubkey)} from the space?`,
       confirm: async () => {
         const {error} = await manageRelay(url!, {
           method: ManagementMethod.BanPubkey,

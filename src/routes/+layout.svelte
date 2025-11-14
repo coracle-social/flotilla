@@ -111,7 +111,9 @@
     ])
 
     // Wait until data storage is initialized before syncing other stuff
-    await db.init(storage.adapters)
+    if (!db.idbp) {
+      await db.init(storage.adapters)
+    }
 
     // Add our extra policies now that we're set up
     defaultSocketPolicies.push(...policies)

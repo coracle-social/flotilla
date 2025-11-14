@@ -9,7 +9,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
-  import EventReport from "@app/components/EventReport.svelte"
+  import Report from "@app/components/Report.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import {pushModal} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
@@ -27,7 +27,7 @@
 
   const report = () => {
     onClick()
-    pushModal(EventReport, {url, event})
+    pushModal(Report, {url, event})
   }
 
   const showInfo = () => {

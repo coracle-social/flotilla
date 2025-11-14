@@ -14,7 +14,7 @@
   import Confirm from "@lib/components/Confirm.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
-  import EventReport from "@app/components/EventReport.svelte"
+  import Report from "@app/components/Report.svelte"
   import EventShare from "@app/components/EventShare.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import {hasNip29, deriveUserIsSpaceAdmin} from "@app/core/state"
@@ -35,7 +35,7 @@
   const isRoot = event.kind !== COMMENT
   const userIsAdmin = deriveUserIsSpaceAdmin(url)
 
-  const report = () => pushModal(EventReport, {url, event})
+  const report = () => pushModal(Report, {url, event})
 
   const showInfo = () => pushModal(EventInfo, {url, event})
 

@@ -1,12 +1,13 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {derived} from "svelte/store"
-  import {displayRelayUrl, getTagValue, EVENT_TIME, ZAP_GOAL, THREAD} from "@welshman/util"
+  import {displayRelayUrl, getTagValue, EVENT_TIME, ZAP_GOAL, THREAD, REPORT} from "@welshman/util"
   import {deriveRelay, pubkey} from "@welshman/app"
   import {fly} from "@lib/transition"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import RemoteControllerMinimalistic from "@assets/icons/remote-controller-minimalistic.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
+  import Danger from "@assets/icons/danger.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Exit from "@assets/icons/logout-3.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
@@ -31,6 +32,7 @@
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import SpaceMembers from "@app/components/SpaceMembers.svelte"
+  import SpaceReports from "@app/components/SpaceReports.svelte"
   import AlertAdd from "@app/components/AlertAdd.svelte"
   import Alerts from "@app/components/Alerts.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
@@ -47,6 +49,7 @@
     hasNip29,
     alerts,
     deriveUserCanCreateRoom,
+    deriveUserIsSpaceAdmin,
   } from "@app/core/state"
   import {notifications} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
@@ -62,6 +65,8 @@
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url)
   const members = deriveSpaceMembers(url)
+  const userIsAdmin = deriveUserIsSpaceAdmin(url)
+  const reports = deriveEventsForUrl(url, [{kinds: [REPORT]}])
   const hasAlerts = $derived($alerts.some(a => getTagValue("feed", a.tags)?.includes(url)))
 
   const spaceKinds = derived(
@@ -80,6 +85,8 @@
   const showDetail = () => pushModal(SpaceDetail, {url}, {replaceState})
 
   const showMembers = () => pushModal(SpaceMembers, {url}, {replaceState})
+
+  const showReports = () => pushModal(SpaceReports, {url}, {replaceState})
 
   const canCreateRoom = deriveUserCanCreateRoom(url)
 
@@ -144,6 +151,14 @@
                 View Members ({$members.length})
               </Button>
             </li>
+            {#if $userIsAdmin}
+              <li>
+                <Button onclick={showReports}>
+                  <Icon icon={Danger} />
+                  View Reports ({$reports.length})
+                </Button>
+              </li>
+            {/if}
             {#if $relay?.pubkey && $relay.pubkey !== $pubkey}
               <li>
                 <Link href={makeChatPath([$relay.pubkey])}>

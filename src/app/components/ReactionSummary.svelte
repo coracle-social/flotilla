@@ -22,7 +22,7 @@
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Reaction from "@app/components/Reaction.svelte"
-  import EventReportDetails from "@app/components/EventReportDetails.svelte"
+  import ReportDetails from "@app/components/ReportDetails.svelte"
   import {REACTION_KINDS} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
 
@@ -75,7 +75,7 @@
     }
   }
 
-  const onReportClick = () => pushModal(EventReportDetails, {url, event})
+  const onReportClick = () => pushModal(ReportDetails, {url, event})
 
   const reportReasons = $derived(uniq($reports.map(e => getTag("e", e.tags)?.[2])))
 

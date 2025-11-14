@@ -34,7 +34,7 @@ export class IDB {
 
   async init(adapters: IDBAdapters) {
     if (this.idbp) {
-      await this.close()
+      throw new Error("Unable to initialize a database that isn't yet closed")
     }
 
     this.status = IDBStatus.Opening

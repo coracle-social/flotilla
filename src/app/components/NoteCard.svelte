@@ -1,19 +1,16 @@
 <script lang="ts">
   import cx from "classnames"
   import type {Snippet} from "svelte"
-  import * as nip19 from "nostr-tools/nip19"
   import {formatTimestamp} from "@welshman/lib"
   import {getListTags, getPubkeyTagValues} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import {Router} from "@welshman/router"
   import {userMutes} from "@welshman/app"
-  import Link from "@lib/components/Link.svelte"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {entityLink} from "@app/core/state"
+  import {goToEvent} from "@app/util/routes"
 
   const {
     event,
@@ -30,9 +27,6 @@
     url?: string
     class?: string
   } = $props()
-
-  const relays = Router.get().Event(event).getUrls()
-  const nevent = nip19.neventEncode({id: event.id, relays})
 
   const ignoreMute = () => {
     muted = false
@@ -59,12 +53,11 @@
           <Profile pubkey={event.pubkey} {url} />
         {/if}
       {/if}
-      <Link
-        external
-        href={entityLink(nevent)}
-        class={cx("text-sm opacity-75", {"text-xs": minimal})}>
+      <Button
+        class={cx("text-sm opacity-75", {"text-xs": minimal})}
+        onclick={() => goToEvent(event)}>
         {formatTimestamp(event.created_at)}
-      </Link>
+      </Button>
     </div>
     {@render children()}
   {/if}

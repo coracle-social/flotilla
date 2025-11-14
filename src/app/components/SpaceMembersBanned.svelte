@@ -25,11 +25,11 @@
   const back = () => history.back()
 
   const toggleMenu = (pubkey: string) => {
-    menuPubkey = menuPubkey === pubkey ? null : pubkey
+    menuPubkey = menuPubkey === pubkey ? undefined : pubkey
   }
 
   const closeMenu = () => {
-    menuPubkey = null
+    menuPubkey = undefined
   }
 
   const restoreMember = async (pubkey: string) => {
@@ -46,7 +46,7 @@
     }
   }
 
-  let menuPubkey = $state<string | null>(null)
+  let menuPubkey = $state<string | undefined>()
 </script>
 
 <div class="column gap-4">
