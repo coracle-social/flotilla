@@ -5,7 +5,11 @@
   import {makeSpacePath, goToSpace} from "@app/util/routes"
   import {notifications} from "@app/util/notifications"
 
-  const {url} = $props()
+  type Props = {
+    url: string
+  }
+
+  const {url}: Props = $props()
 
   const onClick = () => goToSpace(url)
 </script>
@@ -15,5 +19,5 @@
   title={displayRelayUrl(url)}
   class="tooltip-right"
   notification={$notifications.has(makeSpacePath(url))}>
-  <RelayIcon {url} size={url ? 10 : 7} class="rounded-full" />
+  <RelayIcon {url} size={7} class="rounded-full" />
 </PrimaryNavItem>
