@@ -88,6 +88,9 @@
     }
   })
 
+  // Cleanup on page close
+  window.addEventListener("beforeunload", () => db.close())
+
   const unsubscribe = call(async () => {
     const unsubscribers: Unsubscriber[] = []
 
@@ -110,10 +113,14 @@
       }),
     ])
 
+    // Set up our storage adapters
+    db.adapters = storage.adapters
+
     // Wait until data storage is initialized before syncing other stuff
-    if (!db.idbp) {
-      await db.init(storage.adapters)
-    }
+    await db.connect()
+
+    // Close the database connection on reload
+    unsubscribers.push(() => db.close())
 
     // Add our extra policies now that we're set up
     defaultSocketPolicies.push(...policies)
