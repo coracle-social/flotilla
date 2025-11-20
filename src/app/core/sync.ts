@@ -25,10 +25,10 @@ import {
   pubkey,
   loadRelay,
   userFollows,
-  userRelaySelections,
-  userInboxRelaySelections,
-  loadRelaySelections,
-  loadInboxRelaySelections,
+  userRelayList,
+  userMessagingRelayList,
+  loadRelayList,
+  loadMessagingRelayList,
   loadBlossomServers,
   loadFollows,
   loadMutes,
@@ -43,14 +43,14 @@ import {
   CONTENT_KINDS,
   INDEXER_RELAYS,
   loadSettings,
-  loadGroupSelections,
+  loadGroupList,
   userSpaceUrls,
-  userGroupSelections,
+  userGroupList,
   bootstrapPubkeys,
   decodeRelay,
   getUrlsForEvent,
-  getSpaceUrlsFromGroupSelections,
-  getSpaceRoomsFromGroupSelections,
+  getSpaceUrlsFromGroupList,
+  getSpaceRoomsFromGroupList,
   makeCommentFilter,
 } from "@app/core/state"
 import {loadAlerts, loadAlertStatuses} from "@app/core/requests"
@@ -173,20 +173,20 @@ const syncUserRoomMembership = (url: string, h: string) => {
 const syncUserData = () => {
   const unsubscribersByKey = new Map<string, Unsubscriber>()
 
-  const unsubscribeGroupSelections = userGroupSelections.subscribe($l => {
+  const unsubscribeGroupList = userGroupList.subscribe($l => {
     const $pubkey = pubkey.get()
 
     if ($pubkey) {
       const keys = new Set<string>()
 
-      for (const url of getSpaceUrlsFromGroupSelections($l)) {
+      for (const url of getSpaceUrlsFromGroupList($l)) {
         if (!unsubscribersByKey.has(url)) {
           unsubscribersByKey.set(url, syncUserSpaceMembership(url))
         }
 
         keys.add(url)
 
-        for (const h of getSpaceRoomsFromGroupSelections(url, $l)) {
+        for (const h of getSpaceRoomsFromGroupList(url, $l)) {
           const key = `${url}'${h}`
 
           if (!unsubscribersByKey.has(key)) {
@@ -206,7 +206,7 @@ const syncUserData = () => {
     }
   })
 
-  const unsubscribeSelections = userRelaySelections.subscribe($l => {
+  const unsubscribeList = userRelayList.subscribe($l => {
     const $pubkey = pubkey.get()
 
     if ($pubkey) {
@@ -214,7 +214,7 @@ const syncUserData = () => {
       loadAlertStatuses($pubkey)
       loadBlossomServers($pubkey)
       loadFollows($pubkey)
-      loadGroupSelections($pubkey)
+      loadGroupList($pubkey)
       loadMutes($pubkey)
       loadProfile($pubkey)
       loadSettings($pubkey)
@@ -228,8 +228,8 @@ const syncUserData = () => {
 
       await Promise.all(
         pubkeys.map(async pk => {
-          await loadRelaySelections(pk)
-          await loadGroupSelections(pk)
+          await loadRelayList(pk)
+          await loadGroupList(pk)
           await loadProfile(pk)
           await loadFollows(pk)
           await loadMutes(pk)
@@ -240,14 +240,14 @@ const syncUserData = () => {
 
   const unsubscribePubkey = pubkey.subscribe($pubkey => {
     if ($pubkey) {
-      loadRelaySelections($pubkey)
+      loadRelayList($pubkey)
     }
   })
 
   return () => {
     unsubscribersByKey.forEach(call)
-    unsubscribeGroupSelections()
-    unsubscribeSelections()
+    unsubscribeGroupList()
+    unsubscribeList()
     unsubscribeFollows()
     unsubscribePubkey()
   }
@@ -386,10 +386,10 @@ const syncDMs = () => {
         unsubscribeAll()
       }
 
-      // If we have a pubkey, refresh our user's relay selections then sync our subscriptions
+      // If we have a pubkey, refresh our user's relay list then sync our subscriptions
       if ($pubkey && $shouldUnwrap) {
-        loadRelaySelections($pubkey)
-          .then(() => loadInboxRelaySelections($pubkey))
+        loadRelayList($pubkey)
+          .then(() => loadMessagingRelayList($pubkey))
           .then($l => subscribeAll($pubkey, getRelayTagValues(getListTags($l))))
       }
 
@@ -397,20 +397,20 @@ const syncDMs = () => {
     },
   )
 
-  // When user inbox relays change, update synchronization
-  const unsubscribeSelections = userInboxRelaySelections.subscribe($userInboxRelaySelections => {
+  // When user messaging relays change, update synchronization
+  const unsubscribeList = userMessagingRelayList.subscribe($userMessagingRelayList => {
     const $pubkey = pubkey.get()
     const $shouldUnwrap = shouldUnwrap.get()
 
     if ($pubkey && $shouldUnwrap) {
-      subscribeAll($pubkey, getRelayTagValues(getListTags($userInboxRelaySelections)))
+      subscribeAll($pubkey, getRelayTagValues(getListTags($userMessagingRelayList)))
     }
   })
 
   return () => {
     unsubscribeAll()
     unsubscribePubkey()
-    unsubscribeSelections()
+    unsubscribeList()
   }
 }
 

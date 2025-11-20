@@ -3,7 +3,7 @@
   import {page} from "$app/stores"
   import {remove} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {pubkey, loadInboxRelaySelections} from "@welshman/app"
+  import {pubkey, loadMessagingRelayList} from "@welshman/app"
   import {fade} from "@lib/transition"
   import Link from "@lib/components/Link.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
@@ -27,7 +27,7 @@
 
   onMount(() => {
     for (const pk of others) {
-      loadInboxRelaySelections(pk)
+      loadMessagingRelayList(pk)
     }
   })
 </script>

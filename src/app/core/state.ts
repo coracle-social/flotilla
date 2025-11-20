@@ -122,8 +122,8 @@ import {
   appContext,
   getThunkError,
   publishThunk,
-  userRelaySelections,
-  userInboxRelaySelections,
+  userRelayList,
+  userMessagingRelayList,
   deriveRelay,
   makeUserData,
   makeUserLoader,
@@ -390,18 +390,6 @@ export const relaysPendingTrust = writable<string[]>([])
 
 export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
-// Relay selections
-
-export const userReadRelays = derived(userRelaySelections, $l =>
-  getRelaysFromList($l, RelayMode.Read),
-)
-
-export const userWriteRelays = derived(userRelaySelections, $l =>
-  getRelaysFromList($l, RelayMode.Write),
-)
-
-export const userInboxRelays = derived(userInboxRelaySelections, $l => getRelaysFromList($l))
-
 // Alerts
 
 export type Alert = {
@@ -610,29 +598,29 @@ export const displayRoom = (url: string, h: string) =>
 
 export const roomComparator = (url: string) => (h: string) => displayRoom(url, h).toLowerCase()
 
-// User space/room selections
+// User space/room lists
 
-export const groupSelections = deriveEventsMapped<PublishedList>(repository, {
+export const groupLists = deriveEventsMapped<PublishedList>(repository, {
   filters: [{kinds: [ROOMS]}],
   itemToEvent: item => item.event,
   eventToItem: (event: TrustedEvent) => readList(asDecryptedEvent(event)),
 })
 
 export const {
-  indexStore: groupSelectionsByPubkey,
-  deriveItem: deriveGroupSelections,
-  loadItem: loadGroupSelections,
+  indexStore: groupListsByPubkey,
+  deriveItem: deriveGroupList,
+  loadItem: loadGroupList,
 } = collection({
-  name: "groupSelections",
-  store: groupSelections,
+  name: "groupLists",
+  store: groupLists,
   getKey: list => list.event.pubkey,
   load: makeOutboxLoader(ROOMS),
 })
 
-export const groupSelectionsPubkeysByUrl = derived(groupSelections, $groupSelections => {
+export const groupListsPubkeysByUrl = derived(groupLists, $groupLists => {
   const result = new Map<string, Set<string>>()
 
-  for (const list of $groupSelections) {
+  for (const list of $groupLists) {
     const tags = getListTags(list)
 
     for (const url of getRelayTagValues(tags)) {
@@ -651,8 +639,8 @@ export const groupSelectionsPubkeysByUrl = derived(groupSelections, $groupSelect
   return result
 })
 
-export const getSpaceUrlsFromGroupSelections = ($groupSelections: List | undefined) => {
-  const tags = getListTags($groupSelections)
+export const getSpaceUrlsFromGroupList = ($groupLists: List | undefined) => {
+  const tags = getListTags($groupLists)
   const urls = getRelayTagValues(tags)
 
   for (const tag of getGroupTags(tags)) {
@@ -666,13 +654,10 @@ export const getSpaceUrlsFromGroupSelections = ($groupSelections: List | undefin
   return uniq(urls.map(normalizeRelayUrl))
 }
 
-export const getSpaceRoomsFromGroupSelections = (
-  url: string,
-  $groupSelections: List | undefined,
-) => {
+export const getSpaceRoomsFromGroupList = (url: string, $groupList: List | undefined) => {
   const rooms: string[] = []
 
-  for (const [_, h, relay] of getGroupTags(getListTags($groupSelections))) {
+  for (const [_, h, relay] of getGroupTags(getListTags($groupList))) {
     if (url === relay) {
       rooms.push(h)
     }
@@ -681,20 +666,20 @@ export const getSpaceRoomsFromGroupSelections = (
   return sortBy(roomComparator(url), rooms)
 }
 
-export const userGroupSelections = makeUserData({
-  mapStore: groupSelectionsByPubkey,
-  loadItem: loadGroupSelections,
+export const userGroupList = makeUserData({
+  mapStore: groupListsByPubkey,
+  loadItem: loadGroupList,
 })
 
-export const loadUserGroupSelections = makeUserLoader(loadGroupSelections)
+export const loadUserGroupList = makeUserLoader(loadGroupList)
 
-export const userSpaceUrls = derived(userGroupSelections, getSpaceUrlsFromGroupSelections)
+export const userSpaceUrls = derived(userGroupList, getSpaceUrlsFromGroupLists)
 
 export const deriveUserRooms = (url: string) =>
-  derived([userGroupSelections, roomsById], ([$userGroupSelections, $roomsById]) => {
+  derived([userGroupList, roomsById], ([$userGroupList, $roomsById]) => {
     const rooms: string[] = []
 
-    for (const h of getSpaceRoomsFromGroupSelections(url, $userGroupSelections)) {
+    for (const h of getSpaceRoomsFromGroupList(url, $userGroupList)) {
       if ($roomsById.has(makeRoomId(url, h))) {
         rooms.push(h)
       }

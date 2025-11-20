@@ -1,5 +1,6 @@
 <script lang="ts">
-  import {waitForThunkCompletion} from "@welshman/app"
+  import {RelayMode} from "@welshman/util"
+  import {waitForThunkCompletion, getPubkeyRelays, pubkey} from "@welshman/app"
   import ChatSquare from "@assets/icons/chat-square.svg?dataurl"
   import Check from "@assets/icons/check.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
@@ -11,7 +12,7 @@
   import {setChecked} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
-  import {dmAlert, userInboxRelays} from "@app/core/state"
+  import {dmAlert} from "@app/core/state"
   import {deleteAlert, createDmAlert} from "@app/core/commands"
 
   const startChat = () => pushModal(ChatStart, {}, {replaceState: true})
@@ -22,7 +23,7 @@
   }
 
   const enableAlerts = async () => {
-    if ($userInboxRelays.length === 0) {
+    if (getPubkeyRelays($pubkey!, RelayMode.Messaging).length === 0) {
       return pushToast({
         theme: "error",
         message: "Please set up your messaging relays before enabling alerts.",

@@ -25,9 +25,9 @@
   import SpaceCheck from "@app/components/SpaceCheck.svelte"
   import {
     bootstrapPubkeys,
-    loadGroupSelections,
-    getSpaceUrlsFromGroupSelections,
-    groupSelectionsPubkeysByUrl,
+    loadGroupList,
+    getSpaceUrlsFromGroupList,
+    groupListsPubkeysByUrl,
     parseInviteLink,
   } from "@app/core/state"
   import {pushModal} from "@app/util/modal"
@@ -50,8 +50,8 @@
         relays: Router.get().Index().getUrls(),
       }),
       ...$bootstrapPubkeys.map(async pubkey => {
-        const list = await loadGroupSelections(pubkey)
-        const urls = getSpaceUrlsFromGroupSelections(list)
+        const list = await loadGroupList(pubkey)
+        const urls = getSpaceUrlsFromGroupList(list)
 
         await Promise.all(urls.map(url => loadRelay(url)))
       }),
@@ -59,13 +59,13 @@
 
   const relaySearch = $derived(
     createSearch(
-      $relays.filter(r => $groupSelectionsPubkeysByUrl.has(r.url) && r.url !== inviteData?.url),
+      $relays.filter(r => $groupListsPubkeysByUrl.has(r.url) && r.url !== inviteData?.url),
       {
         getValue: (relay: RelayProfile) => relay.url,
         sortFn: ({score, item}) => {
           if (score && score > 0.1) return -score!
 
-          const wotScore = $groupSelectionsPubkeysByUrl.get(item.url)!.size
+          const wotScore = $groupListsPubkeysByUrl.get(item.url)!.size
 
           return score ? dec(score) * wotScore : -wotScore
         },

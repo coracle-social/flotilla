@@ -1,7 +1,8 @@
 <script lang="ts">
   import {sleep} from "@welshman/lib"
-  import {getTagValue, getAddress} from "@welshman/util"
+  import {getTagValue, getAddress, RelayMode} from "@welshman/util"
   import {isRelayFeed, findFeed} from "@welshman/feeds"
+  import {getPubkeyRelays, pubkey} from "@welshman/app"
   import Inbox from "@assets/icons/inbox.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
@@ -15,7 +16,6 @@
     alerts,
     dmAlert,
     deriveAlertStatus,
-    userInboxRelays,
     getAlertFeed,
     userSettingsValues,
   } from "@app/core/state"
@@ -59,7 +59,7 @@
     if ($dmAlert) {
       deleteAlert($dmAlert)
     } else {
-      if ($userInboxRelays.length === 0) {
+      if (getPubkeyRelays($pubkey!, RelayMode.Messaging).length === 0) {
         return uncheckDmAlert("Please set up your messaging relays before enabling alerts.")
       }
 

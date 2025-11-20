@@ -6,7 +6,7 @@
   import {COMMENT, getTagValue} from "@welshman/util"
   import {repository} from "@welshman/app"
   import {request} from "@welshman/net"
-  import {deriveEvents} from "@welshman/store"
+  import {deriveEventsById, deriveEventsDesc} from "@welshman/store"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import SortVertical from "@assets/icons/sort-vertical.svg?dataurl"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
@@ -29,7 +29,7 @@
   const url = decodeRelay(relay)
   const event = deriveEvent(id)
   const filters = [{kinds: [COMMENT], "#E": [id]}]
-  const replies = deriveEvents(repository, {filters})
+  const replies = deriveEventsDesc(deriveEventsById({repository, filters}))
   const summary = getTagValue("summary", $event.tags)
 
   const back = () => history.back()
@@ -98,7 +98,7 @@
           </Button>
         </div>
       {/if}
-      {#each sortBy(e => e.created_at, $replies).slice(0, showAll ? undefined : 4) as reply (reply.id)}
+      {#each $replies.slice(0, showAll ? undefined : 4) as reply (reply.id)}
         <NoteCard event={reply} {url} class="card2 bg-alt z-feature w-full">
           <div class="col-3 ml-12">
             <Content showEntire event={reply} {url} />

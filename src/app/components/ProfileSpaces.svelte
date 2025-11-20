@@ -8,7 +8,7 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {makeSpacePath} from "@app/util/routes"
-  import {deriveGroupSelections, getSpaceUrlsFromGroupSelections} from "@app/core/state"
+  import {deriveGroupList, getSpaceUrlsFromGroupList} from "@app/core/state"
 
   type Props = {
     pubkey: string
@@ -16,8 +16,8 @@
 
   const {pubkey}: Props = $props()
 
-  const selections = deriveGroupSelections(pubkey)
-  const spaceUrls = $derived(getSpaceUrlsFromGroupSelections($selections))
+  const groupList = deriveGroupList(pubkey)
+  const spaceUrls = $derived(getSpaceUrlsFromGroupList($groupList))
 
   const back = () => history.back()
 </script>

@@ -31,7 +31,7 @@ import {
   DELETE,
   REPORT,
   PROFILE,
-  INBOX_RELAYS,
+  MESSAGING_RELAYS,
   RELAYS,
   FOLLOWS,
   REACTION,
@@ -82,8 +82,8 @@ import {
   profilesByPubkey,
   tagEvent,
   tagEventForReaction,
-  userRelaySelections,
-  userInboxRelaySelections,
+  userRelayList,
+  userMessagingRelayList,
   nip44EncryptToSelf,
   dropSession,
   tagEventForComment,
@@ -106,8 +106,8 @@ import {
   userSpaceUrls,
   userSettingsValues,
   getSetting,
-  userInboxRelays,
-  userGroupSelections,
+  userMessagingRelays,
+  userGroupList,
   shouldIgnoreError,
 } from "@app/core/state"
 import {loadAlertStatuses} from "@app/core/requests"
@@ -164,7 +164,7 @@ export const logout = async () => {
 
 export const broadcastUserData = async (relays: string[]) => {
   const authors = [pubkey.get()!]
-  const kinds = [RELAYS, INBOX_RELAYS, FOLLOWS, PROFILE]
+  const kinds = [RELAYS, MESSAGING_RELAYS, FOLLOWS, PROFILE]
   const events = repository.query([{kinds, authors}])
 
   for (const event of events) {
@@ -177,7 +177,7 @@ export const broadcastUserData = async (relays: string[]) => {
 // List updates
 
 export const addSpaceMembership = async (url: string) => {
-  const list = get(userGroupSelections) || makeList({kind: ROOMS})
+  const list = get(userGroupList) || makeList({kind: ROOMS})
   const event = await addToListPublicly(list, ["r", url]).reconcile(nip44EncryptToSelf)
   const relays = uniq([...Router.get().FromUser().getUrls(), ...getRelayTagValues(event.tags)])
 
@@ -185,7 +185,7 @@ export const addSpaceMembership = async (url: string) => {
 }
 
 export const removeSpaceMembership = async (url: string) => {
-  const list = get(userGroupSelections) || makeList({kind: ROOMS})
+  const list = get(userGroupList) || makeList({kind: ROOMS})
   const pred = (t: string[]) => t[t[0] === "r" ? 1 : 2] === url
   const event = await removeFromListByPredicate(list, pred).reconcile(nip44EncryptToSelf)
   const relays = uniq([url, ...Router.get().FromUser().getUrls(), ...getRelayTagValues(event.tags)])
@@ -194,7 +194,7 @@ export const removeSpaceMembership = async (url: string) => {
 }
 
 export const addRoomMembership = async (url: string, h: string) => {
-  const list = get(userGroupSelections) || makeList({kind: ROOMS})
+  const list = get(userGroupList) || makeList({kind: ROOMS})
   const newTags = [
     ["r", url],
     ["group", h, url],
@@ -206,7 +206,7 @@ export const addRoomMembership = async (url: string, h: string) => {
 }
 
 export const removeRoomMembership = async (url: string, h: string) => {
-  const list = get(userGroupSelections) || makeList({kind: ROOMS})
+  const list = get(userGroupList) || makeList({kind: ROOMS})
   const pred = (t: string[]) => equals(["group", h, url], t.slice(0, 3))
   const event = await removeFromListByPredicate(list, pred).reconcile(nip44EncryptToSelf)
   const relays = uniq([url, ...Router.get().FromUser().getUrls(), ...getRelayTagValues(event.tags)])
@@ -215,7 +215,7 @@ export const removeRoomMembership = async (url: string, h: string) => {
 }
 
 export const setRelayPolicy = (url: string, read: boolean, write: boolean) => {
-  const list = get(userRelaySelections) || makeList({kind: RELAYS})
+  const list = get(userRelayList) || makeList({kind: RELAYS})
   const tags = getRelayTags(getListTags(list)).filter(t => normalizeRelayUrl(t[1]) !== url)
 
   if (read && write) {
@@ -232,10 +232,10 @@ export const setRelayPolicy = (url: string, read: boolean, write: boolean) => {
   })
 }
 
-export const setInboxRelayPolicy = (url: string, enabled: boolean) => {
-  const list = get(userInboxRelaySelections) || makeList({kind: INBOX_RELAYS})
+export const setMessagingRelayPolicy = (url: string, enabled: boolean) => {
+  const list = get(userMessagingRelayList) || makeList({kind: MESSAGING_RELAYS})
 
-  // Only update inbox policies if they already exist or we're adding them
+  // Only update messaging policies if they already exist or we're adding them
   if (enabled || getRelaysFromList(list).includes(url)) {
     const tags = getRelayTags(getListTags(list)).filter(t => normalizeRelayUrl(t[1]) !== url)
 
@@ -542,7 +542,7 @@ export const createDmAlert = async () => {
     description: `for direct messages.`,
     feed: makeIntersectionFeed(
       feedFromFilters([{kinds: [WRAP], "#p": [pubkey.get()!]}]),
-      makeRelayFeed(...get(userInboxRelays)),
+      makeRelayFeed(...get(userMessagingRelays)),
     ),
   })
 }

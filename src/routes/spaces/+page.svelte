@@ -8,7 +8,7 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import MenuSpacesItem from "@app/components/MenuSpacesItem.svelte"
   import SpaceAdd from "@app/components/SpaceAdd.svelte"
-  import {userSpaceUrls, loadUserGroupSelections, PLATFORM_RELAYS} from "@app/core/state"
+  import {userSpaceUrls, loadUserGroupList, PLATFORM_RELAYS} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
 
   const addSpace = () => pushModal(SpaceAdd)
@@ -37,7 +37,7 @@
     {#each PLATFORM_RELAYS as url (url)}
       <MenuSpacesItem {url} />
     {:else}
-      {#await loadUserGroupSelections()}
+      {#await loadUserGroupList()}
         <div class="flex justify-center items-center py-20">
           <span class="loading loading-spinner mr-3"></span>
           Loading your spaces...

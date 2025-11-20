@@ -9,7 +9,7 @@
     BLOSSOM_SERVERS,
   } from "@welshman/util"
   import {Router} from "@welshman/router"
-  import {userMutes, tagPubkey, publishThunk, userBlossomServers} from "@welshman/app"
+  import {userMuteList, tagPubkey, publishThunk, userBlossomServerList} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Field from "@lib/components/Field.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -22,8 +22,8 @@
 
   const reset = () => {
     settings = {...$userSettingsValues}
-    mutedPubkeys = getPubkeyTagValues(getListTags($userMutes))
-    blossomServers = getTagValues("server", getListTags($userBlossomServers))
+    mutedPubkeys = getPubkeyTagValues(getListTags($userMuteList))
+    blossomServers = getTagValues("server", getListTags($userBlossomServerList))
   }
 
   const onsubmit = preventDefault(async () => {
@@ -43,8 +43,8 @@
   })
 
   let settings = $state({...$userSettingsValues})
-  let mutedPubkeys = $state(getPubkeyTagValues(getListTags($userMutes)))
-  let blossomServers = $state(getTagValues("server", getListTags($userBlossomServers)))
+  let mutedPubkeys = $state(getPubkeyTagValues(getListTags($userMuteList)))
+  let blossomServers = $state(getTagValues("server", getListTags($userBlossomServerList)))
 </script>
 
 <form class="content column gap-4" {onsubmit}>

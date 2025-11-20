@@ -32,7 +32,7 @@
       }
 
       success = true
-      pushToast({message: "Success! Please check your inbox and continue when you're ready."})
+      pushToast({message: "Success! Please check your messages and continue when you're ready."})
 
       await logout()
     } finally {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {pubkey, relaySelections, inboxRelaySelections, derivePubkeyRelays} from "@welshman/app"
+  import {pubkey, getRelayLists, getMessagingRelayLists, derivePubkeyRelays} from "@welshman/app"
   import {RelayMode} from "@welshman/util"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -9,7 +9,7 @@
   import RelayAdd from "@app/components/RelayAdd.svelte"
   import {pushModal} from "@app/util/modal"
   import {discoverRelays} from "@app/core/requests"
-  import {setRelayPolicy, setInboxRelayPolicy} from "@app/core/commands"
+  import {setRelayPolicy, setMessagingRelayPolicy} from "@app/core/commands"
   import Globus from "@assets/icons/globus.svg?dataurl"
   import Inbox from "@assets/icons/inbox.svg?dataurl"
   import Mailbox from "@assets/icons/mailbox.svg?dataurl"
@@ -18,7 +18,7 @@
 
   const readRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Read)
   const writeRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Write)
-  const inboxRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Inbox)
+  const messagingRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Messaging)
 
   const addReadRelay = () =>
     pushModal(RelayAdd, {
@@ -32,20 +32,20 @@
       addRelay: (url: string) => setRelayPolicy(url, $readRelayUrls.includes(url), true),
     })
 
-  const addInboxRelay = () =>
+  const addMessagingRelay = () =>
     pushModal(RelayAdd, {
-      relays: inboxRelayUrls,
-      addRelay: (url: string) => setInboxRelayPolicy(url, true),
+      relays: messagingRelayUrls,
+      addRelay: (url: string) => setMessagingRelayPolicy(url, true),
     })
 
   const removeReadRelay = (url: string) => setRelayPolicy(url, false, $writeRelayUrls.includes(url))
 
   const removeWriteRelay = (url: string) => setRelayPolicy(url, $readRelayUrls.includes(url), false)
 
-  const removeInboxRelay = (url: string) => setInboxRelayPolicy(url, false)
+  const removeMessagingRelay = (url: string) => setMessagingRelayPolicy(url, false)
 
   onMount(() => {
-    discoverRelays([...$relaySelections, ...$inboxRelaySelections])
+    discoverRelays([...getRelayLists(), ...getMessagingRelayLists()])
   })
 </script>
 
@@ -130,19 +130,19 @@
       </p>
     {/snippet}
     <div class="column gap-2">
-      {#each $inboxRelayUrls.sort() as url (url)}
+      {#each $messagingRelayUrls.sort() as url (url)}
         <RelayItem {url}>
           <Button
             class="tooltip flex items-center"
             data-tip="Stop using this relay"
-            onclick={() => removeInboxRelay(url)}>
+            onclick={() => removeMessagingRelay(url)}>
             <Icon icon={CloseCircle} />
           </Button>
         </RelayItem>
       {:else}
         <p class="text-center text-sm">No relays found</p>
       {/each}
-      <Button class="btn btn-primary mt-2" onclick={addInboxRelay}>
+      <Button class="btn btn-primary mt-2" onclick={addMessagingRelay}>
         <Icon icon={AddCircle} />
         Add Relay
       </Button>

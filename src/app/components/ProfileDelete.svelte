@@ -7,8 +7,9 @@
     DELETE,
     isReplaceable,
     getAddress,
+    RelayMode,
   } from "@welshman/util"
-  import {pubkey, publishThunk, repository} from "@welshman/app"
+  import {pubkey, publishThunk, repository, derivePubkeyRelays} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
@@ -19,12 +20,13 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {pushToast} from "@app/util/toast"
   import {logout} from "@app/core/commands"
-  import {INDEXER_RELAYS, PLATFORM_NAME, userSpaceUrls, userWriteRelays} from "@app/core/state"
+  import {INDEXER_RELAYS, PLATFORM_NAME, userSpaceUrls} from "@app/core/state"
 
   let progress: number | undefined = $state(undefined)
   let confirmText = $state("")
 
   const CONFIRM_TEXT = "permanently delete my nostr account"
+  const userWriteRelays = derivePubkeyRelays($pubkey!, RelayMode.Write)
   const confirmOk = $derived(confirmText.toLowerCase().trim() === CONFIRM_TEXT)
   const showProgress = $derived(progress !== undefined)
 

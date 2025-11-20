@@ -6,14 +6,10 @@
   import {deriveEvents} from "@welshman/store"
   import {formatTimestampRelative} from "@welshman/lib"
   import {NOTE, ROOMS, COMMENT} from "@welshman/util"
-  import {repository, loadRelaySelections} from "@welshman/app"
+  import {repository, loadRelayList} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
-  import {
-    deriveGroupSelections,
-    getSpaceUrlsFromGroupSelections,
-    MESSAGE_KINDS,
-  } from "@app/core/state"
+  import {deriveGroupList, getSpaceUrlsFromGroupLists, MESSAGE_KINDS} from "@app/core/state"
   import {goToEvent} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
 
@@ -25,8 +21,8 @@
   const {pubkey, url}: Props = $props()
   const filters: Filter[] = [{authors: [pubkey], limit: 1}]
   const events = deriveEvents(repository, {filters})
-  const selections = deriveGroupSelections(pubkey)
-  const spaceUrls = $derived(getSpaceUrlsFromGroupSelections($selections))
+  const groupList = deriveGroupList(pubkey)
+  const spaceUrls = $derived(getSpaceUrlsFromGroupList($groupList))
 
   const viewEvent = () => goToEvent($events[0]!)
 
@@ -34,7 +30,7 @@
 
   onMount(async () => {
     // Make sure we have their relay selections before we load their posts
-    await loadRelaySelections(pubkey)
+    await loadRelayList(pubkey)
 
     // Load groups and at least one note, regardless of time frame
     load({

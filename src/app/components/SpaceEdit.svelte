@@ -2,7 +2,7 @@
   import {uniqBy, prop, ifLet} from "@welshman/lib"
   import type {RelayProfile} from "@welshman/util"
   import {displayRelayUrl, ManagementMethod} from "@welshman/util"
-  import {manageRelay, relays, fetchRelayProfileDirectly} from "@welshman/app"
+  import {manageRelay, relays, fetchRelayDirectly} from "@welshman/app"
   import StickerSmileSquare from "@assets/icons/sticker-smile-square.svg?dataurl"
   import SettingsMinimalistic from "@assets/icons/settings-minimalistic.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -72,8 +72,12 @@
     }
 
     // Force-reload the relay
-    ifLet(await fetchRelayProfileDirectly(url), profile => {
-      relays.update($relays => uniqBy(prop("url"), [{...profile, url}, ...$relays]))
+    ifLet(await fetchRelayDirectly(url), relay => {
+      relaysByUrl.update($relaysByUrl => {
+        $relaysByUrl.set(url, relay)
+
+        return new Map($relaysByUrl)
+      })
     })
 
     pushToast({message: "Your changes have been saved!"})
