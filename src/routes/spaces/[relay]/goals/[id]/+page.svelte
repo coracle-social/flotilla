@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {page} from "$app/stores"
-  import {sortBy, sleep} from "@welshman/lib"
+  import {sleep} from "@welshman/lib"
   import type {MakeNonOptional} from "@welshman/lib"
   import {COMMENT, getTagValue} from "@welshman/util"
   import {repository} from "@welshman/app"
@@ -27,10 +27,10 @@
 
   const {relay, id} = $page.params as MakeNonOptional<typeof $page.params>
   const url = decodeRelay(relay)
-  const event = deriveEvent(id)
+  const event = deriveEvent(id, [url])
   const filters = [{kinds: [COMMENT], "#E": [id]}]
   const replies = deriveEventsDesc(deriveEventsById({repository, filters}))
-  const summary = getTagValue("summary", $event.tags)
+  const summary = getTagValue("summary", $event?.tags || [])
 
   const back = () => history.back()
 
@@ -71,7 +71,7 @@
     </div>
   {/snippet}
   {#snippet title()}
-    <h1 class="text-xl">{$event.content}</h1>
+    <h1 class="text-xl">{$event?.content}</h1>
   {/snippet}
   {#snippet action()}
     <div>

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import {uniqBy, prop, ifLet} from "@welshman/lib"
+  import {ifLet} from "@welshman/lib"
   import type {RelayProfile} from "@welshman/util"
   import {displayRelayUrl, ManagementMethod} from "@welshman/util"
-  import {manageRelay, relays, fetchRelayDirectly} from "@welshman/app"
+  import {manageRelay, relaysByUrl, notifyRelay, fetchRelayDirectly} from "@welshman/app"
   import StickerSmileSquare from "@assets/icons/sticker-smile-square.svg?dataurl"
   import SettingsMinimalistic from "@assets/icons/settings-minimalistic.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -78,6 +78,8 @@
 
         return new Map($relaysByUrl)
       })
+
+      notifyRelay(relay)
     })
 
     pushToast({message: "Your changes have been saved!"})

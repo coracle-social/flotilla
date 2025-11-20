@@ -1,33 +1,35 @@
 import twColors from "tailwindcss/colors"
 import {Capacitor} from "@capacitor/core"
-import {get, derived, writable} from "svelte/store"
+import {get, derived, readable, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {
   on,
   gt,
   max,
+  find,
   spec,
   call,
   first,
-  assoc,
-  remove,
   uniqBy,
   sortBy,
+  append,
   sort,
   prop,
   uniq,
+  indexBy,
+  partition,
   pushToMapKey,
   shuffle,
   parseJson,
   memoize,
   addToMapKey,
   identity,
-  groupBy,
   always,
   tryCatch,
   fromPairs,
 } from "@welshman/lib"
-import type {Socket} from "@welshman/net"
+import type {Override} from "@welshman/lib"
+import type {RepositoryUpdate} from "@welshman/net"
 import {
   Pool,
   load,
@@ -37,7 +39,17 @@ import {
   SocketEvent,
   netContext,
 } from "@welshman/net"
-import {collection, custom, throttled, deriveEvents, deriveEventsMapped} from "@welshman/store"
+import {
+  getter,
+  throttled,
+  deriveArray,
+  makeDeriveEvent,
+  makeLoadItem,
+  makeDeriveItem,
+  deriveItemsByKey,
+  deriveEventsByIdByUrl,
+  deriveEventsByIdForUrl,
+} from "@welshman/store"
 import {isKindFeed, findFeed} from "@welshman/feeds"
 import {
   ALERT_ANDROID,
@@ -72,16 +84,14 @@ import {
   ROOMS,
   THREAD,
   WRAP,
+  PROFILE,
   ZAP_GOAL,
   ZAP_REQUEST,
   ZAP_RESPONSE,
   asDecryptedEvent,
-  displayProfile,
   getGroupTags,
-  getIdFilters,
   getListTags,
   getPubkeyTagValues,
-  getRelaysFromList,
   getRelayTagValues,
   getTagValue,
   getTagValues,
@@ -89,47 +99,33 @@ import {
   makeEvent,
   normalizeRelayUrl,
   readList,
-  RelayMode,
   verifyEvent,
   readRoomMeta,
   makeRoomMeta,
   ManagementMethod,
 } from "@welshman/util"
-import type {
-  TrustedEvent,
-  RelayProfile,
-  PublishedList,
-  PublishedRoomMeta,
-  List,
-  Filter,
-} from "@welshman/util"
+import type {TrustedEvent, RelayProfile, PublishedRoomMeta, List, Filter} from "@welshman/util"
 import {decrypt} from "@welshman/signer"
 import {routerContext, Router} from "@welshman/router"
 import {
   pubkey,
   repository,
-  profilesByPubkey,
   tracker,
-  makeTrackerStore,
-  makeRepositoryStore,
   createSearch,
-  userFollows,
+  userFollowList,
   ensurePlaintext,
-  thunks,
   sign,
   signer,
   makeOutboxLoader,
   appContext,
   getThunkError,
   publishThunk,
-  userRelayList,
-  userMessagingRelayList,
   deriveRelay,
   makeUserData,
   makeUserLoader,
   manageRelay,
+  displayProfileByPubkey,
 } from "@welshman/app"
-import type {Thunk} from "@welshman/app"
 
 export const fromCsv = (s: string) => (s || "").split(",").filter(identity)
 
@@ -208,87 +204,28 @@ export const entityLink = (entity: string) => `https://coracle.social/${entity}`
 export const pubkeyLink = (pubkey: string, relays = Router.get().FromPubkeys([pubkey]).getUrls()) =>
   entityLink(nip19.nprofileEncode({pubkey, relays}))
 
-export const bootstrapPubkeys = derived(userFollows, $userFollows => {
+export const bootstrapPubkeys = derived(userFollowList, $userFollowList => {
   const appPubkeys = DEFAULT_PUBKEYS.split(",")
-  const userPubkeys = shuffle(getPubkeyTagValues(getListTags($userFollows)))
+  const userPubkeys = shuffle(getPubkeyTagValues(getListTags($userFollowList)))
 
   return userPubkeys.length > 5 ? userPubkeys : [...userPubkeys, ...appPubkeys]
 })
 
-export const trackerStore = makeTrackerStore()
-
-export const repositoryStore = makeRepositoryStore()
-
-export const deriveEvent = (idOrAddress: string, hints: string[] = []) => {
-  let attempted = false
-
-  const filters = getIdFilters([idOrAddress])
-  const relays = [...hints, ...INDEXER_RELAYS]
-
-  return derived(
-    deriveEvents(repository, {filters, includeDeleted: true}),
-    (events: TrustedEvent[]) => {
-      if (!attempted && events.length === 0) {
-        load({relays, filters})
-        attempted = true
-      }
-
-      return events[0]
-    },
-  )
-}
-
-export const getUrlsForEvent = derived([trackerStore, thunks], ([$tracker, $thunks]) => {
-  const getThunksByEventId = memoize(() => {
-    const thunksByEventId = new Map<string, Thunk[]>()
-
-    for (const thunk of $thunks) {
-      pushToMapKey(thunksByEventId, thunk.event.id, thunk)
-    }
-
-    return thunksByEventId
-  })
-
-  return (id: string) => {
-    const urls = $tracker.getRelays(id)
-
-    for (const thunk of getThunksByEventId().get(id) || []) {
-      for (const url of thunk.options.relays) {
-        urls.add(url)
-      }
-    }
-
-    return Array.from(urls)
-  }
+export const deriveEvent = makeDeriveEvent({
+  repository,
+  includeDeleted: true,
+  onDerive: (filters: Filter[], relays: string[]) => load({filters, relays}),
 })
 
-export const getEventsForUrl = (url: string, filters: Filter[]) => {
-  const ids = uniq([
-    ...tracker.getIds(url),
-    ...get(thunks)
-      .filter(t => t.options.relays.includes(url))
-      .map(t => t.event.id),
-  ])
-
-  return repository.query(filters.map(assoc("ids", ids)))
-}
-
 export const deriveEventsForUrl = (url: string, filters: Filter[]) =>
-  derived([trackerStore, thunks], ([$tracker, $thunks]) => {
-    const ids = uniq([
-      ...$tracker.getIds(url),
-      ...$thunks.filter(t => t.options.relays.includes(url)).map(t => t.event.id),
-    ])
+  deriveArray(deriveEventsByIdForUrl({url, tracker, repository, filters}))
 
-    return repository.query(filters.map(assoc("ids", ids)))
-  })
-
-export const deriveSignedEventsForUrl = (url: string, filters: Filter[]) =>
+export const deriveRelaySignedEvents = (url: string, filters: Filter[]) =>
   derived(
-    [deriveEventsForUrl(url, filters), deriveRelay(url)],
-    ([$events, $relay]) => $events,
-    // Disable this check for now since khatru doesn't support self
-    // $relay?.self ? $events.filter(spec({pubkey: $relay.self})) : [],
+    [deriveRelay(url), deriveEventsForUrl(url, filters)],
+    ([relay, events]) => events,
+    // khatru doesn't support relay.self, uncomment when it's ready
+    // filter(spec({pubkey: relay.self}), events)
   )
 
 // Context
@@ -351,25 +288,25 @@ export const defaultSettings = {
   show_notifications_badge: true,
 }
 
-export const settings = deriveEventsMapped<Settings>(repository, {
+export const settingsByPubkey = deriveItemsByKey({
+  repository,
+  getKey: settings => settings.event.pubkey,
   filters: [{kinds: [APP_DATA], "#d": [SETTINGS]}],
-  itemToEvent: item => item.event,
-  eventToItem: async (event: TrustedEvent) => ({
-    event,
-    values: {...defaultSettings, ...parseJson(await ensurePlaintext(event))},
-  }),
+  eventToItem: async (event: TrustedEvent) => {
+    const values = {...defaultSettings, ...parseJson(await ensurePlaintext(event))}
+
+    return {event, values}
+  },
 })
 
-export const {
-  indexStore: settingsByPubkey,
-  deriveItem: deriveSettings,
-  loadItem: loadSettings,
-} = collection({
-  name: "settings",
-  store: settings,
-  getKey: settings => settings.event.pubkey,
-  load: makeOutboxLoader(APP_DATA, {"#d": [SETTINGS]}),
-})
+export const getSettingsByPubkey = getter(settingsByPubkey)
+
+export const getSettings = (pubkey: string) => getSettingsByPubkey().get(pubkey)
+
+export const loadSettings = makeLoadItem(
+  makeOutboxLoader(APP_DATA, {"#d": [SETTINGS]}),
+  getSettings,
+)
 
 export const userSettings = makeUserData({
   mapStore: settingsByPubkey,
@@ -397,9 +334,10 @@ export type Alert = {
   tags: string[][]
 }
 
-export const alerts = deriveEventsMapped<Alert>(repository, {
+export const alertsById = deriveItemsByKey<Alert>({
+  repository,
+  getKey: alert => alert.event.id,
   filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]}],
-  itemToEvent: item => item.event,
   eventToItem: async event => {
     const $signer = signer.get()
 
@@ -414,13 +352,13 @@ export const alerts = deriveEventsMapped<Alert>(repository, {
 export const getAlertFeed = (alert: Alert) =>
   tryCatch(() => JSON.parse(getTagValue("feed", alert.tags)!))
 
-export const dmAlert = derived(alerts, $alerts =>
-  $alerts.find(alert => {
-    const feed = getAlertFeed(alert)
-
-    return findFeed(feed, f => isKindFeed(f) && f.includes(WRAP))
-  }),
-)
+export const dmAlert = derived(alertsById, $alertsById => {
+  for (const alert of $alertsById.values()) {
+    if (findFeed(getAlertFeed(alert), f => isKindFeed(f) && f.includes(WRAP))) {
+      return alert
+    }
+  }
+})
 
 // Alert Statuses
 
@@ -429,9 +367,10 @@ export type AlertStatus = {
   tags: string[][]
 }
 
-export const alertStatuses = deriveEventsMapped<AlertStatus>(repository, {
+export const alertStatusesByAddress = deriveItemsByKey<AlertStatus>({
+  repository,
   filters: [{kinds: [ALERT_STATUS]}],
-  itemToEvent: item => item.event,
+  getKey: alertStatus => getTagValue("d", alertStatus.event.tags)!,
   eventToItem: async event => {
     const $signer = signer.get()
 
@@ -443,14 +382,9 @@ export const alertStatuses = deriveEventsMapped<AlertStatus>(repository, {
   },
 })
 
-export const deriveAlertStatus = (address: string) =>
-  derived(alertStatuses, statuses => statuses.find(s => getTagValue("d", s.event.tags) === address))
+export const deriveAlertStatus = makeDeriveItem(alertStatusesByAddress)
 
 // Chats
-
-export const chatMessages = deriveEvents(repository, {
-  filters: [{kinds: [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]}],
-})
 
 export type Chat = {
   id: string
@@ -460,65 +394,76 @@ export type Chat = {
   search_text: string
 }
 
-export const makeChatId = (pubkeys: string[]) => sort(uniq(pubkeys.concat(pubkey.get()!))).join(",")
+export const makeChatId = (pubkeys: string[]) => sort(uniq(pubkeys)).join(",")
 
 export const splitChatId = (id: string) => id.split(",")
 
-export const chats = derived(
-  [pubkey, chatMessages, profilesByPubkey],
-  ([$pubkey, $messages, $profilesByPubkey]) => {
-    const messagesByChatId = new Map<string, TrustedEvent[]>()
+export const chatsById = call(() => {
+  const chatsById = new Map<string, Chat>()
+  const chatsByPubkey = new Map<string, Chat[]>()
 
-    for (const message of $messages) {
-      const chatId = makeChatId(getPubkeyTagValues(message.tags).concat(message.pubkey))
+  const addSearchText = (chat: Override<Chat, {search_text?: string}>) => {
+    chat.search_text =
+      chat.pubkeys.length === 1
+        ? displayProfileByPubkey(chat.pubkeys[0]) + " note to self"
+        : chat.pubkeys.map(displayProfileByPubkey).join(" ")
 
-      pushToMapKey(messagesByChatId, chatId, message)
-    }
+    return chat as Chat
+  }
 
-    const displayPubkey = (pubkey: string) => {
-      const profile = $profilesByPubkey.get(pubkey)
+  return readable(chatsById, set => {
+    const unsubscribers = [
+      on(repository, "update", ({added}: RepositoryUpdate) => {
+        let dirty = false
+        for (const event of added) {
+          if ([DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(event.kind)) {
+            const pubkeys = getPubkeyTagValues(event.tags).concat(event.pubkey)
+            const id = makeChatId(pubkeys)
+            const chat = chatsById.get(id)
+            const messages = append(event, chat?.messages || [])
+            const last_activity = Math.max(chat?.last_activity || 0, event.created_at)
+            const updatedChat = addSearchText({id, pubkeys, messages, last_activity})
 
-      return profile ? displayProfile(profile) : ""
-    }
+            chatsById.set(id, updatedChat)
 
-    return sortBy(
-      c => -c.last_activity,
-      Array.from(messagesByChatId.entries()).map(([id, events]): Chat => {
-        const pubkeys = remove($pubkey!, splitChatId(id))
-        const messages = sortBy(e => -e.created_at, uniqBy(prop("id"), events))
-        const last_activity = messages[0].created_at
-        const search_text =
-          pubkeys.length === 0
-            ? displayPubkey($pubkey!) + " note to self"
-            : pubkeys.map(displayPubkey).join(" ")
+            for (const pubkey of pubkeys) {
+              const pubkeyChats = chatsByPubkey.get(pubkey) || []
+              const uniqueChats = uniqBy(chat => chat.id, append(updatedChat, pubkeyChats))
 
-        return {id, pubkeys, messages, last_activity, search_text}
+              chatsByPubkey.set(pubkey, uniqueChats)
+            }
+
+            dirty = true
+          }
+
+          if (event.kind === PROFILE) {
+            for (const chat of chatsByPubkey.get(event.pubkey) || []) {
+              addSearchText(chat)
+              dirty = true
+            }
+          }
+        }
+
+        if (dirty) {
+          set(chatsById)
+        }
       }),
-    )
-  },
-)
+    ]
 
-export const {
-  indexStore: chatsById,
-  deriveItem: deriveChat,
-  loadItem: loadChat,
-} = collection({
-  name: "chats",
-  store: chats,
-  getKey: chat => chat.id,
-  load: always(Promise.resolve()),
+    return () => unsubscribers.forEach(call)
+  })
 })
 
-export const chatSearch = derived(chats, $chats =>
-  createSearch($chats, {
+export const deriveChat = makeDeriveItem(chatsById)
+
+export const chatSearch = derived(throttled(800, chatsById), $chatsByPubkey => {
+  return createSearch(Array.from($chatsByPubkey.values()), {
     getValue: (chat: Chat) => chat.id,
     fuseOptions: {keys: ["search_text"]},
-  }),
-)
+  })
+})
 
 // Rooms
-
-export const messages = deriveEvents(repository, {filters: [{kinds: [MESSAGE]}]})
 
 export type Room = PublishedRoomMeta & {
   id: string
@@ -532,95 +477,94 @@ export const splitRoomId = (id: string) => id.split("'")
 export const hasNip29 = (relay?: RelayProfile) =>
   relay?.supported_nips?.map?.(String)?.includes?.("29")
 
-export const roomMetas = deriveEventsMapped<PublishedRoomMeta>(repository, {
-  filters: [{kinds: [ROOM_META]}],
-  itemToEvent: item => item.event,
-  eventToItem: readRoomMeta,
+export const roomMetaEventsByIdByUrl = deriveEventsByIdByUrl({
+  tracker,
+  repository,
+  filters: [{kinds: [ROOM_META, ROOM_DELETE]}],
 })
 
-export const roomDeletes = deriveEvents(repository, {
-  filters: [{kinds: [ROOM_DELETE]}],
-})
+export const roomsByUrl = derived(roomMetaEventsByIdByUrl, roomMetaEventsByIdByUrl => {
+  const result = new Map<string, Room[]>()
 
-export const rooms = derived(
-  [roomMetas, roomDeletes, getUrlsForEvent],
-  ([$roomMetas, $roomDeletes, $getUrlsForEvent]) => {
-    const result = new Map<string, Room>()
+  for (const [url, events] of roomMetaEventsByIdByUrl.entries()) {
+    const [metaEvents, deleteEvents] = partition(spec({kind: ROOM_META}), events.values())
     const deletedByH = new Map<string, number>()
 
-    for (const event of $roomDeletes) {
+    for (const event of deleteEvents) {
       for (const h of getTagValues("h", event.tags)) {
         deletedByH.set(h, max([deletedByH.get(h), event.created_at]))
       }
     }
 
-    for (const meta of $roomMetas) {
+    for (const event of metaEvents) {
+      const meta = readRoomMeta(event)
+
       if (gt(deletedByH.get(meta.h), meta.event.created_at)) {
         continue
       }
 
-      for (const url of $getUrlsForEvent(meta.event.id)) {
-        const id = makeRoomId(url, meta.h)
-
-        result.set(id, {...meta, url, id})
-      }
+      pushToMapKey(result, url, {...meta, url, id: makeRoomId(url, meta.h)})
     }
+  }
 
-    return Array.from(result.values())
-  },
+  return result
+})
+
+export const roomsById = derived(roomsByUrl, roomsByUrl =>
+  indexBy(room => room.id, Array.from(roomsByUrl.values()).flatMap(identity)),
 )
 
-export const roomsByUrl = derived(rooms, $rooms => groupBy(c => c.url, $rooms))
+export const getRoomsById = getter(roomsById)
 
-export const {
-  indexStore: roomsById,
-  deriveItem: _deriveRoom,
-  loadItem: _loadRoom,
-} = collection({
-  name: "rooms",
-  store: rooms,
-  getKey: room => room.id,
-  load: async (id: string) => {
+export const getRoom = (id: string) => getRoomsById().get(id)
+
+export const loadRoom = call(() => {
+  const _fetchRoom = async (id: string) => {
     const [url, h] = splitRoomId(id)
 
     await load({
       relays: [url],
       filters: [{kinds: [ROOM_META], "#d": [h]}],
     })
-  },
+  }
+
+  const _loadRoom = makeLoadItem(_fetchRoom, getRoom)
+
+  return (url: string, h: string) => _loadRoom(makeRoomId(url, h))
 })
 
-export const deriveRoom = (url: string, h: string) =>
-  derived(_deriveRoom(makeRoomId(url, h)), $meta => $meta || makeRoomMeta({h}))
+export const deriveRoom = call(() => {
+  const _deriveRoom = makeDeriveItem(roomsById, loadRoom)
 
-export const displayRoom = (url: string, h: string) =>
-  roomsById.get().get(makeRoomId(url, h))?.name || h
+  return (url: string, h: string) =>
+    derived(_deriveRoom(makeRoomId(url, h)), room => room || makeRoomMeta({h}))
+})
+
+export const displayRoom = (url: string, h: string) => getRoom(makeRoomId(url, h))?.name || h
 
 export const roomComparator = (url: string) => (h: string) => displayRoom(url, h).toLowerCase()
 
 // User space/room lists
 
-export const groupLists = deriveEventsMapped<PublishedList>(repository, {
+export const groupListsByPubkey = deriveItemsByKey({
+  repository,
   filters: [{kinds: [ROOMS]}],
-  itemToEvent: item => item.event,
+  getKey: list => list.event.pubkey,
   eventToItem: (event: TrustedEvent) => readList(asDecryptedEvent(event)),
 })
 
-export const {
-  indexStore: groupListsByPubkey,
-  deriveItem: deriveGroupList,
-  loadItem: loadGroupList,
-} = collection({
-  name: "groupLists",
-  store: groupLists,
-  getKey: list => list.event.pubkey,
-  load: makeOutboxLoader(ROOMS),
-})
+export const getGroupListsByPubkey = getter(groupListsByPubkey)
 
-export const groupListsPubkeysByUrl = derived(groupLists, $groupLists => {
+export const getGroupList = (pubkey: string) => getGroupListsByPubkey().get(pubkey)
+
+export const loadGroupList = makeLoadItem(makeOutboxLoader(ROOMS), getGroupList)
+
+export const deriveGroupList = makeDeriveItem(groupListsByPubkey, loadGroupList)
+
+export const groupListsPubkeysByUrl = derived(groupListsByPubkey, $groupListsByPubkey => {
   const result = new Map<string, Set<string>>()
 
-  for (const list of $groupLists) {
+  for (const list of $groupListsByPubkey.values()) {
     const tags = getListTags(list)
 
     for (const url of getRelayTagValues(tags)) {
@@ -639,8 +583,8 @@ export const groupListsPubkeysByUrl = derived(groupLists, $groupLists => {
   return result
 })
 
-export const getSpaceUrlsFromGroupList = ($groupLists: List | undefined) => {
-  const tags = getListTags($groupLists)
+export const getSpaceUrlsFromGroupList = (groupList: List | undefined) => {
+  const tags = getListTags(groupList)
   const urls = getRelayTagValues(tags)
 
   for (const tag of getGroupTags(tags)) {
@@ -654,10 +598,10 @@ export const getSpaceUrlsFromGroupList = ($groupLists: List | undefined) => {
   return uniq(urls.map(normalizeRelayUrl))
 }
 
-export const getSpaceRoomsFromGroupList = (url: string, $groupList: List | undefined) => {
+export const getSpaceRoomsFromGroupList = (url: string, groupList: List | undefined) => {
   const rooms: string[] = []
 
-  for (const [_, h, relay] of getGroupTags(getListTags($groupList))) {
+  for (const [_, h, relay] of getGroupTags(getListTags(groupList))) {
     if (url === relay) {
       rooms.push(h)
     }
@@ -673,7 +617,7 @@ export const userGroupList = makeUserData({
 
 export const loadUserGroupList = makeUserLoader(loadGroupList)
 
-export const userSpaceUrls = derived(userGroupList, getSpaceUrlsFromGroupLists)
+export const userSpaceUrls = derived(userGroupList, getSpaceUrlsFromGroupList)
 
 export const deriveUserRooms = (url: string) =>
   derived([userGroupList, roomsById], ([$userGroupList, $roomsById]) => {
@@ -705,9 +649,7 @@ export const deriveOtherRooms = (url: string) =>
 
 export const deriveSpaceMembers = (url: string) =>
   derived(
-    deriveSignedEventsForUrl(url, [
-      {kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS]},
-    ]),
+    deriveRelaySignedEvents(url, [{kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS]}]),
     $events => {
       const membersEvent = $events.find(spec({kind: RELAY_MEMBERS}))
 
@@ -755,43 +697,45 @@ export const deriveSpaceBannedPubkeyItems = (url: string) => {
   return store
 }
 
-export const deriveRoomMembers = (url: string, h: string) =>
-  derived(
-    deriveEventsForUrl(url, [
-      {kinds: [ROOM_MEMBERS], "#d": [h]},
-      {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [h]},
-    ]),
-    $events => {
-      const membersEvent = $events.find(spec({kind: ROOM_MEMBERS}))
+export const deriveRoomMembers = (url: string, h: string) => {
+  const filters: Filter[] = [
+    {kinds: [ROOM_MEMBERS], "#d": [h]},
+    {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [h]},
+  ]
 
-      if (membersEvent) {
-        return uniq(getPubkeyTagValues(membersEvent.tags))
-      }
+  return derived(deriveEventsForUrl(url, filters), $events => {
+    const membersEvent = find(spec({kind: ROOM_MEMBERS}), $events)
 
-      const members = new Set<string>()
+    if (membersEvent) {
+      return uniq(getPubkeyTagValues(membersEvent.tags))
+    }
 
-      for (const event of sortBy(e => -e.created_at, $events)) {
-        const pubkeys = getPubkeyTagValues(event.tags)
+    const members = new Set<string>()
 
-        if (event.kind === ROOM_ADD_MEMBER) {
-          for (const pubkey of pubkeys) {
-            members.add(pubkey)
-          }
-        }
+    for (const event of sortBy(e => -e.created_at, $events)) {
+      const pubkeys = getPubkeyTagValues(event.tags)
 
-        if (event.kind === ROOM_REMOVE_MEMBER) {
-          for (const pubkey of pubkeys) {
-            members.delete(pubkey)
-          }
+      if (event.kind === ROOM_ADD_MEMBER) {
+        for (const pubkey of pubkeys) {
+          members.add(pubkey)
         }
       }
 
-      return Array.from(members)
-    },
-  )
+      if (event.kind === ROOM_REMOVE_MEMBER) {
+        for (const pubkey of pubkeys) {
+          members.delete(pubkey)
+        }
+      }
+    }
 
-export const deriveRoomAdmins = (url: string, h: string) =>
-  derived(deriveEventsForUrl(url, [{kinds: [ROOM_ADMINS], "#d": [h]}]), $events => {
+    return Array.from(members)
+  })
+}
+
+export const deriveRoomAdmins = (url: string, h: string) => {
+  const filters: Filter[] = [{kinds: [ROOM_ADMINS], "#d": [h]}]
+
+  return derived(deriveEventsForUrl(url, filters), $events => {
     const adminsEvent = first($events)
 
     if (adminsEvent) {
@@ -800,6 +744,7 @@ export const deriveRoomAdmins = (url: string, h: string) =>
 
     return []
   })
+}
 
 // User membership status
 
@@ -821,12 +766,14 @@ export const deriveUserIsSpaceAdmin = memoize((url?: string) => {
   return store
 })
 
-export const deriveUserSpaceMembershipStatus = (url: string) =>
-  derived(
+export const deriveUserSpaceMembershipStatus = (url: string) => {
+  const filters: Filter[] = [{kinds: [RELAY_JOIN, RELAY_LEAVE]}]
+
+  return derived(
     [
       pubkey,
       deriveSpaceMembers(url),
-      deriveEventsForUrl(url, [{kinds: [RELAY_JOIN, RELAY_LEAVE]}]),
+      deriveEventsForUrl(url, filters),
       deriveUserIsSpaceAdmin(url),
     ],
     ([$pubkey, $members, $events, $isAdmin]) => {
@@ -849,6 +796,7 @@ export const deriveUserSpaceMembershipStatus = (url: string) =>
       return isMember ? MembershipStatus.Granted : MembershipStatus.Initial
     },
   )
+}
 
 export const deriveUserIsRoomAdmin = (url: string, h: string) =>
   derived(
@@ -856,12 +804,14 @@ export const deriveUserIsRoomAdmin = (url: string, h: string) =>
     ([$pubkey, $admins, $isSpaceAdmin]) => $isSpaceAdmin || $admins.includes($pubkey!),
   )
 
-export const deriveUserRoomMembershipStatus = (url: string, h: string) =>
-  derived(
+export const deriveUserRoomMembershipStatus = (url: string, h: string) => {
+  const filters: Filter[] = [{kinds: [ROOM_JOIN, ROOM_LEAVE], "#h": [h]}]
+
+  return derived(
     [
       pubkey,
       deriveRoomMembers(url, h),
-      deriveEventsForUrl(url, [{kinds: [ROOM_JOIN, ROOM_LEAVE], "#h": [h]}]),
+      deriveEventsForUrl(url, filters),
       deriveUserIsRoomAdmin(url, h),
     ],
     ([$pubkey, $members, $events, $isAdmin]) => {
@@ -884,14 +834,13 @@ export const deriveUserRoomMembershipStatus = (url: string, h: string) =>
       return isMember ? MembershipStatus.Granted : MembershipStatus.Initial
     },
   )
+}
 
-export const deriveUserCanCreateRoom = (url: string) =>
-  derived(
-    [
-      pubkey,
-      deriveEventsForUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}]),
-      deriveUserIsSpaceAdmin(url),
-    ],
+export const deriveUserCanCreateRoom = (url: string) => {
+  const filters: Filter[] = [{kinds: [ROOM_CREATE_PERMISSION]}]
+
+  return derived(
+    [pubkey, deriveEventsForUrl(url, filters), deriveUserIsSpaceAdmin(url)],
     ([$pubkey, $events, $isAdmin]) => {
       for (const event of $events) {
         if (getPubkeyTagValues(event.tags).includes($pubkey!)) {
@@ -902,6 +851,7 @@ export const deriveUserCanCreateRoom = (url: string) =>
       return $isAdmin
     },
   )
+}
 
 // Other utils
 
@@ -920,13 +870,10 @@ export const displayReaction = (content: string) => {
   return content
 }
 
-export const deriveSocket = (url: string) =>
-  custom<Socket>(set => {
-    const pool = Pool.get()
-    const socket = pool.get(url)
+export const deriveSocket = (url: string) => {
+  const socket = Pool.get().get(url)
 
-    set(socket)
-
+  return readable(socket, set => {
     const subs = [
       on(socket, SocketEvent.Error, () => set(socket)),
       on(socket, SocketEvent.Status, () => set(socket)),
@@ -935,6 +882,7 @@ export const deriveSocket = (url: string) =>
 
     return () => subs.forEach(call)
   })
+}
 
 export const deriveSocketStatus = (url: string) =>
   throttled(

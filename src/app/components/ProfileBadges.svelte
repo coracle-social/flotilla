@@ -3,13 +3,13 @@
   import {load} from "@welshman/net"
   import {Router} from "@welshman/router"
   import type {Filter} from "@welshman/util"
-  import {deriveEvents} from "@welshman/store"
+  import {deriveArray, deriveEventsById} from "@welshman/store"
   import {formatTimestampRelative} from "@welshman/lib"
   import {NOTE, ROOMS, COMMENT} from "@welshman/util"
   import {repository, loadRelayList} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
-  import {deriveGroupList, getSpaceUrlsFromGroupLists, MESSAGE_KINDS} from "@app/core/state"
+  import {deriveGroupList, getSpaceUrlsFromGroupList, MESSAGE_KINDS} from "@app/core/state"
   import {goToEvent} from "@app/util/routes"
   import {pushModal} from "@app/util/modal"
 
@@ -20,7 +20,7 @@
 
   const {pubkey, url}: Props = $props()
   const filters: Filter[] = [{authors: [pubkey], limit: 1}]
-  const events = deriveEvents(repository, {filters})
+  const events = deriveArray(deriveEventsById({repository, filters}))
   const groupList = deriveGroupList(pubkey)
   const spaceUrls = $derived(getSpaceUrlsFromGroupList($groupList))
 

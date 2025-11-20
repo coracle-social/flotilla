@@ -4,6 +4,7 @@ import {
   int,
   YEAR,
   DAY,
+  assoc,
   insertAt,
   sortBy,
   now,
@@ -32,7 +33,7 @@ import {load, request} from "@welshman/net"
 import {repository, makeFeedController, loadRelay, tracker} from "@welshman/app"
 import {createScroller} from "@lib/html"
 import {daysBetween} from "@lib/util"
-import {NOTIFIER_RELAY, getEventsForUrl} from "@app/core/state"
+import {NOTIFIER_RELAY} from "@app/core/state"
 
 // Utils
 
@@ -47,7 +48,9 @@ export const makeFeed = ({
   element: HTMLElement
   onExhausted?: () => void
 }) => {
-  const initialEvents = getEventsForUrl(url, filters)
+  const initialIds = Array.from(tracker.getIds(url))
+  const initialFilters = filters.map(assoc("ids", initialIds))
+  const initialEvents = repository.query(initialFilters)
   const seen = new Set(initialEvents.map(e => e.id))
   const controller = new AbortController()
   const buffer = writable(initialEvents)
@@ -144,7 +147,9 @@ export const makeCalendarFeed = ({
 }) => {
   const interval = int(5, DAY)
   const controller = new AbortController()
-  const initialEvents = getEventsForUrl(url, filters)
+  const initialIds = Array.from(tracker.getIds(url))
+  const initialFilters = filters.map(assoc("ids", initialIds))
+  const initialEvents = repository.query(initialFilters)
 
   let exhaustedScrollers = 0
   let backwardWindow = [now() - interval, now()]

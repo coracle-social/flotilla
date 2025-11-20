@@ -51,9 +51,9 @@
   import {
     INDEXER_RELAYS,
     userSettingsValues,
-    deriveChat,
     splitChatId,
     PLATFORM_NAME,
+    deriveChat,
   } from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {prependParent} from "@app/core/commands"
@@ -151,7 +151,7 @@
   let compose: ChatCompose | undefined = $state()
   let parent: TrustedEvent | undefined = $state()
   let chatCompose: HTMLElement | undefined = $state()
-  let dlists: HTMLElelist | undefined = $state()
+  let dynamicPadding: HTMLElement | undefined = $state()
 
   const elements = $derived.by(() => {
     const elements = []

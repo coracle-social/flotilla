@@ -1,9 +1,10 @@
 import {derived, get} from "svelte/store"
 import {Badge} from "@capawesome/capacitor-badge"
 import {synced, throttled} from "@welshman/store"
-import {pubkey, relaysByUrl} from "@welshman/app"
-import {prop, spec, identity, now, groupBy} from "@welshman/lib"
+import {pubkey, tracker, repository, relaysByUrl} from "@welshman/app"
+import {prop, find, call, spec, first, identity, now, groupBy} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
+import {deriveEventsByIdByUrl} from "@welshman/store"
 import {ZAP_GOAL, EVENT_TIME, MESSAGE, THREAD, COMMENT, getTagValue} from "@welshman/util"
 import {
   makeSpacePath,
@@ -15,10 +16,8 @@ import {
   makeRoomPath,
 } from "@app/util/routes"
 import {
-  chats,
+  chatsById,
   hasNip29,
-  getUrlsForEvent,
-  repositoryStore,
   userSettingsValues,
   userGroupList,
   getSpaceUrlsFromGroupList,
@@ -40,151 +39,170 @@ export const setChecked = (key: string) => checked.update(state => ({...state, [
 
 // Derived notifications state
 
-export const notifications = derived(
-  throttled(
-    1000,
-    derived(
-      [pubkey, checked, chats, userGroupList, repositoryStore, getUrlsForEvent, relaysByUrl],
-      identity,
+export const notifications = call(() => {
+  const goalCommentFilters = [{kinds: [COMMENT], "#K": [String(ZAP_GOAL)]}]
+  const threadCommentFilters = [{kinds: [COMMENT], "#K": [String(THREAD)]}]
+  const calendarCommentFilters = [{kinds: [COMMENT], "#K": [String(EVENT_TIME)]}]
+  const messageFilters = [{kinds: [MESSAGE, THREAD, ZAP_GOAL, EVENT_TIME]}]
+
+  return derived(
+    throttled(
+      1000,
+      derived(
+        [
+          pubkey,
+          checked,
+          chatsById,
+          userGroupList,
+          relaysByUrl,
+          deriveEventsByIdByUrl({tracker, repository, filters: goalCommentFilters}),
+          deriveEventsByIdByUrl({tracker, repository, filters: threadCommentFilters}),
+          deriveEventsByIdByUrl({tracker, repository, filters: calendarCommentFilters}),
+          deriveEventsByIdByUrl({tracker, repository, filters: messageFilters}),
+        ],
+        identity,
+      ),
     ),
-  ),
-  ([$pubkey, $checked, $chats, $userGroupList, $repository, $getUrlsForEvent, $relaysByUrl]) => {
-    const hasNotification = (path: string, latestEvent: TrustedEvent | undefined) => {
-      if (!latestEvent || latestEvent.pubkey === $pubkey) {
-        return false
-      }
-
-      for (const [entryPath, ts] of Object.entries($checked)) {
-        const isMatch =
-          entryPath === "*" ||
-          entryPath.startsWith(path) ||
-          (entryPath === "/chat/*" && path.startsWith("/chat/"))
-
-        if (isMatch && ts > latestEvent.created_at) {
+    ([
+      $pubkey,
+      $checked,
+      $chatsById,
+      $userGroupList,
+      $relaysByUrl,
+      goalCommentsByUrl,
+      threadCommentsByUrl,
+      calendarCommentsByUrl,
+      messagesByUrl,
+    ]) => {
+      const hasNotification = (path: string, latestEvent: TrustedEvent | undefined) => {
+        if (!latestEvent || latestEvent.pubkey === $pubkey) {
           return false
         }
-      }
 
-      return true
-    }
+        for (const [entryPath, ts] of Object.entries($checked)) {
+          const isMatch =
+            entryPath === "*" ||
+            entryPath.startsWith(path) ||
+            (entryPath === "/chat/*" && path.startsWith("/chat/"))
 
-    const paths = new Set<string>()
-
-    for (const {pubkeys, messages} of $chats) {
-      const chatPath = makeChatPath(pubkeys)
-
-      if (hasNotification(chatPath, messages[0])) {
-        paths.add("/chat")
-        paths.add(chatPath)
-      }
-    }
-
-    const allGoalComments = $repository.query([{kinds: [COMMENT], "#K": [String(ZAP_GOAL)]}])
-
-    const allThreadComments = $repository.query([{kinds: [COMMENT], "#K": [String(THREAD)]}])
-
-    const allCalendarComments = $repository.query([{kinds: [COMMENT], "#K": [String(EVENT_TIME)]}])
-
-    const allMessages = $repository.query([{kinds: [MESSAGE, THREAD, ZAP_GOAL, EVENT_TIME]}])
-
-    for (const url of getSpaceUrlsFromGroupList($userGroupList)) {
-      const spacePath = makeSpacePath(url)
-      const spacePathMobile = spacePath + ":mobile"
-      const goalPath = makeGoalPath(url)
-      const threadPath = makeThreadPath(url)
-      const calendarPath = makeCalendarPath(url)
-      const messagesPath = makeSpaceChatPath(url)
-      const goalComments = allGoalComments.filter(e => $getUrlsForEvent(e.id).includes(url))
-      const threadComments = allThreadComments.filter(e => $getUrlsForEvent(e.id).includes(url))
-      const calendarComments = allCalendarComments.filter(e => $getUrlsForEvent(e.id).includes(url))
-      const messages = allMessages.filter(e => $getUrlsForEvent(e.id).includes(url))
-
-      const commentsByGoalId = groupBy(
-        e => getTagValue("E", e.tags),
-        goalComments.filter(spec({kind: COMMENT})),
-      )
-
-      for (const [goalId, [comment]] of commentsByGoalId.entries()) {
-        const goalItemPath = makeGoalPath(url, goalId)
-
-        if (hasNotification(spacePathMobile, comment)) {
-          paths.add(spacePathMobile)
-        }
-
-        if (hasNotification(goalPath, comment)) {
-          paths.add(goalPath)
-        }
-
-        if (hasNotification(goalItemPath, comment)) {
-          paths.add(goalItemPath)
-        }
-      }
-
-      const commentsByThreadId = groupBy(
-        e => getTagValue("E", e.tags),
-        threadComments.filter(spec({kind: COMMENT})),
-      )
-
-      for (const [threadId, [comment]] of commentsByThreadId.entries()) {
-        const threadItemPath = makeThreadPath(url, threadId)
-
-        if (hasNotification(spacePathMobile, comment)) {
-          paths.add(spacePathMobile)
-        }
-
-        if (hasNotification(threadPath, comment)) {
-          paths.add(threadPath)
-        }
-
-        if (hasNotification(threadItemPath, comment)) {
-          paths.add(threadItemPath)
-        }
-      }
-
-      const commentsByEventId = groupBy(
-        e => getTagValue("E", e.tags),
-        calendarComments.filter(spec({kind: COMMENT})),
-      )
-
-      for (const [eventId, [comment]] of commentsByEventId.entries()) {
-        const calendarItemPath = makeCalendarPath(url, eventId)
-
-        if (hasNotification(spacePathMobile, comment)) {
-          paths.add(spacePathMobile)
-        }
-
-        if (hasNotification(calendarPath, comment)) {
-          paths.add(calendarPath)
-        }
-
-        if (hasNotification(calendarItemPath, comment)) {
-          paths.add(calendarItemPath)
-        }
-      }
-
-      if (hasNip29($relaysByUrl.get(url))) {
-        for (const h of getSpaceRoomsFromGroupList(url, $userGroupList)) {
-          const roomPath = makeRoomPath(url, h)
-          const latestEvent = messages.find(e => e.tags.some(spec(["h", h])))
-
-          if (hasNotification(roomPath, latestEvent)) {
-            paths.add(spacePathMobile)
-            paths.add(spacePath)
-            paths.add(roomPath)
+          if (isMatch && ts > latestEvent.created_at) {
+            return false
           }
         }
-      } else {
-        if (hasNotification(messagesPath, messages[0])) {
-          paths.add(spacePathMobile)
-          paths.add(spacePath)
-          paths.add(messagesPath)
+
+        return true
+      }
+
+      const paths = new Set<string>()
+
+      for (const {pubkeys, messages} of $chatsById.values()) {
+        const chatPath = makeChatPath(pubkeys)
+
+        if (hasNotification(chatPath, messages[0])) {
+          paths.add("/chat")
+          paths.add(chatPath)
         }
       }
-    }
 
-    return paths
-  },
-)
+      for (const url of getSpaceUrlsFromGroupList($userGroupList)) {
+        const spacePath = makeSpacePath(url)
+        const spacePathMobile = spacePath + ":mobile"
+        const goalPath = makeGoalPath(url)
+        const threadPath = makeThreadPath(url)
+        const calendarPath = makeCalendarPath(url)
+        const messagesPath = makeSpaceChatPath(url)
+        const goalComments = goalCommentsByUrl.get(url)?.values() || []
+        const threadComments = threadCommentsByUrl.get(url)?.values() || []
+        const calendarComments = calendarCommentsByUrl.get(url)?.values() || []
+        const messages = messagesByUrl.get(url)?.values() || []
+
+        const commentsByGoalId = groupBy(
+          e => getTagValue("E", e.tags),
+          goalComments.filter(spec({kind: COMMENT})),
+        )
+
+        for (const [goalId, [comment]] of commentsByGoalId.entries()) {
+          const goalItemPath = makeGoalPath(url, goalId)
+
+          if (hasNotification(spacePathMobile, comment)) {
+            paths.add(spacePathMobile)
+          }
+
+          if (hasNotification(goalPath, comment)) {
+            paths.add(goalPath)
+          }
+
+          if (hasNotification(goalItemPath, comment)) {
+            paths.add(goalItemPath)
+          }
+        }
+
+        const commentsByThreadId = groupBy(
+          e => getTagValue("E", e.tags),
+          threadComments.filter(spec({kind: COMMENT})),
+        )
+
+        for (const [threadId, [comment]] of commentsByThreadId.entries()) {
+          const threadItemPath = makeThreadPath(url, threadId)
+
+          if (hasNotification(spacePathMobile, comment)) {
+            paths.add(spacePathMobile)
+          }
+
+          if (hasNotification(threadPath, comment)) {
+            paths.add(threadPath)
+          }
+
+          if (hasNotification(threadItemPath, comment)) {
+            paths.add(threadItemPath)
+          }
+        }
+
+        const commentsByEventId = groupBy(
+          e => getTagValue("E", e.tags),
+          calendarComments.filter(spec({kind: COMMENT})),
+        )
+
+        for (const [eventId, [comment]] of commentsByEventId.entries()) {
+          const calendarItemPath = makeCalendarPath(url, eventId)
+
+          if (hasNotification(spacePathMobile, comment)) {
+            paths.add(spacePathMobile)
+          }
+
+          if (hasNotification(calendarPath, comment)) {
+            paths.add(calendarPath)
+          }
+
+          if (hasNotification(calendarItemPath, comment)) {
+            paths.add(calendarItemPath)
+          }
+        }
+
+        if (hasNip29($relaysByUrl.get(url))) {
+          for (const h of getSpaceRoomsFromGroupList(url, $userGroupList)) {
+            const roomPath = makeRoomPath(url, h)
+            const latestEvent = find(e => e.tags.some(spec(["h", h])), messages)
+
+            if (hasNotification(roomPath, latestEvent)) {
+              paths.add(spacePathMobile)
+              paths.add(spacePath)
+              paths.add(roomPath)
+            }
+          }
+        } else {
+          if (hasNotification(messagesPath, first(messages))) {
+            paths.add(spacePathMobile)
+            paths.add(spacePath)
+            paths.add(messagesPath)
+          }
+        }
+      }
+
+      return paths
+    },
+  )
+})
 
 export const badgeCount = derived(notifications, notifications => {
   return notifications.size

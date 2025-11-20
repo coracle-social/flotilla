@@ -2,7 +2,7 @@
   import cx from "classnames"
   import {onMount} from "svelte"
   import type {Snippet} from "svelte"
-  import {groupBy, sum, uniq, uniqBy, batch, displayList} from "@welshman/lib"
+  import {groupBy, map, sum, uniq, uniqBy, batch, displayList} from "@welshman/lib"
   import {
     REPORT,
     REACTION,
@@ -15,7 +15,7 @@
     DELETE,
   } from "@welshman/util"
   import type {TrustedEvent, EventContent, Zap} from "@welshman/util"
-  import {deriveEvents, deriveEventsMapped} from "@welshman/store"
+  import {deriveArray, deriveEventsById, deriveItemsByKey} from "@welshman/store"
   import {load} from "@welshman/net"
   import {pubkey, repository, getValidZap, displayProfileByPubkey} from "@welshman/app"
   import {isMobile, preventDefault, stopPropagation} from "@lib/html"
@@ -46,19 +46,22 @@
     children,
   }: Props = $props()
 
-  const reports = deriveEvents(repository, {
-    filters: [{kinds: [REPORT], "#e": [event.id]}],
-  })
+  const reports = deriveArray(
+    deriveEventsById({repository, filters: [{kinds: [REPORT], "#e": [event.id]}]}),
+  )
 
-  const reactions = deriveEvents(repository, {
-    filters: [{kinds: [REACTION], "#e": [event.id]}],
-  })
+  const reactions = deriveArray(
+    deriveEventsById({repository, filters: [{kinds: [REACTION], "#e": [event.id]}]}),
+  )
 
-  const zaps = deriveEventsMapped<Zap>(repository, {
-    filters: [{kinds: [ZAP_RESPONSE], "#e": [event.id]}],
-    itemToEvent: item => item.response,
-    eventToItem: (response: TrustedEvent) => getValidZap(response, event),
-  })
+  const zaps = deriveArray(
+    deriveItemsByKey<Zap>({
+      repository,
+      getKey: zap => zap.response.id,
+      filters: [{kinds: [ZAP_RESPONSE], "#e": [event.id]}],
+      eventToItem: (response: TrustedEvent) => getValidZap(response, event),
+    }),
+  )
 
   const onReactionClick = (events: TrustedEvent[]) => {
     const reaction = events.find(e => e.pubkey === $pubkey)
@@ -77,18 +80,18 @@
 
   const onReportClick = () => pushModal(ReportDetails, {url, event})
 
-  const reportReasons = $derived(uniq($reports.map(e => getTag("e", e.tags)?.[2])))
+  const reportReasons = $derived(uniq(map(e => getTag("e", e.tags)?.[2], $reports.values())))
 
   const getReactionKey = (e: TrustedEvent) => getEmojiTag(e.content, e.tags)?.join("") || e.content
 
   const groupedReactions = $derived(
     groupBy(
       getReactionKey,
-      uniqBy(e => `${e.pubkey}${getReactionKey(e)}`, $reactions),
+      uniqBy(e => `${e.pubkey}${getReactionKey(e)}`, $reactions.values()),
     ),
   )
 
-  const groupedZaps = $derived(groupBy(e => getReactionKey(e.request), $zaps))
+  const groupedZaps = $derived(groupBy(e => getReactionKey(e.request), $zaps.values()))
 
   onMount(() => {
     const controller = new AbortController()

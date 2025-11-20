@@ -1,7 +1,7 @@
 <script lang="ts">
   import {REPORT} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import {deriveEvents} from "@welshman/store"
+  import {deriveEventsById} from "@welshman/store"
   import {repository} from "@welshman/app"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -14,14 +14,15 @@
 
   const {url, event}: Props = $props()
 
-  const reports = deriveEvents(repository, {
+  const reports = deriveEventsById({
+    repository,
     filters: [{kinds: [REPORT], "#e": [event.id]}],
   })
 
   const back = () => history.back()
 
   const onDelete = () => {
-    if ($reports.length === 0) {
+    if ($reports.size === 0) {
       back()
     }
   }
@@ -36,7 +37,7 @@
       <div>All reports for this event are shown below.</div>
     {/snippet}
   </ModalHeader>
-  {#each $reports as report (report.id)}
+  {#each $reports.values() as report (report.id)}
     <div class="card2 card2-sm bg-alt">
       <ReportItem {url} event={report} {onDelete} />
     </div>

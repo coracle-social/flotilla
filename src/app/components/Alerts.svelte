@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {sleep} from "@welshman/lib"
+  import {sleep, filter} from "@welshman/lib"
   import {getTagValue, getAddress, RelayMode} from "@welshman/util"
   import {isRelayFeed, findFeed} from "@welshman/feeds"
   import {getPubkeyRelays, pubkey} from "@welshman/app"
@@ -13,8 +13,8 @@
   import {pushModal} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
   import {
-    alerts,
     dmAlert,
+    alertsById,
     deriveAlertStatus,
     getAlertFeed,
     userSettingsValues,
@@ -33,7 +33,7 @@
   const dmStatus = $derived($dmAlert ? deriveAlertStatus(getAddress($dmAlert.event)) : undefined)
 
   const filteredAlerts = $derived(
-    $alerts.filter(alert => {
+    filter(alert => {
       const feed = getAlertFeed(alert)
 
       // Skip non-feeds and DM alerts
@@ -43,7 +43,7 @@
       if (url) return findFeed(feed, f => isRelayFeed(f) && f.includes(url))
 
       return true
-    }),
+    }, $alertsById.values()),
   )
 
   const startAlert = () => pushModal(AlertAdd, {url, channel, hideSpaceField})

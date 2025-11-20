@@ -1,5 +1,5 @@
-import {on, throttle, fromPairs, batch} from "@welshman/lib"
-import {throttled, freshness} from "@welshman/store"
+import {on, throttle, indexBy, fromPairs, batch} from "@welshman/lib"
+import {throttled} from "@welshman/store"
 import {
   ALERT_ANDROID,
   ALERT_EMAIL,
@@ -38,13 +38,14 @@ import type {Zapper, TrustedEvent, RelayProfile} from "@welshman/util"
 import type {RepositoryUpdate, WrapItem} from "@welshman/net"
 import type {Handle, RelayStats} from "@welshman/app"
 import {
-  plaintext,
   tracker,
-  relays,
-  relayStats,
+  plaintext,
   repository,
-  handles,
-  zappers,
+  relaysByUrl,
+  relayStatsByUrl,
+  onRelayStats,
+  handlesByNip05,
+  zappersByLnurl,
   onZapper,
   onHandle,
   wrapManager,
@@ -185,9 +186,9 @@ const relaysAdapter = {
   name: "relays",
   keyPath: "url",
   init: async (table: IDBTable<RelayProfile>) => {
-    relays.set(await table.getAll())
+    relaysByUrl.set(indexBy(r => r.url, await table.getAll()))
 
-    return onRelay(batch(3000, table.bulkPut))
+    return onRelay(batch(1000, table.bulkPut))
   },
 }
 
@@ -195,9 +196,9 @@ const relayStatsAdapter = {
   name: "relayStats",
   keyPath: "url",
   init: async (table: IDBTable<RelayStats>) => {
-    relayStats.set(await table.getAll())
+    relayStatsByUrl.set(indexBy(r => r.url, await table.getAll()))
 
-    return throttled(3000, relayStats).subscribe(table.bulkPut)
+    return onRelayStats(batch(1000, table.bulkPut))
   },
 }
 
@@ -205,9 +206,9 @@ const handlesAdapter = {
   name: "handles",
   keyPath: "nip05",
   init: async (table: IDBTable<Handle>) => {
-    handles.set(await table.getAll())
+    handlesByNip05.set(indexBy(r => r.nip05, await table.getAll()))
 
-    return onHandle(batch(3000, table.bulkPut))
+    return onHandle(batch(1000, table.bulkPut))
   },
 }
 
@@ -215,25 +216,9 @@ const zappersAdapter = {
   name: "zappers",
   keyPath: "lnurl",
   init: async (table: IDBTable<Zapper>) => {
-    zappers.set(await table.getAll())
+    zappersByLnurl.set(indexBy(z => z.lnurl, await table.getAll()))
 
     return onZapper(batch(3000, table.bulkPut))
-  },
-}
-
-type FreshnessItem = {key: string; value: number}
-
-const freshnessAdapter = {
-  name: "freshness",
-  keyPath: "key",
-  init: async (table: IDBTable<FreshnessItem>) => {
-    const initialRecords = await table.getAll()
-
-    freshness.set(fromPairs(initialRecords.map(({key, value}) => [key, value])))
-
-    return throttled(3000, freshness).subscribe($freshness => {
-      table.bulkPut(Object.entries($freshness).map(([key, value]) => ({key, value})))
-    })
   },
 }
 
@@ -280,7 +265,6 @@ export const adapters = [
   relayStatsAdapter,
   handlesAdapter,
   zappersAdapter,
-  freshnessAdapter,
   plaintextAdapter,
   wrapManagerAdapter,
 ]

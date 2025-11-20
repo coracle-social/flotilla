@@ -3,7 +3,7 @@
   import {max, formatTimestampRelative} from "@welshman/lib"
   import {COMMENT} from "@welshman/util"
   import {load} from "@welshman/net"
-  import {deriveEvents} from "@welshman/store"
+  import {deriveArray, deriveEventsById} from "@welshman/store"
   import type {TrustedEvent} from "@welshman/util"
   import {repository} from "@welshman/app"
   import {notifications} from "@app/util/notifications"
@@ -13,7 +13,7 @@
   const {url, path, event}: {url: string; path: string; event: TrustedEvent} = $props()
 
   const filters = [{kinds: [COMMENT], "#E": [event.id]}]
-  const replies = deriveEvents(repository, {filters})
+  const replies = deriveArray(deriveEventsById({repository, filters}))
   const lastActive = $derived(max([...$replies, event].map(e => e.created_at)))
 
   onMount(() => {

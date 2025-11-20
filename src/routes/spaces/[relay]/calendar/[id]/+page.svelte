@@ -28,7 +28,7 @@
 
   const {relay, id} = $page.params as MakeNonOptional<typeof $page.params>
   const url = decodeRelay(relay)
-  const event = deriveEvent(id)
+  const event = deriveEvent(id, [url])
   const filters = [{kinds: [COMMENT], "#E": [id]}]
   const replies = deriveEventsDesc(deriveEventsById({filters, repository}))
 

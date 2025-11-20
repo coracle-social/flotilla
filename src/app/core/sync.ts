@@ -24,15 +24,16 @@ import {request, load, pull} from "@welshman/net"
 import {
   pubkey,
   loadRelay,
-  userFollows,
+  userFollowList,
   userRelayList,
   userMessagingRelayList,
   loadRelayList,
   loadMessagingRelayList,
-  loadBlossomServers,
-  loadFollows,
-  loadMutes,
+  loadBlossomServerList,
+  loadFollowList,
+  loadMuteList,
   loadProfile,
+  tracker,
   repository,
   shouldUnwrap,
   hasNegentropy,
@@ -48,7 +49,6 @@ import {
   userGroupList,
   bootstrapPubkeys,
   decodeRelay,
-  getUrlsForEvent,
   getSpaceUrlsFromGroupList,
   getSpaceRoomsFromGroupList,
   makeCommentFilter,
@@ -65,7 +65,6 @@ type PullOpts = {
 }
 
 const pullWithFallback = ({relays, filters, signal}: PullOpts) => {
-  const $getUrlsForEvent = get(getUrlsForEvent)
   const [smart, dumb] = partition(hasNegentropy, relays)
   const events = repository.query(filters, {shouldSort: false}).filter(isSignedEvent)
   const promises: Promise<TrustedEvent[]>[] = [pull({relays: smart, filters, signal, events})]
@@ -73,7 +72,7 @@ const pullWithFallback = ({relays, filters, signal}: PullOpts) => {
   // Since pulling from relays without negentropy is expensive, limit how many
   // duplicates we repeatedly download
   for (const url of dumb) {
-    const urlEvents = events.filter(e => $getUrlsForEvent(e.id).includes(url))
+    const urlEvents = events.filter(e => tracker.getRelays(e.id).has(url))
 
     if (urlEvents.length >= 100) {
       filters = filters.map(assoc("since", sortBy(e => -e.created_at, urlEvents)[10]!.created_at))
@@ -212,16 +211,16 @@ const syncUserData = () => {
     if ($pubkey) {
       loadAlerts($pubkey)
       loadAlertStatuses($pubkey)
-      loadBlossomServers($pubkey)
-      loadFollows($pubkey)
+      loadBlossomServerList($pubkey)
+      loadFollowList($pubkey)
       loadGroupList($pubkey)
-      loadMutes($pubkey)
+      loadMuteList($pubkey)
       loadProfile($pubkey)
       loadSettings($pubkey)
     }
   })
 
-  const unsubscribeFollows = userFollows.subscribe(async $l => {
+  const unsubscribeFollows = userFollowList.subscribe(async $l => {
     for (const pubkeys of chunk(10, get(bootstrapPubkeys))) {
       // This isn't urgent, avoid clogging other stuff up
       await sleep(1000)
@@ -231,8 +230,8 @@ const syncUserData = () => {
           await loadRelayList(pk)
           await loadGroupList(pk)
           await loadProfile(pk)
-          await loadFollows(pk)
-          await loadMutes(pk)
+          await loadFollowList(pk)
+          await loadMuteList(pk)
         }),
       )
     }

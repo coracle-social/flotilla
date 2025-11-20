@@ -46,7 +46,6 @@ import {
   APP_DATA,
   isSignedEvent,
   makeEvent,
-  displayProfile,
   normalizeRelayUrl,
   makeList,
   addToListPublicly,
@@ -79,7 +78,6 @@ import {
   session,
   repository,
   publishThunk,
-  profilesByPubkey,
   tagEvent,
   tagEventForReaction,
   userRelayList,
@@ -90,7 +88,7 @@ import {
   tagEventForQuote,
   waitForThunkError,
   getPubkeyRelays,
-  userBlossomServers,
+  userBlossomServerList,
   shouldUnwrap,
 } from "@welshman/app"
 import {compressFile} from "@lib/html"
@@ -106,7 +104,6 @@ import {
   userSpaceUrls,
   userSettingsValues,
   getSetting,
-  userMessagingRelays,
   userGroupList,
   shouldIgnoreError,
 } from "@app/core/state"
@@ -120,13 +117,6 @@ export const getPubkeyHints = (pubkey: string) => {
   const hints = relays.length ? relays : INDEXER_RELAYS
 
   return hints
-}
-
-export const getPubkeyPetname = (pubkey: string) => {
-  const profile = profilesByPubkey.get().get(pubkey)
-  const display = displayProfile(profile)
-
-  return display
 }
 
 export const prependParent = (parent: TrustedEvent | undefined, {content, tags}: EventContent) => {
@@ -538,11 +528,13 @@ export const createDmAlert = async () => {
     shouldUnwrap.set(true)
   }
 
+  const $pubkey = pubkey.get()!
+
   return createAlert({
     description: `for direct messages.`,
     feed: makeIntersectionFeed(
-      feedFromFilters([{kinds: [WRAP], "#p": [pubkey.get()!]}]),
-      makeRelayFeed(...get(userMessagingRelays)),
+      feedFromFilters([{kinds: [WRAP], "#p": [$pubkey]}]),
+      makeRelayFeed(...getPubkeyRelays($pubkey, RelayMode.Messaging)),
     ),
   })
 }
@@ -651,7 +643,7 @@ export const getBlossomServer = async (options: GetBlossomServerOptions = {}) =>
     }
   }
 
-  const userUrls = getTagValues("server", getListTags(userBlossomServers.get()))
+  const userUrls = getTagValues("server", getListTags(userBlossomServerList.get()))
 
   for (const url of userUrls) {
     return normalizeBlossomUrl(url)

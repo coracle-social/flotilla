@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {derived} from "svelte/store"
+  import {some} from "@welshman/lib"
   import {displayRelayUrl, getTagValue, EVENT_TIME, ZAP_GOAL, THREAD, REPORT} from "@welshman/util"
   import {deriveRelay, pubkey} from "@welshman/app"
   import {fly} from "@lib/transition"
@@ -40,16 +41,15 @@
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
   import {
     ENABLE_ZAPS,
-    CONTENT_KINDS,
     deriveSpaceMembers,
-    deriveEventsForUrl,
     deriveUserRooms,
     deriveOtherRooms,
     userSpaceUrls,
     hasNip29,
-    alerts,
+    alertsById,
     deriveUserCanCreateRoom,
     deriveUserIsSpaceAdmin,
+    deriveEventsForUrl,
   } from "@app/core/state"
   import {notifications} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
@@ -67,10 +67,12 @@
   const members = deriveSpaceMembers(url)
   const userIsAdmin = deriveUserIsSpaceAdmin(url)
   const reports = deriveEventsForUrl(url, [{kinds: [REPORT]}])
-  const hasAlerts = $derived($alerts.some(a => getTagValue("feed", a.tags)?.includes(url)))
+  const hasAlerts = $derived(
+    some(a => getTagValue("feed", a.tags)?.includes(url), $alertsById.values()),
+  )
 
   const spaceKinds = derived(
-    deriveEventsForUrl(url, [{kinds: CONTENT_KINDS}]),
+    deriveEventsForUrl(url, [{kinds: [REPORT]}]),
     $events => new Set($events.map(e => e.kind)),
   )
 

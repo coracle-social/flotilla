@@ -4,7 +4,7 @@
   import {formatTimestamp} from "@welshman/lib"
   import {getListTags, getPubkeyTagValues} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import {userMutes} from "@welshman/app"
+  import {userMuteList} from "@welshman/app"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -32,7 +32,7 @@
     muted = false
   }
 
-  let muted = $state(getPubkeyTagValues(getListTags($userMutes)).includes(event.pubkey))
+  let muted = $state(getPubkeyTagValues(getListTags($userMuteList)).includes(event.pubkey))
 </script>
 
 <div class="flex flex-col gap-2 {restProps.class}">

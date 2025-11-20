@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {preventDefault} from "@lib/html"
-  import {randomInt, displayList, TIMEZONE, identity} from "@welshman/lib"
+  import {randomInt, map, displayList, TIMEZONE, identity} from "@welshman/lib"
   import {displayRelayUrl, getTagValue, THREAD, MESSAGE, EVENT_TIME, COMMENT} from "@welshman/util"
   import type {Filter} from "@welshman/util"
   import {makeIntersectionFeed, makeRelayFeed, feedFromFilters} from "@welshman/feeds"
@@ -13,7 +13,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {alerts, userSpaceUrls} from "@app/core/state"
+  import {alertsById, userSpaceUrls} from "@app/core/state"
   import {requestRelayClaim} from "@app/core/requests"
   import {createAlert} from "@app/core/commands"
   import {canSendPushNotifications} from "@app/util/push"
@@ -45,7 +45,9 @@
 
   let loading = $state(false)
   let cron = $state(WEEKLY)
-  let email = $state($alerts.map(a => getTagValue("email", a.tags)).filter(identity)[0] || "")
+  let email = $state(
+    map(a => getTagValue("email", a.tags), $alertsById.values()).filter(identity)[0] || "",
+  )
 
   const back = () => history.back()
 

@@ -3,7 +3,7 @@
   import {sum} from "@welshman/lib"
   import type {Zap, TrustedEvent} from "@welshman/util"
   import {getTagValue, fromMsats, ZAP_RESPONSE} from "@welshman/util"
-  import {deriveEventsMapped} from "@welshman/store"
+  import {deriveItemsByKey, deriveArray} from "@welshman/store"
   import {repository, getValidZap} from "@welshman/app"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -14,11 +14,14 @@
   const content = getTagValue("summary", props.event.tags)
   const fakeEvent = {content, tags: props.event.tags}
 
-  const zaps = deriveEventsMapped<Zap>(repository, {
-    filters: [{kinds: [ZAP_RESPONSE], "#e": [props.event.id]}],
-    itemToEvent: item => item.response,
-    eventToItem: (response: TrustedEvent) => getValidZap(response, props.event),
-  })
+  const zaps = deriveArray(
+    deriveItemsByKey<Zap>({
+      repository,
+      getKey: zap => zap.response.id,
+      filters: [{kinds: [ZAP_RESPONSE], "#e": [props.event.id]}],
+      eventToItem: (response: TrustedEvent) => getValidZap(response, props.event),
+    }),
+  )
 
   const goalAmount = parseInt(getTagValue("amount", props.event.tags) || "0")
   const zapAmount = $derived(fromMsats(sum($zaps.map(zap => zap.invoiceAmount))))
