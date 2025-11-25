@@ -7,6 +7,8 @@
 * Add space membership management and bans
 * Add event info to profile dialog
 * Add better room membership management
+* Refactor stores for performance
+* Hide nav when keyboard is open
 
 # 1.5.3
 

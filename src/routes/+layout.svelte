@@ -37,6 +37,7 @@
   import {initializePushNotifications} from "@app/util/push"
   import * as notifications from "@app/util/notifications"
   import * as storage from "@app/util/storage"
+  import {syncKeyboard} from "@app/util/keyboard"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
 
   const {children} = $props()
@@ -133,6 +134,9 @@
 
     // Subscribe to badge count for changes
     unsubscribers.push(notifications.badgeCount.subscribe(notifications.handleBadgeCountChanges))
+
+    // Initialize keyboard state tracking
+    unsubscribers.push(syncKeyboard())
 
     // Listen for signer errors, report to user via toast
     unsubscribers.push(

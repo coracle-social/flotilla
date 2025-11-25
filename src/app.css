@@ -392,6 +392,16 @@ progress[value]::-webkit-progress-value {
   @apply md:bottom-sai bottom-[calc(var(--saib)+3.5rem)];
 }
 
+/* Keyboard open state adjustments */
+
+body.keyboard-open .cb {
+  @apply bottom-sai;
+}
+
+body.keyboard-open .bottom-nav {
+  display: none;
+}
+
 /* chat view */
 
 .chat__compose {

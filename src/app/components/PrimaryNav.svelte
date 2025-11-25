@@ -110,9 +110,10 @@
 {@render children?.()}
 
 <!-- a little extra something for ios -->
-<div class="fixed bottom-0 left-0 right-0 z-nav h-[var(--saib)] bg-base-100 md:hidden"></div>
+<div class="bottom-nav fixed bottom-0 left-0 right-0 z-nav h-[var(--saib)] bg-base-100 md:hidden">
+</div>
 <div
-  class="border-top bottom-sai fixed left-0 right-0 z-nav h-14 border border-base-200 bg-base-100 md:hidden">
+  class="bottom-nav border-top bottom-sai fixed left-0 right-0 z-nav h-14 border border-base-200 bg-base-100 md:hidden">
   <div class="content-padding-x content-sizing flex justify-between px-2">
     <div class="flex gap-2 sm:gap-6">
       <PrimaryNavItem title="Home" href="/home">
