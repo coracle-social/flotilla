@@ -41,6 +41,7 @@
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
   import {
     ENABLE_ZAPS,
+    CONTENT_KINDS,
     deriveSpaceMembers,
     deriveUserRooms,
     deriveOtherRooms,
@@ -72,7 +73,7 @@
   )
 
   const spaceKinds = derived(
-    deriveEventsForUrl(url, [{kinds: [REPORT]}]),
+    deriveEventsForUrl(url, [{kinds: CONTENT_KINDS}]),
     $events => new Set($events.map(e => e.kind)),
   )
 
