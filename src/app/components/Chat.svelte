@@ -48,26 +48,19 @@
   import ChatCompose from "@app/components/ChatCompose.svelte"
   import ChatComposeParent from "@app/components/ChatComposeParent.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
-  import {
-    INDEXER_RELAYS,
-    userSettingsValues,
-    splitChatId,
-    PLATFORM_NAME,
-    deriveChat,
-  } from "@app/core/state"
+  import {INDEXER_RELAYS, userSettingsValues, PLATFORM_NAME, deriveChat} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {prependParent} from "@app/core/commands"
   import {pushToast} from "@app/util/toast"
 
   type Props = {
-    id: string
+    pubkeys: string[]
     info?: Snippet
   }
 
-  const {id, info}: Props = $props()
+  const {pubkeys, info}: Props = $props()
 
-  const chat = deriveChat(id)
-  const pubkeys = splitChatId(id)
+  const chat = deriveChat(pubkeys)
   const others = remove($pubkey!, pubkeys)
   const missingRelayLists = $derived(pubkeys.filter(pk => !$messagingRelayListsByPubkey.has(pk)))
 

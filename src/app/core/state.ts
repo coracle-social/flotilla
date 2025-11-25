@@ -408,49 +408,57 @@ export const chatsById = call(() => {
   }
 
   return readable(chatsById, set => {
-    const unsubscribers = [
-      on(repository, "update", ({added}: RepositoryUpdate) => {
-        let dirty = false
-        for (const event of added) {
-          if ([DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(event.kind)) {
-            const pubkeys = getPubkeyTagValues(event.tags).concat(event.pubkey)
-            const id = makeChatId(pubkeys)
-            const chat = chatsById.get(id)
-            const messages = append(event, chat?.messages || [])
-            const last_activity = Math.max(chat?.last_activity || 0, event.created_at)
-            const updatedChat = addSearchText({id, pubkeys, messages, last_activity})
+    const addEvents = (events: TrustedEvent[]) => {
+      let dirty = false
+      for (const event of events) {
+        if ([DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(event.kind)) {
+          const pubkeys = getPubkeyTagValues(event.tags).concat(event.pubkey)
+          const id = makeChatId(pubkeys)
+          const chat = chatsById.get(id)
+          const messages = append(event, chat?.messages || [])
+          const last_activity = Math.max(chat?.last_activity || 0, event.created_at)
+          const updatedChat = addSearchText({id, pubkeys, messages, last_activity})
 
-            chatsById.set(id, updatedChat)
+          chatsById.set(id, updatedChat)
 
-            for (const pubkey of pubkeys) {
-              const pubkeyChats = chatsByPubkey.get(pubkey) || []
-              const uniqueChats = uniqBy(chat => chat.id, append(updatedChat, pubkeyChats))
+          for (const pubkey of pubkeys) {
+            const pubkeyChats = chatsByPubkey.get(pubkey) || []
+            const uniqueChats = uniqBy(chat => chat.id, append(updatedChat, pubkeyChats))
 
-              chatsByPubkey.set(pubkey, uniqueChats)
-            }
+            chatsByPubkey.set(pubkey, uniqueChats)
+          }
 
+          dirty = true
+        }
+
+        if (event.kind === PROFILE) {
+          for (const chat of chatsByPubkey.get(event.pubkey) || []) {
+            addSearchText(chat)
             dirty = true
           }
-
-          if (event.kind === PROFILE) {
-            for (const chat of chatsByPubkey.get(event.pubkey) || []) {
-              addSearchText(chat)
-              dirty = true
-            }
-          }
         }
+      }
 
-        if (dirty) {
-          set(chatsById)
-        }
-      }),
+      if (dirty) {
+        set(chatsById)
+      }
+    }
+
+    addEvents(repository.query([{kinds: [DIRECT_MESSAGE, PROFILE]}]))
+
+    const unsubscribers = [
+      on(repository, "update", ({added}: RepositoryUpdate) => addEvents(added)),
     ]
 
     return () => unsubscribers.forEach(call)
   })
 })
 
-export const deriveChat = makeDeriveItem(chatsById)
+export const deriveChat = call(() => {
+  const _deriveChat = makeDeriveItem(chatsById)
+
+  return (pubkeys: string[]) => _deriveChat(makeChatId(pubkeys))
+})
 
 export const chatSearch = derived(throttled(800, chatsById), $chatsByPubkey => {
   return createSearch(Array.from($chatsByPubkey.values()), {

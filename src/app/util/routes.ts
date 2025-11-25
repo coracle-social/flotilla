@@ -2,9 +2,9 @@ import type {Page} from "@sveltejs/kit"
 import {get} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {goto} from "$app/navigation"
-import {nthEq, sleep} from "@welshman/lib"
+import {nthEq, remove, sleep} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
-import {tracker, loadRelay} from "@welshman/app"
+import {pubkey, tracker, loadRelay} from "@welshman/app"
 import {scrollToEvent} from "@lib/html"
 import {identity} from "@welshman/lib"
 import {
@@ -55,7 +55,11 @@ export const goToSpace = async (url: string) => {
   }
 }
 
-export const makeChatPath = (pubkeys: string[]) => `/chat/${makeChatId(pubkeys)}`
+export const makeChatPath = (pubkeys: string[]) => {
+  const id = makeChatId(remove(pubkey.get()!, pubkeys))
+
+  return `/chat/${id}`
+}
 
 export const makeRoomPath = (url: string, h: string) => `/spaces/${encodeRelay(url)}/${h}`
 
