@@ -10,8 +10,8 @@ import {
   profiles,
   searchProfiles,
   handlesByNip05,
-  maxWot,
-  wotGraph,
+  getMaxWot,
+  getWotGraph,
 } from "@welshman/app"
 import type {FileAttributes} from "@welshman/editor"
 import {Editor, MentionSuggestion, WelshmanExtension} from "@welshman/editor"
@@ -62,10 +62,10 @@ export const makeEditor = async ({
         onSearch: searchProfiles,
         getValue: (profile: PublishedProfile) => profile.event.pubkey,
         sortFn: ({score = 1, item}) => {
-          const wotScore = wotGraph.get().get(item.event.pubkey) || 0
+          const wotScore = getWotGraph().get(item.event.pubkey) || 0
           const membershipScale = $spaceMembers.includes(item.event.pubkey) ? 2 : 1
 
-          return dec(score) * inc(wotScore / maxWot.get()) * membershipScale
+          return dec(score) * inc(wotScore / getMaxWot()) * membershipScale
         },
         fuseOptions: {
           keys: [

@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import {debounce} from "throttle-debounce"
   import {createScroller, isMobile} from "@lib/html"
   import {profileSearch} from "@welshman/app"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
@@ -11,9 +12,18 @@
 
   let term = $state("")
   let limit = $state(10)
+  let pubkeys = $state($bootstrapPubkeys)
   let element: Element | undefined = $state()
 
-  const pubkeys = $derived(term ? $profileSearch.searchValues(term) : $bootstrapPubkeys)
+  const search = debounce(200, (term: string) => {
+    if (term) {
+      pubkeys = $profileSearch.searchValues(term)
+    } else {
+      pubkeys = $bootstrapPubkeys
+    }
+  })
+
+  $effect(() => search(term))
 
   onMount(() => {
     const scroller = createScroller({

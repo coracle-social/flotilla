@@ -643,7 +643,7 @@ export const getBlossomServer = async (options: GetBlossomServerOptions = {}) =>
     }
   }
 
-  const userUrls = getTagValues("server", getListTags(userBlossomServerList.get()))
+  const userUrls = getTagValues("server", getListTags(get(userBlossomServerList)))
 
   for (const url of userUrls) {
     return normalizeBlossomUrl(url)
