@@ -9,6 +9,8 @@
 * Add better room membership management
 * Refactor stores for performance
 * Hide nav when keyboard is open
+* Handle flotilla links in-app
+* Fix new messages indicator z-index
 
 # 1.5.3
 

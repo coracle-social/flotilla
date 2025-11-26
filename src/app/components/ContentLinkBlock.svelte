@@ -6,12 +6,15 @@
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
   import {pushModal} from "@app/util/modal"
+  import {PLATFORM_URL} from "@app/core/state"
 
   const {value, event} = $props()
 
   let hideImage = $state(false)
 
   const url = value.url.toString()
+  const external = !url.startsWith(PLATFORM_URL)
+  const href = external ? url : url.replace(PLATFORM_URL, "")
 
   const loadPreview = async () => {
     const json = await postJson(dufflepud("link/preview"), {url})
@@ -30,7 +33,7 @@
   const expand = () => pushModal(ContentLinkDetail, {value, event}, {fullscreen: true})
 </script>
 
-<Link external href={url} class="my-2 block">
+<Link {external} {href} class="my-2 block">
   <div class="overflow-hidden rounded-box">
     {#if url.match(/\.(mov|webm|mp4)$/)}
       <video controls src={url} class="max-h-96 object-contain object-center">

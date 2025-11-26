@@ -6,10 +6,13 @@
   import Link from "@lib/components/Link.svelte"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import {pushModal} from "@app/util/modal"
+  import {PLATFORM_URL} from "@app/core/state"
 
   const {value} = $props()
 
   const url = value.url.toString()
+  const external = !url.startsWith(PLATFORM_URL)
+  const href = external ? url : url.replace(PLATFORM_URL, "")
 
   const expand = () => pushModal(ContentLinkDetail, {url}, {fullscreen: true})
 </script>
@@ -21,7 +24,7 @@
     {displayUrl(url)}
   </a>
 {:else}
-  <Link external href={url} class="link-content whitespace-nowrap">
+  <Link {external} {href} class="link-content whitespace-nowrap">
     <Icon icon={LinkRound} size={3} class="inline-block" />
     {displayUrl(url)}
   </Link>

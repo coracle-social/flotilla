@@ -485,7 +485,7 @@
 {/if}
 
 {#if showFixedNewMessages}
-  <div class="relative z-feature flex justify-center">
+  <div class="relative z-popover flex justify-center">
     <div transition:fly={{duration: 200}} class="fixed top-12">
       <Button class="btn btn-primary btn-xs rounded-full" onclick={scrollToNewMessages}>
         New Messages

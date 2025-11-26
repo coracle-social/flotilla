@@ -1,6 +1,6 @@
-import {Capacitor} from '@capacitor/core'
+import {Capacitor} from "@capacitor/core"
 import {Keyboard} from "@capacitor/keyboard"
-import {noop} from '@welshman/lib'
+import {noop} from "@welshman/lib"
 
 export const syncKeyboard = () => {
   if (!Capacitor.isNativePlatform()) return noop
