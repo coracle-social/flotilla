@@ -1,6 +1,7 @@
 import {writable} from "svelte/store"
 import type {Nip46ResponseWithResult} from "@welshman/signer"
-import {Nip46Broker, makeSecret} from "@welshman/signer"
+import {Nip46Broker} from "@welshman/signer"
+import {makeSecret} from "@welshman/util"
 import {PLATFORM_URL, PLATFORM_NAME, PLATFORM_LOGO, SIGNER_RELAYS} from "@app/core/state"
 import {pushToast} from "@app/util/toast"
 

@@ -2,7 +2,7 @@
   import {nsecEncode} from "nostr-tools/nip19"
   import {encrypt} from "nostr-tools/nip49"
   import {hexToBytes} from "@welshman/lib"
-  import {makeSecret} from "@welshman/signer"
+  import {makeSecret} from "@welshman/util"
   import type {Profile} from "@welshman/util"
   import {preventDefault, downloadText} from "@lib/html"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"

@@ -1,8 +1,8 @@
 <script lang="ts">
   import {onMount, onDestroy} from "svelte"
   import {postJson, stripProtocol} from "@welshman/lib"
-  import {Nip46Broker, makeSecret} from "@welshman/signer"
-  import {normalizeRelayUrl} from "@welshman/util"
+  import {Nip46Broker} from "@welshman/signer"
+  import {normalizeRelayUrl, makeSecret} from "@welshman/util"
   import {addSession, makeNip46Session} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
