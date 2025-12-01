@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {page} from "$app/stores"
-  import {remove} from "@welshman/lib"
+  import {remove, formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {pubkey, loadMessagingRelayList} from "@welshman/app"
   import {fade} from "@lib/transition"
@@ -59,12 +59,15 @@
         {/if}
       </div>
       <p class="overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-        <span class="opacity-50">
+        <span class="opacity-70">
           {#if props.messages[0].pubkey === $pubkey}
             You:
           {/if}
         </span>
         {props.messages[0].content}
+      </p>
+      <p class="text-xs opacity-70">
+        {formatTimestamp(props.messages[0].created_at)}
       </p>
     </div>
   </div>
