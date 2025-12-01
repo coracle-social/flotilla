@@ -137,10 +137,9 @@ const syncUserSpaceMembership = (url: string) => {
       relays: [url],
       signal: controller.signal,
       filters: [
-        {
-          kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, ROOM_CREATE_PERMISSION],
-          "#p": [$pubkey],
-        },
+        {kinds: [RELAY_ADD_MEMBER], "#p": [$pubkey], limit: 1},
+        {kinds: [RELAY_REMOVE_MEMBER], "#p": [$pubkey], limit: 1},
+        {kinds: [ROOM_CREATE_PERMISSION], "#p": [$pubkey], limit: 1},
       ],
     })
   }
@@ -157,11 +156,8 @@ const syncUserRoomMembership = (url: string, h: string) => {
       relays: [url],
       signal: controller.signal,
       filters: [
-        {
-          kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER],
-          "#p": [$pubkey],
-          "#h": [h],
-        },
+        {kinds: [ROOM_ADD_MEMBER], "#p": [$pubkey], "#h": [h], limit: 1},
+        {kinds: [ROOM_REMOVE_MEMBER], "#p": [$pubkey], "#h": [h], limit: 1},
       ],
     })
   }
@@ -172,20 +168,18 @@ const syncUserRoomMembership = (url: string, h: string) => {
 const syncUserData = () => {
   const unsubscribersByKey = new Map<string, Unsubscriber>()
 
-  const unsubscribeGroupList = userGroupList.subscribe($l => {
-    const $pubkey = pubkey.get()
-
-    if ($pubkey) {
+  const unsubscribeGroupList = userGroupList.subscribe($userGroupList => {
+    if ($userGroupList) {
       const keys = new Set<string>()
 
-      for (const url of getSpaceUrlsFromGroupList($l)) {
+      for (const url of getSpaceUrlsFromGroupList($userGroupList)) {
         if (!unsubscribersByKey.has(url)) {
           unsubscribersByKey.set(url, syncUserSpaceMembership(url))
         }
 
         keys.add(url)
 
-        for (const h of getSpaceRoomsFromGroupList(url, $l)) {
+        for (const h of getSpaceRoomsFromGroupList(url, $userGroupList)) {
           const key = `${url}'${h}`
 
           if (!unsubscribersByKey.has(key)) {
@@ -205,22 +199,20 @@ const syncUserData = () => {
     }
   })
 
-  const unsubscribeList = userRelayList.subscribe($l => {
-    const $pubkey = pubkey.get()
-
-    if ($pubkey) {
-      loadAlerts($pubkey)
-      loadAlertStatuses($pubkey)
-      loadBlossomServerList($pubkey)
-      loadFollowList($pubkey)
-      loadGroupList($pubkey)
-      loadMuteList($pubkey)
-      loadProfile($pubkey)
-      loadSettings($pubkey)
+  const unsubscribeRelayList = userRelayList.subscribe($userRelayList => {
+    if ($userRelayList) {
+      loadAlerts($userRelayList.event.pubkey)
+      loadAlertStatuses($userRelayList.event.pubkey)
+      loadBlossomServerList($userRelayList.event.pubkey)
+      loadFollowList($userRelayList.event.pubkey)
+      loadGroupList($userRelayList.event.pubkey)
+      loadMuteList($userRelayList.event.pubkey)
+      loadProfile($userRelayList.event.pubkey)
+      loadSettings($userRelayList.event.pubkey)
     }
   })
 
-  const unsubscribeFollows = userFollowList.subscribe(async $l => {
+  const unsubscribeFollows = userFollowList.subscribe(async $userFollowList => {
     for (const pubkeys of chunk(10, get(bootstrapPubkeys))) {
       // This isn't urgent, avoid clogging other stuff up
       await sleep(1000)
@@ -237,18 +229,11 @@ const syncUserData = () => {
     }
   })
 
-  const unsubscribePubkey = pubkey.subscribe($pubkey => {
-    if ($pubkey) {
-      loadRelayList($pubkey)
-    }
-  })
-
   return () => {
     unsubscribersByKey.forEach(call)
     unsubscribeGroupList()
-    unsubscribeList()
+    unsubscribeRelayList()
     unsubscribeFollows()
-    unsubscribePubkey()
   }
 }
 
@@ -262,8 +247,8 @@ const syncSpace = (url: string) => {
     signal: controller.signal,
     filters: [
       {kinds: [RELAY_MEMBERS]},
-      {kinds: [ROOM_META, ROOM_DELETE]},
       {kinds: [ROOM_ADMINS, ROOM_MEMBERS]},
+      {kinds: [ROOM_META, ROOM_DELETE], limit: 1000},
       {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER]},
       {kinds: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]},
       ...MESSAGE_KINDS.map(kind => ({kinds: [kind]})),
@@ -276,54 +261,37 @@ const syncSpace = (url: string) => {
 }
 
 const syncSpaces = () => {
-  const membershipUnsubscribersByUrl = new Map<string, Unsubscriber>()
+  const store = derived([userSpaceUrls, page], identity)
+  const unsubscribersByUrl = new Map<string, Unsubscriber>()
+  const unsubscribe = store.subscribe(([$userSpaceUrls, $page]) => {
+    const urls = Array.from($userSpaceUrls)
 
-  const unsubscribeSpaceUrls = userSpaceUrls.subscribe(urls => {
+    if ($page.params.relay) {
+      urls.push(decodeRelay($page.params.relay))
+    }
+
     // stop syncing removed spaces
-    for (const [url, unsubscribe] of membershipUnsubscribersByUrl.entries()) {
+    for (const [url, unsubscribe] of unsubscribersByUrl.entries()) {
       if (!urls.includes(url)) {
-        membershipUnsubscribersByUrl.delete(url)
+        unsubscribersByUrl.delete(url)
         unsubscribe()
       }
     }
 
     // Start syncing newly added spaces
     for (const url of urls) {
-      if (!membershipUnsubscribersByUrl.has(url)) {
-        membershipUnsubscribersByUrl.set(url, syncSpace(url))
+      if (!unsubscribersByUrl.has(url)) {
+        unsubscribersByUrl.set(url, syncSpace(url))
       }
-    }
-  })
-
-  const pageUnsubscribersByUrl = new Map<string, Unsubscriber>()
-
-  // Sync the space the user is currently visiting
-  const unsubscribePage = page.subscribe($page => {
-    if ($page.params.relay) {
-      const url = decodeRelay($page.params.relay)
-
-      // Don't subscribe twice if the user is a member
-      if (!pageUnsubscribersByUrl.has(url) && !get(userSpaceUrls).includes(url)) {
-        pageUnsubscribersByUrl.set(url, syncSpace(url))
-      }
-
-      // Clean up old subscriptions
-      for (const [oldUrl, unsubscribe] of pageUnsubscribersByUrl.entries()) {
-        if (url !== oldUrl) {
-          pageUnsubscribersByUrl.delete(oldUrl)
-          unsubscribe()
-        }
-      }
-    } else {
-      Array.from(pageUnsubscribersByUrl.values()).forEach(call)
     }
   })
 
   return () => {
-    Array.from(membershipUnsubscribersByUrl.values()).forEach(call)
-    Array.from(pageUnsubscribersByUrl.values()).forEach(call)
-    unsubscribeSpaceUrls()
-    unsubscribePage()
+    for (const unsubscriber of unsubscribersByUrl.values()) {
+      unsubscriber()
+    }
+
+    unsubscribe()
   }
 }
 
