@@ -71,16 +71,16 @@
       View Details
     </Link>
   {/if}
-  <Button class="btn btn-outline btn-neutral w-full" onclick={sendReply}>
+  <Button class="btn btn-neutral w-full" onclick={sendReply}>
     <Icon size={4} icon={Reply} />
     Reply
   </Button>
-  <Button class="btn btn-secondary w-full" onclick={showEmojiPicker}>
+  <Button class="btn btn-neutral w-full" onclick={showEmojiPicker}>
     <Icon size={4} icon={SmileCircle} />
     React
   </Button>
   {#if ENABLE_ZAPS}
-    <ZapButton replaceState {url} {event} class="btn btn-primary w-full">
+    <ZapButton replaceState {url} {event} class="btn btn-neutral w-full">
       <Icon size={4} icon={Bolt} />
       Zap
     </ZapButton>

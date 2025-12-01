@@ -26,4 +26,4 @@
   })
 </script>
 
-<emoji-picker bind:this={element}></emoji-picker>
+<emoji-picker bind:this={element} class="m-auto"></emoji-picker>
