@@ -565,7 +565,7 @@ export const loadGroupList = makeLoadItem(makeOutboxLoader(ROOMS), getGroupList)
 
 export const deriveGroupList = makeDeriveItem(groupListsByPubkey, loadGroupList)
 
-export const groupListsPubkeysByUrl = derived(groupListsByPubkey, $groupListsByPubkey => {
+export const groupListPubkeysByUrl = derived(groupListsByPubkey, $groupListsByPubkey => {
   const result = new Map<string, Set<string>>()
 
   for (const list of $groupListsByPubkey.values()) {
@@ -586,6 +586,9 @@ export const groupListsPubkeysByUrl = derived(groupListsByPubkey, $groupListsByP
 
   return result
 })
+
+export const deriveGroupListPubkeys = (url: string) =>
+  derived(groupListPubkeysByUrl, $groupListPubkeysByUrl => new Set($groupListPubkeysByUrl.get(url)))
 
 export const getSpaceUrlsFromGroupList = (groupList: List | undefined) => {
   const tags = getListTags(groupList)

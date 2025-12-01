@@ -5,7 +5,7 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {deriveSpaceMembers, deriveUserRooms} from "@app/core/state"
+  import {deriveGroupListPubkeys, deriveUserRooms} from "@app/core/state"
 
   type Props = {
     url: string
@@ -13,7 +13,7 @@
 
   const {url}: Props = $props()
   const rooms = deriveUserRooms(url)
-  const members = deriveSpaceMembers(url)
+  const favorited = deriveGroupListPubkeys(url)
 </script>
 
 <div class="col-4 text-left">
@@ -43,10 +43,10 @@
     </div>
     <RelayDescription {url} />
   </div>
-  {#if $members.length > 0}
+  {#if $favorited.size > 0}
     <div class="row-2 card2 card2-sm bg-alt">
-      Members:
-      <ProfileCircles pubkeys={$members} />
+      Favorited By:
+      <ProfileCircles pubkeys={Array.from($favorited)} />
     </div>
   {/if}
 </div>

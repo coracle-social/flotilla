@@ -27,7 +27,7 @@
     bootstrapPubkeys,
     loadGroupList,
     getSpaceUrlsFromGroupList,
-    groupListsPubkeysByUrl,
+    groupListPubkeysByUrl,
     parseInviteLink,
   } from "@app/core/state"
   import {pushModal} from "@app/util/modal"
@@ -59,13 +59,13 @@
 
   const relaySearch = $derived(
     createSearch(
-      $relays.filter(r => $groupListsPubkeysByUrl.has(r.url) && r.url !== inviteData?.url),
+      $relays.filter(r => $groupListPubkeysByUrl.has(r.url) && r.url !== inviteData?.url),
       {
         getValue: (relay: RelayProfile) => relay.url,
         sortFn: ({score, item}) => {
           if (score && score > 0.1) return -score!
 
-          const wotScore = $groupListsPubkeysByUrl.get(item.url)!.size
+          const wotScore = $groupListPubkeysByUrl.get(item.url)!.size
 
           return score ? dec(score) * wotScore : -wotScore
         },

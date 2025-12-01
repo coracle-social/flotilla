@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {getProfile} from "@welshman/app"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
 
   type Props = {
@@ -10,7 +11,10 @@
 </script>
 
 <div class="flex pr-3">
-  {#each pubkeys.toSorted().slice(0, 15) as pubkey (pubkey)}
+  {#each pubkeys
+    .filter(p => getProfile(p)?.picture)
+    .toSorted()
+    .slice(0, 15) as pubkey (pubkey)}
     <div class="z-feature -mr-3 inline-block">
       <ProfileCircle class="h-8 w-8 bg-base-300" {pubkey} {size} />
     </div>
