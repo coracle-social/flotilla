@@ -1,5 +1,9 @@
 # Changelog
 
+# Current
+
+* Fix skinny profile images
+
 # 1.6.0
 
 * Switch back to indexeddb to fix memory and performance

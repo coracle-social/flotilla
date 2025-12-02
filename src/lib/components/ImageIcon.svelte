@@ -14,5 +14,8 @@
 {#if src.includes("image/svg") || src.endsWith(".svg")}
   <Icon icon={src} {size} class={props.class} />
 {:else}
-  <img {src} {alt} class="h-{size} w-{size} aspect-square object-cover {props.class}" />
+  <img
+    {src}
+    {alt}
+    class="h-{size} w-{size} min-w-{size} min-h-{size} aspect-square object-cover {props.class}" />
 {/if}
