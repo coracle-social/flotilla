@@ -140,7 +140,7 @@
         data-tip={tooltip}
         class={cx(
           reactionClass,
-          "flex-inline btn btn-outline btn-neutral btn-xs gap-1 rounded-full text-xs font-normal",
+          "flex-inline btn btn-outline btn-neutral btn-xs flex items-center gap-1 rounded-full text-xs font-normal",
           {
             tooltip: !noTooltip && !isMobile,
             "border-neutral-content/20": !isOwn,
