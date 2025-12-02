@@ -1,6 +1,6 @@
 # Changelog
 
-# Current
+# 1.6.0
 
 * Switch back to indexeddb to fix memory and performance
 * Add pay invoice functionality
@@ -11,6 +11,10 @@
 * Hide nav when keyboard is open
 * Handle flotilla links in-app
 * Fix new messages indicator z-index
+* Fix some display bugs
+* Add date to chat items
+* Refine data synchronization
+* Hide nav when keyboard is open on mobile
 
 # 1.5.3
 
