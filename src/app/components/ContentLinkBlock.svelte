@@ -1,20 +1,25 @@
 <script lang="ts">
-  import {ellipsize, displayUrl, postJson} from "@welshman/lib"
-  import {dufflepud} from "@app/core/state"
+  import {call, ellipsize, displayUrl, postJson} from "@welshman/lib"
+  import {isRelayUrl} from "@welshman/util"
   import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
   import {pushModal} from "@app/util/modal"
-  import {PLATFORM_URL} from "@app/core/state"
+  import {dufflepud, PLATFORM_URL} from "@app/core/state"
+  import {makeSpacePath} from "@app/util/routes"
 
   const {value, event} = $props()
 
   let hideImage = $state(false)
 
   const url = value.url.toString()
-  const external = !url.startsWith(PLATFORM_URL)
-  const href = external ? url : url.replace(PLATFORM_URL, "")
+  const [href, external] = call(() => {
+    if (isRelayUrl(url)) return [makeSpacePath(url), false]
+    if (url.startsWith(PLATFORM_URL)) return [url.replace(PLATFORM_URL, ""), false]
+
+    return [url, true]
+  })
 
   const loadPreview = async () => {
     const json = await postJson(dufflepud("link/preview"), {url})

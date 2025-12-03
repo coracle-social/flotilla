@@ -1,5 +1,6 @@
 <script lang="ts">
-  import {displayUrl} from "@welshman/lib"
+  import {call, displayUrl} from "@welshman/lib"
+  import {isRelayUrl} from "@welshman/util"
   import {preventDefault} from "@lib/html"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -7,12 +8,17 @@
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import {pushModal} from "@app/util/modal"
   import {PLATFORM_URL} from "@app/core/state"
+  import {makeSpacePath} from "@app/util/routes"
 
   const {value} = $props()
 
   const url = value.url.toString()
-  const external = !url.startsWith(PLATFORM_URL)
-  const href = external ? url : url.replace(PLATFORM_URL, "")
+  const [href, external] = call(() => {
+    if (isRelayUrl(url)) return [makeSpacePath(url), false]
+    if (url.startsWith(PLATFORM_URL)) return [url.replace(PLATFORM_URL, ""), false]
+
+    return [url, true]
+  })
 
   const expand = () => pushModal(ContentLinkDetail, {url}, {fullscreen: true})
 </script>
