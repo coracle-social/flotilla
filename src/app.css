@@ -398,7 +398,7 @@ body.keyboard-open .cb {
   @apply bottom-sai;
 }
 
-body.keyboard-open .bottom-nav {
+body.keyboard-open .hide-on-keyboard {
   display: none;
 }
 
