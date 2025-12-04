@@ -48,6 +48,7 @@ import {
   deriveItemsByKey,
   deriveEventsByIdByUrl,
   deriveEventsByIdForUrl,
+  getEventsByIdForUrl,
 } from "@welshman/store"
 import {isKindFeed, findFeed} from "@welshman/feeds"
 import {
@@ -215,6 +216,9 @@ export const deriveEvent = makeDeriveEvent({
   includeDeleted: true,
   onDerive: (filters: Filter[], relays: string[]) => load({filters, relays}),
 })
+
+export const getEventsForUrl = (url: string, filters: Filter[]) =>
+  getEventsByIdForUrl({url, tracker, repository, filters}).values()
 
 export const deriveEventsForUrl = (url: string, filters: Filter[]) =>
   deriveArray(deriveEventsByIdForUrl({url, tracker, repository, filters}))

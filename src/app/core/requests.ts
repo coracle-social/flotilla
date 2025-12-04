@@ -4,7 +4,6 @@ import {
   int,
   YEAR,
   DAY,
-  assoc,
   insertAt,
   sortBy,
   now,
@@ -33,7 +32,7 @@ import {load, request} from "@welshman/net"
 import {repository, makeFeedController, loadRelay, tracker} from "@welshman/app"
 import {createScroller} from "@lib/html"
 import {daysBetween} from "@lib/util"
-import {NOTIFIER_RELAY} from "@app/core/state"
+import {NOTIFIER_RELAY, getEventsForUrl} from "@app/core/state"
 
 // Utils
 
@@ -48,12 +47,9 @@ export const makeFeed = ({
   element: HTMLElement
   onExhausted?: () => void
 }) => {
-  const initialIds = Array.from(tracker.getIds(url))
-  const initialFilters = filters.map(assoc("ids", initialIds))
-  const initialEvents = repository.query(initialFilters)
-  const seen = new Set(initialEvents.map(e => e.id))
+  const seen = new Set<string>()
   const controller = new AbortController()
-  const buffer = writable(initialEvents)
+  const buffer = writable<TrustedEvent[]>([])
   const events = writable<TrustedEvent[]>([])
 
   const insertEvent = (event: TrustedEvent) => {
@@ -124,6 +120,10 @@ export const makeFeed = ({
     },
   })
 
+  for (const event of getEventsForUrl(url, filters)) {
+    insertEvent(event)
+  }
+
   return {
     events,
     cleanup: () => {
@@ -147,9 +147,6 @@ export const makeCalendarFeed = ({
 }) => {
   const interval = int(5, DAY)
   const controller = new AbortController()
-  const initialIds = Array.from(tracker.getIds(url))
-  const initialFilters = filters.map(assoc("ids", initialIds))
-  const initialEvents = repository.query(initialFilters)
 
   let exhaustedScrollers = 0
   let backwardWindow = [now() - interval, now()]
@@ -159,7 +156,7 @@ export const makeCalendarFeed = ({
 
   const getEnd = (event: TrustedEvent) => parseInt(getTagValue("end", event.tags) || "")
 
-  const events = writable(sortBy(getStart, initialEvents))
+  const events = writable(sortBy(getStart, getEventsForUrl(url, filters)))
 
   const insertEvent = (event: TrustedEvent) => {
     const start = getStart(event)
