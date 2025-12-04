@@ -3,7 +3,7 @@
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
-  import {now, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
+  import {now, int, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {makeEvent, MESSAGE, RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
@@ -138,6 +138,7 @@
     let previousDate
     let previousKind
     let previousPubkey
+    let previousCreatedAt = 0
     let newMessagesSeen = false
 
     if (events) {
@@ -174,14 +175,15 @@
           type: "note",
           value: event,
           showPubkey:
-            date !== previousDate ||
             previousPubkey !== event.pubkey ||
+            event.created_at - previousCreatedAt > int(3, MINUTE) ||
             [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER].includes(previousKind!),
         })
 
         previousDate = date
         previousKind = event.kind
         previousPubkey = event.pubkey
+        previousCreatedAt = event.created_at
         seen.add(event.id)
       }
     }

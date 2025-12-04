@@ -4,6 +4,7 @@
 
 * Fix skinny profile images
 * Custom handler for relay urls
+* Improve time based chat partitioning
 
 # 1.6.0
 

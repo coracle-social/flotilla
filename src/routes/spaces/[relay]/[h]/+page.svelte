@@ -5,7 +5,7 @@
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
   import type {MakeNonOptional} from "@welshman/lib"
-  import {now, formatTimestampAsDate, ago, MINUTE} from "@welshman/lib"
+  import {now, int, formatTimestampAsDate, ago, MINUTE} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {
     makeEvent,
@@ -213,6 +213,7 @@
     let previousDate
     let previousKind
     let previousPubkey
+    let previousCreatedAt = 0
     let newMessagesSeen = false
 
     if (events) {
@@ -249,14 +250,15 @@
           type: "note",
           value: event,
           showPubkey:
-            date !== previousDate ||
             previousPubkey !== event.pubkey ||
+            event.created_at - previousCreatedAt > int(3, MINUTE) ||
             [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER].includes(previousKind!),
         })
 
         previousDate = date
         previousKind = event.kind
         previousPubkey = event.pubkey
+        previousCreatedAt = event.created_at
         seen.add(event.id)
       }
     }
