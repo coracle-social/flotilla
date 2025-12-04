@@ -21,7 +21,8 @@
       .map(tagsFromIMeta)
       .find(meta => getTagValue("url", meta) === url) || event.tags
 
-  const hash = getTagValue("x", meta)
+  // Fallback to filename if hash was omitted from the message for interoperability
+  const hash = getTagValue("x", meta) || url.split(/[\/\.]/).slice(-2)[0]
   const key = getTagValue("decryption-key", meta)
   const nonce = getTagValue("decryption-nonce", meta)
   const algorithm = getTagValue("encryption-algorithm", meta)
