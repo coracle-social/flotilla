@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {preventDefault} from "@lib/html"
-  import {randomInt, map, displayList, TIMEZONE, identity} from "@welshman/lib"
+  import {randomInt, map, displayList, identity, TIMEZONE} from "@welshman/lib"
   import {displayRelayUrl, getTagValue, THREAD, MESSAGE, EVENT_TIME, COMMENT} from "@welshman/util"
   import type {Filter} from "@welshman/util"
   import {makeIntersectionFeed, makeRelayFeed, feedFromFilters} from "@welshman/feeds"
@@ -37,7 +37,7 @@
     hideSpaceField = false,
   }: Props = $props()
 
-  const timezoneOffset = parseInt(TIMEZONE.slice(3)) / 100
+  const timezoneOffset = parseInt(TIMEZONE.split(":")?.[0] || "00")
   const minute = randomInt(0, 59)
   const hour = (17 - timezoneOffset) % 24
   const WEEKLY = `0 ${minute} ${hour} * * 1`
