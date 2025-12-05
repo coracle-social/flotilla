@@ -17,7 +17,6 @@ import {
   uniq,
   indexBy,
   partition,
-  pushToMapKey,
   shuffle,
   parseJson,
   memoize,
@@ -492,7 +491,7 @@ export const roomMetaEventsByIdByUrl = deriveEventsByIdByUrl({
 })
 
 export const roomsByUrl = derived(roomMetaEventsByIdByUrl, roomMetaEventsByIdByUrl => {
-  const result = new Map<string, Room[]>()
+  const metaByIdByUrl = new Map<string, Map<string, Room>>()
 
   for (const [url, events] of roomMetaEventsByIdByUrl.entries()) {
     const [metaEvents, deleteEvents] = partition(spec({kind: ROOM_META}), events.values())
@@ -511,8 +510,22 @@ export const roomsByUrl = derived(roomMetaEventsByIdByUrl, roomMetaEventsByIdByU
         continue
       }
 
-      pushToMapKey(result, url, {...meta, url, id: makeRoomId(url, meta.h)})
+      let metaById = metaByIdByUrl.get(url)
+      if (!metaById) {
+        metaById = new Map()
+        metaByIdByUrl.set(url, metaById)
+      }
+
+      const id = makeRoomId(url, meta.h)
+
+      metaById.set(id, {...meta, url, id})
     }
+  }
+
+  const result = new Map<string, Room[]>()
+
+  for (const [url, metaById] of metaByIdByUrl.entries()) {
+    result.set(url, Array.from(metaById.values()))
   }
 
   return result
