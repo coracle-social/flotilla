@@ -285,7 +285,7 @@ export const defaultSettings = {
   report_usage: true,
   report_errors: true,
   send_delay: 0,
-  font_size: 1,
+  font_size: 1.1,
   play_notification_sound: true,
   show_notifications_badge: true,
 }

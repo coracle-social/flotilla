@@ -1,11 +1,14 @@
 # Changelog
 
-# Current
+# 1.6.1
 
 * Fix skinny profile images
 * Custom handler for relay urls
 * Improve time based chat partitioning
 * Improve authenticated image access interop
+* Fix image detail dialog
+* Fix zapper loading
+* Fix recent events missing in feeds
 
 # 1.6.0
 
