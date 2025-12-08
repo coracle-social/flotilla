@@ -58,12 +58,12 @@
   {#if event.pubkey === $pubkey}
     <Button class="btn btn-neutral text-error" onclick={showDelete}>
       <Icon size={4} icon={TrashBin2} />
-      Delete
+      Delete Message
     </Button>
   {/if}
   <Button class="btn btn-neutral" onclick={showInfo}>
     <Icon size={4} icon={Code2} />
-    Show JSON
+    Message Info
   </Button>
   {#if path}
     <Link class="btn btn-neutral" href={path}>
@@ -71,18 +71,18 @@
       View Details
     </Link>
   {/if}
-  <Button class="btn btn-neutral w-full" onclick={sendReply}>
-    <Icon size={4} icon={Reply} />
-    Reply
-  </Button>
-  <Button class="btn btn-neutral w-full" onclick={showEmojiPicker}>
-    <Icon size={4} icon={SmileCircle} />
-    React
-  </Button>
   {#if ENABLE_ZAPS}
     <ZapButton replaceState {url} {event} class="btn btn-neutral w-full">
       <Icon size={4} icon={Bolt} />
-      Zap
+      Send Zap
     </ZapButton>
   {/if}
+  <Button class="btn btn-neutral w-full" onclick={sendReply}>
+    <Icon size={4} icon={Reply} />
+    Send Reply
+  </Button>
+  <Button class="btn btn-neutral w-full" onclick={showEmojiPicker}>
+    <Icon size={4} icon={SmileCircle} />
+    Send Reaction
+  </Button>
 </div>

@@ -11,13 +11,21 @@
 
   const {onClose = noop, fullscreen = false, children}: Props = $props()
 
-  const extraClass = $derived(
-    !fullscreen &&
-      cx(
-        "bg-alt text-base-content overflow-auto text-base-content shadow-md",
-        "px-4 py-6 bottom-0 left-0 right-0 top-20 rounded-t-box absolute",
-        "sm:p-6 sm:max-h-[90vh] sm:w-[520px] sm:rounded-box sm:relative sm:top-0 sm:relative",
-      ),
+  const wrapperClass = $derived(
+    cx("absolute inset-0 flex sm:relative pointer-events-none", {
+      "items-center justify-center": fullscreen,
+      "items-end sm:w-[520px] sm:items-center": !fullscreen,
+    }),
+  )
+
+  const innerClass = $derived(
+    cx(
+      "relative text-base-content text-base-content flex-grow pointer-events-auto",
+      "px-4 py-6 rounded-t-box sm:p-6 sm:rounded-box sm:mt-0",
+      {
+        "bg-alt shadow-m max-h-[90vh] scroll-container overflow-auto": !fullscreen,
+      },
+    ),
   )
 </script>
 
@@ -28,7 +36,9 @@
     transition:fade={{duration: 300}}
     onclick={onClose}>
   </button>
-  <div class="scroll-container relative {extraClass}" transition:fly={{duration: 300}}>
-    {@render children?.()}
+  <div class={wrapperClass}>
+    <div class={innerClass} transition:fly={{duration: 300}}>
+      {@render children?.()}
+    </div>
   </div>
 </div>
