@@ -1,5 +1,9 @@
 # Changelog
 
+# 1.6.2
+
+* Fix modal scrolling and style
+
 # 1.6.1
 
 * Fix skinny profile images
