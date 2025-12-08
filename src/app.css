@@ -409,5 +409,5 @@ body.keyboard-open .hide-on-keyboard {
 }
 
 .chat__scroll-down {
-  @apply fixed bottom-28 right-4 md:bottom-16;
+  @apply fixed bottom-28 right-4 z-feature md:bottom-16;
 }

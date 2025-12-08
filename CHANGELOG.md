@@ -1,5 +1,9 @@
 # Changelog
 
+# 1.6.3
+
+* Fix scroll down button z index
+
 # 1.6.2
 
 * Fix modal scrolling and style
