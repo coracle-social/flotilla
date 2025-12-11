@@ -124,11 +124,8 @@ export const notifications = call(() => {
         for (const [goalId, [comment]] of commentsByGoalId.entries()) {
           const goalItemPath = makeGoalPath(url, goalId)
 
-          if (hasNotification(spacePathMobile, comment)) {
-            paths.add(spacePathMobile)
-          }
-
           if (hasNotification(goalPath, comment)) {
+            paths.add(spacePathMobile)
             paths.add(goalPath)
           }
 
@@ -145,11 +142,8 @@ export const notifications = call(() => {
         for (const [threadId, [comment]] of commentsByThreadId.entries()) {
           const threadItemPath = makeThreadPath(url, threadId)
 
-          if (hasNotification(spacePathMobile, comment)) {
-            paths.add(spacePathMobile)
-          }
-
           if (hasNotification(threadPath, comment)) {
+            paths.add(spacePathMobile)
             paths.add(threadPath)
           }
 
@@ -166,11 +160,8 @@ export const notifications = call(() => {
         for (const [eventId, [comment]] of commentsByEventId.entries()) {
           const calendarItemPath = makeCalendarPath(url, eventId)
 
-          if (hasNotification(spacePathMobile, comment)) {
-            paths.add(spacePathMobile)
-          }
-
           if (hasNotification(calendarPath, comment)) {
+            paths.add(spacePathMobile)
             paths.add(calendarPath)
           }
 
