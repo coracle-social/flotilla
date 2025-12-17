@@ -171,6 +171,8 @@
   const onScroll = () => {
     showScrollButton = Math.abs(element?.scrollTop || 0) > 1500
 
+    const newMessages = document.getElementById("new-messages")
+
     if (!newMessages || newMessagesSeen) {
       showFixedNewMessages = false
     } else {
@@ -185,7 +187,7 @@
   }
 
   const scrollToNewMessages = () =>
-    newMessages?.scrollIntoView({behavior: "smooth", block: "center"})
+    document.getElementById("new-messages")?.scrollIntoView({behavior: "smooth", block: "center"})
 
   const scrollToBottom = () => element?.scrollTo({top: 0, behavior: "smooth"})
 
@@ -195,7 +197,6 @@
   let share = $state(popKey<TrustedEvent | undefined>("share"))
   let parent: TrustedEvent | undefined = $state()
   let element: HTMLElement | undefined = $state()
-  let newMessages: HTMLElement | undefined = $state()
   let chatCompose: HTMLElement | undefined = $state()
   let dynamicPadding: HTMLElement | undefined = $state()
   let newMessagesSeen = false
@@ -389,7 +390,7 @@
     {#each elements as { type, id, value, showPubkey } (id)}
       {#if type === "new-messages"}
         <div
-          bind:this={newMessages}
+          {id}
           class="flex items-center py-2 text-xs transition-colors"
           class:opacity-0={showFixedNewMessages}>
           <div class="h-px flex-grow bg-primary"></div>
