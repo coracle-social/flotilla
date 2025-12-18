@@ -1,4 +1,5 @@
 import twColors from "tailwindcss/colors"
+import {setSignerPubkeys} from 'pomade'
 import {Capacitor} from "@capacitor/core"
 import {get, derived, readable, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
@@ -162,7 +163,9 @@ export const PLATFORM_DESCRIPTION = import.meta.env.VITE_PLATFORM_DESCRIPTION
 
 export const DEFAULT_BLOSSOM_SERVERS = fromCsv(import.meta.env.VITE_DEFAULT_BLOSSOM_SERVERS)
 
-export const BURROW_URL = import.meta.env.VITE_BURROW_URL
+export const POMADE_SIGNERS = fromCsv(import.meta.env.VITE_POMADE_SIGNERS)
+
+export const POMADE_MAILERS = fromCsv(import.meta.env.VITE_POMADE_MAILERS)
 
 export const DEFAULT_PUBKEYS = import.meta.env.VITE_DEFAULT_PUBKEYS
 
@@ -228,6 +231,8 @@ export const deriveRelaySignedEvents = (url: string, filters: Filter[]) =>
   )
 
 // Context
+
+setSignerPubkeys(POMADE_SIGNERS)
 
 appContext.dufflepudUrl = DUFFLEPUD_URL
 
