@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {postJson} from "@welshman/lib"
   import {session} from "@welshman/app"
   import {slideAndFade} from "@lib/transition"
   import Link from "@lib/components/Link.svelte"
@@ -12,9 +11,7 @@
   import Field from "@lib/components/Field.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {PLATFORM_NAME, BURROW_URL} from "@app/core/state"
-  import {pushToast} from "@app/util/toast"
-  import {logout} from "@app/core/commands"
+  import {PLATFORM_NAME} from "@app/core/state"
 
   const email = $session?.email
 
@@ -24,29 +21,13 @@
     loading = true
 
     try {
-      const payload = {email, password, eject: true}
-      const res = await postJson(BURROW_URL + "/user", payload, {method: "delete"})
-
-      if (res.error) {
-        return pushToast({message: res.error, theme: "error"})
-      }
-
-      success = true
-      pushToast({message: "Success! Please check your messages and continue when you're ready."})
-
-      await logout()
+      // TODO: Implement export functionality
     } finally {
       loading = false
     }
   }
 
-  const reload = () => {
-    loading = true
-    window.location.href = "/"
-  }
-
-  let password = $state("")
-  let success = $state(false)
+  const success = $state(false)
   let loading = $state(false)
 </script>
 
@@ -85,7 +66,7 @@
         {#snippet input()}
           <label class="input input-bordered flex w-full items-center gap-2">
             <Icon icon={Key} />
-            <input type="password" disabled={loading} bind:value={password} class="grow" />
+            <input type="password" disabled={loading} class="grow" />
           </label>
         {/snippet}
       </Field>
@@ -97,7 +78,7 @@
       Go back
     </Button>
     {#if success}
-      <Button class="btn btn-primary" disabled={loading} onclick={reload}>
+      <Button class="btn btn-primary" disabled={loading}>
         <Icon icon={CheckCircle} />
         <Spinner {loading}>Refresh the page</Spinner>
       </Button>

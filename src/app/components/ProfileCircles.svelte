@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {getProfile} from "@welshman/app"
+  import {loadProfile} from "@welshman/app"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
 
   type Props = {
@@ -8,14 +8,21 @@
   }
 
   const {pubkeys, size = 7}: Props = $props()
+
+  for (const pubkey of pubkeys) {
+    loadProfile(pubkey)
+  }
+
+  const visiblePubkeys = $derived.by(() => {
+    const filtered = pubkeys.filter(pubkey => getProfile(pubkey)?.picture)
+
+    return filtered.length > 0 ? filtered : pubkeys.slice(0, 1)
+  })
 </script>
 
 <div class="flex pr-3">
-  {#each pubkeys
-    .filter(p => getProfile(p)?.picture)
-    .toSorted()
-    .slice(0, 15) as pubkey (pubkey)}
-    <div class="z-feature -mr-3 inline-block">
+  {#each visiblePubkeys.toSorted().slice(0, 15) as pubkey (pubkey)}
+    <div class="z-feature -mr-3 inline-block flex items-center justify-center bg-base-100 rounded-full h-8 w-8">
       <ProfileCircle class="h-8 w-8 bg-base-300" {pubkey} {size} />
     </div>
   {/each}
