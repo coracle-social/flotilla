@@ -8,7 +8,14 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
   import SignUpKey from "@app/components/SignUpKey.svelte"
+  import SignUpEmail from "@app/components/SignUpEmail.svelte"
   import {pushModal} from "@app/util/modal"
+
+  type Props = {
+    flow: "nostr" | "email"
+  }
+
+  const {flow}: Props = $props()
 
   const initialValues = {
     profile: makeProfile(),
@@ -17,7 +24,8 @@
 
   const back = () => history.back()
 
-  const onsubmit = (values: {profile: Profile}) => pushModal(SignUpKey, values)
+  const onsubmit = (values: {profile: Profile}) =>
+    pushModal(flow === "nostr" ? SignUpKey : SignUpEmail, values)
 </script>
 
 <div class="flex flex-col gap-4">

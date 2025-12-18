@@ -4,7 +4,7 @@
   import {getNip07, getNip55, Nip55Signer} from "@welshman/signer"
   import {addSession, type Session, makeNip07Session, makeNip55Session} from "@welshman/app"
   import Widget from "@assets/icons/widget-2.svg?dataurl"
-  import Key from "@assets/icons/key-minimalistic.svg?dataurl"
+  import Letter from "@assets/icons/letter.svg?dataurl"
   import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
   import Compass from "@assets/icons/compass-big.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -13,14 +13,16 @@
   import SignUp from "@app/components/SignUp.svelte"
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import LogInBunker from "@app/components/LogInBunker.svelte"
-  import LogInPassword from "@app/components/LogInPassword.svelte"
+  import LogInEmail from "@app/components/LogInEmail.svelte"
   import {pushModal, clearModals} from "@app/util/modal"
-  import {PLATFORM_NAME, BURROW_URL} from "@app/core/state"
+  import {PLATFORM_NAME, POMADE_SIGNERS} from "@app/core/state"
   import {pushToast} from "@app/util/toast"
   import {setChecked} from "@app/util/notifications"
 
   let signers: any[] = $state([])
   let loading: string | undefined = $state()
+
+  const hasPomade = POMADE_SIGNERS.length >= 3
 
   const disabled = $derived(loading ? true : undefined)
 
@@ -72,7 +74,7 @@
     }
   }
 
-  const loginWithPassword = () => pushModal(LogInPassword)
+  const loginWithEmail = () => pushModal(LogInEmail)
 
   const loginWithBunker = () => pushModal(LogInBunker)
 
@@ -112,39 +114,31 @@
       Log in with {app.name}
     </Button>
   {/each}
-  {#if BURROW_URL && !hasSigner}
-    <Button {disabled} onclick={loginWithPassword} class="btn btn-primary">
-      {#if loading === "password"}
-        <span class="loading loading-spinner mr-3"></span>
-      {:else}
-        <Icon icon={Key} />
-      {/if}
-      Log in with Password
+  {#if hasPomade && !hasSigner}
+    <Button {disabled} onclick={loginWithEmail} class="btn btn-primary">
+      <Icon icon={Letter} />
+      Log in with Email
     </Button>
   {/if}
   <Button
     onclick={loginWithBunker}
     {disabled}
-    class="btn {hasSigner || BURROW_URL ? 'btn-neutral' : 'btn-primary'}">
+    class="btn {hasSigner || hasPomade ? 'btn-neutral' : 'btn-primary'}">
     <Icon icon={Cpu} />
     Log in with Remote Signer
   </Button>
-  {#if BURROW_URL && hasSigner}
-    <Button {disabled} onclick={loginWithPassword} class="btn">
-      {#if loading === "password"}
-        <span class="loading loading-spinner mr-3"></span>
-      {:else}
-        <Icon icon={Key} />
-      {/if}
-      Log in with Password
+  {#if hasPomade && hasSigner}
+    <Button {disabled} onclick={loginWithEmail} class="btn">
+      <Icon icon={Letter} />
+      Log in with Email
     </Button>
   {/if}
-  {#if !hasSigner || !BURROW_URL}
+  {#if !hasSigner || !hasPomade}
     <Link
       external
       {disabled}
       href="https://nostrapps.com#signers"
-      class="btn {hasSigner || BURROW_URL ? '' : 'btn-neutral'}">
+      class="btn {hasSigner || hasPomade ? '' : 'btn-neutral'}">
       <Icon icon={Compass} />
       Browse Signer Apps
     </Link>

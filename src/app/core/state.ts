@@ -1,4 +1,5 @@
 import twColors from "tailwindcss/colors"
+import {context as pomadeContext} from "@pomade/core"
 import {Capacitor} from "@capacitor/core"
 import {get, derived, readable, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
@@ -163,7 +164,7 @@ export const PLATFORM_DESCRIPTION = import.meta.env.VITE_PLATFORM_DESCRIPTION
 
 export const DEFAULT_BLOSSOM_SERVERS = fromCsv(import.meta.env.VITE_DEFAULT_BLOSSOM_SERVERS)
 
-export const BURROW_URL = import.meta.env.VITE_BURROW_URL
+export const POMADE_SIGNERS = fromCsv(import.meta.env.VITE_POMADE_SIGNERS)
 
 export const DEFAULT_PUBKEYS = import.meta.env.VITE_DEFAULT_PUBKEYS
 
@@ -232,6 +233,10 @@ export const deriveRelaySignedEvents = (url: string, filters: Filter[]) =>
   )
 
 // Context
+
+pomadeContext.setSignerPubkeys(POMADE_SIGNERS)
+
+pomadeContext.setArgonWorker(import('@pomade/core/argon-worker.js?worker'))
 
 appContext.dufflepudUrl = DUFFLEPUD_URL
 
@@ -516,9 +521,9 @@ export const roomsByUrl = derived(roomMetaEventsByIdByUrl, roomMetaEventsByIdByU
     }
 
     for (const event of metaEvents) {
-      const meta = readRoomMeta(event)
+      const meta = tryCatch(() => readRoomMeta(event))
 
-      if (gt(deletedByH.get(meta.h), meta.event.created_at)) {
+      if (!meta || gt(deletedByH.get(meta.h), meta.event.created_at)) {
         continue
       }
 

@@ -15,18 +15,14 @@
 
   const back = () => history.back()
 
-  const tryJoin = async () => {
-    await addSpaceMembership(url)
-
-    broadcastUserData([url])
-    clearModals()
-  }
-
   const join = async () => {
     loading = true
 
     try {
-      await tryJoin()
+      await addSpaceMembership(url)
+
+      broadcastUserData([url])
+      clearModals()
     } catch (e) {
       loading = false
     }

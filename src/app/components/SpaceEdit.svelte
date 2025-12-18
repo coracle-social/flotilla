@@ -24,7 +24,7 @@
     initialValues: RelayProfile
   }
 
-  const {url, initialValues}: Props = $props()
+  const {url, initialValues = {}}: Props = $props()
 
   const values = $state(initialValues)
 

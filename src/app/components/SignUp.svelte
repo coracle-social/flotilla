@@ -1,95 +1,37 @@
 <script lang="ts">
-  import {postJson} from "@welshman/lib"
-  import {preventDefault} from "@lib/html"
-  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
-  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+  import Letter from "@assets/icons/letter.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Divider from "@lib/components/Divider.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
-  import SignUpSuccess from "@app/components/SignUpSuccess.svelte"
   import {pushModal} from "@app/util/modal"
-  import {BURROW_URL, PLATFORM_NAME} from "@app/core/state"
-  import {pushToast} from "@app/util/toast"
+  import {POMADE_SIGNERS, PLATFORM_NAME} from "@app/core/state"
+
+  const hasPomade = POMADE_SIGNERS.length >= 3
 
   const login = () => pushModal(LogIn)
 
-  const signupPassword = async () => {
-    loading = true
+  const useEmail = () => pushModal(SignUpProfile, {flow: "email"})
 
-    try {
-      const res = await postJson(BURROW_URL + "/user", {email, password})
-
-      if (res.error) {
-        pushToast({message: res.error, theme: "error"})
-      } else {
-        pushModal(SignUpSuccess, {email}, {replaceState: true})
-      }
-    } finally {
-      loading = false
-    }
-  }
-
-  const usePassword = () => {
-    if (BURROW_URL) {
-      signupPassword()
-    }
-  }
-
-  const next = () => pushModal(SignUpProfile)
-
-  let email = $state("")
-  let password = $state("")
-  let loading = $state(false)
+  const useNostr = () => pushModal(SignUpProfile, {flow: "nostr"})
 </script>
 
-<form class="column gap-4" onsubmit={preventDefault(usePassword)}>
+<div class="column gap-4">
   <h1 class="heading">Sign up with Nostr</h1>
   <p class="m-auto max-w-sm text-center">
     {PLATFORM_NAME} is built using the
     <Button class="link" onclick={() => pushModal(InfoNostr)}>nostr protocol</Button>, which gives
     users control over their digital identity using <strong>cryptographic key pairs</strong>.
   </p>
-  {#if BURROW_URL}
-    <FieldInline>
-      {#snippet label()}
-        <p>Email</p>
-      {/snippet}
-      {#snippet input()}
-        <label class="input input-bordered flex w-full items-center gap-2">
-          <Icon icon={UserRounded} />
-          <input bind:value={email} />
-        </label>
-      {/snippet}
-    </FieldInline>
-    <FieldInline>
-      {#snippet label()}
-        <p>Password</p>
-      {/snippet}
-      {#snippet input()}
-        <label class="input input-bordered flex w-full items-center gap-2">
-          <Icon icon={Key} />
-          <input bind:value={password} type="password" />
-        </label>
-      {/snippet}
-    </FieldInline>
-    <Button type="submit" class="btn btn-primary" disabled={loading || !email || !password}>
-      <Spinner {loading}>Sign Up</Spinner>
-      <Icon icon={AltArrowRight} />
+  {#if hasPomade}
+    <Button onclick={useEmail} class="btn btn-primary">
+      <Icon icon={Letter} />
+      Sign up with email
     </Button>
-    <p class="text-sm opacity-75">
-      Note that your email and password will only work to log in to {PLATFORM_NAME}. To use your key
-      on other nostr applications, you can create a nostr key yourself, or export your key from {PLATFORM_NAME}
-      later.
-    </p>
-    <Divider>Or</Divider>
   {/if}
-  <Button onclick={next} class="btn {email || password ? 'btn-neutral' : 'btn-primary'}">
+  <Button onclick={useNostr} class="btn {hasPomade ? 'btn-neutral' : 'btn-primary'}">
     <Icon icon={Key} />
     Generate a key
   </Button>
@@ -97,4 +39,4 @@
     Already have an account?
     <Button class="link" onclick={login}>Log in instead</Button>
   </div>
-</form>
+</div>
