@@ -1,5 +1,5 @@
 import twColors from "tailwindcss/colors"
-import {setSignerPubkeys} from 'pomade'
+import {setSignerPubkeys} from "pomade"
 import {Capacitor} from "@capacitor/core"
 import {get, derived, readable, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"

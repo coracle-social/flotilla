@@ -1,26 +1,19 @@
 <script lang="ts">
-  import {Client, RecoveryType} from 'pomade'
-  import {onMount, onDestroy} from "svelte"
-  import {postJson, stripProtocol} from "@welshman/lib"
-  import {Nip46Broker} from "@welshman/signer"
-  import {normalizeRelayUrl, makeSecret} from "@welshman/util"
-  import {addSession, makeNip46Session} from "@welshman/app"
+  import {Client} from "pomade"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Letter from "@assets/icons/letter.svg?dataurl"
-  import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import LogInEmailConfirm from "@app/components/LogInEmailConfirm.svelte"
-  import {clearModals, pushModal} from "@app/util/modal"
-  import {setChecked} from "@app/util/notifications"
+  import {pushModal} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
-  import {POMADE_SIGNERS, POMADE_MAILERS, PLATFORM_NAME} from "@app/core/state"
+  import {PLATFORM_NAME} from "@app/core/state"
 
   interface Props {
     email?: string
@@ -34,13 +27,12 @@
     loading = true
 
     try {
-      const clientSecret = makeSecret()
-      const res = await Client.startRecovery(RecoveryType.Login, clientSecret, email)
+      const {ok, messages, clientSecret} = await Client.startLogin(email)
 
-      if (res.ok) {
+      if (ok) {
         pushModal(LogInEmailConfirm, {email, clientSecret})
       } else {
-        console.error(res.messages)
+        console.error(messages)
 
         pushToast({
           theme: "error",
@@ -52,8 +44,6 @@
     }
   }
 
-  let url = ""
-  let sent = $state(false)
   let loading = $state(false)
 </script>
 
@@ -78,8 +68,8 @@
     {/snippet}
   </FieldInline>
   <p class="text-sm">
-    Your email only works to log in to {PLATFORM_NAME}. To use your nostr key
-    elsewhere, visit your settings page.
+    Your email only works to log in to {PLATFORM_NAME}. To use your nostr key elsewhere, visit your
+    settings page.
   </p>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back} disabled={loading}>

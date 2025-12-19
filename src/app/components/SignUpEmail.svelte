@@ -1,17 +1,15 @@
 <script lang="ts">
-  import {Client} from 'pomade'
-  import {hexToBytes, choice} from "@welshman/lib"
+  import {Client} from "pomade"
+  import {choice} from "@welshman/lib"
   import {makeSecret} from "@welshman/util"
   import type {Profile} from "@welshman/util"
-  import {preventDefault, downloadText} from "@lib/html"
+  import {preventDefault} from "@lib/html"
   import Letter from "@assets/icons/letter.svg?dataurl"
-  import ArrowDown from "@assets/icons/arrow-down.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
@@ -32,14 +30,17 @@
     loading = true
 
     try {
-      const {secret, group, peers} = await Client.register(2, 3, makeSecret())
-      const clientOptions = {secret, group, peers}
+      const {clientOptions} = await Client.register(2, 3, makeSecret())
       const client = new Client(clientOptions)
-      const res = await client.setRecoveryMethod(email, choice(POMADE_MAILERS))
+
+      let res
+      try {
+        res = await client.setRecoveryMethod(email, choice(POMADE_MAILERS))
+      } finally {
+        client.stop()
+      }
 
       if (res.ok) {
-        const {peers, group} = client
-
         pushModal(SignUpEmailConfirm, {email, profile, clientOptions})
       } else {
         const message = res.messages[0]?.payload.message || "Please try again."
@@ -75,10 +76,12 @@
     {/snippet}
   </ModalHeader>
   <p>
-    Under the hood, nostr uses "cryptographic keypairs" to help you prove that your identity is actually you.
+    Under the hood, nostr uses "cryptographic keypairs" to help you prove that your identity is
+    actually you.
   </p>
   <p>
-    If you you're not ready to take control of your keys though, that's ok! We'll keep them safe until you are.
+    If you you're not ready to take control of your keys though, that's ok! We'll keep them safe
+    until you are.
   </p>
   <FieldInline>
     {#snippet label()}
@@ -92,7 +95,8 @@
     {/snippet}
   </FieldInline>
   <p class="text-sm">
-    Your email only works to log in to {PLATFORM_NAME}. To use your nostr key elsewhere, visit your settings page.
+    Your email only works to log in to {PLATFORM_NAME}. To use your nostr key elsewhere, visit your
+    settings page.
   </p>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>

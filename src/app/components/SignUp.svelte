@@ -1,30 +1,19 @@
 <script lang="ts">
-  import {postJson} from "@welshman/lib"
-  import {preventDefault} from "@lib/html"
-  import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
-  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Divider from "@lib/components/Divider.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import {pushModal} from "@app/util/modal"
   import {POMADE_SIGNERS, PLATFORM_NAME} from "@app/core/state"
-  import {pushToast} from "@app/util/toast"
 
   const login = () => pushModal(LogIn)
 
-  const useEmail = () => pushModal(SignUpProfile, {flow: 'email'})
+  const useEmail = () => pushModal(SignUpProfile, {flow: "email"})
 
-  const useNostr = () => pushModal(SignUpProfile, {flow: 'nostr'})
-
-  let email = $state("")
-  let loading = $state(false)
+  const useNostr = () => pushModal(SignUpProfile, {flow: "nostr"})
 </script>
 
 <div class="column gap-4">

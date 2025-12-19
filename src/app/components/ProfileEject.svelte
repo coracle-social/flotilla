@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {postJson} from "@welshman/lib"
   import {session} from "@welshman/app"
   import {slideAndFade} from "@lib/transition"
   import Link from "@lib/components/Link.svelte"
@@ -12,9 +11,7 @@
   import Field from "@lib/components/Field.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {PLATFORM_NAME, POMADE_SIGNERS} from "@app/core/state"
-  import {pushToast} from "@app/util/toast"
-  import {logout} from "@app/core/commands"
+  import {PLATFORM_NAME} from "@app/core/state"
 
   const email = $session?.email
 
@@ -24,12 +21,13 @@
     loading = true
 
     try {
+      // TODO: Implement export functionality
     } finally {
       loading = false
     }
   }
 
-  let success = $state(false)
+  const success = $state(false)
   let loading = $state(false)
 </script>
 

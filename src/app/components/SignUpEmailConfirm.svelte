@@ -1,12 +1,8 @@
 <script lang="ts">
-  import {Client, parseChallenge} from 'pomade'
-  import type {ClientOptions} from 'pomade'
-  import {onMount, onDestroy} from "svelte"
-  import {postJson, stripProtocol} from "@welshman/lib"
-  import {Nip46Broker} from "@welshman/signer"
+  import {Client} from "pomade"
+  import type {ClientOptions} from "pomade"
   import type {Profile} from "@welshman/util"
-  import {normalizeRelayUrl, makeSecret} from "@welshman/util"
-  import {addSession, loginWithPomade} from "@welshman/app"
+  import {loginWithPomade} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -17,10 +13,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {clearModals, pushModal} from "@app/util/modal"
+  import {clearModals} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
-  import {POMADE_SIGNERS, POMADE_MAILERS, PLATFORM_NAME} from "@app/core/state"
 
   type Props = {
     email: string
@@ -28,20 +23,20 @@
     clientOptions: ClientOptions
   }
 
-  let {email, profile, clientOptions}: Props = $props()
+  const {email, clientOptions}: Props = $props()
 
   const back = () => history.back()
 
   const onSubmit = async () => {
     loading = true
 
-    try {
-      const res = await new Client(clientOptions).finalizeRecoveryMethod(challenge)
+    const client = new Client(clientOptions)
 
-      console.log(res)
+    try {
+      const res = await client.finalizeRecoveryMethod(challenge)
 
       if (res.ok) {
-        loginWithPomade(clientOptions.group.group_pk.slice(2), clientOptions)
+        loginWithPomade(client.group.group_pk.slice(2), clientOptions)
         pushToast({message: "Successfully logged in!"})
         setChecked("*")
         clearModals()
@@ -62,6 +57,7 @@
       })
     } finally {
       loading = false
+      client.stop()
     }
   }
 

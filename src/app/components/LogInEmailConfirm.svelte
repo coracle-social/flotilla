@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {Client} from 'pomade'
-  import {onMount, onDestroy} from "svelte"
-  import {postJson, stripProtocol} from "@welshman/lib"
-  import {Nip46Broker} from "@welshman/signer"
-  import {normalizeRelayUrl, makeSecret} from "@welshman/util"
+  import {Client} from "pomade"
   import {loginWithPomade} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -15,17 +11,16 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {clearModals, pushModal} from "@app/util/modal"
+  import {clearModals} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
-  import {POMADE_SIGNERS, POMADE_MAILERS, PLATFORM_NAME} from "@app/core/state"
 
   type Props = {
     email: string
     clientSecret: string
   }
 
-  let {email, clientSecret}: Props = $props()
+  const {email, clientSecret}: Props = $props()
 
   const back = () => history.back()
 
@@ -33,16 +28,15 @@
     loading = true
 
     try {
-      const res = await Client.finalizeRecovery(clientSecret, challenge)
-      const clientOptions = {secret: clientSecret, group: res.group, peers: res.peers}
+      const {ok, messages, clientOptions} = await Client.finalizeLogin(clientSecret, challenge)
 
-      if (res.ok && res.group) {
-        loginWithPomade(res.group.group_pk.slice(2), clientOptions)
+      if (ok) {
+        loginWithPomade(clientOptions.group.group_pk.slice(2), clientOptions)
         pushToast({message: "Successfully logged in!"})
         setChecked("*")
         clearModals()
       } else {
-        console.error(res.messages)
+        console.error(messages)
 
         pushToast({
           theme: "error",
