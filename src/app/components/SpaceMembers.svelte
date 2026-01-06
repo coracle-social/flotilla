@@ -87,7 +87,7 @@
     </div>
   {/if}
   {#each $members as pubkey (pubkey)}
-    <div class="card2 bg-alt relative">
+    <div class="card2 card2-sm bg-alt relative">
       <div class="flex items-center justify-between gap-2">
         <div class="min-w-0 flex-1">
           <Profile {pubkey} {url} />

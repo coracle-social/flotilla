@@ -9,6 +9,7 @@
 * Make video embeds rounded
 * Fix ProfileMultiSelect styling
 * Accept hex pubkeys/npubs/nprofiles in ProfileMultiSelect
+* Tweak room edit form design
 
 # 1.6.0
 
