@@ -1,8 +1,7 @@
 <script lang="ts">
-  import {ifLet} from "@welshman/lib"
   import type {RelayProfile} from "@welshman/util"
   import {displayRelayUrl, ManagementMethod} from "@welshman/util"
-  import {manageRelay, relaysByUrl, notifyRelay, fetchRelayDirectly} from "@welshman/app"
+  import {manageRelay, forceLoadRelay} from "@welshman/app"
   import StickerSmileSquare from "@assets/icons/sticker-smile-square.svg?dataurl"
   import SettingsMinimalistic from "@assets/icons/settings-minimalistic.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -71,18 +70,8 @@
       }
     }
 
-    // Force-reload the relay
-    ifLet(await fetchRelayDirectly(url), relay => {
-      relaysByUrl.update($relaysByUrl => {
-        $relaysByUrl.set(url, relay)
-
-        return new Map($relaysByUrl)
-      })
-
-      notifyRelay(relay)
-    })
-
     pushToast({message: "Your changes have been saved!"})
+    forceLoadRelay(url)
     clearModals()
   }
 
