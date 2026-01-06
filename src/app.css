@@ -66,6 +66,10 @@
   --neutral-content: oklch(var(--nc));
 }
 
+.mobile [data-tip]::before {
+  display: none !important;
+}
+
 /* safe area insets */
 
 @layer components {

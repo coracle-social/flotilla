@@ -4,6 +4,9 @@
 
 * Fix skinny profile images
 * Custom handler for relay urls
+* Hide tooltips on mobile
+* Sort comments ascending
+* Make video embeds rounded
 
 # 1.6.0
 

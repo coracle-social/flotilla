@@ -41,7 +41,7 @@
 <Link {external} {href} class="my-2 block">
   <div class="overflow-hidden rounded-box">
     {#if url.match(/\.(mov|webm|mp4)$/)}
-      <video controls src={url} class="max-h-96 object-contain object-center">
+      <video controls src={url} class="max-h-96 rounded-box object-contain object-center">
         <track kind="captions" />
       </video>
     {:else if url.match(/\.(jpe?g|png|gif|webp)$/)}

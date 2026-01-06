@@ -30,7 +30,7 @@
 
   const back = () => history.back()
 
-  const startEdit = () => pushModal(SpaceEdit, {url, initialValues: $relay})
+  const startEdit = () => pushModal(SpaceEdit, {url, initialValues: $relay || {url}})
 </script>
 
 <div class="column gap-4">
