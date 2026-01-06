@@ -11,6 +11,7 @@
 * Accept hex pubkeys/npubs/nprofiles in ProfileMultiSelect
 * Tweak room edit form design
 * Report pending signer to user
+* Update default relays
 
 # 1.6.0
 
