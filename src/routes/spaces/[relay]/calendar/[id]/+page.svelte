@@ -6,7 +6,7 @@
   import {COMMENT, getTagValue} from "@welshman/util"
   import {request} from "@welshman/net"
   import {repository} from "@welshman/app"
-  import {deriveEventsById, deriveEventsDesc} from "@welshman/store"
+  import {deriveEventsById, deriveEventsAsc} from "@welshman/store"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import SortVertical from "@assets/icons/sort-vertical.svg?dataurl"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
@@ -30,7 +30,7 @@
   const url = decodeRelay(relay)
   const event = deriveEvent(id, [url])
   const filters = [{kinds: [COMMENT], "#E": [id]}]
-  const replies = deriveEventsDesc(deriveEventsById({filters, repository}))
+  const replies = deriveEventsAsc(deriveEventsById({filters, repository}))
 
   const back = () => history.back()
 

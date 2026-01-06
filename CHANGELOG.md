@@ -3,6 +3,18 @@
 # 1.6.3
 
 * Fix scroll down button z index
+* Hide tooltips on mobile
+* Sort comments ascending
+* Make video embeds rounded
+* Fix ProfileMultiSelect styling
+* Accept hex pubkeys/npubs/nprofiles in ProfileMultiSelect
+* Tweak room edit form design
+* Report pending signer to user
+* Update default relays
+* Fix chat list responsiveness
+* Fix memory leak, notification badge not showing
+* Improve space join flow
+* Fix opening images in fullscreen dialog
 
 # 1.6.2
 

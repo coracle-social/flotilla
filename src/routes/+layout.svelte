@@ -20,6 +20,7 @@
   import * as welshmanSigner from "@welshman/signer"
   import * as net from "@welshman/net"
   import * as app from "@welshman/app"
+  import {isMobile} from "@lib/html"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import {setupHistory} from "@app/util/history"
@@ -191,7 +192,7 @@
 {#await unsubscribe}
   <!-- pass -->
 {:then}
-  <div>
+  <div class={isMobile ? "mobile" : ""}>
     <AppContainer>
       {@render children()}
     </AppContainer>
