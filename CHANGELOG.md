@@ -10,6 +10,7 @@
 * Fix ProfileMultiSelect styling
 * Accept hex pubkeys/npubs/nprofiles in ProfileMultiSelect
 * Tweak room edit form design
+* Report pending signer to user
 
 # 1.6.0
 
