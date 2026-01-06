@@ -1,17 +1,16 @@
 <script lang="ts">
   import "@src/app.css"
   import "@capacitor-community/safe-area"
-  import {throttle} from "throttle-debounce"
   import * as nip19 from "nostr-tools/nip19"
   import type {Unsubscriber} from "svelte/store"
   import {get} from "svelte/store"
   import {App, type URLOpenListenerEvent} from "@capacitor/app"
   import {dev} from "$app/environment"
   import {goto} from "$app/navigation"
-  import {sync} from "@welshman/store"
-  import {call, spec} from "@welshman/lib"
+  import {sync, throttled} from "@welshman/store"
+  import {call} from "@welshman/lib"
   import {defaultSocketPolicies} from "@welshman/net"
-  import {pubkey, sessions, signerLog, shouldUnwrap, SignerLogEntryStatus} from "@welshman/app"
+  import {pubkey, sessions, signerLog, shouldUnwrap} from "@welshman/app"
   import * as lib from "@welshman/lib"
   import * as util from "@welshman/util"
   import * as feeds from "@welshman/feeds"
@@ -141,25 +140,23 @@
 
     // Listen for signer errors, report to user via toast
     unsubscribers.push(
-      signerLog.subscribe(
-        throttle(10_000, $log => {
-          const recent = $log.slice(-10)
-          const success = recent.filter(spec({status: SignerLogEntryStatus.Success}))
-          const failure = recent.filter(spec({status: SignerLogEntryStatus.Failure}))
+      throttled(10_000, signerLog).subscribe($log => {
+        const cutoff = Date.now() - 3_000
+        const recent = $log.filter(x => x.started_at < cutoff).slice(-10)
+        const ok = recent.filter(x => x.ok)
 
-          if (!$toast && failure.length > 5 && success.length === 0) {
-            pushToast({
-              theme: "error",
-              timeout: 60_000,
-              message: "Your signer appears to be unresponsive.",
-              action: {
-                message: "Details",
-                onclick: () => goto("/settings/profile"),
-              },
-            })
-          }
-        }),
-      ),
+        if (!$toast && recent.length > 5 && ok.length === 0) {
+          pushToast({
+            theme: "error",
+            timeout: 60_000,
+            message: "Your signer appears to be unresponsive.",
+            action: {
+              message: "Details",
+              onclick: () => goto("/settings/profile"),
+            },
+          })
+        }
+      }),
     )
 
     // Sync theme and font size
