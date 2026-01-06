@@ -7,6 +7,8 @@
 * Hide tooltips on mobile
 * Sort comments ascending
 * Make video embeds rounded
+* Fix ProfileMultiSelect styling
+* Accept hex pubkeys/npubs/nprofiles in ProfileMultiSelect
 
 # 1.6.0
 

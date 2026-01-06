@@ -1,4 +1,5 @@
 <script lang="ts">
+  import * as nip19 from "nostr-tools/nip19"
   import {writable} from "svelte/store"
   import type {Writable} from "svelte/store"
   import {type Instance} from "tippy.js"
@@ -33,6 +34,26 @@
 
   const removePubkey = (pubkey: string) => {
     value = remove(pubkey, value)
+  }
+
+  const onInput = (e: any) => {
+    if (e.target.value.match(/^[a-f0-9]{64}$/)) {
+      selectPubkey(e.target.value)
+    }
+
+    try {
+      const {type, data} = nip19.decode(e.target.value) as any
+
+      if (type === "npub") {
+        selectPubkey(data)
+      }
+
+      if (type === "nprofile") {
+        selectPubkey(data.pubkey)
+      }
+    } catch (e) {
+      // pass
+    }
   }
 
   const onKeyDown = (e: Event) => {
@@ -80,6 +101,7 @@
       type="text"
       placeholder="Search for profiles..."
       bind:value={$term}
+      oninput={onInput}
       onkeydown={onKeyDown} />
   </label>
   <Tippy
