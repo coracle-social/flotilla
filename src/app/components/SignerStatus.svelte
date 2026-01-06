@@ -1,6 +1,6 @@
 <script lang="ts">
-  import {spec, prop, avg} from "@welshman/lib"
-  import {session, SessionMethod, signerLog, SignerLogEntryStatus} from "@welshman/app"
+  import {spec, avg} from "@welshman/lib"
+  import {session, SessionMethod, signerLog} from "@welshman/app"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
@@ -10,17 +10,18 @@
   import LogOut from "@app/components/LogOut.svelte"
   import {pushModal} from "@app/util/modal"
 
-  const {Pending, Success, Failure} = SignerLogEntryStatus
-  const pending = $derived($signerLog.filter(spec({status: Pending})).length)
-  const success = $derived($signerLog.filter(spec({status: Success})).length)
-  const failure = $derived($signerLog.filter(spec({status: Failure})).length)
+  const finished = $derived($signerLog.filter(x => x.finished_at))
+  const pending = $derived($signerLog.filter(x => !x.finished_at))
+  const failure = $derived(finished.filter(spec({ok: false})))
+  const success = $derived(finished.filter(spec({ok: true})))
   const recent = $derived($signerLog.slice(-10))
-  const recentAvg = $derived(avg(recent.map(prop("duration"))))
-  const recentPending = $derived(recent.filter(spec({status: Pending})).length)
-  const recentSuccess = $derived(recent.filter(spec({status: Success})).length)
-  const recentFailure = $derived(recent.filter(spec({status: Failure})).length)
+  const recentFinished = $derived(recent.filter(x => x.finished_at))
+  const recentPending = $derived(recent.filter(x => !x.finished_at))
+  const recentAvg = $derived(avg(recentFinished.map(x => x.finished_at! - x.started_at)))
+  const recentFailure = $derived(recentFinished.filter(x => !x.ok))
+  const recentSuccess = $derived(recentFinished.filter(x => x.ok))
   const isDisconnected = $derived(
-    recent.length > 0 && recentFailure + recentPending === recent.length,
+    recent.length > 0 && recentFailure.length + recentPending.length === recent.length,
   )
 
   const logout = () => pushModal(LogOut)
@@ -34,11 +35,13 @@
         <span class="flex items-center gap-2">
           {#if isDisconnected}
             <Icon icon={CloseCircle} class="text-error" size={4} /> Disconnected
-          {:else if recentFailure > 3}
+          {:else if recentFailure.length > 3}
             <Icon icon={Danger} class="text-warning" size={4} /> Partial Failure
-          {:else if recentAvg > 1000 || recentPending > 3}
+          {:else if recentAvg > 1000 || recentPending.length > 3}
             <Icon icon={ClockCircle} class="text-warning" size={4} /> Slow connection
-          {:else if recentSuccess === 0 && recentFailure > 0}{:else}
+          {:else if recentSuccess.length === 0 && recentFailure.length > 0}
+            <Icon icon={Danger} class="text-warning" size={4} /> Partial Failure
+          {:else}
             <Icon icon={CheckCircle} class="text-success" size={4} /> Ok
           {/if}
         </span>
@@ -59,7 +62,7 @@
           {/if}
         </p>
         <p>
-          {success} requests succeeded, {failure} failed, {pending} pending
+          {success.length} requests succeeded, {failure.length} failed, {pending.length} pending
         </p>
       </div>
     </div>
