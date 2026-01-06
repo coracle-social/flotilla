@@ -12,6 +12,7 @@
 * Tweak room edit form design
 * Report pending signer to user
 * Update default relays
+* Fix chat list responsiveness
 
 # 1.6.0
 
