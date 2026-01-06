@@ -112,27 +112,25 @@
       <p>Icon</p>
     {/snippet}
     {#snippet input()}
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          {#if imagePreview}
-            <div class="flex items-center gap-2">
-              <span class="text-sm opacity-75">Selected:</span>
-              <ImageIcon src={imagePreview} alt="" class="rounded-lg" />
-            </div>
-          {:else}
-            <span class="text-sm opacity-75">No icon selected</span>
-          {/if}
-          <div class="flex gap-2">
-            <IconPickerButton onSelect={handleIconSelect} class="btn btn-primary btn-sm">
-              <Icon icon={StickerSmileSquare} size={4} />
-              Select
-            </IconPickerButton>
-            <label class="btn btn-neutral btn-sm cursor-pointer">
-              <Icon icon={UploadMinimalistic} size={4} />
-              Upload
-              <input type="file" accept="image/*" class="hidden" onchange={handleImageUpload} />
-            </label>
+      <div class="flex flex-grow items-center justify-between gap-4">
+        {#if imagePreview}
+          <div class="flex items-center gap-2">
+            <span class="text-sm opacity-75">Selected:</span>
+            <ImageIcon src={imagePreview} alt="" class="rounded-lg" />
           </div>
+        {:else}
+          <span class="text-sm opacity-75">No icon selected</span>
+        {/if}
+        <div class="flex gap-2">
+          <IconPickerButton onSelect={handleIconSelect} class="btn btn-primary btn-sm">
+            <Icon icon={StickerSmileSquare} size={4} />
+            <span class="hidden sm:inline">Select</span>
+          </IconPickerButton>
+          <label class="btn btn-neutral btn-sm cursor-pointer">
+            <Icon icon={UploadMinimalistic} size={4} />
+            <span class="hidden sm:inline">Upload</span>
+            <input type="file" accept="image/*" class="hidden" onchange={handleImageUpload} />
+          </label>
         </div>
       </div>
     {/snippet}
@@ -162,41 +160,22 @@
       </label>
     {/snippet}
   </FieldInline>
-  <FieldInline>
-    {#snippet label()}
-      <strong>Restricted</strong>
-    {/snippet}
-    {#snippet input()}
-      <input type="checkbox" class="checkbox" bind:checked={values.isRestricted} />
-      <span class="text-sm opacity-75">Only allow members to send messages</span>
-    {/snippet}
-  </FieldInline>
-  <FieldInline>
-    {#snippet label()}
-      <strong>Private</strong>
-    {/snippet}
-    {#snippet input()}
-      <input type="checkbox" class="checkbox" bind:checked={values.isPrivate} />
-      <span class="text-sm opacity-75">Only allow members to read messages</span>
-    {/snippet}
-  </FieldInline>
-  <FieldInline>
-    {#snippet label()}
-      <strong>Hidden</strong>
-    {/snippet}
-    {#snippet input()}
-      <input type="checkbox" class="checkbox" bind:checked={values.isHidden} />
-      <span class="text-sm opacity-75">Hide this group from non-members</span>
-    {/snippet}
-  </FieldInline>
-  <FieldInline>
-    {#snippet label()}
-      <strong>Closed</strong>
-    {/snippet}
-    {#snippet input()}
-      <input type="checkbox" class="checkbox" bind:checked={values.isClosed} />
-      <span class="text-sm opacity-75">Ignore requests to join</span>
-    {/snippet}
-  </FieldInline>
+  <strong class="md:hidden">Permissions</strong>
+  <div class="flex items-center gap-2">
+    <input type="checkbox" class="checkbox" bind:checked={values.isRestricted} />
+    <span class="text-sm opacity-75">Only allow members to send messages</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <input type="checkbox" class="checkbox" bind:checked={values.isPrivate} />
+    <span class="text-sm opacity-75">Only allow members to read messages</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <input type="checkbox" class="checkbox" bind:checked={values.isHidden} />
+    <span class="text-sm opacity-75">Hide this group from non-members</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <input type="checkbox" class="checkbox" bind:checked={values.isClosed} />
+    <span class="text-sm opacity-75">Ignore requests to join</span>
+  </div>
   {@render footer({loading})}
 </form>
