@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {page} from "$app/stores"
-  import {remove, formatTimestamp} from "@welshman/lib"
+  import {remove, uniq, formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {pubkey, loadMessagingRelayList} from "@welshman/app"
   import {fade} from "@lib/transition"
@@ -21,7 +21,7 @@
 
   const {...props}: Props = $props()
 
-  const others = remove($pubkey!, props.pubkeys)
+  const others = uniq(remove($pubkey!, props.pubkeys))
   const active = $derived($page.params.chat === props.id)
   const path = makeChatPath(props.pubkeys)
 

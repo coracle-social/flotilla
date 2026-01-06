@@ -631,7 +631,7 @@ export const getSpaceRoomsFromGroupList = (url: string, groupList: List | undefi
     }
   }
 
-  return sortBy(roomComparator(url), rooms)
+  return sortBy(roomComparator(url), uniq(rooms))
 }
 
 export const userGroupList = makeUserData(groupListsByPubkey, loadGroupList)
@@ -663,7 +663,7 @@ export const deriveOtherRooms = (url: string) =>
       }
     }
 
-    return sortBy(roomComparator(url), rooms)
+    return sortBy(roomComparator(url), uniq(rooms))
   })
 
 // Space/room memberships
