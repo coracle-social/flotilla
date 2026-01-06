@@ -146,9 +146,8 @@
           const recent = $log.slice(-10)
           const success = recent.filter(spec({status: SignerLogEntryStatus.Success}))
           const failure = recent.filter(spec({status: SignerLogEntryStatus.Failure}))
-          const pending = recent.filter(spec({status: SignerLogEntryStatus.Pending}))
 
-          if (!$toast && (failure.length > 5 || pending.length > 5) && success.length === 0) {
+          if (!$toast && failure.length > 5 && success.length === 0) {
             pushToast({
               theme: "error",
               timeout: 60_000,

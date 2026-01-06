@@ -25,6 +25,7 @@ import {
   always,
   tryCatch,
   fromPairs,
+  remove,
 } from "@welshman/lib"
 import type {Override} from "@welshman/lib"
 import type {RepositoryUpdate} from "@welshman/net"
@@ -393,9 +394,20 @@ export type Chat = {
   search_text: string
 }
 
-export const makeChatId = (pubkeys: string[]) => sort(uniq(pubkeys)).join(",")
+export const getChatPubkeys = (pubkeys: string[]) => sort(uniq(append(pubkey.get()!, pubkeys)))
 
-export const splitChatId = (id: string) => id.split(",")
+export const getChatPubkeysFromEvent = (event: TrustedEvent) =>
+  getChatPubkeys(getPubkeyTagValues(event.tags).concat(event.pubkey))
+
+export const makeChatId = (pubkeys: string[]) => {
+  const userPubkey = pubkey.get()!
+  const otherPubkeys = remove(userPubkey, uniq(pubkeys))
+  const visiblePubkeys = otherPubkeys.length === 0 ? [userPubkey] : otherPubkeys
+
+  return sort(visiblePubkeys).join(",")
+}
+
+export const splitChatId = (id: string) => getChatPubkeys(id.split(","))
 
 export const chatsById = call(() => {
   const chatsById = new Map<string, Chat>()
@@ -405,7 +417,7 @@ export const chatsById = call(() => {
     chat.search_text =
       chat.pubkeys.length === 1
         ? displayProfileByPubkey(chat.pubkeys[0]) + " note to self"
-        : chat.pubkeys.map(displayProfileByPubkey).join(" ")
+        : remove(pubkey.get()!, chat.pubkeys).map(displayProfileByPubkey).join(" ")
 
     return chat as Chat
   }
@@ -415,10 +427,10 @@ export const chatsById = call(() => {
       let dirty = false
       for (const event of events) {
         if ([DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(event.kind)) {
-          const pubkeys = getPubkeyTagValues(event.tags).concat(event.pubkey)
+          const pubkeys = getChatPubkeysFromEvent(event)
           const id = makeChatId(pubkeys)
           const chat = chatsById.get(id)
-          const messages = append(event, chat?.messages || [])
+          const messages = sortBy(e => -e.created_at, append(event, chat?.messages || []))
           const last_activity = Math.max(chat?.last_activity || 0, event.created_at)
           const updatedChat = addSearchText({id, pubkeys, messages, last_activity})
 
