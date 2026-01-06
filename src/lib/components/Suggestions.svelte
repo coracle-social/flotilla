@@ -76,9 +76,8 @@
         onclick={stopPropagation(preventDefault(() => select(value)))}>
         <Component {value}></Component>
       </button>
+    {:else}
+      <div class="tiptap-suggestions__item">No results</div>
     {/each}
   </div>
-  {#if items.length === 0}
-    <div class="tiptap-suggestions__empty">No results</div>
-  {/if}
 </div>
