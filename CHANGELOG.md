@@ -13,6 +13,7 @@
 * Report pending signer to user
 * Update default relays
 * Fix chat list responsiveness
+* Fix memory leak, notification badge not showing
 
 # 1.6.0
 

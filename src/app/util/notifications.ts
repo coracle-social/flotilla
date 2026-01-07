@@ -5,7 +5,15 @@ import {pubkey, tracker, repository, relaysByUrl} from "@welshman/app"
 import {prop, find, call, spec, first, identity, now, groupBy} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {deriveEventsByIdByUrl} from "@welshman/store"
-import {ZAP_GOAL, EVENT_TIME, MESSAGE, THREAD, COMMENT, getTagValue} from "@welshman/util"
+import {
+  ZAP_GOAL,
+  EVENT_TIME,
+  MESSAGE,
+  THREAD,
+  COMMENT,
+  getTagValue,
+  sortEventsDesc,
+} from "@welshman/util"
 import {
   makeSpacePath,
   makeChatPath,
@@ -111,10 +119,10 @@ export const notifications = call(() => {
         const threadPath = makeThreadPath(url)
         const calendarPath = makeCalendarPath(url)
         const messagesPath = makeSpaceChatPath(url)
-        const goalComments = goalCommentsByUrl.get(url)?.values() || []
-        const threadComments = threadCommentsByUrl.get(url)?.values() || []
-        const calendarComments = calendarCommentsByUrl.get(url)?.values() || []
-        const messages = messagesByUrl.get(url)?.values() || []
+        const goalComments = sortEventsDesc(goalCommentsByUrl.get(url)?.values() || [])
+        const threadComments = sortEventsDesc(threadCommentsByUrl.get(url)?.values() || [])
+        const calendarComments = sortEventsDesc(calendarCommentsByUrl.get(url)?.values() || [])
+        const messages = sortEventsDesc(messagesByUrl.get(url)?.values() || [])
 
         const commentsByGoalId = groupBy(
           e => getTagValue("E", e.tags),
