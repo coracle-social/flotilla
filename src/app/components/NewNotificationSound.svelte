@@ -23,16 +23,16 @@
     }
   }
 
+  $effect(() => {
+    if ($notifications.size > notificationCount) {
+      playSound()
+    }
+
+    notificationCount = $notifications.size
+  })
+
   onMount(() => {
     audioElement.load()
-
-    notifications.subscribe(notifications => {
-      if (notifications.size > notificationCount) {
-        playSound()
-      }
-
-      notificationCount = notifications.size
-    })
   })
 </script>
 
