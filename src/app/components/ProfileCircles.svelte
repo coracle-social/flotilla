@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {loadProfile} from "@welshman/app"
+  import {getProfile, loadProfile} from "@welshman/app"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
 
   type Props = {
@@ -22,7 +22,8 @@
 
 <div class="flex pr-3">
   {#each visiblePubkeys.toSorted().slice(0, 15) as pubkey (pubkey)}
-    <div class="z-feature -mr-3 inline-block flex items-center justify-center bg-base-100 rounded-full h-8 w-8">
+    <div
+      class="z-feature -mr-3 inline-block flex h-8 w-8 items-center justify-center rounded-full bg-base-100">
       <ProfileCircle class="h-8 w-8 bg-base-300" {pubkey} {size} />
     </div>
   {/each}

@@ -138,13 +138,15 @@ export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios"
 
 export const NOTIFIER_PUBKEY = import.meta.env.VITE_NOTIFIER_PUBKEY
 
-export const NOTIFIER_RELAY = import.meta.env.VITE_NOTIFIER_RELAY
-
 export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
-export const INDEXER_RELAYS = fromCsv(import.meta.env.VITE_INDEXER_RELAYS)
+export const NOTIFIER_RELAY = normalizeRelayUrl(import.meta.env.VITE_NOTIFIER_RELAY)
 
-export const SIGNER_RELAYS = fromCsv(import.meta.env.VITE_SIGNER_RELAYS)
+export const SIGNER_RELAYS = fromCsv(import.meta.env.VITE_SIGNER_RELAYS).map(normalizeRelayUrl)
+
+export const INDEXER_RELAYS = fromCsv(import.meta.env.VITE_INDEXER_RELAYS).map(normalizeRelayUrl)
+
+export const PLATFORM_RELAYS = fromCsv(import.meta.env.VITE_PLATFORM_RELAYS).map(normalizeRelayUrl)
 
 export const PLATFORM_URL = import.meta.env.VITE_PLATFORM_URL
 
@@ -156,15 +158,13 @@ export const PLATFORM_LOGO = PLATFORM_URL + "/logo.png"
 
 export const PLATFORM_NAME = import.meta.env.VITE_PLATFORM_NAME
 
-export const PLATFORM_RELAYS = fromCsv(import.meta.env.VITE_PLATFORM_RELAYS)
-
 export const PLATFORM_ACCENT = import.meta.env.VITE_PLATFORM_ACCENT
 
 export const PLATFORM_DESCRIPTION = import.meta.env.VITE_PLATFORM_DESCRIPTION
 
-export const DEFAULT_BLOSSOM_SERVERS = fromCsv(import.meta.env.VITE_DEFAULT_BLOSSOM_SERVERS)
-
 export const POMADE_SIGNERS = fromCsv(import.meta.env.VITE_POMADE_SIGNERS)
+
+export const DEFAULT_BLOSSOM_SERVERS = fromCsv(import.meta.env.VITE_DEFAULT_BLOSSOM_SERVERS)
 
 export const DEFAULT_PUBKEYS = import.meta.env.VITE_DEFAULT_PUBKEYS
 
@@ -233,7 +233,7 @@ export const deriveRelaySignedEvents = (url: string, filters: Filter[]) =>
 
 pomadeContext.setSignerPubkeys(POMADE_SIGNERS)
 
-pomadeContext.setArgonWorker(import('@pomade/core/argon-worker.js?worker'))
+pomadeContext.setArgonWorker(import("@pomade/core/argon-worker.js?worker"))
 
 appContext.dufflepudUrl = DUFFLEPUD_URL
 

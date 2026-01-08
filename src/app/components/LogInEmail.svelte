@@ -99,7 +99,8 @@
     {/snippet}
   </FieldInline>
   <p class="text-sm">
-    Forgot your password? <Button class="link" onclick={loginWithOTP}>Log in with a one-time access code</Button
+    Forgot your password? <Button class="link" onclick={loginWithOTP}
+      >Log in with a one-time access code</Button
     >.
   </p>
   <ModalFooter>
