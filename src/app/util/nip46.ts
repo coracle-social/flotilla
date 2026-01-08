@@ -2,7 +2,13 @@ import {writable} from "svelte/store"
 import type {Nip46ResponseWithResult} from "@welshman/signer"
 import {Nip46Broker} from "@welshman/signer"
 import {makeSecret} from "@welshman/util"
-import {PLATFORM_URL, PLATFORM_NAME, PLATFORM_LOGO, SIGNER_RELAYS} from "@app/core/state"
+import {
+  PLATFORM_URL,
+  PLATFORM_NAME,
+  PLATFORM_LOGO,
+  SIGNER_RELAYS,
+  NIP46_PERMS,
+} from "@app/core/state"
 import {pushToast} from "@app/util/toast"
 
 export class Nip46Controller {
@@ -23,6 +29,7 @@ export class Nip46Controller {
       url: PLATFORM_URL,
       name: PLATFORM_NAME,
       image: PLATFORM_LOGO,
+      perms: NIP46_PERMS,
     })
 
     this.url.set(url)

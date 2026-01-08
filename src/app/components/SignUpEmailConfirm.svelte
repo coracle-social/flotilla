@@ -68,7 +68,8 @@
     {/snippet}
   </FieldInline>
   <p class="text-sm">
-    We just sent a one-time confirmation code to {email}. Once you receive it, you can enter it above.
+    We just sent a one-time confirmation code to {email}. Once you receive it, you can enter it
+    above.
   </p>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back} disabled={loading}>

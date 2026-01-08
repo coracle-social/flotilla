@@ -111,8 +111,8 @@
     {/snippet}
   </FieldInline>
   <p class="text-sm">
-    To keep your key as safe a possible, you will receive <strong>three separate emails</strong>.
-    Be sure to enter all three codes!
+    To keep your key as safe a possible, you will receive <strong>three separate emails</strong>. Be
+    sure to enter all three codes!
   </p>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back} disabled={loading}>

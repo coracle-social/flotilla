@@ -28,10 +28,10 @@
 
   const onSubmit = async () => {
     if (password.trim().length < 12) {
-        return pushToast({
-          theme: "error",
-          message: "Password must be at least 12 characters long.",
-        })
+      return pushToast({
+        theme: "error",
+        message: "Password must be at least 12 characters long.",
+      })
     }
 
     loading = true
