@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+
+import fs from 'fs'
+import path from 'path'
+import { execSync } from 'child_process'
+
+if (execSync('git status --porcelain', { encoding: 'utf8' }).trim()) {
+  console.error('Error: Git working tree is dirty. Please commit or stash your changes first.')
+  process.exit(1)
+}
+
+const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'))
+
+pkg.pnpm.overrides = pkg.pnpm.overrides || {}
+pkg.pnpm.overrides["@welshman/app"] = "link:../welshman/packages/app"
+pkg.pnpm.overrides["@welshman/content"] = "link:../welshman/packages/content"
+pkg.pnpm.overrides["@welshman/editor"] = "link:../welshman/packages/editor"
+pkg.pnpm.overrides["@welshman/feeds"] = "link:../welshman/packages/feeds"
+pkg.pnpm.overrides["@welshman/lib"] = "link:../welshman/packages/lib"
+pkg.pnpm.overrides["@welshman/net"] = "link:../welshman/packages/net"
+pkg.pnpm.overrides["@welshman/router"] = "link:../welshman/packages/router"
+pkg.pnpm.overrides["@welshman/signer"] = "link:../welshman/packages/signer"
+pkg.pnpm.overrides["@welshman/store"] = "link:../welshman/packages/store"
+pkg.pnpm.overrides["@welshman/util"] = "link:../welshman/packages/util"
+pkg.pnpm.overrides["@pomade/core"] = "link:../pomade/packages/core"
+
+fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n')
+
+execSync('pnpm i', { stdio: 'inherit' })
+
+execSync('git checkout -f pnpm-lock.yaml', { stdio: 'inherit' })
+execSync('git checkout -f package.json', { stdio: 'inherit' })
