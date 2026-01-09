@@ -21,7 +21,7 @@
       const canvasRect = canvas.getBoundingClientRect()
 
       scale = wrapperRect.width / (canvasRect.width * 10)
-      height = canvasRect.width * 10 * scale
+      height = canvasRect.height * 10 * scale
     }
   })
 </script>
