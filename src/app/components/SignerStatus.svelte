@@ -9,6 +9,7 @@
   import Button from "@lib/components/Button.svelte"
   import LogOut from "@app/components/LogOut.svelte"
   import {pushModal} from "@app/util/modal"
+  import PomadeSessions from "@app/components/PomadeSessions.svelte"
 
   const finished = $derived($signerLog.filter(x => x.finished_at))
   const pending = $derived($signerLog.filter(x => !x.finished_at))
@@ -68,6 +69,8 @@
     </div>
     {#if isDisconnected}
       <Button class="btn btn-outline btn-error" onclick={logout}>Logout to Reconnect</Button>
+    {:else if $session?.method === SessionMethod.Pomade}
+      <PomadeSessions />
     {/if}
   </div>
 {/if}

@@ -1,7 +1,6 @@
 <script lang="ts">
   import type {Profile} from "@welshman/util"
-  import {createProfile, PROFILE, makeEvent} from "@welshman/util"
-  import {publishThunk, loginWithNip01} from "@welshman/app"
+  import {loginWithNip01} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
@@ -10,7 +9,6 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {clearModals} from "@app/util/modal"
-  import {PROTECTED} from "@app/core/state"
   import {initProfile} from "@app/core/commands"
 
   type Props = {
