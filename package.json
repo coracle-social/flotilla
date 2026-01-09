@@ -86,7 +86,7 @@
     "qrcode": "^1.5.4",
     "throttle-debounce": "^5.0.2",
     "tippy.js": "^6.3.7",
-    "@pomade/core": "^0.0.5"
+    "@pomade/core": "^0.0.7"
   },
   "pnpm": {
     "ignoredBuiltDependencies": [
@@ -106,8 +106,7 @@
       "@welshman/router": "link:../welshman/packages/router",
       "@welshman/signer": "link:../welshman/packages/signer",
       "@welshman/store": "link:../welshman/packages/store",
-      "@welshman/util": "link:../welshman/packages/util",
-      "@pomade/core": "link:../pomade/packages/core"
+      "@welshman/util": "link:../welshman/packages/util"
     }
   }
 }

@@ -21,7 +21,7 @@
 
   type Props = {
     url: string
-    initialValues: RelayProfile
+    initialValues: Partial<RelayProfile>
   }
 
   const {url, initialValues = {}}: Props = $props()

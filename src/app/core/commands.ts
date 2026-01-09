@@ -1,6 +1,6 @@
 import {nwc} from "@getalby/sdk"
 import * as nip19 from "nostr-tools/nip19"
-import {get} from "svelte/store"
+import {get, derived} from "svelte/store"
 import type {Override, MakeOptional} from "@welshman/lib"
 import {
   first,
@@ -90,6 +90,7 @@ import {
   getPubkeyRelays,
   userBlossomServerList,
   shouldUnwrap,
+  getThunkError,
 } from "@welshman/app"
 import {compressFile} from "@lib/html"
 import {kv, db} from "@app/core/storage"
@@ -106,6 +107,9 @@ import {
   getSetting,
   userGroupList,
   shouldIgnoreError,
+  stripPrefix,
+  relaysMostlyRestricted,
+  deriveSocket,
 } from "@app/core/state"
 import {loadAlertStatuses} from "@app/core/requests"
 import {platform, platformName, getPushInfo} from "@app/util/push"
@@ -281,12 +285,40 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
 
   if (shouldIgnoreError(error)) return
 
-  if (claim) {
-    const ignoreClaimError =
-      error.includes("invalid invite code size") || error.includes("failed to validate invite code")
+  if (error.includes("invite code")) return "join request rejected"
 
-    if (!ignoreClaimError) return error?.replace(/^\w+: /, "")
-  }
+  return stripPrefix(error)
+}
+
+export const deriveRelayAuthError = (url: string, claim = "") => {
+  // Kick off the auth process
+  Pool.get().get(url).auth.attemptAuth(sign)
+
+  // Attempt to join the relay
+  const thunk = publishJoinRequest({url, claim})
+
+  return derived(
+    [thunk, relaysMostlyRestricted, deriveSocket(url)],
+    ([$thunk, $relaysMostlyRestricted, $socket]) => {
+      if ($socket.auth.status === AuthStatus.Forbidden && $socket.auth.details) {
+        return stripPrefix($socket.auth.details)
+      }
+
+      if ($relaysMostlyRestricted[url]) {
+        return stripPrefix($relaysMostlyRestricted[url])
+      }
+
+      const error = getThunkError($thunk)
+
+      if (error) {
+        const isEmptyInvite = !claim && error.includes("invite code")
+
+        if (!shouldIgnoreError(error) && !isEmptyInvite) {
+          return stripPrefix(error) || "join request rejected"
+        }
+      }
+    },
+  )
 }
 
 // Deletions

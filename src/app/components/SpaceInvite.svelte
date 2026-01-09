@@ -13,7 +13,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import QRCode from "@app/components/QRCode.svelte"
   import {clip} from "@app/util/toast"
-  import {PLATFORM_URL, deriveRelayAuthError} from "@app/core/state"
+  import {PLATFORM_URL} from "@app/core/state"
+  import {deriveRelayAuthError} from "@app/core/commands"
 
   const {url} = $props()
 
