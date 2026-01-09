@@ -97,7 +97,6 @@ import {
   getTagValue,
   getTagValues,
   isRelayUrl,
-  makeEvent,
   normalizeRelayUrl,
   readList,
   verifyEvent,
@@ -115,12 +114,9 @@ import {
   createSearch,
   userFollowList,
   ensurePlaintext,
-  sign,
   signer,
   makeOutboxLoader,
   appContext,
-  getThunkError,
-  publishThunk,
   deriveRelay,
   makeUserData,
   makeUserLoader,
@@ -986,41 +982,7 @@ export const shouldIgnoreError = (error: string) => {
   return isIgnored || isAborted || isStrictNip29Relay
 }
 
-export const deriveRelayAuthError = (url: string, claim = "") => {
-  const stripPrefix = (m: string) => m.replace(/^\w+: /, "")
-
-  // Kick off the auth process
-  Pool.get().get(url).auth.attemptAuth(sign)
-
-  // Attempt to join the relay
-  const thunk = publishThunk({
-    event: makeEvent(RELAY_JOIN, {tags: [["claim", claim]]}),
-    relays: [url],
-  })
-
-  return derived(
-    [thunk, relaysMostlyRestricted, deriveSocket(url)],
-    ([$thunk, $relaysMostlyRestricted, $socket]) => {
-      if ($socket.auth.status === AuthStatus.Forbidden && $socket.auth.details) {
-        return stripPrefix($socket.auth.details)
-      }
-
-      if ($relaysMostlyRestricted[url]) {
-        return stripPrefix($relaysMostlyRestricted[url])
-      }
-
-      const error = getThunkError($thunk)
-
-      if (error) {
-        const isEmptyInvite = !claim && error.includes("invite code")
-
-        if (!shouldIgnoreError(error) && !isEmptyInvite) {
-          return stripPrefix(error) || "join request rejected"
-        }
-      }
-    },
-  )
-}
+export const stripPrefix = (m: string) => m.replace(/^\w+: /, "")
 
 export type InviteData = {url: string; claim: string}
 

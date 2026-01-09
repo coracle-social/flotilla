@@ -9,7 +9,8 @@
   import SpaceTrustRelay from "@app/components/SpaceTrustRelay.svelte"
   import {pushModal} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
-  import {decodeRelay, deriveRelayAuthError, relaysPendingTrust} from "@app/core/state"
+  import {decodeRelay, relaysPendingTrust} from "@app/core/state"
+  import {deriveRelayAuthError} from "@app/core/commands"
   import {notifications} from "@app/util/notifications"
 
   type Props = {

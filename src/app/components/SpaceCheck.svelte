@@ -10,10 +10,10 @@
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import SpaceJoinConfirm, {confirmSpaceJoin} from "@app/components/SpaceJoinConfirm.svelte"
   import {attemptRelayAccess} from "@app/core/commands"
   import {pushModal} from "@app/util/modal"
-  import {pushToast} from "@app/util/toast"
 
   const {url} = $props()
 
@@ -21,7 +21,7 @@
 
   const next = async () => {
     if (error) {
-      return pushToast({theme: "error", message: error, timeout: 30_000})
+      return pushModal(SpaceAccessRequest, {url})
     }
 
     if (Pool.get().get(url).auth.status === AuthStatus.None) {
@@ -35,7 +35,7 @@
   let loading = $state(true)
 
   onMount(async () => {
-    ;[error] = await Promise.all([attemptRelayAccess(url), sleep(3000)])
+    ;[error] = await Promise.all([attemptRelayAccess(url), sleep(1000)])
     loading = false
   })
 </script>
@@ -77,7 +77,11 @@
       Go back
     </Button>
     <Button type="submit" class="btn btn-primary" disabled={loading}>
-      Join Space
+      {#if error}
+        Request Access
+      {:else}
+        Join Space
+      {/if}
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
