@@ -11,6 +11,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {clearModals} from "@app/util/modal"
   import {PROTECTED} from "@app/core/state"
+  import {initProfile} from "@app/core/commands"
 
   type Props = {
     secret: string
@@ -22,19 +23,8 @@
   const back = () => history.back()
 
   const next = () => {
-    const template = createProfile(profile)
-
-    // Start out protected by default
-    template.tags.push(PROTECTED)
-
-    const event = makeEvent(PROFILE, template)
-
-    // Log in first, then publish
     loginWithNip01(secret)
-
-    // Don't publish anywhere yet, wait until they join a space
-    publishThunk({event, relays: []})
-
+    initProfile(profile)
     clearModals()
   }
 </script>

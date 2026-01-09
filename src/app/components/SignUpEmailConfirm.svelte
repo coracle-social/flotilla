@@ -13,6 +13,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import {initProfile} from "@app/core/commands"
   import {clearModals} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
@@ -23,7 +24,7 @@
     clientOptions: ClientOptions
   }
 
-  const {email, clientOptions}: Props = $props()
+  const {email, profile, clientOptions}: Props = $props()
 
   const back = () => history.back()
 
@@ -36,6 +37,7 @@
     try {
       loginWithPomade(clientOptions.group.group_pk.slice(2), clientOptions)
       pushToast({message: "Successfully logged in!"})
+      initProfile(profile)
       setChecked("*")
       clearModals()
     } finally {
