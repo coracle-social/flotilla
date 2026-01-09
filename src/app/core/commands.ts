@@ -754,6 +754,18 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
 
 // Update Profile
 
+export const initProfile = (profile: Profile) => {
+  const template = createProfile(profile)
+
+  // Start out protected by default
+  template.tags.push(PROTECTED)
+
+  const event = makeEvent(PROFILE, template)
+
+  // Don't publish anywhere yet, wait until they join a space
+  return publishThunk({event, relays: []})
+}
+
 export const updateProfile = async ({
   profile,
   shouldBroadcast = !getTag(PROTECTED, profile.event?.tags || []),
