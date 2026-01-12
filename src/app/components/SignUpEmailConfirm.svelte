@@ -35,7 +35,7 @@
     await sleep(800)
 
     try {
-      loginWithPomade(clientOptions.group.group_pk.slice(2), clientOptions)
+      loginWithPomade(clientOptions.group.group_pk.slice(2), email, clientOptions)
       pushToast({message: "Successfully logged in!"})
       initProfile(profile)
       setChecked("*")

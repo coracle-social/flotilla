@@ -2,7 +2,7 @@
   import * as nip19 from "nostr-tools/nip19"
   import {hexToBytes} from "@welshman/lib"
   import {displayPubkey, displayProfile} from "@welshman/util"
-  import {pubkey, session, displayNip05, deriveProfile} from "@welshman/app"
+  import {pubkey, session, displayNip05, deriveProfile, SessionMethod} from "@welshman/app"
   import {slideAndFade} from "@lib/transition"
   import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
@@ -20,6 +20,7 @@
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileDelete from "@app/components/ProfileDelete.svelte"
+  import KeyRecovery from "@app/components/KeyRecovery.svelte"
   import SignerStatus from "@app/components/SignerStatus.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
   import {PLATFORM_NAME} from "@app/core/state"
@@ -39,6 +40,8 @@
   const startEject = () => pushModal(InfoKeys)
 
   const startDelete = () => pushModal(ProfileDelete)
+
+  const startRecovery = () => pushModal(KeyRecovery)
 
   let showAdvanced = false
 </script>
@@ -156,7 +159,13 @@
     </div>
     {#if showAdvanced}
       <div transition:slideAndFade class="flex flex-col gap-2 pt-4">
-        <Button class="btn btn-outline btn-error" onclick={startDelete}>
+        {#if $session?.method === SessionMethod.Pomade}
+          <Button class="btn btn-neutral" onclick={startRecovery}>
+            <Icon icon={Key} />
+            Recover your key
+          </Button>
+        {/if}
+        <Button class="btn btn-error" onclick={startDelete}>
           <Icon icon={TrashBin2} />
           Delete your profile
         </Button>
