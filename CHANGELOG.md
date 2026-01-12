@@ -15,6 +15,7 @@
 * Fix chat list responsiveness
 * Fix memory leak, notification badge not showing
 * Improve space join flow
+* Fix opening images in fullscreen dialog
 
 # 1.6.0
 

@@ -116,7 +116,7 @@
         {:else if isCashu(parsed) || isInvoice(parsed)}
           <ContentToken value={parsed.value} />
         {:else if isLink(parsed)}
-          <ContentLinkInline value={parsed.value} />
+          <ContentLinkInline value={parsed.value} {event} />
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />
         {:else if isQuote(parsed)}

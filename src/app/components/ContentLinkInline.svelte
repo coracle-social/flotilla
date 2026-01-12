@@ -1,7 +1,7 @@
 <script lang="ts">
   import {call, displayUrl} from "@welshman/lib"
   import {isRelayUrl} from "@welshman/util"
-  import {preventDefault} from "@lib/html"
+  import {preventDefault, stopPropagation} from "@lib/html"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
@@ -10,7 +10,7 @@
   import {PLATFORM_URL} from "@app/core/state"
   import {makeSpacePath} from "@app/util/routes"
 
-  const {value} = $props()
+  const {value, event} = $props()
 
   const url = value.url.toString()
   const [href, external] = call(() => {
@@ -20,12 +20,12 @@
     return [url, true]
   })
 
-  const expand = () => pushModal(ContentLinkDetail, {url}, {fullscreen: true})
+  const expand = () => pushModal(ContentLinkDetail, {value, event}, {fullscreen: true})
 </script>
 
 {#if url.match(/\.(jpe?g|png|gif|webp)$/)}
   <!-- Use a real link so people can copy the href -->
-  <a href={url} class="link-content whitespace-nowrap" onclick={preventDefault(expand)}>
+  <a href={url} class="link-content whitespace-nowrap" onclick={stopPropagation(preventDefault(expand))}>
     <Icon icon={LinkRound} size={3} class="inline-block" />
     {displayUrl(url)}
   </a>

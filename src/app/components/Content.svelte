@@ -169,7 +169,7 @@
           {#if isBlock(i)}
             <ContentLinkBlock value={parsed.value} {event} />
           {:else}
-            <ContentLinkInline value={parsed.value} />
+            <ContentLinkInline value={parsed.value} {event} />
           {/if}
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />

@@ -28,7 +28,7 @@
     transition:fade={{duration: 300}}
     onclick={onClose}>
   </button>
-  <div class="scroll-container {extraClass}" transition:fly={{duration: 300}}>
+  <div class="scroll-container z-feature {extraClass}" transition:fly={{duration: 300}}>
     {@render children?.()}
   </div>
 </div>
