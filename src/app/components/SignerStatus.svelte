@@ -60,6 +60,8 @@
             {$session.signer}
           {:else if $session.method === SessionMethod.Pubkey}
             public key (readonly)
+          {:else if $session.method === SessionMethod.Pomade}
+            email and password
           {/if}
         </p>
         <p>
@@ -69,7 +71,7 @@
     </div>
     {#if isDisconnected}
       <Button class="btn btn-outline btn-error" onclick={logout}>Logout to Reconnect</Button>
-    {:else if $session?.method === SessionMethod.Pomade}
+    {:else}
       <PomadeSessions />
     {/if}
   </div>

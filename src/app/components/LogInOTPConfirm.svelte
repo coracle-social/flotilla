@@ -46,7 +46,7 @@
       const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
 
       if (res.ok && clientOptions) {
-        loginWithPomade(clientOptions.group.group_pk.slice(2), clientOptions)
+        loginWithPomade(clientOptions.group.group_pk.slice(2), email, clientOptions)
         pushToast({message: "Successfully logged in!"})
         setChecked("*")
         clearModals()

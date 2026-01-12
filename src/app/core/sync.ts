@@ -1,7 +1,7 @@
 import {page} from "$app/stores"
 import type {Unsubscriber} from "svelte/store"
 import {derived, get} from "svelte/store"
-import {partition, call, sortBy, assoc, chunk, sleep, identity, WEEK, ago} from "@welshman/lib"
+import {partition, call, sortBy, assoc, dissoc, chunk, sleep, identity, WEEK, ago} from "@welshman/lib"
 import {
   getListTags,
   getRelayTagValues,
@@ -94,7 +94,7 @@ const pullAndListen = ({relays, filters, signal}: PullOpts) => {
   request({
     relays,
     signal,
-    filters: unionFilters(filters).map(assoc("limit", 0)),
+    filters: unionFilters(filters.map(dissoc('limit'))).map(assoc("limit", 0)),
   })
 }
 
