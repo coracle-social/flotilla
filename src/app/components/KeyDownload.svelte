@@ -3,7 +3,6 @@
   import {encrypt} from "nostr-tools/nip49"
   import {hexToBytes} from "@welshman/lib"
   import {makeSecret} from "@welshman/util"
-  import type {Profile} from "@welshman/util"
   import {preventDefault, downloadText} from "@lib/html"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import ArrowDown from "@assets/icons/arrow-down.svg?dataurl"
@@ -14,9 +13,7 @@
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import SignUpComplete from "@app/components/SignUpComplete.svelte"
   import {pushToast} from "@app/util/toast"
-  import {pushModal} from "@app/util/modal"
   import {PLATFORM_NAME} from "@app/core/state"
 
   type Props = {
