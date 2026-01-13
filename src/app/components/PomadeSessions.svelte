@@ -19,6 +19,7 @@
     try {
       const client = new Client($session.clientOptions)
       const result = await client.listSessions()
+      const pubkey = await client.getPubkey()
 
       if (result.ok) {
         // Group sessions by client pubkey and collect peers
@@ -34,15 +35,13 @@
 
             if (existing) {
               existing.peers.push(peer)
-            } else {
+            } else if (item.client !== pubkey) {
               sessionMap.set(item.client, {...item, peers: [peer]})
             }
           }
         }
 
-        sessions = Array.from(sessionMap.values()).filter(
-          s => s.client !== client.pubkey, // Filter out current session
-        )
+        sessions = Array.from(sessionMap.values())
       } else {
         pushToast({
           theme: "error",

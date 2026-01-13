@@ -39,7 +39,9 @@
     let client: Client | undefined = undefined
 
     try {
-      const {ok, clientOptions} = await Client.register(2, 3, makeSecret())
+      const userSecret = makeSecret()
+      console.log(userSecret)
+      const {ok, clientOptions} = await Client.register(2, 3, userSecret)
 
       if (!ok) {
         return pushToast({

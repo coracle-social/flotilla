@@ -20,7 +20,7 @@
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileDelete from "@app/components/ProfileDelete.svelte"
-  import KeyRecovery from "@app/components/KeyRecovery.svelte"
+  import KeyRecoveryRequest from "@app/components/KeyRecoveryRequest.svelte"
   import SignerStatus from "@app/components/SignerStatus.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
   import {PLATFORM_NAME} from "@app/core/state"
@@ -41,7 +41,7 @@
 
   const startDelete = () => pushModal(ProfileDelete)
 
-  const startRecovery = () => pushModal(KeyRecovery)
+  const startRecovery = () => pushModal(KeyRecoveryRequest)
 
   let showAdvanced = false
 </script>

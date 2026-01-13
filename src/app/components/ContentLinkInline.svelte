@@ -25,7 +25,10 @@
 
 {#if url.match(/\.(jpe?g|png|gif|webp)$/)}
   <!-- Use a real link so people can copy the href -->
-  <a href={url} class="link-content whitespace-nowrap" onclick={stopPropagation(preventDefault(expand))}>
+  <a
+    href={url}
+    class="link-content whitespace-nowrap"
+    onclick={stopPropagation(preventDefault(expand))}>
     <Icon icon={LinkRound} size={3} class="inline-block" />
     {displayUrl(url)}
   </a>
