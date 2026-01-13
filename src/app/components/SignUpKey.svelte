@@ -9,9 +9,9 @@
     profile: Profile
   }
 
-  const props: Props = $props()
+  const {secret, profile}: Props = $props()
 
-  const next = () => pushModal(SignUpComplete, props)
+  const next = () => pushModal(SignUpComplete, {secret, profile})
 </script>
 
-<KeyDownload {next} />
+<KeyDownload {secret} {next} />

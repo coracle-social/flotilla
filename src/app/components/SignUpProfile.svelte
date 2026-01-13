@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {Profile} from "@welshman/util"
-  import {makeProfile} from "@welshman/util"
+  import {makeProfile, makeSecret} from "@welshman/util"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -18,6 +18,7 @@
   const {flow}: Props = $props()
 
   const initialValues = {
+    secret: makeSecret(),
     profile: makeProfile(),
     shouldBroadcast: false,
   }

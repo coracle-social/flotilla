@@ -2,7 +2,6 @@
   import {nsecEncode} from "nostr-tools/nip19"
   import {encrypt} from "nostr-tools/nip49"
   import {hexToBytes} from "@welshman/lib"
-  import {makeSecret} from "@welshman/util"
   import {preventDefault, downloadText} from "@lib/html"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import ArrowDown from "@assets/icons/arrow-down.svg?dataurl"
@@ -17,13 +16,12 @@
   import {PLATFORM_NAME} from "@app/core/state"
 
   type Props = {
+    secret: string
     next: () => unknown
     submitText?: string
   }
 
-  const {next, submitText = "Continue"}: Props = $props()
-
-  const secret = makeSecret()
+  const {secret, next, submitText = "Continue"}: Props = $props()
 
   const back = () => history.back()
 
