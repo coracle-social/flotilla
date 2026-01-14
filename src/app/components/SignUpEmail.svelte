@@ -39,11 +39,9 @@
     let client: Client | undefined = undefined
 
     try {
-      const userSecret = makeSecret()
-      console.log(userSecret)
-      const {ok, clientOptions} = await Client.register(2, 3, userSecret)
+      const {clientOptions, ...registerRes} = await Client.register(2, 3, makeSecret())
 
-      if (!ok) {
+      if (!registerRes.ok) {
         return pushToast({
           theme: "error",
           message: "Failed to register! Please try again.",
@@ -68,7 +66,7 @@
       if (!challengeRes.ok) {
         return pushToast({
           theme: "error",
-          message: `Failed to request confirmation code! Please try again..`,
+          message: `Failed to request confirmation code! Please try again.`,
         })
       }
 

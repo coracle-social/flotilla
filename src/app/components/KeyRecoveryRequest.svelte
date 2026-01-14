@@ -19,8 +19,9 @@
   } = $session as SessionPomade
 
   const requestRecovery = async () => {
-    await Client.requestChallenge(email, peers)
-    pushModal(KeyRecoveryConfirm)
+    const {peersByPrefix} = await Client.requestChallenge(email, peers)
+
+    pushModal(KeyRecoveryConfirm, {peersByPrefix})
   }
 
   const submit = async () => {

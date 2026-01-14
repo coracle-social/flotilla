@@ -26,10 +26,10 @@
     loading = true
 
     try {
-      const {ok} = await Client.requestChallenge(email)
+      const {ok, peersByPrefix} = await Client.requestChallenge(email)
 
       if (ok) {
-        pushModal(LogInOTPConfirm, {email})
+        pushModal(LogInOTPConfirm, {email, peersByPrefix})
       } else {
         pushToast({
           theme: "error",

@@ -1,6 +1,5 @@
 <script lang="ts">
-  import {Client, decodeChallenge} from "@pomade/core"
-  import {tryCatch} from "@welshman/lib"
+  import {Client} from "@pomade/core"
   import {getPubkey} from "@welshman/util"
   import type {SessionPomade} from "@welshman/app"
   import {session} from "@welshman/app"
@@ -17,25 +16,31 @@
   import {pushModal, clearModals} from "@app/util/modal"
   import {POMADE_SIGNERS} from "@app/core/state"
 
+  type Props = {
+    peersByPrefix: Map<string, string>
+  }
+
+  const {peersByPrefix}: Props = $props()
+
   const {
     email,
     clientOptions: {secret, peers},
   } = $session as SessionPomade
 
   const confirmRecovery = async () => {
-    const challenges = input
+    const otps = input
       .split(/\n/)
       .map(x => x.trim())
-      .filter(x => tryCatch(() => decodeChallenge(x)))
+      .filter(x => x.match(/^[0-9]{8}$/))
 
-    if (challenges.length < 2) {
+    if (otps.length < 2) {
       return pushToast({
         theme: "error",
-        message: "Failed to recover, not enough valid challenges were provided.",
+        message: "Failed to recover, not enough valid recovery codes were provided.",
       })
     }
 
-    const request = await Client.recoverWithChallenge(email, challenges)
+    const request = await Client.recoverWithChallenge(email, peersByPrefix, otps)
 
     if (!request.ok) {
       console.log(request.messages)
@@ -88,12 +93,11 @@
   <p>Your recovery codes have been sent!</p>
   <p>
     For security reasons, you may receive three or more emails with recovery codes in them. Please
-    paste <i>all</i>
-    recovery codes into the text box below, on separate lines.
+    paste <strong>all</strong> recovery codes into the text box below, on separate lines.
   </p>
   <textarea
     rows={POMADE_SIGNERS.length + 1}
-    class="textarea textarea-bordered text-xs leading-4"
+    class="textarea textarea-bordered leading-4"
     bind:value={input}></textarea>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>

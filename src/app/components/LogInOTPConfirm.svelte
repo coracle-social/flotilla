@@ -1,12 +1,9 @@
 <script lang="ts">
   import {Client} from "@pomade/core"
-  import {identity} from "@welshman/lib"
   import {loginWithPomade} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
-  import FieldInline from "@lib/components/FieldInline.svelte"
-  import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -15,22 +12,37 @@
   import {clearModals} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
+  import {POMADE_SIGNERS} from "@app/core/state"
 
   type Props = {
     email: string
+    peersByPrefix: Map<string, string>
   }
 
-  const {email}: Props = $props()
+  const {email, peersByPrefix}: Props = $props()
 
   const back = () => history.back()
 
   const onSubmit = async () => {
+    const otps = input
+      .split(/\n/)
+      .map(x => x.trim())
+      .filter(x => x.match(/^[0-9]{8}$/))
+
+    if (otps.length < 2) {
+      return pushToast({
+        theme: "error",
+        message: "Failed to recover, not enough valid recovery codes were provided.",
+      })
+    }
+
     loading = true
 
     try {
       const {ok, options, messages, clientSecret} = await Client.loginWithChallenge(
         email,
-        challenges,
+        peersByPrefix,
+        otps,
       )
 
       if (!ok) {
@@ -63,8 +75,7 @@
     }
   }
 
-  const challenges = $state(["", "", ""])
-
+  let input = $state("")
   let loading = $state(false)
 </script>
 
@@ -74,52 +85,24 @@
       <div>Log In</div>
     {/snippet}
     {#snippet info()}
-      <div>Enter the one-time login code sent to your email</div>
+      <div>Enter the login codes sent to your email</div>
     {/snippet}
   </ModalHeader>
-  <FieldInline>
-    {#snippet label()}
-      <p>Login Code #1*</p>
-    {/snippet}
-    {#snippet input()}
-      <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon={Key} />
-        <input bind:value={challenges[0]} />
-      </label>
-    {/snippet}
-  </FieldInline>
-  <FieldInline>
-    {#snippet label()}
-      <p>Login Code #2*</p>
-    {/snippet}
-    {#snippet input()}
-      <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon={Key} />
-        <input bind:value={challenges[1]} />
-      </label>
-    {/snippet}
-  </FieldInline>
-  <FieldInline>
-    {#snippet label()}
-      <p>Login Code #3*</p>
-    {/snippet}
-    {#snippet input()}
-      <label class="input input-bordered flex w-full items-center gap-2">
-        <Icon icon={Key} />
-        <input bind:value={challenges[2]} />
-      </label>
-    {/snippet}
-  </FieldInline>
-  <p class="text-sm">
-    To keep your key as safe a possible, you will receive <strong>three separate emails</strong>. Be
-    sure to enter all three codes!
+  <p>Your login codes have been sent!</p>
+  <p>
+    For security reasons, you may receive three or more emails with login codes in them. Please
+    paste <strong>all</strong> login codes into the text box below, on separate lines.
   </p>
+  <textarea
+    rows={POMADE_SIGNERS.length + 1}
+    class="textarea textarea-bordered leading-4"
+    bind:value={input}></textarea>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back} disabled={loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="btn btn-primary" disabled={loading || !challenges.every(identity)}>
+    <Button type="submit" class="btn btn-primary" disabled={loading}>
       <Spinner {loading}>Log In</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
