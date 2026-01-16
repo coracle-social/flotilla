@@ -24,7 +24,6 @@
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import {setupHistory} from "@app/util/history"
-  import {setupTracking} from "@app/util/tracking"
   import {setupAnalytics} from "@app/util/analytics"
   import {authPolicy, blockPolicy, trustPolicy, mostlyRestrictedPolicy} from "@app/util/policies"
   import {kv, db} from "@app/core/storage"
@@ -131,8 +130,8 @@
     // Remove policies when we're done
     unsubscribers.push(() => defaultSocketPolicies.splice(-policies.length))
 
-    // History, navigation, bug tracking, application data
-    unsubscribers.push(setupHistory(), setupAnalytics(), setupTracking(), syncApplicationData())
+    // History, navigation, application data
+    unsubscribers.push(setupHistory(), setupAnalytics(), syncApplicationData())
 
     // Subscribe to badge count for changes
     unsubscribers.push(notifications.badgeCount.subscribe(notifications.handleBadgeCountChanges))

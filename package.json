@@ -17,7 +17,6 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@eslint/js": "^9.37.0",
-    "@sentry/cli": "^2.56.1",
     "@sveltejs/kit": "^2.46.5",
     "@sveltejs/vite-plugin-svelte": "^4.0.4",
     "@types/eslint": "^9.6.1",
@@ -55,7 +54,6 @@
     "@getalby/sdk": "^5.1.2",
     "@pomade/core": "^0.0.12",
     "@poppanator/sveltekit-svg": "^4.2.1",
-    "@sentry/browser": "^8.55.0",
     "@sveltejs/adapter-static": "^3.0.10",
     "@tiptap/core": "^2.26.3",
     "@types/qrcode": "^1.5.5",
@@ -90,7 +88,6 @@
   },
   "pnpm": {
     "ignoredBuiltDependencies": [
-      "@sentry/cli",
       "esbuild"
     ],
     "onlyBuiltDependencies": [
