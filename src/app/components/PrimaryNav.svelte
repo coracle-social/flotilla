@@ -62,7 +62,7 @@
         <PrimaryNavItemSpace {url} />
       {:else}
         <PrimaryNavItem title="Home" href="/home" class="tooltip-right">
-          <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" />
+          <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={10} />
         </PrimaryNavItem>
         <Divider />
         {#each primarySpaceUrls as url (url)}
@@ -74,11 +74,11 @@
             class="tooltip-right"
             onclick={showOtherSpacesMenu}
             notification={otherSpaceNotifications}>
-            <ImageIcon alt="Other Spaces" src={Widget} />
+            <ImageIcon alt="Other Spaces" src={Widget} size={8} />
           </PrimaryNavItem>
         {/if}
         <PrimaryNavItem title="Add a Space" href="/discover" class="tooltip-right">
-          <ImageIcon alt="Add a Space" src={Compass} size={7} />
+          <ImageIcon alt="Add a Space" src={Compass} size={8} />
         </PrimaryNavItem>
       {/each}
     </div>
@@ -91,17 +91,21 @@
         href="/settings/profile"
         prefix="/settings"
         class="tooltip-right">
-        <ImageIcon alt="Settings" src={$userProfile?.picture || UserRounded} class="rounded-full" />
+        {#if $userProfile?.picture}
+          <ImageIcon alt="Settings" src={$userProfile?.picture} class="rounded-full" size={10} />
+        {:else}
+          <ImageIcon alt="Settings" src={UserRounded} class="rounded-full" size={8} />
+        {/if}
       </PrimaryNavItem>
       <PrimaryNavItem
         title="Messages"
         onclick={openChat}
         class="tooltip-right"
         notification={$notifications.has("/chat")}>
-        <ImageIcon alt="Messages" src={Letter} size={7} />
+        <ImageIcon alt="Messages" src={Letter} size={8} />
       </PrimaryNavItem>
       <PrimaryNavItem title="Search" href="/people" class="tooltip-right">
-        <ImageIcon alt="Search" src={Magnifier} size={7} />
+        <ImageIcon alt="Search" src={Magnifier} size={8} />
       </PrimaryNavItem>
     </div>
   </div>
@@ -118,26 +122,26 @@
   <div class="content-padding-x content-sizing flex justify-between px-2">
     <div class="flex gap-2 sm:gap-6">
       <PrimaryNavItem title="Home" href="/home">
-        <ImageIcon alt="Home" src={HomeSmile} size={7} />
+        <ImageIcon alt="Home" src={HomeSmile} size={8} />
       </PrimaryNavItem>
       <PrimaryNavItem
         title="Messages"
         onclick={openChat}
         notification={$notifications.has("/chat")}>
-        <ImageIcon alt="Messages" src={Letter} size={7} />
+        <ImageIcon alt="Messages" src={Letter} size={8} />
       </PrimaryNavItem>
       {#if PLATFORM_RELAYS.length !== 1}
         <PrimaryNavItem title="Spaces" href="/spaces" notification={anySpaceNotifications}>
-          <ImageIcon alt="Spaces" src={SettingsMinimalistic} size={7} />
+          <ImageIcon alt="Spaces" src={SettingsMinimalistic} size={8} />
         </PrimaryNavItem>
       {/if}
     </div>
     <PrimaryNavItem title="Settings" onclick={showSettingsMenu}>
-      <ImageIcon
-        alt="Settings"
-        src={$userProfile?.picture || Settings}
-        size={7}
-        class="rounded-full" />
+      {#if $userProfile?.picture}
+        <ImageIcon alt="Settings" src={$userProfile?.picture} size={10} class="rounded-full" />
+      {:else}
+        <ImageIcon alt="Settings" src={Settings} size={8} class="rounded-full" />
+      {/if}
     </PrimaryNavItem>
   </div>
 </div>

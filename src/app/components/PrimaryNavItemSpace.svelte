@@ -19,5 +19,5 @@
   title={displayRelayUrl(url)}
   class="tooltip-right"
   notification={$notifications.has(makeSpacePath(url))}>
-  <RelayIcon {url} size={7} class="rounded-full" />
+  <RelayIcon {url} size={10} class="rounded-full" />
 </PrimaryNavItem>

@@ -17,6 +17,7 @@
       await logout()
       window.location.href = "/"
     } catch (e) {
+      console.error(e)
       loading = false
     }
   }

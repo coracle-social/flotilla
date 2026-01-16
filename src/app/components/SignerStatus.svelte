@@ -15,7 +15,7 @@
   const pending = $derived($signerLog.filter(x => !x.finished_at))
   const failure = $derived(finished.filter(spec({ok: false})))
   const success = $derived(finished.filter(spec({ok: true})))
-  const recent = $derived($signerLog.slice(-10))
+  const recent = $derived($signerLog.filter(x => x.started_at < Date.now() - 5000).slice(-10))
   const recentFinished = $derived(recent.filter(x => x.finished_at))
   const recentPending = $derived(recent.filter(x => !x.finished_at))
   const recentAvg = $derived(avg(recentFinished.map(x => x.finished_at! - x.started_at)))
