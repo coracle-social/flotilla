@@ -16,6 +16,7 @@
 * Improve space join flow
 * Fix opening images in fullscreen dialog
 * Add support for blocked relays
+* Add authentication policy setting
 
 # 1.6.2
 

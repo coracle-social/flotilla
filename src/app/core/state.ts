@@ -263,12 +263,18 @@ export const MESSAGE_KINDS = [...CONTENT_KINDS, MESSAGE]
 
 export const SETTINGS = "flotilla/settings"
 
+export enum RelayAuthMode {
+  Aggressive = "aggressive",
+  Conservative = "conservative",
+}
+
 export type SettingsValues = {
   show_media: boolean
   hide_sensitive: boolean
   trusted_relays: string[]
   report_usage: boolean
   report_errors: boolean
+  relay_auth: RelayAuthMode
   send_delay: number
   font_size: number
   play_notification_sound: boolean
@@ -280,12 +286,13 @@ export type Settings = {
   values: SettingsValues
 }
 
-export const defaultSettings = {
+export const defaultSettings: SettingsValues = {
   show_media: true,
   hide_sensitive: true,
   trusted_relays: [],
   report_usage: true,
   report_errors: true,
+  relay_auth: RelayAuthMode.Conservative,
   send_delay: 0,
   font_size: 1.1,
   play_notification_sound: true,

@@ -8,6 +8,7 @@
   import InfoSquare from "@assets/icons/info-square.svg?dataurl"
   import Exit from "@assets/icons/logout-3.svg?dataurl"
   import GalleryMinimalistic from "@assets/icons/gallery-minimalistic.svg?dataurl"
+  import Shield from "@assets/icons/shield-minimalistic.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
@@ -60,16 +61,21 @@
       </SecondaryNavItem>
     </div>
     <div in:fly|local={{delay: 250}}>
+      <SecondaryNavItem href="/settings/privacy">
+        <Icon icon={Shield} /> Privacy
+      </SecondaryNavItem>
+    </div>
+    <div in:fly|local={{delay: 300}}>
       <SecondaryNavItem onclick={toggleTheme}>
         <Icon icon={Moon} /> Theme
       </SecondaryNavItem>
     </div>
-    <div in:fly|local={{delay: 300}}>
+    <div in:fly|local={{delay: 350}}>
       <SecondaryNavItem href="/settings/about">
         <Icon icon={InfoSquare} /> About
       </SecondaryNavItem>
     </div>
-    <div in:fly|local={{delay: 350}}>
+    <div in:fly|local={{delay: 400}}>
       <SecondaryNavItem class="text-error hover:text-error" onclick={logout}>
         <Icon icon={Exit} /> Log Out
       </SecondaryNavItem>

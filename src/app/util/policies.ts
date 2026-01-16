@@ -1,4 +1,5 @@
-import {on, always, call, dissoc, assoc, uniq} from "@welshman/lib"
+import {get} from "svelte/store"
+import {on, call, dissoc, assoc, uniq} from "@welshman/lib"
 import {RelayMode} from "@welshman/util"
 import type {Socket, RelayMessage, ClientMessage} from "@welshman/net"
 import {
@@ -20,9 +21,27 @@ import {
   getSetting,
   relaysPendingTrust,
   relaysMostlyRestricted,
+  RelayAuthMode,
+  NOTIFIER_RELAY,
+  userSpaceUrls,
 } from "@app/core/state"
 
-export const authPolicy = makeSocketPolicyAuth({sign, shouldAuth: always(true)})
+export const authPolicy = makeSocketPolicyAuth({
+  sign,
+  shouldAuth: (socket: Socket) => {
+    const $pubkey = pubkey.get()
+    const mode = getSetting<RelayAuthMode>("relay_auth")
+
+    if (!$pubkey) return false
+    if (socket.url === NOTIFIER_RELAY) return true
+    if (mode === RelayAuthMode.Aggressive) return true
+    if (get(userSpaceUrls).includes(socket.url)) return true
+    if (getPubkeyRelays($pubkey).includes(socket.url)) return true
+    if (getPubkeyRelays($pubkey, RelayMode.Messaging).includes(socket.url)) return true
+
+    return false
+  },
+})
 
 export const blockPolicy = (socket: Socket) => {
   const previousOpen = socket.open
