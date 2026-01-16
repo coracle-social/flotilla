@@ -7,6 +7,7 @@
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
   import Compass from "@assets/icons/compass-big.svg?dataurl"
+  import Key from "@assets/icons/key.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -14,6 +15,7 @@
   import InfoNostr from "@app/components/InfoNostr.svelte"
   import LogInBunker from "@app/components/LogInBunker.svelte"
   import LogInEmail from "@app/components/LogInEmail.svelte"
+  import LogInKey from "@app/components/LogInKey.svelte"
   import {pushModal, clearModals} from "@app/util/modal"
   import {PLATFORM_NAME, POMADE_SIGNERS} from "@app/core/state"
   import {pushToast} from "@app/util/toast"
@@ -78,6 +80,8 @@
 
   const loginWithBunker = () => pushModal(LogInBunker)
 
+  const loginWithKey = () => pushModal(LogInKey)
+
   const hasSigner = $derived(getNip07() || signers.length > 0)
 
   onMount(async () => {
@@ -131,6 +135,12 @@
     <Button {disabled} onclick={loginWithEmail} class="btn">
       <Icon icon={Letter} />
       Log in with Email
+    </Button>
+  {/if}
+  {#if !hasSigner}
+    <Button {disabled} onclick={loginWithKey} class="btn btn-neutral">
+      <Icon icon={Key} />
+      Log in with Key
     </Button>
   {/if}
   {#if !hasSigner || !hasPomade}

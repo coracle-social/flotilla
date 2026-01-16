@@ -17,6 +17,7 @@
 * Fix opening images in fullscreen dialog
 * Add support for blocked relays
 * Add authentication policy setting
+* Add login with key if no signer is detected
 
 # 1.6.2
 
