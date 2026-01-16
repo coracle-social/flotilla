@@ -1,13 +1,12 @@
 <script lang="ts">
   import {Client} from "@pomade/core"
   import {choice} from "@welshman/lib"
-  import {makeSecret} from "@welshman/util"
-  import type {Profile} from "@welshman/util"
   import {preventDefault} from "@lib/html"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Key from "@assets/icons/key.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+  import {getKey, setKey} from "@lib/implicit"
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -19,10 +18,10 @@
   import {pushModal} from "@app/util/modal"
 
   type Props = {
-    profile: Profile
+    next: () => void
   }
 
-  const {profile}: Props = $props()
+  const {next}: Props = $props()
 
   const back = () => history.back()
 
@@ -39,7 +38,8 @@
     let client: Client | undefined = undefined
 
     try {
-      const {clientOptions, ...registerRes} = await Client.register(2, 3, makeSecret())
+      const secret = getKey<string>("signup.secret")!
+      const {clientOptions, ...registerRes} = await Client.register(2, 3, secret)
 
       if (!registerRes.ok) {
         return pushToast({
@@ -70,7 +70,10 @@
         })
       }
 
-      pushModal(SignUpEmailConfirm, {email, profile, clientOptions})
+      setKey("signup.email", email)
+      setKey("signup.clientOptions", clientOptions)
+
+      pushModal(SignUpEmailConfirm, {next})
     } catch (e) {
       console.error(e)
 

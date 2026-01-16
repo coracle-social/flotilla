@@ -16,8 +16,9 @@
   const loadSessions = async () => {
     if (!isPomadeSession($session)) return
 
+    const client = new Client($session.clientOptions)
+
     try {
-      const client = new Client($session.clientOptions)
       const result = await client.listSessions()
       const pubkey = await client.getPubkey()
 
@@ -42,20 +43,9 @@
         }
 
         sessions = Array.from(sessionMap.values())
-      } else {
-        pushToast({
-          theme: "error",
-          message: "Failed to load sessions",
-        })
       }
-
+    } finally {
       client.stop()
-    } catch (e) {
-      console.error(e)
-      pushToast({
-        theme: "error",
-        message: "Failed to load sessions",
-      })
     }
   }
 

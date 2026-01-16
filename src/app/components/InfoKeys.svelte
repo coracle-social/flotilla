@@ -7,13 +7,13 @@
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import ProfileEject from "@app/components/ProfileEject.svelte"
+  import KeyRecoveryRequest from "@app/components/KeyRecoveryRequest.svelte"
   import {PLATFORM_NAME} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
 
   const back = () => history.back()
 
-  const startEject = () => pushModal(ProfileEject)
+  const startRecoveryRequest = () => pushModal(KeyRecoveryRequest)
 </script>
 
 <div class="column gap-4">
@@ -44,7 +44,7 @@
         <Icon icon={AltArrowLeft} />
         Go back
       </Button>
-      <Button class="btn btn-primary" onclick={startEject}>
+      <Button class="btn btn-primary" onclick={startRecoveryRequest}>
         <Icon icon={CheckCircle} />
         I want to hold my own keys
       </Button>

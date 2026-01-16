@@ -2,7 +2,7 @@
   import * as nip19 from "nostr-tools/nip19"
   import {hexToBytes} from "@welshman/lib"
   import {displayPubkey, displayProfile} from "@welshman/util"
-  import {pubkey, session, displayNip05, deriveProfile, SessionMethod} from "@welshman/app"
+  import {pubkey, session, displayNip05, deriveProfile} from "@welshman/app"
   import {slideAndFade} from "@lib/transition"
   import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
@@ -20,7 +20,6 @@
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileDelete from "@app/components/ProfileDelete.svelte"
-  import KeyRecoveryRequest from "@app/components/KeyRecoveryRequest.svelte"
   import SignerStatus from "@app/components/SignerStatus.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
   import {PLATFORM_NAME} from "@app/core/state"
@@ -37,11 +36,9 @@
 
   const startEdit = () => pushModal(ProfileEdit)
 
-  const startEject = () => pushModal(InfoKeys)
-
   const startDelete = () => pushModal(ProfileDelete)
 
-  const startRecovery = () => pushModal(KeyRecoveryRequest)
+  const startRecovery = () => pushModal(InfoKeys)
 
   let showAdvanced = false
 </script>
@@ -87,7 +84,7 @@
         {#snippet info()}
           <p>
             Your email and password can only be used to log into {PLATFORM_NAME}.
-            <Button class="link" onclick={startEject}>Start holding your own keys</Button>
+            <Button class="link" onclick={startRecovery}>Start holding your own keys</Button>
           </p>
         {/snippet}
       </FieldInline>
@@ -159,12 +156,6 @@
     </div>
     {#if showAdvanced}
       <div transition:slideAndFade class="flex flex-col gap-2 pt-4">
-        {#if $session?.method === SessionMethod.Pomade}
-          <Button class="btn btn-neutral" onclick={startRecovery}>
-            <Icon icon={Key} />
-            Recover your key
-          </Button>
-        {/if}
         <Button class="btn btn-error" onclick={startDelete}>
           <Icon icon={TrashBin2} />
           Delete your profile

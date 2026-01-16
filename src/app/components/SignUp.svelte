@@ -1,21 +1,65 @@
 <script lang="ts">
+  import type {ClientOptions} from "@pomade/core"
+  import type {Profile} from "@welshman/util"
+  import {makeProfile, makeSecret, getPubkey} from "@welshman/util"
+  import {loginWithNip01, loginWithPomade} from "@welshman/app"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
+  import {getKey, setKey} from "@lib/implicit"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import InfoNostr from "@app/components/InfoNostr.svelte"
+  import SignUpKey from "@app/components/SignUpKey.svelte"
+  import SignUpEmail from "@app/components/SignUpEmail.svelte"
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
-  import {pushModal} from "@app/util/modal"
+  import SignUpComplete from "@app/components/SignUpComplete.svelte"
+  import {setChecked} from "@app/util/notifications"
+  import {pushModal, clearModals} from "@app/util/modal"
+  import {initProfile} from "@app/core/commands"
   import {POMADE_SIGNERS, PLATFORM_NAME} from "@app/core/state"
+
+  setKey("signup.email", "")
+  setKey("signup.secret", makeSecret())
+  setKey("signup.profile", makeProfile())
+  setKey("signup.clientOptions", undefined)
 
   const hasPomade = POMADE_SIGNERS.length >= 3
 
   const login = () => pushModal(LogIn)
 
-  const useEmail = () => pushModal(SignUpProfile, {flow: "email"})
+  const flows = {
+    email: {
+      start: () => pushModal(SignUpEmail, {next: flows.email.profile}),
+      profile: () => pushModal(SignUpProfile, {next: flows.email.complete}),
+      complete: () => pushModal(SignUpComplete, {next: flows.email.finalize}),
+      finalize: () => {
+        const email = getKey<string>("signup.email")!
+        const secret = getKey<string>("signup.secret")!
+        const profile = getKey<Profile>("signup.profile")!
+        const clientOptions = getKey<ClientOptions>("signup.clientOptions")!
 
-  const useNostr = () => pushModal(SignUpProfile, {flow: "nostr"})
+        loginWithPomade(getPubkey(secret), email, clientOptions!)
+        initProfile(profile)
+        setChecked("*")
+        clearModals()
+      },
+    },
+    nostr: {
+      start: () => pushModal(SignUpProfile, {next: flows.nostr.key}),
+      key: () => pushModal(SignUpKey, {next: flows.nostr.complete}),
+      complete: () => pushModal(SignUpComplete, {next: flows.nostr.finalize}),
+      finalize: () => {
+        const secret = getKey<string>("signup.secret")!
+        const profile = getKey<Profile>("signup.profile")!
+
+        loginWithNip01(secret)
+        initProfile(profile)
+        setChecked("*")
+        clearModals()
+      },
+    },
+  }
 </script>
 
 <div class="column gap-4">
@@ -26,12 +70,12 @@
     users control over their digital identity using <strong>cryptographic key pairs</strong>.
   </p>
   {#if hasPomade}
-    <Button onclick={useEmail} class="btn btn-primary">
+    <Button onclick={flows.email.start} class="btn btn-primary">
       <Icon icon={Letter} />
       Sign up with email
     </Button>
   {/if}
-  <Button onclick={useNostr} class="btn {hasPomade ? 'btn-neutral' : 'btn-primary'}">
+  <Button onclick={flows.nostr.start} class="btn {hasPomade ? 'btn-neutral' : 'btn-primary'}">
     <Icon icon={Key} />
     Generate a key
   </Button>

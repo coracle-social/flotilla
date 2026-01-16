@@ -1,9 +1,7 @@
 <script lang="ts">
-  import type {ClientOptions} from "@pomade/core"
-  import type {Profile} from "@welshman/util"
   import {sleep} from "@welshman/lib"
-  import {loginWithPomade} from "@welshman/app"
   import {preventDefault} from "@lib/html"
+  import {getKey} from "@lib/implicit"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -13,18 +11,14 @@
   import Icon from "@lib/components/Icon.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {initProfile} from "@app/core/commands"
-  import {clearModals} from "@app/util/modal"
-  import {setChecked} from "@app/util/notifications"
-  import {pushToast} from "@app/util/toast"
 
   type Props = {
-    email: string
-    profile: Profile
-    clientOptions: ClientOptions
+    next: () => void
   }
 
-  const {email, profile, clientOptions}: Props = $props()
+  const {next}: Props = $props()
+
+  const email = getKey<string>("signup.email")
 
   const back = () => history.back()
 
@@ -34,15 +28,7 @@
     // Just pretend we're validating, they clearly got a code from somewhere
     await sleep(800)
 
-    try {
-      loginWithPomade(clientOptions.group.group_pk.slice(2), email, clientOptions)
-      pushToast({message: "Successfully logged in!"})
-      initProfile(profile)
-      setChecked("*")
-      clearModals()
-    } finally {
-      loading = false
-    }
+    next()
   }
 
   let challenge = $state("")

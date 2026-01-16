@@ -1,17 +1,14 @@
 <script lang="ts">
-  import type {Profile} from "@welshman/util"
+  import {getKey} from "@lib/implicit"
   import KeyDownload from "@app/components/KeyDownload.svelte"
-  import SignUpComplete from "@app/components/SignUpComplete.svelte"
-  import {pushModal} from "@app/util/modal"
 
   type Props = {
-    secret: string
-    profile: Profile
+    next: () => void
   }
 
-  const {secret, profile}: Props = $props()
+  const {next}: Props = $props()
 
-  const next = () => pushModal(SignUpComplete, {secret, profile})
+  const secret = getKey<string>("signup.secret")!
 </script>
 
 <KeyDownload {secret} {next} />

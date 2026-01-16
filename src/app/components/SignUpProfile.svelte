@@ -1,32 +1,29 @@
 <script lang="ts">
   import type {Profile} from "@welshman/util"
-  import {makeProfile, makeSecret} from "@welshman/util"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+  import {getKey, setKey} from "@lib/implicit"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
-  import SignUpKey from "@app/components/SignUpKey.svelte"
-  import SignUpEmail from "@app/components/SignUpEmail.svelte"
-  import {pushModal} from "@app/util/modal"
 
   type Props = {
-    flow: "nostr" | "email"
+    next: () => void
   }
 
-  const {flow}: Props = $props()
+  const {next}: Props = $props()
 
-  const initialValues = {
-    secret: makeSecret(),
-    profile: makeProfile(),
-    shouldBroadcast: false,
-  }
+  const profile = getKey<Profile>("signup.profile")!
+
+  const initialValues = {profile, shouldBroadcast: false}
 
   const back = () => history.back()
 
-  const onsubmit = (values: {profile: Profile}) =>
-    pushModal(flow === "nostr" ? SignUpKey : SignUpEmail, values)
+  const onsubmit = ({profile}: {profile: Profile}) => {
+    setKey("signup.profile", profile)
+    next()
+  }
 </script>
 
 <div class="flex flex-col gap-4">

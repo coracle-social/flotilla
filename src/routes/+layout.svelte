@@ -20,6 +20,7 @@
   import * as net from "@welshman/net"
   import * as app from "@welshman/app"
   import {isMobile} from "@lib/html"
+  import * as implicit from "@lib/implicit"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import {setupHistory} from "@app/util/history"
@@ -50,6 +51,7 @@
     nip19,
     theme,
     ...lib,
+    ...implicit,
     ...welshmanSigner,
     ...router,
     ...store,

@@ -1,6 +1,4 @@
 <script lang="ts">
-  import type {Profile} from "@welshman/util"
-  import {loginWithNip01} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import HomeSmile from "@assets/icons/home-smile.svg?dataurl"
@@ -8,23 +6,14 @@
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {clearModals} from "@app/util/modal"
-  import {initProfile} from "@app/core/commands"
 
   type Props = {
-    secret: string
-    profile: Profile
+    next: () => void
   }
 
-  const {secret, profile}: Props = $props()
+  const {next}: Props = $props()
 
   const back = () => history.back()
-
-  const next = () => {
-    loginWithNip01(secret)
-    initProfile(profile)
-    clearModals()
-  }
 </script>
 
 <form class="column gap-4" onsubmit={preventDefault(next)}>

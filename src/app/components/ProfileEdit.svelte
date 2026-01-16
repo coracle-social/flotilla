@@ -7,7 +7,7 @@
   import {clearModals} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
   import {PROTECTED} from "@app/core/state"
-  import {updateProfile} from "../core/commands"
+  import {updateProfile} from "@app/core/commands"
 
   const profile = $profilesByPubkey.get($pubkey!) || makeProfile()
   const shouldBroadcast = !getTag(PROTECTED, profile.event?.tags || [])
