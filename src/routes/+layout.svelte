@@ -26,7 +26,7 @@
   import {setupHistory} from "@app/util/history"
   import {setupTracking} from "@app/util/tracking"
   import {setupAnalytics} from "@app/util/analytics"
-  import {authPolicy, trustPolicy, mostlyRestrictedPolicy} from "@app/util/policies"
+  import {authPolicy, blockPolicy, trustPolicy, mostlyRestrictedPolicy} from "@app/util/policies"
   import {kv, db} from "@app/core/storage"
   import {userSettingsValues} from "@app/core/state"
   import {syncApplicationData} from "@app/core/sync"
@@ -43,7 +43,7 @@
 
   const {children} = $props()
 
-  const policies = [authPolicy, trustPolicy, mostlyRestrictedPolicy]
+  const policies = [authPolicy, blockPolicy, trustPolicy, mostlyRestrictedPolicy]
 
   // Add stuff to window for convenience
   Object.assign(window, {

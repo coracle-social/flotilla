@@ -52,10 +52,8 @@ import {
   removeFromListByPredicate,
   getTag,
   getListTags,
-  getRelayTags,
   getRelayTagValues,
   toNostrURI,
-  getRelaysFromList,
   RelayMode,
   getAddress,
   getTagValue,
@@ -80,8 +78,6 @@ import {
   publishThunk,
   tagEvent,
   tagEventForReaction,
-  userRelayList,
-  userMessagingRelayList,
   nip44EncryptToSelf,
   dropSession,
   tagEventForComment,
@@ -206,42 +202,6 @@ export const removeRoomMembership = async (url: string, h: string) => {
   const relays = uniq([url, ...Router.get().FromUser().getUrls(), ...getRelayTagValues(event.tags)])
 
   return publishThunk({event, relays})
-}
-
-export const setRelayPolicy = (url: string, read: boolean, write: boolean) => {
-  const list = get(userRelayList) || makeList({kind: RELAYS})
-  const tags = getRelayTags(getListTags(list)).filter(t => normalizeRelayUrl(t[1]) !== url)
-
-  if (read && write) {
-    tags.push(["r", url])
-  } else if (read) {
-    tags.push(["r", url, "read"])
-  } else if (write) {
-    tags.push(["r", url, "write"])
-  }
-
-  return publishThunk({
-    event: makeEvent(list.kind, {tags}),
-    relays: [url, ...INDEXER_RELAYS, ...Router.get().FromUser().getUrls(), ...get(userSpaceUrls)],
-  })
-}
-
-export const setMessagingRelayPolicy = (url: string, enabled: boolean) => {
-  const list = get(userMessagingRelayList) || makeList({kind: MESSAGING_RELAYS})
-
-  // Only update messaging policies if they already exist or we're adding them
-  if (enabled || getRelaysFromList(list).includes(url)) {
-    const tags = getRelayTags(getListTags(list)).filter(t => normalizeRelayUrl(t[1]) !== url)
-
-    if (enabled) {
-      tags.push(["relay", url])
-    }
-
-    return publishThunk({
-      event: makeEvent(list.kind, {tags}),
-      relays: [...INDEXER_RELAYS, ...Router.get().FromUser().getUrls(), ...get(userSpaceUrls)],
-    })
-  }
 }
 
 // Relay access

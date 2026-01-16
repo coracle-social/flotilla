@@ -1,4 +1,5 @@
 import {on, always, call, dissoc, assoc, uniq} from "@welshman/lib"
+import {RelayMode} from "@welshman/util"
 import type {Socket, RelayMessage, ClientMessage} from "@welshman/net"
 import {
   makeSocketPolicyAuth,
@@ -13,7 +14,7 @@ import {
   isClientNegOpen,
   isClientNegClose,
 } from "@welshman/net"
-import {sign} from "@welshman/app"
+import {sign, pubkey, getPubkeyRelays} from "@welshman/app"
 import {
   userSettingsValues,
   getSetting,
@@ -22,6 +23,22 @@ import {
 } from "@app/core/state"
 
 export const authPolicy = makeSocketPolicyAuth({sign, shouldAuth: always(true)})
+
+export const blockPolicy = (socket: Socket) => {
+  const previousOpen = socket.open
+
+  socket.open = () => {
+    const $pubkey = pubkey.get()
+
+    if (!$pubkey || !getPubkeyRelays($pubkey, RelayMode.Blocked).includes(socket.url)) {
+      return previousOpen()
+    }
+  }
+
+  return () => {
+    socket.open = previousOpen
+  }
+}
 
 export const trustPolicy = (socket: Socket) => {
   const buffer: RelayMessage[] = []

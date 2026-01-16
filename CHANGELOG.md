@@ -15,6 +15,7 @@
 * Fix memory leak, notification badge not showing
 * Improve space join flow
 * Fix opening images in fullscreen dialog
+* Add support for blocked relays
 
 # 1.6.2
 

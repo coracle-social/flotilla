@@ -1,6 +1,16 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {pubkey, getRelayLists, getMessagingRelayLists, derivePubkeyRelays} from "@welshman/app"
+  import {
+    pubkey,
+    getRelayLists,
+    derivePubkeyRelays,
+    addRelay,
+    removeRelay,
+    addBlockedRelay,
+    removeBlockedRelay,
+    addMessagingRelay,
+    removeMessagingRelay,
+  } from "@welshman/app"
   import {RelayMode} from "@welshman/util"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -9,43 +19,42 @@
   import RelayAdd from "@app/components/RelayAdd.svelte"
   import {pushModal} from "@app/util/modal"
   import {discoverRelays} from "@app/core/requests"
-  import {setRelayPolicy, setMessagingRelayPolicy} from "@app/core/commands"
   import Globus from "@assets/icons/globus.svg?dataurl"
   import Inbox from "@assets/icons/inbox.svg?dataurl"
   import Mailbox from "@assets/icons/mailbox.svg?dataurl"
+  import ForbiddenCircle from "@assets/icons/forbidden-circle.svg?dataurl"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
 
   const readRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Read)
   const writeRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Write)
+  const blockedRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Blocked)
   const messagingRelayUrls = derivePubkeyRelays($pubkey!, RelayMode.Messaging)
 
-  const addReadRelay = () =>
+  const addReadRelays = () =>
     pushModal(RelayAdd, {
       relays: readRelayUrls,
-      addRelay: (url: string) => setRelayPolicy(url, true, $writeRelayUrls.includes(url)),
+      addRelay: (url: string) => addRelay(url, RelayMode.Read),
     })
 
-  const addWriteRelay = () =>
+  const addWriteRelays = () =>
     pushModal(RelayAdd, {
       relays: writeRelayUrls,
-      addRelay: (url: string) => setRelayPolicy(url, $readRelayUrls.includes(url), true),
+      addRelay: (url: string) => addRelay(url, RelayMode.Write),
     })
 
-  const addMessagingRelay = () =>
-    pushModal(RelayAdd, {
-      relays: messagingRelayUrls,
-      addRelay: (url: string) => setMessagingRelayPolicy(url, true),
-    })
+  const addBlockedRelays = () =>
+    pushModal(RelayAdd, {relays: blockedRelayUrls, addRelay: addBlockedRelay})
 
-  const removeReadRelay = (url: string) => setRelayPolicy(url, false, $writeRelayUrls.includes(url))
+  const addMessagingRelays = () =>
+    pushModal(RelayAdd, {relays: messagingRelayUrls, addRelay: addMessagingRelay})
 
-  const removeWriteRelay = (url: string) => setRelayPolicy(url, $readRelayUrls.includes(url), false)
+  const removeReadRelay = (url: string) => removeRelay(url, RelayMode.Read)
 
-  const removeMessagingRelay = (url: string) => setMessagingRelayPolicy(url, false)
+  const removeWriteRelay = (url: string) => removeRelay(url, RelayMode.Write)
 
   onMount(() => {
-    discoverRelays([...getRelayLists(), ...getMessagingRelayLists()])
+    discoverRelays(getRelayLists())
   })
 </script>
 
@@ -77,7 +86,7 @@
       {:else}
         <p class="text-center text-sm">No relays found</p>
       {/each}
-      <Button class="btn btn-primary mt-2" onclick={addWriteRelay}>
+      <Button class="btn btn-primary mt-2" onclick={addWriteRelays}>
         <Icon icon={AddCircle} />
         Add Relay
       </Button>
@@ -109,7 +118,7 @@
       {:else}
         <p class="text-center text-sm">No relays found</p>
       {/each}
-      <Button class="btn btn-primary mt-2" onclick={addReadRelay}>
+      <Button class="btn btn-primary mt-2" onclick={addReadRelays}>
         <Icon icon={AddCircle} />
         Add Relay
       </Button>
@@ -142,7 +151,38 @@
       {:else}
         <p class="text-center text-sm">No relays found</p>
       {/each}
-      <Button class="btn btn-primary mt-2" onclick={addMessagingRelay}>
+      <Button class="btn btn-primary mt-2" onclick={addMessagingRelays}>
+        <Icon icon={AddCircle} />
+        Add Relay
+      </Button>
+    </div>
+  </Collapse>
+  <Collapse class="card2 bg-alt column gap-4 shadow-md">
+    {#snippet title()}
+      <h2 class="flex items-center gap-3 text-xl">
+        <Icon icon={ForbiddenCircle} />
+        Blocked Relays
+      </h2>
+    {/snippet}
+    {#snippet description()}
+      <p class="text-sm">
+        These relays will never be connected to by clients supporting this policy.
+      </p>
+    {/snippet}
+    <div class="column gap-2">
+      {#each $blockedRelayUrls.sort() as url (url)}
+        <RelayItem {url}>
+          <Button
+            class="tooltip flex items-center"
+            data-tip="Stop using this relay"
+            onclick={() => removeBlockedRelay(url)}>
+            <Icon icon={CloseCircle} />
+          </Button>
+        </RelayItem>
+      {:else}
+        <p class="text-center text-sm">No relays found</p>
+      {/each}
+      <Button class="btn btn-primary mt-2" onclick={addBlockedRelays}>
         <Icon icon={AddCircle} />
         Add Relay
       </Button>

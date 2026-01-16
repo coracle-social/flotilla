@@ -41,6 +41,7 @@ import {
   loadRelayList,
   loadMessagingRelayList,
   loadBlossomServerList,
+  loadBlockedRelayList,
   loadFollowList,
   loadMuteList,
   loadProfile,
@@ -215,6 +216,7 @@ const syncUserData = () => {
       loadAlerts($userRelayList.event.pubkey)
       loadAlertStatuses($userRelayList.event.pubkey)
       loadBlossomServerList($userRelayList.event.pubkey)
+      loadBlockedRelayList($userRelayList.event.pubkey)
       loadFollowList($userRelayList.event.pubkey)
       loadGroupList($userRelayList.event.pubkey)
       loadMuteList($userRelayList.event.pubkey)
@@ -229,13 +231,13 @@ const syncUserData = () => {
       await sleep(1000)
 
       await Promise.all(
-        pubkeys.map(async pk => {
-          await loadRelayList(pk)
-          await loadGroupList(pk)
-          await loadProfile(pk)
-          await loadFollowList(pk)
-          await loadMuteList(pk)
-        }),
+        pubkeys.flatMap(pk => [
+          loadRelayList(pk),
+          loadGroupList(pk),
+          loadProfile(pk),
+          loadFollowList(pk),
+          loadMuteList(pk),
+        ]),
       )
     }
   })
