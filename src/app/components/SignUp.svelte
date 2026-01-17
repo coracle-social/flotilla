@@ -1,8 +1,15 @@
 <script lang="ts">
   import type {ClientOptions} from "@pomade/core"
   import type {Profile} from "@welshman/util"
-  import {makeProfile, makeSecret, getPubkey} from "@welshman/util"
-  import {loginWithNip01, loginWithPomade} from "@welshman/app"
+  import {
+    makeProfile,
+    makeSecret,
+    getPubkey,
+    RELAYS,
+    MESSAGING_RELAYS,
+    makeEvent,
+  } from "@welshman/util"
+  import {loginWithNip01, loginWithPomade, publishThunk} from "@welshman/app"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import {getKey, setKey} from "@lib/implicit"
@@ -17,7 +24,13 @@
   import {setChecked} from "@app/util/notifications"
   import {pushModal, clearModals} from "@app/util/modal"
   import {initProfile} from "@app/core/commands"
-  import {POMADE_SIGNERS, PLATFORM_NAME} from "@app/core/state"
+  import {
+    POMADE_SIGNERS,
+    PLATFORM_NAME,
+    INDEXER_RELAYS,
+    DEFAULT_RELAYS,
+    DEFAULT_MESSAGING_RELAYS,
+  } from "@app/core/state"
 
   setKey("signup.email", "")
   setKey("signup.secret", makeSecret())
@@ -28,6 +41,29 @@
 
   const login = () => pushModal(LogIn)
 
+  const completeSignup = () => {
+    // Add default outbox/inbox relays
+    publishThunk({
+      event: makeEvent(RELAYS, {tags: DEFAULT_RELAYS.map(url => ["r", url])}),
+      relays: [...INDEXER_RELAYS, ...DEFAULT_RELAYS],
+    })
+
+    // Add default messaging relays
+    publishThunk({
+      event: makeEvent(MESSAGING_RELAYS, {tags: DEFAULT_MESSAGING_RELAYS.map(url => ["r", url])}),
+      relays: DEFAULT_RELAYS,
+    })
+
+    // Save the user's profile
+    initProfile(getKey<Profile>("signup.profile")!)
+
+    // Don't show any notifications for old content
+    setChecked("*")
+
+    // Go to the dashboard
+    clearModals()
+  }
+
   const flows = {
     email: {
       start: () => pushModal(SignUpEmail, {next: flows.email.profile}),
@@ -36,13 +72,10 @@
       finalize: () => {
         const email = getKey<string>("signup.email")!
         const secret = getKey<string>("signup.secret")!
-        const profile = getKey<Profile>("signup.profile")!
         const clientOptions = getKey<ClientOptions>("signup.clientOptions")!
 
-        loginWithPomade(getPubkey(secret), email, clientOptions!)
-        initProfile(profile)
-        setChecked("*")
-        clearModals()
+        loginWithPomade(getPubkey(secret), email, clientOptions)
+        completeSignup()
       },
     },
     nostr: {
@@ -51,12 +84,9 @@
       complete: () => pushModal(SignUpComplete, {next: flows.nostr.finalize}),
       finalize: () => {
         const secret = getKey<string>("signup.secret")!
-        const profile = getKey<Profile>("signup.profile")!
 
         loginWithNip01(secret)
-        initProfile(profile)
-        setChecked("*")
-        clearModals()
+        completeSignup()
       },
     },
   }

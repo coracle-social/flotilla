@@ -18,6 +18,7 @@
 * Add support for blocked relays
 * Add authentication policy setting
 * Add login with key if no signer is detected
+* Publish default relay selections on signup
 
 # 1.6.2
 

@@ -142,6 +142,12 @@ export const SIGNER_RELAYS = fromCsv(import.meta.env.VITE_SIGNER_RELAYS).map(nor
 
 export const INDEXER_RELAYS = fromCsv(import.meta.env.VITE_INDEXER_RELAYS).map(normalizeRelayUrl)
 
+export const DEFAULT_RELAYS = fromCsv(import.meta.env.VITE_DEFAULT_RELAYS).map(normalizeRelayUrl)
+
+export const DEFAULT_MESSAGING_RELAYS = fromCsv(import.meta.env.VITE_DEFAULT_MESSAGING_RELAYS).map(
+  normalizeRelayUrl,
+)
+
 export const PLATFORM_RELAYS = fromCsv(import.meta.env.VITE_PLATFORM_RELAYS).map(normalizeRelayUrl)
 
 export const PLATFORM_URL = import.meta.env.VITE_PLATFORM_URL
