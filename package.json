@@ -1,11 +1,10 @@
 {
-  "name": "flotilla",
+ "name": "flotilla",
   "version": "1.6.3",
   "private": true,
   "scripts": {
     "dev": "vite dev",
     "build": "./build.sh",
-    "sourcemaps": "./build.sh && ./sourcemaps.sh",
     "release:android": "./build.sh && cap build android --androidreleasetype APK --signing-type apksigner",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
