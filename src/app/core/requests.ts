@@ -32,7 +32,7 @@ import {load, request} from "@welshman/net"
 import {repository, makeFeedController, loadRelay, tracker} from "@welshman/app"
 import {createScroller} from "@lib/html"
 import {daysBetween} from "@lib/util"
-import {NOTIFIER_RELAY, getEventsForUrl} from "@app/core/state"
+import {getEventsForUrl} from "@app/core/state"
 
 // Utils
 
@@ -248,20 +248,6 @@ export const makeCalendarFeed = ({
 }
 
 // Domain specific
-
-export const loadAlerts = (pubkey: string) =>
-  request({
-    autoClose: true,
-    relays: [NOTIFIER_RELAY],
-    filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID], authors: [pubkey]}],
-  })
-
-export const loadAlertStatuses = (pubkey: string) =>
-  request({
-    autoClose: true,
-    relays: [NOTIFIER_RELAY],
-    filters: [{kinds: [ALERT_STATUS], "#p": [pubkey]}],
-  })
 
 export const discoverRelays = (lists: List[]) =>
   Promise.all(

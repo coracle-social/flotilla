@@ -123,13 +123,11 @@ export const PROTECTED = ["-"]
 
 export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios"
 
-export const NOTIFIER_PUBKEY = import.meta.env.VITE_NOTIFIER_PUBKEY
-
 export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
-export const NOTIFIER_RELAY = normalizeRelayUrl(import.meta.env.VITE_NOTIFIER_RELAY)
-
 export const SIGNER_RELAYS = fromCsv(import.meta.env.VITE_SIGNER_RELAYS).map(normalizeRelayUrl)
+
+export const BLOCKED_RELAYS = fromCsv(import.meta.env.VITE_BLOCKED_RELAYS).map(normalizeRelayUrl)
 
 export const INDEXER_RELAYS = fromCsv(import.meta.env.VITE_INDEXER_RELAYS).map(normalizeRelayUrl)
 
@@ -274,6 +272,7 @@ export type SettingsValues = {
   relay_auth: RelayAuthMode
   send_delay: number
   font_size: number
+  alerts_push: boolean
   alerts_spaces: boolean
   alerts_mentions: boolean
   alerts_messages: boolean
@@ -295,9 +294,10 @@ export const defaultSettings: SettingsValues = {
   relay_auth: RelayAuthMode.Conservative,
   send_delay: 0,
   font_size: 1.1,
-  alerts_spaces: true,
-  alerts_mentions: true,
-  alerts_messages: true,
+  alerts_push: true,
+  alerts_spaces: false,
+  alerts_mentions: false,
+  alerts_messages: false,
   alerts_sound: true,
   alerts_badge: true,
 }

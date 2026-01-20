@@ -17,12 +17,12 @@ import {
 } from "@welshman/net"
 import {sign, pubkey, getPubkeyRelays} from "@welshman/app"
 import {
+  BLOCKED_RELAYS,
   userSettingsValues,
   getSetting,
   relaysPendingTrust,
   relaysMostlyRestricted,
   RelayAuthMode,
-  NOTIFIER_RELAY,
   userSpaceUrls,
 } from "@app/core/state"
 
@@ -33,7 +33,6 @@ export const authPolicy = makeSocketPolicyAuth({
     const mode = getSetting<RelayAuthMode>("relay_auth")
 
     if (!$pubkey) return false
-    if (socket.url === NOTIFIER_RELAY) return true
     if (mode === RelayAuthMode.Aggressive) return true
     if (get(userSpaceUrls).includes(socket.url)) return true
     if (getPubkeyRelays($pubkey).includes(socket.url)) return true
@@ -49,9 +48,10 @@ export const blockPolicy = (socket: Socket) => {
   socket.open = () => {
     const $pubkey = pubkey.get()
 
-    if (!$pubkey || !getPubkeyRelays($pubkey, RelayMode.Blocked).includes(socket.url)) {
-      return previousOpen()
-    }
+    if (BLOCKED_RELAYS.includes(socket.url)) return
+    if ($pubkey && getPubkeyRelays($pubkey, RelayMode.Blocked).includes(socket.url)) return
+
+    previousOpen()
   }
 
   return () => {

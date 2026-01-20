@@ -65,7 +65,6 @@ import {
   getSpaceRoomsFromGroupList,
   makeCommentFilter,
 } from "@app/core/state"
-import {loadAlerts, loadAlertStatuses} from "@app/core/requests"
 import {hasBlossomSupport} from "@app/core/commands"
 
 // Utils
@@ -76,7 +75,7 @@ type PullOpts = {
   signal: AbortSignal
 }
 
-const pullWithFallback = ({relays, filters, signal}: PullOpts) => {
+export const pullWithFallback = ({relays, filters, signal}: PullOpts) => {
   const [smart, dumb] = partition(hasNegentropy, relays)
   const events = repository.query(filters, {shouldSort: false}).filter(isSignedEvent)
   const promises: Promise<TrustedEvent[]>[] = [pull({relays: smart, filters, signal, events})]
@@ -213,8 +212,6 @@ const syncUserData = () => {
 
   const unsubscribeRelayList = userRelayList.subscribe($userRelayList => {
     if ($userRelayList) {
-      loadAlerts($userRelayList.event.pubkey)
-      loadAlertStatuses($userRelayList.event.pubkey)
       loadBlossomServerList($userRelayList.event.pubkey)
       loadBlockedRelayList($userRelayList.event.pubkey)
       loadFollowList($userRelayList.event.pubkey)

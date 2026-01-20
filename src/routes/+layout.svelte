@@ -63,13 +63,6 @@
     ...notifications,
   })
 
-  // Listen for navigation messages from service worker
-  navigator.serviceWorker?.addEventListener("message", event => {
-    if (event.data && event.data.type === "NAVIGATE") {
-      goto(event.data.url)
-    }
-  })
-
   // Listen for deep link events
   App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => {
     const url = new URL(event.url)
@@ -134,6 +127,9 @@
 
     // Initialize keyboard state tracking
     unsubscribers.push(syncKeyboard())
+
+    // Initialize background notifications
+    unsubscribers.push(notifications.Alerts.resume())
 
     // Listen for signer errors, report to user via toast
     unsubscribers.push(
