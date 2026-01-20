@@ -1,8 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {derived} from "svelte/store"
-  import {some} from "@welshman/lib"
-  import {displayRelayUrl, getTagValue, EVENT_TIME, ZAP_GOAL, THREAD, REPORT} from "@welshman/util"
+  import {displayRelayUrl, EVENT_TIME, ZAP_GOAL, THREAD, REPORT} from "@welshman/util"
   import {deriveRelay, pubkey} from "@welshman/app"
   import {fly} from "@lib/transition"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
@@ -34,8 +33,6 @@
   import RelayName from "@app/components/RelayName.svelte"
   import SpaceMembers from "@app/components/SpaceMembers.svelte"
   import SpaceReports from "@app/components/SpaceReports.svelte"
-  import AlertAdd from "@app/components/AlertAdd.svelte"
-  import Alerts from "@app/components/Alerts.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import MenuSpaceRoomItem from "@app/components/MenuSpaceRoomItem.svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
@@ -47,7 +44,6 @@
     deriveOtherRooms,
     userSpaceUrls,
     hasNip29,
-    alertsById,
     deriveUserCanCreateRoom,
     deriveUserIsSpaceAdmin,
     deriveEventsForUrl,
@@ -68,9 +64,6 @@
   const members = deriveSpaceMembers(url)
   const userIsAdmin = deriveUserIsSpaceAdmin(url)
   const reports = deriveEventsForUrl(url, [{kinds: [REPORT]}])
-  const hasAlerts = $derived(
-    some(a => getTagValue("feed", a.tags)?.includes(url), $alertsById.values()),
-  )
 
   const spaceKinds = derived(
     deriveEventsForUrl(url, [{kinds: CONTENT_KINDS}]),
@@ -100,13 +93,6 @@
   const joinSpace = () => pushModal(SpaceJoin, {url}, {replaceState})
 
   const addRoom = () => pushModal(RoomCreate, {url}, {replaceState})
-
-  const manageAlerts = () => {
-    const component = hasAlerts ? Alerts : AlertAdd
-    const params = {url, channel: "push", hideSpaceField: true}
-
-    pushModal(component, params, {replaceState})
-  }
 
   let showMenu = $state(false)
   let replaceState = $state(false)
@@ -258,9 +244,9 @@
     <Button class="btn btn-neutral btn-sm" onclick={showDetail}>
       <SocketStatusIndicator {url} />
     </Button>
-    <Button class="btn btn-neutral btn-sm" onclick={manageAlerts}>
+    <Link href="/settings/alerts" class="btn btn-neutral btn-sm">
       <Icon icon={Bell} />
       Manage Alerts
-    </Button>
+    </Link>
   </div>
 </div>

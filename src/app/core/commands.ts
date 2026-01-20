@@ -1,33 +1,24 @@
 import {nwc} from "@getalby/sdk"
 import * as nip19 from "nostr-tools/nip19"
 import {get, derived} from "svelte/store"
-import type {Override, MakeOptional} from "@welshman/lib"
 import {
   first,
   sha256,
-  randomId,
   append,
   remove,
-  flatten,
   poll,
   uniq,
   equals,
-  TIMEZONE,
-  LOCALE,
   parseJson,
-  fromPairs,
   last,
   simpleCache,
   normalizeUrl,
   nthNe,
 } from "@welshman/lib"
-import {decrypt, Nip01Signer} from "@welshman/signer"
+import {Nip01Signer} from "@welshman/signer"
 import type {UploadTask} from "@welshman/editor"
-import type {Feed} from "@welshman/feeds"
-import {makeIntersectionFeed, feedFromFilters, makeRelayFeed} from "@welshman/feeds"
 import type {TrustedEvent, EventContent, Profile} from "@welshman/util"
 import {
-  WRAP,
   DELETE,
   REPORT,
   PROFILE,
@@ -39,10 +30,6 @@ import {
   RELAY_LEAVE,
   ROOMS,
   COMMENT,
-  ALERT_EMAIL,
-  ALERT_WEB,
-  ALERT_IOS,
-  ALERT_ANDROID,
   APP_DATA,
   isSignedEvent,
   makeEvent,
@@ -55,8 +42,6 @@ import {
   getRelayTagValues,
   toNostrURI,
   RelayMode,
-  getAddress,
-  getTagValue,
   getTagValues,
   uploadBlob,
   canUploadBlob,
@@ -85,18 +70,15 @@ import {
   waitForThunkError,
   getPubkeyRelays,
   userBlossomServerList,
-  shouldUnwrap,
   getThunkError,
 } from "@welshman/app"
 import {compressFile} from "@lib/html"
 import {kv, db} from "@app/core/storage"
-import type {SettingsValues, Alert} from "@app/core/state"
+import type {SettingsValues} from "@app/core/state"
 import {
   SETTINGS,
   PROTECTED,
   INDEXER_RELAYS,
-  NOTIFIER_PUBKEY,
-  NOTIFIER_RELAY,
   DEFAULT_BLOSSOM_SERVERS,
   userSpaceUrls,
   userSettingsValues,
@@ -107,8 +89,6 @@ import {
   relaysMostlyRestricted,
   deriveSocket,
 } from "@app/core/state"
-import {loadAlertStatuses} from "@app/core/requests"
-import {platform, platformName, getPushInfo} from "@app/util/push"
 
 // Utils
 
@@ -372,164 +352,6 @@ export const makeComment = ({event, content, tags = []}: CommentParams) =>
 
 export const publishComment = ({relays, ...params}: CommentParams & {relays: string[]}) =>
   publishThunk({event: makeComment(params), relays})
-
-// Alerts
-
-export type AlertParamsEmail = {
-  cron: string
-  email: string
-  handler: string[]
-}
-
-export type AlertParamsWeb = {
-  endpoint: string
-  p256dh: string
-  auth: string
-}
-
-export type AlertParamsIos = {
-  device_token: string
-  bundle_identifier: string
-}
-
-export type AlertParamsAndroid = {
-  device_token: string
-}
-
-export type AlertParams = {
-  feed: Feed
-  description: string
-  claims?: Record<string, string>
-  email?: AlertParamsEmail
-  web?: AlertParamsWeb
-  ios?: AlertParamsIos
-  android?: AlertParamsAndroid
-}
-
-export const makeAlert = async (params: AlertParams) => {
-  const tags = [
-    ["feed", JSON.stringify(params.feed)],
-    ["locale", LOCALE],
-    ["timezone", TIMEZONE],
-    ["description", params.description],
-  ]
-
-  for (const [relay, claim] of Object.entries(params.claims || [])) {
-    tags.push(["claim", relay, claim])
-  }
-
-  let kind: number
-  if (params.email) {
-    kind = ALERT_EMAIL
-    tags.push(...Object.entries(params.email).map(flatten))
-  } else if (params.web) {
-    kind = ALERT_WEB
-    tags.push(...Object.entries(params.web).map(flatten))
-  } else if (params.ios) {
-    kind = ALERT_IOS
-    tags.push(...Object.entries(params.ios).map(flatten))
-  } else if (params.android) {
-    kind = ALERT_ANDROID
-    tags.push(...Object.entries(params.android).map(flatten))
-  } else {
-    throw new Error("Alert has invalid params")
-  }
-
-  return makeEvent(kind, {
-    content: await signer.get().nip44.encrypt(NOTIFIER_PUBKEY, JSON.stringify(tags)),
-    tags: [
-      ["d", randomId()],
-      ["p", NOTIFIER_PUBKEY],
-    ],
-  })
-}
-
-export const publishAlert = async (params: AlertParams) =>
-  publishThunk({event: await makeAlert(params), relays: [NOTIFIER_RELAY]})
-
-export const deleteAlert = (alert: Alert) => {
-  const relays = [NOTIFIER_RELAY]
-  const tags = [["p", NOTIFIER_PUBKEY]]
-
-  return publishDelete({event: alert.event, relays, tags, protect: false})
-}
-
-export type CreateAlertParams = Override<
-  AlertParams,
-  {
-    email?: MakeOptional<AlertParamsEmail, "handler">
-  }
->
-
-export type CreateAlertResult = {
-  ok?: true
-  error?: string
-}
-
-export const createAlert = async (params: CreateAlertParams): Promise<CreateAlertResult> => {
-  if (params.email) {
-    const cadence = params.email.cron.endsWith("1") ? "Weekly" : "Daily"
-    const handler = [
-      "31990:97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322:1737058597050",
-      "wss://relay.nostr.band/",
-      "web",
-    ]
-
-    params.email = {handler, ...params.email}
-    params.description = `${cadence} alert ${params.description}, sent via email.`
-  } else {
-    try {
-      // @ts-ignore
-      params[platform] = await getPushInfo()
-      params.description = `${platformName} push notification ${params.description}.`
-    } catch (e: any) {
-      return {error: String(e)}
-    }
-  }
-
-  // If we don't do this we'll get an event rejection
-  await Pool.get().get(NOTIFIER_RELAY).auth.attemptAuth(sign)
-
-  const thunk = await publishAlert(params as AlertParams)
-  const error = await waitForThunkError(thunk)
-
-  if (error) {
-    return {error}
-  }
-
-  // Fetch our new status to make sure it's active
-  const $pubkey = pubkey.get()!
-  const address = getAddress(thunk.event)
-  const statusEvents = await loadAlertStatuses($pubkey!)
-  const statusEvent = statusEvents.find(event => getTagValue("d", event.tags) === address)
-  const statusTags = statusEvent
-    ? parseJson(await decrypt(signer.get(), NOTIFIER_PUBKEY, statusEvent.content))
-    : []
-  const {status = "error", message = "Your alert was not activated"}: Record<string, string> =
-    fromPairs(statusTags)
-
-  if (status === "error") {
-    return {error: message}
-  }
-
-  return {ok: true}
-}
-
-export const createDmAlert = async () => {
-  if (!shouldUnwrap.get()) {
-    shouldUnwrap.set(true)
-  }
-
-  const $pubkey = pubkey.get()!
-
-  return createAlert({
-    description: `for direct messages.`,
-    feed: makeIntersectionFeed(
-      feedFromFilters([{kinds: [WRAP], "#p": [$pubkey]}]),
-      makeRelayFeed(...getPubkeyRelays($pubkey, RelayMode.Messaging)),
-    ),
-  })
-}
 
 // Settings
 

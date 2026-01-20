@@ -18,7 +18,7 @@
   let notificationCount = $state($notifications.size)
 
   const playSound = () => {
-    if (enabled && $userSettingsValues.play_notification_sound) {
+    if (enabled && $userSettingsValues.alerts_sound) {
       audioElement?.play()
     }
   }

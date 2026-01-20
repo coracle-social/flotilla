@@ -208,7 +208,7 @@ export const badgeCount = derived(notifications, notifications => {
 })
 
 export const handleBadgeCountChanges = async (count: number) => {
-  if (get(userSettingsValues).show_notifications_badge) {
+  if (get(userSettingsValues).alerts_badge) {
     try {
       await Badge.set({count})
     } catch (err) {

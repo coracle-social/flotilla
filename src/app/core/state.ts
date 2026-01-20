@@ -51,13 +51,7 @@ import {
   deriveEventsByIdForUrl,
   getEventsByIdForUrl,
 } from "@welshman/store"
-import {isKindFeed, findFeed} from "@welshman/feeds"
 import {
-  ALERT_ANDROID,
-  ALERT_EMAIL,
-  ALERT_IOS,
-  ALERT_STATUS,
-  ALERT_WEB,
   APP_DATA,
   CLIENT_AUTH,
   COMMENT,
@@ -94,7 +88,6 @@ import {
   getListTags,
   getPubkeyTagValues,
   getRelayTagValues,
-  getTagValue,
   getTagValues,
   isRelayUrl,
   normalizeRelayUrl,
@@ -105,7 +98,6 @@ import {
   ManagementMethod,
 } from "@welshman/util"
 import type {TrustedEvent, RelayProfile, PublishedRoomMeta, List, Filter} from "@welshman/util"
-import {decrypt} from "@welshman/signer"
 import {routerContext, Router} from "@welshman/router"
 import {
   pubkey,
@@ -114,7 +106,6 @@ import {
   createSearch,
   userFollowList,
   ensurePlaintext,
-  signer,
   makeOutboxLoader,
   appContext,
   deriveRelay,
@@ -283,8 +274,11 @@ export type SettingsValues = {
   relay_auth: RelayAuthMode
   send_delay: number
   font_size: number
-  play_notification_sound: boolean
-  show_notifications_badge: boolean
+  alerts_spaces: boolean
+  alerts_mentions: boolean
+  alerts_messages: boolean
+  alerts_sound: boolean
+  alerts_badge: boolean
 }
 
 export type Settings = {
@@ -301,8 +295,11 @@ export const defaultSettings: SettingsValues = {
   relay_auth: RelayAuthMode.Conservative,
   send_delay: 0,
   font_size: 1.1,
-  play_notification_sound: true,
-  show_notifications_badge: true,
+  alerts_spaces: true,
+  alerts_mentions: true,
+  alerts_messages: true,
+  alerts_sound: true,
+  alerts_badge: true,
 }
 
 export const settingsByPubkey = deriveItemsByKey({
@@ -340,63 +337,6 @@ export const relaysPendingTrust = writable<string[]>([])
 // Relays that mostly send restricted responses to requests and events
 
 export const relaysMostlyRestricted = writable<Record<string, string>>({})
-
-// Alerts
-
-export type Alert = {
-  event: TrustedEvent
-  tags: string[][]
-}
-
-export const alertsById = deriveItemsByKey<Alert>({
-  repository,
-  getKey: alert => alert.event.id,
-  filters: [{kinds: [ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID]}],
-  eventToItem: async event => {
-    const $signer = signer.get()
-
-    if ($signer) {
-      const tags = parseJson(await decrypt($signer, NOTIFIER_PUBKEY, event.content))
-
-      return {event, tags}
-    }
-  },
-})
-
-export const getAlertFeed = (alert: Alert) =>
-  tryCatch(() => JSON.parse(getTagValue("feed", alert.tags)!))
-
-export const dmAlert = derived(alertsById, $alertsById => {
-  for (const alert of $alertsById.values()) {
-    if (findFeed(getAlertFeed(alert), f => isKindFeed(f) && f.includes(WRAP))) {
-      return alert
-    }
-  }
-})
-
-// Alert Statuses
-
-export type AlertStatus = {
-  event: TrustedEvent
-  tags: string[][]
-}
-
-export const alertStatusesByAddress = deriveItemsByKey<AlertStatus>({
-  repository,
-  filters: [{kinds: [ALERT_STATUS]}],
-  getKey: alertStatus => getTagValue("d", alertStatus.event.tags)!,
-  eventToItem: async event => {
-    const $signer = signer.get()
-
-    if ($signer) {
-      const tags = parseJson(await decrypt($signer, NOTIFIER_PUBKEY, event.content))
-
-      return {event, tags}
-    }
-  },
-})
-
-export const deriveAlertStatus = makeDeriveItem(alertStatusesByAddress)
 
 // Chats
 

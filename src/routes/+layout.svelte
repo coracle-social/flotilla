@@ -34,7 +34,6 @@
   import * as appState from "@app/core/state"
   import {theme} from "@app/util/theme"
   import {toast, pushToast} from "@app/util/toast"
-  import {initializePushNotifications} from "@app/util/push"
   import * as notifications from "@app/util/notifications"
   import * as storage from "@app/util/storage"
   import {syncKeyboard} from "@app/util/keyboard"
@@ -63,9 +62,6 @@
     ...requests,
     ...notifications,
   })
-
-  // Initialize push notification handler asap
-  initializePushNotifications()
 
   // Listen for navigation messages from service worker
   navigator.serviceWorker?.addEventListener("message", event => {

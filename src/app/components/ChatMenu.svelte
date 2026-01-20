@@ -1,19 +1,15 @@
 <script lang="ts">
-  import {RelayMode} from "@welshman/util"
-  import {waitForThunkCompletion, getPubkeyRelays, pubkey} from "@welshman/app"
   import ChatSquare from "@assets/icons/chat-square.svg?dataurl"
   import Check from "@assets/icons/check.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
   import BellOff from "@assets/icons/bell-off.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import ChatStart from "@app/components/ChatStart.svelte"
   import {setChecked} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
-  import {pushToast} from "@app/util/toast"
-  import {dmAlert} from "@app/core/state"
-  import {deleteAlert, createDmAlert} from "@app/core/commands"
+  import {userSettingsValues} from "@app/core/state"
+  import {publishSettings} from "@app/core/commands"
 
   const startChat = () => pushModal(ChatStart, {}, {replaceState: true})
 
@@ -22,39 +18,9 @@
     history.back()
   }
 
-  const enableAlerts = async () => {
-    if (getPubkeyRelays($pubkey!, RelayMode.Messaging).length === 0) {
-      return pushToast({
-        theme: "error",
-        message: "Please set up your messaging relays before enabling alerts.",
-      })
-    }
+  const enableAlerts = () => publishSettings({...$userSettingsValues, alerts_messages: true})
 
-    enablingAlert = true
-
-    try {
-      const {error} = await createDmAlert()
-
-      if (error) {
-        return pushToast({theme: "error", message: error})
-      }
-    } finally {
-      enablingAlert = false
-    }
-  }
-
-  const disableAlerts = async () => {
-    disablingAlert = true
-
-    try {
-      await waitForThunkCompletion(deleteAlert($dmAlert!))
-    } finally {
-      disablingAlert = false
-    }
-  }
-
-  let enablingAlert = $state(false)
-  let disablingAlert = $state(false)
+  const disableAlerts = () => publishSettings({...$userSettingsValues, alerts_messages: false})
 </script>
 
 <div class="col-2">
@@ -66,19 +32,15 @@
     <Icon size={5} icon={Check} />
     Mark all read
   </Button>
-  {#if (!enablingAlert && $dmAlert) || disablingAlert}
-    <Button class="btn btn-neutral" onclick={disableAlerts} disabled={disablingAlert}>
-      {#if !disablingAlert}
-        <Icon size={4} icon={BellOff} />
-      {/if}
-      <Spinner loading={disablingAlert}>Disable alerts</Spinner>
+  {#if $userSettingsValues.alerts_messages}
+    <Button class="btn btn-neutral" onclick={disableAlerts}>
+      <Icon size={4} icon={BellOff} />
+      Disable alerts
     </Button>
   {:else}
-    <Button class="btn btn-neutral" onclick={enableAlerts} disabled={enablingAlert}>
-      {#if !enablingAlert}
-        <Icon size={4} icon={Bell} />
-      {/if}
-      <Spinner loading={enablingAlert}>Enable alerts</Spinner>
+    <Button class="btn btn-neutral" onclick={enableAlerts}>
+      <Icon size={4} icon={Bell} />
+      Enable alerts
     </Button>
   {/if}
 </div>
