@@ -2,13 +2,15 @@
   import cx from "classnames"
   import {sleep, remove} from "@welshman/lib"
   import {displayRelayUrl} from "@welshman/util"
+  import {Capacitor} from "@capacitor/core"
+  import {Badge} from "@capawesome/capacitor-badge"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import {preventDefault} from "@lib/html"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {pushToast} from "@app/util/toast"
-  import {Alerts, clearBadges} from "@app/util/notifications"
+  import {Push, clearBadges} from "@app/util/notifications"
   import {userSettingsValues, splitRoomId} from "@app/core/state"
   import {publishSettings} from "@app/core/commands"
 
@@ -24,7 +26,7 @@
 
   const onAlertsPushChange = () => {
     if (settings.alerts_push) {
-      Alerts.request().then(permissions => {
+      Push.request().then(permissions => {
         if (permissions !== "granted") {
           sleep(300).then(() => {
             settings.alerts_push = false
@@ -46,12 +48,6 @@
   const onsubmit = preventDefault(async () => {
     await publishSettings($state.snapshot(settings))
 
-    if (settings.alerts_push) {
-      await Alerts.start()
-    } else {
-      await Alerts.stop()
-    }
-
     pushToast({message: "Your settings have been saved!"})
   })
 
@@ -61,18 +57,26 @@
 <form class="content column gap-4" {onsubmit}>
   <div class="card2 bg-alt col-4 shadow-md">
     <strong class="text-lg">Alert Settings</strong>
-    <div class="flex justify-between">
-      <p>Show badge for unread alerts</p>
-      <input
-        type="checkbox"
-        class="toggle toggle-primary"
-        bind:checked={settings.alerts_badge}
-        onchange={onAlertsBadgeChange} />
-    </div>
-    <div class="flex justify-between">
-      <p>Play sound for new activity</p>
-      <input type="checkbox" class="toggle toggle-primary" bind:checked={settings.alerts_sound} />
-    </div>
+    {#await Badge.isSupported()}
+      <!-- pass -->
+    {:then { isSupported }}
+      {#if isSupported}
+        <div class="flex justify-between">
+          <p>Show badge for unread alerts</p>
+          <input
+            type="checkbox"
+            class="toggle toggle-primary"
+            bind:checked={settings.alerts_badge}
+            onchange={onAlertsBadgeChange} />
+        </div>
+      {/if}
+    {/await}
+    {#if !Capacitor.isNativePlatform()}
+      <div class="flex justify-between">
+        <p>Play sound for new activity</p>
+        <input type="checkbox" class="toggle toggle-primary" bind:checked={settings.alerts_sound} />
+      </div>
+    {/if}
     <div class="flex justify-between">
       <p>Enable push notifications</p>
       <input
@@ -82,7 +86,11 @@
         onchange={onAlertsPushChange} />
     </div>
   </div>
-  <div class="card2 bg-alt col-4 shadow-md">
+  <div
+    class={cx("card2 bg-alt col-4 shadow-md", {
+      "pointer-events-none opacity-50":
+        !settings.alerts_badge && !settings.alerts_sound && !settings.alerts_push,
+    })}>
     <strong class="text-lg">Alert Types</strong>
     <div class="flex justify-between">
       <p>Notify me about new activity</p>
@@ -100,7 +108,11 @@
         bind:checked={settings.alerts_messages} />
     </div>
   </div>
-  <div class="card2 bg-alt col-4 shadow-md">
+  <div
+    class={cx("card2 bg-alt col-4 shadow-md", {
+      "pointer-events-none opacity-50":
+        !settings.alerts_badge && !settings.alerts_sound && !settings.alerts_push,
+    })}>
     <strong class="text-lg">Muted Rooms</strong>
     {#each settings.muted_rooms as id (id)}
       {@const [url, h] = splitRoomId(id)}

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import cx from "classnames"
   import {readable, derived as _derived} from "svelte/store"
   import {onMount, onDestroy} from "svelte"
   import {page} from "$app/stores"
@@ -76,7 +75,14 @@
   const isFavorite = $derived($userRooms.includes(h))
   const membershipStatus = deriveUserRoomMembershipStatus(url, h)
   const isMuted = $derived($userSettingsValues.muted_rooms.includes($room.id))
-  const hasAlerts = throttled(800, _derived(userSettingsValues, ({alerts_spaces, alerts_push, alerts_sound, alerts_badge}) =>    alerts_spaces && (alerts_push || alerts_sound || alerts_badge)))
+  const hasAlerts = throttled(
+    800,
+    _derived(
+      userSettingsValues,
+      ({alerts_spaces, alerts_push, alerts_sound, alerts_badge}) =>
+        alerts_spaces && (alerts_push || alerts_sound || alerts_badge),
+    ),
+  )
 
   const showRoomDetail = () => pushModal(RoomDetail, {url, h})
 
@@ -371,22 +377,22 @@
           class="btn btn-neutral btn-sm tooltip tooltip-left"
           data-tip="Notifications are turned off"
           onclick={unmuteRoom}>
-          <Icon size={4} icon={VolumeLoud} />
+          <Icon size={4} icon={VolumeCross} />
         </Button>
       {:else}
         <Button
           class="btn btn-neutral btn-sm tooltip tooltip-left"
           data-tip="Notifications are turned on"
           onclick={muteRoom}>
-          <Icon size={4} icon={VolumeLoud} class="text-primary" />
+          <Icon size={4} icon={VolumeLoud} />
         </Button>
       {/if}
       {#if isFavorite}
         <Button
-          class="btn btn-neutral btn-sm tooltip tooltip-left"
+          class="btn btn-neutral btn-sm tooltip tooltip-left text-secondary"
           data-tip="Remove Favorite"
           onclick={removeFavorite}>
-          <Icon size={4} icon={Bookmark} class="text-primary" />
+          <Icon size={4} icon={Bookmark} />
         </Button>
       {:else}
         <Button

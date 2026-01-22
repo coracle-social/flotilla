@@ -103,7 +103,7 @@
 </script>
 
 <div bind:this={element} class="flex h-full flex-col justify-between">
-  <SecondaryNavSection>
+  <SecondaryNavSection class="pb-0">
     <div>
       <Button
         class="flex w-full flex-col rounded-xl p-3 transition-all hover:bg-base-100"
@@ -172,7 +172,7 @@
         </Popover>
       {/if}
     </div>
-    <div class="flex max-h-[calc(100vh-250px)] min-h-0 flex-col gap-1 overflow-auto">
+    <div class="flex max-h-[calc(100vh-150px)] min-h-0 flex-col gap-1 overflow-auto">
       {#if hasNip29($relay)}
         <SecondaryNavItem {replaceState} href={makeSpacePath(url, "recent")}>
           <Icon icon={History} /> Recent Activity
@@ -239,7 +239,7 @@
       {/if}
     </div>
   </SecondaryNavSection>
-  <div class="flex flex-col gap-2 p-4">
+  <div class="flex flex-col gap-2 p-4 pt-0">
     <Button class="btn btn-neutral btn-sm" onclick={showDetail}>
       <SocketStatusIndicator {url} />
     </Button>

@@ -47,7 +47,7 @@
           {/if}
         </span>
       </div>
-      <div class="flex justify-between text-sm opacity-75">
+      <div class="flex flex-col justify-between text-sm opacity-75 sm:flex-row">
         <p>
           Logged in with
           {#if $session.method === SessionMethod.Nip01}

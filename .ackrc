@@ -3,6 +3,7 @@
 --ignore-dir=build
 --ignore-dir=ios/DerivedData
 --ignore-dir=ios/App/App/public
+--ignore-dir=ios/App/Pods
 --ignore-file=match:.svg
 --ignore-file=match:package-lock.json
 
