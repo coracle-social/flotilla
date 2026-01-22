@@ -1,24 +1,51 @@
-import type {Unsubscriber} from 'svelte/store'
+import type {Unsubscriber} from "svelte/store"
 import {derived, get} from "svelte/store"
 import {Capacitor} from "@capacitor/core"
 import {Badge} from "@capawesome/capacitor-badge"
+import {PushNotifications} from "@capacitor/push-notifications"
+import type {ActionPerformed, RegistrationError, Token} from "@capacitor/push-notifications"
 import {synced, throttled} from "@welshman/store"
-import {pubkey, tracker, repository, relaysByUrl} from "@welshman/app"
-import {prop, ms, maybe, int, MINUTE, flatten, find, spec, first, identity, now, groupBy, hash} from "@welshman/lib"
-import type {TrustedEvent} from "@welshman/util"
-import {deriveEventsByIdByUrl, deriveEventsById, deriveEventsDesc, deriveDeduplicated} from "@welshman/store"
+import {pubkey, tracker, repository, relaysByUrl, signer, publishThunk, getPubkeyRelays, loadRelay} from "@welshman/app"
 import {
-  DIRECT_MESSAGE,
-  DIRECT_MESSAGE_FILE,
+  poll,
+  prop,
+  sha256,
+  textEncoder,
+  parseJson,
+  ms,
+  maybe,
+  int,
+  MINUTE,
+  flatten,
+  find,
+  spec,
+  first,
+  identity,
+  now,
+  groupBy,
+  hash,
+  tryCatch,
+  postJson,
+  fetchJson,
+} from "@welshman/lib"
+import type {TrustedEvent} from "@welshman/util"
+import {
+  deriveEventsByIdByUrl,
+  deriveEventsById,
+  deriveEventsDesc,
+  deriveDeduplicated,
+} from "@welshman/store"
+import {
   ZAP_GOAL,
   EVENT_TIME,
-  MESSAGE,
   THREAD,
   COMMENT,
   getTagValue,
   getPubkeyTagValues,
   matchFilters,
   sortEventsDesc,
+  makeEvent,
+  RelayMode,
 } from "@welshman/util"
 import {
   makeSpacePath,
@@ -28,17 +55,28 @@ import {
   makeCalendarPath,
   makeSpaceChatPath,
   makeRoomPath,
+  getEventPath,
   goToEvent,
 } from "@app/util/routes"
 import {
+  DM_KINDS,
+  CONTENT_KINDS,
+  MESSAGE_KINDS,
+  PUSH_BRIDGE,
+  PUSH_SERVER,
+  alertToken,
+  alertSecret,
   chatsById,
   hasNip29,
   getSetting,
   userGroupList,
   getSpaceUrlsFromGroupList,
   getSpaceRoomsFromGroupList,
+  makeCommentFilter,
+  userSpaceUrls,
 } from "@app/core/state"
 import {kv} from "@app/core/storage"
+import {goto} from "$app/navigation"
 
 // Checked state
 
@@ -57,13 +95,19 @@ export const setChecked = (key: string) => checked.update(state => ({...state, [
 const goalCommentFilters = [{kinds: [COMMENT], "#K": [String(ZAP_GOAL)]}]
 const threadCommentFilters = [{kinds: [COMMENT], "#K": [String(THREAD)]}]
 const calendarCommentFilters = [{kinds: [COMMENT], "#K": [String(EVENT_TIME)]}]
-const messageFilters = [{kinds: [MESSAGE, THREAD, ZAP_GOAL, EVENT_TIME]}]
-const dmFilters = [{kinds: [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]}]
-const allFilters = flatten([goalCommentFilters, threadCommentFilters, calendarCommentFilters, messageFilters, dmFilters])
+const messageFilters = [{kinds: CONTENT_KINDS}]
+const dmFilters = [{kinds: DM_KINDS}]
+const allFilters = flatten([
+  goalCommentFilters,
+  threadCommentFilters,
+  calendarCommentFilters,
+  messageFilters,
+  dmFilters,
+])
 
 export const latestNotification = deriveDeduplicated(
   deriveEventsDesc(deriveEventsById({repository, filters: allFilters})),
-  first
+  first,
 )
 
 export const notifications = derived(
@@ -222,7 +266,7 @@ export const badgeCount = derived(notifications, notifications => {
 })
 
 export const handleBadgeCountChanges = async (count: number) => {
-  if (getSetting<boolean>('alerts_badge')) {
+  if (getSetting<boolean>("alerts_badge")) {
     try {
       await Badge.set({count})
     } catch (err) {
@@ -245,12 +289,171 @@ interface IAlertsAdapter {
 }
 
 class CapacitorNotifications implements IAlertsAdapter {
+  async ensureSubscription() {
+    const token = get(alertToken)
+
+    if (!token) {
+      return
+    }
+
+    const info = await tryCatch(async () => {
+      const secret = get(alertSecret)
+
+      if (secret) {
+        const {callback} = await fetchJson(`${PUSH_SERVER}/subscription/${secret}`)
+
+        if (callback) {
+          return {secret, callback}
+        }
+      }
+
+      const ios = Capacitor.getPlatform() === "ios"
+      const channel = ios ? "apns" : "fcm"
+      const topic = "social.flotilla"
+      const data = ios ? {token, topic} : {token}
+
+      const json = await postJson(`${PUSH_SERVER}/subscription/${channel}`, data)
+
+      if (json) {
+        return {
+          secret: json.sk,
+          callback: json.callback,
+        } as {
+          secret: string
+          callback: string
+        }
+      }
+    })
+
+    if (info) {
+      alertSecret.set(info.secret)
+
+      const getPushStuff = async (url: string) => {
+        let relay = await loadRelay(url)
+
+        if (!relay?.self || !relay?.supported_nips?.includes("9a")) {
+          relay = await loadRelay(PUSH_BRIDGE)
+        }
+
+        if (relay?.self) {
+          return {url: relay.url, pubkey: relay.self}
+        }
+      }
+
+      for (const url of get(userSpaceUrls)) {
+        const stuff = await getPushStuff(url)
+
+        if (!stuff) {
+          console.warn(`Failed to subscribe ${url} to space notifications`)
+          continue
+        }
+
+        const filters = [{kinds: MESSAGE_KINDS}, makeCommentFilter(CONTENT_KINDS)]
+        // const ignore = [] todo - muted rooms
+
+        publishThunk({
+          relays: [stuff.url],
+          event: makeEvent(30390, {
+            content: await signer
+              .get()
+              .nip44.encrypt(stuff.pubkey, JSON.stringify([
+                ["relay", url],
+                ["callback", info.callback],
+                // ...ignore.map(filter => ["ignore", JSON.stringify(filter)]),
+                ...filters.map(filter => ["filter", JSON.stringify(filter)]),
+              ])),
+            tags: [
+              ["d", await sha256(textEncoder.encode(info.callback + url + "spaces"))],
+              ["p", stuff.pubkey],
+            ],
+          }),
+        })
+      }
+
+      const $pubkey = pubkey.get()!
+
+      for (const url of getPubkeyRelays($pubkey, RelayMode.Messaging)) {
+        const stuff = await getPushStuff(url)
+
+        if (!stuff) {
+          console.warn(`Failed to subscribe ${url} to messaging notifications`)
+          continue
+        }
+
+        publishThunk({
+          relays: [stuff.url],
+          event: makeEvent(30390, {
+            content: await signer
+              .get()
+              .nip44.encrypt(stuff.pubkey, JSON.stringify([
+                ["relay", url],
+                ["callback", info.callback],
+                ["filter", JSON.stringify({kinds: DM_KINDS, '#p': [$pubkey]})],
+              ])),
+            tags: [
+              ["d", await sha256(textEncoder.encode(info.callback + url + "messages"))],
+              ["p", stuff.pubkey],
+            ],
+          }),
+        })
+      }
+    } else {
+      alertSecret.set(undefined)
+    }
+  }
+
   async request() {
+    let status = await PushNotifications.checkPermissions()
+
+    if (status.receive === "prompt") {
+      status = await PushNotifications.requestPermissions()
+    }
+
+    if (status.receive !== "granted") {
+      return status.receive
+    }
+
+    let token = ""
+
+    PushNotifications.addListener("registration", ({value}: Token) => {
+      token = value
+    })
+
+    PushNotifications.addListener("registrationError", (error: RegistrationError) => {
+      console.error(error)
+    })
+
+    await PushNotifications.register()
+    await poll({
+      condition: () => Boolean(token),
+      signal: AbortSignal.timeout(5000),
+    })
+
+    if (token) {
+      alertToken.set(token)
+
+      return "granted"
+    }
+
+    alertToken.set(undefined)
+
     return "denied"
   }
 
   start() {
-    return () => undefined
+    this.ensureSubscription().then(() => {
+      PushNotifications.addListener(
+        "pushNotificationActionPerformed",
+        async (action: ActionPerformed) => {
+          const event = parseJson(action.notification.data.event)
+          const relays = [action.notification.data.relay]
+
+          goto(await getEventPath(event, relays))
+        }
+      )
+    })
+
+    return () => PushNotifications.removeAllListeners()
   }
 }
 
@@ -264,7 +467,12 @@ class WebNotifications implements IAlertsAdapter {
   }
 
   notify(event: TrustedEvent, title: string, body: string) {
-    const notification = new Notification(title, {body, tag: event.id, icon: "/icon.png", badge: "/icon.png"})
+    const notification = new Notification(title, {
+      body,
+      tag: event.id,
+      icon: "/icon.png",
+      badge: "/icon.png",
+    })
 
     notification.onclick = () => {
       window.focus()
@@ -289,11 +497,15 @@ class WebNotifications implements IAlertsAdapter {
       if (!initialized) {
         initialized = true
       } else if (event && document.hidden && Notification?.permission === "granted") {
-        if (getSetting<boolean>('alerts_messages') && matchFilters(dmFilters, event)) {
+        if (getSetting<boolean>("alerts_messages") && matchFilters(dmFilters, event)) {
           this.notify(event, "New direct message", "Someone sent you a direct message.")
-        } else if (getSetting<boolean>('alerts_mentions') && event.pubkey !== pubkey.get() && getPubkeyTagValues(event.tags).includes(pubkey.get())) {
+        } else if (
+          event.pubkey !== pubkey.get() &&
+          getSetting<boolean>("alerts_mentions") &&
+          getPubkeyTagValues(event.tags).includes(pubkey.get()!)
+        ) {
           this.notify(event, "Someone mentioned you", "Someone tagged you in a message.")
-        } else if (getSetting<boolean>('alerts_spaces')) {
+        } else if (getSetting<boolean>("alerts_spaces")) {
           this.notify(event, "New activity", "Someone posted a new message.")
         }
       }
@@ -302,8 +514,8 @@ class WebNotifications implements IAlertsAdapter {
 }
 
 export class Alerts {
-  static _adapter: IAlertsAdapter
-  static _unsubscriber: Unsubscriber
+  static _adapter: IAlertsAdapter | undefined
+  static _unsubscriber: Unsubscriber | undefined
 
   static _getAdapter() {
     if (!Alerts._adapter) {
@@ -326,13 +538,13 @@ export class Alerts {
   }
 
   static resume() {
-    if (getSetting<boolean>('alerts_push')) {
+    if (getSetting<boolean>("alerts_push")) {
       const promise = Alerts.request()
       const controller = new AbortController()
 
       promise.then(permissions => {
         if (permissions === "granted" && !controller.signal.aborted) {
-          controller.signal.addEventListener('abort', Alerts.start())
+          controller.signal.addEventListener("abort", Alerts.start())
         }
       })
 

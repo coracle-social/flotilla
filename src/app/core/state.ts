@@ -123,6 +123,10 @@ export const PROTECTED = ["-"]
 
 export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios"
 
+export const PUSH_SERVER = import.meta.env.VITE_PUSH_SERVER
+
+export const PUSH_BRIDGE = import.meta.env.VITE_PUSH_BRIDGE
+
 export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
 export const SIGNER_RELAYS = fromCsv(import.meta.env.VITE_SIGNER_RELAYS).map(normalizeRelayUrl)
@@ -254,6 +258,8 @@ export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD]
 
 export const MESSAGE_KINDS = [...CONTENT_KINDS, MESSAGE]
 
+export const DM_KINDS = [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]
+
 // Settings
 
 export const SETTINGS = "flotilla/settings"
@@ -338,6 +344,12 @@ export const relaysPendingTrust = writable<string[]>([])
 
 export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
+// Alerts
+
+export const alertToken = writable<string | undefined>()
+
+export const alertSecret = writable<string | undefined>()
+
 // Chats
 
 export type Chat = {
@@ -380,7 +392,7 @@ export const chatsById = call(() => {
     const addEvents = (events: TrustedEvent[]) => {
       let dirty = false
       for (const event of events) {
-        if ([DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(event.kind)) {
+        if (DM_KINDS.includes(event.kind)) {
           const pubkeys = getChatPubkeysFromEvent(event)
           const id = makeChatId(pubkeys)
           const chat = chatsById.get(id)
