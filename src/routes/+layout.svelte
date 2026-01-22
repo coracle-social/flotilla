@@ -123,13 +123,13 @@
     unsubscribers.push(setupHistory(), setupAnalytics(), syncApplicationData())
 
     // Subscribe to badge count for changes
-    unsubscribers.push(notifications.badgeCount.subscribe(notifications.handleBadgeCountChanges))
+    unsubscribers.push(notifications.syncBadges)
 
     // Initialize keyboard state tracking
     unsubscribers.push(syncKeyboard())
 
     // Initialize background notifications
-    unsubscribers.push(notifications.Alerts.resume())
+    unsubscribers.push(notifications.Push.resume())
 
     // Listen for signer errors, report to user via toast
     unsubscribers.push(

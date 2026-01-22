@@ -1,7 +1,7 @@
 import twColors from "tailwindcss/colors"
 import {context as pomadeContext} from "@pomade/core"
 import {Capacitor} from "@capacitor/core"
-import {get, derived, readable, writable} from "svelte/store"
+import {derived, readable, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {
   on,
@@ -323,11 +323,9 @@ export const settingsByPubkey = deriveItemsByKey({
 
 export const getSettingsByPubkey = getter(settingsByPubkey)
 
-export const getSettings = (pubkey: string) => getSettingsByPubkey().get(pubkey)
-
 export const loadSettings = makeLoadItem(
   makeOutboxLoader(APP_DATA, {"#d": [SETTINGS]}),
-  getSettings,
+  (pubkey: string) => getSettingsByPubkey().get(pubkey),
 )
 
 export const userSettings = makeUserData(settingsByPubkey, loadSettings)
@@ -336,7 +334,9 @@ export const loadUserSettings = makeUserLoader(loadSettings)
 
 export const userSettingsValues = derived(userSettings, $s => $s?.values || defaultSettings)
 
-export const getSetting = <T>(key: keyof Settings["values"]) => get(userSettingsValues)[key] as T
+export const getSettings = getter(userSettingsValues)
+
+export const getSetting = <T>(key: keyof Settings["values"]) => getSettings()[key] as T
 
 // Relays sending events with empty signatures that the user has to choose to trust
 
@@ -346,11 +346,11 @@ export const relaysPendingTrust = writable<string[]>([])
 
 export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
-// Alerts
+// Push notifications
 
-export const alertToken = writable<string | undefined>()
+export const pushToken = writable<string | undefined>()
 
-export const alertSecret = writable<string | undefined>()
+export const pushSecret = writable<string | undefined>()
 
 // Chats
 

@@ -15,11 +15,6 @@ import {
 import {
   EVENT_TIME,
   RELAY_INVITE,
-  ALERT_EMAIL,
-  ALERT_WEB,
-  ALERT_IOS,
-  ALERT_ANDROID,
-  ALERT_STATUS,
   matchFilters,
   getTagValue,
   getAddress,

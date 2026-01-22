@@ -1,4 +1,4 @@
-import type {Unsubscriber} from "svelte/store"
+import type {Unsubscriber, Subscriber} from "svelte/store"
 import {derived, get} from "svelte/store"
 import {Capacitor} from "@capacitor/core"
 import {Badge} from "@capawesome/capacitor-badge"
@@ -14,17 +14,19 @@ import {
   publishThunk,
   getPubkeyRelays,
   loadRelay,
+  waitForThunkError,
 } from "@welshman/app"
+import type {Maybe
+} from "@welshman/lib"
 import {
+  on,
+  call,
+  assoc,
   poll,
   prop,
   sha256,
   textEncoder,
   parseJson,
-  ms,
-  maybe,
-  int,
-  MINUTE,
   flatten,
   find,
   spec,
@@ -32,18 +34,12 @@ import {
   identity,
   now,
   groupBy,
-  hash,
   tryCatch,
   postJson,
   fetchJson,
 } from "@welshman/lib"
-import type {TrustedEvent} from "@welshman/util"
-import {
-  deriveEventsByIdByUrl,
-  deriveEventsById,
-  deriveEventsDesc,
-  deriveDeduplicated,
-} from "@welshman/store"
+import type {TrustedEvent, Filter} from "@welshman/util"
+import {deriveEventsByIdByUrl} from "@welshman/store"
 import {
   ZAP_GOAL,
   EVENT_TIME,
@@ -73,16 +69,18 @@ import {
   MESSAGE_KINDS,
   PUSH_BRIDGE,
   PUSH_SERVER,
-  alertToken,
-  alertSecret,
+  pushToken,
+  pushSecret,
   chatsById,
   hasNip29,
-  getSetting,
+  getSettings,
+  userSettingsValues,
   userGroupList,
   getSpaceUrlsFromGroupList,
   getSpaceRoomsFromGroupList,
   makeCommentFilter,
   userSpaceUrls,
+  makeRoomId,
 } from "@app/core/state"
 import {kv} from "@app/core/storage"
 import {goto} from "$app/navigation"
@@ -104,7 +102,7 @@ export const setChecked = (key: string) => checked.update(state => ({...state, [
 const goalCommentFilters = [{kinds: [COMMENT], "#K": [String(ZAP_GOAL)]}]
 const threadCommentFilters = [{kinds: [COMMENT], "#K": [String(THREAD)]}]
 const calendarCommentFilters = [{kinds: [COMMENT], "#K": [String(EVENT_TIME)]}]
-const messageFilters = [{kinds: CONTENT_KINDS}]
+const messageFilters = [{kinds: MESSAGE_KINDS}]
 const dmFilters = [{kinds: DM_KINDS}]
 const allFilters = flatten([
   goalCommentFilters,
@@ -113,11 +111,6 @@ const allFilters = flatten([
   messageFilters,
   dmFilters,
 ])
-
-export const latestNotification = deriveDeduplicated(
-  deriveEventsDesc(deriveEventsById({repository, filters: allFilters})),
-  first,
-)
 
 export const notifications = derived(
   throttled(
@@ -268,55 +261,107 @@ export const notifications = derived(
   },
 )
 
-// Badges
+export const onNotification = call(() => {
+  const filters = allFilters.map(assoc("since", now()))
+  const subscribers: Subscriber<TrustedEvent>[] = []
 
-export const badgeCount = derived(notifications, notifications => {
-  return notifications.size
+  let unsubscribe: Unsubscriber | undefined
+
+  return (f: (event: TrustedEvent) => void) => {
+    subscribers.push(f)
+
+    if (!unsubscribe) {
+      unsubscribe = on(repository, "update", ({added}) => {
+        const $pubkey = pubkey.get()
+        const {muted_rooms} = getSettings()
+
+        for (const event of added) {
+          if (event.pubkey == $pubkey) {
+            continue
+          }
+
+          const h = getTagValue("h", event.tags)
+          const muted = Array.from(tracker.getRelays(event.id)).every(
+            url => h && muted_rooms.includes(makeRoomId(url, h)),
+          )
+
+          if (muted) {
+            continue
+          }
+
+          if (matchFilters(filters, event)) {
+            for (const f of subscribers) {
+              f(event)
+            }
+          }
+        }
+      })
+    }
+
+    return () => {
+      subscribers.splice(subscribers.indexOf(f), 1)
+
+      if (subscribers.length === 0) {
+        unsubscribe?.()
+        unsubscribe = undefined
+      }
+    }
+  }
 })
 
-export const handleBadgeCountChanges = async (count: number) => {
-  if (getSetting<boolean>("alerts_badge")) {
-    try {
-      await Badge.set({count})
-    } catch (err) {
-      // failed to set badge
-    }
-  } else {
-    await clearBadges()
-  }
-}
+// Badges
+
+export const syncBadges = () =>
+  derived([notifications, userSettingsValues], identity).subscribe(
+    async ([$notifications, {alerts_badge}]) => {
+      if (alerts_badge) {
+        try {
+          await Badge.set({count: $notifications.size})
+        } catch (err) {
+          // pass - firefox doesn't support badges
+        }
+      } else {
+        await clearBadges()
+      }
+    },
+  )
 
 export const clearBadges = async () => {
   try {
     await Badge.clear()
   } catch (e) {
-    // Pass - firefox doesn't support this
+    // pass - firefox doesn't support this
   }
 }
 
 // Local notifications
 
-interface IAlertsAdapter {
+interface IPushAdapter {
   request: () => Promise<string>
   start: () => Unsubscriber
 }
 
-class CapacitorNotifications implements IAlertsAdapter {
-  async ensureSubscription() {
-    const token = get(alertToken)
+class CapacitorNotifications implements IPushAdapter {
+  async sync() {
+    const token = get(pushToken)
 
     if (!token) {
       return
     }
 
-    const info = await tryCatch(async () => {
-      const secret = get(alertSecret)
+    const info: Maybe<{
+      secret: string
+      callback: string
+    }> = await tryCatch(async () => {
+      const secret = get(pushSecret)
 
       if (secret) {
         const {callback} = await fetchJson(`${PUSH_SERVER}/subscription/${secret}`)
 
         if (callback) {
           return {secret, callback}
+        } else {
+          pushSecret.set(undefined)
         }
       }
 
@@ -328,92 +373,85 @@ class CapacitorNotifications implements IAlertsAdapter {
       const json = await postJson(`${PUSH_SERVER}/subscription/${channel}`, data)
 
       if (json) {
-        return {
-          secret: json.sk,
-          callback: json.callback,
-        } as {
-          secret: string
-          callback: string
-        }
+        pushSecret.set(json.sk)
+
+        return {secret: json.sk, callback: json.callback}
       }
     })
 
-    if (info) {
-      alertSecret.set(info.secret)
+    if (!info) {
+      return
+    }
 
-      const getPushStuff = async (url: string) => {
-        let relay = await loadRelay(url)
+    const getPushStuff = async (url: string) => {
+      let relay = await loadRelay(url)
 
-        if (!relay?.self || !relay?.supported_nips?.includes("9a")) {
-          relay = await loadRelay(PUSH_BRIDGE)
-        }
-
-        if (relay?.self) {
-          return {url: relay.url, pubkey: relay.self}
-        }
+      if (!relay?.self || !relay?.supported_nips?.includes("9a")) {
+        relay = await loadRelay(PUSH_BRIDGE)
       }
 
-      for (const url of get(userSpaceUrls)) {
-        const stuff = await getPushStuff(url)
+      if (relay?.self) {
+        return {url: relay.url, pubkey: relay.self}
+      }
+    }
 
-        if (!stuff) {
-          console.warn(`Failed to subscribe ${url} to space notifications`)
-          continue
-        }
+    const syncSubscription = async (
+      key: string,
+      relay: string,
+      filters: Filter[],
+      ignore: Filter[] = [],
+    ) => {
+      const stuff = await getPushStuff(relay)
 
-        const filters = [{kinds: MESSAGE_KINDS}, makeCommentFilter(CONTENT_KINDS)]
-        // const ignore = [] todo - muted rooms
+      if (!stuff) {
+        console.warn(`Failed to subscribe ${relay} to ${key} notifications: unsupported`)
+      } else {
+        const {url, pubkey} = stuff
+        const identifier = await sha256(textEncoder.encode(info.callback + relay + key))
 
-        publishThunk({
-          relays: [stuff.url],
+        const thunk = publishThunk({
+          relays: [url],
           event: makeEvent(30390, {
-            content: await signer.get().nip44.encrypt(
-              stuff.pubkey,
-              JSON.stringify([
-                ["relay", url],
-                ["callback", info.callback],
-                // ...ignore.map(filter => ["ignore", JSON.stringify(filter)]),
-                ...filters.map(filter => ["filter", JSON.stringify(filter)]),
-              ]),
-            ),
+            content: await signer
+              .get()
+              .nip44.encrypt(
+                pubkey,
+                JSON.stringify([
+                  ["relay", relay],
+                  ["callback", info.callback],
+                  ...ignore.map(filter => ["ignore", JSON.stringify(filter)]),
+                  ...filters.map(filter => ["filter", JSON.stringify(filter)]),
+                ]),
+              ),
             tags: [
-              ["d", await sha256(textEncoder.encode(info.callback + url + "spaces"))],
-              ["p", stuff.pubkey],
+              ["d", identifier],
+              ["p", pubkey],
             ],
           }),
         })
-      }
 
-      const $pubkey = pubkey.get()!
+        const error = await waitForThunkError(thunk)
 
-      for (const url of getPubkeyRelays($pubkey, RelayMode.Messaging)) {
-        const stuff = await getPushStuff(url)
-
-        if (!stuff) {
-          console.warn(`Failed to subscribe ${url} to messaging notifications`)
-          continue
+        if (error) {
+          console.warn(`Failed to subscribe ${relay} to ${key} notifications:`, error)
         }
-
-        publishThunk({
-          relays: [stuff.url],
-          event: makeEvent(30390, {
-            content: await signer.get().nip44.encrypt(
-              stuff.pubkey,
-              JSON.stringify([
-                ["relay", url],
-                ["callback", info.callback],
-                ["filter", JSON.stringify({kinds: DM_KINDS, "#p": [$pubkey]})],
-              ]),
-            ),
-            tags: [
-              ["d", await sha256(textEncoder.encode(info.callback + url + "messages"))],
-              ["p", stuff.pubkey],
-            ],
-          }),
-        })
       }
-    } else {
-      alertSecret.set(undefined)
+    }
+
+    for (const relay of get(userSpaceUrls)) {
+      const {muted_rooms} = getSettings()
+      const filters = [{kinds: MESSAGE_KINDS}, makeCommentFilter(CONTENT_KINDS)]
+      const ignore = [{"#h": [muted_rooms]}]
+
+      syncSubscription("spaces", relay, filters, ignore)
+    }
+
+    const $pubkey = pubkey.get()!
+
+    for (const relay of getPubkeyRelays($pubkey, RelayMode.Messaging)) {
+      const filters = [{kinds: DM_KINDS, "#p": [$pubkey]}]
+
+      syncSubscription("messages", relay, filters)
     }
   }
 
@@ -445,18 +483,18 @@ class CapacitorNotifications implements IAlertsAdapter {
     })
 
     if (token) {
-      alertToken.set(token)
+      pushToken.set(token)
 
       return "granted"
     }
 
-    alertToken.set(undefined)
+    pushToken.set(undefined)
 
     return "denied"
   }
 
   start() {
-    this.ensureSubscription().then(() => {
+    this.sync().then(() => {
       PushNotifications.addListener(
         "pushNotificationActionPerformed",
         async (action: ActionPerformed) => {
@@ -472,7 +510,7 @@ class CapacitorNotifications implements IAlertsAdapter {
   }
 }
 
-class WebNotifications implements IAlertsAdapter {
+class WebNotifications implements IPushAdapter {
   async request() {
     if (Notification?.permission === "default") {
       await Notification.requestPermission()
@@ -506,21 +544,19 @@ class WebNotifications implements IAlertsAdapter {
   }
 
   start() {
-    let initialized = false
+    return onNotification(event => {
+      const {alerts_messages, alerts_mentions, alerts_spaces} = getSettings()
 
-    return latestNotification.subscribe(event => {
-      if (!initialized) {
-        initialized = true
-      } else if (event && document.hidden && Notification?.permission === "granted") {
-        if (getSetting<boolean>("alerts_messages") && matchFilters(dmFilters, event)) {
+      if (document.hidden && Notification?.permission === "granted") {
+        if (alerts_messages && matchFilters(dmFilters, event)) {
           this.notify(event, "New direct message", "Someone sent you a direct message.")
         } else if (
+          alerts_mentions &&
           event.pubkey !== pubkey.get() &&
-          getSetting<boolean>("alerts_mentions") &&
           getPubkeyTagValues(event.tags).includes(pubkey.get()!)
         ) {
           this.notify(event, "Someone mentioned you", "Someone tagged you in a message.")
-        } else if (getSetting<boolean>("alerts_spaces")) {
+        } else if (alerts_spaces) {
           this.notify(event, "New activity", "Someone posted a new message.")
         }
       }
@@ -528,49 +564,56 @@ class WebNotifications implements IAlertsAdapter {
   }
 }
 
-export class Alerts {
-  static _adapter: IAlertsAdapter | undefined
+export class Push {
+  static _adapter: IPushAdapter | undefined
   static _unsubscriber: Unsubscriber | undefined
 
   static _getAdapter() {
-    if (!Alerts._adapter) {
+    if (!Push._adapter) {
       if (Capacitor.isNativePlatform()) {
-        Alerts._adapter = new CapacitorNotifications()
+        Push._adapter = new CapacitorNotifications()
       } else {
-        Alerts._adapter = new WebNotifications()
+        Push._adapter = new WebNotifications()
       }
     }
 
-    return Alerts._adapter
+    return Push._adapter
   }
 
   static start() {
-    return Alerts._getAdapter().start()
+    return Push._getAdapter().start()
   }
 
   static request() {
-    return Alerts._getAdapter().request()
+    return Push._getAdapter().request()
   }
 
   static resume() {
-    if (getSetting<boolean>("alerts_push")) {
-      const promise = Alerts.request()
-      const controller = new AbortController()
+    const unsubscribe = userSettingsValues.subscribe(({alerts_push}) => {
+      if (alerts_push) {
+        const promise = Push.request()
+        const controller = new AbortController()
 
-      promise.then(permissions => {
-        if (permissions === "granted" && !controller.signal.aborted) {
-          controller.signal.addEventListener("abort", Alerts.start())
-        }
-      })
+        promise.then(permissions => {
+          if (permissions === "granted" && !controller.signal.aborted) {
+            controller.signal.addEventListener("abort", Push.start())
+          }
+        })
 
-      Alerts._unsubscriber = () => controller.abort()
+        Push._unsubscriber = () => controller.abort()
+      } else {
+        Push.stop()
+      }
+    })
+
+    return () => {
+      unsubscribe()
+      Push.stop()
     }
-
-    return Alerts.stop
   }
 
   static stop() {
-    Alerts._unsubscriber?.()
-    Alerts._unsubscriber = undefined
+    Push._unsubscriber?.()
+    Push._unsubscriber = undefined
   }
 }
