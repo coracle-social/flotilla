@@ -18,7 +18,6 @@
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
-  import Bell from "@assets/icons/bell.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -34,7 +33,7 @@
   import SpaceMembers from "@app/components/SpaceMembers.svelte"
   import SpaceReports from "@app/components/SpaceReports.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
-  import MenuSpaceRoomItem from "@app/components/MenuSpaceRoomItem.svelte"
+  import SpaceMenuRoomItem from "@app/components/SpaceMenuRoomItem.svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
   import {
     ENABLE_ZAPS,
@@ -216,7 +215,7 @@
           <SecondaryNavHeader>Your Rooms</SecondaryNavHeader>
         {/if}
         {#each $userRooms as h, i (h)}
-          <MenuSpaceRoomItem {replaceState} notify {url} {h} />
+          <SpaceMenuRoomItem {replaceState} notify {url} {h} />
         {/each}
         {#if $otherRooms.length > 0}
           <div class="h-2"></div>
@@ -229,7 +228,7 @@
           </SecondaryNavHeader>
         {/if}
         {#each $otherRooms as h, i (h)}
-          <MenuSpaceRoomItem {replaceState} {url} {h} />
+          <SpaceMenuRoomItem {replaceState} {url} {h} />
         {/each}
         {#if $canCreateRoom}
           <SecondaryNavItem {replaceState} onclick={addRoom}>
@@ -244,9 +243,5 @@
     <Button class="btn btn-neutral btn-sm" onclick={showDetail}>
       <SocketStatusIndicator {url} />
     </Button>
-    <Link href="/settings/alerts" class="btn btn-neutral btn-sm">
-      <Icon icon={Bell} />
-      Manage Alerts
-    </Link>
   </div>
 </div>

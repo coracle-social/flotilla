@@ -279,11 +279,12 @@ export type SettingsValues = {
   send_delay: number
   font_size: number
   alerts_push: boolean
+  alerts_sound: boolean
+  alerts_badge: boolean
   alerts_spaces: boolean
   alerts_mentions: boolean
   alerts_messages: boolean
-  alerts_sound: boolean
-  alerts_badge: boolean
+  muted_rooms: string[]
 }
 
 export type Settings = {
@@ -300,12 +301,13 @@ export const defaultSettings: SettingsValues = {
   relay_auth: RelayAuthMode.Conservative,
   send_delay: 0,
   font_size: 1.1,
-  alerts_push: true,
-  alerts_spaces: false,
-  alerts_mentions: false,
-  alerts_messages: false,
-  alerts_sound: true,
-  alerts_badge: true,
+  alerts_push: false,
+  alerts_sound: false,
+  alerts_badge: false,
+  alerts_spaces: true,
+  alerts_mentions: true,
+  alerts_messages: true,
+  muted_rooms: [],
 }
 
 export const settingsByPubkey = deriveItemsByKey({
@@ -536,7 +538,10 @@ export const deriveRoom = call(() => {
   const _deriveRoom = makeDeriveItem(roomsById, loadRoom)
 
   return (url: string, h: string) =>
-    derived(_deriveRoom(makeRoomId(url, h)), room => room || makeRoomMeta({h}))
+    derived(
+      _deriveRoom(makeRoomId(url, h)),
+      room => room || {url, id: makeRoomId(url, h), ...makeRoomMeta({h})},
+    )
 })
 
 export const displayRoom = (url: string, h: string) => getRoom(makeRoomId(url, h))?.name || h

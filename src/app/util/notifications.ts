@@ -5,7 +5,16 @@ import {Badge} from "@capawesome/capacitor-badge"
 import {PushNotifications} from "@capacitor/push-notifications"
 import type {ActionPerformed, RegistrationError, Token} from "@capacitor/push-notifications"
 import {synced, throttled} from "@welshman/store"
-import {pubkey, tracker, repository, relaysByUrl, signer, publishThunk, getPubkeyRelays, loadRelay} from "@welshman/app"
+import {
+  pubkey,
+  tracker,
+  repository,
+  relaysByUrl,
+  signer,
+  publishThunk,
+  getPubkeyRelays,
+  loadRelay,
+} from "@welshman/app"
 import {
   poll,
   prop,
@@ -278,7 +287,11 @@ export const handleBadgeCountChanges = async (count: number) => {
 }
 
 export const clearBadges = async () => {
-  await Badge.clear()
+  try {
+    await Badge.clear()
+  } catch (e) {
+    // Pass - firefox doesn't support this
+  }
 }
 
 // Local notifications
@@ -354,14 +367,15 @@ class CapacitorNotifications implements IAlertsAdapter {
         publishThunk({
           relays: [stuff.url],
           event: makeEvent(30390, {
-            content: await signer
-              .get()
-              .nip44.encrypt(stuff.pubkey, JSON.stringify([
+            content: await signer.get().nip44.encrypt(
+              stuff.pubkey,
+              JSON.stringify([
                 ["relay", url],
                 ["callback", info.callback],
                 // ...ignore.map(filter => ["ignore", JSON.stringify(filter)]),
                 ...filters.map(filter => ["filter", JSON.stringify(filter)]),
-              ])),
+              ]),
+            ),
             tags: [
               ["d", await sha256(textEncoder.encode(info.callback + url + "spaces"))],
               ["p", stuff.pubkey],
@@ -383,13 +397,14 @@ class CapacitorNotifications implements IAlertsAdapter {
         publishThunk({
           relays: [stuff.url],
           event: makeEvent(30390, {
-            content: await signer
-              .get()
-              .nip44.encrypt(stuff.pubkey, JSON.stringify([
+            content: await signer.get().nip44.encrypt(
+              stuff.pubkey,
+              JSON.stringify([
                 ["relay", url],
                 ["callback", info.callback],
-                ["filter", JSON.stringify({kinds: DM_KINDS, '#p': [$pubkey]})],
-              ])),
+                ["filter", JSON.stringify({kinds: DM_KINDS, "#p": [$pubkey]})],
+              ]),
+            ),
             tags: [
               ["d", await sha256(textEncoder.encode(info.callback + url + "messages"))],
               ["p", stuff.pubkey],
@@ -449,7 +464,7 @@ class CapacitorNotifications implements IAlertsAdapter {
           const relays = [action.notification.data.relay]
 
           goto(await getEventPath(event, relays))
-        }
+        },
       )
     })
 
