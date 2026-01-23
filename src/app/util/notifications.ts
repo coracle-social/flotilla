@@ -16,8 +16,7 @@ import {
   loadRelay,
   waitForThunkError,
 } from "@welshman/app"
-import type {Maybe
-} from "@welshman/lib"
+import type {Maybe} from "@welshman/lib"
 import {
   on,
   call,
