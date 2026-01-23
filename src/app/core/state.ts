@@ -125,7 +125,7 @@ export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios"
 
 export const PUSH_SERVER = import.meta.env.VITE_PUSH_SERVER
 
-export const PUSH_BRIDGE = import.meta.env.VITE_PUSH_BRIDGE
+export const PUSH_BRIDGE = normalizeRelayUrl(import.meta.env.VITE_PUSH_BRIDGE)
 
 export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 

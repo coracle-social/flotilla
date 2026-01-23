@@ -23,7 +23,7 @@ import {
   assoc,
   poll,
   prop,
-  sha256,
+  hash,
   textEncoder,
   parseJson,
   flatten,
@@ -37,7 +37,7 @@ import {
   postJson,
   fetchJson,
 } from "@welshman/lib"
-import type {TrustedEvent, Filter} from "@welshman/util"
+import type {TrustedEvent, RelayProfile, Filter} from "@welshman/util"
 import {deriveEventsByIdByUrl} from "@welshman/store"
 import {
   ZAP_GOAL,
@@ -51,6 +51,7 @@ import {
   makeEvent,
   RelayMode,
 } from "@welshman/util"
+import {buildUrl} from '@lib/util'
 import {
   makeSpacePath,
   makeChatPath,
@@ -73,6 +74,7 @@ import {
   chatsById,
   hasNip29,
   getSettings,
+  userSettings,
   userSettingsValues,
   userGroupList,
   getSpaceUrlsFromGroupList,
@@ -336,12 +338,13 @@ export const clearBadges = async () => {
 // Local notifications
 
 interface IPushAdapter {
-  request: () => Promise<string>
+  request: (prompt: boolean) => Promise<string>
+  cancel: () => Promise<void>
   start: () => Unsubscriber
 }
 
 class CapacitorNotifications implements IPushAdapter {
-  async sync() {
+  async sync(signal: AbortSignal) {
     const token = get(pushToken)
 
     if (!token) {
@@ -355,21 +358,23 @@ class CapacitorNotifications implements IPushAdapter {
       const secret = get(pushSecret)
 
       if (secret) {
-        const {callback} = await fetchJson(`${PUSH_SERVER}/subscription/${secret}`)
+        const res = await fetch(buildUrl(PUSH_SERVER, "subscription", secret), {signal})
 
-        if (callback) {
-          return {secret, callback}
-        } else {
-          pushSecret.set(undefined)
+        if (res.ok) {
+          const {callback} = await res.json()
+
+          if (callback) {
+            return {secret, callback}
+          } else {
+            pushSecret.set(undefined)
+          }
         }
       }
 
       const ios = Capacitor.getPlatform() === "ios"
       const channel = ios ? "apns" : "fcm"
-      const topic = "social.flotilla"
-      const data = ios ? {token, topic} : {token}
-
-      const json = await postJson(`${PUSH_SERVER}/subscription/${channel}`, data)
+      const url = buildUrl(PUSH_SERVER, "subscription", channel)
+      const json = await postJson(url, {token}, {signal})
 
       if (json) {
         pushSecret.set(json.sk)
@@ -382,10 +387,13 @@ class CapacitorNotifications implements IPushAdapter {
       return
     }
 
+    const canPush = (relay?: RelayProfile) =>
+      Boolean(relay?.self && relay?.supported_nips?.map(String)?.includes("9a"))
+
     const getPushStuff = async (url: string) => {
       let relay = await loadRelay(url)
 
-      if (!relay?.self || !relay?.supported_nips?.includes("9a")) {
+      if (!canPush(relay)) {
         relay = await loadRelay(PUSH_BRIDGE)
       }
 
@@ -406,9 +414,10 @@ class CapacitorNotifications implements IPushAdapter {
         console.warn(`Failed to subscribe ${relay} to ${key} notifications: unsupported`)
       } else {
         const {url, pubkey} = stuff
-        const identifier = await sha256(textEncoder.encode(info.callback + relay + key))
+        const identifier = String(hash(info.callback + relay + key))
 
         const thunk = publishThunk({
+          signal,
           relays: [url],
           event: makeEvent(30390, {
             content: await signer
@@ -454,10 +463,10 @@ class CapacitorNotifications implements IPushAdapter {
     }
   }
 
-  async request() {
+  async request(prompt = true) {
     let status = await PushNotifications.checkPermissions()
 
-    if (status.receive === "prompt") {
+    if (prompt && status.receive === "prompt") {
       status = await PushNotifications.requestPermissions()
     }
 
@@ -465,53 +474,50 @@ class CapacitorNotifications implements IPushAdapter {
       return status.receive
     }
 
-    let token = ""
+    let token = get(pushToken)
 
-    PushNotifications.addListener("registration", ({value}: Token) => {
-      token = value
-    })
+    if (!token) {
+      PushNotifications.addListener("registration", ({value}: Token) => {
+        token = value
+      })
 
-    PushNotifications.addListener("registrationError", (error: RegistrationError) => {
-      console.error(error)
-    })
+      PushNotifications.addListener("registrationError", (error: RegistrationError) => {
+        console.error(error)
+      })
 
-    await PushNotifications.register()
-    await poll({
-      condition: () => Boolean(token),
-      signal: AbortSignal.timeout(5000),
-    })
+      await Promise.all([
+        PushNotifications.register(),
+        poll({
+          condition: () => Boolean(token),
+          signal: AbortSignal.timeout(5000),
+        }),
+      ])
 
-    if (token) {
       pushToken.set(token)
-
-      return "granted"
     }
 
-    pushToken.set(undefined)
-
-    return "denied"
+    return token ? "granted" : "denied"
   }
 
   start() {
-    this.sync().then(() => {
-      PushNotifications.addListener(
-        "pushNotificationActionPerformed",
-        async (action: ActionPerformed) => {
-          const event = parseJson(action.notification.data.event)
-          const relays = [action.notification.data.relay]
+    const controller = new AbortController()
 
-          goto(await getEventPath(event, relays))
-        },
-      )
-    })
+    this.sync(controller.signal)
 
-    return () => PushNotifications.removeAllListeners()
+    return () => controller.abort()
+  }
+
+  async cancel() {
+    await PushNotifications.unregister()
+
+    pushSecret.set(undefined)
+    pushToken.set(undefined)
   }
 }
 
 class WebNotifications implements IPushAdapter {
-  async request() {
-    if (Notification?.permission === "default") {
+  async request(prompt = true) {
+    if (prompt && Notification?.permission === "default") {
       await Notification.requestPermission()
     }
 
@@ -561,6 +567,10 @@ class WebNotifications implements IPushAdapter {
       }
     })
   }
+
+  async cancel() {
+    // pass
+  }
 }
 
 export class Push {
@@ -580,39 +590,24 @@ export class Push {
   }
 
   static start() {
-    return Push._getAdapter().start()
+    const adapter = Push._getAdapter()
+    const promise = adapter.request(false)
+    const controller = new AbortController()
+
+    promise.then(permissions => {
+      if (permissions === "granted" && !controller.signal.aborted) {
+        controller.signal.addEventListener("abort", adapter.start())
+      }
+    })
+
+    Push._unsubscriber = () => controller.abort()
   }
 
   static request() {
     return Push._getAdapter().request()
   }
 
-  static resume() {
-    const unsubscribe = userSettingsValues.subscribe(({alerts_push}) => {
-      if (alerts_push) {
-        const promise = Push.request()
-        const controller = new AbortController()
-
-        promise.then(permissions => {
-          if (permissions === "granted" && !controller.signal.aborted) {
-            controller.signal.addEventListener("abort", Push.start())
-          }
-        })
-
-        Push._unsubscriber = () => controller.abort()
-      } else {
-        Push.stop()
-      }
-    })
-
-    return () => {
-      unsubscribe()
-      Push.stop()
-    }
-  }
-
-  static stop() {
-    Push._unsubscriber?.()
-    Push._unsubscriber = undefined
+  static cancel() {
+    return Push._getAdapter().cancel()
   }
 }

@@ -11,12 +11,15 @@ const config: CapacitorConfig = {
     adjustMarginsForEdgeToEdge: false,
   },
   plugins: {
+    SystemBars: {
+      insetsHandling: "disable",
+    },
     SplashScreen: {
-      androidSplashResourceName: "splash"
+      androidSplashResourceName: "splash",
     },
     Keyboard: {
       style: "DARK",
-      resizeOnFullScreen: true,
+      // resizeOnFullScreen: true,
     },
     Badge: {
       persist: true,
@@ -25,7 +28,7 @@ const config: CapacitorConfig = {
   },
   // Use this for live reload https://capacitorjs.com/docs/guides/live-reload
   // server: {
-  //   url: "http://192.168.1.115:1847",
+  //   url: "http://192.168.1.65:1847",
   //   cleartext: true
   // },
 };

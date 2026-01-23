@@ -48,6 +48,12 @@
   const onsubmit = preventDefault(async () => {
     await publishSettings($state.snapshot(settings))
 
+    if (settings.alerts_push) {
+      await Alerts.start()
+    } else {
+      await Alerts.cancel()
+    }
+
     pushToast({message: "Your settings have been saved!"})
   })
 

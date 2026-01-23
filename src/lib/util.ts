@@ -16,3 +16,11 @@ export const day = (seconds: number) => Math.floor(seconds / DAY)
 export const daysBetween = (start: number, end: number) => [...range(start, end, DAY)].map(day)
 
 export const ucFirst = (s: string) => s.slice(0, 1).toUpperCase() + s.slice(1)
+
+export const buildUrl = (base: string | URL, ...pathname: string[]) => {
+  const url = new URL(base)
+
+  url.pathname = '/' + pathname.join('/')
+
+  return url.toString()
+}

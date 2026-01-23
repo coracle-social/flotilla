@@ -1,6 +1,7 @@
 <script lang="ts">
   import "@src/app.css"
   import "@capacitor-community/safe-area"
+  import {PushNotifications} from "@capacitor/push-notifications"
   import * as nip19 from "nostr-tools/nip19"
   import type {Unsubscriber} from "svelte/store"
   import {get} from "svelte/store"
@@ -42,6 +43,17 @@
   const {children} = $props()
 
   const policies = [authPolicy, blockPolicy, trustPolicy, mostlyRestrictedPolicy]
+
+  PushNotifications.addListener(
+    "pushNotificationActionPerformed",
+    async (action: ActionPerformed) => {
+      console.log('====== action', JSON.stringify(action))
+      const event = parseJson(action.notification.data.event)
+      const relays = [action.notification.data.relay]
+
+      goto(await getEventPath(event, relays))
+    },
+  )
 
   // Add stuff to window for convenience
   Object.assign(window, {
@@ -129,7 +141,7 @@
     unsubscribers.push(syncKeyboard())
 
     // Initialize background notifications
-    unsubscribers.push(notifications.Push.resume())
+    unsubscribers.push(notifications.Push.start())
 
     // Listen for signer errors, report to user via toast
     unsubscribers.push(
