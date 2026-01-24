@@ -42,6 +42,7 @@ import {
 import {
   getter,
   throttled,
+  withGetter,
   deriveArray,
   makeDeriveEvent,
   makeLoadItem,
@@ -278,12 +279,6 @@ export type SettingsValues = {
   relay_auth: RelayAuthMode
   send_delay: number
   font_size: number
-  alerts_push: boolean
-  alerts_sound: boolean
-  alerts_badge: boolean
-  alerts_spaces: boolean
-  alerts_mentions: boolean
-  alerts_messages: boolean
   muted_rooms: string[]
 }
 
@@ -301,12 +296,6 @@ export const defaultSettings: SettingsValues = {
   relay_auth: RelayAuthMode.Conservative,
   send_delay: 0,
   font_size: 1.1,
-  alerts_push: false,
-  alerts_sound: false,
-  alerts_badge: false,
-  alerts_spaces: true,
-  alerts_mentions: true,
-  alerts_messages: true,
   muted_rooms: [],
 }
 
@@ -348,9 +337,28 @@ export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
 // Push notifications
 
-export const pushToken = writable<string | undefined>()
-
-export const pushSecret = writable<string | undefined>()
+export const notificationSettings = withGetter(
+  writable<{
+    push: boolean
+    sound: boolean
+    badge: boolean
+    spaces: boolean,
+    mentions: boolean,
+    messages: boolean,
+    token?: string
+    subscription?: {
+      key: string
+      callback: string
+    }
+  }>({
+    push: false,
+    sound: false,
+    badge: false,
+    spaces: true,
+    mentions: true,
+    messages: true,
+  })
+)
 
 // Chats
 
