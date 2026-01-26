@@ -4,7 +4,7 @@ import {Capacitor} from "@capacitor/core"
 import {Badge} from "@capawesome/capacitor-badge"
 import {PushNotifications} from "@capacitor/push-notifications"
 import type {ActionPerformed, RegistrationError, Token} from "@capacitor/push-notifications"
-import {synced, throttled} from "@welshman/store"
+import {synced, throttled, deriveDeduplicated, deriveDeduplicatedByValue} from "@welshman/store"
 import {
   pubkey,
   tracker,
@@ -12,9 +12,9 @@ import {
   relaysByUrl,
   signer,
   publishThunk,
-  getPubkeyRelays,
   loadRelay,
   waitForThunkError,
+  userMessagingRelayList,
 } from "@welshman/app"
 import {
   on,
@@ -32,6 +32,8 @@ import {
   now,
   groupBy,
   postJson,
+  nth,
+  nthEq,
 } from "@welshman/lib"
 import type {TrustedEvent, RelayProfile, Filter} from "@welshman/util"
 import {deriveEventsByIdByUrl} from "@welshman/store"
@@ -40,12 +42,14 @@ import {
   EVENT_TIME,
   THREAD,
   COMMENT,
+  DELETE,
   getTagValue,
   getPubkeyTagValues,
+  getRelaysFromList,
   matchFilters,
   sortEventsDesc,
   makeEvent,
-  RelayMode,
+  Address,
 } from "@welshman/util"
 import {buildUrl} from "@lib/util"
 import {
@@ -66,6 +70,7 @@ import {
   PUSH_BRIDGE,
   PUSH_SERVER,
   notificationSettings,
+  notificationState,
   chatsById,
   hasNip29,
   getSettings,
@@ -75,6 +80,7 @@ import {
   getSpaceRoomsFromGroupList,
   makeCommentFilter,
   userSpaceUrls,
+  splitRoomId,
   makeRoomId,
 } from "@app/core/state"
 import {kv} from "@app/core/storage"
@@ -342,6 +348,7 @@ if (Capacitor.isNativePlatform()) {
   PushNotifications.addListener(
     "pushNotificationActionPerformed",
     async (action: ActionPerformed) => {
+      console.log('=======', JSON.stringify(action))
       const event = parseJson(action.notification.data.event)
       const relays = [action.notification.data.relay]
 
@@ -362,7 +369,7 @@ class CapacitorNotifications implements IPushAdapter {
       return status.receive
     }
 
-    let {token} = notificationSettings.get()
+    let {token} = notificationState.get()
 
     if (!token) {
       PushNotifications.addListener("registration", ({value}: Token) => {
@@ -381,32 +388,38 @@ class CapacitorNotifications implements IPushAdapter {
         }),
       ])
 
-      notificationSettings.update(assoc("token", token))
+      notificationState.update(assoc("token", token))
     }
 
     return token ? "granted" : "denied"
   }
 
   async syncServer(signal: AbortSignal) {
-    const {token} = notificationSettings.get()
+    const {token, subscription} = notificationState.get()
 
     if (!token) {
       throw new Error("Attempted to sync push server without a token")
     }
 
-    const channel = Capacitor.getPlatform() === "ios" ? "apns" : "fcm"
-    const url = buildUrl(PUSH_SERVER, "subscription", channel)
-    const json = await postJson(url, {token}, {signal})
+    if (!subscription) {
+      const channel = Capacitor.getPlatform() === "ios" ? "apns" : "fcm"
+      const url = buildUrl(PUSH_SERVER, "subscription", channel)
+      const json = await postJson(url, {token}, {signal})
 
-    if (json?.callback && json?.id) {
-      notificationSettings.update(assoc("subscription", json))
-    } else {
-      console.warn("Failed to register with push server")
+      if (json?.callback && json?.key) {
+        notificationState.update(assoc("subscription", json))
+      } else {
+        console.warn("Failed to register with push server")
+      }
     }
   }
 
   async syncRelays(signal: AbortSignal) {
-    const {subscription} = notificationSettings.get()
+    const {subscription} = notificationState.get()
+
+    if (signal.aborted) {
+      return
+    }
 
     if (!subscription) {
       throw new Error("Attempted to sync relays without a subscription")
@@ -433,10 +446,6 @@ class CapacitorNotifications implements IPushAdapter {
       filters: Filter[],
       ignore: Filter[] = [],
     ) => {
-      if (signal.aborted) {
-        return
-      }
-
       const stuff = await getPushStuff(relay)
 
       if (!stuff) {
@@ -475,25 +484,114 @@ class CapacitorNotifications implements IPushAdapter {
       }
     }
 
-    for (const relay of get(userSpaceUrls)) {
-      const {muted_rooms} = getSettings()
+    const unsyncRelay = async (key: string, relay: string) => {
+      const stuff = await getPushStuff(relay)
+
+      if (!stuff) {
+        console.warn(`Failed to unsubscribe ${relay} from ${key} notifications: unsupported`)
+      } else {
+        const identifier = String(hash(subscription.callback + relay + key))
+        const address = new Address(30390, pubkey.get()!, identifier).toString()
+
+        const thunk = publishThunk({
+          signal,
+          relays: [stuff.url],
+          event: makeEvent(DELETE, {tags: [["a", address]]}),
+        })
+
+        const error = await waitForThunkError(thunk)
+
+        if (error) {
+          console.warn(`Failed to unsubscribe ${relay} from ${key} notifications:`, error)
+        }
+      }
+    }
+
+    const syncedSpaceUrls = new Set<string>()
+
+    const syncSpaceRelay = (url: string) => {
+      const {spaces, mentions} = notificationSettings.get()
       const filters = [{kinds: MESSAGE_KINDS}, makeCommentFilter(CONTENT_KINDS)]
-      const ignore = [{"#h": [muted_rooms]}]
+      const mutedRooms = getSettings().muted_rooms.map(splitRoomId).filter(nthEq(0, url)).map(nth(1))
 
-      syncRelay("spaces", relay, filters, ignore)
+      if (spaces) {
+        syncRelay("spaces", url, filters, [{"#h": [mutedRooms]}])
+      } else {
+        unsyncRelay("spaces", url)
+      }
+
+      if (mentions) {
+        const mentionFilters = filters.map(assoc("#p", [pubkey.get()!]))
+
+       if (!spaces) {
+          syncRelay("mentions", url, mentionFilters)
+        } else if (mutedRooms.length > 0) {
+          syncRelay("mentions", url, mentionFilters.map(assoc('#h', [mutedRooms])))
+        } else {
+          unsyncRelay("mentions", url)
+        }
+      } else {
+        unsyncRelay("mentions", url)
+      }
     }
 
-    const $pubkey = pubkey.get()!
+    const syncSpaceRelays = () => {
+      const $userSpaceUrls = get(userSpaceUrls)
+      const {spaces, mentions} = notificationSettings.get()
 
-    for (const relay of getPubkeyRelays($pubkey, RelayMode.Messaging)) {
-      const filters = [{kinds: DM_KINDS, "#p": [$pubkey]}]
+      for (const url of $userSpaceUrls) {
+        syncSpaceRelay(url)
+        syncedSpaceUrls.add(url)
+      }
 
-      syncRelay("messages", relay, filters)
+      for (const url of syncedSpaceUrls) {
+        if (!$userSpaceUrls.includes(url)) {
+          unsyncRelay("spaces", url)
+          syncedSpaceUrls.delete(url)
+        }
+      }
     }
+
+    const syncedMessagingUrls = new Set<string>()
+
+    const syncMessagingRelay = (url: string) => {
+      const {messages} = notificationSettings.get()
+
+      if (messages) {
+        syncRelay("messages", url, [{kinds: DM_KINDS, "#p": [pubkey.get()!]}])
+      } else {
+        unsyncRelay("messages", url)
+      }
+    }
+
+    const syncMessagingRelays = () => {
+      const messagingRelayUrls = getRelaysFromList(get(userMessagingRelayList))
+
+      for (const url of messagingRelayUrls) {
+        syncMessagingRelay(url)
+        syncedMessagingUrls.add(url)
+      }
+
+      for (const url of syncedMessagingUrls) {
+        if (!messagingRelayUrls.includes(url)) {
+          unsyncRelay("messages", url)
+          syncedMessagingUrls.delete(url)
+        }
+      }
+    }
+
+    const unsubscribers = [
+      userSpaceUrls.subscribe(syncSpaceRelays),
+      userMessagingRelayList.subscribe(syncMessagingRelays),
+      userSettingsValues.subscribe(syncSpaceRelays),
+      userSettingsValues.subscribe(syncMessagingRelays),
+    ]
+
+    signal.addEventListener("abort", () => unsubscribers.forEach(call))
   }
 
   start() {
-    const {token} = notificationSettings.get()
+    const {token} = notificationState.get()
     const controller = new AbortController()
     const {signal} = controller
 
@@ -502,13 +600,8 @@ class CapacitorNotifications implements IPushAdapter {
     } else {
       call(async () => {
         try {
-          if (!notificationSettings.get().subscription) {
-            await this.syncServer(signal)
-          }
-
-          if (notificationSettings.get().subscription) {
-            await this.syncRelays(signal)
-          }
+          await this.syncServer(signal)
+          await this.syncRelays(signal)
         } catch (e) {
           console.error(e)
         }
@@ -523,9 +616,7 @@ class CapacitorNotifications implements IPushAdapter {
   }
 
   async disable() {
-    const {subscription, ...settings} = notificationSettings.get()
-
-    await PushNotifications.unregister()
+    const {subscription} = notificationState.get()
 
     if (subscription) {
       const res = await fetch(buildUrl(PUSH_SERVER, "subscription", subscription.key), {
@@ -537,7 +628,8 @@ class CapacitorNotifications implements IPushAdapter {
       }
     }
 
-    notificationSettings.set({...settings, push: false})
+    notificationSettings.update(assoc('push', false))
+    notificationState.set({})
   }
 }
 

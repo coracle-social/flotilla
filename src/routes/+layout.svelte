@@ -27,7 +27,7 @@
   import {setupAnalytics} from "@app/util/analytics"
   import {authPolicy, blockPolicy, trustPolicy, mostlyRestrictedPolicy} from "@app/util/policies"
   import {kv, db} from "@app/core/storage"
-  import {userSettingsValues, notificationSettings} from "@app/core/state"
+  import {userSettingsValues, notificationSettings, notificationState} from "@app/core/state"
   import {syncApplicationData} from "@app/core/sync"
   import * as commands from "@app/core/commands"
   import * as requests from "@app/core/requests"
@@ -105,6 +105,11 @@
       sync({
         key: "notificationSettings",
         store: notificationSettings,
+        storage: kv,
+      }),
+      sync({
+        key: "notificationState",
+        store: notificationState,
         storage: kv,
       }),
     ])

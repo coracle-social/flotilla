@@ -338,19 +338,7 @@ export const relaysMostlyRestricted = writable<Record<string, string>>({})
 // Push notifications
 
 export const notificationSettings = withGetter(
-  writable<{
-    push: boolean
-    sound: boolean
-    badge: boolean
-    spaces: boolean
-    mentions: boolean
-    messages: boolean
-    token?: string
-    subscription?: {
-      key: string
-      callback: string
-    }
-  }>({
+  writable({
     push: false,
     sound: false,
     badge: false,
@@ -359,6 +347,17 @@ export const notificationSettings = withGetter(
     messages: true,
   }),
 )
+
+export const notificationState = withGetter(
+  writable<{
+    token?: string
+    subscription?: {
+      key: string
+      callback: string
+    }
+  }>({}),
+)
+
 
 // Chats
 
