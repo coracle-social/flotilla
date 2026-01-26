@@ -6,7 +6,8 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {logout} from "@app/core/commands"
+  import {Push} from "@app/util/notifications"
+  import {kv, db} from "@app/core/storage"
 
   const back = () => history.back()
 
@@ -14,7 +15,12 @@
     loading = true
 
     try {
-      await logout()
+      await Push.disable()
+      await kv.clear()
+      await db.clear()
+
+      localStorage.clear()
+
       window.location.href = "/"
     } catch (e) {
       console.error(e)

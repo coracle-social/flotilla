@@ -18,9 +18,10 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {pushToast} from "@app/util/toast"
-  import {logout} from "@app/core/commands"
   import {INDEXER_RELAYS, PLATFORM_NAME, userSpaceUrls} from "@app/core/state"
+  import {kv, db} from "@app/core/storage"
+  import {pushToast} from "@app/util/toast"
+  import {Push} from "@app/util/notifications"
 
   let progress: number | undefined = $state(undefined)
   let confirmText = $state("")
@@ -83,7 +84,11 @@
     await sleep(2000)
 
     // Goodbye forever!
-    await logout()
+    await Push.disable()
+    await kv.clear()
+    await db.clear()
+
+    localStorage.clear()
 
     window.location.href = "/"
   }

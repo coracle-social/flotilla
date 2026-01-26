@@ -16,7 +16,6 @@ import {
   loadRelay,
   waitForThunkError,
 } from "@welshman/app"
-import type {Maybe} from "@welshman/lib"
 import {
   on,
   call,
@@ -24,7 +23,6 @@ import {
   poll,
   prop,
   hash,
-  textEncoder,
   parseJson,
   flatten,
   find,
@@ -33,9 +31,7 @@ import {
   identity,
   now,
   groupBy,
-  tryCatch,
   postJson,
-  fetchJson,
 } from "@welshman/lib"
 import type {TrustedEvent, RelayProfile, Filter} from "@welshman/util"
 import {deriveEventsByIdByUrl} from "@welshman/store"
@@ -51,7 +47,7 @@ import {
   makeEvent,
   RelayMode,
 } from "@welshman/util"
-import {buildUrl} from '@lib/util'
+import {buildUrl} from "@lib/util"
 import {
   makeSpacePath,
   makeChatPath,
@@ -73,7 +69,6 @@ import {
   chatsById,
   hasNip29,
   getSettings,
-  userSettings,
   userSettingsValues,
   userGroupList,
   getSpaceUrlsFromGroupList,
@@ -343,16 +338,17 @@ interface IPushAdapter {
   start: () => Unsubscriber
 }
 
-PushNotifications.addListener(
-  "pushNotificationActionPerformed",
-  async (action: ActionPerformed) => {
-    console.log('====== action', JSON.stringify(action))
-    const event = parseJson(action.notification.data.event)
-    const relays = [action.notification.data.relay]
+if (Capacitor.isNativePlatform()) {
+  PushNotifications.addListener(
+    "pushNotificationActionPerformed",
+    async (action: ActionPerformed) => {
+      const event = parseJson(action.notification.data.event)
+      const relays = [action.notification.data.relay]
 
-    goto(await getEventPath(event, relays))
-  },
-)
+      goto(await getEventPath(event, relays))
+    },
+  )
+}
 
 class CapacitorNotifications implements IPushAdapter {
   async request(prompt = true) {
@@ -385,7 +381,7 @@ class CapacitorNotifications implements IPushAdapter {
         }),
       ])
 
-      notificationSettings.update(assoc('token', token))
+      notificationSettings.update(assoc("token", token))
     }
 
     return token ? "granted" : "denied"
@@ -403,7 +399,7 @@ class CapacitorNotifications implements IPushAdapter {
     const json = await postJson(url, {token}, {signal})
 
     if (json?.callback && json?.id) {
-      notificationSettings.update(assoc('subscription', json))
+      notificationSettings.update(assoc("subscription", json))
     } else {
       console.warn("Failed to register with push server")
     }
@@ -523,17 +519,17 @@ class CapacitorNotifications implements IPushAdapter {
   }
 
   async enable() {
-    notificationSettings.update(assoc('push', true))
+    notificationSettings.update(assoc("push", true))
   }
 
   async disable() {
-    const {token, subscription, ...settings} = notificationSettings.get()
+    const {subscription, ...settings} = notificationSettings.get()
 
     await PushNotifications.unregister()
 
     if (subscription) {
-      const res = await fetch(buildUrl(PUSH_SERVER, 'subscription', subscription.key), {
-        method: 'delete',
+      const res = await fetch(buildUrl(PUSH_SERVER, "subscription", subscription.key), {
+        method: "delete",
       })
 
       if (!res.ok) {
@@ -599,11 +595,11 @@ class WebNotifications implements IPushAdapter {
   }
 
   async enable() {
-    notificationSettings.update(assoc('push', true))
+    notificationSettings.update(assoc("push", true))
   }
 
   async disable() {
-    notificationSettings.update(assoc('push', false))
+    notificationSettings.update(assoc("push", false))
   }
 }
 

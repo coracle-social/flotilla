@@ -79,10 +79,7 @@
       {#if isSupported}
         <div class="flex justify-between">
           <p>Show badge for unread alerts</p>
-          <input
-            type="checkbox"
-            class="toggle toggle-primary"
-            bind:checked={settings.badge} />
+          <input type="checkbox" class="toggle toggle-primary" bind:checked={settings.badge} />
         </div>
       {/if}
     {/await}
@@ -94,16 +91,12 @@
     {/if}
     <div class="flex justify-between">
       <p>Enable push notifications</p>
-      <input
-        type="checkbox"
-        class="toggle toggle-primary"
-        bind:checked={settings.push} />
+      <input type="checkbox" class="toggle toggle-primary" bind:checked={settings.push} />
     </div>
   </div>
   <div
     class={cx("card2 bg-alt col-4 shadow-md", {
-      "pointer-events-none opacity-50":
-        !settings.badge && !settings.sound && !settings.push,
+      "pointer-events-none opacity-50": !settings.badge && !settings.sound && !settings.push,
     })}>
     <strong class="text-lg">Alert Types</strong>
     <div class="flex justify-between">
@@ -116,16 +109,12 @@
     </div>
     <div class="flex justify-between">
       <p>Notify me about new messages</p>
-      <input
-        type="checkbox"
-        class="toggle toggle-primary"
-        bind:checked={settings.messages} />
+      <input type="checkbox" class="toggle toggle-primary" bind:checked={settings.messages} />
     </div>
   </div>
   <div
     class={cx("card2 bg-alt col-4 shadow-md", {
-      "pointer-events-none opacity-50":
-        !settings.badge && !settings.sound && !settings.push,
+      "pointer-events-none opacity-50": !settings.badge && !settings.sound && !settings.push,
     })}>
     <strong class="text-lg">Muted Rooms</strong>
     {#each muted_rooms as id (id)}

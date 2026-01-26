@@ -1,7 +1,6 @@
 <script lang="ts">
   import "@src/app.css"
   import "@capacitor-community/safe-area"
-  import {PushNotifications} from "@capacitor/push-notifications"
   import * as nip19 from "nostr-tools/nip19"
   import type {Unsubscriber} from "svelte/store"
   import {get} from "svelte/store"

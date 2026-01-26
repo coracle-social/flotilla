@@ -342,9 +342,9 @@ export const notificationSettings = withGetter(
     push: boolean
     sound: boolean
     badge: boolean
-    spaces: boolean,
-    mentions: boolean,
-    messages: boolean,
+    spaces: boolean
+    mentions: boolean
+    messages: boolean
     token?: string
     subscription?: {
       key: string
@@ -357,7 +357,7 @@ export const notificationSettings = withGetter(
     spaces: true,
     mentions: true,
     messages: true,
-  })
+  }),
 )
 
 // Chats
@@ -452,10 +452,13 @@ export const deriveChat = call(() => {
 })
 
 export const chatSearch = derived(throttled(800, chatsById), $chatsByPubkey => {
-  return createSearch(Array.from($chatsByPubkey.values()), {
-    getValue: (chat: Chat) => chat.id,
-    fuseOptions: {keys: ["search_text"]},
-  })
+  return createSearch(
+    sortBy(c => -c.last_activity, Array.from($chatsByPubkey.values())),
+    {
+      getValue: (chat: Chat) => chat.id,
+      fuseOptions: {keys: ["search_text"]},
+    },
+  )
 })
 
 // Rooms
