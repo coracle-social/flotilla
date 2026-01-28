@@ -351,18 +351,6 @@ interface IPushAdapter {
   enable: () => Promise<void>
 }
 
-if (Capacitor.isNativePlatform()) {
-  PushNotifications.addListener(
-    "pushNotificationActionPerformed",
-    async (action: ActionPerformed) => {
-      const event = parseJson(action.notification.data.event)
-      const relays = [action.notification.data.relay]
-
-      goto(await getEventPath(event, relays))
-    },
-  )
-}
-
 class CapacitorNotifications implements IPushAdapter {
   _controller = maybe<AbortController>()
 
@@ -380,13 +368,14 @@ class CapacitorNotifications implements IPushAdapter {
     let {token} = notificationState.get()
 
     if (!token) {
-      PushNotifications.addListener("registration", ({value}: Token) => {
-        token = value
-      })
-
-      PushNotifications.addListener("registrationError", (error: RegistrationError) => {
-        console.error(error)
-      })
+      const listeners = [
+        PushNotifications.addListener("registration", ({value}: Token) => {
+          token = value
+        }),
+        PushNotifications.addListener("registrationError", (error: RegistrationError) => {
+          console.error(error)
+        }),
+      ]
 
       await Promise.all([
         PushNotifications.register(),
@@ -396,6 +385,7 @@ class CapacitorNotifications implements IPushAdapter {
         }),
       ])
 
+      listeners.forEach(p => p.then(listener => listener.remove()))
       notificationState.update(assoc("token", token))
     }
 
@@ -585,6 +575,20 @@ class CapacitorNotifications implements IPushAdapter {
     if (!this._controller) {
       this._controller = new AbortController()
 
+      PushNotifications.addListener(
+        "pushNotificationActionPerformed",
+        async (action: ActionPerformed) => {
+          const event = parseJson(action.notification.data.event)
+          const relays = [action.notification.data.relay]
+
+          goto(await getEventPath(event, relays))
+        },
+      )
+
+      this._controller.signal.addEventListener("abort", () => {
+        PushNotifications.removeAllListeners()
+      })
+
       try {
         await this._syncServer(this._controller.signal)
         await this._syncSpaceSubscription(this._controller.signal)
@@ -611,15 +615,15 @@ class CapacitorNotifications implements IPushAdapter {
       }
     }
 
-    for (const url of get(userSpaceUrls)) {
-      this._unsyncRelay(url, ["spaces", "mentions"])
-    }
-
-    for (const url of getRelaysFromList(get(userMessagingRelayList))) {
-      this._unsyncRelay(url, ["messages"])
-    }
-
     notificationState.set({})
+
+    await Promise.all(get(userSpaceUrls).map(url => this._unsyncRelay(url, ["spaces", "mentions"])))
+
+    await Promise.all(
+      getRelaysFromList(get(userMessagingRelayList)).map(url =>
+        this._unsyncRelay(url, ["messages"]),
+      ),
+    )
   }
 }
 

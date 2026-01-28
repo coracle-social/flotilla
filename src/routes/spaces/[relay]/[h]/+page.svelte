@@ -43,6 +43,7 @@
   import RoomComposeParent from "@app/components/RoomComposeParent.svelte"
   import {
     deriveUserRooms,
+    notificationSettings,
     userSettingsValues,
     decodeRelay,
     deriveUserRoomMembershipStatus,
@@ -78,9 +79,8 @@
   const hasAlerts = throttled(
     800,
     _derived(
-      userSettingsValues,
-      ({alerts_spaces, alerts_push, alerts_sound, alerts_badge}) =>
-        alerts_spaces && (alerts_push || alerts_sound || alerts_badge),
+      notificationSettings,
+      ({spaces, push, sound, badge}) => spaces && (push || sound || badge),
     ),
   )
 

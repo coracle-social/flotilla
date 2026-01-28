@@ -1,30 +1,35 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {userSettingsValues} from "@app/core/state"
+  import {notificationSettings} from "@app/core/state"
   import {onNotification} from "@app/util/notifications"
 
   let audioElement: HTMLAudioElement
 
   let enabled = $state(false)
 
-  document.addEventListener("visibilitychange", () => {
+  const onVisibilityChange = () => {
     if (document.hidden) {
       enabled = true
     } else {
       enabled = false
     }
-  })
+  }
 
   onMount(() => {
     audioElement.load()
 
+    document.addEventListener("visibilitychange", onVisibilityChange)
+
     const unsubscribe = onNotification(() => {
-      if (enabled && $userSettingsValues.alerts_sound) {
+      if (enabled && $notificationSettings.sound) {
         audioElement?.play()
       }
     })
 
-    return unsubscribe
+    return () => {
+      unsubscribe()
+      document.removeEventListener("visibilitychange", onVisibilityChange)
+    }
   })
 </script>
 
