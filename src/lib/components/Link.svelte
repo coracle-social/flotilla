@@ -16,6 +16,7 @@
     replaceState?: boolean
     disabled?: boolean
     class?: string
+    "data-tip"?: string
   } = $props()
 
   const go = (e: Event) => {

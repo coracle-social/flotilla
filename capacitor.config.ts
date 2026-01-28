@@ -1,33 +1,36 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type {CapacitorConfig} from "@capacitor/cli"
 
 const config: CapacitorConfig = {
-  appId: 'social.flotilla',
-  appName: 'Flotilla',
-  webDir: 'build'
-  server: {
-    androidScheme: "https"
-  },
+  appId: "social.flotilla",
+  appName: "Flotilla",
+  webDir: "build",
   android: {
     adjustMarginsForEdgeToEdge: false,
   },
   plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+    SystemBars: {
+      insetsHandling: "disable",
+    },
     SplashScreen: {
-      androidSplashResourceName: "splash"
+      androidSplashResourceName: "splash",
     },
     Keyboard: {
       style: "DARK",
-      resizeOnFullScreen: true,
+      // resizeOnFullScreen: true,
     },
     Badge: {
       persist: true,
-      autoClear: true
+      autoClear: true,
     },
   },
-  // Use this for live reload https://capacitorjs.com/docs/guides/live-reload
-  // server: {
-  //   url: "http://192.168.1.115:1847",
-  //   cleartext: true
-  // },
-};
+  server: {
+    // Use this for live reload https://capacitorjs.com/docs/guides/live-reload
+    // url: "http://192.168.1.17:1847",
+    // cleartext: true,
+  },
+}
 
-export default config;
+export default config

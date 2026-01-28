@@ -64,7 +64,6 @@ import {
   tagEvent,
   tagEventForReaction,
   nip44EncryptToSelf,
-  dropSession,
   tagEventForComment,
   tagEventForQuote,
   waitForThunkError,
@@ -73,7 +72,6 @@ import {
   getThunkError,
 } from "@welshman/app"
 import {compressFile} from "@lib/html"
-import {kv, db} from "@app/core/storage"
 import type {SettingsValues} from "@app/core/state"
 import {
   SETTINGS,
@@ -113,21 +111,6 @@ export const prependParent = (parent: TrustedEvent | undefined, {content, tags}:
   }
 
   return {content, tags}
-}
-
-// Log out
-
-export const logout = async () => {
-  const $pubkey = pubkey.get()
-
-  if ($pubkey) {
-    dropSession($pubkey)
-  }
-
-  localStorage.clear()
-
-  await kv.clear()
-  await db.clear()
 }
 
 // Synchronization

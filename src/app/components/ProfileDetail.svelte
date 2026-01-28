@@ -124,7 +124,7 @@
       </Link>
       <Button onclick={openChat} class="btn btn-primary">
         <Icon icon={Letter} />
-        Open Chat
+        Message
       </Button>
     </div>
   </ModalFooter>

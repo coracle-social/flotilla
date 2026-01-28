@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {assoc} from "@welshman/lib"
   import ChatSquare from "@assets/icons/chat-square.svg?dataurl"
   import Check from "@assets/icons/check.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
@@ -8,8 +9,7 @@
   import ChatStart from "@app/components/ChatStart.svelte"
   import {setChecked} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
-  import {userSettingsValues} from "@app/core/state"
-  import {publishSettings} from "@app/core/commands"
+  import {notificationSettings} from "@app/core/state"
 
   const startChat = () => pushModal(ChatStart, {}, {replaceState: true})
 
@@ -18,9 +18,9 @@
     history.back()
   }
 
-  const enableAlerts = () => publishSettings({...$userSettingsValues, alerts_messages: true})
+  const enableAlerts = () => notificationSettings.update(assoc("messages", true))
 
-  const disableAlerts = () => publishSettings({...$userSettingsValues, alerts_messages: false})
+  const disableAlerts = () => notificationSettings.update(assoc("messages", false))
 </script>
 
 <div class="col-2">
@@ -32,7 +32,7 @@
     <Icon size={5} icon={Check} />
     Mark all read
   </Button>
-  {#if $userSettingsValues.alerts_messages}
+  {#if $notificationSettings.messages}
     <Button class="btn btn-neutral" onclick={disableAlerts}>
       <Icon size={4} icon={BellOff} />
       Disable alerts

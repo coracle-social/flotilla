@@ -13,9 +13,9 @@
 </script>
 
 <Link replaceState href={path}>
-  <CardButton class="btn-neutral shadow-md">
+  <CardButton class="btn-neutral shadow-md bg-alt">
     {#snippet icon()}
-      <RelayIcon {url} size={12} />
+      <RelayIcon {url} size={12} class="rounded-full" />
     {/snippet}
     {#snippet title()}
       <div class="flex gap-1">

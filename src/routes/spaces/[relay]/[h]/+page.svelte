@@ -1,12 +1,12 @@
 <script lang="ts">
-  import cx from "classnames"
-  import {readable} from "svelte/store"
+  import {readable, derived as _derived} from "svelte/store"
   import {onMount, onDestroy} from "svelte"
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
   import type {MakeNonOptional} from "@welshman/lib"
-  import {now, int, formatTimestampAsDate, ago, MINUTE} from "@welshman/lib"
+  import {now, int, append, remove, formatTimestampAsDate, ago, MINUTE} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
+  import {throttled} from "@welshman/store"
   import {
     makeEvent,
     makeRoomMeta,
@@ -21,7 +21,10 @@
   import Login2 from "@assets/icons/login-3.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"
+  import VolumeLoud from "@assets/icons/volume-loud.svg?dataurl"
+  import VolumeCross from "@assets/icons/volume-cross.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
+  import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
@@ -40,6 +43,7 @@
   import RoomComposeParent from "@app/components/RoomComposeParent.svelte"
   import {
     deriveUserRooms,
+    notificationSettings,
     userSettingsValues,
     decodeRelay,
     deriveUserRoomMembershipStatus,
@@ -50,11 +54,12 @@
   } from "@app/core/state"
   import {setChecked, checked} from "@app/util/notifications"
   import {
-    addRoomMembership,
     canEnforceNip70,
-    removeRoomMembership,
     prependParent,
     publishDelete,
+    publishSettings,
+    addRoomMembership,
+    removeRoomMembership,
   } from "@app/core/commands"
   import {makeFeed} from "@app/core/requests"
   import {popKey} from "@lib/implicit"
@@ -70,12 +75,26 @@
   const userRooms = deriveUserRooms(url)
   const isFavorite = $derived($userRooms.includes(h))
   const membershipStatus = deriveUserRoomMembershipStatus(url, h)
+  const isMuted = $derived($userSettingsValues.muted_rooms.includes($room.id))
+  const hasAlerts = throttled(
+    800,
+    _derived(
+      notificationSettings,
+      ({spaces, push, sound, badge}) => spaces && (push || sound || badge),
+    ),
+  )
 
   const showRoomDetail = () => pushModal(RoomDetail, {url, h})
 
   const addFavorite = () => addRoomMembership(url, h)
 
   const removeFavorite = () => removeRoomMembership(url, h)
+
+  const muteRoom = () =>
+    publishSettings({muted_rooms: append($room.id, $userSettingsValues.muted_rooms)})
+
+  const unmuteRoom = () =>
+    publishSettings({muted_rooms: remove($room.id, $userSettingsValues.muted_rooms)})
 
   const join = async () => {
     joining = true
@@ -346,12 +365,43 @@
   {/snippet}
   {#snippet action()}
     <div class="row-2">
-      <Button
-        class="btn btn-neutral btn-sm tooltip tooltip-left"
-        data-tip={isFavorite ? "Remove Favorite" : "Add Favorite"}
-        onclick={isFavorite ? removeFavorite : addFavorite}>
-        <Icon size={4} icon={Bookmark} class={cx({"text-primary": isFavorite})} />
-      </Button>
+      {#if !hasAlerts}
+        <Link
+          href="/settings/alerts"
+          class="center btn btn-neutral btn-sm tooltip tooltip-left"
+          data-tip="Notifications are disabled">
+          <Icon size={4} icon={VolumeCross} />
+        </Link>
+      {:else if isMuted}
+        <Button
+          class="btn btn-neutral btn-sm tooltip tooltip-left"
+          data-tip="Notifications are turned off"
+          onclick={unmuteRoom}>
+          <Icon size={4} icon={VolumeCross} />
+        </Button>
+      {:else}
+        <Button
+          class="btn btn-neutral btn-sm tooltip tooltip-left"
+          data-tip="Notifications are turned on"
+          onclick={muteRoom}>
+          <Icon size={4} icon={VolumeLoud} />
+        </Button>
+      {/if}
+      {#if isFavorite}
+        <Button
+          class="btn btn-neutral btn-sm tooltip tooltip-left text-secondary"
+          data-tip="Remove Favorite"
+          onclick={removeFavorite}>
+          <Icon size={4} icon={Bookmark} />
+        </Button>
+      {:else}
+        <Button
+          class="btn btn-neutral btn-sm tooltip tooltip-left"
+          data-tip="Add Favorite"
+          onclick={addFavorite}>
+          <Icon size={4} icon={Bookmark} />
+        </Button>
+      {/if}
       <Button
         class="btn btn-neutral btn-sm tooltip tooltip-left"
         data-tip="Room information"

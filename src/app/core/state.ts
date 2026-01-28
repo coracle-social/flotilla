@@ -1,7 +1,7 @@
 import twColors from "tailwindcss/colors"
 import {context as pomadeContext} from "@pomade/core"
 import {Capacitor} from "@capacitor/core"
-import {get, derived, readable, writable} from "svelte/store"
+import {derived, readable, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {
   on,
@@ -24,6 +24,7 @@ import {
   addToMapKey,
   identity,
   always,
+  randomId,
   tryCatch,
   fromPairs,
   remove,
@@ -42,6 +43,7 @@ import {
 import {
   getter,
   throttled,
+  withGetter,
   deriveArray,
   makeDeriveEvent,
   makeLoadItem,
@@ -122,6 +124,10 @@ export const ROOM = "h"
 export const PROTECTED = ["-"]
 
 export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios"
+
+export const PUSH_SERVER = import.meta.env.VITE_PUSH_SERVER
+
+export const PUSH_BRIDGE = normalizeRelayUrl(import.meta.env.VITE_PUSH_BRIDGE)
 
 export const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY
 
@@ -254,6 +260,8 @@ export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD]
 
 export const MESSAGE_KINDS = [...CONTENT_KINDS, MESSAGE]
 
+export const DM_KINDS = [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]
+
 // Settings
 
 export const SETTINGS = "flotilla/settings"
@@ -272,12 +280,7 @@ export type SettingsValues = {
   relay_auth: RelayAuthMode
   send_delay: number
   font_size: number
-  alerts_push: boolean
-  alerts_spaces: boolean
-  alerts_mentions: boolean
-  alerts_messages: boolean
-  alerts_sound: boolean
-  alerts_badge: boolean
+  muted_rooms: string[]
 }
 
 export type Settings = {
@@ -294,12 +297,7 @@ export const defaultSettings: SettingsValues = {
   relay_auth: RelayAuthMode.Conservative,
   send_delay: 0,
   font_size: 1.1,
-  alerts_push: true,
-  alerts_spaces: false,
-  alerts_mentions: false,
-  alerts_messages: false,
-  alerts_sound: true,
-  alerts_badge: true,
+  muted_rooms: [],
 }
 
 export const settingsByPubkey = deriveItemsByKey({
@@ -315,11 +313,9 @@ export const settingsByPubkey = deriveItemsByKey({
 
 export const getSettingsByPubkey = getter(settingsByPubkey)
 
-export const getSettings = (pubkey: string) => getSettingsByPubkey().get(pubkey)
-
 export const loadSettings = makeLoadItem(
   makeOutboxLoader(APP_DATA, {"#d": [SETTINGS]}),
-  getSettings,
+  (pubkey: string) => getSettingsByPubkey().get(pubkey),
 )
 
 export const userSettings = makeUserData(settingsByPubkey, loadSettings)
@@ -328,7 +324,9 @@ export const loadUserSettings = makeUserLoader(loadSettings)
 
 export const userSettingsValues = derived(userSettings, $s => $s?.values || defaultSettings)
 
-export const getSetting = <T>(key: keyof Settings["values"]) => get(userSettingsValues)[key] as T
+export const getSettings = getter(userSettingsValues)
+
+export const getSetting = <T>(key: keyof Settings["values"]) => getSettings()[key] as T
 
 // Relays sending events with empty signatures that the user has to choose to trust
 
@@ -337,6 +335,33 @@ export const relaysPendingTrust = writable<string[]>([])
 // Relays that mostly send restricted responses to requests and events
 
 export const relaysMostlyRestricted = writable<Record<string, string>>({})
+
+// Push notifications
+
+export const device = withGetter(writable(randomId()))
+
+export const notificationSettings = withGetter(
+  writable({
+    push: false,
+    sound: false,
+    badge: false,
+    spaces: true,
+    mentions: true,
+    messages: true,
+  }),
+)
+
+export type PushSubscription = {
+  key: string
+  callback: string
+}
+
+export type PushState = {
+  token?: string
+  subscription?: PushSubscription
+}
+
+export const notificationState = withGetter(writable<PushState>({}))
 
 // Chats
 
@@ -380,7 +405,7 @@ export const chatsById = call(() => {
     const addEvents = (events: TrustedEvent[]) => {
       let dirty = false
       for (const event of events) {
-        if ([DIRECT_MESSAGE, DIRECT_MESSAGE_FILE].includes(event.kind)) {
+        if (DM_KINDS.includes(event.kind)) {
           const pubkeys = getChatPubkeysFromEvent(event)
           const id = makeChatId(pubkeys)
           const chat = chatsById.get(id)
@@ -430,10 +455,13 @@ export const deriveChat = call(() => {
 })
 
 export const chatSearch = derived(throttled(800, chatsById), $chatsByPubkey => {
-  return createSearch(Array.from($chatsByPubkey.values()), {
-    getValue: (chat: Chat) => chat.id,
-    fuseOptions: {keys: ["search_text"]},
-  })
+  return createSearch(
+    sortBy(c => -c.last_activity, Array.from($chatsByPubkey.values())),
+    {
+      getValue: (chat: Chat) => chat.id,
+      fuseOptions: {keys: ["search_text"]},
+    },
+  )
 })
 
 // Rooms
@@ -524,7 +552,10 @@ export const deriveRoom = call(() => {
   const _deriveRoom = makeDeriveItem(roomsById, loadRoom)
 
   return (url: string, h: string) =>
-    derived(_deriveRoom(makeRoomId(url, h)), room => room || makeRoomMeta({h}))
+    derived(
+      _deriveRoom(makeRoomId(url, h)),
+      room => room || {url, id: makeRoomId(url, h), ...makeRoomMeta({h})},
+    )
 })
 
 export const displayRoom = (url: string, h: string) => getRoom(makeRoomId(url, h))?.name || h
