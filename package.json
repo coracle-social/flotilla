@@ -79,7 +79,7 @@
     "husky": "^9.1.7",
     "idb": "^8.0.3",
     "nostr-signer-capacitor-plugin": "^0.0.4",
-   "nostr-tools": "^2.19.4",
+    "nostr-tools": "^2.19.4",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "qr-scanner": "^1.4.2",
     "qrcode": "^1.5.4",

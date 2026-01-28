@@ -31,10 +31,10 @@ import {
   identity,
   now,
   groupBy,
-  postJson,
   nth,
   nthEq,
   maybe,
+  throttle,
 } from "@welshman/lib"
 import type {TrustedEvent, Filter} from "@welshman/util"
 import {deriveEventsByIdByUrl} from "@welshman/store"
@@ -349,7 +349,6 @@ interface IPushAdapter {
   request: (prompt?: boolean) => Promise<string>
   disable: () => Promise<void>
   enable: () => Promise<void>
-  stop: () => Promise<void>
 }
 
 if (Capacitor.isNativePlatform()) {
@@ -411,14 +410,32 @@ class CapacitorNotifications implements IPushAdapter {
     }
 
     if (!subscription) {
-      const channel = Capacitor.getPlatform() === "ios" ? "apns" : "fcm"
-      const url = buildUrl(PUSH_SERVER, "subscription", channel)
-      const json = await postJson(url, {token}, {signal})
+      try {
+        const channel = Capacitor.getPlatform() === "ios" ? "apns" : "fcm"
+        const url = buildUrl(PUSH_SERVER, "subscription", channel)
+        const res = await fetch(url, {
+          signal,
+          method: "POST",
+          body: JSON.stringify({token}),
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+        })
 
-      if (json?.callback && json?.key) {
-        notificationState.update(assoc("subscription", json))
-      } else {
-        console.warn("Failed to register with push server")
+        if (!res.ok) {
+          console.warn(`Failed to register with push server (status ${res.status})`)
+        } else {
+          const json = await res.json()
+
+          if (json?.callback && json?.key) {
+            notificationState.update(assoc("subscription", json))
+          } else {
+            console.warn("Failed to register with push server (bad response)")
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to register with push server:", e)
       }
     }
   }
@@ -439,7 +456,6 @@ class CapacitorNotifications implements IPushAdapter {
   }
 
   _syncRelay = async (relay: string, key: string, filters: Filter[], ignore: Filter[] = []) => {
-    console.log(`=== syncing ${relay} ${key}`)
     const {subscription} = notificationState.get()
 
     if (!subscription) {
@@ -486,8 +502,6 @@ class CapacitorNotifications implements IPushAdapter {
   }
 
   _unsyncRelay = async (relay: string, keys: string[]) => {
-    console.log(`=== unsyncing ${relay} ${keys.join(", ")}`)
-
     const stuff = await this._getPushStuff(relay)
 
     if (!stuff) {
@@ -517,7 +531,7 @@ class CapacitorNotifications implements IPushAdapter {
     signal.addEventListener(
       "abort",
       merged([userSpaceUrls, notificationSettings, userSettingsValues]).subscribe(
-        ([$userSpaceUrls, {spaces, mentions}, {muted_rooms}]) => {
+        throttle(3000, ([$userSpaceUrls, {spaces, mentions}, {muted_rooms}]) => {
           const filters = [{kinds: MESSAGE_KINDS}, makeCommentFilter(CONTENT_KINDS)]
 
           for (const url of $userSpaceUrls) {
@@ -545,7 +559,7 @@ class CapacitorNotifications implements IPushAdapter {
               }
             }
           }
-        },
+        }),
       ),
     )
   }
@@ -554,7 +568,7 @@ class CapacitorNotifications implements IPushAdapter {
     signal.addEventListener(
       "abort",
       merged([userMessagingRelayList, notificationSettings]).subscribe(
-        ([$userMessagingRelayList, {messages}]) => {
+        throttle(3000, ([$userMessagingRelayList, {messages}]) => {
           for (const url of getRelaysFromList($userMessagingRelayList)) {
             if (messages) {
               this._syncRelay(url, "messages", [{kinds: DM_KINDS, "#p": [pubkey.get()!]}])
@@ -562,24 +576,29 @@ class CapacitorNotifications implements IPushAdapter {
               this._unsyncRelay(url, ["messages"])
             }
           }
-        },
+        }),
       ),
     )
   }
 
   async enable() {
-    this._controller = new AbortController()
+    if (!this._controller) {
+      this._controller = new AbortController()
 
-    try {
-      await this._syncServer(this._controller.signal)
-      await this._syncSpaceSubscription(this._controller.signal)
-      await this._syncMessageSubscription(this._controller.signal)
-    } catch (e) {
-      console.error(e)
+      try {
+        await this._syncServer(this._controller.signal)
+        await this._syncSpaceSubscription(this._controller.signal)
+        await this._syncMessageSubscription(this._controller.signal)
+      } catch (e) {
+        console.error(e)
+      }
     }
   }
 
   async disable() {
+    this._controller?.abort()
+    this._controller = undefined
+
     const {subscription} = notificationState.get()
 
     if (subscription) {
@@ -601,11 +620,6 @@ class CapacitorNotifications implements IPushAdapter {
     }
 
     notificationState.set({})
-  }
-
-  async stop() {
-    this._controller?.abort()
-    this._controller = undefined
   }
 }
 
@@ -645,30 +659,28 @@ class WebNotifications implements IPushAdapter {
   }
 
   async enable() {
-    this._unsubscriber = onNotification(event => {
-      const {push, messages, mentions, spaces} = notificationSettings.get()
+    if (!this._unsubscriber) {
+      this._unsubscriber = onNotification(event => {
+        const {push, messages, mentions, spaces} = notificationSettings.get()
 
-      if (push && document.hidden && Notification?.permission === "granted") {
-        if (messages && matchFilters(dmFilters, event)) {
-          this._notify(event, "New direct message", "Someone sent you a direct message.")
-        } else if (
-          mentions &&
-          event.pubkey !== pubkey.get() &&
-          getPubkeyTagValues(event.tags).includes(pubkey.get()!)
-        ) {
-          this._notify(event, "Someone mentioned you", "Someone tagged you in a message.")
-        } else if (spaces) {
-          this._notify(event, "New activity", "Someone posted a new message.")
+        if (push && document.hidden && Notification?.permission === "granted") {
+          if (messages && matchFilters(dmFilters, event)) {
+            this._notify(event, "New direct message", "Someone sent you a direct message.")
+          } else if (
+            mentions &&
+            event.pubkey !== pubkey.get() &&
+            getPubkeyTagValues(event.tags).includes(pubkey.get()!)
+          ) {
+            this._notify(event, "Someone mentioned you", "Someone tagged you in a message.")
+          } else if (spaces) {
+            this._notify(event, "New activity", "Someone posted a new message.")
+          }
         }
-      }
-    })
+      })
+    }
   }
 
   async disable() {
-    // pass
-  }
-
-  async stop() {
     this._unsubscriber?.()
     this._unsubscriber = undefined
   }
@@ -696,27 +708,18 @@ export class Push {
   static disable() {
     return Push._getAdapter().disable()
   }
+
   static enable() {
     return Push._getAdapter().enable()
   }
-  static stop() {
-    return Push._getAdapter().stop()
-  }
 
   static sync() {
-    const adapter = Push._getAdapter()
-
-    const unsubscriber = notificationSettings.subscribe($notificationSettings => {
-      if ($notificationSettings.push) {
-        adapter.enable()
+    return notificationSettings.subscribe(({push}) => {
+      if (push) {
+        Push.enable()
       } else {
-        adapter.disable()
+        Push.disable()
       }
     })
-
-    return () => {
-      unsubscriber()
-      adapter.stop()
-    }
   }
 }

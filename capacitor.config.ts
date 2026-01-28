@@ -4,13 +4,13 @@ const config: CapacitorConfig = {
   appId: "social.flotilla",
   appName: "Flotilla",
   webDir: "build",
-  server: {
-    androidScheme: "https",
-  },
   android: {
     adjustMarginsForEdgeToEdge: false,
   },
   plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
     SystemBars: {
       insetsHandling: "disable",
     },
@@ -26,10 +26,10 @@ const config: CapacitorConfig = {
       autoClear: true,
     },
   },
-  // Use this for live reload https://capacitorjs.com/docs/guides/live-reload
   server: {
-    url: "http://192.168.1.148:1847",
-    cleartext: true,
+    // Use this for live reload https://capacitorjs.com/docs/guides/live-reload
+    // url: "http://192.168.1.17:1847",
+    // cleartext: true,
   },
 }
 
