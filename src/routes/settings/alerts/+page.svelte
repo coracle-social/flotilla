@@ -39,18 +39,11 @@
 
           settings.push = false
 
-          pushToast({
+          return pushToast({
             theme: "error",
             message: "Failed to request notification permissions.",
           })
-
-          return
         }
-
-        await Push.enable()
-        await Push.start()
-      } else {
-        await Push.disable()
       }
 
       if (!equals(muted_rooms, $userSettingsValues.muted_rooms)) {

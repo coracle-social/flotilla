@@ -1,6 +1,6 @@
 <script lang="ts">
   import {getProfile, loadProfile} from "@welshman/app"
-  import {isMobile} from '@lib/html'
+  import {isMobile} from "@lib/html"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
 
   type Props = {

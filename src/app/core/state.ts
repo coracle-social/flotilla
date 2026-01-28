@@ -24,6 +24,7 @@ import {
   addToMapKey,
   identity,
   always,
+  randomId,
   tryCatch,
   fromPairs,
   remove,
@@ -337,6 +338,8 @@ export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
 // Push notifications
 
+export const device = withGetter(writable(randomId()))
+
 export const notificationSettings = withGetter(
   writable({
     push: false,
@@ -348,16 +351,17 @@ export const notificationSettings = withGetter(
   }),
 )
 
-export const notificationState = withGetter(
-  writable<{
-    token?: string
-    subscription?: {
-      key: string
-      callback: string
-    }
-  }>({}),
-)
+export type PushSubscription = {
+  key: string
+  callback: string
+}
 
+export type PushState = {
+  token?: string
+  subscription?: PushSubscription
+}
+
+export const notificationState = withGetter(writable<PushState>({}))
 
 // Chats
 

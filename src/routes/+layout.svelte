@@ -27,7 +27,12 @@
   import {setupAnalytics} from "@app/util/analytics"
   import {authPolicy, blockPolicy, trustPolicy, mostlyRestrictedPolicy} from "@app/util/policies"
   import {kv, db} from "@app/core/storage"
-  import {userSettingsValues, notificationSettings, notificationState} from "@app/core/state"
+  import {
+    device,
+    userSettingsValues,
+    notificationSettings,
+    notificationState,
+  } from "@app/core/state"
   import {syncApplicationData} from "@app/core/sync"
   import * as commands from "@app/core/commands"
   import * as requests from "@app/core/requests"
@@ -88,6 +93,11 @@
     // Sync stuff to localstorage
     await Promise.all([
       sync({
+        key: "device",
+        store: device,
+        storage: kv,
+      }),
+      sync({
         key: "pubkey",
         store: pubkey,
         storage: kv,
@@ -139,7 +149,7 @@
     unsubscribers.push(syncKeyboard())
 
     // Initialize background notifications
-    unsubscribers.push(notifications.Push.start())
+    unsubscribers.push(notifications.Push.sync())
 
     // Listen for signer errors, report to user via toast
     unsubscribers.push(

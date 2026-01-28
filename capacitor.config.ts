@@ -1,11 +1,11 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type {CapacitorConfig} from "@capacitor/cli"
 
 const config: CapacitorConfig = {
-  appId: 'social.flotilla',
-  appName: 'Flotilla',
-  webDir: 'build'
+  appId: "social.flotilla",
+  appName: "Flotilla",
+  webDir: "build",
   server: {
-    androidScheme: "https"
+    androidScheme: "https",
   },
   android: {
     adjustMarginsForEdgeToEdge: false,
@@ -23,14 +23,14 @@ const config: CapacitorConfig = {
     },
     Badge: {
       persist: true,
-      autoClear: true
+      autoClear: true,
     },
   },
   // Use this for live reload https://capacitorjs.com/docs/guides/live-reload
   server: {
-    url: "http://192.168.1.65:1847",
-    cleartext: true
+    url: "http://192.168.1.148:1847",
+    cleartext: true,
   },
-};
+}
 
-export default config;
+export default config
