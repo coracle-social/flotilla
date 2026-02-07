@@ -55,7 +55,6 @@
     displayRoom,
   } from "@app/core/state"
   import {setSpaceNotifications} from "@app/core/commands"
-  import {notifications} from "@app/util/notifications"
   import {pushModal} from "@app/util/modal"
   import {makeSpacePath, makeChatPath} from "@app/util/routes"
 
@@ -227,42 +226,27 @@
           <Icon icon={History} /> Recent Activity
         </SecondaryNavItem>
       {:else}
-        <SecondaryNavItem
-          {replaceState}
-          href={chatPath}
-          notification={$notifications.has(chatPath)}>
+        <SecondaryNavItem {replaceState} href={chatPath}>
           <Icon icon={ChatRound} /> Chat
         </SecondaryNavItem>
       {/if}
       {#if ENABLE_ZAPS && $spaceKinds.has(ZAP_GOAL)}
-        <SecondaryNavItem
-          {replaceState}
-          href={goalsPath}
-          notification={$notifications.has(goalsPath)}>
+        <SecondaryNavItem {replaceState} href={goalsPath}>
           <Icon icon={StarFallMinimalistic} /> Goals
         </SecondaryNavItem>
       {/if}
       {#if $spaceKinds.has(THREAD)}
-        <SecondaryNavItem
-          {replaceState}
-          href={threadsPath}
-          notification={$notifications.has(threadsPath)}>
+        <SecondaryNavItem {replaceState} href={threadsPath}>
           <Icon icon={NotesMinimalistic} /> Threads
         </SecondaryNavItem>
       {/if}
       {#if $spaceKinds.has(CLASSIFIED)}
-        <SecondaryNavItem
-          {replaceState}
-          href={classifiedsPath}
-          notification={$notifications.has(classifiedsPath)}>
+        <SecondaryNavItem {replaceState} href={classifiedsPath}>
           <Icon icon={CaseMinimalistic} /> Classifieds
         </SecondaryNavItem>
       {/if}
       {#if $spaceKinds.has(EVENT_TIME)}
-        <SecondaryNavItem
-          {replaceState}
-          href={calendarPath}
-          notification={$notifications.has(calendarPath)}>
+        <SecondaryNavItem {replaceState} href={calendarPath}>
           <Icon icon={CalendarMinimalistic} /> Calendar
         </SecondaryNavItem>
       {/if}
@@ -272,7 +256,7 @@
           <SecondaryNavHeader>Your Rooms</SecondaryNavHeader>
         {/if}
         {#each $userRooms as h, i (h)}
-          <SpaceMenuRoomItem {replaceState} notify {url} {h} />
+          <SpaceMenuRoomItem {replaceState} {url} {h} />
         {/each}
         {#if $otherRooms.length > 0}
           <div class="h-2"></div>

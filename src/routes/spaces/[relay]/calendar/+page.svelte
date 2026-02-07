@@ -21,7 +21,6 @@
   import {pushModal} from "@app/util/modal"
   import {decodeRelay, makeCommentFilter} from "@app/core/state"
   import {makeCalendarFeed} from "@app/core/requests"
-  import {setChecked} from "@app/util/notifications"
 
   const url = decodeRelay($page.params.relay!)
 
@@ -108,7 +107,6 @@
 
     return () => {
       feed.cleanup()
-      setChecked($page.url.pathname)
     }
   })
 </script>

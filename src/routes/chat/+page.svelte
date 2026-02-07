@@ -1,6 +1,4 @@
 <script lang="ts">
-  import {page} from "$app/stores"
-  import {onDestroy} from "svelte"
   import InfoCircle from "@assets/icons/info-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
@@ -13,7 +11,6 @@
   import ChatMenu from "@app/components/ChatMenu.svelte"
   import {chatSearch} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
-  import {setChecked} from "@app/util/notifications"
 
   let term = $state("")
 
@@ -22,10 +19,6 @@
   const openMenu = () => pushModal(ChatMenu)
 
   const chats = $derived($chatSearch.searchOptions(term))
-
-  onDestroy(() => {
-    setChecked($page.url.pathname)
-  })
 </script>
 
 <div class="hidden min-h-screen md:hero">

@@ -45,7 +45,7 @@
     MESSAGE_KINDS,
     userSettingsValues,
   } from "@app/core/state"
-  import {setChecked, checked} from "@app/util/notifications"
+  import {checked} from "@app/util/notifications"
   import {canEnforceNip70, prependParent, publishDelete} from "@app/core/commands"
   import {makeFeed} from "@app/core/requests"
   import {popKey} from "@lib/implicit"
@@ -318,11 +318,6 @@
 
   onDestroy(() => {
     cleanup?.()
-
-    // Sveltekit calls onDestroy at the beginning of the page load for some reason
-    setTimeout(() => {
-      setChecked($page.url.pathname)
-    }, 800)
   })
 </script>
 

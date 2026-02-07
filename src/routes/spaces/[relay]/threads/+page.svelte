@@ -17,7 +17,6 @@
   import ThreadItem from "@app/components/ThreadItem.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {decodeRelay} from "@app/core/state"
-  import {setChecked} from "@app/util/notifications"
   import {makeCommentFilter} from "@app/core/state"
   import {makeFeed} from "@app/core/requests"
   import {pushModal} from "@app/util/modal"
@@ -59,7 +58,6 @@
 
     return () => {
       feed.cleanup()
-      setChecked($page.url.pathname)
     }
   })
 </script>

@@ -22,7 +22,6 @@
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventReply from "@app/components/EventReply.svelte"
   import {deriveEvent, decodeRelay} from "@app/core/state"
-  import {setChecked} from "@app/util/notifications"
 
   const {relay, address} = $page.params as MakeNonOptional<typeof $page.params>
   const url = decodeRelay(relay)
@@ -54,7 +53,6 @@
 
     return () => {
       controller.abort()
-      setChecked($page.url.pathname)
     }
   })
 </script>

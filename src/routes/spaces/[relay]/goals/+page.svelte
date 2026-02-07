@@ -17,7 +17,6 @@
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
   import {decodeRelay, makeCommentFilter} from "@app/core/state"
-  import {setChecked} from "@app/util/notifications"
   import {makeFeed} from "@app/core/requests"
   import {pushModal} from "@app/util/modal"
 
@@ -58,7 +57,6 @@
 
     return () => {
       feed.cleanup()
-      setChecked($page.url.pathname)
     }
   })
 </script>

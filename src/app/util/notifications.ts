@@ -4,13 +4,12 @@ import {Capacitor} from "@capacitor/core"
 import {Badge} from "@capawesome/capacitor-badge"
 import {PushNotifications} from "@capacitor/push-notifications"
 import type {ActionPerformed, RegistrationError, Token} from "@capacitor/push-notifications"
-import {synced, throttled} from "@welshman/store"
+import {synced, throttled, withGetter} from "@welshman/store"
 import {load, LOCAL_RELAY_URL} from "@welshman/net"
 import {
   pubkey,
   tracker,
   repository,
-  relaysByUrl,
   publishThunk,
   loadRelay,
   waitForThunkError,
@@ -23,28 +22,22 @@ import {
   poll,
   prop,
   hash,
-  flatten,
-  find,
   spec,
   first,
   identity,
+  remove,
   now,
-  groupBy,
   maybe,
   throttle,
 } from "@welshman/lib"
 import type {TrustedEvent, Filter} from "@welshman/util"
 import {deriveEventsByIdByUrl} from "@welshman/store"
 import {
-  ZAP_GOAL,
-  EVENT_TIME,
-  THREAD,
-  CLASSIFIED,
-  COMMENT,
   DELETE,
   getTagValue,
   getPubkeyTagValues,
   getRelaysFromList,
+  matchFilter,
   matchFilters,
   getIdFilters,
   sortEventsDesc,
@@ -52,18 +45,7 @@ import {
   Address,
 } from "@welshman/util"
 import {buildUrl} from "@lib/util"
-import {
-  makeSpacePath,
-  makeChatPath,
-  makeGoalPath,
-  makeThreadPath,
-  makeClassifiedPath,
-  makeCalendarPath,
-  makeSpaceChatPath,
-  makeRoomPath,
-  getEventPath,
-  goToEvent,
-} from "@app/util/routes"
+import {makeSpacePath, makeChatPath, getEventPath, goToEvent} from "@app/util/routes"
 import {
   DM_KINDS,
   CONTENT_KINDS,
@@ -73,11 +55,9 @@ import {
   notificationSettings,
   notificationState,
   chatsById,
-  hasNip29,
   userSettingsValues,
   userGroupList,
   getSpaceUrlsFromGroupList,
-  getSpaceRoomsFromGroupList,
   makeCommentFilter,
   userSpaceUrls,
   shouldNotify,
@@ -85,6 +65,7 @@ import {
 } from "@app/core/state"
 import {kv} from "@app/core/storage"
 import {goto} from "$app/navigation"
+import {page} from "$app/stores"
 
 // Temporarily copied from welshman
 
@@ -94,65 +75,55 @@ const merged = <S extends Stores>(stores: S) => derived(stores, identity)
 
 // Checked state
 
-export const checked = synced<Record<string, number>>({
-  key: "checked",
-  defaultValue: {},
-  storage: kv,
-})
+export const checked = withGetter(
+  synced<Record<string, number>>({
+    key: "checked",
+    defaultValue: {},
+    storage: kv,
+  }),
+)
 
-export const deriveChecked = (key: string) => derived(checked, prop(key))
+export const getChecked = (key: string) => checked.get()[key]
 
-export const setChecked = (key: string) => checked.update(state => ({...state, [key]: now()}))
+export const deriveChecked = (key: string) => derived(checked, prop<number>(key))
+
+export const setChecked = (key: string) => checked.update(assoc(key, now()))
+
+export const syncChecked = () => {
+  let prev = ""
+
+  // Set checked when we leave a given page to account for the time the user spent there
+  return page.subscribe($page => {
+    if (prev) {
+      setChecked(prev)
+    }
+
+    prev = $page.url.pathname
+  })
+}
 
 // Derived notifications state
 
-const goalCommentFilters = [{kinds: [COMMENT], "#K": [String(ZAP_GOAL)]}]
-const threadCommentFilters = [{kinds: [COMMENT], "#K": [String(THREAD)]}]
-const classifiedCommentFilters = [{kinds: [COMMENT], "#K": [String(CLASSIFIED)]}]
-const calendarCommentFilters = [{kinds: [COMMENT], "#K": [String(EVENT_TIME)]}]
-const messageFilters = [{kinds: MESSAGE_KINDS}]
-const dmFilters = [{kinds: DM_KINDS}]
-const allFilters = flatten([
-  goalCommentFilters,
-  threadCommentFilters,
-  classifiedCommentFilters,
-  calendarCommentFilters,
-  messageFilters,
-  dmFilters,
-])
-
-export const notifications = derived(
+export const allNotifications = derived(
   throttled(
-    1000,
+    2000,
     derived(
       [
         pubkey,
         checked,
         chatsById,
         userGroupList,
-        relaysByUrl,
-        deriveEventsByIdByUrl({tracker, repository, filters: goalCommentFilters}),
-        deriveEventsByIdByUrl({tracker, repository, filters: threadCommentFilters}),
-        deriveEventsByIdByUrl({tracker, repository, filters: classifiedCommentFilters}),
-        deriveEventsByIdByUrl({tracker, repository, filters: calendarCommentFilters}),
-        deriveEventsByIdByUrl({tracker, repository, filters: messageFilters}),
+        deriveEventsByIdByUrl({
+          tracker,
+          repository,
+          filters: [{kinds: MESSAGE_KINDS}, makeCommentFilter(MESSAGE_KINDS)],
+        }),
       ],
       identity,
     ),
   ),
-  ([
-    $pubkey,
-    $checked,
-    $chatsById,
-    $userGroupList,
-    $relaysByUrl,
-    goalCommentsByUrl,
-    threadCommentsByUrl,
-    classifiedCommentsByUrl,
-    calendarCommentsByUrl,
-    messagesByUrl,
-  ]) => {
-    const hasNotification = (path: string, latestEvent: TrustedEvent | undefined) => {
+  ([$pubkey, $checked, $chatsById, $userGroupList, eventsByIdByUrl]) => {
+    const hasNotification = (path: string, latestEvent?: TrustedEvent) => {
       if (!latestEvent || latestEvent.pubkey === $pubkey) {
         return false
       }
@@ -184,107 +155,11 @@ export const notifications = derived(
 
     for (const url of getSpaceUrlsFromGroupList($userGroupList)) {
       const spacePath = makeSpacePath(url)
-      const spacePathMobile = spacePath + ":mobile"
-      const goalPath = makeGoalPath(url)
-      const threadPath = makeThreadPath(url)
-      const classifiedPath = makeClassifiedPath(url)
-      const calendarPath = makeCalendarPath(url)
-      const messagesPath = makeSpaceChatPath(url)
-      const goalComments = sortEventsDesc(goalCommentsByUrl.get(url)?.values() || [])
-      const threadComments = sortEventsDesc(threadCommentsByUrl.get(url)?.values() || [])
-      const classifiedComments = sortEventsDesc(classifiedCommentsByUrl.get(url)?.values() || [])
-      const calendarComments = sortEventsDesc(calendarCommentsByUrl.get(url)?.values() || [])
-      const messages = sortEventsDesc(messagesByUrl.get(url)?.values() || [])
+      const eventsById = eventsByIdByUrl.get(url) || new Map()
+      const latestEvent = first(sortEventsDesc(eventsById.values()))
 
-      const commentsByGoalId = groupBy(
-        e => getTagValue("E", e.tags),
-        goalComments.filter(spec({kind: COMMENT})),
-      )
-
-      for (const [goalId, [comment]] of commentsByGoalId.entries()) {
-        const goalItemPath = makeGoalPath(url, goalId)
-
-        if (hasNotification(goalPath, comment)) {
-          paths.add(spacePathMobile)
-          paths.add(goalPath)
-        }
-
-        if (hasNotification(goalItemPath, comment)) {
-          paths.add(goalItemPath)
-        }
-      }
-
-      const commentsByThreadId = groupBy(
-        e => getTagValue("E", e.tags),
-        threadComments.filter(spec({kind: COMMENT})),
-      )
-
-      for (const [threadId, [comment]] of commentsByThreadId.entries()) {
-        const threadItemPath = makeThreadPath(url, threadId)
-
-        if (hasNotification(threadPath, comment)) {
-          paths.add(spacePathMobile)
-          paths.add(threadPath)
-        }
-
-        if (hasNotification(threadItemPath, comment)) {
-          paths.add(threadItemPath)
-        }
-      }
-
-      const commentsByClassifiedAddress = groupBy(
-        e => getTagValue("A", e.tags),
-        classifiedComments.filter(spec({kind: COMMENT})),
-      )
-
-      for (const [address, [comment]] of commentsByClassifiedAddress.entries()) {
-        const classifiedItemPath = makeClassifiedPath(url, address)
-
-        if (hasNotification(classifiedPath, comment)) {
-          paths.add(spacePathMobile)
-          paths.add(classifiedPath)
-        }
-
-        if (hasNotification(classifiedItemPath, comment)) {
-          paths.add(classifiedItemPath)
-        }
-      }
-
-      const commentsByEventAddress = groupBy(
-        e => getTagValue("A", e.tags),
-        calendarComments.filter(spec({kind: COMMENT})),
-      )
-
-      for (const [address, [comment]] of commentsByEventAddress.entries()) {
-        const calendarItemPath = makeCalendarPath(url, address)
-
-        if (hasNotification(calendarPath, comment)) {
-          paths.add(spacePathMobile)
-          paths.add(calendarPath)
-        }
-
-        if (hasNotification(calendarItemPath, comment)) {
-          paths.add(calendarItemPath)
-        }
-      }
-
-      if (hasNip29($relaysByUrl.get(url))) {
-        for (const h of getSpaceRoomsFromGroupList(url, $userGroupList)) {
-          const roomPath = makeRoomPath(url, h)
-          const latestEvent = find(e => e.tags.some(spec(["h", h])), messages)
-
-          if (hasNotification(roomPath, latestEvent)) {
-            paths.add(spacePathMobile)
-            paths.add(spacePath)
-            paths.add(roomPath)
-          }
-        }
-      } else {
-        if (hasNotification(messagesPath, first(messages))) {
-          paths.add(spacePathMobile)
-          paths.add(spacePath)
-          paths.add(messagesPath)
-        }
+      if (hasNotification(spacePath, latestEvent)) {
+        paths.add(spacePath)
       }
     }
 
@@ -292,7 +167,12 @@ export const notifications = derived(
   },
 )
 
+export const notifications = derived([page, allNotifications], ([$page, $allNotifications]) => {
+  return new Set(remove($page.url.pathname, [...$allNotifications]))
+})
+
 export const onNotification = call(() => {
+  const allFilters = [{kinds: [...MESSAGE_KINDS, ...DM_KINDS]}, makeCommentFilter(MESSAGE_KINDS)]
   const filters = allFilters.map(assoc("since", now()))
   const subscribers: Subscriber<TrustedEvent>[] = []
 
@@ -687,7 +567,7 @@ class WebNotifications implements IPushAdapter {
         const {push, messages, mentions, spaces} = notificationSettings.get()
 
         if (push && document.hidden && Notification?.permission === "granted") {
-          if (messages && matchFilters(dmFilters, event)) {
+          if (messages && matchFilter({kinds: DM_KINDS}, event)) {
             this._notify(event, "New direct message", "Someone sent you a direct message.")
           } else if (
             mentions &&

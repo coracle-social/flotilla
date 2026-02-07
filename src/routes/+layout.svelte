@@ -142,11 +142,14 @@
     // History, navigation, application data
     unsubscribers.push(setupHistory(), setupAnalytics(), syncApplicationData())
 
+    // Initialize keyboard state tracking
+    unsubscribers.push(syncKeyboard())
+
     // Subscribe to badge count for changes
     unsubscribers.push(notifications.syncBadges)
 
-    // Initialize keyboard state tracking
-    unsubscribers.push(syncKeyboard())
+    // Subscribe to page history to update checked state
+    unsubscribers.push(notifications.syncChecked)
 
     // Initialize background notifications
     unsubscribers.push(notifications.Push.sync())

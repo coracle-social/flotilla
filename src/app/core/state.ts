@@ -49,6 +49,7 @@ import {
   makeLoadItem,
   makeDeriveItem,
   deriveItemsByKey,
+  deriveDeduplicated,
   deriveEventsByIdByUrl,
   deriveEventsByIdForUrl,
   getEventsByIdForUrl,
@@ -99,6 +100,7 @@ import {
   readRoomMeta,
   makeRoomMeta,
   ManagementMethod,
+  sortEventsDesc,
 } from "@welshman/util"
 import type {TrustedEvent, RelayProfile, PublishedRoomMeta, List, Filter} from "@welshman/util"
 import {routerContext, Router} from "@welshman/router"
@@ -227,13 +229,18 @@ export const deriveEvent = makeDeriveEvent({
   onDerive: (filters: Filter[], relays: string[]) => load({filters, relays}),
 })
 
-export const getEventsForUrl = (url: string, filters: Filter[]) =>
+export const getEventsForUrl = (url: string, filters: Filter[] = [{}]) =>
   getEventsByIdForUrl({url, tracker, repository, filters}).values()
 
-export const deriveEventsForUrl = (url: string, filters: Filter[]) =>
+export const deriveEventsForUrl = (url: string, filters: Filter[] = [{}]) =>
   deriveArray(deriveEventsByIdForUrl({url, tracker, repository, filters}))
 
-export const deriveRelaySignedEvents = (url: string, filters: Filter[]) =>
+export const deriveLatestEventForUrl = (url: string, filters: Filter[] = [{}]) =>
+  deriveDeduplicated(deriveEventsByIdForUrl({url, tracker, repository, filters}), $eventsById =>
+    first(sortEventsDesc($eventsById.values())),
+  )
+
+export const deriveRelaySignedEvents = (url: string, filters: Filter[] = [{}]) =>
   derived(
     [deriveRelay(url), deriveEventsForUrl(url, filters)],
     ([relay, events]) => events,
