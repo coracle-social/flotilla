@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {Capacitor} from "@capacitor/core"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Server from "@assets/icons/server.svg?dataurl"
   import Moon from "@assets/icons/moon.svg?dataurl"
@@ -52,19 +53,21 @@
           {/snippet}
         </CardButton>
       </Link>
-      <Link replaceState href="/settings/wallet">
-        <CardButton class="btn-neutral">
-          {#snippet icon()}
-            <div><Icon icon={Wallet} size={7} /></div>
-          {/snippet}
-          {#snippet title()}
-            <div>Wallet</div>
-          {/snippet}
-          {#snippet info()}
-            <div>Connect a bitcoin wallet for sending social tips</div>
-          {/snippet}
-        </CardButton>
-      </Link>
+      {#if Capacitor.getPlatform() !== "ios"}
+        <Link replaceState href="/settings/wallet">
+          <CardButton class="btn-neutral">
+            {#snippet icon()}
+              <div><Icon icon={Wallet} size={7} /></div>
+            {/snippet}
+            {#snippet title()}
+              <div>Wallet</div>
+            {/snippet}
+            {#snippet info()}
+              <div>Connect a bitcoin wallet for sending social tips</div>
+            {/snippet}
+          </CardButton>
+        </Link>
+      {/if}
       <Link replaceState href="/settings/relays">
         <CardButton class="btn-neutral">
           {#snippet icon()}

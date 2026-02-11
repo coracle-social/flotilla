@@ -1,5 +1,6 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
+  import {Capacitor} from "@capacitor/core"
   import {fly} from "@lib/transition"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import Wallet from "@assets/icons/wallet.svg?dataurl"
@@ -45,11 +46,13 @@
         <Icon icon={Bell} /> Alerts
       </SecondaryNavItem>
     </div>
-    <div in:fly|local={{delay: 100}}>
-      <SecondaryNavItem href="/settings/wallet">
-        <Icon icon={Wallet} /> Wallet
-      </SecondaryNavItem>
-    </div>
+    {#if Capacitor.getPlatform() !== "ios"}
+      <div in:fly|local={{delay: 100}}>
+        <SecondaryNavItem href="/settings/wallet">
+          <Icon icon={Wallet} /> Wallet
+        </SecondaryNavItem>
+      </div>
+    {/if}
     <div in:fly|local={{delay: 150}}>
       <SecondaryNavItem href="/settings/relays">
         <Icon icon={Server} /> Relays
