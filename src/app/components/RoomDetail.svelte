@@ -11,6 +11,7 @@
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import EyeClosed from "@assets/icons/eye-closed.svg?dataurl"
+  import Eye from "@assets/icons/eye.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
   import Lock from "@assets/icons/lock.svg?dataurl"
   import Microphone from "@assets/icons/microphone.svg?dataurl"
@@ -198,6 +199,9 @@
         {/if}
       </div>
     </div>
+    {#if $room?.about}
+      <p>{$room.about}</p>
+    {/if}
     <div class="flex flex-col gap-2 card2 card2-sm bg-alt">
       <strong class="text-lg">Room Permissions</strong>
       <div class="flex gap-2 flex-wrap">
@@ -233,14 +237,11 @@
           <Button
             class="btn btn-neutral btn-xs rounded-full tooltip flex gap-2 items-center"
             data-tip="This room has no additional access controls.">
-            <Icon size={4} icon={MinusCircle} /> Public
+            <Icon size={4} icon={Eye} /> Public
           </Button>
         {/if}
       </div>
     </div>
-    {#if $room?.about}
-      <p>{$room.about}</p>
-    {/if}
     {#if $members.length > 0}
       <div class="card2 card2-sm bg-alt flex items-center justify-between gap-4">
         <div class="flex items-center gap-4">
