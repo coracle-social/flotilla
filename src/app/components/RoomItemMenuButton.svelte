@@ -17,7 +17,7 @@
     if (popover) {
       const {x, y, width, height} = popover.popper.getBoundingClientRect()
 
-      if (!between([x, x + width], clientX) || !between([y, y + height + 30], clientY)) {
+      if (!between([x, x + width], clientX) || !between([y - 50, y + height + 50], clientY)) {
         popover.hide()
       }
     }
