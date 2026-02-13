@@ -126,17 +126,13 @@
       {/if}
     </div>
   </div>
-  <div
-    class="card2 bg-alt flex flex-col shadow-md"
-    class:gap-6={profileLightningAddress && walletLud16 && profile?.lud16 !== walletLud16}>
-    <div class="flex items-center justify-between">
-      <strong>Lightning Address</strong>
-      <div class="flex items-center gap-2">
-        <span class={profileLightningAddress ? "" : "text-warning"}>
-          {profileLightningAddress ? profileLightningAddress : "Not set"}
-        </span>
-        <Button class="btn btn-neutral btn-xs ml-3" onclick={updateReceivingAddress}>Update</Button>
-      </div>
+  <div class="card2 bg-alt flex flex-col shadow-md gap-6">
+    <strong>Lightning Address</strong>
+    <div class="flex justify-between items-center gap-2">
+      <span class={profileLightningAddress ? "" : "text-warning"}>
+        {profileLightningAddress ? profileLightningAddress : "Not set"}
+      </span>
+      <Button class="btn btn-neutral btn-xs ml-3" onclick={updateReceivingAddress}>Update</Button>
     </div>
     {#if profileLightningAddress && walletLud16 && profile?.lud16 !== walletLud16}
       <div class="card2 bg-alt flex items-center gap-2 text-xs">
