@@ -15,6 +15,7 @@
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
+  import Restart from "@assets/icons/restart.svg?dataurl"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
@@ -30,7 +31,7 @@
   import EventInfo from "@app/components/EventInfo.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
   import ChatEnable from "@app/components/ChatEnable.svelte"
-  import {pubkeyLink, deriveUserIsSpaceAdmin} from "@app/core/state"
+  import {pubkeyLink, deriveUserIsSpaceAdmin, deriveSpaceBannedPubkeyItems} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
   import {makeChatPath} from "@app/util/routes"
@@ -45,6 +46,10 @@
   const profile = deriveProfile(pubkey, removeUndefined([url]))
 
   const userIsAdmin = deriveUserIsSpaceAdmin(url)
+
+  const bannedPubkeys = url ? deriveSpaceBannedPubkeyItems(url) : undefined
+
+  const isBanned = $derived($bannedPubkeys?.some(item => item.pubkey === pubkey) ?? false)
 
   const back = () => history.back()
 
@@ -81,6 +86,20 @@
       },
     })
 
+  const restoreMember = async () => {
+    const {error} = await manageRelay(url!, {
+      method: ManagementMethod.AllowPubkey,
+      params: [pubkey],
+    })
+
+    if (error) {
+      pushToast({theme: "error", message: error})
+    } else {
+      pushToast({message: "User has successfully been restored!"})
+      back()
+    }
+  }
+
   let showMenu = $state(false)
 
   onMount(() => {
@@ -112,12 +131,21 @@
                     </li>
                   {/if}
                   {#if $userIsAdmin}
-                    <li>
-                      <Button class="text-error" onclick={banMember}>
-                        <Icon icon={MinusCircle} />
-                        Ban User
-                      </Button>
-                    </li>
+                    {#if isBanned}
+                      <li>
+                        <Button onclick={restoreMember}>
+                          <Icon icon={Restart} />
+                          Restore User
+                        </Button>
+                      </li>
+                    {:else}
+                      <li>
+                        <Button class="text-error" onclick={banMember}>
+                          <Icon icon={MinusCircle} />
+                          Ban User
+                        </Button>
+                      </li>
+                    {/if}
                   {/if}
                 </ul>
               </Popover>

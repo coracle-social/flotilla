@@ -3,14 +3,12 @@
   import {getTag, getIdFilters} from "@welshman/util"
   import {load, LOCAL_RELAY_URL} from "@welshman/net"
   import type {TrustedEvent} from "@welshman/util"
-  import {pubkey} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import ReportMenu from "@app/components/ReportMenu.svelte"
-  import {publishDelete, canEnforceNip70} from "@app/core/commands"
   import {pushModal} from "@app/util/modal"
   import {goToEvent} from "@app/util/routes"
 
@@ -25,7 +23,6 @@
   const etag = getTag("e", event.tags)
   const ptag = getTag("p", event.tags)
   const reason = etag?.[2] || ptag?.[2]
-  const shouldProtect = canEnforceNip70(url)
 
   const onClick = (e: Event, event: TrustedEvent) => {
     // @ts-ignore
@@ -35,17 +32,12 @@
       goToEvent(event)
     }
   }
-
-  const deleteReport = async () => {
-    publishDelete({event, relays: [url], protect: await shouldProtect})
-    onDelete?.()
-  }
 </script>
 
-<div class="column gap-4">
+<div class="column gap-4 card2 card2-sm bg-alt">
   <div class="flex justify-between">
     <div>
-      <Profile pubkey={event.pubkey} {url} avatarSize={5} />
+      <ProfileName pubkey={event.pubkey} {url} />
       <span>
         Reported this event
         {#if reason}
@@ -53,11 +45,7 @@
         {/if}
       </span>
     </div>
-    {#if event.pubkey === $pubkey}
-      <Button class="btn-default btn" onclick={deleteReport}>Delete Report</Button>
-    {:else}
-      <ReportMenu {url} {event} />
-    {/if}
+    <ReportMenu {url} {event} {onDelete} />
   </div>
   {#if event.content}
     <div class="border-l-2 border-primary pl-3">

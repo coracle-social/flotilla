@@ -40,9 +40,7 @@
       <ModalSubtitle>All reports for this event are shown below.</ModalSubtitle>
     </ModalHeader>
     {#each $reports.values() as report (report.id)}
-      <div class="card2 card2-sm bg-alt">
-        <ReportItem {url} event={report} {onDelete} />
-      </div>
+      <ReportItem {url} event={report} {onDelete} />
     {/each}
   </ModalBody>
   <ModalFooter>

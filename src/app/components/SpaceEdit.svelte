@@ -172,12 +172,12 @@
     </FieldInline>
     <FieldInline>
       {#snippet label()}
-        <p>Description</p>
+        <p class="flex flex-col items-start h-full">Description</p>
       {/snippet}
       {#snippet input()}
-        <label class="input input-bordered flex w-full items-center gap-2">
-          <input bind:value={values.description} class="grow" type="text" />
-        </label>
+        <textarea
+          bind:value={values.description}
+          class="min-h-24 textarea textarea-bordered flex w-full"></textarea>
       {/snippet}
     </FieldInline>
   </ModalBody>

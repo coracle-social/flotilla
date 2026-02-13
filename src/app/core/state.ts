@@ -50,6 +50,7 @@ import {
   makeDeriveItem,
   deriveItemsByKey,
   deriveDeduplicated,
+  deriveEventsById,
   deriveEventsByIdByUrl,
   deriveEventsByIdForUrl,
   getEventsByIdForUrl,
@@ -230,6 +231,9 @@ export const deriveEvent = makeDeriveEvent({
   includeDeleted: true,
   onDerive: (filters: Filter[], relays: string[]) => load({filters, relays}),
 })
+
+export const deriveEvents = (filters: Filter[] = [{}]) =>
+  deriveEventsDesc(deriveEventsById({repository, filters}))
 
 export const getEventsForUrl = (url: string, filters: Filter[] = [{}]) =>
   getEventsByIdForUrl({url, tracker, repository, filters}).values()

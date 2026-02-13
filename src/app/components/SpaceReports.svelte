@@ -22,6 +22,12 @@
   const reports = deriveEventsForUrl(url, [{kinds: [REPORT]}])
 
   const back = () => history.back()
+
+  const onDelete = () => {
+    if ($reports.length === 0) {
+      back()
+    }
+  }
 </script>
 
 <Modal>
@@ -32,7 +38,7 @@
     </ModalHeader>
     <div class="flex flex-col gap-2">
       {#each $reports as event (event.id)}
-        <ReportItem {url} {event} />
+        <ReportItem {url} {event} {onDelete} />
       {:else}
         <p class="py-12 text-center">No reports found.</p>
       {/each}

@@ -2,6 +2,7 @@
   import type {Snippet} from "svelte"
   import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent, EventContent} from "@welshman/util"
+  import {Router} from "@welshman/router"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
@@ -11,26 +12,28 @@
   import {publishDelete, publishReaction, canEnforceNip70} from "@app/core/commands"
 
   type Props = {
-    url: string
     event: TrustedEvent
     children?: Snippet
+    url?: string
   }
 
   const {url, event, children}: Props = $props()
 
-  const shouldProtect = canEnforceNip70(url)
+  const relays = url ? [url] : Router.get().Event(event).getUrls()
+
+  const shouldProtect = url ? canEnforceNip70(url) : Promise.resolve(false)
 
   const deleteReaction = async (event: TrustedEvent) =>
-    publishDelete({relays: [url], event, protect: await shouldProtect})
+    publishDelete({relays, event, protect: await shouldProtect})
 
   const createReaction = async (template: EventContent) =>
-    publishReaction({...template, event, relays: [url], protect: await shouldProtect})
+    publishReaction({...template, event, relays, protect: await shouldProtect})
 
   const onEmoji = async (emoji: NativeEmoji) =>
     publishReaction({
       event,
+      relays,
       content: emoji.unicode,
-      relays: [url],
       protect: await shouldProtect,
     })
 </script>
