@@ -1,5 +1,6 @@
 import {get, writable} from "svelte/store"
 import {
+  call,
   uniq,
   int,
   YEAR,
@@ -80,18 +81,29 @@ export const makeFeed = ({
     seen.add(event.id)
   }
 
-  const unsubscribe = on(repository, "update", ({added, removed}) => {
-    if (removed.size > 0) {
-      buffer.update($buffer => $buffer.filter(e => !removed.has(e.id)))
-      events.update($events => $events.filter(e => !removed.has(e.id)))
-    }
-
-    for (const event of added) {
-      if (matchFilters(filters, event) && tracker.getRelays(event.id).has(url)) {
-        insertEvent(event)
+  const unsubscribers = [
+    on(repository, "update", ({added, removed}) => {
+      if (removed.size > 0) {
+        buffer.update($buffer => $buffer.filter(e => !removed.has(e.id)))
+        events.update($events => $events.filter(e => !removed.has(e.id)))
       }
-    }
-  })
+
+      for (const event of added) {
+        if (matchFilters(filters, event) && tracker.getRelays(event.id).has(url)) {
+          insertEvent(event)
+        }
+      }
+    }),
+    on(tracker, "add", (id: string, trackerUrl: string) => {
+      if (trackerUrl === url) {
+        const event = repository.getEvent(id)
+
+        if (event && matchFilters(filters, event)) {
+          insertEvent(event)
+        }
+      }
+    }),
+  ]
 
   const ctrl = makeFeedController({
     useWindowing: true,
@@ -122,9 +134,9 @@ export const makeFeed = ({
   return {
     events,
     cleanup: () => {
-      unsubscribe()
       scroller.stop()
       controller.abort()
+      unsubscribers.forEach(call)
     },
   }
 }
@@ -169,17 +181,28 @@ export const makeCalendarFeed = ({
     })
   }
 
-  const unsubscribe = on(repository, "update", ({added, removed}) => {
-    if (removed.size > 0) {
-      events.update($events => $events.filter(e => !removed.has(e.id)))
-    }
-
-    for (const event of added) {
-      if (matchFilters(filters, event)) {
-        insertEvent(event)
+  const unsubscribers = [
+    on(repository, "update", ({added, removed}) => {
+      if (removed.size > 0) {
+        events.update($events => $events.filter(e => !removed.has(e.id)))
       }
-    }
-  })
+
+      for (const event of added) {
+        if (matchFilters(filters, event)) {
+          insertEvent(event)
+        }
+      }
+    }),
+    on(tracker, "add", (id: string, trackerUrl: string) => {
+      if (trackerUrl === url) {
+        const event = repository.getEvent(id)
+
+        if (event && matchFilters(filters, event)) {
+          insertEvent(event)
+        }
+      }
+    }),
+  ]
 
   const loadTimeframe = (since: number, until: number) => {
     const hashes = daysBetween(since, until).map(String)
@@ -234,10 +257,10 @@ export const makeCalendarFeed = ({
   return {
     events,
     cleanup: () => {
-      backwardScroller.stop()
-      forwardScroller.stop()
       controller.abort()
-      unsubscribe()
+      forwardScroller.stop()
+      backwardScroller.stop()
+      unsubscribers.forEach(call)
     },
   }
 }
