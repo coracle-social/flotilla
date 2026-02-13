@@ -10,8 +10,6 @@ import {scrollToEvent} from "@lib/html"
 import {identity} from "@welshman/lib"
 import {
   getTagValue,
-  DIRECT_MESSAGE,
-  DIRECT_MESSAGE_FILE,
   MESSAGE,
   THREAD,
   CLASSIFIED,
@@ -26,6 +24,7 @@ import {
   encodeRelay,
   userSpaceUrls,
   hasNip29,
+  DM_KINDS,
   ROOM,
 } from "@app/core/state"
 import {lastPageBySpaceUrl} from "@app/util/history"
@@ -108,7 +107,7 @@ export const goToEvent = async (event: TrustedEvent, options: Record<string, any
 }
 
 export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
-  if (event.kind === DIRECT_MESSAGE || event.kind === DIRECT_MESSAGE_FILE) {
+  if (DM_KINDS.includes(event.kind)) {
     return makeChatPath([event.pubkey, ...getPubkeyTagValues(event.tags)])
   }
 

@@ -129,6 +129,10 @@ export const ROOM = "h"
 
 export const PROTECTED = ["-"]
 
+export const IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+
+export const VIDEO_CONTENT_TYPES = ["video/quicktime", "video/webm", "video/mp4"]
+
 export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios"
 
 export const PUSH_SERVER = import.meta.env.VITE_PUSH_SERVER
@@ -475,7 +479,7 @@ export const chatsById = call(() => {
       }
     }
 
-    addEvents(repository.query([{kinds: [DIRECT_MESSAGE, PROFILE]}]))
+    addEvents(repository.query([{kinds: [...DM_KINDS, PROFILE]}]))
 
     const unsubscribers = [
       on(repository, "update", ({added}: RepositoryUpdate) => addEvents(added)),

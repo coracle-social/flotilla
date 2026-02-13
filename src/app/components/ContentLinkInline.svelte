@@ -1,18 +1,19 @@
 <script lang="ts">
   import {call, displayUrl} from "@welshman/lib"
-  import {isRelayUrl} from "@welshman/util"
+  import {isRelayUrl, getTagValue} from "@welshman/util"
   import {preventDefault, stopPropagation} from "@lib/html"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import {pushModal} from "@app/util/modal"
-  import {PLATFORM_URL} from "@app/core/state"
+  import {PLATFORM_URL, IMAGE_CONTENT_TYPES} from "@app/core/state"
   import {makeSpacePath} from "@app/util/routes"
 
   const {value, event} = $props()
 
   const url = value.url.toString()
+  const fileType = getTagValue("file-type", event.tags) || ""
   const [href, external] = call(() => {
     if (isRelayUrl(url)) return [makeSpacePath(url), false]
     if (url.startsWith(PLATFORM_URL)) return [url.replace(PLATFORM_URL, ""), false]
@@ -23,7 +24,7 @@
   const expand = () => pushModal(ContentLinkDetail, {value, event}, {fullscreen: true})
 </script>
 
-{#if url.match(/\.(jpe?g|png|gif|webp)$/)}
+{#if url.match(/\.(jpe?g|png|gif|webp)$/) || IMAGE_CONTENT_TYPES.includes(fileType)}
   <!-- Use a real link so people can copy the href -->
   <a
     href={url}
