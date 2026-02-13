@@ -1,4 +1,4 @@
-import {get, writable} from "svelte/store"
+import {get, writable, derived} from "svelte/store"
 import {
   uniq,
   int,
@@ -24,10 +24,10 @@ import {
 import type {TrustedEvent, Filter, List} from "@welshman/util"
 import {feedFromFilters, makeRelayFeed, makeIntersectionFeed} from "@welshman/feeds"
 import {load, request} from "@welshman/net"
-import {repository, makeFeedController, loadRelay, tracker} from "@welshman/app"
+import {repository, makeFeedController, loadRelay} from "@welshman/app"
 import {createScroller} from "@lib/html"
 import {daysBetween} from "@lib/util"
-import {getEventsForUrl} from "@app/core/state"
+import {getEventsForUrl, deriveEventsForUrlDesc} from "@app/core/state"
 
 // Utils
 
@@ -42,56 +42,12 @@ export const makeFeed = ({
   element: HTMLElement
   onExhausted?: () => void
 }) => {
-  const seen = new Set<string>()
   const controller = new AbortController()
-  const buffer = writable<TrustedEvent[]>([])
-  const events = writable<TrustedEvent[]>([])
+  const allEvents = deriveEventsForUrlDesc(url, filters)
+  const total = derived(allEvents, $allEvents => $allEvents.length)
+  const limit = writable(0)
 
-  const insertEvent = (event: TrustedEvent) => {
-    let handled = false
-
-    if (seen.has(event.id)) {
-      return
-    }
-
-    events.update($events => {
-      for (let i = 0; i < $events.length; i++) {
-        if ($events[i].id === event.id) return $events
-        if ($events[i].created_at < event.created_at) {
-          handled = true
-          return insertAt(i, event, $events)
-        }
-      }
-
-      return $events
-    })
-
-    if (!handled) {
-      buffer.update($buffer => {
-        for (let i = 0; i < $buffer.length; i++) {
-          if ($buffer[i].id === event.id) return $buffer
-          if ($buffer[i].created_at < event.created_at) return insertAt(i, event, $buffer)
-        }
-
-        return [...$buffer, event]
-      })
-    }
-
-    seen.add(event.id)
-  }
-
-  const unsubscribe = on(repository, "update", ({added, removed}) => {
-    if (removed.size > 0) {
-      buffer.update($buffer => $buffer.filter(e => !removed.has(e.id)))
-      events.update($events => $events.filter(e => !removed.has(e.id)))
-    }
-
-    for (const event of added) {
-      if (matchFilters(filters, event) && tracker.getRelays(event.id).has(url)) {
-        insertEvent(event)
-      }
-    }
-  })
+  const events = derived([allEvents, limit], ([$allEvents, $limit]) => $allEvents.slice(0, $limit))
 
   const ctrl = makeFeedController({
     useWindowing: true,
@@ -103,26 +59,22 @@ export const makeFeed = ({
   const scroller = createScroller({
     element,
     delay: 300,
-    threshold: 10_000,
+    threshold: 8_000,
     onScroll: async () => {
-      const $buffer = get(buffer)
+      console.log(get(events).length, get(allEvents).length)
+      limit.update($limit => {
+        if (get(total) - $limit < 100) {
+          ctrl.load(100)
+        }
 
-      events.update($events => [...$events, ...$buffer.splice(0, 30)])
-
-      if ($buffer.length < 100) {
-        ctrl.load(100)
-      }
+        return $limit + 10
+      })
     },
   })
-
-  for (const event of getEventsForUrl(url, filters)) {
-    insertEvent(event)
-  }
 
   return {
     events,
     cleanup: () => {
-      unsubscribe()
       scroller.stop()
       controller.abort()
     },

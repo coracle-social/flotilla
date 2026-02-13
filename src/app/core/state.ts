@@ -53,6 +53,8 @@ import {
   deriveEventsByIdByUrl,
   deriveEventsByIdForUrl,
   getEventsByIdForUrl,
+  deriveEventsAsc,
+  deriveEventsDesc,
 } from "@welshman/store"
 import {
   APP_DATA,
@@ -234,6 +236,12 @@ export const getEventsForUrl = (url: string, filters: Filter[] = [{}]) =>
 
 export const deriveEventsForUrl = (url: string, filters: Filter[] = [{}]) =>
   deriveArray(deriveEventsByIdForUrl({url, tracker, repository, filters}))
+
+export const deriveEventsForUrlAsc = (url: string, filters: Filter[] = [{}]) =>
+  deriveEventsAsc(deriveEventsByIdForUrl({url, tracker, repository, filters}))
+
+export const deriveEventsForUrlDesc = (url: string, filters: Filter[] = [{}]) =>
+  deriveEventsDesc(deriveEventsByIdForUrl({url, tracker, repository, filters}))
 
 export const deriveLatestEventForUrl = (url: string, filters: Filter[] = [{}]) =>
   deriveDeduplicated(deriveEventsByIdForUrl({url, tracker, repository, filters}), $eventsById =>
