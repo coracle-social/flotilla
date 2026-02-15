@@ -64,7 +64,21 @@
     ed.chain().clearContent().run()
   }
 
-  const editor = makeEditor({url, content, autofocus, submit, uploading, aggressive: true})
+  const toEditorContent = (value: string | undefined) =>
+    (value || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll("\n", "<br>")
+
+  const editor = makeEditor({
+    url,
+    content: toEditorContent(content),
+    autofocus,
+    submit,
+    uploading,
+    aggressive: true,
+  })
 
   let popover: Instance | undefined = $state()
 
