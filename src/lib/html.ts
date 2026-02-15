@@ -118,6 +118,10 @@ export const scrollToEvent = async (id: string, attempts = 3): Promise<boolean> 
 
     return true
   } else if (elements.length > 0) {
+    if (attempts <= 0) {
+      return false
+    }
+
     const lastElement = last(elements)
 
     if (lastElement && !isIntersecting(lastElement)) {
@@ -126,11 +130,7 @@ export const scrollToEvent = async (id: string, attempts = 3): Promise<boolean> 
 
     await sleep(300)
 
-    if (attempts > 0) {
-      return scrollToEvent(id, attempts - 1)
-    } else {
-      return false
-    }
+    return scrollToEvent(id, attempts - 1)
   }
 
   return false
