@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onMount} from "svelte"
+  import {onMount, tick} from "svelte"
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
@@ -103,7 +103,7 @@
     }
   }
 
-  const onScroll = () => {
+  const manageScrollPosition = () => {
     showScrollButton = Math.abs(element?.scrollTop || 0) > 1500
 
     const newMessages = document.getElementById("new-messages")
@@ -119,6 +119,28 @@
         showFixedNewMessages = y < 0
       }
     }
+
+    if (!userHasScrolled && $page.url.searchParams.get("at")) {
+      const targetEvent = $events.find(event => event.created_at >= at)
+
+      if (targetEvent) {
+        const target = element?.querySelector(`[data-event="${targetEvent.id}"]`)
+
+        if (target instanceof HTMLElement) {
+          isProgrammaticScroll = true
+          target.scrollIntoView({block: "center"})
+        }
+      }
+    }
+  }
+
+  const onScroll = () => {
+    if (!isProgrammaticScroll) {
+      userHasScrolled = true
+      manageScrollPosition()
+    }
+
+    isProgrammaticScroll = false
   }
 
   const scrollToNewMessages = () =>
@@ -135,6 +157,8 @@
 
   let loadingBackward = $state(true)
   let loadingForward = $state(true)
+  let userHasScrolled = $state(false)
+  let isProgrammaticScroll = $state(false)
   let at = $state(parseInt($page.url.searchParams.get("at") || String(now())))
   let share = $state(popKey<TrustedEvent | undefined>("share"))
   let parent: TrustedEvent | undefined = $state()
@@ -208,7 +232,7 @@
 
     elements.reverse()
 
-    setTimeout(onScroll, 100)
+    tick().then(manageScrollPosition)
 
     return elements
   })

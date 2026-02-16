@@ -13,7 +13,6 @@ import {
   isDefined,
   filterVals,
   fromPairs,
-  HOUR,
 } from "@welshman/lib"
 import {
   EVENT_TIME,
@@ -48,7 +47,7 @@ export const makeFeed = ({
   onForwardExhausted?: () => void
   at?: number
 }) => {
-  const interval = int(12, HOUR)
+  const interval = int(DAY)
   const controller = new AbortController()
   const events = writable<TrustedEvent[]>([])
 
