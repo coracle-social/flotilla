@@ -1,14 +1,12 @@
 <script lang="ts">
-  import {onMount, tick} from "svelte"
+  import {onMount} from "svelte"
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
-  import {now, int, formatTimestampAsDate, MINUTE, ago, sleep} from "@welshman/lib"
+  import {now, int, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {makeEvent, MESSAGE, RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER} from "@welshman/util"
   import {pubkey, publishThunk} from "@welshman/app"
-  import {load} from "@welshman/net"
-  import {scrollToEvent} from "@lib/html"
   import {fade, fly} from "@lib/transition"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
@@ -19,6 +17,7 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
+  import SpaceSearch from "@app/components/SpaceSearch.svelte"
   import SpaceMenuButton from "@app/components/SpaceMenuButton.svelte"
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@src/app/components/RoomItemAddMember.svelte"
@@ -37,7 +36,6 @@
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay($page.params.relay!)
   const shouldProtect = canEnforceNip70(url)
-  const pendingSearchEvent = popKey<TrustedEvent | undefined>("room_search_event")
 
   const replyTo = (event: TrustedEvent) => {
     parent = event
@@ -139,11 +137,8 @@
   let showScrollButton = $state(false)
   let cleanup: () => void
   let events: Readable<TrustedEvent[]> = $state(readable([]))
-  let revealInFeed = (_id: string, _event?: TrustedEvent) => false
   let compose: RoomCompose | undefined = $state()
   let eventToEdit: TrustedEvent | undefined = $state()
-  let jumpInFlight = $state(false)
-  let lastJumpId: string | undefined = $state()
 
   const elements = $derived.by(() => {
     const elements = []
@@ -232,108 +227,6 @@
     }
   }
 
-  const revealMessageById = async (id: string, targetEvent?: TrustedEvent) => {
-    const tryScroll = async () => {
-      for (let i = 0; i < 4; i++) {
-        if (await scrollToEvent(id, 0)) {
-          return true
-        }
-
-        await tick()
-        await sleep(120)
-      }
-
-      return false
-    }
-
-    let revealed = false
-    let inserted = revealInFeed(id, targetEvent)
-
-    if (inserted) {
-      await tick()
-    }
-
-    revealed = await tryScroll()
-
-    if (!revealed) {
-      await load({relays: [url], filters: [{ids: [id]}]})
-      inserted = revealInFeed(id, targetEvent)
-
-      if (inserted) {
-        await tick()
-      }
-
-      revealed = await tryScroll()
-    }
-
-    for (let i = 0; i < 18 && !revealed; i++) {
-      await sleep(250)
-      inserted = revealInFeed(id, targetEvent)
-
-      if (inserted) {
-        await tick()
-      }
-
-      revealed = await tryScroll()
-    }
-
-    return revealed
-  }
-
-  const stabilizeJumpScroll = async (id: string) => {
-    const maybeCenter = (behavior: "auto" | "smooth") => {
-      const element = document.querySelector(`[data-event="${id}"]`)
-
-      if (!element) {
-        return
-      }
-
-      const {top, bottom} = element.getBoundingClientRect()
-      const viewport = window.innerHeight
-      const inViewBand = top >= viewport * 0.2 && bottom <= viewport * 0.8
-
-      if (!inViewBand) {
-        element.scrollIntoView({behavior, block: "center"})
-      }
-    }
-
-    await sleep(220)
-    maybeCenter("smooth")
-    await sleep(320)
-    maybeCenter("auto")
-  }
-
-  const clearJumpParam = () => {
-    const next = new URL($page.url)
-    next.searchParams.delete("jump")
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `${next.pathname}${next.search}${next.hash}`,
-    )
-  }
-
-  const handleJump = async (jumpId: string) => {
-    if (jumpInFlight && lastJumpId === jumpId) {
-      return
-    }
-
-    jumpInFlight = true
-    lastJumpId = jumpId
-
-    const targetEvent = pendingSearchEvent?.id === jumpId ? pendingSearchEvent : undefined
-    const revealed = await revealMessageById(jumpId, targetEvent)
-
-    if (!revealed) {
-      pushToast({theme: "error", message: "Could not load this older message yet."})
-    } else {
-      await stabilizeJumpScroll(jumpId)
-    }
-
-    clearJumpParam()
-    jumpInFlight = false
-  }
-
   onMount(() => {
     const controller = new AbortController()
 
@@ -356,7 +249,6 @@
     })
 
     events = feed.events
-    revealInFeed = feed.reveal
     cleanup = feed.cleanup
 
     return () => {
@@ -371,18 +263,6 @@
       }, 800)
     }
   })
-
-  $effect(() => {
-    const jumpId = $page.url.searchParams.get("jump")
-
-    if (!jumpId) {
-      return
-    }
-
-    setTimeout(() => {
-      void handleJump(jumpId)
-    }, 400)
-  })
 </script>
 
 <PageBar>
@@ -395,7 +275,10 @@
     <strong>Chat</strong>
   {/snippet}
   {#snippet action()}
-    <SpaceMenuButton {url} />
+    <div class="row-2 items-center">
+      <SpaceSearch {url} />
+      <SpaceMenuButton {url} />
+    </div>
   {/snippet}
 </PageBar>
 

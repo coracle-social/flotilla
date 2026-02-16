@@ -402,6 +402,10 @@ progress[value]::-webkit-progress-value {
   @apply md:bottom-sai bottom-[calc(var(--saib)+3.5rem)];
 }
 
+.ct {
+  @apply top-[calc(var(--sait)+5rem)] md:top-[calc(var(--sait)+3rem)];
+}
+
 /* Keyboard open state adjustments */
 
 body.keyboard-open .cb {

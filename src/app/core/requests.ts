@@ -131,55 +131,8 @@ export const makeFeed = ({
     insertEvent(event)
   }
 
-  const reveal = (id: string, targetEvent?: TrustedEvent) => {
-    const current = get(events)
-
-    if (current.find(e => e.id === id)) {
-      return true
-    }
-
-    const queued = get(buffer)
-    const index = queued.findIndex(e => e.id === id)
-
-    if (index === -1) {
-      const event = targetEvent || repository.getEvent(id)
-
-      if (event && matchFilters(filters, event)) {
-        insertEvent(event)
-
-        const next = get(events)
-
-        if (next.find(e => e.id === id)) {
-          return true
-        }
-
-        const queuedNext = get(buffer)
-        const queuedIndex = queuedNext.findIndex(e => e.id === id)
-
-        if (queuedIndex > -1) {
-          const count = Math.max(30, queuedIndex + 1)
-          const chunk = queuedNext.splice(0, count)
-
-          events.update($events => [...$events, ...chunk])
-
-          return true
-        }
-      }
-
-      return false
-    }
-
-    const count = Math.max(30, index + 1)
-    const chunk = queued.splice(0, count)
-
-    events.update($events => [...$events, ...chunk])
-
-    return true
-  }
-
   return {
     events,
-    reveal,
     cleanup: () => {
       scroller.stop()
       controller.abort()

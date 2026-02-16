@@ -157,7 +157,7 @@ src/
 - Derive all other data inside the component from identifiers
 - Example: Don't pass `members` prop, derive it from `h` inside component
 
-**Code Style:**
+**CRITICAL Code Style Guidelines:**
 
 - **No `null`** - only use `undefined`
 - Svelte 5 runes (`$state`, `$derived`, `$effect`) only in UI components
@@ -168,6 +168,7 @@ src/
 - When dynamically building classes, use `cx` from `classnames` rather than embedded ternaries or svelte 4's old `class:` syntax.
 - When creating forms, use `FieldInline` or `Field` instead of custom elements/tailwindcss
 - Do not define svelte event handlers inline, instead name them and put them in the script section of templates
+- Avoid using `as`, except where necessary. Instead, annotate function parameters, and ensure upstream values are typed correctly.
 
 ## Common Tasks
 
