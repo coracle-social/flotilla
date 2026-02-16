@@ -26,3 +26,5 @@ export const buildUrl = (base: string | URL, ...pathname: string[]) => {
 
   return url.toString()
 }
+
+export const addPeriod = (s: string) => (s + ".").replace(/\.+$/, ".")

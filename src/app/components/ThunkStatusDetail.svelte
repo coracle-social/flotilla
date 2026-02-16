@@ -2,6 +2,7 @@
   import {PublishStatus} from "@welshman/net"
   import {displayRelayUrl} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
+  import {addPeriod} from "@lib/util"
 
   interface Props {
     url: string
@@ -25,7 +26,7 @@
 
 <div class="card2 bg-alt col-2 shadow-lg">
   <p>
-    Failed to publish to {displayRelayUrl(url)}: {message}.
+    Failed to publish to {displayRelayUrl(url)}: {addPeriod(message)}
   </p>
   <Button class="link" onclick={retry}>Retry</Button>
 </div>

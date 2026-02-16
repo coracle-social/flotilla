@@ -110,51 +110,58 @@
   }
 
   const onSubmit = async ({content, tags}: EventContent) => {
-    tags.push(["h", h])
+    try {
+      tags.push(["h", h])
 
-    if (await shouldProtect) {
-      tags.push(PROTECTED)
-    }
+      if (await shouldProtect) {
+        tags.push(PROTECTED)
+      }
 
-    let template: EventContent & {created_at?: number} = {content, tags}
+      let template: EventContent & {created_at?: number} = {content, tags}
 
-    if (eventToEdit) {
-      // Delete previous message, to be republished with same timestamp
-      template.created_at = eventToEdit.created_at
-      publishDelete({
+      if (eventToEdit) {
+        // Don't do anything if message hasn't changed
+        if (eventToEdit.content === content) {
+          return
+        }
+
+        // Delete previous message, to be republished with same timestamp
+        template.created_at = eventToEdit.created_at
+        publishDelete({
+          relays: [url],
+          event: $state.snapshot(eventToEdit),
+          protect: await shouldProtect,
+        })
+      }
+
+      if (share) {
+        template = prependParent(share, template, url)
+      }
+
+      if (parent) {
+        template = prependParent(parent, template, url)
+      }
+
+      const thunk = publishThunk({
         relays: [url],
-        event: $state.snapshot(eventToEdit),
-        protect: await shouldProtect,
+        event: makeEvent(MESSAGE, template),
+        delay: $userSettingsValues.send_delay,
       })
+
+      if ($userSettingsValues.send_delay) {
+        pushToast({
+          timeout: 30_000,
+          children: {
+            component: ThunkToast,
+            props: {thunk},
+          },
+        })
+      }
+    } finally {
+      clearParent()
+      clearShare()
+      clearEventToEdit()
     }
-
-    if (share) {
-      template = prependParent(share, template, url)
-    }
-
-    if (parent) {
-      template = prependParent(parent, template, url)
-    }
-
-    const thunk = publishThunk({
-      relays: [url],
-      event: makeEvent(MESSAGE, template),
-      delay: $userSettingsValues.send_delay,
-    })
-
-    if ($userSettingsValues.send_delay) {
-      pushToast({
-        timeout: 30_000,
-        children: {
-          component: ThunkToast,
-          props: {thunk},
-        },
-      })
-    }
-
-    clearParent()
-    clearShare()
-    clearEventToEdit()
   }
 
   const onScroll = () => {

@@ -164,3 +164,11 @@ export const compressFile = async (
     })
   })
 }
+
+export const escapeHtml = (html: string) => {
+  const element = document.createElement("div")
+
+  element.innerText = html
+
+  return element.innerHTML
+}

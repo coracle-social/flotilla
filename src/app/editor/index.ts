@@ -15,6 +15,7 @@ import {
 } from "@welshman/app"
 import type {FileAttributes} from "@welshman/editor"
 import {Editor, MentionSuggestion, WelshmanExtension, editorProps} from "@welshman/editor"
+import {escapeHtml} from "@lib/html"
 import {makeMentionNodeView} from "@app/editor/MentionNodeView"
 import ProfileSuggestion from "@app/editor/ProfileSuggestion.svelte"
 import {uploadFile} from "@app/core/commands"
@@ -82,7 +83,7 @@ export const makeEditor = async ({
   )
 
   return new Editor({
-    content,
+    content: escapeHtml(content),
     autofocus,
     editorProps,
     element: document.createElement("div"),

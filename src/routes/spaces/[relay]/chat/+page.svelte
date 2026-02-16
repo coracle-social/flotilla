@@ -54,45 +54,52 @@
   }
 
   const onSubmit = async ({content, tags}: EventContent) => {
-    let template: EventContent & {created_at?: number} = {content, tags}
+    try {
+      let template: EventContent & {created_at?: number} = {content, tags}
 
-    if (eventToEdit) {
-      // Delete previous message, to be republished with same timestamp
-      template.created_at = eventToEdit.created_at
-      publishDelete({relays: [url], event: eventToEdit, protect: await shouldProtect})
-    }
+      if (eventToEdit) {
+        // Don't do anything if message hasn't changed
+        if (eventToEdit.content === content) {
+          return
+        }
 
-    if (await shouldProtect) {
-      tags.push(PROTECTED)
-    }
+        // Delete previous message, to be republished with same timestamp
+        template.created_at = eventToEdit.created_at
+        publishDelete({relays: [url], event: eventToEdit, protect: await shouldProtect})
+      }
 
-    if (share) {
-      template = prependParent(share, template, url)
-    }
+      if (await shouldProtect) {
+        tags.push(PROTECTED)
+      }
 
-    if (parent) {
-      template = prependParent(parent, template, url)
-    }
+      if (share) {
+        template = prependParent(share, template, url)
+      }
 
-    const thunk = publishThunk({
-      relays: [url],
-      event: makeEvent(MESSAGE, template),
-      delay: $userSettingsValues.send_delay,
-    })
+      if (parent) {
+        template = prependParent(parent, template, url)
+      }
 
-    if ($userSettingsValues.send_delay) {
-      pushToast({
-        timeout: 30_000,
-        children: {
-          component: ThunkToast,
-          props: {thunk},
-        },
+      const thunk = publishThunk({
+        relays: [url],
+        event: makeEvent(MESSAGE, template),
+        delay: $userSettingsValues.send_delay,
       })
-    }
 
-    clearParent()
-    clearShare()
-    clearEventToEdit()
+      if ($userSettingsValues.send_delay) {
+        pushToast({
+          timeout: 30_000,
+          children: {
+            component: ThunkToast,
+            props: {thunk},
+          },
+        })
+      }
+    } finally {
+      clearParent()
+      clearShare()
+      clearEventToEdit()
+    }
   }
 
   const onScroll = () => {
