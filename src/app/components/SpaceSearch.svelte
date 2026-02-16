@@ -7,7 +7,6 @@
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import {fly} from "@lib/transition"
-  import PageContent from "@lib/components/PageContent.svelte"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import {deriveEventsForUrl} from "@app/core/state"
@@ -92,7 +91,7 @@
 
   const onRoomSearchResultClick = (event: TrustedEvent) => {
     close()
-    void goToEvent(event, {keepFocus: true})
+    goToEvent(event, {keepFocus: true})
   }
 </script>
 

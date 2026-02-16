@@ -140,13 +140,13 @@ export const compressFile = async (
   file: File | Blob,
   options: Record<string, any> = {},
 ): Promise<File> => {
-  const {default: Compressor} = await import("compressorjs")
+  const {default: Compressor} = await import("compressorjs-next")
 
   return new Promise<File>((resolve, _reject) => {
     new Compressor(file, {
       maxWidth: 2048,
       maxHeight: 2048,
-      convertSize: 10 * 1024 * 1024,
+      convertTypes: ["image/png"],
       ...options,
       success: result => resolve(result as File),
       error: e => {

@@ -70,7 +70,7 @@
     "@welshman/signer": "^0.8.4",
     "@welshman/store": "^0.8.4",
     "@welshman/util": "^0.8.4",
-    "compressorjs": "^1.2.1",
+    "compressorjs-next": "^1.1.2",
     "daisyui": "^4.12.24",
     "date-picker-svelte": "^2.17.0",
     "dotenv": "^16.6.1",
