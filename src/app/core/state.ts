@@ -450,7 +450,10 @@ export const chatsById = call(() => {
           const pubkeys = getChatPubkeysFromEvent(event)
           const id = makeChatId(pubkeys)
           const chat = chatsById.get(id)
-          const messages = sortBy(e => -e.created_at, append(event, chat?.messages || []))
+          const messages = sortBy(
+            e => -e.created_at,
+            uniqBy(e => e.id, append(event, chat?.messages || [])),
+          )
           const last_activity = Math.max(chat?.last_activity || 0, event.created_at)
           const updatedChat = addSearchText({id, pubkeys, messages, last_activity})
 
