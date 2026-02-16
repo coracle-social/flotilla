@@ -1,4 +1,4 @@
-import {sleep, last, randomId} from "@welshman/lib"
+import {sleep, randomId} from "@welshman/lib"
 export {preventDefault, stopPropagation} from "svelte/legacy"
 
 export const copyToClipboard = (text: string) => {
@@ -102,42 +102,6 @@ export const isIntersecting = async (element: Element) =>
 
     observer.observe(element)
   })
-
-export const scrollToEvent = async (id: string, attempts = 3): Promise<boolean> => {
-  const element = document.querySelector(`[data-event="${id}"]`) as any
-  const elements = Array.from(document.querySelectorAll("[data-event]"))
-
-  if (element) {
-    element.scrollIntoView({behavior: "smooth", block: "center"})
-    element.style = "filter: brightness(1.5); transition-property: all; transition-duration: 400ms;"
-
-    setTimeout(() => {
-      element.style = "transition-property: all; transition-duration: 300ms;"
-    }, 800)
-
-    setTimeout(() => {
-      element.style = ""
-    }, 800 + 400)
-
-    return true
-  } else if (elements.length > 0) {
-    if (attempts <= 0) {
-      return false
-    }
-
-    const lastElement = last(elements)
-
-    if (lastElement && !isIntersecting(lastElement)) {
-      lastElement.scrollIntoView({behavior: "smooth", block: "center"})
-    }
-
-    await sleep(300)
-
-    return scrollToEvent(id, attempts - 1)
-  }
-
-  return false
-}
 
 export const compressFile = async (
   file: File | Blob,

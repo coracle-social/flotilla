@@ -27,7 +27,7 @@
   import RoomComposeParent from "@app/components/RoomComposeParent.svelte"
   import {userSettingsValues, decodeRelay, PROTECTED, MESSAGE_KINDS} from "@app/core/state"
   import {prependParent, canEnforceNip70, publishDelete} from "@app/core/commands"
-  import {setChecked, checked} from "@app/util/notifications"
+  import {checked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
   import {makeFeed} from "@app/core/requests"
   import {popKey} from "@lib/implicit"

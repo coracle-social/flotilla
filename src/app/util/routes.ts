@@ -2,11 +2,10 @@ import type {Page} from "@sveltejs/kit"
 import {get} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {goto} from "$app/navigation"
-import {nthEq, sleep} from "@welshman/lib"
+import {nthEq} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {getAddress} from "@welshman/util"
 import {tracker, loadRelay} from "@welshman/app"
-import {scrollToEvent} from "@lib/html"
 import {identity} from "@welshman/lib"
 import {
   getTagValue,
@@ -62,6 +61,14 @@ export const makeRoomPath = (url: string, h: string) => `/spaces/${encodeRelay(u
 
 export const makeSpaceChatPath = (url: string) => makeRoomPath(url, "chat")
 
+export const makeMessagePath = (url: string, event: TrustedEvent) => {
+  const h = getTagValue(ROOM, event.tags)
+  const path = h ? makeRoomPath(url, h) : makeSpaceChatPath(url)
+  const qp = new URLSearchParams({at: String(event.created_at)})
+
+  return path + "?" + qp.toString()
+}
+
 export const makeGoalPath = (url: string, id?: string) => makeSpacePath(url, "goals", id)
 
 export const makeThreadPath = (url: string, id?: string) => makeSpacePath(url, "threads", id)
@@ -92,26 +99,21 @@ export const getPrimaryNavItemIndex = ($page: Page) => {
   }
 }
 
-export const goToEvent = async (event: TrustedEvent, options: Record<string, any> = {}) => {
+export const goToEvent = (event: TrustedEvent, options: Record<string, any> = {}) => {
   const urls = Array.from(tracker.getRelays(event.id))
-  const path = await getEventPath(event, urls)
+  const path = getEventPath(event, urls)
 
   if (path.includes("://")) {
     window.open(path)
   } else {
     goto(path, options)
-
-    await sleep(300)
-    await scrollToEvent(event.id)
   }
 }
 
-export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
+export const getEventPath = (event: TrustedEvent, urls: string[]) => {
   if (DM_KINDS.includes(event.kind)) {
     return makeChatPath([event.pubkey, ...getPubkeyTagValues(event.tags)])
   }
-
-  const h = getTagValue(ROOM, event.tags)
 
   if (urls.length > 0) {
     const url = urls[0]
@@ -133,7 +135,7 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
     }
 
     if (event.kind === MESSAGE) {
-      return h ? makeRoomPath(url, h) : makeSpacePath(url, "chat")
+      return makeMessagePath(url, event)
     }
 
     const address = event.tags.find(nthEq(0, "A"))?.[1]
@@ -150,7 +152,7 @@ export const getEventPath = async (event: TrustedEvent, urls: string[]) => {
       }
 
       if (parseInt(kind) === MESSAGE) {
-        return h ? makeRoomPath(url, h) : makeSpacePath(url, "chat")
+        return makeMessagePath(url, event)
       }
     }
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onMount, onDestroy} from "svelte"
+  import {onMount} from "svelte"
   import {readable} from "svelte/store"
   import {page} from "$app/stores"
   import type {Readable} from "svelte/store"
