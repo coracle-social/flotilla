@@ -46,13 +46,11 @@
         <Icon icon={Bell} /> Alerts
       </SecondaryNavItem>
     </div>
-    {#if Capacitor.getPlatform() !== "ios"}
-      <div in:fly|local={{delay: 100}}>
-        <SecondaryNavItem href="/settings/wallet">
-          <Icon icon={Wallet} /> Wallet
-        </SecondaryNavItem>
-      </div>
-    {/if}
+    <div in:fly|local={{delay: 100}} class:hidden={Capacitor.getPlatform() === "ios"}>
+      <SecondaryNavItem href="/settings/wallet">
+        <Icon icon={Wallet} /> Wallet
+      </SecondaryNavItem>
+    </div>
     <div in:fly|local={{delay: 150}}>
       <SecondaryNavItem href="/settings/relays">
         <Icon icon={Server} /> Relays
