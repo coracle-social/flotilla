@@ -124,9 +124,18 @@
   const scrollToNewMessages = () =>
     document.getElementById("new-messages")?.scrollIntoView({behavior: "smooth", block: "center"})
 
-  const scrollToBottom = () => element?.scrollTo({top: 0, behavior: "smooth"})
+  const scrollToBottom = () => {
+    if ($page.url.searchParams.get("at")) {
+      at = now()
+      start()
+    } else {
+      element?.scrollTo({top: 0, behavior: "smooth"})
+    }
+  }
 
-  let loadingEvents = $state(true)
+  let loadingBackward = $state(true)
+  let loadingForward = $state(true)
+  let at = $state(parseInt($page.url.searchParams.get("at") || String(now())))
   let share = $state(popKey<TrustedEvent | undefined>("share"))
   let parent: TrustedEvent | undefined = $state()
   let element: HTMLElement | undefined = $state()
@@ -157,7 +166,7 @@
       const adjustedLastChecked =
         lastChecked && lastUserEvent ? Math.max(lastUserEvent.created_at, lastChecked) : lastChecked
 
-      for (const event of $events.toReversed()) {
+      for (const event of $events) {
         if (seen.has(event.id)) {
           continue
         }
@@ -204,6 +213,26 @@
     return elements
   })
 
+  const start = () => {
+    cleanup?.()
+
+    const feed = makeFeed({
+      at,
+      url,
+      element: element!,
+      filters: [{kinds: [...MESSAGE_KINDS, RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]}],
+      onBackwardExhausted: () => {
+        loadingBackward = false
+      },
+      onForwardExhausted: () => {
+        loadingForward = false
+      },
+    })
+
+    events = feed.events
+    cleanup = feed.cleanup
+  }
+
   const onEscape = () => {
     clearParent()
     clearShare()
@@ -238,29 +267,13 @@
 
     observer.observe(chatCompose!)
     observer.observe(dynamicPadding!)
-
-    const feed = makeFeed({
-      url,
-      element: element!,
-      filters: [{kinds: [...MESSAGE_KINDS, RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]}],
-      onExhausted: () => {
-        loadingEvents = false
-      },
-    })
-
-    events = feed.events
-    cleanup = feed.cleanup
+    start()
 
     return () => {
       cleanup()
       controller.abort()
       observer.unobserve(chatCompose!)
       observer.unobserve(dynamicPadding!)
-
-      // Sveltekit calls onDestroy at the beginning of the page load for some reason
-      setTimeout(() => {
-        setChecked($page.url.pathname)
-      }, 800)
     }
   })
 </script>
@@ -284,6 +297,11 @@
 
 <PageContent bind:element onscroll={onScroll} class="flex flex-col-reverse pt-4">
   <div bind:this={dynamicPadding}></div>
+  {#if loadingForward}
+    <p class="py-20 flex justify-center">
+      <Spinner loading={loadingForward}>Looking for messages...</Spinner>
+    </p>
+  {/if}
   {#each elements as { type, id, value, showPubkey } (id)}
     {#if type === "new-messages"}
       <div
@@ -316,8 +334,8 @@
     {/if}
   {/each}
   <p class="flex h-10 items-center justify-center py-20">
-    {#if loadingEvents}
-      <Spinner loading={loadingEvents}>Looking for messages...</Spinner>
+    {#if loadingBackward}
+      <Spinner loading={loadingBackward}>Looking for messages...</Spinner>
     {:else}
       <Spinner>End of message history</Spinner>
     {/if}

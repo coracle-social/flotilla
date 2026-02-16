@@ -49,7 +49,7 @@
       url,
       element: element!,
       filters: [{kinds: [CLASSIFIED]}, makeCommentFilter([CLASSIFIED])],
-      onExhausted: () => {
+      onBackwardExhausted: () => {
         loading = false
       },
     })

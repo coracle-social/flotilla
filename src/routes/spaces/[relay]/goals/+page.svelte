@@ -48,7 +48,7 @@
       url,
       element: element!,
       filters: [{kinds: [ZAP_GOAL]}, makeCommentFilter([ZAP_GOAL])],
-      onExhausted: () => {
+      onBackwardExhausted: () => {
         loading = false
       },
     })

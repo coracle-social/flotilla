@@ -186,11 +186,20 @@
   const scrollToNewMessages = () =>
     document.getElementById("new-messages")?.scrollIntoView({behavior: "smooth", block: "center"})
 
-  const scrollToBottom = () => element?.scrollTo({top: 0, behavior: "smooth"})
+  const scrollToBottom = () => {
+    if ($page.url.searchParams.get("at")) {
+      at = now()
+      start()
+    } else {
+      element?.scrollTo({top: 0, behavior: "smooth"})
+    }
+  }
 
   let joining = $state(false)
   let leaving = $state(false)
-  let loadingEvents = $state(true)
+  let loadingBackward = $state(true)
+  let loadingForward = $state(true)
+  let at = $state(parseInt($page.url.searchParams.get("at") || String(now())))
   let share = $state(popKey<TrustedEvent | undefined>("share"))
   let parent: TrustedEvent | undefined = $state()
   let element: HTMLElement | undefined = $state()
@@ -221,7 +230,7 @@
       const adjustedLastChecked =
         lastChecked && lastUserEvent ? Math.max(lastUserEvent.created_at, lastChecked) : lastChecked
 
-      for (const event of $events.toReversed()) {
+      for (const event of $events) {
         if (seen.has(event.id)) {
           continue
         }
@@ -272,11 +281,15 @@
     cleanup?.()
 
     const feed = makeFeed({
+      at,
       url,
       element: element!,
       filters: [{kinds: [...MESSAGE_KINDS, ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#h": [h]}],
-      onExhausted: () => {
-        loadingEvents = false
+      onBackwardExhausted: () => {
+        loadingBackward = false
+      },
+      onForwardExhausted: () => {
+        loadingForward = false
       },
     })
 
@@ -319,13 +332,10 @@
     start()
 
     return () => {
+      cleanup()
       observer.unobserve(chatCompose!)
       observer.unobserve(dynamicPadding!)
     }
-  })
-
-  onDestroy(() => {
-    cleanup?.()
   })
 </script>
 
@@ -373,6 +383,11 @@
       </div>
     </div>
   {:else}
+    {#if loadingForward}
+      <p class="py-20 flex justify-center">
+        <Spinner loading={loadingForward}>Looking for messages...</Spinner>
+      </p>
+    {/if}
     {#each elements as { type, id, value, showPubkey } (id)}
       {#if type === "new-messages"}
         <div
@@ -405,8 +420,8 @@
       {/if}
     {/each}
     <p class="flex h-10 items-center justify-center py-20">
-      {#if loadingEvents}
-        <Spinner loading={loadingEvents}>Looking for messages...</Spinner>
+      {#if loadingBackward}
+        <Spinner loading={loadingBackward}>Looking for messages...</Spinner>
       {:else}
         <Spinner>End of message history</Spinner>
       {/if}

@@ -20,7 +20,7 @@ If you're deploying a custom version of flotilla, be sure to remove the `plausib
 
 ## Development
 
-See [./CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](AGENTS.md).
 
 ## Deployment
 

@@ -9,9 +9,11 @@ import {
   sortBy,
   now,
   on,
+  between,
   isDefined,
   filterVals,
   fromPairs,
+  HOUR,
 } from "@welshman/lib"
 import {
   EVENT_TIME,
@@ -23,9 +25,8 @@ import {
   getRelaysFromList,
 } from "@welshman/util"
 import type {TrustedEvent, Filter, List} from "@welshman/util"
-import {feedFromFilters, makeRelayFeed, makeIntersectionFeed} from "@welshman/feeds"
 import {load, request} from "@welshman/net"
-import {repository, makeFeedController, loadRelay, tracker} from "@welshman/app"
+import {repository, loadRelay, tracker} from "@welshman/app"
 import {createScroller} from "@lib/html"
 import {daysBetween} from "@lib/util"
 import {getEventsForUrl} from "@app/core/state"
@@ -36,55 +37,61 @@ export const makeFeed = ({
   url,
   filters,
   element,
-  onExhausted,
+  onBackwardExhausted,
+  onForwardExhausted,
+  at = now(),
 }: {
   url: string
   filters: Filter[]
   element: HTMLElement
-  onExhausted?: () => void
+  onBackwardExhausted?: () => void
+  onForwardExhausted?: () => void
+  at?: number
 }) => {
-  const seen = new Set<string>()
+  const interval = int(12, HOUR)
   const controller = new AbortController()
-  const buffer = writable<TrustedEvent[]>([])
   const events = writable<TrustedEvent[]>([])
+
+  let buffer: TrustedEvent[] = []
+  let backwardWindow = [at - interval, at]
+  let forwardWindow = [at, at + interval]
 
   const insertEvent = (event: TrustedEvent) => {
     let handled = false
 
-    if (seen.has(event.id)) {
-      return
-    }
+    if (between([backwardWindow[0], forwardWindow[1]], event.created_at)) {
+      const $events = get(events)
 
-    events.update($events => {
       for (let i = 0; i < $events.length; i++) {
-        if ($events[i].id === event.id) return $events
-        if ($events[i].created_at < event.created_at) {
+        if ($events[i].created_at > event.created_at) {
+          events.set(insertAt(i, event, $events))
           handled = true
-          return insertAt(i, event, $events)
+          break
         }
       }
 
-      return $events
-    })
-
-    if (!handled) {
-      buffer.update($buffer => {
-        for (let i = 0; i < $buffer.length; i++) {
-          if ($buffer[i].id === event.id) return $buffer
-          if ($buffer[i].created_at < event.created_at) return insertAt(i, event, $buffer)
+      if (!handled) {
+        events.set([...$events, event])
+      }
+    } else {
+      for (let i = 0; i < buffer.length; i++) {
+        if (buffer[i].created_at > event.created_at) {
+          buffer.splice(i, 0, event)
+          handled = true
+          break
         }
+      }
 
-        return [...$buffer, event]
-      })
+      if (!handled) {
+        buffer.push(event)
+      }
     }
-
-    seen.add(event.id)
   }
 
   const unsubscribers = [
     on(repository, "update", ({added, removed}) => {
       if (removed.size > 0) {
-        buffer.update($buffer => $buffer.filter(e => !removed.has(e.id)))
+        buffer = buffer.filter(e => !removed.has(e.id))
         events.update($events => $events.filter(e => !removed.has(e.id)))
       }
 
@@ -105,24 +112,56 @@ export const makeFeed = ({
     }),
   ]
 
-  const ctrl = makeFeedController({
-    useWindowing: true,
-    signal: controller.signal,
-    feed: makeIntersectionFeed(makeRelayFeed(url), feedFromFilters(filters)),
-    onExhausted,
-  })
+  const loadTimeframe = (since: number, until: number) => {
+    request({
+      relays: [url],
+      autoClose: true,
+      signal: controller.signal,
+      filters: filters.map(filter => ({...filter, since, until})),
+    })
+  }
 
-  const scroller = createScroller({
+  const backwardScroller = createScroller({
     element,
     delay: 300,
-    threshold: 10_000,
-    onScroll: async () => {
-      const $buffer = get(buffer)
+    threshold: 5000,
+    onScroll: () => {
+      const [since, until] = backwardWindow
 
-      events.update($events => [...$events, ...$buffer.splice(0, 30)])
+      backwardWindow = [since - interval, since]
 
-      if ($buffer.length < 100) {
-        ctrl.load(100)
+      for (const event of buffer.splice(0)) {
+        insertEvent(event)
+      }
+
+      if (until > now() - int(2, YEAR)) {
+        loadTimeframe(since, until)
+      } else if (!buffer.some(e => e.created_at < at)) {
+        backwardScroller.stop()
+        onBackwardExhausted?.()
+      }
+    },
+  })
+
+  const forwardScroller = createScroller({
+    element,
+    reverse: true,
+    delay: 300,
+    threshold: 5000,
+    onScroll: () => {
+      const [since, until] = forwardWindow
+
+      forwardWindow = [until, until + interval]
+
+      for (const event of buffer.splice(0)) {
+        insertEvent(event)
+      }
+
+      if (until < now()) {
+        loadTimeframe(since, until)
+      } else if (!buffer.some(e => e.created_at > at)) {
+        forwardScroller.stop()
+        onForwardExhausted?.()
       }
     },
   })
@@ -134,8 +173,9 @@ export const makeFeed = ({
   return {
     events,
     cleanup: () => {
-      scroller.stop()
       controller.abort()
+      forwardScroller.stop()
+      backwardScroller.stop()
       unsubscribers.forEach(call)
     },
   }
