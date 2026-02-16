@@ -2,6 +2,7 @@ import type {Page} from "@sveltejs/kit"
 import {get} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {goto} from "$app/navigation"
+import {page} from "$app/stores"
 import {nthEq} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {getAddress} from "@welshman/util"
@@ -99,14 +100,35 @@ export const getPrimaryNavItemIndex = ($page: Page) => {
   }
 }
 
+export const scrollToEvent = (id: string) => {
+  const element = document.querySelector(`[data-event="${id}"]`) as any
+
+  if (element) {
+    element.scrollIntoView({behavior: "smooth", block: "center"})
+    element.style = "filter: brightness(1.5); transition-property: all; transition-duration: 400ms;"
+
+    setTimeout(() => {
+      element.style = "transition-property: all; transition-duration: 300ms;"
+    }, 800)
+
+    setTimeout(() => {
+      element.style = ""
+    }, 800 + 400)
+  }
+
+  return Boolean(element)
+}
+
 export const goToEvent = (event: TrustedEvent, options: Record<string, any> = {}) => {
   const urls = Array.from(tracker.getRelays(event.id))
   const path = getEventPath(event, urls)
 
   if (path.includes("://")) {
     window.open(path)
-  } else {
-    goto(path, options)
+  } else if (!scrollToEvent(event.id)) {
+    const replaceState = path.replace(/\?.*$/, "") === get(page).url.pathname
+
+    goto(path, {replaceState, ...options})
   }
 }
 

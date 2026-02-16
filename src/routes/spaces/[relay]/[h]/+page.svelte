@@ -2,6 +2,7 @@
   import {onMount, tick} from "svelte"
   import {readable} from "svelte/store"
   import {page} from "$app/stores"
+  import {goto} from "$app/navigation"
   import type {Readable} from "svelte/store"
   import {pubkey, publishThunk, waitForThunkError, joinRoom, leaveRoom} from "@welshman/app"
   import {now, int, formatTimestampAsDate, ago, MINUTE} from "@welshman/lib"
@@ -60,6 +61,7 @@
   const room = deriveRoom(url, h)
   const shouldProtect = canEnforceNip70(url)
   const membershipStatus = deriveUserRoomMembershipStatus(url, h)
+  const at = $derived(parseInt($page.url.searchParams.get("at") || String(now())))
 
   const showRoomDetail = () => pushModal(RoomDetail, {url, h})
 
@@ -166,7 +168,7 @@
   }
 
   const manageScrollPosition = () => {
-    showScrollButton = Math.abs(element?.scrollTop || 0) > 1500
+    showScrollButton = Boolean(at) || Math.abs(element?.scrollTop || 0) > 1500
 
     const newMessages = document.getElementById("new-messages")
 
@@ -210,8 +212,7 @@
 
   const scrollToBottom = () => {
     if ($page.url.searchParams.get("at")) {
-      at = now()
-      start()
+      goto($page.url.pathname, {replaceState: true})
     } else {
       element?.scrollTo({top: 0, behavior: "smooth"})
     }
@@ -223,7 +224,6 @@
   let isProgrammaticScroll = $state(false)
   let loadingBackward = $state(true)
   let loadingForward = $state(true)
-  let at = $state(parseInt($page.url.searchParams.get("at") || String(now())))
   let share = $state(popKey<TrustedEvent | undefined>("share"))
   let parent: TrustedEvent | undefined = $state()
   let element: HTMLElement | undefined = $state()
@@ -353,6 +353,7 @@
 
     observer.observe(chatCompose!)
     observer.observe(dynamicPadding!)
+
     start()
 
     return () => {

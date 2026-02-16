@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onMount, tick} from "svelte"
   import {page} from "$app/stores"
+  import {goto} from "$app/navigation"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
   import {now, int, formatTimestampAsDate, MINUTE, ago} from "@welshman/lib"
@@ -36,6 +37,7 @@
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay($page.params.relay!)
   const shouldProtect = canEnforceNip70(url)
+  const at = $derived(parseInt($page.url.searchParams.get("at") || String(now())))
 
   const replyTo = (event: TrustedEvent) => {
     parent = event
@@ -104,7 +106,7 @@
   }
 
   const manageScrollPosition = () => {
-    showScrollButton = Math.abs(element?.scrollTop || 0) > 1500
+    showScrollButton = Boolean(at) || Math.abs(element?.scrollTop || 0) > 1500
 
     const newMessages = document.getElementById("new-messages")
 
@@ -148,8 +150,7 @@
 
   const scrollToBottom = () => {
     if ($page.url.searchParams.get("at")) {
-      at = now()
-      start()
+      goto($page.url.pathname, {replaceState: true})
     } else {
       element?.scrollTo({top: 0, behavior: "smooth"})
     }
@@ -159,7 +160,6 @@
   let loadingForward = $state(true)
   let userHasScrolled = $state(false)
   let isProgrammaticScroll = $state(false)
-  let at = $state(parseInt($page.url.searchParams.get("at") || String(now())))
   let share = $state(popKey<TrustedEvent | undefined>("share"))
   let parent: TrustedEvent | undefined = $state()
   let element: HTMLElement | undefined = $state()
