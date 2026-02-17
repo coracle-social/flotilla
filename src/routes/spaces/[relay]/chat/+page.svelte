@@ -37,7 +37,7 @@
   const lastChecked = $checked[$page.url.pathname]
   const url = decodeRelay($page.params.relay!)
   const shouldProtect = canEnforceNip70(url)
-  const at = $derived(parseInt($page.url.searchParams.get("at") || String(now())))
+  const at = $derived(parseInt($page.url.searchParams.get("at")!))
 
   const replyTo = (event: TrustedEvent) => {
     parent = event
@@ -106,7 +106,7 @@
   }
 
   const manageScrollPosition = () => {
-    showScrollButton = Boolean(at) || Math.abs(element?.scrollTop || 0) > 1500
+    showScrollButton = !isNaN(at) || Math.abs(element?.scrollTop || 0) > 1500
 
     const newMessages = document.getElementById("new-messages")
 
@@ -122,7 +122,7 @@
       }
     }
 
-    if (!userHasScrolled && $page.url.searchParams.get("at")) {
+    if (!userHasScrolled && !isNaN(at)) {
       const targetEvent = $events.find(event => event.created_at >= at)
 
       if (targetEvent) {
@@ -149,7 +149,7 @@
     document.getElementById("new-messages")?.scrollIntoView({behavior: "smooth", block: "center"})
 
   const scrollToBottom = () => {
-    if ($page.url.searchParams.get("at")) {
+    if (!isNaN(at)) {
       goto($page.url.pathname, {replaceState: true})
     } else {
       element?.scrollTo({top: 0, behavior: "smooth"})
@@ -241,8 +241,8 @@
     cleanup?.()
 
     const feed = makeFeed({
-      at,
       url,
+      at: at || now(),
       element: element!,
       filters: [{kinds: [...MESSAGE_KINDS, RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER]}],
       onBackwardExhausted: () => {
