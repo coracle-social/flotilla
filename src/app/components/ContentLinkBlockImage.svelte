@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount, onDestroy} from "svelte"
-  import {displayUrl} from "@welshman/lib"
+  import {displayUrl, once} from "@welshman/lib"
   import {
     getTags,
     getBlob,
@@ -27,7 +27,7 @@
   const nonce = getTagValue("decryption-nonce", meta)
   const algorithm = getTagValue("encryption-algorithm", meta)
 
-  const onError = async () => {
+  const onError = once(async () => {
     // If the image failed to load, try authenticating
     if (hash && $signer) {
       const server = new URL(url).origin
@@ -43,7 +43,7 @@
     } else {
       hasError = true
     }
-  }
+  })
 
   let hasError = $state(false)
   let src = $state("")
