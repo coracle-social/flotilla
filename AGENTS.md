@@ -170,6 +170,15 @@ src/
 - Do not define svelte event handlers inline, instead name them and put them in the script section of templates
 - Avoid using `as`, except where necessary. Instead, annotate function parameters, and ensure upstream values are typed correctly.
 
+**Human-First Simplicity (Jon Staab Style):**
+
+- Prefer direct, readable code over layered abstractions.
+- Do not add indirection (extra helpers, wrappers, stores, or derived state) unless it removes real repeated complexity.
+- Reuse existing Welshman and Flotilla primitives before introducing new utilities or dependencies.
+- Favor linear control flow and explicit naming over clever patterns.
+- Remove defensive checks that do not apply in this runtime model.
+- When two approaches work, pick the one that feels more human and easier to maintain.
+
 ## Common Tasks
 
 ### Adding a New Component
