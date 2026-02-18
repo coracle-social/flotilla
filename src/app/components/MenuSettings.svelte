@@ -1,5 +1,6 @@
 <script lang="ts">
   import {Capacitor} from "@capacitor/core"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Server from "@assets/icons/server.svg?dataurl"
   import Moon from "@assets/icons/moon.svg?dataurl"
@@ -19,8 +20,8 @@
   import {pushModal} from "@app/util/modal"
   import {theme} from "@app/util/theme"
 
+  const back = () => history.back()
   const logout = () => pushModal(LogOut)
-
   const toggleTheme = () => theme.set($theme === "dark" ? "light" : "dark")
 </script>
 
@@ -122,6 +123,10 @@
       </Link>
       <Button onclick={logout} class="btn btn-neutral">
         <Icon icon={Exit} /> Log Out
+      </Button>
+      <Button class="btn btn-link w-full md:hidden" onclick={back}>
+        <Icon icon={AltArrowLeft} />
+        Go back
       </Button>
     </div>
   </ModalBody>
