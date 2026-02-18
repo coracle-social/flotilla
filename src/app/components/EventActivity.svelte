@@ -26,7 +26,7 @@
   <Icon icon={Reply} />
   <span>{$replies.length} {$replies.length === 1 ? "reply" : "replies"}</span>
 </div>
-<div class="btn btn-neutral btn-xs relative hidden rounded-full sm:flex">
+<div class="btn btn-neutral btn-xs relative rounded-full">
   {#if gt(lastActive, $checked)}
     <div class="h-2 w-2 rounded-full bg-primary"></div>
   {/if}

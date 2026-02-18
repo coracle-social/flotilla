@@ -94,6 +94,8 @@ import {
   ZAP_GOAL,
   ZAP_REQUEST,
   ZAP_RESPONSE,
+  REPOST,
+  GENERIC_REPOST,
   asDecryptedEvent,
   getGroupTags,
   getListTags,
@@ -111,6 +113,10 @@ import {
   getAddress,
   Address,
   getIdFilters,
+  getEventTagValues,
+  getAddressTagValues,
+  getParentIds,
+  getParentAddrs,
 } from "@welshman/util"
 import type {
   TrustedEvent,
@@ -126,6 +132,7 @@ import {
   repository,
   tracker,
   createSearch,
+  userMuteList,
   userFollowList,
   ensurePlaintext,
   makeOutboxLoader,
@@ -135,6 +142,7 @@ import {
   makeUserLoader,
   manageRelay,
   displayProfileByPubkey,
+  getProfile,
 } from "@welshman/app"
 import {readFeed} from "@lib/feeds"
 
@@ -299,6 +307,8 @@ export const makeCommentFilter = (kinds: number[], extra: Filter = {}) => ({
   "#K": kinds.map(String),
   ...extra,
 })
+
+export const REPOST_KINDS = [REPOST, GENERIC_REPOST]
 
 export const REACTION_KINDS = [REPORT, DELETE, REACTION]
 
@@ -997,6 +1007,43 @@ export const loadFeedFavorites = makeLoadItem(makeOutboxLoader(FEEDS), getFeedFa
 export const userFeedFavorites = makeUserData(feedFavoritesByPubkey, loadFeedFavorites)
 
 export const loadUserFeedFavorites = makeUserLoader(loadFeedFavorites)
+
+// Mutes
+
+export const isEventMuted = withGetter(
+  derived(userMuteList, $userMuteList => {
+    const pubkey = $userMuteList?.event.pubkey
+    const tags = getListTags($userMuteList)
+    const mutedEvents = new Set(getEventTagValues(tags))
+    const mutedPubkeys = new Set(getPubkeyTagValues(tags))
+    const mutedAddresses = new Set(getAddressTagValues(tags))
+    const mutedTopics = new Set(getTagValues("t", tags))
+    const mutedWords = getTagValues("word", tags)
+    const regex =
+      mutedWords.length > 0
+        ? new RegExp(`\\b(${mutedWords.map(w => w.toLowerCase().trim()).join("|")})\\b`)
+        : null
+
+    return (e: TrustedEvent) => {
+      if (!pubkey) return false
+      if (pubkey === e.pubkey) return false
+      if (mutedPubkeys.has(e.pubkey)) return true
+      if (mutedEvents.has(e.id)) return true
+      if (mutedAddresses.has(getAddress(e))) return true
+      if (getParentIds(e).some(id => mutedEvents.has(id))) return true
+      if (getParentAddrs(e).some(address => mutedAddresses.has(address))) return true
+      if (getTagValues("t", e.tags).some(t => mutedTopics.has(t))) return true
+
+      if (regex) {
+        if (e.content?.toLowerCase().match(regex)) return true
+        if (displayProfileByPubkey(e.pubkey).toLowerCase().match(regex)) return true
+        if (tryCatch(() => getProfile(e.pubkey)?.nip05?.match(regex))) return true
+      }
+
+      return false
+    }
+  }),
+)
 
 // Other utils
 
