@@ -15,7 +15,7 @@ import {
   isClientNegOpen,
   isClientNegClose,
 } from "@welshman/net"
-import {sign, pubkey, getPubkeyRelays} from "@welshman/app"
+import {sign, pubkey, thunks, getPubkeyRelays} from "@welshman/app"
 import {
   BLOCKED_RELAYS,
   userSettingsValues,
@@ -36,6 +36,7 @@ export const authPolicy = makeSocketPolicyAuth({
     if (mode === RelayAuthMode.Aggressive) return true
     if (get(userSpaceUrls).includes(socket.url)) return true
     if (getPubkeyRelays($pubkey).includes(socket.url)) return true
+    if (get(thunks).some(t => t.options.relays.includes(socket.url))) return true
     if (getPubkeyRelays($pubkey, RelayMode.Messaging).includes(socket.url)) return true
 
     return false
