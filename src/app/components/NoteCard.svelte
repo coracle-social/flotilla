@@ -2,7 +2,6 @@
   import cx from "classnames"
   import type {Snippet} from "svelte"
   import {formatTimestamp} from "@welshman/lib"
-  import {getListTags, getPubkeyTagValues} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
