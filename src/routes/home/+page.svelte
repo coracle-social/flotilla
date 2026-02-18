@@ -36,7 +36,7 @@
   import GoalItem from "@app/components/GoalItem.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
   import RecentConversation from "@app/components/RecentConversation.svelte"
-  import {makeRoomId, userSpaceUrls, loadUserGroupList, CONTENT_KINDS} from "@app/core/state"
+  import {makeRoomId, userSpaceUrls, loadUserGroupList, isEventMuted, CONTENT_KINDS} from "@app/core/state"
 
   type Activity = {
     type: "message" | "content"
@@ -130,7 +130,14 @@
           makeIntersectionFeed(makeScopeFeed(Scope.Follows), makeKindFeed(NOTE)),
         ),
         onEvent: batch(100, (evts: TrustedEvent[]) => {
-          events.update($events => [...$events, ...evts.filter(e => !getParentIdOrAddr(e))])
+          const keep = evts.filter(event => {
+            if ($isEventMuted(event)) return false
+            if (getParentIdOrAddr(event)) return false
+
+            return true
+          })
+
+          events.update($events => [...$events, ...keep])
         }),
         onExhausted: () => {
           loading = false

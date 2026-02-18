@@ -13,6 +13,7 @@
   import {deriveFeed} from "@app/core/state"
 
   const {address} = $page.params as MakeNonOptional<typeof $page.params>
+  console.log(address)
   const events = writable<TrustedEvent[]>([])
   const controller = new AbortController()
   const feed = deriveFeed(address)
