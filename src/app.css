@@ -274,7 +274,7 @@
 .input-editor,
 .chat-editor,
 .note-editor {
-  @apply -m-1 min-h-12 p-1 text-sm;
+  @apply -m-1 p-1;
 }
 
 .tiptap {
@@ -300,7 +300,7 @@
 }
 
 .tiptap {
-  @apply max-h-[350px] overflow-y-auto p-2 px-4;
+  @apply max-h-[350px] min-h-10 overflow-y-auto p-2 px-4;
 }
 
 .tiptap p.is-editor-empty:first-child::before {
