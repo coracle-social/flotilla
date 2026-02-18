@@ -1,7 +1,7 @@
 <script lang="ts">
-  import {nwc} from "@getalby/sdk"
-  import {LOCALE} from "@welshman/lib"
-  import {displayRelayUrl, isNWCWallet, fromMsats} from "@welshman/util"
+  import cx from "classnames"
+  import {LOCALE, always, sleep} from "@welshman/lib"
+  import {WalletType, displayRelayUrl, isNWCWallet, fromMsats} from "@welshman/util"
   import {session, pubkey, profilesByPubkey} from "@welshman/app"
   import DownloadMinimalistic from "@assets/icons/download-minimalistic.svg?dataurl"
   import UploadMinimalistic from "@assets/icons/upload-minimalistic.svg?dataurl"
@@ -13,7 +13,7 @@
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
   import WalletUpdateReceivingAddress from "@app/components/WalletUpdateReceivingAddress.svelte"
   import {pushModal} from "@app/util/modal"
-  import {getWebLn} from "@app/core/commands"
+  import {getNwcClient, getWebLn} from "@app/core/commands"
   import Wallet2 from "@assets/icons/wallet.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
@@ -33,6 +33,7 @@
   )
 
   const pay = () => pushModal(WalletPay)
+
   const receive = () => {
     if ($session?.wallet) {
       pushModal(WalletReceive)
@@ -40,6 +41,35 @@
       pushModal(WalletConnect)
     }
   }
+
+  let walletStatus = $state<"checking" | "connected" | "unavailable">("checking")
+
+  const isWalletAvailable = $derived(Boolean($session?.wallet) && walletStatus === "connected")
+  const statusClass = $derived(
+    cx("flex items-center gap-2 text-sm", {
+      "text-success": walletStatus === "connected",
+      "text-warning": walletStatus === "unavailable",
+    }),
+  )
+  const connectionVerb = $derived(walletStatus === "connected" ? "Connected to" : "Configured for")
+
+  const startWalletStatusCheck = async (wallet = $session?.wallet) => {
+    walletStatus = "checking"
+
+    if (wallet) {
+      const promise =
+        wallet.type === WalletType.NWC ? getNwcClient().getInfo() : getWebLn().getInfo()
+
+      walletStatus = await Promise.race([
+        promise.then(always("connected")).catch(always("unavailable")),
+        sleep(5000).then(always("unavailable")),
+      ])
+    }
+  }
+
+  $effect(() => {
+    startWalletStatusCheck($session?.wallet)
+  })
 </script>
 
 <div class="content column gap-4">
@@ -50,9 +80,17 @@
         Wallet
       </strong>
       {#if $session?.wallet}
-        <div class="flex items-center gap-2 text-sm text-success">
-          <Icon icon={CheckCircle} size={4} />
-          Connected
+        <div class={statusClass}>
+          {#if walletStatus === "checking"}
+            <span class="loading loading-spinner loading-xs"></span>
+            Checking
+          {:else if walletStatus === "connected"}
+            <Icon icon={CheckCircle} size={4} />
+            Connected
+          {:else}
+            <Icon icon={InfoCircle} size={4} />
+            Unavailable
+          {/if}
         </div>
       {:else}
         <Button class="btn btn-primary btn-sm" onclick={connect}>
@@ -67,39 +105,54 @@
           {@const {node, version} = $session.wallet.info}
           <div class="flex flex-col justify-between gap-2 lg:flex-row">
             <p>
-              Connected to <strong>{node?.alias || version || "unknown wallet"}</strong>
+              {connectionVerb} <strong>{node?.alias || version || "unknown wallet"}</strong>
               via <strong>{$session.wallet.type}</strong>
             </p>
             <p class="flex gap-2 whitespace-nowrap">
-              Balance:
-              {#await getWebLn()
-                ?.enable()
-                .then(() => getWebLn().getBalance())}
+              {#if walletStatus === "connected"}
+                Balance:
+                {#await getWebLn()
+                  ?.enable()
+                  .then(() => getWebLn().getBalance())}
+                  <span class="loading loading-spinner loading-sm"></span>
+                {:then res}
+                  {new Intl.NumberFormat(LOCALE).format(res?.balance || 0)}
+                {:catch}
+                  [unknown]
+                {/await}
+                sats
+              {:else if walletStatus === "checking"}
+                Balance:
                 <span class="loading loading-spinner loading-sm"></span>
-              {:then res}
-                {new Intl.NumberFormat(LOCALE).format(res?.balance || 0)}
-              {:catch}
-                [unknown]
-              {/await}
-              sats
+              {:else}
+                Balance unavailable
+              {/if}
             </p>
           </div>
         {:else if $session.wallet.type === "nwc"}
-          {@const {lud16, relayUrl, nostrWalletConnectUrl} = $session.wallet.info}
+          {@const {lud16, relayUrl} = $session.wallet.info}
           <div class="flex flex-col justify-between gap-2 lg:flex-row">
             <p>
-              Connected to <strong>{lud16}</strong> via <strong>{displayRelayUrl(relayUrl)}</strong>
+              {connectionVerb} <strong>{lud16}</strong> via
+              <strong>{displayRelayUrl(relayUrl)}</strong>
             </p>
             <p class="flex gap-2 whitespace-nowrap">
-              Balance:
-              {#await new nwc.NWCClient({nostrWalletConnectUrl}).getBalance()}
+              {#if walletStatus === "connected"}
+                Balance:
+                {#await getNwcClient().getBalance()}
+                  <span class="loading loading-spinner loading-sm"></span>
+                {:then res}
+                  {new Intl.NumberFormat(LOCALE).format(fromMsats(res?.balance || 0))}
+                {:catch}
+                  [unknown]
+                {/await}
+                sats
+              {:else if walletStatus === "checking"}
+                Balance:
                 <span class="loading loading-spinner loading-sm"></span>
-              {:then res}
-                {new Intl.NumberFormat(LOCALE).format(fromMsats(res?.balance || 0))}
-              {:catch}
-                [unknown]
-              {/await}
-              sats
+              {:else}
+                Balance unavailable
+              {/if}
             </p>
           </div>
         {/if}
@@ -109,13 +162,17 @@
             Disconnect Wallet
           </Button>
           <div class="flex w-full gap-4 lg:w-auto">
-            <Button class="btn btn-primary btn-sm flex-1 justify-center lg:flex-none" onclick={pay}>
+            <Button
+              class="btn btn-primary btn-sm flex-1 justify-center lg:flex-none"
+              onclick={pay}
+              disabled={!isWalletAvailable}>
               <Icon icon={UploadMinimalistic} />
               Send
             </Button>
             <Button
               class="btn btn-secondary btn-sm flex-1 justify-center lg:flex-none"
-              onclick={receive}>
+              onclick={receive}
+              disabled={!isWalletAvailable}>
               <Icon icon={DownloadMinimalistic} />
               Receive
             </Button>
