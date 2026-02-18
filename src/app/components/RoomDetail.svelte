@@ -153,15 +153,15 @@
               class="bg-alt menu absolute right-0 z-popover w-48 gap-1 rounded-box p-2 shadow-md">
               {#if $userIsAdmin}
                 <li>
-                  <Button class="text-error" onclick={startDelete}>
-                    <Icon icon={TrashBin2} />
-                    Delete Room
-                  </Button>
-                </li>
-                <li>
                   <Button onclick={startEdit}>
                     <Icon icon={Pen} />
                     Edit Room
+                  </Button>
+                </li>
+                <li>
+                  <Button class="text-error" onclick={startDelete}>
+                    <Icon icon={TrashBin2} />
+                    Delete Room
                   </Button>
                 </li>
               {:else if $membershipStatus === MembershipStatus.Initial}
