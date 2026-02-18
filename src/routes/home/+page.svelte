@@ -13,6 +13,7 @@
     getTagValue,
     getTagValues,
     getIdAndAddress,
+    getParentIdOrAddr,
   } from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {
@@ -129,7 +130,7 @@
           makeIntersectionFeed(makeScopeFeed(Scope.Follows), makeKindFeed(NOTE)),
         ),
         onEvent: batch(100, (evts: TrustedEvent[]) => {
-          events.update($events => [...$events, ...evts])
+          events.update($events => [...$events, ...evts.filter(e => !getParentIdOrAddr(e))])
         }),
         onExhausted: () => {
           loading = false
@@ -141,7 +142,6 @@
         delay: 800,
         threshold: 3000,
         onScroll: async () => {
-          console.log("scroll")
           limit.update($limit => {
             if ($events.length - $limit < 50) {
               ctrl.load(50)
@@ -175,7 +175,6 @@
     <div class="row-2"></div>
   {/snippet}
 </PageBar>
-
 <PageContent class="flex flex-col gap-2 p-2 pt-4" bind:element>
   {#each $recentActivity as { type, event, url, count } (event.id)}
     {#if type === "message"}

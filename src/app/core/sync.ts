@@ -52,6 +52,7 @@ import {
   getSpaceUrlsFromGroupList,
   getSpaceRoomsFromGroupList,
   makeCommentFilter,
+  loadFeedsForPubkey,
 } from "@app/core/state"
 import {hasBlossomSupport} from "@app/core/commands"
 
@@ -200,6 +201,7 @@ const syncUserData = () => {
       loadMuteList($userRelayList.event.pubkey)
       loadProfile($userRelayList.event.pubkey)
       loadSettings($userRelayList.event.pubkey)
+      loadFeedsForPubkey($userRelayList.event.pubkey)
     }
   })
 

@@ -27,6 +27,7 @@ import {
   randomId,
   tryCatch,
   fromPairs,
+  groupBy,
   remove,
 } from "@welshman/lib"
 import type {Override} from "@welshman/lib"
@@ -48,6 +49,7 @@ import {
   makeDeriveEvent,
   makeLoadItem,
   makeDeriveItem,
+  deriveItems,
   deriveItemsByKey,
   deriveDeduplicated,
   deriveEventsById,
@@ -58,6 +60,8 @@ import {
   deriveEventsDesc,
 } from "@welshman/store"
 import {
+  FEED,
+  FEEDS,
   APP_DATA,
   CLIENT_AUTH,
   COMMENT,
@@ -104,8 +108,18 @@ import {
   makeRoomMeta,
   ManagementMethod,
   sortEventsDesc,
+  getAddress,
+  Address,
+  getIdFilters,
 } from "@welshman/util"
-import type {TrustedEvent, RelayProfile, PublishedRoomMeta, List, Filter} from "@welshman/util"
+import type {
+  TrustedEvent,
+  RelayProfile,
+  PublishedList,
+  PublishedRoomMeta,
+  List,
+  Filter,
+} from "@welshman/util"
 import {routerContext, Router} from "@welshman/router"
 import {
   pubkey,
@@ -122,6 +136,7 @@ import {
   manageRelay,
   displayProfileByPubkey,
 } from "@welshman/app"
+import {readFeed} from "@lib/feeds"
 
 export const fromCsv = (s: string) => (s || "").split(",").filter(identity)
 
@@ -914,6 +929,74 @@ export const deriveUserCanCreateRoom = (url: string) => {
     },
   )
 }
+
+// Feeds
+
+export const feedsByAddress = deriveItemsByKey({
+  repository,
+  getKey: feed => getAddress(feed.event),
+  filters: [{kinds: [FEED]}],
+  eventToItem: readFeed,
+})
+
+export const getFeedsByAddress = getter(feedsByAddress)
+
+export const feeds = deriveItems(feedsByAddress)
+
+export const getFeeds = getter(feeds)
+
+export const getFeed = (address: string) => getFeedsByAddress().get(address)
+
+export const fetchFeed = (address: string) => {
+  const {pubkey} = Address.from(address)
+
+  return load({
+    relays: Router.get().FromPubkey(pubkey).getUrls(),
+    filters: getIdFilters([address]),
+  })
+}
+
+export const loadFeed = makeLoadItem(fetchFeed, getFeed)
+
+export const deriveFeed = makeDeriveItem(feedsByAddress, loadFeed)
+
+// Feeds by pubkey
+
+export const feedsByPubkey = derived(feeds, $feeds => groupBy(f => f.event.pubkey, $feeds))
+
+export const getFeedsByPubkey = getter(feedsByPubkey)
+
+export const getFeedsForPubkey = (pubkey: string) => getFeedsByPubkey().get(pubkey)
+
+export const loadFeedsForPubkey = makeLoadItem(makeOutboxLoader(FEED), getFeedsForPubkey)
+
+export const userFeeds = makeUserData(feedsByPubkey, loadFeedsForPubkey)
+
+export const loadUserFeeds = makeUserLoader(loadFeedsForPubkey)
+
+// Feed favorites
+
+export const feedFavoritesByPubkey = deriveItemsByKey<PublishedList>({
+  repository,
+  getKey: list => list.event.pubkey,
+  filters: [{kinds: [FEEDS]}],
+  eventToItem: async event =>
+    readList(
+      asDecryptedEvent(event, {
+        content: await ensurePlaintext(event),
+      }),
+    ),
+})
+
+export const getFeedFavoritesByPubkey = getter(feedFavoritesByPubkey)
+
+export const getFeedFavorites = (pubkey: string) => getFeedFavoritesByPubkey().get(pubkey)
+
+export const loadFeedFavorites = makeLoadItem(makeOutboxLoader(FEEDS), getFeedFavorites)
+
+export const userFeedFavorites = makeUserData(feedFavoritesByPubkey, loadFeedFavorites)
+
+export const loadUserFeedFavorites = makeUserLoader(loadFeedFavorites)
 
 // Other utils
 

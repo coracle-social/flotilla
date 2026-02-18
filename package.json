@@ -7,7 +7,7 @@
     "build": "./build.sh",
     "release:android": "./build.sh && cap build android --androidreleasetype APK --signing-type apksigner",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "check:watch": "./check.sh",
     "lint": "prettier --check src && eslint src",
     "format": "git diff head --name-only --diff-filter d | grep -E '(js|ts|svelte|css)$' | xargs -r prettier --write",
     "format:all": "prettier --write src",
