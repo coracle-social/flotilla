@@ -15,7 +15,6 @@
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import ChatEnable from "@app/components/ChatEnable.svelte"
-  import MenuOtherSpaces from "@app/components/MenuOtherSpaces.svelte"
   import MenuSettings from "@app/components/MenuSettings.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
   import {userSpaceUrls, PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/state"
@@ -27,8 +26,6 @@
   }
 
   const {children}: Props = $props()
-
-  const showOtherSpacesMenu = () => pushModal(MenuOtherSpaces, {urls: secondarySpaceUrls})
 
   const showSettingsMenu = () => pushModal(MenuSettings)
 
@@ -60,15 +57,13 @@
         {#each primarySpaceUrls as url (url)}
           <PrimaryNavItemSpace {url} />
         {/each}
-        {#if secondarySpaceUrls.length > 0}
-          <PrimaryNavItem
-            title="Other Spaces"
-            class="tooltip-right"
-            onclick={showOtherSpacesMenu}
-            notification={otherSpaceNotifications}>
-            <ImageIcon alt="Other Spaces" src={Widget} size={8} />
-          </PrimaryNavItem>
-        {/if}
+        <PrimaryNavItem
+          href="/spaces"
+          title="All Spaces"
+          class="tooltip-right"
+          notification={otherSpaceNotifications}>
+          <ImageIcon alt="All Spaces" src={Widget} size={8} />
+        </PrimaryNavItem>
         <PrimaryNavItem title="Add a Space" href="/discover" class="tooltip-right">
           <ImageIcon alt="Add a Space" src={Compass} size={8} />
         </PrimaryNavItem>

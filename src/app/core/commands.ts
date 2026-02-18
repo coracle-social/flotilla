@@ -37,6 +37,7 @@ import {
   makeList,
   addToListPublicly,
   removeFromListByPredicate,
+  updateList,
   getTag,
   getListTags,
   getRelayTagValues,
@@ -144,6 +145,20 @@ export const removeSpaceMembership = async (url: string) => {
   const pred = (t: string[]) => normalizeRelayUrl(t[t[0] === "r" ? 1 : 2]) === url
   const event = await removeFromListByPredicate(list, pred).reconcile(nip44EncryptToSelf)
   const relays = uniq([url, ...Router.get().FromUser().getUrls(), ...getRelayTagValues(event.tags)])
+
+  return publishThunk({event, relays})
+}
+
+export const setSpaceMembershipOrder = async (urls: string[]) => {
+  const list = get(userGroupList) || makeList({kind: ROOMS})
+  const orderedUrls = uniq(urls.map(normalizeRelayUrl))
+  const relayTags = list.publicTags.filter(t => t[0] === "r")
+  const otherPublicTags = list.publicTags.filter(t => t[0] !== "r")
+  const relayTagByUrl = new Map(relayTags.map(t => [normalizeRelayUrl(t[1]), t]))
+  const orderedRelayTags = orderedUrls.map(url => relayTagByUrl.get(url) || ["r", url])
+  const publicTags = [...orderedRelayTags, ...otherPublicTags]
+  const event = await updateList(list, {publicTags}).reconcile(nip44EncryptToSelf)
+  const relays = uniq([...Router.get().FromUser().getUrls(), ...getRelayTagValues(event.tags)])
 
   return publishThunk({event, relays})
 }

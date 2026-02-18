@@ -13,7 +13,7 @@
 </script>
 
 <Link replaceState href={path}>
-  <CardButton class="btn-neutral shadow-md bg-alt">
+  <CardButton class="btn-neutral shadow-md bg-alt rounded-box border-none">
     {#snippet icon()}
       <RelayIcon {url} size={12} class="rounded-full" />
     {/snippet}
