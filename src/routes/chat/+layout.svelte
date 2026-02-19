@@ -1,7 +1,9 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
+  import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {sleep} from "@welshman/lib"
+  import {shouldUnwrap} from "@welshman/app"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -29,6 +31,10 @@
   const chats = $derived($chatSearch.searchOptions(term))
 
   const promise = sleep(10000)
+
+  onMount(() => {
+    shouldUnwrap.set(true)
+  })
 </script>
 
 <SecondaryNav>

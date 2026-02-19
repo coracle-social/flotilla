@@ -4,7 +4,6 @@
   import {removeUndefined} from "@welshman/lib"
   import {ManagementMethod} from "@welshman/util"
   import {
-    shouldUnwrap,
     manageRelay,
     deriveProfile,
     displayProfileByPubkey,
@@ -30,7 +29,6 @@
   import ProfileInfo from "@app/components/ProfileInfo.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
-  import ChatEnable from "@app/components/ChatEnable.svelte"
   import {pubkeyLink, deriveUserIsSpaceAdmin, deriveSpaceBannedPubkeyItems} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
@@ -57,7 +55,7 @@
 
   const showInfo = () => pushModal(EventInfo, {url, event: $profile!.event})
 
-  const openChat = () => ($shouldUnwrap ? goto(chatPath) : pushModal(ChatEnable, {next: chatPath}))
+  const openChat = () => goto(chatPath)
 
   const toggleMenu = (pubkey: string) => {
     showMenu = !showMenu

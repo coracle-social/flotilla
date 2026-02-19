@@ -2,7 +2,7 @@
   import type {Snippet} from "svelte"
   import {goto} from "$app/navigation"
   import {splitAt} from "@welshman/lib"
-  import {userProfile, shouldUnwrap} from "@welshman/app"
+  import {userProfile} from "@welshman/app"
   import Widget from "@assets/icons/widget.svg?dataurl"
   import Compass from "@assets/icons/compass.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
@@ -14,7 +14,6 @@
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
-  import ChatEnable from "@app/components/ChatEnable.svelte"
   import MenuSettings from "@app/components/MenuSettings.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
   import {userSpaceUrls, PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/state"
@@ -29,7 +28,7 @@
 
   const showSettingsMenu = () => pushModal(MenuSettings)
 
-  const openChat = () => ($shouldUnwrap ? goto("/chat") : pushModal(ChatEnable, {next: "/chat"}))
+  const openChat = () => goto("/chat")
 
   let windowHeight = $state(0)
 
