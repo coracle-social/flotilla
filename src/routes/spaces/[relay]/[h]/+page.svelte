@@ -432,7 +432,7 @@
         {:else if event.kind === ROOM_REMOVE_MEMBER}
           <RoomItemRemoveMember {url} {event} />
         {:else}
-          <div in:slide class:-mt-1={!showPubkey}>
+          <div in:slide class="cv" class:-mt-1={!showPubkey}>
             <RoomItem
               {url}
               {event}

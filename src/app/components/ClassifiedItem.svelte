@@ -25,7 +25,7 @@
 </script>
 
 <Link
-  class="col-2 card2 bg-alt w-full cursor-pointer shadow-xl"
+  class="cv col-2 card2 bg-alt w-full cursor-pointer shadow-xl"
   href={makeClassifiedPath(url, getAddress(event))}>
   {#if title}
     <div class="flex w-full items-center justify-between gap-2">

@@ -25,7 +25,7 @@
   const onClick = () => goto(h ? makeRoomPath(url, h) : makeSpaceChatPath(url))
 </script>
 
-<Button class="card2 bg-alt shadow-md" onclick={onClick}>
+<Button class="cv card2 bg-alt shadow-md" onclick={onClick}>
   <div class="flex flex-col gap-3">
     <div class="flex items-center gap-2 text-sm">
       {#if h}

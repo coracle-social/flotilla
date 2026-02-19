@@ -425,3 +425,9 @@ body.keyboard-open .hide-on-keyboard {
 .chat__scroll-down {
   @apply pb-sai fixed bottom-28 right-4 z-feature md:bottom-16;
 }
+
+/* content visibility */
+
+.cv {
+  content-visibility: auto;
+}
