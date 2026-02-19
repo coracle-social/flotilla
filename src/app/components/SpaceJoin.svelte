@@ -1,21 +1,19 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {goto} from "$app/navigation"
-  import {dissoc} from "@welshman/lib"
+  import {dissoc, maybe} from "@welshman/lib"
   import {preventDefault} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
-  import DangerTriangle from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import StatusIndicator from "@lib/components/StatusIndicator.svelte"
   import RelaySummary from "@app/components/RelaySummary.svelte"
-  import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
+  import SpaceJoinSettings from "@app/components/SpaceJoinSettings.svelte"
   import {
     attemptRelayAccess,
     addSpaceMembership,
@@ -72,7 +70,7 @@
     }
   }
 
-  let error: string | undefined = $state()
+  let error = $state(maybe<string>())
   let loading = $state(true)
   let notifications = $state(true)
 
@@ -85,33 +83,7 @@
 <Modal tag="form" onsubmit={preventDefault(join)}>
   <ModalBody>
     <RelaySummary {url} />
-    <div class="card2 card2-sm bg-alt">
-      <div class="flex justify-between gap-12">
-        <div class="col-1">
-          <strong>Enable notifications for this space</strong>
-          <p class="text-xs opacity-75">
-            Get notified about new activity in this space. You can change this later in settings.
-          </p>
-        </div>
-        <input type="checkbox" class="toggle toggle-primary" bind:checked={notifications} />
-      </div>
-    </div>
-    <div class="card2 card2-sm bg-alt flex flex-col gap-2">
-      <div class="flex justify-between">
-        <strong>Connection Status</strong>
-        {#if error}
-          <StatusIndicator class="bg-error">Error</StatusIndicator>
-        {:else}
-          <SocketStatusIndicator {url} />
-        {/if}
-      </div>
-      {#if error}
-        <div class="flex items-center gap-2">
-          <Icon icon={DangerTriangle} />
-          <p class="text-sm opacity-75">{error}</p>
-        </div>
-      {/if}
-    </div>
+    <SpaceJoinSettings {url} bind:error bind:notifications />
   </ModalBody>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back} disabled={loading}>

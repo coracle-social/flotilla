@@ -8,7 +8,7 @@ const FALLBACK_APP_NAME = "Flotilla"
 const staticTitles = new Map<string, string>([
   ["/", "Redirecting"],
   ["/home", "Home"],
-  ["/discover", "Discover Spaces"],
+  ["/discover", "Join a Space"],
   ["/spaces", "Your Spaces"],
   ["/spaces/create", "Create a Space"],
   ["/spaces/[relay]", "Space"],

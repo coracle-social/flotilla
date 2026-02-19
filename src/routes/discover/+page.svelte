@@ -1,39 +1,30 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {derived as _derived} from "svelte/store"
-  import {debounce} from "throttle-debounce"
   import {dec, sleep} from "@welshman/lib"
   import type {RelayProfile} from "@welshman/util"
   import {throttled} from "@welshman/store"
   import {relays, createSearch} from "@welshman/app"
   import {createScroller} from "@lib/html"
-  import QrCode from "@assets/icons/qr-code.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import Login from "@assets/icons/login-3.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
-  import Scanner from "@lib/components/Scanner.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import Divider from "@lib/components/Divider.svelte"
   import Button from "@lib/components/Button.svelte"
+  import CardButton from "@lib/components/CardButton.svelte"
+  import Link from "@lib/components/Link.svelte"
   import PageHeader from "@lib/components/PageHeader.svelte"
   import ContentSearch from "@lib/components/ContentSearch.svelte"
-  import SpaceAdd from "@app/components/SpaceAdd.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import {groupListPubkeysByUrl, parseInviteLink} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
 
-  const openMenu = () => pushModal(SpaceAdd, {hideDiscover: true})
-
-  const toggleScanner = () => {
-    showScanner = !showScanner
-  }
-
-  const onScan = debounce(1000, async (data: string) => {
-    showScanner = false
-    pushModal(SpaceInviteAccept, {invite: data})
-  })
+  const startJoin = () => pushModal(SpaceInviteAccept)
 
   const relaySearch = _derived(throttled(1000, relays), $relays => {
     const options = $relays.filter(r => $groupListPubkeysByUrl.has(r.url))
@@ -64,7 +55,6 @@
 
   let term = $state("")
   let limit = $state(20)
-  let showScanner = $state(false)
   let element: Element
 
   const options = $derived($relaySearch.searchOptions(term).filter(r => r.url !== inviteData?.url))
@@ -90,36 +80,51 @@
       <div class="flex flex-col gap-2">
         <PageHeader>
           {#snippet title()}
-            Discover Spaces
+            Join a Space
           {/snippet}
           {#snippet info()}
             Find communities all across the nostr network
           {/snippet}
         </PageHeader>
-        <div class="row-2 min-w-0 flex-grow items-center">
-          <label class="input input-bordered flex flex-grow items-center gap-2">
-            <Icon icon={Magnifier} />
-            <input
-              bind:value={term}
-              class="grow"
-              type="text"
-              placeholder="Search for spaces or paste invite link..." />
-            <Button onclick={toggleScanner} class="center">
-              <Icon icon={QrCode} />
-            </Button>
-          </label>
-          <Button class="btn btn-primary" onclick={openMenu}>
-            <Icon icon={AddCircle} />
-            <span class="hidden sm:inline">Add Space</span>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <Button onclick={startJoin} class="w-full">
+            <CardButton class="btn-primary w-full">
+              {#snippet icon()}
+                <div><Icon icon={Login} size={7} /></div>
+              {/snippet}
+              {#snippet title()}
+                <div>Join with an invite</div>
+              {/snippet}
+              {#snippet info()}
+                <div>Paste a link and jump right in.</div>
+              {/snippet}
+            </CardButton>
           </Button>
+          <Link href="/spaces/create" class="w-full">
+            <CardButton class="btn-neutral w-full">
+              {#snippet icon()}
+                <div><Icon icon={AddCircle} size={7} /></div>
+              {/snippet}
+              {#snippet title()}
+                <div>Create a new space</div>
+              {/snippet}
+              {#snippet info()}
+                <div>Launch a place for your people.</div>
+              {/snippet}
+            </CardButton>
+          </Link>
         </div>
-        {#if showScanner}
-          <Scanner onscan={onScan} />
-        {/if}
+        <Divider>Or</Divider>
+        <div class="min-w-0">
+          <label class="input input-bordered flex items-center gap-2">
+            <Icon icon={Magnifier} />
+            <input bind:value={term} class="grow" type="text" placeholder="Search for spaces..." />
+          </label>
+        </div>
       </div>
     {/snippet}
     {#snippet content()}
-      <div class="col-2 scroll-container" bind:this={element}>
+      <div class="col-2" bind:this={element}>
         {#if inviteData}
           {#key inviteData.url}
             <Button
