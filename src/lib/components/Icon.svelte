@@ -1,6 +1,6 @@
 <style>
   div {
-    mask-repeat: none;
+    mask-repeat: no-repeat;
     mask-size: 100% 100%;
   }
 </style>
