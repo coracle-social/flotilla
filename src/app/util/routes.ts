@@ -27,7 +27,7 @@ import {
   DM_KINDS,
   ROOM,
 } from "@app/core/state"
-import {lastPageBySpaceUrl} from "@app/util/history"
+import {lastPageBySpaceUrl, lastChatUrl} from "@app/util/history"
 
 export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => {
   let path = `/spaces/${encodeRelay(url)}`
@@ -54,6 +54,10 @@ export const goToSpace = async (url: string) => {
   } else {
     goto(makeSpacePath(url, "chat"))
   }
+}
+
+export const goToLastChat = () => {
+  goto(lastChatUrl ?? "/chat")
 }
 
 export const makeChatPath = (pubkeys: string[]) => `/chat/${makeChatId(pubkeys)}`

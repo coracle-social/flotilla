@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {goto} from "$app/navigation"
   import {splitAt} from "@welshman/lib"
   import {userProfile} from "@welshman/app"
   import Widget from "@assets/icons/widget.svg?dataurl"
@@ -19,6 +18,7 @@
   import {userSpaceUrls, PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {notifications} from "@app/util/notifications"
+  import {goToLastChat} from "@app/util/routes"
 
   type Props = {
     children?: Snippet
@@ -27,8 +27,6 @@
   const {children}: Props = $props()
 
   const showSettingsMenu = () => pushModal(MenuSettings)
-
-  const openChat = () => goto("/chat")
 
   let windowHeight = $state(0)
 
@@ -85,7 +83,7 @@
       </PrimaryNavItem>
       <PrimaryNavItem
         title="Messages"
-        onclick={openChat}
+        onclick={goToLastChat}
         class="tooltip-right"
         notification={$notifications.has("/chat")}>
         <ImageIcon alt="Messages" src={Letter} size={8} />
@@ -112,7 +110,7 @@
       </PrimaryNavItem>
       <PrimaryNavItem
         title="Messages"
-        onclick={openChat}
+        onclick={goToLastChat}
         notification={$notifications.has("/chat")}>
         <ImageIcon alt="Messages" src={Letter} size={8} />
       </PrimaryNavItem>
