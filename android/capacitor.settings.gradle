@@ -27,4 +27,4 @@ include ':capawesome-capacitor-badge'
 project(':capawesome-capacitor-badge').projectDir = new File('../node_modules/.pnpm/@capawesome+capacitor-badge@8.0.0_@capacitor+core@8.0.1/node_modules/@capawesome/capacitor-badge/android')
 
 include ':nostr-signer-capacitor-plugin'
-project(':nostr-signer-capacitor-plugin').projectDir = new File('../node_modules/.pnpm/nostr-signer-capacitor-plugin@0.0.4_@capacitor+core@8.0.1/node_modules/nostr-signer-capacitor-plugin/android')
+project(':nostr-signer-capacitor-plugin').projectDir = new File('../node_modules/.pnpm/nostr-signer-capacitor-plugin@0.0.5_@capacitor+core@8.0.1/node_modules/nostr-signer-capacitor-plugin/android')
