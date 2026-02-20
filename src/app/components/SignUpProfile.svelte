@@ -7,7 +7,6 @@
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
 
   type Props = {
@@ -32,16 +31,14 @@
   <ModalBody>
     <ProfileEditForm isSignup {initialValues} {onsubmit}>
       {#snippet footer()}
-        <ModalFooter>
-          <Button class="btn btn-link" onclick={back}>
-            <Icon icon={AltArrowLeft} />
-            Go back
-          </Button>
-          <Button class="btn btn-primary" type="submit">
-            Create Account
-            <Icon icon={AltArrowRight} />
-          </Button>
-        </ModalFooter>
+        <Button class="btn btn-link" onclick={back}>
+          <Icon icon={AltArrowLeft} />
+          Go back
+        </Button>
+        <Button class="btn btn-primary" type="submit">
+          Create Account
+          <Icon icon={AltArrowRight} />
+        </Button>
       {/snippet}
     </ProfileEditForm>
   </ModalBody>

@@ -51,7 +51,7 @@
 
       return pushToast({
         theme: "error",
-        message: `Failed to recover: ${request.messages[0]?.payload.message.toLowerCase()}`,
+        message: `Failed to recover: ${request.messages[0]?.res?.message.toLowerCase()}`,
       })
     }
 
@@ -62,7 +62,7 @@
 
       return pushToast({
         theme: "error",
-        message: `Failed to recover: ${result.messages[0]?.payload.message.toLowerCase()}`,
+        message: `Failed to recover: ${result.messages[0]?.res?.message.toLowerCase()}`,
       })
     }
 

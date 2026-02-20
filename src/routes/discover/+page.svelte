@@ -86,7 +86,7 @@
             Find communities all across the nostr network
           {/snippet}
         </PageHeader>
-        <div class="grid gap-3 sm:grid-cols-2">
+        <div class="grid gap-3 sm:grid-cols-2 card2 bg-alt">
           <Button onclick={startJoin} class="w-full">
             <CardButton class="btn-primary w-full">
               {#snippet icon()}

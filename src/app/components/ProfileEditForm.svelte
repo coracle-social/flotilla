@@ -10,6 +10,7 @@
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
+  import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InputProfilePicture from "@app/components/InputProfilePicture.svelte"
   import InfoHandle from "@app/components/InfoHandle.svelte"
   import {pushModal} from "@app/util/modal"
@@ -123,5 +124,7 @@
       </FieldInline>
     {/if}
   </ModalBody>
-  {@render footer()}
+  <ModalFooter>
+    {@render footer()}
+  </ModalFooter>
 </Modal>

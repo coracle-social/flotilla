@@ -17,35 +17,28 @@
     if (!isPomadeSession($session)) return
 
     const client = new Client($session.clientOptions)
+    const result = await client.listSessions()
+    const pubkey = await client.getPubkey()
 
-    try {
-      const result = await client.listSessions()
-      const pubkey = await client.getPubkey()
+    if (result.ok) {
+      // Group sessions by client pubkey and collect peers
+      const sessionMap = new Map<string, SessionWithPeers>()
 
-      if (result.ok) {
-        // Group sessions by client pubkey and collect peers
-        const sessionMap = new Map<string, SessionWithPeers>()
+      for (const message of result.messages) {
+        if (!message.res?.items) continue
 
-        for (const message of result.messages) {
-          if (!message?.payload.items) continue
+        for (const item of message.res.items) {
+          const existing = sessionMap.get(item.client)
 
-          const peer = message.event.pubkey
-
-          for (const item of message.payload.items) {
-            const existing = sessionMap.get(item.client)
-
-            if (existing) {
-              existing.peers.push(peer)
-            } else if (item.client !== pubkey) {
-              sessionMap.set(item.client, {...item, peers: [peer]})
-            }
+          if (existing) {
+            existing.peers.push(message.url)
+          } else if (item.client !== pubkey) {
+            sessionMap.set(item.client, {...item, peers: [message.url]})
           }
         }
-
-        sessions = Array.from(sessionMap.values())
       }
-    } finally {
-      client.stop()
+
+      sessions = Array.from(sessionMap.values())
     }
   }
 
@@ -71,8 +64,6 @@
           message: "Failed to delete session",
         })
       }
-
-      client.stop()
     } catch (e) {
       console.error(e)
       pushToast({

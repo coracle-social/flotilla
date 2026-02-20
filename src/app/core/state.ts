@@ -289,7 +289,7 @@ export const deriveRelaySignedEvents = (url: string, filters: Filter[] = [{}]) =
 
 // Context
 
-pomadeContext.setSignerPubkeys(POMADE_SIGNERS)
+pomadeContext.setSignerUrls(POMADE_SIGNERS)
 
 pomadeContext.setArgonWorker(import("@pomade/core/argon-worker.js?worker"))
 

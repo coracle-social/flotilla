@@ -39,8 +39,6 @@
 
     loading = true
 
-    let client: Client | undefined = undefined
-
     try {
       const secret = getKey<string>("signup.secret")!
       const {clientOptions, ...registerRes} = await Client.register(2, 3, secret)
@@ -52,12 +50,11 @@
         })
       }
 
-      client = new Client(clientOptions)
-
+      const client = new Client(clientOptions)
       const setupRes = await client.setupRecovery(email, password)
 
       if (!setupRes.ok) {
-        const message = setupRes.messages[0]?.payload.message || "Please try again."
+        const message = setupRes.messages[0]?.res?.message || "Please try again."
 
         return pushToast({
           theme: "error",
@@ -86,7 +83,6 @@
         message: "Failed to register! Please try again.",
       })
     } finally {
-      client?.stop()
       loading = false
     }
   }

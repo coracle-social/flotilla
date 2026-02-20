@@ -2,6 +2,8 @@
   import type {Profile} from "@welshman/util"
   import {getTag, makeProfile} from "@welshman/util"
   import {pubkey, profilesByPubkey} from "@welshman/app"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
   import {clearModals} from "@app/util/modal"
@@ -24,9 +26,10 @@
 
 <ProfileEditForm {initialValues} {onsubmit}>
   {#snippet footer()}
-    <div class="mt-4 flex flex-row items-center justify-between gap-4">
-      <Button class="btn btn-neutral" onclick={back}>Discard Changes</Button>
-      <Button type="submit" class="btn btn-primary">Save Changes</Button>
-    </div>
+    <Button class="btn btn-link" onclick={back}>
+      <Icon icon={AltArrowLeft} />
+      Go Back
+    </Button>
+    <Button type="submit" class="btn btn-primary">Save Changes</Button>
   {/snippet}
 </ProfileEditForm>
