@@ -94,7 +94,8 @@
       "sharp"
     ],
     "overrides": {
-      "sharp": "0.35.0-rc.0"
+      "sharp": "0.35.0-rc.0",
+      "nostr-signer-capacitor-plugin": "github:coracle-social/nostr-signer-capacitor-plugin#main"
     }
   }
 }

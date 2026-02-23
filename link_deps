@@ -23,6 +23,7 @@ pkg.pnpm.overrides["@welshman/signer"] = "link:../welshman/packages/signer"
 pkg.pnpm.overrides["@welshman/store"] = "link:../welshman/packages/store"
 pkg.pnpm.overrides["@welshman/util"] = "link:../welshman/packages/util"
 // pkg.pnpm.overrides["@pomade/core"] = "link:../pomade/packages/core"
+// pkg.pnpm.overrides["nostr-signer-capacitor-plugin"] = "link:../nostr-signer-capacitor-plugin"
 
 fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n')
 
