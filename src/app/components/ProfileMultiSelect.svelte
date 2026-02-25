@@ -62,7 +62,7 @@
     }
   }
 
-  let input: Element | undefined = $state()
+  let label: Element | undefined = $state()
   let popover: Instance | undefined = $state()
   let instance: any = $state()
 
@@ -92,7 +92,7 @@
       </div>
     {/each}
   </div>
-  <label class="input input-bordered flex w-full items-center gap-2" bind:this={input}>
+  <label class="input input-bordered flex w-full items-center gap-2" bind:this={label}>
     <Icon icon={Magnifier} />
     <!-- svelte-ignore a11y_autofocus -->
     <input
@@ -114,12 +114,15 @@
       select: selectPubkey,
       component: ProfileSuggestion,
       class: "rounded-box",
-      style: `left: 4px; width: ${input?.clientWidth + 12}px`,
+      style: `left: 4px; width: ${label?.clientWidth + 12}px`,
     }}
     params={{
       trigger: "manual",
       interactive: true,
-      maxWidth: "none",
-      getReferenceClientRect: () => input!.getBoundingClientRect(),
+      placement: "bottom",
+      getReferenceClientRect: () => label!.getBoundingClientRect(),
+      onShow: (instance: Instance) => {
+        instance.popper.style.width = `${label!.getBoundingClientRect().width + 8}px`
+      },
     }} />
 </div>

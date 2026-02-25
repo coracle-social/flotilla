@@ -1,9 +1,10 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {randomId} from "@welshman/lib"
+  import {removeUndefined, randomId, uniq} from "@welshman/lib"
   import {makeEvent, CLASSIFIED} from "@welshman/util"
   import {publishThunk} from "@welshman/app"
   import {isMobile, preventDefault} from "@lib/html"
+  import {normalizeTopic} from "@lib/util"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Field from "@lib/components/Field.svelte"
@@ -14,6 +15,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ImagesInput from "@lib/components/ImagesInput.svelte"
   import CurrencyInput from "@app/components/CurrencyInput.svelte"
+  import TopicMultiSelect from "@app/components/TopicMultiSelect.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {pushToast} from "@app/util/toast"
   import {PROTECTED} from "@app/core/state"
@@ -32,6 +34,7 @@
       currency?: string
       images?: string[]
       status?: string
+      topics?: string[]
     }
   }
 
@@ -70,6 +73,10 @@
         ["status", status],
         ...ed.storage.nostr.getEditorTags(),
       ]
+
+      for (const topic of topics) {
+        tags.push(["t", topic])
+      }
 
       if (await shouldProtect) {
         tags.push(PROTECTED)
@@ -118,6 +125,7 @@
   let price = $state(Number(initialValues?.price || 0))
   let currency = $state(initialValues?.currency || "SAT")
   let images = $state<(string | File)[]>(initialValues?.images || [])
+  let topics = $state(uniq(removeUndefined((initialValues?.topics || []).map(normalizeTopic))))
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(submit)}>
@@ -148,6 +156,14 @@
           <div class="note-editor flex-grow overflow-hidden">
             <EditorContent {editor} />
           </div>
+        {/snippet}
+      </Field>
+      <Field>
+        {#snippet label()}
+          <p>Topics</p>
+        {/snippet}
+        {#snippet input()}
+          <TopicMultiSelect bind:value={topics} />
         {/snippet}
       </Field>
       <Field>

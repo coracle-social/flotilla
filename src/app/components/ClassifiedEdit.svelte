@@ -18,7 +18,8 @@
   const {d, title, status} = fromPairs(event.tags)
   const [_, price = 0, currency = "SAT"] = getTag("price", event.tags) || []
   const images = getTagValues("image", event.tags)
-  const initialValues = {d, title, status, content, price: Number(price), currency, images}
+  const topics = getTagValues("t", event.tags)
+  const initialValues = {d, title, status, content, price: Number(price), currency, images, topics}
 </script>
 
 <ClassifiedForm {url} {initialValues}>

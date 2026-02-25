@@ -96,6 +96,10 @@
     params={{
       trigger: "manual",
       interactive: true,
+      placement: "bottom",
       getReferenceClientRect: () => wrapper!.getBoundingClientRect(),
+      onShow: (instance: Instance) => {
+        instance.popper.style.width = `${wrapper!.getBoundingClientRect().width + 8}px`
+      },
     }} />
 </button>

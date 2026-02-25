@@ -1,8 +1,10 @@
 <script lang="ts">
+  import {uniq} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {getTagValue, getAddress} from "@welshman/util"
+  import {getTagValue, getTagValues, getAddress} from "@welshman/util"
   import {pubkey} from "@welshman/app"
   import Pen2 from "@assets/icons/pen-2.svg?dataurl"
+  import {normalizeTopic} from '@lib/util'
   import Link from "@lib/components/Link.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -27,6 +29,7 @@
   const {url, event, showRoom, showActivity}: Props = $props()
 
   const h = getTagValue("h", event.tags)
+  const topics = getTagValues("t", event.tags)
   const path = makeClassifiedPath(url, getAddress(event))
   const shouldProtect = canEnforceNip70(url)
 
@@ -45,6 +48,13 @@
       Posted in #<RoomName {h} {url} />
     </Link>
   {/if}
+  <div class="flex min-w-0 flex-wrap gap-2">
+    {#each uniq(topics) as topic (topic)}
+      <button type="button" class="btn btn-xs rounded-full font-normal">
+        #{normalizeTopic(topic)}
+      </button>
+    {/each}
+  </div>
   <ReactionSummary {url} {event} {deleteReaction} {createReaction} reactionClass="tooltip-left" />
   <ThunkStatusOrDeleted {event}>
     <ClassifiedStatus {event} />

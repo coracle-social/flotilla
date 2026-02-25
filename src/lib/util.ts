@@ -28,3 +28,5 @@ export const buildUrl = (base: string | URL, ...pathname: string[]) => {
 }
 
 export const addPeriod = (s: string) => (s + ".").replace(/\.+$/, ".")
+
+export const normalizeTopic = (topic: string) => topic.trim().replace(/^#+/, "").toLowerCase()
