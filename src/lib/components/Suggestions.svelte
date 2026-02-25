@@ -9,7 +9,7 @@
   let items: string[] = $state([])
 
   const populateItems = throttle(300, term => {
-    items = search(term).slice(0, 5)
+    items = term ? search(term).slice(0, 5) : []
   })
 
   const setIndex = (newIndex: number, block: any) => {

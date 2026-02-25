@@ -4,7 +4,7 @@
   import {getTagValue, getTagValues, getAddress} from "@welshman/util"
   import {pubkey} from "@welshman/app"
   import Pen2 from "@assets/icons/pen-2.svg?dataurl"
-  import {normalizeTopic} from '@lib/util'
+  import {normalizeTopic} from "@lib/util"
   import Link from "@lib/components/Link.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"

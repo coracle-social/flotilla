@@ -2,7 +2,7 @@
   import {writable} from "svelte/store"
   import type {Writable} from "svelte/store"
   import type {Instance} from "tippy.js"
-  import {remove, without, uniq} from "@welshman/lib"
+  import {remove, reject, spec, uniq} from "@welshman/lib"
   import {createSearch, topics} from "@welshman/app"
   import {normalizeTopic} from "@lib/util"
   import Suggestions from "@lib/components/Suggestions.svelte"
@@ -21,7 +21,7 @@
   let {value = $bindable(), term = writable("")}: Props = $props()
 
   const topicSearch = $derived.by(() =>
-    createSearch(without(value, $topics), {
+    createSearch(reject(spec({name: value}), $topics), {
       getValue: topic => topic.name,
       fuseOptions: {
         keys: ["name"],
@@ -76,9 +76,9 @@
 </script>
 
 <div class="flex flex-col gap-2">
-  <div class="flex flex-wrap gap-2">
+  <div>
     {#each value as topic (topic)}
-      <div class="badge badge-neutral gap-1">
+      <div class="flex-inline badge badge-neutral mr-1 gap-1">
         <Button class="flex items-center" onclick={() => removeTopic(topic)}>
           <Icon icon={CloseCircle} size={4} class="-ml-1 mt-px" />
         </Button>
