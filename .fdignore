@@ -1,4 +1,5 @@
 src/assets
+target
 build
 .idea
 .gradle

@@ -4,8 +4,8 @@
   import {session, loadZapperForPubkey} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import Zap from "@app/components/Zap.svelte"
+  import ZapInvoice from "@app/components/ZapInvoice.svelte"
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
-  import WalletConnect from "@app/components/WalletConnect.svelte"
   import {pushModal} from "@app/util/modal"
 
   type Props = {
@@ -31,7 +31,7 @@
       } else if ($session?.wallet) {
         pushModal(Zap, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
       } else {
-        pushModal(WalletConnect, {}, {replaceState})
+        pushModal(ZapInvoice, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
       }
     } finally {
       loading = false
