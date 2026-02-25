@@ -26,6 +26,22 @@
   const key = getTagValue("decryption-key", meta)
   const nonce = getTagValue("decryption-nonce", meta)
   const algorithm = getTagValue("encryption-algorithm", meta)
+  const mime = getTagValue("m", meta)
+  const fileName =
+    getTagValue("filename", meta) ||
+    getTagValue("name", meta) ||
+    decodeURIComponent(new URL(url).pathname.split("/").filter(Boolean).at(-1) || "image")
+
+  const revokeSrc = () => {
+    if (src.startsWith("blob:")) {
+      URL.revokeObjectURL(src)
+    }
+  }
+
+  const setBlobSrc = (data: Blob | Uint8Array<ArrayBuffer>, type?: string) => {
+    revokeSrc()
+    src = URL.createObjectURL(new File([data], fileName, type ? {type} : undefined))
+  }
 
   const onError = once(async () => {
     // If the image failed to load, try authenticating
@@ -36,7 +52,8 @@
       const res = await getBlob(server, hash, {authEvent})
 
       if (res.status === 200) {
-        src = URL.createObjectURL(await res.blob())
+        const blob = await res.blob()
+        setBlobSrc(blob, blob.type || undefined)
       } else {
         hasError = true
       }
@@ -57,7 +74,7 @@
         const ciphertext = new Uint8Array(await response.arrayBuffer())
         const decryptedData = await decryptFile({ciphertext, key, nonce, algorithm})
 
-        src = URL.createObjectURL(new Blob([new Uint8Array(decryptedData)]))
+        setBlobSrc(new Uint8Array(decryptedData), mime)
       }
     } else {
       src = url
@@ -65,7 +82,7 @@
   })
 
   onDestroy(() => {
-    URL.revokeObjectURL(src)
+    revokeSrc()
   })
 </script>
 
