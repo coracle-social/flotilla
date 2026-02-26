@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {LOCALE, always, sleep} from "@welshman/lib"
+  import {LOCALE, always, call, sleep} from "@welshman/lib"
   import {WalletType, displayRelayUrl, isNWCWallet, fromMsats} from "@welshman/util"
   import {session, pubkey, profilesByPubkey} from "@welshman/app"
   import DownloadMinimalistic from "@assets/icons/download-minimalistic.svg?dataurl"
@@ -42,7 +42,7 @@
     }
   }
 
-  let walletStatus = $state<"checking" | "connected" | "unavailable">("checking")
+  let walletStatus = $state("checking")
 
   const isWalletAvailable = $derived(Boolean($session?.wallet) && walletStatus === "connected")
   const statusClass = $derived(
@@ -58,7 +58,15 @@
 
     if (wallet) {
       const promise =
-        wallet.type === WalletType.NWC ? getNwcClient().getInfo() : getWebLn().getInfo()
+        wallet.type === WalletType.NWC
+          ? getNwcClient().getInfo()
+          : call(async () => {
+              const client = getWebLn()
+
+              await client.enable()
+
+              return client.getInfo()
+            })
 
       walletStatus = await Promise.race([
         promise.then(always("connected")).catch(always("unavailable")),

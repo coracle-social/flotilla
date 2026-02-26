@@ -1,7 +1,7 @@
 <script lang="ts">
+  import {gt} from "@welshman/lib"
   import {Invoice} from "@getalby/lightning-tools/bolt11"
   import {debounce} from "throttle-debounce"
-  import {session} from "@welshman/app"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -30,7 +30,7 @@
     loading = true
 
     try {
-      if (hasAmount) {
+      if (gt(invoice!.satoshi, 0)) {
         await payInvoice(invoice!.paymentRequest)
       } else {
         await payInvoice(invoice!.paymentRequest, sats * 1000)
@@ -55,7 +55,6 @@
   let loading = $state(false)
   let invoice: Invoice | undefined = $state()
   let sats = $state(0)
-  const hasAmount = $derived((invoice?.satoshi ?? 0) > 0)
 </script>
 
 <Modal>
@@ -66,34 +65,27 @@
     </ModalHeader>
     {#if invoice}
       <div class="card2 bg-alt flex flex-col gap-2">
-        {#if $session?.wallet?.type === "webln" && !hasAmount}
-          <p class="text-sm opacity-75">
-            Uh oh! It looks like your current wallet doesn't support invoices without an amount. See
-            if you can get a lightning invoice with a pre-set amount.
-          </p>
-        {:else}
-          <FieldInline>
-            {#snippet label()}
-              Amount (satoshis)
-            {/snippet}
-            {#snippet input()}
-              <div class="flex flex-grow justify-end">
-                <label class="input input-bordered flex items-center gap-2">
-                  <Icon icon={Bolt} />
-                  <input
-                    bind:value={sats}
-                    type="number"
-                    class="w-14"
-                    disabled={invoice!.satoshi > 0} />
-                </label>
-              </div>
-            {/snippet}
-          </FieldInline>
-          <p class="text-sm opacity-75">
-            You're about to pay a bitcoin lightning invoice with the following description:
-            <strong>{invoice.description || "[no description]"}</strong>"
-          </p>
-        {/if}
+        <FieldInline>
+          {#snippet label()}
+            Amount (satoshis)
+          {/snippet}
+          {#snippet input()}
+            <div class="flex flex-grow justify-end">
+              <label class="input input-bordered flex items-center gap-2">
+                <Icon icon={Bolt} />
+                <input
+                  bind:value={sats}
+                  type="number"
+                  class="w-14"
+                  disabled={invoice!.satoshi > 0} />
+              </label>
+            </div>
+          {/snippet}
+        </FieldInline>
+        <p class="text-sm opacity-75">
+          You're about to pay a bitcoin lightning invoice with the following description:
+          <strong>{invoice.description || "[no description]"}</strong>"
+        </p>
       </div>
     {:else}
       <Scanner onscan={onScan} />
@@ -107,13 +99,7 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button
-      class="btn btn-primary"
-      onclick={confirm}
-      disabled={!invoice ||
-        sats === 0 ||
-        loading ||
-        ($session?.wallet?.type === "webln" && !hasAmount)}>
+    <Button class="btn btn-primary" onclick={confirm} disabled={!invoice || sats === 0 || loading}>
       {#if loading}
         <span class="loading loading-spinner loading-sm"></span>
       {:else}
