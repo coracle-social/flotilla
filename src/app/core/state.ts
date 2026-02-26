@@ -29,6 +29,7 @@ import {
   fromPairs,
   groupBy,
   remove,
+  simpleCache,
 } from "@welshman/lib"
 import type {Override} from "@welshman/lib"
 import type {RepositoryUpdate} from "@welshman/net"
@@ -1123,6 +1124,15 @@ export const deriveSocketStatus = (url: string) =>
       return {theme: "success", title: "Connected"}
     }),
   )
+
+export const deriveSupportedMethods = simpleCache(([url]: [string]) => {
+  return readable<ManagementMethod[]>([], set => {
+    manageRelay(url, {
+      method: ManagementMethod.SupportedMethods,
+      params: [],
+    }).then(({result = []}) => set(result))
+  })
+})
 
 export const deriveTimeout = (timeout: number) => {
   const store = writable<boolean>(false)

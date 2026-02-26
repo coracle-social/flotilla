@@ -2,6 +2,7 @@
   import {ManagementMethod} from "@welshman/util"
   import {manageRelay, displayProfileByPubkey} from "@welshman/app"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
+  import UserMinus from "@assets/icons/user-minus.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -24,6 +25,7 @@
     deriveSpaceMembers,
     deriveSpaceBannedPubkeyItems,
     deriveUserIsSpaceAdmin,
+    deriveSupportedMethods,
   } from "@app/core/state"
   import {pushModal} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
@@ -37,6 +39,9 @@
   const members = deriveSpaceMembers(url)
   const bans = deriveSpaceBannedPubkeyItems(url)
   const userIsAdmin = deriveUserIsSpaceAdmin(url)
+  const supportedMethods = deriveSupportedMethods(url)
+  const canBan = $derived($supportedMethods.includes(ManagementMethod.BanPubkey))
+  const canUnallow = $derived($supportedMethods.includes(ManagementMethod.UnallowPubkey))
 
   const back = () => history.back()
 
@@ -51,6 +56,25 @@
   const showBannedPubkeyItems = () => pushModal(SpaceMembersBanned, {url})
 
   const addMember = () => pushModal(SpaceMembersAdd, {url})
+
+  const unallowMember = (pubkey: string) =>
+    pushModal(Confirm, {
+      title: "Remove User",
+      message: `Are you sure you want to remove @${displayProfileByPubkey(pubkey)} from the space?`,
+      confirm: async () => {
+        const {error} = await manageRelay(url, {
+          method: ManagementMethod.UnallowPubkey,
+          params: [pubkey],
+        })
+
+        if (error) {
+          pushToast({theme: "error", message: error})
+        } else {
+          pushToast({message: "User has successfully been removed!"})
+          back()
+        }
+      },
+    })
 
   const banMember = (pubkey: string) =>
     pushModal(Confirm, {
@@ -94,25 +118,37 @@
             <div class="min-w-0 flex-1">
               <Profile {pubkey} {url} />
             </div>
-            <div class="relative">
-              <Button class="btn btn-circle btn-ghost btn-sm" onclick={() => toggleMenu(pubkey)}>
-                <Icon icon={MenuDots} />
-              </Button>
-              {#if menuPubkey === pubkey}
-                <Popover hideOnClick onClose={closeMenu}>
-                  <ul
-                    transition:fly
-                    class="menu absolute right-0 z-popover mt-2 w-48 gap-1 rounded-box bg-base-100 p-2 shadow-md">
-                    <li>
-                      <Button class="text-error" onclick={() => banMember(pubkey)}>
-                        <Icon icon={MinusCircle} />
-                        Ban User
-                      </Button>
-                    </li>
-                  </ul>
-                </Popover>
-              {/if}
-            </div>
+            {#if canBan || canUnallow}
+              <div class="relative">
+                <Button class="btn btn-circle btn-ghost btn-sm" onclick={() => toggleMenu(pubkey)}>
+                  <Icon icon={MenuDots} />
+                </Button>
+                {#if menuPubkey === pubkey}
+                  <Popover hideOnClick onClose={closeMenu}>
+                    <ul
+                      transition:fly
+                      class="menu absolute right-0 z-popover mt-2 w-48 gap-1 rounded-box bg-base-100 p-2 shadow-md">
+                      {#if canUnallow}
+                        <li>
+                          <Button onclick={() => unallowMember(pubkey)}>
+                            <Icon icon={UserMinus} />
+                            Remove User
+                          </Button>
+                        </li>
+                      {/if}
+                      {#if canBan}
+                        <li>
+                          <Button class="text-error" onclick={() => banMember(pubkey)}>
+                            <Icon icon={MinusCircle} />
+                            Ban User
+                          </Button>
+                        </li>
+                      {/if}
+                    </ul>
+                  </Popover>
+                {/if}
+              </div>
+            {/if}
           </div>
         </div>
       {/each}
