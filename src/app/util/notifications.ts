@@ -12,12 +12,14 @@ import {
   repository,
   publishThunk,
   loadRelay,
+  relaysByUrl,
   waitForThunkError,
   userMessagingRelayList,
 } from "@welshman/app"
 import {
   on,
   call,
+  find,
   assoc,
   poll,
   prop,
@@ -44,7 +46,14 @@ import {
   Address,
 } from "@welshman/util"
 import {buildUrl} from "@lib/util"
-import {makeSpacePath, makeChatPath, getEventPath, goToEvent} from "@app/util/routes"
+import {
+  makeSpacePath,
+  makeRoomPath,
+  makeSpaceChatPath,
+  makeChatPath,
+  getEventPath,
+  goToEvent,
+} from "@app/util/routes"
 import {
   DM_KINDS,
   CONTENT_KINDS,
@@ -57,9 +66,11 @@ import {
   userSettingsValues,
   userGroupList,
   getSpaceUrlsFromGroupList,
+  getSpaceRoomsFromGroupList,
   makeCommentFilter,
   userSpaceUrls,
   shouldNotify,
+  hasNip29,
   device,
 } from "@app/core/state"
 import {kv} from "@app/core/storage"
@@ -125,6 +136,7 @@ export const allNotifications = derived(
         pubkey,
         checked,
         chatsById,
+        relaysByUrl,
         userGroupList,
         deriveEventsByIdByUrl({
           tracker,
@@ -135,7 +147,7 @@ export const allNotifications = derived(
       identity,
     ),
   ),
-  ([$pubkey, $checked, $chatsById, $userGroupList, eventsByIdByUrl]) => {
+  ([$pubkey, $checked, $chatsById, $relaysByUrl, $userGroupList, eventsByIdByUrl]) => {
     const hasNotification = (path: string, latestEvent?: TrustedEvent) => {
       if (!latestEvent || latestEvent.pubkey === $pubkey) {
         return false
@@ -168,11 +180,33 @@ export const allNotifications = derived(
 
     for (const url of getSpaceUrlsFromGroupList($userGroupList)) {
       const spacePath = makeSpacePath(url)
+      const spacePathMobile = spacePath + ":mobile"
       const eventsById = eventsByIdByUrl.get(url) || new Map()
       const latestEvent = first(sortEventsDesc(eventsById.values()))
 
       if (hasNotification(spacePath, latestEvent)) {
         paths.add(spacePath)
+      }
+
+      if (hasNip29($relaysByUrl.get(url))) {
+        for (const h of getSpaceRoomsFromGroupList(url, $userGroupList)) {
+          const roomPath = makeRoomPath(url, h)
+          const latestEvent = find(e => e.tags.some(spec(["h", h])), eventsById.values())
+
+          if (hasNotification(roomPath, latestEvent)) {
+            paths.add(spacePathMobile)
+            paths.add(spacePath)
+            paths.add(roomPath)
+          }
+        }
+      } else {
+        const messagesPath = makeSpaceChatPath(url)
+
+        if (hasNotification(messagesPath, first(eventsById.values()))) {
+          paths.add(spacePathMobile)
+          paths.add(spacePath)
+          paths.add(messagesPath)
+        }
       }
     }
 

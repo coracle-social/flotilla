@@ -38,7 +38,7 @@
     class:text-base-content={active}
     class:bg-base-100={active}>
     {@render children?.()}
-    {#if !active && notification}
+    {#if notification}
       <div class="absolute right-2 top-5 h-2 w-2 rounded-full bg-primary" transition:fade></div>
     {/if}
   </a>
@@ -48,7 +48,7 @@
     class="{restProps.class} relative flex w-full items-center gap-3 text-left transition-all hover:bg-base-100 hover:text-base-content"
     class:text-base-content={active}
     class:bg-base-100={active}>
-    {#if !active && notification}
+    {#if notification}
       <div class="absolute right-2 top-5 h-2 w-2 rounded-full bg-primary" transition:fade></div>
     {/if}
     {@render children?.()}
