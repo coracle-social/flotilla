@@ -2,3 +2,11 @@ node_modules
 android
 ios
 build
+
+# Git
+.git
+.gitignore
+
+# Env files (keep .env for build; exclude local overrides)
+.env.local
+.env.*.local

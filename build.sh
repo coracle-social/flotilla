@@ -5,6 +5,9 @@ temp_env=$(declare -p -x)
 if [ -f .env.template ]; then
   source .env.template
 fi
+if [ -f .env ]; then
+  source .env
+fi
 
 # Avoid overwriting env vars provided directly
 # https://stackoverflow.com/a/69127685/1467342
@@ -14,12 +17,13 @@ if [[ -z $VITE_BUILD_HASH ]]; then
   export VITE_BUILD_HASH=$(git rev-parse --short HEAD)
 fi
 
-if [[ $VITE_PLATFORM_LOGO =~ ^https://* ]]; then
-  curl $VITE_PLATFORM_LOGO > static/logo.png
+if [[ $VITE_PLATFORM_LOGO =~ ^https:// ]]; then
+  curl -fSL "$VITE_PLATFORM_LOGO" -o static/logo.png
   export VITE_PLATFORM_LOGO=static/logo.png
 fi
 
-npx pwa-assets-generator
+# Ensure generator uses local path (dotenv may have loaded URL from .env)
+VITE_PLATFORM_LOGO="${VITE_PLATFORM_LOGO}" npx pwa-assets-generator
 npx vite build
 
 # Replace index.html variables with stuff from our env
