@@ -23,9 +23,8 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {INDEXER_RELAYS, PLATFORM_NAME, userSpaceUrls} from "@app/core/state"
-  import {kv, db} from "@app/core/storage"
   import {pushToast} from "@app/util/toast"
-  import {Push} from "@app/util/notifications"
+  import {logout} from "@app/util/logout"
 
   let progress: number | undefined = $state(undefined)
   let confirmText = $state("")
@@ -88,13 +87,7 @@
     await sleep(2000)
 
     // Goodbye forever!
-    await Push.disable()
-    await kv.clear()
-    await db.clear()
-
-    localStorage.clear()
-
-    window.location.href = "/"
+    await logout()
   }
 
   const confirm = async () => {

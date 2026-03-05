@@ -1,6 +1,8 @@
 import {nwc} from "@getalby/sdk"
 import * as nip19 from "nostr-tools/nip19"
 import {get, derived} from "svelte/store"
+import {Client} from "@pomade/core"
+import type {SessionItem} from "@pomade/core"
 import {
   first,
   sha256,
@@ -71,6 +73,7 @@ import {
   waitForThunkError,
   getPubkeyRelays,
   userBlossomServerList,
+  isPomadeSession,
   getThunkError,
 } from "@welshman/app"
 import {compressFile} from "@lib/html"
@@ -698,4 +701,59 @@ export const updateProfile = async ({
   const relays = router.merge(scenarios).getUrls()
 
   await publishThunk({event, relays}).complete
+}
+
+// Pomade
+
+export type PomadeSessionWithPeers = SessionItem & {peers: string[]}
+
+export const loadOtherPomadeSessions = async () => {
+  const $session = get(session)
+
+  if (isPomadeSession($session)) {
+    const client = new Client($session.clientOptions)
+    const result = await client.listSessions()
+    const pubkey = await client.getPubkey()
+
+    if (result.ok) {
+      // Group sessions by client pubkey and collect peers
+      const sessionMap = new Map<string, PomadeSessionWithPeers>()
+
+      for (const message of result.messages) {
+        if (!message.res?.items) continue
+
+        for (const item of message.res.items) {
+          if (item.client === pubkey) {
+            continue
+          }
+
+          const existing = sessionMap.get(item.client)
+
+          if (existing) {
+            existing.peers.push(message.url)
+          } else {
+            sessionMap.set(item.client, {...item, peers: [message.url]})
+          }
+        }
+      }
+
+      return Array.from(sessionMap.values())
+    }
+  }
+
+  return []
+}
+
+export const deleteOldPomadeSessions = async () => {
+  const $session = get(session)
+
+  if (isPomadeSession($session)) {
+    const client = new Client($session.clientOptions)
+
+    for (const item of await loadOtherPomadeSessions()) {
+      if (item.deactivated_at) {
+        await client.deleteSession(item.client, item.peers)
+      }
+    }
+  }
 }

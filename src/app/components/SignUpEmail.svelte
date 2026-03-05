@@ -18,7 +18,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SignUpEmailConfirm from "@app/components/SignUpEmailConfirm.svelte"
-  import {pushToast} from "@app/util/toast"
+  import {pushToast, popToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
 
   type Props = {
@@ -40,6 +40,11 @@
     loading = true
 
     try {
+      const toastId = pushToast({
+        timeout: 60_000,
+        message: "Creating your account, please wait...",
+      })
+
       const secret = getKey<string>("signup.secret")!
       const {clientOptions, ...registerRes} = await Client.register(2, 3, secret)
 
@@ -74,6 +79,7 @@
       setKey("signup.email", email)
       setKey("signup.clientOptions", clientOptions)
 
+      popToast(toastId)
       pushModal(SignUpEmailConfirm, {next})
     } catch (e) {
       console.error(e)

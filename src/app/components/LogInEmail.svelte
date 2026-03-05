@@ -20,6 +20,7 @@
   import {pushModal, clearModals} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
+  import {deleteOldPomadeSessions} from "@app/core/commands"
 
   interface Props {
     email?: string
@@ -51,7 +52,7 @@
 
       if (res.ok && clientOptions) {
         loginWithPomade(clientOptions.group.group_pk.slice(2), email, clientOptions)
-        pushToast({message: "Successfully logged in!"})
+        deleteOldPomadeSessions()
         setChecked("*")
         clearModals()
       } else {

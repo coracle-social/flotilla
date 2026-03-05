@@ -9,8 +9,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {Push} from "@app/util/notifications"
-  import {kv, db} from "@app/core/storage"
+  import {logout} from "@app/util/logout"
 
   const back = () => history.back()
 
@@ -18,13 +17,7 @@
     loading = true
 
     try {
-      await Push.disable()
-      await kv.clear()
-      await db.clear()
-
-      localStorage.clear()
-
-      window.location.href = "/"
+      await logout()
     } catch (e) {
       console.error(e)
       loading = false

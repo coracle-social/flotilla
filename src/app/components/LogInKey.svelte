@@ -57,7 +57,6 @@
       }
 
       loginWithNip01(secret)
-      pushToast({message: "Successfully logged in!"})
       setChecked("*")
       clearModals()
     } catch (e) {

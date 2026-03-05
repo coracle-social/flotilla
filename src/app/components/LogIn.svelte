@@ -34,7 +34,6 @@
 
   const onSuccess = async (session: Session) => {
     addSession(session)
-    pushToast({message: "Successfully logged in!"})
     setChecked("*")
     clearModals()
   }
