@@ -302,7 +302,7 @@ class CapacitorNotifications implements IPushAdapter {
   async request(prompt = true) {
     let status = await PushNotifications.checkPermissions()
 
-    if (prompt && status.receive === "prompt") {
+    if (prompt && ["prompt", "prompt-with-rationale"].includes(status.receive)) {
       status = await PushNotifications.requestPermissions()
     }
 
