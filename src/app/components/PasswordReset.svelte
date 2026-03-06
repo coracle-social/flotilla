@@ -37,7 +37,8 @@
     if (otps.length < 2) {
       return pushToast({
         theme: "error",
-        message: "Failed to confirm your email, not enough valid recovery codes were provided.",
+        message:
+          "Failed to validate email ownership, not enough valid recovery codes were provided.",
       })
     }
 
@@ -48,7 +49,7 @@
 
       return pushToast({
         theme: "error",
-        message: `Failed to confirm your email: ${request.messages[0]?.res?.message.toLowerCase()}`,
+        message: `Failed to validate email ownership: ${request.messages[0]?.res?.message.toLowerCase()}`,
       })
     }
 
@@ -69,7 +70,7 @@
 
       return pushToast({
         theme: "error",
-        message: `Failed to confirm your email: ${result.messages[0]?.res?.message.toLowerCase()}`,
+        message: `Failed to validate email ownership: ${result.messages[0]?.res?.message.toLowerCase()}`,
       })
     }
 

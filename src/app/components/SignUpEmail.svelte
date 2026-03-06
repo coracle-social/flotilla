@@ -59,7 +59,7 @@
       const setupRes = await client.setupRecovery(email, password)
 
       if (!setupRes.ok) {
-        const message = setupRes.messages[0]?.res?.message || "Please try again."
+        const message = setupRes.messages.find(m => m.res && !m.res?.ok)?.res?.message || "Please try again."
 
         return pushToast({
           theme: "error",
