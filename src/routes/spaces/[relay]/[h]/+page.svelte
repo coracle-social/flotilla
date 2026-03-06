@@ -337,7 +337,7 @@
   }
 
   const onEditPrevious = () => {
-    const prev = $events.find(e => e.pubkey === $pubkey)
+    const prev = $events.toReversed().find(e => e.pubkey === $pubkey)
 
     if (prev && canEditEvent(prev)) {
       onEditEvent(prev)
