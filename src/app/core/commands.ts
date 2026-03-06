@@ -676,7 +676,7 @@ export const initProfile = (profile: Profile) => {
   return publishThunk({event, relays: []})
 }
 
-export const updateProfile = async ({
+export const updateProfile = ({
   profile,
   shouldBroadcast = !getTag(PROTECTED, profile.event?.tags || []),
 }: {
@@ -697,5 +697,5 @@ export const updateProfile = async ({
   const event = makeEvent(template.kind, template)
   const relays = router.merge(scenarios).getUrls()
 
-  await publishThunk({event, relays}).complete
+  return publishThunk({event, relays})
 }

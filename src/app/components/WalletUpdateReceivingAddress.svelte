@@ -1,6 +1,7 @@
 <script lang="ts">
   import {getWalletAddress} from "@welshman/util"
-  import {session, userProfile} from "@welshman/app"
+  import {session, waitForThunkError, userProfile} from "@welshman/app"
+  import {errorMessage} from "@lib/util"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -17,7 +18,7 @@
   const back = () => history.back()
 
   let address = $state($userProfile?.lud16 || "")
-  let isLoading = $state(false)
+  let loading = $state(false)
 
   const walletLud16 = $derived($session?.wallet ? getWalletAddress($session.wallet) : undefined)
 
@@ -28,20 +29,28 @@
   }
 
   const save = async () => {
-    isLoading = true
+    loading = true
+
     try {
-      await updateProfile({
-        profile: {
-          ...$userProfile,
-          lud06: undefined,
-          lud16: address.trim() || undefined,
-        },
-      })
-      back()
+      const error = await waitForThunkError(
+        updateProfile({
+          profile: {
+            ...$userProfile,
+            lud06: undefined,
+            lud16: address.trim() || undefined,
+          },
+        }),
+      )
+
+      if (error) {
+        pushToast({theme: "error", message: `Failed to update profile: ${errorMessage(error)}`})
+      } else {
+        back()
+      }
     } catch (error) {
       pushToast({theme: "error", message: "Failed to update profile"})
     } finally {
-      isLoading = false
+      loading = false
     }
   }
 </script>
@@ -61,7 +70,7 @@
           placeholder="user@domain.com"
           bind:value={address}
           class="input input-bordered flex w-full"
-          disabled={isLoading} />
+          disabled={loading} />
         <p class="text-xs opacity-75">
           You can enter one manually or use your connected wallet's address (if available). Leave
           empty to remove your lightning address
@@ -78,7 +87,7 @@
               </div>
               <p class="text-xs opacity-75">{walletLud16}</p>
             </div>
-            <Button class="btn btn-outline btn-sm" onclick={useWalletAddress} disabled={isLoading}>
+            <Button class="btn btn-outline btn-sm" onclick={useWalletAddress} disabled={loading}>
               Use This
             </Button>
           </div>
@@ -87,9 +96,9 @@
     </div>
   </ModalBody>
   <ModalFooter>
-    <Button class="btn btn-neutral" onclick={back} disabled={isLoading}>Cancel</Button>
-    <Button class="btn btn-primary" onclick={save} disabled={isLoading}>
-      {#if isLoading}
+    <Button class="btn btn-neutral" onclick={back} disabled={loading}>Cancel</Button>
+    <Button class="btn btn-primary" onclick={save} disabled={loading}>
+      {#if loading}
         <span class="loading loading-spinner loading-sm"></span>
       {:else}
         <Icon icon={CheckCircle} />

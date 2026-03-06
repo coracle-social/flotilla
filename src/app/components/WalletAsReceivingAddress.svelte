@@ -1,5 +1,8 @@
 <script lang="ts">
+  import {makeProfile} from "@welshman/util"
   import {getWalletAddress} from "@welshman/util"
+  import {userProfile, waitForThunkError, session} from "@welshman/app"
+  import {errorMessage} from "@lib/util"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Modal from "@lib/components/Modal.svelte"
@@ -9,8 +12,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {updateProfile} from "@app/core/commands"
   import {clearModals} from "@app/util/modal"
-  import {userProfile, session} from "@welshman/app"
-  import {makeProfile} from "@welshman/util"
+  import {pushToast} from "@app/util/toast"
 
   const lud16 = getWalletAddress($session!.wallet!)
 
@@ -20,9 +22,13 @@
     loading = true
 
     try {
-      await updateProfile({profile: {...profile, lud16}})
+      const error = await waitForThunkError(updateProfile({profile: {...profile, lud16}}))
 
-      clearModals()
+      if (error) {
+        pushToast({theme: "error", message: `Failed to update profile: ${errorMessage(error)}`})
+      } else {
+        clearModals()
+      }
     } finally {
       loading = false
     }
