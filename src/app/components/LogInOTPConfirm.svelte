@@ -13,8 +13,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import LogInSelect from "@app/components/LogInSelect.svelte"
-  import {POMADE_SIGNERS} from "@app/core/state"
   import {pushToast} from "@app/util/toast"
   import {setChecked} from "@app/util/notifications"
   import {pushModal, clearModals} from "@app/util/modal"
@@ -30,18 +30,6 @@
   const back = () => history.back()
 
   const onSubmit = async () => {
-    const otps = input
-      .split(/\n/)
-      .map(x => x.trim())
-      .filter(x => x.match(/^[0-9]{8}$/))
-
-    if (otps.length < 3) {
-      return pushToast({
-        theme: "error",
-        message: "Not enough valid recovery codes were provided.",
-      })
-    }
-
     loading = true
 
     try {
@@ -85,7 +73,7 @@
     }
   }
 
-  let input = $state("")
+  let otps = $state<string[]>([])
   let loading = $state(false)
 </script>
 
@@ -100,17 +88,14 @@
       For security reasons, you may receive three or more emails with login codes in them. Please
       paste <strong>all</strong> login codes into the text box below, on separate lines.
     </p>
-    <textarea
-      rows={POMADE_SIGNERS.length + 1}
-      class="textarea textarea-bordered leading-4"
-      bind:value={input}></textarea>
+    <StringMultiInput bind:value={otps} placeholder="Enter your login codes..." />
   </ModalBody>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back} disabled={loading}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="btn btn-primary" disabled={loading}>
+    <Button type="submit" class="btn btn-primary" disabled={loading || otps.length < 3}>
       <Spinner {loading}>Log In</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>

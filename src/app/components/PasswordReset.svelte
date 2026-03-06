@@ -14,8 +14,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import PasswordResetConfirm from "@app/components/PasswordResetConfirm.svelte"
-  import {POMADE_SIGNERS} from "@app/core/state"
   import {pushToast} from "@app/util/toast"
   import {pushModal} from "@app/util/modal"
   import {getPomadeClient} from "@app/util/pomade"
@@ -29,19 +29,6 @@
   const {email} = $session as SessionPomade
 
   const confirmRecovery = async () => {
-    const otps = input
-      .split(/\n/)
-      .map(x => x.trim())
-      .filter(x => x.match(/^[0-9]{8}$/))
-
-    if (otps.length < 2) {
-      return pushToast({
-        theme: "error",
-        message:
-          "Failed to validate email ownership, not enough valid recovery codes were provided.",
-      })
-    }
-
     const request = await Client.recoverWithChallenge(email, peersByPrefix, otps)
 
     if (!request.ok) {
@@ -90,7 +77,7 @@
   const back = () => history.back()
 
   let loading = $state(false)
-  let input = $state("")
+  let otps = $state<string[]>([])
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(submit)}>
@@ -104,17 +91,14 @@
       For security reasons, you may receive three or more emails with confirmation codes in them.
       Please paste <strong>all</strong> confirmation codes into the text box below, on separate lines.
     </p>
-    <textarea
-      rows={POMADE_SIGNERS.length + 1}
-      class="textarea textarea-bordered leading-4"
-      bind:value={input}></textarea>
+    <StringMultiInput bind:value={otps} placeholder="Enter your confirmation codes..." />
   </ModalBody>
   <ModalFooter>
     <Button class="btn btn-link" onclick={back}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="btn btn-primary" disabled={loading}>
+    <Button type="submit" class="btn btn-primary" disabled={loading || otps.length < 2}>
       <Spinner {loading}>Continue</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
