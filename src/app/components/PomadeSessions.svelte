@@ -9,8 +9,8 @@
   import Popover from "@lib/components/Popover.svelte"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import {pushToast} from "@app/util/toast"
-  import {loadOtherPomadeSessions} from "@app/core/commands"
-  import type {PomadeSessionWithPeers} from "@app/core/commands"
+  import {loadOtherPomadeSessions} from "@app/util/pomade"
+  import type {PomadeSessionWithPeers} from "@app/util/pomade"
 
   const toggleMenu = (client: string) => {
     menuClient = menuClient === client ? "" : client
@@ -63,7 +63,7 @@
 
   onMount(() => {
     loadOtherPomadeSessions().then(_sessions => {
-      sessions = _sessions
+      sessions = _sessions || []
     })
   })
 </script>

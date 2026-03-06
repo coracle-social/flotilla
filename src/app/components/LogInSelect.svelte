@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {AccountOption} from "@pomade/core"
   import {Client} from "@pomade/core"
-  import {loginWithPomade} from "@welshman/app"
+  import {uniqBy} from "@welshman/lib"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -13,10 +13,10 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Profile from "@app/components/Profile.svelte"
-  import {clearModals} from "@app/util/modal"
+  import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/util/pomade"
   import {setChecked} from "@app/util/notifications"
+  import {clearModals} from "@app/util/modal"
   import {pushToast} from "@app/util/toast"
-  import {deleteOldPomadeSessions} from "@app/core/commands"
 
   interface Props {
     email: string
@@ -24,7 +24,7 @@
     clientSecret: string
   }
 
-  let {email, options, clientSecret}: Props = $props()
+  const {email, options, clientSecret}: Props = $props()
 
   let loading = $state(false)
 
@@ -37,8 +37,8 @@
       const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
 
       if (res.ok && clientOptions) {
-        loginWithPomade(clientOptions.group.group_pk.slice(2), clientOptions.email, clientOptions)
-        deleteOldPomadeSessions()
+        loginWithPomade(clientOptions, email)
+        deleteDeactivatedPomadeSessions()
         setChecked("*")
         clearModals()
       } else {
@@ -59,10 +59,11 @@
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Select Account</ModalTitle>
-      <ModalSubtitle>Multiple accounts are associated with {email}. Please select one to continue.</ModalSubtitle>
+      <ModalSubtitle
+        >Multiple accounts are associated with {email}. Please select one to continue.</ModalSubtitle>
     </ModalHeader>
     <div class="flex flex-col gap-2">
-      {#each options as option (option.pubkey)}
+      {#each uniqBy(o => o.pubkey, options) as option (option.pubkey)}
         <Button
           onclick={() => selectAccount(option)}
           disabled={loading}

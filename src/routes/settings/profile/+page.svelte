@@ -1,12 +1,14 @@
 <script lang="ts">
   import * as nip19 from "nostr-tools/nip19"
+  import {Client} from "@pomade/core"
   import {hexToBytes} from "@welshman/lib"
   import {displayPubkey, displayProfile} from "@welshman/util"
-  import {pubkey, session, displayNip05, deriveProfile} from "@welshman/app"
+  import {pubkey, session, SessionMethod, displayNip05, deriveProfile} from "@welshman/app"
   import {slideAndFade} from "@lib/transition"
   import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
+  import Letter from "@assets/icons/letter.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Copy from "@assets/icons/copy.svg?dataurl"
   import Settings from "@assets/icons/settings.svg?dataurl"
@@ -16,15 +18,16 @@
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Spinner from "@lib/components/Spinner.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileDelete from "@app/components/ProfileDelete.svelte"
   import SignerStatus from "@app/components/SignerStatus.svelte"
+  import PasswordReset from "@app/components/PasswordReset.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
-  import {PLATFORM_NAME} from "@app/core/state"
   import {pushModal} from "@app/util/modal"
-  import {clip} from "@app/util/toast"
+  import {clip, pushToast} from "@app/util/toast"
 
   const npub = nip19.npubEncode($pubkey!)
   const profile = deriveProfile($pubkey!)
@@ -38,9 +41,29 @@
 
   const startDelete = () => pushModal(ProfileDelete)
 
+  const startPasswordReset = async () => {
+    loading = true
+
+    try {
+      const {ok, peersByPrefix} = await Client.requestChallenge($session!.email)
+
+      if (!ok) {
+        pushToast({
+          theme: "error",
+          message: "Failed to initiate password reset!",
+        })
+      }
+
+      pushModal(PasswordReset, {peersByPrefix})
+    } finally {
+      loading = false
+    }
+  }
+
   const startRecovery = () => pushModal(InfoKeys)
 
-  let showAdvanced = false
+  let loading = $state(false)
+  let showAdvanced = $state(false)
 </script>
 
 <div class="content column gap-4">
@@ -69,10 +92,11 @@
       <ContentMinimal event={{content: $profile?.about || "", tags: []}} />
     {/key}
   </div>
-  {#if $session?.email}
-    <div class="card2 bg-alt col-4 shadow-md">
+  <div class="card2 bg-alt col-4 shadow-md">
+    {#if $session?.method === SessionMethod.Pomade}
       <FieldInline>
         {#snippet label()}
+          <Icon icon={Letter} />
           <p>Email Address</p>
         {/snippet}
         {#snippet input()}
@@ -81,16 +105,8 @@
             <input readonly value={$session.email} class="grow" />
           </label>
         {/snippet}
-        {#snippet info()}
-          <p>
-            Your email and password can only be used to log into {PLATFORM_NAME}.
-            <Button class="link" onclick={startRecovery}>Start holding your own keys</Button>
-          </p>
-        {/snippet}
       </FieldInline>
-    </div>
-  {/if}
-  <div class="card2 bg-alt col-4 shadow-md">
+    {/if}
     <FieldInline>
       {#snippet label()}
         <p class="flex items-center gap-3">
@@ -139,6 +155,14 @@
       </FieldInline>
     {/if}
     <SignerStatus />
+    {#if $session?.method === SessionMethod.Pomade}
+      <div class="flex gap-2 justify-end">
+        <Button class="btn" onclick={startPasswordReset}>
+          <Spinner {loading}>Update your password</Spinner>
+        </Button>
+        <Button class="btn btn-primary" onclick={startRecovery}>Start holding your own keys</Button>
+      </div>
+    {/if}
   </div>
   <div class="card2 bg-alt shadow-md">
     <div class="flex items-center justify-between">

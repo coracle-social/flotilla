@@ -1,7 +1,6 @@
 <script lang="ts">
   import {uniq} from "@welshman/lib"
   import {Client} from "@pomade/core"
-  import {loginWithPomade} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -19,10 +18,10 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import LogInOTP from "@app/components/LogInOTP.svelte"
   import LogInSelect from "@app/components/LogInSelect.svelte"
+  import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/util/pomade"
   import {pushModal, clearModals} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
-  import {deleteOldPomadeSessions} from "@app/core/commands"
 
   interface Props {
     email?: string
@@ -56,8 +55,8 @@
         const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
 
         if (res.ok && clientOptions) {
-          loginWithPomade(clientOptions.group.group_pk.slice(2), email, clientOptions)
-          deleteOldPomadeSessions()
+          loginWithPomade(clientOptions, email)
+          deleteDeactivatedPomadeSessions()
           setChecked("*")
           clearModals()
         } else {

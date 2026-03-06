@@ -1,15 +1,8 @@
 <script lang="ts">
   import type {ClientOptions} from "@pomade/core"
   import type {Profile} from "@welshman/util"
-  import {
-    makeProfile,
-    makeSecret,
-    getPubkey,
-    RELAYS,
-    MESSAGING_RELAYS,
-    makeEvent,
-  } from "@welshman/util"
-  import {loginWithNip01, loginWithPomade, publishThunk} from "@welshman/app"
+  import {makeProfile, makeSecret, RELAYS, MESSAGING_RELAYS, makeEvent} from "@welshman/util"
+  import {loginWithNip01, publishThunk} from "@welshman/app"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import {getKey, setKey} from "@lib/implicit"
@@ -23,8 +16,6 @@
   import SignUpEmail from "@app/components/SignUpEmail.svelte"
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import SignUpComplete from "@app/components/SignUpComplete.svelte"
-  import {setChecked} from "@app/util/notifications"
-  import {pushModal, clearModals} from "@app/util/modal"
   import {initProfile} from "@app/core/commands"
   import {
     POMADE_SIGNERS,
@@ -33,6 +24,9 @@
     DEFAULT_RELAYS,
     DEFAULT_MESSAGING_RELAYS,
   } from "@app/core/state"
+  import {setChecked} from "@app/util/notifications"
+  import {loginWithPomade} from "@app/util/pomade"
+  import {pushModal, clearModals} from "@app/util/modal"
 
   setKey("signup.email", "")
   setKey("signup.secret", makeSecret())
@@ -73,10 +67,9 @@
       complete: () => pushModal(SignUpComplete, {next: flows.email.finalize}),
       finalize: () => {
         const email = getKey<string>("signup.email")!
-        const secret = getKey<string>("signup.secret")!
         const clientOptions = getKey<ClientOptions>("signup.clientOptions")!
 
-        loginWithPomade(getPubkey(secret), email, clientOptions)
+        loginWithPomade(clientOptions, email)
         completeSignup()
       },
     },
