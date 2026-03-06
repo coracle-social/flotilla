@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {uniq} from "@welshman/lib"
   import {Client} from "@pomade/core"
   import {loginWithPomade} from "@welshman/app"
   import {preventDefault} from "@lib/html"
@@ -13,7 +14,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {clearModals} from "@app/util/modal"
+  import LogInSelect from "@app/components/LogInSelect.svelte"
+  import {pushModal, clearModals} from "@app/util/modal"
   import {setChecked} from "@app/util/notifications"
   import {pushToast} from "@app/util/toast"
   import {POMADE_SIGNERS} from "@app/core/state"
@@ -34,10 +36,10 @@
       .map(x => x.trim())
       .filter(x => x.match(/^[0-9]{8}$/))
 
-    if (otps.length < 2) {
+    if (otps.length < 3) {
       return pushToast({
         theme: "error",
-        message: "Failed to recover, not enough valid recovery codes were provided.",
+        message: "Not enough valid recovery codes were provided.",
       })
     }
 
@@ -50,7 +52,7 @@
         otps,
       )
 
-      if (!ok) {
+      if (!ok || options.length === 0) {
         console.error(messages)
 
         return pushToast({
@@ -59,21 +61,25 @@
         })
       }
 
-      const [client, peers] = options[0]!
-      const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
-
-      if (res.ok && clientOptions) {
-        loginWithPomade(clientOptions.group.group_pk.slice(2), email, clientOptions)
-        deleteOldPomadeSessions()
-        setChecked("*")
-        clearModals()
+      if (uniq(options.map(o => o.pubkey)).length > 1) {
+        pushModal(LogInSelect, {email, options, clientSecret})
       } else {
-        console.error(res.messages)
+        const {client, peers} = options[0]
+        const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
 
-        pushToast({
-          theme: "error",
-          message: "Sorry, we were unable to log you in.",
-        })
+        if (res.ok && clientOptions) {
+          loginWithPomade(clientOptions.group.group_pk.slice(2), email, clientOptions)
+          deleteOldPomadeSessions()
+          setChecked("*")
+          clearModals()
+        } else {
+          console.error(res.messages)
+
+          pushToast({
+            theme: "error",
+            message: "Sorry, we were unable to log you in.",
+          })
+        }
       }
     } finally {
       loading = false
