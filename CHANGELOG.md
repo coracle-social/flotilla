@@ -1,5 +1,31 @@
 # Changelog
 
+# 1.6.5
+
+* Attempt to fix permission grant for notifications
+* Make sync logic more robust
+* Add unban/unallow support
+* Improve support for downloading/opening protected images
+* Add manual send/receive to wallet
+* Show wallet status when wallet is unreachable
+* Update nostr signer capacitor plugin
+* Fix some safe area insets
+* Update NIP 55 signer plugin (fixes Primal login)
+* Refine space join dialogs and discover page
+* Reopen the last DM that was open when navigating back to chat
+* Get rid of ChatEnable interstitial
+* Enable auth for relays we're publishing to
+* Drag and drop space icons
+* Add better muting support
+* Add back button to settings menu
+* Add page titles
+* Improve scroll to event behavior
+* Add in-memory search to rooms
+* Fix editing messages with html tags
+* Fix DM media detection
+* Clean up reporting dialogs
+* Improve room detail
+
 # 1.6.4
 
 * Clean up modal design
