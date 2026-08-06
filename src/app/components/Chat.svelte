@@ -262,12 +262,12 @@
       <div class="truncate min-w-0 flex items-center gap-4 whitespace-nowrap">
         <Button class="flex flex-col gap-1 sm:flex-row sm:gap-2" onclick={showMembers}>
           {#if others.length === 0}
-            <div class="flex gap-2">
+            <div class="flex items-center gap-2">
               <ProfileCircle pubkey={$user.pubkey} size={5} />
               <ProfileName pubkey={$user.pubkey} />
             </div>
           {:else if others.length === 1}
-            <div class="flex gap-2">
+            <div class="flex items-center gap-2">
               <ProfileCircle pubkey={others[0]} size={5} />
               <ProfileName pubkey={others[0]} />
             </div>

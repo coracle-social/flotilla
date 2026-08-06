@@ -34,7 +34,7 @@
     <PrimaryNavItemSpace {url} />
   {:else}
     <PrimaryNavItem title="Home" href="/home">
-      <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={10} />
+      <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={9} />
     </PrimaryNavItem>
     <Divider />
     {#each primarySpaceUrls as url (url)}
@@ -46,7 +46,7 @@
         {title}
         prefix="no-highlight"
         notification={otherSpaceNotifications}>
-        <ImageIcon alt="All Spaces" src={Widget} size={8} />
+        <ImageIcon alt="All Spaces" src={Widget} size={7} />
       </PrimaryNavItem>
     {/snippet}
     {#if secondarySpaceUrls.length > 0}

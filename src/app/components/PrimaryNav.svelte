@@ -45,7 +45,7 @@
   <div class="flex flex-col items-center">
     <PrimaryNavItem title="Settings" href="/settings/profile" prefix="/settings">
       {#if $userProfile?.picture()}
-        <ImageIcon alt="Settings" src={$userProfile.picture()!} class="rounded-full" size={10} />
+        <ImageIcon alt="Settings" src={$userProfile.picture()!} class="rounded-full" size={8} />
       {:else}
         <ImageIcon alt="Settings" src={UserRounded} class="rounded-full" size={8} />
       {/if}
