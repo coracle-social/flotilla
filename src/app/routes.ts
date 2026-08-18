@@ -134,6 +134,26 @@ export const makeClassifiedPath = (url: string, address?: string) =>
 export const makeArticlePath = (url: string, address?: string) =>
   makeSpacePath(url, "articles", address)
 
+// shareToChat is separate from h because the space-level chat has no room to scope an article to
+export const makeArticleCreatePath = (
+  url: string,
+  {h, shareToChat}: {h?: string; shareToChat?: boolean} = {},
+) => {
+  const params = new URLSearchParams()
+
+  if (h) {
+    params.set("h", h)
+  }
+
+  if (shareToChat) {
+    params.set("shareToChat", "1")
+  }
+
+  const query = params.toString()
+
+  return makeSpacePath(url, "articles", "create") + (query ? "?" + query : "")
+}
+
 export const makeCalendarPath = (url: string, address?: string) =>
   makeSpacePath(url, "calendar", address)
 

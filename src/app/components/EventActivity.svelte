@@ -8,7 +8,22 @@
   import type {FeedContext} from "@app/feeds"
   import {deriveChecked} from "@app/notifications"
 
-  const {path, event, context}: {path: string; event: TrustedEvent; context: FeedContext} = $props()
+  // hideLastActive: redundant next to a detail page's own comments below.
+  const {
+    path,
+    event,
+    context,
+    size = "xs",
+    hideLastActive,
+  }: {
+    path: string
+    event: TrustedEvent
+    context: FeedContext
+    size?: "xs" | "sm"
+    hideLastActive?: boolean
+  } = $props()
+
+  const buttonClass = `button button-neutral button-${size} rounded-full`
 
   const checked = deriveChecked(path)
   const related = context.related(event)
@@ -16,13 +31,15 @@
   const lastActive = $derived(max([...$replies, event].map(e => e.created_at)))
 </script>
 
-<div class="flex-inline button button-neutral button-xs gap-1 rounded-full">
+<div class="flex-inline {buttonClass} gap-1">
   <Icon icon={Reply} />
   <span>{$replies.length} {$replies.length === 1 ? "reply" : "replies"}</span>
 </div>
-<div class="button button-neutral button-xs relative rounded-full">
-  {#if gt(lastActive, $checked)}
-    <div class="h-2 w-2 rounded-full bg-primary text-primary-content"></div>
-  {/if}
-  Active {formatTimestampRelative(lastActive)}
-</div>
+{#if !hideLastActive}
+  <div class="{buttonClass} relative">
+    {#if gt(lastActive, $checked)}
+      <div class="h-2 w-2 rounded-full bg-primary text-primary-content"></div>
+    {/if}
+    Active {formatTimestampRelative(lastActive)}
+  </div>
+{/if}

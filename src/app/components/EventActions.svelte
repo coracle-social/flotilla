@@ -1,21 +1,14 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import type {Maybe} from "@welshman/lib"
-  import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent} from "@welshman/util"
-  import {tagSpec, tagValue} from "@welshman/util"
-  import Bolt from "@assets/icons/bolt.svg?dataurl"
-  import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import Button from "@lib/components/Button.svelte"
-  import EmojiButton from "@lib/components/EmojiButton.svelte"
-  import ZapButton from "@app/components/ZapButton.svelte"
   import EventMenu from "@app/components/EventMenu.svelte"
-  import {reactions, relays} from "@app/core"
-  import {ENABLE_ZAPS} from "@app/env"
+  import EventReactButtons from "@app/components/EventReactButtons.svelte"
 
   type Props = {
     url: string
@@ -27,39 +20,17 @@
 
   const {url, noun, event, hideZap, customActions}: Props = $props()
 
-  const shouldProtect = $relays.hasNip(url, 70)
-
   const showPopover = () => tippy?.show()
 
   const hidePopover = () => tippy?.hide()
 
-  const onEmoji = async (emoji: NativeEmoji) => {
-    const protect = await shouldProtect
-    const room = tagValue(tagSpec("h"), event.tags)
-
-    const command = await $reactions.react(event, emoji.unicode, writer => {
-      writer.setProtected(protect)
-
-      if (room) {
-        writer.setRoom(url, room)
-      }
-    })
-
-    return command.publishToRelays([url])
-  }
-
   let tippy: Maybe<TippyController> = $state()
 </script>
 
+<!-- The compact segmented control a card footer gets. EventActionBar is the full-width
+     version a detail page gets. -->
 <div class="items-center join">
-  {#if ENABLE_ZAPS && !hideZap}
-    <ZapButton {url} {event} class="button button-neutral button-xs join-item">
-      <Icon icon={Bolt} size={4} />
-    </ZapButton>
-  {/if}
-  <EmojiButton {onEmoji} class="button button-neutral button-xs join-item">
-    <Icon icon={SmileCircle} size={4} />
-  </EmojiButton>
+  <EventReactButtons {url} {event} {hideZap} class="button button-neutral button-xs join-item" />
   <Button onclick={showPopover} class="flex join-item button button-neutral button-xs">
     <Tippy
       bind:controller={tippy}

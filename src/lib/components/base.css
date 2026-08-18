@@ -276,6 +276,14 @@ body.keyboard-open .room {
   padding: 0.65rem;
   padding-bottom: 1.5rem;
 }
+/* the full-page article composer gets a taller writing surface than the note editor's default */
+.article-editor .tiptap {
+  @apply min-h-96;
+  max-height: none;
+}
+.article-editor .tiptap p.is-editor-empty:first-child::before {
+  @apply text-content-muted opacity-100;
+}
 .input-editor .tiptap {
   --tiptap-object-bg: var(--surface);
   @apply bg-surface block h-auto rounded-2xl;

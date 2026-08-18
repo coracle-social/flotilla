@@ -69,4 +69,73 @@
       @apply border-line border border-solid px-3 py-2 text-left;
     }
   }
+
+  /* A note is skimmed, an article is read: larger type, looser leading. */
+  .content-markdown--article {
+    font-size: 1.075rem;
+    line-height: 1.75;
+    gap: 1.35em;
+
+    h1 {
+      @apply text-3xl;
+    }
+
+    h2 {
+      @apply text-2xl;
+    }
+
+    h3 {
+      @apply text-xl;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      @apply leading-tight;
+      margin-top: 0.75em;
+    }
+
+    /* nothing to separate from at the very top */
+    :is(h1, h2, h3, h4):first-child {
+      margin-top: 0;
+    }
+
+    /* hanging bullets keep the text block flush with the paragraphs around it */
+    ul,
+    ol {
+      @apply flex list-outside flex-col gap-2;
+      padding-left: 1.3em;
+    }
+
+    li {
+      @apply my-0;
+    }
+
+    /* Pull-quote: resets the base rule's left border/indent for a centered line. */
+    blockquote {
+      @apply text-content border-line my-2 border-0 border-y py-6 pl-0 text-xl leading-snug font-bold text-balance;
+
+      p {
+        @apply m-0;
+      }
+    }
+
+    img {
+      @apply w-full;
+    }
+
+    pre code {
+      @apply p-4 text-sm leading-relaxed;
+    }
+
+    hr {
+      @apply my-4;
+    }
+  }
+
+  /* Only when there's no summary/deck above it — the opening line stands in for one instead. */
+  .content-markdown--lead > p:first-child {
+    @apply text-content-muted text-xl leading-snug font-normal;
+  }
 }

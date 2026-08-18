@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import {goto} from "$app/navigation"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
@@ -9,9 +10,9 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import {pushModal} from "@app/modal"
+  import {makeArticleCreatePath} from "@app/routes"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import ArticleCreate from "@app/components/ArticleCreate.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
   import PollCreate from "@app/components/PollCreate.svelte"
@@ -34,7 +35,7 @@
 
   const createPoll = () => pushModal(PollCreate, {url, h, shareToChat: true})
 
-  const createArticle = () => pushModal(ArticleCreate, {url, h, shareToChat: true})
+  const createArticle = () => goto(makeArticleCreatePath(url, {h, shareToChat: true}))
 
   let ul: Element
 

@@ -19,6 +19,8 @@
     children: Snippet
     replaceState?: boolean
     class?: string
+    "data-tip"?: string
+    "aria-label"?: string
   }
 
   const {url, event, children, replaceState, ...props}: Props = $props()

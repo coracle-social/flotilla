@@ -1,14 +1,20 @@
 <script lang="ts">
+  import {formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
   import CommentCompose from "@app/components/CommentCompose.svelte"
-  import NoteCard from "@app/components/NoteCard.svelte"
-  import NoteContent from "@app/components/NoteContent.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import ProfileName from "@app/components/ProfileName.svelte"
+  import ProfileDetail from "@app/components/ProfileDetail.svelte"
+  import Content from "@app/components/Content.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import type {FeedContext} from "@app/feeds"
+  import Danger from "@assets/icons/danger-triangle.svg?dataurl"
+  import {pushModal} from "@app/modal"
+  import {isEventMuted} from "@app/social"
   import type {CommentNode} from "@app/social"
 
   type Props = {
@@ -27,25 +33,56 @@
   const reply = () => setReplyTo(node.comment)
 
   const clearReplyTo = () => setReplyTo(undefined)
+
+  const openProfile = () => pushModal(ProfileDetail, {pubkey: node.comment.pubkey, url})
+
+  const ignoreMute = () => {
+    muted = false
+  }
+
+  let muted = $state($isEventMuted(node.comment))
 </script>
 
-<div class="flex flex-col gap-3">
-  <NoteCard event={node.comment} {url} class="card z-feature w-full">
-    <div class="flex flex-col gap-3 ml-12">
-      <NoteContent showEntire event={node.comment} {url} />
-      {#if url}
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <Button class="button button-neutral button-sm" onclick={reply}>
-            <Icon icon={Reply} />
-            Reply
-          </Button>
-          <CommentActions event={node.comment} {url} {context} />
-        </div>
-      {/if}
+<!-- Vertical rhythm lives on the individual blocks rather than the wrapper, so nesting
+     doesn't compound padding at every level. -->
+<div class="flex flex-col">
+  {#if muted}
+    <div class="flex flex-wrap items-center justify-between gap-2 py-3">
+      <div class="text-content-muted flex items-center gap-2 text-sm">
+        <Icon icon={Danger} size={4} />
+        <p>You have muted this person.</p>
+      </div>
+      <Button class="button button-neutral button-xs" onclick={ignoreMute}>Show anyway</Button>
     </div>
-  </NoteCard>
+  {:else}
+    <div class="flex min-w-0 gap-3 py-3">
+      <Button onclick={openProfile} class="shrink-0 self-start">
+        <ProfileCircle pubkey={node.comment.pubkey} {url} size={8} />
+      </Button>
+      <div class="flex min-w-0 grow flex-col gap-1.5">
+        <div class="flex flex-wrap items-baseline gap-x-2">
+          <Button onclick={openProfile} class="text-sm font-bold hover:underline">
+            <ProfileName pubkey={node.comment.pubkey} {url} />
+          </Button>
+          <span class="text-content-subtle text-xs">
+            {formatTimestamp(node.comment.created_at)}
+          </span>
+        </div>
+        <Content showEntire event={node.comment} {url} />
+        {#if url}
+          <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
+            <Button class="button button-neutral button-xs" onclick={reply}>
+              <Icon icon={Reply} size={4} />
+              Reply
+            </Button>
+            <CommentActions event={node.comment} {url} {context} />
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
   {#if composing && url}
-    <div class="ml-4 pl-4">
+    <div class="ml-11 pb-3">
       <CommentCompose
         {url}
         event={root}
@@ -55,7 +92,10 @@
     </div>
   {/if}
   {#if node.children.length > 0}
-    <div class="flex flex-col gap-3 border-l border-solid border-line ml-4 pl-4">
+    <!-- The thread line runs under the avatar's center and indents replies to line up with
+         this comment's text column; it brightens while the subtree is hovered. -->
+    <div
+      class="border-line-less hover:border-line ml-4 flex flex-col border-l pl-7 transition-colors">
       {#each node.children as child (child.comment.id)}
         <CommentTree node={child} {root} {replyTo} {setReplyTo} {url} {context} />
       {/each}

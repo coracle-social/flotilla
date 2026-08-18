@@ -11,7 +11,9 @@
   import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
+  import EventActionBar from "@app/components/EventActionBar.svelte"
   import {reader} from "@app/core"
+  import {deriveIsDeleted} from "@app/repository"
   import {makeArticlePath, makeSpacePath} from "@app/routes"
 
   type Props = {
@@ -20,44 +22,74 @@
     showRoom?: boolean
     showActivity?: boolean
     context: FeedContext
+    // The article's own page, where this is the primary action bar rather than a card footer.
+    detail?: boolean
   }
 
-  const {url, event, showRoom, showActivity, context}: Props = $props()
+  const {url, event, showRoom, showActivity, context, detail}: Props = $props()
 
   const article = $derived(reader(Article)(event))
   const h = $derived(article.room())
   const topics = $derived(article.topics())
   const path = $derived(makeArticlePath(url, getAddress(event)))
+  const deleted = $derived(deriveIsDeleted(event))
 
   const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url, h})
 
   const createReaction = (values: EventContent) => publishReaction(event, values, {url, h})
 </script>
 
-<div class="flex grow flex-wrap justify-end gap-2">
-  {#if h && showRoom}
-    <Link href={makeSpacePath(url, h)} class="button button-neutral button-xs rounded-full">
-      Posted in #<RoomName {h} {url} />
-    </Link>
-  {/if}
-  <div class="flex min-w-0 flex-wrap gap-2">
-    {#each uniq(topics) as topic (topic)}
-      <button type="button" class="button button-xs rounded-full font-normal">
-        #{topic}
-      </button>
-    {/each}
-  </div>
-  <ThunkStatusOrDeleted {event} {context}>
-    <ReactionSummary
-      {url}
-      {event}
-      {context}
-      {deleteReaction}
-      {createReaction}
-      reactionClass="tip-left" />
-    {#if showActivity}
-      <EventActivity {path} {event} {context} />
+{#if detail}
+  <div class="flex w-full min-w-0 flex-col gap-3">
+    <ThunkStatusOrDeleted {event} {context}>
+      <ReactionSummary
+        {url}
+        {event}
+        {context}
+        {deleteReaction}
+        {createReaction}
+        reactionClass="tip-top" />
+    </ThunkStatusOrDeleted>
+    {#if !$deleted}
+      <EventActionBar {url} {event} noun="Article">
+        {#snippet leading()}
+          {#if showActivity}
+            <EventActivity {path} {event} {context} size="sm" hideLastActive />
+          {/if}
+        {/snippet}
+      </EventActionBar>
     {/if}
-    <EventActions {url} {event} noun="Article" />
-  </ThunkStatusOrDeleted>
-</div>
+  </div>
+{:else}
+  <div class="flex grow flex-wrap items-center justify-end gap-2">
+    <div class="flex min-w-0 flex-wrap items-center gap-2">
+      {#if h && showRoom}
+        <Link href={makeSpacePath(url, h)} class="button button-neutral button-xs rounded-full">
+          Posted in #<RoomName {h} {url} />
+        </Link>
+      {/if}
+      <div class="flex min-w-0 flex-wrap gap-2">
+        {#each uniq(topics) as topic (topic)}
+          <button type="button" class="button button-xs rounded-full font-normal">
+            #{topic}
+          </button>
+        {/each}
+      </div>
+      <ThunkStatusOrDeleted {event} {context}>
+        <ReactionSummary
+          {url}
+          {event}
+          {context}
+          {deleteReaction}
+          {createReaction}
+          reactionClass="tip-left" />
+        {#if showActivity}
+          <EventActivity {path} {event} {context} />
+        {/if}
+      </ThunkStatusOrDeleted>
+    </div>
+    {#if !$deleted}
+      <EventActions {url} {event} noun="Article" />
+    {/if}
+  </div>
+{/if}

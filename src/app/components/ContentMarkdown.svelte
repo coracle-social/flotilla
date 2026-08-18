@@ -64,9 +64,10 @@
   type Props = {
     event: TrustedEvent
     url?: string
+    class?: string
   }
 
-  const {event, url}: Props = $props()
+  const {event, url, class: className}: Props = $props()
 
   const entityPattern = /(nostr:)?n(event|ote|pub|profile|addr)\w{10,1000}/g
 
@@ -125,6 +126,6 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
-<div {onclick} class="content-markdown flex flex-col gap-4 overflow-hidden leading-6">
+<div {onclick} class="content-markdown flex flex-col gap-4 overflow-hidden leading-6 {className}">
   {@html html}
 </div>

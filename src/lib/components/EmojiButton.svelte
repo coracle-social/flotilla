@@ -7,12 +7,12 @@
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
 
-  const {tippyParams = {}, ...props} = $props()
+  const {tippyParams = {}, onEmoji, class: className, children, ...restProps} = $props()
 
   const open = () => tippy?.show()
 
   const onClick = (emoji: NativeEmoji) => {
-    props.onEmoji(emoji)
+    onEmoji(emoji)
     tippy?.hide()
   }
 
@@ -33,13 +33,13 @@
 
 <svelte:document onmousemove={tippy?.visible ? onMouseMove : undefined} />
 
-<Button onclick={open} class={props.class}>
+<Button onclick={open} class={className} {...restProps}>
   <Tippy
     bind:controller={tippy}
     class="flex"
     component={EmojiPicker}
     props={{onClick}}
     params={{trigger: "manual", interactive: true, ...tippyParams}}>
-    {@render props.children?.()}
+    {@render children?.()}
   </Tippy>
 </Button>

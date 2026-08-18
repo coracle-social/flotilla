@@ -49,20 +49,37 @@
   })
 </script>
 
-<div class="flex flex-col gap-3">
-  {#each nodes as node (node.comment.id)}
-    <CommentTree {node} root={event} {replyTo} {setReplyTo} {url} {context} />
-  {/each}
-</div>
-{#if url}
-  {#if replyTo?.id === event.id}
-    <CommentCompose {url} {event} onCancel={clearReplyTo} onSubmit={clearReplyTo} />
-  {:else}
-    <div class="flex justify-end">
-      <Button class="button button-primary" onclick={commentOnRoot}>
-        <Icon icon={Reply} />
-        Add a comment
-      </Button>
+<section class="flex flex-col">
+  <!-- The heading rule is a page-level divider, so it runs full width; the comments below it
+       stay in the article's reading column. -->
+  <div class="border-b px-5 sm:px-8" style="border-color: var(--line)">
+    <div class="mx-auto flex w-full max-w-[68ch] flex-wrap items-center justify-between gap-2 py-3">
+      <h2 class="text-lg font-bold">
+        {nodes.length === 0
+          ? "Discussion about this post"
+          : `${$comments.length} ${$comments.length === 1 ? "comment" : "comments"}`}
+      </h2>
+      {#if url && replyTo?.id !== event.id}
+        <Button class="button button-primary button-sm" onclick={commentOnRoot}>
+          <Icon icon={Reply} size={4} />
+          Add a comment
+        </Button>
+      {/if}
     </div>
-  {/if}
-{/if}
+  </div>
+  <div class="px-5 sm:px-8">
+    <div class="mx-auto flex w-full max-w-[68ch] flex-col pb-10">
+      {#if url && replyTo?.id === event.id}
+        <div class="py-4">
+          <CommentCompose {url} {event} onCancel={clearReplyTo} onSubmit={clearReplyTo} />
+        </div>
+      {/if}
+      {#each nodes as node (node.comment.id)}
+        <CommentTree {node} root={event} {replyTo} {setReplyTo} {url} {context} />
+      {/each}
+      {#if nodes.length === 0 && replyTo?.id !== event.id}
+        <p class="py-6 text-sm opacity-60">No comments yet.</p>
+      {/if}
+    </div>
+  </div>
+</section>

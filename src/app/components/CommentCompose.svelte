@@ -89,7 +89,9 @@
   })
 </script>
 
-<form onsubmit={preventDefault(submit)} class="card card-sm flex flex-col gap-2">
+<form
+  onsubmit={preventDefault(submit)}
+  class="border-line flex flex-col gap-2 rounded-2xl border border-solid p-3">
   <div class="relative">
     <div class="note-editor grow overflow-hidden">
       <EditorContent autofocus={!isMobile} {editor} />

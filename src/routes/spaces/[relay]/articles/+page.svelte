@@ -3,6 +3,7 @@
   import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
   import {page} from "$app/stores"
+  import {goto} from "$app/navigation"
   import {sortBy, partition, spec, max, pushToMapKey} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
@@ -17,13 +18,12 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ArticleItem from "@app/components/ArticleItem.svelte"
-  import ArticleCreate from "@app/components/ArticleCreate.svelte"
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
   import {reader} from "@app/core"
   import {decodeRelay} from "@app/relays"
   import {makeCommentFilter} from "@app/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {pushModal} from "@app/modal"
+  import {makeArticleCreatePath} from "@app/routes"
 
   const url = decodeRelay($page.params.relay!)
   const context = makeFeedContext({relays: [url]})
@@ -39,7 +39,7 @@
   let element: HTMLElement | undefined = $state()
   let events: Readable<TrustedEvent[]> = $state(readable([]))
 
-  const createArticle = () => pushModal(ArticleCreate, {url})
+  const createArticle = () => goto(makeArticleCreatePath(url))
 
   const articles = $derived.by(() => {
     const scores = new Map<string, number[]>()
