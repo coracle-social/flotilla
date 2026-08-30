@@ -41,7 +41,7 @@
     prependParent,
   } from "@app/rooms"
   import {userSettingsValues} from "@app/settings"
-  import {makeFeed, makeFeedContext} from "@app/feeds"
+  import {makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {checked, deferredRoomPath, setChecked} from "@app/notifications"
   import {makeRoomPath} from "@app/routes"
   import {pendingShare, type Share} from "@app/share"
@@ -308,8 +308,8 @@
   let userHasScrolled = $state(false)
   let isProgrammaticScroll = $state(false)
   let isUserScrolling = $state(false)
-  let loadingBackward = $state(true)
-  let loadingForward = $state(true)
+  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
+  let newer: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
   let share: Maybe<Share> = $state()
   let parent: TrustedEvent | undefined = $state()
   let element: HTMLElement | undefined = $state()
@@ -323,6 +323,11 @@
   let events: Readable<TrustedEvent[]> = $state(readable([]))
   let compose: RoomCompose | undefined = $state()
   let eventToEdit: TrustedEvent | undefined = $state()
+
+  // There is always more history until the feed says otherwise, so this stays up rather than
+  // blinking between spans while it walks a quiet room.
+  const loadingBackward = $derived($older?.status !== "exhausted")
+  const reachedStartOfHistory = $derived($older?.status === "exhausted")
 
   // Claim the share once we're on screen. Sharing into the room you're already looking at
   // doesn't re-create this component, so this can't be read once on mount.
@@ -415,6 +420,14 @@
     return elements
   })
 
+  // Newer messages are only worth waiting for when the window stops short of the present, which
+  // only happens after jumping into history — anything published from here on arrives through the
+  // repository rather than through a forward walk. And with no messages between them the two
+  // loaders would sit against each other, so this one yields while the other is still running.
+  const loadingForward = $derived(
+    !isNaN(at) && $newer?.status !== "exhausted" && !(elements.length === 0 && loadingBackward),
+  )
+
   $effect(() => {
     if (elements.length > 0 && !isUserScrolling) {
       requestAnimationFrame(manageScrollPosition)
@@ -427,21 +440,23 @@
     const feed = makeFeed({
       relays: [url],
       at: at || now(),
-      element: element!,
       filters: [
         h ? {kinds: [MESSAGE, addMemberKind], "#h": [h]} : {kinds: [MESSAGE, addMemberKind]},
       ],
       onEvent: context.add,
-      onBackwardExhausted: () => {
-        loadingBackward = false
-      },
-      onForwardExhausted: () => {
-        loadingForward = false
-      },
     })
 
+    // The container is reversed, so scrolling away from its origin reaches older messages and
+    // sitting at the origin is the newest end.
+    older = makeScrollLoader(element!, feed.loadOlder)
+    newer = makeScrollLoader(element!, feed.loadNewer, {reverse: true})
+
     events = feed.events
-    cleanup = feed.cleanup
+    cleanup = () => {
+      older?.stop()
+      newer?.stop()
+      feed.cleanup()
+    }
   }
 
   const onEscape = () => {
@@ -548,7 +563,7 @@
             </div>
           </div>
         {:else}
-          {#if loadingForward && elements.length > 0}
+          {#if loadingForward}
             <p class="py-20 flex justify-center">
               <Spinner loading={loadingForward}>Looking for messages...</Spinner>
             </p>
@@ -588,8 +603,8 @@
           {/each}
           <p class="flex h-10 items-center justify-center py-20">
             {#if loadingBackward}
-              <Spinner loading={loadingBackward}>Looking for messages...</Spinner>
-            {:else}
+              <Spinner loading>Looking for messages...</Spinner>
+            {:else if reachedStartOfHistory}
               End of message history
             {/if}
           </p>

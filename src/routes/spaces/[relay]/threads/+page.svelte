@@ -4,6 +4,7 @@
   import type {Readable} from "svelte/store"
   import {page} from "$app/stores"
   import {sortBy, partition, spec, max, pushToMapKey, groupBy} from "@welshman/lib"
+  import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {THREAD, tagValue, tagSpec} from "@welshman/util"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
@@ -18,7 +19,7 @@
   import {decodeRelay} from "@app/relays"
   import {displayRoom} from "@app/rooms"
   import {makeCommentFilter} from "@app/content"
-  import {makeFeed, makeFeedContext} from "@app/feeds"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {pushModal} from "@app/modal"
 
   const url = decodeRelay($page.params.relay!)
@@ -26,7 +27,10 @@
 
   onDestroy(context.cleanup)
 
-  let loading = $state(true)
+  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
+
+  const loading = $derived(isFeedLoading($older))
+  const exhausted = $derived($older?.status === "exhausted")
   let element: HTMLElement | undefined = $state()
   let events: Readable<TrustedEvent[]> = $state(readable([]))
 
@@ -56,17 +60,20 @@
   onMount(() => {
     const feed = makeFeed({
       relays: [url],
-      element: element!,
       onEvent: context.add,
       filters: [{kinds: [THREAD]}, makeCommentFilter([THREAD])],
-      onBackwardExhausted: () => {
-        loading = false
-      },
     })
 
     events = feed.events
 
-    return () => feed.cleanup()
+    // These lists are sorted newest first, so reaching the bottom is reaching the oldest thing
+    // loaded.
+    older = makeScrollLoader(element!, feed.loadOlder)
+
+    return () => {
+      older?.stop()
+      feed.cleanup()
+    }
   })
 </script>
 
@@ -93,7 +100,7 @@
     <Spinner {loading}>
       {#if loading}
         Looking for threads...
-      {:else if threadFeed.items.length === 0}
+      {:else if exhausted && threadFeed.items.length === 0}
         No threads found.
       {/if}
     </Spinner>

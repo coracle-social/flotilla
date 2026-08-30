@@ -1,6 +1,6 @@
-import {derived, readable, writable} from "svelte/store"
-import type {Readable} from "svelte/store"
-import {batch, between, call, int, now, on, sortBy, uniqBy, MONTH, YEAR} from "@welshman/lib"
+import {derived, get, readable, writable} from "svelte/store"
+import type {Readable, Writable} from "svelte/store"
+import {batch, call, int, now, on, sortBy, uniqBy, MONTH, YEAR} from "@welshman/lib"
 import {
   COMMENT,
   DELETE,
@@ -16,10 +16,12 @@ import {
   tagValue,
   tagValues,
 } from "@welshman/util"
+import type {Maybe} from "@welshman/lib"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {mergeRepositoryUpdates} from "@welshman/net"
 import type {RepositoryUpdate} from "@welshman/net"
 import {createScroller} from "@lib/html"
+import type {ScrollerOpts} from "@lib/html"
 import {daysBetween} from "@lib/util"
 import {EVENT_CONTEXT_KINDS, REACTION_KINDS} from "@app/content"
 import {app, network} from "@app/core"
@@ -203,100 +205,24 @@ export const makeFeedContext = ({relays}: {relays: string[] | Promise<string[]>}
 
 export type FeedContext = ReturnType<typeof makeFeedContext>
 
-export const makeFeed = ({
+// Keeps a feed's store in step with the repository: events that arrive later, events that get
+// deleted, and events already held that have only now been seen on one of the feed's relays.
+const syncFeed = ({
   relays,
   filters,
-  element,
-  onEvent,
-  onBackwardExhausted,
-  onForwardExhausted,
-  at = now(),
+  events,
+  seen,
+  insertEvents,
+  requireRelay = true,
 }: {
   relays: string[]
   filters: Filter[]
-  element: HTMLElement
-  onEvent?: (event: TrustedEvent) => void
-  onBackwardExhausted?: () => void
-  onForwardExhausted?: () => void
-  at?: number
+  events: Writable<TrustedEvent[]>
+  seen: Set<string>
+  insertEvents: (events: TrustedEvent[]) => void
+  // Whether an event has to have been seen on one of `relays` to belong to this feed
+  requireRelay?: boolean
 }) => {
-  const controller = new AbortController()
-  const events = writable<TrustedEvent[]>([])
-  const seen = new Set<string>()
-
-  let interval = int(6, MONTH)
-  let buffer: TrustedEvent[] = []
-  let backwardWindow = [at - interval, at]
-  let forwardWindow = [at, at + interval]
-
-  const insertIntoBuffer = (event: TrustedEvent) => {
-    for (let i = 0; i < buffer.length; i++) {
-      if (buffer[i].created_at < event.created_at) {
-        buffer.splice(i, 0, event)
-        return
-      }
-    }
-    buffer.push(event)
-  }
-
-  // Batch-insert events into the visible store with a single update
-  const insertEvents = (newEvents: Iterable<TrustedEvent>) => {
-    const visible: TrustedEvent[] = []
-
-    for (const event of newEvents) {
-      if (seen.has(event.id)) {
-        continue
-      }
-
-      seen.add(event.id)
-
-      if (between([backwardWindow[0], forwardWindow[1]], event.created_at)) {
-        visible.push(event)
-      } else {
-        insertIntoBuffer(event)
-      }
-    }
-
-    if (visible.length > 0) {
-      visible.sort((a, b) => a.created_at - b.created_at)
-
-      for (const event of visible) {
-        onEvent?.(event)
-      }
-
-      events.update($events => {
-        const merged: TrustedEvent[] = []
-        let i = 0
-        let j = 0
-
-        while (i < $events.length && j < visible.length) {
-          if ($events[i].created_at <= visible[j].created_at) {
-            merged.push($events[i++])
-          } else {
-            merged.push(visible[j++])
-          }
-        }
-
-        while (i < $events.length) merged.push($events[i++])
-        while (j < visible.length) merged.push(visible[j++])
-
-        return merged
-      })
-    }
-  }
-
-  // Buffered events are routed through insertEvents again, so forget we've seen
-  // them to let the window check run a second time
-  const drainBuffer = () => {
-    const drained = buffer.splice(0, 30)
-
-    for (const event of drained) {
-      seen.delete(event.id)
-    }
-
-    insertEvents(drained)
-  }
-
   const onTrackedId = batch(150, (ids: string[]) => {
     const matching: TrustedEvent[] = []
 
@@ -313,7 +239,7 @@ export const makeFeed = ({
     }
   })
 
-  const unsubscribers = [
+  return [
     on(
       app.get().repository,
       "update",
@@ -321,7 +247,6 @@ export const makeFeed = ({
         const {added, removed} = mergeRepositoryUpdates(updates)
 
         if (removed.size > 0) {
-          buffer = buffer.filter(e => !removed.has(e.id))
           events.update($events => $events.filter(e => !removed.has(e.id)))
 
           for (const id of removed) {
@@ -332,7 +257,7 @@ export const makeFeed = ({
         const matching = added.filter(
           event =>
             matchFilters(filters, event) &&
-            relays.some(url => app.get().tracker.getRelays(event.id).has(url)),
+            (!requireRelay || relays.some(url => app.get().tracker.getRelays(event.id).has(url))),
         )
 
         if (matching.length > 0) {
@@ -346,63 +271,181 @@ export const makeFeed = ({
       }
     }),
   ]
+}
+
+// One direction of a feed. A span that comes back empty is a gap in the timeline, not the end of
+// it — conflating the two either stops loading at the first gap or walks the whole history
+// looking for the end of one.
+export type FeedLoadState =
+  | {status: "idle"}
+  | {status: "loading"}
+  | {status: "searching"}
+  | {status: "exhausted"}
+
+// Empty spans to walk per trigger. Enough to cross a gap; not enough to reach the end of the
+// history on a single request.
+const SPANS_PER_TRIGGER = 3
+
+// Whether a request is actually in flight, which is not the same as whether more might exist. A
+// list that already has what it needs shouldn't sit under a spinner just because it hasn't
+// walked to the end of the history.
+export const isFeedLoading = (state: Maybe<FeedLoadState>) =>
+  state?.status === "loading" || state?.status === "searching"
+
+const makeFeedLoader = (load: () => Promise<{found: number; exhausted: boolean}>) => {
+  const state = writable<FeedLoadState>({status: "idle"})
+
+  let running = false
+
+  const run = async () => {
+    if (running || get(state).status === "exhausted") return
+
+    running = true
+
+    try {
+      for (let span = 0; span < SPANS_PER_TRIGGER; span++) {
+        state.set({status: span > 0 ? "searching" : "loading"})
+
+        const {found, exhausted} = await load()
+
+        if (exhausted) {
+          state.set({status: "exhausted"})
+          return
+        }
+
+        if (found > 0) {
+          state.set({status: "idle"})
+          return
+        }
+      }
+
+      state.set({status: "idle"})
+    } finally {
+      running = false
+    }
+  }
+
+  return {subscribe: state.subscribe, run}
+}
+
+// A loader triggered by proximity to the end of a scroll container, which is how every list in
+// the app pages. The container's orientation decides which direction `reverse` reaches, so the
+// caller passes it — a reversed chat scrolls away from its origin to find older messages, an
+// ordinary feed scrolls toward the end of its own content.
+export const makeScrollLoader = (
+  element: HTMLElement,
+  load: () => Promise<{found: number; exhausted: boolean}>,
+  options: Partial<ScrollerOpts> = {},
+) => {
+  const loader = makeFeedLoader(load)
+  const scroller = createScroller({
+    element,
+    delay: 300,
+    threshold: 5000,
+    ...options,
+    onScroll: loader.run,
+  })
+
+  return {subscribe: loader.subscribe, stop: scroller.stop}
+}
+
+// Holds every event a view has loaded, sorted oldest to newest, and knows how to ask for the
+// next span in either direction. It does not decide *when* to ask — the view does, because the
+// view is what knows what is on screen.
+export const makeFeed = ({
+  relays,
+  filters,
+  onEvent,
+  at = now(),
+}: {
+  relays: string[]
+  filters: Filter[]
+  onEvent?: (event: TrustedEvent) => void
+  at?: number
+}) => {
+  const controller = new AbortController()
+  const events = writable<TrustedEvent[]>([])
+  const seen = new Set<string>()
+
+  // The span the relays have been asked about, which grows outward from the anchor
+  let oldest = at
+  let newest = at
+  let interval = int(MONTH)
+
+  const insertEvents = (newEvents: Iterable<TrustedEvent>) => {
+    const added: TrustedEvent[] = []
+
+    for (const event of newEvents) {
+      if (!seen.has(event.id)) {
+        seen.add(event.id)
+        added.push(event)
+        onEvent?.(event)
+      }
+    }
+
+    if (added.length > 0) {
+      added.sort((a, b) => a.created_at - b.created_at)
+
+      events.update($events => {
+        const merged: TrustedEvent[] = []
+        let i = 0
+        let j = 0
+
+        while (i < $events.length && j < added.length) {
+          if ($events[i].created_at <= added[j].created_at) {
+            merged.push($events[i++])
+          } else {
+            merged.push(added[j++])
+          }
+        }
+
+        while (i < $events.length) merged.push($events[i++])
+        while (j < added.length) merged.push(added[j++])
+
+        return merged
+      })
+    }
+  }
+
+  const unsubscribers = syncFeed({relays, filters, events, seen, insertEvents})
 
   const loadTimeframe = async (since: number, until: number) => {
-    const events = await network.get().request({
+    const found = await network.get().request({
       relays,
       autoClose: true,
       signal: controller.signal,
       filters: filters.map(filter => ({...filter, since, until})),
     })
 
-    // If we found nothing, accelerate
-    if (events.length === 0) {
-      interval = Math.round(interval * 1.1)
-    } else {
-      interval = int(MONTH)
-    }
+    // A span that turns up nothing widens the next one, so walking a sparse history doesn't
+    // take dozens of round trips
+    interval = found.length > 0 ? int(MONTH) : Math.round(interval * 1.5)
+
+    return found.length
   }
 
-  const backwardScroller = createScroller({
-    element,
-    delay: 300,
-    threshold: 5000,
-    onScroll: async () => {
-      const [since, until] = backwardWindow
+  // Ask for the next span in each direction. A span that comes back empty is normal while
+  // walking a sparse history, so the count is reported separately from whether there is any
+  // history left — a caller watching its list for changes would never hear about an empty one.
+  const loadOlder = async () => {
+    if (oldest < now() - int(2, YEAR)) return {found: 0, exhausted: true}
 
-      backwardWindow = [since - interval, since]
+    const until = oldest
 
-      drainBuffer()
+    oldest = until - interval
 
-      if (until > now() - int(2, YEAR)) {
-        await loadTimeframe(since, until)
-      } else if (!buffer.some(e => e.created_at < at)) {
-        backwardScroller.stop()
-        onBackwardExhausted?.()
-      }
-    },
-  })
+    return {found: await loadTimeframe(oldest, until), exhausted: false}
+  }
 
-  const forwardScroller = createScroller({
-    element,
-    reverse: true,
-    delay: 300,
-    threshold: 5000,
-    onScroll: async () => {
-      const [since, until] = forwardWindow
+  const loadNewer = async () => {
+    if (newest >= now()) return {found: 0, exhausted: true}
 
-      forwardWindow = [until, until + interval]
+    const since = newest
 
-      drainBuffer()
+    newest = Math.min(now(), since + interval)
 
-      if (until < now()) {
-        await loadTimeframe(since, until)
-      } else if (!buffer.some(e => e.created_at > at)) {
-        forwardScroller.stop()
-        onForwardExhausted?.()
-      }
-    },
-  })
+    return {found: await loadTimeframe(since, newest), exhausted: false}
+  }
 
   for (const url of relays) {
     insertEvents(getEventsForUrl(url, filters))
@@ -410,35 +453,33 @@ export const makeFeed = ({
 
   return {
     events,
+    loadOlder,
+    loadNewer,
     cleanup: () => {
       controller.abort()
-      forwardScroller.stop()
-      backwardScroller.stop()
       unsubscribers.forEach(call)
     },
   }
 }
 
+// Same split as makeFeed: it holds what has been loaded and knows how to reach further out in
+// either direction, while the page decides when to ask. Calendar events are addressed by the
+// days they cover rather than by when they were published, so the spans are date hashes.
 export const makeCalendarFeed = ({
   relays,
   filters,
-  element,
   onEvent,
-  onExhausted,
 }: {
   relays: string[]
   filters: Filter[]
-  element: HTMLElement
   onEvent?: (event: TrustedEvent) => void
-  onExhausted?: () => void
 }) => {
   const interval = int(5, MONTH)
   const controller = new AbortController()
   const seen = new Set<string>()
 
-  let exhaustedScrollers = 0
-  let backwardWindow = [now() - interval, now()]
-  let forwardWindow = [now(), now() + interval]
+  let oldest = now()
+  let newest = now()
 
   const getStart = (event: TrustedEvent) => parseInt(tagValue(tagSpec("start"), event.tags) || "")
 
@@ -454,7 +495,6 @@ export const makeCalendarFeed = ({
     ),
   )
 
-  // Batch-insert calendar events into the store with a single update
   const insertEvents = (newEvents: TrustedEvent[]) => {
     const valid = newEvents.filter(e => !isNaN(getStart(e)) && !isNaN(getEnd(e)) && !seen.has(e.id))
 
@@ -490,107 +530,54 @@ export const makeCalendarFeed = ({
     })
   }
 
-  const onTrackedId = batch(150, (ids: string[]) => {
-    const matching: TrustedEvent[] = []
-
-    for (const id of new Set(ids)) {
-      const event = app.get().repository.getEvent(id)
-
-      if (event && matchFilters(filters, event)) {
-        matching.push(event)
-      }
-    }
-
-    if (matching.length > 0) {
-      insertEvents(matching)
-    }
+  // Calendar events are addressable and often relayed on from elsewhere, so this feed takes any
+  // matching event rather than only those seen on its own relays
+  const unsubscribers = syncFeed({
+    relays,
+    filters,
+    events,
+    seen,
+    insertEvents,
+    requireRelay: false,
   })
 
-  const unsubscribers = [
-    on(
-      app.get().repository,
-      "update",
-      batch(150, (updates: RepositoryUpdate[]) => {
-        const {added, removed} = mergeRepositoryUpdates(updates)
-
-        if (removed.size > 0) {
-          events.update($events => $events.filter(e => !removed.has(e.id)))
-
-          for (const id of removed) {
-            seen.delete(id)
-          }
-        }
-
-        const matching = added.filter(event => matchFilters(filters, event))
-
-        if (matching.length > 0) {
-          insertEvents(matching)
-        }
-      }),
-    ),
-    on(app.get().tracker, "add", (id: string, url: string) => {
-      if (relays.includes(url)) {
-        onTrackedId(id)
-      }
-    }),
-  ]
-
-  const loadTimeframe = (since: number, until: number) => {
-    const hashes = daysBetween(since, until).map(String)
-
-    network.get().request({
+  const loadTimeframe = async (since: number, until: number) => {
+    const found = await network.get().request({
       relays,
       autoClose: true,
       signal: controller.signal,
-      filters: [{kinds: [EVENT_TIME], "#D": hashes}],
+      filters: [{kinds: [EVENT_TIME], "#D": daysBetween(since, until).map(String)}],
     })
+
+    return found.length
   }
 
-  const maybeExhausted = () => {
-    if (++exhaustedScrollers === 2) {
-      onExhausted?.()
-    }
+  const loadOlder = async () => {
+    if (oldest < now() - int(2, YEAR)) return {found: 0, exhausted: true}
+
+    const until = oldest
+
+    oldest = until - interval
+
+    return {found: await loadTimeframe(oldest, until), exhausted: false}
   }
 
-  const backwardScroller = createScroller({
-    element,
-    reverse: true,
-    onScroll: () => {
-      const [since, until] = backwardWindow
+  const loadNewer = async () => {
+    if (newest > now() + int(2, YEAR)) return {found: 0, exhausted: true}
 
-      backwardWindow = [since - interval, since]
+    const since = newest
 
-      if (until > now() - int(2, YEAR)) {
-        loadTimeframe(since, until)
-      } else {
-        backwardScroller.stop()
-        maybeExhausted()
-      }
-    },
-  })
+    newest = since + interval
 
-  const forwardScroller = createScroller({
-    element,
-    onScroll: () => {
-      const [since, until] = forwardWindow
-
-      forwardWindow = [until, until + interval]
-
-      if (until < now() + int(2, YEAR)) {
-        loadTimeframe(since, until)
-      } else {
-        forwardScroller.stop()
-        maybeExhausted()
-      }
-    },
-  })
+    return {found: await loadTimeframe(since, newest), exhausted: false}
+  }
 
   return {
     events,
+    loadOlder,
+    loadNewer,
     cleanup: () => {
       controller.abort()
-      forwardScroller.stop()
-      backwardScroller.stop()
       unsubscribers.forEach(call)
     },
   }

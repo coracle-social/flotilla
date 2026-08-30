@@ -3,6 +3,7 @@
   import {derived, writable} from "svelte/store"
   import type {Writable} from "svelte/store"
   import {sortBy, uniqBy, now} from "@welshman/lib"
+  import type {Maybe} from "@welshman/lib"
   import {NOTE, outbox} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {getReplyTags} from "@welshman/domain"
@@ -11,7 +12,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {app, network, router} from "@app/core"
-  import {makeFeed, makeFeedContext} from "@app/feeds"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
 
   type Props = {
     pubkey: string
@@ -44,7 +45,10 @@
   })
 
   let element: HTMLElement | undefined = $state()
-  let exhausted = $state(false)
+  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
+
+  const exhausted = $derived($older?.status === "exhausted")
+  const loading = $derived(isFeedLoading($older))
   let events: Writable<TrustedEvent[]> = $state(writable([]))
 
   const feedEvents = $derived(
@@ -60,16 +64,18 @@
     relays.then($relays => {
       const feed = makeFeed({
         relays: $relays,
-        element: element!,
         filters: [{kinds: [NOTE], authors: [pubkey]}],
         onEvent: context.add,
-        onBackwardExhausted: () => {
-          exhausted = true
-        },
       })
 
       events = feed.events
-      cleanup = feed.cleanup
+
+      older = makeScrollLoader(element!, feed.loadOlder)
+
+      cleanup = () => {
+        older?.stop()
+        feed.cleanup()
+      }
     })
 
     return () => cleanup?.()
@@ -86,7 +92,7 @@
       <p class="py-12 text-center text-sm opacity-75">No notes found for this profile.</p>
     {/if}
   {/each}
-  {#if !exhausted}
+  {#if loading}
     <p class="my-12 flex items-center justify-center gap-2">
       <Spinner loading />
       Loading notes...

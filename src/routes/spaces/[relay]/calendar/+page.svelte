@@ -4,6 +4,7 @@
   import {readable} from "svelte/store"
   import {page} from "$app/stores"
   import {now, last, formatTimestampAsDate} from "@welshman/lib"
+  import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {EVENT_TIME, tagValue, tagSpec} from "@welshman/util"
   import {fly} from "@lib/transition"
@@ -20,7 +21,7 @@
   import {pushModal} from "@app/modal"
   import {decodeRelay} from "@app/relays"
   import {makeCommentFilter} from "@app/content"
-  import {makeCalendarFeed, makeFeedContext} from "@app/feeds"
+  import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
 
   const url = decodeRelay($page.params.relay!)
   const context = makeFeedContext({relays: [url]})
@@ -32,7 +33,13 @@
   let element: HTMLElement | undefined = $state()
   onDestroy(context.cleanup)
 
-  let loading = $state(true)
+  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
+  let newer: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
+
+  // Unlike the other feeds this one asks whether more might exist rather than whether a request
+  // is in flight: a digest fills in progressively across many spans, and a spinner that blinked
+  // between each of them would read as broken.
+  const loading = $derived(!$older || $older.status !== "exhausted")
   let events: Readable<TrustedEvent[]> = $state(readable([]))
 
   type Item = {
@@ -96,17 +103,21 @@
   onMount(() => {
     const feed = makeCalendarFeed({
       relays: [url],
-      element: element!,
       onEvent: context.add,
       filters: [{kinds: [EVENT_TIME]}, makeCommentFilter([EVENT_TIME])],
-      onExhausted: () => {
-        loading = false
-      },
     })
 
     events = feed.events
 
-    return () => feed.cleanup()
+    // The calendar runs in both directions from today, so both ends fetch as they are reached
+    older = makeScrollLoader(element!, feed.loadOlder, {reverse: true})
+    newer = makeScrollLoader(element!, feed.loadNewer)
+
+    return () => {
+      older?.stop()
+      newer?.stop()
+      feed.cleanup()
+    }
   })
 </script>
 

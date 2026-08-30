@@ -117,20 +117,27 @@ export const createScroller = ({
   const check = async () => {
     const isHidden = (el: Element) => !(el as HTMLElement).offsetParent || el.clientHeight === 0
 
-    if (container && !isHidden(container)) {
-      // While we have empty space, fill it
-      const {scrollY, innerHeight} = window
-      const {scrollHeight, scrollTop, clientHeight} = container
-      const viewHeight = clientHeight || innerHeight
-      const offset = Math.abs(scrollTop || scrollY)
-      const shouldLoad = reverse
-        ? offset < threshold
-        : offset + viewHeight + threshold > scrollHeight
+    // A relay that rejects — a dropped socket, an aborted request — must not take the loop with
+    // it. Letting it throw skips the rAF below, which silently ends scrolling for the life of
+    // the component and leaves whatever spinner the caller is showing up forever.
+    try {
+      if (container && !isHidden(container)) {
+        // While we have empty space, fill it
+        const {scrollY, innerHeight} = window
+        const {scrollHeight, scrollTop, clientHeight} = container
+        const viewHeight = clientHeight || innerHeight
+        const offset = Math.abs(scrollTop || scrollY)
+        const shouldLoad = reverse
+          ? offset < threshold
+          : offset + viewHeight + threshold > scrollHeight
 
-      // Only trigger loading the first time we reach the threshold
-      if (shouldLoad) {
-        await onScroll()
+        // Only trigger loading the first time we reach the threshold
+        if (shouldLoad) {
+          await onScroll()
+        }
       }
+    } catch (error) {
+      console.error(error)
     }
 
     // No need to check all that often
