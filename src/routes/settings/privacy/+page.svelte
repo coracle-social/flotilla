@@ -23,7 +23,7 @@
   }
 
   const send = async () => {
-    loading = true
+    sendingLogs = true
 
     try {
       const thunk = await sendLogs()
@@ -35,7 +35,7 @@
         pushToast({message: "Your logs have been sent. Thank you!"})
       }
     } finally {
-      loading = false
+      sendingLogs = false
     }
   }
 
@@ -44,13 +44,20 @@
   }
 
   const onsubmit = preventDefault(async () => {
-    await publishSettings($settings)
+    loading = true
 
-    pushToast({message: "Your settings have been saved!"})
+    try {
+      await publishSettings($settings)
+
+      pushToast({message: "Your settings have been saved!"})
+    } finally {
+      loading = false
+    }
   })
 
   const settings = createSettingsForm()
   let loading = $state(false)
+  let sendingLogs = $state(false)
 </script>
 
 <form {onsubmit}>
@@ -89,8 +96,8 @@
           <p>Something went wrong?</p>
         {/snippet}
         {#snippet input()}
-          <Button class="button button-neutral" onclick={send} disabled={loading}>
-            <Spinner {loading}>Send Logs</Spinner>
+          <Button class="button button-neutral" onclick={send} disabled={sendingLogs}>
+            <Spinner loading={sendingLogs}>Send Logs</Spinner>
           </Button>
         {/snippet}
         {#snippet info()}
@@ -101,8 +108,11 @@
       </FieldInline>
     </Card>
     <Card class="sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
-      <Button class="button button-neutral" onclick={reset}>Discard Changes</Button>
-      <Button class="button button-primary" type="submit">Save Changes</Button>
+      <Button class="button button-neutral" onclick={reset} disabled={loading}
+        >Discard Changes</Button>
+      <Button class="button button-primary" type="submit" disabled={loading}>
+        <Spinner {loading}>Save Changes</Spinner>
+      </Button>
     </Card>
   </PageContent>
 </form>

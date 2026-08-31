@@ -178,7 +178,7 @@
     <SignerStatus />
     {#if pomadeEmail}
       <div class="flex flex-col lg:flex-row gap-4 lg:gap-2 justify-end">
-        <Button class="button button-neutral" onclick={startPasswordReset}>
+        <Button class="button button-neutral" onclick={startPasswordReset} disabled={loading}>
           <Spinner {loading}>Update your password</Spinner>
         </Button>
         <Button class="button button-primary" onclick={startRecovery}

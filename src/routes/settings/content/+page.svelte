@@ -10,6 +10,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Card from "@lib/components/Card.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Spinner from "@lib/components/Spinner.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {blossomServerLists, deriveUserItem, muteLists} from "@app/core"
@@ -31,16 +32,25 @@
   }
 
   const onsubmit = preventDefault(async () => {
-    await publishSettings($settings)
+    loading = true
 
-    await $muteLists.setMutes({publicTags: mutedPubkeys.map(pubkey => ["p", pubkey])}).then(publish)
+    try {
+      await publishSettings($settings)
 
-    await $blossomServerLists.setUrls($state.snapshot(blossomServers)).then(publish)
+      await $muteLists
+        .setMutes({publicTags: mutedPubkeys.map(pubkey => ["p", pubkey])})
+        .then(publish)
 
-    pushToast({message: "Your settings have been saved!"})
+      await $blossomServerLists.setUrls($state.snapshot(blossomServers)).then(publish)
+
+      pushToast({message: "Your settings have been saved!"})
+    } finally {
+      loading = false
+    }
   })
 
   const settings = createSettingsForm()
+  let loading = $state(false)
   let mutedPubkeys = $state($userMuteList?.pubkeys() ?? [])
   let blossomServers = $state($userBlossomServerList?.urls() ?? [])
 </script>
@@ -128,8 +138,11 @@
       </Field>
     </Card>
     <Card class="sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
-      <Button class="button button-neutral" onclick={reset}>Discard Changes</Button>
-      <Button class="button button-primary" type="submit">Save Changes</Button>
+      <Button class="button button-neutral" onclick={reset} disabled={loading}
+        >Discard Changes</Button>
+      <Button class="button button-primary" type="submit" disabled={loading}>
+        <Spinner {loading}>Save Changes</Spinner>
+      </Button>
     </Card>
   </PageContent>
 </form>
