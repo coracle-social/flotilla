@@ -32,6 +32,8 @@ import {
   ROOM_DELETE,
   ROOM_REMOVE_MEMBER,
   ROOMS,
+  hexTags,
+  tagValues,
   verifiedSymbol,
 } from "@welshman/util"
 import type {Handle, TrustedEvent} from "@welshman/util"
@@ -145,13 +147,16 @@ const kinds = {
   ],
 }
 
-// Space and room events mean nothing apart from the relay they came from — welshman keys them
-// per relay, and only counts room state the relay itself signed.
 const isRelayScoped = (event: TrustedEvent) =>
   kinds.space.includes(event.kind) || kinds.room.includes(event.kind)
 
-const shouldPersistEvent = (event: TrustedEvent) =>
-  kinds.meta.includes(event.kind) || kinds.alert.includes(event.kind) || isRelayScoped(event)
+const isMembershipChange = (event: TrustedEvent) =>
+  event.kind === ROOM_ADD_MEMBER || event.kind === ROOM_REMOVE_MEMBER
+
+const shouldPersistEvent = (event: TrustedEvent, pubkey: string) =>
+  isMembershipChange(event)
+    ? tagValues(hexTags("p"), event.tags).includes(pubkey)
+    : kinds.meta.includes(event.kind) || kinds.alert.includes(event.kind) || isRelayScoped(event)
 
 type EventItem = {id: string; event: TrustedEvent; relays: string[]}
 
@@ -170,11 +175,14 @@ class Storage {
   private timeouts: ReturnType<typeof setTimeout>[] = []
   private stopped = false
 
+  private readonly pubkey: string
+
   constructor(private readonly app: IApp) {
     // Every identity used to share one database; drop it rather than leave it on disk.
     void deleteDB("flotilla-9gl")
 
-    this.db = new IDB({name: `flotilla-9gl-${User.require(app).pubkey}`, stores: TABLES})
+    this.pubkey = User.require(app).pubkey
+    this.db = new IDB({name: `flotilla-9gl-${this.pubkey}`, stores: TABLES})
     this.ready = this.start()
   }
 
@@ -238,7 +246,7 @@ class Storage {
       // Rows written before provenance was stored inline hold a bare event
       if (
         item.event &&
-        shouldPersistEvent(item.event) &&
+        shouldPersistEvent(item.event, this.pubkey) &&
         (!isRelayScoped(item.event) || item.relays.length > 0)
       ) {
         item.event[verifiedSymbol] = true
@@ -281,7 +289,7 @@ class Storage {
 
         for (const update of updates) {
           for (const event of update.added) {
-            if (shouldPersistEvent(event)) {
+            if (shouldPersistEvent(event, this.pubkey)) {
               add.push(event)
               remove.delete(event.id)
             }
@@ -323,7 +331,7 @@ class Storage {
         // A brand-new event is tracked before it's published, so it isn't queryable here —
         // syncEvents persists its provenance along with the event itself. This pass only
         // records relay changes for events we already have.
-        if (event && shouldPersistEvent(event)) {
+        if (event && shouldPersistEvent(event, this.pubkey)) {
           items.push({id, event, relays: Array.from(this.app.tracker.getRelays(id))})
         }
       }
