@@ -1,11 +1,11 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {formatTimestampRelative} from "@welshman/lib"
-  import {NOTE, ROOMS, COMMENT, MESSAGE, outbox} from "@welshman/util"
+  import {NOTE, COMMENT, MESSAGE} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
-  import {network, relayLists, roomLists, router} from "@app/core"
-  import {deriveEvents} from "@app/repository"
+  import {network, roomLists} from "@app/core"
+  import {deriveLatestEvent} from "@app/repository"
   import {goToEvent} from "@app/routes"
   import {pushModal} from "@app/modal"
 
@@ -16,31 +16,23 @@
 
   const {pubkey, url}: Props = $props()
 
-  const events = deriveEvents([{authors: [pubkey], limit: 1}])
+  const latest = deriveLatestEvent(pubkey)
 
   const spaceUrls = $roomLists.urls(pubkey).$
 
-  const viewEvent = () => goToEvent($events[0]!)
+  const viewEvent = () => goToEvent($latest!)
 
   const openSpaces = () => pushModal(ProfileSpaces, {pubkey, url})
 
-  onMount(async () => {
-    await $relayLists.load(pubkey)
-
-    $network.load({
-      filters: [
-        {authors: [pubkey], kinds: [ROOMS]},
-        {authors: [pubkey], limit: 1, kinds: [NOTE, COMMENT, MESSAGE]},
-      ],
-      relays: await $router.resolver.relays([outbox(pubkey)]),
-    })
+  onMount(() => {
+    $network.loadUsingOutbox(pubkey, {limit: 1, kinds: [NOTE, COMMENT, MESSAGE]})
   })
 </script>
 
 <div class="flex flex-wrap gap-2">
-  {#if $events.length > 0}
+  {#if $latest}
     <Button onclick={viewEvent} class="badge badge-neutral">
-      Last active {formatTimestampRelative($events[0].created_at)}
+      Last active {formatTimestampRelative($latest.created_at)}
     </Button>
   {/if}
   {#if $spaceUrls.length > 0}
