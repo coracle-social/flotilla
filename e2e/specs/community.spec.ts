@@ -63,10 +63,15 @@ const openCard = (card: Locator, title: string) => card.getByText(title).click()
 // its progress bar.
 const pollOption = (page: Page, label: string) => page.locator(".card-sm").filter({hasText: label})
 
-// dateFormatter in @welshman/lib resolves the environment's own locale, which node shares.
-const longDate = (seconds: number) =>
-  new Intl.DateTimeFormat(undefined, {year: "numeric", month: "long", day: "numeric"}).format(
-    new Date(seconds * 1000),
+// The options mirror dateFormatter in @welshman/lib. Formatted by the browser rather than by node,
+// so the locale and the timezone are the ones the app rendered with — see dayLabel in dms.spec.ts.
+const longDate = (page: Page, seconds: number) =>
+  page.evaluate(
+    ts =>
+      new Intl.DateTimeFormat(undefined, {year: "numeric", month: "long", day: "numeric"}).format(
+        new Date(ts * 1000),
+      ),
+    seconds,
   )
 
 // The selections of every poll response this page put on the wire, oldest first. A multiple choice
@@ -204,7 +209,7 @@ test("US-046 create and browse a calendar event", async ({seed, as}) => {
   const market = card("Winter Market")
 
   await expect(market).toBeVisible()
-  await expect(market).toContainText(longDate(Math.floor(target.getTime() / 1000)))
+  await expect(market).toContainText(await longDate(page, Math.floor(target.getTime() / 1000)))
 })
 
 test("US-047 manage your own calendar event", async ({seed, as}) => {
@@ -249,7 +254,7 @@ test("US-047 manage your own calendar event", async ({seed, as}) => {
   const eventCard = page.locator(".card.z-feature")
 
   await expect(page.getByRole("heading", {name: "Harvest Supper", exact: true})).toBeVisible()
-  await expect(eventCard).toContainText(longDate(at(-2, DAY)))
+  await expect(eventCard).toContainText(await longDate(page, at(-2, DAY)))
   await expect(eventCard).toContainText("The Old Mill")
   await expect(eventCard).toContainText("Alice Anderson")
 

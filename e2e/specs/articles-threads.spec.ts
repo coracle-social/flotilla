@@ -96,10 +96,14 @@ const expectReactionRoundTrip = async (page: Page, scope: Locator, opener: Locat
   await expect(pill).toHaveCount(0)
 }
 
-// formatTimestamp renders a short date and a short time in the environment's own locale, which node
-// shares, so the date half of it is what a spec can name without pinning a format.
-const shortDate = (seconds: number) =>
-  new Intl.DateTimeFormat(undefined, {dateStyle: "short"}).format(new Date(seconds * 1000))
+// formatTimestamp renders a short date and a short time, so the date half of it is what a spec can
+// name without pinning a format. Formatted by the browser rather than by node, so the locale and the
+// timezone are the ones the app rendered with — see dayLabel in dms.spec.ts.
+const shortDate = (page: Page, seconds: number) =>
+  page.evaluate(
+    ts => new Intl.DateTimeFormat(undefined, {dateStyle: "short"}).format(new Date(ts * 1000)),
+    seconds,
+  )
 
 // The card is a div carrying an overlay link, so it is found by its component rather than by a
 // role — its own contents include a profile button and the room and action links.
@@ -284,7 +288,7 @@ test("US-038 browse, filter, and read articles", async ({seed, as}) => {
   await expect(garden).toContainText("Written by")
   await expect(garden).toContainText("Alice Anderson")
   await expect(garden).toContainText("A short teaser about gardens.")
-  await expect(garden).toContainText(shortDate(at(4, HOUR)))
+  await expect(garden).toContainText(await shortDate(page, at(4, HOUR)))
 
   const authors = page
     .locator("section")
@@ -308,7 +312,7 @@ test("US-038 browse, filter, and read articles", async ({seed, as}) => {
   await expect(page.getByRole("heading", {name: "Tending the Garden"}).first()).toBeVisible()
   await expect(page.locator('img[src="https://images.test/garden.jpg"]')).toBeVisible()
   await expect(page.getByText("A short teaser about gardens.")).toBeVisible()
-  await expect(page.getByText(/^Published /)).toContainText(shortDate(at(4, HOUR)))
+  await expect(page.getByText(/^Published /)).toContainText(await shortDate(page, at(4, HOUR)))
 
   const markdown = page.locator(".content-markdown")
 
@@ -658,7 +662,9 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
   await expect(chairs.getByRole("cell").nth(0)).toContainText("Chair procurement")
   await expect(chairs.getByRole("cell").nth(1)).toContainText("Bob Barker")
   await expect(chairs.getByRole("cell").nth(2)).toHaveText("2")
-  await expect(chairs.getByRole("cell").nth(3)).toContainText(shortDate(at(4, HOUR) + 60))
+  await expect(chairs.getByRole("cell").nth(3)).toContainText(
+    await shortDate(page, at(4, HOUR) + 60),
+  )
 
   await pageBar(page).getByRole("button", {name: "Create", exact: true}).click()
 

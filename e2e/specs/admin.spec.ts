@@ -1109,12 +1109,17 @@ test("US-102 pause a relay and settle the bill", async ({seed, as}) => {
   const invoices = history.getByRole("listitem")
 
   // The whole period, not just its start: the two invoices meet at a month boundary, so either
-  // date on its own reads the same on both of them.
+  // date on its own reads the same on both of them. Formatted by the browser rather than by node,
+  // so the locale is the one the app rendered with — see dayLabel in dms.spec.ts.
   const period = ({start, end}: {start: number; end: number}) =>
-    `${new Date(start * 1000).toLocaleDateString()} – ${new Date(end * 1000).toLocaleDateString()}`
+    page.evaluate(
+      ([from, to]) =>
+        `${new Date(from * 1000).toLocaleDateString()} – ${new Date(to * 1000).toLocaleDateString()}`,
+      [start, end],
+    )
 
   await expect(invoices.first()).toContainText("$9.00")
-  await expect(invoices.first()).toContainText(period(openPeriod))
+  await expect(invoices.first()).toContainText(await period(openPeriod))
   await expect(invoices.nth(1)).toContainText("$5.00")
-  await expect(invoices.nth(1)).toContainText(period(paidPeriod))
+  await expect(invoices.nth(1)).toContainText(await period(paidPeriod))
 })
