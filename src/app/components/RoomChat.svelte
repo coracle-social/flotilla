@@ -6,7 +6,7 @@
   import type {Readable} from "svelte/store"
   import {debounce} from "throttle-debounce"
   import cx from "classnames"
-  import {now, ifLet, int, formatTimestampAsDate, ago, MINUTE} from "@welshman/lib"
+  import {now, ifLet, ago, MINUTE} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {makeEvent, MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
@@ -40,6 +40,7 @@
     RoomType,
     deriveUserRoomMembershipStatus,
     getRoomType,
+    groupRoomMessages,
     prependParent,
   } from "@app/rooms"
   import {userSettingsValues} from "@app/settings"
@@ -236,9 +237,6 @@
 
   const getElementKey = (element: {id: string}) => element.id
 
-  // The list renders from the newest message outward, so a row deep in history isn't on the page
-  // until it's asked for — and asking renders it on the next flush, which the lookup has to wait
-  // for. Messages carry the id as a data attribute; the new-messages divider as its element id.
   // Where a row sits inside the scroll container, in screen terms rather than scroll terms, so
   // the reversed layout doesn't come into it
   const topOf = (target: HTMLElement) =>
@@ -266,6 +264,9 @@
     pinned = undefined
   }
 
+  // The list renders from the newest message outward, so a row deep in history isn't on the page
+  // until it's asked for — and asking renders it on the next flush, which the lookup has to wait
+  // for. Messages carry the id as a data attribute; the new-messages divider as its element id.
   const scrollToRow = (
     id: string,
     {
@@ -421,71 +422,15 @@
     isUserScrolling = false
   })
 
-  const elements = $derived.by(() => {
-    const elements = []
-    const seen = new Set()
-
-    let previousDate
-    let previousKind
-    let previousPubkey
-    let previousCreatedAt = 0
-    let newMessagesSeen = false
-
-    if (events) {
-      const lastUserEvent = $events.findLast(e => e.pubkey === $user.pubkey)
-
-      // Adjust the boundary to account for messages that came from a different device
-      const adjustedAfter =
-        newMessagesAfter && lastUserEvent
-          ? Math.max(lastUserEvent.created_at, newMessagesAfter)
-          : newMessagesAfter
-
-      for (const event of $events) {
-        if (seen.has(event.id)) {
-          continue
-        }
-
-        const date = formatTimestampAsDate(event.created_at)
-
-        if (
-          !newMessagesSeen &&
-          adjustedAfter &&
-          event.pubkey !== $user.pubkey &&
-          event.created_at > adjustedAfter &&
-          event.created_at < newMessagesBefore
-        ) {
-          elements.push({type: "new-messages", id: "new-messages"})
-          newMessagesSeen = true
-        }
-
-        if (date !== previousDate) {
-          elements.push({type: "date", value: date, id: date, showPubkey: false})
-        }
-
-        const showPubkey =
-          previousPubkey !== event.pubkey ||
-          event.created_at - previousCreatedAt > int(3, MINUTE) ||
-          previousKind === addMemberKind
-
-        elements.push({
-          id: event.id,
-          type: "note",
-          value: event,
-          showPubkey,
-        })
-
-        previousDate = date
-        previousKind = event.kind
-        previousPubkey = event.pubkey
-        previousCreatedAt = event.created_at
-        seen.add(event.id)
-      }
-    }
-
-    elements.reverse()
-
-    return elements
-  })
+  const elements = $derived(
+    groupRoomMessages({
+      events: $events,
+      pubkey: $user.pubkey,
+      addMemberKind,
+      unreadAfter: newMessagesAfter,
+      unreadBefore: newMessagesBefore,
+    }),
+  )
 
   // Newer messages are only worth waiting for when the window stops short of the present, which
   // only happens after jumping into history — anything published from here on arrives through the
@@ -586,6 +531,24 @@
   })
 </script>
 
+{#snippet membershipButton(label: string)}
+  {#if $membershipStatus === MembershipStatus.Pending}
+    <Button class="button button-neutral button-sm" disabled={leaving} onclick={leave}>
+      <Icon icon={ClockCircle} />
+      Access Pending
+    </Button>
+  {:else}
+    <Button class="button button-neutral button-sm" disabled={joining} onclick={join}>
+      {#if joining}
+        <Spinner size="sm" />
+      {:else}
+        <Icon icon={Login2} />
+      {/if}
+      {label}
+    </Button>
+  {/if}
+{/snippet}
+
 <div
   class={cx(
     "room flex min-h-0 min-w-0 flex-1 flex-col",
@@ -644,21 +607,7 @@
           <div class="py-20">
             <div class="card flex flex-col gap-8 m-auto max-w-md items-center text-center">
               <p class="opacity-75">You aren't currently a member of this room.</p>
-              {#if $membershipStatus === MembershipStatus.Pending}
-                <Button class="button button-neutral button-sm" disabled={leaving} onclick={leave}>
-                  <Icon icon={ClockCircle} />
-                  Access Pending
-                </Button>
-              {:else}
-                <Button class="button button-neutral button-sm" disabled={joining} onclick={join}>
-                  {#if joining}
-                    <Spinner size="sm" />
-                  {:else}
-                    <Icon icon={Login2} />
-                  {/if}
-                  Join Room
-                </Button>
-              {/if}
+              {@render membershipButton("Join Room")}
             </div>
           </div>
         {:else}
@@ -672,10 +621,10 @@
             getKey={getElementKey}
             container={element}
             bind:controller={virtualList}>
-            {#snippet row({type, id, value, showPubkey})}
-              {#if type === "new-messages"}
+            {#snippet row(item)}
+              {#if item.type === "new-messages"}
                 <div
-                  {id}
+                  id={item.id}
                   class={cx("flex items-center py-2 text-xs transition-colors", {
                     "opacity-0": showFixedNewMessages,
                   })}>
@@ -687,22 +636,19 @@
                   </p>
                   <div class="h-px grow bg-primary text-primary-content"></div>
                 </div>
-              {:else if type === "date"}
-                <Divider>{value}</Divider>
+              {:else if item.type === "date"}
+                <Divider>{item.value}</Divider>
+              {:else if item.value.kind === addMemberKind}
+                <RoomItemAddMember {url} event={item.value} />
               {:else}
-                {@const event = value as TrustedEvent}
-                {#if event.kind === addMemberKind}
-                  <RoomItemAddMember {url} {event} />
-                {:else}
-                  <RoomItem
-                    {url}
-                    {event}
-                    {replyTo}
-                    {showPubkey}
-                    {context}
-                    canEdit={canEditEvent}
-                    onEdit={onEditEvent} />
-                {/if}
+                <RoomItem
+                  {url}
+                  {replyTo}
+                  {context}
+                  event={item.value}
+                  showPubkey={item.showPubkey}
+                  canEdit={canEditEvent}
+                  onEdit={onEditEvent} />
               {/if}
             {/snippet}
           </VirtualList>
@@ -743,21 +689,7 @@
         {:else if $room?.meta?.isRestricted() && $membershipStatus !== MembershipStatus.Granted}
           <div class="card m-4 flex flex-row items-center justify-between px-4 py-3">
             <p class="opacity-75">Only members are allowed to post to this room.</p>
-            {#if $membershipStatus === MembershipStatus.Pending}
-              <Button class="button button-neutral button-sm" disabled={leaving} onclick={leave}>
-                <Icon icon={ClockCircle} />
-                Access Pending
-              </Button>
-            {:else}
-              <Button class="button button-neutral button-sm" disabled={joining} onclick={join}>
-                {#if joining}
-                  <Spinner size="sm" />
-                {:else}
-                  <Icon icon={Login2} />
-                {/if}
-                Ask to Join
-              </Button>
-            {/if}
+            {@render membershipButton("Ask to Join")}
           </div>
         {:else}
           <div>
