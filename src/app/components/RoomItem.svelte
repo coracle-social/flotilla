@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {get, readable} from "svelte/store"
+  import {readable} from "svelte/store"
   import {
     hash,
     gte,
@@ -39,6 +39,7 @@
   import RoomItemMenuMobile from "@app/components/RoomItemMenuMobile.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import {profiles, thunks, user} from "@app/core"
+  import {noThunks, thunksByEventId} from "@app/thunks"
   import {colors} from "@app/theme"
   import {ENABLE_ZAPS} from "@app/env"
   import type {FeedContext} from "@app/feeds"
@@ -69,7 +70,7 @@
   const h = tagValue(tagSpec("h"), event.tags)
   const today = formatTimestampAsDate(now())
   const profileDisplay = $profiles.display(event.pubkey, [url]).$
-  const thunk = $thunks.merge(get($thunks.history).filter(t => t.event.id === event.id))
+  const thunk = $derived($thunks.merge($thunksByEventId.get(event.id) ?? noThunks))
   const [_, colorValue] = colors[hash(event.pubkey) % colors.length]
 
   const qTag = matchTag(tagSpec("q"), event.tags)

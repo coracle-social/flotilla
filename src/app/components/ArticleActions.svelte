@@ -47,7 +47,7 @@
       </button>
     {/each}
   </div>
-  <ThunkStatusOrDeleted {event}>
+  <ThunkStatusOrDeleted {event} {context}>
     <ReactionSummary
       {url}
       {event}

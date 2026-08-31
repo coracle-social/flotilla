@@ -35,7 +35,7 @@
       Posted in #<RoomName {h} {url} />
     </Link>
   {/if}
-  <ThunkStatusOrDeleted {event}>
+  <ThunkStatusOrDeleted {event} {context}>
     <ReactionSummary
       {url}
       {event}

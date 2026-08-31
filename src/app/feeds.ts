@@ -8,6 +8,7 @@ import {
   addressTags,
   getAddress,
   getCommentFiltersForRoot,
+  getIdOrAddress,
   getReplyFilters,
   hexTags,
   isReplaceableKind,
@@ -48,6 +49,7 @@ export const makeFeedContext = ({relays}: {relays: string[] | Promise<string[]>}
   const eventsByTarget = new Map<string, TrustedEvent[]>()
   const targetsByEventId = new Map<string, string[]>()
   const subscribersByTarget = new Map<string, Set<(events: TrustedEvent[]) => void>>()
+  const deletedChecks = new Map<string, Set<() => void>>()
 
   const addEvent = (event: TrustedEvent, touched: Set<string>) => {
     // An event seen before its target was tracked stays unfiled, so that adding the target
@@ -82,6 +84,22 @@ export const makeFeedContext = ({relays}: {relays: string[] | Promise<string[]>}
         }
 
         touched.add(target)
+      }
+    }
+  }
+
+  const notifyDeleted = (added: TrustedEvent[], removed: Set<string>) => {
+    if (deletedChecks.size > 0) {
+      if (removed.size > 0) {
+        for (const checks of deletedChecks.values()) {
+          for (const check of checks) check()
+        }
+      } else {
+        for (const event of added) {
+          for (const check of deletedChecks.get(getIdOrAddress(event)) || []) {
+            check()
+          }
+        }
       }
     }
   }
@@ -146,6 +164,7 @@ export const makeFeedContext = ({relays}: {relays: string[] | Promise<string[]>}
       }
 
       notify(touched)
+      notifyDeleted(added, removed)
     }),
   )
 
@@ -183,6 +202,29 @@ export const makeFeedContext = ({relays}: {relays: string[] | Promise<string[]>}
 
   return {
     add,
+    deleted: (event: TrustedEvent) =>
+      readable(repository.isDeleted(event), set => {
+        const key = getIdOrAddress(event)
+        const check = () => set(repository.isDeleted(event))
+
+        let checks = deletedChecks.get(key)
+
+        if (!checks) {
+          checks = new Set()
+          deletedChecks.set(key, checks)
+        }
+
+        checks.add(check)
+        check()
+
+        return () => {
+          checks.delete(check)
+
+          if (checks.size === 0) {
+            deletedChecks.delete(key)
+          }
+        }
+      }),
     related: (event: TrustedEvent): Readable<TrustedEvent[]> => {
       add(event)
 

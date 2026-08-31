@@ -2,24 +2,22 @@
   import type {Snippet} from "svelte"
   import type {TrustedEvent} from "@welshman/util"
   import {PublishStatus} from "@welshman/net"
-  import {deriveIsDeleted} from "@app/repository"
   import ThunkStatus from "@app/components/ThunkStatus.svelte"
   import {thunks} from "@app/core"
+  import type {FeedContext} from "@app/feeds"
+  import {noThunks, thunksByEventId} from "@app/thunks"
 
   type Props = {
     event: TrustedEvent
+    context: FeedContext
     status?: Snippet
     children?: Snippet
   }
 
-  const {event, status, children}: Props = $props()
-
-  // Editing a replaceable event hands this a different event
-  const deleted = $derived(deriveIsDeleted(event))
-  const history = $thunks.history
-  // Subscribed rather than read: a thunk mutates its results in place and notifies, so reading
-  // them off the object would leave this showing a publish that has since finished.
-  const thunk = $derived($thunks.merge($history.filter(t => t.event.id === event.id)))
+  const {event, context, status, children}: Props = $props()
+  const deleted = $derived(context.deleted(event))
+  const pending = $derived($thunksByEventId.get(event.id) ?? noThunks)
+  const thunk = $derived($thunks.merge(pending))
 </script>
 
 {#if $deleted}

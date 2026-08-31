@@ -58,7 +58,7 @@
       </button>
     {/each}
   </div>
-  <ThunkStatusOrDeleted {event}>
+  <ThunkStatusOrDeleted {event} {context}>
     {#snippet status()}
       <ClassifiedStatus {event} />
     {/snippet}

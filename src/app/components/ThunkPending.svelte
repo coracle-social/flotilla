@@ -17,7 +17,7 @@
 
 <div class="flex w-full justify-end px-1 text-xs {restProps.class}">
   <span class="flex items-center gap-1">
-    <span class="spinner-xs mx-1 h-3 w-3 translate-y-px"></span>
+    <span class="spinner spinner-xs mx-1 translate-y-px"></span>
     <span class="opacity-50">Sending...</span>
     <button
       type="button"
