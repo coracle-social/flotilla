@@ -21,6 +21,8 @@
   import Divider from "@lib/components/Divider.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import VirtualList from "@lib/components/VirtualList.svelte"
+  import type {VirtualListController} from "@lib/components/VirtualList.svelte"
   import RoomCompose from "@app/components/RoomCompose.svelte"
   import RoomComposeEdit from "@app/components/RoomComposeEdit.svelte"
   import RoomComposeParent from "@app/components/RoomComposeParent.svelte"
@@ -232,6 +234,8 @@
     }
   }
 
+  const getElementKey = (element: {id: string}) => element.id
+
   const manageScrollPosition = () => {
     // Only treat an `at` jump as "scrolled up" when it targets an event below the
     // newest one; jumping to the most recent message already lands us at the bottom.
@@ -259,6 +263,10 @@
       const targetEvent = $events.find(event => event.created_at >= at)
 
       if (targetEvent) {
+        // The list renders from the newest message outward, so a jump target deep in history
+        // may not be on the page yet
+        virtualList?.reveal(targetEvent.id)
+
         const target = element?.querySelector(`[data-event="${targetEvent.id}"]`)
 
         if (target instanceof HTMLElement) {
@@ -280,8 +288,16 @@
     isProgrammaticScroll = false
   }
 
-  const scrollToNewMessages = () =>
-    document.getElementById("new-messages")?.scrollIntoView({behavior: "smooth", block: "center"})
+  const scrollToNewMessages = () => {
+    virtualList?.reveal("new-messages")
+
+    // Revealing it renders it on the next flush, so the scroll has to wait for that
+    requestAnimationFrame(() =>
+      document
+        .getElementById("new-messages")
+        ?.scrollIntoView({behavior: "smooth", block: "center"}),
+    )
+  }
 
   const scrollToBottom = () => {
     if (!isNaN(at)) {
@@ -308,6 +324,7 @@
   let userHasScrolled = $state(false)
   let isProgrammaticScroll = $state(false)
   let isUserScrolling = $state(false)
+  let virtualList: Maybe<VirtualListController> = $state()
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
   let newer: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
   let share: Maybe<Share> = $state()
@@ -568,39 +585,45 @@
               <Spinner loading={loadingForward}>Looking for messages...</Spinner>
             </p>
           {/if}
-          {#each elements as { type, id, value, showPubkey } (id)}
-            {#if type === "new-messages"}
-              <div
-                {id}
-                class={cx("flex items-center py-2 text-xs transition-colors", {
-                  "opacity-0": showFixedNewMessages,
-                })}>
-                <div class="h-px grow bg-primary text-primary-content"></div>
-                <p
-                  class="rounded-full bg-primary text-primary-content px-2 py-1"
-                  style="color: var(--primary-content)">
-                  New Messages
-                </p>
-                <div class="h-px grow bg-primary text-primary-content"></div>
-              </div>
-            {:else if type === "date"}
-              <Divider>{value}</Divider>
-            {:else}
-              {@const event = value as TrustedEvent}
-              {#if event.kind === addMemberKind}
-                <RoomItemAddMember {url} {event} />
+          <VirtualList
+            items={elements}
+            getKey={getElementKey}
+            container={element}
+            bind:controller={virtualList}>
+            {#snippet row({type, id, value, showPubkey})}
+              {#if type === "new-messages"}
+                <div
+                  {id}
+                  class={cx("flex items-center py-2 text-xs transition-colors", {
+                    "opacity-0": showFixedNewMessages,
+                  })}>
+                  <div class="h-px grow bg-primary text-primary-content"></div>
+                  <p
+                    class="rounded-full bg-primary text-primary-content px-2 py-1"
+                    style="color: var(--primary-content)">
+                    New Messages
+                  </p>
+                  <div class="h-px grow bg-primary text-primary-content"></div>
+                </div>
+              {:else if type === "date"}
+                <Divider>{value}</Divider>
               {:else}
-                <RoomItem
-                  {url}
-                  {event}
-                  {replyTo}
-                  {showPubkey}
-                  {context}
-                  canEdit={canEditEvent}
-                  onEdit={onEditEvent} />
+                {@const event = value as TrustedEvent}
+                {#if event.kind === addMemberKind}
+                  <RoomItemAddMember {url} {event} />
+                {:else}
+                  <RoomItem
+                    {url}
+                    {event}
+                    {replyTo}
+                    {showPubkey}
+                    {context}
+                    canEdit={canEditEvent}
+                    onEdit={onEditEvent} />
+                {/if}
               {/if}
-            {/if}
-          {/each}
+            {/snippet}
+          </VirtualList>
           <p class="flex h-10 items-center justify-center py-20">
             {#if loadingBackward}
               <Spinner loading>Looking for messages...</Spinner>
