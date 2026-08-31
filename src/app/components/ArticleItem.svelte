@@ -48,13 +48,14 @@
       expandMode="inline"
       minLength={100}
       maxLength={300} />
-    <div
-      class="pointer-events-auto flex w-full flex-col items-end justify-between gap-2 sm:flex-row">
-      <span class="whitespace-nowrap py-1 text-sm opacity-75">
+    <div class="flex w-full flex-col items-end justify-between gap-2 sm:flex-row">
+      <span class="pointer-events-auto whitespace-nowrap py-1 text-sm opacity-75">
         Written by
         <ProfileLink pubkey={event.pubkey} {url} />
       </span>
-      <ArticleActions showRoom showActivity {url} {event} {context} />
+      <div class="pointer-events-auto shrink-0">
+        <ArticleActions showRoom showActivity {url} {event} {context} />
+      </div>
     </div>
   </div>
 </div>
