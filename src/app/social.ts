@@ -1,5 +1,5 @@
 import {derived} from "svelte/store"
-import {pushToMapKey, removeUndefined, shuffle, sortBy, uniqBy} from "@welshman/lib"
+import {noop, pushToMapKey, removeUndefined, shuffle, sortBy, uniqBy} from "@welshman/lib"
 import {
   COMMENT,
   addressTags,
@@ -12,20 +12,35 @@ import {
 } from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {withGetter} from "@welshman/store"
-import {getCommentTagValues, getReplyTagValues} from "@welshman/domain"
-import {FollowLists, MuteLists} from "@welshman/app"
-import {deriveUserItem, profiles, user} from "@app/core"
+import {displayPubkey, getCommentTagValues, getReplyTagValues} from "@welshman/domain"
+import {FollowLists, MuteLists, Profiles} from "@welshman/app"
+import {deriveUserItem, fromApp, profiles, user} from "@app/core"
 import {DEFAULT_PUBKEYS} from "@app/env"
 
-// The display names for a group of people, as a store rather than a snapshot. A display starts
-// out as the author's npub and only becomes their name once the profile loads, so reading it once
-// leaves a name frozen as bech32 — and reading it that way never asks for the profile at all.
-export const deriveDisplaysByPubkey = (pubkeys: string[], url?: string) =>
-  derived(
-    pubkeys.map(pubkey => profiles.get().display(pubkey, removeUndefined([url])).$),
-    displays => new Map(pubkeys.map((pubkey, i) => [pubkey, displays[i]])),
+const profileIndex = fromApp($app => $app.use(Profiles).index.$)
+
+export const deriveDisplaysByPubkey = (pubkeys: string[], url?: string) => {
+  const relays = removeUndefined([url])
+
+  // Load profiles
+  for (const pubkey of pubkeys) {
+    if (pubkey) {
+      profiles.get().load(pubkey, relays).catch(noop)
+    }
+  }
+
+  return derived(
+    profileIndex,
+    $index =>
+      new Map(
+        pubkeys.map(pubkey => [
+          pubkey,
+          pubkey ? ($index.get(pubkey)?.display() ?? displayPubkey(pubkey)) : "",
+        ]),
+      ),
     new Map<string, string>(),
   )
+}
 
 export const bootstrapPubkeys = derived(deriveUserItem(FollowLists), $userFollowList => {
   const appPubkeys = DEFAULT_PUBKEYS.split(",")
