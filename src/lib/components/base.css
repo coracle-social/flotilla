@@ -101,6 +101,25 @@
 @utility cv {
   content-visibility: auto;
 }
+/* Marks the event a link pointed at, so the reader can pick it out of the conversation once the
+   jump lands. Brightness rather than a background so it works over any row's own surface. */
+@utility highlight-target {
+  animation: highlight-target 1.6s ease-out;
+}
+@keyframes highlight-target {
+  0%,
+  50% {
+    filter: brightness(1.5);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .highlight-target {
+    animation: none;
+  }
+}
 @utility pt-sai {
   padding-top: var(--sait);
 }

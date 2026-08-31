@@ -236,6 +236,66 @@
 
   const getElementKey = (element: {id: string}) => element.id
 
+  // The list renders from the newest message outward, so a row deep in history isn't on the page
+  // until it's asked for — and asking renders it on the next flush, which the lookup has to wait
+  // for. Messages carry the id as a data attribute; the new-messages divider as its element id.
+  // Where a row sits inside the scroll container, in screen terms rather than scroll terms, so
+  // the reversed layout doesn't come into it
+  const topOf = (target: HTMLElement) =>
+    target.getBoundingClientRect().top - element!.getBoundingClientRect().top
+
+  // Messages loading in below the pinned row are inserted at the scroll origin, which pushes
+  // everything else away from it. The browser has no reason to compensate for that, so put the
+  // row back where it was. scrollBy is in visual terms, so this reads the same way either way up.
+  const keepPinned = () => {
+    const target = pinned && element?.querySelector(`[data-event="${pinned.id}"]`)
+
+    if (target instanceof HTMLElement && pinned) {
+      const drift = topOf(target) - pinned.top
+
+      if (Math.abs(drift) >= 1) {
+        isProgrammaticScroll = true
+        element!.scrollBy({top: drift})
+      }
+    }
+  }
+
+  // Any scroll event at all fires while content loads, so taking over has to be a real gesture
+  const release = () => {
+    released = true
+    pinned = undefined
+  }
+
+  const scrollToRow = (
+    id: string,
+    {
+      behavior = "auto",
+      highlight = false,
+      pin = false,
+    }: {behavior?: ScrollBehavior; highlight?: boolean; pin?: boolean} = {},
+  ) => {
+    virtualList?.reveal(id)
+
+    requestAnimationFrame(() => {
+      const target = element?.querySelector(`[data-event="${id}"]`) ?? document.getElementById(id)
+
+      if (target instanceof HTMLElement) {
+        isProgrammaticScroll = true
+        target.scrollIntoView({behavior, block: "center"})
+
+        if (highlight) {
+          target.classList.add("highlight-target")
+        }
+
+        if (pin) {
+          pinned = {id, top: topOf(target)}
+        }
+      }
+
+      jumpSettled = true
+    })
+  }
+
   const manageScrollPosition = () => {
     // Only treat an `at` jump as "scrolled up" when it targets an event below the
     // newest one; jumping to the most recent message already lands us at the bottom.
@@ -259,27 +319,20 @@
       }
     }
 
-    if (!userHasScrolled && !isNaN(at)) {
+    if (!released && !pinned && !isNaN(at)) {
       const targetEvent = $events.find(event => event.created_at >= at)
 
       if (targetEvent) {
-        // The list renders from the newest message outward, so a jump target deep in history
-        // may not be on the page yet
-        virtualList?.reveal(targetEvent.id)
-
-        const target = element?.querySelector(`[data-event="${targetEvent.id}"]`)
-
-        if (target instanceof HTMLElement) {
-          isProgrammaticScroll = true
-          target.scrollIntoView({block: "center"})
-        }
+        scrollToRow(targetEvent.id, {highlight: true, pin: true})
+      } else {
+        // Nothing to jump to yet, so don't hold the room back waiting for it
+        jumpSettled = true
       }
     }
   }
 
   const onScroll = () => {
     if (!isProgrammaticScroll) {
-      userHasScrolled = true
       isUserScrolling = true
       clearIsUserScrolling()
       manageScrollPosition()
@@ -288,16 +341,7 @@
     isProgrammaticScroll = false
   }
 
-  const scrollToNewMessages = () => {
-    virtualList?.reveal("new-messages")
-
-    // Revealing it renders it on the next flush, so the scroll has to wait for that
-    requestAnimationFrame(() =>
-      document
-        .getElementById("new-messages")
-        ?.scrollIntoView({behavior: "smooth", block: "center"}),
-    )
-  }
+  const scrollToNewMessages = () => scrollToRow("new-messages", {behavior: "smooth"})
 
   const scrollToBottom = () => {
     if (!isNaN(at)) {
@@ -321,7 +365,9 @@
 
   let joining = $state(false)
   let leaving = $state(false)
-  let userHasScrolled = $state(false)
+  let jumpSettled = $state(false)
+  let released = false
+  let pinned: Maybe<{id: string; top: number}>
   let isProgrammaticScroll = $state(false)
   let isUserScrolling = $state(false)
   let virtualList: Maybe<VirtualListController> = $state()
@@ -340,6 +386,10 @@
   let events: Readable<TrustedEvent[]> = $state(readable([]))
   let compose: RoomCompose | undefined = $state()
   let eventToEdit: TrustedEvent | undefined = $state()
+
+  // A link into history renders the newest messages first and only then scrolls, so the room is
+  // held back for that frame rather than showing the wrong end of the conversation and jumping.
+  const awaitingJump = $derived(!isNaN(at) && !jumpSettled)
 
   // There is always more history until the feed says otherwise, so this stays up rather than
   // blinking between spans while it walks a quiet room.
@@ -451,6 +501,33 @@
     }
   })
 
+  // Content can arrive mid-scroll too, so this runs whether or not the reader is moving
+  $effect(() => {
+    if (elements.length > 0) {
+      const frame = requestAnimationFrame(keepPinned)
+
+      return () => cancelAnimationFrame(frame)
+    }
+  })
+
+  // Bound here rather than in the markup: these watch for the reader taking over, they don't make
+  // the transcript a control, and declaring them as handlers would claim it is one.
+  $effect(() => {
+    if (element) {
+      const target = element
+
+      for (const type of ["wheel", "touchmove", "keydown"]) {
+        target.addEventListener(type, release, {passive: true})
+      }
+
+      return () => {
+        for (const type of ["wheel", "touchmove", "keydown"]) {
+          target.removeEventListener(type, release)
+        }
+      }
+    }
+  })
+
   const start = () => {
     cleanup?.()
 
@@ -557,7 +634,12 @@
     {/if}
 
     <div class="relative flex min-h-0 flex-1 flex-col">
-      <div bind:this={element} onscroll={onScroll} class="room__content scroll-container">
+      <div
+        bind:this={element}
+        onscroll={onScroll}
+        class={cx("room__content scroll-container transition-opacity", {
+          "opacity-0": awaitingJump,
+        })}>
         {#if $room?.meta?.isPrivate() && $membershipStatus !== MembershipStatus.Granted}
           <div class="py-20">
             <div class="card flex flex-col gap-8 m-auto max-w-md items-center text-center">

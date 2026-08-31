@@ -36,9 +36,6 @@
   // guessed height. Everything on screen is real, so the scrollbar is honest and nothing the
   // reader is looking at can shift under them. Guessing at the height of rows that have never
   // been mounted is what makes a virtualised list lurch, and a list that only grows never has to.
-  //
-  // The cost is that a long scrollback ends up holding every row it passed, which is what the
-  // list did all the time before. What this buys is the opening render.
   let edgeKey: Maybe<string> = $state()
 
   // Held by key rather than index: messages arriving at the origin shift every index along, and

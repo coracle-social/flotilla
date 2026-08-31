@@ -220,22 +220,14 @@ export const makeEventPermalink = (event: TrustedEvent, url?: string) => {
 }
 
 export const scrollToEvent = (id: string) => {
-  const element = document.querySelector(`[data-event="${id}"]`) as any
+  const element = document.querySelector(`[data-event="${id}"]`)
 
-  if (element) {
+  if (element instanceof HTMLElement) {
     element.scrollIntoView({behavior: "smooth", block: "center"})
-    element.style = "filter: brightness(1.5); transition-property: all; transition-duration: 400ms;"
-
-    setTimeout(() => {
-      element.style = "transition-property: all; transition-duration: 300ms;"
-    }, 800)
-
-    setTimeout(() => {
-      element.style = ""
-    }, 800 + 400)
+    element.classList.add("highlight-target")
   }
 
-  return Boolean(element)
+  return element instanceof HTMLElement
 }
 
 export const goToEvent = (event: TrustedEvent, options: Record<string, any> = {}) => {
