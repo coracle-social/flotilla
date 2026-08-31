@@ -36,7 +36,7 @@
   }
 </script>
 
-<Card sm class="flex flex-col gap-4">
+<Card sm class="cv flex flex-col gap-4">
   <div class="flex justify-between">
     <div>
       <ProfileName pubkey={event.pubkey} {url} />

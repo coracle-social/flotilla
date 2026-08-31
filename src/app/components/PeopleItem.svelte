@@ -15,7 +15,7 @@
   const {pubkey, url}: Props = $props()
 </script>
 
-<div class="card card-interactive flex flex-col gap-4">
+<div class="cv card card-interactive flex flex-col gap-4">
   <div class="flex justify-between">
     <Profile {pubkey} {url} />
     <Link href={makeProfilePath(pubkey)} class="button button-primary hidden sm:flex">

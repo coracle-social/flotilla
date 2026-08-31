@@ -34,7 +34,7 @@
 {#if mobile}
   <Link
     href={path}
-    class="hover:bg-surface-less flex w-full flex-col gap-2 border-b border-solid border-line px-4 py-3 text-left text-sm transition-colors">
+    class="cv hover:bg-surface-less flex w-full flex-col gap-2 border-b border-solid border-line px-4 py-3 text-left text-sm transition-colors">
     <p class="truncate font-medium">{title || "Untitled thread"}</p>
     <div class="text-content-muted flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
       <span class="flex min-w-0 items-center gap-1.5">
