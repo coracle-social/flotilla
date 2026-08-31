@@ -1,7 +1,7 @@
 <script lang="ts">
-  import {derived} from "svelte/store"
   import {getJson, setJson} from "@welshman/lib"
   import {EVENT_TIME, ZAP_GOAL, THREAD, CLASSIFIED, PINBOARD, POLL, LONG_FORM} from "@welshman/util"
+  import {deriveDeduplicatedByValue} from "@welshman/store"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import UsersGroup from "@assets/icons/users-group-rounded.svg?dataurl"
   import Home from "@assets/icons/home.svg?dataurl"
@@ -46,7 +46,7 @@
   const spaceKindsKey = `space-kinds:${url}`
   const cachedKinds: number[] = getJson(spaceKindsKey) ?? []
 
-  const spaceKinds = derived(
+  const spaceKinds = deriveDeduplicatedByValue(
     deriveEventsForUrl(url, [{kinds: CONTENT_KINDS}]),
     $events => new Set([...cachedKinds, ...$events.map(e => e.kind)]),
   )
