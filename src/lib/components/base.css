@@ -261,7 +261,7 @@ body.keyboard-open .room {
   @apply -m-1 p-1;
 }
 .tiptap {
-  --tiptap-object-bg: var(--surface);
+  --tiptap-object-bg: var(--surface-more);
   --tiptap-object-fg: var(--content);
   --tiptap-active-bg: var(--primary);
   --tiptap-active-fg: var(--primary-content);
@@ -288,7 +288,6 @@ body.keyboard-open .room {
   @apply bg-surface border-line rounded-3xl border border-solid;
 }
 .note-editor .tiptap {
-  --tiptap-object-bg: var(--surface);
   @apply bg-surface block h-auto min-h-32 w-full rounded-2xl;
   border: var(--border-thin) solid var(--line);
   padding: 0.65rem;
@@ -303,7 +302,6 @@ body.keyboard-open .room {
   @apply text-content-muted opacity-100;
 }
 .input-editor .tiptap {
-  --tiptap-object-bg: var(--surface);
   @apply bg-surface block h-auto rounded-2xl;
   border: var(--border-thin) solid var(--line);
   padding: 0.65rem;
