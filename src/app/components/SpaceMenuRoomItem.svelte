@@ -26,7 +26,7 @@
   const shouldNotifyForSpace = deriveShouldNotify(url)
   const shouldNotifyForRoom = deriveShouldNotify(url, h)
   const showDifferenceIcon = $derived($shouldNotifyForRoom !== $shouldNotifyForSpace)
-  const notification = $derived($shouldNotifyForRoom ? $notifications.has(path) : false)
+  const notification = $derived($notifications.has(path))
   const roomName = $derived($room?.meta?.name() || h)
 </script>
 

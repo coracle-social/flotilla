@@ -20,6 +20,8 @@ export type SpaceNotificationSettings = {
   url: string
   notify: boolean
   exceptions: string[]
+  // Absent in settings published before muting existed
+  muted?: string[]
 }
 
 export type SettingsValues = {
@@ -113,7 +115,18 @@ export const zapAmounts = derived(userSettingsValues, $settings => $settings.zap
 
 export const getSetting = <K extends keyof SettingsValues>(key: K) => userSettingsValues.get()[key]
 
-export const getShouldNotify = ({alerts}: SettingsValues, url: string, h?: string) => {
+export const getMutedRooms = ({alerts}: SettingsValues, url: string) =>
+  alerts.find(spec({url}))?.muted ?? []
+
+export const getIsMuted = (settings: SettingsValues, url: string, h: string) =>
+  getMutedRooms(settings, url).includes(h)
+
+export const deriveIsMuted = (url: string, h: string) =>
+  derived(userSettingsValues, $settings => getIsMuted($settings, url, h))
+
+// The stored notification preference, ignoring mute. Toggling notifications writes this, so it is
+// preserved while a room is muted and comes back as it was when the room is unmuted.
+export const getNotifyPreference = ({alerts}: SettingsValues, url: string, h?: string) => {
   const pref = alerts.find(spec({url}))
 
   if (!pref) return true
@@ -121,6 +134,13 @@ export const getShouldNotify = ({alerts}: SettingsValues, url: string, h?: strin
 
   return pref.notify ? !pref.exceptions.includes(h) : pref.exceptions.includes(h)
 }
+
+// Muting a room is stronger than turning its notifications off: it forces notifications off and
+// also hides unread badges, which `notifications` handles by dropping muted rooms from the
+// activity it tracks. This is what the room settings toggle displays; it is only editable when the
+// room is not muted, so what it shows and what clicking it writes cannot disagree.
+export const getShouldNotify = (settings: SettingsValues, url: string, h?: string) =>
+  h && getIsMuted(settings, url, h) ? false : getNotifyPreference(settings, url, h)
 
 export const shouldNotify = (url: string, h?: string) =>
   getShouldNotify(userSettingsValues.get(), url, h)
@@ -186,4 +206,18 @@ export const toggleRoomNotifications = (url: string, h: string) => {
   }
 
   return publishSettings({alerts: [...alerts, {url, notify: true, exceptions: [h]}]})
+}
+
+export const toggleRoomMuted = (url: string, h: string) => {
+  const alerts = getSetting("alerts")
+  const existing = alerts.find(spec({url}))
+
+  if (existing) {
+    const current = existing.muted ?? []
+    const muted = current.includes(h) ? remove(h, current) : append(h, current)
+
+    return publishSettings({alerts: alerts.map(s => (s.url === url ? {...s, muted} : s))})
+  }
+
+  return publishSettings({alerts: [...alerts, {url, notify: true, exceptions: [], muted: [h]}]})
 }

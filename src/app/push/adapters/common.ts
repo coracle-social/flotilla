@@ -8,7 +8,7 @@ import {
 } from "@capacitor/push-notifications"
 import type {PluginListenerHandle} from "@capacitor/core"
 import {goto} from "$app/navigation"
-import {assoc, call, now, on, poll, spec, throttle} from "@welshman/lib"
+import {assoc, call, now, on, poll, spec, throttle, uniq} from "@welshman/lib"
 import {LOCAL_RELAY_URL} from "@welshman/net"
 import type {RepositoryUpdate} from "@welshman/net"
 import {
@@ -24,7 +24,7 @@ import {merged, withGetter} from "@welshman/store"
 import {User} from "@welshman/app"
 import {app, messagingRelayLists, network, roomLists} from "@app/core"
 import {DM_KINDS, CONTENT_KINDS, makeCommentFilter} from "@app/content"
-import {notificationSettings, shouldNotify, userSettingsValues} from "@app/settings"
+import {getMutedRooms, notificationSettings, shouldNotify, userSettingsValues} from "@app/settings"
 import {makeEventPath, goToSpace} from "@app/routes"
 
 export type PushSubscription = {
@@ -165,23 +165,28 @@ export const syncRelaySubscriptions = (
     notificationSettings,
     userSettingsValues,
   ]).subscribe(
-    throttle(3000, ([$spaceUrls, {spaces, mentions}, {alerts}]) => {
+    throttle(3000, ([$spaceUrls, {spaces, mentions}, $settings]) => {
       const baseFilters = [{kinds: [MESSAGE, ...CONTENT_KINDS]}, makeCommentFilter(CONTENT_KINDS)]
 
       for (const url of $spaceUrls) {
-        const {notify = true, exceptions = []} = alerts.find(spec({url})) || {}
+        const {notify = true, exceptions = []} = $settings.alerts.find(spec({url})) || {}
+        const muted = getMutedRooms($settings, url)
         const filters: Filter[] = []
         const ignore: Filter[] = []
 
         if (spaces) {
           if (notify) {
-            if (exceptions.length > 0) {
-              ignore.push({"#h": exceptions})
+            const skipped = uniq([...exceptions, ...muted])
+
+            if (skipped.length > 0) {
+              ignore.push({"#h": skipped})
             }
             filters.push(...baseFilters)
           } else {
-            if (exceptions.length > 0) {
-              filters.push(...baseFilters.map(f => ({...f, "#h": exceptions})))
+            const included = exceptions.filter(h => !muted.includes(h))
+
+            if (included.length > 0) {
+              filters.push(...baseFilters.map(f => ({...f, "#h": included})))
             }
           }
         }

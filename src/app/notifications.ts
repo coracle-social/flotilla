@@ -30,7 +30,7 @@ import {deriveEventsByIdByUrl} from "@app/repository"
 import {app, fromApp} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
 import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
-import {notificationSettings} from "@app/settings"
+import {getIsMuted, notificationSettings, userSettingsValues} from "@app/settings"
 import {chatsById} from "@app/chats"
 import {dufflepud, DUFFLEPUD_URL, PLATFORM_RELAYS} from "@app/env"
 import {kv} from "@app/storage"
@@ -235,11 +235,12 @@ export const latestActivityByPath = derived(
           {kinds: [MESSAGE, ...CONTENT_KINDS]},
           makeCommentFilter(CONTENT_KINDS),
         ]),
+        userSettingsValues,
       ],
       identity,
     ),
   ),
-  ([$app, $chatsById, $relays, $roomLists, eventsByIdByUrl]) => {
+  ([$app, $chatsById, $relays, $roomLists, eventsByIdByUrl, $settings]) => {
     const activity = new Map<string, TrustedEvent>()
 
     for (const {pubkeys, messages} of $chatsById.values()) {
@@ -256,7 +257,8 @@ export const latestActivityByPath = derived(
 
       if ($relays.get(url)?.hasNip(29)) {
         for (const [h, [latestEvent]] of groupBy(e => tagValue(tagSpec("h"), e.tags), events)) {
-          if (h) {
+          // A muted room is left out entirely, so it can't light up its own badge or the space's
+          if (h && !getIsMuted($settings, url, h)) {
             activity.set(makeRoomPath(url, h), latestEvent)
           }
         }

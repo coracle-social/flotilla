@@ -10,6 +10,7 @@
   import Microphone from "@assets/icons/microphone.svg?dataurl"
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
+  import BellOff from "@assets/icons/bell-off.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
@@ -25,7 +26,12 @@
   import RoomImage from "@app/components/RoomImage.svelte"
   import {roomLists, rooms} from "@app/core"
   import {deriveRoomMembers, deriveUserIsRoomAdmin, deriveUserRooms} from "@app/rooms"
-  import {deriveShouldNotify, toggleRoomNotifications} from "@app/settings"
+  import {
+    deriveIsMuted,
+    deriveShouldNotify,
+    toggleRoomMuted,
+    toggleRoomNotifications,
+  } from "@app/settings"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -43,6 +49,7 @@
   const meta = $derived($room?.meta)
   const isFavorite = $derived($userRooms.includes(h))
   const shouldNotify = deriveShouldNotify(url, h)
+  const isMuted = deriveIsMuted(url, h)
 
   const back = () => history.back()
 
@@ -60,6 +67,10 @@
 
   const toggleShouldNotify = () => {
     toggleRoomNotifications(url, h)
+  }
+
+  const toggleMuted = () => {
+    toggleRoomMuted(url, h)
   }
 </script>
 
@@ -144,6 +155,23 @@
       <strong class="text-lg">Room Settings</strong>
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
+          <Icon icon={Bookmark} />
+          <span>Favorite</span>
+        </div>
+        <input type="checkbox" class="toggle" checked={isFavorite} onchange={toggleFavorite} />
+      </div>
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex min-w-0 items-center gap-2">
+          <Icon icon={BellOff} />
+          <div class="flex min-w-0 flex-col">
+            <span>Mute</span>
+            <span class="text-sm opacity-75">Hide alerts and unread badges for this room</span>
+          </div>
+        </div>
+        <input type="checkbox" class="toggle" checked={$isMuted} onchange={toggleMuted} />
+      </div>
+      <div class="flex items-center justify-between" class:opacity-50={$isMuted}>
+        <div class="flex items-center gap-2">
           <Icon icon={Bell} />
           <span>Notifications</span>
         </div>
@@ -151,14 +179,8 @@
           type="checkbox"
           class="toggle"
           checked={$shouldNotify}
+          disabled={$isMuted}
           onchange={toggleShouldNotify} />
-      </div>
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <Icon icon={Bookmark} />
-          <span>Favorite</span>
-        </div>
-        <input type="checkbox" class="toggle" checked={isFavorite} onchange={toggleFavorite} />
       </div>
     </div>
   </ModalBody>
