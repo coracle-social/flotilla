@@ -29,7 +29,7 @@
             <RelayIcon {url} size={10} class="rounded-full" />
           </div>
         </div>
-        {#if $userSpaceUrls.includes(url)}
+        {#if !hideFavorites && $userSpaceUrls.includes(url)}
           <div
             class="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-primary text-primary-content flex justify-center items-center">
             <Icon icon={CheckCircle} class="scale-120" />
