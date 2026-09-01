@@ -14,7 +14,7 @@
   import {rooms} from "@app/core"
   import {joinRoom} from "@app/access"
   import {pushToast} from "@app/toast"
-  import {compressFileForUpload, uploadFileOrFallback} from "@app/uploads"
+  import {resolveImageInput} from "@app/uploads"
   import {deriveHasLivekit} from "@app/relays"
   import {RoomType} from "@app/rooms"
 
@@ -27,6 +27,8 @@
   }
 
   const {url, header, footer, onsubmit, initialValues = {h: randomId()}}: Props = $props()
+
+  const compressOptions = {maxWidth: 128, maxHeight: 128}
 
   const values = $state(initialValues)
   const relayHasLivekit = deriveHasLivekit(url)
@@ -43,16 +45,7 @@
 
     room.livekit = roomType === RoomType.Voice
 
-    if (imageFile) {
-      const compressedFile = await compressFileForUpload(imageFile, {
-        maxWidth: 128,
-        maxHeight: 128,
-      })
-
-      const result = await uploadFileOrFallback(compressedFile)
-
-      room.picture = result.url
-    }
+    room.picture = await resolveImageInput(imageFile, imagePreview, compressOptions)
 
     const createCommand = await $rooms.createRoom(url, room)
     const createMessage = await createCommand.publish().waitForError()

@@ -28,7 +28,7 @@
   import {derivePlans} from "@app/hosting"
   import {HOSTING_RELAY_DOMAIN} from "@app/env"
   import {pushToast} from "@app/toast"
-  import {compressFileForUpload, uploadFileOrFallback} from "@app/uploads"
+  import {resolveImageInput} from "@app/uploads"
 
   type Props = {
     mode: "create" | "edit"
@@ -47,6 +47,8 @@
     header,
     onSubmit,
   }: Props = $props()
+
+  const compressOptions = {maxWidth: 128, maxHeight: 128}
 
   const slugify = (value: string) =>
     value
@@ -123,17 +125,11 @@
     loading = true
 
     try {
-      if (imageFile) {
-        const compressedFile = await compressFileForUpload(imageFile, {
-          maxWidth: 128,
-          maxHeight: 128,
-        })
-        const result = await uploadFileOrFallback(compressedFile)
+      const resolvedIcon = await resolveImageInput(imageFile, imagePreview, compressOptions)
 
-        icon = result.url
-        imagePreview = result.url
-        imageFile = undefined
-      }
+      icon = resolvedIcon ?? ""
+      imagePreview = icon
+      imageFile = undefined
 
       await onSubmit({
         plan_id: planId,

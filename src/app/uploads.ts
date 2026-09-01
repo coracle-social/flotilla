@@ -1,3 +1,4 @@
+import type {Maybe} from "@welshman/lib"
 import {first, normalizeUrl, parseJson, sha256, simpleCache} from "@welshman/lib"
 import {canUploadBlob, encryptFile, makeBlossomAuthEvent, uploadBlob} from "@welshman/util"
 import {Nip01Signer} from "@welshman/signer"
@@ -176,4 +177,19 @@ export const uploadFileOrFallback = async (
   }
 
   return {url: await readFileAsDataUrl(file), tags: []}
+}
+
+export const resolveImageInput = async (
+  file: Maybe<File>,
+  url: Maybe<string>,
+  options: CompressFileOptions = {},
+) => {
+  if (!file) {
+    return url
+  }
+
+  const compressedFile = await compressFileForUpload(file, options)
+  const result = await uploadFileOrFallback(compressedFile)
+
+  return result.url
 }

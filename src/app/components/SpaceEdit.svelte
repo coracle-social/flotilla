@@ -18,7 +18,7 @@
   import IconInput from "@lib/components/IconInput.svelte"
   import {pushToast} from "@app/toast"
   import {clearModals} from "@app/modal"
-  import {compressFileForUpload, uploadFileOrFallback} from "@app/uploads"
+  import {resolveImageInput} from "@app/uploads"
   import {relayManagement, relays} from "@app/core"
 
   type Props = {
@@ -29,6 +29,8 @@
   const {url, initialValues = {}}: Props = $props()
 
   const values = $state({...initialValues})
+
+  const compressOptions = {maxWidth: 128, maxHeight: 128}
 
   const back = () => history.back()
 
@@ -51,11 +53,10 @@
       }
     }
 
-    if (imageFile) {
-      const compressedFile = await compressFileForUpload(imageFile, {maxWidth: 128, maxHeight: 128})
-      const result = await uploadFileOrFallback(compressedFile)
+    const icon = await resolveImageInput(imageFile, imagePreview, compressOptions)
 
-      const res = await $relayManagement.forUrl(url).changeRelayIcon(result.url)
+    if (icon && icon !== initialValues.icon) {
+      const res = await $relayManagement.forUrl(url).changeRelayIcon(icon)
 
       if (res.error) {
         return pushToast({theme: "error", message: res.error})
