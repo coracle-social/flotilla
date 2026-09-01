@@ -1,6 +1,6 @@
 import {derived, get, readable, writable} from "svelte/store"
 import type {Readable, Writable} from "svelte/store"
-import {batch, call, int, now, on, sortBy, uniqBy, MONTH, YEAR} from "@welshman/lib"
+import {batch, call, int, ms, now, on, sleep, sortBy, uniqBy, MONTH, YEAR} from "@welshman/lib"
 import {
   COMMENT,
   DELETE,
@@ -324,6 +324,11 @@ export type FeedLoadState =
   | {status: "searching"}
   | {status: "exhausted"}
 
+// One span of a feed's timeline. `complete` is whether the relays actually answered for it: a
+// request the socket dropped reports nothing found, which is not the same thing as a span with
+// nothing in it, and the two have to move the window differently.
+export type FeedSpan = {found: number; complete: boolean; exhausted: boolean}
+
 // Empty spans to walk per trigger. Enough to cross a gap; not enough to reach the end of the
 // history on a single request.
 const SPANS_PER_TRIGGER = 3
@@ -334,7 +339,7 @@ const SPANS_PER_TRIGGER = 3
 export const isFeedLoading = (state: Maybe<FeedLoadState>) =>
   state?.status === "loading" || state?.status === "searching"
 
-const makeFeedLoader = (load: () => Promise<{found: number; exhausted: boolean}>) => {
+const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
   const state = writable<FeedLoadState>({status: "idle"})
 
   let running = false
@@ -348,17 +353,21 @@ const makeFeedLoader = (load: () => Promise<{found: number; exhausted: boolean}>
       for (let span = 0; span < SPANS_PER_TRIGGER; span++) {
         state.set({status: span > 0 ? "searching" : "loading"})
 
-        const {found, exhausted} = await load()
+        const {found, complete, exhausted} = await load()
 
         if (exhausted) {
           state.set({status: "exhausted"})
           return
         }
 
-        if (found > 0) {
-          state.set({status: "idle"})
-          return
+        // A span nobody answered for hasn't moved the window, so hold here rather than walking
+        // past it, and give the socket a moment before the scroller comes back around
+        if (!complete) {
+          await sleep(ms(3))
+          break
         }
+
+        if (found > 0) break
       }
 
       state.set({status: "idle"})
@@ -376,7 +385,7 @@ const makeFeedLoader = (load: () => Promise<{found: number; exhausted: boolean}>
 // ordinary feed scrolls toward the end of its own content.
 export const makeScrollLoader = (
   element: HTMLElement,
-  load: () => Promise<{found: number; exhausted: boolean}>,
+  load: () => Promise<FeedSpan>,
   options: Partial<ScrollerOpts> = {},
 ) => {
   const loader = makeFeedLoader(load)
@@ -452,41 +461,58 @@ export const makeFeed = ({
   const unsubscribers = syncFeed({relays, filters, events, seen, insertEvents})
 
   const loadTimeframe = async (since: number, until: number) => {
+    let complete = false
+
     const found = await network.get().request({
       relays,
       autoClose: true,
       signal: controller.signal,
       filters: filters.map(filter => ({...filter, since, until})),
+      onEose: () => {
+        complete = true
+      },
     })
 
     // A span that turns up nothing widens the next one, so walking a sparse history doesn't
     // take dozens of round trips
-    interval = found.length > 0 ? int(MONTH) : Math.round(interval * 1.5)
+    if (complete) {
+      interval = found.length > 0 ? int(MONTH) : Math.round(interval * 1.5)
+    }
 
-    return found.length
+    return {found: found.length, complete}
   }
 
   // Ask for the next span in each direction. A span that comes back empty is normal while
   // walking a sparse history, so the count is reported separately from whether there is any
   // history left — a caller watching its list for changes would never hear about an empty one.
-  const loadOlder = async () => {
-    if (oldest < now() - int(2, YEAR)) return {found: 0, exhausted: true}
+  // The window only moves once the relays have answered: a request the socket dropped looks
+  // exactly like an empty span, and walking past it would leave a hole nothing goes back for.
+  const loadOlder = async (): Promise<FeedSpan> => {
+    if (oldest < now() - int(2, YEAR)) return {found: 0, complete: true, exhausted: true}
 
     const until = oldest
+    const since = until - interval
+    const {found, complete} = await loadTimeframe(since, until)
 
-    oldest = until - interval
+    if (complete) {
+      oldest = since
+    }
 
-    return {found: await loadTimeframe(oldest, until), exhausted: false}
+    return {found, complete, exhausted: false}
   }
 
-  const loadNewer = async () => {
-    if (newest >= now()) return {found: 0, exhausted: true}
+  const loadNewer = async (): Promise<FeedSpan> => {
+    if (newest >= now()) return {found: 0, complete: true, exhausted: true}
 
     const since = newest
+    const until = Math.min(now(), since + interval)
+    const {found, complete} = await loadTimeframe(since, until)
 
-    newest = Math.min(now(), since + interval)
+    if (complete) {
+      newest = until
+    }
 
-    return {found: await loadTimeframe(since, newest), exhausted: false}
+    return {found, complete, exhausted: false}
   }
 
   for (const url of relays) {
@@ -584,34 +610,47 @@ export const makeCalendarFeed = ({
   })
 
   const loadTimeframe = async (since: number, until: number) => {
+    let complete = false
+
     const found = await network.get().request({
       relays,
       autoClose: true,
       signal: controller.signal,
       filters: [{kinds: [EVENT_TIME], "#D": daysBetween(since, until).map(String)}],
+      onEose: () => {
+        complete = true
+      },
     })
 
-    return found.length
+    return {found: found.length, complete}
   }
 
-  const loadOlder = async () => {
-    if (oldest < now() - int(2, YEAR)) return {found: 0, exhausted: true}
+  const loadOlder = async (): Promise<FeedSpan> => {
+    if (oldest < now() - int(2, YEAR)) return {found: 0, complete: true, exhausted: true}
 
     const until = oldest
+    const since = until - interval
+    const {found, complete} = await loadTimeframe(since, until)
 
-    oldest = until - interval
+    if (complete) {
+      oldest = since
+    }
 
-    return {found: await loadTimeframe(oldest, until), exhausted: false}
+    return {found, complete, exhausted: false}
   }
 
-  const loadNewer = async () => {
-    if (newest > now() + int(2, YEAR)) return {found: 0, exhausted: true}
+  const loadNewer = async (): Promise<FeedSpan> => {
+    if (newest > now() + int(2, YEAR)) return {found: 0, complete: true, exhausted: true}
 
     const since = newest
+    const until = since + interval
+    const {found, complete} = await loadTimeframe(since, until)
 
-    newest = since + interval
+    if (complete) {
+      newest = until
+    }
 
-    return {found: await loadTimeframe(since, newest), exhausted: false}
+    return {found, complete, exhausted: false}
   }
 
   return {
