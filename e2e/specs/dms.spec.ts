@@ -611,3 +611,44 @@ test("US-036 receive a new conversation live", async ({seed, as}) => {
 
   await expect(bubble(alice, "starting a chat with you")).toBeVisible()
 })
+
+test("US-108 read messages from a relay you only use for messages", async ({seed, as}) => {
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+    const inbox = relay("other")
+
+    seedPerson(space, user.alice, "Alice Anchor")
+    seedPerson(space, user.bob, "Bob Barnacle")
+    enableDms(space, user.bob)
+
+    // Alice's inbox is a relay she has nothing else to do with: not a space she has joined, and
+    // not one of her read or write relays. Membership of it is only what lets a wrap addressed to
+    // her be stored there — it never reaches her room list — so her messaging relay list is the
+    // one thing that can vouch for her, and the relay serves her nothing until it does.
+    inbox.member(user.alice)
+
+    // Tagged verbatim rather than through setUrls, which normalizes on the way in. A list written
+    // by another client is where a url missing its trailing slash comes from, and the relay it
+    // names is the same relay either way.
+    space.event(user.alice, () =>
+      space
+        .kind(MessagingRelayList)
+        .writer()
+        .addTags(["relay", inbox.url.replace(/\/$/, "")])
+        .renderTemplate(),
+    )
+
+    inbox.dm(user.bob, [user.alice], "over on your inbox relay", at(2, HOUR))
+  })
+
+  const page = await as(users.alice, "/chat")
+
+  const conversation = chatItems(page).filter({hasText: "over on your inbox relay"})
+
+  await expect(conversation).toContainText("Bob Barnacle")
+
+  await conversation.click()
+
+  await expect(pageBar(page)).toContainText("Bob Barnacle")
+  await expect(bubble(page, "over on your inbox relay")).toBeVisible()
+})

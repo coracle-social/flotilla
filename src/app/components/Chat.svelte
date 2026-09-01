@@ -89,83 +89,85 @@
   }
 
   const onSubmit = async (params: EventContent) => {
-    try {
-      const ptags = others.map(pk => ["p", pk])
+    const ptags = others.map(pk => ["p", pk])
 
-      // Remove p tags since they result in forking the conversation
-      params.tags = params.tags.filter(nthNe(0, "p"))
+    // Remove p tags since they result in forking the conversation
+    params.tags = params.tags.filter(nthNe(0, "p"))
 
-      // Add our reply quote to content
-      params = await prependParent(parent, params)
+    // Add our reply quote to content
+    params = await prependParent(parent, params)
 
-      if (eventToEdit) {
-        if (eventToEdit.content === params.content) {
-          return
-        }
-
-        const command = await $deletes.deleteEvent(eventToEdit)
-
-        await $wraps.publish({event: command.event, recipients: pubkeys, pow: 16})
+    if (eventToEdit) {
+      // An edit that changes nothing is just a dismissal
+      if (eventToEdit.content === params.content) {
+        return clearEventToEdit()
       }
 
-      const [imetaTags, tags] = partition(nthEq(0, "imeta"), params.tags)
-      const imetas = imetaTags.map(tag => tag.slice(1).map(entry => entry.split(" ")))
-      const templates: EventTemplate[] = []
-      const buffer = []
+      const command = await $deletes.deleteEvent(eventToEdit)
 
-      const addTemplate = (kind: number, content: string, tags: string[][]) => {
-        content = content.trim()
-
-        if (content) {
-          templates.push(
-            makeEvent(kind, {
-              content,
-              tags: [...tags, ...ptags],
-              created_at: eventToEdit?.created_at,
-            }),
-          )
-        }
-      }
-
-      for (const p of parse(params)) {
-        const imeta = isLink(p)
-          ? imetas.find(tags => tags.find(spec(["url", p.value.url.toString()])))
-          : undefined
-
-        if (isLink(p) && imeta) {
-          addTemplate(DIRECT_MESSAGE, buffer.splice(0).join(""), tags)
-          addTemplate(DIRECT_MESSAGE_FILE, p.value.url.toString(), imeta.filter(nthNe(0, "url")))
-        } else {
-          buffer.push(p.raw)
-        }
-      }
-
-      addTemplate(DIRECT_MESSAGE, buffer.splice(0).join(""), tags)
-
-      // Split the message into multiple pieces so that we can use kind 15 to send images per nip 17
-      // Sleep 1 second between each one to make sure timestamps are distinct
-      const thunks = await Promise.all(
-        Array.from(enumerate(templates)).map(([i, event]) =>
-          $wraps.publish({
-            event,
-            recipients: pubkeys,
-            delay: $userSettingsValues.send_delay + ms(i),
-            pow: 16,
-          }),
-        ),
-      )
-
-      pushToast({
-        timeout: 30_000,
-        children: {
-          component: ThunkToast,
-          props: {thunk: $app.use(Thunks).merge(thunks)},
-        },
-      })
-    } finally {
-      clearParent()
-      clearEventToEdit()
+      await $wraps.publish({event: command.event, recipients: pubkeys, pow: 16})
     }
+
+    const [imetaTags, tags] = partition(nthEq(0, "imeta"), params.tags)
+    const imetas = imetaTags.map(tag => tag.slice(1).map(entry => entry.split(" ")))
+    const templates: EventTemplate[] = []
+    const buffer = []
+
+    const addTemplate = (kind: number, content: string, tags: string[][]) => {
+      content = content.trim()
+
+      if (content) {
+        templates.push(
+          makeEvent(kind, {
+            content,
+            tags: [...tags, ...ptags],
+            created_at: eventToEdit?.created_at,
+          }),
+        )
+      }
+    }
+
+    for (const p of parse(params)) {
+      const imeta = isLink(p)
+        ? imetas.find(tags => tags.find(spec(["url", p.value.url.toString()])))
+        : undefined
+
+      if (isLink(p) && imeta) {
+        addTemplate(DIRECT_MESSAGE, buffer.splice(0).join(""), tags)
+        addTemplate(DIRECT_MESSAGE_FILE, p.value.url.toString(), imeta.filter(nthNe(0, "url")))
+      } else {
+        buffer.push(p.raw)
+      }
+    }
+
+    addTemplate(DIRECT_MESSAGE, buffer.splice(0).join(""), tags)
+
+    // Split the message into multiple pieces so that we can use kind 15 to send images per nip 17
+    // Sleep 1 second between each one to make sure timestamps are distinct
+    const thunks = await Promise.all(
+      Array.from(enumerate(templates)).map(([i, event]) =>
+        $wraps.publish({
+          event,
+          recipients: pubkeys,
+          delay: $userSettingsValues.send_delay + ms(i),
+          pow: 16,
+        }),
+      ),
+    )
+
+    // Only once the message exists. Publishing has to read each recipient's messaging relays first,
+    // and a failed read throws before any thunk is made — so the reply or edit this was part of has
+    // to survive that along with the draft the composer is holding on to.
+    clearParent()
+    clearEventToEdit()
+
+    pushToast({
+      timeout: 30_000,
+      children: {
+        component: ThunkToast,
+        props: {thunk: $app.use(Thunks).merge(thunks)},
+      },
+    })
   }
 
   const onEscape = () => {

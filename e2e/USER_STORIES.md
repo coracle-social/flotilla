@@ -526,6 +526,21 @@ Acceptance:
   a conversation with bob appears in her list without a reload.
 - Opening it shows his message.
 
+### US-108 — Read messages from a relay you only use for messages
+
+As alice, I want the conversations on my messaging relay to load even when that relay is not one
+of my spaces, so that direct messages work wherever I have pointed them.
+
+Acceptance:
+
+- With alice's messaging relays naming a relay she has not joined and neither reads from nor
+  publishes to, a conversation held there still appears in her chat list and opens with its
+  history.
+- That relay hands her messages to nobody but her, so her messaging relay list is the only thing
+  that can vouch for her to it.
+- A messaging relay list written by another client, naming the same relay without the trailing
+  slash, is honoured the same way.
+
 ## Articles & threads
 
 ### US-037 — Write and publish an article
@@ -1564,6 +1579,14 @@ navigation off the app's origin, so nothing about the destination is observable.
 **Diagnostic log sending.** The privacy page's button that bundles client-side
 logs into a DM to the platform's support contact. It targets a hardcoded pubkey
 whose relays are not part of the sealed test network.
+
+**A network read that fails.** Every relay a scenario declares answers, and a url the container
+does not serve is answered by an empty relay rather than refused, so no spec can express a read
+that fails. That leaves one invariant untested: a send whose reads fail before the message exists
+must keep the text in the composer and say so, rather than clearing as though it went. It is the
+shape of the bug that motivated US-108 — `@welshman/store`'s `load` rejects rather than resolving
+empty, so a failure there aborts a publish before its thunk is made and nothing reaches the
+timeline to carry a status. Testing it needs a seam for making a relay unusable.
 
 **Internals with no user-visible surface.** The legacy session-storage format
 migration, which has no observable difference and no supported way to seed the

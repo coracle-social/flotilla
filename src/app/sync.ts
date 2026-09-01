@@ -1,6 +1,6 @@
 import {page} from "$app/stores"
 import type {Unsubscriber} from "svelte/store"
-import {ago, assoc, call, MONTH, WEEK} from "@welshman/lib"
+import {ago, assoc, call, noop, MONTH, WEEK} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   APP_DATA,
@@ -29,12 +29,7 @@ import {
   unionFilters,
 } from "@welshman/util"
 import type {Filter} from "@welshman/util"
-import type {
-  FollowListReader,
-  MessagingRelayListReader,
-  RelayListReader,
-  RoomListReader,
-} from "@welshman/domain"
+import type {FollowListReader, RelayListReader, RoomListReader} from "@welshman/domain"
 import {merged, synced, withGetter} from "@welshman/store"
 import {
   FollowLists,
@@ -375,32 +370,29 @@ const syncDMs = () => {
     }
   }
 
-  const syncPubkey = ($pubkey: Maybe<string>, $shouldUnwrap: boolean) => {
+  const syncPubkey = async ($pubkey: Maybe<string>, $shouldUnwrap: boolean) => {
     if ($pubkey !== currentPubkey) {
       unsubscribeAll()
     }
 
-    if ($pubkey && $shouldUnwrap) {
-      relayLists
-        .get()
-        .load($pubkey)
-        .then(() => messagingRelayLists.get().load($pubkey))
-        .then($list => {
-          if ($list && currentPubkey === $pubkey && currentShouldUnwrap === $shouldUnwrap) {
-            subscribeAll($pubkey, $list.urls())
-          }
-        })
-    }
-
     currentPubkey = $pubkey
     currentShouldUnwrap = $shouldUnwrap
+
+    if ($pubkey && $shouldUnwrap) {
+      await relayLists.get().load($pubkey).catch(noop)
+      await messagingRelayLists.get().load($pubkey).catch(noop)
+
+      if (currentPubkey === $pubkey && currentShouldUnwrap === $shouldUnwrap) {
+        subscribeAll($pubkey, messagingRelayLists.get().urls($pubkey).get())
+      }
+    }
   }
 
-  const syncList = ($list: Maybe<MessagingRelayListReader>) => {
+  const syncList = () => {
     const $pubkey = app.get().user?.pubkey
 
     if ($pubkey && shouldUnwrap.get()) {
-      subscribeAll($pubkey, $list?.urls() ?? [])
+      subscribeAll($pubkey, messagingRelayLists.get().urls($pubkey).get())
     }
   }
 

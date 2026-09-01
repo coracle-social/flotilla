@@ -2,6 +2,7 @@
   import {onDestroy, onMount} from "svelte"
   import {writable} from "svelte/store"
   import cx from "classnames"
+  import type {MaybeAsync} from "@welshman/lib"
   import type {EventContent} from "@welshman/util"
   import {isMobile, preventDefault} from "@lib/html"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
@@ -12,6 +13,7 @@
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {makeEditor} from "@app/editor"
   import {type DraftKey, type Draft} from "@app/drafts"
+  import {pushToast} from "@app/toast"
   import type {Share} from "@app/share"
 
   type Props = {
@@ -19,7 +21,7 @@
     draftKey?: DraftKey<Draft>
     onEscape?: () => void
     onEditPrevious?: () => void
-    onSubmit: (event: EventContent) => void
+    onSubmit: (event: EventContent) => MaybeAsync<void>
     initialValues?: Share
   }
 
@@ -68,7 +70,13 @@
 
     if (!content) return
 
-    onSubmit({content, tags})
+    try {
+      await onSubmit({content, tags})
+    } catch (error) {
+      console.error("Failed to send message", error)
+
+      return pushToast({theme: "error", message: "Failed to send your message."})
+    }
 
     draftKey?.clear()
     ed.chain().clearContent().run()
