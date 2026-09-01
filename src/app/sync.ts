@@ -29,7 +29,7 @@ import {
   unionFilters,
 } from "@welshman/util"
 import type {Filter} from "@welshman/util"
-import type {FollowListReader, RelayListReader, RoomListReader} from "@welshman/domain"
+import type {FollowListReader, RoomListReader} from "@welshman/domain"
 import {merged, synced, withGetter} from "@welshman/store"
 import {
   FollowLists,
@@ -171,6 +171,7 @@ const syncUserRoomMembership = (url: string, h: string) => {
 
 const syncUserData = () => {
   const unsubscribersByKey = new Map<string, Unsubscriber>()
+  const $pubkey = app.get().user?.pubkey
 
   const syncRoomList = ($roomList: Maybe<RoomListReader>) => {
     if ($roomList) {
@@ -203,17 +204,15 @@ const syncUserData = () => {
     }
   }
 
-  const syncRelayList = ($relayList: Maybe<RelayListReader>) => {
-    const author = $relayList?.author()
-
-    if (author) {
-      blossomServerLists.get().load(author)
-      blockedRelayLists.get().load(author)
-      followLists.get().load(author)
-      roomLists.get().load(author)
-      muteLists.get().load(author)
-      profiles.get().load(author)
-      app.get().use(Settings).load(author)
+  const syncUserLists = () => {
+    if ($pubkey) {
+      blossomServerLists.get().load($pubkey)
+      blockedRelayLists.get().load($pubkey)
+      followLists.get().load($pubkey)
+      roomLists.get().load($pubkey)
+      muteLists.get().load($pubkey)
+      profiles.get().load($pubkey)
+      app.get().use(Settings).load($pubkey)
     }
   }
 
@@ -230,8 +229,12 @@ const syncUserData = () => {
     }
   }
 
+  if ($pubkey) {
+    relayLists.get().load($pubkey)
+  }
+
   const unsubscribeRoomList = userRoomList.subscribe(syncRoomList)
-  const unsubscribeRelayList = userRelayList.subscribe(syncRelayList)
+  const unsubscribeRelayList = userRelayList.subscribe(syncUserLists)
   const unsubscribeFollowList = userFollowList.subscribe(syncFollowNetwork)
 
   return () => {
