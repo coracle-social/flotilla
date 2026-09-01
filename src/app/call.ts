@@ -4,15 +4,15 @@
  */
 import {
   DisconnectReason,
-  LocalParticipant,
-  LocalTrackPublication,
-  Participant,
   Room as LiveKitRoom,
   RoomEvent,
   Track,
-  TrackPublication,
   supportsAudioOutputSelection,
   type AudioCaptureOptions,
+  type LocalParticipant,
+  type LocalTrackPublication,
+  type Participant,
+  type TrackPublication,
 } from "livekit-client"
 import {App} from "@capacitor/app"
 import {derived, get, writable} from "svelte/store"

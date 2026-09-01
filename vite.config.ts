@@ -47,8 +47,20 @@ export default defineConfig({
     SvelteKitPWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
+      // adapter-static writes the fallback shell after the service worker is generated, so the
+      // plugin can't glob it — this precaches "/" explicitly, giving workbox's navigation
+      // fallback something to bind to.
+      kit: {
+        spa: true,
+        adapterFallback: "/",
+      },
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 ** 2, // 5 MB or set to something else
+        // The service worker is generated before SvelteKit prerenders anything, so the
+        // "prerendered/**" glob @vite-pwa/sveltekit forces in never matches. It only forces it
+        // when modifyURLPrefix is unset, and an empty one is a no-op.
+        modifyURLPrefix: {},
+        globPatterns: ["client/**/*.{js,css,ico,png,svg,webp,webmanifest}"],
       },
       manifest: {
         name: process.env.VITE_PLATFORM_NAME,

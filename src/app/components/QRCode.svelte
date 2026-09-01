@@ -1,5 +1,4 @@
 <script lang="ts">
-  import QRCode from "qrcode"
   import Button from "@lib/components/Button.svelte"
   import {clip} from "@app/toast"
 
@@ -12,22 +11,20 @@
 
   const copy = () => clip(code)
 
-  $effect(() => {
-    if (canvas && wrapper && code) {
-      QRCode.toCanvas(canvas, code)
-    }
-  })
+  // qrcode is imported here rather than at the top of the module because svelte strips effect
+  // bodies when compiling for SSR, which would leave the import with no remaining use.
+  const draw = async (canvas: HTMLCanvasElement, wrapper: Element, code: string) => {
+    const QRCode = await import("qrcode")
+
+    await QRCode.toCanvas(canvas, code)
+
+    scale = wrapper.getBoundingClientRect().width / canvas.width
+    height = canvas.height * scale
+  }
 
   $effect(() => {
-    // Draw first so canvas.width/height reflect the current code, then fit the
-    // intrinsic canvas size to the wrapper. Measure the intrinsic size (not
-    // getBoundingClientRect, which includes the transform below) so this stays
-    // idempotent — otherwise scale feeds back into its own measurement and loops.
     if (canvas && wrapper && code) {
-      const wrapperRect = wrapper.getBoundingClientRect()
-
-      scale = wrapperRect.width / canvas.width
-      height = canvas.height * scale
+      draw(canvas, wrapper, code)
     }
   })
 </script>
