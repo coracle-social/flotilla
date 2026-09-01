@@ -1,4 +1,4 @@
-import {append, identity, uniq} from "@welshman/lib"
+import {identity, uniq} from "@welshman/lib"
 import {tagSpec, tagValue} from "@welshman/util"
 import {displayPubkey} from "@welshman/domain"
 import {makeRoomKey} from "@welshman/app"
@@ -6,7 +6,6 @@ import {decodePubkey} from "@lib/util"
 import {app, profiles, rooms} from "@app/core"
 import {PLATFORM_NAME} from "@app/env"
 import {decodeRelay} from "@app/relays"
-import {splitChatId} from "@app/chats"
 
 const FALLBACK_APP_NAME = "Flotilla"
 
@@ -92,8 +91,9 @@ const getChatTitle = (chatId: string | undefined, pubkey: string | undefined) =>
     return "Chat"
   }
 
-  const chatPeers = pubkey ? uniq(append(pubkey, splitChatId(chatId))) : splitChatId(chatId)
-  const others = pubkey ? chatPeers.filter(pk => pk !== pubkey) : chatPeers
+  // Read the id directly rather than through splitChatId, which resolves it against the signed-in
+  // user and throws when there isn't one.
+  const others = uniq(chatId.split(",")).filter(pk => pk !== pubkey)
 
   if (others.length === 1) {
     return `Chat with ${displayPubkey(others[0])}`

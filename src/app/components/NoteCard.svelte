@@ -32,7 +32,7 @@
   let muted = $state($isEventMuted(event))
 </script>
 
-<div class="@container flex flex-col gap-2 {restProps.class}" style={restProps.style}>
+<div class="flex flex-col gap-2 {restProps.class}" style={restProps.style}>
   {#if muted}
     <div class="flex items-center justify-between">
       <div class="flex gap-2 relative">
@@ -42,7 +42,11 @@
       <Button class="link ml-8" onclick={ignoreMute}>Show anyway</Button>
     </div>
   {:else}
-    <div class="flex items-start justify-between gap-2">
+    <!-- The size container is the header, not the card: container-type contains a box's inline
+         size, so a card that is its own container reports no width to an ancestor sized by its
+         contents and collapses a quote inside a chat bubble. The header fills the card either way,
+         so the query still measures the card's width. -->
+    <div class="@container flex items-start justify-between gap-2">
       {#if !hideProfile}
         {#if minimal}
           @<ProfileName pubkey={event.pubkey} {url} />
