@@ -25,11 +25,14 @@ import {userSpaceUrls} from "@app/rooms"
 import {PLATFORM_RELAYS} from "@app/env"
 import {pushToast} from "@app/toast"
 
+const isEmpty = (editor: Editor) => editor.getText({blockSeparator: "\n"}).trim() === ""
+
 export const makeEditor = async ({
   encryptFiles = false,
   aggressive = false,
   charCount,
   content = "",
+  empty,
   onChange,
   placeholder = "",
   url,
@@ -41,6 +44,7 @@ export const makeEditor = async ({
   aggressive?: boolean
   charCount?: Writable<number>
   content?: string | object
+  empty?: Writable<boolean>
   onChange?: (json: object) => void
   placeholder?: string
   url?: string
@@ -192,9 +196,16 @@ export const makeEditor = async ({
     onUpdate({editor}) {
       wordCount?.set(editor.storage.wordCount.words)
       charCount?.set(editor.storage.wordCount.chars)
+      empty?.set(isEmpty(editor))
       onChange?.(editor.getJSON())
     },
   })
+
+  // Seed the caller's store from the document tiptap actually parsed — a restored draft is a
+  // document even when it holds no text, so the caller can't tell from `content` alone. Callers
+  // clear their draft when this reads true, so it has to be set before they render: keep every
+  // await in this function inside a callback, below the constructor.
+  empty?.set(isEmpty(ed))
 
   return ed
 }

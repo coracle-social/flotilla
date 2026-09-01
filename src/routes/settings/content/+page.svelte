@@ -2,11 +2,13 @@
   import {BlossomServerLists, MuteLists, publish} from "@welshman/app"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import Microphone from "@assets/icons/microphone.svg?dataurl"
   import {preventDefault} from "@lib/html"
   import Field from "@lib/components/Field.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
   import InputList from "@lib/components/InputList.svelte"
+  import Link from "@lib/components/Link.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Card from "@lib/components/Card.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -116,6 +118,29 @@
           <p>
             Delay sending chat messages for {$settings.send_delay / 1000}
             {$settings.send_delay === 1000 ? "second" : "seconds"}.
+          </p>
+        {/snippet}
+      </Field>
+      <Field>
+        {#snippet label()}
+          <p>Voice Input</p>
+        {/snippet}
+        {#snippet input()}
+          <label class="input flex w-full items-center gap-2">
+            <Icon icon={Microphone} />
+            <input
+              bind:value={$settings.openrouter_key}
+              autocomplete="off"
+              name="flotilla-openrouter-key"
+              placeholder="OpenRouter API key"
+              class="grow"
+              type="password" />
+          </label>
+        {/snippet}
+        {#snippet info()}
+          <p>
+            Add an <Link external href="https://openrouter.ai/settings/keys" class="text-primary"
+              >OpenRouter API key</Link> to dictate messages using the microphone button in your composer.
           </p>
         {/snippet}
       </Field>

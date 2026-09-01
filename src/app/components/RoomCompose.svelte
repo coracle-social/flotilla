@@ -2,7 +2,7 @@
   import {writable} from "svelte/store"
   import type {Maybe} from "@welshman/lib"
   import type {EventContent} from "@welshman/util"
-  import {isMobile, preventDefault} from "@lib/html"
+  import {escapeHtml, isMobile, preventDefault} from "@lib/html"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import WidgetAdd from "@assets/icons/widget-add.svg?dataurl"
   import Plane from "@assets/icons/plane-2.svg?dataurl"
@@ -12,6 +12,7 @@
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ComposeMenu from "@app/components/ComposeMenu.svelte"
+  import DictationButton from "@app/components/DictationButton.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {makeEditor} from "@app/editor"
   import {DraftKey, type Draft} from "@app/drafts"
@@ -53,6 +54,14 @@
 
   const uploadFiles = () => editor.then(ed => ed.chain().selectFiles().run())
 
+  // Tiptap parses a string handed to insertContent as html, so an angle bracket in the
+  // transcript would eat the rest of the sentence.
+  const insertTranscript = async (text: string) => {
+    const ed = await editor
+
+    ed.chain().focus().insertContent(escapeHtml(text)).run()
+  }
+
   const showPopover = () => tippy?.show()
 
   const hidePopover = () => tippy?.hide()
@@ -67,21 +76,25 @@
     onSubmit({content, tags})
 
     draftKey?.clear()
-    ed.chain().clearContent().run()
+    ed.chain().clearContent(true).run()
   }
 
   let tippy: Maybe<TippyController> = $state()
   let content = $state(
     initialValues?.type === "text" ? initialValues.value : (draftKey?.get()?.content ?? ""),
   )
+  let recording = $state(false)
 
   const onChange = (json: object) => {
     content = json
   }
 
+  const empty = writable(true)
+
   const editor = makeEditor({
     url,
     content,
+    empty,
     submit,
     uploading,
     onChange,
@@ -89,7 +102,11 @@
   })
 
   $effect(() => {
-    draftKey?.set({content})
+    if ($empty) {
+      draftKey?.clear()
+    } else {
+      draftKey?.set({content})
+    }
   })
 
   onMount(async () => {
@@ -137,11 +154,15 @@
   <div class="chat-editor grow overflow-hidden">
     <EditorContent {autofocus} {editor} />
   </div>
-  <Button
-    data-tip="{window.navigator.platform.includes('Mac') ? 'cmd' : 'ctrl'}+enter to send"
-    class="button button-primary button-circle flex justify-center items-center tip tip-left h-10 w-10 min-w-10"
-    disabled={$uploading}
-    onclick={submit}>
-    <Icon icon={Plane} />
-  </Button>
+  {#if recording || $empty}
+    <DictationButton bind:recording onTranscript={insertTranscript} />
+  {:else}
+    <Button
+      data-tip="{window.navigator.platform.includes('Mac') ? 'cmd' : 'ctrl'}+enter to send"
+      class="button button-primary button-circle flex justify-center items-center tip tip-left h-10 w-10 min-w-10"
+      disabled={$uploading}
+      onclick={submit}>
+      <Icon icon={Plane} />
+    </Button>
+  {/if}
 </form>

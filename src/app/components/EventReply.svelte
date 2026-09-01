@@ -78,10 +78,16 @@
     content = json
   }
 
-  const editor = makeEditor({url, submit, uploading, content, onChange})
+  const empty = writable(true)
+
+  const editor = makeEditor({url, submit, uploading, content, onChange, empty})
 
   $effect(() => {
-    draftKey.set({content})
+    if ($empty) {
+      draftKey.clear()
+    } else {
+      draftKey.set({content})
+    }
   })
 
   onMount(() => {

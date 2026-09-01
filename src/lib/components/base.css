@@ -120,6 +120,24 @@
     animation: none;
   }
 }
+/* Breathes a control in and out while it's listening to the user's voice. */
+@utility pulse-scale {
+  animation: pulse-scale 200ms ease-in-out infinite;
+}
+@keyframes pulse-scale {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-scale {
+    animation: none;
+  }
+}
 @utility pt-sai {
   padding-top: var(--sait);
 }

@@ -32,6 +32,7 @@ export type SettingsValues = {
   font_size: number
   alerts: SpaceNotificationSettings[]
   zap_amounts: number[]
+  openrouter_key: string
 }
 
 export const defaultSettings: SettingsValues = {
@@ -44,6 +45,7 @@ export const defaultSettings: SettingsValues = {
   font_size: 1.1,
   alerts: [],
   zap_amounts: [21, 210, 2100, 21000],
+  openrouter_key: "",
 }
 
 export class Settings extends DerivedPlugin<AppDataReader> {

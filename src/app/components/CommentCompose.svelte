@@ -75,17 +75,24 @@
     content = json
   }
 
+  const empty = writable(true)
+
   const editor = makeEditor({
     url,
     submit,
     uploading,
     onChange,
     content,
+    empty,
     placeholder: parent ? "Write a reply..." : "Write a comment...",
   })
 
   $effect(() => {
-    draftKey.set({content})
+    if ($empty) {
+      draftKey.clear()
+    } else {
+      draftKey.set({content})
+    }
   })
 </script>
 
