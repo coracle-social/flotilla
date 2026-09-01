@@ -24,8 +24,8 @@
 
 <PageContent class="flex flex-col gap-2 p-2 sm:gap-4 sm:p-4">
   <div class="hidden min-h-screen md:flex flex-col gap-2 m-auto items-center py-20">
-    <p class="flex items-center gap-2 text-lg">
-      <Icon icon={InfoCircle} class="translate-y-px" />
+    <p class="flex gap-2 text-lg">
+      <Icon icon={InfoCircle} />
       No conversation selected.
     </p>
     <p>
