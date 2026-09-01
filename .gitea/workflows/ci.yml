@@ -32,4 +32,47 @@ jobs:
         run: pnpm run check
 
       - name: Build
+        if: github.event_name != 'pull_request'
         run: pnpm run build
+
+      # On a pull request the same build doubles as the preview build: same
+      # command, just pointed at the preview origin and with production
+      # analytics stripped out. The preview server downloads the artifact
+      # produced below; it never checks out or builds a pull request itself,
+      # so contributor code only ever executes here, in the runner.
+      #
+      # The hostname is spelled out rather than templated so that what gets
+      # deployed is readable from this file alone. It is one of two places to
+      # change if previews move (the other is PREVIEW_DOMAIN on the server).
+      - name: Build preview
+        if: github.event_name == 'pull_request'
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          VITE_PLATFORM_URL: https://pr-${{ github.event.number }}.preview.flowboat.lol
+          VITE_PLATFORM_NAME: "Flotilla PR #${{ github.event.number }}"
+          VITE_PLATFORM_DESCRIPTION: "Preview build of coracle/flotilla PR #${{ github.event.number }}. Not the real Flotilla."
+        run: |
+          export VITE_BUILD_HASH="${HEAD_SHA:0:8}"
+          pnpm run build
+
+          # src/app.html hardcodes plausible with data-domain="flotilla.social";
+          # a preview must not report into production analytics.
+          perl -0777 -i -pe \
+            's|<script\s+defer\s+data-domain="[^"]*"\s+src="https://plausible\.coracle\.social/[^"]*"\s*></script>||gs' \
+            build/index.html
+
+      # v3, not v4, on purpose: actions/upload-artifact@v4 fails on this Gitea
+      # with "GHESNotSupportedError". @actions/artifact v2 decides an instance
+      # is GHES purely from GITHUB_SERVER_URL's hostname not being github.com,
+      # which is always true here, and the runner overwrites any step-level
+      # override of that variable. v3 works, and the preview server fetches
+      # the result through the run's artifact download route.
+      # (Verified on gitea.coracle.social, act_runner v0.6.1, 2026-09-01.)
+      - name: Upload preview
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v3
+        with:
+          name: preview
+          path: build
+          retention-days: 7
+          if-no-files-found: error
