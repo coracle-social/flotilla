@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import {Capacitor} from "@capacitor/core"
   import {notificationSettings} from "@app/settings"
   import {onNotification} from "@app/push"
 
@@ -16,6 +17,8 @@
   }
 
   onMount(() => {
+    if (Capacitor.isNativePlatform()) return
+
     audioElement.load()
 
     document.addEventListener("visibilitychange", onVisibilityChange)
