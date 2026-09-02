@@ -18,6 +18,7 @@ export type TranscriptEntry = {
 type Traffic = {
   transcript: TranscriptEntry[]
   leaks: Set<string>
+  forgotten: Set<string>
 }
 
 const trafficByContext = new WeakMap<BrowserContext, Traffic>()
@@ -56,6 +57,10 @@ const openEmptyRelay = (): RelayConnection => {
 const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
   const url = normalizeRelayUrl(route.url())
   const connection = call(() => {
+    if (traffic.forgotten.has(url)) {
+      return openEmptyRelay()
+    }
+
     const relay = zooid.relays.get(url)
 
     if (relay) {
@@ -94,7 +99,7 @@ const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
  * as a leak.
  */
 export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) => {
-  const traffic: Traffic = {transcript: [], leaks: new Set()}
+  const traffic: Traffic = {transcript: [], leaks: new Set(), forgotten: new Set()}
 
   trafficByContext.set(context, traffic)
 
@@ -105,6 +110,13 @@ export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) =>
 }
 
 export const getTranscript = (context: BrowserContext) => getTraffic(context).transcript
+
+// Retention, as this context sees it: from here on the relay answers like one that never held
+// anything, while staying a url the scenario declared rather than becoming a leak. Sockets already
+// open keep the relay they were opened against — `serve` resolves once, at open — so the drop takes
+// effect on the next connection, which is what a reload gives it.
+export const forgetRelay = (context: BrowserContext, url: string) =>
+  getTraffic(context).forgotten.add(normalizeRelayUrl(url))
 
 // Every frame in both directions, oldest first. Attach it to a failing test to see what the client
 // actually said, and to whom.

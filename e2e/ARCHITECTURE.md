@@ -66,6 +66,12 @@ Every socket the browser opens is terminated in the node process, and the only o
 is the loopback connection `zooid/transport.ts` makes to the container the test started.
 `assertNoLeaks()` fails a test that touched a url the scenario never declared.
 
+Because the branch is taken per socket rather than once, retention is expressible here too:
+`forgetRelay(context, url)` sends that context down the empty-relay side from its next connection
+on, without the url becoming a leak. A reload after it is a client coming back to a relay that has
+dropped what it was holding, which is what separates history a client kept from history it is
+reading back off the wire.
+
 Interception is installed by `as()` and `visit()`, on a context each of them creates, so a page that
 came from anywhere else has none of it. Playwright's own `context` fixture — and the `page` fixture
 built on it — is therefore overridden to throw, so a spec written the ordinary way fails immediately

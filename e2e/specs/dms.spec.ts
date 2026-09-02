@@ -1,8 +1,17 @@
 import {npubEncode} from "nostr-tools/nip19"
 import type {Locator, Page} from "@playwright/test"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
+import {DIRECT_MESSAGE, REACTION} from "@welshman/util"
 import {MessagingRelayList, RelayList} from "@welshman/domain"
-import {expect, makeTestUser, test, users} from "../harness"
+import {
+  expect,
+  forgetRelay,
+  makeTestUser,
+  readCachedEvents,
+  roomPath,
+  test,
+  users,
+} from "../harness"
 import type {SeededRumor, SeededSpace, TestUser} from "../harness"
 
 // The path the app builds for a conversation: the other participants' pubkeys, sorted and joined
@@ -19,8 +28,8 @@ const pathPattern = (path: string) => new RegExp(path.replace(/[.?+*()[\]]/g, "\
 // no kind-10002 to no relays at all. So a person here is a membership, a profile and a relay list.
 // Membership is also what lets a gift wrap addressed to them be stored: zooid authorizes a
 // kind-1059 by the member named in its p tag.
-const seedPerson = (space: SeededSpace, user: TestUser, name: string) => {
-  space.join(user)
+const seedPerson = (space: SeededSpace, user: TestUser, name: string, ...rooms: string[]) => {
+  space.join(user, ...rooms)
   space.profile(user, {name})
   space.event(user, () =>
     space
@@ -128,6 +137,15 @@ const stampLabel = (page: Page, seconds: number) =>
       ),
     seconds,
   )
+
+// What this user's client has written to disk, of one kind. Events reach indexeddb in three-second
+// batches with nothing in the ui to say when one has landed, so a spec that takes the relay away
+// and reloads has to read the cache first — otherwise it passes or fails on the batch window rather
+// than on what was persisted.
+const cachedContent = async (page: Page, pubkey: string, kind: number) =>
+  (await readCachedEvents(page, pubkey))
+    .filter(event => event.kind === kind)
+    .map(event => event.content)
 
 const topOf = async (locator: Locator) => {
   const box = await locator.boundingBox()
@@ -651,4 +669,87 @@ test("US-108 read messages from a relay you only use for messages", async ({seed
 
   await expect(pageBar(page)).toContainText("Bob Barnacle")
   await expect(bubble(page, "over on your inbox relay")).toBeVisible()
+})
+
+test("US-109 keep a conversation you have already read", async ({seed, as}) => {
+  let his!: SeededRumor
+  let hers!: SeededRumor
+
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+
+    seedPerson(space, user.alice, "Alice Anchor", "general")
+    seedPerson(space, user.bob, "Bob Barnacle", "general")
+    enableDms(space, user.alice)
+    enableDms(space, user.bob)
+
+    his = space.dm(user.bob, [user.alice], "the tide charts are up", at(2, HOUR))
+    hers = space.dm(user.alice, [user.bob], "thakns", at(1, HOUR))
+
+    // The control on the relay having really forgotten. A room message comes off the same relay as
+    // the wraps and is the kind of thing a client reads back off the wire every time, so it is what
+    // a conversation that survives is being distinguished from.
+    space.message(user.bob, "general", "boat is in the water", at(2, HOUR))
+  })
+
+  const url = scenario.space("space").url
+
+  // A touch context, which is what puts Edit Message behind a named button. Editing is the only way
+  // the ui takes a direct message back, and the delete it publishes is the second half of the story.
+  const alice = await as(users.alice, roomPath(url, "general"), {context: {hasTouch: true}})
+
+  await expect(alice.locator(".room__item").filter({hasText: "boat is in the water"})).toBeVisible()
+
+  await alice.goto(chatPath(users.bob.pubkey))
+
+  await expect(message(alice, his.id)).toBeVisible()
+  await expect(message(alice, hers.id)).toBeVisible()
+
+  await openMessageMenu(alice, hers.id)
+  await alice.getByRole("button", {name: "Edit Message"}).click()
+
+  await expect(composer(alice)).toContainText("thakns")
+
+  await composer(alice).press("ControlOrMeta+a")
+  await send(alice, "thanks")
+
+  await expect(bubble(alice, "thanks")).toBeVisible()
+  await expect(alice.locator(".chat-bubble").filter({hasText: "thakns"})).toHaveCount(0)
+
+  // A reaction travels to the conversation gift-wrapped the way the messages do, so it is kept or
+  // lost with them rather than on its own terms.
+  await openMessageMenu(alice, his.id)
+  await alice.getByRole("button", {name: "Send Reaction"}).click()
+
+  const picker = alice.locator("emoji-picker").filter({visible: true})
+
+  await picker.locator("input.search").fill("party popper")
+  await picker.getByRole("option", {name: /party popper/}).click()
+
+  await expect(message(alice, his.id)).toContainText("🎉")
+
+  // The edit, the delete that retracted the original and the reaction all reach disk in batches, so
+  // waiting for them there is waiting for the whole of what the reload is about to read back.
+  await expect
+    .poll(() => cachedContent(alice, users.alice.pubkey, DIRECT_MESSAGE))
+    .toEqual(expect.arrayContaining(["the tide charts are up", "thanks"]))
+
+  await expect.poll(() => cachedContent(alice, users.alice.pubkey, REACTION)).toContain("🎉")
+
+  // Her messaging relay drops everything it was holding, and she comes back to the app
+  forgetRelay(alice.context(), url)
+
+  await alice.reload()
+
+  await expect(bubble(alice, "the tide charts are up")).toBeVisible()
+  await expect(bubble(alice, "thanks")).toBeVisible()
+  await expect(alice.locator(".chat-bubble").filter({hasText: "thakns"})).toHaveCount(0)
+  await expect(message(alice, his.id)).toContainText("🎉")
+
+  // ...and the room, which she keeps no copy of, is as empty as the relay now is
+  await alice.goto(roomPath(url, "general"))
+
+  await expect(alice.locator(".room__item")).toHaveCount(0)
 })

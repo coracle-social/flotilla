@@ -28,7 +28,8 @@ export type {Scenario} from "./seed/scenario"
 export type {SeededRumor, SeededSpace} from "./seed/space"
 export type {TenantName} from "./zooid/config"
 export type {TranscriptEntry} from "./net/websocket"
-export {formatTranscript, getTranscript} from "./net/websocket"
+export {forgetRelay, formatTranscript, getTranscript} from "./net/websocket"
+export {readCachedEvents} from "./app/cache"
 export {
   assertNoBlockedRequests,
   getHosting,

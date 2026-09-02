@@ -32,7 +32,10 @@ import {
   ROOM_DELETE,
   ROOM_REMOVE_MEMBER,
   ROOMS,
+  DELETE,
+  REACTION,
   hexTags,
+  isSignedEvent,
   tagValues,
   verifiedSymbol,
 } from "@welshman/util"
@@ -45,6 +48,7 @@ import {Handles, Plaintext, Relays, RelayStats, User, Zappers} from "@welshman/a
 import type {AppPolicy, IApp, RelayStatsItem} from "@welshman/app"
 import {IDB} from "@lib/indexeddb"
 import {appPolicies} from "@app/core"
+import {DM_KINDS} from "@app/content"
 
 export const kv = call(() => {
   const enqueue = makeQueue()
@@ -153,10 +157,17 @@ const isRelayScoped = (event: TrustedEvent) =>
 const isMembershipChange = (event: TrustedEvent) =>
   event.kind === ROOM_ADD_MEMBER || event.kind === ROOM_REMOVE_MEMBER
 
+const isConversation = (event: TrustedEvent) =>
+  DM_KINDS.includes(event.kind) ||
+  ([DELETE, REACTION].includes(event.kind) && !isSignedEvent(event))
+
 const shouldPersistEvent = (event: TrustedEvent, pubkey: string) =>
   isMembershipChange(event)
     ? tagValues(hexTags("p"), event.tags).includes(pubkey)
-    : kinds.meta.includes(event.kind) || kinds.alert.includes(event.kind) || isRelayScoped(event)
+    : kinds.meta.includes(event.kind) ||
+      kinds.alert.includes(event.kind) ||
+      isRelayScoped(event) ||
+      isConversation(event)
 
 type EventItem = {id: string; event: TrustedEvent; relays: string[]}
 

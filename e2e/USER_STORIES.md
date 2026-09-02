@@ -541,6 +541,18 @@ Acceptance:
 - A messaging relay list written by another client, naming the same relay without the trailing
   slash, is honoured the same way.
 
+### US-109 — Keep a conversation I have already read
+
+As alice, I want a conversation I have already read to stay readable, so that my history does not
+shrink to whatever my messaging relays happen to still be holding.
+
+Acceptance:
+
+- With a conversation open and read, closing the app and opening it again shows the same messages,
+  whether or not the relay they arrived from still serves them.
+- A message deleted or edited out of that conversation stays gone across the same restart.
+- A reaction I left on one of its messages is still there after the same restart.
+
 ## Articles & threads
 
 ### US-037 — Write and publish an article
