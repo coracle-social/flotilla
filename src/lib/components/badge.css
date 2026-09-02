@@ -1,6 +1,13 @@
 @layer components {
   .badge {
-    @apply inline-flex items-center gap-1 rounded-full border-2 border-solid border-transparent px-2 py-1 text-sm font-semibold whitespace-nowrap;
+    @apply inline-flex max-w-full min-w-0 items-center gap-1 overflow-hidden rounded-full border-2 border-solid border-transparent px-2 py-1 text-sm font-semibold whitespace-nowrap;
+
+    /* text-overflow doesn't reach a flex container's anonymous items, so the
+       ellipsis has to live on an element child; overflow-hidden above is the
+       backstop for badges whose content is a bare text node. */
+    & > * {
+      @apply min-w-0 truncate;
+    }
 
     &.badge-sm {
       @apply h-6 text-xs;

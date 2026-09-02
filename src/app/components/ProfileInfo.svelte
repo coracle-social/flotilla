@@ -106,7 +106,7 @@
           <div class="flex flex-wrap gap-2">
             {#each seenOn as seenUrl (seenUrl)}
               <Badge class="bg-surface flex gap-1">
-                {displayRelayUrl(seenUrl)}
+                <span>{displayRelayUrl(seenUrl)}</span>
               </Badge>
             {/each}
           </div>
