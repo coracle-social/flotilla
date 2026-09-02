@@ -8,15 +8,20 @@
     animation: spinner-spin 0.7s linear infinite;
   }
 
+  .button-primary .spinner,
+  .button-error .spinner {
+    border-top-color: currentColor;
+  }
+
   /* sizes share the element with .spinner rather than nesting under it, and only override its
      dimensions — the shape, colour and animation all come from .spinner, so a size on its own
      renders as a bordered box */
   .spinner-sm {
-    @apply h-4 w-4 border-1;
+    @apply h-4 w-4 border-2;
   }
 
   .spinner-xs {
-    @apply h-3 w-3 border-1;
+    @apply h-3 w-3 border-2;
   }
 }
 
