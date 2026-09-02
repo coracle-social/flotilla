@@ -29,6 +29,7 @@ import {Relays, RoomLists} from "@welshman/app"
 import {deriveEventsByIdByUrl} from "@app/repository"
 import {app, fromApp} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
+import {decodeRelay} from "@app/relays"
 import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
 import {getIsMuted, notificationSettings, userSettingsValues} from "@app/settings"
 import {chatsById} from "@app/chats"
@@ -60,25 +61,41 @@ const getPaths = (path: string) =>
     .map((_, i, segments) => segments.slice(0, i + 1).join("/"))
     .slice(1)
 
+const getCheckedPaths = (pathname: string, relay?: string) => {
+  const paths = getPaths(pathname)
+
+  if (relay) {
+    const url = decodeRelay(relay)
+
+    if (CONTENT_KINDS.some(kind => makeContentPath(url, kind) === pathname)) {
+      paths.push(pathname + "*")
+    }
+  }
+
+  return paths
+}
+
 export const syncChecked = () => {
-  let prev = ""
+  let prev: string[] = []
 
   return page.subscribe($page => {
     // Set checked when we leave a given page
     checked.update($checked => {
-      for (const path of getPaths(prev)) {
+      for (const path of prev) {
         $checked[path] = now()
       }
 
       return $checked
     })
 
+    const paths = getCheckedPaths($page.url.pathname, $page.params.relay)
+
     // Set checked when we visit a given page - but delay it a tad
     setTimeout(() => {
       const defer = get(deferredRoomPath)
 
       checked.update($checked => {
-        for (const path of getPaths($page.url.pathname)) {
+        for (const path of paths) {
           if (defer && path === defer) continue
           $checked[path] = now()
         }
@@ -87,7 +104,7 @@ export const syncChecked = () => {
       })
     }, 300)
 
-    prev = $page.url.pathname
+    prev = paths
   })
 }
 
@@ -330,16 +347,26 @@ export const notifications = derived(
     ),
 )
 
+const countActivity = (activity: Map<string, TrustedEvent>, paths: Set<string>) =>
+  [...activity.keys()].filter(path => paths.has(path)).length
+
+export const notificationCount = derived(
+  [latestActivityByPath, notifications],
+  ([$latestActivityByPath, $notifications]) => countActivity($latestActivityByPath, $notifications),
+)
+
+export const backgroundNotificationCount = derived(
+  [latestActivityByPath, allNotifications],
+  ([$latestActivityByPath, $allNotifications]) =>
+    countActivity($latestActivityByPath, $allNotifications),
+)
+
 // Badges
 
 export const syncBadges = () =>
-  derived([latestActivityByPath, notifications, notificationSettings], identity).subscribe(
-    async ([$latestActivityByPath, $notifications, $notificationSettings]) => {
+  derived([notificationCount, notificationSettings], identity).subscribe(
+    async ([count, $notificationSettings]) => {
       if ($notificationSettings.badge) {
-        const count = [...$latestActivityByPath.keys()].filter(path =>
-          $notifications.has(path),
-        ).length
-
         try {
           await Badge.set({count})
         } catch (err) {

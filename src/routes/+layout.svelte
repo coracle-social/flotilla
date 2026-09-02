@@ -37,11 +37,7 @@
   import {activeTheme, flTheme, theme} from "@app/theme"
   import {toast, pushToast} from "@app/toast"
   import * as notifications from "@app/notifications"
-  import {
-    notifications as notificationPaths,
-    allNotifications,
-    latestActivityByPath,
-  } from "@app/notifications"
+  import {notificationCount, backgroundNotificationCount} from "@app/notifications"
   import {Push} from "@app/push"
   import {onPushNotificationAction, pushState} from "@app/push/adapters/common"
   import {syncKeyboard} from "@app/keyboard"
@@ -290,12 +286,9 @@
   $effect(() => {
     const {user} = core.app.get()
     const title = getPageTitle({page: $page, pubkey: user?.pubkey})
-    // While the tab isn't actively focused the user isn't actually looking at the
-    // active page, so count notifications for it too rather than treating it as read.
-    const paths = $documentActive ? $notificationPaths : $allNotifications
-    const unreadCount = [...$latestActivityByPath.keys()].filter(path => paths.has(path)).length
+    const count = $documentActive ? $notificationCount : $backgroundNotificationCount
 
-    document.title = unreadCount > 0 ? `(${unreadCount}) ${title}` : title
+    document.title = count > 0 ? `(${count}) ${title}` : title
   })
 </script>
 
