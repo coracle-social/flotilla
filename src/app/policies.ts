@@ -13,6 +13,8 @@ import {
   isClientClose,
   isClientNegOpen,
   isClientNegClose,
+  matchReason,
+  RelayReasonPrefix,
 } from "@welshman/net"
 import {
   BlockedRelayLists,
@@ -138,12 +140,15 @@ const mostlyRestrictedPolicy = (socket: Socket) => {
 
   // NIP-01 reserves "blocked: " for a ban and "restricted: " for lacking permission.
   const countDetails = (details: string) => {
-    if (details.startsWith("auth-required: ")) {
+    if (matchReason(RelayReasonPrefix.AuthRequired, details)) {
       total--
       updateStatus()
     }
 
-    if (details.startsWith("restricted: ") || details.startsWith("blocked: ")) {
+    if (
+      matchReason(RelayReasonPrefix.Restricted, details) ||
+      matchReason(RelayReasonPrefix.Blocked, details)
+    ) {
       refused++
       updateStatus(details)
     }
