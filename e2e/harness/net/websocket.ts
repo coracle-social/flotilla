@@ -5,6 +5,7 @@ import {RelayMessageType, isClientEvent, isClientReq} from "@welshman/net"
 import type {ClientMessage, RelayMessage} from "@welshman/net"
 import type {RelayConnection} from "../zooid/types"
 import type {Zooid} from "../zooid/relay"
+import {makeContextStore} from "./context"
 import {isDevServerUrl} from "./http"
 
 export type Direction = "toRelay" | "toClient"
@@ -21,21 +22,10 @@ type Traffic = {
   forgotten: Set<string>
 }
 
-const trafficByContext = new WeakMap<BrowserContext, Traffic>()
+const trafficStore = makeContextStore<Traffic>("installWebSocketRoutes")
 
-const getTraffic = (context: BrowserContext) => {
-  const traffic = trafficByContext.get(context)
-
-  if (traffic) {
-    return traffic
-  }
-
-  throw new Error("installWebSocketRoutes was never called for this browser context")
-}
-
-// A relay that holds nothing: REQs get an immediate EOSE and events are accepted into the void.
-// Only urls the container does not serve get one, so a leak fails on the assertion that names it
-// rather than on a timeout three layers away.
+// A relay that holds nothing. REQs get an immediate EOSE and events are accepted and dropped, so a
+// leak fails on the assertion that names it rather than on a timeout three layers away.
 const openEmptyRelay = (): RelayConnection => {
   let listener: (message: RelayMessage) => void = () => undefined
 
@@ -92,16 +82,18 @@ const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
 /**
  * The single interception point for relay traffic. It goes on the context rather than a page, so
  * every page in it is covered including ones opened later, and it is safe to call before any page
- * exists — routing is the environment a page is born into, not a step in a sequence.
+ * exists.
  *
  * Vite's hmr socket is the one url left alone. Everything else is answered from this process, and
  * a url that is not one of the container's virtual relays is served by an empty relay and recorded
  * as a leak.
  */
 export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) => {
-  const traffic: Traffic = {transcript: [], leaks: new Set(), forgotten: new Set()}
-
-  trafficByContext.set(context, traffic)
+  const traffic = trafficStore.set(context, {
+    transcript: [],
+    leaks: new Set(),
+    forgotten: new Set(),
+  })
 
   return context.routeWebSocket(
     url => !isDevServerUrl(url),
@@ -109,14 +101,13 @@ export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) =>
   )
 }
 
-export const getTranscript = (context: BrowserContext) => getTraffic(context).transcript
+export const getTranscript = (context: BrowserContext) => trafficStore.get(context).transcript
 
-// Retention, as this context sees it: from here on the relay answers like one that never held
-// anything, while staying a url the scenario declared rather than becoming a leak. Sockets already
-// open keep the relay they were opened against — `serve` resolves once, at open — so the drop takes
-// effect on the next connection, which is what a reload gives it.
+// Makes a relay answer like one that never held anything, without its url becoming a leak. `serve`
+// resolves a relay once, at open, so sockets already open keep theirs and the drop takes effect on
+// the next connection. A reload is what gives it one.
 export const forgetRelay = (context: BrowserContext, url: string) =>
-  getTraffic(context).forgotten.add(normalizeRelayUrl(url))
+  trafficStore.get(context).forgotten.add(normalizeRelayUrl(url))
 
 // Every frame in both directions, oldest first. Attach it to a failing test to see what the client
 // actually said, and to whom.
@@ -129,7 +120,7 @@ export const formatTranscript = (context: BrowserContext) =>
     .join("\n")
 
 export const assertNoLeaks = (context: BrowserContext) => {
-  const {leaks} = getTraffic(context)
+  const {leaks} = trafficStore.get(context)
 
   if (leaks.size > 0) {
     throw new Error(

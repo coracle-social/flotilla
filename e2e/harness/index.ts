@@ -39,8 +39,8 @@ export {
 } from "./net/http"
 export type {DufflepudFixtures, HostingFixtures, HostingHandle, HostingRecord} from "./net/http"
 
-// Mirrors encodeRelay in src/app/relays.ts, which can't be imported here — it reaches the app's
-// module graph, and with it sveltekit.
+// Mirrors encodeRelay in src/app/relays.ts. Importing it reaches the app's module graph, and with
+// it sveltekit.
 const encodeRelay = (url: string) =>
   encodeURIComponent(
     normalizeRelayUrl(url)
@@ -54,19 +54,17 @@ export const roomPath = (url: string, h: string) => `${spacePath(url)}/${h}`
 
 // What a page is opened with, over and above the scenario's own relays.
 export type PageOptions = {
-  // Overrides the project's context options, for a spec that needs a viewport, a colour scheme or
-  // a permission of its own.
+  // Overrides the project's context options, for a spec that needs a viewport or a permission of
+  // its own.
   context?: BrowserContextOptions
-  // VITE_ values applied over the ones derived from the scenario's relays, e.g. a platform space
-  // or the domain hosted relays are created under. Whatever is named here has to be something the
-  // scenario owns, or the app will reach for it and the test will fail on a leak.
+  // VITE_ values applied over the ones derived from the scenario's relays, e.g. a platform space or
+  // the domain hosted relays are created under. See BootOptions in app/boot.ts.
   env?: Record<string, string>
   // A NIP-07 provider signing as this user, for a login that goes through an extension.
   nip07?: TestUser
-  // A blossom server, installed before the page boots. A spec whose server is one the app probes
-  // on load — a space's own url, which src/app/sync.ts asks about as soon as its page opens —
-  // has to name it here: mockBlossom called on the page `as()` returns arrives after that probe
-  // has already been answered and cached, and uploads go to the default server instead.
+  // A blossom server, installed before the page boots. mockBlossom called on the page `as()`
+  // returns arrives after src/app/sync.ts has probed and cached a space's own url, so a spec whose
+  // server is one the app probes on load has to name it here instead.
   blossom?: BlossomOptions
   // Fields merged over a relay's own nip-11 document, keyed by relay url.
   relayInfo?: RelayInfoOverrides
@@ -78,11 +76,11 @@ export type PageOptions = {
 export type Harness = {
   zooid: Zooid
   seed(build: (tools: SeedTools) => MaybeAsync<void>): Promise<Scenario>
-  // A logged-in page for a user: its own browser context, its own storage, its own sockets into
-  // the relays every other user is talking to.
+  // A logged-in page for a user, in its own browser context, with its own storage and its own
+  // sockets into the relays every other user is talking to.
   as(user: TestUser, path?: string, options?: PageOptions): Promise<Page>
-  // The same page with no session injected — the app as someone who has never logged in sees it,
-  // and the only way to watch a login, a reload or a logout happen.
+  // The same page with no session injected, which is the only way to watch a login or a logout
+  // happen.
   visit(path?: string, options?: PageOptions): Promise<Page>
 }
 
@@ -98,11 +96,8 @@ export type HarnessWorkerFixtures = {
 }
 
 export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
-  // Playwright's own context — and the `page` fixture built on it — is unrouted: no websocket
-  // interception, no http block-all, no injected env, and nothing collecting leaks from it. A page
-  // born there boots the app against the relays baked into .env, which is the one thing this suite
-  // exists to prevent, so it is refused outright and `as()`/`visit()` are the only ways to get a
-  // page.
+  // Playwright's own context, and the `page` fixture built on it, is unrouted, so a page born
+  // there boots the app against the relays baked into .env.
   context: async () => {
     throw new Error(
       "The built-in `context` and `page` fixtures reach the real network. Open a page with the " +
@@ -110,9 +105,8 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         "they navigate.",
     )
   },
-  // Playwright builds this one with `playwright.request.newContext()`, so it is an http client in
-  // this process that belongs to no browser context: `installHttpRoutes` cannot see it and nothing
-  // records what it sent.
+  // Playwright builds this one with `playwright.request.newContext()`, an http client in this
+  // process that belongs to no browser context, so `installHttpRoutes` cannot see it.
   request: async () => {
     throw new Error(
       "The built-in `request` fixture makes http requests from node, where nothing intercepts " +
@@ -153,13 +147,12 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
     const open = async (path: string, options: PageOptions, user?: TestUser) => {
       const {urls, cache} = requireScenario()
-      // The project's own `use` first, so a viewport, colour scheme or device descriptor set in
-      // playwright.config.ts reaches the context rather than being silently dropped.
+      // The project's own `use` first, so a viewport or device descriptor set in
+      // playwright.config.ts reaches the context rather than being dropped.
       //
-      // A request a service worker makes is not seen by context.route, so a worker is the one
-      // way out of the block-all below. Sveltekit registers src/service-worker.js on every
-      // navigation in dev; it has no fetch handler today, and blocking registration is what keeps
-      // that from being the thing containment rests on.
+      // context.route does not see a request a service worker makes, and sveltekit registers
+      // src/service-worker.js on every navigation in dev, so registration is blocked rather than
+      // left as the thing containment rests on.
       const context = await browser.newContext({
         ...testInfo.project.use,
         serviceWorkers: "block",
@@ -168,9 +161,9 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
       contexts.push(context)
 
-      // Interception before navigation, and the block-all before the mocks — playwright matches
-      // the most recently registered route first, and every mock falls through what it doesn't
-      // recognize, so the mocks have to be registered last to be reachable at all.
+      // Playwright matches the most recently registered route first and every mock falls through
+      // what it doesn't recognize, so the block-all goes in before the mocks, and all of it before
+      // the page navigates.
       await installHttpRoutes(context)
       await installWebSocketRoutes(context, zooid)
       await mockRelayInfo(context, options.relayInfo ?? {})
@@ -188,10 +181,9 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         await injectNip07(context, options.nip07)
       }
 
-      // Playwright grants the "notifications" permission at the browser level, but headless Chromium
-      // still reports `Notification.permission` as "denied", so a spec that opted into notifications
-      // would watch the app's push-enable refuse a permission it was given. Reflect the grant into
-      // the Notification API the app actually reads.
+      // Headless Chromium reports `Notification.permission` as "denied" even where playwright has
+      // granted the permission at the browser level, so the grant is reflected into the API the app
+      // reads.
       if (options.context?.permissions?.includes("notifications")) {
         await context.addInitScript(() => {
           Object.defineProperty(Notification, "permission", {

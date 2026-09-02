@@ -9,13 +9,12 @@ import type {TestUser} from "../keys"
 import {seedSpace} from "./space"
 import type {SeededSpace} from "./space"
 
-// A fixture timestamp, as an offset from the moment the scenario started: `at(2, HOUR)` is two
-// hours before the test began. Count-first, like int and ago.
+// A fixture timestamp, as an offset from the moment the scenario started. `at(2, HOUR)` is two
+// hours before the test began, count-first like int and ago.
 export type At = (count: number, unit: number) => number
 
 export type SeedTools = {
-  // Names a relay the container already serves — its policy is its toml in zooid/docker/config, so
-  // a scenario describes what is on a relay, never what the relay is.
+  // Names a relay the container already serves. Its policy is its toml in zooid/docker/config.
   relay: (name: TenantName) => SeededSpace
   user: typeof users
   at: At
@@ -26,9 +25,9 @@ export type Scenario = {
   readonly at: At
   readonly urls: string[]
   space(name: TenantName): SeededSpace
-  // The events a returning user's client would already have on disk. Just the room list: the
-  // scenario's own relays stand in for the indexers, and a members-only relay won't serve the list
-  // that would tell authPolicy it may identify to it. See ARCHITECTURE.md, "Users and sessions".
+  // The events a returning user's client would already have on disk, which is just the room list.
+  // A members-only relay won't serve the list that would tell authPolicy it may identify to it. See
+  // ARCHITECTURE.md, "Users and sessions".
   cache(user: TestUser): SignedEvent[]
 }
 

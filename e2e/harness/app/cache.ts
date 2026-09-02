@@ -7,9 +7,8 @@ const databaseName = (pubkey: string) => `flotilla-9gl-${pubkey}`
 
 /**
  * What this user's client has written to disk so far. Events reach indexeddb in three-second
- * batches and nothing in the ui says when one has landed, so a spec about what survives a restart
- * has to read the cache to know the restart is testing anything: a reload before the batch would
- * fail whether or not the events were ever going to be persisted.
+ * batches with nothing in the ui to say when one has landed, so a spec about what survives a
+ * restart waits on this before it reloads.
  */
 export const readCachedEvents = (page: Page, pubkey: string): Promise<TrustedEvent[]> =>
   page.evaluate(async name => {
@@ -21,7 +20,7 @@ export const readCachedEvents = (page: Page, pubkey: string): Promise<TrustedEve
     })
 
     // An unversioned open creates the database when it is missing, so a client that has not written
-    // anything yet answers with an empty one rather than with a store to read.
+    // anything yet has no store to read.
     if (!open.objectStoreNames.contains("events")) {
       open.close()
 

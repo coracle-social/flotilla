@@ -2,9 +2,8 @@ import type {BrowserContext} from "@playwright/test"
 import type {StampedEvent} from "@welshman/util"
 import type {TestUser} from "../keys"
 
-// The function playwright installs on window for the shim below to call into. A binding is the
-// only way across: the keys live in node, and a signer built in the page would be a different
-// thing from the one seeding signs with.
+// The function playwright installs on window for the shim below to call into. The keys live in
+// node, so a signer built in the page would not be the one seeding signs with.
 const TEST_NIP07_KEY = "__TEST_NIP07__"
 
 type Nip07Call =
@@ -14,10 +13,10 @@ type Nip07Call =
 
 /**
  * A NIP-07 provider backed by a test identity's real signer, so an extension login produces
- * signatures the relays accept — including the NIP-42 auth events a members-only relay demands.
+ * signatures the relays accept, including the NIP-42 auth events a members-only relay demands.
  *
- * Both halves have to be installed before the page navigates: LogIn.svelte reads `window.nostr`
- * while it renders to decide whether to offer the button at all.
+ * Both halves have to be installed before the page navigates. LogIn.svelte reads `window.nostr`
+ * while it renders, to decide whether to offer the button at all.
  */
 export const injectNip07 = async (context: BrowserContext, user: TestUser) => {
   await context.exposeBinding(TEST_NIP07_KEY, (source, call: Nip07Call) => {

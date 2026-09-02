@@ -7,13 +7,13 @@ import {injectEvents, injectSession} from "./session"
 // Must match TEST_ENV_KEY in src/lib/test/env.ts.
 const TEST_ENV_KEY = "__TEST_ENV__"
 
-// Set the first time the app reads a value out of the injected env, which is this side's only
-// evidence that the hook in src/app/env.ts ran at all.
+// Set the first time the app reads a value out of the injected env, the only evidence this side
+// has that the hook in src/app/env.ts ran.
 const TEST_ENV_READ_KEY = "__TEST_ENV_READ__"
 
 export type BootOptions = {
-  // Every relay list the app reads at startup is pointed here, so the urls it dials on its own
-  // initiative can only ever be relays the scenario created.
+  // Every relay list the app reads at startup is pointed here, so it can only dial relays the
+  // scenario created.
   relays: string[]
   spaces?: string[]
   user?: TestUser
@@ -21,7 +21,7 @@ export type BootOptions = {
   events?: TrustedEvent[]
   path?: string
   // VITE_ values the scenario sets for itself, applied over the relay-derived ones below. Anything
-  // named here still has to be something the test owns, or the app will reach for it.
+  // named here has to be something the test owns, or the test fails on a leak.
   env?: Record<string, string>
 }
 
@@ -73,16 +73,15 @@ export const boot = async (
   await page.goto(path)
 
   // The root layout renders nothing until its async setup block resolves, so the shell appearing
-  // is the first point at which the app is really running. With a session injected, wait for the
-  // signed-in nav instead — one the app rejected renders the landing dialog, and failing on that
-  // here is much easier to read than the assertions it would break later.
+  // is the first point at which the app is running. With a session injected, wait for the signed-in
+  // nav instead. A session the app rejected renders the landing dialog, and failing on that here
+  // reads far better than the assertions it would break later.
   await page
     .locator(user ? ".primary-nav" : ".fl")
     .waitFor({state: "attached", timeout: ms(int(1, MINUTE))})
 
-  // src/app/env.ts reads every VITE_ value as it is imported, so by now the app has either resolved
-  // them against the env above or against .env's real relays — which would otherwise surface as
-  // every assertion in the suite timing out.
+  // src/app/env.ts reads every VITE_ value as it is imported, so by now the app has resolved them
+  // against either the env above or .env's real relays.
   const usedTestEnv = await page.evaluate(
     key => Boolean(Reflect.get(window, key)),
     TEST_ENV_READ_KEY,

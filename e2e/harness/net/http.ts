@@ -5,10 +5,11 @@ import type {Handle} from "@welshman/util"
 import type {ZapperValues} from "@welshman/domain"
 import {tenantByUrl} from "../zooid/config"
 import {requestZooid} from "../zooid/transport"
+import {makeContextStore} from "./context"
 
-// Mirrors the service urls in src/app/env.ts and .env, which this process can't import: env.ts
-// reads import.meta.env and pulls in Capacitor. Nothing here is ever fetched — these are route
-// patterns, and every handler answers from memory.
+// Mirrors the service urls in src/app/env.ts and .env, which this process can't import because
+// env.ts reads import.meta.env and pulls in Capacitor. These are route patterns rather than urls
+// anything fetches, and every handler answers from memory.
 const DUFFLEPUD_ORIGIN = "https://dufflepud.coracle.social"
 const PUSH_SERVER_ORIGIN = "https://nps.flotilla.social"
 const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
@@ -16,8 +17,8 @@ const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
 // Hard-coded in src/app.html, so every navigation asks for it whatever the scenario is doing.
 const PLAUSIBLE_ORIGIN = "https://plausible.coracle.social"
 
-// Where the hosting api sends a browser to pay. Nothing serves it — `.test` resolves nowhere and
-// the block-all aborts the navigation — so a spec sees the redirect without one leaving.
+// Where the hosting api sends a browser to pay. `.test` resolves nowhere and the block-all aborts
+// the navigation, so a spec sees the redirect without one leaving.
 const CHECKOUT_ORIGIN = "https://checkout.test"
 
 // Relay-hosted livekit lives under a well-known path rather than an origin of its own.
@@ -30,8 +31,7 @@ const PNG = Buffer.from(
 )
 
 // The dev server from vite.config.ts. Traffic to it is the app loading itself rather than egress,
-// so it is the one host both layers here let past, websockets included — Vite's hmr socket has to
-// keep working.
+// so it is the one host both layers here let past, websockets included for Vite's hmr socket.
 export const isDevServerUrl = (url: URL) =>
   url.port === "1847" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
 
@@ -47,31 +47,19 @@ export type BlockedRequest = {
   url: string
 }
 
-const blockedByContext = new WeakMap<BrowserContext, BlockedRequest[]>()
-
-export const getBlockedRequests = (context: BrowserContext) => {
-  const blocked = blockedByContext.get(context)
-
-  if (blocked) {
-    return blocked
-  }
-
-  throw new Error("installHttpRoutes was never called for this browser context")
-}
+const blockedStore = makeContextStore<BlockedRequest[]>("installHttpRoutes")
 
 /**
  * Blocks every http request the app makes, except to the dev server and to a relay's own origin,
  * which is forwarded to the container so that the nip-11 document and the nip-86 management api the
- * app reads are the real relay's. Install this first: the per-service mocks below are registered
+ * app reads are the real relay's. Install this first. The per-service mocks below are registered
  * later and therefore take priority, so a request that still reaches this handler is one nothing
  * has mocked.
  */
 export const installHttpRoutes = (context: BrowserContext) => {
-  const blocked: BlockedRequest[] = []
+  const blocked = blockedStore.set(context, [])
 
-  blockedByContext.set(context, blocked)
-
-  // The dev server is left unrouted rather than matched and continued: a sveltekit page in dev is
+  // The dev server is left unrouted rather than matched and continued. A sveltekit page in dev is
   // hundreds of module requests, and none of them is egress.
   return context.route(
     url => !isDevServerUrl(url),
@@ -102,12 +90,12 @@ export const installHttpRoutes = (context: BrowserContext) => {
 
 /**
  * Opt-in, for a spec that wants every request the app made to have been answered by something the
- * scenario stood up. Some of what a page asks for is meant to be refused — the blossom probe
- * against a relay with blossom off, for one — so call this from a spec that has mocked what it
- * exercises rather than from teardown.
+ * scenario stood up. Some of what a page asks for is meant to be refused, such as the blossom probe
+ * against a relay with blossom off, so call this from a spec that has mocked what it exercises
+ * rather than from teardown.
  */
 export const assertNoBlockedRequests = (context: BrowserContext) => {
-  const blocked = getBlockedRequests(context)
+  const blocked = blockedStore.get(context)
 
   if (blocked.length > 0) {
     throw new Error(
@@ -123,12 +111,12 @@ export const assertNoBlockedRequests = (context: BrowserContext) => {
 export type RelayInfoOverrides = Record<string, object>
 
 /**
- * A relay's real document with a few fields replaced: a `redirect_to`, a `limitation`, a NIP the
- * relay does not implement. Merged rather than fabricated, because `self`, `pubkey`, `name` and
- * `supported_nips` are what room state is trusted from — a hand-written document breaks every
- * room on the page.
+ * A relay's real document with a few fields replaced, such as a `redirect_to`, a `limitation`, or a
+ * NIP the relay does not implement. It is merged rather than fabricated because `self`, `pubkey`,
+ * `name` and `supported_nips` are what room state is trusted from, and a hand-written document
+ * breaks every room on the page.
  *
- * Install it before the page navigates: the document is read at startup and cached from then on.
+ * Install it before the page navigates. The document is read at startup and cached from then on.
  */
 export const mockRelayInfo = (context: BrowserContext, overrides: RelayInfoOverrides) => {
   const overrideByOrigin = new Map(
@@ -151,14 +139,14 @@ export const mockRelayInfo = (context: BrowserContext, overrides: RelayInfoOverr
       if (request.method() === "GET" && host && override) {
         const {status, headers, body} = await requestZooid(host, "GET", "/", {
           ...request.headers(),
-          // The merge has to read the document, and khatru will compress it if invited to.
+          // The merge has to read the document, and khatru compresses it when invited to.
           "accept-encoding": "identity",
         })
 
         return route.fulfill({
           status,
           // khatru's Access-Control-Allow-Origin is what makes the fetch legal, so the relay's own
-          // headers are kept — all but the length of a body that is about to change.
+          // headers are kept, all but the length of a body that is about to change.
           headers: omit(["content-length"], headers),
           body: JSON.stringify({...JSON.parse(body.toString()), ...override}),
         })
@@ -171,9 +159,8 @@ export const mockRelayInfo = (context: BrowserContext, overrides: RelayInfoOverr
 
 /**
  * The analytics script src/app.html loads on every page. Answering with an empty body leaves
- * `window.plausible` as the queueing shim src/app/analytics.ts installs, so pageviews accumulate
- * in memory and nothing is ever sent — and `assertNoBlockedRequests` stays a statement about the
- * scenario rather than about the page shell.
+ * `window.plausible` as the queueing shim src/app/analytics.ts installs, so pageviews accumulate in
+ * memory and nothing is ever sent.
  */
 export const mockAnalytics = (context: BrowserContext) =>
   context.route(`${PLAUSIBLE_ORIGIN}/**`, route =>
@@ -186,15 +173,15 @@ export type DufflepudFixtures = {
   // A link preview is only rendered when it carries a title or an image.
   preview?: {title?: string; description?: string; image?: string}
   handles?: {handle: string; info?: Handle}[]
-  // `lnurl` is hex here, not bech32 — that's the encoding dufflepud speaks.
+  // `lnurl` is hex here rather than bech32, which is the encoding dufflepud speaks.
   zappers?: {lnurl: string; info?: Omit<ZapperValues, "lnurl">}[]
 }
 
 /**
  * Dufflepud, whose origin is the one service url the app hard-codes rather than reading from a
- * `VITE_` value. `as()` installs it with no fixtures, so a spec that needs one — a zapper for a zap
- * receipt, a link preview — calls this again with its own: playwright matches the most recently
- * registered route first, so the spec's answers win over the empty defaults.
+ * `VITE_` value. `as()` installs it with no fixtures, so a spec that needs one calls this again
+ * with its own. Playwright matches the most recently registered route first, so the spec's answers
+ * win over the empty defaults.
  */
 export const mockDufflepud = (context: BrowserContext, fixtures: DufflepudFixtures = {}) =>
   context.route(`${DUFFLEPUD_ORIGIN}/**`, route => {
@@ -227,7 +214,7 @@ export type BlossomOptions = {
 }
 
 /**
- * A blossom server that keeps what it was given: an upload is hashed exactly as the real thing
+ * A blossom server that keeps what it was given. An upload is hashed exactly as the real thing
  * would be, so the descriptor it answers with points at a blob this mock can then serve back.
  */
 export const mockBlossom = (context: BrowserContext, {server}: BlossomOptions) => {
@@ -283,7 +270,7 @@ export const mockPushServer = (context: BrowserContext) =>
         return route.fulfill({json: {}})
       }
 
-      // Registration is only usable if it comes back with both, and the relay is told to post
+      // Registration is only usable if it comes back with both. The relay is told to post
       // notifications to the callback rather than the client ever fetching it.
       const key = "test-push-subscription"
 
@@ -294,8 +281,8 @@ export const mockPushServer = (context: BrowserContext) =>
   })
 
 // One record straight off the hosting api, whose shapes live in src/app/hosting.ts. They're left
-// as loose objects here so that mocking a payment flow doesn't pull the app's module graph — and
-// with it import.meta.env — into the node process. A relay record may also carry `members` and
+// as loose objects here so that mocking a payment flow doesn't pull the app's module graph, and
+// with it import.meta.env, into the node process. A relay record may also carry `members` and
 // `activity`, and an invoice `items` and `bolt11`, which is where those endpoints answer from.
 export type HostingRecord = Record<string, unknown>
 
@@ -311,31 +298,23 @@ export type HostingFixtures = {
   draftInvoice?: HostingRecord
 }
 
-// The backend changing its mind between two of the user's clicks — a custom domain that verifies,
-// an invoice that gets paid — which is the half of those flows no click can reach.
+// The backend changing its mind between two of the user's clicks, such as a custom domain that
+// verifies or an invoice that gets paid. It is the half of those flows no click can reach.
 export type HostingHandle = {
   setTenant(patch: HostingRecord): void
   setRelay(id: string, patch: HostingRecord): void
   setInvoice(id: string, patch: HostingRecord): void
 }
 
-const hostingByContext = new WeakMap<BrowserContext, HostingHandle>()
+const hostingStore = makeContextStore<HostingHandle>("mockHosting")
 
-export const getHosting = (context: BrowserContext) => {
-  const handle = hostingByContext.get(context)
-
-  if (handle) {
-    return handle
-  }
-
-  throw new Error("mockHosting was never called for this browser context")
-}
+export const getHosting = (context: BrowserContext) => hostingStore.get(context)
 
 /**
- * The hosting api as a small stateful fake: a write mutates the record it names and the next read
+ * The hosting api as a small stateful fake. A write mutates the record it names and the next read
  * sees it, which is what makes editing a space's details, deactivating it, changing its plan or
- * saving a custom domain observable at all. Each browser context gets its own store, so one user's
- * spaces are not another's.
+ * saving a custom domain observable. Each browser context gets its own store, so one user's spaces
+ * are not another's.
  */
 export const mockHosting = async (context: BrowserContext, fixtures: HostingFixtures = {}) => {
   const plans = fixtures.plans ?? []
@@ -363,7 +342,7 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
     },
   }
 
-  hostingByContext.set(context, handle)
+  hostingStore.set(context, handle)
 
   await context.route(`${HOSTING_ORIGIN}/**`, route => {
     const request = route.request()
@@ -487,8 +466,8 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
         return route.fulfill({json: {data: {url: `${CHECKOUT_ORIGIN}/invoices/${id}`}}})
       }
 
-      // GET and reconcile both answer with the invoice as it now stands, which is how a spec
-      // marks one paid: flip `paid_at` with the handle and let the dialog's next poll find it.
+      // GET and reconcile both answer with the invoice as it now stands, which is how a spec marks
+      // one paid. Flip `paid_at` with the handle and let the dialog's next poll find it.
       return route.fulfill({json: {data: invoice}})
     }
 
@@ -499,7 +478,7 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
 }
 
 export type LivekitOptions = {
-  // Where the client is told to connect. Point it at something the test owns — the token this
+  // Where the client is told to connect. Point it at something the test owns, since the token this
   // hands out is accepted by nothing else.
   serverUrl: string
   token?: string
@@ -523,8 +502,8 @@ export const mockLivekit = (context: BrowserContext, {serverUrl, token}: Livekit
   )
 
 /**
- * Serves a png for anything the browser is loading as an image — avatars, banners, blossom blobs,
- * video posters — so a scenario's fixtures can reference urls without any of them being fetched.
+ * Serves a png for anything the browser is loading as an image, so a scenario's fixtures can
+ * reference avatar, banner, blob and poster urls without any of them being fetched.
  */
 export const mockImages = (context: BrowserContext) =>
   context.route(

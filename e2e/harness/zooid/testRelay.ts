@@ -20,9 +20,8 @@ export type TestRelayOptions = {
 // Seeding signs the events a real client would send and publishes them over a socket. Room
 // administration is signed by `admin`, the only test identity the tomls grant can_manage.
 //
-// Every timestamp is the caller's: seeding runs off the scenario's clock, and reading the wall
-// clock here would leave two fixtures that describe the same thing — a room's membership, say —
-// stamped seconds apart, which is enough to decide which of them wins.
+// Every timestamp is the caller's. Reading the wall clock here would stamp two fixtures that
+// describe the same thing seconds apart, which is enough to decide which of them wins.
 export const makeTestRelay = ({name, url, publish}: TestRelayOptions): TestRelay => {
   const event = async (user: TestUser, template: StampedEvent) => {
     const signed = await user.signer.sign(template)

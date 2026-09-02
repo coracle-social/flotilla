@@ -21,9 +21,8 @@ const makeUser = (name: string, secret: string): TestUser => {
   return user
 }
 
-// The secrets are near-zero entropy on purpose: they never leave the test process, they are
-// stable across runs so a pubkey can be asserted on directly, and the leading nibbles make an
-// event's author recognizable at a glance in a failed-assertion diff.
+// The secrets never leave the test process. They are stable across runs, so a pubkey can be
+// asserted on directly, and the leading nibbles name an author in a failed-assertion diff.
 export const users = {
   alice: makeUser("alice", "a11ce00000000000000000000000000000000000000000000000000000000001"),
   bob: makeUser("bob", "b0b0000000000000000000000000000000000000000000000000000000000002"),
@@ -31,14 +30,14 @@ export const users = {
   admin: makeUser("admin", "ad31100000000000000000000000000000000000000000000000000000000004"),
 }
 
-// secp256k1's group order. A secret is a scalar in [1, n), and a hash lands outside that range
-// only astronomically rarely, but reducing rather than rejecting keeps the derivation total.
+// secp256k1's group order. A secret is a scalar in [1, n), so the digest below is reduced into
+// that range rather than rejected when it falls outside.
 const CURVE_ORDER = BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141")
 
 /**
- * A fifth, sixth, hundredth identity, named rather than listed. The secret is derived from the
- * name, so the pubkey is as stable across runs as the four above, and minting one registers it —
- * a scenario can seed a profile, a message or a follow for it like any other test user.
+ * An identity beyond the four above, named rather than listed. The secret is derived from the name,
+ * so the pubkey is as stable across runs, and minting one registers it: a scenario can seed for it
+ * like any other test user.
  */
 export const makeTestUser = (name: string) => {
   const digest = BigInt("0x" + createHash("sha256").update(name).digest("hex"))

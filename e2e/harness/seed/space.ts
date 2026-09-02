@@ -21,8 +21,8 @@ import {users} from "../keys"
 import type {TestUser} from "../keys"
 
 // @welshman/domain has no writer for NIP-29 kind-9 messages, and none of its readers describe one,
-// so this pairs the base writer with the base reader. The behavior tags it renders — `h` via
-// setRoom, `q`/`p` via addQuote/addMention — are everything a room message carries.
+// so this pairs the base writer with the base reader. The behavior tags it renders are everything a
+// room message carries: `h` via setRoom, `q` and `p` via addQuote and addMention.
 class MessageWriter extends EventWriter<BaseEventReader> {}
 
 // A handle to an event the scenario is going to publish. Seeding calls record what to write and
@@ -32,8 +32,8 @@ export type SeededEvent = {
   readonly id: string
 }
 
-// The kind-14 a direct message really is. It is never published — each participant gets it inside
-// a gift wrap — so this, rather than anything on the wire, is what a spec asserts on.
+// The kind-14 a direct message really is. It is never published, since each participant gets it
+// inside a gift wrap, so this is what a spec asserts on.
 export type SeededRumor = {
   readonly rumor: HashedEvent
   readonly id: string
@@ -51,8 +51,7 @@ export type ProfileValues = {
   nip05?: string
 }
 
-// A queued write. Seeding is ordered — a reply's parent has to exist first — so every write goes
-// through the scenario's queue rather than starting when it is declared.
+// A queued write, drained in declaration order by `seed` in scenario.ts.
 export type Enqueue = (write: () => Promise<void>) => void
 
 // A user's membership as their own client sees it, which the scenario turns into one room list
@@ -69,15 +68,15 @@ export type SeededSpace = {
   readonly memberships: SeededMembership[]
   room(h: string, options?: RoomOptions): void
   member(user: TestUser, h?: string): void
-  // Relay and room membership, plus a place in the user's own room list — what a user who joined
-  // this space through the ui would end up with.
+  // Relay and room membership, plus a place in the user's own room list, which is what a user who
+  // joined this space through the ui ends up with.
   join(user: TestUser, ...rooms: string[]): void
   message(user: TestUser, h: string, content: string, createdAt?: number): SeededEvent
   reply(user: TestUser, parent: SeededEvent, content: string, createdAt?: number): SeededEvent
   profile(user: TestUser, values: ProfileValues, createdAt?: number): SeededEvent
   event(user: TestUser, template: SeededTemplate, createdAt?: number): SeededEvent
-  // A nip-17 conversation: one kind-14 rumor, gift-wrapped once per participant — the sender
-  // included, since their own copy is the half of the thread their client reads back.
+  // A nip-17 conversation. One kind-14 rumor, gift-wrapped once per participant including the
+  // sender, whose own copy is the half of the thread their client reads back.
   dm(from: TestUser, to: TestUser[], content: string, createdAt?: number): SeededRumor
   // This space's domain kinds, bound to a resolver that answers with its url, so a writer built
   // here renders its relay hints as this space. For everything `event()` takes a template for:
@@ -91,7 +90,7 @@ export type SeedSpaceOptions = {
   zooid: Zooid
   enqueue: Enqueue
   // The moment the scenario began. A fixture declared without a timestamp is stamped with it
-  // rather than with the wall clock, so a run's events never drift apart from one another.
+  // rather than with the wall clock.
   startedAt: number
   name: TenantName
 }
@@ -181,8 +180,8 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
   const message = (user: TestUser, h: string, content: string, createdAt = startedAt) =>
     publish(() => relay().message(user, h, content, createdAt))
 
-  // Flotilla replies in a room by quoting: Content.svelte renders a quote from the nostr uri in the
-  // content rather than from the q tag, so the uri has to be prepended, as prependParent does in
+  // Flotilla replies in a room by quoting. Content.svelte renders a quote from the nostr uri in the
+  // content rather than from the q tag, so the uri is prepended as prependParent does in
   // src/app/rooms.ts.
   const reply = (user: TestUser, parent: SeededEvent, content: string, createdAt = startedAt) =>
     publishTemplate(user, async () => {
@@ -213,9 +212,9 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
   const kind = <R extends BaseEventReader, W extends EventWriter<R>>(factory: KindFactory<R, W>) =>
     factory.configure(context)
 
-  // Every wrap is published over the sender's own connection: a gift wrap is signed by an
-  // ephemeral key, so its author is nobody this process can authenticate as. zooid stores it
-  // anyway, because it authorizes a kind-1059 by the member named in its p tag.
+  // Every wrap is published over the sender's own connection, since a gift wrap's author is an
+  // ephemeral key nobody in this process can authenticate as. zooid stores it anyway, authorizing a
+  // kind-1059 by the member named in its p tag.
   const dm = (from: TestUser, to: TestUser[], content: string, createdAt = startedAt) => {
     const rumor = seeded(async () => {
       const writer = kind(DirectMessage).writer().setContent(content)
