@@ -1,8 +1,10 @@
 <script lang="ts">
+  import {goto} from "$app/navigation"
+  import {page} from "$app/stores"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import {relays} from "@app/core"
-  import {makeSpacePath, goToSpace} from "@app/routes"
+  import {makeSpacePath, makeSpaceEntryPath} from "@app/routes"
   import {notifications} from "@app/notifications"
 
   type Props = {
@@ -12,7 +14,11 @@
 
   const {url, showTooltip = true}: Props = $props()
 
-  const onClick = () => goToSpace(url)
+  const onClick = () => {
+    const entryPath = makeSpaceEntryPath(url)
+
+    goto(entryPath, {replaceState: entryPath === $page.url.pathname})
+  }
 
   const path = makeSpacePath(url)
 

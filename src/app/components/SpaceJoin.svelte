@@ -40,7 +40,7 @@
       await access.completeJoin(notifications)
 
       pushToast({message: "Welcome to the space!"})
-      await goToSpace(url)
+      await goToSpace(url, {replaceState: true})
     } catch (e) {
       console.error("Failed to join space:", e)
       pushToast({theme: "error", message: "Failed to join space. Please try again."})

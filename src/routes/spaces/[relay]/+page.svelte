@@ -13,7 +13,7 @@
 
   $effect(() => {
     if (width > md) {
-      goToSpace(url)
+      goToSpace(url, {replaceState: true})
     }
   })
 </script>

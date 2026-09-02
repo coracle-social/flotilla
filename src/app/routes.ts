@@ -85,30 +85,33 @@ export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => 
   return path
 }
 
-export const goToSpace = (url: string, hash = "") => {
+export const makeSpaceEntryPath = (url: string) => {
   const prevPath = lastPageBySpaceUrl.get(encodeRelay(url))
 
   if (prevPath && prevPath !== makeSpacePath(url)) {
-    return goto(prevPath + hash, {replaceState: true})
+    return prevPath
   }
 
   if (!relays.get().get(url)?.hasNip(29)) {
-    return goto(makeSpaceChatPath(url) + hash, {replaceState: true})
+    return makeSpaceChatPath(url)
   }
 
   if (window.matchMedia(`(min-width: ${theme.screens.md})`).matches) {
-    return goto(makeSpacePath(url, "about") + hash, {replaceState: true})
+    return makeSpacePath(url, "about")
   }
 
-  return goto(makeSpacePath(url) + hash, {replaceState: true})
+  return makeSpacePath(url)
 }
+
+export const goToSpace = (url: string, options: {replaceState?: boolean} = {}) =>
+  goto(makeSpaceEntryPath(url), options)
 
 export const goToMovedSpace = (oldUrl: string, newUrl: string) =>
   goto(get(page).url.pathname.replace(encodeRelay(oldUrl), encodeRelay(newUrl)))
 
 export const goToHome = () => {
   if (PLATFORM_RELAYS.length > 0) {
-    return goToSpace(PLATFORM_RELAYS[0], get(page).url.hash)
+    return goto(makeSpaceEntryPath(PLATFORM_RELAYS[0]) + get(page).url.hash, {replaceState: true})
   }
 
   return goto("/home" + get(page).url.hash)

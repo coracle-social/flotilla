@@ -15,7 +15,7 @@
 
   onMount(async () => {
     if (PLATFORM_RELAYS.length > 0) {
-      goToSpace(PLATFORM_RELAYS[0])
+      goToSpace(PLATFORM_RELAYS[0], {replaceState: true})
     }
   })
 </script>

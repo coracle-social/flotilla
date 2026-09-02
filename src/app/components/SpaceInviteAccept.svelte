@@ -63,7 +63,7 @@
     }
 
     pushToast({message: "Welcome to the space!"})
-    await goToSpace(data.url)
+    await goToSpace(data.url, {replaceState: true})
   }
 
   const join = async () => {
