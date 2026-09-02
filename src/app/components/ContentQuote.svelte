@@ -7,6 +7,7 @@
     Address,
     MESSAGE,
     eventOutbox,
+    fromNostrURI,
     getIdFilters,
     relays as relaySelections,
     seen,
@@ -23,11 +24,13 @@
 
   type Props = {
     value: any
+    raw: string
     event: TrustedEvent
+    inline?: boolean
     url?: string
   }
 
-  const {value, event, url}: Props = $props()
+  const {value, raw, event, inline = false, url}: Props = $props()
 
   const {id, identifier, kind, pubkey = value.author, relays = []} = value
   const idOrAddress = id || new Address(kind, pubkey, identifier).toString()
@@ -72,8 +75,14 @@
   }
 </script>
 
-<Button class="my-2 block w-full max-w-full text-left" {onclick}>
-  {#if $quote}
+<Button
+  class={inline
+    ? "max-w-full cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap underline"
+    : "my-2 block w-full max-w-full text-left"}
+  {onclick}>
+  {#if inline}
+    {fromNostrURI(raw).slice(0, 16) + "…"}
+  {:else if $quote}
     {#if $quote.content.trim().match(/^(nostr:)?nevent1[a-z0-9]+$/)}
       <NoteContent {url} event={$quote} />
     {:else if $quote.kind === MESSAGE}

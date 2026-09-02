@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {fromNostrURI, tagSpec, tagValue} from "@welshman/util"
+  import {tagSpec, tagValue} from "@welshman/util"
   import {
     parse,
     truncate,
@@ -37,7 +37,6 @@
   import ContentTopic from "@app/components/ContentTopic.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {entityLink} from "@app/env"
   import {makeRoomPath} from "@app/routes"
   import {userSettingsValues} from "@app/settings"
 
@@ -190,16 +189,7 @@
             #<RoomName url={parsed.value.url} h={parsed.value.room} />
           </Link>
         {:else if isQuote(parsed)}
-          {#if isBlock(i)}
-            <ContentQuote {url} value={parsed.value} {event} />
-          {:else}
-            <Link
-              external
-              class="overflow-hidden text-ellipsis whitespace-nowrap underline"
-              href={entityLink(parsed.raw)}>
-              {fromNostrURI(parsed.raw).slice(0, 16) + "…"}
-            </Link>
-          {/if}
+          <ContentQuote {url} value={parsed.value} raw={parsed.raw} {event} inline={!isBlock(i)} />
         {:else if isEllipsis(parsed) && expandInline}
           {@html renderAsHtml(parsed)}
           <button
