@@ -9,9 +9,11 @@
   import type {Maybe} from "@welshman/lib"
   import {once} from "@welshman/lib"
   import {normalizeRelayUrl} from "@welshman/util"
+  import {isMobile} from "@lib/html"
   import Page from "@lib/components/Page.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
+  import SocketStatusToast from "@app/components/SocketStatusToast.svelte"
   import SpaceAuthError from "@app/components/SpaceAuthError.svelte"
   import SpaceTrustRelay from "@app/components/SpaceTrustRelay.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
@@ -98,6 +100,11 @@
     }
   })
 </script>
+
+<!-- Desktop shows the same status pinned to the space menu; on mobile that's behind the drawer -->
+{#if isMobile}
+  <SocketStatusToast {url} />
+{/if}
 
 {#if $page.url.pathname === makeSpacePath(url)}
   {@render children?.()}
