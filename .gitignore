@@ -20,6 +20,11 @@ static/apple-touch-icon-180x180.png
 static/maskable-icon-512x512.png
 src/assets/icons/*.webp
 manifest.webmanifest
+android/app/src/main/res/drawable*/splash.png
+android/app/src/main/res/drawable-*/ic_stat_notify.png
+android/app/src/main/res/mipmap-*/ic_launcher*
+ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+ios/App/App/Assets.xcassets/Splash.imageset/Default@*.png
 
 # Capacitor
 ios/App/public/
@@ -67,7 +72,6 @@ local.properties
 proguard/
 google-services.json
 GoogleService-Info.plist
-ic_stat_notify.png
 
 # IDEs and editors
 .roo
