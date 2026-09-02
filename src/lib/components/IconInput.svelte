@@ -68,6 +68,7 @@
     <ImageInputButton
       onSelect={handleImageSelect}
       initialValue={initialUrlValue}
+      aria-label="Add an image"
       class="button button-neutral button-sm">
       <Icon icon={UploadMinimalistic} size={4} />
     </ImageInputButton>

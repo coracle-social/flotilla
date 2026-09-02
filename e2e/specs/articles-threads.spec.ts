@@ -43,7 +43,7 @@ const modal = (page: Page, title: string) =>
 const composerForm = (page: Page) =>
   page.locator("form").filter({has: page.locator(".note-editor")})
 
-const editorOf = (scope: Locator) => scope.locator(".note-editor [contenteditable=true]")
+const editorOf = (scope: Locator | Page) => scope.locator(".note-editor [contenteditable=true]")
 
 const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
 
@@ -146,17 +146,17 @@ test("US-037 write and publish an article", async ({seed, as}) => {
 
   await pageBar(page).getByRole("button", {name: "Write"}).click()
 
-  const composer = modal(page, "Write an Article")
-  const title = composer.getByPlaceholder("What is this article about?")
-  const body = editorOf(composer)
+  const publish = pageBar(page).getByRole("button", {name: "Publish"})
+  const title = page.getByPlaceholder("Title", {exact: true})
+  const body = editorOf(page)
 
-  await expect(composer).toBeVisible()
+  await expect(title).toBeVisible()
 
-  await composer.getByRole("button", {name: "Publish Article"}).click()
+  await publish.click()
   await expect(page.getByRole("alert")).toContainText("Please provide a title for your article.")
 
   await title.fill("Half Baked")
-  await composer.getByRole("button", {name: "Publish Article"}).click()
+  await publish.click()
   await expect(page.getByRole("alert")).toContainText("Please write something for your article.")
 
   await body.pressSequentially("Only the beginning.")
@@ -164,8 +164,8 @@ test("US-037 write and publish an article", async ({seed, as}) => {
   // Neither refusal put anything on the wire.
   expect(publishedEvents(page, LONG_FORM)).toEqual([])
 
-  await composer.getByRole("button", {name: "Go back"}).click()
-  await expect(page.getByRole("heading", {name: "Write an Article"})).toHaveCount(0)
+  await page.goBack()
+  await expect(articleCards(page)).toHaveCount(1)
 
   // Reopening picks up where the composer was closed rather than starting over.
   await pageBar(page).getByRole("button", {name: "Write"}).click()
@@ -173,12 +173,16 @@ test("US-037 write and publish an article", async ({seed, as}) => {
   await expect(body).toContainText("Only the beginning.")
 
   await title.fill("Signals in the Noise")
-  await composer.getByRole("button", {name: "Publish Article"}).click()
+  await publish.click()
 
-  await expect(page.getByRole("heading", {name: "Write an Article"})).toHaveCount(0)
+  // Publishing lands on the article itself rather than back on the list.
+  await expect(page.getByRole("heading", {name: "Signals in the Noise"}).first()).toBeVisible()
+  expect(publishedEvents(page, LONG_FORM)).toHaveLength(1)
+
+  await page.goto(`${spacePath(url)}/articles`)
+
   await expect(articleCards(page)).toHaveCount(2)
   await expect(articleCards(page).first()).toContainText("Signals in the Noise")
-  expect(publishedEvents(page, LONG_FORM)).toHaveLength(1)
 
   // A published article leaves the composer empty for the next one.
   await pageBar(page).getByRole("button", {name: "Write"}).click()
@@ -560,15 +564,14 @@ test("US-041 publish an article from a room", async ({seed, as}) => {
   await openComposeMenu(page)
   await page.getByRole("button", {name: "Write an Article"}).click()
 
-  const composer = modal(page, "Write an Article")
+  await page.getByPlaceholder("Title", {exact: true}).fill("Repotting in Winter")
+  await editorOf(page).pressSequentially("Wait for a warm week.")
+  await pageBar(page).getByRole("button", {name: "Publish"}).click()
 
-  await composer.getByPlaceholder("What is this article about?").fill("Repotting in Winter")
-  await editorOf(composer).pressSequentially("Wait for a warm week.")
-  await composer.getByRole("button", {name: "Publish Article"}).click()
-
-  await expect(page.getByRole("heading", {name: "Write an Article"})).toHaveCount(0)
+  await expect(page.getByRole("heading", {name: "Repotting in Winter"}).first()).toBeVisible()
 
   // The room hears about the article without alice posting it a second time.
+  await page.goto(roomPath(url, "lounge"))
   await expect(page.getByText("Repotting in Winter")).toBeVisible()
 
   await page.goto(`${spacePath(url)}/articles`)

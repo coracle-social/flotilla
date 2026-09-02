@@ -144,11 +144,14 @@ test("US-092 edit a space's profile and featured content", async ({seed, as}) =>
 
   await expect(editor).toBeVisible()
 
-  // The icon picker's file input is hidden inside its own label, so the chooser is opened by
-  // clicking the label rather than by writing to the input.
+  await editor.getByRole("button", {name: "Add an image"}).click()
+
+  // The upload's file input is hidden inside its own label, so the chooser is opened by clicking
+  // the label rather than by writing to the input. Picking a file dismisses the picker.
+  const picker = dialog(admin, "Add an image")
   const chooser = admin.waitForEvent("filechooser")
 
-  await editor.locator('label:has(input[type="file"])').click()
+  await picker.locator('label:has(input[type="file"])').click()
   await (await chooser).setFiles(ICON)
 
   await expect(editor.getByText("Selected:")).toBeVisible()

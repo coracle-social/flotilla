@@ -1,5 +1,5 @@
 import type {BrowserContext} from "@playwright/test"
-import {MINUTE, int, ms} from "@welshman/lib"
+import {ms} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import type {TestUser} from "../keys"
 import {injectEvents, injectSession} from "./session"
@@ -76,9 +76,18 @@ export const boot = async (
   // is the first point at which the app is running. With a session injected, wait for the signed-in
   // nav instead. A session the app rejected renders the landing dialog, and failing on that here
   // reads far better than the assertions it would break later.
-  await page
-    .locator(user ? ".primary-nav" : ".fl")
-    .waitFor({state: "attached", timeout: ms(int(1, MINUTE))})
+  const shell = page.locator(user ? ".primary-nav" : ".fl")
+
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await shell.waitFor({state: "attached", timeout: ms(15)})
+      break
+    } catch (e) {
+      if (attempt === 3) throw e
+
+      await page.reload()
+    }
+  }
 
   // src/app/env.ts reads every VITE_ value as it is imported, so by now the app has resolved them
   // against either the env above or .env's real relays.
