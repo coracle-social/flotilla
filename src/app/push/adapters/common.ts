@@ -17,6 +17,7 @@ import {
   tagSpec,
   tagValue,
   MESSAGE,
+  WRAP,
   type Filter,
   type TrustedEvent,
 } from "@welshman/util"
@@ -25,7 +26,7 @@ import {User} from "@welshman/app"
 import {app, messagingRelayLists, network, roomLists} from "@app/core"
 import {DM_KINDS, CONTENT_KINDS, makeCommentFilter} from "@app/content"
 import {getMutedRooms, notificationSettings, shouldNotify, userSettingsValues} from "@app/settings"
-import {makeEventPath, goToSpace} from "@app/routes"
+import {makeEventPath, goToChat, goToSpace} from "@app/routes"
 
 export type PushSubscription = {
   key: string
@@ -101,16 +102,36 @@ export const onNotification = call(() => {
   }
 })
 
-export const onPushNotificationAction = async (action: ActionPerformed) => {
-  const {relay, id} = action.notification.data
-
-  const [event] = await network.get().load({
-    relays: [relay, LOCAL_RELAY_URL],
+const loadNotificationEvent = (relay: string, id: string) =>
+  network.get().request({
     filters: getIdFilters([id]),
+    relays: [relay, LOCAL_RELAY_URL],
+    // The local relay eoses immediately, so anything less waits on it alone
+    threshold: 1,
+    autoClose: true,
+    signal: AbortSignal.timeout(5000),
   })
 
-  if (event) {
-    goto(await makeEventPath(event, [relay]))
+// Wraps are ingested into the repository and unwrapped in the background, so wait for the rumor
+const loadNotificationRumor = async (wrap: TrustedEvent) => {
+  const getRumor = () => app.get().wrapManager.getRumor(wrap.id)
+
+  await poll({condition: () => Boolean(getRumor()), signal: AbortSignal.timeout(5000)})
+
+  return getRumor()
+}
+
+export const onPushNotificationAction = async (action: ActionPerformed) => {
+  const {relay, id} = action.notification.data
+  const [event] = await loadNotificationEvent(relay, id)
+  const target = event?.kind === WRAP ? await loadNotificationRumor(event) : event
+  const path = target && makeEventPath(target, [relay])
+
+  // Kinds we have no route for get a coracle.social permalink, which goto refuses
+  if (path && !path.includes("://")) {
+    goto(path)
+  } else if (event?.kind === WRAP) {
+    goToChat()
   } else {
     goToSpace(relay)
   }
@@ -209,7 +230,7 @@ export const syncRelaySubscriptions = (
         const filters: Filter[] = []
 
         if (messages) {
-          filters.push({kinds: DM_KINDS, "#p": [$pubkey]})
+          filters.push({kinds: [WRAP], "#p": [$pubkey]})
         }
 
         sync(url, "messages", filters, [])
