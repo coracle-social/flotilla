@@ -25,7 +25,7 @@ import {
   makeAppPolicyAuth,
 } from "@welshman/app"
 import type {AppPolicy, IApp} from "@welshman/app"
-import {app, appPolicies} from "@app/core"
+import {app, logger, appPolicies} from "@app/core"
 import {BLOCKED_RELAYS} from "@app/env"
 import {userSettingsValues, getSetting, RelayAuthMode} from "@app/settings"
 
@@ -106,6 +106,8 @@ const trustPolicy = (socket: Socket) => {
     // the receive queue. If trust status is undefined, buffer it for later.
     on(socket, SocketEvent.Receiving, (message: RelayMessage) => {
       if (isRelayEvent(message) && !message[2]?.sig) {
+        logger.get().log("trustPolicy", {url: socket.url, message})
+
         const isTrusted = getSetting("trusted_relays").includes(socket.url)
 
         if (!isTrusted) {
