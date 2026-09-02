@@ -41,6 +41,11 @@ const settingRow = (page: Page, label: string) =>
 const spaceNavItem = (page: Page, name: string) =>
   page.locator(`.primary-nav [data-tip^="${name}"]`)
 
+// The desktop rail and the phone's bottom bar each carry a link to the space list, and neither one
+// has an accessible name — both icons are masked svgs. Below tailwind's md breakpoint the rail is
+// display:none, so on a phone the visible one is the bar's.
+const spacesNavItem = (page: Page) => page.locator('a[href="/spaces"]:visible')
+
 // The space menu's header, the one button in the secondary nav carrying the relay's address.
 const spaceMenu = (page: Page, url: string) =>
   page.locator(".secondary-nav").getByRole("button", {name: pattern(displayRelayUrl(url))})
@@ -417,4 +422,56 @@ test("US-107 open a nostr link", async ({seed, as}) => {
   await page.goto(`/${neventEncode({id: "f".repeat(64), relays: [space.url]})}`)
 
   await expect(page).toHaveURL(/\/home$/)
+})
+
+test("US-110 see another space's unread activity from a phone", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+    const other = relay("other")
+
+    space.room("general", {name: "General"})
+    space.room("random", {name: "Random"})
+    other.room("general", {name: "General"})
+
+    space.join(user.alice, "general", "random")
+    space.join(user.bob, "general", "random")
+    other.join(user.alice, "general")
+    other.join(user.bob, "general")
+  })
+
+  const space = scenario.space("space")
+  const other = scenario.space("other")
+
+  // A phone has no room list on screen while a room is open, so the bottom bar is the only place
+  // activity elsewhere can surface
+  const bob = await as(users.bob, roomPath(space.url, "general"), {
+    context: {viewport: {width: 390, height: 844}, hasTouch: true},
+  })
+
+  const spacesButton = spacesNavItem(bob)
+
+  await expect(spacesButton).toBeVisible()
+  await expect(unreadDot(spacesButton)).toHaveCount(0)
+
+  const inOther = await as(users.alice, roomPath(other.url, "general"))
+
+  await send(inOther, "the server is on fire")
+
+  await expect(unreadDot(spacesButton)).toBeVisible()
+
+  // Meanwhile the space bob is sitting in gets a message too, in a room he isn't reading
+  const inSpace = await as(users.alice, roomPath(space.url, "random"))
+
+  await send(inSpace, "anyone seen the sextant?")
+
+  await bob.goto(roomPath(other.url, "general"))
+
+  await expect(message(bob, "the server is on fire")).toBeVisible()
+
+  // Reading the other space empties the bar, even though bob's own space still has an unread room
+  // — that one is the space's business, and its own indicators carry it
+  await bob.goto(spacePath(space.url))
+
+  await expect(unreadDot(roomLink(bob, "Random"))).toBeVisible()
+  await expect(unreadDot(spacesButton)).toHaveCount(0)
 })

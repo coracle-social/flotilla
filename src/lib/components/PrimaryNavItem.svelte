@@ -27,7 +27,7 @@
 {#if onclick}
   <Button {onclick} data-tip={title} class={className}>
     {@render children?.()}
-    {#if !active && notification}
+    {#if notification}
       <div class="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary text-primary-content">
       </div>
     {/if}
@@ -35,7 +35,7 @@
 {:else}
   <Link {href} data-tip={title} class={className}>
     {@render children?.()}
-    {#if !active && notification}
+    {#if notification}
       <div class="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary text-primary-content">
       </div>
     {/if}

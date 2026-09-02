@@ -10,6 +10,7 @@
   import {userSpaceUrls} from "@app/rooms"
   import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/env"
   import {notifications} from "@app/notifications"
+  import {makeSpacePath} from "@app/routes"
 
   let windowHeight = $state(0)
 
@@ -17,7 +18,9 @@
   const navPadding = 8 * itemHeight
   const itemLimit = $derived(Math.max(0, (windowHeight - navPadding) / itemHeight))
   const [primarySpaceUrls, secondarySpaceUrls] = $derived(splitAt(itemLimit, $userSpaceUrls))
-  const otherSpaceNotifications = $derived(secondarySpaceUrls.some(p => $notifications.has(p)))
+  const otherSpaceNotifications = $derived(
+    secondarySpaceUrls.some(url => $notifications.has(makeSpacePath(url))),
+  )
 
   // Tippy mounts its content component once, so pass a stable reactive object it can read from
   const overflowProps = $state({urls: [] as string[]})

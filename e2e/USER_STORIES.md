@@ -1538,6 +1538,21 @@ Acceptance:
 - An unresolvable nostr link redirects to the app's home rather than showing a
   broken page.
 
+### US-110 — See another space's unread activity from a phone
+
+As bob on a phone, I want the bottom bar's Spaces button to tell me another
+space wants attention, so that I don't have to leave the room I'm reading to
+find out.
+
+Acceptance:
+
+- While bob has a room open, a message in a space he isn't in raises an unread
+  dot on the Spaces button, matching the dot that space's row carries in
+  `/spaces`.
+- A message in another room of the space he's already in does not; that space's
+  own room list carries it.
+- Reading the other space takes the dot down.
+
 ## Out of scope
 
 Features the e2e suite cannot exercise, and what stops it.
