@@ -6,9 +6,12 @@
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Copy from "@assets/icons/copy.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
+  import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
+  import AltArrowUp from "@assets/icons/alt-arrow-up.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
+  import {slideAndFade} from "@lib/transition"
   import Button from "@lib/components/Button.svelte"
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
@@ -24,6 +27,8 @@
   }
 
   const {event, pubkeys, reply, edit}: Props = $props()
+
+  const tile = "button h-auto flex-col gap-1.5 py-4 text-xs"
 
   const onEmoji = async (emoji: NativeEmoji) => {
     history.back()
@@ -51,33 +56,49 @@
   }
 
   const showInfo = () => pushModal(EventInfo, {event}, {replaceState: true})
+
+  const toggleMore = () => {
+    showMore = !showMore
+  }
+
+  let showMore = $state(false)
 </script>
 
 <Modal>
   <ModalBody>
-    <div class="flex flex-col gap-2">
-      <Button class="button button-neutral" onclick={showInfo}>
-        <Icon size={4} icon={Code2} />
-        Message Info
+    <div class="grid grid-cols-2 gap-2">
+      <Button class="{tile} button-outline button-primary" onclick={showEmojiPicker}>
+        <Icon size={6} icon={SmileCircle} />
+        React
       </Button>
-      <Button class="button button-neutral w-full" onclick={copyText}>
-        <Icon size={4} icon={Copy} />
-        Copy Text
+      <Button class="{tile} button-neutral" onclick={sendReply}>
+        <Icon size={6} icon={Reply} />
+        Reply
       </Button>
-      <Button class="button button-neutral w-full" onclick={sendReply}>
-        <Icon size={4} icon={Reply} />
-        Send Reply
+    </div>
+    <div class="flex flex-col">
+      <Button class="button button-neutral w-full" onclick={toggleMore}>
+        <Icon size={4} icon={showMore ? AltArrowUp : AltArrowDown} />
+        {showMore ? "Fewer Options" : "More Options"}
       </Button>
-      {#if edit}
-        <Button class="button button-neutral w-full" onclick={sendEdit}>
-          <Icon size={4} icon={Pen} />
-          Edit Message
-        </Button>
+      {#if showMore}
+        <div transition:slideAndFade class="flex flex-col gap-2 pt-2">
+          {#if edit}
+            <Button class="button button-neutral w-full" onclick={sendEdit}>
+              <Icon size={4} icon={Pen} />
+              Edit Message
+            </Button>
+          {/if}
+          <Button class="button button-neutral w-full" onclick={copyText}>
+            <Icon size={4} icon={Copy} />
+            Copy Text
+          </Button>
+          <Button class="button button-neutral w-full" onclick={showInfo}>
+            <Icon size={4} icon={Code2} />
+            Message Info
+          </Button>
+        </div>
       {/if}
-      <Button class="button button-primary w-full" onclick={showEmojiPicker}>
-        <Icon size={4} icon={SmileCircle} />
-        Send Reaction
-      </Button>
     </div>
   </ModalBody>
 </Modal>

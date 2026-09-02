@@ -30,13 +30,14 @@
     }
   }
 
-  /* secondary — outline that fills on hover */
+  /* secondary — solid fill that darkens on hover */
   .button-secondary {
-    @apply bg-surface text-secondary border-secondary;
+    @apply bg-secondary text-secondary-content;
+    border-color: rgba(0, 0, 0, 0.1);
     box-shadow: var(--shadow-sm);
 
     &:hover {
-      @apply bg-secondary text-secondary-content;
+      @apply bg-secondary-bold;
     }
   }
 
@@ -80,12 +81,38 @@
     }
   }
 
-  /* outline */
+  /* outline — border and text carry the color, fill arrives on hover. Stands
+     alone as a neutral outline, or pairs with a color class. */
   .button-outline {
-    @apply text-content bg-transparent;
+    @apply text-content border-line bg-transparent;
+    box-shadow: var(--shadow-sm);
 
     &:hover {
       @apply border-primary text-primary;
+    }
+  }
+
+  .button-outline.button-primary {
+    @apply text-primary border-primary bg-transparent;
+
+    &:hover {
+      @apply bg-primary text-primary-content;
+    }
+  }
+
+  .button-outline.button-secondary {
+    @apply text-secondary border-secondary bg-transparent;
+
+    &:hover {
+      @apply bg-secondary text-secondary-content;
+    }
+  }
+
+  .button-outline.button-error {
+    @apply text-error border-error bg-transparent;
+
+    &:hover {
+      @apply bg-error text-error-content;
     }
   }
 
@@ -139,30 +166,41 @@
   }
 }
 
-[data-fl-theme="clay"] .button-primary,
-[data-fl-theme="clay"] .button-error {
+/* these are unlayered, so they beat the @layer rules above no matter their
+   specificity — hence the :not(.button-outline) on every filled variant */
+[data-fl-theme="clay"] .button-primary:not(.button-outline),
+[data-fl-theme="clay"] .button-secondary:not(.button-outline),
+[data-fl-theme="clay"] .button-error:not(.button-outline) {
   box-shadow: var(--shadow-sm), var(--shadow-inset-strong);
 }
 
 /* hover lift + bigger offset shadow; active press + smaller offset shadow */
-[data-fl-theme="clay"] .button-primary:hover {
+[data-fl-theme="clay"] .button-primary:not(.button-outline):hover {
   background: var(--primary-bold);
   transform: translateY(-2px);
   box-shadow:
     6px 6px 0 rgba(var(--shadow-color), 0.3),
     var(--shadow-inset-strong);
 }
-[data-fl-theme="clay"] .button-secondary:hover,
+[data-fl-theme="clay"] .button-secondary:not(.button-outline):hover {
+  background: var(--secondary-bold);
+  transform: translateY(-2px);
+  box-shadow:
+    6px 6px 0 rgba(var(--shadow-color), 0.3),
+    var(--shadow-inset-strong);
+}
 [data-fl-theme="clay"] .button-neutral:hover,
-[data-fl-theme="clay"] .button-error:hover {
+[data-fl-theme="clay"] .button-outline:hover,
+[data-fl-theme="clay"] .button-error:not(.button-outline):hover {
   transform: translateY(-2px);
 }
-[data-fl-theme="clay"] .button-primary:active,
-[data-fl-theme="clay"] .button-secondary:active,
-[data-fl-theme="clay"] .button-neutral:active {
+[data-fl-theme="clay"] .button-primary:not(.button-outline):active,
+[data-fl-theme="clay"] .button-secondary:not(.button-outline):active,
+[data-fl-theme="clay"] .button-neutral:active,
+[data-fl-theme="clay"] .button-outline:active {
   transform: translateY(2px);
   box-shadow: 2px 2px 0 rgba(var(--shadow-color), 0.3);
 }
-[data-fl-theme="clay"] .button-error:active {
+[data-fl-theme="clay"] .button-error:not(.button-outline):active {
   transform: translateY(2px);
 }
