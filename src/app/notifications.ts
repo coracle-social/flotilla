@@ -61,7 +61,7 @@ const getPaths = (path: string) =>
     .map((_, i, segments) => segments.slice(0, i + 1).join("/"))
     .slice(1)
 
-const getCheckedPaths = (pathname: string, relay?: string) => {
+const getExitPaths = (pathname: string, relay?: string) => {
   const paths = getPaths(pathname)
 
   if (relay) {
@@ -88,7 +88,7 @@ export const syncChecked = () => {
       return $checked
     })
 
-    const paths = getCheckedPaths($page.url.pathname, $page.params.relay)
+    const paths = getPaths($page.url.pathname)
 
     // Set checked when we visit a given page - but delay it a tad
     setTimeout(() => {
@@ -104,7 +104,7 @@ export const syncChecked = () => {
       })
     }, 300)
 
-    prev = paths
+    prev = getExitPaths($page.url.pathname, $page.params.relay)
   })
 }
 

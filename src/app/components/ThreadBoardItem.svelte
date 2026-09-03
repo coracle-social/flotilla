@@ -28,14 +28,19 @@
   const title = tagValue(tagSpec("title"), event.tags)
   const path = makeThreadPath(url, event.id)
   const onClick = () => goto(path)
-  //  notification={$notifications.has(path)}
 </script>
+
+{#snippet unread()}
+  {#if $notifications.has(path)}
+    <div class="mr-1 inline-block h-2 w-2 rounded-full bg-primary" transition:fade></div>
+  {/if}
+{/snippet}
 
 {#if mobile}
   <Link
     href={path}
     class="cv hover:bg-surface-less flex w-full flex-col gap-2 border-b border-solid border-line px-4 py-3 text-left text-sm transition-colors">
-    <p class="truncate font-medium">{title || "Untitled thread"}</p>
+    <p class="truncate font-medium">{@render unread()}{title || "Untitled thread"}</p>
     <div class="text-content-muted flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
       <span class="flex min-w-0 items-center gap-1.5">
         <ProfileCircle pubkey={event.pubkey} {url} size={4} />
@@ -52,10 +57,7 @@
     onclick={onClick}
     class="hover:bg-surface-less cursor-pointer border-b border-solid border-line text-sm transition-colors">
     <td class="max-w-0 truncate px-4 py-3 align-top">
-      {#if $notifications.has(path)}
-        <div class="h-2 w-2 rounded-full bg-primary inline-block mr-1" transition:fade></div>
-      {/if}
-      {title || "Untitled thread"}
+      {@render unread()}{title || "Untitled thread"}
     </td>
     <td class="w-32 px-4 py-3 align-middle">
       <div class="flex min-w-0 items-center gap-2">

@@ -1553,6 +1553,30 @@ Acceptance:
   own room list carries it.
 - Reading the other space takes the dot down.
 
+### US-112 — See which threads are unread
+
+As bob, I want the Threads dot to lead me to the thread that raised it, so that
+the indicator is something I can act on rather than dismiss.
+
+Acceptance:
+
+- A thread alice posted raises an unread dot on the Threads nav item; one bob
+  posted himself does not.
+- Opening the list keeps the dot on alice's row, so he can tell which thread is
+  new, and bob's row still carries none.
+- Leaving the list marks its threads read, and neither the row nor the nav item
+  shows a dot afterwards.
+
+### US-113 — See which threads are unread on a phone
+
+As bob on a phone, I want the same dot on the thread that raised it, so that the
+Threads indicator is as actionable on a phone as it is on a desktop.
+
+Acceptance:
+
+- The thread list below the md breakpoint is a list of links rather than a
+  table, and alice's thread carries a dot there; bob's own does not.
+
 ## Out of scope
 
 Features the e2e suite cannot exercise, and what stops it.

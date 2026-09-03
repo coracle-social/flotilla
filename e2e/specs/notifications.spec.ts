@@ -1,7 +1,7 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE} from "@welshman/lib"
 import {displayRelayUrl} from "@welshman/util"
-import {MessagingRelayList, RelayList} from "@welshman/domain"
+import {MessagingRelayList, RelayList, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {expect, roomPath, spacePath, test, users} from "../harness"
 import type {SeededSpace, TestUser} from "../harness"
@@ -474,4 +474,108 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
 
   await expect(unreadDot(roomLink(bob, "Random"))).toBeVisible()
   await expect(unreadDot(spacesButton)).toHaveCount(0)
+})
+
+// SpaceMenuNavItems hides a content type until the space has an event of that kind, so this link
+// appearing at all is what says the seeded threads loaded.
+const contentNavItem = (page: Page, name: string) =>
+  page.locator(".secondary-nav").getByRole("link", {name})
+
+const seedThread = (space: SeededSpace, user: TestUser, title: string, createdAt: number) =>
+  space.event(
+    user,
+    () =>
+      space
+        .kind(Thread)
+        .writer()
+        .setRoom(space.url, "general")
+        .setTitle(title)
+        .setContent("worth talking about")
+        .renderTemplate(),
+    createdAt,
+  )
+
+test("US-112 see which threads are unread", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    // A thread bob wrote raises no indicator of its own, so it is the control for a row with no dot
+    seedThread(space, user.bob, "where is the sextant", at(3, HOUR))
+    seedThread(space, user.alice, "the server is on fire", at(2, HOUR))
+  })
+
+  const space = scenario.space("space")
+  const bob = await as(users.bob, roomPath(space.url, "general"))
+
+  const threadsNav = contentNavItem(bob, "Threads")
+
+  await expect(threadsNav).toBeVisible()
+  await expect(unreadDot(threadsNav)).toBeVisible()
+
+  await threadsNav.click()
+
+  const hers = bob.getByRole("row").filter({hasText: "the server is on fire"})
+  const his = bob.getByRole("row").filter({hasText: "where is the sextant"})
+
+  await expect(his).toBeVisible()
+
+  // syncChecked marks the landed-on page read 300ms later and latestActivityByPath is throttled to
+  // a second, so a dot the list is about to clear stays up well past the click. Nothing on screen
+  // reports the tick — the nav dot goes down on the route change either way — so wait it out.
+  await bob.waitForTimeout(1500)
+
+  await expect(unreadDot(hers)).toBeVisible()
+  await expect(unreadDot(his)).toHaveCount(0)
+
+  await hers.click()
+
+  await expect(bob.locator('[data-component="PageBar"]')).toContainText("the server is on fire")
+
+  // Leaving the list is what marks its threads read, so the dot is gone on the way back
+  await bob.goBack()
+
+  await expect(hers).toBeVisible()
+  await expect(unreadDot(hers)).toHaveCount(0)
+
+  await roomLink(bob, "General").click()
+
+  await expect(threadsNav).toBeVisible()
+  await expect(unreadDot(threadsNav)).toHaveCount(0)
+})
+
+test("US-113 see which threads are unread on a phone", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    seedThread(space, user.bob, "where is the sextant", at(3, HOUR))
+    seedThread(space, user.alice, "the server is on fire", at(2, HOUR))
+  })
+
+  const space = scenario.space("space")
+
+  // ThreadBoard swaps its table for a list of links below tailwind's md breakpoint, and the two
+  // branches render the thread separately, so a dot on one says nothing about the other.
+  const bob = await as(users.bob, `${spacePath(space.url)}/threads`, {
+    context: {viewport: {width: 390, height: 844}, hasTouch: true},
+  })
+
+  const hers = bob.getByRole("link").filter({hasText: "the server is on fire"})
+  const his = bob.getByRole("link").filter({hasText: "where is the sextant"})
+
+  await expect(his).toBeVisible()
+
+  // Same tick and throttle as US-112: a dot read before both have run is one the list may still be
+  // about to clear.
+  await bob.waitForTimeout(1500)
+
+  await expect(unreadDot(hers)).toBeVisible()
+  await expect(unreadDot(his)).toHaveCount(0)
 })
