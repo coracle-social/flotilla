@@ -1,9 +1,11 @@
 <script lang="ts">
+  import {onDestroy} from "svelte"
   import {first, removeUndefined, uniq} from "@welshman/lib"
   import {inbox} from "@welshman/util"
   import {ZapRequest} from "@welshman/domain"
   import {Zappers} from "@welshman/app"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
+  import Copy from "@assets/icons/copy.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -16,11 +18,14 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {errorMessage} from "@lib/util"
   import ProfileLink from "@app/components/ProfileLink.svelte"
+  import QRCode from "@app/components/QRCode.svelte"
+  import WalletConnect from "@app/components/WalletConnect.svelte"
   import ZapForm from "@app/components/ZapForm.svelte"
-  import {payInvoice} from "@app/lightning"
-  import {zapAmounts} from "@app/settings"
-  import {pushToast} from "@app/toast"
   import {app, domain, network, router} from "@app/core"
+  import {payInvoice, wallet} from "@app/lightning"
+  import {pushModal} from "@app/modal"
+  import {zapAmounts} from "@app/settings"
+  import {clip, pushToast} from "@app/toast"
 
   type Props = {
     url?: string
@@ -36,61 +41,107 @@
 
   const back = () => history.back()
 
+  const requestInvoice = async () => {
+    const currentZapper = zapper.get()!
+    const relays = uniq([
+      ...(url ? [url] : await $router.resolver.relays([inbox(pubkey)])),
+      ...goalRelays,
+    ])
+    const writer = $domain
+      .writer(ZapRequest)
+      .setContent(content)
+      .setAmount(amount * 1000)
+      .setLnurl(currentZapper.lnurl)
+      .setRecipient(pubkey)
+      .setUrls(relays)
+
+    if (eventId) {
+      writer.setEventId(eventId)
+    }
+
+    const res = await writer.requestInvoice(currentZapper)
+
+    if (!res.invoice) {
+      throw new Error(res.error || "no error given")
+    }
+
+    return {
+      relays,
+      invoice: res.invoice,
+      filters: [currentZapper.getResponseFilter(pubkey, eventId)],
+    }
+  }
+
+  const payWithWallet = async () => {
+    const {relays, invoice, filters} = await requestInvoice()
+
+    await payInvoice(invoice)
+    await $network.load({relays, filters})
+
+    pushToast({message: "Zap successfully sent!"})
+    back()
+  }
+
+  const createInvoice = async () => {
+    const {relays, invoice: created, filters} = await requestInvoice()
+
+    invoice = created
+
+    paymentController?.abort()
+    paymentController = new AbortController()
+
+    $network.request({
+      relays,
+      filters,
+      signal: paymentController.signal,
+      onEvent: () => {
+        pushToast({message: "Payment sent!"})
+        paymentController?.abort()
+        back()
+      },
+    })
+  }
+
   const sendZap = async () => {
     loading = true
 
     try {
-      const currentZapper = zapper.get()!
-      const relays = uniq([
-        ...(url ? [url] : await $router.resolver.relays([inbox(pubkey)])),
-        ...goalRelays,
-      ])
-      const writer = $domain
-        .writer(ZapRequest)
-        .setContent(content)
-        .setAmount(amount * 1000)
-        .setLnurl(currentZapper.lnurl)
-        .setRecipient(pubkey)
-        .setUrls(relays)
-
-      if (eventId) {
-        writer.setEventId(eventId)
+      if ($wallet) {
+        await payWithWallet()
+      } else {
+        await createInvoice()
       }
-
-      const res = await writer.requestInvoice(currentZapper)
-
-      if (!res.invoice) {
-        return pushToast({
-          theme: "error",
-          message: `Failed to zap: ${res.error || "no error given"}`,
-        })
-      }
-
-      await payInvoice(res.invoice)
-      await $network.load({
-        relays,
-        filters: [currentZapper.getResponseFilter(pubkey, eventId)],
-      })
-
-      pushToast({message: "Zap successfully sent!"})
-      back()
     } catch (e) {
       console.error(e)
 
-      const message = errorMessage(e)
-
       pushToast({
         theme: "error",
-        message: `Failed to zap: ${message}`,
+        message: `Failed to zap: ${errorMessage(e)}`,
       })
     } finally {
       loading = false
     }
   }
 
+  const connectWallet = () => {
+    pushModal(WalletConnect, {}, {nested: true})
+  }
+
+  const copyInvoice = () => {
+    if (invoice) {
+      clip(invoice)
+    }
+  }
+
   let amount = $state<number>(first($zapAmounts) ?? 21)
   let content = $state("⚡️")
   let loading = $state(false)
+  let invoice = $state<string>()
+  let paymentController: AbortController | undefined = $state()
+
+  onDestroy(() => {
+    paymentController?.abort()
+  })
 </script>
 
 <Modal>
@@ -99,22 +150,55 @@
       <ModalTitle>Send a Zap</ModalTitle>
       <ModalSubtitle>To <ProfileLink {pubkey} class="text-primary!" /></ModalSubtitle>
     </ModalHeader>
-    <ZapForm bind:amount bind:content />
+
+    {#if invoice}
+      <div class="flex flex-col gap-6">
+        <div class="flex flex-col items-center gap-4">
+          <QRCode code={invoice} class="w-full max-w-56" />
+          <p class="text-content-muted text-center text-sm">
+            Scan with your lightning wallet, or copy the invoice below.
+          </p>
+        </div>
+        <label class="input flex w-full items-center gap-2">
+          <input readonly class="min-w-0 grow truncate" value={invoice} />
+          <Button
+            class="button button-neutral button-sm button-square shrink-0"
+            onclick={copyInvoice}>
+            <Icon icon={Copy} size={4} />
+          </Button>
+        </label>
+      </div>
+    {:else}
+      <ZapForm bind:amount bind:content>
+        {#if !$wallet}
+          <div class="card card-sm card-flat flex flex-col items-center gap-3 p-4 text-center">
+            <p class="text-content-muted text-sm">
+              Connect a wallet to pay instantly without scanning a QR code.
+            </p>
+            <Button class="button button-neutral" onclick={connectWallet}>
+              Connect a lightning wallet
+            </Button>
+          </div>
+        {/if}
+      </ZapForm>
+    {/if}
   </ModalBody>
   <ModalFooter>
     <Button class="button button-link" onclick={back}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button class="button button-primary" onclick={sendZap} disabled={loading}>
-      <Spinner {loading}>
-        <div class="flex items-center gap-2">
-          {#if !loading}
-            <Icon icon={Bolt} />
-          {/if}
-          Send Zap
-        </div>
-      </Spinner>
-    </Button>
+    {#if !invoice}
+      <Button class="button button-primary" onclick={sendZap} disabled={loading}>
+        <Spinner {loading}>
+          <div class="flex items-center gap-2">
+            {#if !loading}
+              <Icon icon={Bolt} />
+            {/if}
+            {$wallet ? "Send Zap" : "Create invoice"}
+          </div>
+        </Spinner>
+      </Button>
+    {/if}
   </ModalFooter>
 </Modal>

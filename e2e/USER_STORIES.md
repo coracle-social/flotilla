@@ -416,6 +416,19 @@ Acceptance:
   quote of the shared message.
 - Sending posts the quoted message in the destination, visible to bob there.
 
+### US-115 — Connect a wallet while sending a zap
+
+As alice, I want to connect a wallet from the zap dialog and go on zapping, so
+that reaching for one mid-zap is not a dead end.
+
+Acceptance:
+
+- Zapping a message from someone with a lightning address offers "Create
+  invoice" and a prompt to connect a wallet.
+- Connecting one over WebLN reports success and closes only the wallet dialog.
+- The zap dialog behind it drops the prompt, offers "Send Zap" instead, and
+  still holds the amount that was typed before the detour.
+
 ## Direct messages
 
 ### US-029 — Start a one-on-one chat
@@ -1595,12 +1608,13 @@ Features the e2e suite cannot exercise, and what stops it.
 
 **Lightning payments and wallets.** Sending a zap on a message, article, thread
 post, comment, or note; contributing to a funding goal; connecting a wallet over
-WebLN or Nostr Wallet Connect; the wallet page's connection status and balance;
+Nostr Wallet Connect; the wallet page's connection status and balance;
 disconnecting a wallet; paying and receiving invoices. The harness mocks zapper
-_discovery_ (Dufflepud's `/zapper/info`) but not the LNURL invoice callback or
-the payment leg, and a connected wallet needs a real extension or an NWC
-responder on its own relay. Existing zap receipts can be seeded, so a zap total
-rendered on a message is testable; the send-and-settle flow is not.
+_discovery_ (Dufflepud's `/zapper/info`) and stands up a WebLN provider that
+answers the connection handshake, but not the LNURL invoice callback, the
+payment leg, or an NWC responder on a relay of its own. Existing zap receipts
+can be seeded, so a zap total rendered on a message is testable; the
+send-and-settle flow is not.
 
 **Voice and video rooms.** Creating or joining a Voice room, the mic-preview and
 device-picker dialog, mute/camera/screen-share controls, speaking indicators,

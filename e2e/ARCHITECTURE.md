@@ -260,6 +260,7 @@ starts from. Both take the same options, over and above the scenario's own relay
 | `context`   | merged over the project's context options: a viewport, a colour scheme, a permission |
 | `env`       | `VITE_` values applied over the ones derived from the scenario's relays              |
 | `nip07`     | a `window.nostr` backed by that identity's own signer, for an extension login        |
+| `webln`     | a `window.webln` that answers the connection handshake, for connecting a wallet      |
 | `relayInfo` | fields merged over a relay's own NIP-11 document, keyed by relay url                 |
 | `hosting`   | what the hosting backend already knows about this user                               |
 
@@ -293,6 +294,7 @@ e2e/
                            the overrides
       session.ts           NIP-01 session injection
       nip07.ts             a window.nostr backed by a test identity's own signer
+      webln.ts             a window.webln that enables and reports what it supports
     seed/
       scenario.ts          the `seed()` builder and relative-time helpers
       space.ts             one space's fixtures: rooms, members, messages, replies, profiles,

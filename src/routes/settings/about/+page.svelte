@@ -9,10 +9,8 @@
   import Pen from "@assets/icons/pen.svg?dataurl"
   import HeadphonesRound from "@assets/icons/headphones-round.svg?dataurl"
   import Zap from "@app/components/Zap.svelte"
-  import ZapInvoice from "@app/components/ZapInvoice.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {PLATFORM_NAME, PLATFORM_ABOUT} from "@app/env"
-  import {wallet} from "@app/lightning"
   import {pushModal} from "@app/modal"
   import {makeSpacePath} from "@app/routes"
 
@@ -22,7 +20,7 @@
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey})
 
-  const zap = () => pushModal($wallet ? Zap : ZapInvoice, {pubkey})
+  const zap = () => pushModal(Zap, {pubkey})
 </script>
 
 <div class="flex flex-col gap-6 p-8 max-w-2xl h-screen justify-center m-auto">

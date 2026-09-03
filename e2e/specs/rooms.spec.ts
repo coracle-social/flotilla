@@ -1,7 +1,8 @@
-import {DAY, HOUR, WEEK} from "@welshman/lib"
-import {MessagingRelayList, RelayList, displayPubkey} from "@welshman/domain"
+import {DAY, HOUR, WEEK, bech32ToHex} from "@welshman/lib"
+import {getLnUrl} from "@welshman/util"
+import {MessagingRelayList, Profile, RelayList, displayPubkey} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
-import {expect, makeTestUser, roomPath, spacePath, test, users} from "../harness"
+import {expect, makeTestUser, mockDufflepud, roomPath, spacePath, test, users} from "../harness"
 import type {SeededSpace, TestUser} from "../harness"
 
 // A handle to a seeded event. SeededEvent isn't exported from the harness, and only its id and
@@ -750,4 +751,68 @@ test("US-028 share a message somewhere else", async ({seed, as}) => {
 
   await expect(message(alice, "heads up")).toContainText("the dock is closed on sunday")
   await expect(message(bob, "heads up")).toContainText("the dock is closed on sunday")
+})
+
+test("US-115 connect a wallet without losing the zap you were composing", async ({seed, as}) => {
+  // The lightning address on bob's profile, and the lnurl endpoint it resolves to. Zapping only gets
+  // as far as a dialog once dufflepud answers with a zapper for that endpoint.
+  const lud16 = "bob@zap.test"
+  // A zapper's receipts are signed by the recipient's lightning provider, so it is an identity of
+  // its own even where, as here, nothing is ever paid.
+  const provider = makeTestUser("zapper")
+
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anchor"})
+    space.event(user.bob, () =>
+      space.kind(Profile).writer().update({name: "Bob Barnacle", lud16}).renderTemplate(),
+    )
+    space.message(user.bob, "general", "the new sail came in")
+  })
+
+  const {url} = scenario.space("space")
+  const path = roomPath(url, "general")
+  const page = await as(users.alice, path, {webln: {node: {alias: "Test Node"}}})
+
+  // Registered after the page was opened, so it answers ahead of the empty dufflepud `as()`
+  // installs, and before the navigation below, since a zapper is looked up once per page load.
+  await mockDufflepud(page.context(), {
+    zappers: [
+      {
+        lnurl: bech32ToHex(getLnUrl(lud16)!),
+        info: {pubkey: users.bob.pubkey, nostrPubkey: provider.pubkey, allowsNostr: true},
+      },
+    ],
+  })
+
+  await page.goto(path)
+
+  await expect(message(page, "the new sail came in")).toBeVisible()
+
+  await messageActions(page, "the new sail came in").first().click()
+
+  const zap = dialog(page, "Send a Zap")
+  const amount = zap.locator('input[type="number"]')
+
+  await expect(zap.getByRole("button", {name: "Create invoice"})).toBeVisible()
+
+  await amount.fill("210")
+  await zap.getByRole("button", {name: "Connect a lightning wallet"}).click()
+
+  const connect = dialog(page, "Connect a Wallet")
+
+  await connect.getByRole("button", {name: "Connect with WebLN"}).click()
+
+  await expect(page.getByRole("alert")).toContainText("Wallet successfully connected!")
+  await expect(connect).toHaveCount(0)
+
+  // The zap dialog was underneath rather than replaced, so it answers to the wallet she now has
+  // instead of still asking for one, and the amount she had typed survived the detour.
+  await expect(zap.getByRole("button", {name: "Connect a lightning wallet"})).toHaveCount(0)
+  await expect(zap.getByRole("button", {name: "Send Zap"})).toBeVisible()
+  await expect(amount).toHaveValue("210")
 })

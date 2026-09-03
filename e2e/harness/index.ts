@@ -17,9 +17,11 @@ import type {BlossomOptions, HostingFixtures, RelayInfoOverrides} from "./net/ht
 import {assertNoLeaks, installWebSocketRoutes} from "./net/websocket"
 import {boot} from "./app/boot"
 import {injectNip07} from "./app/nip07"
+import {injectWebLn} from "./app/webln"
 import {seed} from "./seed/scenario"
 import type {Scenario, SeedTools} from "./seed/scenario"
 import type {TestUser} from "./keys"
+import type {WebLnInfo} from "./app/webln"
 
 export {expect}
 export {makeTestUser, users} from "./keys"
@@ -38,6 +40,7 @@ export {
   mockLivekit,
 } from "./net/http"
 export type {DufflepudFixtures, HostingFixtures, HostingHandle, HostingRecord} from "./net/http"
+export type {WebLnInfo} from "./app/webln"
 
 // Mirrors encodeRelay in src/app/relays.ts. Importing it reaches the app's module graph, and with
 // it sveltekit.
@@ -62,6 +65,8 @@ export type PageOptions = {
   env?: Record<string, string>
   // A NIP-07 provider signing as this user, for a login that goes through an extension.
   nip07?: TestUser
+  // A WebLN provider on window, for a wallet that gets connected through an extension.
+  webln?: WebLnInfo
   // A blossom server, installed before the page boots. mockBlossom called on the page `as()`
   // returns arrives after src/app/sync.ts has probed and cached a space's own url, so a spec whose
   // server is one the app probes on load has to name it here instead.
@@ -179,6 +184,10 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
       if (options.nip07) {
         await injectNip07(context, options.nip07)
+      }
+
+      if (options.webln) {
+        await injectWebLn(context, options.webln)
       }
 
       // Headless Chromium reports `Notification.permission` as "denied" even where playwright has

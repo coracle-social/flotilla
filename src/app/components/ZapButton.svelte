@@ -7,11 +7,9 @@
   import {Zappers} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import Zap from "@app/components/Zap.svelte"
-  import ZapInvoice from "@app/components/ZapInvoice.svelte"
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
   import {pushModal} from "@app/modal"
   import {app, reader} from "@app/core"
-  import {wallet} from "@app/lightning"
 
   type Props = {
     url?: string
@@ -37,16 +35,10 @@
     try {
       const zapper = await zapperPromise
 
-      if (!zapper?.allowsNostr) {
-        pushModal(InfoZapperError, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
-      } else if ($wallet) {
+      if (zapper?.allowsNostr) {
         pushModal(Zap, {url, pubkey: event.pubkey, eventId: event.id, goalRelays}, {replaceState})
       } else {
-        pushModal(
-          ZapInvoice,
-          {url, pubkey: event.pubkey, eventId: event.id, goalRelays},
-          {replaceState},
-        )
+        pushModal(InfoZapperError, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
       }
     } finally {
       loading = false
