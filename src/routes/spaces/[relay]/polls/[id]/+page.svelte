@@ -86,7 +86,7 @@
       <NoteCard event={$event} {url} class="card z-feature w-full">
         <div class="flex flex-col gap-3 ml-12 flex flex-col gap-3">
           <NoteContent showEntire event={$event} {url} />
-          <CommentActions segment="polls" showActivity {url} event={$event} {context} />
+          <CommentActions showActivity {url} event={$event} {context} />
         </div>
       </NoteCard>
       {#if !showAll && $comments.length > 4}
@@ -101,7 +101,7 @@
         <NoteCard event={reply} {url} class="card z-feature w-full">
           <div class="flex flex-col gap-3 ml-12">
             <NoteContent showEntire event={reply} {url} />
-            <CommentActions segment="polls" event={reply} {url} {context} />
+            <CommentActions event={reply} {url} {context} />
           </div>
         </NoteCard>
       {/each}

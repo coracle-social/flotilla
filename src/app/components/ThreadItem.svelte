@@ -8,6 +8,7 @@
   import ThreadActions from "@app/components/ThreadActions.svelte"
   import type {FeedContext} from "@app/feeds"
   import RoomLink from "@app/components/RoomLink.svelte"
+  import UnreadDot from "@app/components/UnreadDot.svelte"
   import {makeThreadPath} from "@app/routes"
 
   type Props = {
@@ -18,13 +19,13 @@
 
   const {url, event, context}: Props = $props()
 
+  const path = makeThreadPath(url, event.id)
   const title = tagValue(tagSpec("title"), event.tags)
   const h = tagValue(tagSpec("h"), event.tags)
 </script>
 
-<Link
-  class="cv flex flex-col gap-2 card card-interactive w-full"
-  href={makeThreadPath(url, event.id)}>
+<Link class="cv relative flex flex-col gap-2 card card-interactive w-full" href={path}>
+  <UnreadDot {path} class="absolute right-3 top-3" />
   {#if title}
     <div class="flex w-full items-center justify-between gap-2">
       <p class="text-xl">{title}</p>

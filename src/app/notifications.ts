@@ -1,18 +1,7 @@
 import {derived, get, writable} from "svelte/store"
 import {Badge} from "@capawesome/capacitor-badge"
 import {page} from "$app/stores"
-import {
-  assoc,
-  prop,
-  first,
-  identity,
-  groupBy,
-  now,
-  remove,
-  throttle,
-  parseJson,
-  gt,
-} from "@welshman/lib"
+import {assoc, first, identity, groupBy, now, remove, throttle, parseJson, gt} from "@welshman/lib"
 import type {SignedEvent, TrustedEvent} from "@welshman/util"
 import {
   getIdOrAddress,
@@ -47,8 +36,6 @@ export const checked = withGetter(
 )
 
 export const getChecked = (key: string) => checked.get()[key]
-
-export const deriveChecked = (key: string) => derived(checked, prop<number>(key))
 
 export const setChecked = (key: string) => checked.update(assoc(key, now()))
 

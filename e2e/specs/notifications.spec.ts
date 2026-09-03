@@ -1,7 +1,7 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE} from "@welshman/lib"
 import {displayRelayUrl} from "@welshman/util"
-import {MessagingRelayList, RelayList, Thread} from "@welshman/domain"
+import {Classified, MessagingRelayList, RelayList, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {expect, roomPath, spacePath, test, users} from "../harness"
 import type {SeededSpace, TestUser} from "../harness"
@@ -481,6 +481,22 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
 const contentNavItem = (page: Page, name: string) =>
   page.locator(".secondary-nav").getByRole("link", {name})
 
+const seedClassified = (space: SeededSpace, user: TestUser, title: string, createdAt: number) =>
+  space.event(
+    user,
+    () =>
+      space
+        .kind(Classified)
+        .writer()
+        .setRoom(space.url, "general")
+        .setIdentifier()
+        .setTitle(title)
+        .setPrice(100)
+        .setContent("in good condition")
+        .renderTemplate(),
+    createdAt,
+  )
+
 const seedThread = (space: SeededSpace, user: TestUser, title: string, createdAt: number) =>
   space.event(
     user,
@@ -574,6 +590,42 @@ test("US-113 see which threads are unread on a phone", async ({seed, as}) => {
 
   // Same tick and throttle as US-112: a dot read before both have run is one the list may still be
   // about to clear.
+  await bob.waitForTimeout(1500)
+
+  await expect(unreadDot(hers)).toBeVisible()
+  await expect(unreadDot(his)).toHaveCount(0)
+})
+
+// Classifieds stands in for the five boards whose items are cards rather than rows — they all
+// render the same UnreadDot off the same content path, and only the corner it sits in differs.
+test("US-114 see which listings are unread", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    seedClassified(space, user.bob, "vintage sextant", at(3, HOUR))
+    seedClassified(space, user.alice, "brass astrolabe", at(2, HOUR))
+  })
+
+  const space = scenario.space("space")
+  const bob = await as(users.bob, roomPath(space.url, "general"))
+
+  const classifiedsNav = contentNavItem(bob, "Classifieds")
+
+  await expect(classifiedsNav).toBeVisible()
+  await expect(unreadDot(classifiedsNav)).toBeVisible()
+
+  await classifiedsNav.click()
+
+  const hers = bob.getByRole("link").filter({hasText: "brass astrolabe"})
+  const his = bob.getByRole("link").filter({hasText: "vintage sextant"})
+
+  await expect(his).toBeVisible()
+
+  // Same tick and throttle as US-112.
   await bob.waitForTimeout(1500)
 
   await expect(unreadDot(hers)).toBeVisible()

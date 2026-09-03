@@ -101,7 +101,7 @@
       <NoteCard event={reply} {url} class="card z-feature w-full">
         <div class="flex flex-col gap-3 ml-12">
           <NoteContent showEntire event={reply} {url} />
-          <CommentActions segment="calendar" event={reply} {url} {context} />
+          <CommentActions event={reply} {url} {context} />
         </div>
       </NoteCard>
     {/each}

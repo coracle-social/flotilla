@@ -1,7 +1,6 @@
 <script lang="ts">
   import {uniq} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {getAddress} from "@welshman/util"
   import {Classified} from "@welshman/domain"
   import Pen2 from "@assets/icons/pen-2.svg?dataurl"
   import {normalizeTopic} from "@lib/util"
@@ -18,7 +17,7 @@
   import EventActions from "@app/components/EventActions.svelte"
   import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
   import {reader, user} from "@app/core"
-  import {makeClassifiedPath, makeSpacePath} from "@app/routes"
+  import {makeSpacePath} from "@app/routes"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -36,7 +35,6 @@
   const classified = $derived(reader(Classified)(event))
   const h = $derived(classified.room())
   const topics = $derived(classified.topics() ?? [])
-  const path = $derived(makeClassifiedPath(url, getAddress(event)))
 
   const editClassified = () => pushModal(ClassifiedEdit, {url, event})
 
@@ -70,7 +68,7 @@
       {createReaction}
       reactionClass="tip-left" />
     {#if showActivity}
-      <EventActivity {path} {event} {context} />
+      <EventActivity {event} {context} />
     {/if}
     <EventActions {url} {event} noun="Listing">
       {#snippet customActions()}

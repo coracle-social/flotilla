@@ -1577,6 +1577,18 @@ Acceptance:
 - The thread list below the md breakpoint is a list of links rather than a
   table, and alice's thread carries a dot there; bob's own does not.
 
+### US-114 — See which listings are unread
+
+As bob, I want the same dot on a board whose items are cards rather than rows,
+so that every content section answers "which one is new" the same way.
+
+Acceptance:
+
+- A listing alice posted raises an unread dot on the Classifieds nav item; one
+  bob posted himself does not.
+- Opening the list keeps the dot on the corner of alice's card, and bob's own
+  card carries none.
+
 ## Out of scope
 
 Features the e2e suite cannot exercise, and what stops it.

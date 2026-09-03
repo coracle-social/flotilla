@@ -1,7 +1,6 @@
 <script lang="ts">
   import {uniq} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import RoomName from "@app/components/RoomName.svelte"
@@ -14,7 +13,7 @@
   import EventActionBar from "@app/components/EventActionBar.svelte"
   import {reader} from "@app/core"
   import {deriveIsDeleted} from "@app/repository"
-  import {makeArticlePath, makeSpacePath} from "@app/routes"
+  import {makeSpacePath} from "@app/routes"
 
   type Props = {
     url: string
@@ -31,7 +30,6 @@
   const article = $derived(reader(Article)(event))
   const h = $derived(article.room())
   const topics = $derived(article.topics())
-  const path = $derived(makeArticlePath(url, getAddress(event)))
   const deleted = $derived(deriveIsDeleted(event))
 
   const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url, h})
@@ -54,7 +52,7 @@
       <EventActionBar {url} {event} noun="Article">
         {#snippet leading()}
           {#if showActivity}
-            <EventActivity {path} {event} {context} size="sm" hideLastActive />
+            <EventActivity {event} {context} size="sm" hideLastActive />
           {/if}
         {/snippet}
       </EventActionBar>
@@ -84,7 +82,7 @@
           {createReaction}
           reactionClass="tip-left" />
         {#if showActivity}
-          <EventActivity {path} {event} {context} />
+          <EventActivity {event} {context} />
         {/if}
       </ThunkStatusOrDeleted>
     </div>

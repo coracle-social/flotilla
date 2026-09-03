@@ -9,7 +9,7 @@
   import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
-  import {makePollPath, makeSpacePath} from "@app/routes"
+  import {makeSpacePath} from "@app/routes"
 
   type Props = {
     url: string
@@ -22,7 +22,6 @@
   const {url, event, showRoom, showActivity, context}: Props = $props()
 
   const h = tagValue(tagSpec("h"), event.tags)
-  const path = makePollPath(url, event.id)
 
   const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url, h})
 
@@ -44,7 +43,7 @@
       {createReaction}
       reactionClass="tip-left" />
     {#if showActivity}
-      <EventActivity {path} {event} {context} />
+      <EventActivity {event} {context} />
     {/if}
     <EventActions {url} {event} noun="Poll" />
   </ThunkStatusOrDeleted>

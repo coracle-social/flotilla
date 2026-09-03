@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {getAddress, tagSpec, tagValue} from "@welshman/util"
+  import {tagSpec, tagValue} from "@welshman/util"
   import Pen2 from "@assets/icons/pen-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -14,7 +14,7 @@
   import EventActions from "@app/components/EventActions.svelte"
   import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
   import {user} from "@app/core"
-  import {makeCalendarPath, makeSpacePath} from "@app/routes"
+  import {makeSpacePath} from "@app/routes"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -28,7 +28,6 @@
   const {url, event, showRoom, showActivity, context}: Props = $props()
 
   const h = $derived(tagValue(tagSpec("h"), event.tags))
-  const path = $derived(makeCalendarPath(url, getAddress(event)))
 
   const editEvent = () => pushModal(CalendarEventEdit, {url, event})
 
@@ -52,7 +51,7 @@
       {createReaction}
       reactionClass="tip tip-left" />
     {#if showActivity}
-      <EventActivity {path} {event} {context} />
+      <EventActivity {event} {context} />
     {/if}
     <EventActions {url} {event} noun="Event">
       {#snippet customActions()}

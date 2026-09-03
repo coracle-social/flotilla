@@ -9,6 +9,7 @@
   import type {FeedContext} from "@app/feeds"
   import GoalSummary from "@app/components/GoalSummary.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
+  import UnreadDot from "@app/components/UnreadDot.svelte"
   import {makeGoalPath} from "@app/routes"
 
   type Props = {
@@ -21,14 +22,14 @@
 
   const goal = reader(ZapGoal)(event)
 
+  const path = makeGoalPath(url, event.id)
   const title = goal.title()
   const summary = goal.summary()
   const h = goal.room()
 </script>
 
-<Link
-  class="cv flex flex-col gap-2 card card-interactive w-full"
-  href={makeGoalPath(url, event.id)}>
+<Link class="cv relative flex flex-col gap-2 card card-interactive w-full" href={path}>
+  <UnreadDot {path} class="absolute right-3 top-3" />
   <p class="text-2xl">{title}</p>
   <Content
     event={{content: summary, tags: event.tags}}

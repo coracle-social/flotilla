@@ -4,12 +4,11 @@
   import {filter, formatTimestamp, max, spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {COMMENT, tagSpec, tagValue} from "@welshman/util"
-  import {fade} from "@lib/transition"
   import Link from "@lib/components/Link.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
+  import UnreadDot from "@app/components/UnreadDot.svelte"
   import type {FeedContext} from "@app/feeds"
-  import {notifications} from "@app/notifications"
   import {makeThreadPath} from "@app/routes"
 
   type Props = {
@@ -30,17 +29,13 @@
   const onClick = () => goto(path)
 </script>
 
-{#snippet unread()}
-  {#if $notifications.has(path)}
-    <div class="mr-1 inline-block h-2 w-2 rounded-full bg-primary" transition:fade></div>
-  {/if}
-{/snippet}
-
 {#if mobile}
   <Link
     href={path}
     class="cv hover:bg-surface-less flex w-full flex-col gap-2 border-b border-solid border-line px-4 py-3 text-left text-sm transition-colors">
-    <p class="truncate font-medium">{@render unread()}{title || "Untitled thread"}</p>
+    <p class="truncate font-medium">
+      <UnreadDot {path} class="mr-1" />{title || "Untitled thread"}
+    </p>
     <div class="text-content-muted flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
       <span class="flex min-w-0 items-center gap-1.5">
         <ProfileCircle pubkey={event.pubkey} {url} size={4} />
@@ -57,7 +52,7 @@
     onclick={onClick}
     class="hover:bg-surface-less cursor-pointer border-b border-solid border-line text-sm transition-colors">
     <td class="max-w-0 truncate px-4 py-3 align-top">
-      {@render unread()}{title || "Untitled thread"}
+      <UnreadDot {path} class="mr-1" />{title || "Untitled thread"}
     </td>
     <td class="w-32 px-4 py-3 align-middle">
       <div class="flex min-w-0 items-center gap-2">

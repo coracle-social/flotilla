@@ -7,6 +7,7 @@
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ArticleActions from "@app/components/ArticleActions.svelte"
+  import UnreadDot from "@app/components/UnreadDot.svelte"
   import type {FeedContext} from "@app/feeds"
   import {reader} from "@app/core"
   import {makeArticlePath} from "@app/routes"
@@ -19,6 +20,7 @@
 
   const {url, event, context}: Props = $props()
 
+  const path = $derived(makeArticlePath(url, getAddress(event)))
   const article = $derived(reader(Article)(event))
   const title = $derived(article.title())
   const summary = $derived(article.summary())
@@ -28,10 +30,8 @@
 <div data-component="ArticleItem" class="cv relative w-full card card-interactive">
   <!-- An overlay rather than a wrapper: the card carries a profile button and the room and action
        links, and none of those may sit inside an anchor. -->
-  <Link
-    class="absolute inset-0 rounded-2xl"
-    href={makeArticlePath(url, getAddress(event))}
-    aria-label={title || "Untitled"} />
+  <Link class="absolute inset-0 rounded-2xl" href={path} aria-label={title || "Untitled"} />
+  <UnreadDot {path} class="absolute right-3 top-3" />
   <div class="pointer-events-none relative flex flex-col gap-2">
     {#if image}
       <img src={image} alt="" class="h-40 w-full rounded-2xl object-cover" />

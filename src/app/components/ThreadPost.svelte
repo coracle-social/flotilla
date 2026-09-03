@@ -92,7 +92,7 @@
           Reply
         </Button>
         {#if isComment}
-          <CommentActions segment="threads" {event} {url} {context} />
+          <CommentActions {event} {url} {context} />
         {:else}
           <ThreadActions {event} {url} {context} />
         {/if}

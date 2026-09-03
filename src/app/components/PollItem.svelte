@@ -7,6 +7,7 @@
   import type {FeedContext} from "@app/feeds"
   import RoomLink from "@app/components/RoomLink.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
+  import UnreadDot from "@app/components/UnreadDot.svelte"
   import {makePollPath} from "@app/routes"
 
   type Props = {
@@ -17,12 +18,12 @@
 
   const {url, event, context}: Props = $props()
 
+  const path = makePollPath(url, event.id)
   const h = tagValue(tagSpec("h"), event.tags)
 </script>
 
-<Link
-  class="cv flex flex-col gap-2 card card-interactive w-full"
-  href={makePollPath(url, event.id)}>
+<Link class="cv relative flex flex-col gap-2 card card-interactive w-full" href={path}>
+  <UnreadDot {path} class="absolute right-3 top-3" />
   <NoteContent {event} {url} />
   <div class="flex w-full flex-col items-end justify-between gap-2 sm:flex-row">
     <span class="whitespace-nowrap py-1 text-sm opacity-75">

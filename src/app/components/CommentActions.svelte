@@ -7,21 +7,17 @@
   import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
-  import {makeSpacePath} from "@app/routes"
 
   type Props = {
     url: string
     event: TrustedEvent
-    segment?: string
     showActivity?: boolean
     context: FeedContext
   }
 
-  const {url, event, segment, showActivity = false, context}: Props = $props()
+  const {url, event, showActivity = false, context}: Props = $props()
 
   const h = tagValue(tagSpec("h"), event.tags)
-
-  const path = segment && makeSpacePath(url, segment, event.id)
 
   const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url, h})
 
@@ -38,8 +34,8 @@
         {deleteReaction}
         {createReaction}
         reactionClass="tip-left" />
-      {#if showActivity && path}
-        <EventActivity {path} {event} {context} />
+      {#if showActivity}
+        <EventActivity {event} {context} />
       {/if}
       <EventActions {url} {event} noun="Comment" />
     </ThunkStatusOrDeleted>

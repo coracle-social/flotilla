@@ -10,7 +10,7 @@
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {makeGoalPath, makeSpacePath} from "@app/routes"
+  import {makeSpacePath} from "@app/routes"
 
   interface Props {
     url: string
@@ -22,7 +22,6 @@
 
   const {url, event, showRoom, showActivity, context}: Props = $props()
 
-  const path = makeGoalPath(url, event.id)
   const goal = reader(ZapGoal)(event)
 
   const h = goal.room()
@@ -47,7 +46,7 @@
       {createReaction}
       reactionClass="tip-left" />
     {#if showActivity}
-      <EventActivity {path} {event} {context} />
+      <EventActivity {event} {context} />
     {/if}
     <EventActions {url} {event} hideZap noun="Goal" />
   </ThunkStatusOrDeleted>

@@ -12,6 +12,7 @@
   import ClassifiedActions from "@app/components/ClassifiedActions.svelte"
   import type {FeedContext} from "@app/feeds"
   import RoomLink from "@app/components/RoomLink.svelte"
+  import UnreadDot from "@app/components/UnreadDot.svelte"
   import {makeClassifiedPath} from "@app/routes"
 
   type Props = {
@@ -22,6 +23,7 @@
 
   const {url, event, context}: Props = $props()
 
+  const path = $derived(makeClassifiedPath(url, getAddress(event)))
   const classified = $derived(reader(Classified)(event))
   const title = $derived(classified.title())
   const h = $derived(classified.room())
@@ -29,9 +31,8 @@
   const price = $derived(classified.price())
 </script>
 
-<Link
-  class="cv flex flex-col gap-2 card card-interactive w-full"
-  href={makeClassifiedPath(url, getAddress(event))}>
+<Link class="cv relative flex flex-col gap-2 card card-interactive w-full" href={path}>
+  <UnreadDot {path} class="absolute right-3 top-3" />
   {#if title}
     <div class="flex w-full items-center justify-between gap-2">
       <p class="text-xl">

@@ -4,6 +4,8 @@
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import BoardMenu from "@app/components/BoardMenu.svelte"
+  import UnreadDot from "@app/components/UnreadDot.svelte"
+  import {makeLibraryPath} from "@app/routes"
 
   type Props = {
     url: string
@@ -13,6 +15,8 @@
   }
 
   const {url, board, selected, onclick}: Props = $props()
+
+  const path = $derived(makeLibraryPath(url, board.address()))
 </script>
 
 <div class="relative w-56 shrink-0">
@@ -22,7 +26,8 @@
     class={cx("card card-sm card-interactive flex h-full w-full flex-col items-start gap-1 pr-10", {
       "card-primary": selected,
     })}>
-    <strong class="truncate w-full text-left">{board.title() || "Untitled shelf"}</strong>
+    <strong class="truncate w-full text-left"
+      ><UnreadDot {path} class="mr-1" />{board.title() || "Untitled shelf"}</strong>
     {#if board.description()}
       <span class="line-clamp-2 text-left text-sm opacity-70">{board.description()}</span>
     {/if}
