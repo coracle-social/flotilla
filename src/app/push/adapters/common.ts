@@ -8,7 +8,7 @@ import {
 } from "@capacitor/push-notifications"
 import type {PluginListenerHandle} from "@capacitor/core"
 import {goto} from "$app/navigation"
-import {assoc, call, now, on, poll, spec, throttle, uniq} from "@welshman/lib"
+import {assoc, call, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
 import {LOCAL_RELAY_URL} from "@welshman/net"
 import type {RepositoryUpdate} from "@welshman/net"
 import {
@@ -16,6 +16,7 @@ import {
   matchFilters,
   tagSpec,
   tagValue,
+  verifyEvent,
   MESSAGE,
   WRAP,
   type Filter,
@@ -102,15 +103,27 @@ export const onNotification = call(() => {
   }
 })
 
-const loadNotificationEvent = (relay: string, id: string) =>
-  network.get().request({
-    filters: getIdFilters([id]),
-    relays: [relay, LOCAL_RELAY_URL],
-    // The local relay eoses immediately, so anything less waits on it alone
-    threshold: 1,
-    autoClose: true,
-    signal: AbortSignal.timeout(5000),
-  })
+const ingestNotification = async (relay: string, id: string, json?: string) => {
+  const pushed = parseJson<TrustedEvent>(json)
+
+  if (pushed && verifyEvent(pushed)) {
+    app.get().tracker.track(pushed.id, relay)
+    app.get().repository.publish(pushed)
+
+    return pushed
+  } else {
+    const events = await network.get().request({
+      filters: getIdFilters([id]),
+      relays: [relay, LOCAL_RELAY_URL],
+      // The local relay eoses immediately, so anything less waits on it alone
+      threshold: 1,
+      autoClose: true,
+      signal: AbortSignal.timeout(5000),
+    })
+
+    return events[0]
+  }
+}
 
 // Wraps are ingested into the repository and unwrapped in the background, so wait for the rumor
 const loadNotificationRumor = async (wrap: TrustedEvent) => {
@@ -122,8 +135,8 @@ const loadNotificationRumor = async (wrap: TrustedEvent) => {
 }
 
 export const onPushNotificationAction = async (action: ActionPerformed) => {
-  const {relay, id} = action.notification.data
-  const [event] = await loadNotificationEvent(relay, id)
+  const {relay, id, event: json} = action.notification.data
+  const event = await ingestNotification(relay, id, json)
   const target = event?.kind === WRAP ? await loadNotificationRumor(event) : event
   const path = target && makeEventPath(target, [relay])
 

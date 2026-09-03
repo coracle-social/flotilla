@@ -109,6 +109,7 @@ export class CapacitorNotifications implements IPushAdapter {
           ["d", identifier],
           ["relay", relay],
           ["callback", subscription.callback],
+          ["include_event"],
           ...ignore.map(filter => ["ignore", JSON.stringify(filter)]),
           ...filters.map(filter => ["filter", JSON.stringify(filter)]),
         ],
