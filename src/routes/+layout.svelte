@@ -41,7 +41,6 @@
   import {Push} from "@app/push"
   import {onPushNotificationAction, pushState} from "@app/push/adapters/common"
   import {syncKeyboard} from "@app/keyboard"
-  import {syncCallAudioResume} from "@app/call"
   import {getPageTitle} from "@app/title"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
 
@@ -192,9 +191,6 @@
 
     // Initialize keyboard state tracking
     unsubscribers.push(syncKeyboard())
-
-    // Reacquire the mic if the screen locked mid-call and capture died
-    unsubscribers.push(syncCallAudioResume())
 
     // Subscribe to badge count for changes
     unsubscribers.push(notifications.syncBadges())

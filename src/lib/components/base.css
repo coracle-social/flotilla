@@ -219,6 +219,7 @@ body.keyboard-open .room {
   font-family: "Satoshis";
   font-style: normal;
   font-weight: 400;
+  font-display: swap;
   src:
     local(""),
     url("/fonts/Satoshi Symbol.ttf") format("truetype");
@@ -228,14 +229,16 @@ body.keyboard-open .room {
   font-family: "Lato";
   font-style: normal;
   font-weight: 400;
+  font-display: swap;
   src:
     local(""),
     url("/fonts/Lato-Regular.ttf") format("truetype");
 }
 @font-face {
   font-family: "Lato";
-  font-style: bold;
+  font-style: normal;
   font-weight: 600;
+  font-display: swap;
   src:
     local(""),
     url("/fonts/Lato-Bold.ttf") format("truetype");
@@ -244,9 +247,10 @@ body.keyboard-open .room {
   font-family: "Lato";
   font-style: italic;
   font-weight: 400;
+  font-display: swap;
   src:
     local(""),
-    url("/fonts/Italic.ttf") format("truetype");
+    url("/fonts/Lato-Italic.ttf") format("truetype");
 }
 
 /* ----------------------------------------------------------------------------

@@ -16,7 +16,8 @@
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {displayRoom} from "@app/rooms"
-  import {deriveCallParticipants, joinVoiceRoom, loadCallParticipants} from "@app/call"
+  import {deriveCallParticipants, loadCallParticipants} from "@app/call"
+  import {joinVoiceRoom} from "@app/callEngine"
   import {popModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 

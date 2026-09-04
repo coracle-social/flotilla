@@ -17,10 +17,7 @@
     callState,
     callTargetRoom,
     callMicMuted,
-    cancelJoinVoiceRoom,
     deriveIsCallActiveElsewhere,
-    leaveVoiceRoom,
-    toggleMute,
   } from "@app/call"
 
   const {relay, h} = $derived($page.params)
@@ -43,13 +40,21 @@
     void goto(makeRoomPath($callTargetRoom.url, $callTargetRoom.h))
   }
 
+  const toggleMute = async () => {
+    const engine = await import("@app/callEngine")
+
+    await engine.toggleMute()
+  }
+
   // leaveVoiceRoom no-ops during Joining (no session exists yet to leave) — cancel
   // the in-flight join instead, otherwise this button silently does nothing.
-  const endCall = () => {
+  const endCall = async () => {
+    const engine = await import("@app/callEngine")
+
     if ($callState === CallState.Joining) {
-      cancelJoinVoiceRoom()
+      engine.cancelJoinVoiceRoom()
     } else {
-      leaveVoiceRoom()
+      await engine.leaveVoiceRoom()
     }
   }
 </script>

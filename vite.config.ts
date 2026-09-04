@@ -40,7 +40,7 @@ export default defineConfig({
     // cors: true,
   },
   build: {
-    sourcemap: true,
+    sourcemap: false,
   },
   plugins: [
     sveltekit(),

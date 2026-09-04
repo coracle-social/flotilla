@@ -20,11 +20,11 @@
     mediaStateByIdentity,
     participantKey,
     callState,
-    cancelJoinVoiceRoom,
     deriveCallParticipants,
     loadCallParticipants,
     type CallParticipant,
   } from "@app/call"
+  import {cancelJoinVoiceRoom} from "@app/callEngine"
   import {profiles} from "@app/core"
 
   interface Props {

@@ -1,6 +1,6 @@
 <script lang="ts">
   import {spec} from "@welshman/lib"
-  import {RoomEvent, Track} from "livekit-client"
+  import {RoomEvent, Track, supportsAudioOutputSelection} from "livekit-client"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Modal from "@lib/components/Modal.svelte"
@@ -10,13 +10,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
-  import {
-    currentCallSession,
-    DeviceKind,
-    supportsAudioOutputSelection,
-    switchCallActiveDevice,
-    type CallSession,
-  } from "@app/call"
+  import {currentCallSession, DeviceKind, type CallSession} from "@app/call"
+  import {switchCallActiveDevice} from "@app/callEngine"
   import {popModal} from "@app/modal"
 
   const selectValueForActiveDevice = (session: CallSession, kind: DeviceKind): string => {
