@@ -72,7 +72,10 @@ or iOS. `dev:desktop` opens those built assets; rerun `build:desktop` after fron
 changes. Live reload is deferred to the desktop configuration work.
 
 Run `pnpm run test:desktop` after building to check the Linux desktop window. On a
-headless Linux runner, use `xvfb-run -a pnpm run test:desktop`. The separate smoke
+headless Linux runner, use `xvfb-run -a pnpm run test:desktop`; Electron links
+against GTK, which Playwright's chromium dependencies do not cover, so such a box
+also needs `libgtk-3-0t64`. The test drops Chromium's sandbox when it runs as
+root, because Chromium refuses to start that way. The separate smoke
 suite does not start a web dev server or test installers. Windows and macOS desktop
 behavior is not verified by the Linux test. CI builds and runs this suite under
 Xvfb in a separate desktop job.

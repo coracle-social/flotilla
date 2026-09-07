@@ -13,7 +13,8 @@ test("the desktop baseline renders, navigates, and keeps external pages outside"
     )
     const app = await _electron.launch({
       executablePath,
-      chromiumSandbox: true,
+      // Chromium refuses to start as root with its sandbox on, which is what a CI container is.
+      chromiumSandbox: process.getuid?.() !== 0,
       args: [resolve("electron")],
       env: {...process.env, XDG_CONFIG_HOME: profile},
     })

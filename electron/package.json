@@ -6,6 +6,7 @@
   "main": "build/main.js",
   "scripts": {
     "build": "tsc",
+    "postinstall": "install-electron",
     "start": "electron ."
   },
   "devDependencies": {

@@ -94,11 +94,14 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      # playwright's chromium set covers everything but GTK, which chromium
+      # only needs headed and electron always links against.
       - name: Install dependencies
         run: |
           corepack enable && pnpm i --frozen-lockfile
           npm ci --prefix electron
           pnpm exec playwright install-deps chromium
+          apt-get install -y libgtk-3-0t64
 
       - name: Build desktop
         run: pnpm run build:desktop
