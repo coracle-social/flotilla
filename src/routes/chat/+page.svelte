@@ -1,11 +1,11 @@
 <script lang="ts">
   import InfoCircle from "@assets/icons/info-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
-  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Button from "@lib/components/Button.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import ContentSearch from "@lib/components/ContentSearch.svelte"
   import ChatItem from "@app/components/ChatItem.svelte"
   import ChatStart from "@app/components/ChatStart.svelte"
@@ -16,8 +16,6 @@
   let term = $state("")
 
   const startChat = () => pushModal(ChatStart)
-
-  const openMenu = () => pushModal(ChatMenu)
 
   const chats = $derived($chatSearch.searchOptions(term))
 </script>
@@ -45,9 +43,7 @@
             type="text"
             placeholder="Search for conversations..." />
         </label>
-        <Button class="button button-neutral" onclick={openMenu}>
-          <Icon icon={MenuDots} />
-        </Button>
+        <MenuButton component={ChatMenu} class="button button-neutral" aria-label="Chat options" />
       </div>
     {/snippet}
     {#snippet content()}

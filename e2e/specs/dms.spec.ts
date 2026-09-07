@@ -474,7 +474,7 @@ test("US-034 track and clear unread conversations", async ({seed, as}) => {
   await expect(unreadDots(bobChat)).toHaveCount(0)
 
   // Mark all read clears what is left of them in one go
-  await alice.locator(".secondary-nav__header").getByRole("button").click()
+  await alice.locator(".secondary-nav__header").getByRole("button", {name: "Chat options"}).click()
   await alice.getByRole("button", {name: "Mark all read"}).click()
 
   await expect(unreadDots(chatList(alice))).toHaveCount(0)

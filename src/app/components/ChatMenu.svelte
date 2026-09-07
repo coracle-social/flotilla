@@ -1,43 +1,48 @@
 <script lang="ts">
+  import {onMount} from "svelte"
   import {assoc} from "@welshman/lib"
   import Check from "@assets/icons/check.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
   import BellOff from "@assets/icons/bell-off.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Modal from "@lib/components/Modal.svelte"
-  import ModalBody from "@lib/components/ModalBody.svelte"
   import {setChecked} from "@app/notifications"
   import {notificationSettings} from "@app/settings"
 
-  const markAsRead = () => {
-    setChecked("/chat/*")
-    history.back()
+  type Props = {
+    onClick: () => void
   }
 
-  const enableAlerts = () => notificationSettings.update(assoc("messages", true))
+  const {onClick}: Props = $props()
 
-  const disableAlerts = () => notificationSettings.update(assoc("messages", false))
+  const markAsRead = () => setChecked("/chat/*")
+
+  const toggleAlerts = () =>
+    notificationSettings.update(assoc("messages", !$notificationSettings.messages))
+
+  let ul: Element
+
+  onMount(() => {
+    ul.addEventListener("click", onClick)
+  })
 </script>
 
-<Modal>
-  <ModalBody>
-    <div class="flex flex-col gap-2">
-      <Button class="button button-neutral" onclick={markAsRead}>
-        <Icon size={5} icon={Check} />
-        Mark all read
-      </Button>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+  <li>
+    <Button onclick={markAsRead}>
+      <Icon size={4} icon={Check} />
+      Mark all read
+    </Button>
+  </li>
+  <li>
+    <Button onclick={toggleAlerts}>
       {#if $notificationSettings.messages}
-        <Button class="button button-neutral" onclick={disableAlerts}>
-          <Icon size={4} icon={BellOff} />
-          Disable alerts
-        </Button>
+        <Icon size={4} icon={BellOff} />
+        Disable alerts
       {:else}
-        <Button class="button button-neutral" onclick={enableAlerts}>
-          <Icon size={4} icon={Bell} />
-          Enable alerts
-        </Button>
+        <Icon size={4} icon={Bell} />
+        Enable alerts
       {/if}
-    </div>
-  </ModalBody>
-</Modal>
+    </Button>
+  </li>
+</ul>

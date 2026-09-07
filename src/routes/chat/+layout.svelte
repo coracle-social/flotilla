@@ -3,12 +3,13 @@
   import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {sleep} from "@welshman/lib"
-  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
+  import Add from "@assets/icons/add.svg?dataurl"
   import ChatSquarePlus from "@assets/icons/chat-square-plus.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
   import Button from "@lib/components/Button.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import FAB from "@lib/components/FAB.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
@@ -27,8 +28,6 @@
 
   const {children}: Props = $props()
 
-  const openMenu = () => pushModal(ChatMenu)
-
   const startChat = () => pushModal(ChatStart)
 
   let term = $state("")
@@ -46,14 +45,16 @@
   <SecondaryNavSection>
     <SecondaryNavHeader>
       Chats
-      <Button onclick={openMenu}>
-        <Icon icon={MenuDots} />
-      </Button>
+      <div class="flex items-center">
+        <Button
+          class="button button-ghost button-sm button-circle"
+          aria-label="Start New Chat"
+          onclick={startChat}>
+          <Icon icon={Add} />
+        </Button>
+        <MenuButton component={ChatMenu} aria-label="Chat options" />
+      </div>
     </SecondaryNavHeader>
-    <Button class="button button-primary button-sm w-full" onclick={startChat}>
-      <Icon icon={ChatSquarePlus} />
-      Start New Chat
-    </Button>
     <label class="input input-sm flex items-center gap-2">
       <Icon icon={Magnifier} />
       <input bind:value={term} class="grow" type="text" />
