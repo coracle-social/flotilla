@@ -1083,9 +1083,9 @@ profile.
 
 Acceptance:
 
-- Typing a name on the people search filters results as she types, each showing
+- Typing a name in the search dialog filters results as she types, each showing
   avatar, display name, and about text.
-- Scrolling to the bottom loads more matches.
+- Only the ten best matches are listed.
 - Clicking a result opens that person's profile.
 
 ### US-075 — View someone's profile

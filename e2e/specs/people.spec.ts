@@ -53,6 +53,13 @@ const sidebar = (page: Page) => page.locator("aside")
 // content in it.
 const dialog = (page: Page) => page.locator(".dialog").last()
 
+// Search is a dialog the nav opens rather than a page of its own.
+const openSearch = (page: Page) => page.locator('.primary-nav button[data-tip="Search"]').click()
+
+const searchTerm = (page: Page) => page.getByPlaceholder("Search your spaces...")
+
+const searchResults = (page: Page) => dialog(page).locator(".card.card-interactive")
+
 const notes = (page: Page) => pageContent(page).locator(".cv.card")
 
 const readClipboard = (page: Page) => page.evaluate(() => navigator.clipboard.readText())
@@ -76,11 +83,8 @@ const seedRelayList = (space: SeededSpace, user: TestUser) =>
   )
 
 test("US-074 find a person", async ({seed, as}) => {
-  // Sixty of them: the people list starts at ten and adds another ten every second until the page
-  // is taller than the scroller's threshold — and it keeps counting while the profiles are still
-  // on their way, so by the time the first ones render the limit is already well past ten.
-  // "Scrolling loads more" is only a fact when there are far more matches than that first fill
-  // can reach.
+  // Sixty of them, so that the ten the dialog lists are visibly the best matches rather than
+  // everyone who matched.
   const searchers = Array.from({length: 60}, (_, i) => makeTestUser(`searcher-${i}`))
   const searcherName = (i: number) => `Searcher ${String(i).padStart(2, "0")}`
   const searcherAvatar = (i: number) => `https://images.test/searcher-${i}.png`
@@ -91,7 +95,7 @@ test("US-074 find a person", async ({seed, as}) => {
     "Answers to a whistle and to nothing else.",
   ].join("\n")
 
-  await seed(({relay, user}) => {
+  const scenario = await seed(({relay, user}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
@@ -113,10 +117,11 @@ test("US-074 find a person", async ({seed, as}) => {
     }
   })
 
-  const page = await as(users.alice, "/people", {context: DESKTOP})
-  const term = page.getByPlaceholder("Search for people...")
-  const cards = page.locator(".card.card-interactive")
+  const page = await as(users.alice, spacePath(scenario.space("space").url), {context: DESKTOP})
+  const term = searchTerm(page)
+  const cards = searchResults(page)
 
+  await openSearch(page)
   await term.fill("Searcher")
 
   // Which of them ranks first is fuse's business, so a result is described by what every
@@ -128,15 +133,7 @@ test("US-074 find a person", async ({seed, as}) => {
   await expect(first).toContainText(/Searcher \d\d/)
   await expect(first).toContainText("Deck crew on the northern run.")
 
-  await expect.poll(() => cards.count()).toBeGreaterThanOrEqual(10)
-
-  const shown = await cards.count()
-
-  expect(shown).toBeLessThan(searchers.length)
-
-  await cards.last().scrollIntoViewIfNeeded()
-
-  await expect.poll(() => cards.count()).toBeGreaterThan(shown)
+  await expect.poll(() => cards.count()).toBe(10)
 
   // Narrowing the term filters the list rather than reordering it.
   await term.fill("Barnacle")
@@ -267,7 +264,7 @@ test("US-076 follow and unfollow", async ({seed, as}) => {
 test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
   const carolAvatar = "https://images.test/carol-avatar.png"
 
-  await seed(({relay, user}) => {
+  const scenario = await seed(({relay, user}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
@@ -289,9 +286,9 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
 
   // Every hop here is a link click rather than a navigation, so the follow alice publishes stays
   // in the client that published it.
-  const page = await as(users.alice, "/people", {context: DESKTOP})
-  const term = page.getByPlaceholder("Search for people...")
-  const cards = page.locator(".card.card-interactive")
+  const page = await as(users.alice, spacePath(scenario.space("space").url), {context: DESKTOP})
+  const term = searchTerm(page)
+  const cards = searchResults(page)
   const bobCard = cards.filter({hasText: "Bob Barnacle"})
   const carolCard = cards.filter({hasText: "Carol Cutter"})
   const reputation = () => sidebar(page).locator(".card.card-sm").filter({hasText: "Reputation"})
@@ -300,6 +297,7 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
   const ring = async () =>
     Number(await bobCard.locator("circle.wot-highlight").getAttribute("stroke-dashoffset"))
 
+  await openSearch(page)
   await term.fill("Barnacle")
 
   await expect(bobCard).toHaveCount(1)
@@ -315,7 +313,7 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
   await expect(reputation()).toContainText(/\b0 \/ 100\b/)
   await expect(reputation()).toContainText("This user is not well known in your network.")
 
-  await page.locator('.primary-nav a[href="/people"]').click()
+  await openSearch(page)
   await term.fill("Cutter")
 
   await expect(carolCard).toHaveCount(1)
@@ -328,7 +326,7 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
 
   await expect(page.getByRole("button", {name: "Unfollow", exact: true})).toBeVisible()
 
-  await page.locator('.primary-nav a[href="/people"]').click()
+  await openSearch(page)
   await term.fill("Barnacle")
 
   await expect(bobCard).toHaveCount(1)
@@ -733,10 +731,10 @@ test("US-082 mute an account", async ({seed, as}) => {
   // Through the nav rather than a fresh navigation, so what is on screen is what the client that
   // just published the mute believes.
   const openBobsProfile = async () => {
-    await page.locator('.primary-nav a[href="/people"]').click()
-    await page.getByPlaceholder("Search for people...").fill("Barnacle")
+    await openSearch(page)
+    await searchTerm(page).fill("Barnacle")
 
-    const card = page.locator(".card.card-interactive").filter({hasText: "Bob Barnacle"})
+    const card = searchResults(page).filter({hasText: "Bob Barnacle"})
 
     await expect(card).toHaveCount(1)
     await viewProfile(card).click()

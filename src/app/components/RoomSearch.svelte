@@ -1,26 +1,13 @@
 <script lang="ts">
-  import {onMount, tick} from "svelte"
-  import {debounce} from "throttle-debounce"
-  import {groupBy, uniqBy, now, MINUTE, HOUR, DAY, WEEK} from "@welshman/lib"
-  import type {TrustedEvent, Filter} from "@welshman/util"
-  import {MESSAGE, sortEventsDesc, displayRelayUrl} from "@welshman/util"
-  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
-  import Icon from "@lib/components/Icon.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
-  import Button from "@lib/components/Button.svelte"
-  import Badge from "@lib/components/Badge.svelte"
+  import {MESSAGE} from "@welshman/util"
   import Modal from "@lib/components/Modal.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
-  import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
-  import NoteCard from "@app/components/NoteCard.svelte"
-  import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
+  import RoomName from "@app/components/RoomName.svelte"
+  import SearchBody from "@app/components/SearchBody.svelte"
   import {CONTENT_KINDS} from "@app/content"
-  import {getEventsForUrl} from "@app/repository"
-  import {network} from "@app/core"
-  import {popModal} from "@app/modal"
-  import {goToEvent} from "@app/routes"
+  import {deriveRoomMembers} from "@app/rooms"
 
   type Props = {
     url: string
@@ -29,146 +16,17 @@
 
   const {url, h}: Props = $props()
 
-  let term = $state("")
-  let results = $state<TrustedEvent[]>([])
-  let loading = $state(false)
-  let input: HTMLInputElement | undefined = $state()
-  let controller: AbortController | undefined
+  const filter = {kinds: [MESSAGE, ...CONTENT_KINDS], "#h": [h]}
 
-  const doSearch = debounce(300, async (searchTerm: string, controller: AbortController) => {
-    if (!searchTerm?.trim()) {
-      loading = false
-      results = []
-      return
-    }
-
-    const filter: Filter = {
-      kinds: [MESSAGE, ...CONTENT_KINDS],
-      "#h": [h],
-      search: searchTerm.trim(),
-    }
-
-    results = sortEventsDesc(getEventsForUrl(url, [filter]))
-
-    try {
-      const events = await $network.load({
-        relays: [url],
-        signal: controller.signal,
-        filters: [filter],
-      })
-
-      results = sortEventsDesc(uniqBy((e: TrustedEvent) => e.id, [...events, ...results]))
-    } catch (error) {
-      // Ignore aborts from superseded searches; surface anything else
-      if (!(error instanceof DOMException && error.name === "AbortError")) {
-        throw error
-      }
-    } finally {
-      loading = false
-    }
-  })
-
-  const onInput = () => {
-    loading = true
-    controller?.abort()
-    controller = new AbortController()
-    doSearch(term, controller)
-  }
-
-  const eventsByAge = $derived(groupBy(e => getAgeSection(e.created_at), results))
-
-  const getAgeSection = (createdAt: number) => {
-    const age = now() - createdAt
-
-    if (age <= DAY) {
-      return "day"
-    }
-
-    if (age <= WEEK) {
-      return "week"
-    }
-
-    return "older"
-  }
-
-  const getAgeLabel = (createdAt: number) => {
-    const age = now() - createdAt
-
-    if (age < MINUTE) {
-      return "Just now"
-    }
-
-    if (age < HOUR) {
-      return `${Math.floor(age / MINUTE)}m ago`
-    }
-
-    if (age < DAY) {
-      return `${Math.floor(age / HOUR)}h ago`
-    }
-
-    return `${Math.floor(age / DAY)}d ago`
-  }
-
-  const onResultClick = (event: TrustedEvent) => {
-    popModal()
-    goToEvent(event, {keepFocus: true})
-  }
-
-  onMount(() => {
-    tick().then(() => input?.focus())
-
-    return () => controller?.abort()
-  })
+  const members = deriveRoomMembers(url, h)
 </script>
 
 <Modal class="flex flex-col gap-2">
   <ModalHeader>
-    <ModalTitle>Search Content</ModalTitle>
+    <ModalTitle>Search</ModalTitle>
     <ModalSubtitle>
-      on <span class="text-primary">{displayRelayUrl(url)}</span>
+      in <RoomName {url} {h} class="text-primary" />
     </ModalSubtitle>
   </ModalHeader>
-  <ModalBody>
-    <label class="input input-sm flex w-full items-center gap-2">
-      <Icon size={4} icon={Magnifier} />
-      <input
-        bind:this={input}
-        bind:value={term}
-        class="min-w-0 grow"
-        type="text"
-        placeholder="Search this room..."
-        oninput={onInput} />
-    </label>
-    {#if loading}
-      <Spinner {loading}>Searching...</Spinner>
-    {:else if eventsByAge.size === 0 && term}
-      <Spinner {loading}>No results found.</Spinner>
-    {:else}
-      {#each eventsByAge as [key, events] (key)}
-        <p class="text-xs uppercase tracking-wide opacity-60">
-          {#if key === "day"}
-            Last 24 Hours
-          {:else if key === "week"}
-            Last 7 Days
-          {:else}
-            Older
-          {/if}
-        </p>
-        {#each events as event (event.id)}
-          <Button
-            class="card card-sm card-interactive flex flex-col gap-2"
-            onclick={() => onResultClick(event)}>
-            <NoteCard minimal {event}>
-              <NoteContentMinimal {event} />
-            </NoteCard>
-            <div class="flex gap-2">
-              <Badge variant="neutral">
-                {getAgeLabel(event.created_at)}
-              </Badge>
-            </div>
-          </Button>
-        {/each}
-      {/each}
-    {/if}
-  </ModalBody>
+  <SearchBody {url} {filter} placeholder="Search this room..." relays={[url]} members={$members} />
 </Modal>

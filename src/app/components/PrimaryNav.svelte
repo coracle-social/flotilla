@@ -13,6 +13,7 @@
   import MenuSettings from "@app/components/MenuSettings.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
   import PrimaryNavSpaces from "@app/components/PrimaryNavSpaces.svelte"
+  import Search from "@app/components/Search.svelte"
   import {userSpaceUrls} from "@app/rooms"
   import {PLATFORM_RELAYS} from "@app/env"
   import {pushModal} from "@app/modal"
@@ -31,6 +32,8 @@
   const chatHandler = () => goToChat()
 
   const showSettingsMenu = () => pushModal(MenuSettings)
+
+  const showSearch = () => pushModal(Search)
 
   const anySpaceNotifications = $derived(
     $userSpaceUrls.some(p => $notifications.has(makeSpacePath(p))),
@@ -56,7 +59,7 @@
       notification={$notifications.has("/chat")}>
       <ImageIcon alt="Messages" src={Letter} size={8} />
     </PrimaryNavItem>
-    <PrimaryNavItem title="Search" href="/people">
+    <PrimaryNavItem title="Search" onclick={showSearch}>
       <ImageIcon alt="Search" src={Magnifier} size={8} />
     </PrimaryNavItem>
   </div>
@@ -74,7 +77,7 @@
       {#if PLATFORM_RELAYS.length === 1}
         <PrimaryNavItemSpace url={PLATFORM_RELAYS[0]} />
       {:else}
-        <PrimaryNavItem href="/people">
+        <PrimaryNavItem onclick={showSearch}>
           <ImageIcon alt="Search" src={Magnifier} size={8} />
         </PrimaryNavItem>
       {/if}

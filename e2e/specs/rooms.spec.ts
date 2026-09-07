@@ -683,7 +683,7 @@ test("US-027 find a past message and jump to it", async ({seed, as}) => {
   await pageBar(page).getByRole("button", {name: "Search"}).click()
 
   const term = page.getByPlaceholder("Search this room...")
-  const search = dialog(page, "Search Content")
+  const search = dialog(page, "Search")
 
   await term.fill("harbor")
 

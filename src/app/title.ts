@@ -27,7 +27,6 @@ const staticTitles = new Map<string, string>([
   ["/spaces/[relay]/admin", "Space Administration"],
   ["/chat", "Messages"],
   ["/join", "Join Space"],
-  ["/people", "Find People"],
   ["/settings/about", "About"],
   ["/settings/profile", "Profile Settings"],
   ["/settings/content", "Content Settings"],
