@@ -1,7 +1,6 @@
 <script lang="ts">
   import {Capacitor} from "@capacitor/core"
   import ServerPath from "@assets/icons/server-path.svg?dataurl"
-  import RemoteControlMinimalistic from "@assets/icons/remote-controller-minimalistic.svg?dataurl"
   import GalleryMinimalistic from "@assets/icons/gallery-minimalistic.svg?dataurl"
   import Shield from "@assets/icons/shield-minimalistic.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
@@ -42,13 +41,6 @@
             Wallet
           </Link>
         {/if}
-        <Link
-          replaceState
-          href="/settings/relays"
-          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
-          <Icon icon={RemoteControlMinimalistic} size={5} />
-          Relays
-        </Link>
         <Link
           replaceState
           href="/settings/hosting"

@@ -31,7 +31,6 @@ const staticTitles = new Map<string, string>([
   ["/settings/profile", "Profile Settings"],
   ["/settings/content", "Content Settings"],
   ["/settings/privacy", "Privacy Settings"],
-  ["/settings/relays", "Relay Settings"],
   ["/settings/hosting", "Hosting"],
   ["/settings/alerts", "Alert Settings"],
   ["/settings/wallet", "Wallet Settings"],

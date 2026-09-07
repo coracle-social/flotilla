@@ -2,7 +2,7 @@
   import {onMount} from "svelte"
   import {SvelteSet} from "svelte/reactivity"
   import type {Readable} from "svelte/store"
-  import {tryCatch} from "@welshman/lib"
+  import {tryCatch, uniq} from "@welshman/lib"
   import {isShareableRelayUrl, isIPAddress, normalizeRelayUrl} from "@welshman/util"
   import type {Thunk} from "@welshman/app"
   import {Relays} from "@welshman/app"
@@ -18,7 +18,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
   import {pushToast} from "@app/toast"
-  import {app, blockedRelayLists, user} from "@app/core"
+  import {app, blockedRelayLists, relayLists, user} from "@app/core"
 
   interface Props {
     relays: Readable<string[]>
@@ -72,7 +72,15 @@
       .slice(0, limit),
   )
 
+  // Suggestions come from relay search, which only knows about relays whose NIP-11
+  // document has been fetched — so seed it from everyone's relay lists.
   onMount(() => {
+    const urls = uniq($relayLists.all.get().flatMap(list => list.urls()))
+
+    for (const url of urls.filter(isShareableRelayUrl)) {
+      $app.use(Relays).load(url)
+    }
+
     const scroller = createScroller({
       element: element!,
       delay: 300,

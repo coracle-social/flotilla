@@ -1,5 +1,7 @@
 <script lang="ts">
+  import {publish} from "@welshman/app"
   import ShieldMinimalistic from "@assets/icons/shield-minimalistic.svg?dataurl"
+  import ForbiddenCircle from "@assets/icons/forbidden-circle.svg?dataurl"
   import {preventDefault} from "@lib/html"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
@@ -8,6 +10,9 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import RelayList from "@app/components/RelayList.svelte"
+  import {blockedRelayLists, user} from "@app/core"
+  import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {PLATFORM_NAME} from "@app/env"
   import {sendLogs} from "@app/logger"
@@ -43,6 +48,15 @@
     $settings.relay_auth = checked ? RelayAuthMode.Aggressive : RelayAuthMode.Conservative
   }
 
+  const showBlockedRelays = () =>
+    pushModal(RelayList, {
+      title: "Blocked Relays",
+      subtitle: "These relays won't be used unless explicitly requested.",
+      relays: blockedRelayUrls,
+      addRelay: (url: string) => $blockedRelayLists.addUrl(url).then(publish),
+      removeRelay: (url: string) => $blockedRelayLists.removeUrl(url).then(publish),
+    })
+
   const onsubmit = preventDefault(async () => {
     loading = true
 
@@ -56,6 +70,8 @@
   })
 
   const settings = createSettingsForm()
+  const blockedRelayUrls = $blockedRelayLists.urls($user.pubkey).$
+
   let loading = $state(false)
   let sendingLogs = $state(false)
 </script>
@@ -78,6 +94,20 @@
         {/snippet}
         {#snippet info()}
           <p>Controls whether {PLATFORM_NAME} will identify you to relays not in your lists.</p>
+        {/snippet}
+      </FieldInline>
+      <FieldInline>
+        {#snippet label()}
+          <p>Blocked relays</p>
+        {/snippet}
+        {#snippet input()}
+          <Button class="button button-neutral" onclick={showBlockedRelays}>
+            <Icon icon={ForbiddenCircle} />
+            {$blockedRelayUrls.length} Blocked
+          </Button>
+        {/snippet}
+        {#snippet info()}
+          <p>These relays won't be used unless explicitly requested.</p>
         {/snippet}
       </FieldInline>
       <FieldInline>
