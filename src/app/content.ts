@@ -22,6 +22,16 @@ export const IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/gif", "ima
 
 export const VIDEO_CONTENT_TYPES = ["video/quicktime", "video/webm", "video/mp4"]
 
+export const AUDIO_CONTENT_TYPES = [
+  "audio/mpeg",
+  "audio/mp4",
+  "audio/wav",
+  "audio/x-wav",
+  "audio/ogg",
+  "audio/webm",
+  "audio/flac",
+]
+
 export const makeCommentFilter = (kinds: number[], extra: Filter = {}) => ({
   kinds: [COMMENT],
   "#K": kinds.map(String),

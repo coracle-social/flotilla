@@ -26,7 +26,7 @@
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
   import {pushModal} from "@app/modal"
   import {PLATFORM_URL, THUMBNAIL_URL} from "@app/env"
-  import {IMAGE_CONTENT_TYPES, VIDEO_CONTENT_TYPES} from "@app/content"
+  import {AUDIO_CONTENT_TYPES, IMAGE_CONTENT_TYPES, VIDEO_CONTENT_TYPES} from "@app/content"
   import {isRoomId} from "@app/rooms"
 
   const {value, event} = $props()
@@ -42,6 +42,10 @@
   })
 
   const fileType = tagValue(tagSpec("file-type"), event.tags) || ""
+
+  const isAudio =
+    Boolean(url.match(/\.(mp3|m4a|wav|ogg|oga|opus|flac)$/)) ||
+    AUDIO_CONTENT_TYPES.includes(fileType)
 
   const getVideoPoster = (videoUrl: string): string | undefined => {
     if (Capacitor.getPlatform() === "android" && THUMBNAIL_URL) {
@@ -60,6 +64,8 @@
 
 {#if isRoomOrRelay}
   <ContentLinkUrl {url} class="link-content whitespace-nowrap" />
+{:else if isAudio}
+  <audio controls src={url} preload="metadata" class="my-2 w-full max-w-xl"></audio>
 {:else}
   <Link {external} {href} class="my-2 block">
     {#if url.match(/\.(mov|webm|mp4)$/) || VIDEO_CONTENT_TYPES.includes(fileType)}
