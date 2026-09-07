@@ -2,7 +2,6 @@
   import cx from "classnames"
   import {readable} from "svelte/store"
   import {
-    hash,
     gte,
     now,
     uniq,
@@ -40,7 +39,7 @@
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import {profiles, thunks, user} from "@app/core"
   import {noThunks, thunksByEventId} from "@app/thunks"
-  import {colors} from "@app/theme"
+  import {colorFor} from "@app/theme"
   import {ENABLE_ZAPS} from "@app/env"
   import type {FeedContext} from "@app/feeds"
   import {deriveEvent, deriveEventsForUrl} from "@app/repository"
@@ -71,7 +70,7 @@
   const today = formatTimestampAsDate(now())
   const profileDisplay = $profiles.display(event.pubkey, [url]).$
   const thunk = $derived($thunks.merge($thunksByEventId.get(event.id) ?? noThunks))
-  const [_, colorValue] = colors[hash(event.pubkey) % colors.length]
+  const colorValue = colorFor(event.pubkey)
 
   const qTag = matchTag(tagSpec("q"), event.tags)
   const isQuoteOnly = Boolean(

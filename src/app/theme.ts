@@ -1,30 +1,33 @@
 import twColors from "tailwindcss/colors"
 import {derived, readable} from "svelte/store"
+import {hash} from "@welshman/lib"
 import {synced} from "@welshman/store"
 import {FL_THEME} from "@app/env"
 import {kv} from "@app/storage"
 
-export const colors = [
-  ["amber", twColors.amber[600]],
-  ["blue", twColors.blue[600]],
-  ["cyan", twColors.cyan[600]],
-  ["emerald", twColors.emerald[600]],
-  ["fuchsia", twColors.fuchsia[600]],
-  ["green", twColors.green[600]],
-  ["indigo", twColors.indigo[600]],
-  ["sky", twColors.sky[600]],
-  ["lime", twColors.lime[600]],
-  ["orange", twColors.orange[600]],
-  ["pink", twColors.pink[600]],
-  ["purple", twColors.purple[600]],
-  ["red", twColors.red[600]],
-  ["rose", twColors.rose[600]],
-  ["sky", twColors.sky[600]],
-  ["teal", twColors.teal[600]],
-  ["violet", twColors.violet[600]],
-  ["yellow", twColors.yellow[600]],
-  ["zinc", twColors.zinc[600]],
+const colors = [
+  twColors.amber[600],
+  twColors.blue[600],
+  twColors.cyan[600],
+  twColors.emerald[600],
+  twColors.fuchsia[600],
+  twColors.green[600],
+  twColors.indigo[600],
+  twColors.sky[600],
+  twColors.lime[600],
+  twColors.orange[600],
+  twColors.pink[600],
+  twColors.purple[600],
+  twColors.red[600],
+  twColors.rose[600],
+  twColors.sky[600],
+  twColors.teal[600],
+  twColors.violet[600],
+  twColors.yellow[600],
+  twColors.zinc[600],
 ]
+
+export const colorFor = (value: string) => colors[hash(value) % colors.length]
 
 // Every theme with token values in lib/components/theme.css
 export const flThemes = ["clay", "flat", "navy"]

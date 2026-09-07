@@ -31,7 +31,7 @@
   <div class="card flex flex-col gap-4">
     <div class="relative flex gap-4">
       <div class="relative">
-        <RelayIcon {url} size={14} class="rounded-full" />
+        <RelayIcon {url} size={14} />
       </div>
       <div class="flex min-w-0 flex-col">
         <h1 class="truncate min-w-0 whitespace-nowrap">

@@ -26,7 +26,7 @@
         <div class="relative">
           <div
             class="flex justify-center items-center h-12 w-12 min-w-12 rounded-full border-2 border-solid bg-surface-more border-line">
-            <RelayIcon {url} size={10} class="rounded-full" />
+            <RelayIcon {url} size={10} />
           </div>
         </div>
         {#if !hideFavorites && $userSpaceUrls.includes(url)}

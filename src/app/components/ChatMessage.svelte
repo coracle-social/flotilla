@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {hash, formatTimestampAsTime} from "@welshman/lib"
+  import {formatTimestampAsTime} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {Thunks} from "@welshman/app"
@@ -21,7 +21,7 @@
   import ChatMessageMenu from "@app/components/ChatMessageMenu.svelte"
   import ChatMessageMenuMobile from "@app/components/ChatMessageMenuMobile.svelte"
   import {app, profiles, user} from "@app/core"
-  import {colors} from "@app/theme"
+  import {colorFor} from "@app/theme"
   import {pushModal} from "@app/modal"
 
   interface Props {
@@ -40,7 +40,7 @@
   const profileDisplay = $profiles.display(event.pubkey).$
   const thunks = $app.use(Thunks).history
   const thunk = $app.use(Thunks).merge($thunks.filter(t => t.event.id === event.id))
-  const [_, colorValue] = colors[hash(event.pubkey) % colors.length]
+  const colorValue = colorFor(event.pubkey)
 
   const reply = () => replyTo(event)
   const edit = canEdit?.(event) ? () => onEdit?.(event) : undefined
