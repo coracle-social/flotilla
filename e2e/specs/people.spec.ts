@@ -590,6 +590,14 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
   await expect(dialog(page).getByText("Deckhand, dockside cook")).toBeVisible()
   await expect(dialog(page).getByText(/Last active/)).toBeVisible()
 
+  await page.keyboard.press("Escape")
+
+  await expect(page.locator(".dialog")).toHaveCount(0)
+  await expect(page).toHaveURL(new RegExp(`${spacePath(url)}/directory$`))
+  await expect(preview).toBeVisible()
+
+  await preview.click()
+
   await dialog(page).getByRole("button", {name: "Go back"}).click()
 
   // Closed, and alice is exactly where she opened it from.

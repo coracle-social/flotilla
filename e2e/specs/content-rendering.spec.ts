@@ -142,6 +142,15 @@ test("US-062 see images and video inline", async ({seed, as}) => {
 
   await expect(lightbox).toBeVisible()
 
+  await page.keyboard.press("Escape")
+
+  await expect(page.locator(".dialog")).toHaveCount(0)
+  await expect(inlineImage).toBeVisible()
+
+  await inlineImage.click()
+
+  await expect(lightbox).toBeVisible()
+
   await lightbox.click()
 
   await expect(page.locator(".dialog")).toHaveCount(0)

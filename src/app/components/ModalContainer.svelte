@@ -10,8 +10,14 @@
     }
   }
 
-  const onKeyDown = (e: any) => {
-    if (e.code === "Escape" && e.target === document.body) {
+  const onKeyDown = (event: KeyboardEvent) => {
+    const target = event.target
+
+    if (
+      event.code === "Escape" &&
+      target instanceof Element &&
+      !target.closest("input, textarea, [contenteditable]")
+    ) {
       closeModal()
     }
   }
