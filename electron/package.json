@@ -1,0 +1,15 @@
+{
+  "name": "flotilla-electron",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Electron platform project for Flotilla.",
+  "main": "build/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^43.0.0",
+    "typescript": "^5.5.0"
+  }
+}

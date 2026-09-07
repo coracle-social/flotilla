@@ -85,3 +85,4 @@ CLAUDE.md
 .DS_Store
 Thumbs.db
 package-lock.json
+!electron/package-lock.json

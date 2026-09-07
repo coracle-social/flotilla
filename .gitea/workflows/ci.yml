@@ -31,6 +31,11 @@ jobs:
       - name: Check
         run: pnpm run check
 
+      - name: Check desktop TypeScript
+        run: |
+          npm ci --prefix electron --ignore-scripts
+          npm --prefix electron run build
+
       - name: Build
         if: github.event_name != 'pull_request'
         run: pnpm run build
@@ -76,3 +81,27 @@ jobs:
           path: build
           retention-days: 7
           if-no-files-found: error
+
+  desktop-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Install dependencies
+        run: |
+          corepack enable && pnpm i --frozen-lockfile
+          npm ci --prefix electron
+          pnpm exec playwright install-deps chromium
+
+      - name: Build desktop
+        run: pnpm run build:desktop
+
+      - name: Test desktop
+        run: xvfb-run -a pnpm run test:desktop

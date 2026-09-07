@@ -29,7 +29,7 @@
       <h1 class="heading">Welcome to {PLATFORM_NAME}!</h1>
       <p class="text-center">{PLATFORM_DESCRIPTION}</p>
     </div>
-    <Button onclick={logIn}>
+    <Button aria-label="Log in" onclick={logIn}>
       <CardButton primary>
         {#snippet icon()}
           <div><Icon icon={Login} size={7} /></div>

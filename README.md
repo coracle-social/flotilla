@@ -45,6 +45,38 @@ If you're deploying a custom version of flotilla, be sure to remove the `plausib
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+### Desktop development (Linux)
+
+The Electron target is a development baseline. It has no supported installers,
+release pipeline, packaging configuration, or auto-update setup.
+
+**Use disposable accounts only.** The current secure-storage plugin falls back to
+unencrypted `localStorage` on desktop. This is not secure desktop credential or
+private-key storage. OS-protected secret storage is required before distribution.
+
+Install the root dependencies with pnpm and the Electron subproject with npm,
+following the platform's documented setup. Installing that subproject separately avoids
+downloading Electron for ordinary web/mobile installs:
+
+```sh
+pnpm install --frozen-lockfile
+npm ci --prefix electron
+pnpm run build:desktop
+pnpm run dev:desktop
+```
+
+`build:desktop` builds the frontend without PWA/service-worker registration,
+synchronizes the Electron platform, and compiles its TypeScript entrypoint. It uses
+the same branding environment as the web build and does not synchronize Android
+or iOS. `dev:desktop` opens those built assets; rerun `build:desktop` after frontend
+changes. Live reload is deferred to the desktop configuration work.
+
+Run `pnpm run test:desktop` after building to check the Linux desktop window. On a
+headless Linux runner, use `xvfb-run -a pnpm run test:desktop`. The separate smoke
+suite does not start a web dev server or test installers. Windows and macOS desktop
+behavior is not verified by the Linux test. CI builds and runs this suite under
+Xvfb in a separate desktop job.
+
 ## Deployment
 
 To run your own Flotilla, it's as simple as:

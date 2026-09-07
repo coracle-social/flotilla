@@ -4,7 +4,7 @@ import {Keyboard} from "@capacitor/keyboard"
 import {noop} from "@welshman/lib"
 
 export const syncKeyboard = () => {
-  if (!Capacitor.isNativePlatform()) return noop
+  if (!Capacitor.isPluginAvailable("Keyboard")) return noop
 
   const showListener = Keyboard.addListener("keyboardWillShow", () => {
     document.body.classList.add("keyboard-open")

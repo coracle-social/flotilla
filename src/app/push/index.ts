@@ -17,7 +17,7 @@ export class Push {
 
       if (Capacitor.getPlatform() === "android" && useFallback) {
         Push._adapter = new AndroidFallbackNotifications()
-      } else if (Capacitor.isNativePlatform()) {
+      } else if (Capacitor.isPluginAvailable("PushNotifications")) {
         Push._adapter = new CapacitorNotifications()
       } else {
         Push._adapter = new WebNotifications()

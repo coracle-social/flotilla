@@ -90,13 +90,13 @@
   const hasSigner = $derived(getNip07() || signers.length > 0)
 
   onMount(async () => {
-    if (Capacitor.isNativePlatform()) {
+    if (Capacitor.getPlatform() === "android") {
       signers = await getNip55()
     }
   })
 </script>
 
-<Modal>
+<Modal data-testid="login">
   <ModalBody>
     <h1 class="heading">Log in with Nostr</h1>
     <p class="m-auto max-w-sm text-center">

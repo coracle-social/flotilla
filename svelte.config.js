@@ -5,6 +5,9 @@ import {vitePreprocess} from "@sveltejs/vite-plugin-svelte"
 export default {
   preprocess: vitePreprocess(),
   kit: {
+    serviceWorker: {
+      register: process.env.FLOTILLA_DESKTOP !== "1",
+    },
     adapter: adapter({
       fallback: "index.html",
     }),
@@ -16,7 +19,7 @@ export default {
     },
     csp: {
       directives: {
-        "script-src": ["self", "wasm-unsafe-eval", "plausible.coracle.social", "sha256-NpqGpeZTuPniNAucgyfqzWy9iIHwOswFzPzpigwvp/c="],
+        "script-src": ["self", "wasm-unsafe-eval", "https://plausible.coracle.social", "sha256-NpqGpeZTuPniNAucgyfqzWy9iIHwOswFzPzpigwvp/c="],
         "worker-src": ["self", "blob:"],
         "style-src": ["self", "unsafe-inline"],
         "frame-src": ["none"],

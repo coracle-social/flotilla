@@ -65,7 +65,7 @@
   pomadeContext.setSignerUrls(env.POMADE_SIGNERS)
   pomadeContext.setArgonWorker(import("@pomade/core/argon-worker.js?worker"))
 
-  if (Capacitor.isNativePlatform()) {
+  if (Capacitor.getPlatform() === "android") {
     setNip55Plugin(NostrSignerPlugin)
   }
 

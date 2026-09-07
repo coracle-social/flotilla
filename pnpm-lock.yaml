@@ -53,6 +53,9 @@ importers:
       '@capawesome/capacitor-badge':
         specifier: ^8.0.0
         version: 8.0.2(@capacitor/core@8.3.4)
+      '@capawesome/capacitor-electron':
+        specifier: 0.1.1
+        version: 0.1.1(@capacitor/core@8.3.4)
       '@getalby/lightning-tools':
         specifier: ^6.1.0
         version: 6.1.0
@@ -881,6 +884,16 @@ packages:
     resolution: {integrity: sha512-4ZnRyFvViaokupdrOi3OkoBurH+23hnxni+PYq5C1ObNLYbhty/WK8BzMtndCv0S47XjGBLjQ9DJsYj3JDVxGQ==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
+
+  '@capawesome/capacitor-electron@0.1.1':
+    resolution: {integrity: sha512-ALzLTcdcWEfYQCQ/hPper2Nwhk9Hes/s9yusKGXggxOzDL0Rt/r1BF6HcQq2CshG1oB5i2UY4CQ/cRS9JdD2PA==}
+    hasBin: true
+    peerDependencies:
+      '@capacitor/core': '>=6.0.0'
+      electron: '>=28.0.0'
+    peerDependenciesMeta:
+      electron:
+        optional: true
 
   '@cbor-extract/cbor-extract-darwin-arm64@2.2.2':
     resolution: {integrity: sha512-ZKZ/F8US7JR92J4DMct6cLW/Y66o2K576+zjlEN/MevH70bFIsB10wkZEQPLzl2oNh2SMGy55xpJ9JoBRl5DOA==}
@@ -6225,6 +6238,10 @@ snapshots:
       '@capacitor/core': 8.3.4
 
   '@capawesome/capacitor-badge@8.0.2(@capacitor/core@8.3.4)':
+    dependencies:
+      '@capacitor/core': 8.3.4
+
+  '@capawesome/capacitor-electron@0.1.1(@capacitor/core@8.3.4)':
     dependencies:
       '@capacitor/core': 8.3.4
 

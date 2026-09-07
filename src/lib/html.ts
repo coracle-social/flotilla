@@ -178,7 +178,7 @@ export const downloadText = async (filename: string, text: string) => {
   // hand it to the native share sheet, letting the user save it to Files,
   // Drive, a password manager, etc. Cache is the directory our FileProvider
   // (android/app/src/main/res/xml/file_paths.xml) is configured to serve.
-  if (Capacitor.isNativePlatform()) {
+  if (["android", "ios"].includes(Capacitor.getPlatform())) {
     const {Filesystem, Directory, Encoding} = await import("@capacitor/filesystem")
     const {Share} = await import("@capacitor/share")
 
