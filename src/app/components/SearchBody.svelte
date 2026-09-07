@@ -80,6 +80,14 @@
     doSearch(term, controller)
   }
 
+  // The modal container ignores Escape inside a text field, so the focused search input has to
+  // close the modal itself
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      popModal()
+    }
+  }
+
   const getAgeSection = (createdAt: number) => {
     const age = now() - createdAt
 
@@ -125,7 +133,8 @@
       class="min-w-0 grow"
       type="text"
       {placeholder}
-      oninput={onInput} />
+      oninput={onInput}
+      onkeydown={onKeyDown} />
   </label>
   {#if term}
     {#if people.length > 0}
@@ -135,9 +144,9 @@
       {/each}
     {/if}
     {#if loading}
-      <Spinner {loading}>Searching...</Spinner>
+      <Spinner {loading} class="justify-center py-12">Searching...</Spinner>
     {:else if results.length === 0 && people.length === 0}
-      <Spinner {loading}>No results found.</Spinner>
+      <Spinner {loading} class="justify-center py-12">No results found.</Spinner>
     {:else}
       {#each eventsByAge as [key, events] (key)}
         <p class="text-xs uppercase tracking-wide opacity-60">
