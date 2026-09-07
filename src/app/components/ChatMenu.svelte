@@ -27,7 +27,7 @@
 
   const showRelays = () =>
     pushModal(RelayList, {
-      title: "DM Relays",
+      title: "Messaging Relays",
       subtitle:
         "Where you send and receive direct messages. Be sure to select relays that will accept your messages and messages from people you'd like to be in contact with.",
       relays: $messagingRelayLists.urls($user.pubkey).$,
@@ -63,7 +63,7 @@
   <li>
     <Button onclick={showRelays}>
       <Icon size={4} icon={Mailbox} />
-      DM relays
+      Manage Relays
     </Button>
   </li>
 </ul>
