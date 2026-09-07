@@ -35,9 +35,11 @@
   import ContentNewline from "@app/components/ContentNewline.svelte"
   import ContentQuote from "@app/components/ContentQuote.svelte"
   import ContentTopic from "@app/components/ContentTopic.svelte"
+  import ContentCommand from "@app/components/ContentCommand.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {makeRoomPath} from "@app/routes"
+  import {deriveCommandsForTarget, describeCommandDraft} from "@app/commands"
   import {userSettingsValues} from "@app/settings"
 
   type Props = {
@@ -60,7 +62,19 @@
     url,
   }: Props = $props()
 
-  const fullContent = $derived(parse(event))
+  // An invocation is plain text and carries no tags, so it's only recognizable against the
+  // definitions loaded for this space. Anything else — including a command nobody here
+  // publishes — falls through and renders as the text it is.
+  const available = deriveCommandsForTarget({
+    url,
+    kind: event.kind,
+    pubkey: event.pubkey,
+    tags: event.tags,
+  })
+
+  const draft = $derived(describeCommandDraft($available, event.content))
+
+  const fullContent = $derived(parse(draft ? {...event, content: draft.invocation.rest} : event))
 
   const expand = () => {
     showEntire = true
@@ -161,6 +175,9 @@
     <div
       class="overflow-hidden text-ellipsis wrap-break-word"
       style={expandBlock ? "mask-image: linear-gradient(0deg, transparent 0px, black 100px)" : ""}>
+      {#if draft}
+        <ContentCommand command={draft.command} />
+      {/if}
       {#each shortContent as parsed, i (i)}
         {#if isNewline(parsed) && !isBlock(i - 1)}
           <ContentNewline value={parsed.value} />

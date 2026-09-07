@@ -7,14 +7,25 @@ import {createSearch, splitRoomKey} from "@welshman/app"
 import type {Room} from "@welshman/app"
 import type {FileAttributes} from "@welshman/editor"
 import {
+  CommandExtension,
+  CommandSuggestion,
   Editor,
   MentionSuggestion,
   TippySuggestion,
   WelshmanExtension,
   editorProps,
 } from "@welshman/editor"
+import type {CommandScopeTarget} from "@welshman/util"
 import {escapeHtml} from "@lib/html"
 import {profiles, relayLists, relayMemberLists, rooms} from "@app/core"
+import {
+  commands,
+  createCommandSearch,
+  getCommandByAddress,
+  getCommandsForTarget,
+} from "@app/commands"
+import {CommandNodeView} from "@app/editor/CommandNodeView"
+import CommandSuggestionItem from "@app/editor/CommandSuggestion.svelte"
 import {MentionNodeView} from "@app/editor/MentionNodeView"
 import ProfileSuggestion from "@app/editor/ProfileSuggestion.svelte"
 import {RoomReferenceExtension} from "@app/editor/RoomReferenceExtension"
@@ -37,8 +48,10 @@ export const makeEditor = async ({
   placeholder = "",
   url,
   submit,
+  text,
   uploading,
   wordCount,
+  commandTarget,
 }: {
   encryptFiles?: boolean
   aggressive?: boolean
@@ -49,8 +62,11 @@ export const makeEditor = async ({
   placeholder?: string
   url?: string
   submit: () => void
+  text?: Writable<string>
   uploading?: Writable<boolean>
   wordCount?: Writable<number>
+  // When given, `/` at the start of the composer suggests commands scoped to this target
+  commandTarget?: CommandScopeTarget
 }) => {
   const searchProfiles = derived(
     [profiles.get().profileSearch, throttled(800, relayMemberLists.get().forUrl(url ?? ""))],
@@ -91,12 +107,38 @@ export const makeEditor = async ({
     },
   )
 
+  if (commandTarget?.url) {
+    commands.get().ensureLoaded(commandTarget.url)
+  }
+
+  const commandSearch = derived(throttled(800, commands.get().index.$), () =>
+    commandTarget ? createCommandSearch(commandTarget) : undefined,
+  )
+
+  // The spec prefers a bare trigger, so qualify with the executor's pubkey only where the
+  // trigger would otherwise reach more than one of them.
+  const getCommandAttributes = (address: string) => {
+    if (commandTarget) {
+      const command = getCommandByAddress(commandTarget.url ?? "", address)
+
+      if (command) {
+        const trigger = command.command() ?? ""
+        const matches = getCommandsForTarget(commandTarget).filter(
+          option => option.command() === trigger,
+        )
+
+        return {command: trigger, pubkey: matches.length > 1 ? command.author() : undefined}
+      }
+    }
+  }
+
   const ed = new Editor({
     content: typeof content === "string" ? escapeHtml(content) : content,
     editorProps,
     element: document.createElement("div"),
     extensions: [
       RoomReferenceExtension,
+      CommandExtension.extend({addNodeView: () => CommandNodeView}),
       WelshmanExtension.configure({
         submit,
         extensions: {
@@ -185,6 +227,23 @@ export const makeEditor = async ({
                       return target
                     },
                   }),
+                  ...(commandTarget
+                    ? [
+                        CommandSuggestion({
+                          editor: (this as any).editor,
+                          search: (term: string) => get(commandSearch)?.searchValues(term) ?? [],
+                          updateSignal: commandSearch,
+                          getAttributes: getCommandAttributes,
+                          createSuggestion: (value: string) => {
+                            const target = document.createElement("div")
+
+                            mount(CommandSuggestionItem, {target, props: {value, url: url ?? ""}})
+
+                            return target
+                          },
+                        }),
+                      ]
+                    : []),
                 ]
               },
             },
@@ -194,6 +253,7 @@ export const makeEditor = async ({
       NativeClipboardPasteExtension,
     ],
     onUpdate({editor}) {
+      text?.set(editor.getText({blockSeparator: "\n"}))
       wordCount?.set(editor.storage.wordCount.words)
       charCount?.set(editor.storage.wordCount.chars)
       empty?.set(isEmpty(editor))
@@ -206,6 +266,7 @@ export const makeEditor = async ({
   // clear their draft when this reads true, so it has to be set before they render: keep every
   // await in this function inside a callback, below the constructor.
   empty?.set(isEmpty(ed))
+  text?.set(ed.getText({blockSeparator: "\n"}))
 
   return ed
 }

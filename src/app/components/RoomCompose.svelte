@@ -1,6 +1,7 @@
 <script lang="ts">
   import {writable} from "svelte/store"
   import type {Maybe} from "@welshman/lib"
+  import {MESSAGE} from "@welshman/util"
   import type {EventContent} from "@welshman/util"
   import {escapeHtml, isMobile, preventDefault} from "@lib/html"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
@@ -13,8 +14,10 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ComposeMenu from "@app/components/ComposeMenu.svelte"
   import DictationButton from "@app/components/DictationButton.svelte"
+  import CommandArgBar from "@app/components/CommandArgBar.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {makeEditor} from "@app/editor"
+  import {app} from "@app/core"
   import {DraftKey, type Draft} from "@app/drafts"
   import type {Share} from "@app/share"
   import {onDestroy, onMount} from "svelte"
@@ -37,6 +40,15 @@
 
   const uploading = writable(false)
 
+  const text = writable("")
+
+  const commandTarget = {
+    url,
+    kind: MESSAGE,
+    pubkey: $app.user?.pubkey,
+    tags: h ? [["h", h]] : [],
+  }
+
   export const focus = () => editor.then(ed => ed.chain().focus().run())
 
   export const canEnterEditPrevious = () =>
@@ -56,10 +68,21 @@
 
   // Tiptap parses a string handed to insertContent as html, so an angle bracket in the
   // transcript would eat the rest of the sentence.
-  const insertTranscript = async (text: string) => {
+  const insertTranscript = async (transcript: string) => {
     const ed = await editor
 
-    ed.chain().focus().insertContent(escapeHtml(text)).run()
+    ed.chain().focus().insertContent(escapeHtml(transcript)).run()
+  }
+
+  // Argument tokens are whitespace-delimited, so separate one from whatever precedes it.
+  const insertCommandToken = async (token: string) => {
+    const ed = await editor
+    const separator = /\s$/.test($text) ? "" : " "
+
+    ed.chain()
+      .focus()
+      .insertContent(escapeHtml(separator + token))
+      .run()
   }
 
   const showPopover = () => tippy?.show()
@@ -96,8 +119,10 @@
     content,
     empty,
     submit,
+    text,
     uploading,
     onChange,
+    commandTarget,
     aggressive: true,
   })
 
@@ -126,6 +151,7 @@
   })
 </script>
 
+<CommandArgBar target={commandTarget} content={$text} insert={insertCommandToken} />
 <form class="relative flex gap-2 py-2" onsubmit={preventDefault(submit)}>
   <div class="join">
     <Button

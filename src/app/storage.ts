@@ -3,7 +3,7 @@ import type {Unsubscriber} from "svelte/store"
 import {deleteDB} from "idb"
 import {SecureStorage} from "@aparajita/capacitor-secure-storage"
 import {Preferences} from "@capacitor/preferences"
-import {noop, on, throttle, batch, call, makeQueue} from "@welshman/lib"
+import {WEEK, ago, noop, now, on, throttle, batch, call, makeQueue} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   ALERT_ANDROID,
@@ -13,6 +13,7 @@ import {
   ALERT_WEB,
   APP_DATA,
   BLOSSOM_SERVERS,
+  COMMAND,
   FOLLOWS,
   MESSAGING_RELAYS,
   MUTES,
@@ -138,7 +139,7 @@ const idleWrite = <T>(f: (xs: T[]) => void): ((xs: T[]) => void) => {
 const kinds = {
   meta: [PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, MESSAGING_RELAYS, APP_DATA, ROOMS],
   alert: [ALERT_STATUS, ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID],
-  space: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS, RELAY_JOIN, RELAY_LEAVE],
+  space: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS, RELAY_JOIN, RELAY_LEAVE, COMMAND],
   room: [
     ROOM_META,
     ROOM_DELETE,
@@ -169,7 +170,13 @@ const shouldPersistEvent = (event: TrustedEvent, pubkey: string) =>
       isRelayScoped(event) ||
       isConversation(event)
 
-type EventItem = {id: string; event: TrustedEvent; relays: string[]}
+type EventItem = {id: string; event: TrustedEvent; relays: string[]; cachedAt?: number}
+
+// A command definition is only advisory, and a space's set drifts as bots come and go, so one
+// we haven't seen republished in a week is dropped rather than offered as still available.
+// Everything else is kept until it's superseded or deleted.
+const isExpired = (item: EventItem) =>
+  item.event.kind === COMMAND && (item.cachedAt ?? now()) < ago(1, WEEK)
 
 type PlaintextItem = {key: string; value: string}
 
@@ -182,6 +189,7 @@ class Storage {
   ready: Promise<void>
 
   private db: IDB
+  private cachedAt = new Map<string, number>()
   private unsubscribers: Unsubscriber[] = []
   private timeouts: ReturnType<typeof setTimeout>[] = []
   private stopped = false
@@ -258,9 +266,11 @@ class Storage {
       if (
         item.event &&
         shouldPersistEvent(item.event, this.pubkey) &&
-        (!isRelayScoped(item.event) || item.relays.length > 0)
+        (!isRelayScoped(item.event) || item.relays.length > 0) &&
+        !isExpired(item)
       ) {
         item.event[verifiedSymbol] = true
+        this.cachedAt.set(item.id, item.cachedAt ?? now())
         items.push(item)
       } else {
         stale.push(item.id)
@@ -312,18 +322,27 @@ class Storage {
         }
 
         if (add.length > 0) {
+          const cachedAt = now()
+
           // The ingest policy tracks an event before publishing it, so by the time the
           // repository reports it, its provenance is already in the tracker
           await table.bulkPut(
-            add.map(event => ({
-              id: event.id,
-              event,
-              relays: Array.from(this.app.tracker.getRelays(event.id)),
-            })),
+            add.map(event => {
+              this.cachedAt.set(event.id, cachedAt)
+
+              return {
+                id: event.id,
+                event,
+                relays: Array.from(this.app.tracker.getRelays(event.id)),
+                cachedAt,
+              }
+            }),
           )
         }
 
         if (remove.size > 0) {
+          remove.forEach(id => this.cachedAt.delete(id))
+
           await table.bulkDelete(remove)
         }
       }),
@@ -343,7 +362,12 @@ class Storage {
         // syncEvents persists its provenance along with the event itself. This pass only
         // records relay changes for events we already have.
         if (event && shouldPersistEvent(event, this.pubkey)) {
-          items.push({id, event, relays: Array.from(this.app.tracker.getRelays(id))})
+          items.push({
+            id,
+            event,
+            relays: Array.from(this.app.tracker.getRelays(id)),
+            cachedAt: this.cachedAt.get(id) ?? now(),
+          })
         }
       }
 
