@@ -67,7 +67,7 @@ importers:
         version: 1.9.7
       '@pomade/core':
         specifier: ^0.3.3
-        version: 0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
+        version: 0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
       '@poppanator/sveltekit-svg':
         specifier: ^7.0.0
         version: 7.0.0(rollup@4.60.4)(svelte@5.55.9(@typescript-eslint/types@8.67.0))(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0))
@@ -99,35 +99,35 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(@sveltejs/kit@2.61.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.55.9(@typescript-eslint/types@8.67.0))(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))(typescript@5.9.3)(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)))(@vite-pwa/assets-generator@1.0.2(@types/node@25.9.1))(supports-color@7.2.0)(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0))(workbox-build@7.4.1(supports-color@8.1.1))(workbox-window@7.4.1)
       '@welshman/app':
-        specifier: ^0.9.9
-        version: 0.9.9(21ba4e3722f69affc3f27817dea59e48)
+        specifier: ^0.9.10
+        version: 0.9.10(c7491bfdb2f00862139489f42aa00c9f)
       '@welshman/content':
-        specifier: ^0.9.9
-        version: 0.9.9(nostr-tools@2.23.5(typescript@5.9.3))
+        specifier: ^0.9.10
+        version: 0.9.10(nostr-tools@2.23.5(typescript@5.9.3))
       '@welshman/domain':
-        specifier: ^0.9.9
-        version: 0.9.9(745250eb02c4ba0dccd35c710a63a7af)
+        specifier: ^0.9.10
+        version: 0.9.10(758ff7503e4ce4d223600452e3c09ce0)
       '@welshman/editor':
-        specifier: ^0.9.9
-        version: 0.9.9(ae98d1bfea864e5d405c75935a83c2de)
+        specifier: ^0.9.10
+        version: 0.9.10(01632a01ef9f1bee420767a77feafd3f)
       '@welshman/feeds':
-        specifier: ^0.9.9
-        version: 0.9.9(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))
+        specifier: ^0.9.10
+        version: 0.9.10(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))
       '@welshman/lib':
-        specifier: ^0.9.9
-        version: 0.9.9
+        specifier: ^0.9.10
+        version: 0.9.10
       '@welshman/net':
-        specifier: ^0.9.9
-        version: 0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
+        specifier: ^0.9.10
+        version: 0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
       '@welshman/signer':
-        specifier: ^0.9.9
-        version: 0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
+        specifier: ^0.9.10
+        version: 0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
       '@welshman/store':
-        specifier: ^0.9.9
-        version: 0.9.9(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))
+        specifier: ^0.9.10
+        version: 0.9.10(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))
       '@welshman/util':
-        specifier: ^0.9.9
-        version: 0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))
+        specifier: ^0.9.10
+        version: 0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))
       cheerio:
         specifier: ^1.2.0
         version: 1.2.0
@@ -2186,36 +2186,36 @@ packages:
       '@vite-pwa/assets-generator':
         optional: true
 
-  '@welshman/app@0.9.9':
-    resolution: {integrity: sha512-/cGT63IxB9fC76uFglMoc5sn5CQAiB0jyIXH4+PNG3JijtS7vSoBDFn7yWW07jVBSRS1yrnkIT9XpjOBhi4vaQ==}
+  '@welshman/app@0.9.10':
+    resolution: {integrity: sha512-s2+6gx7qBRV0NRIMjbWDYt06hRzn5yDvfyTg60tjyH/35wnBQfZp3HiMRvw1bxtrIWY2gm4dkDUNAXDC2Dgglw==}
     peerDependencies:
       '@pomade/core': ^0.3.3
-      '@welshman/domain': 0.9.9
-      '@welshman/feeds': 0.9.9
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9
-      '@welshman/signer': 0.9.9
-      '@welshman/store': 0.9.9
-      '@welshman/util': 0.9.9
+      '@welshman/domain': 0.9.10
+      '@welshman/feeds': 0.9.10
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10
+      '@welshman/signer': 0.9.10
+      '@welshman/store': 0.9.10
+      '@welshman/util': 0.9.10
       svelte: ^4.0.0 || ^5.0.0
 
-  '@welshman/content@0.9.9':
-    resolution: {integrity: sha512-JrqtnlvETdtMZpgcElJjncBQUTBuHaYN+zCxBkyGP4yy5gFy0wtfqliEEGCopViJvYEaI21k3Bq3RdJ01cqtaw==}
+  '@welshman/content@0.9.10':
+    resolution: {integrity: sha512-AomTc/cLXJf/jI15PLimUWs7X++zY6amPlobCfCUeDddi1JDfff+ii+uObBqI0fILzI+wdWW1KwEKg7REbQdZQ==}
     peerDependencies:
       nostr-tools: ^2.19.4
 
-  '@welshman/domain@0.9.9':
-    resolution: {integrity: sha512-iNhy08a7hcqqMI88hj4WuiNkk4xkvWZzWSZOtSNYSnmPn7lEWnSCZ0e2lOV1GGIOSSWbjj/EwQRMeNix6145fw==}
+  '@welshman/domain@0.9.10':
+    resolution: {integrity: sha512-DZUdz7JY9/r58WqABWyA97L0oS59SLszSw2fygKLRaWACZvM13DZMgVBgWLZrd9JTIUyxVEzGIDjdIbyhY4wAg==}
     peerDependencies:
-      '@welshman/feeds': 0.9.9
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9
-      '@welshman/signer': 0.9.9
-      '@welshman/util': 0.9.9
+      '@welshman/feeds': 0.9.10
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10
+      '@welshman/signer': 0.9.10
+      '@welshman/util': 0.9.10
       nostr-tools: ^2.19.4
 
-  '@welshman/editor@0.9.9':
-    resolution: {integrity: sha512-3P2g3dHqswm/pHyjtKqOywuCQk5VrHyOu1GHli7mbvSMrhyj+e9aWDW5fO6rVy1FHA9efkuZlJoJBTrClT/25A==}
+  '@welshman/editor@0.9.10':
+    resolution: {integrity: sha512-wmjp13pH3iQ32MhVhl9rZx3IIYL1OufT5l69m7rSFRAK+W9/k7pPOz7RMdeNDEhwJ0VZn47Vb3wi3Onei2xBdQ==}
     peerDependencies:
       '@tiptap/core': ^2.11.7
       '@tiptap/extension-code': ^2.11.7
@@ -2230,52 +2230,52 @@ packages:
       '@tiptap/extension-text': ^2.11.7
       '@tiptap/pm': ^2.11.7
       '@tiptap/suggestion': ^2.11.7
-      '@welshman/lib': 0.9.9
-      '@welshman/util': 0.9.9
+      '@welshman/lib': 0.9.10
+      '@welshman/util': 0.9.10
       nostr-editor: ^1.1.1
       nostr-tools: ^2.19.4
 
-  '@welshman/feeds@0.9.9':
-    resolution: {integrity: sha512-9jnVN416DUNWlVt60A4U9Q15KzW11i+LPZy9RzHqEYZlvr0590bqXBlIn6OGmN7bwQc/JSZpblOZ7/XW50tHUw==}
+  '@welshman/feeds@0.9.10':
+    resolution: {integrity: sha512-Aq/GSvFLq5weR2N4kVaJ9IIFym1Aal3JrbQyntIgBguwk2bvr6y3zA0PxHfgnE8uBQoq9vAI+nrqEtK6uYhQcQ==}
     peerDependencies:
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9
-      '@welshman/signer': 0.9.9
-      '@welshman/util': 0.9.9
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10
+      '@welshman/signer': 0.9.10
+      '@welshman/util': 0.9.10
 
-  '@welshman/lib@0.9.9':
-    resolution: {integrity: sha512-glv7CpodqBpg0ZhEI73jsfM6qlWZcitvCe88Uhx+ebL4jSdjDF7QdF0bvd9pDUKTbCfXU/89Ybnuag3jFxt2Sg==}
+  '@welshman/lib@0.9.10':
+    resolution: {integrity: sha512-/kjUzGhC4aKZSWxNmOo+tzlbI5RiRjpwbZjzLwVYun43jhzRfOWVK/JAqtlPwoipfVRVMulQ54TqLe4o3hVd/Q==}
     engines: {node: '>=12.0.0'}
 
-  '@welshman/net@0.9.9':
-    resolution: {integrity: sha512-21TgE+fNZocphd8Ul32qCCeloRinToBlbieiqO3MCMLaOkq12Pii/qoWfHS3m8X+Q3766h4/3O4FFbKXlf13hw==}
+  '@welshman/net@0.9.10':
+    resolution: {integrity: sha512-WoU9kVNALqp6+cH+3IWhbgXHwt6wFWIJBFu/ToxzPzHSr8OUam3rfpK1IG6l5a9Zr8wWH+iZ/PFQEJV62taEmg==}
     peerDependencies:
-      '@welshman/lib': 0.9.9
-      '@welshman/util': 0.9.9
+      '@welshman/lib': 0.9.10
+      '@welshman/util': 0.9.10
 
-  '@welshman/signer@0.9.9':
-    resolution: {integrity: sha512-yfriBe9prChttisIqJnGQp1maOrzr/sZrvr1HL1bujvc/o8eGSaVoMX71YIOICol/B0fUScFhJGgncMQYXJW+g==}
+  '@welshman/signer@0.9.10':
+    resolution: {integrity: sha512-pJGRe1IeClJKouANG9Iaol5mtcy8F0pqgJvvGEiY2syTzQ6J+yGSt/Sg+1SHLyVwJNJjoqcmWL7nYQNLKrGuYQ==}
     peerDependencies:
       '@noble/curves': ^1.9.7
       '@noble/hashes': ^2.0.1
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9
-      '@welshman/util': 0.9.9
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10
+      '@welshman/util': 0.9.10
       nostr-tools: ^2.19.4
 
-  '@welshman/store@0.9.9':
-    resolution: {integrity: sha512-PQrs2aSwkw4Tlw9BiWBhjkj2jYmqdhRkFawqF8x/ZV5LYgOjMTV0LQgZ4RFcUhqyhHaCHScOvL5XgchaamkUfw==}
+  '@welshman/store@0.9.10':
+    resolution: {integrity: sha512-5NA9ChAah5KHDJcSxgaIfPqti317mzD2Jo3OOSla/001KMIvb2JcC4mJFT/Y54GiDr6E0sElKZD4MzdaQmAxyA==}
     peerDependencies:
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9
-      '@welshman/util': 0.9.9
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10
+      '@welshman/util': 0.9.10
       svelte: ^4.0.0 || ^5.0.0
 
-  '@welshman/util@0.9.9':
-    resolution: {integrity: sha512-Kne0VsFRFVEIHPNW0lLu6B69/vlpq8kCgOEwrjQ1ktiheCYHSRkvwyk6JEYLVj5YEVmOl6gbThi7M+9ik6Mbtg==}
+  '@welshman/util@0.9.10':
+    resolution: {integrity: sha512-PY03L/YE5Kmm4gGEuibfVdLc6bZ+Ae/4YElQHxkHK8jIfURyoA1kHv1oPO7JChYApvcp/apAnL/EKug0WwLlJA==}
     peerDependencies:
       '@noble/curves': ^1.9.7
-      '@welshman/lib': 0.9.9
+      '@welshman/lib': 0.9.10
       nostr-tools: ^2.19.4
 
   '@xml-tools/parser@1.0.11':
@@ -7013,15 +7013,15 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@pomade/core@0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))':
+  '@pomade/core@0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))':
     dependencies:
       '@frostr/bifrost': 1.0.7(typescript@5.9.3)
       '@noble/hashes': 2.0.1
       '@peculiar/x509': 1.14.3
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
-      '@welshman/util': 0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/util': 0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))
       cbor-x: 1.6.4
       hash-wasm: 4.12.0
       nostr-tools: 2.23.5(typescript@5.9.3)
@@ -7642,35 +7642,35 @@ snapshots:
       - workbox-build
       - workbox-window
 
-  '@welshman/app@0.9.9(21ba4e3722f69affc3f27817dea59e48)':
+  '@welshman/app@0.9.10(c7491bfdb2f00862139489f42aa00c9f)':
     dependencies:
-      '@pomade/core': 0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
-      '@welshman/domain': 0.9.9(745250eb02c4ba0dccd35c710a63a7af)
-      '@welshman/feeds': 0.9.9(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
-      '@welshman/store': 0.9.9(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))
-      '@welshman/util': 0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))
+      '@pomade/core': 0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/domain': 0.9.10(758ff7503e4ce4d223600452e3c09ce0)
+      '@welshman/feeds': 0.9.10(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/store': 0.9.10(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))
+      '@welshman/util': 0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))
       fuse.js: 7.3.0
       svelte: 5.55.9(@typescript-eslint/types@8.67.0)
       throttle-debounce: 5.0.2
 
-  '@welshman/content@0.9.9(nostr-tools@2.23.5(typescript@5.9.3))':
+  '@welshman/content@0.9.10(nostr-tools@2.23.5(typescript@5.9.3))':
     dependencies:
       '@braintree/sanitize-url': 7.1.2
       nostr-tools: 2.23.5(typescript@5.9.3)
 
-  '@welshman/domain@0.9.9(745250eb02c4ba0dccd35c710a63a7af)':
+  '@welshman/domain@0.9.10(758ff7503e4ce4d223600452e3c09ce0)':
     dependencies:
-      '@welshman/feeds': 0.9.9(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
-      '@welshman/util': 0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/feeds': 0.9.10(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/util': 0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))
       nostr-tools: 2.23.5(typescript@5.9.3)
 
-  '@welshman/editor@0.9.9(ae98d1bfea864e5d405c75935a83c2de)':
+  '@welshman/editor@0.9.10(01632a01ef9f1bee420767a77feafd3f)':
     dependencies:
       '@tiptap/core': 2.27.2(@tiptap/pm@2.27.2)
       '@tiptap/extension-code': 2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))
@@ -7685,56 +7685,56 @@ snapshots:
       '@tiptap/extension-text': 2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))
       '@tiptap/pm': 2.27.2
       '@tiptap/suggestion': 2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))(@tiptap/pm@2.27.2)
-      '@welshman/lib': 0.9.9
-      '@welshman/util': 0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/lib': 0.9.10
+      '@welshman/util': 0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))
       nostr-editor: 1.2.0(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))(@tiptap/extension-image@2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2)))(@tiptap/extension-link@2.27.2(@tiptap/core@2.27.2(@tiptap/pm@2.27.2))(@tiptap/pm@2.27.2))(@tiptap/pm@2.27.2)(linkifyjs@4.3.3)(nostr-tools@2.23.5(typescript@5.9.3))(prosemirror-markdown@1.13.4)(prosemirror-model@1.25.7)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(tiptap-markdown@0.8.10(@tiptap/core@2.27.2(@tiptap/pm@2.27.2)))
       nostr-tools: 2.23.5(typescript@5.9.3)
       tippy.js: 6.3.7
 
-  '@welshman/feeds@0.9.9(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))':
+  '@welshman/feeds@0.9.10(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3)))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))':
     dependencies:
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
-      '@welshman/util': 0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/util': 0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))
       trava: 1.2.1
 
-  '@welshman/lib@0.9.9':
+  '@welshman/lib@0.9.10':
     dependencies:
       '@scure/base': 1.2.6
       '@types/events': 3.0.3
       events: 3.3.0
 
-  '@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)':
+  '@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)':
     dependencies:
-      '@welshman/lib': 0.9.9
-      '@welshman/util': 0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/lib': 0.9.10
+      '@welshman/util': 0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))
       events: 3.3.0
       isomorphic-ws: 5.0.0(ws@8.21.2)
     transitivePeerDependencies:
       - ws
 
-  '@welshman/signer@0.9.9(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))':
+  '@welshman/signer@0.9.10(@noble/curves@1.9.7)(@noble/hashes@2.0.1)(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(nostr-tools@2.23.5(typescript@5.9.3))':
     dependencies:
       '@noble/curves': 1.9.7
       '@noble/hashes': 2.0.1
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/util': 0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/util': 0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))
       nostr-tools: 2.23.5(typescript@5.9.3)
 
-  '@welshman/store@0.9.9(@welshman/lib@0.9.9)(@welshman/net@0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))':
+  '@welshman/store@0.9.10(@welshman/lib@0.9.10)(@welshman/net@0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))':
     dependencies:
-      '@welshman/lib': 0.9.9
-      '@welshman/net': 0.9.9(@welshman/lib@0.9.9)(@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/util': 0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))
+      '@welshman/lib': 0.9.10
+      '@welshman/net': 0.9.10(@welshman/lib@0.9.10)(@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/util': 0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))
       svelte: 5.55.9(@typescript-eslint/types@8.67.0)
 
-  '@welshman/util@0.9.9(@noble/curves@1.9.7)(@welshman/lib@0.9.9)(nostr-tools@2.23.5(typescript@5.9.3))':
+  '@welshman/util@0.9.10(@noble/curves@1.9.7)(@welshman/lib@0.9.10)(nostr-tools@2.23.5(typescript@5.9.3))':
     dependencies:
       '@noble/curves': 1.9.7
       '@types/ws': 8.18.1
-      '@welshman/lib': 0.9.9
+      '@welshman/lib': 0.9.10
       js-base64: 3.9.2
       nostr-tools: 2.23.5(typescript@5.9.3)
       nostr-wasm: 0.1.0
