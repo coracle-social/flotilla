@@ -14,7 +14,7 @@
   import RelayName from "@app/components/RelayName.svelte"
   import SearchBody from "@app/components/SearchBody.svelte"
   import {CONTENT_KINDS} from "@app/content"
-  import {app, relays, searchRelayLists, user} from "@app/core"
+  import {app, relays, searchRelayLists, user, userSearchRelayUrls} from "@app/core"
   import {pushModal} from "@app/modal"
   import {userSpaceUrls} from "@app/rooms"
 
@@ -38,12 +38,23 @@
   <ModalHeader>
     <ModalTitle>Search</ModalTitle>
     <ModalSubtitle>across all your spaces</ModalSubtitle>
-    <Button class="button button-link button-sm self-center" onclick={showRelays}>
-      <Icon size={4} icon={Server} />
-      Search relays
-    </Button>
   </ModalHeader>
   <SearchBody placeholder="Search your spaces..." relays={$userSpaceUrls} {filter}>
+    {#snippet empty()}
+      {@const spaces = $userSpaceUrls.length}
+      {@const extras = $userSearchRelayUrls.length}
+      <div class="flex flex-col items-center gap-2 py-12 text-center">
+        <p class="text-content-muted text-sm">
+          Searching {spaces}
+          {spaces === 1 ? "space" : "spaces"}{#if extras > 0}, plus {extras}
+            extra {extras === 1 ? "relay" : "relays"} for people{/if}.
+        </p>
+        <Button class="button button-link button-sm" onclick={showRelays}>
+          <Icon size={4} icon={Server} />
+          Manage search relays
+        </Button>
+      </div>
+    {/snippet}
     {#snippet badges(event)}
       {@const url = getSpaceUrl(event)}
       {#if url}

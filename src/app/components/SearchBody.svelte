@@ -27,9 +27,10 @@
     url?: string
     members?: string[]
     badges?: Snippet<[TrustedEvent]>
+    empty?: Snippet
   }
 
-  const {placeholder, relays, filter, url, members, badges}: Props = $props()
+  const {placeholder, relays, filter, url, members, badges, empty}: Props = $props()
 
   const profileSearch = $profiles.profileSearch
 
@@ -126,42 +127,46 @@
       {placeholder}
       oninput={onInput} />
   </label>
-  {#if people.length > 0}
-    <p class="text-xs uppercase tracking-wide opacity-60">People</p>
-    {#each people as pubkey (pubkey)}
-      <PeopleItem {pubkey} {url} />
-    {/each}
-  {/if}
-  {#if loading}
-    <Spinner {loading}>Searching...</Spinner>
-  {:else if term && results.length === 0 && people.length === 0}
-    <Spinner {loading}>No results found.</Spinner>
-  {:else}
-    {#each eventsByAge as [key, events] (key)}
-      <p class="text-xs uppercase tracking-wide opacity-60">
-        {#if key === "day"}
-          Last 24 Hours
-        {:else if key === "week"}
-          Last 7 Days
-        {:else}
-          Older
-        {/if}
-      </p>
-      {#each events as event (event.id)}
-        <Button
-          class="card card-sm card-interactive flex flex-col gap-2"
-          onclick={() => onResultClick(event)}>
-          <NoteCard minimal {event} {url}>
-            <NoteContentMinimal {event} />
-          </NoteCard>
-          <div class="flex gap-2">
-            <Badge variant="neutral">
-              {formatTimestampRelative(event.created_at)}
-            </Badge>
-            {@render badges?.(event)}
-          </div>
-        </Button>
+  {#if term}
+    {#if people.length > 0}
+      <p class="text-xs uppercase tracking-wide opacity-60">People</p>
+      {#each people as pubkey (pubkey)}
+        <PeopleItem {pubkey} {url} />
       {/each}
-    {/each}
+    {/if}
+    {#if loading}
+      <Spinner {loading}>Searching...</Spinner>
+    {:else if results.length === 0 && people.length === 0}
+      <Spinner {loading}>No results found.</Spinner>
+    {:else}
+      {#each eventsByAge as [key, events] (key)}
+        <p class="text-xs uppercase tracking-wide opacity-60">
+          {#if key === "day"}
+            Last 24 Hours
+          {:else if key === "week"}
+            Last 7 Days
+          {:else}
+            Older
+          {/if}
+        </p>
+        {#each events as event (event.id)}
+          <Button
+            class="card card-sm card-interactive flex flex-col gap-2"
+            onclick={() => onResultClick(event)}>
+            <NoteCard minimal {event} {url}>
+              <NoteContentMinimal {event} />
+            </NoteCard>
+            <div class="flex gap-2">
+              <Badge variant="neutral">
+                {formatTimestampRelative(event.created_at)}
+              </Badge>
+              {@render badges?.(event)}
+            </div>
+          </Button>
+        {/each}
+      {/each}
+    {/if}
+  {:else}
+    {@render empty?.()}
   {/if}
 </ModalBody>

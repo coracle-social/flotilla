@@ -1,4 +1,4 @@
-import {derived, writable} from "svelte/store"
+import {derived, readable, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {always} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
@@ -59,11 +59,7 @@ const makeApp = (user?: User) => {
       dufflepudUrl: DUFFLEPUD_URL,
       getDefaultRelays: always(DEFAULT_RELAYS),
       getIndexerRelays: always(INDEXER_RELAYS),
-      getSearchRelays: () => {
-        const urls = user ? instance.use(SearchRelayLists).urls(user.pubkey).get() : []
-
-        return urls.length > 0 ? urls : DEFAULT_SEARCH_RELAYS
-      },
+      getSearchRelays: () => userSearchRelayUrls.get(),
     },
     policies: appPolicies,
   })
@@ -163,6 +159,17 @@ export const searchRelayLists = usePlugin(SearchRelayLists)
 export const thunks = usePlugin(Thunks)
 export const wot = usePlugin(Wot)
 export const wraps = usePlugin(Wraps)
+
+// The relays profile search runs against, with a fallback so search still works before the user
+// has chosen any of their own.
+export const userSearchRelayUrls = withGetter(
+  derived(
+    fromApp($app =>
+      $app.user ? $app.use(SearchRelayLists).urls($app.user.pubkey).$ : readable<string[]>([]),
+    ),
+    urls => (urls.length > 0 ? urls : DEFAULT_SEARCH_RELAYS),
+  ),
+)
 
 // The domain entry points, since almost every read or write goes through one of them.
 export const reader = <R extends BaseEventReader, W extends EventWriter<R>>(
