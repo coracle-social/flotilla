@@ -231,7 +231,7 @@ test("US-063 preview a shared link", async ({seed, as}) => {
   const previewImage = 'img[src="https://images.test/preview.png"]'
 
   await expect(card.locator(".spinner")).toBeVisible()
-  await expect(failed.getByText(`Unable to load a preview for ${unreadable}`)).toBeVisible()
+  await expect(failed.getByRole("link", {name: "example.test/unreadable"})).toBeVisible()
 
   servePreview()
 

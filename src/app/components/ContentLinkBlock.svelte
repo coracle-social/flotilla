@@ -52,6 +52,11 @@
     Boolean(url.match(/\.(mp3|m4a|wav|ogg|oga|opus|flac)$/)) ||
     AUDIO_CONTENT_TYPES.includes(fileType)
 
+  const isVideo = Boolean(url.match(/\.(mov|webm|mp4)$/)) || VIDEO_CONTENT_TYPES.includes(fileType)
+
+  const isImage =
+    Boolean(url.match(/\.(jpe?g|png|gif|webp)$/)) || IMAGE_CONTENT_TYPES.includes(fileType)
+
   const getVideoPoster = (videoUrl: string): string | undefined => {
     if (Capacitor.getPlatform() === "android" && THUMBNAIL_URL) {
       return `${THUMBNAIL_URL}/thumbnail?url=${encodeURIComponent(videoUrl)}`
@@ -71,50 +76,48 @@
   <ContentLinkUrl {url} class="link-content whitespace-nowrap" />
 {:else if isAudio}
   <audio controls src={url} preload="metadata" class="my-2 w-full max-w-xl"></audio>
-{:else}
+{:else if isVideo}
   <Link {external} {href} class="my-2 block">
-    {#if url.match(/\.(mov|webm|mp4)$/) || VIDEO_CONTENT_TYPES.includes(fileType)}
-      <video
-        controls
-        src={url}
-        poster={getVideoPoster(url)}
-        preload="metadata"
-        class="max-h-96 rounded-2xl object-contain object-center">
-        <track kind="captions" />
-      </video>
-    {:else if url.match(/\.(jpe?g|png|gif|webp)$/) || IMAGE_CONTENT_TYPES.includes(fileType)}
-      <button type="button" onclick={stopPropagation(preventDefault(expand))}>
-        <ContentLinkBlockImage {value} {event} class="m-auto max-h-96 rounded-2xl" />
-      </button>
-    {:else}
-      {#await loadPreview(url)}
-        <div class="flex justify-center items-center my-12 w-full">
-          <Spinner />
-        </div>
-      {:then preview}
-        <div
-          class="border border-solid flex max-w-xl flex-col overflow-hidden leading-normal rounded-2xl"
-          style="border-color: var(--line)">
-          {#if preview.image && !hideImage}
-            <img
-              alt=""
-              onerror={onError}
-              src={preview.image}
-              class="bg-surface max-h-72 object-contain object-center" />
-          {/if}
-          <div class="flex flex-col gap-2 p-4">
-            <strong class="overflow-hidden text-ellipsis whitespace-nowrap"
-              >{preview.title || displayUrl(url)}</strong>
-            <p>{ellipsize(preview.description, 140)}</p>
-          </div>
-        </div>
-      {:catch}
-        <p
-          class="border border-solid p-12 text-center leading-normal rounded-2xl"
-          style="border-color: var(--line)">
-          Unable to load a preview for {url}
-        </p>
-      {/await}
-    {/if}
+    <video
+      controls
+      src={url}
+      poster={getVideoPoster(url)}
+      preload="metadata"
+      class="max-h-96 rounded-2xl object-contain object-center">
+      <track kind="captions" />
+    </video>
   </Link>
+{:else if isImage}
+  <Link {external} {href} class="my-2 block">
+    <button type="button" onclick={stopPropagation(preventDefault(expand))}>
+      <ContentLinkBlockImage {value} {event} class="m-auto max-h-96 rounded-2xl" />
+    </button>
+  </Link>
+{:else}
+  {#await loadPreview(url)}
+    <div class="flex justify-center items-center my-12 w-full">
+      <Spinner />
+    </div>
+  {:then preview}
+    <Link {external} {href} class="my-2 block">
+      <div
+        class="border border-solid flex max-w-xl flex-col overflow-hidden leading-normal rounded-2xl"
+        style="border-color: var(--line)">
+        {#if preview.image && !hideImage}
+          <img
+            alt=""
+            onerror={onError}
+            src={preview.image}
+            class="bg-surface max-h-72 object-contain object-center" />
+        {/if}
+        <div class="flex flex-col gap-2 p-4">
+          <strong class="overflow-hidden text-ellipsis whitespace-nowrap"
+            >{preview.title || displayUrl(url)}</strong>
+          <p>{ellipsize(preview.description, 140)}</p>
+        </div>
+      </div>
+    </Link>
+  {:catch}
+    <ContentLinkUrl {url} class="link-content whitespace-nowrap" />
+  {/await}
 {/if}

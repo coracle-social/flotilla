@@ -940,8 +940,7 @@ Acceptance:
 
 - A standalone url whose preview resolves shows a card with title, description,
   and image after a brief loading state.
-- A standalone url with nothing usable shows a card explaining the preview
-  couldn't be loaded, naming the url.
+- A standalone url with nothing usable falls back to the compact inline link.
 - The same url embedded in a sentence renders as a compact inline link with no
   card.
 
