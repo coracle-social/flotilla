@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Bell from "@assets/icons/bell.svg?dataurl"
   import BellOff from "@assets/icons/bell-off.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
@@ -7,7 +6,7 @@
   import VoiceRoomItem from "@app/components/VoiceRoomItem.svelte"
   import {rooms} from "@app/core"
   import {RoomType, getRoomType} from "@app/rooms"
-  import {deriveShouldNotify} from "@app/settings"
+  import {deriveIsMuted} from "@app/settings"
   import {notifications} from "@app/notifications"
   import {makeRoomPath} from "@app/routes"
 
@@ -23,9 +22,7 @@
   const room = $rooms.forRoom(url, h)
   const roomType = $derived(getRoomType($room))
   const path = makeRoomPath(url, h)
-  const shouldNotifyForSpace = deriveShouldNotify(url)
-  const shouldNotifyForRoom = deriveShouldNotify(url, h)
-  const showDifferenceIcon = $derived($shouldNotifyForRoom !== $shouldNotifyForSpace)
+  const isMuted = deriveIsMuted(url, h)
   const notification = $derived($notifications.has(path))
   const roomName = $derived($room?.meta?.name() || h)
 </script>
@@ -35,8 +32,8 @@
 {:else}
   <SecondaryNavItem href={path} title={tooltip ? roomName : ""} {replaceState} {notification}>
     <RoomNameWithImage {url} {h} />
-    {#if showDifferenceIcon}
-      <Icon icon={$shouldNotifyForRoom ? Bell : BellOff} size={4} class="ml-auto opacity-50" />
+    {#if $isMuted}
+      <Icon icon={BellOff} size={4} class="ml-auto opacity-50" />
     {/if}
   </SecondaryNavItem>
 {/if}
