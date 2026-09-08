@@ -298,12 +298,7 @@
   }
 
   const manageScrollPosition = () => {
-    // Only treat an `at` jump as "scrolled up" when it targets an event below the
-    // newest one; jumping to the most recent message already lands us at the bottom.
-    const newestEvent = $events[$events.length - 1]
-    const atIsBelowNewest = !isNaN(at) && newestEvent !== undefined && at < newestEvent.created_at
-
-    showScrollButton = atIsBelowNewest || Math.abs(element?.scrollTop || 0) > 1500
+    scrolledUp = Math.abs(element?.scrollTop || 0) > 1500
 
     const newMessages = document.getElementById("new-messages")
 
@@ -382,7 +377,7 @@
   let newMessagesBefore = $state(now())
   let newMessagesSeen = false
   let showFixedNewMessages = $state(false)
-  let showScrollButton = $state(false)
+  let scrolledUp = $state(false)
   let cleanup: () => void
   let events: Readable<TrustedEvent[]> = $state(readable([]))
   let compose: RoomCompose | undefined = $state()
@@ -432,13 +427,19 @@
     }),
   )
 
-  // Newer messages are only worth waiting for when the window stops short of the present, which
-  // only happens after jumping into history — anything published from here on arrives through the
-  // repository rather than through a forward walk. And with no messages between them the two
-  // loaders would sit against each other, so this one yields while the other is still running.
-  const loadingForward = $derived(
-    !isNaN(at) && $newer?.status !== "exhausted" && !(elements.length === 0 && loadingBackward),
-  )
+  // The window only stops short of the present after jumping into history — anything published
+  // from here on arrives through the repository rather than through a forward walk.
+  const windowStopsShort = $derived(!isNaN(at) && $newer?.status !== "exhausted")
+
+  // With no messages between them the two loaders would sit against each other, so this one yields
+  // while the other is still running.
+  const loadingForward = $derived(windowStopsShort && !(elements.length === 0 && loadingBackward))
+
+  // While the window stops short, the bottom of the container is not the bottom of the
+  // conversation, so the button is the way back to the live end rather than a scroll — which is
+  // why it clears `at` instead of scrolling. Once the two are the same place, scroll position is
+  // the whole answer.
+  const showScrollButton = $derived(scrolledUp || windowStopsShort)
 
   $effect(() => {
     if (elements.length > 0 && !isUserScrolling) {
@@ -665,7 +666,10 @@
 
       {#if showScrollButton}
         <div in:fade class="absolute bottom-2 right-4 z-popover">
-          <Button class="button button-neutral button-circle" onclick={scrollToBottom}>
+          <Button
+            aria-label="Jump to newest"
+            class="button button-neutral button-circle"
+            onclick={scrollToBottom}>
             <Icon icon={AltArrowDown} />
           </Button>
         </div>

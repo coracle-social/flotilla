@@ -401,8 +401,20 @@ Acceptance:
 - Clicking a result closes search and scrolls the timeline to the message,
   highlighted in view.
 - Opening a permalink url for a specific message lands on that message directly,
-  with a "scroll to bottom" control shown since the view is no longer at the
-  newest message.
+  with a "jump to newest" control shown since the view is no longer at the newest
+  message. Using it returns to the live end and the control goes away.
+
+### US-027a — Follow a link to a recent message
+
+As someone opening a push notification, I want the room to behave as though I
+had scrolled to the bottom, so that I am not offered a way back to where I
+already am.
+
+Acceptance:
+
+- A permalink to a message near the newest end lands with the room's last
+  message on screen and no "jump to newest" control, even when other events were
+  published after the one linked to.
 
 ### US-028 — Share a message somewhere else
 

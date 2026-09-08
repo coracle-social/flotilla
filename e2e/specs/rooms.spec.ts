@@ -1,4 +1,4 @@
-import {DAY, HOUR, WEEK, bech32ToHex} from "@welshman/lib"
+import {DAY, HOUR, MINUTE, WEEK, bech32ToHex} from "@welshman/lib"
 import {getLnUrl} from "@welshman/util"
 import {MessagingRelayList, Profile, RelayList, displayPubkey} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
@@ -27,6 +27,9 @@ const composer = (page: Page) => page.locator(".chat-editor [contenteditable=tru
 const messages = (page: Page) => page.locator(".room__item")
 
 const message = (page: Page, text: string) => messages(page).filter({hasText: text})
+
+// The room's way back to the live end, up only while the bottom of the container isn't it.
+const jumpToNewest = (page: Page) => page.getByRole("button", {name: "Jump to newest"})
 
 // RoomItem gives its hover actions no accessible names — every one is an icon. Their order is
 // fixed by the component: zap, emoji, reply, edit (only on your own recent message), menu.
@@ -706,7 +709,47 @@ test("US-027 find a past message and jump to it", async ({seed, as}) => {
   await page.goto(`${path}?at=${older.event.created_at}`)
 
   await expect(page.locator(`[data-event="${older.id}"]`)).toBeInViewport()
-  await expect(page.locator(".chat__scroll-down")).toBeVisible()
+  await expect(jumpToNewest(page)).toBeVisible()
+
+  await jumpToNewest(page).click()
+
+  await expect(message(page, "harbor lights are on tonight")).toBeInViewport()
+  await expect(jumpToNewest(page)).toHaveCount(0)
+})
+
+// A push notification links to the message it announced, which is near the newest end of the room,
+// so the jump lands at the bottom with nowhere left to scroll down to. Anything published since —
+// another message, a membership event — is newer than the one linked to, so "is this the last
+// event in the room" is the wrong question to hang the button on; whether the loaded window has
+// caught up to the present is the right one.
+test("US-027a a permalink near the newest end lands at the bottom", async ({seed, as}) => {
+  let recent!: Seeded
+
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    for (let i = 0; i < 20; i++) {
+      space.message(user.bob, "general", `harbor watch note ${i}`, at(40 - i, MINUTE))
+    }
+
+    recent = space.message(user.bob, "general", "the harbor pilot is booked", at(5, MINUTE))
+
+    space.message(user.bob, "general", "and the tide is with us", at(2, MINUTE))
+  })
+
+  const {url} = scenario.space("space")
+  const path = roomPath(url, "general")
+  const page = await as(users.alice, `${path}?at=${recent.event.created_at}`)
+
+  await expect(page.locator(`[data-event="${recent.id}"]`)).toBeInViewport()
+
+  // The newest message in the room is on screen with it, so this is the live end
+  await expect(message(page, "and the tide is with us")).toBeInViewport()
+  await expect(jumpToNewest(page)).toHaveCount(0)
 })
 
 test("US-028 share a message somewhere else", async ({seed, as}) => {
