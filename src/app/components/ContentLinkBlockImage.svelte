@@ -1,26 +1,16 @@
 <script lang="ts">
   import {onMount, onDestroy} from "svelte"
   import {displayUrl, once} from "@welshman/lib"
-  import {
-    getBlob,
-    decryptFile,
-    makeBlossomAuthEvent,
-    matchTags,
-    tagSpec,
-    tagValue,
-  } from "@welshman/util"
+  import {getBlob, decryptFile, makeBlossomAuthEvent, tagSpec, tagValue} from "@welshman/util"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import {user} from "@app/core"
+  import {getUrlTags} from "@app/content"
 
   const {value, event, ...props} = $props()
 
   const url = value.url.toString()
-  // An imeta tag packs its own tags into space-separated values, so unpack the one for this url.
-  const meta =
-    matchTags(tagSpec("imeta"), event.tags)
-      .map(([, ...values]: string[]) => values.map(value => value.split(" ")))
-      .find(meta => tagValue(tagSpec("url"), meta) === url) || event.tags
+  const meta = getUrlTags(url, event)
 
   // Fallback to filename if hash was omitted from the message for interoperability
   const hash = tagValue(tagSpec("x"), meta) || url.split(/[\/\.]/).slice(-2)[0]

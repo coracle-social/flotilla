@@ -1,18 +1,17 @@
 <script lang="ts">
   import {displayUrl} from "@welshman/lib"
-  import {tagSpec, tagValue} from "@welshman/util"
   import {preventDefault, stopPropagation} from "@lib/html"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
   import {pushModal} from "@app/modal"
-  import {IMAGE_CONTENT_TYPES} from "@app/content"
+  import {getUrlContentType, IMAGE_CONTENT_TYPES} from "@app/content"
 
   const {value, event} = $props()
 
   const url = value.url.toString()
-  const fileType = tagValue(tagSpec("file-type"), event.tags) || ""
+  const fileType = getUrlContentType(url, event)
 
   const expand = () => pushModal(ContentLinkDetail, {value, event}, {fullscreen: true})
 </script>

@@ -16,7 +16,7 @@
 
 <script lang="ts">
   import {call, ellipsize, displayUrl} from "@welshman/lib"
-  import {isRelayUrl, tagSpec, tagValue} from "@welshman/util"
+  import {isRelayUrl} from "@welshman/util"
   import {Capacitor} from "@capacitor/core"
   import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
@@ -26,7 +26,12 @@
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
   import {pushModal} from "@app/modal"
   import {PLATFORM_URL, THUMBNAIL_URL} from "@app/env"
-  import {AUDIO_CONTENT_TYPES, IMAGE_CONTENT_TYPES, VIDEO_CONTENT_TYPES} from "@app/content"
+  import {
+    getUrlContentType,
+    AUDIO_CONTENT_TYPES,
+    IMAGE_CONTENT_TYPES,
+    VIDEO_CONTENT_TYPES,
+  } from "@app/content"
   import {isRoomId} from "@app/rooms"
 
   const {value, event} = $props()
@@ -41,7 +46,7 @@
     return [url, true]
   })
 
-  const fileType = tagValue(tagSpec("file-type"), event.tags) || ""
+  const fileType = getUrlContentType(url, event)
 
   const isAudio =
     Boolean(url.match(/\.(mp3|m4a|wav|ogg|oga|opus|flac)$/)) ||

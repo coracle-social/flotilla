@@ -15,8 +15,11 @@ import {
   THREAD,
   ZAP_GOAL,
   ZAP_RECEIPT,
+  matchTags,
+  tagSpec,
+  tagValue,
 } from "@welshman/util"
-import type {Filter} from "@welshman/util"
+import type {Filter, TrustedEvent} from "@welshman/util"
 import {ENABLE_ZAPS} from "@app/env"
 export const IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 
@@ -31,6 +34,28 @@ export const AUDIO_CONTENT_TYPES = [
   "audio/webm",
   "audio/flac",
 ]
+
+export const getUrlTags = (url: string, event: TrustedEvent) => {
+  // An imeta tag packs its own tags into space-separated values, so unpack them.
+  const imetas = matchTags(tagSpec("imeta"), event.tags).map(([, ...values]: string[]) =>
+    values.map(value => value.split(" ")),
+  )
+  const imeta = imetas.find(meta => tagValue(tagSpec("url"), meta) === url)
+
+  if (imeta) {
+    return imeta
+  }
+
+  // A nip 17 file message describes its one file on the event itself, but an event carrying imeta
+  // has said all it has to say about each url, so any other link in it is described by nothing.
+  return imetas.length > 0 ? [] : event.tags
+}
+
+export const getUrlContentType = (url: string, event: TrustedEvent) => {
+  const tags = getUrlTags(url, event)
+
+  return tagValue(tagSpec("m"), tags) || tagValue(tagSpec("file-type"), tags) || ""
+}
 
 export const makeCommentFilter = (kinds: number[], extra: Filter = {}) => ({
   kinds: [COMMENT],
