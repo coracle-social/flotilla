@@ -2,6 +2,7 @@
   import cx from "classnames"
   import {Pubkey} from "@welshman/util"
   import type {CommandArg, CommandScopeTarget} from "@welshman/util"
+  import {slide} from "@lib/transition"
   import Button from "@lib/components/Button.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import {deriveCommandsForTarget, describeCommandDraft} from "@app/commands"
@@ -43,7 +44,9 @@
 </script>
 
 {#if draft}
-  <div class="flex flex-col gap-1 px-1 pb-1 text-sm">
+  <div
+    class="bg-surface-more border-t-line-less border-l-primary flex flex-col gap-1 border-t border-l-2 border-solid px-2 py-1 text-xs"
+    transition:slide>
     <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
       <span class="font-mono">
         <span class="text-primary">/{draft.command.command()}</span>
@@ -68,7 +71,7 @@
       <div class="flex flex-wrap items-center gap-2">
         <span class="opacity-75">Several bots answer this — pick one:</span>
         {#each draft.matches as match (match.address())}
-          <Button class="button button-sm button-neutral" onclick={() => qualify(match.author())}>
+          <Button class="button button-xs button-neutral" onclick={() => qualify(match.author())}>
             @<ProfileName pubkey={match.author()} url={target.url} />
           </Button>
         {/each}
@@ -76,7 +79,7 @@
     {:else if choices.length > 0}
       <div class="flex flex-wrap items-center gap-2">
         {#each choices as choice (choice)}
-          <Button class="button button-sm button-neutral" onclick={() => insert(choice)}>
+          <Button class="button button-xs button-neutral" onclick={() => insert(choice)}>
             {choice}
           </Button>
         {/each}
