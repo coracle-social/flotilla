@@ -14,8 +14,8 @@
 
 <section class="flex min-w-0 flex-col border-b border-line last:border-b-0">
   <div class="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
-    <h2 class="flex items-center gap-2 text-xs font-bold tracking-widest uppercase opacity-75">
-      <Icon {icon} size={4} />
+    <h2 class="flex items-center gap-2 text-base font-bold tracking-wide uppercase">
+      <Icon {icon} size={5} />
       {title}
     </h2>
     {@render action?.()}

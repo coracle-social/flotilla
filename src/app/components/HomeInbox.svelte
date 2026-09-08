@@ -24,11 +24,17 @@
       <Button class="button button-neutral button-xs" onclick={markAllRead}>Mark all read</Button>
     {/if}
   {/snippet}
-  {#if conversations.length === 0}
+  {#if conversations.length > 0}
+    <div class="flex flex-col gap-3 px-4 pb-4">
+      {#each conversations as conversation (conversation.path)}
+        <HomeInboxItem {conversation} />
+      {/each}
+    </div>
+  {:else}
     <div class="flex flex-col items-center gap-3 px-4 pb-8 text-center">
-      <p class="font-medium">Nothing in your inbox yet</p>
+      <p class="font-medium">You're all caught up</p>
       <p class="max-w-md text-sm opacity-75">
-        The rooms, space chats and direct messages you belong to show their latest message here.
+        The rooms, space chats and direct messages you belong to show what's unread here.
       </p>
       <div class="flex flex-wrap justify-center gap-2">
         <Link href="/spaces" class="button button-primary button-sm">
@@ -40,12 +46,6 @@
           Start a conversation
         </Button>
       </div>
-    </div>
-  {:else}
-    <div class="flex flex-col divide-y divide-line border-t border-line">
-      {#each conversations as conversation (conversation.path)}
-        <HomeInboxItem {conversation} />
-      {/each}
     </div>
   {/if}
 </HomeSection>

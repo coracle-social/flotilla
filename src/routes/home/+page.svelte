@@ -38,9 +38,9 @@
       <span class="hidden text-sm opacity-75 sm:inline">{today}</span>
     </div>
   </PageBar>
-  <PageContent noPad class="flex flex-col">
+  <PageContent noPad class="flex flex-col bg-surface">
     <div class="flex min-w-0 flex-col lg:flex-row lg:items-stretch">
-      <div class="flex min-w-0 flex-col bg-surface lg:flex-[2] lg:border-r lg:border-line">
+      <div class="flex min-w-0 flex-col lg:flex-[2] lg:border-r lg:border-line">
         <HomeInbox />
         <HomeActivity />
         <HomeNetwork />

@@ -1563,15 +1563,14 @@ that I don't have to walk every space to find out.
 
 Acceptance:
 
-- The inbox lists each room and conversation with unread activity, naming the
-  room and space and showing the latest message, newest first. It holds messages
-  only.
+- The inbox lists each room and conversation with unread activity as a card,
+  naming the room and space and showing the latest message, newest first. It
+  holds messages only, and only while they are unread.
 - Activity is a row of one card per space, counting what that space has waiting
   that isn't a message - threads, events, classifieds and the rest. A card
   disappears once its space is read.
-- A conversation with unread activity carries an unread dot, and "Mark all read"
-  clears every dot on the page.
-- Selecting a conversation opens it, and it stays in the inbox once read.
+- A conversation carries an unread dot, and "Mark all read" empties the inbox.
+- Selecting a conversation opens it.
 - Relay health checks are listed alongside the inbox, with the recommendation
   each one applies.
 - Hosting is offered whether or not she hosts a space: a shortcut to the hosting

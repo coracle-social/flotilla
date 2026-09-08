@@ -9,10 +9,10 @@
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import {user} from "@app/core"
-  import type {InboxConversation} from "@app/inbox"
+  import type {Activity} from "@app/notifications"
 
   type Props = {
-    conversation: InboxConversation
+    conversation: Activity
   }
 
   const {conversation}: Props = $props()
@@ -24,7 +24,7 @@
   const others = $derived(uniq(remove($user.pubkey, conversation.pubkeys ?? [])))
 </script>
 
-<Link href={path} class="flex items-center gap-3 px-4 py-3 hover:bg-surface-more">
+<Link href={path} class="card card-sm card-interactive flex items-center gap-3">
   {#if url}
     <RelayIcon {url} size={9} class="shrink-0" />
   {:else}

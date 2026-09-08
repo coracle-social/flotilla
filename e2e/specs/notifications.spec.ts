@@ -405,17 +405,14 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
   // Hosting shows even though alice hosts nothing, as an invitation to start a space
   await expect(page.getByRole("button", {name: "Start a space"})).toBeVisible()
 
+  await expect(conversation).toHaveAttribute("href", roomPath(space.url, "general"))
+
+  // The inbox is the badges, so a conversation leaves the list once it has nothing unread
   await page.getByRole("button", {name: "Mark all read"}).click()
 
-  await expect(unreadDot(conversation)).toHaveCount(0)
-
-  // Unlike a conversation, a space's activity card is a count of what's new, so reading it empties
+  await expect(conversation).toHaveCount(0)
   await expect(activity).toHaveCount(0)
-
-  // A conversation stays in the inbox once it's read - it's a list of where things are, not a queue
-  await conversation.click()
-
-  await expect(page).toHaveURL(pattern(roomPath(space.url, "general")))
+  await expect(page.getByText("You're all caught up")).toBeVisible()
 })
 
 test("US-106 share text into the app", async ({seed, as}) => {
