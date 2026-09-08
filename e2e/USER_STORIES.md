@@ -455,6 +455,8 @@ Acceptance:
 - The conversation appears at the top of her list, labeled with bob's name.
 - Bob's profile page offers a "Message" button that opens the same conversation;
   her own profile offers none.
+- A profile modal has no such button, so its "..." menu offers "Send Message"
+  instead; the profile page's menu does not repeat it.
 
 ### US-030 — Start a group chat
 

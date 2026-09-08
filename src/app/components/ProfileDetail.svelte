@@ -5,6 +5,7 @@
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
   import UserMinus from "@assets/icons/user-minus.svg?dataurl"
+  import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import Restart from "@assets/icons/restart.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
@@ -16,11 +17,11 @@
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
-  import {messagingRelayLists, profiles, relayManagement} from "@app/core"
+  import {messagingRelayLists, profiles, relayManagement, user} from "@app/core"
   import {deriveUserIsSpaceAdmin} from "@app/management"
-  import {navigate, pushModal} from "@app/modal"
+  import {navigate, popModal, pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
-  import {makeProfilePath} from "@app/routes"
+  import {goToChat, makeProfilePath} from "@app/routes"
 
   export type Props = {
     pubkey: string
@@ -31,9 +32,16 @@
 
   const userIsAdmin = deriveUserIsSpaceAdmin(url)
 
+  const isSelf = $derived($user.pubkey === pubkey)
+
   const back = () => history.back()
 
   const viewProfile = () => navigate(makeProfilePath(pubkey), {replaceState: true})
+
+  const sendMessage = () => {
+    popModal()
+    goToChat([pubkey])
+  }
 
   const report = (error: string | undefined, message: string) => {
     if (error) {
@@ -92,24 +100,32 @@
         <Profile showPubkey avatarSize={14} {pubkey} {url} />
         <ProfileMenu {pubkey} {url}>
           {#snippet customActions()}
+            {#if !isSelf}
+              <li>
+                <Button onclick={sendMessage}>
+                  <Icon size={4} icon={Letter} />
+                  Send Message
+                </Button>
+              </li>
+            {/if}
             {#if $userIsAdmin}
               {#if isBanned}
                 <li>
                   <Button onclick={restoreMember}>
-                    <Icon icon={Restart} />
+                    <Icon size={4} icon={Restart} />
                     Restore Membership
                   </Button>
                 </li>
               {:else}
                 <li>
                   <Button onclick={removeMember}>
-                    <Icon icon={UserMinus} />
+                    <Icon size={4} icon={UserMinus} />
                     Remove Member
                   </Button>
                 </li>
                 <li>
                   <Button class="text-error" onclick={banMember}>
-                    <Icon icon={MinusCircle} />
+                    <Icon size={4} icon={MinusCircle} />
                     Ban User
                   </Button>
                 </li>

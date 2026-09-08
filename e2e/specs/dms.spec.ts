@@ -60,6 +60,14 @@ const unreadDots = (scope: Locator) => scope.locator(".rounded-full.bg-primary")
 
 const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
 
+// A modal is a `.dialog` overlay wrapping a `.dialog` card, and the card is the one with the
+// content in it.
+const dialog = (page: Page) => page.locator(".dialog").last()
+
+// The "..." menu on a profile header, which is the only ghost circle button either the profile
+// page or the profile modal renders.
+const profileMenu = (scope: Page | Locator) => scope.locator("button.button-circle.button-ghost")
+
 // A modal's body is the only scroll container carrying its title.
 const modalBody = (page: Page, title: string) =>
   page
@@ -68,8 +76,13 @@ const modalBody = (page: Page, title: string) =>
 
 const composer = (page: Page) => page.locator(".chat-editor [contenteditable=true]")
 
-// The send button is named by the shortcut it advertises, which differs by platform.
-const sendButton = (page: Page) => page.locator('.room__compose [data-tip$="enter to send"]')
+// The editor is where the composer says whether it is ready. The send button is not there to
+// ask while the composer is empty, since a dictation button stands in its place.
+const composerEnabled = (page: Page) =>
+  expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "false")
+
+const composerDisabled = (page: Page) =>
+  expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "true")
 
 // Both things the composer puts above itself — the message being replied to and the editing
 // indicator — are the same bordered strip.
@@ -84,7 +97,7 @@ const enablePrompt = (page: Page) => page.getByRole("heading", {name: "Enable di
 // The composer stays disabled until every recipient's messaging relays have been read, so waiting
 // on it is part of sending rather than a wait for a wait's sake.
 const send = async (page: Page, content: string) => {
-  await expect(sendButton(page)).toBeEnabled()
+  await composerEnabled(page)
   await composer(page).pressSequentially(content)
   await composer(page).press("Enter")
 }
@@ -183,7 +196,7 @@ test("US-029 start a one-on-one chat", async ({seed, as}) => {
 
   await expect(page).toHaveURL(pathPattern(chatPath(users.bob.pubkey)))
   await expect(composer(page)).toBeVisible()
-  await expect(sendButton(page)).toBeEnabled()
+  await composerEnabled(page)
 
   await send(page, "hi bob")
 
@@ -203,6 +216,23 @@ test("US-029 start a one-on-one chat", async ({seed, as}) => {
 
   await expect(page).toHaveURL(pathPattern(chatPath(users.bob.pubkey)))
   await expect(bubble(page, "hi bob")).toBeVisible()
+
+  // The profile page's menu leaves messaging to the button beside it
+  await page.goto(profilePath(users.bob.pubkey))
+  await profileMenu(page).click()
+
+  await expect(page.getByRole("button", {name: "Profile Info"})).toBeVisible()
+  await expect(page.getByRole("button", {name: "Send Message"})).toHaveCount(0)
+
+  // The profile modal, which has no such button, carries the action in its menu instead
+  await page.goto("/chat")
+  await chatItems(page).filter({hasText: "welcome aboard"}).click()
+  await bubble(page, "welcome aboard").getByRole("button", {name: "Carol Cutter"}).first().click()
+  await profileMenu(dialog(page)).click()
+  await page.getByRole("button", {name: "Send Message"}).click()
+
+  await expect(page).toHaveURL(pathPattern(chatPath(users.carol.pubkey)))
+  await expect(pageBar(page)).toContainText("Carol Cutter")
 
   // Her own profile offers no way to message herself
   await page.goto(profilePath(users.alice.pubkey))
@@ -241,7 +271,7 @@ test("US-030 start a group chat", async ({seed, as}) => {
 
   // One conversation holding both of them, rather than one apiece
   await expect(page).toHaveURL(pathPattern(chatPath(users.bob.pubkey, users.carol.pubkey)))
-  await expect(sendButton(page)).toBeEnabled()
+  await composerEnabled(page)
 
   // Labeled with both of them rather than with one
   await expect(pageBar(page)).toContainText("Bob Barnacle")
@@ -294,7 +324,7 @@ test("US-031 direct messaging has to be switched on", async ({seed, as}) => {
   const banner = alice.locator(".card").filter({hasText: "Direct messages are not enabled"})
 
   await expect(banner).toContainText("Bob Barnacle")
-  await expect(sendButton(alice)).toBeDisabled()
+  await composerDisabled(alice)
 
   const bob = await as(users.bob, "/")
 
@@ -319,7 +349,7 @@ test("US-031 direct messaging has to be switched on", async ({seed, as}) => {
   // The prompt is behind her for good, and his end of it works now
   await expect(alice).toHaveURL(pathPattern(chatPath(users.bob.pubkey)))
   await expect(enablePrompt(alice)).toHaveCount(0)
-  await expect(sendButton(alice)).toBeEnabled()
+  await composerEnabled(alice)
   await expect(banner).toHaveCount(0)
 
   await send(alice, "finally")
