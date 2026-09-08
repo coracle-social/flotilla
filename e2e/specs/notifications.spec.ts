@@ -381,6 +381,9 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
   // Relay health checks had no mount point at all before the dashboard
   await expect(page.getByText("Health checks")).toBeVisible()
 
+  // Hosting shows even though alice hosts nothing, as an invitation to start a space
+  await expect(page.getByRole("button", {name: "Start a space"})).toBeVisible()
+
   await page.getByRole("button", {name: "Mark all read"}).click()
 
   await expect(unreadDot(conversation)).toHaveCount(0)

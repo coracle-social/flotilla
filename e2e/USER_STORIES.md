@@ -1570,6 +1570,8 @@ Acceptance:
 - Selecting a conversation opens it, and it stays in the inbox once read.
 - Relay health checks are listed alongside the inbox, with the recommendation
   each one applies.
+- Hosting is offered whether or not she hosts a space: a shortcut to the hosting
+  panel when she has one, an invitation to start one when she doesn't.
 
 ### US-106 — Share text into the app
 

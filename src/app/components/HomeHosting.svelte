@@ -5,6 +5,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Spinner from "@lib/components/Spinner.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import RelayListItem from "@app/components/hosting/RelayListItem.svelte"
   import RelayCreate from "@app/components/hosting/RelayCreate.svelte"
@@ -13,31 +14,36 @@
   import {HostingError, listTenantRelays, type HostedRelay} from "@app/hosting"
 
   let relays = $state<HostedRelay[]>([])
-  let loaded = $state(false)
+  let loading = $state(true)
 
   const openCreate = () => pushModal(RelayCreate)
 
   // A pubkey with no tenant yet answers with a HostingError, which is the ordinary case for
-  // anyone who has never hosted a space. The panel stays out of the way rather than reporting it.
+  // anyone who has never hosted a space.
   onMount(async () => {
     try {
       relays = await listTenantRelays($user.pubkey)
-      loaded = true
     } catch (e) {
       if (!(e instanceof HostingError)) {
         console.error(e)
       }
+    } finally {
+      loading = false
     }
   })
 </script>
 
-{#if loaded}
-  <HomeSection title="Hosting" icon={Server}>
-    {#snippet action()}
-      {#if relays.length > 0}
-        <Link href="/settings/hosting" class="button button-neutral button-xs">Manage</Link>
-      {/if}
-    {/snippet}
+<HomeSection title="Hosting" icon={Server}>
+  {#snippet action()}
+    {#if relays.length > 0}
+      <Link href="/settings/hosting" class="button button-neutral button-xs">Manage</Link>
+    {/if}
+  {/snippet}
+  {#if loading}
+    <div class="flex justify-center px-4 pb-8">
+      <Spinner>Checking your hosted spaces…</Spinner>
+    </div>
+  {:else}
     {#if relays.length > 0}
       <div class="flex flex-col divide-y divide-line border-y border-line">
         {#each relays as relay (relay.id)}
@@ -59,5 +65,5 @@
         {relays.length > 0 ? "Add another space" : "Start a space"}
       </Button>
     </div>
-  </HomeSection>
-{/if}
+  {/if}
+</HomeSection>
