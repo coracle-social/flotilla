@@ -6,6 +6,7 @@
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import HomeInbox from "@app/components/HomeInbox.svelte"
+  import HomeActivity from "@app/components/HomeActivity.svelte"
   import HomeNetwork from "@app/components/HomeNetwork.svelte"
   import HomeHealthChecks from "@app/components/HomeHealthChecks.svelte"
   import HomeHosting from "@app/components/HomeHosting.svelte"
@@ -41,6 +42,7 @@
     <div class="flex min-w-0 flex-col lg:flex-row lg:items-stretch">
       <div class="flex min-w-0 flex-col bg-surface lg:flex-[2] lg:border-r lg:border-line">
         <HomeInbox />
+        <HomeActivity />
         <HomeNetwork />
       </div>
       <div class="flex min-w-0 flex-col border-t border-line lg:w-80 lg:shrink-0 lg:border-t-0">

@@ -7,22 +7,11 @@
   import Button from "@lib/components/Button.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HomeInboxItem from "@app/components/HomeInboxItem.svelte"
-  import RelayIcon from "@app/components/RelayIcon.svelte"
-  import RelayName from "@app/components/RelayName.svelte"
-  import {displayContentCount} from "@app/content"
-  import {inboxConversations, inboxSpaceContent} from "@app/inbox"
+  import {inboxConversations} from "@app/inbox"
   import {navigate} from "@app/modal"
-  import {setChecked} from "@app/notifications"
-  import {makeSpacePath} from "@app/routes"
+  import {allNotifications, setChecked} from "@app/notifications"
 
   const conversations = $derived($inboxConversations.slice(0, 8))
-
-  const hasUnread = $derived(
-    $inboxConversations.some(conversation => conversation.unread) || $inboxSpaceContent.length > 0,
-  )
-
-  const displayContent = (countsByKind: Map<number, number>) =>
-    [...countsByKind].map(([kind, count]) => displayContentCount(kind, count)).join(" · ")
 
   const markAllRead = () => setChecked("*")
 
@@ -31,16 +20,15 @@
 
 <HomeSection title="Inbox" icon={Inbox}>
   {#snippet action()}
-    {#if hasUnread}
+    {#if $allNotifications.size > 0}
       <Button class="button button-neutral button-xs" onclick={markAllRead}>Mark all read</Button>
     {/if}
   {/snippet}
-  {#if conversations.length === 0 && $inboxSpaceContent.length === 0}
+  {#if conversations.length === 0}
     <div class="flex flex-col items-center gap-3 px-4 pb-8 text-center">
       <p class="font-medium">Nothing in your inbox yet</p>
       <p class="max-w-md text-sm opacity-75">
-        Rooms and spaces you belong to report their activity here — messages, threads, classifieds,
-        events and polls.
+        The rooms, space chats and direct messages you belong to show their latest message here.
       </p>
       <div class="flex flex-wrap justify-center gap-2">
         <Link href="/spaces" class="button button-primary button-sm">
@@ -57,15 +45,6 @@
     <div class="flex flex-col divide-y divide-line border-t border-line">
       {#each conversations as conversation (conversation.path)}
         <HomeInboxItem {conversation} />
-      {/each}
-      {#each $inboxSpaceContent as { url, countsByKind } (url)}
-        <Link
-          href={makeSpacePath(url)}
-          class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-more">
-          <RelayIcon {url} size={6} class="shrink-0" />
-          <strong class="truncate"><RelayName {url} /></strong>
-          <span class="truncate opacity-75">{displayContent(countsByKind)}</span>
-        </Link>
       {/each}
     </div>
   {/if}

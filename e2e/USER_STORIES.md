@@ -1564,7 +1564,11 @@ that I don't have to walk every space to find out.
 Acceptance:
 
 - The inbox lists each room and conversation with unread activity, naming the
-  room and space and showing the latest message, newest first.
+  room and space and showing the latest message, newest first. It holds messages
+  only.
+- Activity is a row of one card per space, counting what that space has waiting
+  that isn't a message - threads, events, classifieds and the rest. A card
+  disappears once its space is read.
 - A conversation with unread activity carries an unread dot, and "Mark all read"
   clears every dot on the page.
 - Selecting a conversation opens it, and it stays in the inbox once read.

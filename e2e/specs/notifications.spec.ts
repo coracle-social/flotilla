@@ -366,6 +366,19 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
     space.message(user.bob, "general", "the server is on fire", at(1, HOUR))
+
+    space.event(
+      user.bob,
+      () =>
+        space
+          .kind(Thread)
+          .writer()
+          .setRoom(space.url, "general")
+          .setTitle("Bed rotation")
+          .setContent("How often do you move things around?")
+          .renderTemplate(),
+      at(2, HOUR),
+    )
   })
 
   const space = scenario.space("space")
@@ -378,6 +391,14 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
   await expect(conversation).toContainText("General")
   await expect(unreadDot(conversation)).toBeVisible()
 
+  // A space's threads, events and classifieds are counted per space in Activity rather than listed
+  // as conversations, so the inbox stays a list of messages
+  const activity = page.getByRole("link").filter({hasText: "1 thread"})
+
+  await expect(page.getByRole("heading", {name: "Activity"})).toBeVisible()
+  await expect(activity).toBeVisible()
+  await expect(conversation).not.toContainText("1 thread")
+
   // Relay health checks had no mount point at all before the dashboard
   await expect(page.getByText("Health checks")).toBeVisible()
 
@@ -387,6 +408,9 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
   await page.getByRole("button", {name: "Mark all read"}).click()
 
   await expect(unreadDot(conversation)).toHaveCount(0)
+
+  // Unlike a conversation, a space's activity card is a count of what's new, so reading it empties
+  await expect(activity).toHaveCount(0)
 
   // A conversation stays in the inbox once it's read - it's a list of where things are, not a queue
   await conversation.click()
