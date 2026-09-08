@@ -77,8 +77,7 @@ against GTK, which Playwright's chromium dependencies do not cover, so such a bo
 also needs `libgtk-3-0t64`. The test drops Chromium's sandbox when it runs as
 root, because Chromium refuses to start that way. The separate smoke
 suite does not start a web dev server or test installers. Windows and macOS desktop
-behavior is not verified by the Linux test. CI builds and runs this suite under
-Xvfb in a separate desktop job.
+behavior is not verified by the Linux test. CI does not run it.
 
 ## Deployment
 
