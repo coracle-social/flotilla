@@ -38,7 +38,7 @@
 
   const back = () => history.back()
 
-  const submit = () => shareTo(selection, share, {replaceState: true})
+  const submit = () => shareTo(selection, share)
 
   let term = $state("")
   let selection = $state("")

@@ -1,7 +1,6 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {onDestroy, onMount} from "svelte"
-  import {goto} from "$app/navigation"
   import {
     ago,
     int,
@@ -45,7 +44,7 @@
   import {userSettingsValues} from "@app/settings"
   import {deriveChat, makeChatId} from "@app/chats"
   import {makeFeedContext} from "@app/feeds"
-  import {pushModal} from "@app/modal"
+  import {navigate, pushModal} from "@app/modal"
   import {DraftKey, type Draft} from "@app/drafts"
   import {prependParent} from "@app/rooms"
   import {pendingShare, type Share} from "@app/share"
@@ -73,7 +72,7 @@
       ? pushModal(ProfileDetail, {pubkey: others[0]})
       : pushModal(ChatMembers, {pubkeys: others})
 
-  const back = () => goto("/chat")
+  const back = () => navigate("/chat")
 
   const replyTo = (event: TrustedEvent) => {
     parent = event

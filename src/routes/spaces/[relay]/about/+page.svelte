@@ -1,14 +1,13 @@
 <script lang="ts">
   import {page} from "$app/stores"
-  import {goto} from "$app/navigation"
   import {displayRelayUrl} from "@welshman/util"
-  import ArrowLeft from "@assets/icons/arrow-left.svg?dataurl"
+  import Home from "@assets/icons/home.svg?dataurl"
   import ShieldUser from "@assets/icons/shield-user.svg?dataurl"
   import BillList from "@assets/icons/bill-list.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
-  import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import SpaceBar from "@app/components/SpaceBar.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
@@ -16,18 +15,22 @@
   import SpaceMembersSummary from "@app/components/SpaceMembersSummary.svelte"
   import SpaceFeaturedContent from "@app/components/SpaceFeaturedContent.svelte"
   import {relays} from "@app/core"
-  import {makeSpacePath} from "@app/routes"
   import {decodeRelay} from "@app/relays"
 
   const url = decodeRelay($page.params.relay!)
   const relay = $relays.one(url)
-  const showMenu = () => goto(makeSpacePath(url))
 </script>
 
+<SpaceBar>
+  {#snippet leading()}
+    <Icon icon={Home} />
+  {/snippet}
+  {#snippet title()}
+    <strong>Space Details</strong>
+  {/snippet}
+</SpaceBar>
+
 <PageContent class="flex flex-col gap-4 p-4">
-  <Button onclick={showMenu} class="button button-neutral md:hidden place-self-start">
-    <Icon icon={ArrowLeft} size={7} /> Go Back
-  </Button>
   <div class="card flex flex-col gap-4">
     <div class="relative flex gap-4">
       <div class="relative">

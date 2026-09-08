@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {goto} from "$app/navigation"
+  import {navigate} from "@app/modal"
   import {formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {tagValue, tagSpec} from "@welshman/util"
@@ -22,7 +22,7 @@
 
   const h = tagValue(tagSpec("h"), event.tags)
 
-  const onClick = () => goto(h ? makeRoomPath(url, h) : makeSpaceChatPath(url))
+  const onClick = () => navigate(h ? makeRoomPath(url, h) : makeSpaceChatPath(url))
 </script>
 
 <Button class="cv card card-interactive" onclick={onClick}>

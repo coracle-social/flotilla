@@ -1,6 +1,10 @@
 @layer components {
   .primary-nav {
-    @apply ml-sai mt-sai mb-sai z-popover bg-surface border-line relative isolate hidden w-14 shrink-0 flex-col border-r border-solid pt-2 md:flex;
+    @apply z-popover bg-surface border-line relative isolate w-14 shrink-0 flex-col border-r border-solid pt-2;
+  }
+
+  .drawer .primary-nav .tip[data-tip]::before {
+    @apply hidden;
   }
 
   .primary-nav__nav-item {

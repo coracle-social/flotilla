@@ -13,11 +13,10 @@
   type Props = {
     url: string
     h: string
-    replaceState?: boolean
     tooltip?: boolean
   }
 
-  const {url, h, replaceState = false, tooltip = true}: Props = $props()
+  const {url, h, tooltip = true}: Props = $props()
 
   const room = $rooms.forRoom(url, h)
   const roomType = $derived(getRoomType($room))
@@ -28,9 +27,9 @@
 </script>
 
 {#if roomType === RoomType.Voice}
-  <VoiceRoomItem {url} {h} {replaceState} {notification} />
+  <VoiceRoomItem {url} {h} {notification} />
 {:else}
-  <SecondaryNavItem href={path} title={tooltip ? roomName : ""} {replaceState} {notification}>
+  <SecondaryNavItem href={path} title={tooltip ? roomName : ""} {notification}>
     <RoomNameWithImage {url} {h} />
     {#if $isMuted}
       <Icon icon={BellOff} size={4} class="ml-auto opacity-50" />

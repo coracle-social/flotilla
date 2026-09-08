@@ -192,6 +192,8 @@ return a `Command`, so `.then(publish)` is usually all you need.
 - Import from `app/modal.ts` or `app/toast.ts`
 - Pass component objects with parameters
 - Use `$state.snapshot` if calling component might unmount
+- Navigate with `navigate` from `app/modal.ts` rather than `goto` — an open modal owns the current
+  history entry, so a navigation that drops it replaces that entry instead of stacking on it
 
 ## Development Workflow
 

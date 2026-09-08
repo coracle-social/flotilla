@@ -29,7 +29,7 @@
   const back = () => history.back()
 
   const onSubmit = () => {
-    shareTo(makeRoomPath(url, selection), {type: "event", value: event}, {replaceState: true})
+    shareTo(makeRoomPath(url, selection), {type: "event", value: event})
   }
 
   const toggleRoom = (h: string) => {

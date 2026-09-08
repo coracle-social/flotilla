@@ -1,7 +1,7 @@
 <script lang="ts">
   import {debounce} from "throttle-debounce"
   import {maybe} from "@welshman/lib"
-  import {goto} from "$app/navigation"
+  import {navigate} from "@app/modal"
   import {preventDefault} from "@lib/html"
   import {slideAndFade} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -58,7 +58,7 @@
       const qp = data.code ? `?code=${encodeURIComponent(data.code)}` : ""
 
       pushToast({message: "Welcome to the room!"})
-      await goto(path + qp)
+      await navigate(path + qp)
       return
     }
 

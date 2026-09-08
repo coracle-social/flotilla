@@ -25,14 +25,7 @@
   import {fade} from "@lib/transition"
   import {page} from "$app/stores"
 
-  const {
-    children,
-    href = "",
-    title = "",
-    notification = false,
-    replaceState = false,
-    ...restProps
-  } = $props()
+  const {children, href = "", title = "", notification = false, ...restProps} = $props()
 
   const active = $derived($page.url.pathname === href)
   const wrapperClass = $derived(
@@ -48,12 +41,7 @@
 </script>
 
 {#if href}
-  <a
-    {href}
-    {...restProps}
-    data-tip={title}
-    data-sveltekit-replacestate={replaceState}
-    class={wrapperClass}>
+  <a {href} {...restProps} data-tip={title} class={wrapperClass}>
     {@render children?.()}
     {#if notification}
       <div

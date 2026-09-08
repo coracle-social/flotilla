@@ -13,19 +13,27 @@ export type TranslateParams = {
   duration?: number
   easing?: (t: number) => number
   axis?: "x" | "y"
-  reverse?: boolean
+  offset?: number
+  unit?: string
 }
 
 export const translate = (
   node: Element,
-  {delay = 0, duration = 400, easing = cubicOut, axis = "y", reverse = false}: TranslateParams = {},
+  {
+    delay = 0,
+    duration = 400,
+    easing = cubicOut,
+    axis = "y",
+    offset = 100,
+    unit = "%",
+  }: TranslateParams = {},
 ) => {
   return {
     delay,
     duration,
     easing,
     css: (t: number) => {
-      const p = reverse ? `${t * 100}%` : `${100 - t * 100}%`
+      const p = `${offset - t * offset}${unit}`
 
       if (axis === "x") {
         return `transform: translateX(${p})`

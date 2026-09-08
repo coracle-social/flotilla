@@ -12,11 +12,19 @@
   import {notifications} from "@app/notifications"
   import {makeSpacePath} from "@app/routes"
 
+  type Props = {
+    overflow?: boolean
+  }
+
+  const {overflow = true}: Props = $props()
+
   let windowHeight = $state(0)
 
   const itemHeight = 56
   const navPadding = 8 * itemHeight
-  const itemLimit = $derived(Math.max(0, (windowHeight - navPadding) / itemHeight))
+  const itemLimit = $derived(
+    overflow ? Math.max(0, (windowHeight - navPadding) / itemHeight) : $userSpaceUrls.length,
+  )
   const [primarySpaceUrls, secondarySpaceUrls] = $derived(splitAt(itemLimit, $userSpaceUrls))
   const otherSpaceNotifications = $derived(
     secondarySpaceUrls.some(url => $notifications.has(makeSpacePath(url))),

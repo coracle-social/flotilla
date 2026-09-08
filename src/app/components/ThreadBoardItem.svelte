@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {goto} from "$app/navigation"
+  import {navigate} from "@app/modal"
   import {derived} from "svelte/store"
   import {filter, formatTimestamp, max, spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
@@ -26,7 +26,7 @@
   const lastActive = $derived(max([...$replies, event].map(e => e.created_at)))
   const title = tagValue(tagSpec("title"), event.tags)
   const path = makeThreadPath(url, event.id)
-  const onClick = () => goto(path)
+  const onClick = () => navigate(path)
 </script>
 
 {#if mobile}

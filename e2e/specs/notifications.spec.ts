@@ -41,10 +41,9 @@ const settingRow = (page: Page, label: string) =>
 const spaceNavItem = (page: Page, name: string) =>
   page.locator(`.primary-nav [data-tip^="${name}"]`)
 
-// The desktop rail and the phone's bottom bar each carry a link to the space list, and neither one
-// has an accessible name — both icons are masked svgs. Below tailwind's md breakpoint the rail is
-// display:none, so on a phone the visible one is the bar's.
-const spacesNavItem = (page: Page) => page.locator('a[href="/spaces"]:visible')
+// The phone's bottom bar opens the space menu in a drawer; the desktop rail has no equivalent,
+// since the menu is always on screen there.
+const spaceMenuNavItem = (page: Page) => page.getByRole("button", {name: "Open space menu"})
 
 // The space menu's header, the one button in the secondary nav carrying the relay's address.
 const spaceMenu = (page: Page, url: string) =>
@@ -53,8 +52,7 @@ const spaceMenu = (page: Page, url: string) =>
 const roomLink = (page: Page, name: string) =>
   page.locator(".space-menu__scroll").getByRole("link", {name})
 
-// The room's page bar carries a back arrow (display:none at this viewport), a search button and the
-// detail button, in that order.
+// The room's page bar carries a search button and the detail button, in that order.
 const openRoomDetail = (page: Page) =>
   page.locator('[data-component="PageBar"]').getByRole("button").last().click()
 
@@ -448,16 +446,16 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
     context: {viewport: {width: 390, height: 844}, hasTouch: true},
   })
 
-  const spacesButton = spacesNavItem(bob)
+  const menuButton = spaceMenuNavItem(bob)
 
-  await expect(spacesButton).toBeVisible()
-  await expect(unreadDot(spacesButton)).toHaveCount(0)
+  await expect(menuButton).toBeVisible()
+  await expect(unreadDot(menuButton)).toHaveCount(0)
 
   const inOther = await as(users.alice, roomPath(other.url, "general"))
 
   await send(inOther, "the server is on fire")
 
-  await expect(unreadDot(spacesButton)).toBeVisible()
+  await expect(unreadDot(menuButton)).toBeVisible()
 
   // Meanwhile the space bob is sitting in gets a message too, in a room he isn't reading
   const inSpace = await as(users.alice, roomPath(space.url, "random"))
@@ -473,7 +471,7 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
   await bob.goto(spacePath(space.url))
 
   await expect(unreadDot(roomLink(bob, "Random"))).toBeVisible()
-  await expect(unreadDot(spacesButton)).toHaveCount(0)
+  await expect(unreadDot(menuButton)).toHaveCount(0)
 })
 
 // SpaceMenuNavItems hides a content type until the space has an event of that kind, so this link

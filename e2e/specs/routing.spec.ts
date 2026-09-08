@@ -112,3 +112,37 @@ test("does not stack a history entry for the space you are already in", async ({
 
   await expect(page).toHaveURL(new RegExp(`${roomPath(space.url, "lounge")}$`))
 })
+
+test("takes over the space menu's history entry when you navigate out of it", async ({
+  seed,
+  as,
+}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("lounge", {name: "Space Lounge"})
+    space.room("garden", {name: "Space Garden"})
+    space.join(user.alice, "lounge")
+    space.join(user.alice, "garden")
+  })
+
+  const space = scenario.space("space")
+  const page = await as(users.alice, roomPath(space.url, "lounge"), {
+    context: {viewport: {width: 390, height: 844}, hasTouch: true},
+  })
+
+  const drawer = page.locator(".drawer")
+
+  await page.getByRole("button", {name: "Open space menu"}).click()
+  await drawer.getByRole("link", {name: "Space Garden"}).click()
+
+  await expect(page).toHaveURL(new RegExp(`${roomPath(space.url, "garden")}$`))
+  await expect(drawer).toHaveCount(0)
+
+  // The menu held the entry the room it opened now holds, so one step back is the room it opened
+  // over. Stacked instead, this lands on the menu again.
+  await page.goBack()
+
+  await expect(page).toHaveURL(new RegExp(`${roomPath(space.url, "lounge")}$`))
+  await expect(drawer).toHaveCount(0)
+})

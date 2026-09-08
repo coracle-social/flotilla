@@ -2,6 +2,7 @@ import type {Component} from "svelte"
 import {get, writable} from "svelte/store"
 import {randomId, always, assoc, Emitter} from "@welshman/lib"
 import {deriveDeduplicated} from "@welshman/store"
+import {goto} from "$app/navigation"
 import {page} from "$app/stores"
 import type {DialogSize} from "@lib/components/Dialog.svelte"
 
@@ -55,6 +56,16 @@ const setModalHash = (hash: string, replace: boolean) => {
 
   modalHash.set(hash)
 }
+
+// An open modal owns the current history entry, so a navigation that drops it takes that entry over
+const closesModal = (path: string) => {
+  const hash = get(modalHash)
+
+  return hash !== "" && !path.endsWith(hash)
+}
+
+export const navigate = (path: string, options?: Parameters<typeof goto>[1]) =>
+  goto(path, {...options, replaceState: options?.replaceState || closesModal(path)})
 
 export const modalStack = deriveDeduplicated([modalHash, modals], ([$hash, $modals]) => {
   return getIdsFromHash($hash)

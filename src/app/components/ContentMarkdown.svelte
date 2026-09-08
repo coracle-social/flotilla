@@ -55,7 +55,7 @@
 <script lang="ts">
   import {marked} from "marked"
   import * as nip19 from "nostr-tools/nip19"
-  import {goto} from "$app/navigation"
+  import {navigate} from "@app/modal"
   import {removeUndefined, tryCatch} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {fromNostrURI} from "@welshman/util"
@@ -119,7 +119,7 @@
 
     if (href && isEntityPath(href)) {
       clickEvent.preventDefault()
-      goto(href)
+      navigate(href)
     }
   }
 </script>

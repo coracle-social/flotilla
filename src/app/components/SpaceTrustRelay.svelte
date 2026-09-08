@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {goto} from "$app/navigation"
   import {remove} from "@welshman/lib"
   import {displayRelayUrl} from "@welshman/util"
   import {publish} from "@welshman/app"
@@ -18,7 +17,7 @@
   import InfoSignatures from "@app/components/InfoSignatures.svelte"
   import {relaysPendingTrust} from "@app/policies"
   import {addTrustedRelay, removeTrustedRelay} from "@app/settings"
-  import {popModal, pushModal} from "@app/modal"
+  import {navigate, popModal, pushModal} from "@app/modal"
   import {roomLists} from "@app/core"
 
   type Props = {
@@ -35,7 +34,7 @@
     try {
       await $roomLists.removeRelay(url).then(publish)
       await removeTrustedRelay(url)
-      goto("/home")
+      navigate("/home")
     } finally {
       loading = false
     }

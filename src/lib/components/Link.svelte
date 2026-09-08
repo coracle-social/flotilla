@@ -1,8 +1,8 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import cx from "classnames"
-  import {goto} from "$app/navigation"
   import {stopPropagation} from "@lib/html"
+  import {navigate} from "@app/modal"
 
   const {
     children,
@@ -26,7 +26,7 @@
     if (!external) {
       e.preventDefault()
 
-      goto(href, {replaceState})
+      navigate(href, {replaceState})
     }
   }
 </script>

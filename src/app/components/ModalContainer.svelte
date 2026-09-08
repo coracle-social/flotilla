@@ -61,4 +61,4 @@
 
 <svelte:window onkeydown={onKeyDown} />
 
-<div bind:this={element}></div>
+<div bind:this={element} data-sveltekit-replacestate="true"></div>

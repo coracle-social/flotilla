@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {goto} from "$app/navigation"
+  import {navigate} from "@app/modal"
   import {displayRelayUrl} from "@welshman/util"
   import {publish} from "@welshman/app"
   import {preventDefault} from "@lib/html"
@@ -31,7 +31,7 @@
       loading = false
     }
 
-    goto("/home")
+    navigate("/home")
   }
 
   let loading = $state(false)

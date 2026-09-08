@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {Component} from "svelte"
-  import {fade, translate} from "@lib/transition"
+  import {fade} from "@lib/transition"
 
   type Props = {
     onClose?: any
@@ -13,7 +13,8 @@
   const {onClose, children}: Props = $props()
 </script>
 
-<div class="drawer fixed inset-0 z-modal">
+<div
+  class="drawer fixed inset-x-0 top-0 z-modal bottom-[calc(var(--mobile-nav-height)+var(--saib))] md:bottom-0">
   <button
     aria-label="Close drawer"
     class="absolute inset-0 cursor-pointer bg-black opacity-50"
@@ -21,8 +22,7 @@
     onclick={onClose}>
   </button>
   <div
-    class="bg-surface scroll-container py-sai pr-sair absolute bottom-0 right-0 top-0 w-72 overflow-auto lg:w-96"
-    transition:translate={{axis: "x", duration: 300}}>
+    class="pt-sai pl-sai border-line absolute bottom-0 left-0 top-0 flex w-full overflow-hidden border-r border-solid shadow-xl md:w-80 md:pb-sai lg:w-96">
     <children.component {...children.props} />
   </div>
 </div>

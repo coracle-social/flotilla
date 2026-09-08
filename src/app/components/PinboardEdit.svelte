@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {goto} from "$app/navigation"
+  import {navigate} from "@app/modal"
   import {getAddress} from "@welshman/util"
   import {publishAsRelay} from "@welshman/app"
   import {Pinboard} from "@welshman/domain"
@@ -49,7 +49,7 @@
         back()
       } else {
         pushToast({message: "Shelf created!"})
-        goto(makeLibraryPath(url, getAddress(thunk.event)))
+        navigate(makeLibraryPath(url, getAddress(thunk.event)))
       }
     } catch (e) {
       console.error(e)

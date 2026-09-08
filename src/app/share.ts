@@ -1,12 +1,11 @@
 import {writable} from "svelte/store"
-import {goto} from "$app/navigation"
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import type {PluginListenerHandle} from "@capacitor/core"
 import {noop} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {app, relays} from "@app/core"
-import {pushModal} from "@app/modal"
+import {navigate, pushModal} from "@app/modal"
 import {makeSpaceChatPath} from "@app/routes"
 import {pushToast} from "@app/toast"
 import {UPLOAD_MIME_TYPES} from "@app/uploads"
@@ -20,13 +19,13 @@ export type Share =
 
 export const pendingShare = writable<Maybe<Share>>(undefined)
 
-// Set pendingShare after goto so the current view doesn't pop it
+// Set pendingShare after navigating so the current view doesn't pop it
 export const shareTo = async (
   path: string,
   share: Share,
   options: {replaceState?: boolean} = {},
 ) => {
-  await goto(path, options)
+  await navigate(path, options)
 
   pendingShare.set(share)
 }

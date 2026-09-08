@@ -1,7 +1,6 @@
 import theme from "tailwindcss/defaultTheme"
-import {get} from "svelte/store"
+import {get, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
-import {goto} from "$app/navigation"
 import {page} from "$app/stores"
 import {identity} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
@@ -23,10 +22,10 @@ import {
 import {app, messagingRelayLists, relays, user} from "@app/core"
 import {makeChatId} from "@app/chats"
 import {entityLink, PLATFORM_URL, PLATFORM_RELAYS} from "@app/env"
-import {encodeRelay} from "@app/relays"
+import {decodeRelay, encodeRelay} from "@app/relays"
 import {DM_KINDS} from "@app/content"
 import {ROOM} from "@app/rooms"
-import {pushModal} from "@app/modal"
+import {navigate, pushModal} from "@app/modal"
 import ChatEnable from "@app/components/ChatEnable.svelte"
 
 // State
@@ -35,10 +34,15 @@ export let lastChatUrl: string | undefined = undefined
 
 export const lastPageBySpaceUrl = new Map<string, string>()
 
+// The space the user was in most recently, so the space menu can be opened from a page that isn't
+// in a space. A store because it's read from markup, unlike lastChatUrl.
+export const lastSpaceUrl = writable<string | undefined>(undefined)
+
 export const setupHistory = () =>
   page.subscribe($page => {
     if ($page.params.relay) {
       lastPageBySpaceUrl.set($page.params.relay, $page.url.pathname)
+      lastSpaceUrl.set(decodeRelay($page.params.relay))
     }
 
     if ($page.params.chat) {
@@ -62,9 +66,9 @@ export const goToChat = (pubkeys: string[] = [], options: {replaceState?: boolea
   if (messagingRelayLists.get().urls(user.get().pubkey).get().length === 0) {
     pushModal(ChatEnable, {next: () => goToChat(pubkeys, options)})
   } else if (pubkeys.length === 0) {
-    goto(lastChatUrl ?? "/chat", options)
+    navigate(lastChatUrl ?? "/chat", options)
   } else {
-    goto(makeChatPath(pubkeys), options)
+    navigate(makeChatPath(pubkeys), options)
   }
 }
 
@@ -104,17 +108,19 @@ export const makeSpaceEntryPath = (url: string) => {
 }
 
 export const goToSpace = (url: string, options: {replaceState?: boolean} = {}) =>
-  goto(makeSpaceEntryPath(url), options)
+  navigate(makeSpaceEntryPath(url), options)
 
 export const goToMovedSpace = (oldUrl: string, newUrl: string) =>
-  goto(get(page).url.pathname.replace(encodeRelay(oldUrl), encodeRelay(newUrl)))
+  navigate(get(page).url.pathname.replace(encodeRelay(oldUrl), encodeRelay(newUrl)))
 
 export const goToHome = () => {
   if (PLATFORM_RELAYS.length > 0) {
-    return goto(makeSpaceEntryPath(PLATFORM_RELAYS[0]) + get(page).url.hash, {replaceState: true})
+    return navigate(makeSpaceEntryPath(PLATFORM_RELAYS[0]) + get(page).url.hash, {
+      replaceState: true,
+    })
   }
 
-  return goto("/home" + get(page).url.hash)
+  return navigate("/home" + get(page).url.hash)
 }
 
 // Content types, events
@@ -262,6 +268,6 @@ export const goToEvent = (event: TrustedEvent, options: Record<string, any> = {}
   } else if (!scrollToEvent(event.id)) {
     const replaceState = path.replace(/\?.*$/, "") === get(page).url.pathname
 
-    goto(path, {replaceState, ...options})
+    navigate(path, {replaceState, ...options})
   }
 }

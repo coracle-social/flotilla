@@ -95,16 +95,13 @@
     `${$shouldNotify ? "Turn off" : "Turn on"} notifications`,
   )}
 {:else}
-  <Link href="/settings/alerts" replaceState class="button button-neutral w-full justify-start">
+  <Link href="/settings/alerts" class="button button-neutral w-full justify-start">
     <Icon size={4} icon={Bell} />
     Enable notifications
   </Link>
 {/if}
 {#if HOSTING_ENABLED && $hostedRelay.relay}
-  <Link
-    href={makeSpacePath(url, "admin")}
-    replaceState
-    class="button button-neutral w-full justify-start">
+  <Link href={makeSpacePath(url, "admin")} class="button button-neutral w-full justify-start">
     <Icon size={4} icon={ServerPath} />
     Hosting settings
   </Link>

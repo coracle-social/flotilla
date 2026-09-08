@@ -1,6 +1,5 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {goto} from "$app/navigation"
   import {removeUndefined, spec} from "@welshman/lib"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
@@ -19,7 +18,7 @@
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import {messagingRelayLists, profiles, relayManagement} from "@app/core"
   import {deriveUserIsSpaceAdmin} from "@app/management"
-  import {pushModal} from "@app/modal"
+  import {navigate, pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {makeProfilePath} from "@app/routes"
 
@@ -34,7 +33,7 @@
 
   const back = () => history.back()
 
-  const viewProfile = () => goto(makeProfilePath(pubkey), {replaceState: true})
+  const viewProfile = () => navigate(makeProfilePath(pubkey), {replaceState: true})
 
   const report = (error: string | undefined, message: string) => {
     if (error) {

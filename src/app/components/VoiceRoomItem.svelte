@@ -1,6 +1,5 @@
 <script lang="ts">
   import cx from "classnames"
-  import {goto} from "$app/navigation"
   import {makeRoomKey} from "@welshman/app"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -10,7 +9,7 @@
   import RoomImage from "@app/components/RoomImage.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {makeRoomPath} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {navigate, pushModal} from "@app/modal"
   import VoiceRoomJoinDialog from "@app/components/VoiceRoomJoinDialog.svelte"
   import VoiceParticipantMediaBadges from "@app/components/VoiceParticipantMediaBadges.svelte"
   import {
@@ -30,11 +29,10 @@
   interface Props {
     url: string
     h: string
-    replaceState?: boolean
     notification?: boolean
   }
 
-  const {url, h, replaceState = false, notification = false}: Props = $props()
+  const {url, h, notification = false}: Props = $props()
 
   // Beyond this many participants, a full name+avatar row per person makes the
   // sidebar item too tall — fall back to the compact ProfileCircles cluster instead.
@@ -59,7 +57,7 @@
     }
 
     e.preventDefault()
-    await goto(makeRoomPath(url, h), {replaceState})
+    await navigate(makeRoomPath(url, h))
     pushModal(VoiceRoomJoinDialog, {url, h})
   }
 
@@ -76,7 +74,6 @@
 
 <SecondaryNavItem
   href={makeRoomPath(url, h)}
-  {replaceState}
   {notification}
   onclick={handleClick}
   class={cx("items-start!", isActive && "bg-surface! text-content!")}>

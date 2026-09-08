@@ -4,9 +4,9 @@
   import {Profiles} from "@welshman/app"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
-  import Widget from "@assets/icons/widget-4.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Settings from "@assets/icons/settings.svg?dataurl"
+  import Sidebar from "@assets/icons/sidebar-minimalistic.svg?dataurl"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
@@ -14,11 +14,12 @@
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
   import PrimaryNavSpaces from "@app/components/PrimaryNavSpaces.svelte"
   import Search from "@app/components/Search.svelte"
-  import {userSpaceUrls} from "@app/rooms"
+  import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
   import {PLATFORM_RELAYS} from "@app/env"
-  import {pushModal} from "@app/modal"
+  import {modal, popModal, pushDrawer, pushModal} from "@app/modal"
   import {notifications} from "@app/notifications"
-  import {goToChat, makeSpacePath} from "@app/routes"
+  import {userSpaceUrls} from "@app/rooms"
+  import {goToChat, lastSpaceUrl, makeSpacePath} from "@app/routes"
   import {deriveUserItem} from "@app/core"
 
   type Props = {
@@ -35,12 +36,26 @@
 
   const showSearch = () => pushModal(Search)
 
-  const anySpaceNotifications = $derived(
-    $userSpaceUrls.some(p => $notifications.has(makeSpacePath(p))),
+  // The menu is reachable from every page, so it opens on the space the user is in, or the last one
+  // they were in when they're somewhere else.
+  const spaceUrl = $derived($lastSpaceUrl ?? PLATFORM_RELAYS[0] ?? $userSpaceUrls[0])
+
+  const spaceMenuIsOpen = $derived($modal?.component === SpaceMenuDrawer)
+
+  const spaceMenuLabel = $derived(spaceMenuIsOpen ? "Close space menu" : "Open space menu")
+
+  const toggleSpaceMenu = () =>
+    spaceMenuIsOpen ? popModal() : pushDrawer(SpaceMenuDrawer, {url: spaceUrl})
+
+  const otherSpaceNotifications = $derived(
+    $userSpaceUrls.some(url => url !== spaceUrl && $notifications.has(makeSpacePath(url))),
   )
 </script>
 
-<div class={cx("primary-nav", {"justify-between": PLATFORM_RELAYS.length === 0})}>
+<div
+  class={cx("primary-nav ml-sai mt-sai mb-sai hidden md:flex", {
+    "justify-between": PLATFORM_RELAYS.length === 0,
+  })}>
   <PrimaryNavSpaces />
   {#if PLATFORM_RELAYS.length > 0}
     <Divider />
@@ -71,9 +86,17 @@
 <div class="hide-on-keyboard fixed bottom-0 left-0 right-0 z-nav h-(--saib) bg-surface md:hidden">
 </div>
 <div
-  class="hide-on-keyboard border-top bottom-sai fixed left-0 right-0 z-nav h-14 border border-line bg-surface md:hidden">
+  class="hide-on-keyboard border-top bottom-sai fixed left-0 right-0 z-nav h-(--mobile-nav-height) border border-line bg-surface md:hidden">
   <div class="flex h-full justify-between px-2">
     <div class="flex items-center gap-6">
+      {#if spaceUrl}
+        <PrimaryNavItem
+          onclick={toggleSpaceMenu}
+          aria-label={spaceMenuLabel}
+          notification={otherSpaceNotifications}>
+          <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
+        </PrimaryNavItem>
+      {/if}
       {#if PLATFORM_RELAYS.length === 1}
         <PrimaryNavItemSpace url={PLATFORM_RELAYS[0]} />
       {:else}
@@ -84,11 +107,6 @@
       <PrimaryNavItem href="/chat" onclick={chatHandler} notification={$notifications.has("/chat")}>
         <ImageIcon alt="Messages" src={Letter} size={8} />
       </PrimaryNavItem>
-      {#if PLATFORM_RELAYS.length !== 1}
-        <PrimaryNavItem href="/spaces" notification={anySpaceNotifications}>
-          <ImageIcon alt="Spaces" src={Widget} size={8} />
-        </PrimaryNavItem>
-      {/if}
     </div>
     <PrimaryNavItem onclick={showSettingsMenu}>
       {#if $userProfile?.picture()}

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {goto} from "$app/navigation"
   import {displayRelayUrl} from "@welshman/util"
   import {parse, renderAsHtml} from "@welshman/content"
   import {publish} from "@welshman/app"
@@ -18,7 +17,7 @@
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import {publishLeaveRequest} from "@app/access"
   import {roomLists} from "@app/core"
-  import {pushModal, clearModals} from "@app/modal"
+  import {clearModals, navigate, pushModal} from "@app/modal"
   import {removeTrustedRelay} from "@app/settings"
 
   type Props = {
@@ -28,7 +27,7 @@
 
   const {url, error}: Props = $props()
 
-  const back = () => goto("/home")
+  const back = () => navigate("/home")
 
   const requestAccess = () => pushModal(SpaceAccessRequest, {url, callback: clearModals})
 
@@ -43,7 +42,7 @@
       loading = false
     }
 
-    goto("/home")
+    navigate("/home")
   }
 
   let loading = $state(false)

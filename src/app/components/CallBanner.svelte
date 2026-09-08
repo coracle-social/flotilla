@@ -1,6 +1,6 @@
 <script lang="ts">
   import {fly} from "svelte/transition"
-  import {goto} from "$app/navigation"
+  import {navigate} from "@app/modal"
   import {page} from "$app/stores"
   import cx from "classnames"
   import {displayRelayUrl} from "@welshman/util"
@@ -37,7 +37,7 @@
 
   const goToRoom = () => {
     if (!$callTargetRoom) return
-    void goto(makeRoomPath($callTargetRoom.url, $callTargetRoom.h))
+    void navigate(makeRoomPath($callTargetRoom.url, $callTargetRoom.h))
   }
 
   const toggleMute = async () => {

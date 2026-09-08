@@ -2,7 +2,7 @@
   import {onDestroy, onMount} from "svelte"
   import {readable} from "svelte/store"
   import {page} from "$app/stores"
-  import {goto} from "$app/navigation"
+  import {navigate} from "@app/modal"
   import type {Readable} from "svelte/store"
   import {debounce} from "throttle-debounce"
   import cx from "classnames"
@@ -341,7 +341,7 @@
 
   const scrollToBottom = () => {
     if (!isNaN(at)) {
-      goto($page.url.pathname, {replaceState: true})
+      navigate($page.url.pathname, {replaceState: true})
     } else {
       element?.scrollTo({top: 0, behavior: "smooth"})
     }

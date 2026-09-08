@@ -43,8 +43,7 @@ const openMessageMenu = (page: Page, text: string) => messageActions(page, text)
 // left corner of the viewport is outside it.
 const dismissMenu = (page: Page) => page.mouse.move(0, 0)
 
-// The room's page bar carries a back arrow, a search button and the detail button, in that order.
-// The back arrow is display:none at this viewport, so a role query sees the other two.
+// The room's page bar carries a search button and the detail button, in that order.
 const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
 
 const openRoomDetail = (page: Page) => pageBar(page).getByRole("button").last().click()

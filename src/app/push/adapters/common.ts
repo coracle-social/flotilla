@@ -7,7 +7,7 @@ import {
   type Token,
 } from "@capacitor/push-notifications"
 import type {PluginListenerHandle} from "@capacitor/core"
-import {goto} from "$app/navigation"
+import {navigate} from "@app/modal"
 import {assoc, call, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
 import {LOCAL_RELAY_URL} from "@welshman/net"
 import type {RepositoryUpdate} from "@welshman/net"
@@ -140,9 +140,9 @@ export const onPushNotificationAction = async (action: ActionPerformed) => {
   const target = event?.kind === WRAP ? await loadNotificationRumor(event) : event
   const path = target && makeEventPath(target, [relay])
 
-  // Kinds we have no route for get a coracle.social permalink, which goto refuses
+  // Kinds we have no route for get a coracle.social permalink, which navigate refuses
   if (path && !path.includes("://")) {
-    goto(path)
+    navigate(path)
   } else if (event?.kind === WRAP) {
     goToChat()
   } else {

@@ -1,14 +1,12 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {page} from "$app/stores"
-  import {goto} from "$app/navigation"
   import {displayRelayUrl} from "@welshman/util"
   import ArrowLeft from "@assets/icons/arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
   import {decodeRelay} from "@app/relays"
-  import {makeSpacePath} from "@app/routes"
 
   interface Props {
     back?: () => unknown
@@ -18,16 +16,18 @@
     [key: string]: any
   }
 
-  const {back = () => goto(makeSpacePath(url)), leading, title, action, ...props}: Props = $props()
+  const {back, leading, title, action, ...props}: Props = $props()
 
   const url = decodeRelay($page.params.relay!)
 </script>
 
 <PageBar {...props}>
   <div class="flex">
-    <Button onclick={back} class="place-self-start pr-3 md:hidden">
-      <Icon icon={ArrowLeft} size={7} />
-    </Button>
+    {#if back}
+      <Button onclick={back} aria-label="Go back" class="place-self-start pr-3 md:hidden">
+        <Icon icon={ArrowLeft} size={7} />
+      </Button>
+    {/if}
     <div class="flex grow items-center justify-between gap-4">
       <div class="flex min-w-0 flex-col">
         <div class="flex min-w-0 items-start gap-2">

@@ -1,6 +1,5 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {goto} from "$app/navigation"
   import type {Maybe} from "@welshman/lib"
   import {MembershipStatus, publish} from "@welshman/app"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -16,7 +15,7 @@
   import {joinRoom, leaveRoom} from "@app/access"
   import {deriveUserIsRoomAdmin, deriveUserRoomMembershipStatus} from "@app/rooms"
   import {makeSpacePath} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {navigate, pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -63,7 +62,7 @@
           pushToast({theme: "error", message})
         } else {
           await $roomLists.removeRoom(h, url).then(publish)
-          goto(makeSpacePath(url))
+          navigate(makeSpacePath(url))
         }
       },
     })

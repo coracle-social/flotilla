@@ -28,7 +28,7 @@
 
   const openMenu = () => {
     if (mobile) {
-      pushModal(SpaceMenuMobile, {url})
+      pushModal(SpaceMenuMobile, {url}, {nested: true})
     } else {
       showMenu = true
     }

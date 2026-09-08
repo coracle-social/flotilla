@@ -1,11 +1,10 @@
 <script lang="ts">
-  import {goto} from "$app/navigation"
   import {publish} from "@welshman/app"
   import RelayForm, {type RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import {roomLists, user} from "@app/core"
-  import {pushModal} from "@app/modal"
+  import {navigate, pushModal} from "@app/modal"
   import {makeSpacePath} from "@app/routes"
   import {HOSTING_RELAY_DOMAIN} from "@app/env"
   import {
@@ -56,7 +55,7 @@
 
     const tenant = await getTenant($user.pubkey)
 
-    await goto(makeSpacePath(url, "admin"), {replaceState: true})
+    await navigate(makeSpacePath(url, "admin"), {replaceState: true})
 
     if (values.plan_id !== "free" && !autopayConfigured(tenant)) {
       const invoice = selectPayableInvoice(await listTenantInvoices($user.pubkey))
