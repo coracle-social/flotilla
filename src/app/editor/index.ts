@@ -31,7 +31,7 @@ import ProfileSuggestion from "@app/editor/ProfileSuggestion.svelte"
 import {RoomReferenceExtension} from "@app/editor/RoomReferenceExtension"
 import RoomSuggestion from "@app/editor/RoomSuggestion.svelte"
 import {NativeClipboardPasteExtension} from "@app/editor/clipboard"
-import {UPLOAD_MIME_TYPES, compressFileForUpload, uploadFile} from "@app/uploads"
+import {compressFileForUpload, makeImetaTag, uploadFile} from "@app/uploads"
 import {userSpaceUrls} from "@app/rooms"
 import {PLATFORM_RELAYS} from "@app/env"
 import {pushToast} from "@app/toast"
@@ -132,6 +132,39 @@ export const makeEditor = async ({
     }
   }
 
+  // A file the editor has no node for is uploaded here instead, so its imeta has to join what
+  // the nostr extension collects off the document, and it has to hold `uploading` open itself.
+  const attachments: {url: string; tag: string[]}[] = []
+
+  let attaching = 0
+
+  const setUploading = () =>
+    uploading?.set(
+      attaching > 0 ||
+        ed.storage.fileUpload.uploader.getFiles().some((attrs: FileAttributes) => attrs.uploading),
+    )
+
+  const attachFile = async (editor: Editor, file: File) => {
+    attaching += 1
+    uploading?.set(true)
+
+    const {error, result} = await uploadFile(file, {url, encrypt: encryptFiles})
+
+    attaching -= 1
+    setUploading()
+
+    if (result) {
+      attachments.push({url: result.url, tag: makeImetaTag(file, result)})
+      editor
+        .chain()
+        .focus()
+        .insertContent({type: "text", text: result.url + " "})
+        .run()
+    } else {
+      pushToast({theme: "error", message: error})
+    }
+  }
+
   const ed = new Editor({
     content: typeof content === "string" ? escapeHtml(content) : content,
     editorProps,
@@ -154,36 +187,47 @@ export const makeEditor = async ({
           },
           fileUpload: {
             config: {
-              allowedMimeTypes: UPLOAD_MIME_TYPES,
+              allowedMimeTypes: ["*/*"],
               upload: async (attrs: FileAttributes) =>
                 uploadFile(await compressFileForUpload(attrs.file), {url, encrypt: encryptFiles}),
               onDrop: () => uploading?.set(true),
-              onComplete: () => uploading?.set(false),
+              onComplete: () => setUploading(),
               onUploadError(currentEditor, task) {
                 currentEditor.commands.removeFailedUploads()
                 pushToast({theme: "error", message: task.error})
-                uploading?.set(false)
+                setUploading()
               },
             },
             extend: {
               // The picker, a drop and a paste all reach the uploader through addFile, which
-              // refuses a type that isn't allowed above by returning false and saying nothing.
-              // Say it, or choosing the wrong file looks like the app simply ignored the click.
+              // only knows how to make an image or a video node. Everything else is uploaded on
+              // its own, so what you can attach is the server's call rather than a list here.
               onCreate() {
                 const {uploader} = this.storage
                 const addFile = uploader.addFile.bind(uploader)
 
                 uploader.addFile = (file: File, pos: number) => {
-                  const added = addFile(file, pos)
-
-                  if (!added) {
-                    pushToast({
-                      theme: "error",
-                      message: `${file.name} is not a type you can attach.`,
-                    })
+                  if (file.type.match(/^(image|video)\//)) {
+                    return addFile(file, pos)
                   }
 
-                  return added
+                  attachFile(this.editor, file)
+
+                  return true
+                }
+
+                // Paste filters by mime type before it ever reaches addFile.
+                uploader.handlePaste = (event: ClipboardEvent) => {
+                  const files = Array.from(event.clipboardData?.items || [])
+                    .filter(item => item.kind === "file")
+                    .map(item => item.getAsFile())
+                    .filter(Boolean) as File[]
+
+                  for (const file of files) {
+                    uploader.addFile(file, uploader.view.state.selection.from + 1)
+                  }
+
+                  return files.length > 0
                 }
               },
             },
@@ -267,6 +311,19 @@ export const makeEditor = async ({
   // await in this function inside a callback, below the constructor.
   empty?.set(isEmpty(ed))
   text?.set(ed.getText({blockSeparator: "\n"}))
+
+  // Deleting the url an attachment was inserted as is how you remove it, since there is no node
+  // to delete.
+  const getEditorTags = ed.storage.nostr.getEditorTags
+
+  ed.storage.nostr.getEditorTags = (...args: unknown[]) => {
+    const content = ed.getText({blockSeparator: "\n"})
+
+    return [
+      ...getEditorTags(...args),
+      ...attachments.filter(({url}) => content.includes(url)).map(({tag}) => tag),
+    ]
+  }
 
   return ed
 }

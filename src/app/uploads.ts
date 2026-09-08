@@ -2,7 +2,6 @@ import type {Maybe} from "@welshman/lib"
 import {first, normalizeUrl, parseJson, sha256, simpleCache} from "@welshman/lib"
 import {canUploadBlob, encryptFile, makeBlossomAuthEvent, uploadBlob} from "@welshman/util"
 import {Nip01Signer} from "@welshman/signer"
-import type {UploadTask} from "@welshman/editor"
 import {compressFile} from "@lib/html"
 import {app, blossomServerLists, relays} from "@app/core"
 import {DEFAULT_BLOSSOM_SERVERS} from "@app/env"
@@ -62,22 +61,6 @@ export const getBlossomServer = async (options: GetBlossomServerOptions = {}) =>
   return first(DEFAULT_BLOSSOM_SERVERS)!
 }
 
-// The editor's default list leaves out the formats an iPhone camera actually produces, so
-// anything shared from Photos would be rejected without a word. Heic gets re-encoded by the
-// compressor on its way to a blossom server; quicktime is uploaded as-is.
-export const UPLOAD_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-  "video/mp4",
-  "video/mpeg",
-  "video/webm",
-  "video/quicktime",
-]
-
 export type CompressFileOptions = {
   maxWidth?: number
   maxHeight?: number
@@ -94,9 +77,38 @@ export type UploadFileOptions = {
   encrypt?: boolean
 }
 
+export type UploadResult = {
+  url: string
+  sha256: string
+  tags: string[][]
+}
+
 export type UploadFileResult = {
   error?: string
-  result?: UploadTask
+  result?: UploadResult
+}
+
+// Mirrors the imeta the editor builds for the media it holds as a node, for the files it
+// doesn't.
+export const makeImetaTag = (file: File, result: UploadResult) => {
+  const meta: Record<string, string> = {
+    url: result.url,
+    x: result.sha256,
+    ox: result.sha256,
+    m: file.type,
+    size: String(file.size),
+  }
+
+  for (const [k, v] of result.tags) {
+    meta[k] = v
+  }
+
+  return [
+    "imeta",
+    ...Object.entries(meta)
+      .map(entry => entry.join(" "))
+      .sort(),
+  ]
 }
 
 export const uploadFile = async (file: File, options: UploadFileOptions = {}) => {
@@ -119,12 +131,31 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
       })
     }
 
-    const ext = "." + type.split("/")[1]
+    // A subtype worth putting on a url is a plain word. Anything else (an office document, a
+    // file the platform gave no type at all) keeps whatever the server named it.
+    const [, subtype = ""] = type.split("/")
+    const ext = /^[a-z0-9]+$/.test(subtype) ? "." + subtype : ""
     const server = await getBlossomServer(options)
     const hashes = [await sha256(await file.arrayBuffer())]
     const $signer = app.get().user?.signer || Nip01Signer.ephemeral()
     const authTemplate = makeBlossomAuthEvent({action: "upload", server, hashes})
     const authEvent = await $signer.sign(authTemplate)
+
+    // What a server takes is its own business, so ask before spending the upload. A 404 or a
+    // 405 is a server that doesn't implement BUD-06 rather than one saying no.
+    const check = await canUploadBlob(server, {
+      authEvent,
+      headers: {
+        "X-Content-Type": file.type,
+        "X-Content-Length": String(file.size),
+        "X-SHA-256": hashes[0],
+      },
+    })
+
+    if (![200, 404, 405].includes(check.status)) {
+      return {error: check.headers.get("X-Reason") || `${name} was refused (HTTP ${check.status})`}
+    }
+
     const res = await uploadBlob(server, file, {authEvent})
     const text = await res.text()
 

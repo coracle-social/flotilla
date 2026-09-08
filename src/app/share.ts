@@ -8,7 +8,6 @@ import {app, relays} from "@app/core"
 import {navigate, pushModal} from "@app/modal"
 import {makeSpaceChatPath} from "@app/routes"
 import {pushToast} from "@app/toast"
-import {UPLOAD_MIME_TYPES} from "@app/uploads"
 import ShareDialog from "@app/components/Share.svelte"
 import ShareEvent from "@app/components/ShareEvent.svelte"
 
@@ -64,10 +63,6 @@ export const shareFromNative = async ({
   if (text) {
     shareText(text)
   } else if (path) {
-    if (!UPLOAD_MIME_TYPES.includes(mimeType)) {
-      return pushToast({theme: "error", message: "Flotilla can't share that type of file."})
-    }
-
     try {
       const response = await fetch(Capacitor.convertFileSrc(path))
 
