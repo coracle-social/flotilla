@@ -327,7 +327,7 @@ test("US-105 land on the home page", async ({seed, as}) => {
 
   await expect(platform).toHaveURL(pattern(spacePath(space.url)))
 
-  // With none configured, /home is a welcome screen with two ways out
+  // With none configured, /home is the dashboard, whose empty inbox offers two ways out
   const page = await as(users.alice, "/home")
 
   const addSpace = page.getByRole("link", {name: "Add a space"})
@@ -356,6 +356,39 @@ test("US-105 land on the home page", async ({seed, as}) => {
   await homeNavItem(phone).click()
 
   await expect(phone).toHaveURL(/\/home$/)
+})
+
+test("US-116 read the home dashboard", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.message(user.bob, "general", "the server is on fire", at(1, HOUR))
+  })
+
+  const space = scenario.space("space")
+  const page = await as(users.alice, "/home")
+
+  // Each conversation is one link, headed by its room and carrying the latest message underneath
+  const conversation = page.getByRole("link").filter({hasText: "the server is on fire"})
+
+  await expect(conversation).toBeVisible()
+  await expect(conversation).toContainText("General")
+  await expect(unreadDot(conversation)).toBeVisible()
+
+  // Relay health checks had no mount point at all before the dashboard
+  await expect(page.getByText("Health checks")).toBeVisible()
+
+  await page.getByRole("button", {name: "Mark all read"}).click()
+
+  await expect(unreadDot(conversation)).toHaveCount(0)
+
+  // A conversation stays in the inbox once it's read - it's a list of where things are, not a queue
+  await conversation.click()
+
+  await expect(page).toHaveURL(pattern(roomPath(space.url, "general")))
 })
 
 test("US-106 share text into the app", async ({seed, as}) => {

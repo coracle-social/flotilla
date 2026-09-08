@@ -207,9 +207,22 @@ const getContentTarget = (event: TrustedEvent) => {
   }
 }
 
+// Where an activity happened, alongside the event itself. The map is built from room lists, chats
+// and content targets, all of which know what they are - a consumer handed only a path would have
+// to parse it back apart. `contentKind` is what an activity is filed under when it belongs to a
+// content item rather than to a conversation, and a comment files under its subject's kind.
+export type Activity = {
+  path: string
+  event: TrustedEvent
+  contentKind?: number
+  url?: string
+  h?: string
+  pubkeys?: string[]
+}
+
 // Assumes `events` is sorted descending, so the first event seen per content item wins.
-const latestEventByContentPath = (url: string, events: TrustedEvent[]) => {
-  const byPath = new Map<string, TrustedEvent>()
+const latestContentActivity = (url: string, events: TrustedEvent[]) => {
+  const byPath = new Map<string, Activity>()
 
   for (const event of events) {
     const target = getContentTarget(event)
@@ -219,7 +232,7 @@ const latestEventByContentPath = (url: string, events: TrustedEvent[]) => {
     const path = makeContentPath(url, target.kind, target.idOrAddress)
 
     if (path && !byPath.has(path)) {
-      byPath.set(path, event)
+      byPath.set(path, {path, url, contentKind: target.kind, event})
     }
   }
 
@@ -245,11 +258,13 @@ export const latestActivityByPath = derived(
     ),
   ),
   ([$app, $chatsById, $relays, $roomLists, eventsByIdByUrl, $settings]) => {
-    const activity = new Map<string, TrustedEvent>()
+    const activity = new Map<string, Activity>()
 
     for (const {pubkeys, messages} of $chatsById.values()) {
       if (messages[0]) {
-        activity.set(makeChatPath(pubkeys), messages[0])
+        const path = makeChatPath(pubkeys)
+
+        activity.set(path, {path, pubkeys, event: messages[0]})
       }
     }
 
@@ -260,22 +275,26 @@ export const latestActivityByPath = derived(
       const events = sortEventsDesc((eventsByIdByUrl.get(url) || new Map()).values())
 
       if ($relays.get(url)?.hasNip(29)) {
-        for (const [h, [latestEvent]] of groupBy(e => tagValue(tagSpec("h"), e.tags), events)) {
+        for (const [h, [event]] of groupBy(e => tagValue(tagSpec("h"), e.tags), events)) {
           // A muted room is left out entirely, so it can't light up its own badge or the space's
           if (h && !getIsMuted($settings, url, h)) {
-            activity.set(makeRoomPath(url, h), latestEvent)
+            const path = makeRoomPath(url, h)
+
+            activity.set(path, {path, url, h, event})
           }
         }
       } else {
-        const latestEvent = first(events)
+        const event = first(events)
 
-        if (latestEvent) {
-          activity.set(makeSpaceChatPath(url), latestEvent)
+        if (event) {
+          const path = makeSpaceChatPath(url)
+
+          activity.set(path, {path, url, event})
         }
       }
 
-      for (const [path, latestEvent] of latestEventByContentPath(url, events)) {
-        activity.set(path, latestEvent)
+      for (const [path, contentActivity] of latestContentActivity(url, events)) {
+        activity.set(path, contentActivity)
       }
     }
 
@@ -306,12 +325,12 @@ export const allNotifications = derived(
 
     const paths = new Set<string>()
 
-    for (const [path, latestEvent] of $latestActivityByPath) {
-      if (hasNotification(path, latestEvent)) {
+    for (const [path, {event}] of $latestActivityByPath) {
+      if (hasNotification(path, event)) {
         paths.add(path)
 
         for (const branchPath of remove(path, getPaths(path.split("?")[0]))) {
-          if (hasNotification(branchPath, latestEvent)) {
+          if (hasNotification(branchPath, event)) {
             paths.add(branchPath)
           }
         }
@@ -334,7 +353,7 @@ export const notifications = derived(
     ),
 )
 
-const countActivity = (activity: Map<string, TrustedEvent>, paths: Set<string>) =>
+const countActivity = (activity: Map<string, Activity>, paths: Set<string>) =>
   [...activity.keys()].filter(path => paths.has(path)).length
 
 export const notificationCount = derived(

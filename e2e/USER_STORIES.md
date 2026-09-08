@@ -1551,10 +1551,25 @@ never staring at a blank screen.
 Acceptance:
 
 - On a build with a configured platform space, `/home` opens that space.
-- With none configured, it shows a welcome screen offering "Add a space" and
-  "Start a conversation".
+- With none configured, it shows the dashboard, whose empty inbox offers "Add a
+  space" and "Start a conversation".
 - Those options navigate to the spaces directory and the chat view respectively.
 - On a phone, the bottom bar carries a link home from wherever she is.
+
+### US-116 — Read the home dashboard
+
+As alice, I want the home page to tell me what happened while I was away, so
+that I don't have to walk every space to find out.
+
+Acceptance:
+
+- The inbox lists each room and conversation with unread activity, naming the
+  room and space and showing the latest message, newest first.
+- A conversation with unread activity carries an unread dot, and "Mark all read"
+  clears every dot on the page.
+- Selecting a conversation opens it, and it stays in the inbox once read.
+- Relay health checks are listed alongside the inbox, with the recommendation
+  each one applies.
 
 ### US-106 — Share text into the app
 

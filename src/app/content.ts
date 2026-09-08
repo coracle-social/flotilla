@@ -81,6 +81,22 @@ if (ENABLE_ZAPS) {
 
 export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD, CLASSIFIED, POLL, PINBOARD, LONG_FORM]
 
+const CONTENT_NOUNS = new Map([
+  [ZAP_GOAL, ["goal", "goals"]],
+  [EVENT_TIME, ["event", "events"]],
+  [THREAD, ["thread", "threads"]],
+  [CLASSIFIED, ["classified", "classifieds"]],
+  [POLL, ["poll", "polls"]],
+  [PINBOARD, ["pinboard", "pinboards"]],
+  [LONG_FORM, ["article", "articles"]],
+])
+
+export const displayContentCount = (kind: number, count: number) => {
+  const [singular, plural] = CONTENT_NOUNS.get(kind) ?? ["item", "items"]
+
+  return `${count} ${count === 1 ? singular : plural}`
+}
+
 export const DM_KINDS = [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]
 
 export const displayReaction = (content: string) => {
