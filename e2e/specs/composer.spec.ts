@@ -95,6 +95,11 @@ const composer = (page: Page) => page.locator(".chat-editor [contenteditable=tru
 // The send button carries the shortcut it advertises, which differs by platform.
 const sendButton = (page: Page) => page.locator("button[data-tip$='enter to send']")
 
+// The editor is where the composer says whether it is ready. The send button is not there to
+// ask while the composer is empty, since a dictation button stands in its place.
+const composerEnabled = (page: Page) =>
+  expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "false")
+
 const suggestions = (page: Page) => page.locator(".tiptap-suggestions__item")
 
 const timeline = (page: Page) => page.locator(".room__content")
@@ -316,11 +321,11 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)
 
   // The same thing in a conversation. Its composer stays disabled until the recipient's messaging
-  // relays have been read, which is what waiting on the send button waits out.
+  // relays have been read, which is what waiting on the composer waits out.
   await alice.goto(chatPath(users.bob.pubkey))
   await bob.goto(chatPath(users.alice.pubkey))
 
-  await expect(sendButton(alice)).toBeEnabled()
+  await composerEnabled(alice)
 
   await chooseFile(alice, chatUploadButton(alice), gifFile("selfie.gif"))
 
@@ -379,7 +384,7 @@ test("US-058 drafts survive navigating away", async ({seed, as}) => {
   const editor = composer(page)
   const rooms = page.locator(".secondary-nav")
 
-  await expect(sendButton(page)).toBeEnabled()
+  await composerEnabled(page)
 
   await editor.click()
   await editor.pressSequentially("still thinking about this")

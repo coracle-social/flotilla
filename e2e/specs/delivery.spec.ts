@@ -48,6 +48,12 @@ const composer = (page: Page) => page.locator(".chat-editor [contenteditable=tru
 // The send button carries the shortcut it advertises, which differs by platform.
 const sendButton = (page: Page) => page.locator("button[data-tip$='enter to send']")
 
+// The editor is where the composer says whether it is ready. The send button is not there to
+// ask while the composer is empty, since a dictation button stands in its place. Only the
+// conversation composer has a disabled state; a room's is usable as soon as it renders.
+const composerEnabled = (page: Page) =>
+  expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "false")
+
 const timeline = (page: Page) => page.locator(".room__content")
 
 const message = (page: Page, text: string) => page.locator(".room__item").filter({hasText: text})
@@ -76,10 +82,10 @@ const modal = (page: Page, title: string) =>
 
 const editorOf = (scope: Locator) => scope.locator(".note-editor [contenteditable=true]")
 
-// The composer stays disabled until every recipient's messaging relays have been read, so waiting
-// on the send button is part of sending rather than a wait for a wait's sake.
+// Every caller of this sends to a room, whose composer gates on nothing, so the wait is for the
+// room to have rendered one.
 const send = async (page: Page, content: string) => {
-  await expect(sendButton(page)).toBeEnabled()
+  await expect(composer(page)).toBeVisible()
   await composer(page).click()
   await composer(page).pressSequentially(content)
   await composer(page).press("Enter")
@@ -561,7 +567,7 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
   await mockBlossom(alice.context(), {server: BLOSSOM_ORIGIN})
   await mockBlossom(bob.context(), {server: BLOSSOM_ORIGIN})
 
-  await expect(sendButton(alice)).toBeEnabled()
+  await composerEnabled(alice)
 
   await composer(alice).click()
   await composer(alice).pressSequentially("here is the harbour")
@@ -590,7 +596,7 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
   // The same message to someone one of whose relays refuses it: each part says so for itself.
   await alice.goto(chatPath(users.carol.pubkey))
 
-  await expect(sendButton(alice)).toBeEnabled()
+  await composerEnabled(alice)
 
   await composer(alice).click()
   await composer(alice).pressSequentially("and one for you")
