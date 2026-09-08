@@ -15,7 +15,7 @@
   import PrimaryNavSpaces from "@app/components/PrimaryNavSpaces.svelte"
   import Search from "@app/components/Search.svelte"
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
-  import {PLATFORM_RELAYS} from "@app/env"
+  import {PLATFORM_LOGO, PLATFORM_RELAYS} from "@app/env"
   import {modal, popModal, pushDrawer, pushModal} from "@app/modal"
   import {notifications} from "@app/notifications"
   import {userSpaceUrls} from "@app/rooms"
@@ -100,6 +100,9 @@
       {#if PLATFORM_RELAYS.length === 1}
         <PrimaryNavItemSpace url={PLATFORM_RELAYS[0]} />
       {:else}
+        <PrimaryNavItem title="Home" href="/home">
+          <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={10} />
+        </PrimaryNavItem>
         <PrimaryNavItem onclick={showSearch}>
           <ImageIcon alt="Search" src={Magnifier} size={8} />
         </PrimaryNavItem>

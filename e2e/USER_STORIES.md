@@ -1537,6 +1537,7 @@ Acceptance:
 - With none configured, it shows a welcome screen offering "Add a space" and
   "Start a conversation".
 - Those options navigate to the spaces directory and the chat view respectively.
+- On a phone, the bottom bar carries a link home from wherever she is.
 
 ### US-106 — Share text into the app
 
