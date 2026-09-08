@@ -13,6 +13,12 @@
   import {HOSTING_ENABLED} from "@app/hosting"
   import {PLATFORM_RELAYS} from "@app/env"
 
+  const today = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  })
+
   // A single-space build has no dashboard to show - everything on it is scoped to the one space.
   onMount(() => {
     if (PLATFORM_RELAYS.length > 0) {
@@ -23,21 +29,26 @@
 
 <Page>
   <PageBar>
-    <div class="flex items-center gap-2">
-      <Icon icon={Home} size={6} />
-      <strong>Home</strong>
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <Icon icon={Home} size={6} />
+        <strong>Home</strong>
+      </div>
+      <span class="hidden text-sm opacity-75 sm:inline">{today}</span>
     </div>
   </PageBar>
-  <PageContent class="flex flex-col gap-4 p-2 sm:p-4 lg:flex-row lg:items-start">
-    <div class="flex min-w-0 flex-col gap-4 lg:flex-[2]">
-      <HomeInbox />
-      <HomeNetwork />
-    </div>
-    <div class="flex min-w-0 flex-col gap-4 lg:flex-1">
-      <HomeHealthChecks />
-      {#if HOSTING_ENABLED}
-        <HomeHosting />
-      {/if}
+  <PageContent noPad class="flex flex-col">
+    <div class="flex min-w-0 flex-col lg:flex-row lg:items-stretch">
+      <div class="flex min-w-0 flex-col bg-surface lg:flex-[2] lg:border-r lg:border-line">
+        <HomeInbox />
+        <HomeNetwork />
+      </div>
+      <div class="flex min-w-0 flex-col border-t border-line lg:w-80 lg:shrink-0 lg:border-t-0">
+        <HomeHealthChecks />
+        {#if HOSTING_ENABLED}
+          <HomeHosting />
+        {/if}
+      </div>
     </div>
   </PageContent>
 </Page>

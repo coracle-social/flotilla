@@ -5,7 +5,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
+  import HomeSection from "@app/components/HomeSection.svelte"
   import HomeInboxItem from "@app/components/HomeInboxItem.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {displayContentCount} from "@app/content"
   import {inboxConversations, inboxSpaceContent} from "@app/inbox"
@@ -27,18 +29,14 @@
   const startChat = () => navigate("/chat")
 </script>
 
-<div class="card flex flex-col gap-3">
-  <div class="flex items-center justify-between gap-3">
-    <strong class="flex items-center gap-2 text-lg">
-      <Icon icon={Inbox} />
-      Inbox
-    </strong>
+<HomeSection title="Inbox" icon={Inbox}>
+  {#snippet action()}
     {#if hasUnread}
       <Button class="button button-neutral button-xs" onclick={markAllRead}>Mark all read</Button>
     {/if}
-  </div>
-  {#if conversations.length === 0}
-    <div class="flex flex-col items-center gap-3 py-8 text-center">
+  {/snippet}
+  {#if conversations.length === 0 && $inboxSpaceContent.length === 0}
+    <div class="flex flex-col items-center gap-3 px-4 pb-8 text-center">
       <p class="font-medium">Nothing in your inbox yet</p>
       <p class="max-w-md text-sm opacity-75">
         Rooms and spaces you belong to report their activity here — messages, threads, classifieds,
@@ -56,16 +54,19 @@
       </div>
     </div>
   {:else}
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col divide-y divide-line border-t border-line">
       {#each conversations as conversation (conversation.path)}
         <HomeInboxItem {conversation} />
       {/each}
+      {#each $inboxSpaceContent as { url, countsByKind } (url)}
+        <Link
+          href={makeSpacePath(url)}
+          class="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-more">
+          <RelayIcon {url} size={6} class="shrink-0" />
+          <strong class="truncate"><RelayName {url} /></strong>
+          <span class="truncate opacity-75">{displayContent(countsByKind)}</span>
+        </Link>
+      {/each}
     </div>
   {/if}
-  {#each $inboxSpaceContent as { url, countsByKind } (url)}
-    <Link href={makeSpacePath(url)} class="flex flex-wrap items-baseline gap-x-2 text-sm">
-      <strong><RelayName {url} /></strong>
-      <span class="opacity-75">{displayContent(countsByKind)}</span>
-    </Link>
-  {/each}
-</div>
+</HomeSection>

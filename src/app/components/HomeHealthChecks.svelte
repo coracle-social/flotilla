@@ -5,6 +5,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
+  import HomeSection from "@app/components/HomeSection.svelte"
   import HealthCheckItem from "@app/components/HealthCheckItem.svelte"
   import {healthChecks} from "@app/healthChecks"
 
@@ -17,30 +18,30 @@
   }
 </script>
 
-<div class="card flex flex-col gap-3">
-  <div class="flex items-center justify-between gap-3">
-    <strong class="flex items-center gap-2 text-lg">
-      <Icon icon={Stethoscope} />
-      Health checks
-    </strong>
+<HomeSection title="Health checks" icon={Stethoscope}>
+  {#snippet action()}
     {#if $pending.length > 0}
       <Badge variant="warning">{$pending.length} open</Badge>
     {/if}
-  </div>
+  {/snippet}
   {#if $pending.length === 0}
-    <p class="flex items-center gap-2 text-sm opacity-75">
+    <p class="flex items-center gap-2 px-4 pb-4 text-sm opacity-75">
       <Icon icon={CheckCircle} size={4} />
       Your connection to the network looks healthy.
     </p>
   {:else}
-    {#each $pending as healthCheck (healthCheck.title)}
-      <HealthCheckItem {healthCheck} />
-    {/each}
-    {#if $pending.length > 1}
-      <Button class="button button-primary button-sm" onclick={applyAll}>
-        <Icon icon={Stars} size={4} />
-        Apply all recommendations
-      </Button>
-    {/if}
+    <div class="flex flex-col divide-y divide-line border-t border-line">
+      {#each $pending as healthCheck (healthCheck.title)}
+        <HealthCheckItem {healthCheck} />
+      {/each}
+      {#if $pending.length > 1}
+        <div class="flex justify-center p-3">
+          <Button class="button button-primary button-sm" onclick={applyAll}>
+            <Icon icon={Stars} size={4} />
+            Apply all recommendations
+          </Button>
+        </div>
+      {/if}
+    </div>
   {/if}
-</div>
+</HomeSection>

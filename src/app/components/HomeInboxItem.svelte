@@ -1,10 +1,9 @@
 <script lang="ts">
   import {formatTimestamp, remove, uniq} from "@welshman/lib"
-  import ChatRoundDots from "@assets/icons/chat-round-dots.svg?dataurl"
-  import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
@@ -25,23 +24,22 @@
   const others = $derived(uniq(remove($user.pubkey, conversation.pubkeys ?? [])))
 </script>
 
-<Link href={path} class="card card-sm card-interactive flex flex-col gap-2">
-  <div class="flex min-w-0 items-center gap-2 text-sm">
-    {#if url}
+<Link href={path} class="flex items-center gap-3 px-4 py-3 hover:bg-surface-more">
+  {#if url}
+    <RelayIcon {url} size={9} class="shrink-0" />
+  {:else}
+    <ProfileCircle pubkey={others[0] || $user.pubkey} size={9} class="shrink-0" />
+  {/if}
+  <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+    <div class="flex min-w-0 items-baseline gap-2 text-sm">
       <strong class="truncate">
-        {#if h}
-          <RoomName {url} {h} />
-        {:else}
-          Chat
-        {/if}
-      </strong>
-      <span class="truncate opacity-50">
-        <RelayName {url} />
-      </span>
-    {:else}
-      <Icon icon={ChatRoundDots} size={4} class="shrink-0 opacity-50" />
-      <strong class="truncate">
-        {#if others.length === 0}
+        {#if url}
+          {#if h}
+            <RoomName {url} {h} />
+          {:else}
+            Chat
+          {/if}
+        {:else if others.length === 0}
           Note to self
         {:else}
           <ProfileName pubkey={others[0]} />
@@ -50,24 +48,29 @@
           {/if}
         {/if}
       </strong>
-      <span class="truncate opacity-50">direct message</span>
-    {/if}
-    <span class="ml-auto flex shrink-0 items-center gap-2 text-xs opacity-50">
-      {formatTimestamp(event.created_at)}
-      <UnreadDot {path} />
-    </span>
-  </div>
-  <div class="flex min-w-0 items-center gap-2">
-    <ProfileCircle pubkey={event.pubkey} size={5} />
-    <span class="shrink-0 text-xs opacity-50">
-      {#if event.pubkey === $user.pubkey}
-        You:
-      {:else}
-        <ProfileName pubkey={event.pubkey} {url} />:
-      {/if}
-    </span>
-    <div class="min-w-0 flex-1">
-      <NoteContentMinimal {event} {url} singleLine />
+      <span class="truncate opacity-50">
+        {#if url}
+          <RelayName {url} />
+        {:else}
+          direct message
+        {/if}
+      </span>
     </div>
+    <div class="flex min-w-0 items-center gap-1 text-sm opacity-75">
+      <span class="shrink-0">
+        {#if event.pubkey === $user.pubkey}
+          You:
+        {:else}
+          <ProfileName pubkey={event.pubkey} {url} />:
+        {/if}
+      </span>
+      <div class="min-w-0 flex-1">
+        <NoteContentMinimal {event} {url} singleLine />
+      </div>
+    </div>
+  </div>
+  <div class="flex shrink-0 items-center gap-2 text-xs opacity-50">
+    {formatTimestamp(event.created_at)}
+    <UnreadDot {path} />
   </div>
 </Link>

@@ -19,9 +19,16 @@
     children?: Snippet
     context: FeedContext
     url?: string
+    class?: string
   }
 
-  const {url, event, children, context}: Props = $props()
+  const {
+    url,
+    event,
+    children,
+    context,
+    class: className = "card card-interactive",
+  }: Props = $props()
 
   const getRelays = () => (url ? [url] : $router.resolver.relays([seen(event)]))
 
@@ -34,7 +41,7 @@
   const onEmoji = (emoji: NativeEmoji) => createReaction({content: emoji.unicode, tags: []})
 </script>
 
-<Cv tag={NoteCard} {event} {url} class="card card-interactive">
+<Cv tag={NoteCard} {event} {url} class={className}>
   <NoteContent {event} expandMode="inline" />
   <div class="flex w-full justify-between gap-2">
     <ReactionSummary

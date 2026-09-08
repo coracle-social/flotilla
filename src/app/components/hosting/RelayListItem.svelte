@@ -9,16 +9,17 @@
 
   type Props = {
     relay: HostedRelay
+    class?: string
   }
 
-  const {relay}: Props = $props()
+  const {relay, class: className = "card p-3 sm:p-4"}: Props = $props()
 
   const name = $derived(relay.info_name || relay.subdomain)
   const host = $derived(canonicalRelayHost(relay))
   const href = $derived(makeSpacePath(getHostedRelayUrl(relay), "admin"))
 </script>
 
-<div class="card flex flex-row items-center justify-between gap-3 p-3 sm:p-4">
+<div class="flex flex-row items-center justify-between gap-3 {className}">
   <ImageIcon size={8} alt="" class="rounded-xl" src={relay.info_icon || Server} />
   <div class="min-w-0 flex-1">
     <p class="truncate text-sm font-medium">{name}</p>

@@ -7,10 +7,10 @@
   import {Feeds} from "@welshman/app"
   import {Scope, feedFromFilter, makeIntersectionFeed, makeScopeFeed} from "@welshman/feeds"
   import Planet from "@assets/icons/planet.svg?dataurl"
-  import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import HomeSection from "@app/components/HomeSection.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {app, relayLists, user} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
@@ -60,18 +60,14 @@
   onMount(load)
 </script>
 
-<div class="card flex flex-col gap-3">
-  <strong class="flex items-center gap-2 text-lg">
-    <Icon icon={Planet} />
-    Network
-  </strong>
+<HomeSection title="Network" icon={Planet}>
   {#if events.length === 0}
     {#if loading}
-      <div class="flex justify-center py-8">
+      <div class="flex justify-center px-4 pb-8">
         <Spinner {loading}>Looking for notes from people you follow…</Spinner>
       </div>
     {:else}
-      <div class="flex flex-col items-center gap-3 py-8 text-center">
+      <div class="flex flex-col items-center gap-3 px-4 pb-8 text-center">
         <p class="font-medium">Follow a few people to fill this out</p>
         <p class="max-w-md text-sm opacity-75">
           Notes from the people you follow collect here. Spaces are a good place to find some.
@@ -80,11 +76,13 @@
       </div>
     {/if}
   {:else}
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col divide-y divide-line border-t border-line">
       {#each events.slice(0, limit) as event (event.id)}
-        <NoteItem {event} {context} />
+        <NoteItem {event} {context} class="cv px-4 py-3" />
       {/each}
     </div>
-    <Button class="button button-neutral button-sm" onclick={showMore}>Show more</Button>
+    <div class="flex justify-center border-t border-line p-3">
+      <Button class="button button-neutral button-sm" onclick={showMore}>Show more</Button>
+    </div>
   {/if}
-</div>
+</HomeSection>
