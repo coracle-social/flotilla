@@ -43,7 +43,10 @@
       {deleteReaction}
       {createReaction}
       reactionClass="tip-right">
-      <EmojiButton {onEmoji} class="button button-neutral button-xs h-[26px] rounded-2xl">
+      <EmojiButton
+        {onEmoji}
+        aria-label="Add a reaction"
+        class="button button-neutral button-xs rounded-full">
         <Icon icon={SmileCircle} size={4} />
       </EmojiButton>
     </ReactionSummary>

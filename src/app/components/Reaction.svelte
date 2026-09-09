@@ -14,15 +14,17 @@
 </script>
 
 {#if event.content === "+" || event.content === ""}
-  <Icon icon={Heart} />
+  <Icon icon={Heart} size={4} />
 {:else if event.content === "-"}
-  <Icon icon={ThumbsDown} />
+  <Icon icon={ThumbsDown} size={4} />
 {:else}
-  {#each parse(event) as parsed, i (i)}
-    {#if isEmoji(parsed)}
-      <ContentEmoji value={parsed.value} />
-    {:else}
-      {@html renderAsHtml(parsed)}
-    {/if}
-  {/each}
+  <span class="text-base leading-none">
+    {#each parse(event) as parsed, i (i)}
+      {#if isEmoji(parsed)}
+        <ContentEmoji value={parsed.value} />
+      {:else}
+        {@html renderAsHtml(parsed)}
+      {/if}
+    {/each}
+  </span>
 {/if}
