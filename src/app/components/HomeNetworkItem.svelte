@@ -2,6 +2,7 @@
   import {sortBy} from "@welshman/lib"
   import {COMMENT, NOTE} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
+  import Cv from "@lib/components/Cv.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
   import type {FeedContext} from "@app/feeds"
@@ -29,7 +30,7 @@
   )
 </script>
 
-<div class="cv card card-interactive flex flex-col gap-3">
+<Cv class="card card-interactive flex flex-col gap-3">
   <NoteItem {event} {context} class="" />
   {#if nodes.length > 0}
     <div class="border-line-less flex flex-col border-t">
@@ -38,4 +39,4 @@
       {/each}
     </div>
   {/if}
-</div>
+</Cv>

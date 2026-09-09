@@ -16,6 +16,8 @@
   import {followLists, relayLists, router, user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
 
+  const {class: className = ""}: {class?: string} = $props()
+
   // The hubs most of the user's follows publish to, which is the same set and the same limit
   // `syncFollowNetwork` reads their lists from.
   const RELAY_LIMIT = 8
@@ -77,7 +79,7 @@
   })
 </script>
 
-<HomeSection title="Network" icon={Planet}>
+<HomeSection title="Network" icon={Planet} class={className}>
   <div class="flex flex-col gap-3 px-4 pb-4" bind:this={element}>
     {#if isEmpty}
       <div class="flex flex-col items-center gap-3 pb-4 text-center">

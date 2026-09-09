@@ -7,12 +7,13 @@
     icon: string
     action?: Snippet
     children: Snippet
+    class?: string
   }
 
-  const {title, icon, action, children}: Props = $props()
+  const {title, icon, action, children, class: className = ""}: Props = $props()
 </script>
 
-<section class="flex min-w-0 flex-col border-b border-line last:border-b-0">
+<section class="flex min-w-0 flex-col border-b border-line {className}">
   <div class="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
     <h2 class="flex items-center gap-2 text-base font-bold tracking-wide uppercase">
       <Icon {icon} size={5} />

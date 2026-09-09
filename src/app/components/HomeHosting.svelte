@@ -13,6 +13,8 @@
   import {pushModal} from "@app/modal"
   import {HostingError, listTenantRelays, type HostedRelay} from "@app/hosting"
 
+  const {class: className = ""}: {class?: string} = $props()
+
   let relays = $state<HostedRelay[]>([])
   let loading = $state(true)
 
@@ -33,7 +35,7 @@
   })
 </script>
 
-<HomeSection title="Hosting" icon={Server}>
+<HomeSection title="Hosting" icon={Server} class={className}>
   {#snippet action()}
     {#if relays.length > 0}
       <Link href="/settings/hosting" class="button button-neutral button-xs">Manage</Link>

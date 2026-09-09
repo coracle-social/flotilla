@@ -103,6 +103,7 @@
    Nothing else should reach for it. */
 @utility cv {
   content-visibility: auto;
+  contain-intrinsic-size: auto 16rem;
 }
 /* Marks the event a link pointed at, so the reader can pick it out of the conversation once the
    jump lands. Brightness rather than a background so it works over any row's own surface. */
