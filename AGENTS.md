@@ -126,6 +126,7 @@ callbacks and hot paths.
 **CRITICAL Code Style Guidelines:**
 
 - **No `null`** - only use `undefined`
+- Never hard-code the app's name. The brand is a build-time `VITE_PLATFORM_*` variable, so user-facing copy interpolates `PLATFORM_NAME` from `@app/env`, and `PLATFORM_URL`, `PLATFORM_LOGO`, `PLATFORM_ABOUT` for the rest of it. Each is set by the deployment, so don't write a `"Flotilla"` fallback behind one either.
 - Svelte 5 runes (`$state`, `$derived`, `$effect`) only in UI components
 - TailwindCSS styling with css components customized by theme. See lib/components for examples.
 - Comments, naming, conditionals and single-use indirection are covered by the Cleanup Pass above.

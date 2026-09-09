@@ -12,6 +12,7 @@
   import {user} from "@app/core"
   import {pushModal} from "@app/modal"
   import {HostingError, listTenantRelays, type HostedRelay} from "@app/hosting"
+  import {PLATFORM_NAME} from "@app/env"
 
   const {class: className = ""}: {class?: string} = $props()
 
@@ -58,8 +59,8 @@
         {#if relays.length > 0}
           Spin up another hosted space — rooms, calendar and moderation included.
         {:else}
-          Don't wait for an invite. Flotilla Hosting sets up a space with rooms, calendar and
-          moderation in about a minute.
+          Don't wait for an invite. {PLATFORM_NAME} Hosting sets up a space with rooms, calendar and moderation
+          in about a minute.
         {/if}
       </p>
       <Button class="button button-primary button-sm" onclick={openCreate}>

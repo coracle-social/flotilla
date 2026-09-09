@@ -7,8 +7,6 @@ import {app, profiles, rooms} from "@app/core"
 import {PLATFORM_NAME} from "@app/env"
 import {decodeRelay} from "@app/relays"
 
-const FALLBACK_APP_NAME = "Flotilla"
-
 const staticTitles = new Map<string, string>([
   ["/", "Redirecting"],
   ["/home", "Home"],
@@ -108,9 +106,7 @@ export const makeTitle = (...parts: Array<string | undefined>) =>
   parts
     .map(part => part?.trim() || "")
     .filter(identity)
-    .join(" · ") ||
-  PLATFORM_NAME ||
-  FALLBACK_APP_NAME
+    .join(" · ") || PLATFORM_NAME
 
 export const getPageTitle = ({page, pubkey}: PageTitleContext) => {
   const routeId = page.route.id || ""
