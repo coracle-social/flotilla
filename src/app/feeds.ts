@@ -5,6 +5,7 @@ import {
   COMMENT,
   DELETE,
   EVENT_TIME,
+  NOTE,
   addressTags,
   compareEventsAsc,
   getAddress,
@@ -58,7 +59,17 @@ const getTargets = ({kind, tags}: TrustedEvent) =>
 const getKeys = (event: TrustedEvent) =>
   isReplaceableKind(event.kind) ? [event.id, getAddress(event)] : [event.id]
 
-export const makeFeedContext = ({relays}: {relays: string[] | Promise<string[]>}) => {
+export const makeFeedContext = ({
+  relays,
+  withReplies = false,
+}: {
+  relays: string[] | Promise<string[]>
+  withReplies?: boolean
+}) => {
+  // Every feed loads NIP-22 comments. Kind 1 notes reply to each other with `e` tags instead,
+  // so a feed that renders those replies has to ask for them as well.
+  const contextKinds = withReplies ? [...EVENT_CONTEXT_KINDS, NOTE] : EVENT_CONTEXT_KINDS
+  const requestKinds = withReplies ? [...REACTION_KINDS, NOTE] : REACTION_KINDS
   const {repository} = app.get()
   const controller = new AbortController()
   const targets = new Set<string>()
@@ -134,7 +145,7 @@ export const makeFeedContext = ({relays}: {relays: string[] | Promise<string[]>}
     // What's already local — an earlier page, our own optimistic reactions — never comes
     // through the update listener, so file it before asking the network for the rest
     for (const event of repository.query([
-      ...getReplyFilters(events, {kinds: EVENT_CONTEXT_KINDS}),
+      ...getReplyFilters(events, {kinds: contextKinds}),
       ...getCommentFiltersForRoot(events),
     ])) {
       addEvent(event, touched)
@@ -148,7 +159,7 @@ export const makeFeedContext = ({relays}: {relays: string[] | Promise<string[]>}
       relays: urls,
       signal: controller.signal,
       filters: [
-        ...getReplyFilters(events, {kinds: REACTION_KINDS}),
+        ...getReplyFilters(events, {kinds: requestKinds}),
         ...getCommentFiltersForRoot(events),
       ],
     })
@@ -170,7 +181,7 @@ export const makeFeedContext = ({relays}: {relays: string[] | Promise<string[]>}
       const touched = new Set<string>()
 
       for (const event of added) {
-        if (EVENT_CONTEXT_KINDS.includes(event.kind)) {
+        if (contextKinds.includes(event.kind)) {
           addEvent(event, touched)
         }
       }

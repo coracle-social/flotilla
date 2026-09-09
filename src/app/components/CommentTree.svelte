@@ -21,18 +21,19 @@
     node: CommentNode
     root: TrustedEvent
     replyTo?: TrustedEvent
-    setReplyTo: (comment?: TrustedEvent) => void
+    setReplyTo?: (comment?: TrustedEvent) => void
     url?: string
     context: FeedContext
+    maxDepth?: number
   }
 
-  const {node, root, replyTo, setReplyTo, url, context}: Props = $props()
+  const {node, root, replyTo, setReplyTo, url, context, maxDepth = Infinity}: Props = $props()
 
   const composing = $derived(replyTo?.id === node.comment.id)
 
-  const reply = () => setReplyTo(node.comment)
+  const reply = () => setReplyTo?.(node.comment)
 
-  const clearReplyTo = () => setReplyTo(undefined)
+  const clearReplyTo = () => setReplyTo?.(undefined)
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: node.comment.pubkey, url})
 
@@ -70,11 +71,13 @@
         </div>
         <Content showEntire event={node.comment} {url} />
         {#if url}
-          <div class="mt-1 flex flex-wrap items-center justify-between gap-2">
-            <Button class="button button-neutral button-xs" onclick={reply}>
-              <Icon icon={Reply} size={4} />
-              Reply
-            </Button>
+          <div class="mt-1 flex flex-wrap items-center justify-end gap-2">
+            {#if setReplyTo}
+              <Button class="button button-neutral button-xs mr-auto" onclick={reply}>
+                <Icon icon={Reply} size={4} />
+                Reply
+              </Button>
+            {/if}
             <CommentActions event={node.comment} {url} {context} />
           </div>
         {/if}
@@ -91,14 +94,21 @@
         onSubmit={clearReplyTo} />
     </div>
   {/if}
-  {#if node.children.length > 0}
+  {#if node.children.length > 0 && maxDepth > 1}
     <!-- The thread line runs under the avatar's center and indents replies to line up with
          this comment's text column; it brightens while the subtree is hovered. -->
     <div
       data-component="CommentReplies"
       class="border-line-less hover:border-line ml-4 flex flex-col border-l pl-7 transition-colors">
       {#each node.children as child (child.comment.id)}
-        <CommentTree node={child} {root} {replyTo} {setReplyTo} {url} {context} />
+        <CommentTree
+          node={child}
+          {root}
+          {replyTo}
+          {setReplyTo}
+          {url}
+          {context}
+          maxDepth={maxDepth - 1} />
       {/each}
     </div>
   {/if}

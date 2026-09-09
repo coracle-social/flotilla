@@ -12,7 +12,7 @@
   import Masonry from "@lib/components/Masonry.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
-  import NoteItem from "@app/components/NoteItem.svelte"
+  import HomeNetworkItem from "@app/components/HomeNetworkItem.svelte"
   import {followLists, relayLists, router, user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
 
@@ -20,7 +20,10 @@
   // `syncFollowNetwork` reads their lists from.
   const RELAY_LIMIT = 8
 
-  const context = makeFeedContext({relays: $relayLists.readUrls($user.pubkey).get()})
+  const context = makeFeedContext({
+    relays: $relayLists.readUrls($user.pubkey).get(),
+    withReplies: true,
+  })
 
   const followList = $derived($followLists.one($user.pubkey))
   const follows = $derived($followList?.pubkeys())
@@ -91,7 +94,7 @@
     {:else}
       <Masonry items={notes} getKey={event => event.id} columnWidth={80} maxColumns={2} gap={3}>
         {#snippet child(event)}
-          <NoteItem {event} {context} />
+          <HomeNetworkItem {event} {context} />
         {/snippet}
       </Masonry>
       {#if loading}
