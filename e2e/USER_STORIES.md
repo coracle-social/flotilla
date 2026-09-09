@@ -273,6 +273,16 @@ Acceptance:
 - bob, already viewing the same room in his own session, sees the message appear
   without reloading.
 
+### US-118 — Messages sent in the same second are in one order for everyone
+
+As alice, I want a room to read the same way for me as it does for bob, so that
+we can refer to what was said without first agreeing on what order it was in.
+
+Acceptance:
+
+- Five messages sharing one timestamp are shown in ascending event id order,
+  whatever order they reached the client in.
+
 ### US-019 — Join and leave a room
 
 As bob, I want to join a room's member list and leave it later, so that it shows

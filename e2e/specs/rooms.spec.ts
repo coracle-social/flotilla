@@ -175,6 +175,47 @@ test("US-018 send and receive a room message in real time", async ({seed, as}) =
   await expect(message(bob, "second line")).toContainText("first line")
 })
 
+// Two people typing in the same second used to leave every client with a different transcript,
+// since the timestamp alone gave the merge nothing to break the tie on and each client saw its own
+// message arrive first. Ordering falls back to the event id, which is the same everywhere.
+test("US-118 messages sent in the same second are in one order for everyone", async ({
+  seed,
+  as,
+}) => {
+  const tied: Seeded[] = []
+
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+    const sentAt = at(2, HOUR)
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    tied.push(
+      space.message(user.bob, "general", "the tide turns at four", sentAt),
+      space.message(user.alice, "general", "the tug is already out", sentAt),
+      space.message(user.bob, "general", "we cast off before dark", sentAt),
+      space.message(user.alice, "general", "the pilot boat follows us", sentAt),
+      space.message(user.bob, "general", "and the harbor master knows", sentAt),
+    )
+  })
+
+  const {url} = scenario.space("space")
+  const page = await as(users.alice, roomPath(url, "general"))
+
+  await expect(message(page, "and the harbor master knows")).toBeVisible()
+  await expect(messages(page)).toHaveCount(5)
+
+  const rendered = await messages(page).evaluateAll(items =>
+    items.map(item => item.getAttribute("data-event")),
+  )
+
+  // The room reads newest first in the dom, so the ids run the other way from the order the feed
+  // holds them in
+  expect(rendered.reverse()).toEqual(tied.map(({id}) => id).sort())
+})
+
 test("US-019 join and leave a room", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")

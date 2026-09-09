@@ -1,11 +1,12 @@
 import {derived, get, readable, writable} from "svelte/store"
 import type {Readable, Writable} from "svelte/store"
-import {batch, call, int, ms, now, on, sleep, sortBy, uniqBy, MONTH, YEAR} from "@welshman/lib"
+import {batch, call, int, ms, now, on, sleep, uniqBy, MONTH, YEAR} from "@welshman/lib"
 import {
   COMMENT,
   DELETE,
   EVENT_TIME,
   addressTags,
+  compareEventsAsc,
   getAddress,
   getCommentFiltersForRoot,
   getIdOrAddress,
@@ -29,6 +30,21 @@ import {app, network} from "@app/core"
 import {getEventsForUrl} from "@app/repository"
 
 const noEvents: TrustedEvent[] = []
+
+const mergeSorted = <T>(left: T[], right: T[], compare: (a: T, b: T) => number) => {
+  const merged: T[] = []
+  let i = 0
+  let j = 0
+
+  while (i < left.length && j < right.length) {
+    merged.push(compare(left[i], right[j]) <= 0 ? left[i++] : right[j++])
+  }
+
+  while (i < left.length) merged.push(left[i++])
+  while (j < right.length) merged.push(right[j++])
+
+  return merged
+}
 
 // Reactions, zaps and reports point at their subject with `e`/`a`. A NIP-22 comment instead
 // points at its thread *root* with `E`/`A`, so filing it by those tags puts a whole thread in
@@ -435,26 +451,9 @@ export const makeFeed = ({
     }
 
     if (added.length > 0) {
-      added.sort((a, b) => a.created_at - b.created_at)
+      added.sort(compareEventsAsc)
 
-      events.update($events => {
-        const merged: TrustedEvent[] = []
-        let i = 0
-        let j = 0
-
-        while (i < $events.length && j < added.length) {
-          if ($events[i].created_at <= added[j].created_at) {
-            merged.push($events[i++])
-          } else {
-            merged.push(added[j++])
-          }
-        }
-
-        while (i < $events.length) merged.push($events[i++])
-        while (j < added.length) merged.push(added[j++])
-
-        return merged
-      })
+      events.update($events => mergeSorted($events, added, compareEventsAsc))
     }
   }
 
@@ -553,14 +552,14 @@ export const makeCalendarFeed = ({
 
   const getEnd = (event: TrustedEvent) => parseInt(tagValue(tagSpec("end"), event.tags) || "")
 
+  const compareByStart = (a: TrustedEvent, b: TrustedEvent) =>
+    getStart(a) - getStart(b) || compareEventsAsc(a, b)
+
   const events = writable(
-    sortBy(
-      getStart,
-      uniqBy(
-        e => e.id,
-        relays.flatMap(url => Array.from(getEventsForUrl(url, filters))),
-      ),
-    ),
+    uniqBy(
+      e => e.id,
+      relays.flatMap(url => Array.from(getEventsForUrl(url, filters))),
+    ).sort(compareByStart),
   )
 
   const insertEvents = (newEvents: TrustedEvent[]) => {
@@ -573,28 +572,17 @@ export const makeCalendarFeed = ({
       onEvent?.(event)
     }
 
-    valid.sort((a, b) => getStart(a) - getStart(b))
+    valid.sort(compareByStart)
 
     events.update($events => {
       // Calendar events are addressable, so a new version supersedes the old one
       const superseded = new Set(valid.map(getAddress))
-      const kept = $events.filter(e => !superseded.has(getAddress(e)))
-      const merged: TrustedEvent[] = []
-      let i = 0
-      let j = 0
 
-      while (i < kept.length && j < valid.length) {
-        if (getStart(kept[i]) <= getStart(valid[j])) {
-          merged.push(kept[i++])
-        } else {
-          merged.push(valid[j++])
-        }
-      }
-
-      while (i < kept.length) merged.push(kept[i++])
-      while (j < valid.length) merged.push(valid[j++])
-
-      return merged
+      return mergeSorted(
+        $events.filter(e => !superseded.has(getAddress(e))),
+        valid,
+        compareByStart,
+      )
     })
   }
 
