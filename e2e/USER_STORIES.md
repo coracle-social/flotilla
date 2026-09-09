@@ -4,6 +4,13 @@ The catalog e2e specs are written from. Each story is a slice of behavior a
 person can observe in the running app. Specs reference stories by stable
 id (`US-042`), so numbers are never reused or renumbered.
 
+A story is behavior someone can describe without reading the css: what a button
+does, what a feed contains, what a notification says. A layout threshold, a
+padding, a color or a wording is not one, and a change that only moves one
+belongs in the acceptance text of the story it sits under rather than in a story
+of its own. Nothing in CI runs this suite, so every spec is a cost paid by hand
+forever.
+
 **Personas** come from `e2e/harness/keys.ts`, which defines four deterministic
 identities:
 
