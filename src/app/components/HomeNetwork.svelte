@@ -94,15 +94,15 @@
         <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
       </div>
     {:else if items.length === 0}
-      <div class="flex justify-center pb-4">
-        <Spinner loading>Looking for posts from people you follow…</Spinner>
+      <div class="flex justify-center py-8">
+        <Spinner loading>Loading recent posts...</Spinner>
       </div>
     {:else}
       {#each items as event (event.id)}
         <HomeNetworkItem {event} {context} />
       {/each}
       {#if loading}
-        <div class="flex justify-center py-4">
+        <div class="flex justify-center py-8">
           <Spinner loading />
         </div>
       {/if}

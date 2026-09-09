@@ -105,6 +105,30 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 16rem;
 }
+/* Carries a bottom border out past the element's own box, so a centered column can still rule the
+   page from edge to edge. The pseudo-elements inherit that border, so an element without one draws
+   nothing; --rule-bleed-l and --rule-bleed-r turn off the side that faces a neighbor. */
+@utility rule-bleed {
+  position: relative;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: calc(-1 * var(--border-thin));
+    border-bottom: inherit;
+  }
+
+  &::before {
+    right: 100%;
+    width: var(--rule-bleed-l, 100vw);
+  }
+
+  &::after {
+    left: 100%;
+    width: var(--rule-bleed-r, 100vw);
+  }
+}
 /* Marks the event a link pointed at, so the reader can pick it out of the conversation once the
    jump lands. Brightness rather than a background so it works over any row's own surface. */
 @utility highlight-target {

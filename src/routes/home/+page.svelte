@@ -33,15 +33,20 @@
     </div>
   </PageBar>
   <PageContent noPad bind:element class="flex flex-col bg-surface">
-    <div class="flex min-w-0 flex-1 flex-col lg:flex-row lg:items-stretch">
+    <!-- Content is centered and capped, but the section rules still reach the page edge. At lg
+         each column bleeds only on the side facing the page, so no rule crosses the divider. -->
+    <div
+      class="mx-auto flex w-full max-w-[1000px] min-w-0 flex-1 flex-col lg:flex-row lg:items-stretch">
       <!-- The columns are `contents` below lg, which puts every section in one flow and lets the
            rail's health checks sit between the inbox and the rest of the main column. -->
-      <div class="contents lg:flex lg:min-w-0 lg:flex-[2] lg:flex-col lg:border-r lg:border-line">
+      <div
+        class="contents lg:flex lg:min-w-0 lg:flex-[2] lg:flex-col lg:border-r lg:border-line lg:[--rule-bleed-r:0px]">
         <HomeInbox />
         <HomeActivity class="order-last" />
         <HomeNetwork class="order-last border-b-0" />
       </div>
-      <div class="contents lg:flex lg:w-96 lg:min-w-0 lg:shrink-0 lg:flex-col">
+      <div
+        class="contents lg:flex lg:w-96 lg:min-w-0 lg:shrink-0 lg:flex-col lg:[--rule-bleed-l:0px]">
         <HomeHealthChecks />
         {#if HOSTING_ENABLED}
           <HomeHosting class="border-b-0 max-lg:hidden" />
