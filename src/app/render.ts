@@ -42,7 +42,7 @@ export const renderNode = (parsed: Parsed): string => {
     case ParsedType.Text:
       return parsed.value
     case ParsedType.Topic:
-      return parsed.value.slice(1)
+      return parsed.value
   }
 }
 
