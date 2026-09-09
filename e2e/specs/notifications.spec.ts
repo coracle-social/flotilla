@@ -1,7 +1,7 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE} from "@welshman/lib"
 import {displayRelayUrl} from "@welshman/util"
-import {Classified, MessagingRelayList, RelayList, Thread} from "@welshman/domain"
+import {Classified, FollowList, MessagingRelayList, Note, RelayList, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {expect, roomPath, spacePath, test, users} from "../harness"
 import type {SeededSpace, TestUser} from "../harness"
@@ -413,6 +413,33 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
   await expect(conversation).toHaveCount(0)
   await expect(activity).toHaveCount(0)
   await expect(page.getByText("You're all caught up")).toBeVisible()
+})
+
+test("US-117 read the network feed on home", async ({seed, as}) => {
+  const note = "the tide charts are wrong again"
+
+  await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    // The feed asks each follow's write relays for their notes, so a note is only reachable
+    // through a relay list naming one.
+    seedRelays(space, user.alice)
+    seedRelays(space, user.bob)
+
+    space.event(user.alice, () =>
+      space.kind(FollowList).writer().follow(user.bob.pubkey).renderTemplate(),
+    )
+    space.event(user.bob, () => space.kind(Note).writer().setContent(note).renderTemplate())
+  })
+
+  const page = await as(users.alice, "/home")
+
+  await expect(page.getByRole("heading", {name: "Network"})).toBeVisible()
+  await expect(page.getByText(note)).toBeVisible()
 })
 
 test("US-106 share text into the app", async ({seed, as}) => {

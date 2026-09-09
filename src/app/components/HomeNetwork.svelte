@@ -1,83 +1,76 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
-  import {sortBy, uniqBy} from "@welshman/lib"
-  import {NOTE} from "@welshman/util"
+  import {onDestroy} from "svelte"
+  import {writable} from "svelte/store"
+  import type {Writable} from "svelte/store"
+  import {sortBy} from "@welshman/lib"
+  import type {Maybe} from "@welshman/lib"
+  import {NOTE, outbox} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {getReplyTags} from "@welshman/domain"
-  import {Feeds} from "@welshman/app"
-  import {Scope, feedFromFilter, makeIntersectionFeed, makeScopeFeed} from "@welshman/feeds"
   import Planet from "@assets/icons/planet.svg?dataurl"
-  import {createScroller} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import Masonry from "@lib/components/Masonry.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {app, relayLists, user} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
+  import {followLists, relayLists, router, user} from "@app/core"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
 
-  const PAGE_SIZE = 5
+  // The hubs most of the user's follows publish to, which is the same set and the same limit
+  // `syncFollowNetwork` reads their lists from.
+  const RELAY_LIMIT = 8
 
   const context = makeFeedContext({relays: $relayLists.readUrls($user.pubkey).get()})
 
-  onDestroy(context.cleanup)
+  const followList = $derived($followLists.one($user.pubkey))
+  const follows = $derived($followList?.pubkeys())
 
-  // Notes from the people the user follows, resolved against each author's outbox relays.
+  let element: HTMLElement | undefined = $state()
+  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
+  let events: Writable<TrustedEvent[]> = $state(writable([]))
+  let started = false
+  let stop: Maybe<() => void>
+
   // Replies are left out - without their parent they read as half a conversation.
-  const controller = $app.use(Feeds).makeFeedController({
-    useWindowing: true,
-    feed: makeIntersectionFeed(makeScopeFeed(Scope.Follows), feedFromFilter({kinds: [NOTE]})),
-    onEvent: (event: TrustedEvent) => {
-      if (getReplyTags(event.tags).replies.length === 0) {
-        buffer.push(event)
-        context.add(event)
-      }
-    },
-  })
+  const notes = $derived(
+    sortBy(
+      e => -e.created_at,
+      $events.filter(e => getReplyTags(e.tags).replies.length === 0),
+    ),
+  )
 
-  let element: Element | undefined = $state()
-  let events = $state<TrustedEvent[]>([])
-  let loading = $state(false)
-  let caughtUp = $state(false)
-  let buffer: TrustedEvent[] = []
+  const loading = $derived(isFeedLoading($older))
+  const exhausted = $derived($older?.status === "exhausted")
+  const isEmpty = $derived(follows?.length === 0 || (exhausted && notes.length === 0))
 
-  const isEmpty = $derived(caughtUp && events.length === 0)
+  const start = async (pubkeys: string[]) => {
+    const scenario = await $router.resolve(pubkeys.map(pubkey => outbox(pubkey)))
+    const feed = makeFeed({
+      relays: scenario.limit(RELAY_LIMIT).getUrls(),
+      filters: [{kinds: [NOTE], authors: pubkeys}],
+      onEvent: context.add,
+    })
 
-  const load = async () => {
-    if (!loading) {
-      loading = true
-
-      try {
-        await controller.load(PAGE_SIZE * 4)
-      } catch (e) {
-        console.error(e)
-      } finally {
-        loading = false
-        caughtUp = buffer.length === 0
-      }
+    events = feed.events
+    older = makeScrollLoader(element!, feed.loadOlder)
+    stop = () => {
+      older?.stop()
+      feed.cleanup()
     }
   }
 
-  onMount(() => {
-    const scroller = createScroller({
-      element: element!,
-      delay: 300,
-      threshold: 3000,
-      onScroll: () => {
-        buffer = uniqBy(
-          e => e.id,
-          sortBy(e => -e.created_at, buffer),
-        )
+  // The follow list is what the feed is made of, so it waits for one rather than asking about
+  // nobody. Follows added later don't rebuild it - the feed keeps what is already on screen.
+  $effect(() => {
+    if (!started && follows && follows.length > 0) {
+      started = true
+      start(follows)
+    }
+  })
 
-        events = uniqBy(e => e.id, [...events, ...buffer.splice(0, PAGE_SIZE)])
-
-        if (buffer.length < PAGE_SIZE * 4) {
-          load()
-        }
-      },
-    })
-
-    return scroller.stop
+  onDestroy(() => {
+    stop?.()
+    context.cleanup()
   })
 </script>
 
@@ -91,12 +84,12 @@
         </p>
         <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
       </div>
-    {:else if events.length === 0}
+    {:else if notes.length === 0}
       <div class="flex justify-center pb-4">
         <Spinner loading>Looking for notes from people you follow…</Spinner>
       </div>
     {:else}
-      <Masonry items={events} getKey={event => event.id} columnWidth={80} maxColumns={2} gap={3}>
+      <Masonry items={notes} getKey={event => event.id} columnWidth={80} maxColumns={2} gap={3}>
         {#snippet child(event)}
           <NoteItem {event} {context} />
         {/snippet}

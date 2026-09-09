@@ -1576,6 +1576,17 @@ Acceptance:
 - Hosting is offered whether or not she hosts a space: a shortcut to the hosting
   panel when she has one, an invitation to start one when she doesn't.
 
+### US-117 — See notes from the people I follow
+
+As alice, I want the home page to show what the people I follow have posted, so
+that home is worth opening when nothing is waiting for me.
+
+Acceptance:
+
+- The Network section lists notes from her follows, resolved through the relays
+  those people publish to.
+- Scrolling to the end of the feed loads more rather than asking her to.
+
 ### US-106 — Share text into the app
 
 As alice, I want to hand text to Flotilla and choose where it lands, so that I
