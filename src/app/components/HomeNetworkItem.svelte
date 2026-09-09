@@ -1,12 +1,12 @@
 <script lang="ts">
-  import {sortBy} from "@welshman/lib"
   import {COMMENT, NOTE} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import Cv from "@lib/components/Cv.svelte"
+  import Reply from "@assets/icons/reply-2.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
+  import Button from "@lib/components/Button.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import CommentTree from "@app/components/CommentTree.svelte"
   import type {FeedContext} from "@app/feeds"
-  import {buildCommentTree} from "@app/social"
+  import {goToEvent} from "@app/routes"
 
   type Props = {
     event: TrustedEvent
@@ -17,26 +17,18 @@
 
   const related = context.related(event)
 
-  // buildCommentTree adopts a comment whose parent never loaded, and reads oldest first so
-  // that it adopts a parent before its own children.
-  const nodes = $derived(
-    buildCommentTree(
-      event,
-      sortBy(
-        e => e.created_at,
-        $related.filter(e => e.kind === COMMENT || e.kind === NOTE),
-      ),
-    ),
-  )
+  // Kind 1 notes are replied to with notes as well as with NIP-22 comments.
+  const replyCount = $derived($related.filter(e => e.kind === COMMENT || e.kind === NOTE).length)
+
+  const goToReplies = () => goToEvent(event)
 </script>
 
-<Cv class="card card-interactive flex flex-col gap-3">
-  <NoteItem {event} {context} class="" />
-  {#if nodes.length > 0}
-    <div class="border-line-less flex flex-col border-t">
-      {#each nodes as node (node.comment.id)}
-        <CommentTree {node} root={event} {context} maxDepth={2} />
-      {/each}
-    </div>
-  {/if}
-</Cv>
+<div class="card card-interactive flex flex-col gap-3">
+  <NoteItem {event} {context} card={false}>
+    <Button class="button button-neutral button-xs rounded-full" onclick={goToReplies}>
+      <Icon icon={Reply} size={4} />
+      {replyCount}
+      {replyCount === 1 ? "reply" : "replies"}
+    </Button>
+  </NoteItem>
+</div>

@@ -19,16 +19,10 @@
     children?: Snippet
     context: FeedContext
     url?: string
-    class?: string
+    card?: boolean
   }
 
-  const {
-    url,
-    event,
-    children,
-    context,
-    class: className = "card card-interactive",
-  }: Props = $props()
+  const {url, event, children, context, card = true}: Props = $props()
 
   const getRelays = () => (url ? [url] : $router.resolver.relays([seen(event)]))
 
@@ -41,7 +35,7 @@
   const onEmoji = (emoji: NativeEmoji) => createReaction({content: emoji.unicode, tags: []})
 </script>
 
-<Cv tag={NoteCard} {event} {url} class={className}>
+{#snippet body()}
   <NoteContent {event} expandMode="inline" />
   <div class="flex w-full justify-between gap-2">
     <ReactionSummary
@@ -60,4 +54,14 @@
     </ReactionSummary>
     {@render children?.()}
   </div>
-</Cv>
+{/snippet}
+
+{#if card}
+  <Cv tag={NoteCard} {event} {url} class="card card-interactive">
+    {@render body()}
+  </Cv>
+{:else}
+  <NoteCard {event} {url}>
+    {@render body()}
+  </NoteCard>
+{/if}

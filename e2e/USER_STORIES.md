@@ -1571,6 +1571,9 @@ Acceptance:
 
 - The Network section lists notes from her follows, resolved through the relays
   those people publish to.
+- It is a list of notes: a reply is counted on the note it answers rather than
+  drawn underneath it, and never appears as an item of its own.
+- Every note carries its reply count, including the ones with no replies.
 - Scrolling to the end of the feed loads more rather than asking her to.
 
 ### US-106 — Share text into the app

@@ -417,6 +417,8 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
 
 test("US-117 read the network feed on home", async ({seed, as}) => {
   const note = "the tide charts are wrong again"
+  const quiet = "the ferry is running on time"
+  const reply = "they were reprinted last week"
 
   await seed(({relay, user}) => {
     const space = relay("space")
@@ -433,13 +435,31 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
     space.event(user.alice, () =>
       space.kind(FollowList).writer().follow(user.bob.pubkey).renderTemplate(),
     )
-    space.event(user.bob, () => space.kind(Note).writer().setContent(note).renderTemplate())
+
+    const posted = space.event(user.bob, () =>
+      space.kind(Note).writer().setContent(note).renderTemplate(),
+    )
+
+    space.event(user.bob, () => space.kind(Note).writer().setContent(quiet).renderTemplate())
+
+    space.event(user.bob, () =>
+      space.kind(Note).writer().setParent(posted.event).setContent(reply).renderTemplate(),
+    )
   })
 
   const page = await as(users.alice, "/home")
 
   await expect(page.getByRole("heading", {name: "Network"})).toBeVisible()
   await expect(page.getByText(note)).toBeVisible()
+
+  // The feed is notes only: a reply is counted on the note it answers rather than drawn
+  // underneath it, and it never gets a card of its own.
+  await expect(page.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
+  await expect(page.getByText(reply)).toHaveCount(0)
+
+  // The count is there whether or not anybody replied, so every note reads the same.
+  await expect(page.getByText(quiet)).toBeVisible()
+  await expect(page.getByRole("button", {name: "0 replies"})).toBeVisible()
 })
 
 test("US-106 share text into the app", async ({seed, as}) => {
