@@ -669,7 +669,7 @@ Acceptance:
 - Creating a thread from a room's compose menu files it under that room's board
   and posts a quote of it into the room's chat.
 - Creating a thread from the top-level Threads page files it under a "General"
-  board.
+  board, or under whichever board is picked from its board selector.
 - Each board row shows the topic title, author, reply count, and last-post time.
 
 ### US-043 — Reply to a thread and to a specific post

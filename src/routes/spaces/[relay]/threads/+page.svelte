@@ -34,7 +34,7 @@
   let element: HTMLElement | undefined = $state()
   let events: Readable<TrustedEvent[]> = $state(readable([]))
 
-  const createThread = () => pushModal(ThreadCreate, {url})
+  const createThread = () => pushModal(ThreadCreate, {url, selectRoom: true})
 
   const threadFeed = $derived.by(() => {
     const scores = new Map<string, number[]>()

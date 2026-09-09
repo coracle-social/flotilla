@@ -1,5 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
+  import {sortBy} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {relay} from "@welshman/util"
   import {Thread} from "@welshman/domain"
@@ -21,26 +22,37 @@
   import {command, relays, writer} from "@app/core"
   import {DraftKey} from "@app/drafts"
   import {makeEditor} from "@app/editor"
-  import {publishRoomQuote} from "@app/rooms"
+  import {
+    deriveOtherRooms,
+    deriveUserRooms,
+    displayRoom,
+    publishRoomQuote,
+    roomComparator,
+  } from "@app/rooms"
   import {pushToast} from "@app/toast"
 
   type Values = {
     content?: string | object
     title?: string
+    h?: string
   }
 
   type Props = {
     url: string
     h?: string
+    selectRoom?: boolean
     shareToChat?: boolean
     quote?: TrustedEvent
     initialValues?: Values
   }
 
-  const {url, h, shareToChat = false, quote, initialValues}: Props = $props()
+  const {url, h, selectRoom = false, shareToChat = false, quote, initialValues}: Props = $props()
   const draftKey = new DraftKey<Values>(`thread:${url}:${h ?? ""}`)
   const draft = draftKey.get()
   const shouldProtect = $relays.hasNip(url, 70)
+  const userRooms = deriveUserRooms(url)
+  const otherRooms = deriveOtherRooms(url)
+  const roomOptions = $derived(sortBy(roomComparator(url), [...$userRooms, ...$otherRooms]))
 
   const uploading = writable(false)
 
@@ -79,8 +91,8 @@
         .addTags(...ed.storage.nostr.getEditorTags())
         .forceRoutes(relay(url))
 
-      if (h) {
-        eventWriter.setRoom(url, h)
+      if (room) {
+        eventWriter.setRoom(url, room)
       }
 
       if (quote) {
@@ -98,7 +110,7 @@
       history.back()
 
       if (shareToChat) {
-        publishRoomQuote({url, h, parent: thunk.event, protect})
+        publishRoomQuote({url, h: room, parent: thunk.event, protect})
       }
     } finally {
       loading = false
@@ -109,6 +121,7 @@
 
   let title = $state(initialValues?.title ?? draft?.title ?? "")
   let content = $state(initialValues?.content ?? draft?.content ?? "")
+  let room = $state(h ?? initialValues?.h ?? draft?.h ?? "")
 
   const onChange = (json: object) => {
     content = json
@@ -124,7 +137,7 @@
   })
 
   $effect(() => {
-    draftKey.update({title, content})
+    draftKey.update({title, content, h: room})
   })
 </script>
 
@@ -151,6 +164,21 @@
           </label>
         {/snippet}
       </Field>
+      {#if selectRoom && roomOptions.length > 0}
+        <Field>
+          {#snippet label()}
+            <p>Board</p>
+          {/snippet}
+          {#snippet input()}
+            <select class="select input w-full" bind:value={room}>
+              <option value="">General</option>
+              {#each roomOptions as option (option)}
+                <option value={option}>{displayRoom(url, option)}</option>
+              {/each}
+            </select>
+          {/snippet}
+        </Field>
+      {/if}
       <Field>
         {#snippet label()}
           <p>Message*</p>

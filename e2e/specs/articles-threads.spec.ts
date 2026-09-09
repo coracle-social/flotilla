@@ -691,6 +691,20 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
     .filter({has: page.getByRole("heading", {name: "General", exact: true})})
 
   await expect(general.getByRole("row").filter({hasText: "Open floor"})).toBeVisible()
+
+  // The threads page has no room of its own, so the form offers one.
+  await pageBar(page).getByRole("button", {name: "Create", exact: true}).click()
+
+  const toLounge = modal(page, "Create a Thread")
+
+  await toLounge.getByRole("combobox").selectOption({label: "Lounge"})
+  await toLounge.getByPlaceholder("What is this thread about?").fill("Carpet swatches")
+  await editorOf(toLounge).pressSequentially("Beige is a choice.")
+  await toLounge.getByRole("button", {name: "Create Thread"}).click()
+
+  await expect(page.getByRole("heading", {name: "Create a Thread"})).toHaveCount(0)
+
+  await expect(lounge.getByRole("row").filter({hasText: "Carpet swatches"})).toBeVisible()
 })
 
 test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
