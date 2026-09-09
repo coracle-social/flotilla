@@ -4,6 +4,7 @@
   import {getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
+  import Cv from "@lib/components/Cv.svelte"
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ArticleActions from "@app/components/ArticleActions.svelte"
@@ -27,7 +28,7 @@
   const image = $derived(article.image())
 </script>
 
-<div data-component="ArticleItem" class="cv relative w-full card card-interactive">
+<Cv data-component="ArticleItem" class="relative w-full card card-interactive">
   <!-- An overlay rather than a wrapper: the card carries a profile button and the room and action
        links, and none of those may sit inside an anchor. -->
   <Link class="absolute inset-0 rounded-2xl" href={path} aria-label={title || "Untitled"} />
@@ -58,4 +59,4 @@
       </div>
     </div>
   </div>
-</div>
+</Cv>

@@ -32,7 +32,7 @@
   let muted = $state($isEventMuted(event))
 </script>
 
-<div class="flex flex-col gap-2 {restProps.class}" style={restProps.style}>
+<div {...restProps} class={cx("flex flex-col gap-2", restProps.class)}>
   {#if muted}
     <div class="flex items-center justify-between">
       <div class="flex gap-2 relative">

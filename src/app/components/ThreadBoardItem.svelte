@@ -5,6 +5,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import {COMMENT, tagSpec, tagValue} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
+  import Cv from "@lib/components/Cv.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
@@ -30,9 +31,10 @@
 </script>
 
 {#if stacked}
-  <Link
+  <Cv
+    tag={Link}
     href={path}
-    class="cv hover:bg-surface-less flex w-full flex-col gap-2 border-b border-solid border-line px-4 py-3 text-left text-sm transition-colors">
+    class="hover:bg-surface-less flex w-full flex-col gap-2 border-b border-solid border-line px-4 py-3 text-left text-sm transition-colors">
     <p class="truncate font-medium">
       <UnreadDot {path} class="mr-1" />{title || "Untitled thread"}
     </p>
@@ -46,7 +48,7 @@
       <span>{replyCount} {replyCount === 1 ? "reply" : "replies"}</span>
       <span>{formatTimestamp(lastActive)}</span>
     </div>
-  </Link>
+  </Cv>
 {:else}
   <tr
     onclick={onClick}

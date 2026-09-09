@@ -4,6 +4,7 @@
   import {getAddress} from "@welshman/util"
   import {Classified} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
+  import Cv from "@lib/components/Cv.svelte"
   import CurrencySymbol from "@lib/components/CurrencySymbol.svelte"
   import {reader} from "@app/core"
   import ContentLinkBlock from "@app/components/ContentLinkBlock.svelte"
@@ -31,7 +32,7 @@
   const price = $derived(classified.price())
 </script>
 
-<Link class="cv relative flex flex-col gap-2 card card-interactive w-full" href={path}>
+<Cv tag={Link} class="relative flex flex-col gap-2 card card-interactive w-full" href={path}>
   <UnreadDot {path} class="absolute right-3 top-3" />
   {#if title}
     <div class="flex w-full items-center justify-between gap-2">
@@ -64,4 +65,4 @@
     </span>
     <ClassifiedActions showActivity {url} {event} {context} />
   </div>
-</Link>
+</Cv>

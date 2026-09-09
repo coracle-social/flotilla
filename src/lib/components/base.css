@@ -99,6 +99,8 @@
 @utility superheading {
   @apply font-heading text-center text-4xl font-extrabold;
 }
+/* Applied by Cv.svelte, which pairs it with the observer that paints ahead of a fast scroll.
+   Nothing else should reach for it. */
 @utility cv {
   content-visibility: auto;
 }

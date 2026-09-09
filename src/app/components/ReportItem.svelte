@@ -4,6 +4,7 @@
   import {LOCAL_RELAY_URL} from "@welshman/net"
   import type {TrustedEvent} from "@welshman/util"
   import Card from "@lib/components/Card.svelte"
+  import Cv from "@lib/components/Cv.svelte"
   import Button from "@lib/components/Button.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
@@ -36,7 +37,7 @@
   }
 </script>
 
-<Card sm class="cv flex flex-col gap-4">
+<Cv tag={Card} sm class="flex flex-col gap-4">
   <div class="flex justify-between">
     <div>
       <ProfileName pubkey={event.pubkey} {url} />
@@ -80,4 +81,4 @@
       <Profile pubkey={ptag[1]} />
     {/if}
   </div>
-</Card>
+</Cv>

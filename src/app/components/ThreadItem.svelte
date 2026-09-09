@@ -3,6 +3,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import {tagSpec, tagValue} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
+  import Cv from "@lib/components/Cv.svelte"
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ThreadActions from "@app/components/ThreadActions.svelte"
@@ -24,7 +25,7 @@
   const h = tagValue(tagSpec("h"), event.tags)
 </script>
 
-<Link class="cv relative flex flex-col gap-2 card card-interactive w-full" href={path}>
+<Cv tag={Link} class="relative flex flex-col gap-2 card card-interactive w-full" href={path}>
   <UnreadDot {path} class="absolute right-3 top-3" />
   {#if title}
     <div class="flex w-full items-center justify-between gap-2">
@@ -49,4 +50,4 @@
     </span>
     <ThreadActions showActivity {url} {event} {context} />
   </div>
-</Link>
+</Cv>

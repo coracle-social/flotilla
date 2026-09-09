@@ -6,6 +6,7 @@
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
+  import Cv from "@lib/components/Cv.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import {publishReaction, retractReaction} from "@app/reactions"
   import NoteCard from "@app/components/NoteCard.svelte"
@@ -33,7 +34,7 @@
   const onEmoji = (emoji: NativeEmoji) => createReaction({content: emoji.unicode, tags: []})
 </script>
 
-<NoteCard {event} {url} class="cv card card-interactive">
+<Cv tag={NoteCard} {event} {url} class="card card-interactive">
   <NoteContent {event} expandMode="inline" />
   <div class="flex w-full justify-between gap-2">
     <ReactionSummary
@@ -52,4 +53,4 @@
     </ReactionSummary>
     {@render children?.()}
   </div>
-</NoteCard>
+</Cv>

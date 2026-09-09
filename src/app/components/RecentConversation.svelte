@@ -7,6 +7,7 @@
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Cv from "@lib/components/Cv.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
@@ -25,7 +26,7 @@
   const onClick = () => navigate(h ? makeRoomPath(url, h) : makeSpaceChatPath(url))
 </script>
 
-<Button class="cv card card-interactive" onclick={onClick}>
+<Cv tag={Button} class="card card-interactive" onclick={onClick}>
   <div class="flex flex-col gap-3">
     <div class="flex items-center gap-2 text-sm">
       {#if h}
@@ -55,4 +56,4 @@
       </Button>
     </div>
   </div>
-</Button>
+</Cv>
