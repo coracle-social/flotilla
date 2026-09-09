@@ -82,7 +82,7 @@
 </SpaceBar>
 
 <PageContent bind:element class="flex flex-col gap-2 p-2 sm:gap-4 sm:p-4">
-  {#each threadFeed.boards as [h, threads] (h || "general")}
+  {#each threadFeed.boards as [h, threads] (h)}
     <ThreadBoard {url} {h} {threads} {context} />
   {/each}
   <p class="flex h-10 items-center justify-center py-20">
