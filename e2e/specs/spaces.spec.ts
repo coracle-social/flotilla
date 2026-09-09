@@ -83,6 +83,24 @@ test("US-009 browse, search, and reorder your spaces", async ({seed, as}) => {
   // starts the drag and moves it, but never delivers the drop the reorder is committed in, so the
   // row would snap back to where it came from.
   const dataTransfer = await page.evaluateHandle(() => new DataTransfer())
+
+  // The sidebar rail is the same list and reorders the same way. It shows icons and no text, so
+  // its rows are named by position and the list on the page is where the result is read.
+  const rail = page.locator(".primary-nav [draggable=true]")
+
+  await rail.nth(0).dispatchEvent("dragstart", {dataTransfer})
+  await rail.nth(1).dispatchEvent("drop", {dataTransfer})
+
+  await expect(joined.first()).toContainText(other.url)
+
+  await rail.nth(1).dispatchEvent("dragstart", {dataTransfer})
+  await rail.nth(0).dispatchEvent("drop", {dataTransfer})
+
+  await expect(joined.first()).toContainText(space.url)
+
+  // Dragging in the page's own list moves the same room list. It goes last because it shows the new
+  // order the moment it is dropped, ahead of the room list it publishes, so a drag in the rail
+  // straight afterwards would be working from the order it replaced.
   const source = joined.filter({hasText: other.url})
   const target = joined.filter({hasText: space.url})
 

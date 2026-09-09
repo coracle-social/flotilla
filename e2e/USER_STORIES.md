@@ -153,8 +153,8 @@ Acceptance:
 - Typing a term filters both sections live, matching name, url, or description.
 - Clicking a joined space opens it; clicking one she hasn't joined opens a join
   prompt instead.
-- Dragging a joined space above another reorders the list immediately, and the
-  order survives a reload.
+- Dragging a joined space above another, on the page or in the sidebar rail,
+  reorders the list immediately, and the order survives a reload.
 
 ### US-010 — Join a space from an invite link
 

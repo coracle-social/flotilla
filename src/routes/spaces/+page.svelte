@@ -1,13 +1,11 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {flip} from "svelte/animate"
-  import {cubicOut} from "svelte/easing"
   import {derived as _derived} from "svelte/store"
-  import {addToMapKey, dec, insertAt, removeAt, sleep, spec} from "@welshman/lib"
+  import {addToMapKey, dec, sleep, spec} from "@welshman/lib"
   import {ROOMS} from "@welshman/util"
   import type {Relay} from "@welshman/domain"
   import {throttled} from "@welshman/store"
-  import {Sync, createSearch, publish} from "@welshman/app"
+  import {Sync, createSearch} from "@welshman/app"
   import {createScroller, isMobile} from "@lib/html"
   import {fly} from "@lib/transition"
   import DragHandle from "@assets/icons/drag-handle.svg?dataurl"
@@ -16,6 +14,7 @@
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import DragList from "@lib/components/DragList.svelte"
   import Page from "@lib/components/Page.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -27,7 +26,7 @@
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import {app, relays, roomLists, user} from "@app/core"
-  import {userSpaceUrls} from "@app/rooms"
+  import {reorderSpaceUrls, userSpaceUrls} from "@app/rooms"
   import {PLATFORM_RELAYS, DEFAULT_RELAYS} from "@app/env"
   import {bootstrapPubkeys} from "@app/social"
   import {parseInviteLink} from "@app/access"
@@ -85,108 +84,15 @@
     }
   }
 
-  const reconcileUrls = (currentUrls: string[], nextUrls: string[]) => {
-    const mergedUrls = currentUrls.filter(url => nextUrls.includes(url))
-
-    for (const url of nextUrls) {
-      if (!mergedUrls.includes(url)) {
-        mergedUrls.push(url)
-      }
-    }
-
-    return mergedUrls
-  }
-
-  const isSameOrder = (a: string[], b: string[]) =>
-    a.length === b.length && a.every((url, index) => url === b[index])
-
-  const reorderSpaceUrls = (targetUrl: string) => {
-    if (!draggedUrl) return
-
-    const sourceIndex = orderedSpaceUrls.indexOf(draggedUrl)
-    const targetIndex = orderedSpaceUrls.indexOf(targetUrl)
-
-    if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex) return
-
-    orderedSpaceUrls = insertAt(
-      targetIndex,
-      orderedSpaceUrls[sourceIndex],
-      removeAt(sourceIndex, orderedSpaceUrls),
-    )
-  }
-
-  const onDragStart = (e: DragEvent, url: string) => {
-    draggedUrl = url
-    dragStartOrder = [...orderedSpaceUrls]
-    lastDragTarget = undefined
-    didDrop = false
-
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = "move"
-      e.dataTransfer.setData("text/plain", url)
-    }
-  }
-
-  const onDragOver = (e: DragEvent) => {
-    e.preventDefault()
-  }
-
-  const onDragEnter = (e: DragEvent, targetUrl: string) => {
-    e.preventDefault()
-
-    if (lastDragTarget === targetUrl) return
-
-    lastDragTarget = targetUrl
-    reorderSpaceUrls(targetUrl)
-  }
-
-  const onDrop = (e: DragEvent, targetUrl: string) => {
-    e.preventDefault()
-    reorderSpaceUrls(targetUrl)
-    didDrop = true
-    draggedUrl = undefined
-    lastDragTarget = undefined
-
-    if (dragStartOrder && !isSameOrder(dragStartOrder, orderedSpaceUrls)) {
-      void $roomLists.setRelays(orderedSpaceUrls).then(publish).catch(console.error)
-    }
-
-    dragStartOrder = undefined
-  }
-
-  const onDragEnd = () => {
-    if (!didDrop && dragStartOrder && !isSameOrder(dragStartOrder, orderedSpaceUrls)) {
-      orderedSpaceUrls = dragStartOrder
-    }
-
-    draggedUrl = undefined
-    dragStartOrder = undefined
-    lastDragTarget = undefined
-    didDrop = false
-  }
-
-  $effect(() => {
-    const nextUrls = reconcileUrls(orderedSpaceUrls, $userSpaceUrls)
-
-    if (!isSameOrder(nextUrls, orderedSpaceUrls)) {
-      orderedSpaceUrls = nextUrls
-    }
-  })
-
   let term = $state("")
   let limit = $state(20)
   let element: Element
-  let orderedSpaceUrls = $state<string[]>([])
-  let draggedUrl = $state<string | undefined>()
-  let dragStartOrder = $state<string[] | undefined>()
-  let lastDragTarget = $state<string | undefined>()
-  let didDrop = $state(false)
 
   const inviteData = $derived(parseInviteLink(term))
   const searchResults = $derived($relaySearch.searchOptions(term))
   const userSpaceSet = $derived(new Set($userSpaceUrls))
   const filteredUserUrls = $derived(
-    term ? orderedSpaceUrls.filter(url => searchResults.some(spec({url}))) : orderedSpaceUrls,
+    term ? $userSpaceUrls.filter(url => searchResults.some(spec({url}))) : $userSpaceUrls,
   )
   const otherSpaces = $derived(
     searchResults.filter(r => !userSpaceSet.has(r.url) && r.url !== inviteData?.url),
@@ -267,17 +173,13 @@
               {/if}
               {#if filteredUserUrls.length > 0}
                 <Divider>Your spaces</Divider>
-                {#each filteredUserUrls as url (url)}
-                  <div
-                    animate:flip={{duration: 300, easing: cubicOut}}
-                    class="transition-opacity duration-200 {draggedUrl === url ? 'opacity-50' : ''}"
-                    draggable="true"
-                    role="listitem"
-                    ondragstart={e => onDragStart(e, url)}
-                    ondragover={onDragOver}
-                    ondragenter={e => onDragEnter(e, url)}
-                    ondrop={e => onDrop(e, url)}
-                    ondragend={onDragEnd}>
+                <DragList
+                  class="flex flex-col gap-2"
+                  role="list"
+                  itemRole="listitem"
+                  items={filteredUserUrls}
+                  onReorder={reorderSpaceUrls}>
+                  {#snippet item(url)}
                     <Button
                       class="group card card-interactive w-full relative min-w-0"
                       onclick={() => openSpace(url)}>
@@ -294,8 +196,8 @@
                         </div>
                       {/if}
                     </Button>
-                  </div>
-                {/each}
+                  {/snippet}
+                </DragList>
               {:else if !term}
                 <p class="py-12 text-center">You haven't joined any spaces yet.</p>
               {/if}

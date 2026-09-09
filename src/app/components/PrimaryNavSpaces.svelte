@@ -5,9 +5,10 @@
   import Divider from "@lib/components/Divider.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
+  import DragList from "@lib/components/DragList.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
   import PrimaryNavSpacesOverflow from "@app/components/PrimaryNavSpacesOverflow.svelte"
-  import {userSpaceUrls} from "@app/rooms"
+  import {reorderSpaceUrls, userSpaceUrls} from "@app/rooms"
   import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/env"
   import {notifications} from "@app/notifications"
   import {makeSpacePath} from "@app/routes"
@@ -48,9 +49,14 @@
       <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={10} />
     </PrimaryNavItem>
     <Divider />
-    {#each primarySpaceUrls as url (url)}
-      <PrimaryNavItemSpace {url} />
-    {/each}
+    <DragList
+      class="flex flex-col items-center"
+      items={primarySpaceUrls}
+      onReorder={reorderSpaceUrls}>
+      {#snippet item(url)}
+        <PrimaryNavItemSpace {url} />
+      {/snippet}
+    </DragList>
     {#snippet allSpaces(title: string)}
       <PrimaryNavItem
         href="/spaces"

@@ -1,10 +1,10 @@
 import * as nip19 from "nostr-tools/nip19"
-import {derived} from "svelte/store"
+import {derived, get} from "svelte/store"
 import {formatTimestampAsDate, int, sortBy, uniq, MINUTE} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {MESSAGE, makeEvent, outbox, seen, toNostrURI} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
-import {MembershipStatus, RoomLists, makeRoomKey, createSearch} from "@welshman/app"
+import {MembershipStatus, RoomLists, makeRoomKey, createSearch, publish} from "@welshman/app"
 import type {Room, RoomMeta} from "@welshman/app"
 import {
   deriveUserItem,
@@ -125,6 +125,16 @@ export const publishRoomQuote = async ({
 export const userRoomList = deriveUserItem(RoomLists)
 
 export const userSpaceUrls = derived(userRoomList, $userRoomList => $userRoomList?.urls() ?? [])
+
+// Spaces get reordered from lists that show only some of them, so the urls given here go back
+// in the slots the ones they replace occupied.
+export const reorderSpaceUrls = (urls: string[]) => {
+  let index = 0
+
+  const nextUrls = get(userSpaceUrls).map(url => (urls.includes(url) ? urls[index++] : url))
+
+  return roomLists.get().setRelays(nextUrls).then(publish)
+}
 
 // Rooms in the space the user has joined, limited to those the relay still advertises.
 export const deriveUserRooms = (url: string) =>
