@@ -42,11 +42,7 @@
       <Button class="link ml-8" onclick={ignoreMute}>Show anyway</Button>
     </div>
   {:else}
-    <!-- The size container is the header, not the card: container-type contains a box's inline
-         size, so a card that is its own container reports no width to an ancestor sized by its
-         contents and collapses a quote inside a chat bubble. The header fills the card either way,
-         so the query still measures the card's width. -->
-    <div class="@container flex items-start justify-between gap-2">
+    <div class="flex items-start justify-between gap-2">
       {#if !hideProfile}
         {#if minimal}
           @<ProfileName pubkey={event.pubkey} {url} />
@@ -55,7 +51,7 @@
         {/if}
       {/if}
       <Button
-        class={cx("text-sm opacity-75 @max-sm:hidden", {"text-xs": minimal})}
+        class={cx("whitespace-nowrap text-sm opacity-75", {"text-xs": minimal})}
         onclick={goToNote}>
         {formatTimestamp(event.created_at)}
       </Button>

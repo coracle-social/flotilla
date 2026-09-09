@@ -2,9 +2,9 @@
   import {onDestroy} from "svelte"
   import {writable} from "svelte/store"
   import type {Writable} from "svelte/store"
-  import {sortBy} from "@welshman/lib"
+  import {sortBy, uniqBy} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
-  import {NOTE, outbox} from "@welshman/util"
+  import {NOTE, getIdOrAddress, outbox} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {getReplyTags} from "@welshman/domain"
   import Planet from "@assets/icons/planet.svg?dataurl"
@@ -13,6 +13,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HomeNetworkItem from "@app/components/HomeNetworkItem.svelte"
+  import {CONTENT_KINDS} from "@app/content"
   import {followLists, relayLists, router, user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
 
@@ -36,23 +37,27 @@
   let started = false
   let stop: Maybe<() => void>
 
-  // Replies are left out - without their parent they read as half a conversation.
-  const notes = $derived(
-    sortBy(
-      e => -e.created_at,
-      $events.filter(e => getReplyTags(e.tags).replies.length === 0),
+  // Kind 1 replies are left out - without their parent they read as half a conversation. Every
+  // other kind here is a root, and an edited one is shown once, at its latest version.
+  const isRoot = (event: TrustedEvent) =>
+    event.kind !== NOTE || getReplyTags(event.tags).replies.length === 0
+
+  const items = $derived(
+    uniqBy(
+      getIdOrAddress,
+      sortBy(e => -e.created_at, $events.filter(isRoot)),
     ),
   )
 
   const loading = $derived(isFeedLoading($older))
   const exhausted = $derived($older?.status === "exhausted")
-  const isEmpty = $derived(follows?.length === 0 || (exhausted && notes.length === 0))
+  const isEmpty = $derived(follows?.length === 0 || (exhausted && items.length === 0))
 
   const start = async (pubkeys: string[]) => {
     const scenario = await $router.resolve(pubkeys.map(pubkey => outbox(pubkey)))
     const feed = makeFeed({
       relays: scenario.limit(RELAY_LIMIT).getUrls(),
-      filters: [{kinds: [NOTE], authors: pubkeys}],
+      filters: [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
       onEvent: context.add,
     })
 
@@ -85,16 +90,16 @@
       <div class="flex flex-col items-center gap-3 pb-4 text-center">
         <p class="font-medium">Follow a few people to fill this out</p>
         <p class="max-w-md text-sm opacity-75">
-          Notes from the people you follow collect here. Spaces are a good place to find some.
+          Posts from the people you follow collect here. Spaces are a good place to find some.
         </p>
         <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
       </div>
-    {:else if notes.length === 0}
+    {:else if items.length === 0}
       <div class="flex justify-center pb-4">
-        <Spinner loading>Looking for notes from people you follow…</Spinner>
+        <Spinner loading>Looking for posts from people you follow…</Spinner>
       </div>
     {:else}
-      <Masonry items={notes} getKey={event => event.id} columnWidth={80} maxColumns={2} gap={3}>
+      <Masonry {items} getKey={event => event.id} columnWidth={80} maxColumns={2} gap={3}>
         {#snippet child(event)}
           <HomeNetworkItem {event} {context} />
         {/snippet}

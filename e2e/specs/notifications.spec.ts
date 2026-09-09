@@ -419,6 +419,7 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
   const note = "the tide charts are wrong again"
   const quiet = "the ferry is running on time"
   const reply = "they were reprinted last week"
+  const topic = "Dredging the channel"
 
   await seed(({relay, user}) => {
     const space = relay("space")
@@ -445,6 +446,16 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
     space.event(user.bob, () =>
       space.kind(Note).writer().setParent(posted.event).setContent(reply).renderTemplate(),
     )
+
+    space.event(user.bob, () =>
+      space
+        .kind(Thread)
+        .writer()
+        .setRoom(space.url, "general")
+        .setTitle(topic)
+        .setContent("The barges keep grounding.")
+        .renderTemplate(),
+    )
   })
 
   const page = await as(users.alice, "/home")
@@ -460,6 +471,16 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
   // The count is there whether or not anybody replied, so every note reads the same.
   await expect(page.getByText(quiet)).toBeVisible()
   await expect(page.getByRole("button", {name: "0 replies"})).toBeVisible()
+
+  // The feed carries every kind of post a follow writes, not only their notes.
+  await expect(page.getByText(topic)).toBeVisible()
+
+  // Every card says when it was posted.
+  const network = page
+    .locator("section")
+    .filter({has: page.getByRole("heading", {name: "Network"})})
+
+  await expect(network.getByRole("button", {name: /\d+\/\d+\/\d+/}).first()).toBeVisible()
 })
 
 test("US-106 share text into the app", async ({seed, as}) => {
