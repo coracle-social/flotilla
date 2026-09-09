@@ -39,7 +39,7 @@
     </div>
   </PageBar>
   <PageContent noPad class="flex flex-col bg-surface">
-    <div class="flex min-w-0 flex-col lg:flex-row lg:items-stretch">
+    <div class="flex min-w-0 flex-1 flex-col lg:flex-row lg:items-stretch">
       <div class="flex min-w-0 flex-col lg:flex-[2] lg:border-r lg:border-line">
         <HomeInbox />
         <HomeActivity />

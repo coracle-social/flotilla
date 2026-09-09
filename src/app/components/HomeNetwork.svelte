@@ -7,8 +7,9 @@
   import {Feeds} from "@welshman/app"
   import {Scope, feedFromFilter, makeIntersectionFeed, makeScopeFeed} from "@welshman/feeds"
   import Planet from "@assets/icons/planet.svg?dataurl"
+  import {createScroller} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
-  import Button from "@lib/components/Button.svelte"
+  import Masonry from "@lib/components/Masonry.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
@@ -28,61 +29,83 @@
     feed: makeIntersectionFeed(makeScopeFeed(Scope.Follows), feedFromFilter({kinds: [NOTE]})),
     onEvent: (event: TrustedEvent) => {
       if (getReplyTags(event.tags).replies.length === 0) {
-        events = uniqBy(
-          event => event.id,
-          sortBy(event => -event.created_at, [...events, event]),
-        )
+        buffer.push(event)
         context.add(event)
       }
     },
   })
 
+  let element: Element | undefined = $state()
   let events = $state<TrustedEvent[]>([])
-  let limit = $state(PAGE_SIZE)
-  let loading = $state(true)
+  let loading = $state(false)
+  let caughtUp = $state(false)
+  let buffer: TrustedEvent[] = []
 
-  const load = () => {
-    loading = true
-    controller
-      .load(PAGE_SIZE * 4)
-      .catch(e => console.error(e))
-      .finally(() => (loading = false))
-  }
+  const isEmpty = $derived(caughtUp && events.length === 0)
 
-  const showMore = () => {
-    limit += PAGE_SIZE
+  const load = async () => {
+    if (!loading) {
+      loading = true
 
-    if (events.length < limit + PAGE_SIZE) {
-      load()
+      try {
+        await controller.load(PAGE_SIZE * 4)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        loading = false
+        caughtUp = buffer.length === 0
+      }
     }
   }
 
-  onMount(load)
+  onMount(() => {
+    const scroller = createScroller({
+      element: element!,
+      delay: 300,
+      threshold: 3000,
+      onScroll: () => {
+        buffer = uniqBy(
+          e => e.id,
+          sortBy(e => -e.created_at, buffer),
+        )
+
+        events = uniqBy(e => e.id, [...events, ...buffer.splice(0, PAGE_SIZE)])
+
+        if (buffer.length < PAGE_SIZE * 4) {
+          load()
+        }
+      },
+    })
+
+    return scroller.stop
+  })
 </script>
 
 <HomeSection title="Network" icon={Planet}>
-  {#if events.length === 0}
-    {#if loading}
-      <div class="flex justify-center px-4 pb-8">
-        <Spinner {loading}>Looking for notes from people you follow…</Spinner>
-      </div>
-    {:else}
-      <div class="flex flex-col items-center gap-3 px-4 pb-8 text-center">
+  <div class="flex flex-col gap-3 px-4 pb-4" bind:this={element}>
+    {#if isEmpty}
+      <div class="flex flex-col items-center gap-3 pb-4 text-center">
         <p class="font-medium">Follow a few people to fill this out</p>
         <p class="max-w-md text-sm opacity-75">
           Notes from the people you follow collect here. Spaces are a good place to find some.
         </p>
         <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
       </div>
+    {:else if events.length === 0}
+      <div class="flex justify-center pb-4">
+        <Spinner loading>Looking for notes from people you follow…</Spinner>
+      </div>
+    {:else}
+      <Masonry items={events} getKey={event => event.id} columnWidth={80} maxColumns={2} gap={3}>
+        {#snippet child(event)}
+          <NoteItem {event} {context} />
+        {/snippet}
+      </Masonry>
+      {#if loading}
+        <div class="flex justify-center py-4">
+          <Spinner loading />
+        </div>
+      {/if}
     {/if}
-  {:else}
-    <div class="flex flex-col divide-y divide-line border-t border-line">
-      {#each events.slice(0, limit) as event (event.id)}
-        <NoteItem {event} {context} class="cv px-4 py-3" />
-      {/each}
-    </div>
-    <div class="flex justify-center border-t border-line p-3">
-      <Button class="button button-neutral button-sm" onclick={showMore}>Show more</Button>
-    </div>
-  {/if}
+  </div>
 </HomeSection>
