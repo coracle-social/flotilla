@@ -43,16 +43,16 @@
 <article
   id="post-{event.id}"
   data-event={event.id}
-  class="bg-surface border-b"
+  class="bg-surface border-b @container"
   style="border-color: var(--line)">
-  <div class="flex flex-col md:flex-row">
+  <div class="flex flex-col @2xl:flex-row">
     <aside
-      class="bg-surface flex shrink-0 flex-row items-center gap-3 border-b p-3 md:w-40 md:flex-col md:items-center md:border-b-0 md:border-r md:p-4 md:text-center"
+      class="bg-surface flex shrink-0 flex-row items-center gap-3 border-b p-3 @2xl:w-40 @2xl:flex-col @2xl:items-center @2xl:border-b-0 @2xl:border-r @2xl:p-4 @2xl:text-center"
       style="border-color: var(--line)">
       <Button onclick={openProfile}>
-        <ProfileCircle pubkey={event.pubkey} {url} size={10} class="md:size-14" />
+        <ProfileCircle pubkey={event.pubkey} {url} size={10} class="@2xl:size-14" />
       </Button>
-      <div class="flex min-w-0 flex-col gap-1 md:items-center">
+      <div class="flex min-w-0 flex-col gap-1 @2xl:items-center">
         <Button onclick={openProfile} class="text-bold truncate min-w-0 text-sm">
           {$profileDisplay}
         </Button>
@@ -60,13 +60,13 @@
           <span class="truncate min-w-0 text-xs opacity-75">{displayHandle($handle)}</span>
         {/if}
         {#if isOp}
-          <Badge variant="primary" class="w-fit self-start md:self-center">OP</Badge>
+          <Badge variant="primary" class="w-fit self-start @2xl:self-center">OP</Badge>
         {/if}
       </div>
     </aside>
     <div class="flex min-w-0 grow flex-col">
       <div
-        class="bg-surface flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 text-xs sm:px-4 sm:text-sm"
+        class="bg-surface flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 text-xs @lg:px-4 @lg:text-sm"
         style="border-color: var(--line)">
         <span class="opacity-75">{formatTimestamp(event.created_at)}</span>
         <Button
@@ -76,11 +76,11 @@
           Permalink
         </Button>
       </div>
-      <div class="px-3 py-4 sm:px-4">
+      <div class="px-3 py-4 @lg:px-4">
         <Content showEntire {event} {url} />
       </div>
       <div
-        class="bg-surface flex shrink-0 flex-col gap-2 border-t px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4"
+        class="bg-surface flex shrink-0 flex-col gap-2 border-t px-3 py-3 @lg:flex-row @lg:items-center @lg:justify-between @lg:px-4"
         style="border-color: var(--line)">
         <Button class="button button-neutral button-xs w-fit gap-1" onclick={reply}>
           <Icon icon={Reply} size={4} />
