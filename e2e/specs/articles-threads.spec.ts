@@ -764,6 +764,9 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
   await expect(openingPost.getByText("OP", {exact: true})).toBeVisible()
   await expect(bob.getByText("20 replies")).toBeVisible()
 
+  // The page bar carries the title, so the opening post does not repeat it.
+  await expect(bob.getByText("Bed rotation")).toHaveCount(1)
+
   await bob.getByRole("button", {name: "Reply to thread"}).click()
 
   const threadReply = composerForm(bob)

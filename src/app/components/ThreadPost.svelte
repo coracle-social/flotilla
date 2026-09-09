@@ -9,7 +9,6 @@
   import Badge from "@lib/components/Badge.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import NoteContent from "@app/components/NoteContent.svelte"
   import Content from "@app/components/Content.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import type {FeedContext} from "@app/feeds"
@@ -78,11 +77,7 @@
         </Button>
       </div>
       <div class="px-3 py-4 sm:px-4">
-        {#if isComment}
-          <Content showEntire {event} {url} />
-        {:else}
-          <NoteContent showEntire {event} {url} />
-        {/if}
+        <Content showEntire {event} {url} />
       </div>
       <div
         class="bg-surface flex shrink-0 flex-col gap-2 border-t px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4"
