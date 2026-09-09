@@ -1,5 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
+  import {relay} from "@welshman/util"
   import {Thread} from "@welshman/domain"
   import {publish} from "@welshman/app"
   import {isMobile, preventDefault} from "@lib/html"
@@ -74,7 +75,7 @@
         .setTitle(title)
         .setProtected(protect)
         .addTags(...ed.storage.nostr.getEditorTags())
-        .forceRelays(url)
+        .forceRoutes(relay(url))
 
       if (h) {
         eventWriter.setRoom(url, h)

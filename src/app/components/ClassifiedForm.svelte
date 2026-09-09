@@ -1,6 +1,7 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {removeUndefined, randomId, uniq} from "@welshman/lib"
+  import {relay} from "@welshman/util"
   import {publish} from "@welshman/app"
   import {Classified} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
@@ -112,7 +113,7 @@
       if (h) {
         eventWriter.setRoom(url, h)
       } else {
-        eventWriter.forceRelays(url)
+        eventWriter.forceRoutes(relay(url))
       }
 
       const classifiedThunk = await command(eventWriter).then(publish)

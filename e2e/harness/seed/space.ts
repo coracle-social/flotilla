@@ -13,7 +13,7 @@ import {
 import type {EventTemplate, HashedEvent, SignedEvent, StampedEvent} from "@welshman/util"
 import {Nip59} from "@welshman/signer"
 import {DirectMessage, EventWriter, Profile} from "@welshman/domain"
-import type {BaseEventReader, ConfiguredKind, KindFactory} from "@welshman/domain"
+import type {BaseEventReader, ConfiguredKind, EventQuery, KindFactory} from "@welshman/domain"
 import type {RoomOptions, TestRelay} from "../zooid/types"
 import type {Zooid} from "../zooid/relay"
 import type {TenantName} from "../zooid/config"
@@ -81,9 +81,9 @@ export type SeededSpace = {
   // This space's domain kinds, bound to a resolver that answers with its url, so a writer built
   // here renders its relay hints as this space. For everything `event()` takes a template for:
   // `space.event(user, () => space.kind(Article).writer().setTitle("x").renderTemplate())`.
-  kind<R extends BaseEventReader, W extends EventWriter<R>>(
-    factory: KindFactory<R, W>,
-  ): ConfiguredKind<R, W>
+  kind<R extends BaseEventReader, W extends EventWriter<R>, Q extends EventQuery>(
+    factory: KindFactory<R, W, Q>,
+  ): ConfiguredKind<R, W, Q>
 }
 
 export type SeedSpaceOptions = {
@@ -209,8 +209,9 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
       created_at: createdAt,
     }))
 
-  const kind = <R extends BaseEventReader, W extends EventWriter<R>>(factory: KindFactory<R, W>) =>
-    factory.configure(context)
+  const kind = <R extends BaseEventReader, W extends EventWriter<R>, Q extends EventQuery>(
+    factory: KindFactory<R, W, Q>,
+  ) => factory.configure(context)
 
   // Every wrap is published over the sender's own connection, since a gift wrap's author is an
   // ephemeral key nobody in this process can authenticate as. zooid stores it anyway, authorizing a

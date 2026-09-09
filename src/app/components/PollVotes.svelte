@@ -2,7 +2,7 @@
   import {onDestroy} from "svelte"
   import {formatTimestampRelative} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {POLL_RESPONSE, tagSpec, tagValues} from "@welshman/util"
+  import {POLL_RESPONSE, tagSpec, tagValues, relay} from "@welshman/util"
   import {Poll, PollResponse} from "@welshman/domain"
   import type {Thunk} from "@welshman/app"
   import PollOption from "@app/components/PollOption.svelte"
@@ -38,7 +38,7 @@
     activeThunk = undefined
 
     if (selection.length > 0) {
-      const eventWriter = writer(PollResponse).forceRelays(url).setPollId(event.id)
+      const eventWriter = writer(PollResponse).forceRoutes(relay(url)).setPollId(event.id)
 
       for (const id of selection) {
         eventWriter.addSelection(id)

@@ -4,7 +4,7 @@
   import {page} from "$app/stores"
   import {goto} from "$app/navigation"
   import {now, randomId} from "@welshman/lib"
-  import {getAddress} from "@welshman/util"
+  import {getAddress, relay} from "@welshman/util"
   import {Article} from "@welshman/domain"
   import {publish} from "@welshman/app"
   import {isMobile} from "@lib/html"
@@ -118,7 +118,7 @@
         .setPublishedAt(now())
         .setProtected(protect)
         .addTags(...ed.storage.nostr.getEditorTags())
-        .forceRelays(url)
+        .forceRoutes(relay(url))
 
       if (summary) {
         eventWriter.setSummary(summary)

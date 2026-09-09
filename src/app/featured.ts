@@ -1,5 +1,5 @@
 import {derived} from "svelte/store"
-import {APP_DATA, tagSpec, tagValues} from "@welshman/util"
+import {APP_DATA, tagSpec, tagValues, relay} from "@welshman/util"
 import {AppData} from "@welshman/domain"
 import {Domain} from "@welshman/app"
 import {app} from "@app/core"
@@ -27,7 +27,7 @@ export const setFeaturedContent = async (url: string, content: string[]) => {
     .get()
     .use(Domain)
     .writer(AppData)
-    .forceRelays(url)
+    .forceRoutes(relay(url))
     .setIdentifier(FEATURED_CONTENT_D)
     .addTags(...tags)
 

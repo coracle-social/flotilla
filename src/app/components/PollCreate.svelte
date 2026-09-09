@@ -1,5 +1,6 @@
 <script lang="ts">
   import {insertAt, now, randomId, removeAt, removeUndefined, spec} from "@welshman/lib"
+  import {relay} from "@welshman/util"
   import {publish} from "@welshman/app"
   import {Poll} from "@welshman/domain"
   import type {PollType} from "@welshman/domain"
@@ -139,7 +140,7 @@
       if (h) {
         eventWriter.setRoom(url, h)
       } else {
-        eventWriter.forceRelays(url)
+        eventWriter.forceRoutes(relay(url))
       }
 
       const pollThunk = await command(eventWriter).then(publish)

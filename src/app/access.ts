@@ -7,6 +7,7 @@ import {
   isRelayUrl,
   makeEvent,
   normalizeRelayUrl,
+  relay,
   FOLLOWS,
   MESSAGING_RELAYS,
   PROFILE,
@@ -101,7 +102,7 @@ export const deriveRelayAuthError = (url: string) =>
   })
 
 export const publishJoinRequest = (url: string, claim?: string) => {
-  const eventWriter = writer(RelayJoin).forceRelays(url)
+  const eventWriter = writer(RelayJoin).forceRoutes(relay(url))
 
   if (claim) {
     eventWriter.setClaim(claim)
@@ -111,7 +112,7 @@ export const publishJoinRequest = (url: string, claim?: string) => {
 }
 
 export const publishLeaveRequest = (url: string) =>
-  command(writer(RelayLeave).forceRelays(url)).then(publish)
+  command(writer(RelayLeave).forceRoutes(relay(url))).then(publish)
 
 // A relay answers a re-sent request with "duplicate:" and a membership it already has with
 // "already a member" — both leave us where we wanted to be, so only anything else is a refusal.

@@ -2,6 +2,7 @@
   import type {Snippet} from "svelte"
   import {writable} from "svelte/store"
   import {randomId} from "@welshman/lib"
+  import {relay} from "@welshman/util"
   import {publish} from "@welshman/app"
   import {TimeEvent} from "@welshman/domain"
   import {preventDefault} from "@lib/html"
@@ -100,7 +101,7 @@
       if (h) {
         eventWriter.setRoom(url, h)
       } else {
-        eventWriter.forceRelays(url)
+        eventWriter.forceRoutes(relay(url))
       }
 
       const calendarThunk = await command(eventWriter).then(publish)

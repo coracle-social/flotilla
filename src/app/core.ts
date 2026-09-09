@@ -39,7 +39,7 @@ import {
   appPolicyWraps,
 } from "@welshman/app"
 import type {AppPolicy, DerivedPlugin, Plugin, Session} from "@welshman/app"
-import type {BaseEventReader, EventWriter, KindFactory} from "@welshman/domain"
+import type {BaseEventReader, EventQuery, EventWriter, KindFactory} from "@welshman/domain"
 import {DEFAULT_RELAYS, DEFAULT_SEARCH_RELAYS, DUFFLEPUD_URL, INDEXER_RELAYS} from "@app/env"
 
 // Flotilla's own policies (ingest, sockets, storage) can't be imported here — they depend on
@@ -172,12 +172,12 @@ export const userSearchRelayUrls = withGetter(
 )
 
 // The domain entry points, since almost every read or write goes through one of them.
-export const reader = <R extends BaseEventReader, W extends EventWriter<R>>(
-  factory: KindFactory<R, W>,
+export const reader = <R extends BaseEventReader, W extends EventWriter<R>, Q extends EventQuery>(
+  factory: KindFactory<R, W, Q>,
 ) => domain.get().reader(factory)
 
-export const writer = <R extends BaseEventReader, W extends EventWriter<R>>(
-  factory: KindFactory<R, W>,
+export const writer = <R extends BaseEventReader, W extends EventWriter<R>, Q extends EventQuery>(
+  factory: KindFactory<R, W, Q>,
   seed?: R,
 ) => domain.get().writer(factory, seed)
 
