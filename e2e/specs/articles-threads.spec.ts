@@ -676,7 +676,13 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
     await shortDate(page, at(4, HOUR) + 60),
   )
 
-  await pageBar(page).getByRole("button", {name: "Create", exact: true}).click()
+  const general = page
+    .locator("section")
+    .filter({has: page.getByRole("heading", {name: "General", exact: true})})
+
+  // Each board creates its own threads, so the room comes from the button that was clicked rather
+  // than from a picker.
+  await general.getByRole("button", {name: "Create", exact: true}).click()
 
   const fromThreads = modal(page, "Create a Thread")
 
@@ -686,18 +692,12 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
 
   await expect(page.getByRole("heading", {name: "Create a Thread"})).toHaveCount(0)
 
-  const general = page
-    .locator("section")
-    .filter({has: page.getByRole("heading", {name: "General", exact: true})})
-
   await expect(general.getByRole("row").filter({hasText: "Open floor"})).toBeVisible()
 
-  // The threads page has no room of its own, so the form offers one.
-  await pageBar(page).getByRole("button", {name: "Create", exact: true}).click()
+  await lounge.getByRole("button", {name: "Create", exact: true}).click()
 
   const toLounge = modal(page, "Create a Thread")
 
-  await toLounge.getByRole("combobox").selectOption({label: "Lounge"})
   await toLounge.getByPlaceholder("What is this thread about?").fill("Carpet swatches")
   await editorOf(toLounge).pressSequentially("Beige is a choice.")
   await toLounge.getByRole("button", {name: "Create Thread"}).click()

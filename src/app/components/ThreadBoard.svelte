@@ -1,9 +1,14 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
+  import Add from "@assets/icons/add.svg?dataurl"
   import {matchMd} from "@lib/theme"
+  import Icon from "@lib/components/Icon.svelte"
+  import Button from "@lib/components/Button.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import ThreadBoardItem from "@app/components/ThreadBoardItem.svelte"
+  import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import type {FeedContext} from "@app/feeds"
+  import {pushModal} from "@app/modal"
 
   type Props = {
     url: string
@@ -13,6 +18,8 @@
   }
 
   const {url, h, threads, context}: Props = $props()
+
+  const createThread = () => pushModal(ThreadCreate, {url, h})
 </script>
 
 <section class="card card-flat p-0">
@@ -25,12 +32,20 @@
         General
       {/if}
     </h2>
-    <span class="text-content-muted text-sm">
-      {threads.length}
-      {threads.length === 1 ? "Topic" : "Topics"}
-    </span>
+    <div class="flex shrink-0 items-center gap-3">
+      <span class="text-content-muted text-sm">
+        {threads.length}
+        {threads.length === 1 ? "Topic" : "Topics"}
+      </span>
+      <Button class="button button-primary button-sm" onclick={createThread}>
+        <Icon icon={Add} />
+        Create
+      </Button>
+    </div>
   </header>
-  {#if $matchMd}
+  {#if threads.length === 0}
+    <p class="text-content-muted p-4 text-sm">No topics yet.</p>
+  {:else if $matchMd}
     <div class="scroll-container overflow-x-auto pb-4">
       <table class="w-full min-w-[640px] border-collapse">
         <thead

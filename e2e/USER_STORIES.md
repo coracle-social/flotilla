@@ -682,8 +682,10 @@ Acceptance:
 
 - Creating a thread from a room's compose menu files it under that room's board
   and posts a quote of it into the room's chat.
-- Creating a thread from the top-level Threads page files it under a "General"
-  board, or under whichever board is picked from its board selector.
+- Each board on the Threads page has its own create button, and a thread started
+  from it is filed under that board.
+- The "General" board is always present, so a thread belonging to no room can be
+  started from the Threads page.
 - Each board row shows the topic title, author, reply count, and last-post time.
 
 ### US-043 — Reply to a thread and to a specific post
