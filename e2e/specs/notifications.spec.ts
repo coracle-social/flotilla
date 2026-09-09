@@ -460,6 +460,10 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
 
   const page = await as(users.alice, "/home")
 
+  const network = page
+    .locator("section")
+    .filter({has: page.getByRole("heading", {name: "Network"})})
+
   await expect(page.getByRole("heading", {name: "Network"})).toBeVisible()
   await expect(page.getByText(note)).toBeVisible()
 
@@ -468,18 +472,16 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
   await expect(page.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
   await expect(page.getByText(reply)).toHaveCount(0)
 
-  // The count is there whether or not anybody replied, so every note reads the same.
+  // The count is there whether or not anybody replied, so every post reads the same.
   await expect(page.getByText(quiet)).toBeVisible()
-  await expect(page.getByRole("button", {name: "0 replies"})).toBeVisible()
+  await expect(
+    network.locator(".card").filter({hasText: quiet}).getByRole("button", {name: "0 replies"}),
+  ).toBeVisible()
 
   // The feed carries every kind of post a follow writes, not only their notes.
-  await expect(page.getByText(topic)).toBeVisible()
+  await expect(network.getByText(topic)).toBeVisible()
 
   // Every card says when it was posted.
-  const network = page
-    .locator("section")
-    .filter({has: page.getByRole("heading", {name: "Network"})})
-
   await expect(network.getByRole("button", {name: /\d+\/\d+\/\d+/}).first()).toBeVisible()
 })
 
