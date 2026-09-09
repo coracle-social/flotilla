@@ -1,6 +1,4 @@
 import {get, writable} from "svelte/store"
-import {ParsedType, isImage, parse} from "@welshman/content"
-import type {Parsed} from "@welshman/content"
 import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {errorMessage} from "@lib/util"
@@ -9,6 +7,7 @@ import OpenRouterEnable from "@app/components/OpenRouterEnable.svelte"
 import {endCall, isCallActive} from "@app/call"
 import {profiles} from "@app/core"
 import {pushModal} from "@app/modal"
+import {renderEventAsText} from "@app/render"
 import {getSetting} from "@app/settings"
 import {pushToast} from "@app/toast"
 
@@ -64,50 +63,6 @@ const toWav = (pcm: ArrayBuffer) => {
 
   return new Blob([wav], {type: "audio/wav"})
 }
-
-// An entity or a url read a character at a time is unintelligible, so anything that is not prose
-// is named rather than spelled out.
-const speakOne = (parsed: Parsed): string => {
-  switch (parsed.type) {
-    case ParsedType.Address:
-      return "another post"
-    case ParsedType.Cashu:
-      return "a cashu token"
-    case ParsedType.Code:
-      return parsed.value
-    case ParsedType.Command:
-      return parsed.raw
-    case ParsedType.Ellipsis:
-      return "\u2026"
-    case ParsedType.Email:
-      return parsed.value
-    case ParsedType.Emoji:
-      return parsed.value.name
-    case ParsedType.Event:
-      return "another message"
-    case ParsedType.Invoice:
-      return "a lightning invoice"
-    case ParsedType.Link: {
-      const {host} = parsed.value.url
-
-      return isImage(parsed) ? "an image" : `a link to ${host}`
-    }
-    case ParsedType.LinkGrid:
-      return "some images"
-    case ParsedType.Newline:
-      return parsed.value
-    case ParsedType.Profile:
-      return profiles.get().display(parsed.value.pubkey).get()
-    case ParsedType.Room:
-      return parsed.value.room
-    case ParsedType.Text:
-      return parsed.value
-    case ParsedType.Topic:
-      return parsed.value.slice(1)
-  }
-}
-
-const speakable = (event: TrustedEvent) => parse(event).map(speakOne).join("").trim()
 
 export const synthesize = async (text: string) => {
   const response = await fetch("https://openrouter.ai/api/v1/audio/speech", {
@@ -171,7 +126,7 @@ const play = async (event: TrustedEvent, text: string) => {
 }
 
 export const readAloud = (event: TrustedEvent) => {
-  const text = speakable(event)
+  const text = renderEventAsText(event)
 
   if (getSetting("openrouter_key")) {
     if (get(isCallActive)) {

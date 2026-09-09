@@ -1522,6 +1522,18 @@ Acceptance:
   room in it raises an unread dot.
 - Turning either back on restores unread indicators for subsequent activity.
 
+### US-120 — Read what a notification says
+
+As alice, I want a notification to say what was written, so that I can tell
+from it whether the message is worth opening.
+
+Acceptance:
+
+- With push notifications on and the tab in the background, a reply from bob in
+  a room alice is in raises one naming her as mentioned.
+- Its body is the words bob wrote rather than the quote his reply is prepended
+  with, and a url in it is named by its host instead of spelled out.
+
 ### US-105 — Land on the home page
 
 As a new user, I want the home page to route me somewhere useful, so that I'm

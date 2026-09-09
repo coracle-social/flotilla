@@ -81,6 +81,43 @@ const send = async (page: Page, content: string) => {
   await expect(message(page, content)).toBeVisible()
 }
 
+// RoomItem gives its hover actions no accessible names — every one is an icon. Their order is
+// fixed by the component: zap, emoji, reply, edit (only on your own recent message), menu.
+const replyToMessage = (page: Page, text: string) =>
+  message(page, text).locator(".room__item-actions button").nth(2).click()
+
+// Chromium's own notifications are invisible to a test, and a tab playwright drives is never
+// hidden, so both of the things the adapter reads are stubbed on the page. It takes the global at
+// notify time, which is what lets this land after boot.
+const captureNotifications = async (page: Page) => {
+  const notifications: {title: string; body: string}[] = []
+
+  await page.exposeFunction("onTestNotification", (title: string, body: string) => {
+    notifications.push({title, body})
+  })
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {get: () => true})
+    Object.defineProperty(document, "visibilityState", {get: () => "hidden"})
+
+    window.Notification = class {
+      static permission = "granted"
+
+      constructor(title: string, options: NotificationOptions = {}) {
+        const record = window as unknown as {
+          onTestNotification: (title: string, body: string) => void
+        }
+
+        record.onTestNotification(title, options.body || "")
+      }
+
+      close() {}
+    } as unknown as typeof Notification
+  })
+
+  return notifications
+}
+
 // The page bar names the room, so waiting for it is what says the composer below now belongs to
 // the room that was just opened rather than to the one being torn down.
 const postTo = async (page: Page, room: string, content: string) => {
@@ -642,4 +679,56 @@ test("US-114 see which listings are unread", async ({seed, as}) => {
 
   await expect(unreadDot(hers)).toBeVisible()
   await expect(unreadDot(his)).toHaveCount(0)
+})
+
+test("US-120 read what a notification says", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anchor"})
+    space.profile(user.bob, {name: "Bob Barnacle"})
+    space.message(user.alice, "general", "when does the dock close?", at(2, HOUR))
+  })
+
+  const space = scenario.space("space")
+
+  // Push notifications are off until they are asked for, and the tab has to be in the background
+  // before one is raised at all.
+  const alice = await as(users.alice, "/settings/alerts", {
+    context: {permissions: ["notifications"]},
+  })
+
+  await settingRow(alice, "Enable push notifications").getByRole("checkbox").check()
+  await alice.getByRole("button", {name: "Save Changes"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("Your settings have been saved!")
+
+  await spaceNavItem(alice, space.name).click()
+  await roomLink(alice, "General").click()
+
+  await expect(alice).toHaveURL(pattern(roomPath(space.url, "general")))
+  await expect(message(alice, "when does the dock close?")).toBeVisible()
+
+  const notifications = await captureNotifications(alice)
+
+  const bob = await as(users.bob, roomPath(space.url, "general"))
+
+  await replyToMessage(bob, "when does the dock close?")
+  await composer(bob).pressSequentially("sunday, the notice is at https://harbor.example/dock")
+  await composer(bob).press("Enter")
+
+  await expect(message(bob, "sunday, the notice is at")).toBeVisible()
+
+  // A reply prepends the message it answers, so its first line is an entity and says nothing about
+  // the reply. The preview is the words bob wrote, with the url named by its host rather than
+  // spelled out, and the quote of alice's message tags her, so it reads as a mention.
+  await expect
+    .poll(() => notifications.at(-1))
+    .toEqual({
+      title: "Someone mentioned you",
+      body: "sunday, the notice is at a link to harbor.example",
+    })
 })

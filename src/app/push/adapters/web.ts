@@ -1,5 +1,4 @@
 import type {Unsubscriber} from "svelte/store"
-import {parse, renderAsText} from "@welshman/content"
 import {ellipsize, maybe} from "@welshman/lib"
 import {hexTags, matchFilter, tagValues, type TrustedEvent} from "@welshman/util"
 import {DM_KINDS} from "@app/content"
@@ -7,16 +6,10 @@ import {app} from "@app/core"
 import {notificationSettings} from "@app/settings"
 import type {IPushAdapter} from "@app/push/adapters/common"
 import {onNotification} from "@app/push/adapters/common"
+import {renderEventAsSummary} from "@app/render"
 import {goToEvent} from "@app/routes"
 
 const PREVIEW_LENGTH = 120
-
-const makePreview = (event: TrustedEvent) => {
-  const lines = renderAsText(parse(event)).toString().split("\n")
-  const line = lines.map(line => line.trim()).find(line => line.length > 0)
-
-  return line && ellipsize(line, PREVIEW_LENGTH, "…")
-}
 
 export class WebNotifications implements IPushAdapter {
   _unsubscriber = maybe<Unsubscriber>()
@@ -62,7 +55,7 @@ export class WebNotifications implements IPushAdapter {
         const $pubkey = app.get().user?.pubkey
 
         if (push && document.hidden && Notification?.permission === "granted") {
-          const preview = makePreview(event)
+          const preview = ellipsize(renderEventAsSummary(event), PREVIEW_LENGTH, "…")
 
           if (messages && matchFilter({kinds: DM_KINDS}, event)) {
             this._notify(
