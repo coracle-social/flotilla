@@ -9,7 +9,7 @@
   import Banner from "@app/components/Banner.svelte"
   import {speech, stopSpeech} from "@app/speech"
 
-  let audio: HTMLAudioElement
+  let audio: HTMLAudioElement | undefined = $state()
   let playing = $state(false)
   let currentTime = $state(0)
   let duration = $state(0)
@@ -18,12 +18,7 @@
   // length rather than rendering a range with no end.
   const scrubbable = $derived(Number.isFinite(duration) ? duration : 0)
 
-  const toggle = () => (playing ? audio.pause() : audio.play())
-
-  const scrub = (event: Event & {currentTarget: HTMLInputElement}) => {
-    audio.currentTime = Number(event.currentTarget.value)
-    currentTime = audio.currentTime
-  }
+  const toggle = () => (playing ? audio?.pause() : audio?.play())
 
   const display = (seconds: number) => {
     const whole = Math.floor(seconds)
@@ -37,13 +32,13 @@
     {#if $speech.src}
       <audio
         bind:this={audio}
+        bind:currentTime
+        bind:duration
         src={$speech.src}
         autoplay
         onplay={() => (playing = true)}
         onpause={() => (playing = false)}
-        onended={() => (playing = false)}
-        ondurationchange={() => (duration = audio.duration)}
-        ontimeupdate={() => (currentTime = audio.currentTime)}></audio>
+        onended={() => (playing = false)}></audio>
       <Button
         aria-label={playing ? "Pause message" : "Play message"}
         class="button button-circle button-sm button-primary shrink-0"
@@ -68,8 +63,7 @@
             min="0"
             max={scrubbable}
             step="0.1"
-            value={currentTime}
-            oninput={scrub} />
+            bind:value={currentTime} />
           <span class="whitespace-nowrap">{display(currentTime)} / {display(scrubbable)}</span>
         </span>
       {/if}
