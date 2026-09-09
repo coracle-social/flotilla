@@ -45,7 +45,7 @@
         <HomeActivity />
         <HomeNetwork />
       </div>
-      <div class="flex min-w-0 flex-col border-t border-line lg:w-80 lg:shrink-0 lg:border-t-0">
+      <div class="flex min-w-0 flex-col border-t border-line lg:w-96 lg:shrink-0 lg:border-t-0">
         <HomeHealthChecks />
         {#if HOSTING_ENABLED}
           <HomeHosting />
