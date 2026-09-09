@@ -53,6 +53,7 @@
     pushModal(ThreadCreate, {
       url,
       h,
+      quote: event,
       initialValues: {content: toNostrURI(nip19.neventEncode({...event, relays: [url]}))},
     })
   }

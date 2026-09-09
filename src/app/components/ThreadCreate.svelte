@@ -1,5 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
+  import type {TrustedEvent} from "@welshman/util"
   import {relay} from "@welshman/util"
   import {Thread} from "@welshman/domain"
   import {publish} from "@welshman/app"
@@ -32,10 +33,11 @@
     url: string
     h?: string
     shareToChat?: boolean
+    quote?: TrustedEvent
     initialValues?: Values
   }
 
-  const {url, h, shareToChat = false, initialValues}: Props = $props()
+  const {url, h, shareToChat = false, quote, initialValues}: Props = $props()
   const draftKey = new DraftKey<Values>(`thread:${url}:${h ?? ""}`)
   const draft = draftKey.get()
   const shouldProtect = $relays.hasNip(url, 70)
@@ -79,6 +81,10 @@
 
       if (h) {
         eventWriter.setRoom(url, h)
+      }
+
+      if (quote) {
+        eventWriter.addQuote(quote)
       }
 
       const thunk = await command(eventWriter).then(publish)

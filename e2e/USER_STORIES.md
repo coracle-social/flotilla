@@ -709,6 +709,7 @@ Acceptance:
 - "Create a Thread" from a room message's menu opens the thread composer
   pre-filled with a quote of that message.
 - Publishing files the thread under that room's board.
+- The message it was created from carries a link to the thread, which opens it.
 - Opening the thread shows the quoted original message as part of the opening
   post.
 

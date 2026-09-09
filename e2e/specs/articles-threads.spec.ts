@@ -948,6 +948,7 @@ test("US-045 turn a chat message into a thread", async ({seed, as}) => {
   await composer.getByRole("button", {name: "Create Thread"}).click()
 
   await expect(page.getByRole("heading", {name: "Create a Thread"})).toHaveCount(0)
+  await expect(message.getByRole("link", {name: "Deploy failures"})).toBeVisible()
 
   await page.goto(`${spacePath(url)}/threads`)
 

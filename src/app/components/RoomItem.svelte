@@ -12,6 +12,7 @@
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {
     MESSAGE,
+    THREAD,
     getCommentFiltersForParent,
     getIdOrAddress,
     matchTag,
@@ -19,6 +20,7 @@
     tagValue,
   } from "@welshman/util"
   import {isMobile} from "@lib/html"
+  import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import ReplyAlt from "@assets/icons/reply.svg?dataurl"
@@ -43,7 +45,7 @@
   import {ENABLE_ZAPS} from "@app/env"
   import type {FeedContext} from "@app/feeds"
   import {deriveEvent, deriveEventsForUrl} from "@app/repository"
-  import {makeContentPath} from "@app/routes"
+  import {makeContentPath, makeThreadPath} from "@app/routes"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -84,6 +86,8 @@
   const path = $derived(
     $innerEvent && makeContentPath(url, $innerEvent.kind, getIdOrAddress($innerEvent)),
   )
+
+  const threads = deriveEventsForUrl(url, [{kinds: [THREAD], "#q": [event.id]}])
 
   const commenterDisplays = $derived(
     deriveDisplaysByPubkey(uniq($innerComments.map(e => e.pubkey)), url),
@@ -154,6 +158,16 @@
       {createReaction}
       reactionClass="tip-right"
       innerEvent={$innerEvent} />
+    {#each $threads as thread (thread.id)}
+      <Link
+        href={makeThreadPath(url, thread.id)}
+        class="button button-xs button-neutral gap-1 rounded-full">
+        <Icon icon={NotesMinimalistic} />
+        <span class="max-w-48 truncate">
+          {tagValue(tagSpec("title"), thread.tags) || "Thread"}
+        </span>
+      </Link>
+    {/each}
     {#if path && $innerComments.length > 0}
       {@const pubkeys = $innerComments.map(e => e.pubkey)}
       {@const isOwn = pubkeys.includes($user.pubkey)}
