@@ -1,8 +1,8 @@
 <script lang="ts">
-  import {slide} from "@lib/transition"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import ComposeBar from "@app/components/ComposeBar.svelte"
 
   const {
     clear,
@@ -11,12 +11,9 @@
   } = $props()
 </script>
 
-<div
-  class="bg-surface-more relative flex h-8 items-center justify-between border-l-2 border-solid px-2 pr-7 text-xs"
-  style="border-color: var(--primary)"
-  transition:slide>
+<ComposeBar class="flex h-8 items-center justify-between pr-7 text-xs">
   <p class="text-primary">Editing message</p>
   <Button onclick={clear} class="flex items-center">
     <Icon icon={CloseCircle} />
   </Button>
-</div>
+</ComposeBar>

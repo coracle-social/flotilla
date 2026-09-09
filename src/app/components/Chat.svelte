@@ -37,8 +37,8 @@
   import ChatMembers from "@app/components/ChatMembers.svelte"
   import ChatMessage from "@app/components/ChatMessage.svelte"
   import ChatCompose from "@app/components/ChatCompose.svelte"
-  import ChatComposeEdit from "@app/components/ChatComposeEdit.svelte"
-  import ChatComposeParent from "@app/components/ChatComposeParent.svelte"
+  import ComposeEdit from "@app/components/ComposeEdit.svelte"
+  import ComposeParent from "@app/components/ComposeParent.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import {app, deletes, router, user, wraps} from "@app/core"
   import {userSettingsValues} from "@app/settings"
@@ -338,12 +338,12 @@
   </PageContent>
 
   <div class="room__compose bg-surface">
-    <div>
+    <div class="flex flex-col gap-px">
       {#if parent}
-        <ChatComposeParent event={parent} clear={clearParent} verb="Replying to" />
+        <ComposeParent event={parent} clear={clearParent} verb="Replying to" />
       {/if}
       {#if eventToEdit}
-        <ChatComposeEdit clear={clearEventToEdit} />
+        <ComposeEdit clear={clearEventToEdit} />
       {/if}
     </div>
     {#key initialValues}

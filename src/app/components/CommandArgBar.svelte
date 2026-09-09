@@ -2,8 +2,8 @@
   import cx from "classnames"
   import {Pubkey} from "@welshman/util"
   import type {CommandArg, CommandScopeTarget} from "@welshman/util"
-  import {slide} from "@lib/transition"
   import Button from "@lib/components/Button.svelte"
+  import ComposeBar from "@app/components/ComposeBar.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import {deriveValidCommands, describeCommandDraft} from "@app/commands"
 
@@ -44,9 +44,7 @@
 </script>
 
 {#if draft}
-  <div
-    class="bg-surface-more border-t-line-less border-l-primary flex flex-col gap-1 border-t border-l-2 border-solid px-2 py-1 text-xs"
-    transition:slide>
+  <ComposeBar class="border-t-line-less flex flex-col gap-1 border-t text-xs">
     <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
       <span class="font-mono">
         <span class="text-primary">/{draft.command.command()}</span>
@@ -85,5 +83,5 @@
         {/each}
       </div>
     {/if}
-  </div>
+  </ComposeBar>
 {/if}

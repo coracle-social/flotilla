@@ -24,8 +24,8 @@
   import VirtualList from "@lib/components/VirtualList.svelte"
   import type {VirtualListController} from "@lib/components/VirtualList.svelte"
   import RoomCompose from "@app/components/RoomCompose.svelte"
-  import RoomComposeEdit from "@app/components/RoomComposeEdit.svelte"
-  import RoomComposeParent from "@app/components/RoomComposeParent.svelte"
+  import ComposeEdit from "@app/components/ComposeEdit.svelte"
+  import ComposeParent from "@app/components/ComposeParent.svelte"
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@app/components/RoomItemAddMember.svelte"
   import RoomPinnedMessages from "@app/components/RoomPinnedMessages.svelte"
@@ -696,15 +696,15 @@
             {@render membershipButton("Ask to Join")}
           </div>
         {:else}
-          <div>
+          <div class="flex flex-col gap-px">
             {#if parent}
-              <RoomComposeParent {url} event={parent} clear={clearParent} verb="Replying to" />
+              <ComposeParent {url} event={parent} clear={clearParent} verb="Replying to" />
             {/if}
             {#if sharedEvent}
-              <RoomComposeParent {url} event={sharedEvent} clear={clearShare} verb="Sharing" />
+              <ComposeParent {url} event={sharedEvent} clear={clearShare} verb="Sharing" />
             {/if}
             {#if eventToEdit}
-              <RoomComposeEdit clear={clearEventToEdit} />
+              <ComposeEdit clear={clearEventToEdit} />
             {/if}
           </div>
           {#key initialValues}

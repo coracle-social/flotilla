@@ -11,7 +11,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import ChatComposeParent from "@app/components/ChatComposeParent.svelte"
+  import ComposeParent from "@app/components/ComposeParent.svelte"
   import {prependParent} from "@app/rooms"
   import {makeEditor} from "@app/editor"
   import {DraftKey} from "@app/drafts"
@@ -115,7 +115,7 @@
   class="left-content bottom-sai right-sai fixed z-feature mb-14 md:mb-0 w-full md:w-auto pr-2">
   <div class="card mx-2 my-2 shadow-md">
     {#if parent}
-      <ChatComposeParent {url} event={parent} clear={() => onClearParent?.()} verb="Replying to" />
+      <ComposeParent {url} event={parent} clear={() => onClearParent?.()} verb="Replying to" />
     {/if}
     <div class="relative">
       <div class="note-editor grow overflow-hidden">
