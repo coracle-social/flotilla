@@ -55,7 +55,7 @@
       <Button class="button button-neutral button-xs" onclick={ignoreMute}>Show anyway</Button>
     </div>
   {:else}
-    <div class="flex min-w-0 gap-3 py-3">
+    <div data-component="Comment" class="flex min-w-0 gap-3 py-3">
       <Button onclick={openProfile} class="shrink-0 self-start">
         <ProfileCircle pubkey={node.comment.pubkey} {url} size={8} />
       </Button>
@@ -95,6 +95,7 @@
     <!-- The thread line runs under the avatar's center and indents replies to line up with
          this comment's text column; it brightens while the subtree is hovered. -->
     <div
+      data-component="CommentReplies"
       class="border-line-less hover:border-line ml-4 flex flex-col border-l pl-7 transition-colors">
       {#each node.children as child (child.comment.id)}
         <CommentTree node={child} {root} {replyTo} {setReplyTo} {url} {context} />

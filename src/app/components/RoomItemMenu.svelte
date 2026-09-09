@@ -94,14 +94,17 @@
 
     if (!h) return
 
-    const pins = isPinned ? $pinIds.filter(pin => pin !== event.id) : [...$pinIds, event.id]
+    // The optimistic write flips isPinned while the publish is in flight, so what this did is read
+    // before it goes out rather than after.
+    const wasPinned = isPinned
+    const pins = wasPinned ? $pinIds.filter(pin => pin !== event.id) : [...$pinIds, event.id]
     const command = await $roomPinLists.setPins(url, h, pins)
     const error = await command.publishToRelays([url]).waitForError()
 
     if (error) {
       pushToast({theme: "error", message: error})
     } else {
-      pushToast({message: isPinned ? "Message unpinned" : "Message pinned"})
+      pushToast({message: wasPinned ? "Message unpinned" : "Message pinned"})
     }
   }
 </script>

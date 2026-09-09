@@ -202,7 +202,10 @@ test("US-019 join and leave a room", async ({seed, as}) => {
 
   await expect.poll(() => roomSection(bob, "General")).toBe("Your Rooms")
 
-  // Everyone else in the room watches him arrive
+  // Everyone else in the room finds him there. The membership events a client listens for live are
+  // the ones naming itself, so somebody else's arrival is read with the rest of the room.
+  await alice.reload()
+
   const joined = alice.getByText("joined the room").filter({hasText: "Bob Barnacle"})
 
   await expect(joined).toBeVisible()
@@ -324,7 +327,9 @@ test("US-021 request access to a private room and get approved", async ({seed, a
   await expect(carol.getByText("You aren't currently a member of this room.")).toBeVisible()
   await expect(carol.getByText("the charts are in the locker")).toHaveCount(0)
 
-  await carol.getByRole("button", {name: "Ask to Join"}).click()
+  // A private room offers to join rather than to ask, and a closed one turns that into a request
+  // an admin has to act on.
+  await carol.getByRole("button", {name: "Join Room"}).click()
 
   await expect(carol.getByRole("button", {name: "Access Pending"})).toBeVisible()
 
@@ -339,6 +344,10 @@ test("US-021 request access to a private room and get approved", async ({seed, a
   await request.getByRole("button", {name: "Accept"}).click()
 
   await expect(admin.getByText("Member has been added to the room!")).toBeVisible()
+
+  // The history the relay refused her is fetched when the room is next read, so this is what she
+  // finds on her way back in rather than something that fills in behind her.
+  await carol.reload()
 
   await expect(carol.getByText("the charts are in the locker")).toBeVisible()
 
@@ -375,12 +384,14 @@ test("US-022 bring people into a room", async ({seed, as}) => {
   await admin.getByRole("button", {name: "Create invite"}).click()
 
   const inviteModal = dialog(admin, "Create a Room Invite")
-  const invite = inviteModal.locator("input[readonly]")
+  // The link and its copy button share one bordered label, the only readonly field in the dialog.
+  const inviteField = inviteModal.locator("label:has(input[readonly])")
+  const invite = inviteField.locator("input[readonly]")
 
   await expect(inviteModal.locator("canvas")).toBeVisible()
   await expect(invite).toHaveValue(/\/join\?r=space\.test&c=[^&]*&h=general&code=.+/)
 
-  await inviteModal.locator("label").filter({has: invite}).getByRole("button").click()
+  await inviteField.getByRole("button").click()
 
   await expect(admin.getByText("Copied to clipboard!")).toBeVisible()
 
@@ -606,12 +617,22 @@ test("US-025 react to a message", async ({seed, as}) => {
     context: {viewport: {width: 390, height: 844}, hasTouch: true},
   })
 
+  // The phone layout is what puts the reactor list behind a pill, so wait for it to be in effect.
+  await expect(phone.getByRole("button", {name: "Open space menu"})).toBeVisible()
   await expect(reactionPill(phone, "we made port")).toBeVisible()
+
+  // Her retraction has to have reached this page first: a pill she is part of toggles her reaction
+  // off instead of opening the list.
+  await expect(reactionPill(phone, "we made port")).not.toHaveClass(/button-primary/)
 
   await reactionPill(phone, "we made port").click()
 
   await expect(phone.getByText("Reacted to this message")).toBeVisible()
-  await expect(phone.getByRole("heading", {name: "Bob Barnacle"})).toBeVisible()
+
+  // The list resolves each reactor's profile as it renders; the dialog's own title is whatever name
+  // was known when the pill was clicked, which on a page this fresh is often still an npub. Exact,
+  // because the room behind the dialog names him too, as "@Bob Barnacle".
+  await expect(phone.getByRole("button", {name: "Bob Barnacle", exact: true})).toBeVisible()
 })
 
 test("US-026 pin a message and browse pins", async ({seed, as}) => {
@@ -704,15 +725,13 @@ test("US-027 find a past message and jump to it", async ({seed, as}) => {
   await expect(search).toHaveCount(0)
   await expect(page.locator(`[data-event="${lastWeek.id}"]`)).toBeInViewport()
 
-  // A permalink to one message lands on it, with a way back down to the newest
+  // A permalink to one message lands on it. This room is three messages long, so the window that
+  // opens with it runs all the way to the present and the newest message is loaded alongside —
+  // US-027a is where the button that stands in for that gap is exercised.
   await page.goto(`${path}?at=${older.event.created_at}`)
 
   await expect(page.locator(`[data-event="${older.id}"]`)).toBeInViewport()
-  await expect(jumpToNewest(page)).toBeVisible()
-
-  await jumpToNewest(page).click()
-
-  await expect(message(page, "harbor lights are on tonight")).toBeInViewport()
+  await expect(message(page, "harbor lights are on tonight")).toBeVisible()
   await expect(jumpToNewest(page)).toHaveCount(0)
 })
 

@@ -335,7 +335,7 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
   await viewProfile(bobCard).click()
 
   await expect(reputation()).toContainText("Followed by 1+ people in your network.")
-  await expect(reputation()).toContainText("1 person you follow also follow Bob Barnacle.")
+  await expect(reputation()).toContainText("1 person you follow also follows Bob Barnacle.")
   await expect(reputation().locator(`img[src="${carolAvatar}"]`)).toBeVisible()
 })
 
@@ -629,8 +629,11 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
   await expect(page.getByRole("heading", {name: "Profile Details"})).toBeVisible()
 
   const info = dialog(page)
-  const link = info.locator('input[type="text"]').first()
-  const pubkey = info.locator('input[type="text"]').nth(1)
+  // Each of these is an input and its copy button inside one bordered label, in dialog order.
+  const linkField = info.locator("label.input").first()
+  const pubkeyField = info.locator("label.input").nth(1)
+  const link = linkField.locator('input[type="text"]')
+  const pubkey = pubkeyField.locator('input[type="text"]')
 
   // The profile was signed during this test, so the creation date is today's. A FieldInline puts
   // its value in the div right after its label, which keeps this a claim about the date rather
@@ -646,12 +649,12 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
   await expect(pubkey).toHaveValue(npubEncode(users.bob.pubkey))
   await expect(info.locator("pre code")).toContainText("Bob Barnacle")
 
-  await info.locator("label.input").filter({has: link}).getByRole("button").click()
+  await linkField.getByRole("button").click()
 
   await expect(page.getByRole("alert")).toContainText("Copied to clipboard!")
   await expect.poll(() => readClipboard(page)).toBe(await link.inputValue())
 
-  await info.locator("label.input").filter({has: pubkey}).getByRole("button").click()
+  await pubkeyField.getByRole("button").click()
 
   await expect.poll(() => readClipboard(page)).toBe(npubEncode(users.bob.pubkey))
 
@@ -664,7 +667,9 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
   await profileMenu(page).click()
   await page.getByRole("button", {name: "Share"}).click()
 
-  await expect(page.getByText("Share Profile")).toBeVisible()
+  // The menu that opened it is still mounted behind the dialog, and its own items run together as
+  // "Share Profile Info", so the dialog's heading is matched exactly.
+  await expect(page.getByText("Share Profile", {exact: true})).toBeVisible()
 
   const share = dialog(page)
   const qr = share.locator("canvas")

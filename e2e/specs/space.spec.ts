@@ -69,8 +69,8 @@ test("opens the space menu in a drawer on a phone", async ({seed, as}) => {
   await expect(drawer).toHaveCount(0)
 
   // The button is the bottom bar's rather than the page's, so it still opens the menu from a page
-  // that is in no space at all.
-  await page.locator('a[href="/people"]:visible').click()
+  // that is in no space at all, on the last space the reader was in.
+  await page.goto("/chat")
 
   await page.getByRole("button", {name: "Open space menu"}).click()
 

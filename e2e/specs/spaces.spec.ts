@@ -1,6 +1,17 @@
-import {DAY, HOUR, MINUTE, WEEK} from "@welshman/lib"
-import {THREAD, makeEvent} from "@welshman/util"
-import {expect, roomPath, spacePath, test, users} from "../harness"
+import {DAY, HOUR, MINUTE, WEEK, sortBy} from "@welshman/lib"
+import {ROOMS, THREAD, makeEvent} from "@welshman/util"
+import type {Page} from "@playwright/test"
+import {expect, readCachedEvents, roomPath, spacePath, test, users} from "../harness"
+
+// The space this user's room list names first, read from the copy on disk the app restores itself
+// from. Room lists reach indexeddb in three-second batches with nothing in the ui to say when one
+// has landed, so a spec about what survives a reload waits on this before it reloads.
+const cachedFirstSpace = async (page: Page, pubkey: string) => {
+  const events = (await readCachedEvents(page, pubkey)).filter(event => event.kind === ROOMS)
+  const newest = sortBy(event => -event.created_at, events)[0]
+
+  return newest?.tags.find(tag => tag[0] === "r")?.[1]
+}
 
 test("US-009 browse, search, and reorder your spaces", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
@@ -68,9 +79,21 @@ test("US-009 browse, search, and reorder your spaces", async ({seed, as}) => {
 
   await expect(joined.first()).toContainText(space.url)
 
-  await joined.filter({hasText: other.url}).dragTo(joined.filter({hasText: space.url}))
+  // Html5 drag and drop, dispatched rather than mimed with the mouse: chromium's synthetic drag
+  // starts the drag and moves it, but never delivers the drop the reorder is committed in, so the
+  // row would snap back to where it came from.
+  const dataTransfer = await page.evaluateHandle(() => new DataTransfer())
+  const source = joined.filter({hasText: other.url})
+  const target = joined.filter({hasText: space.url})
+
+  await source.dispatchEvent("dragstart", {dataTransfer})
+  await target.dispatchEvent("drop", {dataTransfer})
 
   await expect(joined.first()).toContainText(other.url)
+
+  // The reload restores the list from disk, so wait for the new order to land there rather than
+  // racing it — a page that read the old copy back keeps the order it started with.
+  await expect.poll(() => cachedFirstSpace(page, users.alice.pubkey)).toBe(other.url)
 
   await page.reload()
 
@@ -247,7 +270,9 @@ test("US-012 decide whether to trust an unsigned space", async ({seed, as}) => {
 
   await expect(bob).toHaveURL(/\/home/)
 
-  await bob.goto("/spaces")
+  // In-app rather than a fresh load: leaving the space is published in the background, and a
+  // page that reloads before it reaches disk reads the list he had a moment ago.
+  await bob.getByRole("link", {name: "All Spaces"}).click()
 
   await expect(bob.getByText("You haven't joined any spaces yet.")).toBeVisible()
 
@@ -292,7 +317,9 @@ test("US-013 follow a space that has moved", async ({seed, as}) => {
 
   await expect(alice).toHaveURL(/\/spaces\/other\.test\/about/)
 
-  await alice.goto("/spaces")
+  // In-app rather than a fresh load: the updated list is published in the background, and a page
+  // that reloads before it reaches disk reads the old address back.
+  await alice.getByRole("link", {name: "All Spaces"}).click()
 
   const aliceSpaces = alice.getByRole("listitem")
 
@@ -336,7 +363,9 @@ test("US-014 leave a space", async ({seed, as}) => {
 
   await expect(page).toHaveURL(/\/home/)
 
-  await page.goto("/spaces")
+  // In-app rather than a fresh load: leaving is published in the background, and a page that
+  // reloads before it reaches disk reads the list he had a moment ago.
+  await page.getByRole("link", {name: "All Spaces"}).click()
 
   await expect(page.getByText("You haven't joined any spaces yet.")).toBeVisible()
 
@@ -493,6 +522,11 @@ test("US-016 catch up on a space's recent activity", async ({seed, as}) => {
   await alice.locator(".chat-editor [contenteditable=true]").press("Enter")
 
   await expect(alice.getByText("still here!")).toBeVisible()
+
+  // The feed is assembled when the page loads rather than kept up to date behind the reader, so
+  // this is the order bob finds when he comes back to it.
+  await bob.reload()
+
   await expect(items.first()).toContainText("Quiet Corner")
 
   await bob.goto(spacePath(other.url) + "/recent")

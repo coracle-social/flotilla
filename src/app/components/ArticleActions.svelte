@@ -38,7 +38,7 @@
 </script>
 
 {#if detail}
-  <div class="flex w-full min-w-0 flex-col gap-3">
+  <div data-component="ArticleActions" class="flex w-full min-w-0 flex-col gap-3">
     <ThunkStatusOrDeleted {event} {context}>
       <ReactionSummary
         {url}

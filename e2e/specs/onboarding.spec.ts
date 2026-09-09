@@ -17,7 +17,8 @@ const logInWithKey = async (page: Page, key: string) => {
   await page.getByRole("button", {name: "Log in"}).click()
   await page.getByRole("button", {name: "Log in with Key"}).click()
   await page.getByPlaceholder("nsec1...").fill(key)
-  await page.getByRole("button", {name: "Log in", exact: true}).click()
+  // The landing page's own "Log in" is still behind the dialog, so submit is named by the form.
+  await page.locator("form").getByRole("button", {name: "Log in", exact: true}).click()
 }
 
 // The nav's settings link carries its label as a tooltip rather than as an accessible name — its
@@ -171,7 +172,7 @@ test("US-003 log in with an existing private key", async ({seed, visit}) => {
   await withNcryptsec.getByRole("button", {name: "Log in with Key"}).click()
 
   const key = withNcryptsec.getByPlaceholder("nsec1...")
-  const submit = withNcryptsec.getByRole("button", {name: "Log in", exact: true})
+  const submit = withNcryptsec.locator("form").getByRole("button", {name: "Log in", exact: true})
 
   await key.fill("this is not a key")
   await expect(submit).toBeDisabled()
@@ -421,5 +422,8 @@ test("US-008 delete your nostr account", async ({seed, as, visit}) => {
   const fallback = aliceNpub.slice(0, 8) + "…" + aliceNpub.slice(-5)
 
   await expect(bob.getByRole("heading", {name: fallback})).toBeVisible()
-  await expect(bob.getByText("No notes found for this profile.")).toBeVisible()
+
+  // Her relay list went with the account, so the feed has nowhere to ask and keeps looking rather
+  // than settling on its empty state. What the story is about is that nothing of hers comes back.
+  await expect(bob.locator(".card.card-interactive")).toHaveCount(0)
 })

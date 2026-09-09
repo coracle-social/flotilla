@@ -30,10 +30,12 @@ const PNG = Buffer.from(
   "base64",
 )
 
-// The dev server from vite.config.ts. Traffic to it is the app loading itself rather than egress,
-// so it is the one host both layers here let past, websockets included for Vite's hmr socket.
+// The dev server from vite.config.ts, on the port playwright.config.ts started it on. Traffic to it
+// is the app loading itself rather than egress, so it is the one host both layers here let past,
+// websockets included for Vite's hmr socket.
 export const isDevServerUrl = (url: URL) =>
-  url.port === "1847" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
+  url.port === (process.env.E2E_PORT ?? "1847") &&
+  ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
 
 // A relay is reached over wss and its own http origin is where nip-11 and nip-86 live.
 const relayOrigin = (url: string) => new URL(url.replace(/^ws/, "http")).origin

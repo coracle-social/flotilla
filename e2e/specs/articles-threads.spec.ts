@@ -109,6 +109,11 @@ const shortDate = (page: Page, seconds: number) =>
 // role — its own contents include a profile button and the room and action links.
 const articleCards = (page: Page) => page.locator('[data-component="ArticleItem"]')
 
+// A comment is a flat block in the tree rather than a card, so it carries a component marker for
+// the specs to name; the marker sits on the comment's own row, not on its replies.
+const comment = (page: Page, text: string) =>
+  page.locator('[data-component="Comment"]').filter({hasText: text})
+
 const openArticle = (page: Page, title: string) =>
   articleCards(page).filter({hasText: title}).getByRole("link", {name: title, exact: true}).click()
 
@@ -316,7 +321,8 @@ test("US-038 browse, filter, and read articles", async ({seed, as}) => {
   await expect(page.getByRole("heading", {name: "Tending the Garden"}).first()).toBeVisible()
   await expect(page.locator('img[src="https://images.test/garden.jpg"]')).toBeVisible()
   await expect(page.getByText("A short teaser about gardens.")).toBeVisible()
-  await expect(page.getByText(/^Published /)).toContainText(await shortDate(page, at(4, HOUR)))
+  // The byline pairs the published date with the reading time, so the header is what carries it.
+  await expect(page.locator("article header")).toContainText(await shortDate(page, at(4, HOUR)))
 
   const markdown = page.locator(".content-markdown")
 
@@ -365,18 +371,14 @@ test("US-039 comment on an article", async ({seed, as}) => {
   await composerForm(bob).getByRole("button", {name: "Comment"}).click()
 
   // The comment renders from the optimistic write, but the composer holds what was typed until the
-  // relay confirms it, so for a moment the page carries this text twice. Match the rendered card.
-  await expect(
-    bob.locator(".card.z-feature").filter({hasText: "The soil chapter is the good one."}),
-  ).toBeVisible()
+  // relay confirms it, so for a moment the page carries this text twice. Match the rendered comment.
+  await expect(comment(bob, "The soil chapter is the good one.")).toBeVisible()
 
   const carol = await as(users.carol, articlesPath)
 
   await openArticle(carol, "Tending the Garden")
 
-  const bobsComment = carol
-    .locator(".card.z-feature")
-    .filter({hasText: "The soil chapter is the good one."})
+  const bobsComment = comment(carol, "The soil chapter is the good one.")
 
   await expect(bobsComment).toBeVisible()
 
@@ -386,11 +388,7 @@ test("US-039 comment on an article", async ({seed, as}) => {
   )
   await composerForm(carol).getByRole("button", {name: "Reply", exact: true}).click()
 
-  await expect(
-    carol
-      .locator(".card.z-feature")
-      .filter({hasText: "Only because you skipped the water chapter."}),
-  ).toBeVisible()
+  await expect(comment(carol, "Only because you skipped the water chapter.")).toBeVisible()
 
   const alice = await as(users.alice, articlesPath)
 
@@ -401,7 +399,7 @@ test("US-039 comment on an article", async ({seed, as}) => {
   await expect(alice.getByText("Only because you skipped the water chapter.")).toBeVisible()
 
   // A reply is nested inside the comment it answers; a top level comment is not.
-  const nested = alice.locator(".border-l.ml-4.pl-4")
+  const nested = alice.locator('[data-component="CommentReplies"]')
 
   await expect(nested.getByText("Only because you skipped the water chapter.")).toBeVisible()
   await expect(nested.getByText("The soil chapter is the good one.")).toHaveCount(0)
@@ -424,9 +422,7 @@ test("US-039 comment on an article", async ({seed, as}) => {
 
   await composer.getByRole("button", {name: "Comment"}).click()
 
-  const alicesComment = alice
-    .locator(".card.z-feature")
-    .filter({hasText: "Thanks both, here's the bed I meant."})
+  const alicesComment = comment(alice, "Thanks both, here's the bed I meant.")
 
   await expect(alicesComment).toBeVisible()
   await expect(alicesComment.locator(`img[src^="${BLOSSOM_ORIGIN}/"]`)).toBeVisible()
@@ -521,11 +517,16 @@ test("US-040 react to a post with an emoji", async ({seed, as}) => {
 
   await openArticle(page, "Tending the Garden")
 
-  const articleCard = page.locator(".card.z-feature").filter({hasText: "Gardens are worth"})
-  const commentCard = page.locator(".card.z-feature").filter({hasText: "A note about the soil"})
+  // An article's own reactions live in the action bar under it rather than on the article itself.
+  const articleActions = page.locator('[data-component="ArticleActions"]')
+  const commentCard = comment(page, "A note about the soil")
 
-  await expect(articleCard).toBeVisible()
-  await expectReactionRoundTrip(page, articleCard, emojiButton(articleCard))
+  await expect(articleActions).toBeVisible()
+  await expectReactionRoundTrip(
+    page,
+    articleActions,
+    articleActions.getByRole("button", {name: "Add a reaction"}),
+  )
 
   await expect(commentCard).toBeVisible()
   await expectReactionRoundTrip(page, commentCard, emojiButton(commentCard))
@@ -570,7 +571,11 @@ test("US-041 publish an article from a room", async ({seed, as}) => {
 
   await expect(page.getByRole("heading", {name: "Repotting in Winter"}).first()).toBeVisible()
 
-  // The room hears about the article without alice posting it a second time.
+  // The room hears about the article without alice posting it a second time. Its copy is published
+  // after the composer has moved on, so wait for it to leave — a page that unloads mid-publish
+  // takes it with it.
+  await expect.poll(() => publishedEvents(page, MESSAGE)).toHaveLength(1)
+
   await page.goto(roomPath(url, "lounge"))
   await expect(page.getByText("Repotting in Winter")).toBeVisible()
 
@@ -583,11 +588,13 @@ test("US-041 publish an article from a room", async ({seed, as}) => {
 
   await openArticle(page, "Repotting in Winter")
 
-  const badge = page.getByRole("link", {name: /Posted in #\s*Lounge/})
+  // A card says which room an article was posted in; the article's own page carries that in its
+  // page bar instead.
+  const roomLink = pageBar(page).getByRole("link", {name: /#\s*Lounge/})
 
-  await expect(badge).toBeVisible()
+  await expect(roomLink).toBeVisible()
 
-  await badge.click()
+  await roomLink.click()
 
   await expect(page).toHaveURL(new RegExp(`${roomPath(url, "lounge")}$`))
   await expect(page.locator(".chat-editor")).toBeVisible()

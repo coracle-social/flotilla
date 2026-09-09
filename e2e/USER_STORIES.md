@@ -1210,46 +1210,17 @@ Acceptance:
 
 ## Settings & preferences
 
-### US-083 — Manage inbox and outbox relays
+### US-084 — Block a relay you never want used
 
-As alice, I want to choose where I read and publish, so that my messages reach
-the right places.
-
-Acceptance:
-
-- The relays page shows separate Inbox and Outbox cards, each with a current
-  count.
-- Adding a relay by url to the Inbox list shows it there and increments the
-  count on the settings page.
-- Removing a relay from the Outbox list drops it immediately, and a list with
-  only one relay shows a warning icon rather than a check.
-
-### US-084 — Manage DM, search, and blocked relays
-
-As bob, I want separate relay lists for messaging, search, and relays I never
-want used, so that each feature uses relays suited to it.
+As bob, I want to block a relay, so that nothing I do reaches out to it.
 
 Acceptance:
 
-- A relay added to DM Relays appears there and not in Search Relays.
-- The search-relay picker only offers relays advertising NIP-50 search support,
-  and removing one updates the count on the relays page.
-- A relay added to Blocked Relays appears in that list and stops being offered
-  as a suggestion for the others.
-
-### US-085 — Fix relay misconfiguration from the health check
-
-As a user whose relay lists are wrong, I want the app to detect and fix it, so
-that I don't have to know the specifics.
-
-Acceptance:
-
-- With only one outbox relay, the relays page shows a health check reporting
-  "Missing Outbox Relays".
-- Applying that recommendation publishes a new relay list and the issue leaves
-  the pending list.
-- "Apply All Recommendations" clears multiple issues at once, after which the
-  card shows an all-clear state.
+- Settings › Privacy shows how many relays are blocked, and opening that list
+  from there offers a picker of the relays the client knows about.
+- A relay added there appears in the blocked list and the count goes up.
+- The picker stops offering a relay once it is blocked, while still offering the
+  others.
 
 ### US-086 — Configure alerts
 

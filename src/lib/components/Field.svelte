@@ -20,9 +20,11 @@
       </label>
     {/if}
     {#if secondary}
-      <label class="flex items-center gap-2">
+      <!-- Not a label: what goes here is a control of its own, and a button wrapped in a label
+           loses its accessible name. -->
+      <div class="flex items-center gap-2">
         {@render secondary()}
-      </label>
+      </div>
     {/if}
   </div>
   {@render input?.()}

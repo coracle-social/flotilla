@@ -71,16 +71,16 @@ const detail = (page: Page) => page.locator(".tippy-target .card").filter({visib
 // an icon with no accessible name.
 const menuOf = (scope: Locator) => scope.locator(".join").getByRole("button").last()
 
-// A comment, an article and a thread post are all the same feature card, named by their text.
-const noteCard = (page: Page, text: string) =>
-  page.locator(".card.z-feature").filter({hasText: text})
+// A comment is a flat block in the comment tree rather than a card, named by its text.
+const commentCard = (page: Page, text: string) =>
+  page.locator('[data-component="Comment"]').filter({hasText: text})
 
-// A modal is mounted alongside the page it covers, so a page's own "Write" and the composer's
-// submit are both in the dom at once.
-const modal = (page: Page, title: string) =>
-  page.locator("form").filter({has: page.getByRole("heading", {name: title})})
+// The action bar under an article on its own page, which is where that article's status shows.
+const articleActions = (page: Page) => page.locator('[data-component="ArticleActions"]')
 
-const editorOf = (scope: Locator) => scope.locator(".note-editor [contenteditable=true]")
+const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
+
+const editorOf = (scope: Locator | Page) => scope.locator(".note-editor [contenteditable=true]")
 
 // Every caller of this sends to a room, whose composer gates on nothing, so the wait is for the
 // room to have rendered one.
@@ -110,14 +110,12 @@ const publishedTo = (page: Page, id: string) =>
     .filter(({event}) => event.id === id)
     .map(({url}) => url)
 
+// The composer is a page of its own, and it holds the reader there until publishing resolves.
 const writeArticle = async (page: Page, title: string, body: string) => {
-  await page.getByRole("button", {name: "Write"}).click()
-
-  const composer = modal(page, "Write an Article")
-
-  await composer.getByPlaceholder("What is this article about?").fill(title)
-  await editorOf(composer).pressSequentially(body)
-  await composer.getByRole("button", {name: "Publish Article"}).click()
+  await pageBar(page).getByRole("button", {name: "Write"}).click()
+  await page.getByPlaceholder("Title", {exact: true}).fill(title)
+  await editorOf(page).pressSequentially(body)
+  await pageBar(page).getByRole("button", {name: "Publish"}).click()
 }
 
 const writeComment = async (page: Page, body: string) => {
@@ -125,6 +123,9 @@ const writeComment = async (page: Page, body: string) => {
 
   const composer = page.locator("form").filter({has: page.locator(".note-editor")})
 
+  // The editor takes focus itself once it has mounted, and typing into it before that puts the
+  // caret back at the start partway through the sentence.
+  await expect(editorOf(composer)).toBeFocused()
   await editorOf(composer).pressSequentially(body)
   await composer.getByRole("button", {name: "Comment"}).click()
 }
@@ -393,21 +394,15 @@ test("US-071 content posts show delivery status in place", async ({seed, as}) =>
 
   await writeArticle(alice, "Signals in the Noise", "Everything worth hearing is quiet.")
 
-  const article = alice.locator('[data-component="ArticleItem"]').filter({hasText: "Signals"})
-
-  await expect(alice.getByRole("heading", {name: "Write an Article"})).toHaveCount(0)
-
-  // The row's own actions first: a status this row does not have says nothing until the row it
-  // would sit in is on screen.
-  await expect(menuOf(article)).toBeVisible()
-  await expect(article.getByText("Sending...")).toHaveCount(0)
-  await expect(article.getByText("Failed to send!")).toHaveCount(0)
+  // Publishing lands on the article's own page, where its status sits under the article itself.
+  await expect(alice.getByRole("heading", {name: "Signals in the Noise"}).first()).toBeVisible()
+  await expect(articleActions(alice).getByText("Sending...")).toHaveCount(0)
+  await expect(articleActions(alice).getByText("Failed to send!")).toHaveCount(0)
   await expect(toast(alice)).toHaveCount(0)
 
-  await article.getByRole("link", {name: "Signals in the Noise", exact: true}).click()
   await writeComment(alice, "Worth saying twice.")
 
-  const comment = noteCard(alice, "Worth saying twice.")
+  const comment = commentCard(alice, "Worth saying twice.")
 
   await expect(menuOf(comment)).toBeVisible()
   await expect(comment.getByText("Sending...")).toHaveCount(0)
@@ -418,14 +413,13 @@ test("US-071 content posts show delivery status in place", async ({seed, as}) =>
   await alice.goto(`${spacePath(quiet)}/articles`)
   await writeArticle(alice, "Into the Void", "Nobody is listening.")
 
-  const stuck = alice.locator('[data-component="ArticleItem"]').filter({hasText: "Into the Void"})
+  // The composer holds the reader until publishing gives up, then lands on the article anyway.
+  // Nothing was refused, so there is no toast — the action bar under the article is what says the
+  // relay never answered.
+  const stuck = articleActions(alice)
 
-  await expect(stuck.getByText("Sending...")).toBeVisible()
-  await expect(stuck.getByRole("button", {name: "Cancel"})).toBeVisible()
-
-  // The composer closes itself once publishing gives up, and the row it left behind says why.
   await expect(stuck.getByText("Failed to send!")).toBeVisible()
-  await expect(alice.getByRole("heading", {name: "Write an Article"})).toHaveCount(0)
+  await expect(toast(alice)).toHaveCount(0)
 
   await stuck.getByText("Failed to send!").click()
 
@@ -433,17 +427,16 @@ test("US-071 content posts show delivery status in place", async ({seed, as}) =>
   await expect(detail(alice)).toContainText("other.test")
   await expect(detail(alice)).toContainText("request timed out.")
 
-  await stuck.getByRole("link", {name: "Into the Void", exact: true}).click()
   await writeComment(alice, "A footnote nobody asked for.")
 
-  const footnote = noteCard(alice, "A footnote nobody asked for.")
+  const footnote = commentCard(alice, "A footnote nobody asked for.")
 
   await expect(footnote.getByText("Sending...")).toBeVisible()
   await expect(footnote.getByRole("button", {name: "Cancel"})).toBeVisible()
 
   await footnote.getByRole("button", {name: "Cancel"}).click()
 
-  await expect(noteCard(alice, "A footnote nobody asked for.")).toHaveCount(0)
+  await expect(commentCard(alice, "A footnote nobody asked for.")).toHaveCount(0)
 })
 
 test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
@@ -503,24 +496,23 @@ test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
   // A post whose relay never answered, deleted while it is still marked failed.
   await writeArticle(alice, "Into the Void", "Nobody is listening.")
 
-  const stuck = alice.locator('[data-component="ArticleItem"]').filter({hasText: "Into the Void"})
+  // Publishing waits the relay out and lands on the article anyway, still marked failed.
+  const stuck = articleActions(alice)
 
   await expect(stuck.getByText("Failed to send!")).toBeVisible()
 
-  // The composer closes itself once publishing gives up, and the row's menu is underneath it.
-  await expect(alice.getByRole("heading", {name: "Write an Article"})).toHaveCount(0)
-
-  await menuOf(stuck).click()
+  await alice.getByRole("button", {name: "Article options"}).click()
   await alice.getByRole("button", {name: "Delete Article"}).click()
   await alice.getByRole("button", {name: "Confirm"}).click()
 
-  // A feed shows non-deleted posts only, so deleting it drops the row rather than marking it.
-  await expect(stuck).toHaveCount(0)
+  // Deleted takes over from the failure the article was carrying.
+  await expect(stuck.getByText("Deleted", {exact: true})).toBeVisible()
+  await expect(stuck.getByText("Failed to send!")).toHaveCount(0)
 
   await alice.goto(articlePath(url, `${LONG_FORM}:${users.alice.pubkey}:tending-the-garden`))
 
-  const comment = noteCard(alice, "A note about the soil chapter.")
-  const article = noteCard(alice, "Gardens are worth the trouble.")
+  const comment = commentCard(alice, "A note about the soil chapter.")
+  const article = articleActions(alice)
 
   await expect(comment).toBeVisible()
   await expect(comment.getByRole("button", {name: /🎉/})).toBeVisible()
@@ -532,14 +524,14 @@ test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
   // The comment list is a feed too, so a deleted comment drops out of it.
   await expect(comment).toHaveCount(0)
 
-  await menuOf(article).click()
+  await alice.getByRole("button", {name: "Article options"}).click()
   await alice.getByRole("button", {name: "Delete Article"}).click()
   await alice.getByRole("button", {name: "Confirm"}).click()
 
   // But this page is the article's own view, so it stays and is marked deleted rather than
-  // vanishing, and the "Deleted" pill stands in place of the actions the row offered before.
+  // vanishing, and the "Deleted" pill stands in place of the actions it offered before.
   await expect(article.getByText("Deleted", {exact: true})).toBeVisible()
-  await expect(article.locator(".join")).toHaveCount(0)
+  await expect(article.getByRole("button", {name: "Add a reaction"})).toHaveCount(0)
 })
 
 test("US-073 a multi-part message reports one status", async ({seed, as}) => {

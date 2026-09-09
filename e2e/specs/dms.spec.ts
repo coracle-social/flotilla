@@ -546,7 +546,7 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
 
   // Reply: the preview appears above the composer, and closing it sends nothing
   await openMessageMenu(alice, his.id)
-  await alice.getByRole("button", {name: "Send Reply"}).click()
+  await alice.getByRole("button", {name: "Reply"}).click()
 
   await expect(composePreview(alice)).toContainText("Replying to @Bob Barnacle")
   await expect(composePreview(alice)).toContainText("did you see the thing?")
@@ -557,7 +557,7 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
   await expect(alice.locator(".chat-bubble")).toHaveCount(2)
 
   await openMessageMenu(alice, his.id)
-  await alice.getByRole("button", {name: "Send Reply"}).click()
+  await alice.getByRole("button", {name: "Reply"}).click()
 
   await expect(composePreview(alice)).toContainText("Replying to @Bob Barnacle")
 
@@ -567,8 +567,10 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
   await expect(bubble(alice, "yes I did")).toContainText("did you see the thing?")
   await expect(bubble(bob, "yes I did")).toContainText("did you see the thing?")
 
-  // Edit: her own message is replaced in place for both of them rather than duplicated
+  // Edit: her own message is replaced in place for both of them rather than duplicated. The menu
+  // leads with React and Reply and keeps the rest behind a disclosure.
   await openMessageMenu(alice, hers.id)
+  await alice.getByRole("button", {name: "More Options"}).click()
 
   await expect(alice.getByRole("button", {name: "Edit Message"})).toBeVisible()
 
@@ -591,7 +593,7 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
 
   // React, then take it back, on both sides of the conversation
   await openMessageMenu(alice, his.id)
-  await alice.getByRole("button", {name: "Send Reaction"}).click()
+  await alice.getByRole("button", {name: "React"}).click()
 
   const picker = alice.locator("emoji-picker").filter({visible: true})
 
@@ -661,7 +663,7 @@ test("US-036 receive a new conversation live", async ({seed, as}) => {
 })
 
 test("US-108 read messages from a relay you only use for messages", async ({seed, as}) => {
-  await seed(({relay, user, at}) => {
+  const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
     const inbox = relay("other")
 
@@ -674,6 +676,10 @@ test("US-108 read messages from a relay you only use for messages", async ({seed
     // her be stored there — it never reaches her room list — so her messaging relay list is the
     // one thing that can vouch for her, and the relay serves her nothing until it does.
     inbox.member(user.alice)
+
+    // Bob's own copy of the wrap is seeded onto the same relay, and this relay authorizes a wrap by
+    // the member its p tag names, so he has to be one too. Nothing else here is his.
+    inbox.member(user.bob)
 
     // Tagged verbatim rather than through setUrls, which normalizes on the way in. A list written
     // by another client is where a url missing its trailing slash comes from, and the relay it
@@ -689,7 +695,12 @@ test("US-108 read messages from a relay you only use for messages", async ({seed
     inbox.dm(user.bob, [user.alice], "over on your inbox relay", at(2, HOUR))
   })
 
-  const page = await as(users.alice, "/chat")
+  // Only her space indexes, so the inbox relay is dialled for her messages and nothing else — the
+  // socket a client opens before it knows what a relay is for never identifies itself to it, and
+  // this relay serves an anonymous reader nothing.
+  const page = await as(users.alice, "/chat", {
+    env: {VITE_INDEXER_RELAYS: scenario.space("space").url},
+  })
 
   const conversation = chatItems(page).filter({hasText: "over on your inbox relay"})
 
@@ -738,6 +749,7 @@ test("US-109 keep a conversation you have already read", async ({seed, as}) => {
   await expect(message(alice, hers.id)).toBeVisible()
 
   await openMessageMenu(alice, hers.id)
+  await alice.getByRole("button", {name: "More Options"}).click()
   await alice.getByRole("button", {name: "Edit Message"}).click()
 
   await expect(composer(alice)).toContainText("thakns")
@@ -751,7 +763,7 @@ test("US-109 keep a conversation you have already read", async ({seed, as}) => {
   // A reaction travels to the conversation gift-wrapped the way the messages do, so it is kept or
   // lost with them rather than on its own terms.
   await openMessageMenu(alice, his.id)
-  await alice.getByRole("button", {name: "Send Reaction"}).click()
+  await alice.getByRole("button", {name: "React"}).click()
 
   const picker = alice.locator("emoji-picker").filter({visible: true})
 

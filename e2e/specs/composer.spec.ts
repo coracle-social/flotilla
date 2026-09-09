@@ -415,6 +415,9 @@ test("US-058 drafts survive navigating away", async ({seed, as}) => {
 
   await expect(editor).toHaveText("half a thought")
 
+  // The composer is remounted around a restored draft, so put the caret in it before sending
+  // rather than typing into whatever had focus when the room came back.
+  await editor.click()
   await editor.press("Enter")
 
   await expect(timeline(page).getByText("half a thought")).toBeVisible()

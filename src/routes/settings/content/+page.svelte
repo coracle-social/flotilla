@@ -55,6 +55,25 @@
   let loading = $state(false)
   let mutedPubkeys = $state($userMuteList?.pubkeys() ?? [])
   let blossomServers = $state($userBlossomServerList?.urls() ?? [])
+  let loadedMutes = Boolean($userMuteList)
+  let loadedServers = Boolean($userBlossomServerList)
+
+  // Both lists come off the wire, so on a fresh load they land after this page has mounted. Each
+  // field takes its stored value up when it arrives, since a form that never saw it would publish
+  // its own emptiness back over it.
+  $effect(() => {
+    if (!loadedMutes && $userMuteList) {
+      loadedMutes = true
+      mutedPubkeys = $userMuteList.pubkeys()
+    }
+  })
+
+  $effect(() => {
+    if (!loadedServers && $userBlossomServerList) {
+      loadedServers = true
+      blossomServers = $userBlossomServerList.urls()
+    }
+  })
 </script>
 
 <form {onsubmit}>

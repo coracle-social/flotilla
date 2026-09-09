@@ -11,6 +11,10 @@ const deviceNames: Record<string, string> = {
 
 const device = devices[deviceNames[process.env.E2E_BROWSER ?? "chromium"]]
 
+// vite.config.ts's port, and what the harness lets past its block-all. Overridable so a run can
+// stand up its own dev server next to one that is already holding the default port.
+const port = process.env.E2E_PORT ?? "1847"
+
 export default defineConfig({
   testDir: "e2e/specs",
   forbidOnly: !!process.env.CI,
@@ -31,15 +35,15 @@ export default defineConfig({
   // has to say so on the terminal, where the person who started it is looking.
   reporter: [["list"], ["html"]],
   use: {
-    baseURL: "http://localhost:1847",
+    baseURL: `http://localhost:${port}`,
     trace: "on-first-retry",
   },
   // Boots the SvelteKit dev server before the suite and reuses one if already running locally. The
   // app resolves its VITE_ values against a key the harness injects per browser context, so any
   // dev server will do.
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:1847",
+    command: `pnpm dev --port ${port}`,
+    url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
