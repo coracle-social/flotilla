@@ -53,7 +53,7 @@
         {/each}
       </div>
     {/if}
-    <div class="flex flex-col items-start gap-3 px-4 pt-3 pb-4">
+    <div class="flex flex-col items-center gap-3 px-4 pt-4 pb-8 text-center">
       <p class="text-sm opacity-75">
         {#if relays.length > 0}
           Spin up another hosted space — rooms, calendar and moderation included.
