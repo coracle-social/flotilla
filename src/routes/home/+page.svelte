@@ -17,12 +17,6 @@
 
   let element: Element | undefined = $state()
 
-  const today = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  })
-
   // A single-space build has no dashboard to show - everything on it is scoped to the one space.
   onMount(() => {
     if (PLATFORM_RELAYS.length > 0) {
@@ -33,12 +27,9 @@
 
 <Page>
   <PageBar>
-    <div class="flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2">
-        <Icon icon={Home} size={6} />
-        <strong>Home</strong>
-      </div>
-      <span class="hidden text-sm opacity-75 sm:inline">{today}</span>
+    <div class="flex items-center gap-2">
+      <Icon icon={Home} size={6} />
+      <strong>Home</strong>
     </div>
   </PageBar>
   <PageContent noPad bind:element class="flex flex-col bg-surface">

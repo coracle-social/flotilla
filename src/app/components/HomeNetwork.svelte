@@ -9,7 +9,6 @@
   import {getReplyTags} from "@welshman/domain"
   import Planet from "@assets/icons/planet.svg?dataurl"
   import Link from "@lib/components/Link.svelte"
-  import Masonry from "@lib/components/Masonry.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HomeNetworkItem from "@app/components/HomeNetworkItem.svelte"
@@ -99,11 +98,9 @@
         <Spinner loading>Looking for posts from people you follow…</Spinner>
       </div>
     {:else}
-      <Masonry {items} getKey={event => event.id} columnWidth={80} maxColumns={2} gap={3}>
-        {#snippet child(event)}
-          <HomeNetworkItem {event} {context} />
-        {/snippet}
-      </Masonry>
+      {#each items as event (event.id)}
+        <HomeNetworkItem {event} {context} />
+      {/each}
       {#if loading}
         <div class="flex justify-center py-4">
           <Spinner loading />
