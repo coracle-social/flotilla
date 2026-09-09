@@ -105,8 +105,8 @@ importers:
         specifier: ^0.10.3
         version: 0.10.3(eb33dd07ae3b5f7c259e5eb0d19b5058)
       '@welshman/content':
-        specifier: ^0.10.3
-        version: 0.10.3(nostr-tools@2.23.5(typescript@5.9.3))
+        specifier: ^0.10.5
+        version: 0.10.5(nostr-tools@2.23.5(typescript@5.9.3))
       '@welshman/domain':
         specifier: ^0.10.3
         version: 0.10.3(271acee725cf9493d8b628baa7ee6ab5)
@@ -2212,8 +2212,8 @@ packages:
       '@welshman/util': 0.10.3
       svelte: ^4.0.0 || ^5.0.0
 
-  '@welshman/content@0.10.3':
-    resolution: {integrity: sha512-QFRX+bseHAeucdODOARyvuChNnny0Pm2EuePd9XyZIdl3ZSps4RAztIARWRB6IZGAOYQXy91ozk5xN79oGqClg==}
+  '@welshman/content@0.10.5':
+    resolution: {integrity: sha512-JEUedhSGTSOhoNKo6SkY/214AbRSlOyFXxy7vkhBkCDBetdPQ425dOw0XNWj3m167npSG+TWUhiRas+nvJus1g==}
     peerDependencies:
       nostr-tools: ^2.19.4
 
@@ -7673,7 +7673,7 @@ snapshots:
       svelte: 5.55.9(@typescript-eslint/types@8.67.0)
       throttle-debounce: 5.0.2
 
-  '@welshman/content@0.10.3(nostr-tools@2.23.5(typescript@5.9.3))':
+  '@welshman/content@0.10.5(nostr-tools@2.23.5(typescript@5.9.3))':
     dependencies:
       '@braintree/sanitize-url': 7.1.2
       nostr-tools: 2.23.5(typescript@5.9.3)

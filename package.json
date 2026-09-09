@@ -83,7 +83,7 @@
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vite-pwa/sveltekit": "^1.1.0",
     "@welshman/app": "^0.10.3",
-    "@welshman/content": "^0.10.3",
+    "@welshman/content": "^0.10.5",
     "@welshman/domain": "^0.10.3",
     "@welshman/editor": "^0.10.3",
     "@welshman/feeds": "^0.10.3",
