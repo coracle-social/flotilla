@@ -166,7 +166,7 @@ export const makeEditor = async ({
   }
 
   const ed = new Editor({
-    content: typeof content === "string" ? escapeHtml(content) : content,
+    content: typeof content === "string" ? undefined : content,
     editorProps,
     element: document.createElement("div"),
     extensions: [
@@ -304,6 +304,13 @@ export const makeEditor = async ({
       onChange?.(editor.getJSON())
     },
   })
+
+  // nostr-editor turns a `nostr:` entity into a node from a paste rule, and the constructor's
+  // `content` option runs none, so seeded text stays text and contributes no tags. Set it here
+  // instead, flagged as a paste. A restored draft is already a document and needs no parse.
+  if (typeof content === "string" && content) {
+    ed.chain().setMeta("uiEvent", "paste").setContent(escapeHtml(content)).run()
+  }
 
   // Seed the caller's store from the document tiptap actually parsed — a restored draft is a
   // document even when it holds no text, so the caller can't tell from `content` alone. Callers

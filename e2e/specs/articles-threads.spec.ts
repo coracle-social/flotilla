@@ -959,7 +959,9 @@ test("US-045 turn a chat message into a thread", async ({seed, as}) => {
   const composer = modal(page, "Create a Thread")
   const nevent = nip19.neventEncode({id: promoted.id, kind: MESSAGE, relays: [url]})
 
-  await expect(editorOf(composer)).toContainText(`nostr:${nevent}`)
+  // The seeded entity is parsed, so the composer shows the editor's chip for it rather than
+  // the raw uri — which is also what makes the thread carry a q tag for the message.
+  await expect(editorOf(composer)).toContainText(`${nevent.slice(0, 16)}...`)
 
   await composer.getByPlaceholder("What is this thread about?").fill("Deploy failures")
   await composer.getByRole("button", {name: "Create Thread"}).click()
