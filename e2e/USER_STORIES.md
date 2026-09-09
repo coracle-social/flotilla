@@ -1611,8 +1611,8 @@ Threads indicator is as actionable on a phone as it is on a desktop.
 
 Acceptance:
 
-- The thread list below the md breakpoint is a list of links rather than a
-  table, and alice's thread carries a dot there; bob's own does not.
+- The thread list in a board too narrow for the table is a list of links rather
+  than a table, and alice's thread carries a dot there; bob's own does not.
 
 ### US-114 — See which listings are unread
 

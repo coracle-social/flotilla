@@ -1,7 +1,6 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import Add from "@assets/icons/add.svg?dataurl"
-  import {matchMd} from "@lib/theme"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
@@ -19,10 +18,12 @@
 
   const {url, h, threads, context}: Props = $props()
 
+  let width = $state(0)
+
   const createThread = () => pushModal(ThreadCreate, {url, h})
 </script>
 
-<section class="card card-flat p-0">
+<section bind:clientWidth={width} class="card card-flat p-0">
   <header
     class="flex items-center justify-between gap-2 border-b border-solid border-line px-4 py-3">
     <h2 class="text-lg">
@@ -45,30 +46,30 @@
   </header>
   {#if threads.length === 0}
     <p class="text-content-muted p-4 text-sm">No topics yet.</p>
-  {:else if $matchMd}
-    <div class="scroll-container overflow-x-auto pb-4">
-      <table class="w-full min-w-[640px] border-collapse">
-        <thead
-          class="border-b border-solid border-line bg-surface-less text-xs font-bold uppercase tracking-wide text-content-muted">
-          <tr>
-            <th class="px-4 py-3 text-left">Topic</th>
-            <th class="w-32 px-4 py-3 text-left">Author</th>
-            <th class="w-20 px-4 py-3 text-center">Replies</th>
-            <th class="w-32 px-4 py-3 text-right">Last post</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each threads as event (event.id)}
-            <ThreadBoardItem {url} {event} {context} />
-          {/each}
-        </tbody>
-      </table>
-    </div>
   {:else}
     <div class="pb-4">
-      {#each threads as event (event.id)}
-        <ThreadBoardItem mobile {url} {event} {context} />
-      {/each}
+      {#if width >= 640}
+        <table class="w-full border-collapse">
+          <thead
+            class="border-b border-solid border-line bg-surface-less text-xs font-bold uppercase tracking-wide text-content-muted">
+            <tr>
+              <th class="px-4 py-3 text-left">Topic</th>
+              <th class="w-32 px-4 py-3 text-left">Author</th>
+              <th class="w-20 px-4 py-3 text-center">Replies</th>
+              <th class="w-32 px-4 py-3 text-right">Last post</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each threads as event (event.id)}
+              <ThreadBoardItem {url} {event} {context} />
+            {/each}
+          </tbody>
+        </table>
+      {:else}
+        {#each threads as event (event.id)}
+          <ThreadBoardItem stacked {url} {event} {context} />
+        {/each}
+      {/if}
     </div>
   {/if}
 </section>

@@ -15,10 +15,10 @@
     url: string
     event: TrustedEvent
     context: FeedContext
-    mobile?: boolean
+    stacked?: boolean
   }
 
-  const {url, event, context, mobile = false}: Props = $props()
+  const {url, event, context, stacked = false}: Props = $props()
 
   const related = context.related(event)
   const replies = derived(related, $related => filter(spec({kind: COMMENT}), $related))
@@ -29,7 +29,7 @@
   const onClick = () => navigate(path)
 </script>
 
-{#if mobile}
+{#if stacked}
   <Link
     href={path}
     class="cv hover:bg-surface-less flex w-full flex-col gap-2 border-b border-solid border-line px-4 py-3 text-left text-sm transition-colors">

@@ -626,8 +626,9 @@ test("US-113 see which threads are unread on a phone", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // ThreadBoard swaps its table for a list of links below tailwind's md breakpoint, and the two
-  // branches render the thread separately, so a dot on one says nothing about the other.
+  // ThreadBoard swaps its table for a list of links when the board is too narrow for the table,
+  // and the two branches render the thread separately, so a dot on one says nothing about the
+  // other.
   const bob = await as(users.bob, `${spacePath(space.url)}/threads`, {
     context: {viewport: {width: 390, height: 844}, hasTouch: true},
   })
