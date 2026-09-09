@@ -9,6 +9,7 @@
     isEmoji,
     isTopic,
     isCode,
+    isCommand,
     isCashu,
     isInvoice,
     isLink,
@@ -39,7 +40,7 @@
   import ContentMention from "@app/components/ContentMention.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {makeRoomPath} from "@app/routes"
-  import {deriveCommandsForTarget, describeCommandDraft} from "@app/commands"
+  import {deriveValidCommands, getCommandsForInvocation} from "@app/commands"
   import {userSettingsValues} from "@app/settings"
 
   type Props = {
@@ -63,18 +64,16 @@
   }: Props = $props()
 
   // An invocation is plain text and carries no tags, so it's only recognizable against the
-  // definitions loaded for this space. Anything else — including a command nobody here
-  // publishes — falls through and renders as the text it is.
-  const available = deriveCommandsForTarget({
+  // definitions the space it was written in publishes. Anything else — including a command
+  // nobody here answers to — falls through and renders as the text it is.
+  const available = deriveValidCommands({
     url,
     kind: event.kind,
     pubkey: event.pubkey,
     tags: event.tags,
   })
 
-  const draft = $derived(describeCommandDraft($available, event.content))
-
-  const fullContent = $derived(parse(draft ? {...event, content: draft.invocation.rest} : event))
+  const fullContent = $derived(parse(event))
 
   const expand = () => {
     showEntire = true
@@ -175,11 +174,15 @@
     <div
       class="overflow-hidden text-ellipsis wrap-break-word"
       style={expandBlock ? "mask-image: linear-gradient(0deg, transparent 0px, black 100px)" : ""}>
-      {#if draft}
-        <ContentCommand command={draft.command} />
-      {/if}
       {#each shortContent as parsed, i (i)}
-        {#if isNewline(parsed) && !isBlock(i - 1)}
+        {#if isCommand(parsed)}
+          {@const command = getCommandsForInvocation($available, parsed.value)[0]}
+          {#if command}
+            <ContentCommand {command} value={parsed.value} />
+          {:else}
+            {@html renderAsHtml(parsed)}
+          {/if}
+        {:else if isNewline(parsed) && !isBlock(i - 1)}
           <ContentNewline value={parsed.value} />
         {:else if isTopic(parsed)}
           <ContentTopic value={parsed.value} />

@@ -5,7 +5,7 @@
   import {slide} from "@lib/transition"
   import Button from "@lib/components/Button.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {deriveCommandsForTarget, describeCommandDraft} from "@app/commands"
+  import {deriveValidCommands, describeCommandDraft} from "@app/commands"
 
   type Props = {
     target: CommandScopeTarget
@@ -15,7 +15,7 @@
 
   const {target, content, insert}: Props = $props()
 
-  const available = deriveCommandsForTarget(target)
+  const available = deriveValidCommands(target)
 
   const draft = $derived(describeCommandDraft($available, content))
 

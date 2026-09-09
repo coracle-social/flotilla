@@ -78,17 +78,46 @@ export const getCommandsForTarget = (target: CommandScopeTarget) =>
     .get()
     .filter(command => command.matches(target))
 
-export const deriveCommandsForTarget = (target: CommandScopeTarget): Readable<CommandReader[]> =>
-  derived(
-    fromApp($app => $app.use(Commands).forUrl(target.url ?? "").$),
-    $commands => $commands.filter(command => command.matches(target)),
+// A space's definitions are the same for everything rendered in it, so one store per url is
+// shared rather than every message deriving its own. Subscribing is also what pulls them, so
+// reading a space loads its definitions whether or not anything is being composed.
+const commandsByUrl = new Map<string, Readable<CommandReader[]>>()
+
+const deriveCommandsForUrl = (url: string): Readable<CommandReader[]> => {
+  const cached = commandsByUrl.get(url)
+
+  if (cached) {
+    return cached
+  }
+
+  const store = fromApp($app => {
+    const plugin = $app.use(Commands)
+
+    if (url) {
+      plugin.ensureLoaded(url)
+    }
+
+    return plugin.forUrl(url).$
+  })
+
+  commandsByUrl.set(url, store)
+
+  return store
+}
+
+// The definitions a piece of content is read against: the ones its space publishes that also
+// scope to it. Content outside a space has no url, and so no commands.
+export const deriveValidCommands = (target: CommandScopeTarget): Readable<CommandReader[]> =>
+  derived(deriveCommandsForUrl(target.url ?? ""), $commands =>
+    $commands.filter(command => command.matches(target)),
   )
 
 // Without a qualifier an invocation targets every definition whose trigger matches, so more
-// than one here is what tells a composer to disambiguate.
+// than one here is what tells a composer to disambiguate. Takes an invocation from either
+// side: the one a composer is typing, or the one a message was parsed into.
 export const getCommandsForInvocation = (
   available: CommandReader[],
-  invocation: CommandInvocation,
+  invocation: Pick<CommandInvocation, "command" | "pubkey">,
 ) =>
   available.filter(
     command =>
