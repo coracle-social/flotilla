@@ -1,5 +1,6 @@
 import {get, writable} from "svelte/store"
-import {parse, renderAsText} from "@welshman/content"
+import {ParsedType, isImage, parse} from "@welshman/content"
+import type {Parsed} from "@welshman/content"
 import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {errorMessage} from "@lib/util"
@@ -15,7 +16,18 @@ const SPEECH_MODEL = "hexgrad/kokoro-82m"
 
 const SPEECH_VOICE = "af_bella"
 
-const SPEECH_FORMAT = "mp3"
+// The endpoint encodes mp3 and raw pcm, and its mp3 carries a xing header naming a fraction of the
+// frames it holds, so a browser reads a fifth more audio than is there and the scrubber never
+// reaches the end. Raw pcm claims no length at all, so the wav header below is the only one.
+const SPEECH_FORMAT = "pcm"
+
+const SPEECH_RATE = 24000
+
+const SPEECH_CHANNELS = 1
+
+const SPEECH_BIT_DEPTH = 16
+
+const WAV_HEADER_LENGTH = 44
 
 export type Speech = {
   id: string
@@ -24,6 +36,78 @@ export type Speech = {
 }
 
 export const speech = writable<Maybe<Speech>>(undefined)
+
+const toWav = (pcm: ArrayBuffer) => {
+  const bytesPerFrame = (SPEECH_CHANNELS * SPEECH_BIT_DEPTH) / 8
+  const wav = new ArrayBuffer(WAV_HEADER_LENGTH + pcm.byteLength)
+  const view = new DataView(wav)
+  const ascii = (offset: number, value: string) => {
+    for (let i = 0; i < value.length; i++) {
+      view.setUint8(offset + i, value.charCodeAt(i))
+    }
+  }
+
+  ascii(0, "RIFF")
+  view.setUint32(4, 36 + pcm.byteLength, true)
+  ascii(8, "WAVEfmt ")
+  view.setUint32(16, 16, true)
+  view.setUint16(20, 1, true)
+  view.setUint16(22, SPEECH_CHANNELS, true)
+  view.setUint32(24, SPEECH_RATE, true)
+  view.setUint32(28, SPEECH_RATE * bytesPerFrame, true)
+  view.setUint16(32, bytesPerFrame, true)
+  view.setUint16(34, SPEECH_BIT_DEPTH, true)
+  ascii(36, "data")
+  view.setUint32(40, pcm.byteLength, true)
+
+  new Uint8Array(wav, WAV_HEADER_LENGTH).set(new Uint8Array(pcm))
+
+  return new Blob([wav], {type: "audio/wav"})
+}
+
+// An entity or a url read a character at a time is unintelligible, so anything that is not prose
+// is named rather than spelled out.
+const speakOne = (parsed: Parsed): string => {
+  switch (parsed.type) {
+    case ParsedType.Address:
+      return "another post"
+    case ParsedType.Cashu:
+      return "a cashu token"
+    case ParsedType.Code:
+      return parsed.value
+    case ParsedType.Command:
+      return parsed.raw
+    case ParsedType.Ellipsis:
+      return "\u2026"
+    case ParsedType.Email:
+      return parsed.value
+    case ParsedType.Emoji:
+      return parsed.value.name
+    case ParsedType.Event:
+      return "another message"
+    case ParsedType.Invoice:
+      return "a lightning invoice"
+    case ParsedType.Link: {
+      const {host} = parsed.value.url
+
+      return isImage(parsed) ? "an image" : `a link to ${host}`
+    }
+    case ParsedType.LinkGrid:
+      return "some images"
+    case ParsedType.Newline:
+      return parsed.value
+    case ParsedType.Profile:
+      return profiles.get().display(parsed.value.pubkey).get()
+    case ParsedType.Room:
+      return parsed.value.room
+    case ParsedType.Text:
+      return parsed.value
+    case ParsedType.Topic:
+      return parsed.value.slice(1)
+  }
+}
+
+const speakable = (event: TrustedEvent) => parse(event).map(speakOne).join("").trim()
 
 export const synthesize = async (text: string) => {
   const response = await fetch("https://openrouter.ai/api/v1/audio/speech", {
@@ -48,7 +132,7 @@ export const synthesize = async (text: string) => {
     throw new Error(error?.message || `OpenRouter returned a ${response.status}.`)
   }
 
-  return response.blob()
+  return toWav(await response.arrayBuffer())
 }
 
 export const stopSpeech = () =>
@@ -87,7 +171,7 @@ const play = async (event: TrustedEvent, text: string) => {
 }
 
 export const readAloud = (event: TrustedEvent) => {
-  const text = renderAsText(parse(event)).toString().trim()
+  const text = speakable(event)
 
   if (getSetting("openrouter_key")) {
     if (get(isCallActive)) {

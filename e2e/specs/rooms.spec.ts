@@ -1,3 +1,4 @@
+import {npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE, WEEK, bech32ToHex} from "@welshman/lib"
 import {getLnUrl} from "@welshman/util"
 import {MessagingRelayList, Profile, RelayList, displayPubkey} from "@welshman/domain"
@@ -871,8 +872,17 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
     space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anchor"})
     space.profile(user.bob, {name: "Bob Barnacle"})
-    space.message(user.bob, "general", "the dock is closed on sunday", at(2, HOUR))
+
+    const notice = space.message(user.bob, "general", "the dock is closed on sunday", at(2, HOUR))
+
+    space.reply(
+      user.bob,
+      notice,
+      `heads up nostr:${npubEncode(user.alice.pubkey)}, the notice is at https://harbor.example/dock?ref=1`,
+      at(1, HOUR),
+    )
 
     seedChatter(space, user.alice)
   })
@@ -881,10 +891,11 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
   const alice = await as(users.alice, roomPath(url, "general"))
   const spoken = await mockOpenRouterSpeech(alice.context())
 
-  await expect(message(alice, "the dock is closed on sunday")).toBeVisible()
+  // The mention has to have resolved on screen before it can be expected in what was spoken.
+  await expect(message(alice, "heads up")).toContainText("@Alice Anchor")
 
   // With no key saved, reading a message asks for one the way dictation does.
-  await openMessageMenu(alice, "the dock is closed on sunday")
+  await openMessageMenu(alice, "heads up")
   await alice.getByRole("button", {name: "Read Out Loud"}).click()
 
   const enable = dialog(alice, "Enable read out loud?")
@@ -894,16 +905,19 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
 
   await expect(alice.getByRole("alert")).toContainText("Read out loud is ready to use!")
 
-  await openMessageMenu(alice, "the dock is closed on sunday")
+  await openMessageMenu(alice, "heads up")
   await alice.getByRole("button", {name: "Read Out Loud"}).click()
 
   await expect(alice.getByText("a message from Bob Barnacle")).toBeVisible()
 
-  // Only what the message says is sent, so the nostr uri wrapping bob's mention never is.
-  expect(spoken).toEqual(["the dock is closed on sunday"])
+  // The quote, the mention and the url are each named rather than spelled out, since none of them
+  // is intelligible read a character at a time.
+  expect(spoken).toEqual([
+    "another message\n\nheads up Alice Anchor, the notice is at a link to harbor.example",
+  ])
 
-  // The duration is the mock's, which is what proves the player is on audio it decoded rather
-  // than on an element that failed to load.
+  // The mock answers headerless pcm, so the duration is only right if the wav header the app put
+  // in front of it is, which is what makes the whole clip scrubbable.
   await expect(alice.getByText("/ 0:03")).toBeVisible()
 
   // Chromium decides for itself whether the autoplay is allowed, so the control is read for
