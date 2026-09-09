@@ -1,5 +1,5 @@
-import {DAY, HOUR, MINUTE, WEEK, sortBy} from "@welshman/lib"
-import {ROOMS, THREAD, makeEvent} from "@welshman/util"
+import {DAY, HOUR, WEEK, sortBy} from "@welshman/lib"
+import {ROOMS} from "@welshman/util"
 import type {Page} from "@playwright/test"
 import {expect, readCachedEvents, roomPath, spacePath, test, users} from "../harness"
 
@@ -405,7 +405,7 @@ test("US-014 leave a space", async ({seed, as}) => {
 })
 
 test("US-015 view a space's details", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
+  const scenario = await seed(({relay, user}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
@@ -413,7 +413,6 @@ test("US-015 view a space's details", async ({seed, as}) => {
     space.join(user.carol, "general")
     space.join(user.alice, "general")
     space.profile(user.alice, {name: "Alice Anchor"})
-    space.message(user.alice, "general", "the tide is high", at(1, HOUR))
   })
 
   const space = scenario.space("space")
@@ -451,10 +450,6 @@ test("US-015 view a space's details", async ({seed, as}) => {
   await expect(carol.getByText("Admins")).toBeVisible()
   await expect(carol.getByText("New members")).toBeVisible()
 
-  // Nothing is featured yet, so recent activity stands in for it
-  await expect(carol.getByRole("heading", {name: "Recent Activity"})).toBeVisible()
-  await expect(carol.getByText("the tide is high")).toBeVisible()
-
   const admin = await as(users.admin, spacePath(space.url) + "/about", {relayInfo})
   const featuredHeader = admin.getByRole("heading", {name: "Featured"}).locator("xpath=..")
 
@@ -465,91 +460,13 @@ test("US-015 view a space's details", async ({seed, as}) => {
 
   await expect(admin.getByText("Featured content updated!")).toBeVisible()
 
-  // What admin featured reaches every visitor, and takes the top slot from recent activity
+  // What admin featured reaches every visitor
   await expect(carol.getByRole("heading", {name: "Featured"})).toBeVisible()
   await expect(carol.getByText("Start with the harbor rules")).toBeVisible()
 
   await carol.getByRole("link", {name: "View all members"}).click()
 
   await expect(carol).toHaveURL(/\/spaces\/space\.test\/directory/)
-})
-
-test("US-016 catch up on a space's recent activity", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-    const other = relay("other")
-
-    space.room("general", {name: "General"})
-    space.room("quiet", {name: "Quiet Corner"})
-    space.join(user.alice, "general", "quiet")
-    space.join(user.bob, "general", "quiet")
-    space.message(user.alice, "general", "the tide is high", at(30, MINUTE))
-    space.message(user.alice, "quiet", "anyone still here?", at(3, HOUR))
-    space.event(
-      user.alice,
-      makeEvent(THREAD, {
-        created_at: at(2, HOUR),
-        content: "Where should we sail next?",
-        tags: [
-          ["h", "general"],
-          ["title", "Next voyage"],
-        ],
-      }),
-    )
-
-    // More items than the page renders at once, so the oldest is only reachable by scrolling
-    for (let day = 1; day <= 20; day++) {
-      space.event(
-        user.alice,
-        makeEvent(THREAD, {
-          created_at: at(day, DAY),
-          content: `Log entry ${day}`,
-          tags: [
-            ["h", "general"],
-            ["title", `Old voyage ${day}`],
-          ],
-        }),
-      )
-    }
-
-    // A space with a member and nothing else
-    other.join(user.bob)
-  })
-
-  const space = scenario.space("space")
-  const other = scenario.space("other")
-  const bob = await as(users.bob, spacePath(space.url) + "/recent")
-  const items = bob.locator(".cv")
-
-  await expect(bob.getByText("the tide is high")).toBeVisible()
-  await expect(bob.getByText("anyone still here?")).toBeVisible()
-  await expect(bob.getByText("Next voyage")).toBeVisible()
-
-  // Newest first: the latest message in each room alongside the thread, in one feed
-  await expect(items.first()).toContainText("the tide is high")
-
-  await bob.mouse.move(640, 400)
-  await bob.mouse.wheel(0, 8000)
-
-  await expect(bob.getByText("Old voyage 20")).toBeVisible()
-
-  // A message in the room that had gone quiet pulls it back to the top
-  const alice = await as(users.alice, roomPath(space.url, "quiet"))
-
-  await alice.locator(".chat-editor [contenteditable=true]").pressSequentially("still here!")
-  await alice.locator(".chat-editor [contenteditable=true]").press("Enter")
-
-  await expect(alice.getByText("still here!")).toBeVisible()
-
-  // The feed is assembled when the page loads rather than kept up to date behind the reader, so
-  // this is the order bob finds when he comes back to it.
-  await bob.reload()
-
-  await expect(items.first()).toContainText("Quiet Corner")
-
-  await bob.goto(spacePath(other.url) + "/recent")
-
-  await expect(bob.getByText("No recent activity found!")).toBeVisible()
 })
 
 test("US-017 search across a space", async ({seed, as}) => {

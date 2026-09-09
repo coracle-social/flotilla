@@ -235,21 +235,7 @@ Acceptance:
   appear when they apply.
 - A members summary listing admins and newest members links through to the full
   directory.
-- Content admin has featured renders at the top for every visitor; with none, a
-  recent-activity summary appears instead.
-
-### US-016 — Catch up on a space's recent activity
-
-As bob, I want one feed of what's new across a space, so that I don't have to
-open every room.
-
-Acceptance:
-
-- "Recent Activity" lists the latest message from each visible room alongside
-  recent posts and threads, newest first.
-- A new message in a previously quiet room moves that room's entry to the top.
-- Scrolling to the bottom loads older items, and a space with nothing in it
-  shows "No recent activity found".
+- Content admin has featured renders at the top for every visitor.
 
 ### US-017 — Search across a space
 

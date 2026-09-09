@@ -16,7 +16,6 @@ const staticTitles = new Map<string, string>([
   ["/spaces/create", "Create a Space"],
   ["/spaces/[relay]", "Space"],
   ["/spaces/[relay]/chat", "Space Chat"],
-  ["/spaces/[relay]/recent", "Recent Activity"],
   ["/spaces/[relay]/threads", "Threads"],
   ["/spaces/[relay]/classifieds", "Classifieds"],
   ["/spaces/[relay]/articles", "Articles"],

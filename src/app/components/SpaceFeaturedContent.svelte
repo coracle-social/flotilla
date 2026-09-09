@@ -6,7 +6,6 @@
   import Card from "@lib/components/Card.svelte"
   import Content from "@app/components/Content.svelte"
   import EditFeaturedContent from "@app/components/EditFeaturedContent.svelte"
-  import SpaceRecentSummary from "@app/components/SpaceRecentSummary.svelte"
   import {deriveFeaturedContent} from "@app/featured"
   import {deriveUserIsSpaceAdmin} from "@app/management"
   import {pushModal} from "@app/modal"
@@ -46,6 +45,4 @@
       </div>
     {/if}
   </Card>
-{:else}
-  <SpaceRecentSummary {url} />
 {/if}

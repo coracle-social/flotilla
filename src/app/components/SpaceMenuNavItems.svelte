@@ -7,7 +7,6 @@
   import Home from "@assets/icons/home.svg?dataurl"
   import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
-  import History from "@assets/icons/history.svg?dataurl"
   import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic-2.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
@@ -63,11 +62,7 @@
 <SecondaryNavItem href={makeSpacePath(url, "about")}>
   <Icon icon={Home} /> Space Details
 </SecondaryNavItem>
-{#if hasNip29}
-  <SecondaryNavItem href={makeSpacePath(url, "recent")}>
-    <Icon icon={History} /> Recent Activity
-  </SecondaryNavItem>
-{:else}
+{#if !hasNip29}
   <SecondaryNavItem href={chatPath} notification={$notifications.has(chatPath)}>
     <Icon icon={ChatRound} /> Chat
   </SecondaryNavItem>
