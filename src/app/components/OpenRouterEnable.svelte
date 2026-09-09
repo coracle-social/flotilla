@@ -19,6 +19,15 @@
   import {publishSettings} from "@app/settings"
   import {pushToast} from "@app/toast"
 
+  type Props = {
+    feature: string
+    subtitle: string
+  }
+
+  const {feature, subtitle}: Props = $props()
+
+  const action = `Enable ${feature.toLowerCase()}`
+
   const back = () => history.back()
 
   const save = async () => {
@@ -27,7 +36,7 @@
     try {
       await publishSettings({openrouter_key: openrouterKey.trim()})
 
-      pushToast({message: "Voice input is ready to use!"})
+      pushToast({message: `${feature} is ready to use!`})
 
       back()
     } catch (error) {
@@ -45,16 +54,14 @@
 <Modal tag="form" onsubmit={preventDefault(save)}>
   <ModalBody>
     <ModalHeader>
-      <ModalTitle>Enable voice input?</ModalTitle>
-      <ModalSubtitle>Dictate your messages instead of typing them.</ModalSubtitle>
+      <ModalTitle>{action}?</ModalTitle>
+      <ModalSubtitle>{subtitle}</ModalSubtitle>
     </ModalHeader>
     <p>
-      Your recordings are transcribed by <Link
-        external
-        href="https://openrouter.ai"
-        class="text-primary">OpenRouter</Link
-      >, which charges a fraction of a cent per minute of audio. To turn voice input on, add some
-      credit to an OpenRouter account, then
+      {feature} is powered by <Link external href="https://openrouter.ai" class="text-primary"
+        >OpenRouter</Link
+      >, which charges a fraction of a cent for each use. To turn it on, add some credit to an
+      OpenRouter account, then
       <Link external href="https://openrouter.ai/settings/keys" class="text-primary"
         >create an API key</Link> and paste it below.
     </p>
@@ -84,7 +91,7 @@
       Go back
     </Button>
     <Button type="submit" class="button button-primary" disabled={!openrouterKey || loading}>
-      <Spinner {loading}>Enable voice input</Spinner>
+      <Spinner {loading}>{action}</Spinner>
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {fly} from "svelte/transition"
   import {navigate} from "@app/modal"
   import {page} from "$app/stores"
   import cx from "classnames"
@@ -9,6 +8,7 @@
   import EndCall from "@assets/icons/end-call-rounded.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Banner from "@app/components/Banner.svelte"
   import {decodeRelay} from "@app/relays"
   import {displayRoom} from "@app/rooms"
   import {makeRoomPath} from "@app/routes"
@@ -18,6 +18,7 @@
     callTargetRoom,
     callMicMuted,
     deriveIsCallActiveElsewhere,
+    endCall,
   } from "@app/call"
 
   const {relay, h} = $derived($page.params)
@@ -45,25 +46,10 @@
 
     await engine.toggleMute()
   }
-
-  // leaveVoiceRoom no-ops during Joining (no session exists yet to leave) — cancel
-  // the in-flight join instead, otherwise this button silently does nothing.
-  const endCall = async () => {
-    const engine = await import("@app/callEngine")
-
-    if ($callState === CallState.Joining) {
-      engine.cancelJoinVoiceRoom()
-    } else {
-      await engine.leaveVoiceRoom()
-    }
-  }
 </script>
 
 {#if visible}
-  <div
-    in:fly={{y: 60, duration: 250}}
-    out:fly={{y: 60, duration: 200}}
-    class="relative flex shrink-0 items-center gap-3 border-t border-line bg-surface py-2 pl-4 pr-2 mb-[calc(var(--saib)+3.5rem)] md:mb-[var(--saib)] md:pl-6">
+  <Banner>
     <Button
       class="flex min-w-0 flex-1 items-center gap-2 text-left"
       onclick={goToRoom}
@@ -103,5 +89,5 @@
         <Icon icon={EndCall} size={4} />
       </Button>
     </div>
-  </div>
+  </Banner>
 {/if}

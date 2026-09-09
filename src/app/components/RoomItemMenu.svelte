@@ -9,6 +9,7 @@
   import Danger from "@assets/icons/danger.svg?dataurl"
   import Pin from "@assets/icons/pin.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
+  import VolumeLoud from "@assets/icons/volume-loud.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
@@ -21,6 +22,7 @@
   import {deriveUserIsSpaceAdmin} from "@app/management"
   import {ROOM, deriveUserIsRoomAdmin} from "@app/rooms"
   import {shareEvent} from "@app/share"
+  import {readAloud} from "@app/speech"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
@@ -46,6 +48,11 @@
   const addToLibrary = () => {
     onClick()
     pushModal(PinboardSelect, {url, event})
+  }
+
+  const read = () => {
+    onClick()
+    readAloud(event)
   }
 
   const createThread = () => {
@@ -127,6 +134,12 @@
     <Button onclick={addToLibrary}>
       <Icon size={4} icon={GalleryWide} />
       Add to Library
+    </Button>
+  </li>
+  <li>
+    <Button onclick={read}>
+      <Icon size={4} icon={VolumeLoud} />
+      Read Out Loud
     </Button>
   </li>
   {#if h}

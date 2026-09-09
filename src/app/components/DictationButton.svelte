@@ -8,7 +8,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {errorMessage} from "@lib/util"
-  import DictationEnable from "@app/components/DictationEnable.svelte"
+  import OpenRouterEnable from "@app/components/OpenRouterEnable.svelte"
   import {startDictation, transcribe} from "@app/dictation"
   import {getSetting} from "@app/settings"
   import {pushModal} from "@app/modal"
@@ -42,7 +42,10 @@
         loading = false
       }
     } else {
-      pushModal(DictationEnable)
+      pushModal(OpenRouterEnable, {
+        feature: "Voice input",
+        subtitle: "Dictate your messages instead of typing them.",
+      })
     }
   }
 

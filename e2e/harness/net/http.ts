@@ -17,6 +17,9 @@ const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
 // Hard-coded in src/app.html, so every navigation asks for it whatever the scenario is doing.
 const PLAUSIBLE_ORIGIN = "https://plausible.coracle.social"
 
+// Transcription and speech both go here, against whichever key the user has saved.
+const OPENROUTER_ORIGIN = "https://openrouter.ai"
+
 // Where the hosting api sends a browser to pay. `.test` resolves nowhere and the block-all aborts
 // the navigation, so a spec sees the redirect without one leaving.
 const CHECKOUT_ORIGIN = "https://checkout.test"
@@ -209,6 +212,45 @@ export const mockDufflepud = (context: BrowserContext, fixtures: DufflepudFixtur
 
     return route.fallback()
   })
+
+// Silence as a wav, built rather than inlined so a spec can ask for a length and then assert the
+// duration the player reads off it. 16 bit mono pcm is the shortest header a browser will decode.
+const silence = (seconds: number) => {
+  const rate = 8000
+  const bytes = seconds * rate * 2
+  const wav = Buffer.alloc(44 + bytes)
+
+  wav.write("RIFF", 0)
+  wav.writeUInt32LE(36 + bytes, 4)
+  wav.write("WAVEfmt ", 8)
+  wav.writeUInt32LE(16, 16)
+  wav.writeUInt16LE(1, 20)
+  wav.writeUInt16LE(1, 22)
+  wav.writeUInt32LE(rate, 24)
+  wav.writeUInt32LE(rate * 2, 28)
+  wav.writeUInt16LE(2, 32)
+  wav.writeUInt16LE(16, 34)
+  wav.write("data", 36)
+  wav.writeUInt32LE(bytes, 40)
+
+  return wav
+}
+
+/**
+ * OpenRouter's text to speech, answering every request with the same silence. The array it returns
+ * collects what the app asked to have read, in the order it asked.
+ */
+export const mockOpenRouterSpeech = async (context: BrowserContext, seconds = 3) => {
+  const spoken: string[] = []
+
+  await context.route(`${OPENROUTER_ORIGIN}/api/v1/audio/speech`, route => {
+    spoken.push(JSON.parse(route.request().postData() ?? "{}").input)
+
+    return route.fulfill({contentType: "audio/wav", body: silence(seconds)})
+  })
+
+  return spoken
+}
 
 export type BlossomOptions = {
   // The blossom server the scenario expects an upload to land on, e.g. a space's own url.

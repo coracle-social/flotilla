@@ -38,6 +38,7 @@ export {
   mockBlossom,
   mockDufflepud,
   mockLivekit,
+  mockOpenRouterSpeech,
 } from "./net/http"
 export type {DufflepudFixtures, HostingFixtures, HostingHandle, HostingRecord} from "./net/http"
 export type {WebLnInfo} from "./app/webln"

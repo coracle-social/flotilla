@@ -142,7 +142,7 @@
       </Field>
       <Field>
         {#snippet label()}
-          <p>Voice Input</p>
+          <p>OpenRouter</p>
         {/snippet}
         {#snippet input()}
           <label class="input flex w-full items-center gap-2">
@@ -159,7 +159,8 @@
         {#snippet info()}
           <p>
             Add an <Link external href="https://openrouter.ai/settings/keys" class="text-primary"
-              >OpenRouter API key</Link> to dictate messages using the microphone button in your composer.
+              >OpenRouter API key</Link> to dictate messages using the microphone button in your composer,
+            and to have messages read out loud to you.
           </p>
         {/snippet}
       </Field>

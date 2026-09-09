@@ -15,6 +15,7 @@
   import AltArrowUp from "@assets/icons/alt-arrow-up.svg?dataurl"
   import Pin from "@assets/icons/pin.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
+  import VolumeLoud from "@assets/icons/volume-loud.svg?dataurl"
   import {slideAndFade} from "@lib/transition"
   import Button from "@lib/components/Button.svelte"
   import Link from "@lib/components/Link.svelte"
@@ -31,6 +32,7 @@
   import {ENABLE_ZAPS} from "@app/env"
   import {makeContentPath} from "@app/routes"
   import {shareEvent} from "@app/share"
+  import {readAloud} from "@app/speech"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
@@ -86,6 +88,11 @@
   const share = () => {
     history.back()
     shareEvent(url, "Message", event)
+  }
+
+  const read = () => {
+    history.back()
+    readAloud(event)
   }
 
   const showInfo = () => pushModal(EventInfo, {url, event}, {replaceState: true})
@@ -152,6 +159,10 @@
           <Button class="button button-neutral w-full" onclick={share}>
             <Icon size={4} icon={ShareCircle} />
             Share
+          </Button>
+          <Button class="button button-neutral w-full" onclick={read}>
+            <Icon size={4} icon={VolumeLoud} />
+            Read Out Loud
           </Button>
           {#if h}
             <Button class="button button-neutral w-full" onclick={createThread}>

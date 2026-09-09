@@ -438,6 +438,19 @@ Acceptance:
   quote of the shared message.
 - Sending posts the quoted message in the destination, visible to bob there.
 
+### US-119 — Have a message read out loud
+
+As alice, I want a message read to me, so that I can take in what was said
+without looking at the screen.
+
+Acceptance:
+
+- "Read Out Loud" on a message with no OpenRouter key saved asks for one, the
+  same prompt dictation uses.
+- Once a key is saved, the same menu item puts a player at the bottom of the
+  app naming whose message is being read.
+- The player plays, pauses, scrubs, and closes, and closing it takes it away.
+
 ### US-115 — Connect a wallet while sending a zap
 
 As alice, I want to connect a wallet from the zap dialog and go on zapping, so

@@ -2,7 +2,16 @@ import {DAY, HOUR, MINUTE, WEEK, bech32ToHex} from "@welshman/lib"
 import {getLnUrl} from "@welshman/util"
 import {MessagingRelayList, Profile, RelayList, displayPubkey} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
-import {expect, makeTestUser, mockDufflepud, roomPath, spacePath, test, users} from "../harness"
+import {
+  expect,
+  makeTestUser,
+  mockDufflepud,
+  mockOpenRouterSpeech,
+  roomPath,
+  spacePath,
+  test,
+  users,
+} from "../harness"
 import type {SeededSpace, TestUser} from "../harness"
 
 // A handle to a seeded event. SeededEvent isn't exported from the harness, and only its id and
@@ -853,6 +862,70 @@ test("US-028 share a message somewhere else", async ({seed, as}) => {
 
   await expect(message(alice, "heads up")).toContainText("the dock is closed on sunday")
   await expect(message(bob, "heads up")).toContainText("the dock is closed on sunday")
+})
+
+test("US-119 have a message read out loud", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.bob, {name: "Bob Barnacle"})
+    space.message(user.bob, "general", "the dock is closed on sunday", at(2, HOUR))
+
+    seedChatter(space, user.alice)
+  })
+
+  const {url} = scenario.space("space")
+  const alice = await as(users.alice, roomPath(url, "general"))
+  const spoken = await mockOpenRouterSpeech(alice.context())
+
+  await expect(message(alice, "the dock is closed on sunday")).toBeVisible()
+
+  // With no key saved, reading a message asks for one the way dictation does.
+  await openMessageMenu(alice, "the dock is closed on sunday")
+  await alice.getByRole("button", {name: "Read Out Loud"}).click()
+
+  const enable = dialog(alice, "Enable read out loud?")
+
+  await enable.locator('input[name="flotilla-openrouter-key"]').fill("sk-or-test")
+  await enable.getByRole("button", {name: "Enable read out loud"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("Read out loud is ready to use!")
+
+  await openMessageMenu(alice, "the dock is closed on sunday")
+  await alice.getByRole("button", {name: "Read Out Loud"}).click()
+
+  await expect(alice.getByText("a message from Bob Barnacle")).toBeVisible()
+
+  // Only what the message says is sent, so the nostr uri wrapping bob's mention never is.
+  expect(spoken).toEqual(["the dock is closed on sunday"])
+
+  // The duration is the mock's, which is what proves the player is on audio it decoded rather
+  // than on an element that failed to load.
+  await expect(alice.getByText("/ 0:03")).toBeVisible()
+
+  // Chromium decides for itself whether the autoplay is allowed, so the control is read for
+  // which way it is about to flip rather than assumed to start paused.
+  const playPause = alice.getByRole("button", {name: /^(Play|Pause) message$/})
+  const wasPlaying = (await playPause.getAttribute("aria-label")) === "Pause message"
+
+  await playPause.click()
+  await expect(playPause).toHaveAttribute(
+    "aria-label",
+    wasPlaying ? "Play message" : "Pause message",
+  )
+
+  const seek = alice.getByRole("slider", {name: "Seek within the message"})
+
+  await seek.fill("2")
+
+  await expect(alice.getByText("0:02 /")).toBeVisible()
+
+  await alice.getByRole("button", {name: "Stop reading"}).click()
+
+  await expect(alice.getByText("a message from Bob Barnacle")).toHaveCount(0)
 })
 
 test("US-115 connect a wallet without losing the zap you were composing", async ({seed, as}) => {

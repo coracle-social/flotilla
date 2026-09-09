@@ -1,4 +1,4 @@
-import {derived, writable} from "svelte/store"
+import {derived, get, writable} from "svelte/store"
 import {first, uniqBy} from "@welshman/lib"
 import {sortEventsDesc, tagSpec, tagValues} from "@welshman/util"
 import {deriveDeduplicated} from "@welshman/store"
@@ -262,14 +262,31 @@ export const callState = writable<CallState>(CallState.Disconnected)
 
 export const callTargetRoom = writable<Room | undefined>(undefined)
 
+export const isCallActive = derived(
+  callState,
+  $state => $state === CallState.Joining || $state === CallState.Connected,
+)
+
 export const deriveIsCallActiveElsewhere = (url: string | undefined, h: string | undefined) =>
   derived(
-    [callState, callTargetRoom],
-    ([$state, $targetRoom]) =>
-      ($state === CallState.Joining || $state === CallState.Connected) &&
+    [isCallActive, callTargetRoom],
+    ([$isCallActive, $targetRoom]) =>
+      $isCallActive &&
       $targetRoom !== undefined &&
       !($targetRoom.url === url && $targetRoom.h === h),
   )
+
+// leaveVoiceRoom no-ops during Joining, since no session exists yet to leave — cancel the
+// in-flight join instead, otherwise ending a call that is still connecting does nothing.
+export const endCall = async () => {
+  const engine = await import("@app/callEngine")
+
+  if (get(callState) === CallState.Joining) {
+    engine.cancelJoinVoiceRoom()
+  } else {
+    await engine.leaveVoiceRoom()
+  }
+}
 
 export const speakingParticipants = writable<CallParticipant[]>([])
 
