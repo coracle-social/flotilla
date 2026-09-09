@@ -146,3 +146,39 @@ test("takes over the space menu's history entry when you navigate out of it", as
   await expect(page).toHaveURL(new RegExp(`${roomPath(space.url, "lounge")}$`))
   await expect(drawer).toHaveCount(0)
 })
+
+test("switches spaces inside the space menu without closing it", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+    const other = relay("other")
+
+    space.room("lounge", {name: "Space Lounge"})
+    other.room("garden", {name: "Other Garden"})
+    space.join(user.alice, "lounge")
+    other.join(user.alice, "garden")
+  })
+
+  const space = scenario.space("space")
+  const other = scenario.space("other")
+  const page = await as(users.alice, roomPath(space.url, "lounge"), {
+    context: {viewport: {width: 390, height: 844}, hasTouch: true},
+  })
+
+  const drawer = page.locator(".drawer")
+
+  await page.getByRole("button", {name: "Open space menu"}).click()
+
+  await expect(drawer.getByRole("link", {name: "Space Lounge"})).toBeVisible()
+
+  // The rail is in the menu on a phone, so a space is picked with the menu still open and the room
+  // is picked after it. Navigating out from under the menu would close it on the first tap.
+  await drawer.locator('.primary-nav [data-tip^="other"]').click()
+
+  await expect(page).toHaveURL(new RegExp(spacePath(other.url)))
+  await expect(drawer.getByRole("link", {name: "Other Garden"})).toBeVisible()
+
+  await drawer.getByRole("link", {name: "Other Garden"}).click()
+
+  await expect(page).toHaveURL(new RegExp(`${roomPath(other.url, "garden")}$`))
+  await expect(drawer).toHaveCount(0)
+})

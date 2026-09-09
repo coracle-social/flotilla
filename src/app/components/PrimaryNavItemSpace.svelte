@@ -17,7 +17,7 @@
   const onClick = () => {
     const entryPath = makeSpaceEntryPath(url)
 
-    navigate(entryPath, {replaceState: entryPath === $page.url.pathname})
+    navigate(entryPath, {keepModal: true, replaceState: entryPath === $page.url.pathname})
   }
 
   const path = makeSpacePath(url)

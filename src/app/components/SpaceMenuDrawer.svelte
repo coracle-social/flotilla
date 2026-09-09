@@ -3,12 +3,15 @@
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
   import PrimaryNavSpaces from "@app/components/PrimaryNavSpaces.svelte"
+  import {lastSpaceUrl} from "@app/routes"
 
   type Props = {
     url: string
   }
 
   const {url}: Props = $props()
+
+  const activeUrl = $derived($lastSpaceUrl ?? url)
 
   const duration = 200
 
@@ -32,7 +35,9 @@
   </div>
   <div class="flex w-0 min-w-0 grow" in:translate={slide(parallax)} out:translate={slide(0)}>
     <SecondaryNav visible class="secondary-nav--mobile-space mt-0 h-full w-0 min-w-0 grow pb-0">
-      <SpaceMenu {url} mobile />
+      {#key activeUrl}
+        <SpaceMenu url={activeUrl} mobile />
+      {/key}
     </SecondaryNav>
   </div>
 </div>

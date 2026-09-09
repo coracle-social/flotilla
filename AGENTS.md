@@ -194,6 +194,7 @@ return a `Command`, so `.then(publish)` is usually all you need.
 - Use `$state.snapshot` if calling component might unmount
 - Navigate with `navigate` from `app/modal.ts` rather than `goto` — an open modal owns the current
   history entry, so a navigation that drops it replaces that entry instead of stacking on it
+- Pass `keepModal` to `navigate` to change the page under a modal and leave it open
 
 ## Development Workflow
 

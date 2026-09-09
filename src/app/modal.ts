@@ -64,8 +64,19 @@ const closesModal = (path: string) => {
   return hash !== "" && !path.endsWith(hash)
 }
 
-export const navigate = (path: string, options?: Parameters<typeof goto>[1]) =>
-  goto(path, {...options, replaceState: options?.replaceState || closesModal(path)})
+export type NavigateOptions = Parameters<typeof goto>[1] & {keepModal?: boolean}
+
+// The modal hash is written with the History API, so it never reaches `page` — carrying it onto
+// the path is what navigates underneath an open modal rather than closing it
+export const navigate = (path: string, {keepModal, ...options}: NavigateOptions = {}) => {
+  const hash = get(modalHash)
+
+  if (keepModal && hash) {
+    return goto(path + hash, {...options, replaceState: true})
+  }
+
+  return goto(path, {...options, replaceState: options.replaceState || closesModal(path)})
+}
 
 export const modalStack = deriveDeduplicated([modalHash, modals], ([$hash, $modals]) => {
   return getIdsFromHash($hash)
