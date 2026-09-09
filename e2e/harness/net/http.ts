@@ -236,17 +236,31 @@ const silence = (seconds: number) => {
   return wav
 }
 
+// The only two the real endpoint encodes; anything else comes back a 400 naming the pair.
+const SPEECH_FORMATS = ["mp3", "pcm"]
+
 /**
  * OpenRouter's text to speech, answering every request with the same silence. The array it returns
- * collects what the app asked to have read, in the order it asked.
+ * collects what the app asked to have read, in the order it asked. A request for a format the real
+ * endpoint does not encode is refused the way it refuses one, since a mock that plays anything back
+ * cannot tell whether the app asked for audio a browser can decode.
  */
 export const mockOpenRouterSpeech = async (context: BrowserContext, seconds = 3) => {
   const spoken: string[] = []
 
   await context.route(`${OPENROUTER_ORIGIN}/api/v1/audio/speech`, route => {
-    spoken.push(JSON.parse(route.request().postData() ?? "{}").input)
+    const {input, response_format} = JSON.parse(route.request().postData() ?? "{}")
 
-    return route.fulfill({contentType: "audio/wav", body: silence(seconds)})
+    if (SPEECH_FORMATS.includes(response_format)) {
+      spoken.push(input)
+
+      return route.fulfill({contentType: "audio/wav", body: silence(seconds)})
+    }
+
+    return route.fulfill({
+      status: 400,
+      json: {error: {message: `Invalid option: expected one of ${SPEECH_FORMATS.join("|")}`}},
+    })
   })
 
   return spoken

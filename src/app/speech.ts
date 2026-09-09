@@ -11,9 +11,11 @@ import {pushModal} from "@app/modal"
 import {getSetting} from "@app/settings"
 import {pushToast} from "@app/toast"
 
-const SPEECH_MODEL = "openai/gpt-audio-mini"
+const SPEECH_MODEL = "hexgrad/kokoro-82m"
 
-const SPEECH_VOICE = "alloy"
+const SPEECH_VOICE = "af_bella"
+
+const SPEECH_FORMAT = "mp3"
 
 export type Speech = {
   id: string
@@ -30,7 +32,12 @@ export const synthesize = async (text: string) => {
       Authorization: `Bearer ${getSetting("openrouter_key")}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({model: SPEECH_MODEL, voice: SPEECH_VOICE, input: text}),
+    body: JSON.stringify({
+      model: SPEECH_MODEL,
+      voice: SPEECH_VOICE,
+      input: text,
+      response_format: SPEECH_FORMAT,
+    }),
   })
 
   // A successful response is audio rather than json, so the error body is only worth reading once
