@@ -1,7 +1,8 @@
 import type {BrowserContext, WebSocketRoute} from "@playwright/test"
 import {call, parseJson} from "@welshman/lib"
 import {normalizeRelayUrl} from "@welshman/util"
-import {RelayMessageType, isClientEvent, isClientReq} from "@welshman/net"
+import type {TrustedEvent} from "@welshman/util"
+import {ClientMessageType, RelayMessageType, isClientEvent, isClientReq} from "@welshman/net"
 import type {ClientMessage, RelayMessage} from "@welshman/net"
 import type {RelayConnection} from "../zooid/types"
 import type {Zooid} from "../zooid/relay"
@@ -14,6 +15,12 @@ export type TranscriptEntry = {
   url: string
   direction: Direction
   message: ClientMessage | RelayMessage
+}
+
+// An event the client published, and the relay it went to.
+export type PublishedEvent = {
+  url: string
+  event: TrustedEvent
 }
 
 type Traffic = {
@@ -102,6 +109,22 @@ export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) =>
 }
 
 export const getTranscript = (context: BrowserContext) => trafficStore.get(context).transcript
+
+// Every event this context put on the wire, oldest first, with the relay it went to. One event
+// published to three relays is three entries.
+export const getPublished = (context: BrowserContext): PublishedEvent[] =>
+  getTranscript(context)
+    .filter(
+      ({direction, message}) => direction === "toRelay" && message[0] === ClientMessageType.Event,
+    )
+    .map(({url, message}) => ({url, event: message[1] as TrustedEvent}))
+
+// The same, narrowed to one kind, which is how a spec asks what the client published rather than
+// what it rendered.
+export const getPublishedEvents = (context: BrowserContext, kind: number) =>
+  getPublished(context)
+    .filter(({event}) => event.kind === kind)
+    .map(({event}) => event)
 
 // Makes a relay answer like one that never held anything, without its url becoming a leak. `serve`
 // resolves a relay once, at open, so sockets already open keep theirs and the drop takes effect on

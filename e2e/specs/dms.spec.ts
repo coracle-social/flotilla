@@ -2,26 +2,29 @@ import {npubEncode} from "nostr-tools/nip19"
 import type {Locator, Page} from "@playwright/test"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
 import {DIRECT_MESSAGE, REACTION} from "@welshman/util"
-import {MessagingRelayList, RelayList} from "@welshman/domain"
+import {MessagingRelayList} from "@welshman/domain"
 import {
+  bubble,
+  chatItems,
+  chatList,
+  chatPath,
+  composer,
+  composerDisabled,
+  composerEnabled,
   expect,
   forgetRelay,
   makeTestUser,
+  pageBar,
+  pathPattern,
+  profilePath,
   readCachedEvents,
   roomPath,
+  send,
   test,
+  topDialog,
   users,
 } from "../harness"
 import type {SeededRumor, SeededSpace, TestUser} from "../harness"
-
-// The path the app builds for a conversation: the other participants' pubkeys, sorted and joined
-// with commas — see makeChatId in src/app/chats.ts.
-const chatPath = (...pubkeys: string[]) => `/chat/${[...pubkeys].sort().join(",")}`
-
-const profilePath = (pubkey: string) => `/people/${npubEncode(pubkey)}`
-
-// A path as a pattern, for a url that carries a modal's hash alongside it.
-const pathPattern = (path: string) => new RegExp(path.replace(/[.?+*()[\]]/g, "\\$&"))
 
 // Everything about a person is resolved through their relay list — their profile, their messaging
 // relays, the wraps addressed to them — and a scenario with no fallbacks resolves an author with
@@ -31,38 +34,13 @@ const pathPattern = (path: string) => new RegExp(path.replace(/[.?+*()[\]]/g, "\
 const seedPerson = (space: SeededSpace, user: TestUser, name: string, ...rooms: string[]) => {
   space.join(user, ...rooms)
   space.profile(user, {name})
-  space.event(user, () =>
-    space
-      .kind(RelayList)
-      .writer()
-      .setReadUrls([space.url])
-      .setWriteUrls([space.url])
-      .renderTemplate(),
-  )
+  space.relayList(user)
 }
-
-// The kind-10050 ChatEnable publishes when someone accepts "Enable direct messaging?". Having one
-// is what makes a person reachable, so a story about messaging being off is a person without one.
-const enableDms = (space: SeededSpace, user: TestUser) =>
-  space.event(user, () =>
-    space.kind(MessagingRelayList).writer().setUrls([space.url]).renderTemplate(),
-  )
-
-const chatList = (page: Page) => page.locator(".secondary-nav .overflow-auto")
-
-// One ChatItem is one button; nothing inside it is one.
-const chatItems = (page: Page) => chatList(page).locator("button")
 
 const chatFilter = (page: Page) => page.locator(".secondary-nav input[type='text']")
 
 // ChatItem's unread mark is a bare dot with no text of its own.
 const unreadDots = (scope: Locator) => scope.locator(".rounded-full.bg-primary")
-
-const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
-
-// A modal is a `.dialog` overlay wrapping a `.dialog` card, and the card is the one with the
-// content in it.
-const dialog = (page: Page) => page.locator(".dialog").last()
 
 // The "..." menu on a profile header, which is the only ghost circle button either the profile
 // page or the profile modal renders.
@@ -74,32 +52,21 @@ const modalBody = (page: Page, title: string) =>
     .locator(".scroll-container")
     .filter({has: page.getByRole("heading", {name: title, exact: true})})
 
-const composer = (page: Page) => page.locator(".chat-editor [contenteditable=true]")
-
-// The editor is where the composer says whether it is ready. The send button is not there to
-// ask while the composer is empty, since a dictation button stands in its place.
-const composerEnabled = (page: Page) =>
-  expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "false")
-
-const composerDisabled = (page: Page) =>
-  expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "true")
-
 // Both things the composer puts above itself — the message being replied to and the editing
 // indicator — are the same bordered strip.
 const composePreview = (page: Page) => page.locator(".room__compose .border-l-2")
 
-const bubble = (page: Page, text: string) => page.locator(".chat-bubble").filter({hasText: text})
-
+// A conversation names its messages by id rather than by text: the same words are sent more than
+// once in these stories, and only the id says which bubble is which.
 const message = (page: Page, id: string) => page.locator(`[data-event="${id}"]`)
 
 const enablePrompt = (page: Page) => page.getByRole("heading", {name: "Enable direct messaging?"})
 
 // The composer stays disabled until every recipient's messaging relays have been read, so waiting
 // on it is part of sending rather than a wait for a wait's sake.
-const send = async (page: Page, content: string) => {
+const sendDm = async (page: Page, content: string) => {
   await composerEnabled(page)
-  await composer(page).pressSequentially(content)
-  await composer(page).press("Enter")
+  await send(page, content)
 }
 
 // A suggestion carries the pubkey it selects as its label, so the name is what gets typed and the
@@ -175,8 +142,8 @@ test("US-029 start a one-on-one chat", async ({seed, as}) => {
     seedPerson(space, user.alice, "Alice Anchor")
     seedPerson(space, user.bob, "Bob Barnacle")
     seedPerson(space, user.carol, "Carol Cutter")
-    enableDms(space, user.alice)
-    enableDms(space, user.bob)
+    space.messagingRelayList(user.alice)
+    space.messagingRelayList(user.bob)
 
     // A conversation the three of them are already in. It puts bob's profile in her client before
     // she goes looking for him, without being the one-on-one she is about to start.
@@ -198,7 +165,7 @@ test("US-029 start a one-on-one chat", async ({seed, as}) => {
   await expect(composer(page)).toBeVisible()
   await composerEnabled(page)
 
-  await send(page, "hi bob")
+  await sendDm(page, "hi bob")
 
   await expect(bubble(page, "hi bob")).toBeVisible()
 
@@ -228,7 +195,7 @@ test("US-029 start a one-on-one chat", async ({seed, as}) => {
   await page.goto("/chat")
   await chatItems(page).filter({hasText: "welcome aboard"}).click()
   await bubble(page, "welcome aboard").getByRole("button", {name: "Carol Cutter"}).first().click()
-  await profileMenu(dialog(page)).click()
+  await profileMenu(topDialog(page)).click()
   await page.getByRole("button", {name: "Send Message"}).click()
 
   await expect(page).toHaveURL(pathPattern(chatPath(users.carol.pubkey)))
@@ -248,9 +215,9 @@ test("US-030 start a group chat", async ({seed, as}) => {
     seedPerson(space, user.alice, "Alice Anchor")
     seedPerson(space, user.bob, "Bob Barnacle")
     seedPerson(space, user.carol, "Carol Cutter")
-    enableDms(space, user.alice)
-    enableDms(space, user.bob)
-    enableDms(space, user.carol)
+    space.messagingRelayList(user.alice)
+    space.messagingRelayList(user.bob)
+    space.messagingRelayList(user.carol)
 
     // One conversation with each of them, so both profiles are in her client before she searches.
     space.dm(user.bob, [user.alice], "just us two", at(4, HOUR))
@@ -352,7 +319,7 @@ test("US-031 direct messaging has to be switched on", async ({seed, as}) => {
   await composerEnabled(alice)
   await expect(banner).toHaveCount(0)
 
-  await send(alice, "finally")
+  await sendDm(alice, "finally")
 
   await expect(bubble(alice, "finally")).toBeVisible()
   await expect(chatItems(bob).filter({hasText: "finally"})).toBeVisible()
@@ -368,8 +335,8 @@ test("US-032 exchange messages in a conversation", async ({seed, as}) => {
 
     seedPerson(space, user.alice, "Alice Anchor")
     seedPerson(space, user.bob, "Bob Barnacle")
-    enableDms(space, user.alice)
-    enableDms(space, user.bob)
+    space.messagingRelayList(user.alice)
+    space.messagingRelayList(user.bob)
 
     yesterday = space.dm(user.bob, [user.alice], "sent this yesterday", at(30, HOUR))
     // A minute apart, which is what puts these two in the same run of messages.
@@ -402,7 +369,7 @@ test("US-032 exchange messages in a conversation", async ({seed, as}) => {
   await expect(bubble(alice, "still around?")).not.toContainText("Bob Barnacle")
   await expect(bubble(alice, "still around?").locator(".rounded-full")).toHaveCount(0)
 
-  await send(alice, "just got here")
+  await sendDm(alice, "just got here")
 
   await expect(bubble(alice, "just got here")).toBeVisible()
   await expect(bubble(alice, "just got here")).toHaveClass(/chat-bubble--user/)
@@ -423,7 +390,7 @@ test("US-033 browse and search your conversations", async ({seed, as}) => {
     seedPerson(space, user.bob, "Bob Barnacle")
     seedPerson(space, user.carol, "Carol Cutter")
     seedPerson(space, dave, "Dave Davits")
-    enableDms(space, user.alice)
+    space.messagingRelayList(user.alice)
 
     space.dm(dave, [user.alice], "see you at the meetup", at(2, DAY))
     space.dm(user.carol, [user.alice], "thanks for the link", at(3, HOUR))
@@ -469,8 +436,8 @@ test("US-034 track and clear unread conversations", async ({seed, as}) => {
     seedPerson(space, user.bob, "Bob Barnacle")
     seedPerson(space, user.carol, "Carol Cutter")
     seedPerson(space, dave, "Dave Davits")
-    enableDms(space, user.alice)
-    enableDms(space, user.bob)
+    space.messagingRelayList(user.alice)
+    space.messagingRelayList(user.bob)
 
     space.dm(user.carol, [user.alice], "did you see this?", at(3, HOUR))
     space.dm(dave, [user.alice], "ping from dave", at(2, HOUR))
@@ -488,7 +455,7 @@ test("US-034 track and clear unread conversations", async ({seed, as}) => {
   // Bob writes while she is looking at the list rather than at his conversation
   const bob = await as(users.bob, chatPath(users.alice.pubkey))
 
-  await send(bob, "are you free later?")
+  await sendDm(bob, "are you free later?")
 
   await expect(bobChat).toBeVisible()
   await expect(unreadDots(bobChat)).toBeVisible()
@@ -529,8 +496,8 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
 
     seedPerson(space, user.alice, "Alice Anchor")
     seedPerson(space, user.bob, "Bob Barnacle")
-    enableDms(space, user.alice)
-    enableDms(space, user.bob)
+    space.messagingRelayList(user.alice)
+    space.messagingRelayList(user.bob)
 
     his = space.dm(user.bob, [user.alice], "did you see the thing?", at(20, MINUTE))
     hers = space.dm(user.alice, [user.bob], "first attempt", at(10, MINUTE))
@@ -561,7 +528,7 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
 
   await expect(composePreview(alice)).toContainText("Replying to @Bob Barnacle")
 
-  await send(alice, "yes I did")
+  await sendDm(alice, "yes I did")
 
   // The reply that gets sent quotes what it answers
   await expect(bubble(alice, "yes I did")).toContainText("did you see the thing?")
@@ -580,7 +547,7 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
   await expect(composer(alice)).toContainText("first attempt")
 
   await composer(alice).press("ControlOrMeta+a")
-  await send(alice, "second attempt")
+  await sendDm(alice, "second attempt")
 
   await expect(bubble(alice, "second attempt")).toBeVisible()
   await expect(alice.locator(".chat-bubble").filter({hasText: "first attempt"})).toHaveCount(0)
@@ -626,8 +593,8 @@ test("US-036 receive a new conversation live", async ({seed, as}) => {
     seedPerson(space, user.alice, "Alice Anchor")
     seedPerson(space, user.bob, "Bob Barnacle")
     seedPerson(space, user.carol, "Carol Cutter")
-    enableDms(space, user.alice)
-    enableDms(space, user.bob)
+    space.messagingRelayList(user.alice)
+    space.messagingRelayList(user.bob)
 
     // A conversation each of them already has. A list with something in it is how each page says
     // its own end of the sync is up, before the one that has to arrive live is sent.
@@ -650,7 +617,7 @@ test("US-036 receive a new conversation live", async ({seed, as}) => {
 
   await expect(bob).toHaveURL(pathPattern(chatPath(users.alice.pubkey)))
 
-  await send(bob, "starting a chat with you")
+  await sendDm(bob, "starting a chat with you")
 
   // Her list picks the conversation up on its own
   const fromBob = chatItems(alice).filter({hasText: "Bob Barnacle"})
@@ -669,7 +636,7 @@ test("US-108 read messages from a relay you only use for messages", async ({seed
 
     seedPerson(space, user.alice, "Alice Anchor")
     seedPerson(space, user.bob, "Bob Barnacle")
-    enableDms(space, user.bob)
+    space.messagingRelayList(user.bob)
 
     // Alice's inbox is a relay she has nothing else to do with: not a space she has joined, and
     // not one of her read or write relays. Membership of it is only what lets a wrap addressed to
@@ -723,8 +690,8 @@ test("US-109 keep a conversation you have already read", async ({seed, as}) => {
 
     seedPerson(space, user.alice, "Alice Anchor", "general")
     seedPerson(space, user.bob, "Bob Barnacle", "general")
-    enableDms(space, user.alice)
-    enableDms(space, user.bob)
+    space.messagingRelayList(user.alice)
+    space.messagingRelayList(user.bob)
 
     his = space.dm(user.bob, [user.alice], "the tide charts are up", at(2, HOUR))
     hers = space.dm(user.alice, [user.bob], "thakns", at(1, HOUR))
@@ -755,7 +722,7 @@ test("US-109 keep a conversation you have already read", async ({seed, as}) => {
   await expect(composer(alice)).toContainText("thakns")
 
   await composer(alice).press("ControlOrMeta+a")
-  await send(alice, "thanks")
+  await sendDm(alice, "thanks")
 
   await expect(bubble(alice, "thanks")).toBeVisible()
   await expect(alice.locator(".chat-bubble").filter({hasText: "thakns"})).toHaveCount(0)

@@ -1,3 +1,4 @@
+import {npubEncode} from "nostr-tools/nip19"
 import {test as base, expect} from "@playwright/test"
 import type {BrowserContext, BrowserContextOptions, Page} from "@playwright/test"
 import type {Maybe, MaybeAsync} from "@welshman/lib"
@@ -31,10 +32,48 @@ export type {SeededEvent} from "./seed/publish"
 export type {SeededOpenRelay} from "./seed/openRelay"
 export type {SeededRumor, SeededSpace} from "./seed/space"
 export type {OpenRelayName, SpaceName, TenantName} from "./zooid/config"
-export type {TranscriptEntry} from "./net/websocket"
-export {forgetRelay, formatTranscript, getTranscript} from "./net/websocket"
+export type {PublishedEvent, TranscriptEntry} from "./net/websocket"
+export {
+  forgetRelay,
+  formatTranscript,
+  getPublished,
+  getPublishedEvents,
+  getTranscript,
+} from "./net/websocket"
 export {readCachedEvents} from "./app/cache"
 export {
+  bubble,
+  chatItems,
+  chatList,
+  composer,
+  composerDisabled,
+  composerEnabled,
+  dialog,
+  emojiButton,
+  longDate,
+  menuButton,
+  message,
+  messageActions,
+  messages,
+  modalForm,
+  noteEditor,
+  openMessageMenu,
+  openRoomDetail,
+  pageBar,
+  pickEmoji,
+  roomLink,
+  send,
+  sendButton,
+  settingRow,
+  settingToggle,
+  timeline,
+  toast,
+  topDialog,
+} from "./ui"
+export {GIF, GIF_BASE64, WEBP, chooseFile, gifFile} from "./files"
+export type {TestFile} from "./files"
+export {
+  DEFAULT_BLOSSOM_ORIGIN,
   assertNoBlockedRequests,
   getHosting,
   mockBlossom,
@@ -57,6 +96,16 @@ const encodeRelay = (url: string) =>
 export const spacePath = (url: string) => `/spaces/${encodeRelay(url)}`
 
 export const roomPath = (url: string, h: string) => `${spacePath(url)}/${h}`
+
+// The path the app builds for a conversation: the other participants' pubkeys, sorted and joined
+// with commas — see makeChatId in src/app/chats.ts.
+export const chatPath = (...pubkeys: string[]) => `/chat/${[...pubkeys].sort().join(",")}`
+
+export const profilePath = (pubkey: string) => `/people/${npubEncode(pubkey)}`
+
+// A literal as a pattern, for a url that carries a query string or a modal's hash alongside the
+// path being matched, or a host whose dots would otherwise be wildcards.
+export const pathPattern = (path: string) => new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
 
 // What a page is opened with, over and above the scenario's own relays.
 export type PageOptions = {

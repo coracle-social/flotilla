@@ -12,7 +12,7 @@ import {
 } from "@welshman/util"
 import type {HashedEvent} from "@welshman/util"
 import {Nip59} from "@welshman/signer"
-import {DirectMessage, EventWriter, Profile} from "@welshman/domain"
+import {DirectMessage, EventWriter, MessagingRelayList, Profile, RelayList} from "@welshman/domain"
 import type {BaseEventReader, ConfiguredKind, EventQuery, KindFactory} from "@welshman/domain"
 import type {RoomOptions, TestRelay} from "../zooid/types"
 import type {Zooid} from "../zooid/relay"
@@ -21,7 +21,7 @@ import type {SpaceName} from "../zooid/config"
 import {users} from "../keys"
 import type {TestUser} from "../keys"
 import {makePublisher} from "./publish"
-import type {Enqueue, ProfileValues, SeededEvent, SeededTemplate} from "./publish"
+import type {Enqueue, ProfileValues, RelayListUrls, SeededEvent, SeededTemplate} from "./publish"
 
 // @welshman/domain has no writer for NIP-29 kind-9 messages, and none of its readers describe one,
 // so this pairs the base writer with the base reader. The behavior tags it renders are everything a
@@ -54,6 +54,13 @@ export type SeededSpace = {
   message(user: TestUser, h: string, content: string, createdAt?: number): SeededEvent
   reply(user: TestUser, parent: SeededEvent, content: string, createdAt?: number): SeededEvent
   profile(user: TestUser, values: ProfileValues, createdAt?: number): SeededEvent
+  // Where this user reads and writes, this space by default. Outbox routing resolves everything
+  // about a person through their relay list — their profile, the events they authored, the wraps
+  // addressed to them — so a fixture is only loadable by somebody else once its author has one.
+  relayList(user: TestUser, urls?: RelayListUrls, createdAt?: number): SeededEvent
+  // The kind-10050 that says where someone's direct messages go, this space by default. Having one
+  // is what makes a person reachable, so a story about messaging being off is a person without one.
+  messagingRelayList(user: TestUser, urls?: string[], createdAt?: number): SeededEvent
   event(user: TestUser, template: SeededTemplate, createdAt?: number): SeededEvent
   // A nip-17 conversation. One kind-14 rumor, gift-wrapped once per participant including the
   // sender, whose own copy is the half of the thread their client reads back.
@@ -165,6 +172,20 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
     factory: KindFactory<R, W, Q>,
   ) => factory.configure(context)
 
+  const relayList = (
+    user: TestUser,
+    {read = [url], write = [url]}: RelayListUrls = {},
+    createdAt = startedAt,
+  ) =>
+    event(
+      user,
+      () => kind(RelayList).writer().setReadUrls(read).setWriteUrls(write).renderTemplate(),
+      createdAt,
+    )
+
+  const messagingRelayList = (user: TestUser, urls = [url], createdAt = startedAt) =>
+    event(user, () => kind(MessagingRelayList).writer().setUrls(urls).renderTemplate(), createdAt)
+
   // Every wrap is published over the sender's own connection, since a gift wrap's author is an
   // ephemeral key nobody in this process can authenticate as. zooid stores it anyway, authorizing a
   // kind-1059 by the member named in its p tag.
@@ -207,6 +228,8 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
     message,
     reply,
     profile,
+    relayList,
+    messagingRelayList,
     event,
     dm,
     kind,

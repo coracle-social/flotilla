@@ -17,6 +17,13 @@ export type SeededEvent = {
 // anything built by one has to be deferred.
 export type SeededTemplate = StampedEvent | (() => MaybeAsync<EventTemplate>)
 
+// A nip-65 relay list, as the two sets a client reads off it: `write` is what an outbox-routed load
+// for this pubkey resolves to, `read` is what a feed asks for that pubkey's context.
+export type RelayListUrls = {
+  read?: string[]
+  write?: string[]
+}
+
 export type ProfileValues = {
   name?: string
   about?: string

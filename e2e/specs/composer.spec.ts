@@ -1,58 +1,25 @@
 import type {Locator, Page} from "@playwright/test"
 import {HOUR} from "@welshman/lib"
-import {MessagingRelayList, RelayList} from "@welshman/domain"
-import {expect, makeTestUser, mockBlossom, roomPath, test, users} from "../harness"
-import type {SeededSpace, TestUser} from "../harness"
-
-// The path the app builds for a conversation — see makeChatId in src/app/chats.ts.
-const chatPath = (...pubkeys: string[]) => `/chat/${[...pubkeys].sort().join(",")}`
-
-// Where an upload lands: the space's own origin is probed first and blossom is off in every
-// tenant's toml, so what is left is VITE_DEFAULT_BLOSSOM_SERVERS.
-const BLOSSOM_ORIGIN = "https://blossom.primal.net"
-
-// A one pixel gif. Gif rather than png because compressFileForUpload passes it through untouched
-// rather than re-encoding it through a canvas, so the mock stores the bytes the browser was handed.
-const GIF = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-
-const gifFile = (name: string) => ({
-  name,
-  mimeType: "image/gif",
-  buffer: Buffer.from(GIF, "base64"),
-})
-
-// Outbox routing resolves everything about a person through their relay list, so a seeded profile
-// is only loadable by somebody else once its author has one.
-const seedRelayList = (space: SeededSpace, user: TestUser) =>
-  space.event(user, () =>
-    space
-      .kind(RelayList)
-      .writer()
-      .setReadUrls([space.url])
-      .setWriteUrls([space.url])
-      .renderTemplate(),
-  )
-
-// The kind-10050 a conversation needs at both ends: the recipient's is what enables the composer,
-// the sender's is what routes their own copy of the wrap back to them.
-const seedMessagingRelays = (space: SeededSpace, user: TestUser) =>
-  space.event(user, () =>
-    space.kind(MessagingRelayList).writer().setUrls([space.url]).renderTemplate(),
-  )
-
-const composer = (page: Page) => page.locator(".chat-editor [contenteditable=true]")
-
-// The send button carries the shortcut it advertises, which differs by platform.
-const sendButton = (page: Page) => page.locator("button[data-tip$='enter to send']")
-
-// The editor is where the composer says whether it is ready. The send button is not there to
-// ask while the composer is empty, since a dictation button stands in its place.
-const composerEnabled = (page: Page) =>
-  expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "false")
+import {
+  DEFAULT_BLOSSOM_ORIGIN,
+  GIF_BASE64,
+  chatPath,
+  chooseFile,
+  composer,
+  composerEnabled,
+  expect,
+  gifFile,
+  makeTestUser,
+  messageActions,
+  mockBlossom,
+  roomPath,
+  sendButton,
+  test,
+  timeline,
+  users,
+} from "../harness"
 
 const suggestions = (page: Page) => page.locator(".tiptap-suggestions__item")
-
-const timeline = (page: Page) => page.locator(".room__content")
 
 // RoomCompose leads with a two button group: upload, then the create menu.
 const roomUploadButton = (page: Page) => page.locator(".room__compose-inner .join-item").first()
@@ -63,22 +30,6 @@ const chatUploadButton = (page: Page) => page.locator("button[data-tip='Add an i
 // indicator — are the same bordered strip, each with a single button in it: its X.
 const banner = (page: Page, text: string) =>
   page.locator(".room__compose .border-l-2").filter({hasText: text})
-
-// RoomItem gives its hover actions no accessible names — every one is an icon. Their order is
-// fixed by the component: zap, emoji, reply, edit (only on your own recent message), menu.
-const messageActions = (page: Page, text: string) =>
-  page.locator(".room__item").filter({hasText: text}).locator(".room__item-actions button")
-
-const chooseFile = async (
-  page: Page,
-  button: Locator,
-  file: {name: string; mimeType: string; buffer: Buffer},
-) => {
-  const chooser = page.waitForEvent("filechooser")
-
-  await button.click()
-  await (await chooser).setFiles(file)
-}
 
 // Both of these are DataTransfer dispatches rather than anything native: prosemirror reads the file
 // straight off the event, and playwright's own dispatchEvent builds a plain Event, which would drop
@@ -103,7 +54,7 @@ const dropImage = (editor: Locator, name: string) =>
         }),
       )
     },
-    {name, data: GIF},
+    {name, data: GIF_BASE64},
   )
 
 const pasteImage = (editor: Locator, name: string) =>
@@ -119,7 +70,7 @@ const pasteImage = (editor: Locator, name: string) =>
         new ClipboardEvent("paste", {bubbles: true, cancelable: true, clipboardData: transfer}),
       )
     },
-    {name, data: GIF},
+    {name, data: GIF_BASE64},
   )
 
 test("US-056 autocomplete a mention or a room reference", async ({seed, as}) => {
@@ -134,7 +85,7 @@ test("US-056 autocomplete a mention or a room reference", async ({seed, as}) => 
     space.join(user.alice, "general", "random")
     space.join(user.bob, "general")
     space.profile(user.bob, {name: "Bob Roberts", picture: "https://images.test/bob.png"})
-    seedRelayList(space, user.bob)
+    space.relayList(user.bob)
     space.message(user.bob, "general", "morning all", at(2, HOUR))
 
     // Someone whose name matches the same term but who belongs to a different space, so the
@@ -143,7 +94,7 @@ test("US-056 autocomplete a mention or a room reference", async ({seed, as}) => 
     other.join(user.alice, "lounge")
     other.join(outsider, "lounge")
     other.profile(outsider, {name: "Bobbin Amaranth"})
-    seedRelayList(other, outsider)
+    other.relayList(outsider)
     other.message(outsider, "lounge", "hello from the lounge", at(2, HOUR))
   })
 
@@ -227,8 +178,8 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
     for (const person of [user.alice, user.bob]) {
       space.profile(person, {name: person.name})
-      seedRelayList(space, person)
-      seedMessagingRelays(space, person)
+      space.relayList(person)
+      space.messagingRelayList(person)
     }
   })
 
@@ -237,7 +188,7 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   const alice = await as(users.alice, path)
   const bob = await as(users.bob, path)
 
-  const blossom = await mockBlossom(alice.context(), {server: BLOSSOM_ORIGIN})
+  const blossom = await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
 
   await blossom.install(bob.context())
 
@@ -258,8 +209,8 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
   await composer(alice).press("Enter")
 
-  await expect(timeline(alice).locator(`img[src^="${BLOSSOM_ORIGIN}/"]`)).toBeVisible()
-  await expect(timeline(bob).locator(`img[src^="${BLOSSOM_ORIGIN}/"]`)).toBeVisible()
+  await expect(timeline(alice).locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
+  await expect(timeline(bob).locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
 
   await dropImage(composer(alice), "dropped.gif")
 
@@ -306,7 +257,7 @@ test("US-057 attach and send an image", async ({seed, as}) => {
     buffer: Buffer.from("not an image"),
   })
 
-  await expect(composer(alice)).toContainText(BLOSSOM_ORIGIN)
+  await expect(composer(alice)).toContainText(DEFAULT_BLOSSOM_ORIGIN)
   await expect(alice.getByRole("alert")).toHaveCount(0)
 
   // What the server refuses is what the composer refuses, in the words the server used.
@@ -335,8 +286,8 @@ test("US-058 drafts survive navigating away", async ({seed, as}) => {
     // her to enable chat; bob's is what enables the conversation's composer.
     for (const person of [user.alice, user.bob]) {
       space.profile(person, {name: person.name})
-      seedRelayList(space, person)
-      seedMessagingRelays(space, person)
+      space.relayList(person)
+      space.messagingRelayList(person)
     }
   })
 
@@ -399,7 +350,7 @@ test("US-059 cancel a reply or an edit in progress", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
     space.profile(user.bob, {name: "Bob Roberts"})
-    seedRelayList(space, user.bob)
+    space.relayList(user.bob)
     space.message(user.bob, "general", "morning all", at(2, HOUR))
   })
 

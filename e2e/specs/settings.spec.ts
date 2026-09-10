@@ -1,43 +1,13 @@
 import {MINUTE} from "@welshman/lib"
-import {RelayList} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
-import {expect, roomPath, test, users} from "../harness"
-import type {SeededSpace, TestUser} from "../harness"
+import {dialog, expect, roomPath, settingToggle, test, toast, topDialog, users} from "../harness"
 
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string}
 
-// The user's own relay list. Everything on these pages is published through their outbox, and the
-// sync that loads their settings back after a reload hangs off this list, so a spec that saves a
-// setting has to seed one.
-const relayList = (space: SeededSpace, user: TestUser) =>
-  space.event(user, () =>
-    space
-      .kind(RelayList)
-      .writer()
-      .setReadUrls([space.url])
-      .setWriteUrls([space.url])
-      .renderTemplate(),
-  )
-
-// FieldInline lays a labelled control out as a single row, with the label at one end and the
-// control at the other.
-const row = (page: Page, label: string) =>
-  page.locator("div.items-center.justify-between").filter({hasText: label})
-
-const toggle = (page: Page, label: string) => row(page, label).getByRole("checkbox")
-
-// One relay list's modal, which carries the list's name as its heading. Dialog nests two elements
-// with the class; the inner one holds the content.
-const relayDialog = (page: Page, title: string) =>
-  page
-    .locator(".dialog")
-    .filter({has: page.getByRole("heading", {name: title, exact: true})})
-    .last()
-
 // The relay picker, which has no heading of its own — and is pushed over the list modal rather
 // than alongside it, so it is the only dialog in the dom while it is open.
-const relayPicker = (page: Page) => page.locator(".dialog").last()
+const relayPicker = (page: Page) => topDialog(page)
 
 const relayCard = (scope: Locator, name: string) => scope.locator(".card").filter({hasText: name})
 
@@ -45,7 +15,7 @@ const relayCard = (scope: Locator, name: string) => scope.locator(".card").filte
 // mounts — so a reload only sees the new value after the batch has been flushed. A toast clears
 // itself after five seconds, which is longer than the batch window, so waiting it out is what
 // makes the assertion that follows about persistence rather than about timing.
-const waitForToastToClear = (page: Page) => expect(page.getByRole("alert")).toHaveCount(0)
+const waitForToastToClear = (page: Page) => expect(toast(page)).toHaveCount(0)
 
 test("US-084 block a relay you never want used", async ({seed, as}) => {
   await seed(({relay, user}) => {
@@ -59,7 +29,7 @@ test("US-084 block a relay you never want used", async ({seed, as}) => {
     space.room("general", {name: "General"})
     space.join(user.bob, "general")
 
-    relayList(space, user.bob)
+    space.relayList(user.bob)
   })
 
   const page = await as(users.bob, "/settings/privacy")
@@ -69,24 +39,22 @@ test("US-084 block a relay you never want used", async ({seed, as}) => {
 
   await blocked.click()
 
-  await expect(
-    relayDialog(page, "Blocked Relays").getByText("No relay selections found."),
-  ).toBeVisible()
+  await expect(dialog(page, "Blocked Relays").getByText("No relay selections found.")).toBeVisible()
 
-  await relayDialog(page, "Blocked Relays").getByRole("button", {name: "Add Relays"}).click()
+  await dialog(page, "Blocked Relays").getByRole("button", {name: "Add Relays"}).click()
   await relayCard(relayPicker(page), "other.test").getByRole("button", {name: "Add Relay"}).click()
   await page.getByRole("button", {name: "Done"}).click()
 
-  await expect(relayDialog(page, "Blocked Relays").getByText("other.test")).toBeVisible()
+  await expect(dialog(page, "Blocked Relays").getByText("other.test")).toBeVisible()
 
-  await relayDialog(page, "Blocked Relays").getByRole("button", {name: "Go back"}).click()
+  await dialog(page, "Blocked Relays").getByRole("button", {name: "Go back"}).click()
 
   await expect(blocked).toContainText("1 Blocked")
 
   // A blocked relay is one bob never wants used, so it stops being offered as a suggestion. It was
   // the picker's only offer a moment ago, which is what makes its absence about the block.
   await blocked.click()
-  await relayDialog(page, "Blocked Relays").getByRole("button", {name: "Add Relays"}).click()
+  await dialog(page, "Blocked Relays").getByRole("button", {name: "Add Relays"}).click()
 
   await expect(relayPicker(page).getByText("space.test")).toBeVisible()
   await expect(relayPicker(page).getByText("other.test")).toHaveCount(0)
@@ -99,13 +67,13 @@ test("US-086 configure alerts", async ({seed, as}) => {
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
 
-    relayList(space, user.alice)
+    space.relayList(user.alice)
   })
 
   const page = await as(users.alice, "/settings/alerts")
 
-  const sound = toggle(page, "Play sound for new activity")
-  const push = toggle(page, "Enable push notifications")
+  const sound = settingToggle(page, "Play sound for new activity")
+  const push = settingToggle(page, "Enable push notifications")
   const alertTypes = page.locator("div.card").filter({has: page.getByText("Alert Types")})
 
   await expect(sound).toBeChecked()
@@ -140,7 +108,7 @@ test("US-086 configure alerts", async ({seed, as}) => {
   await waitForToastToClear(page)
   await page.reload()
 
-  await expect(toggle(page, "Play sound for new activity")).not.toBeChecked()
+  await expect(settingToggle(page, "Play sound for new activity")).not.toBeChecked()
 })
 
 test("US-087 configure content display", async ({seed, as}) => {
@@ -157,14 +125,14 @@ test("US-087 configure content display", async ({seed, as}) => {
     picture = space.message(user.bob, "general", "https://images.test/sunset.png", at(40, MINUTE))
     link = space.message(user.bob, "general", "https://example.test/announcement", at(35, MINUTE))
 
-    relayList(space, user.alice)
+    space.relayList(user.alice)
   })
 
   const {url} = scenario.space("space")
   const page = await as(users.alice, "/settings/content")
 
-  const hideSensitive = toggle(page, "Hide sensitive content?")
-  const showMedia = toggle(page, "Show media?")
+  const hideSensitive = settingToggle(page, "Hide sensitive content?")
+  const showMedia = settingToggle(page, "Show media?")
 
   await expect(hideSensitive).toBeChecked()
   await expect(showMedia).toBeChecked()
@@ -190,7 +158,7 @@ test("US-087 configure content display", async ({seed, as}) => {
 
   await page.goto("/settings/content")
 
-  await expect(toggle(page, "Hide sensitive content?")).not.toBeChecked()
+  await expect(settingToggle(page, "Hide sensitive content?")).not.toBeChecked()
 })
 
 test("US-088 adjust send delay and media servers", async ({seed, as}) => {
@@ -200,7 +168,7 @@ test("US-088 adjust send delay and media servers", async ({seed, as}) => {
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
 
-    relayList(space, user.alice)
+    space.relayList(user.alice)
   })
 
   const page = await as(users.alice, "/settings/content")
@@ -251,13 +219,13 @@ test("US-089 configure privacy preferences", async ({seed, as}) => {
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
 
-    relayList(space, user.alice)
+    space.relayList(user.alice)
   })
 
   const page = await as(users.alice, "/settings/privacy")
 
-  const auth = toggle(page, "Authenticate with unknown relays?")
-  const usage = toggle(page, "Report usage?")
+  const auth = settingToggle(page, "Authenticate with unknown relays?")
+  const usage = settingToggle(page, "Report usage?")
 
   await expect(auth).not.toBeChecked()
   await expect(usage).toBeChecked()
@@ -278,8 +246,8 @@ test("US-089 configure privacy preferences", async ({seed, as}) => {
   await waitForToastToClear(page)
   await page.reload()
 
-  await expect(toggle(page, "Authenticate with unknown relays?")).toBeChecked()
-  await expect(toggle(page, "Report usage?")).not.toBeChecked()
+  await expect(settingToggle(page, "Authenticate with unknown relays?")).toBeChecked()
+  await expect(settingToggle(page, "Report usage?")).not.toBeChecked()
 })
 
 test("US-090 change the app's appearance", async ({seed, as}) => {
@@ -289,7 +257,7 @@ test("US-090 change the app's appearance", async ({seed, as}) => {
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
 
-    relayList(space, user.alice)
+    space.relayList(user.alice)
   })
 
   const page = await as(users.alice, "/settings/theme", {context: {colorScheme: "light"}})
@@ -345,7 +313,7 @@ test("US-091 set up how people zap you", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.profile(user.alice, {name: "Alice Anders"})
 
-    relayList(space, user.alice)
+    space.relayList(user.alice)
   })
 
   const page = await as(users.alice, "/settings/wallet")

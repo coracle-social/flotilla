@@ -2,28 +2,22 @@ import type {Locator, Page} from "@playwright/test"
 import {DAY, HOUR, MINUTE, MONTH, now} from "@welshman/lib"
 import {Article} from "@welshman/domain"
 import {
+  DEFAULT_BLOSSOM_ORIGIN,
+  dialog,
   expect,
   getHosting,
+  gifFile,
   makeTestUser,
+  menuButton,
   mockBlossom,
+  openMessageMenu,
   roomPath,
   spacePath,
   test,
   users,
 } from "../harness"
 
-// Where an icon upload lands. SpaceEdit and RelayForm both call uploadFileOrFallback with no relay
-// of their own, so the space's blossom probe never runs and VITE_DEFAULT_BLOSSOM_SERVERS is what's
-// left.
-const BLOSSOM_ORIGIN = "https://blossom.primal.net"
-
-// A real 1x1 gif. Gif rather than png because compressFileForUpload passes it through untouched
-// instead of re-encoding it through a canvas, so what the mock hashes is what was picked.
-const ICON = {
-  name: "icon.gif",
-  mimeType: "image/gif",
-  buffer: Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64"),
-}
+const ICON = gifFile("icon.gif")
 
 // The plans the hosting backend offers. `free` is what RelayForm starts on, and `basic` is the paid
 // one every upgrade story moves to. PricingTable names a plan by its member limit, which is the
@@ -71,14 +65,6 @@ const hostedRelay = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
-// The panel of the modal carrying a given title. `.dialog` is on both the backdrop wrapper and the
-// panel inside it, so the last match is the panel.
-const dialog = (page: Page, title: string) =>
-  page
-    .locator(".dialog")
-    .filter({has: page.getByRole("heading", {name: title, exact: true})})
-    .last()
-
 // Tippy mounts a menu the first time it is opened and leaves it in the dom when it hides, so a page
 // that has opened two of them holds both — only the one on screen is visible. Exact, because
 // "Edit role" and "Edit roles" are two different menus in the same directory.
@@ -97,18 +83,7 @@ const openSpaceMenu = (page: Page) => page.getByRole("button", {name: /space\.te
 const memberCard = (page: Page, name: string) =>
   page.locator(".card-interactive").filter({hasText: name})
 
-// RoomItem gives its hover actions no accessible names — every one is an icon — and the menu is
-// the last of them.
-const openMessageMenu = (page: Page, text: string) =>
-  page
-    .locator(".room__item")
-    .filter({hasText: text})
-    .locator(".room__item-actions button")
-    .last()
-    .click()
-
-// EventActions renders zap, emoji and menu into one join, so the menu is the last button in it.
-const openEventMenu = (card: Locator) => card.locator(".join").getByRole("button").last().click()
+const openEventMenu = (card: Locator) => menuButton(card).click()
 
 const articleCard = (page: Page, title: string) =>
   page.locator('[data-component="ArticleItem"]').filter({hasText: title})
@@ -135,7 +110,7 @@ test("US-092 edit a space's profile and featured content", async ({seed, as}) =>
   const {url} = scenario.space("space")
   const admin = await as(users.admin, spacePath(url) + "/about")
 
-  await mockBlossom(admin.context(), {server: BLOSSOM_ORIGIN})
+  await mockBlossom(admin.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
 
   await openSpaceMenu(admin)
   await menuItem(admin, "Edit Space").click()
@@ -165,7 +140,7 @@ test("US-092 edit a space's profile and featured content", async ({seed, as}) =>
   // All three come back off the relay's own nip-11 document
   await expect(admin.getByRole("heading", {name: "Harbor"})).toBeVisible()
   await expect(admin.getByText("Where the fleet ties up.")).toBeVisible()
-  await expect(admin.locator(`img[src^="${BLOSSOM_ORIGIN}"]`).first()).toBeVisible()
+  await expect(admin.locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}"]`).first()).toBeVisible()
 
   const featured = admin
     .locator(".card")

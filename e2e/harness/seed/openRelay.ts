@@ -6,14 +6,7 @@ import {tenantUrl} from "../zooid/config"
 import type {OpenRelayName} from "../zooid/config"
 import type {TestUser} from "../keys"
 import {makePublisher} from "./publish"
-import type {Enqueue, ProfileValues, SeededEvent, SeededTemplate} from "./publish"
-
-// A nip-65 relay list, as the two sets a client reads off it: `write` is what an outbox-routed load
-// for this pubkey resolves to, `read` is what a feed asks for that pubkey's context.
-export type RelayListUrls = {
-  read?: string[]
-  write?: string[]
-}
+import type {Enqueue, ProfileValues, RelayListUrls, SeededEvent, SeededTemplate} from "./publish"
 
 /**
  * One public relay's fixtures. Unlike a space it has no rooms, no members and nothing behind an

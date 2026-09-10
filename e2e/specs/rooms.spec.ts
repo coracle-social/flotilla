@@ -1,58 +1,39 @@
 import {npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE, WEEK, bech32ToHex} from "@welshman/lib"
 import {getLnUrl} from "@welshman/util"
-import {MessagingRelayList, Profile, RelayList, displayPubkey} from "@welshman/domain"
+import {Profile, displayPubkey} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
+  composer,
+  dialog,
   expect,
   makeTestUser,
+  message,
+  messageActions,
+  messages,
   mockDufflepud,
   mockOpenRouterSpeech,
+  openMessageMenu,
+  openRoomDetail,
+  pageBar,
+  pathPattern,
+  pickEmoji,
+  roomLink,
   roomPath,
+  send,
   spacePath,
   test,
   users,
 } from "../harness"
 import type {SeededEvent, SeededSpace, TestUser} from "../harness"
 
-// A path as a pattern, for a url that carries a query string or a modal's hash alongside it.
-const pathPattern = (path: string) => new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
-
-// The panel of the modal carrying a given title. `.dialog` is on both the backdrop wrapper and the
-// panel inside it, so the last match is the panel.
-const dialog = (page: Page, title: string) =>
-  page
-    .locator(".dialog")
-    .filter({has: page.getByRole("heading", {name: title, exact: true})})
-    .last()
-
-const composer = (page: Page) => page.locator(".chat-editor [contenteditable=true]")
-
-// .room__content is column-reverse, so the message at the bottom of the room is the first one in
-// the dom.
-const messages = (page: Page) => page.locator(".room__item")
-
-const message = (page: Page, text: string) => messages(page).filter({hasText: text})
-
 // The room's way back to the live end, up only while the bottom of the container isn't it.
 const jumpToNewest = (page: Page) => page.getByRole("button", {name: "Jump to newest"})
-
-// RoomItem gives its hover actions no accessible names — every one is an icon. Their order is
-// fixed by the component: zap, emoji, reply, edit (only on your own recent message), menu.
-const messageActions = (page: Page, text: string) =>
-  message(page, text).locator(".room__item-actions button")
-
-const openMessageMenu = (page: Page, text: string) => messageActions(page, text).last().click()
 
 // Each of these menus hides itself once the pointer leaves it, which is how one is dismissed
 // without clicking an item. The popper sits against the right hand end of the message, so the top
 // left corner of the viewport is outside it.
 const dismissMenu = (page: Page) => page.mouse.move(0, 0)
-
-// The room's page bar carries a search button and the detail button, in that order.
-const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
-
-const openRoomDetail = (page: Page) => pageBar(page).getByRole("button").last().click()
 
 // RoomDetail has no title of its own — the room's name stands in for one — so it is named by the
 // permissions card only it renders. Scoped to the modal's body rather than the dialog, so that the
@@ -77,9 +58,6 @@ const roomSection = (page: Page, name: string) =>
     }
   }, name)
 
-const roomLink = (page: Page, name: string) =>
-  page.locator(".space-menu__scroll").getByRole("link", {name})
-
 // A FieldInline puts its control in the div immediately after its label.
 const field = (form: Locator, label: string) =>
   form
@@ -96,38 +74,13 @@ const permission = (form: Locator, label: string) =>
 const reactionPill = (page: Page, text: string) =>
   message(page, text).getByRole("button", {name: /🎉/})
 
-// The picker is a web component with an open shadow root, so its search field and its results are
-// reachable through it. Searching rather than browsing avoids depending on which category tab an
-// emoji happens to live under. A tippy keeps its content mounted after it hides, so the visible
-// one is the picker that was just opened.
-const react = async (page: Page, opener: Locator) => {
-  await opener.click()
-
-  const picker = page.locator("emoji-picker").filter({visible: true})
-
-  await picker.locator("input.search").fill("party popper")
-  await picker.locator('[role="option"][aria-label*="party popper"]').first().click()
-}
-
-const send = async (page: Page, content: string) => {
-  await composer(page).pressSequentially(content)
-  await composer(page).press("Enter")
-}
+const react = (page: Page, opener: Locator) => pickEmoji(page, opener, "party popper")
 
 // Outbox routing resolves everything about a person through their relay list, and a gift wrap only
 // reaches somebody who has said where their messages go.
 const seedChatter = (space: SeededSpace, user: TestUser) => {
-  space.event(user, () =>
-    space
-      .kind(RelayList)
-      .writer()
-      .setReadUrls([space.url])
-      .setWriteUrls([space.url])
-      .renderTemplate(),
-  )
-  space.event(user, () =>
-    space.kind(MessagingRelayList).writer().setUrls([space.url]).renderTemplate(),
-  )
+  space.relayList(user)
+  space.messagingRelayList(user)
 }
 
 test("US-018 send and receive a room message in real time", async ({seed, as}) => {

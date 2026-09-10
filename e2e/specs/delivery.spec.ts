@@ -1,78 +1,49 @@
 import {HOUR} from "@welshman/lib"
 import {LONG_FORM, MESSAGE} from "@welshman/util"
-import type {TrustedEvent} from "@welshman/util"
-import {ClientMessageType} from "@welshman/net"
-import {Article, Comment, MessagingRelayList, Reaction, RelayList} from "@welshman/domain"
-import type {Locator, Page} from "@playwright/test"
-import {expect, getTranscript, mockBlossom, roomPath, spacePath, test, users} from "../harness"
+import {Article, Comment, Reaction} from "@welshman/domain"
+import type {Page} from "@playwright/test"
+import {
+  DEFAULT_BLOSSOM_ORIGIN,
+  bubble,
+  chatItems,
+  chatPath,
+  chooseFile,
+  composer,
+  composerEnabled,
+  expect,
+  getPublished,
+  getPublishedEvents,
+  gifFile,
+  menuButton,
+  message,
+  mockBlossom,
+  noteEditor,
+  pageBar,
+  roomPath,
+  send,
+  sendButton,
+  spacePath,
+  test,
+  timeline,
+  toast,
+  users,
+} from "../harness"
 import type {SeededSpace, TestUser} from "../harness"
-
-// The path the app builds for a conversation — see makeChatId in src/app/chats.ts.
-const chatPath = (...pubkeys: string[]) => `/chat/${[...pubkeys].sort().join(",")}`
 
 // makeSpacePath percent-encodes each segment it is given, and an address is full of colons.
 const articlePath = (url: string, address: string) =>
   `${spacePath(url)}/articles/${encodeURIComponent(address)}`
 
-// Where an upload lands: the space's own origin is probed first and blossom is off in every
-// tenant's toml, so what is left is VITE_DEFAULT_BLOSSOM_SERVERS.
-const BLOSSOM_ORIGIN = "https://blossom.primal.net"
-
-// A one pixel gif. Gif rather than png because compressFileForUpload passes it through untouched
-// rather than re-encoding it through a canvas.
-const GIF = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64")
-
 // Outbox routing resolves everything about a person through their relay list, so a person here is
 // a membership, a profile and a kind-10002.
 const seedPerson = (space: SeededSpace, user: TestUser, name: string) => {
   space.profile(user, {name})
-  space.event(user, () =>
-    space
-      .kind(RelayList)
-      .writer()
-      .setReadUrls([space.url])
-      .setWriteUrls([space.url])
-      .renderTemplate(),
-  )
+  space.relayList(user)
 }
-
-// The kind-10050 that says where someone's direct messages go. It is read lazily so that a list
-// can name a relay whose url only exists once seeding has drained.
-const enableDms = (space: SeededSpace, user: TestUser, getUrls: () => string[]) =>
-  space.event(user, () =>
-    space.kind(MessagingRelayList).writer().setUrls(getUrls()).renderTemplate(),
-  )
-
-const composer = (page: Page) => page.locator(".chat-editor [contenteditable=true]")
-
-// The send button carries the shortcut it advertises, which differs by platform.
-const sendButton = (page: Page) => page.locator("button[data-tip$='enter to send']")
-
-// The editor is where the composer says whether it is ready. The send button is not there to
-// ask while the composer is empty, since a dictation button stands in its place. Only the
-// conversation composer has a disabled state; a room's is usable as soon as it renders.
-const composerEnabled = (page: Page) =>
-  expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "false")
-
-const timeline = (page: Page) => page.locator(".room__content")
-
-const message = (page: Page, text: string) => page.locator(".room__item").filter({hasText: text})
-
-const bubble = (page: Page, text: string) => page.locator(".chat-bubble").filter({hasText: text})
-
-// One conversation in the sidebar list is one button; nothing inside it is one.
-const chatItems = (page: Page) => page.locator(".secondary-nav .overflow-auto").locator("button")
-
-// One toast at a time — src/app/toast.ts holds a single writable — so this is the toast.
-const toast = (page: Page) => page.getByRole("alert")
 
 // A tippy is appended to the layout's own target rather than beside its trigger, and it keeps its
 // content mounted after it hides, so the visible card there is the popover that was just opened.
 const detail = (page: Page) => page.locator(".tippy-target .card").filter({visible: true})
-
-// EventActions renders zap, emoji and menu into one join, in that order, and every one of them is
-// an icon with no accessible name.
-const menuOf = (scope: Locator) => scope.locator(".join").getByRole("button").last()
 
 // A comment is a flat block in the comment tree rather than a card, named by its text.
 const commentCard = (page: Page, text: string) =>
@@ -81,35 +52,9 @@ const commentCard = (page: Page, text: string) =>
 // The action bar under an article on its own page, which is where that article's status shows.
 const articleActions = (page: Page) => page.locator('[data-component="ArticleActions"]')
 
-const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
-
-const editorOf = (scope: Locator | Page) => scope.locator(".note-editor [contenteditable=true]")
-
-// Every caller of this sends to a room, whose composer gates on nothing, so the wait is for the
-// room to have rendered one.
-const send = async (page: Page, content: string) => {
-  await expect(composer(page)).toBeVisible()
-  await composer(page).click()
-  await composer(page).pressSequentially(content)
-  await composer(page).press("Enter")
-}
-
-// Every frame this page put on the wire carrying an event, with the relay it went to.
-const published = (page: Page): {url: string; event: TrustedEvent}[] =>
-  getTranscript(page.context())
-    .filter(
-      ({direction, message}) => direction === "toRelay" && message[0] === ClientMessageType.Event,
-    )
-    .map(({url, message}) => ({url, event: message[1]}))
-
-const publishedEvents = (page: Page, kind: number) =>
-  published(page)
-    .filter(({event}) => event.kind === kind)
-    .map(({event}) => event)
-
 // Which relays a given event was sent to, oldest first — one entry per attempt.
 const publishedTo = (page: Page, id: string) =>
-  published(page)
+  getPublished(page.context())
     .filter(({event}) => event.id === id)
     .map(({url}) => url)
 
@@ -117,20 +62,20 @@ const publishedTo = (page: Page, id: string) =>
 const writeArticle = async (page: Page, title: string, body: string) => {
   await pageBar(page).getByRole("button", {name: "Write"}).click()
   await page.getByPlaceholder("Title", {exact: true}).fill(title)
-  await editorOf(page).pressSequentially(body)
+  await noteEditor(page).pressSequentially(body)
   await pageBar(page).getByRole("button", {name: "Publish"}).click()
 }
 
 const writeComment = async (page: Page, body: string) => {
   await page.getByRole("button", {name: "Add a comment"}).click()
 
-  const composer = page.locator("form").filter({has: page.locator(".note-editor")})
+  const form = page.locator("form").filter({has: page.locator(".note-editor")})
 
   // The editor takes focus itself once it has mounted, and typing into it before that puts the
   // caret back at the start partway through the sentence.
-  await expect(editorOf(composer)).toBeFocused()
-  await editorOf(composer).pressSequentially(body)
-  await composer.getByRole("button", {name: "Comment"}).click()
+  await expect(noteEditor(form)).toBeFocused()
+  await noteEditor(form).pressSequentially(body)
+  await form.getByRole("button", {name: "Comment"}).click()
 }
 
 // The send delay is a user setting rather than a page's own state, so it is set the way a person
@@ -152,13 +97,6 @@ const setSendDelay = async (page: Page, seconds: number) => {
   await expect(slider).toHaveValue(String(seconds * 1000))
 }
 
-const chooseFile = async (page: Page, button: Locator, name: string) => {
-  const chooser = page.waitForEvent("filechooser")
-
-  await button.click()
-  await (await chooser).setFiles({name, mimeType: "image/gif", buffer: GIF})
-}
-
 test("US-068 watch a delayed send, and cancel it", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -169,7 +107,7 @@ test("US-068 watch a delayed send, and cancel it", async ({seed, as}) => {
 
     for (const person of [user.alice, user.bob]) {
       seedPerson(space, person, person.name)
-      enableDms(space, person, () => [space.url])
+      space.messagingRelayList(person)
     }
 
     space.message(user.bob, "general", "morning all", at(2, HOUR))
@@ -259,10 +197,10 @@ test("US-069 see why a message failed to deliver", async ({seed, as}) => {
       seedPerson(space, person, person.name)
     }
 
-    enableDms(space, user.alice, () => [space.url])
+    space.messagingRelayList(user.alice)
     // Bob's client says his messages go to both relays, but he is not a member of the second, so a
     // wrap addressed to him is stored by one and refused by the other.
-    enableDms(space, user.bob, () => [space.url, other.url])
+    space.messagingRelayList(user.bob, [space.url, other.url])
 
     space.message(user.bob, "general", "morning all", at(2, HOUR))
   })
@@ -365,7 +303,7 @@ test("US-070 retry a failed relay", async ({seed, as}) => {
   await expect(toast(alice)).toContainText("Sending...")
   await expect(toast(alice)).toContainText("Message sent!")
 
-  const [sent] = publishedEvents(alice, MESSAGE)
+  const [sent] = getPublishedEvents(alice.context(), MESSAGE)
 
   // One attempt and two retries, every one of them to the relay that failed and to nothing else.
   expect(publishedTo(alice, sent.id)).toEqual([url, url, url])
@@ -411,7 +349,7 @@ test("US-071 content posts show delivery status in place", async ({seed, as}) =>
 
   const comment = commentCard(alice, "Worth saying twice.")
 
-  await expect(menuOf(comment)).toBeVisible()
+  await expect(menuButton(comment)).toBeVisible()
   await expect(comment.getByText("Sending...")).toHaveCount(0)
   await expect(comment.getByText("Failed to send!")).toHaveCount(0)
   await expect(toast(alice)).toHaveCount(0)
@@ -524,7 +462,7 @@ test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
   await expect(comment).toBeVisible()
   await expect(comment.getByRole("button", {name: /🎉/})).toBeVisible()
 
-  await menuOf(comment).click()
+  await menuButton(comment).click()
   await alice.getByRole("button", {name: "Delete Comment"}).click()
   await alice.getByRole("button", {name: "Confirm"}).click()
 
@@ -553,24 +491,24 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
       seedPerson(space, person, person.name)
     }
 
-    enableDms(space, user.alice, () => [space.url])
-    enableDms(space, user.bob, () => [space.url])
+    space.messagingRelayList(user.alice)
+    space.messagingRelayList(user.bob)
     // Carol's client names a relay she does not belong to, so every part of a message to her is
     // stored by one of her two relays and refused by the other.
-    enableDms(space, user.carol, () => [space.url, other.url])
+    space.messagingRelayList(user.carol, [space.url, other.url])
   })
 
   const alice = await as(users.alice, chatPath(users.bob.pubkey))
   const bob = await as(users.bob, chatPath(users.alice.pubkey))
 
-  await mockBlossom(alice.context(), {server: BLOSSOM_ORIGIN})
-  await mockBlossom(bob.context(), {server: BLOSSOM_ORIGIN})
+  await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
+  await mockBlossom(bob.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
 
   await composerEnabled(alice)
 
   await composer(alice).click()
   await composer(alice).pressSequentially("here is the harbour")
-  await chooseFile(alice, alice.locator("button[data-tip='Add an image']"), "harbour.gif")
+  await chooseFile(alice, alice.locator("button[data-tip='Add an image']"), gifFile("harbour.gif"))
 
   // The editor names the file the moment it is attached, so the name alone does not mean the
   // upload is done — and a submit while it is still running is dropped on the floor.
@@ -599,7 +537,7 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
 
   await composer(alice).click()
   await composer(alice).pressSequentially("and one for you")
-  await chooseFile(alice, alice.locator("button[data-tip='Add an image']"), "harbour.gif")
+  await chooseFile(alice, alice.locator("button[data-tip='Add an image']"), gifFile("harbour.gif"))
 
   await expect(composer(alice)).toContainText("harbour.gif")
   await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)

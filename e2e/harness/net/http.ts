@@ -255,6 +255,11 @@ export const mockOpenRouterSpeech = async (context: BrowserContext, seconds = 3)
   return spoken
 }
 
+// Where an upload lands when nothing else is configured. getBlossomServer probes the space's own
+// origin first — blossom is off in every tenant's toml, so that probe is meant to fail — then the
+// user's kind-10063 list, and VITE_DEFAULT_BLOSSOM_SERVERS is what is left.
+export const DEFAULT_BLOSSOM_ORIGIN = "https://blossom.primal.net"
+
 export type BlossomOptions = {
   // The blossom server the scenario expects an upload to land on, e.g. a space's own url.
   server: string

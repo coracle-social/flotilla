@@ -1,55 +1,35 @@
 import * as nip19 from "nostr-tools/nip19"
 import {HOUR, MINUTE} from "@welshman/lib"
 import {LONG_FORM, MESSAGE, NOTE, makeEvent} from "@welshman/util"
-import type {SignedEvent, TrustedEvent} from "@welshman/util"
-import {ClientMessageType} from "@welshman/net"
-import {Article, Comment, RelayList, Thread} from "@welshman/domain"
+import type {SignedEvent} from "@welshman/util"
+import {Article, Comment, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
-import {expect, getTranscript, mockBlossom, roomPath, spacePath, test, users} from "../harness"
+import {
+  DEFAULT_BLOSSOM_ORIGIN,
+  GIF,
+  emojiButton,
+  expect,
+  getPublishedEvents,
+  mockBlossom,
+  modalForm,
+  noteEditor,
+  pageBar,
+  pickEmoji,
+  roomPath,
+  spacePath,
+  test,
+  users,
+} from "../harness"
 
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string; readonly event: SignedEvent}
 
-// Where an upload lands. getBlossomServer probes the space's own origin first — blossom is off in
-// every tenant's toml, so that probe is meant to fail — then the user's kind-10063 list, and
-// VITE_DEFAULT_BLOSSOM_SERVERS is what is left.
-const BLOSSOM_ORIGIN = "https://blossom.primal.net"
-
-// A real 1x1 gif. Gif rather than png because compressFileForUpload passes gif through untouched
-// instead of re-encoding it through a canvas.
-const GIF = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64")
-
 const PARTY = "🎉"
-
-// Every event of a kind this page put on the wire, oldest first.
-const publishedEvents = (page: Page, kind: number): TrustedEvent[] =>
-  getTranscript(page.context())
-    .filter(
-      ({direction, message}) =>
-        direction === "toRelay" &&
-        message[0] === ClientMessageType.Event &&
-        message[1].kind === kind,
-    )
-    .map(({message}) => message[1])
-
-// A modal is mounted alongside the page it covers, so the "Create Thread" in a room's compose menu
-// and the "Create Thread" that submits the composer are both reachable at once. Everything inside
-// a composer is scoped to the modal's own form to say which one is meant.
-const modal = (page: Page, title: string) =>
-  page.locator("form").filter({has: page.getByRole("heading", {name: title})})
 
 // The comment and thread-reply composers are the only forms on their pages carrying a rich text
 // editor.
 const composerForm = (page: Page) =>
   page.locator("form").filter({has: page.locator(".note-editor")})
-
-const editorOf = (scope: Locator | Page) => scope.locator(".note-editor [contenteditable=true]")
-
-const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
-
-// EventActions renders zap, emoji and menu into one join, in that order, and every one of them is
-// an icon with no accessible name.
-const emojiButton = (scope: Locator) => scope.locator(".join").getByRole("button").nth(1)
 
 // RoomCompose's join is the upload button and then the compose menu, which is where an article or
 // a thread written from inside a room is started.
@@ -62,27 +42,7 @@ const openComposeMenu = (page: Page) =>
     .nth(1)
     .click()
 
-// The picker is a web component with an open shadow root, so its search field and its results are
-// reachable through it. Searching rather than browsing avoids depending on which category tab an
-// emoji happens to live under.
-const pickParty = async (page: Page, opener: Locator) => {
-  await opener.click()
-
-  const picker = page.locator("emoji-picker").filter({visible: true})
-
-  // Tippy keeps a hidden popover mounted through its fade — a quarter of a second during which the
-  // picker from the last card is still visible alongside this one — so wait for there to be one
-  // rather than reaching into whichever resolves first.
-  await expect(picker).toHaveCount(1)
-
-  // A result's label is the emoji's name, its annotation and every shortcode joined together, so
-  // the annotation is matched rather than the whole of it.
-  await picker.locator("input.search").fill("party popper")
-  await picker
-    .getByRole("option", {name: /party popper/})
-    .first()
-    .click()
-}
+const pickParty = (page: Page, opener: Locator) => pickEmoji(page, opener, "party popper")
 
 // One reaction, recorded as the reader's own, and taken back off again.
 const expectReactionRoundTrip = async (page: Page, scope: Locator, opener: Locator) => {
@@ -153,7 +113,7 @@ test("US-037 write and publish an article", async ({seed, as}) => {
 
   const publish = pageBar(page).getByRole("button", {name: "Publish"})
   const title = page.getByPlaceholder("Title", {exact: true})
-  const body = editorOf(page)
+  const body = noteEditor(page)
 
   await expect(title).toBeVisible()
 
@@ -167,7 +127,7 @@ test("US-037 write and publish an article", async ({seed, as}) => {
   await body.pressSequentially("Only the beginning.")
 
   // Neither refusal put anything on the wire.
-  expect(publishedEvents(page, LONG_FORM)).toEqual([])
+  expect(getPublishedEvents(page.context(), LONG_FORM)).toEqual([])
 
   await page.goBack()
   await expect(articleCards(page)).toHaveCount(1)
@@ -182,7 +142,7 @@ test("US-037 write and publish an article", async ({seed, as}) => {
 
   // Publishing lands on the article itself rather than back on the list.
   await expect(page.getByRole("heading", {name: "Signals in the Noise"}).first()).toBeVisible()
-  expect(publishedEvents(page, LONG_FORM)).toHaveLength(1)
+  expect(getPublishedEvents(page.context(), LONG_FORM)).toHaveLength(1)
 
   await page.goto(`${spacePath(url)}/articles`)
 
@@ -367,7 +327,7 @@ test("US-039 comment on an article", async ({seed, as}) => {
 
   await openArticle(bob, "Tending the Garden")
   await bob.getByRole("button", {name: "Add a comment"}).click()
-  await editorOf(composerForm(bob)).pressSequentially("The soil chapter is the good one.")
+  await noteEditor(composerForm(bob)).pressSequentially("The soil chapter is the good one.")
   await composerForm(bob).getByRole("button", {name: "Comment"}).click()
 
   // The comment renders from the optimistic write, but the composer holds what was typed until the
@@ -383,7 +343,7 @@ test("US-039 comment on an article", async ({seed, as}) => {
   await expect(bobsComment).toBeVisible()
 
   await bobsComment.getByRole("button", {name: "Reply", exact: true}).click()
-  await editorOf(composerForm(carol)).pressSequentially(
+  await noteEditor(composerForm(carol)).pressSequentially(
     "Only because you skipped the water chapter.",
   )
   await composerForm(carol).getByRole("button", {name: "Reply", exact: true}).click()
@@ -392,7 +352,7 @@ test("US-039 comment on an article", async ({seed, as}) => {
 
   const alice = await as(users.alice, articlesPath)
 
-  await mockBlossom(alice.context(), {server: BLOSSOM_ORIGIN})
+  await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
   await openArticle(alice, "Tending the Garden")
 
   await expect(alice.getByText("The soil chapter is the good one.")).toBeVisible()
@@ -408,8 +368,8 @@ test("US-039 comment on an article", async ({seed, as}) => {
 
   const composer = composerForm(alice)
 
-  await editorOf(composer).pressSequentially("Thanks both, here's the bed I meant.")
-  await editorOf(composer).press("Enter")
+  await noteEditor(composer).pressSequentially("Thanks both, here's the bed I meant.")
+  await noteEditor(composer).press("Enter")
 
   const chooser = alice.waitForEvent("filechooser")
 
@@ -425,7 +385,7 @@ test("US-039 comment on an article", async ({seed, as}) => {
   const alicesComment = comment(alice, "Thanks both, here's the bed I meant.")
 
   await expect(alicesComment).toBeVisible()
-  await expect(alicesComment.locator(`img[src^="${BLOSSOM_ORIGIN}/"]`)).toBeVisible()
+  await expect(alicesComment.locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
 })
 
 test("US-040 react to a post with an emoji", async ({seed, as}) => {
@@ -442,14 +402,7 @@ test("US-040 react to a post with an emoji", async ({seed, as}) => {
 
     // A profile's notes are loaded through its author's outbox relays, so alice needs a relay list
     // for her note to be findable at all.
-    space.event(user.alice, () =>
-      space
-        .kind(RelayList)
-        .writer()
-        .setReadUrls([space.url])
-        .setWriteUrls([space.url])
-        .renderTemplate(),
-    )
+    space.relayList(user.alice)
 
     const article = space.event(
       user.alice,
@@ -566,7 +519,7 @@ test("US-041 publish an article from a room", async ({seed, as}) => {
   await page.getByRole("button", {name: "Write an Article"}).click()
 
   await page.getByPlaceholder("Title", {exact: true}).fill("Repotting in Winter")
-  await editorOf(page).pressSequentially("Wait for a warm week.")
+  await noteEditor(page).pressSequentially("Wait for a warm week.")
   await pageBar(page).getByRole("button", {name: "Publish"}).click()
 
   await expect(page.getByRole("heading", {name: "Repotting in Winter"}).first()).toBeVisible()
@@ -574,7 +527,7 @@ test("US-041 publish an article from a room", async ({seed, as}) => {
   // The room hears about the article without alice posting it a second time. Its copy is published
   // after the composer has moved on, so wait for it to leave — a page that unloads mid-publish
   // takes it with it.
-  await expect.poll(() => publishedEvents(page, MESSAGE)).toHaveLength(1)
+  await expect.poll(() => getPublishedEvents(page.context(), MESSAGE)).toHaveLength(1)
 
   await page.goto(roomPath(url, "lounge"))
   await expect(page.getByText("Repotting in Winter")).toBeVisible()
@@ -650,10 +603,10 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
   await openComposeMenu(page)
   await page.getByRole("button", {name: "Create Thread"}).click()
 
-  const fromRoom = modal(page, "Create a Thread")
+  const fromRoom = modalForm(page, "Create a Thread")
 
   await fromRoom.getByPlaceholder("What is this thread about?").fill("Bike shed colors")
-  await editorOf(fromRoom).pressSequentially("Blue, surely?")
+  await noteEditor(fromRoom).pressSequentially("Blue, surely?")
   await fromRoom.getByRole("button", {name: "Create Thread"}).click()
 
   await expect(page.getByRole("heading", {name: "Create a Thread"})).toHaveCount(0)
@@ -684,10 +637,10 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
   // than from a picker.
   await general.getByRole("button", {name: "Create", exact: true}).click()
 
-  const fromThreads = modal(page, "Create a Thread")
+  const fromThreads = modalForm(page, "Create a Thread")
 
   await fromThreads.getByPlaceholder("What is this thread about?").fill("Open floor")
-  await editorOf(fromThreads).pressSequentially("Anything goes in here.")
+  await noteEditor(fromThreads).pressSequentially("Anything goes in here.")
   await fromThreads.getByRole("button", {name: "Create Thread"}).click()
 
   await expect(page.getByRole("heading", {name: "Create a Thread"})).toHaveCount(0)
@@ -696,10 +649,10 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
 
   await lounge.getByRole("button", {name: "Create", exact: true}).click()
 
-  const toLounge = modal(page, "Create a Thread")
+  const toLounge = modalForm(page, "Create a Thread")
 
   await toLounge.getByPlaceholder("What is this thread about?").fill("Carpet swatches")
-  await editorOf(toLounge).pressSequentially("Beige is a choice.")
+  await noteEditor(toLounge).pressSequentially("Beige is a choice.")
   await toLounge.getByRole("button", {name: "Create Thread"}).click()
 
   await expect(page.getByRole("heading", {name: "Create a Thread"})).toHaveCount(0)
@@ -774,7 +727,7 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
   await expect(threadReply).toBeVisible()
   await expect(threadReply.getByText(/^Replying to/)).toHaveCount(0)
 
-  await editorOf(threadReply).pressSequentially("Twice a year here.")
+  await noteEditor(threadReply).pressSequentially("Twice a year here.")
   await threadReply.getByRole("button", {name: "Post Reply"}).click()
 
   await expect(bob.getByText("21 replies")).toBeVisible()
@@ -804,7 +757,7 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
 
   await expect(postReply.getByText(/^Replying to/)).toHaveCount(0)
 
-  await editorOf(postReply).pressSequentially("Answering the thread instead.")
+  await noteEditor(postReply).pressSequentially("Answering the thread instead.")
   await postReply.getByRole("button", {name: "Post Reply"}).click()
 
   // Twenty one replies before hers is already a page and a bit, so her post is appended to the
@@ -956,12 +909,12 @@ test("US-045 turn a chat message into a thread", async ({seed, as}) => {
   await message.locator(".room__item-actions").getByRole("button").last().click()
   await page.getByRole("button", {name: "Create a Thread"}).click()
 
-  const composer = modal(page, "Create a Thread")
+  const composer = modalForm(page, "Create a Thread")
   const nevent = nip19.neventEncode({id: promoted.id, kind: MESSAGE, relays: [url]})
 
   // The seeded entity is parsed, so the composer shows the editor's chip for it rather than
   // the raw uri — which is also what makes the thread carry a q tag for the message.
-  await expect(editorOf(composer)).toContainText(`${nevent.slice(0, 16)}...`)
+  await expect(noteEditor(composer)).toContainText(`${nevent.slice(0, 16)}...`)
 
   await composer.getByPlaceholder("What is this thread about?").fill("Deploy failures")
   await composer.getByRole("button", {name: "Create Thread"}).click()

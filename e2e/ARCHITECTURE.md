@@ -339,6 +339,8 @@ e2e/
   harness/
     index.ts               everything a spec imports: `test`, `expect`, helpers
     keys.ts                deterministic keypairs
+    ui.ts                  the locators specs share: dialogs, the composer, a room's messages
+    files.ts               the bytes an upload spec picks, and the browser's own file chooser
     zooid/
       config.ts            the virtual relays and their hosts — the one place they are named
       relay.ts             docker lifecycle, reset, seeding over its own authenticated socket
@@ -366,6 +368,12 @@ e2e/
   specs/
     *.spec.ts
 ```
+
+A locator lives in the spec that uses it until a second spec needs the same one, at which point it
+moves to `harness/ui.ts`. The class or the aria label it names is then one edit when the app renames
+it, and the comment saying why it is shaped that way has one copy to keep true. What stays local is
+what one spec means differently: `dms.spec.ts` names a message by its `data-event` id, because the
+same words are sent more than once there.
 
 One piece lives outside this directory: `src/lib/test/session.ts` holds the two window keys and the
 getters `src/app/session.ts` reads them through. It is the only file the app ships on the harness's

@@ -2,14 +2,27 @@ import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE} from "@welshman/lib"
 import {displayRelayUrl} from "@welshman/util"
 import {RelayMessageType} from "@welshman/net"
-import {Classified, FollowList, MessagingRelayList, Note, RelayList, Thread} from "@welshman/domain"
+import {Classified, FollowList, Note, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
-import {expect, getTranscript, roomPath, spacePath, test, users} from "../harness"
+import {
+  composer,
+  dialog,
+  expect,
+  getTranscript,
+  message,
+  messageActions,
+  openRoomDetail,
+  pageBar,
+  pathPattern,
+  roomLink,
+  roomPath,
+  send,
+  settingRow,
+  spacePath,
+  test,
+  users,
+} from "../harness"
 import type {SeededEvent, SeededSpace, TestUser} from "../harness"
-
-// A literal as a pattern, for a url that carries a query string alongside the path being matched,
-// or a host whose dots would otherwise be wildcards.
-const pattern = (literal: string) => new RegExp(literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
 
 // The unread indicator, which every surface renders the same way: a small primary-colored dot in
 // the corner of the thing it belongs to. RelaySummary's "you're a member" check is the same shape
@@ -25,11 +38,6 @@ const mutedRoomBell = (room: Locator) => room.locator("div.ml-auto.opacity-50")
 // other absolutely-positioned dot in that button is the admin action-items one, which is opacity-0.
 const mutedSpaceBell = (header: Locator) => header.locator("div.opacity-50")
 
-// FieldInline, RoomDetail and EventInfo all lay a labelled control out as a single row, with the
-// label at one end and the control at the other.
-const settingRow = (page: Page, label: string) =>
-  page.locator("div.items-center.justify-between").filter({hasText: label})
-
 // PrimaryNavItemSpace carries the relay's name as a tooltip rather than as an accessible name — its
 // icon is a masked svg with no alt text — and it has an onclick, so PrimaryNavItem renders it as a
 // button rather than a link. The name comes from nip-11; until that document lands the tooltip is
@@ -43,41 +51,23 @@ const spaceMenuNavItem = (page: Page) => page.getByRole("button", {name: "Open s
 
 // The space menu's header, the one button in the secondary nav carrying the relay's address.
 const spaceMenu = (page: Page, url: string) =>
-  page.locator(".secondary-nav").getByRole("button", {name: pattern(displayRelayUrl(url))})
+  page.locator(".secondary-nav").getByRole("button", {name: pathPattern(displayRelayUrl(url))})
 
 // The menu it opens closes itself on the next mouseup anywhere, and a click whose press and release
 // land in the same instant can reach that listener as it mounts, shutting the menu again. A human's
 // click has a gap between the two; playwright's has one only when it is asked for.
 const openSpaceMenu = (menu: Locator) => menu.click({delay: 200})
 
-const roomLink = (page: Page, name: string) =>
-  page.locator(".space-menu__scroll").getByRole("link", {name})
-
-// The room's page bar carries a search button and the detail button, in that order.
-const openRoomDetail = (page: Page) =>
-  page.locator('[data-component="PageBar"]').getByRole("button").last().click()
-
-// `.dialog` is on both the backdrop wrapper and the panel inside it, so the last match is the panel.
-const dialog = (page: Page, title: string) =>
-  page
-    .locator(".dialog")
-    .filter({has: page.getByRole("heading", {name: title, exact: true})})
-    .last()
-
-const composer = (page: Page) => page.locator(".chat-editor [contenteditable=true]")
-
-const message = (page: Page, text: string) => page.locator(".room__item").filter({hasText: text})
-
-const send = async (page: Page, content: string) => {
-  await composer(page).pressSequentially(content)
-  await composer(page).press("Enter")
+// Every story here goes on to assert something that depends on the message having landed, so
+// posting is only finished once it has rendered.
+const post = async (page: Page, content: string) => {
+  await send(page, content)
   await expect(message(page, content)).toBeVisible()
 }
 
-// RoomItem gives its hover actions no accessible names — every one is an icon. Their order is
-// fixed by the component: zap, emoji, reply, edit (only on your own recent message), menu.
-const replyToMessage = (page: Page, text: string) =>
-  message(page, text).locator(".room__item-actions button").nth(2).click()
+// RoomItem's hover actions are icons with no accessible names, in a fixed order: zap, emoji, reply,
+// edit (only on your own recent message), menu.
+const replyToMessage = (page: Page, text: string) => messageActions(page, text).nth(2).click()
 
 // Chromium's own notifications are invisible to a test, and a tab playwright drives is never
 // hidden, so both of the things the adapter reads are stubbed on the page. It takes the global at
@@ -115,25 +105,16 @@ const captureNotifications = async (page: Page) => {
 // the room that was just opened rather than to the one being torn down.
 const postTo = async (page: Page, room: string, content: string) => {
   await roomLink(page, room).click()
-  await expect(page.locator('[data-component="PageBar"]')).toContainText(room)
-  await send(page, content)
+  await expect(pageBar(page)).toContainText(room)
+  await post(page, content)
 }
 
 // Outbox routing resolves everything about a person through their relay list: settings are
 // published to the relays it names, and a gift wrap only reaches somebody who has said where their
 // messages go.
 const seedRelays = (space: SeededSpace, user: TestUser) => {
-  space.event(user, () =>
-    space
-      .kind(RelayList)
-      .writer()
-      .setReadUrls([space.url])
-      .setWriteUrls([space.url])
-      .renderTemplate(),
-  )
-  space.event(user, () =>
-    space.kind(MessagingRelayList).writer().setUrls([space.url]).renderTemplate(),
-  )
+  space.relayList(user)
+  space.messagingRelayList(user)
 }
 
 test("US-103 see and clear unread indicators", async ({seed, as}) => {
@@ -162,7 +143,7 @@ test("US-103 see and clear unread indicators", async ({seed, as}) => {
   await expect(unreadDot(spaceRow)).toHaveCount(0)
   await expect(unreadDot(navItem)).toHaveCount(0)
 
-  await send(alice, "the server is on fire")
+  await post(alice, "the server is on fire")
 
   // Bob is sitting on the space list the whole time, so both dots arrive without a navigation
   await expect(unreadDot(spaceRow)).toBeVisible()
@@ -231,7 +212,7 @@ test("US-104 mute a room or a whole space", async ({seed, as}) => {
 
   await general.click()
 
-  await expect(alice).toHaveURL(pattern(roomPath(space.url, "general")))
+  await expect(alice).toHaveURL(pathPattern(roomPath(space.url, "general")))
 
   // Silence this one room from its detail panel. Mute is the stronger of the two settings there: it
   // forces the room's notifications off and hides its unread badges too.
@@ -253,7 +234,7 @@ test("US-104 mute a room or a whole space", async ({seed, as}) => {
 
   const bob = await as(users.bob, roomPath(space.url, "general"))
 
-  await send(bob, "deploy is broken")
+  await post(bob, "deploy is broken")
   await postTo(bob, "Random", "lunch?")
 
   // The sibling room's message raises a dot, the muted room's does not
@@ -318,7 +299,7 @@ test("US-105 land on the home page", async ({seed, as}) => {
   // A build that names a platform space sends /home straight into it
   const platform = await as(users.alice, "/home", {env: {VITE_PLATFORM_RELAYS: space.url}})
 
-  await expect(platform).toHaveURL(pattern(spacePath(space.url)))
+  await expect(platform).toHaveURL(pathPattern(spacePath(space.url)))
 
   // With none configured, /home is the dashboard, whose empty inbox offers two ways out
   const page = await as(users.alice, "/home")
@@ -580,7 +561,7 @@ test("US-106 share text into the app", async ({seed, as}) => {
   await share.getByRole("button", {name: "General"}).click()
   await share.getByRole("button", {name: "Share", exact: true}).click()
 
-  await expect(page).toHaveURL(pattern(roomPath(space.url, "general")))
+  await expect(page).toHaveURL(pathPattern(roomPath(space.url, "general")))
   await expect(composer(page)).toHaveText(shared)
 })
 
@@ -629,7 +610,7 @@ test("US-107 open a nostr link", async ({seed, as}) => {
 
   await page.goto("/" + link.replace(/^nostr:/, ""))
 
-  await expect(page).toHaveURL(pattern(roomPath(space.url, "general") + "?at="))
+  await expect(page).toHaveURL(pathPattern(roomPath(space.url, "general") + "?at="))
   await expect(message(page, "the meeting moved to friday")).toBeVisible()
 
   // A person's npub resolves the same way
@@ -637,7 +618,7 @@ test("US-107 open a nostr link", async ({seed, as}) => {
 
   await page.goto(`/${npub}`)
 
-  await expect(page).toHaveURL(pattern(`/people/${npub}`))
+  await expect(page).toHaveURL(pathPattern(`/people/${npub}`))
   await expect(page.getByRole("heading", {name: "Bob Barker"})).toBeVisible()
 
   // Nothing holds this event, so the link falls back to the app's home rather than a dead page
@@ -677,14 +658,14 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
 
   const inOther = await as(users.alice, roomPath(other.url, "general"))
 
-  await send(inOther, "the server is on fire")
+  await post(inOther, "the server is on fire")
 
   await expect(unreadDot(menuButton)).toBeVisible()
 
   // Meanwhile the space bob is sitting in gets a message too, in a room he isn't reading
   const inSpace = await as(users.alice, roomPath(space.url, "random"))
 
-  await send(inSpace, "anyone seen the sextant?")
+  await post(inSpace, "anyone seen the sextant?")
 
   await bob.goto(roomPath(other.url, "general"))
 
@@ -771,7 +752,7 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
 
   await hers.click()
 
-  await expect(bob.locator('[data-component="PageBar"]')).toContainText("the server is on fire")
+  await expect(pageBar(bob)).toContainText("the server is on fire")
 
   // Leaving the list is what marks its threads read, so the dot is gone on the way back
   await bob.goBack()
@@ -883,7 +864,7 @@ test("US-120 read what a notification says", async ({seed, as}) => {
   await spaceNavItem(alice, space.name).click()
   await roomLink(alice, "General").click()
 
-  await expect(alice).toHaveURL(pattern(roomPath(space.url, "general")))
+  await expect(alice).toHaveURL(pathPattern(roomPath(space.url, "general")))
   await expect(message(alice, "when does the dock close?")).toBeVisible()
 
   const notifications = await captureNotifications(alice)

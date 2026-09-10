@@ -4,9 +4,21 @@ import {nprofileEncode, npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE, MONTH} from "@welshman/lib"
 import {NOTE, makeEvent} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
-import {FollowList, Note, PinList, Profile, RelayList} from "@welshman/domain"
-import {expect, makeTestUser, mockBlossom, spacePath, test, users} from "../harness"
-import type {SeededSpace, TestUser} from "../harness"
+import {FollowList, Note, PinList, Profile} from "@welshman/domain"
+import {
+  DEFAULT_BLOSSOM_ORIGIN,
+  GIF,
+  WEBP,
+  expect,
+  makeTestUser,
+  mockBlossom,
+  profilePath,
+  spacePath,
+  test,
+  topDialog,
+  users,
+} from "../harness"
+import type {TestUser} from "../harness"
 
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string; readonly event: SignedEvent}
@@ -17,22 +29,10 @@ const DESKTOP = {viewport: {width: 1440, height: 900}}
 
 const CLIPBOARD = {...DESKTOP, permissions: ["clipboard-read", "clipboard-write"]}
 
-// Where an upload lands. Both the avatar picker and the banner picker call into uploadFile with no
-// relay of their own, so the blossom probe is skipped and VITE_DEFAULT_BLOSSOM_SERVERS is used.
-const BLOSSOM_ORIGIN = "https://blossom.primal.net"
-
-// A 1x1 gif and a 1x1 webp. compressFileForUpload passes both formats through untouched rather
-// than re-encoding them through a canvas, so the bytes the server hashes are the bytes chosen
-// here and the url an upload resolves to is predictable from node.
-const GIF = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64")
-const WEBP = Buffer.from("UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==", "base64")
-
 // uploadFile appends the extension when the descriptor's url carries none, which the mock's never
 // does.
 const uploadedUrl = (body: Buffer, extension: string) =>
-  `${BLOSSOM_ORIGIN}/${createHash("sha256").update(body).digest("hex")}.${extension}`
-
-const profilePath = (user: TestUser) => `/people/${npubEncode(user.pubkey)}`
+  `${DEFAULT_BLOSSOM_ORIGIN}/${createHash("sha256").update(body).digest("hex")}.${extension}`
 
 // displayPubkey in @welshman/domain: the npub with its middle taken out.
 const shortNpub = (user: TestUser) => {
@@ -49,10 +49,6 @@ const pageContent = (page: Page) => page.locator(".page__content")
 // the sidebar — so anything said about them is scoped to the copy that is actually on screen.
 const sidebar = (page: Page) => page.locator("aside")
 
-// A modal is a `.dialog` overlay wrapping a `.dialog` card, and the card is the one with the
-// content in it.
-const dialog = (page: Page) => page.locator(".dialog").last()
-
 // A space path redirects to the space's entry room as the page mounts, and modal.ts closes every
 // open modal on navigation, so a dialog opened before the redirect lands is thrown away with it.
 const enteredSpace = (page: Page) => expect(page).toHaveURL(new RegExp("/spaces/[^/]+/."))
@@ -62,7 +58,7 @@ const openSearch = (page: Page) => page.locator('.primary-nav button[data-tip="S
 
 const searchTerm = (page: Page) => page.getByPlaceholder("Search your spaces...")
 
-const searchResults = (page: Page) => dialog(page).locator(".card.card-interactive")
+const searchResults = (page: Page) => topDialog(page).locator(".card.card-interactive")
 
 const notes = (page: Page) => pageContent(page).locator(".cv.card")
 
@@ -73,18 +69,6 @@ const profileMenu = (page: Page) => page.locator("button.button-circle.button-gh
 
 // PeopleItem renders its link twice, once for each breakpoint; the wide one comes first.
 const viewProfile = (card: Locator) => card.getByRole("link", {name: "View Profile"}).first()
-
-// Outbox routing resolves everything about a person through their relay list, so a seeded fixture
-// is only loadable by somebody else once its author has one.
-const seedRelayList = (space: SeededSpace, user: TestUser) =>
-  space.event(user, () =>
-    space
-      .kind(RelayList)
-      .writer()
-      .setReadUrls([space.url])
-      .setWriteUrls([space.url])
-      .renderTemplate(),
-  )
 
 test("US-074 find a person", async ({seed, as}) => {
   // Sixty of them, so that the ten the dialog lists are visibly the best matches rather than
@@ -113,7 +97,7 @@ test("US-074 find a person", async ({seed, as}) => {
       about: "Dockside cook and keeper of the ship's cat.",
     })
 
-    seedRelayList(space, user.bob)
+    space.relayList(user.bob)
 
     for (const [i, searcher] of searchers.entries()) {
       space.member(searcher)
@@ -150,7 +134,7 @@ test("US-074 find a person", async ({seed, as}) => {
 
   await viewProfile(bobCard).click()
 
-  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob)}$`))
+  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob.pubkey)}$`))
   await expect(page.getByRole("heading", {name: "Bob Barnacle"})).toBeVisible()
 })
 
@@ -183,17 +167,17 @@ test("US-075 view someone's profile", async ({seed, as}) => {
         .renderTemplate(),
     )
 
-    seedRelayList(space, user.bob)
+    space.relayList(user.bob)
 
     // Carol belongs to no space at all, which is what the panel's empty state is about.
     space.member(user.carol)
     space.profile(user.carol, {name: "Carol Cutter"})
-    seedRelayList(space, user.carol)
+    space.relayList(user.carol)
   })
 
   const space = scenario.space("space")
   const other = scenario.space("other")
-  const page = await as(users.alice, profilePath(users.bob), {context: CLIPBOARD})
+  const page = await as(users.alice, profilePath(users.bob.pubkey), {context: CLIPBOARD})
   const region = pageContent(page)
 
   await expect(page.getByRole("heading", {name: "Bob Barnacle"})).toBeVisible()
@@ -229,7 +213,7 @@ test("US-075 view someone's profile", async ({seed, as}) => {
 
   await expect(page).toHaveURL(new RegExp(spacePath(space.url)))
 
-  await page.goto(profilePath(users.carol))
+  await page.goto(profilePath(users.carol.pubkey))
 
   await expect(page.getByRole("heading", {name: "Carol Cutter"})).toBeVisible()
   await expect(sidebar(page).getByText("No spaces found.")).toBeVisible()
@@ -243,11 +227,11 @@ test("US-076 follow and unfollow", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
     space.profile(user.bob, {name: "Bob Barnacle"})
-    seedRelayList(space, user.alice)
-    seedRelayList(space, user.bob)
+    space.relayList(user.alice)
+    space.relayList(user.bob)
   })
 
-  const page = await as(users.alice, profilePath(users.bob), {context: DESKTOP})
+  const page = await as(users.alice, profilePath(users.bob.pubkey), {context: DESKTOP})
   const follow = page.getByRole("button", {name: "Follow", exact: true})
   const unfollow = page.getByRole("button", {name: "Unfollow", exact: true})
 
@@ -258,7 +242,7 @@ test("US-076 follow and unfollow", async ({seed, as}) => {
   // The same page, still on the same url: the label flips where it stands.
   await expect(unfollow).toBeVisible()
   await expect(follow).toHaveCount(0)
-  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob)}$`))
+  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob.pubkey)}$`))
 
   await unfollow.click()
 
@@ -278,9 +262,9 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
     space.join(user.carol, "general")
     space.profile(user.bob, {name: "Bob Barnacle", about: "Dockside cook."})
     space.profile(user.carol, {name: "Carol Cutter", about: "Sailmaker.", picture: carolAvatar})
-    seedRelayList(space, user.alice)
-    seedRelayList(space, user.bob)
-    seedRelayList(space, user.carol)
+    space.relayList(user.alice)
+    space.relayList(user.bob)
+    space.relayList(user.carol)
 
     // Carol already follows bob, so alice following carol is the one thing that has to happen
     // through the ui for his standing to move.
@@ -313,7 +297,7 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
 
   await viewProfile(bobCard).click()
 
-  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob)}$`))
+  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob.pubkey)}$`))
   // Word-bounded: a plain "0 / 100" is also a substring of "10 / 100" and "20 / 100", which are
   // exactly the readings this is supposed to rule out.
   await expect(reputation()).toContainText(/\b0 \/ 100\b/)
@@ -326,7 +310,7 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
 
   await viewProfile(carolCard).click()
 
-  await expect(page).toHaveURL(new RegExp(`${profilePath(users.carol)}$`))
+  await expect(page).toHaveURL(new RegExp(`${profilePath(users.carol.pubkey)}$`))
 
   await page.getByRole("button", {name: "Follow", exact: true}).click()
 
@@ -365,12 +349,12 @@ test("US-078 edit your own profile", async ({seed, as}) => {
         .setNip05("alice@flotilla.test")
         .renderTemplate(),
     )
-    seedRelayList(space, user.alice)
+    space.relayList(user.alice)
   })
 
-  const page = await as(users.alice, profilePath(users.alice), {context: DESKTOP})
+  const page = await as(users.alice, profilePath(users.alice.pubkey), {context: DESKTOP})
 
-  await mockBlossom(page.context(), {server: BLOSSOM_ORIGIN})
+  await mockBlossom(page.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
 
   const region = pageContent(page)
   const edit = page.getByRole("button", {name: "Edit profile"})
@@ -445,8 +429,8 @@ test("US-079 read a person's notes", async ({seed, as}) => {
     space.join(user.carol, "general")
     space.profile(user.alice, {name: "Alice Anderson", picture: avatar})
     space.profile(user.carol, {name: "Carol Cutter"})
-    seedRelayList(space, user.alice)
-    seedRelayList(space, user.carol)
+    space.relayList(user.alice)
+    space.relayList(user.carol)
 
     carolNote = space.event(
       user.carol,
@@ -493,7 +477,7 @@ test("US-079 read a person's notes", async ({seed, as}) => {
   })
 
   const {url} = scenario.space("space")
-  const page = await as(users.bob, profilePath(users.alice), {context: DESKTOP})
+  const page = await as(users.bob, profilePath(users.alice.pubkey), {context: DESKTOP})
   const list = notes(page)
   const newest = list.filter({hasText: "NEWEST"})
 
@@ -549,7 +533,7 @@ test("US-079 read a person's notes", async ({seed, as}) => {
   await expect(list.nth(1)).toContainText("LIVE")
 
   // Carol's own note is on her profile; alice's reply to it is alice's, so it isn't here.
-  await page.goto(profilePath(users.carol))
+  await page.goto(profilePath(users.carol.pubkey))
 
   await expect(notes(page).filter({hasText: "Anyone seen the tide charts?"})).toBeVisible()
   await expect(notes(page).filter({hasText: "REPLY"})).toHaveCount(0)
@@ -570,7 +554,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
       picture: avatar,
     })
     space.message(user.bob, "general", "the cat has the helm", at(1, HOUR))
-    seedRelayList(space, user.bob)
+    space.relayList(user.bob)
   })
 
   const {url} = scenario.space("space")
@@ -589,10 +573,10 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
 
   await preview.click()
 
-  await expect(dialog(page).getByText("Bob Barnacle")).toBeVisible()
-  await expect(dialog(page).locator(`img[src="${avatar}"]`)).toBeVisible()
-  await expect(dialog(page).getByText("Deckhand, dockside cook")).toBeVisible()
-  await expect(dialog(page).getByText(/Last active/)).toBeVisible()
+  await expect(topDialog(page).getByText("Bob Barnacle")).toBeVisible()
+  await expect(topDialog(page).locator(`img[src="${avatar}"]`)).toBeVisible()
+  await expect(topDialog(page).getByText("Deckhand, dockside cook")).toBeVisible()
+  await expect(topDialog(page).getByText(/Last active/)).toBeVisible()
 
   await page.keyboard.press("Escape")
 
@@ -602,7 +586,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
 
   await preview.click()
 
-  await dialog(page).getByRole("button", {name: "Go back"}).click()
+  await topDialog(page).getByRole("button", {name: "Go back"}).click()
 
   // Closed, and alice is exactly where she opened it from.
   await expect(page.locator(".dialog")).toHaveCount(0)
@@ -612,7 +596,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
   await preview.click()
   await page.getByRole("button", {name: "View Full Profile"}).click()
 
-  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob)}$`))
+  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob.pubkey)}$`))
   await expect(page.getByRole("heading", {name: "Bob Barnacle"})).toBeVisible()
 })
 
@@ -624,17 +608,17 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
     space.profile(user.bob, {name: "Bob Barnacle", about: "Dockside cook."})
-    seedRelayList(space, user.bob)
+    space.relayList(user.bob)
   })
 
-  const page = await as(users.alice, profilePath(users.bob), {context: CLIPBOARD})
+  const page = await as(users.alice, profilePath(users.bob.pubkey), {context: CLIPBOARD})
 
   await profileMenu(page).click()
   await page.getByRole("button", {name: "Profile Info"}).click()
 
   await expect(page.getByRole("heading", {name: "Profile Details"})).toBeVisible()
 
-  const info = dialog(page)
+  const info = topDialog(page)
   // Each of these is an input and its copy button inside one bordered label, in dialog order.
   const linkField = info.locator("label.input").first()
   const pubkeyField = info.locator("label.input").nth(1)
@@ -677,7 +661,7 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
   // "Share Profile Info", so the dialog's heading is matched exactly.
   await expect(page.getByText("Share Profile", {exact: true})).toBeVisible()
 
-  const share = dialog(page)
+  const share = topDialog(page)
   const qr = share.locator("canvas")
   const shareLink = share.locator("input")
 
@@ -702,8 +686,8 @@ test("US-082 mute an account", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
     space.profile(user.bob, {name: "Bob Barnacle", about: "Dockside cook."})
-    seedRelayList(space, user.alice)
-    seedRelayList(space, user.bob)
+    space.relayList(user.alice)
+    space.relayList(user.bob)
 
     space.event(
       user.bob,
@@ -749,7 +733,7 @@ test("US-082 mute an account", async ({seed, as}) => {
 
     await expect(card).toHaveCount(1)
     await viewProfile(card).click()
-    await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob)}$`))
+    await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob.pubkey)}$`))
   }
 
   await openBobsProfile()

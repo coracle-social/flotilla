@@ -14,10 +14,18 @@ import {
 } from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
+  GIF,
+  dialog,
+  emojiButton,
   expect,
   getTranscript,
+  longDate,
   makeTestUser,
+  menuButton,
   mockDufflepud,
+  modalForm,
+  noteEditor,
+  pickEmoji,
   roomPath,
   spacePath,
   test,
@@ -27,27 +35,6 @@ import type {TestUser} from "../harness"
 
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string}
-
-// A modal is mounted alongside the page it covers, so a page's own "Create" and the modal's submit
-// are both in the dom at once. Form assertions are scoped to the modal's own form to say which one
-// is meant.
-const dialog = (page: Page, title: string) =>
-  page.locator("form").filter({has: page.getByRole("heading", {name: title})})
-
-// The library's modals are plain Modals rather than forms, so the dialog wrapper is what scopes
-// them. Dialog nests two elements carrying the class; the inner one holds the content.
-const panel = (page: Page, title: string) =>
-  page
-    .locator(".dialog")
-    .filter({has: page.getByRole("heading", {name: title, exact: true})})
-    .last()
-
-const editorOf = (scope: Locator) => scope.locator(".note-editor [contenteditable=true]")
-
-// EventActions renders zap, emoji and menu into one join, in that order.
-const emojiOf = (scope: Locator) => scope.locator(".join").getByRole("button").nth(1)
-
-const menuOf = (scope: Locator) => scope.locator(".join").getByRole("button").last()
 
 // A shelf is a card and its menu button side by side, so the menu is reached through the wrapper
 // the two share.
@@ -62,17 +49,6 @@ const openCard = (card: Locator, title: string) => card.getByText(title).click()
 // One option of a poll, which PollOption renders as a small card carrying its label, its count and
 // its progress bar.
 const pollOption = (page: Page, label: string) => page.locator(".card-sm").filter({hasText: label})
-
-// The options mirror dateFormatter in @welshman/lib. Formatted by the browser rather than by node,
-// so the locale and the timezone are the ones the app rendered with — see dayLabel in dms.spec.ts.
-const longDate = (page: Page, seconds: number) =>
-  page.evaluate(
-    ts =>
-      new Intl.DateTimeFormat(undefined, {year: "numeric", month: "long", day: "numeric"}).format(
-        new Date(ts * 1000),
-      ),
-    seconds,
-  )
 
 // The selections of every poll response this page put on the wire, oldest first. A multiple choice
 // vote goes out once the delay window closes, so this is where "both publish" is visible.
@@ -89,30 +65,7 @@ const pollResponses = (page: Page, pollId: string) =>
 
 const PARTY = "🎉"
 
-// The picker is a web component with an open shadow root, so its search field and its results are
-// reachable through it. Searching rather than browsing avoids depending on which category tab an
-// emoji happens to live under.
-const pickParty = async (page: Page, opener: Locator) => {
-  await opener.click()
-
-  const picker = page.locator("emoji-picker").filter({visible: true})
-
-  // Tippy keeps a hidden popover mounted through its fade, so wait for there to be exactly one
-  // picker rather than reaching into whichever resolves first.
-  await expect(picker).toHaveCount(1)
-
-  // A result's label is the emoji's name, its annotation and every shortcode joined together, so
-  // more than one result can carry the annotation being matched.
-  await picker.locator("input.search").fill("party popper")
-  await picker
-    .getByRole("option", {name: /party popper/})
-    .first()
-    .click()
-}
-
-// A one pixel gif. Gif goes to the uploader untouched by the compressor, so this is uploaded byte
-// for byte and the blossom mock can hash it.
-const GIF = Buffer.from("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7", "base64")
+const pickParty = (page: Page, opener: Locator) => pickEmoji(page, opener, "party popper")
 
 test("US-046 create and browse a calendar event", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
@@ -167,7 +120,7 @@ test("US-046 create and browse a calendar event", async ({seed, as}) => {
 
   await page.getByRole("button", {name: "Create", exact: true}).click()
 
-  const composer = dialog(page, "Create an Event")
+  const composer = modalForm(page, "Create an Event")
 
   // Field renders its label and its input as siblings rather than wiring them together, so the
   // form's two writable text fields are taken in document order: title, then location. The date
@@ -258,10 +211,10 @@ test("US-047 manage your own calendar event", async ({seed, as}) => {
   await expect(eventCard).toContainText("The Old Mill")
   await expect(eventCard).toContainText("Alice Anderson")
 
-  await menuOf(eventCard).click()
+  await menuButton(eventCard).click()
   await page.getByRole("button", {name: "Edit Event"}).click()
 
-  const composer = dialog(page, "Edit this Event")
+  const composer = modalForm(page, "Edit this Event")
   const textInputs = composer.locator('input[type="text"]:not([readonly])')
 
   await expect(textInputs.first()).toHaveValue("Harvest Supper")
@@ -276,7 +229,7 @@ test("US-047 manage your own calendar event", async ({seed, as}) => {
   await expect(page.getByRole("heading", {name: "Harvest Supper & Ceilidh"})).toBeVisible()
   await expect(eventCard).toContainText("The Village Hall")
 
-  await menuOf(eventCard).click()
+  await menuButton(eventCard).click()
   await page.getByRole("button", {name: "Delete Event"}).click()
 
   const confirmDelete = page.getByRole("button", {name: "Confirm"})
@@ -346,7 +299,7 @@ test("US-048 create a poll and vote on it", async ({seed, as}) => {
 
   await alice.getByRole("button", {name: "Create", exact: true}).click()
 
-  const composer = dialog(alice, "Create a Poll")
+  const composer = modalForm(alice, "Create a Poll")
   const question = composer.getByPlaceholder("What would you like to ask?")
 
   await composer.getByRole("button", {name: "Create Poll"}).click()
@@ -589,7 +542,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
 
   await page.getByRole("button", {name: "Create", exact: true}).click()
 
-  const composer = dialog(page, "Create a Funding Goal")
+  const composer = modalForm(page, "Create a Funding Goal")
   const title = composer.getByPlaceholder("What do funds go towards?")
   const amount = composer.locator('input[type="number"]')
   const slider = composer.locator('input[type="range"]')
@@ -608,7 +561,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
     "Please provide details about your funding goal.",
   )
 
-  await editorOf(composer).pressSequentially("Three tiles came off in the storm.")
+  await noteEditor(composer).pressSequentially("Three tiles came off in the storm.")
 
   // The target answers to the field and to the slider alike.
   await amount.fill("5000")
@@ -687,7 +640,7 @@ test("US-051 post, edit, and close out a classified listing", async ({seed, as})
 
   await page.getByRole("button", {name: "Create", exact: true}).click()
 
-  const composer = dialog(page, "Create a Classified Listing")
+  const composer = modalForm(page, "Create a Classified Listing")
   const title = composer.getByPlaceholder("What is this listing for?")
   const price = composer.locator('input[type="number"]')
   const currency = composer.locator("button.input")
@@ -705,7 +658,7 @@ test("US-051 post, edit, and close out a classified listing", async ({seed, as})
     "Please provide a description for your listing.",
   )
 
-  await editorOf(composer).pressSequentially("Steel frame, new tires, barely ridden.")
+  await noteEditor(composer).pressSequentially("Steel frame, new tires, barely ridden.")
 
   await currency.click()
   await currency.locator("input").fill("USD")
@@ -742,10 +695,10 @@ test("US-051 post, edit, and close out a classified listing", async ({seed, as})
 
   await expect(detail).toContainText("1200")
 
-  await menuOf(detail).click()
+  await menuButton(detail).click()
   await page.getByRole("button", {name: "Edit Listing"}).click()
 
-  const editor = dialog(page, "Edit this Listing")
+  const editor = modalForm(page, "Edit this Listing")
 
   await expect(editor.getByPlaceholder("What is this listing for?")).toHaveValue(
     "Vintage Road Bike",
@@ -823,7 +776,7 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
 
   await expect(eventCard).toBeVisible()
 
-  await pickParty(bob, emojiOf(eventCard))
+  await pickParty(bob, emojiButton(eventCard))
 
   const bobsPill = eventCard.getByRole("button", {name: PARTY})
 
@@ -835,7 +788,7 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
 
   const reply = bob.locator("form").filter({has: bob.locator(".note-editor")})
 
-  await editorOf(reply).pressSequentially("Is there parking at The Green?")
+  await noteEditor(reply).pressSequentially("Is there parking at The Green?")
   await reply.getByRole("button", {name: "Post Reply"}).click()
 
   await expect(bob.getByText("Is there parking at The Green?")).toBeVisible()
@@ -856,7 +809,7 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
 
   const alicesReply = alice.locator("form").filter({has: alice.locator(".note-editor")})
 
-  await editorOf(alicesReply).pressSequentially("Yes, in the field behind the pub.")
+  await noteEditor(alicesReply).pressSequentially("Yes, in the field behind the pub.")
   await alicesReply.getByRole("button", {name: "Post Reply"}).click()
 
   // Past four replies the rest are folded away behind a control that names how many there are.
@@ -894,7 +847,7 @@ test("US-053 browse and search the library", async ({seed, as}) => {
   const createShelf = async (title: string, description: string) => {
     await admin.getByRole("button", {name: "Create Shelf"}).click()
 
-    const form = panel(admin, "Create Shelf")
+    const form = dialog(admin, "Create Shelf")
 
     await form.getByPlaceholder("Shelf title").fill(title)
     await form.getByPlaceholder("What's this shelf about?").fill(description)
@@ -911,7 +864,7 @@ test("US-053 browse and search the library", async ({seed, as}) => {
   await shelfCard(admin, "Getting Started").getByRole("button", {name: "More options"}).click()
   await admin.getByRole("button", {name: "Add link", exact: true}).click()
 
-  const linkForm = panel(admin, "Add Link")
+  const linkForm = dialog(admin, "Add Link")
 
   await linkForm.getByPlaceholder("URL or nevent...").fill("https://handbook.test/start-here")
   await linkForm.getByPlaceholder("Optional title").fill("The Handbook")
@@ -994,7 +947,7 @@ test("US-054 curate the library", async ({seed, as}) => {
     .filter({hasText: "Should we move standup to 10?"})
 
   // With nothing on the shelves yet, the dialog says so and points at where one is made.
-  await menuOf(pollCard).click()
+  await menuButton(pollCard).click()
   await page.getByRole("button", {name: "Add to Library"}).click()
 
   await expect(page.getByText("This space doesn't have any shelves yet.")).toBeVisible()
@@ -1004,7 +957,7 @@ test("US-054 curate the library", async ({seed, as}) => {
 
   await page.getByRole("button", {name: "Create Shelf"}).click()
 
-  const shelfForm = panel(page, "Create Shelf")
+  const shelfForm = dialog(page, "Create Shelf")
 
   await shelfForm.getByPlaceholder("Shelf title").fill("Reading List")
   await shelfForm.getByPlaceholder("What's this shelf about?").fill("Things worth reading")
@@ -1022,7 +975,7 @@ test("US-054 curate the library", async ({seed, as}) => {
   // An external url becomes a card of its own...
   await page.getByRole("button", {name: "Add a link"}).click()
 
-  const externalLink = panel(page, "Add Link")
+  const externalLink = dialog(page, "Add Link")
 
   await externalLink.getByPlaceholder("URL or nevent...").fill("https://handbook.test/style-guide")
   await externalLink.getByPlaceholder("Optional title").fill("The Style Guide")
@@ -1041,7 +994,7 @@ test("US-054 curate the library", async ({seed, as}) => {
   await shelfCard(page, "Reading List").getByRole("button", {name: "More options"}).click()
   await page.getByRole("button", {name: "Add link", exact: true}).click()
 
-  const nostrLink = panel(page, "Add Link")
+  const nostrLink = dialog(page, "Add Link")
 
   await nostrLink.getByPlaceholder("URL or nevent...").fill(`nostr:${nevent}`)
   await nostrLink.getByPlaceholder("Optional title").fill("Yesterday's incident")
@@ -1056,7 +1009,7 @@ test("US-054 curate the library", async ({seed, as}) => {
   await shelfCard(page, "Reading List").getByRole("button", {name: "More options"}).click()
   await page.getByRole("button", {name: "Edit shelf"}).click()
 
-  const shelfEdit = panel(page, "Edit Shelf")
+  const shelfEdit = dialog(page, "Edit Shelf")
 
   await shelfEdit.getByPlaceholder("What's this shelf about?").fill("Things worth reading twice")
   await shelfEdit.getByRole("button", {name: "Save changes"}).click()
@@ -1068,11 +1021,11 @@ test("US-054 curate the library", async ({seed, as}) => {
 
   // A post filed from its own menu lands on the shelf that was picked for it.
   await page.goto(pollPath)
-  await menuOf(pollCard).click()
+  await menuButton(pollCard).click()
   await page.getByRole("button", {name: "Add to Library"}).click()
   await page.getByRole("button", {name: /Reading List/}).click()
 
-  const fromPoll = panel(page, "Add Link")
+  const fromPoll = dialog(page, "Add Link")
 
   await expect(fromPoll.getByPlaceholder("URL or nevent...")).not.toHaveValue("")
 
@@ -1127,7 +1080,7 @@ test("US-055 create community content from a room", async ({seed, as}) => {
 
   await page.getByRole("button", {name: "Ask a Question", exact: true}).click()
 
-  const composer = dialog(page, "Create a Poll")
+  const composer = modalForm(page, "Create a Poll")
 
   await composer.getByPlaceholder("What would you like to ask?").fill("Pizza or tacos?")
   await composer.getByPlaceholder("Option 1").fill("Pizza")
