@@ -15,6 +15,9 @@ export type BootOptions = {
   // Every relay list the app reads at startup is pointed here, so it can only dial relays the
   // scenario created.
   relays: string[]
+  // What a pubkey's own lists are resolved from, which is a relay of its own only when the
+  // scenario opened one. Defaults to `relays`.
+  indexers?: string[]
   spaces?: string[]
   user?: TestUser
   // What this user's client already has in local storage, e.g. their room list.
@@ -27,7 +30,7 @@ export type BootOptions = {
 
 export const boot = async (
   context: BrowserContext,
-  {relays, spaces = [], user, events = [], path = "/", env = {}}: BootOptions,
+  {relays, indexers = relays, spaces = [], user, events = [], path = "/", env = {}}: BootOptions,
 ) => {
   const urls = relays.join(",")
 
@@ -48,7 +51,7 @@ export const boot = async (
       TEST_ENV_READ_KEY,
       {
         VITE_DEFAULT_RELAYS: urls,
-        VITE_INDEXER_RELAYS: urls,
+        VITE_INDEXER_RELAYS: indexers.join(","),
         VITE_DEFAULT_SEARCH_RELAYS: urls,
         VITE_DEFAULT_MESSAGING_RELAYS: urls,
         VITE_SIGNER_RELAYS: urls,

@@ -1,14 +1,11 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE} from "@welshman/lib"
 import {displayRelayUrl} from "@welshman/util"
+import {RelayMessageType} from "@welshman/net"
 import {Classified, FollowList, MessagingRelayList, Note, RelayList, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
-import {expect, roomPath, spacePath, test, users} from "../harness"
-import type {SeededSpace, TestUser} from "../harness"
-
-// A handle to a seeded event. SeededEvent isn't exported from the harness, and only its id is ever
-// read back here.
-type Seeded = {readonly id: string}
+import {expect, getTranscript, roomPath, spacePath, test, users} from "../harness"
+import type {SeededEvent, SeededSpace, TestUser} from "../harness"
 
 // A literal as a pattern, for a url that carries a query string alongside the path being matched,
 // or a host whose dots would otherwise be wildcards.
@@ -472,6 +469,68 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
   await expect(network.getByRole("button", {name: /\d+\/\d+\/\d+/}).first()).toBeVisible()
 })
 
+test("US-117 read a follow who is in none of your spaces", async ({seed, as}) => {
+  const note = "the lighthouse has been dark since tuesday"
+  const answer = "the keeper is on holiday"
+
+  const scenario = await seed(({relay, open, user, at}) => {
+    const space = relay("space")
+    const indexer = open("indexer")
+    const outbox = open("outbox")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    // Alice reads from her space and the indexer. Bob's relay is somewhere she writes and nowhere
+    // she reads, which is enough for her client to identify to it -- zooid answers no REQ without
+    // nip-42, and Flotilla only identifies to relays her own lists name -- while leaving it out of
+    // the read urls a feed's context is asked of.
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url],
+      write: [space.url, indexer.url, outbox.url],
+    })
+    indexer.follows(user.alice, [user.bob])
+
+    // Bob is in none of her spaces and writes nowhere she reads, so his relay list is the only
+    // thing that can point the feed at his notes.
+    indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url]})
+    outbox.profile(user.bob, {name: "Bob Barker"})
+
+    const posted = outbox.note(user.bob, note, at(30, MINUTE))
+
+    outbox.event(
+      user.bob,
+      () => outbox.kind(Note).writer().setParent(posted.event).setContent(answer).renderTemplate(),
+      at(20, MINUTE),
+    )
+  })
+
+  const space = scenario.space("space")
+  const page = await as(users.alice, "/home")
+
+  const network = page
+    .locator("section")
+    .filter({has: page.getByRole("heading", {name: "Network"})})
+
+  await expect(network.getByText(note)).toBeVisible()
+  await expect(network.getByText("Bob Barker")).toBeVisible()
+
+  // The reply is on bob's relay too, and alice reads from her space rather than from that relay,
+  // so a context asked of her own read relays comes back with nothing.
+  await expect(network.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
+
+  // Her space never held any of it.
+  const fromSpace = getTranscript(page.context()).filter(
+    ({url, direction, message}) =>
+      url === space.url &&
+      direction === "toClient" &&
+      message[0] === RelayMessageType.Event &&
+      [note, answer].includes(message[2].content),
+  )
+
+  expect(fromSpace).toEqual([])
+})
+
 test("US-106 share text into the app", async ({seed, as}) => {
   const shared = "the offsite is moving to the 14th"
 
@@ -526,7 +585,7 @@ test("US-106 share text into the app", async ({seed, as}) => {
 })
 
 test("US-107 open a nostr link", async ({seed, as}) => {
-  let posted!: Seeded
+  let posted!: SeededEvent
 
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")

@@ -1,0 +1,41 @@
+# The other public relay, identical in policy to indexer.toml. It is a followed pubkey's own write
+# relay: somewhere to seed a note that the reader reaches only by resolving that pubkey's relay
+# list, which is the whole of the cross-space half of the app.
+#
+# Keeping it apart from the indexer is what makes routing assertable. A feed that ignored a relay
+# list would ask the indexer, find nothing, and fail — where one relay serving both roles would
+# pass either way.
+#
+# `host` must equal the Host header the harness sends, which is the hostname of the url the client
+# is given; anything else gets a 404 from the dispatcher instead of a relay. Keep it in step with
+# `tenants` in harness/zooid/config.ts, and see harness/zooid/transport.ts for why it is a name
+# that resolves nowhere.
+host = "outbox.test"
+schema = "e2e_outbox"
+secret = "07b0c0000000000000000000000000000000000000000000000000000000000a"
+
+[info]
+name = "outbox"
+pubkey = "6ada7b6eabb3a8349f88667d278a275c704b553a7c57f9d8156555986884a08e"
+description = "Throwaway relay for Flotilla's end-to-end suite."
+
+[policy]
+public_read = true
+public_write = true
+public_join = false
+strip_signatures = false
+
+# Not a space: nothing seeded here carries an `h` tag, and the client is never offered it as one.
+[groups]
+enabled = false
+
+[management]
+enabled = false
+
+# Blossom and push are off, and [livekit] is omitted entirely, because each of them would have
+# the relay or the client talk to a service the test did not create.
+[blossom]
+enabled = false
+
+[push]
+enabled = false

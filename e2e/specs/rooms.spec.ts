@@ -13,11 +13,7 @@ import {
   test,
   users,
 } from "../harness"
-import type {SeededSpace, TestUser} from "../harness"
-
-// A handle to a seeded event. SeededEvent isn't exported from the harness, and only its id and
-// timestamp are ever read back here.
-type Seeded = {readonly id: string; readonly event: {readonly created_at: number}}
+import type {SeededEvent, SeededSpace, TestUser} from "../harness"
 
 // A path as a pattern, for a url that carries a query string or a modal's hash alongside it.
 const pathPattern = (path: string) => new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
@@ -192,7 +188,7 @@ test("US-118 messages sent in the same second are in one order for everyone", as
   seed,
   as,
 }) => {
-  const tied: Seeded[] = []
+  const tied: SeededEvent[] = []
 
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -687,7 +683,7 @@ test("US-025 react to a message", async ({seed, as}) => {
 })
 
 test("US-026 pin a message and browse pins", async ({seed, as}) => {
-  let pinned!: Seeded
+  let pinned!: SeededEvent
 
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -733,8 +729,8 @@ test("US-026 pin a message and browse pins", async ({seed, as}) => {
 })
 
 test("US-027 find a past message and jump to it", async ({seed, as}) => {
-  let lastWeek!: Seeded
-  let older!: Seeded
+  let lastWeek!: SeededEvent
+  let older!: SeededEvent
 
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -792,7 +788,7 @@ test("US-027 find a past message and jump to it", async ({seed, as}) => {
 // event in the room" is the wrong question to hang the button on; whether the loaded window has
 // caught up to the present is the right one.
 test("US-027a a permalink near the newest end lands at the bottom", async ({seed, as}) => {
-  let recent!: Seeded
+  let recent!: SeededEvent
 
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")

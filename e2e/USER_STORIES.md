@@ -1569,7 +1569,9 @@ that home is worth opening when nothing is waiting for me.
 Acceptance:
 
 - The Network section lists notes from her follows, resolved through the relays
-  those people publish to.
+  those people publish to. A follow who is in none of her spaces reads the same
+  way, replies included, since a note's replies are counted from the relay the
+  note itself came from.
 - It is a list of notes: a reply is counted on the note it answers rather than
   drawn underneath it, and never appears as an item of its own.
 - Every note carries its reply count, including the ones with no replies.

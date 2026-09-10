@@ -22,6 +22,9 @@ this space?". Seeding a membership on `closed` is therefore not possible — `jo
 publish a claimless join and the relay refuses it — so a scenario there seeds admin-created rooms
 and lets the spec do the joining.
 
+`indexer` and `outbox` are not spaces: groups are off, anyone may read and write, and nothing seeded
+on them carries an `h` tag. They are what "The follow graph" below is made of.
+
 ### Why the relays are called `<name>.test`
 
 The container listens on plaintext loopback, but a url that is local or insecure is dropped from
@@ -244,8 +247,8 @@ have on disk anyway.
 
 The price is that no spec exercises the bootstrap: every one of them starts already knowing which
 relays it belongs to, so a regression in the chain from relay list to room list, or in `authPolicy`'s
-conservative gate, leaves the suite green. Covering it needs a scenario with a public relay standing
-in for an indexer.
+conservative gate, leaves the suite green. The public relays under "The follow graph" are the
+standing-in indexer that covering it would need.
 
 Each user is a separate `BrowserContext`, which also gives each one its own IndexedDB and
 localStorage, so nothing bleeds between users.
@@ -268,6 +271,65 @@ Whatever `env` names still has to be something the scenario owns — a platform 
 hosted spaces are created under — or the app dials a host nothing serves and the test fails on a
 leak. The NIP-07 provider is a real signer rather than a stub, because the session it produces has to
 sign the NIP-42 challenges the members-only relays send.
+
+## The follow graph
+
+Everything `/home`'s network column is made of sits outside a space: a follow list, each followed
+pubkey's relay list, and an indexer to resolve those from. `open("indexer")` and `open("outbox")`
+are the two public relays that hold it, and a scenario says which of them a given fixture lands on:
+
+```ts
+const scenario = await seed(({relay, open, user, at}) => {
+  const space = relay("space")
+  const indexer = open("indexer")
+  const outbox = open("outbox")
+
+  space.room("general", {name: "General"})
+  space.join(user.alice, "general")
+
+  indexer.relayList(user.alice, {
+    read: [space.url, indexer.url],
+    write: [space.url, indexer.url, outbox.url],
+  })
+  indexer.follows(user.alice, [user.bob])
+
+  indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url]})
+  outbox.profile(user.bob, {name: "Bob Barker"})
+  outbox.note(user.bob, "the lighthouse has been dark since tuesday", at(30, MINUTE))
+})
+```
+
+Bob is in none of alice's spaces, so the only thing that can put his note on her screen is his relay
+list. Keeping the indexer and the outbox apart is what makes that assertable: a client that ignored
+the list would ask the indexer, find nothing, and fail the spec, where one relay serving both roles
+would pass either way. `VITE_INDEXER_RELAYS` points at the indexer as soon as a scenario opens one,
+and at the scenario's spaces otherwise, which is what every spec written before there was one still
+gets.
+
+An open relay's url reads before seeding has run, unlike a space's, because a relay list has to name
+the relay a note is seeded on.
+
+### Why a reader has to name the relays it reads from
+
+zooid answers no REQ without NIP-42, whatever `public_read` says, and `authPolicy` is conservative:
+it identifies only to relays the user's own room list or relay list names. So a relay a spec expects
+the client to read from has to appear in that user's list, and a relay list is seeded for the reader
+as well as for the people they follow.
+
+Read and write are separate there, and the difference is what a routing assertion hangs on. Above,
+alice writes to bob's relay and reads from her space and the indexer: the write url is enough for
+her client to identify to it, while a feed's context, which is built from her read urls, has no
+reason to ask it for anything. A reply that only lives on bob's relay therefore counts only if the
+feed asked the relay the note itself came from.
+
+The write urls have a second job. A user's own follow list is loaded through their outbox, so the
+relay a scenario seeds that list on has to be one of the relays their list says they write to — the
+indexer, here. Seed it somewhere they only read from and the feed comes up empty with nothing to say
+why.
+
+Her own relay list reaches her client as cache alongside her room list, for the same reason the room
+list does: it is the list that says which relays may be identified to, so it cannot be the thing
+that has to be fetched first.
 
 ## Layout
 
@@ -297,8 +359,10 @@ e2e/
       webln.ts             a window.webln that enables and reports what it supports
     seed/
       scenario.ts          the `seed()` builder and relative-time helpers
+      publish.ts           the queue every seeding call goes through, and what it hands back
       space.ts             one space's fixtures: rooms, members, messages, replies, profiles,
                            direct messages, and anything a domain writer renders
+      openRelay.ts         one public relay's fixtures: relay lists, follow lists, profiles, notes
   specs/
     *.spec.ts
 ```

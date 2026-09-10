@@ -1,0 +1,43 @@
+# A public relay rather than a space: no groups, and anyone may read and write. It stands in for the
+# indexers a client resolves a pubkey's own lists from, so a relay list, a follow list or a profile
+# seeded here is reachable by a user who is a member of nothing.
+#
+# zooid answers no REQ without nip-42 whatever `public_read` says, and Flotilla only identifies to
+# relays the user's own lists name, so a scenario expecting the client to read from this one seeds
+# it into that user's relay list. See ARCHITECTURE.md, "The follow graph".
+#
+# `host` must equal the Host header the harness sends, which is the hostname of the url the client
+# is given; anything else gets a 404 from the dispatcher instead of a relay. Keep it in step with
+# `tenants` in harness/zooid/config.ts, and see harness/zooid/transport.ts for why it is a name
+# that resolves nowhere.
+host = "indexer.test"
+schema = "e2e_indexer"
+secret = "10de7e40000000000000000000000000000000000000000000000000000000e8"
+
+[info]
+# Served to the client as nip-11. `pubkey` is the owner, as it is on every other relay here, so a
+# scenario that does reach for management gets the same identity back.
+name = "indexer"
+pubkey = "6ada7b6eabb3a8349f88667d278a275c704b553a7c57f9d8156555986884a08e"
+description = "Throwaway relay for Flotilla's end-to-end suite."
+
+[policy]
+public_read = true
+public_write = true
+public_join = false
+strip_signatures = false
+
+# Not a space: nothing seeded here carries an `h` tag, and the client is never offered it as one.
+[groups]
+enabled = false
+
+[management]
+enabled = false
+
+# Blossom and push are off, and [livekit] is omitted entirely, because each of them would have
+# the relay or the client talk to a service the test did not create.
+[blossom]
+enabled = false
+
+[push]
+enabled = false

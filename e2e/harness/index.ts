@@ -27,8 +27,10 @@ export {expect}
 export {makeTestUser, users} from "./keys"
 export type {TestUser} from "./keys"
 export type {Scenario} from "./seed/scenario"
+export type {SeededEvent} from "./seed/publish"
+export type {SeededOpenRelay} from "./seed/openRelay"
 export type {SeededRumor, SeededSpace} from "./seed/space"
-export type {TenantName} from "./zooid/config"
+export type {OpenRelayName, SpaceName, TenantName} from "./zooid/config"
 export type {TranscriptEntry} from "./net/websocket"
 export {forgetRelay, formatTranscript, getTranscript} from "./net/websocket"
 export {readCachedEvents} from "./app/cache"
@@ -152,7 +154,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     }
 
     const open = async (path: string, options: PageOptions, user?: TestUser) => {
-      const {urls, cache} = requireScenario()
+      const {urls, indexerUrls, cache} = requireScenario()
       // The project's own `use` first, so a viewport or device descriptor set in
       // playwright.config.ts reaches the context rather than being dropped.
       //
@@ -209,6 +211,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         path,
         env: options.env,
         relays: urls,
+        indexers: indexerUrls,
         spaces: urls,
         events: user ? cache(user) : [],
       })

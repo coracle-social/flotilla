@@ -3,19 +3,25 @@ import type {MaybeAsync} from "@welshman/lib"
 import {ROOMS, makeEvent} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import type {Zooid} from "../zooid/relay"
-import type {TenantName} from "../zooid/config"
+import type {OpenRelayName, SpaceName} from "../zooid/config"
 import {users} from "../keys"
 import type {TestUser} from "../keys"
 import {seedSpace} from "./space"
 import type {SeededSpace} from "./space"
+import {seedOpenRelay} from "./openRelay"
+import type {SeededOpenRelay} from "./openRelay"
 
 // A fixture timestamp, as an offset from the moment the scenario started. `at(2, HOUR)` is two
 // hours before the test began, count-first like int and ago.
 export type At = (count: number, unit: number) => number
 
 export type SeedTools = {
-  // Names a relay the container already serves. Its policy is its toml in zooid/docker/config.
-  relay: (name: TenantName) => SeededSpace
+  // Names a space the container already serves. Its policy is its toml in zooid/docker/config.
+  relay: (name: SpaceName) => SeededSpace
+  // Names one of the public relays, which is where the follow graph lives: `indexer` is what a
+  // pubkey's own lists are resolved from, `outbox` is a followed pubkey's write relay. See
+  // ARCHITECTURE.md, "The follow graph".
+  open: (name: OpenRelayName) => SeededOpenRelay
   user: typeof users
   at: At
 }
@@ -23,11 +29,16 @@ export type SeedTools = {
 export type Scenario = {
   readonly startedAt: number
   readonly at: At
+  // The spaces this scenario seeded, which are the relays the app is handed as its own.
   readonly urls: string[]
-  space(name: TenantName): SeededSpace
-  // The events a returning user's client would already have on disk, which is just the room list.
-  // A members-only relay won't serve the list that would tell authPolicy it may identify to it. See
-  // ARCHITECTURE.md, "Users and sessions".
+  // What a pubkey's own lists are resolved from: the open indexer when a scenario declared one,
+  // and the spaces otherwise, which is what a scenario that knows nothing about open relays gets.
+  readonly indexerUrls: string[]
+  space(name: SpaceName): SeededSpace
+  open(name: OpenRelayName): SeededOpenRelay
+  // The events a returning user's client would already have on disk: their room list, and their
+  // relay list when the scenario seeded one. A relay won't serve the list that would tell
+  // authPolicy it may identify to it. See ARCHITECTURE.md, "Users and sessions".
   cache(user: TestUser): SignedEvent[]
 }
 
@@ -38,23 +49,30 @@ export const seed = async (
   const startedAt = now()
   const at: At = (count, unit) => startedAt - int(count, unit)
   const spaces = new Map<string, SeededSpace>()
+  const opened: SeededOpenRelay[] = []
   const writes: (() => Promise<void>)[] = []
   const roomLists = new Map<string, SignedEvent>()
+  const relayLists = new Map<string, SignedEvent>()
 
-  const relay = (name: TenantName) => {
-    const space = seedSpace({
-      zooid,
-      startedAt,
-      name,
-      enqueue: write => writes.push(write),
-    })
+  const enqueue = (write: () => Promise<void>) => writes.push(write)
+
+  const relay = (name: SpaceName) => {
+    const space = seedSpace({zooid, startedAt, name, enqueue})
 
     spaces.set(name, space)
 
     return space
   }
 
-  await build({relay, user: users, at})
+  const open = (name: OpenRelayName) => {
+    const relay = seedOpenRelay({zooid, startedAt, name, enqueue})
+
+    opened.push(relay)
+
+    return relay
+  }
+
+  await build({relay, open, user: users, at})
 
   // Seeding is async and fixtures depend on one another, so the builder only records what to
   // write. Draining the queue here publishes each fixture in the order it was declared.
@@ -88,7 +106,13 @@ export const seed = async (
     roomLists.set(user.pubkey, event)
   }
 
-  const getSpace = (name: TenantName) => {
+  for (const relay of opened) {
+    for (const {event} of relay.relayLists) {
+      relayLists.set(event.pubkey, event)
+    }
+  }
+
+  const getSpace = (name: SpaceName) => {
     const space = spaces.get(name)
 
     if (space) return space
@@ -96,17 +120,35 @@ export const seed = async (
     throw new Error(`No space named "${name}" was seeded`)
   }
 
-  const cache = (user: TestUser) => {
-    const roomList = roomLists.get(user.pubkey)
+  const getOpenRelay = (name: OpenRelayName) => {
+    const relay = opened.find(candidate => candidate.name === name)
 
-    return roomList ? [roomList] : []
+    if (relay) return relay
+
+    throw new Error(`No open relay named "${name}" was seeded`)
   }
+
+  const cache = (user: TestUser) => {
+    const events: SignedEvent[] = []
+    const roomList = roomLists.get(user.pubkey)
+    const relayList = relayLists.get(user.pubkey)
+
+    if (roomList) events.push(roomList)
+    if (relayList) events.push(relayList)
+
+    return events
+  }
+
+  const urls = seeded.map(space => space.url)
+  const indexers = opened.filter(relay => relay.name === "indexer").map(relay => relay.url)
 
   return {
     startedAt,
     at,
     cache,
-    urls: seeded.map(space => space.url),
+    urls,
+    indexerUrls: indexers.length > 0 ? indexers : urls,
     space: getSpace,
+    open: getOpenRelay,
   }
 }
