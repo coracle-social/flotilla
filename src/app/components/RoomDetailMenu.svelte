@@ -14,7 +14,7 @@
   import {app, roomLists, rooms} from "@app/core"
   import {joinRoom, leaveRoom} from "@app/access"
   import {deriveUserIsRoomAdmin, deriveUserRoomMembershipStatus} from "@app/rooms"
-  import {makeSpacePath} from "@app/routes"
+  import {forgetSpacePage, makeSpacePath} from "@app/routes"
   import {navigate, pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
@@ -62,6 +62,8 @@
           pushToast({theme: "error", message})
         } else {
           await $roomLists.removeRoom(h, url).then(publish)
+
+          forgetSpacePage(url)
           navigate(makeSpacePath(url))
         }
       },

@@ -40,8 +40,13 @@ export const lastSpaceUrl = writable<string | undefined>(undefined)
 export const setupHistory = () =>
   page.subscribe($page => {
     if ($page.params.relay) {
-      lastPageBySpaceUrl.set($page.params.relay, $page.url.pathname)
-      lastSpaceUrl.set(decodeRelay($page.params.relay))
+      const url = decodeRelay($page.params.relay)
+
+      if ($page.url.pathname !== makeSpacePath(url)) {
+        lastPageBySpaceUrl.set(url, $page.url.pathname)
+      }
+
+      lastSpaceUrl.set(url)
     }
 
     if ($page.params.chat) {
@@ -88,8 +93,10 @@ export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => 
   return path
 }
 
+export const forgetSpacePage = (url: string) => lastPageBySpaceUrl.delete(url)
+
 export const makeSpaceEntryPath = (url: string) => {
-  const prevPath = lastPageBySpaceUrl.get(encodeRelay(url))
+  const prevPath = lastPageBySpaceUrl.get(url)
 
   if (prevPath) {
     return prevPath

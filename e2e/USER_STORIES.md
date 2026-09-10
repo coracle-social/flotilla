@@ -305,6 +305,18 @@ Acceptance:
   and removes it from the sidebar.
 - bob sees neither "Edit Room" nor "Delete Room" in the room's detail menu.
 
+### US-121 — Land somewhere after deleting the room you are in
+
+As admin, I want deleting the room I am reading to put me on a page of the
+space, so that I am not stranded on a screen with nothing on it.
+
+Acceptance:
+
+- Confirming the deletion leaves admin on a page below the space root, with the
+  space's remaining rooms listed beside it.
+- Entering the space again from the rail lands on a page, rather than returning
+  to the room that was deleted or to the empty root.
+
 ### US-021 — Request access to a private room and get approved
 
 As carol, I want to ask to join a closed room and be let in, so that I can read

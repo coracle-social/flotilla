@@ -300,6 +300,36 @@ test("US-020 create, edit, and delete a room", async ({seed, as}) => {
   await expect(bob.getByRole("button", {name: "Delete Room"})).toHaveCount(0)
 })
 
+test("US-121 land somewhere after deleting the room you are in", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.room("wardroom", {name: "Wardroom"})
+    space.join(user.admin, "general")
+    space.join(user.admin, "wardroom")
+  })
+
+  const {url} = scenario.space("space")
+  const admin = await as(users.admin, roomPath(url, "wardroom"))
+
+  await openRoomDetail(admin)
+  await openRoomDetailMenu(admin)
+  await admin.getByRole("button", {name: "Delete Room"}).click()
+  await admin.getByRole("button", {name: "Confirm"}).click()
+
+  // The space root renders nothing on a wide screen; it hands off to whichever page of the space
+  // was open last, and the room that was just deleted is the page it remembers.
+  await expect(admin).toHaveURL(pathPattern(spacePath(url) + "/"))
+  await expect(roomLink(admin, "General")).toBeVisible()
+
+  // Entering the space from the rail reads the same memory, so it has to land somewhere too.
+  await admin.locator('.primary-nav [data-tip^="space"]').click()
+
+  await expect(admin).toHaveURL(pathPattern(spacePath(url) + "/"))
+  await expect(roomLink(admin, "General")).toBeVisible()
+})
+
 test("US-021 request access to a private room and get approved", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
