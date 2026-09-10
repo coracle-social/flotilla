@@ -70,7 +70,7 @@ export const makeFeedContext = ({
   // so a feed that renders those replies has to ask for them as well.
   const contextKinds = withReplies ? [...EVENT_CONTEXT_KINDS, NOTE] : EVENT_CONTEXT_KINDS
   const requestKinds = withReplies ? [...REACTION_KINDS, NOTE] : REACTION_KINDS
-  const {repository} = app.get()
+  const {repository, tracker} = app.get()
   const controller = new AbortController()
   const targets = new Set<string>()
   const eventsByTarget = new Map<string, TrustedEvent[]>()
@@ -139,22 +139,7 @@ export const makeFeedContext = ({
     }
   }
 
-  const loadContext = batch(100, async (events: TrustedEvent[]) => {
-    const touched = new Set<string>()
-
-    // What's already local — an earlier page, our own optimistic reactions — never comes
-    // through the update listener, so file it before asking the network for the rest
-    for (const event of repository.query([
-      ...getReplyFilters(events, {kinds: contextKinds}),
-      ...getCommentFiltersForRoot(events),
-    ])) {
-      addEvent(event, touched)
-    }
-
-    notify(touched)
-
-    const urls = await relays
-
+  const loadFrom = async (urls: string[], events: TrustedEvent[]) => {
     const context = await network.get().load({
       relays: urls,
       signal: controller.signal,
@@ -171,6 +156,40 @@ export const makeFeedContext = ({
         filters: getReplyFilters(context, {kinds: [DELETE]}),
       })
     }
+  }
+
+  const loadContext = batch(100, async (events: TrustedEvent[]) => {
+    const touched = new Set<string>()
+
+    // What's already local — an earlier page, our own optimistic reactions — never comes
+    // through the update listener, so file it before asking the network for the rest
+    for (const event of repository.query([
+      ...getReplyFilters(events, {kinds: contextKinds}),
+      ...getCommentFiltersForRoot(events),
+    ])) {
+      addEvent(event, touched)
+    }
+
+    notify(touched)
+
+    const urls = await relays
+
+    // A space relay holds the whole conversation for its own feed. A feed built out of other
+    // people's outboxes does not, so ask each event's own relays for its context too.
+    const eventsByRelay = new Map<string, TrustedEvent[]>()
+
+    for (const event of events) {
+      for (const url of tracker.getRelays(event.id)) {
+        if (!urls.includes(url)) {
+          eventsByRelay.set(url, [...(eventsByRelay.get(url) || []), event])
+        }
+      }
+    }
+
+    await Promise.all([
+      loadFrom(urls, events),
+      ...Array.from(eventsByRelay, ([url, seenThere]) => loadFrom([url], seenThere)),
+    ])
   })
 
   const unsubscribe = on(
