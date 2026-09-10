@@ -261,11 +261,9 @@ export const latestActivityByPath = derived(
     const activity = new Map<string, Activity>()
 
     for (const {pubkeys, messages} of $chatsById.values()) {
-      if (messages[0]) {
-        const path = makeChatPath(pubkeys)
+      const path = makeChatPath(pubkeys)
 
-        activity.set(path, {path, pubkeys, event: messages[0]})
-      }
+      activity.set(path, {path, pubkeys, event: messages[0]})
     }
 
     const roomList = $app.user?.pubkey ? $roomLists.get($app.user.pubkey) : undefined

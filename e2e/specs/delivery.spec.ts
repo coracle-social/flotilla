@@ -60,6 +60,9 @@ const message = (page: Page, text: string) => page.locator(".room__item").filter
 
 const bubble = (page: Page, text: string) => page.locator(".chat-bubble").filter({hasText: text})
 
+// One conversation in the sidebar list is one button; nothing inside it is one.
+const chatItems = (page: Page) => page.locator(".secondary-nav .overflow-auto").locator("button")
+
 // One toast at a time — src/app/toast.ts holds a single writable — so this is the toast.
 const toast = (page: Page) => page.getByRole("alert")
 
@@ -229,6 +232,10 @@ test("US-068 watch a delayed send, and cancel it", async ({seed, as}) => {
   await expect(bubble(alice, "ignore this one")).toBeVisible()
 
   await toast(alice).getByRole("button", {name: "Cancel"}).click()
+
+  // That was her only message to him, so the conversation goes with it rather than staying in
+  // the list with nothing left to name it by.
+  await expect(chatItems(alice)).toHaveCount(0)
 
   await send(alice, "actually, hi")
 

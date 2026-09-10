@@ -100,12 +100,18 @@ export const chatsById = call(() => {
       // (unlike a delete, which leaves the target flagged), so `getEvent` would return nothing and
       // the message would linger. Replace each affected chat with a fresh object rather than mutating
       // its messages in place: deriveChat is deduplicated by reference (see makeDeriveItem/
-      // deriveDeduplicated), so a chat whose identity is unchanged never reaches the ui.
+      // deriveDeduplicated), so a chat whose identity is unchanged never reaches the ui. A chat
+      // that loses its last message goes with it, since a chat is only ever its messages.
       for (const [chatId, chat] of chatsById) {
         const messages = chat.messages.filter(e => !removed.has(e.id))
 
         if (messages.length !== chat.messages.length) {
-          chatsById.set(chatId, {...chat, messages})
+          if (messages.length > 0) {
+            chatsById.set(chatId, {...chat, messages})
+          } else {
+            chatsById.delete(chatId)
+          }
+
           dirty = true
         }
       }
