@@ -59,7 +59,7 @@
     {/if}
   </div>
 {:else}
-  <div class="flex grow flex-wrap items-center justify-end gap-2">
+  <div data-component="ArticleActions" class="flex grow flex-wrap items-center justify-end gap-2">
     <div class="flex min-w-0 flex-wrap items-center gap-2">
       {#if h && showRoom}
         <Link href={makeSpacePath(url, h)} class="button button-neutral button-xs rounded-full">

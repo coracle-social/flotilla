@@ -635,6 +635,8 @@ Acceptance:
 - The Articles page lists each article with its author, published date, and a
   preview; clicking an author or a topic filters the list, and combining both
   narrows to articles matching both.
+- An article with more topics than fit on one line wraps them inside its card
+  rather than pushing its reactions and action menu off the edge.
 - Opening an article shows its title, cover image, summary, published date, and
   full content, with the title matching its list card.
 - Markdown in the body renders as real headings, bold text, and bullet lists,

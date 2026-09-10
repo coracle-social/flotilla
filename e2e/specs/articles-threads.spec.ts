@@ -237,7 +237,14 @@ test("US-038 browse, filter, and read articles", async ({seed, as}) => {
           .setIdentifier("winter-reading")
           .setTitle("Winter Reading")
           .setSummary("Six books for the dark months.")
-          .setTopics(["books"])
+          .setTopics([
+            "books",
+            "keepnostrweird",
+            "longform",
+            "recommendations",
+            "wintering",
+            "shortdays",
+          ])
           .setPublishedAt(at(1, HOUR))
           .setContent("Start with the shortest one.")
           .renderTemplate(),
@@ -258,6 +265,14 @@ test("US-038 browse, filter, and read articles", async ({seed, as}) => {
   await expect(garden).toContainText("Alice Anderson")
   await expect(garden).toContainText("A short teaser about gardens.")
   await expect(garden).toContainText(await shortDate(page, at(4, HOUR)))
+
+  // A card with more topics than fit on one line wraps them, rather than widening its action row
+  // until the reactions and the action menu fall off the card's edge.
+  const winter = articleCards(page).filter({hasText: "Winter Reading"})
+  const winterBox = (await winter.boundingBox())!
+  const winterActions = (await winter.locator('[data-component="ArticleActions"]').boundingBox())!
+
+  expect(winterActions.x + winterActions.width).toBeLessThanOrEqual(winterBox.x + winterBox.width)
 
   const authors = page
     .locator("section")

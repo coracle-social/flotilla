@@ -54,7 +54,7 @@
         Written by
         <ProfileLink pubkey={event.pubkey} {url} />
       </span>
-      <div class="pointer-events-auto shrink-0">
+      <div class="pointer-events-auto">
         <ArticleActions showRoom showActivity {url} {event} {context} />
       </div>
     </div>
