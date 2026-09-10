@@ -884,8 +884,8 @@ Acceptance:
   behaves the same for its recipient.
 - Dropping an image onto the composer, or pasting one from the clipboard,
   attaches it the same way.
-- A file type outside the supported list shows an error toast and attaches
-  nothing.
+- A file the editor has no node for attaches as a link instead. What the server
+  refuses attaches nothing and shows its reason in an error toast.
 
 ### US-058 — Drafts survive navigating away
 
