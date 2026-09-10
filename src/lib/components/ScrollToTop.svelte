@@ -12,14 +12,16 @@
 
   $effect(() => {
     if (element) {
+      const target = element
+
       const onScroll = () => {
-        scrolled = element.scrollTop > 800
+        scrolled = target.scrollTop > 800
       }
 
-      element.addEventListener("scroll", onScroll, {passive: true})
+      target.addEventListener("scroll", onScroll, {passive: true})
       onScroll()
 
-      return () => element.removeEventListener("scroll", onScroll)
+      return () => target.removeEventListener("scroll", onScroll)
     }
   })
 </script>

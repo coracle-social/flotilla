@@ -11,8 +11,10 @@
   $effect(() => {
     if (!element) return
 
+    const target = element
+
     const update = () => {
-      const {scrollTop, scrollHeight, clientHeight} = element as HTMLElement
+      const {scrollTop, scrollHeight, clientHeight} = target as HTMLElement
       const scrollable = scrollHeight - clientHeight
 
       // A non-scrollable page reads as zero rather than a misleading full bar.
@@ -21,19 +23,19 @@
 
     update()
 
-    element.addEventListener("scroll", update, {passive: true})
+    target.addEventListener("scroll", update, {passive: true})
 
     // Content (article, then comments) keeps arriving after mount, resizing the scroll range.
     const observer = new ResizeObserver(update)
 
-    observer.observe(element)
+    observer.observe(target)
 
-    for (const child of element.children) {
+    for (const child of target.children) {
       observer.observe(child)
     }
 
     return () => {
-      element.removeEventListener("scroll", update)
+      target.removeEventListener("scroll", update)
       observer.disconnect()
     }
   })

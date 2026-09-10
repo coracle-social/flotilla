@@ -91,9 +91,11 @@
 
   $effect(() => {
     if (container) {
-      container.addEventListener("scroll", fill, {passive: true})
+      const target = container
 
-      return () => container.removeEventListener("scroll", fill)
+      target.addEventListener("scroll", fill, {passive: true})
+
+      return () => target.removeEventListener("scroll", fill)
     }
   })
 </script>
