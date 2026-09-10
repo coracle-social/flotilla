@@ -32,6 +32,7 @@ const serveBlossom = () => {
 
   let held = Promise.resolve()
   let open = () => {}
+  let refusal = ""
 
   return {
     hold: () => {
@@ -40,13 +41,29 @@ const serveBlossom = () => {
       })
     },
     release: () => open(),
+    refuse: (reason: string) => {
+      refusal = reason
+    },
     install: (context: BrowserContext) =>
       context.route(`${BLOSSOM_ORIGIN}/**`, async route => {
         const request = route.request()
         const method = request.method()
         const {pathname} = new URL(request.url())
 
+        // BUD-06, which the app asks before spending an upload. A refusal's reason has to be
+        // exposed cross-origin or all the toast can say is the status code.
         if (pathname === "/upload" && method === "HEAD") {
+          if (refusal) {
+            return route.fulfill({
+              status: 400,
+              headers: {
+                "X-Reason": refusal,
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Expose-Headers": "*",
+              },
+            })
+          }
+
           return route.fulfill({status: 200, body: ""})
         }
 
@@ -353,14 +370,26 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   await expect(timeline(alice).getByText("morning all")).toBeVisible()
   await expect(alice.getByRole("alert")).toHaveCount(0)
 
+  // A file the editor has no node for is uploaded on its own and lands as a url.
   await chooseFile(alice, roomUploadButton(alice), {
     name: "notes.txt",
     mimeType: "text/plain",
     buffer: Buffer.from("not an image"),
   })
 
-  await expect(alice.getByRole("alert")).toBeVisible()
-  await expect(composer(alice)).not.toContainText("notes.txt")
+  await expect(composer(alice)).toContainText(BLOSSOM_ORIGIN)
+  await expect(alice.getByRole("alert")).toHaveCount(0)
+
+  // What the server refuses is what the composer refuses, in the words the server used.
+  blossom.refuse("text files are not allowed here")
+
+  await chooseFile(alice, roomUploadButton(alice), {
+    name: "notes-again.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("still not an image"),
+  })
+
+  await expect(alice.getByRole("alert")).toContainText("text files are not allowed here")
 })
 
 test("US-058 drafts survive navigating away", async ({seed, as}) => {
