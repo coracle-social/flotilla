@@ -711,21 +711,23 @@ Acceptance:
   before submitting.
 - A reply to a thread in a room is tagged into that room, so the relay handles
   it as part of the group.
-- The thread's opening post carries an "OP" badge on every page.
+- The opening post stays above the replies, and the thread's author carries an
+  "OP" badge wherever their posts turn up.
 
 ### US-044 — Navigate a long thread
 
-As bob, I want a long thread paginated and its posts individually linkable, so
-that I can move around it and point people at one message.
+As bob, I want a long thread to open on its newest replies with the earlier ones
+within reach, and its posts individually linkable, so that I can catch up on it
+and point people at one message.
 
 Acceptance:
 
-- A thread with more than 20 posts shows pagination controls, and the page
-  number, next/prev, and first/last controls each move to the matching slice
-  with the "Page X of Y" indicator updating.
+- A thread with more than 20 replies opens on its newest 20, under the opening
+  post, with a "Show earlier replies" control for the rest.
+- That control reveals the next 20 without leaving the page.
 - "Permalink" on a post copies a link to that post.
-- Opening that link as carol loads the thread, navigates to the page holding
-  that post, and scrolls it into view.
+- Opening that link as carol loads the thread, reveals the post it names however
+  far back it is, and scrolls it into view.
 
 ### US-045 — Turn a chat message into a thread
 

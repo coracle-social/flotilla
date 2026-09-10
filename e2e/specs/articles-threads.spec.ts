@@ -718,8 +718,8 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
       at(3, HOUR),
     )
 
-    // Twenty replies plus the opening post is one post past the first page, and the last of them
-    // is alice's, so her OP badge has to survive the page change.
+    // Twenty replies is exactly the window a thread opens with, and the last of them is alice's,
+    // so her OP badge has to survive bob's own reply pushing the oldest one out of it.
     for (let i = 1; i <= 20; i++) {
       space.event(
         i === 20 ? user.alice : i % 2 === 0 ? user.carol : user.bob,
@@ -762,6 +762,7 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
   await threadReply.getByRole("button", {name: "Post Reply"}).click()
 
   await expect(bob.getByText("21 replies")).toBeVisible()
+  await expect(bob.getByText("Twice a year here.")).toBeVisible()
 
   // The same for a thread reply, which goes out through a different composer.
   await expect
@@ -770,16 +771,28 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
     )
     .toEqual(["lounge"])
 
-  // The thread's author is marked OP wherever their posts turn up, second page included.
-  await bob.getByRole("button", {name: "2", exact: true}).click()
-  await expect(bob.getByText("Page 2 of 2")).toBeVisible()
+  // His is the twenty first reply, so the oldest one drops out of the window, and the opening
+  // post stays above whatever the window holds.
+  const showEarlier = bob.getByRole("button", {name: "Show earlier replies"})
 
+  await expect(showEarlier).toBeVisible()
+  await expect(bob.getByText("Reply 01", {exact: true})).toHaveCount(0)
+  await expect(openingPost).toBeVisible()
+
+  // The thread's author is marked OP wherever their posts turn up.
   const alicesLastPost = bob.locator("article").filter({hasText: "Reply 20"})
 
   await expect(alicesLastPost.getByText("OP", {exact: true})).toBeVisible()
-  await expect(bob.getByText("Twice a year here.")).toBeVisible()
+
+  await showEarlier.click()
+
+  await expect(bob.getByText("Reply 01", {exact: true})).toBeVisible()
+  await expect(showEarlier).toHaveCount(0)
 
   const carol = await as(users.carol, threadPath)
+
+  await carol.getByRole("button", {name: "Show earlier replies"}).click()
+
   const bobsFirstPost = carol.locator("article").filter({hasText: "Reply 01"})
 
   await expect(bobsFirstPost).toBeVisible()
@@ -798,23 +811,13 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
   await noteEditor(postReply).pressSequentially("Answering the thread instead.")
   await postReply.getByRole("button", {name: "Post Reply"}).click()
 
-  // Twenty one replies before hers is already a page and a bit, so her post is appended to the
-  // last one rather than to the page she wrote it from. The last control in the join is "go last",
-  // which is the same button whatever the page count turns out to be.
-  await carol
-    .getByText(/^Page \d+ of \d+$/)
-    .locator("xpath=..")
-    .locator(".join")
-    .getByRole("button")
-    .last()
-    .click()
-
+  // Her post lands at the end of the one list, so there is nothing to click to reach it.
   await expect(carol.getByText("Answering the thread instead.")).toBeVisible()
 })
 
 test("US-044 navigate a long thread", async ({seed, as}) => {
   let thread!: Seeded
-  let lastPost!: Seeded
+  let firstReply!: Seeded
 
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -840,7 +843,7 @@ test("US-044 navigate a long thread", async ({seed, as}) => {
       at(4, HOUR),
     )
 
-    // Forty one replies plus the opening post is three pages of twenty.
+    // Forty one replies is two reveals past the twenty a thread opens with.
     for (let i = 1; i <= 41; i++) {
       const reply = space.event(
         i % 2 === 0 ? user.alice : user.bob,
@@ -855,8 +858,8 @@ test("US-044 navigate a long thread", async ({seed, as}) => {
         at(4, HOUR) + i * 60,
       )
 
-      if (i === 41) {
-        lastPost = reply
+      if (i === 1) {
+        firstReply = reply
       }
     }
 
@@ -869,55 +872,48 @@ test("US-044 navigate a long thread", async ({seed, as}) => {
     context: {permissions: ["clipboard-read", "clipboard-write"]},
   })
 
-  const indicator = bob.getByText(/^Page \d+ of \d+$/)
+  const showEarlier = bob.getByRole("button", {name: "Show earlier replies"})
 
-  await expect(indicator).toHaveText("Page 1 of 3")
-  await expect(bob.getByText("Reply 19", {exact: true})).toBeVisible()
+  // Every assertion below is about which of the replies are in the window, so wait until they
+  // have all arrived.
+  await expect(bob.getByText("41 replies")).toBeVisible()
 
-  // ThreadPagination is first, prev, a button per page, next, last, and only the page numbers
-  // carry an accessible name — the rest are icons — so with three pages the ends are 0, 1, 5, 6.
-  const controls = indicator.locator("xpath=..").locator(".join").getByRole("button")
-  const goFirst = controls.nth(0)
-  const goPrev = controls.nth(1)
-  const goNext = controls.nth(5)
-  const goLast = controls.nth(6)
+  // The thread opens on its newest twenty replies, with the opening post above them.
+  await expect(bob.locator(`[data-event="${thread.id}"]`)).toBeVisible()
+  await expect(bob.getByText("Reply 41", {exact: true})).toBeVisible()
+  await expect(bob.getByText("Reply 22", {exact: true})).toBeVisible()
+  await expect(bob.getByText("Reply 21", {exact: true})).toHaveCount(0)
 
-  await goNext.click()
-  await expect(indicator).toHaveText("Page 2 of 3")
-  await expect(bob.getByText("Reply 20", {exact: true})).toBeVisible()
+  // Each reveal reaches twenty further back without leaving the page.
+  await showEarlier.click()
 
-  await goLast.click()
-  await expect(indicator).toHaveText("Page 3 of 3")
+  await expect(bob.getByText("Reply 02", {exact: true})).toBeVisible()
+  await expect(bob.getByText("Reply 01", {exact: true})).toHaveCount(0)
   await expect(bob.getByText("Reply 41", {exact: true})).toBeVisible()
 
-  await goPrev.click()
-  await expect(indicator).toHaveText("Page 2 of 3")
-  await expect(bob.getByText("Reply 20", {exact: true})).toBeVisible()
+  await showEarlier.click()
 
-  await goFirst.click()
-  await expect(indicator).toHaveText("Page 1 of 3")
-  await expect(bob.getByText("Reply 19", {exact: true})).toBeVisible()
+  await expect(bob.getByText("Reply 01", {exact: true})).toBeVisible()
+  await expect(showEarlier).toHaveCount(0)
 
-  await bob.getByRole("button", {name: "3", exact: true}).click()
-  await expect(indicator).toHaveText("Page 3 of 3")
+  const oldestPost = bob.locator(`[data-event="${firstReply.id}"]`)
 
-  const finalPost = bob.locator(`[data-event="${lastPost.id}"]`)
-
-  await finalPost.getByRole("button", {name: "Permalink"}).click()
+  await oldestPost.getByRole("button", {name: "Permalink"}).click()
   await expect(bob.getByRole("alert")).toContainText("Copied to clipboard!")
 
   const permalink = await bob.evaluate(() => navigator.clipboard.readText())
   const {pathname, hash} = new URL(permalink)
 
   expect(pathname).toBe(threadPath)
-  expect(hash).toBe(`#${nip19.neventEncode({id: lastPost.id, relays: [url]})}`)
+  expect(hash).toBe(`#${nip19.neventEncode({id: firstReply.id, relays: [url]})}`)
 
+  // A permalink reaches back as far as it has to on its own, so carol never sees the control.
   const carol = await as(users.carol, pathname + hash)
-  const target = carol.locator(`[data-event="${lastPost.id}"]`)
+  const target = carol.locator(`[data-event="${firstReply.id}"]`)
 
-  await expect(carol.getByText(/^Page \d+ of \d+$/)).toHaveText("Page 3 of 3")
   await expect(target).toBeVisible()
   await expect(target).toBeInViewport()
+  await expect(carol.getByRole("button", {name: "Show earlier replies"})).toHaveCount(0)
 })
 
 test("US-045 turn a chat message into a thread", async ({seed, as}) => {
