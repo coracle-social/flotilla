@@ -53,6 +53,10 @@ const sidebar = (page: Page) => page.locator("aside")
 // content in it.
 const dialog = (page: Page) => page.locator(".dialog").last()
 
+// A space path redirects to the space's entry room as the page mounts, and modal.ts closes every
+// open modal on navigation, so a dialog opened before the redirect lands is thrown away with it.
+const enteredSpace = (page: Page) => expect(page).toHaveURL(new RegExp("/spaces/[^/]+/."))
+
 // Search is a dialog the nav opens rather than a page of its own.
 const openSearch = (page: Page) => page.locator('.primary-nav button[data-tip="Search"]').click()
 
@@ -121,6 +125,7 @@ test("US-074 find a person", async ({seed, as}) => {
   const term = searchTerm(page)
   const cards = searchResults(page)
 
+  await enteredSpace(page)
   await openSearch(page)
   await term.fill("Searcher")
 
@@ -297,6 +302,7 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
   const ring = async () =>
     Number(await bobCard.locator("circle.wot-highlight").getAttribute("stroke-dashoffset"))
 
+  await enteredSpace(page)
   await openSearch(page)
   await term.fill("Barnacle")
 
