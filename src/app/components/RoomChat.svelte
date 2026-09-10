@@ -128,7 +128,7 @@
           pushToast({theme: "error", message})
         } else {
           // Restart the feed now that we're a member
-          start()
+          start(at || now())
         }
       } finally {
         joining = false
@@ -339,12 +339,19 @@
 
   const scrollToNewMessages = () => scrollToRow("new-messages", {behavior: "smooth"})
 
-  const scrollToBottom = () => {
-    if (!isNaN(at)) {
-      navigate($page.url.pathname, {replaceState: true})
-    } else {
-      element?.scrollTo({top: 0, behavior: "smooth"})
+  // While the window stops short, dropping the anchor only takes the button away: where the reader
+  // lands is then whatever the list settles on as it re-windows and the forward walk catches up,
+  // which is not reliably the live end. Anchoring a fresh feed on the present puts it there.
+  const scrollToBottom = async () => {
+    const anchored = !isNaN(at)
+
+    if (anchored) {
+      release()
+      await navigate($page.url.pathname, {replaceState: true})
+      start(now())
     }
+
+    element?.scrollTo({top: 0, behavior: anchored ? "auto" : "smooth"})
   }
 
   // A tab can be `visible` but unfocused (user alt-tabbed to another app), so we
@@ -474,12 +481,12 @@
     }
   })
 
-  const start = () => {
+  const start = (anchor: number) => {
     cleanup?.()
 
     const feed = makeFeed({
       relays: [url],
-      at: at || now(),
+      at: anchor,
       filters: [
         h ? {kinds: [MESSAGE, addMemberKind], "#h": [h]} : {kinds: [MESSAGE, addMemberKind]},
       ],
@@ -519,7 +526,7 @@
   onMount(() => {
     // Defer rendering until navigation finishes
     let frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(start)
+      frame = requestAnimationFrame(() => start(at || now()))
     })
 
     const unsubscribeActive = documentActive.subscribe(onActiveChange)

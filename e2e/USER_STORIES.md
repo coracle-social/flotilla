@@ -404,8 +404,8 @@ Acceptance:
 - Clicking a result closes search and scrolls the timeline to the message,
   highlighted in view.
 - Opening a permalink url for a specific message lands on that message directly,
-  with a "jump to newest" control shown since the view is no longer at the newest
-  message. Using it returns to the live end and the control goes away.
+  and in a room short enough that the window opening with it reaches the present,
+  there is nothing left to jump back to and no control.
 
 ### US-027a — Follow a link to a recent message
 
