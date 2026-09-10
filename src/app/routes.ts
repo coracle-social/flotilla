@@ -92,7 +92,7 @@ export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => 
 export const makeSpaceEntryPath = (url: string) => {
   const prevPath = lastPageBySpaceUrl.get(encodeRelay(url))
 
-  if (prevPath && prevPath !== makeSpacePath(url)) {
+  if (prevPath) {
     return prevPath
   }
 
@@ -100,11 +100,7 @@ export const makeSpaceEntryPath = (url: string) => {
     return makeSpaceChatPath(url)
   }
 
-  if (window.matchMedia(`(min-width: ${theme.screens.md})`).matches) {
-    return makeSpacePath(url, "about")
-  }
-
-  return makeSpacePath(url)
+  return makeSpacePath(url, "about")
 }
 
 export const goToSpace = (url: string, options: {replaceState?: boolean} = {}) =>

@@ -15,7 +15,7 @@
   import Search from "@app/components/Search.svelte"
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
   import {PLATFORM_RELAYS} from "@app/env"
-  import {modal, popModal, pushDrawer, pushModal} from "@app/modal"
+  import {modal, popModal, pushModal} from "@app/modal"
   import {notifications} from "@app/notifications"
   import {userSpaceUrls} from "@app/rooms"
   import {goToChat, lastSpaceUrl, makeSpacePath} from "@app/routes"
@@ -44,7 +44,7 @@
   const spaceMenuLabel = $derived(spaceMenuIsOpen ? "Close space menu" : "Open space menu")
 
   const toggleSpaceMenu = () =>
-    spaceMenuIsOpen ? popModal() : pushDrawer(SpaceMenuDrawer, {url: spaceUrl})
+    spaceMenuIsOpen ? popModal() : pushModal(SpaceMenuDrawer, {url: spaceUrl}, {drawer: true})
 
   const otherSpaceNotifications = $derived(
     $userSpaceUrls.some(url => url !== spaceUrl && $notifications.has(makeSpacePath(url))),

@@ -1,6 +1,6 @@
 import type {Component} from "svelte"
 import {get, writable} from "svelte/store"
-import {randomId, always, assoc, Emitter} from "@welshman/lib"
+import {randomId, last, call, always, assoc, Emitter} from "@welshman/lib"
 import {deriveDeduplicated} from "@welshman/store"
 import {goto} from "$app/navigation"
 import {page} from "$app/stores"
@@ -27,56 +27,9 @@ export const emitter = new Emitter()
 
 export const modals = writable<Record<string, Modal>>({})
 
-const getIdsFromHash = (hash: string) => hash.slice(1).split(",").filter(Boolean)
+export const getIdsFromHash = (hash: string) => hash.slice(1).split(",").filter(Boolean)
 
-// The modal stack lives in the url hash, but it is written with the History API directly rather
-// than SvelteKit's `goto`. A programmatic hash `goto` runs a full navigation, which re-renders the
-// whole layout tree and (in dev) leaves a second, orphaned app shell mounted; a History update does
-// not navigate. `history.state` is carried through untouched, so SvelteKit's own popstate handler
-// treats a back as a same-entry hash change and does nothing, while this store drives the open
-// modals.
-const modalHash = writable(typeof location === "undefined" ? "" : location.hash)
-
-if (typeof window !== "undefined") {
-  window.addEventListener("popstate", () => modalHash.set(location.hash))
-
-  // Close modals on navigate
-  page.subscribe($page => modalHash.set($page.url?.hash ?? ""))
-}
-
-const setModalHash = (hash: string, replace: boolean) => {
-  const {pathname, search} = get(page).url
-  const url = pathname + search + hash
-
-  if (replace) {
-    history.replaceState(history.state, "", url)
-  } else {
-    history.pushState(history.state, "", url)
-  }
-
-  modalHash.set(hash)
-}
-
-// An open modal owns the current history entry, so a navigation that drops it takes that entry over
-const closesModal = (path: string) => {
-  const hash = get(modalHash)
-
-  return hash !== "" && !path.endsWith(hash)
-}
-
-export type NavigateOptions = Parameters<typeof goto>[1] & {keepModal?: boolean}
-
-// The modal hash is written with the History API, so it never reaches `page` — carrying it onto
-// the path is what navigates underneath an open modal rather than closing it
-export const navigate = (path: string, {keepModal, ...options}: NavigateOptions = {}) => {
-  const hash = get(modalHash)
-
-  if (keepModal && hash) {
-    return goto(path + hash, {...options, replaceState: true})
-  }
-
-  return goto(path, {...options, replaceState: options.replaceState || closesModal(path)})
-}
+export const modalHash = writable("")
 
 export const modalStack = deriveDeduplicated([modalHash, modals], ([$hash, $modals]) => {
   return getIdsFromHash($hash)
@@ -84,11 +37,48 @@ export const modalStack = deriveDeduplicated([modalHash, modals], ([$hash, $moda
     .filter(Boolean)
 })
 
-export const modal = deriveDeduplicated([modalHash, modals], ([$hash, $modals]) => {
-  const ids = getIdsFromHash($hash)
+export const modal = deriveDeduplicated(modalStack, last)
 
-  return $modals[ids.at(-1) || ""]
-})
+// Base push which handles both modals and paths
+
+export type PushParams = {
+  pathname?: string
+  search?: string
+  hash?: string
+}
+
+export type PushOptions = Parameters<typeof goto>[1]
+
+export const push = (params: PushParams, options: PushOptions) => {
+  const $page = get(page)
+  const $pathname = params.pathname ?? $page.url.pathname
+  const $search = params.search ?? $page.url.search
+  const $hash = params.hash ?? $page.url.hash
+  const url = $pathname + $search + $hash
+
+  if (params.pathname !== $page.url.pathname) {
+    goto(url, options)
+  } else if (options.replaceState) {
+    history.replaceState(history.state, "", url)
+  } else {
+    history.pushState(history.state, "", url)
+  }
+}
+
+export const pop = () => history.back()
+
+// push/pop path, for navigations that clear modals and query params
+
+export const pushPath = (pathname: string, options: PushOptions) =>
+  push({pathname, search: "", hash: ""}, options)
+
+export const popPath = async () => {
+  while (get(modal)) {
+    await history.back()
+  }
+}
+
+// push/pop/clear modal
 
 export const pushModal = (
   component: Component<any>,
@@ -101,16 +91,14 @@ export const pushModal = (
 
   modals.update(assoc(id, {id, component, props, options}))
 
-  setModalHash("#" + ids.join(","), Boolean(options.replaceState))
+  push({
+    hash: "#" + ids.join(","),
+  }, {
+    replaceState: Boolean(options.replaceState),
+  })
 
   return id
 }
-
-export const pushDrawer = (
-  component: Component<any>,
-  props: Record<string, any> = {},
-  options: ModalOptions = {},
-) => pushModal(component, props, {...options, drawer: true})
 
 export const popModal = () => {
   const ids = getIdsFromHash(get(modalHash))
@@ -121,11 +109,22 @@ export const popModal = () => {
 
   const next = ids.slice(0, -1).join(",")
 
-  setModalHash(next ? `#${next}` : "", true)
+  push({
+    hash: next ? `#${next}` : "",
+  }, {
+    replaceState: true,
+  })
 }
 
 export const clearModals = () => {
-  setModalHash("", true)
+  push({hash: ""}, {replaceState: true})
   modals.update(always({}))
   emitter.emit("close")
 }
+
+// Sync window history with the current hash directly. Svelte's navigation stuff
+// is buggy, and results in double-mounted pages in dev.
+call(() => {
+  window.addEventListener("popstate", () => modalHash.set(location.hash))
+  page.subscribe($page => modalHash.set($page.url?.hash ?? ""))
+})
