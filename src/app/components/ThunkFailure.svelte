@@ -23,7 +23,7 @@
   const retry = (url: string) => {
     for (const child of $thunks.flatten([thunk])) {
       if (child.options.relays.includes(url)) {
-        const retried = $thunks.publish({...child.options, relays: [url]})
+        const retried = $thunks.publish({...child.options, event: child.event, relays: [url]})
 
         if (showToastOnRetry) {
           pushToast({
