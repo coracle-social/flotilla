@@ -1,8 +1,7 @@
-import {createHash} from "node:crypto"
-import type {BrowserContext, Locator, Page} from "@playwright/test"
-import {HOUR, now} from "@welshman/lib"
+import type {Locator, Page} from "@playwright/test"
+import {HOUR} from "@welshman/lib"
 import {MessagingRelayList, RelayList} from "@welshman/domain"
-import {expect, makeTestUser, roomPath, test, users} from "../harness"
+import {expect, makeTestUser, mockBlossom, roomPath, test, users} from "../harness"
 import type {SeededSpace, TestUser} from "../harness"
 
 // The path the app builds for a conversation — see makeChatId in src/app/chats.ts.
@@ -21,76 +20,6 @@ const gifFile = (name: string) => ({
   mimeType: "image/gif",
   buffer: Buffer.from(GIF, "base64"),
 })
-
-// A blossom server whose blobs are shared by every context in a test, and whose next upload can be
-// held open. The harness's own `mockBlossom` keeps blobs per browser context, which a conversation's
-// image cannot use: it is uploaded encrypted and decrypted by the recipient, so the bytes alice puts
-// in have to be the bytes bob reads back. Holding the upload makes the in-flight state a fact rather
-// than a race against a mock that answers in a microtask.
-const serveBlossom = () => {
-  const blobs = new Map<string, {body: Buffer; type: string}>()
-
-  let held = Promise.resolve()
-  let open = () => {}
-  let refusal = ""
-
-  return {
-    hold: () => {
-      held = new Promise<void>(resolve => {
-        open = resolve
-      })
-    },
-    release: () => open(),
-    refuse: (reason: string) => {
-      refusal = reason
-    },
-    install: (context: BrowserContext) =>
-      context.route(`${BLOSSOM_ORIGIN}/**`, async route => {
-        const request = route.request()
-        const method = request.method()
-        const {pathname} = new URL(request.url())
-
-        // BUD-06, which the app asks before spending an upload. A refusal's reason has to be
-        // exposed cross-origin or all the toast can say is the status code.
-        if (pathname === "/upload" && method === "HEAD") {
-          if (refusal) {
-            return route.fulfill({
-              status: 400,
-              headers: {
-                "X-Reason": refusal,
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Expose-Headers": "*",
-              },
-            })
-          }
-
-          return route.fulfill({status: 200, body: ""})
-        }
-
-        if (pathname === "/upload" && method === "PUT") {
-          await held
-
-          const body = request.postDataBuffer() ?? Buffer.alloc(0)
-          const type = request.headers()["content-type"] ?? "application/octet-stream"
-          const sha256 = createHash("sha256").update(body).digest("hex")
-
-          blobs.set(sha256, {body, type})
-
-          const url = `${BLOSSOM_ORIGIN}/${sha256}`
-
-          return route.fulfill({json: {sha256, type, url, size: body.length, uploaded: now()}})
-        }
-
-        const blob = blobs.get(pathname.slice(1).split(".")[0])
-
-        if (blob) {
-          return route.fulfill({contentType: blob.type, body: method === "HEAD" ? "" : blob.body})
-        }
-
-        return route.fallback()
-      }),
-  }
-}
 
 // Outbox routing resolves everything about a person through their relay list, so a seeded profile
 // is only loadable by somebody else once its author has one.
@@ -304,12 +233,12 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   })
 
   const path = roomPath(scenario.space("space").url, "general")
-  const blossom = serveBlossom()
 
   const alice = await as(users.alice, path)
   const bob = await as(users.bob, path)
 
-  await blossom.install(alice.context())
+  const blossom = await mockBlossom(alice.context(), {server: BLOSSOM_ORIGIN})
+
   await blossom.install(bob.context())
 
   await expect(timeline(alice).getByText("morning all")).toBeVisible()

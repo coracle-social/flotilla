@@ -261,47 +261,100 @@ export type BlossomOptions = {
 }
 
 /**
+ * What a spec can turn on. Each of these is off by default, so a scenario that only needs somewhere
+ * for an upload to land ignores all of it.
+ */
+export type BlossomHandle = {
+  // The same server, blobs included, in another user's context. A conversation's image is uploaded
+  // encrypted and decrypted by the recipient, so the bytes one end puts in have to be the bytes the
+  // other reads back.
+  install(context: BrowserContext): Promise<void>
+  // Holds every upload open until `release`, which makes the in-flight state a fact rather than a
+  // race against a mock that answers in a microtask.
+  hold(): void
+  release(): void
+  // Refuses every upload probe from here on, with a reason the app has to show.
+  refuse(reason: string): void
+}
+
+/**
  * A blossom server that keeps what it was given. An upload is hashed exactly as the real thing
  * would be, so the descriptor it answers with points at a blob this mock can then serve back.
  */
-export const mockBlossom = (context: BrowserContext, {server}: BlossomOptions) => {
+export const mockBlossom = async (context: BrowserContext, {server}: BlossomOptions) => {
   const {origin} = new URL(server)
   const blobs = new Map<string, {body: Buffer; type: string}>()
 
-  return context.route(`${origin}/**`, route => {
-    const request = route.request()
-    const method = request.method()
-    const {pathname} = new URL(request.url())
+  let held = Promise.resolve()
+  let open = () => {}
+  let refusal = ""
 
-    if (pathname === "/upload") {
-      if (method === "HEAD") {
-        return route.fulfill({status: 200, body: ""})
-      }
+  const handle: BlossomHandle = {
+    install: async context => {
+      await context.route(`${origin}/**`, async route => {
+        const request = route.request()
+        const method = request.method()
+        const {pathname} = new URL(request.url())
 
-      if (method === "PUT") {
-        const body = request.postDataBuffer() ?? Buffer.alloc(0)
-        const type = request.headers()["content-type"] ?? "application/octet-stream"
-        const sha256 = createHash("sha256").update(body).digest("hex")
+        if (pathname === "/upload") {
+          // BUD-06, which the app asks before spending an upload. A refusal has to expose its
+          // reason cross-origin or all the toast can say is the status code.
+          if (method === "HEAD") {
+            if (refusal) {
+              return route.fulfill({
+                status: 400,
+                headers: {
+                  "X-Reason": refusal,
+                  "Access-Control-Allow-Origin": "*",
+                  "Access-Control-Expose-Headers": "*",
+                },
+              })
+            }
 
-        blobs.set(sha256, {body, type})
+            return route.fulfill({status: 200, body: ""})
+          }
 
-        return route.fulfill({
-          json: {sha256, type, url: `${origin}/${sha256}`, size: body.length, uploaded: now()},
-        })
-      }
-    }
+          if (method === "PUT") {
+            await held
 
-    const blob = blobs.get(pathname.slice(1).split(".")[0])
+            const body = request.postDataBuffer() ?? Buffer.alloc(0)
+            const type = request.headers()["content-type"] ?? "application/octet-stream"
+            const sha256 = createHash("sha256").update(body).digest("hex")
 
-    if (blob) {
-      return route.fulfill({
-        contentType: blob.type,
-        body: method === "HEAD" ? "" : blob.body,
+            blobs.set(sha256, {body, type})
+
+            return route.fulfill({
+              json: {sha256, type, url: `${origin}/${sha256}`, size: body.length, uploaded: now()},
+            })
+          }
+        }
+
+        const blob = blobs.get(pathname.slice(1).split(".")[0])
+
+        if (blob) {
+          return route.fulfill({
+            contentType: blob.type,
+            body: method === "HEAD" ? "" : blob.body,
+          })
+        }
+
+        return route.fallback()
       })
-    }
+    },
+    hold: () => {
+      held = new Promise<void>(resolve => {
+        open = resolve
+      })
+    },
+    release: () => open(),
+    refuse: reason => {
+      refusal = reason
+    },
+  }
 
-    return route.fallback()
-  })
+  await handle.install(context)
+
+  return handle
 }
 
 /**
