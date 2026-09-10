@@ -46,6 +46,10 @@ const serveBlossom = () => {
         const method = request.method()
         const {pathname} = new URL(request.url())
 
+        if (pathname === "/upload" && method === "HEAD") {
+          return route.fulfill({status: 200, body: ""})
+        }
+
         if (pathname === "/upload" && method === "PUT") {
           await held
 
