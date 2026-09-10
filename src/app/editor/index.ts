@@ -187,7 +187,10 @@ export const makeEditor = async ({
           },
           fileUpload: {
             config: {
-              allowedMimeTypes: ["*/*"],
+              // nostr-editor reads this twice: as the file picker's `accept`, where the
+              // wildcard is what we want, and as an exact match against the file's own type,
+              // which no wildcard satisfies. addFile below is the gate that decides.
+              allowedMimeTypes: Object.assign(["*/*"], {includes: () => true}),
               upload: async (attrs: FileAttributes) =>
                 uploadFile(await compressFileForUpload(attrs.file), {url, encrypt: encryptFiles}),
               onDrop: () => uploading?.set(true),
