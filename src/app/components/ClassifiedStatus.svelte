@@ -15,7 +15,7 @@
 </script>
 
 {#if status}
-  <Badge variant={status !== "active" ? "primary" : "neutral"} class="rounded-full">
+  <Badge variant={status !== "active" ? "primary" : "neutral"} class="badge-sm rounded-full">
     {ucFirst(status)}
   </Badge>
 {/if}

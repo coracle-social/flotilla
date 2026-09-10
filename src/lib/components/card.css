@@ -26,6 +26,11 @@
       box-shadow: none;
     }
 
+    /* content reaches the card's edges; padding moves to its inner sections */
+    &.card-media {
+      @apply overflow-hidden p-0;
+    }
+
     &.card-primary {
       --accent: var(--primary);
     }

@@ -2,6 +2,7 @@
   import {uniq} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {Classified} from "@welshman/domain"
+  import {goto} from "$app/navigation"
   import Pen2 from "@assets/icons/pen-2.svg?dataurl"
   import {normalizeTopic} from "@lib/util"
   import Link from "@lib/components/Link.svelte"
@@ -17,7 +18,7 @@
   import EventActions from "@app/components/EventActions.svelte"
   import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
   import {reader, user} from "@app/core"
-  import {makeSpacePath} from "@app/routes"
+  import {makeClassifiedPath, makeSpacePath} from "@app/routes"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -26,9 +27,20 @@
     showRoom?: boolean
     showActivity?: boolean
     context: FeedContext
+    // The grid card lays these out itself, so it opts out of both.
+    showTopics?: boolean
+    showStatus?: boolean
   }
 
-  const {url, event, showRoom, showActivity, context}: Props = $props()
+  const {
+    url,
+    event,
+    showRoom,
+    showActivity,
+    context,
+    showTopics = true,
+    showStatus = true,
+  }: Props = $props()
 
   // Editing a listing hands this a new version of the event, so every value read off it has to be
   // recomputed rather than captured when the component was created.
@@ -38,27 +50,43 @@
 
   const editClassified = () => pushModal(ClassifiedEdit, {url, event})
 
+  const filterByTopic = (topic: string) => (e: MouseEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    goto(`${makeClassifiedPath(url)}?topic=${encodeURIComponent(normalizeTopic(topic))}`)
+  }
+
   const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url, h})
 
   const createReaction = (values: EventContent) => publishReaction(event, values, {url, h})
 </script>
 
-<div class="flex grow flex-wrap justify-end gap-2">
-  {#if h && showRoom}
-    <Link href={makeSpacePath(url, h)} class="button button-neutral button-xs rounded-full">
-      Posted in #<RoomName {h} {url} />
-    </Link>
+<div class="flex grow flex-wrap items-center justify-end gap-2">
+  {#if (h && showRoom) || (showTopics && uniq(topics).length > 0)}
+    <div class="flex min-w-0 flex-wrap items-center gap-2">
+      {#if h && showRoom}
+        <Link href={makeSpacePath(url, h)} class="button button-neutral button-xs rounded-full">
+          Posted in #<RoomName {h} {url} />
+        </Link>
+      {/if}
+      {#if showTopics}
+        {#each uniq(topics) as topic (topic)}
+          <button
+            type="button"
+            class="badge badge-neutral badge-sm cursor-pointer font-normal"
+            onclick={filterByTopic(topic)}>
+            #{normalizeTopic(topic)}
+          </button>
+        {/each}
+      {/if}
+    </div>
+    <span class="h-6 w-px shrink-0 bg-line"></span>
   {/if}
-  <div class="flex min-w-0 flex-wrap gap-2">
-    {#each uniq(topics) as topic (topic)}
-      <button type="button" class="button button-xs rounded-full font-normal">
-        #{normalizeTopic(topic)}
-      </button>
-    {/each}
-  </div>
   <ThunkStatusOrDeleted {event} {context}>
     {#snippet status()}
-      <ClassifiedStatus {event} />
+      {#if showStatus}
+        <ClassifiedStatus {event} />
+      {/if}
     {/snippet}
     <ReactionSummary
       {url}

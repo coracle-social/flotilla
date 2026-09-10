@@ -685,7 +685,8 @@ test("US-051 post, edit, and close out a classified listing", async ({seed, as})
   const listing = page.getByRole("link").filter({hasText: "Vintage Road Bike"})
 
   await expect(listing).toBeVisible()
-  await expect(listing).toContainText("1200")
+  // The card groups thousands, and which separator depends on the browser locale.
+  await expect(listing).toContainText(/1[,.\s]?200/)
   await expect(listing).toContainText("#bicycles")
   await expect(listing.locator('img[src^="https://space.test/"]')).toBeVisible()
 

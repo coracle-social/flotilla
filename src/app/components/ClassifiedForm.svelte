@@ -1,11 +1,13 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {removeUndefined, randomId, uniq} from "@welshman/lib"
+  import cx from "classnames"
+  import {removeUndefined, randomId, uniq, toggle} from "@welshman/lib"
   import {relay} from "@welshman/util"
   import {publish} from "@welshman/app"
   import {Classified} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import {normalizeTopic} from "@lib/util"
+  import {SUGGESTED_TOPICS} from "@app/classifieds"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Field from "@lib/components/Field.svelte"
@@ -148,6 +150,10 @@
     content = json
   }
 
+  const toggleTopic = (topic: string) => () => {
+    topics = toggle(topic, topics)
+  }
+
   const editor = makeEditor({url, submit, onChange, content})
 
   $effect(() => {
@@ -187,10 +193,25 @@
       </Field>
       <Field>
         {#snippet label()}
-          <p>Topics</p>
+          <p>Category</p>
         {/snippet}
         {#snippet input()}
-          <TopicMultiSelect bind:value={topics} />
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap gap-2">
+              {#each SUGGESTED_TOPICS as topic (topic)}
+                <button
+                  type="button"
+                  class={cx(
+                    "button button-xs rounded-full",
+                    topics.includes(topic) ? "button-primary" : "button-neutral",
+                  )}
+                  onclick={toggleTopic(topic)}>
+                  #{topic}
+                </button>
+              {/each}
+            </div>
+            <TopicMultiSelect bind:value={topics} />
+          </div>
         {/snippet}
       </Field>
       <Field>
@@ -198,7 +219,7 @@
           <p>Price*</p>
         {/snippet}
         {#snippet input()}
-          <div class="join grid grid-cols-2">
+          <div class="grid grid-cols-2 gap-2">
             <label class="input flex w-full items-center gap-2">
               <input bind:value={price} class="grow w-32" type="number" />
             </label>

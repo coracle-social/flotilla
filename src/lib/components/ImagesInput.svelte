@@ -103,9 +103,9 @@
           alt="Upload preview"
           class="h-full w-full object-cover rounded-2xl" />
         <Button
-          class="button button-neutral bg-surface absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full"
+          class="button button-neutral button-xs button-circle bg-surface absolute right-1 top-1"
           onclick={() => removeItem(index)}>
-          <Icon icon={CloseCircle} size={6} />
+          <Icon icon={CloseCircle} size={4} />
         </Button>
       </div>
     {/each}
