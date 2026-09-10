@@ -415,14 +415,21 @@ const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
 
         if (found > 0) break
       }
-
-      state.set({status: "idle"})
     } finally {
       running = false
     }
   }
 
-  return {subscribe: state.subscribe, run}
+  // A run covers a few spans and the scroller starts another one a moment later, so settling at
+  // the end of a run blinks the spinner once per page. What ends a load is the trigger going
+  // quiet — the list grown long enough that nothing more is wanted.
+  const settle = () => {
+    if (!running && isFeedLoading(get(state))) {
+      state.set({status: "idle"})
+    }
+  }
+
+  return {subscribe: state.subscribe, run, settle}
 }
 
 // A loader triggered by proximity to the end of a scroll container, which is how every list in
@@ -441,6 +448,7 @@ export const makeScrollLoader = (
     threshold: 5000,
     ...options,
     onScroll: loader.run,
+    onSettle: loader.settle,
   })
 
   return {subscribe: loader.subscribe, stop: scroller.stop}

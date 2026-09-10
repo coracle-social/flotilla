@@ -90,6 +90,9 @@ export const copyToClipboard = (text: string) => {
 
 export type ScrollerOpts = {
   onScroll: () => any
+  // Called by a check that decides nothing more is wanted, which is the only signal that paging
+  // has stopped rather than paused between requests.
+  onSettle?: () => any
   element: Element
   threshold?: number
   reverse?: boolean
@@ -103,6 +106,7 @@ export type Scroller = {
 
 export const createScroller = ({
   onScroll,
+  onSettle,
   element,
   delay = 1000,
   threshold = 2000,
@@ -134,6 +138,8 @@ export const createScroller = ({
         // Only trigger loading the first time we reach the threshold
         if (shouldLoad) {
           await onScroll()
+        } else {
+          onSettle?.()
         }
       }
     } catch (error) {
