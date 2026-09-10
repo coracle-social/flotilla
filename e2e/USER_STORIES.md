@@ -1540,7 +1540,6 @@ Acceptance:
 - With none configured, it shows the dashboard, whose empty inbox offers "Add a
   space" and "Start a conversation".
 - Those options navigate to the spaces directory and the chat view respectively.
-- On a phone, the bottom bar carries a link home from wherever she is.
 
 ### US-116 — Read the home dashboard
 

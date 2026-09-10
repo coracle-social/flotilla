@@ -44,10 +44,6 @@ const spaceNavItem = (page: Page, name: string) =>
 // since the menu is always on screen there.
 const spaceMenuNavItem = (page: Page) => page.getByRole("button", {name: "Open space menu"})
 
-// The link home, which the desktop rail and the phone's bottom bar both carry. Its accessible name
-// is the platform logo's alt text, and the rail is display:none below tailwind's md breakpoint.
-const homeNavItem = (page: Page) => page.getByRole("link", {name: "Home"})
-
 // The space menu's header, the one button in the secondary nav carrying the relay's address.
 const spaceMenu = (page: Page, url: string) =>
   page.locator(".secondary-nav").getByRole("button", {name: pattern(displayRelayUrl(url))})
@@ -347,15 +343,6 @@ test("US-105 land on the home page", async ({seed, as}) => {
   await startConversation.click()
 
   await expect(page).toHaveURL(/\/chat$/)
-
-  // On a phone the bottom bar is the whole of the navigation on screen, so the way back is there
-  const phone = await as(users.alice, "/chat", {
-    context: {viewport: {width: 390, height: 844}, hasTouch: true},
-  })
-
-  await homeNavItem(phone).click()
-
-  await expect(phone).toHaveURL(/\/home$/)
 })
 
 test("US-116 read the home dashboard", async ({seed, as}) => {
