@@ -1,4 +1,3 @@
-import theme from "tailwindcss/defaultTheme"
 import {get, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {page} from "$app/stores"
@@ -110,13 +109,9 @@ export const goToMovedSpace = (oldUrl: string, newUrl: string) =>
   navigate(get(page).url.pathname.replace(encodeRelay(oldUrl), encodeRelay(newUrl)))
 
 export const goToHome = () => {
-  if (PLATFORM_RELAYS.length > 0) {
-    return navigate(makeSpaceEntryPath(PLATFORM_RELAYS[0]) + get(page).url.hash, {
-      replaceState: true,
-    })
-  }
+  const path = PLATFORM_RELAYS.length > 0 ? makeSpaceEntryPath(PLATFORM_RELAYS[0]) : "/home"
 
-  return navigate("/home" + get(page).url.hash)
+  return navigate(path, {keepModal: true, replaceState: true})
 }
 
 // Content types, events

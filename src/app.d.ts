@@ -9,7 +9,7 @@ declare global {
     // interface Locals {}
     // interface PageData {}
     interface PageState {
-      modal?: string
+      modals?: string[]
     }
     // interface Platform {}
   }
