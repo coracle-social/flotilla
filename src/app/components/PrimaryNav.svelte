@@ -103,7 +103,7 @@
         <ImageIcon alt="Messages" src={Letter} size={8} />
       </PrimaryNavItem>
     </div>
-    <PrimaryNavItem onclick={showSettingsMenu}>
+    <PrimaryNavItem onclick={showSettingsMenu} aria-label="Settings">
       {#if $userProfile?.picture()}
         <ImageIcon alt="Settings" src={$userProfile.picture()!} size={10} class="rounded-full" />
       {:else}

@@ -16,6 +16,7 @@
   import AltArrowUp from "@assets/icons/alt-arrow-up.svg?dataurl"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
+  import Link from "@lib/components/Link.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -29,6 +30,7 @@
   import InfoKeys from "@app/components/InfoKeys.svelte"
   import {pushModal} from "@app/modal"
   import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/pomade"
+  import {makeProfilePath} from "@app/routes"
   import {clip, pushToast} from "@app/toast"
   import {profiles, session, user} from "@app/core"
   import {isPomadeSession, requirePomadeSession} from "@app/pomade"
@@ -90,7 +92,7 @@
 <PageContent>
   <div class="card shadow-md flex flex-col gap-2">
     <div class="flex justify-between gap-2">
-      <div class="flex max-w-full gap-3">
+      <Link href={makeProfilePath($user.pubkey)} class="flex max-w-full gap-3">
         <div class="py-1">
           <ProfileCircle pubkey={$user.pubkey} size={10} />
         </div>
@@ -104,7 +106,7 @@
             {$profile?.nip05() ? displayNip05($profile.nip05()!) : pubkeyDisplay}
           </div>
         </div>
-      </div>
+      </Link>
       <Button
         class="button button-neutral button-circle flex justify-center items-center -mr-2 -mt-2 h-12 w-12"
         onclick={startEdit}>

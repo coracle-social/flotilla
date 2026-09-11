@@ -1,5 +1,6 @@
 <script lang="ts">
   import {Capacitor} from "@capacitor/core"
+  import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import ServerPath from "@assets/icons/server-path.svg?dataurl"
   import GalleryMinimalistic from "@assets/icons/gallery-minimalistic.svg?dataurl"
   import Shield from "@assets/icons/shield-minimalistic.svg?dataurl"
@@ -14,6 +15,7 @@
   import LogOut from "@app/components/LogOut.svelte"
   import {user} from "@app/core"
   import {pushModal} from "@app/modal"
+  import {makeProfilePath} from "@app/routes"
 
   const logout = () => pushModal(LogOut)
 </script>
@@ -21,10 +23,16 @@
 <Modal>
   <ModalBody>
     <div class="flex flex-col gap-8 items-center py-12 max-w-[16rem] m-auto w-full">
-      <Link href="/settings/profile">
+      <Link href={makeProfilePath($user.pubkey)}>
         <Profile inert pubkey={$user.pubkey} />
       </Link>
       <div class="grid grid-cols-3 gap-3 w-full">
+        <Link
+          href="/settings/profile"
+          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+          <Icon icon={UserCircle} size={5} />
+          Profile
+        </Link>
         <Link
           href="/settings/alerts"
           class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
