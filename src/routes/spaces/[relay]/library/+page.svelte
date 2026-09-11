@@ -120,7 +120,7 @@
     {/if}
     <div class="divider shrink-0"></div>
     {#if selected && $pins.length > 0}
-      <Masonry items={$pins} getKey={pin => pin.id()} columnWidth={60} gap={3}>
+      <Masonry items={$pins} getKey={pin => pin.id()} columnWidth={80} gap={3}>
         {#snippet child(pin)}
           <PinItem {url} {pin} />
         {/snippet}
