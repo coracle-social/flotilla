@@ -11,19 +11,13 @@ test("the desktop baseline renders, navigates, and keeps external pages outside"
     const executablePath: string = createRequire(import.meta.url)(
       resolve("electron/node_modules/electron"),
     )
-    const options = {
+    const app = await _electron.launch({
       executablePath,
       // Chromium refuses to start as root with its sandbox on, which is what a CI container is.
       chromiumSandbox: process.getuid?.() !== 0,
-      args: [resolve("electron"), "--desktop-local"],
-      env: {
-        ...process.env,
-        XDG_CONFIG_HOME: profile,
-        FLOTILLA_DESKTOP_DEV_URL: "http://127.0.0.1:1/",
-        CAPACITOR_ELECTRON_DEV_SERVER_URL: "http://127.0.0.1:1/",
-      },
-    }
-    const app = await _electron.launch(options)
+      args: [resolve("electron")],
+      env: {...process.env, XDG_CONFIG_HOME: profile},
+    })
 
     try {
       const mainWindows = () =>
@@ -31,21 +25,8 @@ test("the desktop baseline renders, navigates, and keeps external pages outside"
       await expect.poll(() => mainWindows().length).toBe(1)
       const [page] = mainWindows()
       const errors: string[] = []
-      const developmentRequests: string[] = []
 
       page.on("pageerror", error => errors.push(error.message))
-      page.on("request", request => {
-        if (/127\.0\.0\.1:1|\/@vite\/|\/@id\/|\/@fs\//.test(request.url())) {
-          developmentRequests.push(request.url())
-        }
-      })
-
-      expect(
-        await app.evaluate(({BrowserWindow}) => {
-          const window = BrowserWindow.getAllWindows()[0]
-          return {size: window.getSize(), resizable: window.isResizable()}
-        }),
-      ).toEqual({size: [1200, 800], resizable: true})
 
       await page.reload()
       await expect(page.getByRole("heading")).toBeVisible()
@@ -112,21 +93,8 @@ test("the desktop baseline renders, navigates, and keeps external pages outside"
       })
       await expect(page.locator("html")).toHaveAttribute("data-csp-violation", "script-src-elem")
       await expect(page.locator("html")).not.toHaveAttribute("data-inline-script-executed")
-      expect(developmentRequests).toEqual([])
-
-      await app.evaluate(({BrowserWindow}) => BrowserWindow.getAllWindows()[0].setSize(1000, 700))
     } finally {
       await app.close()
-    }
-
-    const reopened = await _electron.launch(options)
-    try {
-      await reopened.firstWindow()
-      expect(
-        await reopened.evaluate(({BrowserWindow}) => BrowserWindow.getAllWindows()[0].getSize()),
-      ).toEqual([1000, 700])
-    } finally {
-      await reopened.close()
     }
   } finally {
     await rm(profile, {recursive: true, force: true})

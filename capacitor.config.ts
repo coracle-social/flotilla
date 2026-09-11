@@ -26,18 +26,8 @@ const config: CapacitorConfig = {
     },
   },
   server: {
-    // Use this for live reload https://capacitorjs.com/docs/guides/live-reload
-    // url: "http://192.168.1.17:1847",
-    // cleartext: true,
+    url: process.env.FLOTILLA_DESKTOP_DEV_URL,
   },
-}
-
-if (
-  process.argv.includes("run") &&
-  process.argv.includes("@capawesome/capacitor-electron") &&
-  process.env.FLOTILLA_DESKTOP_DEV_URL
-) {
-  config.server = {...config.server, url: process.env.FLOTILLA_DESKTOP_DEV_URL}
 }
 
 export default config
