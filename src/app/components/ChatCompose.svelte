@@ -13,12 +13,14 @@
   import DictationButton from "@app/components/DictationButton.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {makeEditor} from "@app/editor"
+  import {getDictation} from "@app/dictation"
   import {type DraftKey, type Draft} from "@app/drafts"
   import {pushToast} from "@app/toast"
   import type {Share} from "@app/share"
 
   type Props = {
     disabled?: boolean
+    dictationKey: string
     draftKey?: DraftKey<Draft>
     onEscape?: () => void
     onEditPrevious?: () => void
@@ -29,6 +31,7 @@
   const {
     initialValues,
     disabled = false,
+    dictationKey,
     draftKey,
     onEscape,
     onEditPrevious,
@@ -94,7 +97,7 @@
   let content = $state(
     initialValues?.type === "text" ? initialValues.value : (draftKey?.get()?.content ?? ""),
   )
-  let recording = $state(false)
+  let dictating = $state(Boolean(getDictation(dictationKey)))
 
   const onChange = (json: object) => {
     content = json
@@ -152,8 +155,8 @@
   <div class={editorClass} aria-disabled={disabled}>
     <EditorContent {autofocus} {editor} />
   </div>
-  {#if recording || ($empty && !disabled)}
-    <DictationButton bind:recording onTranscript={insertTranscript} />
+  {#if dictating || ($empty && !disabled)}
+    <DictationButton key={dictationKey} bind:dictating onTranscript={insertTranscript} />
   {:else}
     <Button
       data-tip="{window.navigator.platform.includes('Mac') ? 'cmd' : 'ctrl'}+enter to send"

@@ -353,6 +353,7 @@
         {onEscape}
         {onEditPrevious}
         {initialValues}
+        dictationKey={draftKey.key}
         draftKey={eventToEdit ? undefined : draftKey}
         disabled={Boolean(missingRelayLists.length)} />
     {/key}

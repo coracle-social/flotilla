@@ -5,7 +5,7 @@ export type Draft = {
 }
 
 export class DraftKey<T> {
-  constructor(private key: string) {}
+  constructor(readonly key: string) {}
 
   get(): T | undefined {
     return store.get(this.key) as T | undefined

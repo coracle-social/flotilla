@@ -18,6 +18,7 @@
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {makeEditor} from "@app/editor"
   import {app} from "@app/core"
+  import {getDictation} from "@app/dictation"
   import {DraftKey, type Draft} from "@app/drafts"
   import type {Share} from "@app/share"
   import {onDestroy, onMount} from "svelte"
@@ -33,8 +34,9 @@
 
   const {url, h, initialValues, onEscape, onEditPrevious, onSubmit}: Props = $props()
 
-  const draftKey =
-    (url || h) && !initialValues ? new DraftKey<Draft>(`room:${url ?? ""}:${h ?? ""}`) : undefined
+  const key = `room:${url ?? ""}:${h ?? ""}`
+
+  const draftKey = (url || h) && !initialValues ? new DraftKey<Draft>(key) : undefined
 
   const autofocus = !isMobile
 
@@ -106,7 +108,7 @@
   let content = $state(
     initialValues?.type === "text" ? initialValues.value : (draftKey?.get()?.content ?? ""),
   )
-  let recording = $state(false)
+  let dictating = $state(Boolean(getDictation(key)))
 
   const onChange = (json: object) => {
     content = json
@@ -180,8 +182,8 @@
   <div class="chat-editor grow overflow-hidden">
     <EditorContent {autofocus} {editor} />
   </div>
-  {#if recording || $empty}
-    <DictationButton bind:recording onTranscript={insertTranscript} />
+  {#if dictating || $empty}
+    <DictationButton {key} bind:dictating onTranscript={insertTranscript} />
   {:else}
     <Button
       data-tip="{window.navigator.platform.includes('Mac') ? 'cmd' : 'ctrl'}+enter to send"

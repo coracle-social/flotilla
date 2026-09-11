@@ -1,7 +1,7 @@
 <script lang="ts">
-  import {onDestroy} from "svelte"
+  import {onDestroy, onMount} from "svelte"
   import cx from "classnames"
-  import type {Maybe, MaybeAsync} from "@welshman/lib"
+  import type {MaybeAsync} from "@welshman/lib"
   import Microphone from "@assets/icons/microphone.svg?dataurl"
   import Stop from "@assets/icons/record.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -9,17 +9,18 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import {errorMessage} from "@lib/util"
   import OpenRouterEnable from "@app/components/OpenRouterEnable.svelte"
-  import {startDictation, transcribe} from "@app/dictation"
+  import {clearDictation, getDictation, startDictation} from "@app/dictation"
   import {getSetting} from "@app/settings"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
   type Props = {
-    recording?: boolean
+    key: string
+    dictating?: boolean
     onTranscript: (text: string) => MaybeAsync<void>
   }
 
-  let {recording = $bindable(false), onTranscript}: Props = $props()
+  let {key, dictating = $bindable(false), onTranscript}: Props = $props()
 
   // Room noise idles just below this, so the pulse follows quiet speech too.
   const onLevel = (level: number) => {
@@ -33,7 +34,7 @@
       loading = true
 
       try {
-        finish = await startDictation(onLevel)
+        await startDictation(key, onLevel)
         recording = true
       } catch (error) {
         console.error(error)
@@ -49,34 +50,50 @@
     }
   }
 
-  const stop = async () => {
-    if (finish) {
-      const audio = finish()
+  const stop = () => {
+    getDictation(key)?.stop()
 
-      finish = undefined
-      recording = false
+    recording = false
+    loud = false
+
+    deliver()
+  }
+
+  const deliver = async () => {
+    const dictation = getDictation(key)
+
+    if (dictation) {
       loading = true
-      loud = false
 
-      try {
-        const text = await transcribe(await audio)
+      await dictation.finished
 
-        await onTranscript(text)
-      } catch (error) {
-        console.error(error)
-        pushToast({theme: "error", message: `Failed to transcribe: ${errorMessage(error)}`})
-      } finally {
-        loading = false
+      // A composer that has gone away has nowhere to put the transcript, so leave the dictation
+      // where it is for whichever one mounts next.
+      if (!destroyed) {
+        if (dictation.error) {
+          console.error(dictation.error)
+          pushToast({
+            theme: "error",
+            message: `Failed to transcribe: ${errorMessage(dictation.error)}`,
+          })
+        } else {
+          await onTranscript(dictation.transcript ?? "")
+        }
+
+        clearDictation(key)
       }
+
+      loading = false
     }
   }
 
   const toggle = () => (recording ? stop() : start())
 
-  // Held outside of state because only the recording flag drives the markup, and clearing this
-  // before the recorder has finished flushing is what keeps a second stop from re-entering.
-  let finish: Maybe<() => Promise<Blob>>
-  let loading = $state(false)
+  let destroyed = false
+  let recording = $state(false)
+  // Starts out in flight when a dictation is already waiting to be picked up, so that the composer
+  // keeps rendering this button until its transcript has been handed over.
+  let loading = $state(Boolean(getDictation(key)))
   let loud = $state(false)
 
   const buttonClass = $derived(
@@ -87,8 +104,21 @@
     ),
   )
 
+  $effect(() => {
+    dictating = recording || loading
+  })
+
+  // Pick up a dictation an earlier composer left running.
+  onMount(deliver)
+
   onDestroy(() => {
-    finish?.()
+    destroyed = true
+
+    const dictation = getDictation(key)
+
+    if (dictation?.recording) {
+      dictation.stop()
+    }
   })
 </script>
 
