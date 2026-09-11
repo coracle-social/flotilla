@@ -16,6 +16,7 @@ import {
   MessagingRelayLists,
   MuteLists,
   Network,
+  PinLists,
   Profiles,
   Reactions,
   RelayLists,
@@ -143,6 +144,7 @@ export const logger = usePlugin(Logger)
 export const messagingRelayLists = usePlugin(MessagingRelayLists)
 export const muteLists = usePlugin(MuteLists)
 export const network = usePlugin(Network)
+export const pinLists = usePlugin(PinLists)
 export const profiles = usePlugin(Profiles)
 export const reactions = usePlugin(Reactions)
 export const relayLists = usePlugin(RelayLists)

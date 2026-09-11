@@ -1,18 +1,18 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {derived, writable} from "svelte/store"
+  import {writable} from "svelte/store"
   import type {Readable} from "svelte/store"
   import {sortBy, uniqBy, now} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import {NOTE, outbox} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {getReplyTags} from "@welshman/domain"
-  import {PinLists} from "@welshman/app"
   import {fly} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {app, network, router} from "@app/core"
+  import {router} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import {derivePinnedEvents} from "@app/pins"
 
   type Props = {
     pubkey: string
@@ -25,30 +25,9 @@
 
   onDestroy(context.cleanup)
 
-  const pinnedIds = derived($app.use(PinLists).one(pubkey), $pinList => $pinList?.ids() ?? [])
+  const pinnedEvents = derivePinnedEvents(pubkey)
 
-  // Pinned notes are asked for by id instead of by the feed's filters, so they get a store of
-  // their own. A feed dedupes and sorts what it holds as it loads it, and writing to its store
-  // from out here bypasses both.
-  const pinnedEvents = writable<TrustedEvent[]>([])
-
-  $effect(() => {
-    if ($pinnedIds.length > 0) {
-      const controller = new AbortController()
-
-      relays.then($relays =>
-        $network.load({
-          relays: $relays,
-          filters: [{ids: $pinnedIds}],
-          signal: controller.signal,
-          onEvent: event =>
-            pinnedEvents.update($pinned => uniqBy(e => e.id, $pinned.concat(event))),
-        }),
-      )
-
-      return () => controller.abort()
-    }
-  })
+  const pinnedIds = $derived($pinnedEvents.map(e => e.id))
 
   let element: HTMLElement | undefined = $state()
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
@@ -59,7 +38,7 @@
 
   const feedEvents = $derived(
     sortBy(
-      e => ($pinnedIds.includes(e.id) ? -(now() + e.created_at) : -e.created_at),
+      e => (pinnedIds.includes(e.id) ? -(now() + e.created_at) : -e.created_at),
       uniqBy(e => e.id, [...$pinnedEvents, ...$events]).filter(
         e => getReplyTags(e.tags).replies.length === 0,
       ),
