@@ -19,13 +19,15 @@
   const href = $derived(makeSpacePath(getHostedRelayUrl(relay), "admin"))
 </script>
 
-<div class="flex flex-row items-center justify-between gap-3 {className}">
-  <ImageIcon size={8} alt="" class="rounded-xl" src={relay.info_icon || Server} />
-  <div class="min-w-0 flex-1">
-    <p class="truncate text-sm font-medium">{name}</p>
-    <p class="truncate text-xs opacity-75">{host}</p>
+<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 {className}">
+  <div class="flex min-w-0 flex-1 items-center gap-3">
+    <ImageIcon size={8} alt="" class="rounded-xl" src={relay.info_icon || Server} />
+    <div class="min-w-0">
+      <p class="truncate text-sm font-medium">{name}</p>
+      <p class="truncate text-xs opacity-75">{host}</p>
+    </div>
   </div>
-  <div class="flex shrink-0 items-center gap-2">
+  <div class="flex flex-wrap items-center gap-2">
     {#if relay.sync_error}
       <Badge variant="warning" title={relay.sync_error}>Failed to sync</Badge>
     {:else}
@@ -36,6 +38,6 @@
     <Badge variant={relay.plan_id === "free" ? "neutral" : "primary"}>
       {ucFirst(relay.plan_id)}
     </Badge>
+    <Link class="button button-neutral button-sm ml-auto" {href}>Manage</Link>
   </div>
-  <Link class="button button-neutral button-sm shrink-0" {href}>Manage</Link>
 </div>

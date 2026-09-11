@@ -70,19 +70,30 @@
   })
 </script>
 
-{#snippet card(className: string, icon: string, message: string, actions: Snippet)}
-  <div
-    class={cx(
-      "card card-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
-      className,
-    )}>
-    <div class="flex min-w-0 items-start gap-3">
-      <Icon {icon} size={5} class="mt-0.5 shrink-0" />
+{#snippet card(
+  className: string,
+  icon: string,
+  message: string,
+  actions: Snippet,
+  dismiss?: () => void,
+)}
+  <div class={cx("card card-sm flex items-start gap-3", className)}>
+    <Icon {icon} size={5} class="mt-0.5 shrink-0" />
+    <div
+      class="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <p class="min-w-0 text-sm">{message}</p>
+      <div class="flex shrink-0 items-center gap-2">
+        {@render actions()}
+      </div>
     </div>
-    <div class="flex shrink-0 items-center gap-2">
-      {@render actions()}
-    </div>
+    {#if dismiss}
+      <Button
+        class="button button-link button-sm -mt-1 shrink-0"
+        aria-label="Dismiss"
+        onclick={dismiss}>
+        <Icon icon={Close} size={4} />
+      </Button>
+    {/if}
   </div>
 {/snippet}
 
@@ -112,9 +123,6 @@
 
 {#snippet autopayActions()}
   <Button class="button button-sm button-primary" onclick={setUpNwc}>Set up autopay</Button>
-  <Button class="button button-link button-sm" aria-label="Dismiss" onclick={dismissAutopay}>
-    <Icon icon={Close} size={4} />
-  </Button>
 {/snippet}
 
 {#if tenant}
@@ -152,6 +160,7 @@
       InfoCircle,
       "Set up automatic payments so your subscription renews without interruption.",
       autopayActions,
+      dismissAutopay,
     )}
   {/if}
 {/if}
