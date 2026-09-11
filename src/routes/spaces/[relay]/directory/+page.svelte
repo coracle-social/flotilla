@@ -135,7 +135,7 @@
   {/snippet}
 </SpaceBar>
 
-<PageContent class="flex flex-col gap-4 p-4">
+<PageContent class="@container flex flex-col gap-4 p-4">
   <label class="input input-group flex w-full items-center gap-2 card">
     <Icon size={4} icon={Magnifier} />
     <input
@@ -147,7 +147,7 @@
   {#if visibleMembers.length === 0}
     <p class="flex flex-col items-center py-20 text-center">No members found.</p>
   {:else}
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 @3xl:grid-cols-2 @5xl:grid-cols-3">
       {#each visibleMembers as { pubkey, roleList } (pubkey)}
         <SpaceMember {url} {pubkey} roles={roleList} />
       {/each}

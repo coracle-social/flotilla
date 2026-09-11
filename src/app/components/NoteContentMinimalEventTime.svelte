@@ -16,7 +16,7 @@
   const end = $derived(parseInt(meta.end))
 </script>
 
-<div class="flex flex-col">
+<div class="@container flex flex-col">
   <div class="flex grow flex-wrap justify-between gap-2">
     <p class="text-sm">{meta.title || meta.name}</p>
     {#if !isNaN(start) && !isNaN(end)}
@@ -25,7 +25,7 @@
       {@const isSingleDay = startDateDisplay === endDateDisplay}
       <div class="flex items-center gap-2">
         <Icon icon={ClockCircle} size={4} />
-        <span class="hidden sm:block">{formatTimestampAsDate(start)}</span>
+        <span class="hidden @sm:block">{formatTimestampAsDate(start)}</span>
         {formatTimestampAsTime(start)} — {isSingleDay
           ? formatTimestampAsTime(end)
           : formatTimestamp(end)}

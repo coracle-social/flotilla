@@ -14,7 +14,7 @@
   const price = $derived(classified.price())
 </script>
 
-<div class="flex flex-col gap-2">
+<div class="@container flex flex-col gap-2">
   {#if title}
     <p class="text-xl">
       {title} —
@@ -24,7 +24,7 @@
   {#if props.event.content}
     <Content {...props} />
   {/if}
-  <div class="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
+  <div class="grid grid-cols-3 gap-2 @md:grid-cols-5 @2xl:grid-cols-9">
     {#each images as image, i (i + image)}
       <ContentLinkBlock event={props.event} value={{url: image}} />
     {/each}

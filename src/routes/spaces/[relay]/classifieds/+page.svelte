@@ -137,7 +137,7 @@
   {/snippet}
 </SpaceBar>
 
-<PageContent bind:element class="flex flex-col gap-3 p-2 sm:gap-4 sm:p-4">
+<PageContent bind:element class="@container flex flex-col gap-3 p-2 sm:gap-4 sm:p-4">
   {#if listings.length > 0}
     <div class="flex flex-wrap items-center gap-2">
       <label class="input flex w-auto min-w-48 grow items-center gap-2">
@@ -183,7 +183,7 @@
       {/if}
     </div>
   {/if}
-  <div class="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-4">
+  <div class="grid gap-3 @2xl:grid-cols-2 @2xl:gap-4 @4xl:grid-cols-3 @7xl:grid-cols-4">
     {#each items as event (event.id)}
       <div in:fly class="h-full min-w-0">
         <ClassifiedItem {url} {context} event={$state.snapshot(event)} />
