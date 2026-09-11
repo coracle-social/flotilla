@@ -74,9 +74,9 @@
   <div>
     {#each value as pubkey (pubkey)}
       {@const onClick = () => pushModal(ProfileDetail, {pubkey})}
-      <Badge variant="neutral" class="flex-inline mr-1 mb-1 gap-1">
+      <Badge variant="neutral" class="mr-1 mb-1 gap-1">
         <Button class="flex items-center" onclick={() => removePubkey(pubkey)}>
-          <Icon icon={CloseCircle} size={4} class="-ml-1 mt-px" />
+          <Icon icon={CloseCircle} size={4} />
         </Button>
         <Button onclick={onClick}>
           <ProfileName {pubkey} />
