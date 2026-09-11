@@ -2,7 +2,7 @@ import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
 import {nprofileEncode, npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE, MONTH} from "@welshman/lib"
-import {NOTE, makeEvent} from "@welshman/util"
+import {NOTE, STATUS, makeEvent} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {FollowList, Note, PinList, Profile} from "@welshman/domain"
 import {
@@ -142,7 +142,7 @@ test("US-075 view someone's profile", async ({seed, as}) => {
   const avatar = "https://images.test/bob-avatar.png"
   const banner = "https://images.test/bob-banner.png"
 
-  const scenario = await seed(({relay, user}) => {
+  const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
     const other = relay("other")
 
@@ -167,11 +167,34 @@ test("US-075 view someone's profile", async ({seed, as}) => {
         .renderTemplate(),
     )
 
+    space.event(
+      user.bob,
+      makeEvent(STATUS, {
+        content: "Scrubbing the decks",
+        tags: [
+          ["d", "general"],
+          ["r", "https://bobbarnacle.example/decks"],
+        ],
+      }),
+    )
+
     space.relayList(user.bob)
 
     // Carol belongs to no space at all, which is what the panel's empty state is about.
     space.member(user.carol)
     space.profile(user.carol, {name: "Carol Cutter"})
+    // An expired status is one its author asked relays to stop serving, so it is not what she is
+    // up to any more.
+    space.event(
+      user.carol,
+      makeEvent(STATUS, {
+        content: "Ashore until spring",
+        tags: [
+          ["d", "general"],
+          ["expiration", String(at(1, HOUR))],
+        ],
+      }),
+    )
     space.relayList(user.carol)
   })
 
@@ -185,6 +208,10 @@ test("US-075 view someone's profile", async ({seed, as}) => {
   await expect(region.locator(`img[src="${avatar}"]`).last()).toBeVisible()
   await expect(region.locator(`img[src="${banner}"]`)).toBeVisible()
   await expect(region.getByText("Deckhand, dockside cook")).toBeVisible()
+  await expect(region.getByRole("link", {name: "Scrubbing the decks"})).toHaveAttribute(
+    "href",
+    "https://bobbarnacle.example/decks",
+  )
 
   const npub = region.getByText(shortNpub(users.bob))
 
@@ -217,6 +244,7 @@ test("US-075 view someone's profile", async ({seed, as}) => {
 
   await expect(page.getByRole("heading", {name: "Carol Cutter"})).toBeVisible()
   await expect(sidebar(page).getByText("No spaces found.")).toBeVisible()
+  await expect(region.getByText("Ashore until spring")).toHaveCount(0)
 })
 
 test("US-076 follow and unfollow", async ({seed, as}) => {
@@ -554,6 +582,10 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
       picture: avatar,
     })
     space.message(user.bob, "general", "the cat has the helm", at(1, HOUR))
+    space.event(
+      user.bob,
+      makeEvent(STATUS, {content: "Scrubbing the decks", tags: [["d", "general"]]}),
+    )
     space.relayList(user.bob)
   })
 
@@ -576,6 +608,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
   await expect(topDialog(page).getByText("Bob Barnacle")).toBeVisible()
   await expect(topDialog(page).locator(`img[src="${avatar}"]`)).toBeVisible()
   await expect(topDialog(page).getByText("Deckhand, dockside cook")).toBeVisible()
+  await expect(topDialog(page).getByText("Scrubbing the decks")).toBeVisible()
   await expect(topDialog(page).getByText(/Last active/)).toBeVisible()
 
   await page.keyboard.press("Escape")

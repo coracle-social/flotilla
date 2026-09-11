@@ -1144,6 +1144,8 @@ Acceptance:
 
 - His profile shows display name, avatar, banner, about text, and a shortened
   npub whose copy button confirms the copy.
+- A status he has published shows what he is up to, and links to the url it
+  names; an expired one shows nothing.
 - A website he has set renders as a link.
 - A Spaces panel lists the spaces he belongs to with a count, marks any alice
   also belongs to as "Member", and navigates to a space when clicked; with none,
@@ -1214,7 +1216,7 @@ check who someone is without losing my place.
 Acceptance:
 
 - Clicking bob's avatar or mention in a member list or message opens a popover
-  with his avatar, name, about text, and badges.
+  with his avatar, name, about text, status, and badges.
 - The popover offers "View Full Profile", which navigates to his profile page.
 - Closing the popover leaves alice where she was.
 

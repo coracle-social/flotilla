@@ -16,6 +16,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileTrust from "@app/components/ProfileTrust.svelte"
   import ProfileSharedSpaces from "@app/components/ProfileSharedSpaces.svelte"
+  import ProfileStatus from "@app/components/ProfileStatus.svelte"
   import ProfilePageNotes from "@app/components/ProfilePageNotes.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
@@ -179,6 +180,8 @@
                   <Icon size={3} icon={Copy} />
                 </Button>
               </div>
+
+              <ProfileStatus pubkey={target} />
 
               {#if website}
                 <Link

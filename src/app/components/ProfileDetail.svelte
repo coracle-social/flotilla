@@ -17,6 +17,7 @@
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
+  import ProfileStatus from "@app/components/ProfileStatus.svelte"
   import {messagingRelayLists, profiles, relayManagement, user} from "@app/core"
   import {deriveUserIsSpaceAdmin} from "@app/management"
   import {navigate, popModal, pushModal} from "@app/modal"
@@ -134,6 +135,7 @@
           {/snippet}
         </ProfileMenu>
       </div>
+      <ProfileStatus {pubkey} {url} />
       <ProfileAbout {pubkey} {url} />
       <ProfileBadges {pubkey} {url} />
     </div>
