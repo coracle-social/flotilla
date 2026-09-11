@@ -61,8 +61,8 @@
       <Icon icon={Check} size={4} class="mt-0.5 shrink-0 text-primary" />
       {memberLabel(plan.members)}
     </li>
-    {@render feature(plan.blossom, "Blossom storage")}
-    {@render feature(plan.livekit, "LiveKit video")}
+    {@render feature(plan.blossom, "Media storage")}
+    {@render feature(plan.livekit, "Video calls")}
   </ul>
   {#if !selectable}
     <Button
