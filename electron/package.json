@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "postinstall": "install-electron",
-    "start": "electron ."
+    "start": "electron . --desktop-local"
   },
   "devDependencies": {
     "electron": "^43.0.0",

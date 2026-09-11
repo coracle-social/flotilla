@@ -61,15 +61,32 @@ downloading Electron for ordinary web/mobile installs:
 ```sh
 pnpm install --frozen-lockfile
 npm ci --prefix electron
-pnpm run build:desktop
 pnpm run dev:desktop
+```
+
+`dev:desktop` starts Vite in development mode on `127.0.0.1`, then runs the
+Capawesome Electron platform against that server with the Capacitor plugin bridge
+and frontend HMR. No previous frontend build is needed. It uses the existing Vite
+port (1847 by default) and fails if the port is occupied. Quit another desktop
+instance before switching modes; the platform allows one instance at a time.
+Restart the command after editing Electron TypeScript. Quit Electron or press
+Ctrl+C to stop the development environment.
+
+To build and run local production assets instead:
+
+```sh
+pnpm run build:desktop
+pnpm run start:desktop
 ```
 
 `build:desktop` builds the frontend without PWA/service-worker registration,
 synchronizes the Electron platform, and compiles its TypeScript entrypoint. It uses
 the same branding environment as the web build and does not synchronize Android
-or iOS. `dev:desktop` opens those built assets; rerun `build:desktop` after frontend
-changes. Live reload is deferred to the desktop configuration work.
+or iOS. The existing build scripts require Bash, Perl, and their usual asset tools.
+`start:desktop` opens the last build without Vite; rerun `build:desktop` after
+frontend changes. The development URL is supplied only to the desktop run process.
+Capawesome records it in ignored generated configuration during development;
+production synchronization removes it, and local startup ignores inherited dev URLs.
 
 Run `pnpm run test:desktop` after building to check the Linux desktop window. On a
 headless Linux runner, use `xvfb-run -a pnpm run test:desktop`; Electron links
@@ -78,6 +95,15 @@ also needs `libgtk-3-0t64`. The test drops Chromium's sandbox when it runs as
 root, because Chromium refuses to start that way. The separate smoke
 suite does not start a web dev server or test installers. Windows and macOS desktop
 behavior is not verified by the Linux test. CI does not run it.
+
+When changing the desktop workflow, also verify `dev:desktop` in a disposable
+checkout: change existing Svelte source and confirm HMR preserves a marker set on
+`window` in DevTools, then restore the file. Check navigation, reload, blob workers,
+and recovery after reloading while Vite restarts. Verify that Ctrl+C and quitting
+Electron release the server port and leave no child processes, including on startup
+failure or a TypeScript error. Finally stop development, rebuild, and confirm
+`start:desktop` loads local assets with no Vite connection. These runtime checks
+are separate from CI's lint and Electron TypeScript checks.
 
 ## Deployment
 

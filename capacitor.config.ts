@@ -32,4 +32,12 @@ const config: CapacitorConfig = {
   },
 }
 
+if (
+  process.argv.includes("run") &&
+  process.argv.includes("@capawesome/capacitor-electron") &&
+  process.env.FLOTILLA_DESKTOP_DEV_URL
+) {
+  config.server = {...config.server, url: process.env.FLOTILLA_DESKTOP_DEV_URL}
+}
+
 export default config
