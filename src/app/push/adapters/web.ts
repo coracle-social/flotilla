@@ -23,8 +23,6 @@ export class WebNotifications implements IPushAdapter {
   }
 
   _notify(event: TrustedEvent, title: string, body: string) {
-    console.log("notify:", event)
-
     const notification = new Notification(title, {
       body,
       tag: event.id,
