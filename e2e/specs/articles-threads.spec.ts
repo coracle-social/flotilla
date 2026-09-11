@@ -1,6 +1,6 @@
 import * as nip19 from "nostr-tools/nip19"
 import {HOUR, MINUTE} from "@welshman/lib"
-import {LONG_FORM, MESSAGE, NOTE, makeEvent} from "@welshman/util"
+import {COMMENT, LONG_FORM, MESSAGE, NOTE, makeEvent, tagSpec, tagValue} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {Article, Comment, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
@@ -325,6 +325,7 @@ test("US-039 comment on an article", async ({seed, as}) => {
         space
           .kind(Article)
           .writer()
+          .setRoom(space.url, "general")
           .setIdentifier("tending-the-garden")
           .setTitle("Tending the Garden")
           .setSummary("A short teaser about gardens.")
@@ -348,6 +349,15 @@ test("US-039 comment on an article", async ({seed, as}) => {
   // The comment renders from the optimistic write, but the composer holds what was typed until the
   // relay confirms it, so for a moment the page carries this text twice. Match the rendered comment.
   await expect(comment(bob, "The soil chapter is the good one.")).toBeVisible()
+
+  // A comment on a room event is a room event, so it carries the room the root lives in. Without
+  // that tag the relay doesn't see it as part of the group, and neither its access rules nor a
+  // room deletion ever reach it.
+  await expect
+    .poll(() =>
+      getPublishedEvents(bob.context(), COMMENT).map(event => tagValue(tagSpec("h"), event.tags)),
+    )
+    .toEqual(["general"])
 
   const carol = await as(users.carol, articlesPath)
 
@@ -746,6 +756,13 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
   await threadReply.getByRole("button", {name: "Post Reply"}).click()
 
   await expect(bob.getByText("21 replies")).toBeVisible()
+
+  // The same for a thread reply, which goes out through a different composer.
+  await expect
+    .poll(() =>
+      getPublishedEvents(bob.context(), COMMENT).map(event => tagValue(tagSpec("h"), event.tags)),
+    )
+    .toEqual(["lounge"])
 
   // The thread's author is marked OP wherever their posts turn up, second page included.
   await bob.getByRole("button", {name: "2", exact: true}).click()

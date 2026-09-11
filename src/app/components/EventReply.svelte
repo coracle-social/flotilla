@@ -2,6 +2,7 @@
   import {onMount} from "svelte"
   import {writable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
+  import {tagSpec, tagValue} from "@welshman/util"
   import {publishToRelays} from "@welshman/app"
   import {Comment} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
@@ -32,6 +33,7 @@
   }
 
   const {url, event, parent, onClose, onClearParent, onSubmit}: Props = $props()
+  const h = $derived(tagValue(tagSpec("h"), event.tags))
   const draftKey = new DraftKey<Values>(`reply:${event.id}:${parent?.id || ""}`)
   const initialValues = draftKey.get()
   const uploading = writable(false)
@@ -63,6 +65,12 @@
       .setRootFromEvent(event)
       .setParentFromEvent(event)
       .setProtected(await $relays.hasNip(url, 70))
+
+    // A comment on a room event is a room event too: an untagged one isn't visible to the
+    // group at all, so the relay neither gates it with the room nor deletes it with it.
+    if (h) {
+      eventWriter.setRoom(url, h)
+    }
 
     const thunk = await command(eventWriter).then(publishToRelays([url]))
 

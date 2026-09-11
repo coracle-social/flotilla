@@ -654,6 +654,8 @@ Acceptance:
   top-level comment.
 - Alice sees both and can add her own comment at the root, optionally attaching
   an image to it.
+- Every comment on an article posted in a room is tagged into that room, so the
+  relay handles it as part of the group.
 
 ### US-040 — React to a post with an emoji
 
@@ -706,6 +708,8 @@ Acceptance:
   appends a post and increments the reply count in the header.
 - "Reply" on a single post shows "Replying to" that post, which can be cleared
   before submitting.
+- A reply to a thread in a room is tagged into that room, so the relay handles
+  it as part of the group.
 - The thread's opening post carries an "OP" badge on every page.
 
 ### US-044 — Navigate a long thread
