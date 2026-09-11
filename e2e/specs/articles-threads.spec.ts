@@ -74,8 +74,14 @@ const articleCards = (page: Page) => page.locator('[data-component="ArticleItem"
 const comment = (page: Page, text: string) =>
   page.locator('[data-component="Comment"]').filter({hasText: text})
 
+// Clicked near its top-left corner rather than at its centre: the link is an overlay covering the
+// whole card, and a card whose footer wraps onto a second line puts that interactive row under the
+// centre point, where it swallows the click.
 const openArticle = (page: Page, title: string) =>
-  articleCards(page).filter({hasText: title}).getByRole("link", {name: title, exact: true}).click()
+  articleCards(page)
+    .filter({hasText: title})
+    .getByRole("link", {name: title, exact: true})
+    .click({position: {x: 20, y: 20}})
 
 test("US-037 write and publish an article", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
