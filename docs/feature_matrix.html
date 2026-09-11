@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flotilla feature matrix</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --fg: #1a1a1a;
+    --muted: #5b6470;
+    --bg: #ffffff;
+    --surface: #f6f7f9;
+    --border: #dfe3e8;
+    --accent: #6d28d9;
+    --ok: #166534;
+    --ok-bg: #dcfce7;
+    --partial: #92400e;
+    --partial-bg: #fef3c7;
+    --no: #991b1b;
+    --no-bg: #fee2e2;
+    --design: #1e40af;
+    --design-bg: #dbeafe;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: #e6e8eb;
+      --muted: #9aa4b2;
+      --bg: #15171a;
+      --surface: #1d2025;
+      --border: #30353c;
+      --accent: #c4b5fd;
+      --ok: #86efac;
+      --ok-bg: #14311f;
+      --partial: #fcd34d;
+      --partial-bg: #3a2c0a;
+      --no: #fca5a5;
+      --no-bg: #3a1414;
+      --design: #93c5fd;
+      --design-bg: #12233f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 1rem; }
+  h2 {
+    font-size: 1.4rem;
+    margin: 3rem 0 1rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid var(--border);
+  }
+  h3 { font-size: 1.1rem; margin: 2rem 0 0.75rem; }
+  p { margin: 0.75rem 0; }
+  a { color: var(--accent); }
+  code {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.35em;
+    font: 0.875em/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  ul { padding-left: 1.4rem; }
+  li { margin: 0.35rem 0; }
+  .table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.95rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--surface);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  tbody tr:nth-child(even) { background: color-mix(in srgb, var(--surface) 55%, transparent); }
+  .status {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .s-ok { color: var(--ok); background: var(--ok-bg); }
+  .s-partial { color: var(--partial); background: var(--partial-bg); }
+  .s-no { color: var(--no); background: var(--no-bg); }
+  .s-design { color: var(--design); background: var(--design-bg); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+</style>
+</head>
+<body>
+<main>
+<h1>Flotilla feature matrix</h1>
+<p>Flotilla&#39;s feature set, grouped by the areas of the pasted outline and expanded
+with capabilities found in the codebase. Status values:</p>
+<ul>
+<li><strong>Implemented</strong> — reachable in the app today.</li>
+<li><strong>Partial</strong> — present but limited, gated behind configuration, or dependent on
+the relay/native platform.</li>
+<li><strong>Not implemented</strong> — no code path exists.</li>
+<li><strong>By design</strong> — supplied by the Nostr protocol or the deployment model rather
+than by app code.</li>
+</ul>
+<p>Notes point at the route or module that carries the feature; <code>US-nnn</code> refers to
+the story catalog in <code>e2e/USER_STORIES.md</code>.</p>
+<h2>Chat</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Spaces (relay-based communities)</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces</code>, <code>app/rooms.ts</code>; NIP-29 relay-as-group. US-009–017</td>
+</tr>
+<tr>
+<td>Rooms / channels</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/[h]</code>, <code>RoomChat.svelte</code>. US-018–028</td>
+</tr>
+<tr>
+<td>Direct messages</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/chat</code>, <code>app/chats.ts</code>; NIP-17/44/59. US-029–036, US-108–109</td>
+</tr>
+<tr>
+<td>Group DMs</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ChatStart.svelte</code>, <code>ChatMembers.svelte</code>. US-030</td>
+</tr>
+<tr>
+<td>Voice &amp; video calls</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>app/call.ts</code>, <code>app/callEngine.ts</code>, LiveKit; relay must advertise the endpoint. Calls and video are out of e2e scope</td>
+</tr>
+<tr>
+<td>Push notifications</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>app/push/</code>, <code>settings/alerts</code>; web, FCM/APNs and Android fallback. US-086, US-120</td>
+</tr>
+<tr>
+<td>Threads</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/threads</code>, <code>ThreadBoard.svelte</code>. US-042–045</td>
+</tr>
+<tr>
+<td>Media / file sharing</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>app/uploads.ts</code>, Blossom servers; upload, drag/paste, native clipboard. US-057, US-062</td>
+</tr>
+<tr>
+<td>Room create / edit / delete</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>RoomCreate.svelte</code>, <code>RoomEdit.svelte</code>. US-020</td>
+</tr>
+<tr>
+<td>Room join / leave and member lists</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>RoomMembers.svelte</code>; private-room access requests in <code>RoomAccess.svelte</code>. US-019, US-021, US-022</td>
+</tr>
+<tr>
+<td>Replies, edits and deletes</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ComposeParent.svelte</code>; up-arrow edit, US-023, US-024, US-035</td>
+</tr>
+<tr>
+<td>Reactions</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>EventReactButtons.svelte</code>, <code>app/reactions.ts</code>. US-025, US-040</td>
+</tr>
+<tr>
+<td>Pinned messages</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>RoomPinnedMessages.svelte</code>, <code>app/roomPins.ts</code>. US-026</td>
+</tr>
+<tr>
+<td>Forward / share to another room</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>Share.svelte</code>, <code>ShareEvent.svelte</code>. US-028, US-106</td>
+</tr>
+<tr>
+<td>Drafts</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>app/drafts.ts</code>. US-058</td>
+</tr>
+<tr>
+<td>Read out loud and dictation</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>SpeechBanner.svelte</code>, <code>app/dictation.ts</code>, <code>app/speech.ts</code>; OpenRouter key. US-119</td>
+</tr>
+<tr>
+<td>Room and space search</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>RoomSearch.svelte</code>, <code>SpaceSearch.svelte</code>. US-017, US-027</td>
+</tr>
+<tr>
+<td>Mentions, room references, hashtags, custom emoji</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>@welshman/editor</code> suggestions, <code>ContentMention.svelte</code>, <code>ContentTopic.svelte</code>, <code>ContentEmoji.svelte</code>. US-056, US-066</td>
+</tr>
+<tr>
+<td>Link previews and rich embeds</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ContentLinkBlock.svelte</code>, <code>NoteContent*.svelte</code>; notes, articles, threads, images, video, invoices/Cashu. US-062–067</td>
+</tr>
+<tr>
+<td>Send delay, per-relay delivery status, cancel and retry</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ThunkStatus.svelte</code>, <code>app/thunks.ts</code>. US-068–073</td>
+</tr>
+<tr>
+<td>Zaps on messages</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>Zap.svelte</code>, <code>app/lightning.ts</code>; NIP-57. US-115</td>
+</tr>
+<tr>
+<td>Unread indicators and mute</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>app/notifications.ts</code>. US-103, US-104, US-110–114</td>
+</tr>
+</tbody></table>
+<h2>Events</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Calendar events</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/calendar</code>, <code>CalendarEvent*.svelte</code>; NIP-52. US-046–047</td>
+</tr>
+<tr>
+<td>Monthly calendar view</td>
+<td><span class="status s-no">Not implemented</span></td>
+<td>The calendar renders a chronological agenda, centered on today or the next event</td>
+</tr>
+<tr>
+<td>RSVP / ticketing</td>
+<td><span class="status s-no">Not implemented</span></td>
+<td>No attendance or ticket kinds</td>
+</tr>
+<tr>
+<td>Event detail with location and host</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>CalendarEventMeta.svelte</code>, <code>CalendarEventHeader.svelte</code>. US-047</td>
+</tr>
+<tr>
+<td>Comments and reactions on events</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>EventComments.svelte</code>, <code>EventReactButtons.svelte</code>. US-052</td>
+</tr>
+</tbody></table>
+<h2>Community content</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Long-form articles</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/articles</code>, <code>app/articles.ts</code>; NIP-23. US-037–039, US-041</td>
+</tr>
+<tr>
+<td>Polls</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/polls</code>, <code>PollCreate.svelte</code>; NIP-88, single- and multiple-choice. US-048–049</td>
+</tr>
+<tr>
+<td>Funding goals</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/goals</code>, <code>GoalCreate.svelte</code>; zap goal kind. US-050, US-052</td>
+</tr>
+<tr>
+<td>Comments and reactions across content</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>CommentTree.svelte</code>, <code>EventActivity.svelte</code>. US-039, US-052</td>
+</tr>
+<tr>
+<td>Create-from-room composer menu</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ComposeMenu.svelte</code>; publishes a kind-9 quote for interoperability. US-041, US-055</td>
+</tr>
+</tbody></table>
+<h2>Moderation</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ban / unban</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>SpaceMemberMenu.svelte</code>, <code>SpaceMembersBanned.svelte</code>; NIP-86 <code>banpubkey</code> / <code>unbanpubkey</code>. US-095</td>
+</tr>
+<tr>
+<td>Allow list</td>
+<td><span class="status s-no">Not implemented</span></td>
+<td>Only banning is wired up; no <code>allowpubkey</code> path</td>
+</tr>
+<tr>
+<td>Member management</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/directory</code>, <code>SpaceMembersAdd.svelte</code>, <code>RoomMembersAdd.svelte</code>. US-022, US-095</td>
+</tr>
+<tr>
+<td>Invite codes / access control</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>app/access.ts</code>, <code>SpaceInvite.svelte</code>, <code>RoomInvite.svelte</code>; relay claims and scoped codes. US-010–011, US-094</td>
+</tr>
+<tr>
+<td>Role management and badges</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/directory</code>, <code>app/roles.ts</code>, <code>SpaceRoles.svelte</code>; NIP-29 <code>member</code> tags. US-093</td>
+</tr>
+<tr>
+<td>Granular RBAC / role permissions</td>
+<td><span class="status s-partial">Partial</span></td>
+<td>Roles are assignable labels; effective permissions remain relay-level (member/admin), not per-role grants</td>
+</tr>
+<tr>
+<td>Tier entitlements</td>
+<td><span class="status s-partial">Partial</span></td>
+<td>Hosting plans gate Blossom and LiveKit toggles in <code>app/hosting.ts</code>; not a general entitlement system. US-099, US-100</td>
+</tr>
+<tr>
+<td>Reports and content moderation</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>Report*.svelte</code>, <code>app/actionItems.ts</code>; author deletes, member reports, admin removes. US-096</td>
+</tr>
+<tr>
+<td>Action-items queue</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>SpaceActionItems.svelte</code>, <code>app/actionItems.ts</code>. US-097</td>
+</tr>
+<tr>
+<td>Relay policy warnings</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>RelaySummary.svelte</code>, <code>app/policies.ts</code>; auth-required, payment-required, proof-of-work. US-012, US-015</td>
+</tr>
+<tr>
+<td>Unsigned-relay trust prompt</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>SpaceTrustRelay.svelte</code>. US-012</td>
+</tr>
+<tr>
+<td>Mute rooms and spaces</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>app/settings.ts</code>, <code>RoomDetail.svelte</code>. US-104</td>
+</tr>
+<tr>
+<td>Feature / pin content as admin</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>EditFeaturedContent.svelte</code>, <code>app/featured.ts</code>. US-092</td>
+</tr>
+</tbody></table>
+<h2>Member tools</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Member profiles</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/people/[npub]</code>, <code>ProfilePage.svelte</code>. US-075, US-080, US-081</td>
+</tr>
+<tr>
+<td>Edit own profile</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ProfileEditForm.svelte</code>, <code>settings/profile</code>. US-078</td>
+</tr>
+<tr>
+<td>Searchable directory</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/directory</code>; search by name or role. US-093</td>
+</tr>
+<tr>
+<td>People search</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>Search.svelte</code>, <code>app/social.ts</code>. US-074</td>
+</tr>
+<tr>
+<td>Classifieds</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/classifieds</code>, <code>ClassifiedForm.svelte</code>; NIP-99, sold status. US-051</td>
+</tr>
+<tr>
+<td>Content library / pinboards</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces/[relay]/library</code>, <code>Pinboard*.svelte</code>, <code>app/pinboards.ts</code>. US-053–054</td>
+</tr>
+<tr>
+<td>Follow / unfollow</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ProfileMenu.svelte</code>, follow list. US-076</td>
+</tr>
+<tr>
+<td>Web of trust</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ProfileTrust.svelte</code>, <code>app/social.ts</code>. US-077</td>
+</tr>
+<tr>
+<td>Mute accounts</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>settings/content</code>. US-082</td>
+</tr>
+<tr>
+<td>Profile notes feed</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ProfilePageNotes.svelte</code>. US-079</td>
+</tr>
+<tr>
+<td>Profile sharing, QR and raw info</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ProfileQrCode.svelte</code>, <code>ProfileInfo.svelte</code>, <code>InfoNostr.svelte</code>. US-081</td>
+</tr>
+<tr>
+<td>Statuses</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ProfileStatus.svelte</code>; NIP-38. US-075</td>
+</tr>
+</tbody></table>
+<h2>White-labeling</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Branded web app</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>VITE_PLATFORM_*</code> env, <code>app/env.ts</code>; name, url, logo, accent, description, terms, privacy</td>
+</tr>
+<tr>
+<td>Branded Android app</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>android/</code>, <code>@capacitor/assets</code>, <code>pnpm run release:android</code></td>
+</tr>
+<tr>
+<td>Branded iOS app</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ios/</code>, Capacitor build</td>
+</tr>
+<tr>
+<td>Branded desktop app</td>
+<td><span class="status s-partial">Partial</span></td>
+<td><code>electron/</code>, <code>scripts/build-desktop.sh</code>; dev baseline only, no installers, release pipeline or auto-update</td>
+</tr>
+<tr>
+<td>PWA / installable web app</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>@vite-pwa/sveltekit</code>, <code>manifest.webmanifest</code>, <code>service-worker.js</code></td>
+</tr>
+<tr>
+<td>Push to your own app</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>VITE_PUSH_SERVER</code> / <code>VITE_PUSH_BRIDGE</code>, <code>app/push/</code></td>
+</tr>
+<tr>
+<td>Custom domain</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>CustomDomainModal.svelte</code>, <code>app/hosting.ts</code>; CNAME verification for hosted relays. US-101</td>
+</tr>
+<tr>
+<td>Platform mode (own relays only)</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>VITE_PLATFORM_RELAYS</code>; disables browse/add/select and makes the platform relay home</td>
+</tr>
+<tr>
+<td>Configurable defaults</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>VITE_DEFAULT_SPACES</code>, <code>VITE_DEFAULT_RELAYS</code>, <code>VITE_DEFAULT_MESSAGING_RELAYS</code>, <code>VITE_DEFAULT_BLOSSOM_SERVERS</code></td>
+</tr>
+<tr>
+<td>Native share sheet and deep links</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>@capacitor/share</code>, Android share intent, <code>nostr:</code> / <code>https:</code> dispatch. US-106, US-107</td>
+</tr>
+</tbody></table>
+<h2>Self-hosting</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Self-hostable</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>Dockerfile</code>, <code>server.js</code>; <code>docker run</code> or static build copied to any host</td>
+</tr>
+<tr>
+<td>Open source</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td>MIT license (<code>LICENSE</code>)</td>
+</tr>
+<tr>
+<td>Static-host deployment</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>pnpm run build</code> output can be copied to any static host (<code>README.md</code>)</td>
+</tr>
+<tr>
+<td>Managed hosting platform</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>app/hosting.ts</code>, <code>settings/hosting</code>, <code>/spaces/[relay]/admin</code>; create, plan, domain, pause and billing. US-098–102</td>
+</tr>
+<tr>
+<td>Relay health checks</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>HomeHealthChecks.svelte</code>, <code>app/healthChecks.ts</code>. US-116</td>
+</tr>
+</tbody></table>
+<h2>SSO</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SAML / OIDC / SCIM / Workspace SSO</td>
+<td><span class="status s-no">Not implemented</span></td>
+<td>No enterprise identity provider integration</td>
+</tr>
+<tr>
+<td>Email / OTP sign-in</td>
+<td><span class="status s-partial">Partial</span></td>
+<td><code>LogInEmail.svelte</code>, <code>LogInOTP.svelte</code>, <code>app/pomade.ts</code>; custodial Pomade flow, enabled only when <code>VITE_POMADE_SIGNERS</code> is set. Out of e2e scope</td>
+</tr>
+<tr>
+<td>Browser extension sign-in</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td>NIP-07, <code>LogInSelect.svelte</code>. US-004</td>
+</tr>
+<tr>
+<td>Remote signer / bunker</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td>NIP-46, <code>LogInBunker.svelte</code>, <code>BunkerConnect.svelte</code>, QR flow. US-005</td>
+</tr>
+<tr>
+<td>Native Android signer</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td>NIP-55; out of e2e scope</td>
+</tr>
+<tr>
+<td>Relay authentication</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td>NIP-42, <code>app/access.ts</code>, <code>settings/privacy</code></td>
+</tr>
+<tr>
+<td>Key backup on signup</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>KeyDownload.svelte</code>; plain nsec or password-encrypted ncryptsec. US-002</td>
+</tr>
+<tr>
+<td>Data export</td>
+<td><span class="status s-no">Not implemented</span></td>
+<td>No user-data export; the privacy page only sends diagnostic logs to the developer</td>
+</tr>
+<tr>
+<td>Account deletion</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>ProfileDelete.svelte</code>, <code>settings/profile</code>; broadcasts account deletion. US-008</td>
+</tr>
+</tbody></table>
+<h2>Portable identity &amp; history</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Customer holds keys</td>
+<td><span class="status s-design">By design</span></td>
+<td>Identity is a self-sovereign <code>nsec</code>/<code>npub</code>; no account lives with the operator</td>
+</tr>
+<tr>
+<td>Customer holds source and data</td>
+<td><span class="status s-design">By design</span></td>
+<td>Self-hostable relay plus user-chosen relays; events are portable Nostr events</td>
+</tr>
+<tr>
+<td>One-click export / import</td>
+<td><span class="status s-no">Not implemented</span></td>
+<td>No bundled export or re-import of a user&#39;s data</td>
+</tr>
+<tr>
+<td>Multi-device sync</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td>NIP-78 app-data sync, <code>app/sync.ts</code>; read state and settings follow the account</td>
+</tr>
+<tr>
+<td>Local-first history</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td>IndexedDB persistence, <code>app/storage.ts</code>, <code>lib/indexeddb.ts</code>; read conversations survive relay loss. US-109</td>
+</tr>
+<tr>
+<td>Account portability across clients</td>
+<td><span class="status s-design">By design</span></td>
+<td>The same keys and relay events work in any NIP-29 client</td>
+</tr>
+<tr>
+<td>Key recovery</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>KeyRecoveryRequest.svelte</code>, <code>KeyRecoveryConfirm.svelte</code> for custodial (Pomade) accounts</td>
+</tr>
+</tbody></table>
+<h2>Home &amp; discovery</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Home dashboard / inbox</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/home</code>, <code>HomeInbox.svelte</code>, <code>app/inbox.ts</code>. US-105, US-116</td>
+</tr>
+<tr>
+<td>Cross-space activity summary</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>HomeActivity.svelte</code>, <code>app/feeds.ts</code>. US-116</td>
+</tr>
+<tr>
+<td>Network feed of follows</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>HomeNetwork.svelte</code>, <code>app/feeds.ts</code>. US-117</td>
+</tr>
+<tr>
+<td>Space browse, search and reorder</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>/spaces</code>, <code>PrimaryNavSpaces.svelte</code>, drag reordering. US-009</td>
+</tr>
+<tr>
+<td>Join by invite / direct link</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>SpaceJoin.svelte</code>, <code>/join</code>, invite parsing in <code>app/access.ts</code>. US-010, US-011</td>
+</tr>
+<tr>
+<td>Link and bech32 resolution</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>[bech32]</code> route, <code>app/routes.ts</code>; npub/nevent/note. US-107</td>
+</tr>
+</tbody></table>
+<h2>Lightning &amp; payments</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Zap messages and profiles</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>Zap.svelte</code>, <code>app/lightning.ts</code>; NIP-57</td>
+</tr>
+<tr>
+<td>Wallet connection (NWC / WebLN)</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>settings/wallet</code>, <code>app/lightning.ts</code>; NIP-47. US-115</td>
+</tr>
+<tr>
+<td>Lightning address and zap presets</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>settings/wallet</code>, <code>app/lightning.ts</code>. US-091</td>
+</tr>
+<tr>
+<td>Hosting billing and invoices</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>PaymentDialog.svelte</code>, <code>PaymentSetup.svelte</code>, <code>app/hosting.ts</code>; Lightning and card. US-102</td>
+</tr>
+</tbody></table>
+
+</main>
+</body>
+</html>
