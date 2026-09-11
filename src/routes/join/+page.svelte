@@ -3,7 +3,7 @@
   import Dialog from "@lib/components/Dialog.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import {goToHome} from "@app/routes"
-  import {modal} from "@app/modal"
+  import {getModal} from "@app/modal.svelte"
 
   const children = {
     component: SpaceInviteAccept,
@@ -15,6 +15,6 @@
   }
 </script>
 
-{#if !$modal}
+{#if !getModal()}
   <Dialog {children} onClose={goToHome} />
 {/if}

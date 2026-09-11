@@ -15,7 +15,8 @@
   import Search from "@app/components/Search.svelte"
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
   import {PLATFORM_RELAYS} from "@app/env"
-  import {modal, popModal, pushModal} from "@app/modal"
+  import {popModal, pushModal} from "@app/modal"
+  import {getModal} from "@app/modal.svelte"
   import {notifications} from "@app/notifications"
   import {userSpaceUrls} from "@app/rooms"
   import {goToChat, lastSpaceUrl, makeSpacePath} from "@app/routes"
@@ -39,7 +40,7 @@
   // they were in when they're somewhere else.
   const spaceUrl = $derived($lastSpaceUrl ?? PLATFORM_RELAYS[0] ?? $userSpaceUrls[0])
 
-  const spaceMenuIsOpen = $derived($modal?.component === SpaceMenuDrawer)
+  const spaceMenuIsOpen = $derived(getModal()?.component === SpaceMenuDrawer)
 
   const spaceMenuLabel = $derived(spaceMenuIsOpen ? "Close space menu" : "Open space menu")
 

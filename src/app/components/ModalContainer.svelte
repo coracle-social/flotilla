@@ -1,11 +1,14 @@
 <script lang="ts">
-  import {onMount, mount, unmount} from "svelte"
+  import {mount, unmount, untrack} from "svelte"
   import Drawer from "@lib/components/Drawer.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
-  import {modal, modalStack, popModal} from "@app/modal"
+  import {popModal} from "@app/modal"
+  import {getModal, getModalStack} from "@app/modal.svelte"
 
   const closeModal = () => {
-    if ($modal && !$modal.options.noEscape) {
+    const modal = getModal()
+
+    if (modal && !modal.options.noEscape) {
       popModal()
     }
   }
@@ -25,9 +28,11 @@
   let element: HTMLElement
   const instances: Record<string, any> = {}
 
-  onMount(() => {
-    return modalStack.subscribe($modalStack => {
-      const ids = $modalStack.map(({id}) => id)
+  $effect(() => {
+    const stack = getModalStack()
+
+    untrack(() => {
+      const ids = stack.map(({id}) => id)
 
       for (const [id, instance] of Object.entries(instances)) {
         if (!ids.includes(id)) {
@@ -36,7 +41,7 @@
         }
       }
 
-      for (const item of $modalStack) {
+      for (const item of stack) {
         if (instances[item.id]) {
           continue
         }

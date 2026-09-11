@@ -7,7 +7,7 @@
   import SpeechBanner from "@app/components/SpeechBanner.svelte"
   import PrimaryNav from "@app/components/PrimaryNav.svelte"
   import {app} from "@app/core"
-  import {modal} from "@app/modal"
+  import {getModal} from "@app/modal.svelte"
 
   type Props = {
     children: Snippet
@@ -22,7 +22,7 @@
       <PrimaryNav>
         {@render children?.()}
       </PrimaryNav>
-    {:else if !$modal}
+    {:else if !getModal()}
       <Dialog noEscape children={{component: Landing, props: {}}} />
     {/if}
   </div>

@@ -21,7 +21,8 @@
   import {deriveRelayAuthError} from "@app/access"
   import {relays, roomLists, user} from "@app/core"
   import {userSpaceUrls} from "@app/rooms"
-  import {modal, pushModal} from "@app/modal"
+  import {pushModal} from "@app/modal"
+  import {getModal} from "@app/modal.svelte"
   import {relaysPendingTrust} from "@app/policies"
   import {decodeRelay} from "@app/relays"
   import {makeSpacePath} from "@app/routes"
@@ -81,7 +82,7 @@
   // Watch for relay errors and notify the user
   // Direct links skip Discover — prompt to join when relay is not in the user's space list.
   $effect(() => {
-    if ($modal) return
+    if (getModal()) return
 
     if (redirectUrl && redirectUrl !== url && !redirectPrompted.has(url)) {
       redirectPrompted.add(url)
