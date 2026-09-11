@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
   import {derived, writable} from "svelte/store"
-  import type {Writable} from "svelte/store"
+  import type {Readable} from "svelte/store"
   import {sortBy, uniqBy, now} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import {NOTE, outbox} from "@welshman/util"
@@ -27,6 +27,11 @@
 
   const pinnedIds = derived($app.use(PinLists).one(pubkey), $pinList => $pinList?.ids() ?? [])
 
+  // Pinned notes are asked for by id instead of by the feed's filters, so they get a store of
+  // their own. A feed dedupes and sorts what it holds as it loads it, and writing to its store
+  // from out here bypasses both.
+  const pinnedEvents = writable<TrustedEvent[]>([])
+
   $effect(() => {
     if ($pinnedIds.length > 0) {
       const controller = new AbortController()
@@ -36,7 +41,8 @@
           relays: $relays,
           filters: [{ids: $pinnedIds}],
           signal: controller.signal,
-          onEvent: e => events.update($events => uniqBy(e => e.id, $events.concat(e))),
+          onEvent: event =>
+            pinnedEvents.update($pinned => uniqBy(e => e.id, $pinned.concat(event))),
         }),
       )
 
@@ -49,12 +55,14 @@
 
   const exhausted = $derived($older?.status === "exhausted")
   const loading = $derived(isFeedLoading($older))
-  let events: Writable<TrustedEvent[]> = $state(writable([]))
+  let events: Readable<TrustedEvent[]> = $state(writable([]))
 
   const feedEvents = $derived(
     sortBy(
       e => ($pinnedIds.includes(e.id) ? -(now() + e.created_at) : -e.created_at),
-      $events.filter(e => getReplyTags(e.tags).replies.length === 0),
+      uniqBy(e => e.id, [...$pinnedEvents, ...$events]).filter(
+        e => getReplyTags(e.tags).replies.length === 0,
+      ),
     ),
   )
 

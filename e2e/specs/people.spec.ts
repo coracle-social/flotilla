@@ -465,9 +465,11 @@ test("US-079 read a person's notes", async ({seed, as}) => {
       makeEvent(NOTE, {content: "Anyone seen the tide charts?", created_at: at(4, HOUR)}),
     )
 
+    // Older than the feed's first window, so the pin is fetched by id while the feed only
+    // reaches it by paging — the order in which one note arrives down both routes.
     pinned = space.event(
       user.alice,
-      makeEvent(NOTE, {content: "PINNED how to read a tide chart", created_at: at(3, HOUR)}),
+      makeEvent(NOTE, {content: "PINNED how to read a tide chart", created_at: at(2, MONTH)}),
     )
 
     space.event(
@@ -521,6 +523,7 @@ test("US-079 read a person's notes", async ({seed, as}) => {
 
   // The pin outranks the newer notes; the rest are newest first.
   await expect(list.first()).toContainText("PINNED")
+  await expect(list.filter({hasText: "PINNED"})).toHaveCount(1)
   await expect(list.nth(1)).toContainText("NEWEST")
   await expect(list.nth(2)).toContainText("MIDDLE")
 
