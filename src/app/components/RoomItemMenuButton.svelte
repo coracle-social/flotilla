@@ -31,7 +31,7 @@
 
 <svelte:document onmousemove={tippy?.visible ? onMouseMove : undefined} />
 
-<Button onclick={open} class="button button-xs button-neutral join-item">
+<Button aria-label="More options" onclick={open} class="button button-xs button-neutral join-item">
   <Tippy
     bind:controller={tippy}
     component={RoomItemMenu}

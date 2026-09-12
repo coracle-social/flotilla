@@ -22,16 +22,19 @@
 <div class="join text-xs">
   <ChatMessageEmojiButton {event} {pubkeys} />
   {#if replyTo}
-    <Button class="button button-neutral button-xs join-item" onclick={reply}>
+    <Button aria-label="Reply" class="button button-neutral button-xs join-item" onclick={reply}>
       <Icon size={4} icon={Reply} />
     </Button>
   {/if}
   {#if edit}
-    <Button class="button button-neutral button-xs join-item" onclick={onEdit}>
+    <Button aria-label="Edit" class="button button-neutral button-xs join-item" onclick={onEdit}>
       <Icon size={4} icon={Pen} />
     </Button>
   {/if}
-  <Button class="button button-neutral button-xs join-item" onclick={showInfo}>
+  <Button
+    aria-label="Message info"
+    class="button button-neutral button-xs join-item"
+    onclick={showInfo}>
     <Icon size={4} icon={Code2} />
   </Button>
 </div>

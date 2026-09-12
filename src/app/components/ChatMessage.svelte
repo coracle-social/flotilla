@@ -70,7 +70,8 @@
       params={{interactive: true, trigger: "manual"}}>
       <button
         type="button"
-        class="opacity-0 transition-all"
+        aria-label="Message actions"
+        class="opacity-0 transition-all focus:opacity-100"
         class:group-hover:opacity-100={!isMobile}
         onclick={togglePopover}>
         <Icon icon={MenuDots} size={4} />

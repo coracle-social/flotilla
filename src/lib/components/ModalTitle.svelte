@@ -1,11 +1,22 @@
 <script lang="ts">
+  import {getContext} from "svelte"
   import type {Snippet} from "svelte"
+  import cx from "classnames"
+  import {randomId} from "@welshman/lib"
+  import type {DialogContext} from "@lib/components/dialog"
+  import {DIALOG_CONTEXT} from "@lib/components/dialog"
 
-  interface Props {
+  type Props = {
+    class?: string
     children: Snippet
   }
 
-  const {children}: Props = $props()
+  const {children, ...props}: Props = $props()
+
+  const id = randomId()
+  const context = getContext<DialogContext | undefined>(DIALOG_CONTEXT)
+
+  $effect(() => context?.registerTitle(id))
 </script>
 
-<h1 class="heading">{@render children()}</h1>
+<h1 {id} class={cx("heading", props.class)} tabindex="-1">{@render children()}</h1>

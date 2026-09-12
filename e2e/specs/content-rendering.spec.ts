@@ -138,8 +138,10 @@ test("US-062 see images and video inline", async ({seed, as}) => {
   await inlineImage.click()
 
   // The lightbox is a fullscreen modal holding nothing but the image.
-  const lightbox = page.locator(".dialog img")
+  const preview = page.getByRole("dialog", {name: "Content preview"})
+  const lightbox = preview.locator("img")
 
+  await expect(preview).toBeVisible()
   await expect(lightbox).toBeVisible()
 
   await page.keyboard.press("Escape")

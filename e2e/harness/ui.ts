@@ -7,17 +7,12 @@ import type {Locator, Page} from "@playwright/test"
  * locator is shaped the way it is has one copy to keep true.
  */
 
-// The panel of the modal carrying a given title. `.dialog` is on both the backdrop wrapper and the
-// panel inside it, so the last match is the panel.
 export const dialog = (page: Page, title: string) =>
-  page
-    .locator(".dialog")
-    .filter({has: page.getByRole("heading", {name: title, exact: true})})
-    .last()
+  page.getByRole("dialog", {name: title, exact: true})
 
 // The modal on top, for one with no heading of its own or one pushed over another rather than
 // alongside it.
-export const topDialog = (page: Page) => page.locator(".dialog").last()
+export const topDialog = (page: Page) => page.getByRole("dialog").last()
 
 // A modal is mounted alongside the page it covers, so a page's own "Create" and the modal's submit
 // are both in the dom at once. Anything said about the form is scoped to the modal's own to say
@@ -55,8 +50,8 @@ export const pickEmoji = async (page: Page, opener: Locator, annotation: string)
 
 export const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
 
-// The room's page bar carries a search button and the detail button, in that order.
-export const openRoomDetail = (page: Page) => pageBar(page).getByRole("button").last().click()
+export const openRoomDetail = (page: Page) =>
+  pageBar(page).getByRole("button", {name: "Room details"}).click()
 
 export const roomLink = (page: Page, name: string) =>
   page.locator(".space-menu__scroll").getByRole("link", {name})
@@ -94,13 +89,11 @@ export const messages = (page: Page) => page.locator(".room__item")
 
 export const message = (page: Page, text: string) => messages(page).filter({hasText: text})
 
-// RoomItem gives its hover actions no accessible names — every one is an icon. Their order is
-// fixed by the component: zap, emoji, reply, edit (only on your own recent message), menu.
 export const messageActions = (page: Page, text: string) =>
   message(page, text).locator(".room__item-actions button")
 
 export const openMessageMenu = (page: Page, text: string) =>
-  messageActions(page, text).last().click()
+  message(page, text).getByRole("button", {name: "More options"}).click()
 
 export const bubble = (page: Page, text: string) =>
   page.locator(".chat-bubble").filter({hasText: text})

@@ -20,6 +20,9 @@
   }
 </script>
 
-<EmojiButton {onEmoji} class="button button-neutral button-xs join-item">
+<EmojiButton
+  aria-label="Add a reaction"
+  {onEmoji}
+  class="button button-neutral button-xs join-item">
   <Icon icon={SmileCircle} size={4} />
 </EmojiButton>

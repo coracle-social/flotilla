@@ -14,9 +14,15 @@
   }
 
   const {children}: Props = $props()
+
+  const blockingModal = $derived.by(() => {
+    const modal = getModal()
+
+    return Boolean(modal && !modal.options.drawer)
+  })
 </script>
 
-<div class="flex h-screen flex-col overflow-hidden">
+<div class="flex h-screen flex-col overflow-hidden" inert={blockingModal}>
   <div class="flex min-h-0 flex-1 overflow-hidden">
     {#if $app.user?.pubkey}
       <PrimaryNav>

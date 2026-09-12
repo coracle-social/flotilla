@@ -43,6 +43,12 @@ test("US-001 sign-in gate for logged-out visitors", async ({seed, visit}) => {
   const page = await visit(roomPath(url, "general"))
 
   await expect(gate(page)).toBeVisible()
+  const signInGate = page.getByRole("dialog", {name: "Welcome to Flotilla!"})
+  const logIn = signInGate.getByRole("button", {name: "Log in"})
+
+  await expect(signInGate).toBeVisible()
+  await expect(logIn).toBeFocused()
+  await expect(signInGate.getByRole("button", {name: "Close dialog"})).toHaveCount(0)
   await expect(page.getByRole("button", {name: "Log in"})).toBeVisible()
   await expect(page.getByRole("button", {name: "Create an account"})).toBeVisible()
   await expect(page.getByRole("link", {name: "Terms of Service"})).toHaveAttribute(
@@ -58,8 +64,12 @@ test("US-001 sign-in gate for logged-out visitors", async ({seed, visit}) => {
 
   await expect(gate(page)).toBeVisible()
 
-  // The backdrop, clicked in its top left corner so the dialog itself isn't what gets hit.
-  await page.getByRole("button", {name: "Close dialog"}).click({position: {x: 4, y: 4}})
+  for (const key of ["Tab", "Tab", "Shift+Tab", "Shift+Tab"]) {
+    await page.keyboard.press(key)
+    expect(await signInGate.evaluate(dialog => dialog.contains(document.activeElement))).toBe(true)
+  }
+
+  await page.locator(".dialog-overlay > button").click({position: {x: 4, y: 4}})
 
   await expect(gate(page)).toBeVisible()
 

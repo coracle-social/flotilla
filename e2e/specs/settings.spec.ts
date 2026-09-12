@@ -262,21 +262,27 @@ test("US-090 change the app's appearance", async ({seed, as}) => {
 
   const page = await as(users.alice, "/settings/theme", {context: {colorScheme: "light"}})
   const body = page.locator("body")
+  const colorScheme = () =>
+    page.evaluate(() => getComputedStyle(document.documentElement).colorScheme)
 
   await expect(body).toHaveAttribute("data-theme", "light")
+  await expect.poll(colorScheme).toBe("light")
 
   await page.getByRole("button", {name: "Dark", exact: true}).click()
 
   await expect(body).toHaveAttribute("data-theme", "dark")
+  await expect.poll(colorScheme).toBe("dark")
 
   await page.getByRole("button", {name: "System", exact: true}).click()
 
   await expect(body).toHaveAttribute("data-theme", "light")
+  await expect.poll(colorScheme).toBe("light")
 
   // System means the device's, so changing the device's changes the app's.
   await page.emulateMedia({colorScheme: "dark"})
 
   await expect(body).toHaveAttribute("data-theme", "dark")
+  await expect.poll(colorScheme).toBe("dark")
 
   await page.getByLabel("Style").selectOption("navy")
 

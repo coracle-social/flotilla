@@ -95,7 +95,7 @@
   })
 </script>
 
-<Modal>
+<Modal label="Add relays">
   <ModalBody>
     <label class="input input-group flex w-full items-center gap-2">
       <Icon icon={Magnifier} />

@@ -608,17 +608,25 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
 
   await preview.click()
 
-  await expect(topDialog(page).getByText("Bob Barnacle")).toBeVisible()
-  await expect(topDialog(page).locator(`img[src="${avatar}"]`)).toBeVisible()
-  await expect(topDialog(page).getByText("Deckhand, dockside cook")).toBeVisible()
-  await expect(topDialog(page).getByText("Scrubbing the decks")).toBeVisible()
-  await expect(topDialog(page).getByText(/Last active/)).toBeVisible()
+  const profile = page.getByRole("dialog", {name: "Profile details"})
+
+  await expect(profile.getByText("Bob Barnacle")).toBeVisible()
+  await expect(profile.locator(`img[src="${avatar}"]`)).toBeVisible()
+  await expect(profile.getByText("Deckhand, dockside cook")).toBeVisible()
+  await expect(profile.getByText("Scrubbing the decks")).toBeVisible()
+  await expect(profile.getByText(/Last active/)).toBeVisible()
+  await expect(profile.getByRole("button", {name: "Close dialog"})).toBeVisible()
+
+  for (const key of ["Tab", "Shift+Tab"]) {
+    await page.keyboard.press(key)
+    expect(await profile.evaluate(dialog => dialog.contains(document.activeElement))).toBe(true)
+  }
 
   await page.keyboard.press("Escape")
 
   await expect(page.locator(".dialog")).toHaveCount(0)
   await expect(page).toHaveURL(new RegExp(`${spacePath(url)}/directory$`))
-  await expect(preview).toBeVisible()
+  await expect(preview).toBeFocused()
 
   await preview.click()
 

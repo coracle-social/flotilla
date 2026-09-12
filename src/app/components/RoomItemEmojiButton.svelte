@@ -33,6 +33,7 @@
 </script>
 
 <EmojiButton
+  aria-label="Add a reaction"
   {onEmoji}
   class="button button-xs button-neutral join-item"
   tippyParams={{placement: "bottom-end"}}>

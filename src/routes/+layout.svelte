@@ -49,14 +49,15 @@
   // Do this asap to avoid a flash of the wrong font size or theme. The stores these mirror live in
   // indexeddb, which doesn't load until well after first paint.
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+  const savedTheme = localStorage.getItem("theme")
+  const initialTheme =
+    savedTheme === "light" || savedTheme === "dark" ? savedTheme : prefersDark ? "dark" : "light"
 
   // @ts-ignore
   document.documentElement.style["font-size"] = `${localStorage.getItem("font-size") || 1.1}rem`
+  document.documentElement.style.colorScheme = initialTheme
   document.body.setAttribute("data-fl-theme", localStorage.getItem("fl-theme") || env.FL_THEME)
-  document.body.setAttribute(
-    "data-theme",
-    localStorage.getItem("theme") || (prefersDark ? "dark" : "light"),
-  )
+  document.body.setAttribute("data-theme", initialTheme)
 
   // Add stuff to window for convenience
   Object.assign(window, {get, nip19, theme, Logger, ...lib, ...util, ...core})
@@ -255,6 +256,7 @@
       activeTheme.subscribe($activeTheme => {
         localStorage.setItem("theme", $activeTheme)
         document.body.setAttribute("data-theme", $activeTheme)
+        document.documentElement.style.colorScheme = $activeTheme
       }),
       flTheme.subscribe($flTheme => {
         localStorage.setItem("fl-theme", $flTheme)

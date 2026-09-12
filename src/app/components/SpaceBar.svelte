@@ -22,14 +22,14 @@
 </script>
 
 <PageBar {...props}>
-  <div class="flex">
+  <div class="flex min-w-0">
     {#if back}
       <Button onclick={back} aria-label="Go back" class="place-self-start pr-3 md:hidden">
         <Icon icon={ArrowLeft} size={7} />
       </Button>
     {/if}
-    <div class="flex grow items-center justify-between gap-4">
-      <div class="flex min-w-0 flex-col">
+    <div class="flex min-w-0 grow items-center justify-between gap-4">
+      <div class="flex min-w-0 grow flex-col">
         <div class="flex min-w-0 items-start gap-2">
           <div class="hidden shrink-0 md:flex md:items-center place-self-center">
             {@render leading?.()}
@@ -38,7 +38,7 @@
             {@render title?.()}
           </div>
         </div>
-        <div class="text-xs text-primary md:hidden">
+        <div class="truncate text-xs text-primary md:hidden">
           {displayRelayUrl(url)}
         </div>
       </div>

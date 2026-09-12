@@ -48,7 +48,7 @@
   })
 </script>
 
-<Modal>
+<Modal label="Share profile">
   <ModalBody>
     <div class="flex flex-col items-center gap-4 text-center">
       <strong>Share Profile</strong>

@@ -64,7 +64,7 @@
   let showMore = $state(false)
 </script>
 
-<Modal>
+<Modal label="Message actions">
   <ModalBody>
     <div class="grid grid-cols-2 gap-2">
       <Button class="{tile} button-outline button-primary" onclick={showEmojiPicker}>

@@ -27,7 +27,7 @@
     <RoomImage {url} {h} />
   {/snippet}
   {#snippet title()}
-    <RoomName {url} {h} />
+    <RoomName {url} {h} class="block" />
   {/snippet}
   {#snippet action()}
     <Button
@@ -36,7 +36,10 @@
       onclick={showRoomSearch}>
       <Icon size={4} icon={Magnifier} />
     </Button>
-    <Button class="button button-neutral button-sm button-square" onclick={showRoomDetail}>
+    <Button
+      class="button button-neutral button-sm button-square"
+      aria-label="Room details"
+      onclick={showRoomDetail}>
       <Icon size={4} icon={InfoCircle} />
     </Button>
   {/snippet}

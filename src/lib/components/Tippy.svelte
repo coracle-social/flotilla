@@ -35,6 +35,12 @@
   // the props it was first mounted with, showing stale data after the source updates.
   const mountedProps = $state({...props})
 
+  let element: Element
+  let popover: Maybe<Instance>
+  let content: Maybe<Record<string, any>>
+  let returnFocus: HTMLElement | undefined
+  let visible = $state(false)
+
   // Building a tippy costs a popper element and a set of listeners, which is wasted on the
   // hover menus of a chat row nobody ever opens. Only a real trigger needs the instance up
   // front — tippy is the one listening for it. A manual one can wait to be shown.
@@ -42,17 +48,27 @@
     popover ??= tippy(element, {
       content: target,
       animation: "shift-away",
-      appendTo: getTippyTarget(),
+      appendTo: getTippyTarget(element),
       trigger: isMobile ? "click" : "mouseenter focus",
       ...params,
       onShow: (instance: Instance) => {
+        const focused = document.activeElement
+
+        returnFocus =
+          focused instanceof HTMLElement && element.contains(focused)
+            ? focused
+            : element.closest<HTMLElement>("button, [href], input, [tabindex]") ||
+              element.querySelector<HTMLElement>("button, [href], input, [tabindex]") ||
+              undefined
         content ??= mount(component, {target, props: mountedProps})
         visible = true
+        document.addEventListener("keydown", onKeyDown)
 
         return params.onShow?.(instance)
       },
       onHidden: (instance: Instance) => {
         visible = false
+        document.removeEventListener("keydown", onKeyDown)
 
         return params.onHidden?.(instance)
       },
@@ -61,10 +77,17 @@
     return popover
   }
 
-  let element: Element
-  let popover: Maybe<Instance>
-  let content: Maybe<Record<string, any>>
-  let visible = $state(false)
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Escape" && visible) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      popover?.hide()
+
+      if (returnFocus?.isConnected) {
+        returnFocus.focus()
+      }
+    }
+  }
 
   controller = {
     show: () => create().show(),
@@ -95,6 +118,7 @@
     }
 
     return () => {
+      document.removeEventListener("keydown", onKeyDown)
       popover?.destroy()
 
       if (content) {

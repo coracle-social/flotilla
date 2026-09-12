@@ -22,7 +22,7 @@
 
   const viewEvent = () => goToEvent($latest!)
 
-  const openSpaces = () => pushModal(ProfileSpaces, {pubkey, url})
+  const openSpaces = () => pushModal(ProfileSpaces, {pubkey, url}, {label: "Profile spaces"})
 
   onMount(() => {
     $network.loadUsingOutbox(pubkey, {limit: 1, kinds: [NOTE, COMMENT, MESSAGE]})

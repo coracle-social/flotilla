@@ -511,6 +511,17 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
   await expect(message(alice, his.id)).toBeVisible()
   await expect(message(alice, hers.id)).toBeVisible()
 
+  const desktopActions = message(bob, his.id).getByRole("button", {name: "Message actions"})
+
+  await desktopActions.focus()
+  await expect(desktopActions).toHaveCSS("opacity", "1")
+  await desktopActions.click()
+  await expect(bob.getByRole("button", {name: "Add a reaction"})).toBeVisible()
+  await expect(bob.getByRole("button", {name: "Reply"})).toBeVisible()
+  await expect(bob.getByRole("button", {name: "Message info"})).toBeVisible()
+  await bob.keyboard.press("Escape")
+  await expect(desktopActions).toBeFocused()
+
   // Reply: the preview appears above the composer, and closing it sends nothing
   await openMessageMenu(alice, his.id)
   await alice.getByRole("button", {name: "Reply"}).click()

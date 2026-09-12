@@ -95,7 +95,7 @@
   })
 </script>
 
-<Modal>
+<Modal label="Profile details">
   <ModalBody>
     <div class="flex flex-col gap-4">
       <div class="flex justify-between">

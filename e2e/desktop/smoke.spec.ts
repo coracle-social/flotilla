@@ -29,7 +29,13 @@ test("the desktop baseline renders, navigates, and keeps external pages outside"
       page.on("pageerror", error => errors.push(error.message))
 
       await page.reload()
-      await expect(page.getByRole("heading")).toBeVisible()
+      const heading = page.getByRole("heading")
+
+      await expect(heading).toBeVisible()
+      await expect(page).toHaveTitle((await heading.textContent())!.replace(/^Welcome to |!$/g, ""))
+      expect(
+        await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme),
+      ).toBe(await page.locator("body").getAttribute("data-theme"))
       const origin = await page.evaluate(() => location.origin)
       expect(origin).toMatch(/^capacitor-electron:\/\//)
 

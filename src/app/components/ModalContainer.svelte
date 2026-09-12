@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type {Component, ComponentProps} from "svelte"
   import {mount, unmount, untrack} from "svelte"
   import Drawer from "@lib/components/Drawer.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
@@ -16,6 +17,7 @@
     const target = event.target
 
     if (
+      !event.defaultPrevented &&
       event.code === "Escape" &&
       target instanceof Element &&
       !target.closest("input, textarea, [contenteditable]")
@@ -25,16 +27,22 @@
   }
 
   let element: HTMLElement
-  const instances: Record<string, any> = {}
+  type WrapperProps = ComponentProps<typeof Dialog>
+
+  const instances: Record<string, {instance: ReturnType<typeof mount>; props: WrapperProps}> = {}
 
   $effect(() => {
     const stack = getModalStack()
 
     untrack(() => {
       const ids = stack.map(({id}) => id)
+      const activeId = ids.at(-1)
 
-      for (const [id, instance] of Object.entries(instances)) {
+      for (const [id, {instance, props}] of Object.entries(instances)) {
+        props.active = id === activeId
+
         if (!ids.includes(id)) {
+          props.restoreFocus = !activeId || Boolean(instances[activeId])
           unmount(instance, {outro: true})
           delete instances[id]
         }
@@ -47,17 +55,24 @@
 
         const {options, component, props} = item
         const wrapper = options.drawer ? Drawer : Dialog
-
-        instances[item.id] = mount(wrapper as any, {
-          target: element,
-          props: {
-            onClose: closeModal,
-            size: options.size,
-            noEscape: options.noEscape,
-            fullscreen: options.fullscreen,
-            children: {component, props},
-          },
+        const wrapperProps = $state({
+          active: item.id === activeId,
+          onClose: closeModal,
+          label: options.label,
+          restoreFocus: true,
+          size: options.size,
+          noEscape: options.noEscape,
+          fullscreen: options.fullscreen,
+          children: {component, props},
         })
+
+        instances[item.id] = {
+          instance: mount(wrapper as Component, {
+            target: element,
+            props: wrapperProps,
+          }),
+          props: wrapperProps,
+        }
       }
     })
   })

@@ -75,15 +75,19 @@ export const anchorDatepicker = (wrapper: HTMLElement) => {
 export const copyToClipboard = (text: string) => {
   const {activeElement} = document
   const input = document.createElement("textarea")
+  const target = activeElement?.closest(".dialog-overlay") || document.body
 
   input.innerHTML = text
-  document.body.appendChild(input)
+  target.appendChild(input)
   input.select()
 
   const result = document.execCommand("copy")
 
-  document.body.removeChild(input)
-  ;(activeElement as HTMLElement).focus()
+  target.removeChild(input)
+
+  if (activeElement instanceof HTMLElement) {
+    activeElement.focus()
+  }
 
   return result
 }
@@ -170,7 +174,13 @@ export const isMobile = "ontouchstart" in document.documentElement
 // this runs thousands of times against a document that is itself thousands of nodes.
 let tippyTarget: Maybe<Element>
 
-export const getTippyTarget = () => {
+export const getTippyTarget = (trigger?: Element) => {
+  const dialogTarget = trigger?.closest(".dialog-overlay")?.querySelector(".dialog-tippy-target")
+
+  if (dialogTarget) {
+    return dialogTarget
+  }
+
   if (!tippyTarget?.isConnected) {
     tippyTarget = document.querySelector(".tippy-target")!
   }

@@ -13,7 +13,8 @@
   const url = value.url.toString()
   const fileType = getUrlContentType(url, event)
 
-  const expand = () => pushModal(ContentLinkDetail, {value, event}, {fullscreen: true})
+  const expand = () =>
+    pushModal(ContentLinkDetail, {value, event}, {fullscreen: true, label: "Content preview"})
 </script>
 
 {#if url.match(/\.(jpe?g|png|gif|webp)$/) || IMAGE_CONTENT_TYPES.includes(fileType)}

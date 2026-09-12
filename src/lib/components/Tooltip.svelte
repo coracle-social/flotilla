@@ -50,7 +50,7 @@
       interactive,
       animation: "shift-away",
       theme: "tooltip",
-      appendTo: getTippyTarget(),
+      appendTo: getTippyTarget(element),
       trigger: isMobile ? "click" : "mouseenter focus",
     })
 

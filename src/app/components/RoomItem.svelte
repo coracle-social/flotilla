@@ -187,24 +187,26 @@
     {/if}
   </div>
   {#if !isMobile}
-    <button
-      class="room__item-actions join absolute right-2 top-0.5 opacity-0 transition-all"
-      class:group-hover:opacity-100={!isMobile}>
+    <div
+      class="room__item-actions join absolute right-2 top-0.5 opacity-0 transition-all focus-within:opacity-100 group-hover:opacity-100">
       {#if ENABLE_ZAPS}
         <RoomItemZapButton {url} {event} />
       {/if}
       <RoomItemEmojiButton {url} {event} />
       {#if replyTo}
-        <Button class="button button-xs button-neutral join-item" onclick={reply}>
+        <Button
+          aria-label="Reply"
+          class="button button-xs button-neutral join-item"
+          onclick={reply}>
           <Icon icon={Reply} size={4} />
         </Button>
       {/if}
       {#if edit}
-        <Button class="button button-xs button-neutral join-item" onclick={edit}>
+        <Button aria-label="Edit" class="button button-xs button-neutral join-item" onclick={edit}>
           <Icon icon={Pen} size={4} />
         </Button>
       {/if}
       <RoomItemMenuButton {url} {event} />
-    </button>
+    </div>
   {/if}
 </TapTarget>

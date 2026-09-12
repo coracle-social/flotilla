@@ -6,6 +6,7 @@
   import Link from "@lib/components/Link.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
+  import ModalTitle from "@lib/components/ModalTitle.svelte"
   import CardButton from "@lib/components/CardButton.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import SignUp from "@app/components/SignUp.svelte"
@@ -26,7 +27,7 @@
 <Modal>
   <ModalBody>
     <div class="py-2">
-      <h1 class="heading">Welcome to {PLATFORM_NAME}!</h1>
+      <ModalTitle>Welcome to {PLATFORM_NAME}!</ModalTitle>
       <p class="text-center">{PLATFORM_DESCRIPTION}</p>
     </div>
     <Button aria-label="Log in" onclick={logIn}>

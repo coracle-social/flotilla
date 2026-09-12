@@ -35,13 +35,10 @@ const jumpToNewest = (page: Page) => page.getByRole("button", {name: "Jump to ne
 // left corner of the viewport is outside it.
 const dismissMenu = (page: Page) => page.mouse.move(0, 0)
 
-// RoomDetail has no title of its own — the room's name stands in for one — so it is named by the
-// permissions card only it renders. Scoped to the modal's body rather than the dialog, so that the
-// dialog's own close button isn't the first button in it.
-const roomDetail = (page: Page) =>
-  page.locator(".scroll-container").filter({hasText: "Room Permissions"})
+const roomDetail = (page: Page) => page.getByRole("dialog", {name: "Room details"})
 
-const openRoomDetailMenu = (page: Page) => roomDetail(page).getByRole("button").first().click()
+const openRoomDetailMenu = (page: Page) =>
+  roomDetail(page).getByRole("button", {name: "Room options"}).click()
 
 // The space menu's sections are flat siblings — a header, then the rooms under it — so which
 // section a room is in is a question about document order rather than nesting.
@@ -223,6 +220,33 @@ test("US-019 join and leave a room", async ({seed, as}) => {
 
   await expect(bob.getByRole("button", {name: "Join member list"})).toBeVisible()
   await expect.poll(() => roomSection(bob, "General")).toBe("Rooms")
+})
+
+test("US-122 long room names keep header and dialog actions available", async ({seed, as}) => {
+  const name = "A very long room name for coordinating every ship arriving in the harbor today"
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("harbor", {name})
+    space.join(user.alice, "harbor")
+  })
+
+  const {url} = scenario.space("space")
+  const page = await as(users.alice, roomPath(url, "harbor"), {
+    context: {viewport: {width: 800, height: 600}},
+  })
+  const header = pageBar(page)
+
+  await expect(header.getByRole("button", {name: "Search"})).toBeVisible()
+  await expect(header.getByRole("button", {name: "Room details"})).toBeVisible()
+  expect(await header.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
+
+  await openRoomDetail(page)
+
+  const detail = roomDetail(page)
+
+  await expect(detail.getByRole("button", {name: "Room options"})).toBeVisible()
+  expect(await detail.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
 })
 
 test("US-020 create, edit, and delete a room", async ({seed, as}) => {
@@ -564,6 +588,25 @@ test("US-024 edit or delete a message you sent", async ({seed, as}) => {
   // Her own message offers zap, emoji, reply, edit and a menu; his offers no edit...
   await expect(messageActions(alice, "we sail at dwan")).toHaveCount(5)
   await expect(messageActions(alice, "spelling?")).toHaveCount(4)
+  await expect(message(alice, "we sail at dwan").locator("button button")).toHaveCount(0)
+
+  const moreOptions = message(alice, "we sail at dwan").getByRole("button", {
+    name: "More options",
+  })
+
+  await moreOptions.focus()
+  await expect(message(alice, "we sail at dwan").locator(".room__item-actions")).toHaveCSS(
+    "opacity",
+    "1",
+  )
+  await moreOptions.press("Enter")
+
+  const messageDetails = alice.getByRole("button", {name: "Message Details"})
+
+  await messageDetails.focus()
+  await expect(messageDetails).toBeFocused()
+  await alice.keyboard.press("Escape")
+  await expect(moreOptions).toBeFocused()
 
   // ...and no delete either
   await openMessageMenu(alice, "spelling?")
@@ -630,8 +673,22 @@ test("US-025 react to a message", async ({seed, as}) => {
   await expect(message(carol, "we made port")).toBeVisible()
   await expect(message(bob, "we made port")).toBeVisible()
 
-  // The quick reaction button is the second of RoomItem's hover actions
-  await react(carol, messageActions(carol, "we made port").nth(1))
+  const reaction = message(carol, "we made port").getByRole("button", {name: "Add a reaction"})
+
+  await reaction.focus()
+  await reaction.press("Enter")
+
+  const picker = carol.locator("emoji-picker").filter({visible: true})
+  const search = picker.locator("input.search")
+
+  await expect(picker).toBeVisible()
+  await search.focus()
+  await expect(search).toBeFocused()
+  await carol.keyboard.press("Escape")
+  await expect(picker).toHaveCount(0)
+  await expect(reaction).toBeFocused()
+
+  await react(carol, reaction)
 
   await expect(reactionPill(carol, "we made port")).toBeVisible()
   await expect(reactionPill(bob, "we made port")).toBeVisible()
@@ -743,6 +800,14 @@ test("US-027 find a past message and jump to it", async ({seed, as}) => {
   const term = page.getByPlaceholder("Search this room...")
   const search = dialog(page, "Search")
 
+  await expect(term).toBeFocused()
+
+  for (const key of ["Tab", "Tab", "Shift+Tab"]) {
+    await page.keyboard.press(key)
+    expect(await search.evaluate(dialog => dialog.contains(document.activeElement))).toBe(true)
+  }
+
+  await term.focus()
   await term.fill("harbor")
 
   await expect(search.getByText("Last 24 Hours")).toBeVisible()
@@ -979,6 +1044,7 @@ test("US-115 connect a wallet without losing the zap you were composing", async 
 
   const connect = dialog(page, "Connect a Wallet")
 
+  await expect(page.locator(".dialog-overlay[inert]")).toHaveCount(1)
   await connect.getByRole("button", {name: "Connect with WebLN"}).click()
 
   await expect(page.getByRole("alert")).toContainText("Wallet successfully connected!")

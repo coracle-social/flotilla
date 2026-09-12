@@ -4,16 +4,18 @@
 
   type Props = {
     onClose?: any
+    active?: boolean
     children: {
       component: Component
       props: Record<string, any>
     }
   }
 
-  const {onClose, children}: Props = $props()
+  const {onClose, active = true, children}: Props = $props()
 </script>
 
 <div
+  inert={!active}
   class="drawer fixed inset-x-0 top-0 z-modal bottom-[calc(var(--mobile-nav-height)+var(--saib))] md:bottom-0">
   <button
     aria-label="Close drawer"

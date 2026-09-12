@@ -74,19 +74,23 @@
   }
 </script>
 
-<Modal>
+<Modal label="Room details">
   <ModalBody>
-    <div class="flex justify-between">
-      <div class="flex gap-3">
-        <div class="pt-0.5">
+    <div class="flex min-w-0 justify-between gap-3">
+      <div class="flex min-w-0 gap-3">
+        <div class="shrink-0 pt-0.5">
           <RoomImage {url} {h} size={8} />
         </div>
         <div class="flex min-w-0 flex-col">
-          <RoomName {url} {h} class="text-2xl" />
-          <span class="text-primary">{displayRelayUrl(url)}</span>
+          <RoomName {url} {h} class="block text-2xl" />
+          <span class="truncate text-primary">{displayRelayUrl(url)}</span>
         </div>
       </div>
-      <MenuButton component={RoomDetailMenu} componentProps={{url, h}} />
+      <MenuButton
+        class="shrink-0"
+        aria-label="Room options"
+        component={RoomDetailMenu}
+        componentProps={{url, h}} />
     </div>
     {#if meta?.about()}
       <p>{meta.about()}</p>

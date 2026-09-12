@@ -6,6 +6,6 @@
   const {url, event} = $props()
 </script>
 
-<ZapButton {url} {event} class="button button-xs button-neutral join-item">
+<ZapButton aria-label="Send a zap" {url} {event} class="button button-xs button-neutral join-item">
   <Icon icon={Bolt} size={4} />
 </ZapButton>

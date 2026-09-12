@@ -14,6 +14,7 @@
   import Link from "@lib/components/Link.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
+  import ModalTitle from "@lib/components/ModalTitle.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import SignUp from "@app/components/SignUp.svelte"
@@ -98,7 +99,7 @@
 
 <Modal data-testid="login">
   <ModalBody>
-    <h1 class="heading">Log in with Nostr</h1>
+    <ModalTitle>Log in with Nostr</ModalTitle>
     <p class="m-auto max-w-sm text-center">
       {PLATFORM_NAME} is built using the
       <Button class="link" onclick={() => pushModal(InfoNostr)}>nostr protocol</Button>, which

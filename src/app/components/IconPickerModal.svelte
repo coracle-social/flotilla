@@ -10,7 +10,7 @@
   const {onSelect}: Props = $props()
 </script>
 
-<Modal>
+<Modal label="Choose an icon">
   <ModalBody>
     <IconPicker {onSelect} />
   </ModalBody>

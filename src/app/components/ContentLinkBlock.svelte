@@ -69,7 +69,8 @@
     hideImage = true
   }
 
-  const expand = () => pushModal(ContentLinkDetail, {value, event}, {fullscreen: true})
+  const expand = () =>
+    pushModal(ContentLinkDetail, {value, event}, {fullscreen: true, label: "Content preview"})
 </script>
 
 {#if isRoomOrRelay}

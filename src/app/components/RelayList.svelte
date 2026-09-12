@@ -13,6 +13,7 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import ModalTitle from "@lib/components/ModalTitle.svelte"
   import RelayAdd from "@app/components/RelayAdd.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
   import {pushModal} from "@app/modal"
@@ -56,7 +57,7 @@
 
 <Modal>
   <ModalBody>
-    <h2 class="text-xl">{title}</h2>
+    <ModalTitle class="text-xl">{title}</ModalTitle>
     <p class="text-sm">{subtitle}</p>
     {#each $relays.toSorted() as url (url)}
       <RelayItem {url}>

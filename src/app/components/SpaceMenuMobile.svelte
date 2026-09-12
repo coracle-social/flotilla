@@ -10,7 +10,7 @@
   const {url}: Props = $props()
 </script>
 
-<Modal>
+<Modal label="Space menu">
   <ModalBody>
     <div class="flex flex-col gap-2">
       <SpaceMenuActionsMobile {url} />

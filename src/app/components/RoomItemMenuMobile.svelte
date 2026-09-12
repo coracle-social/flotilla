@@ -124,7 +124,7 @@
   let showMore = $state(false)
 </script>
 
-<Modal>
+<Modal label="Message actions">
   <ModalBody>
     <div class="grid gap-2 {ENABLE_ZAPS ? 'grid-cols-3' : 'grid-cols-2'}">
       {#if ENABLE_ZAPS}

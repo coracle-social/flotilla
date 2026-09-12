@@ -20,7 +20,7 @@
   const logout = () => pushModal(LogOut)
 </script>
 
-<Modal>
+<Modal label="Settings">
   <ModalBody>
     <div class="flex flex-col gap-8 items-center py-12 max-w-[16rem] m-auto w-full">
       <Link href={makeProfilePath($user.pubkey)}>

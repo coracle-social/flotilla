@@ -48,7 +48,10 @@
   let file: File | undefined = $state()
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(submit)}>
+<Modal
+  label={isSignup ? "Create a profile" : "Edit profile"}
+  tag="form"
+  onsubmit={preventDefault(submit)}>
   <ModalBody>
     {#if isSignup}
       <div class="grid grid-cols-2">

@@ -11,6 +11,7 @@
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
+  import ModalTitle from "@lib/components/ModalTitle.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import SignUpKey from "@app/components/SignUpKey.svelte"
   import SignUpEmail from "@app/components/SignUpEmail.svelte"
@@ -105,7 +106,7 @@
 
 <Modal>
   <ModalBody>
-    <h1 class="heading">Join {PLATFORM_NAME}</h1>
+    <ModalTitle>Join {PLATFORM_NAME}</ModalTitle>
     <p class="m-auto max-w-sm text-center">
       Censorship resistant digital spaces for communities. Meet new people, own your identity.
     </p>

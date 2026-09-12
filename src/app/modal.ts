@@ -6,6 +6,7 @@ import type {DialogSize} from "@lib/components/Dialog.svelte"
 
 export type ModalOptions = {
   drawer?: boolean
+  label?: string
   nested?: boolean
   noEscape?: boolean
   fullscreen?: boolean

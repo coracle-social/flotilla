@@ -59,7 +59,7 @@
   })
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(join)}>
+<Modal label="Join space" tag="form" onsubmit={preventDefault(join)}>
   <ModalBody>
     <RelaySummary {url} />
     <SpaceJoinNotifications bind:notifications />

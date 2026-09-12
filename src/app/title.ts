@@ -8,7 +8,6 @@ import {PLATFORM_NAME} from "@app/env"
 import {decodeRelay} from "@app/relays"
 
 const staticTitles = new Map<string, string>([
-  ["/", "Redirecting"],
   ["/home", "Home"],
   ["/spaces", "Spaces"],
   ["/spaces/create", "Create a Space"],
