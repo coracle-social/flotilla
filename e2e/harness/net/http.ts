@@ -452,7 +452,9 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
   await context.route(`${HOSTING_ORIGIN}/**`, route => {
     const request = route.request()
     const method = request.method()
-    const body: HostingRecord = request.postDataJSON() ?? {}
+    // An import posts JSONL, which postDataJSON() throws on. Every other write posts json.
+    const isJson = request.headers()["content-type"] === "application/json"
+    const body: HostingRecord = (isJson && request.postDataJSON()) || {}
     const [resource, id, sub, detail] = new URL(request.url()).pathname.split("/").filter(Boolean)
 
     const missing = (what: string) => route.fulfill({status: 404, json: {error: `No such ${what}`}})
@@ -526,6 +528,30 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
 
       if (sub === "activity") {
         return route.fulfill({json: {data: {activity: relay.activity ?? []}}})
+      }
+
+      // The dump is whatever the fixture left on the record, served as the download itself rather
+      // than in a json envelope.
+      if (sub === "export") {
+        return route.fulfill({
+          contentType: "application/x-ndjson",
+          body: String(relay.events ?? ""),
+        })
+      }
+
+      // Storing events is the relay's own business, so the fake counts the lines and refuses the
+      // ones that don't look signed, which is the shape zooid reports problems in.
+      if (sub === "import") {
+        const lines = (request.postData() ?? "").split("\n").filter(line => line.trim())
+        const problems = lines.flatMap((line, index) =>
+          line.includes(`"sig"`) ? [] : [{line: index + 1, event_id: "", message: "invalid event"}],
+        )
+
+        return route.fulfill({
+          json: {
+            data: {imported: lines.length - problems.length, invalid: problems.length, problems},
+          },
+        })
       }
 
       const updated = {...relay, ...(method === "PUT" ? body : {})}

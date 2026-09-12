@@ -1508,6 +1508,18 @@ Acceptance:
 - Payment history lists past invoices with amount and billing period, most
   recent first.
 
+### US-122 — Export and import a hosted relay's data
+
+As a space owner, I want to take a copy of everything my relay holds and put
+events back, so that I can keep a backup and move between hosts.
+
+Acceptance:
+
+- "Import / export data" in the relay actions menu opens a Relay data dialog,
+  whose "Download events" downloads the relay's events as `<subdomain>.jsonl`.
+- Importing a file reports how many events were stored and names the lines the
+  relay refused.
+
 ## Notifications & navigation
 
 ### US-103 — See and clear unread indicators

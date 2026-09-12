@@ -160,6 +160,19 @@ export type Activity = {
   resource_id: string
 }
 
+// One line of an imported JSONL file the relay could not store.
+export type ImportProblem = {
+  line: number
+  event_id: string
+  message: string
+}
+
+export type ImportResult = {
+  imported: number
+  invalid: number
+  problems?: ImportProblem[]
+}
+
 export class HostingError extends Error {
   status: number
 
@@ -201,28 +214,32 @@ const getAuthHeader = (): Promise<string> => {
 
 type HostingResponse<T> = {data: T; error?: string}
 
-export const hostingFetch = async <T>(method: string, path: string, body?: unknown): Promise<T> => {
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    Authorization: await getAuthHeader(),
-  }
-
-  if (body !== undefined) headers["Content-Type"] = "application/json"
-
-  const response = await fetch(new URL(path, HOSTING_BACKEND_URL).toString(), {
+const hostingRequest = async (method: string, path: string, init: RequestInit = {}) =>
+  fetch(new URL(path, HOSTING_BACKEND_URL).toString(), {
+    ...init,
     method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: {
+      Accept: "application/json",
+      Authorization: await getAuthHeader(),
+      ...init.headers,
+    },
   })
 
+const hostingJson = async <T>(response: Response): Promise<T> => {
   const payload: Maybe<HostingResponse<T>> = await response.json().catch(() => undefined)
 
-  if (!response.ok || !payload) {
-    throw new HostingError(payload?.error || `Request failed (${response.status})`, response.status)
-  }
+  if (response.ok && payload) return payload.data
 
-  return payload.data
+  throw new HostingError(payload?.error || `Request failed (${response.status})`, response.status)
 }
+
+export const hostingFetch = async <T>(method: string, path: string, body?: unknown): Promise<T> =>
+  hostingJson<T>(
+    await hostingRequest(method, path, {
+      headers: body === undefined ? undefined : {"Content-Type": "application/json"},
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+  )
 
 export const listPlans = () => hostingFetch<Plan[]>("GET", "/plans")
 
@@ -272,6 +289,27 @@ export const listRelayMembers = (id: string) =>
 
 export const listRelayActivity = (id: string) =>
   hostingFetch<{activity: Activity[]}>("GET", `/relays/${id}/activity`)
+
+// Every event the relay holds, as JSONL. Fetched rather than linked, since the
+// nip 98 auth header can't ride on an <a href>.
+export const exportRelayData = async (id: string) => {
+  const response = await hostingRequest("GET", `/relays/${id}/export`)
+
+  if (response.ok) return response.text()
+
+  // Only the failure path is a json envelope; success is the dump itself.
+  return hostingJson<string>(response)
+}
+
+// Events keep their own signatures, so the relay validates them itself and
+// reports the lines it refused.
+export const importRelayData = async (id: string, file: Blob) =>
+  hostingJson<ImportResult>(
+    await hostingRequest("POST", `/relays/${id}/import`, {
+      headers: {"Content-Type": "application/x-ndjson"},
+      body: file,
+    }),
+  )
 
 export const getInvoice = (id: string) => hostingFetch<Invoice>("GET", `/invoices/${id}`)
 

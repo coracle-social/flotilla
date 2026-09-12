@@ -12,6 +12,7 @@
   import Copy from "@assets/icons/copy.svg?dataurl"
   import Refresh from "@assets/icons/refresh.svg?dataurl"
   import BillList from "@assets/icons/bill-list.svg?dataurl"
+  import Database from "@assets/icons/database.svg?dataurl"
   import {fly} from "@lib/transition"
   import {ucFirst} from "@lib/util"
   import Icon from "@lib/components/Icon.svelte"
@@ -26,6 +27,7 @@
   import ToggleInput from "@lib/components/ToggleInput.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import CustomDomainModal from "@app/components/hosting/CustomDomainModal.svelte"
+  import DataTransferModal from "@app/components/hosting/DataTransferModal.svelte"
   import PlanModal from "@app/components/hosting/PlanModal.svelte"
   import {roomLists} from "@app/core"
   import RelayForm from "@app/components/hosting/RelayForm.svelte"
@@ -137,6 +139,10 @@
         await setCurrentAndFollowHost(updated)
       },
     })
+  }
+
+  const openDataTransfer = () => {
+    pushModal(DataTransferModal, {relay: current})
   }
 
   const openCustomDomain = () => {
@@ -266,6 +272,12 @@
               <Button onclick={openPlan}>
                 <Icon icon={BillList} />
                 Change plan
+              </Button>
+            </li>
+            <li>
+              <Button onclick={openDataTransfer}>
+                <Icon icon={Database} />
+                Import / export data
               </Button>
             </li>
             <li>

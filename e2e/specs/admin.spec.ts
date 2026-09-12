@@ -1101,3 +1101,40 @@ test("US-102 pause a relay and settle the bill", async ({seed, as}) => {
   await expect(invoices.nth(1)).toContainText("$5.00")
   await expect(invoices.nth(1)).toContainText(await period(paidPeriod))
 })
+
+test("US-122 export and import a hosted relay's data", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+  })
+
+  const {url} = scenario.space("space")
+  const dump = '{"id":"a","sig":"a"}\n{"id":"b","sig":"b"}\n'
+  const page = await as(users.alice, spacePath(url) + "/admin", {
+    hosting: {plans: PLANS, relays: [hostedRelay({events: dump})]},
+  })
+
+  await page.getByRole("button", {name: "Relay actions"}).click()
+  await menuItem(page, "Import / export data").click()
+
+  const modal = dialog(page, "Relay data")
+  const download = page.waitForEvent("download")
+
+  await modal.getByRole("button", {name: "Download events"}).click()
+
+  expect((await download).suggestedFilename()).toBe("space.jsonl")
+
+  await modal.locator("input[type=file]").setInputFiles({
+    name: "events.jsonl",
+    mimeType: "application/x-ndjson",
+    buffer: Buffer.from('{"id":"c","sig":"c"}\nnot an event\n'),
+  })
+
+  await modal.getByRole("button", {name: "Import events"}).click()
+
+  // The relay keeps what it could verify and says which line it refused
+  await expect(modal.getByText("Imported 1 event, skipped 1.")).toBeVisible()
+  await expect(modal.getByText("line 2: invalid event")).toBeVisible()
+})
