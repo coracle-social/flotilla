@@ -119,7 +119,7 @@
     if (isMobile) {
       showReactors(pubkeys, info.replace(" zapped", ""), "Zapped this message")
     } else {
-      pushModal(ZapModal, {url, pubkey: event.pubkey, eventId: event.id})
+      pushModal(ZapModal, {url, pubkey: event.pubkey, event})
     }
   }
 

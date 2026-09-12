@@ -1,7 +1,8 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {first, removeUndefined, uniq} from "@welshman/lib"
-  import {inbox} from "@welshman/util"
+  import {first, removeUndefined} from "@welshman/lib"
+  import {relay} from "@welshman/util"
+  import type {TrustedEvent} from "@welshman/util"
   import {ZapRequest} from "@welshman/domain"
   import {Zappers} from "@welshman/app"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
@@ -21,7 +22,7 @@
   import QRCode from "@app/components/QRCode.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import ZapForm from "@app/components/ZapForm.svelte"
-  import {app, domain, network, router} from "@app/core"
+  import {app, domain, network} from "@app/core"
   import {payInvoice, wallet} from "@app/lightning"
   import {pushModal} from "@app/modal"
   import {zapAmounts} from "@app/settings"
@@ -30,12 +31,10 @@
   type Props = {
     url?: string
     pubkey: string
-    eventId?: string
-    // NIP-75 requires a zap to a goal to request its receipt on the goal's own relays.
-    goalRelays?: string[]
+    event?: TrustedEvent
   }
 
-  const {url, pubkey, eventId, goalRelays = []}: Props = $props()
+  const {url, pubkey, event}: Props = $props()
 
   const zapper = $app.use(Zappers).forPubkey(pubkey, removeUndefined([url]))
 
@@ -43,20 +42,19 @@
 
   const requestInvoice = async () => {
     const currentZapper = zapper.get()!
-    const relays = uniq([
-      ...(url ? [url] : await $router.resolver.relays([inbox(pubkey)])),
-      ...goalRelays,
-    ])
     const writer = $domain
       .writer(ZapRequest)
       .setContent(content)
       .setAmount(amount * 1000)
       .setLnurl(currentZapper.lnurl)
       .setRecipient(pubkey)
-      .setUrls(relays)
 
-    if (eventId) {
-      writer.setEventId(eventId)
+    if (url) {
+      writer.forceRoutes(relay(url))
+    }
+
+    if (event) {
+      writer.setEvent(event)
     }
 
     const res = await writer.requestInvoice(currentZapper)
@@ -66,9 +64,9 @@
     }
 
     return {
-      relays,
+      relays: await writer.relays(),
       invoice: res.invoice,
-      filters: [currentZapper.getResponseFilter(pubkey, eventId)],
+      filters: [currentZapper.getResponseFilter(pubkey, event?.id)],
     }
   }
 

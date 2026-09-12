@@ -1,15 +1,13 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {removeUndefined} from "@welshman/lib"
-  import {ZAP_GOAL} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import {ZapGoal} from "@welshman/domain"
   import {Zappers} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import Zap from "@app/components/Zap.svelte"
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
   import {pushModal} from "@app/modal"
-  import {app, reader} from "@app/core"
+  import {app} from "@app/core"
 
   type Props = {
     url?: string
@@ -23,11 +21,7 @@
 
   const {url, event, children, replaceState, ...props}: Props = $props()
 
-  const goal = event.kind === ZAP_GOAL ? reader(ZapGoal)(event) : undefined
-
   const zapperPromise = $app.use(Zappers).loadForPubkey(event.pubkey, removeUndefined([url]))
-
-  const goalRelays = goal?.urls() ?? []
 
   const onClick = async () => {
     loading = true
@@ -36,9 +30,9 @@
       const zapper = await zapperPromise
 
       if (zapper?.allowsNostr) {
-        pushModal(Zap, {url, pubkey: event.pubkey, eventId: event.id, goalRelays}, {replaceState})
+        pushModal(Zap, {url, pubkey: event.pubkey, event}, {replaceState})
       } else {
-        pushModal(InfoZapperError, {url, pubkey: event.pubkey, eventId: event.id}, {replaceState})
+        pushModal(InfoZapperError, {url, pubkey: event.pubkey}, {replaceState})
       }
     } finally {
       loading = false
