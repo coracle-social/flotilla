@@ -95,9 +95,18 @@
   </Link>
 {:else}
   {#await loadPreview(url)}
-    <div class="flex justify-center items-center my-12 w-full">
-      <Spinner />
-    </div>
+    <Link {external} {href} class="my-2 block">
+      <div
+        class="border border-solid flex max-w-xl flex-col overflow-hidden leading-normal rounded-2xl"
+        style="border-color: var(--line)">
+        <div class="flex flex-col gap-2 p-4">
+          <Spinner>
+            <strong class="overflow-hidden text-ellipsis whitespace-nowrap"
+              >{displayUrl(url)}</strong>
+          </Spinner>
+        </div>
+      </div>
+    </Link>
   {:then preview}
     <Link {external} {href} class="my-2 block">
       <div
