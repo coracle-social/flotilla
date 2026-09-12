@@ -1,6 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
-  import {relay} from "@welshman/util"
+  import {relay, toMsats} from "@welshman/util"
   import {ZapGoal} from "@welshman/domain"
   import {publish} from "@welshman/app"
   import {isMobile, preventDefault} from "@lib/html"
@@ -81,7 +81,7 @@
       const eventWriter = writer(ZapGoal)
         .setTitle(title)
         .setSummary(content)
-        .setAmount(amount)
+        .setAmount(toMsats(amount))
         .setUrls([url])
         .setProtected(protect)
         .addTags(...ed.storage.nostr.getEditorTags())
