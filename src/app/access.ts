@@ -383,8 +383,8 @@ export class Access {
         sleep(300),
       ])
 
-      // The relay reports methods relay-wide rather than per-user, so a listed method can
-      // still come back "blocked" for this particular user — treat that as having no claim.
+      // A relay that reports methods relay-wide rather than per-user can still come back
+      // "blocked" for this particular user — treat that as having no claim.
       if (methods?.includes("createclaim")) {
         const {result: claims} = await management.listClaims()
 
