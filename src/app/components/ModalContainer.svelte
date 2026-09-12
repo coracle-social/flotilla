@@ -2,8 +2,7 @@
   import {mount, unmount, untrack} from "svelte"
   import Drawer from "@lib/components/Drawer.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
-  import {popModal} from "@app/modal"
-  import {getModal, getModalStack} from "@app/modal.svelte"
+  import {getModal, getModalStack, popModal} from "@app/modal"
 
   const closeModal = () => {
     const modal = getModal()

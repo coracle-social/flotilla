@@ -3,7 +3,7 @@
   import Dialog from "@lib/components/Dialog.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import {goToHome} from "@app/routes"
-  import {getModal} from "@app/modal.svelte"
+  import {getModal} from "@app/modal"
 
   const children = {
     component: SpaceInviteAccept,

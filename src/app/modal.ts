@@ -1,23 +1,47 @@
 import type {Component} from "svelte"
-import {randomId, Emitter} from "@welshman/lib"
+import {randomId, last, Emitter} from "@welshman/lib"
 import {goto, pushState, replaceState} from "$app/navigation"
 import {page} from "$app/state"
-import {modals, type ModalOptions} from "@app/modal.svelte"
+import type {DialogSize} from "@lib/components/Dialog.svelte"
+
+export type ModalOptions = {
+  drawer?: boolean
+  nested?: boolean
+  noEscape?: boolean
+  fullscreen?: boolean
+  size?: DialogSize
+  replaceState?: boolean
+  path?: string
+}
+
+export type Modal = {
+  id: string
+  component: Component
+  props: Record<string, any>
+  options: ModalOptions
+}
 
 export const emitter = new Emitter()
+
+const modals: Record<string, Modal> = {}
+
+// Open modal ids live in SvelteKit page state (shallow routing): each modal owns a history entry
+// without a navigation, and any `goto` that does not pass `state` along closes them.
+export const getModalStack = () => (page.state.modals ?? []).map(id => modals[id]).filter(Boolean)
+
+export const getModal = () => last(getModalStack())
 
 export type NavigateOptions = Parameters<typeof goto>[1] & {keepModal?: boolean}
 
 // An open modal owns the current history entry, so a navigation that drops it takes that entry over
 export const navigate = (path: string, {keepModal, ...options}: NavigateOptions = {}) => {
   const ids = page.state.modals ?? []
-  const modalIsOpen = ids.length > 0
 
-  if (keepModal && modalIsOpen) {
+  if (keepModal && ids.length > 0) {
     return goto(path, {...options, state: {modals: ids}, replaceState: true})
   }
 
-  return goto(path, {...options, replaceState: options.replaceState || modalIsOpen})
+  return goto(path, {...options, replaceState: options.replaceState || ids.length > 0})
 }
 
 export const pushModal = (
