@@ -552,6 +552,11 @@ test("US-024 edit or delete a message you sent", async ({seed, as}) => {
 
   await expect(message(bob, "we sail at dwan")).toBeVisible()
 
+  // Her edit republishes with her original timestamp, and two messages sharing a second are
+  // ordered by event id (US-118) -- which the edit changes. His reply lands in a later second, so
+  // the order asserted below is about the timestamp rather than a coin flip on the new id.
+  await alice.waitForTimeout(1000 - (Date.now() % 1000) + 50)
+
   await send(bob, "spelling?")
 
   await expect(message(alice, "spelling?")).toBeVisible()
@@ -868,7 +873,8 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
 
   const {url} = scenario.space("space")
   const alice = await as(users.alice, roomPath(url, "general"))
-  const spoken = await mockOpenRouterSpeech(alice.context())
+  // Long enough that playback is still going when the controls below are exercised.
+  const spoken = await mockOpenRouterSpeech(alice.context(), 10)
 
   // The mention has to have resolved on screen before it can be expected in what was spoken.
   await expect(message(alice, "heads up")).toContainText("@Alice Anchor")
@@ -897,18 +903,18 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
 
   // The mock answers headerless pcm, so the duration is only right if the wav header the app put
   // in front of it is, which is what makes the whole clip scrubbable.
-  await expect(alice.getByText("/ 0:03")).toBeVisible()
+  await expect(alice.getByText("/ 0:10")).toBeVisible()
 
-  // Chromium decides for itself whether the autoplay is allowed, so the control is read for
-  // which way it is about to flip rather than assumed to start paused.
+  // The clip carries autoplay and the button follows the audio element's own play event, so it
+  // reads "Play message" until that fires. Waiting for it is what keeps the click below a pause:
+  // reading the label instead races the autoplay, and loses whenever playback starts in between.
   const playPause = alice.getByRole("button", {name: /^(Play|Pause) message$/})
-  const wasPlaying = (await playPause.getAttribute("aria-label")) === "Pause message"
+
+  await expect(playPause).toHaveAttribute("aria-label", "Pause message")
 
   await playPause.click()
-  await expect(playPause).toHaveAttribute(
-    "aria-label",
-    wasPlaying ? "Play message" : "Pause message",
-  )
+
+  await expect(playPause).toHaveAttribute("aria-label", "Play message")
 
   const seek = alice.getByRole("slider", {name: "Seek within the message"})
 

@@ -455,7 +455,8 @@ Acceptance:
 - Once a key is saved, the same menu item puts a player at the bottom of the
   app naming whose message is being read.
 - A quote, a mention or a url in the message is named rather than spelled out.
-- The player plays, pauses, scrubs, and closes, and closing it takes it away.
+- The player starts on its own, pauses, scrubs, and closes, and closing it takes
+  it away.
 
 ### US-115 — Connect a wallet while sending a zap
 
