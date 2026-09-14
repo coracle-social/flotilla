@@ -1,27 +1,30 @@
+<script module lang="ts">
+  type EventTab = "about" | "discussion" | "people"
+</script>
+
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {derived} from "svelte/store"
+  import cx from "classnames"
+  import {derived, readable} from "svelte/store"
   import {page} from "$app/stores"
-  import {sortBy, sleep} from "@welshman/lib"
+  import {sleep} from "@welshman/lib"
   import type {MakeNonOptional} from "@welshman/lib"
+  import type {TrustedEvent} from "@welshman/util"
   import {getCommentFiltersForRoot} from "@welshman/util"
   import {TimeEvent} from "@welshman/domain"
-  import SortVertical from "@assets/icons/sort-vertical.svg?dataurl"
-  import Reply from "@assets/icons/reply-2.svg?dataurl"
-  import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import Content from "@app/components/Content.svelte"
-  import NoteContent from "@app/components/NoteContent.svelte"
-  import NoteCard from "@app/components/NoteCard.svelte"
   import CalendarEventActions from "@app/components/CalendarEventActions.svelte"
-  import CommentActions from "@app/components/CommentActions.svelte"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import CalendarEventMeta from "@app/components/CalendarEventMeta.svelte"
   import CalendarEventDate from "@app/components/CalendarEventDate.svelte"
-  import EventReply from "@app/components/EventReply.svelte"
+  import CalendarEventDiscussion from "@app/components/CalendarEventDiscussion.svelte"
+  import CalendarEventPeople from "@app/components/CalendarEventPeople.svelte"
+  import CalendarRsvp from "@app/components/CalendarRsvp.svelte"
+  import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/calendar"
   import {network, reader} from "@app/core"
   import {deriveEvent, deriveEvents} from "@app/repository"
   import {makeFeedContext} from "@app/feeds"
@@ -34,31 +37,41 @@
   const timeEvent = derived(event, $event => ($event ? reader(TimeEvent)($event) : undefined))
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
   const replies = $derived(deriveEvents(filters))
+  const rsvps = $derived($event ? deriveRsvps($event) : readable<TrustedEvent[]>([]))
+  const people = $derived(getRsvpsByStatus($rsvps))
 
   const back = () => history.back()
 
-  const openReply = () => {
-    showReply = true
+  const showTab = (target: EventTab) => () => {
+    tab = target
   }
 
-  const closeReply = () => {
-    showReply = false
-  }
-
-  const expand = () => {
-    showAll = true
-  }
+  const tabClass = (target: EventTab) =>
+    cx("button button-sm join-item grow", tab === target ? "button-primary" : "button-neutral")
 
   onDestroy(context.cleanup)
 
-  let showAll = $state(false)
-  let showReply = $state(false)
+  let tab = $state<EventTab>("about")
 
   $effect(() => {
     if (filters.length > 0) {
       const controller = new AbortController()
 
       $network.request({relays: [url], filters, signal: controller.signal})
+
+      return () => controller.abort()
+    }
+  })
+
+  $effect(() => {
+    if ($event) {
+      const controller = new AbortController()
+
+      $network.request({
+        relays: [url],
+        filters: [makeRsvpFilter($event)],
+        signal: controller.signal,
+      })
 
       return () => controller.abort()
     }
@@ -73,47 +86,54 @@
 
 <PageContent class="flex flex-col gap-2 p-2 sm:gap-4 sm:p-4">
   {#if $event}
-    <div class="card flex flex-col gap-3 z-feature">
-      <div class="flex items-start gap-4">
-        <CalendarEventDate event={$event} />
-        <div class="flex min-w-0 grow flex-col gap-1">
-          <CalendarEventHeader event={$event} />
-          <CalendarEventMeta event={$event} {url} />
-          <div class="flex py-2 opacity-50">
-            <div class="h-px grow opacity-25" style="background-color: var(--line)"></div>
-          </div>
-          <Content showEntire event={$event} {url} />
-        </div>
-      </div>
-      <div class="flex w-full flex-col justify-end sm:flex-row">
+    <div class="card z-feature flex items-start gap-4">
+      <CalendarEventDate event={$event} />
+      <div class="flex min-w-0 grow flex-col gap-2">
+        <CalendarEventHeader event={$event} />
+        <CalendarEventMeta event={$event} {url} />
+        <CalendarRsvp {url} event={$event} rsvps={$rsvps} onShowPeople={showTab("people")} />
         <CalendarEventActions showRoom {url} event={$event} {context} />
       </div>
     </div>
-    {#if !showAll && $replies.length > 4}
-      <div class="flex justify-center">
-        <Button class="button button-link" onclick={expand}>
-          <Icon icon={SortVertical} />
-          Show all {$replies.length} replies
-        </Button>
+    <!-- One event carries three unrelated conversations, so give each its own tab instead of
+         stacking them all down the page -->
+    <div class="join w-full sm:w-auto sm:self-start">
+      <Button class={tabClass("about")} aria-pressed={tab === "about"} onclick={showTab("about")}>
+        About
+      </Button>
+      <Button
+        class={tabClass("discussion")}
+        aria-pressed={tab === "discussion"}
+        onclick={showTab("discussion")}>
+        Discussion
+        {#if $replies.length > 0}
+          <span class="opacity-75">{$replies.length}</span>
+        {/if}
+      </Button>
+      <Button
+        class={tabClass("people")}
+        aria-pressed={tab === "people"}
+        onclick={showTab("people")}>
+        People
+        {#if people.latest.length > 0}
+          <span class="opacity-75">{people.latest.length}</span>
+        {/if}
+      </Button>
+    </div>
+    {#if tab === "about"}
+      <div class="card z-feature flex flex-col gap-3">
+        {#if $event.content.trim()}
+          <Content showEntire event={$event} {url} />
+        {:else}
+          <p class="flex items-center justify-center py-6 opacity-75">
+            The host hasn't added a description.
+          </p>
+        {/if}
       </div>
-    {/if}
-    {#each sortBy(e => e.created_at, $replies).slice(0, showAll ? undefined : 4) as reply (reply.id)}
-      <NoteCard event={reply} {url} class="card z-feature w-full">
-        <div class="flex flex-col gap-3 ml-12">
-          <NoteContent showEntire event={reply} {url} />
-          <CommentActions event={reply} {url} {context} />
-        </div>
-      </NoteCard>
-    {/each}
-    {#if showReply}
-      <EventReply {url} event={$event} onClose={closeReply} onSubmit={closeReply} />
+    {:else if tab === "discussion"}
+      <CalendarEventDiscussion {url} event={$event} replies={$replies} {context} />
     {:else}
-      <div class="flex justify-end px-2 pb-2">
-        <Button class="button button-primary" onclick={openReply}>
-          <Icon icon={Reply} />
-          Leave comment
-        </Button>
-      </div>
+      <CalendarEventPeople {url} event={$event} rsvps={$rsvps} />
     {/if}
   {:else}
     <div class="flex justify-center py-20">

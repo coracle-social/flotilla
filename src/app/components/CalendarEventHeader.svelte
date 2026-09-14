@@ -1,11 +1,11 @@
 <script lang="ts">
   import {formatTimestamp, formatTimestampAsDate, formatTimestampAsTime} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {tagSpec, tagValue} from "@welshman/util"
   import {TimeEvent} from "@welshman/domain"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import {reader} from "@app/core"
+  import {getEventTitle} from "@app/calendar"
 
   type Props = {
     event: TrustedEvent
@@ -15,8 +15,7 @@
 
   const timeEvent = $derived(reader(TimeEvent)(event))
 
-  // NIP-52 settled on `title`, but events from before that still carry `name`.
-  const title = $derived(timeEvent.title() ?? tagValue(tagSpec("name"), event.tags))
+  const title = $derived(getEventTitle(event))
   const start = $derived(timeEvent.start())
   const end = $derived(timeEvent.end())
 </script>

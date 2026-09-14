@@ -39,9 +39,19 @@
     shareToChat?: boolean
     header: Snippet
     initialValues?: Values
+    defaultStart?: number
+    defaultEnd?: number
   }
 
-  let {url, h, shareToChat = false, header, initialValues}: Props = $props()
+  let {
+    url,
+    h,
+    shareToChat = false,
+    header,
+    initialValues,
+    defaultStart,
+    defaultEnd,
+  }: Props = $props()
 
   const draftKey = new DraftKey<Values>(`calendar:${url}:${h ?? ""}`)
 
@@ -129,8 +139,9 @@
   const d = $state(initialValues?.d ?? randomId())
   let title = $state(initialValues?.title ?? "")
   let location = $state(initialValues?.location ?? "")
-  let start: number | undefined = $state(initialValues?.start)
-  let end: number | undefined = $state(initialValues?.end)
+  // A day chosen before the form opened is more current than whatever the draft was left on
+  let start: number | undefined = $state(defaultStart ?? initialValues?.start)
+  let end: number | undefined = $state(defaultEnd ?? initialValues?.end)
   let content = $state(initialValues?.content ?? "")
 
   const onChange = (json: object) => {

@@ -789,6 +789,9 @@ export const makeCalendarFeed = ({
     events,
     loadOlder,
     loadNewer,
+    // The month and week views jump to arbitrary ranges rather than scrolling through them, and
+    // wait on the request so they can show progress for the range on screen
+    load: loadTimeframe,
     cleanup: () => {
       controller.abort()
       unsubscribers.forEach(call)

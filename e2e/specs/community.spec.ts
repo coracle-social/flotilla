@@ -109,6 +109,9 @@ test("US-046 create and browse a calendar event", async ({seed, as}) => {
   const {url} = scenario.space("space")
   const page = await as(users.alice, `${spacePath(url)}/calendar`)
 
+  // This story is about the scrollable list spanning past and future events, not the default view
+  await page.getByRole("button", {name: "Agenda", exact: true}).click()
+
   const cards = page.getByRole("link").filter({hasText: "Posted by"})
   const card = (title: string) => page.getByRole("link").filter({hasText: title})
 
@@ -204,8 +207,9 @@ test("US-047 manage your own calendar event", async ({seed, as}) => {
 
   await openCard(page.getByRole("link").filter({hasText: "Harvest Supper"}), "Harvest Supper")
 
-  // The event has no replies, so the page carries exactly one feature card.
-  const eventCard = page.locator(".card.z-feature")
+  // The hero card (date, header, meta, actions) is always the first feature card on the page;
+  // the About tab renders its own feature card below it for the description.
+  const eventCard = page.locator(".card.z-feature").first()
 
   await expect(page.getByRole("heading", {name: "Harvest Supper", exact: true})).toBeVisible()
   await expect(eventCard).toContainText(await longDate(page, at(-2, DAY)))
@@ -773,18 +777,20 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
 
   await openCard(bob.getByRole("link").filter({hasText: "Autumn Fair"}), "Autumn Fair")
 
-  const eventCard = bob.locator(".card.z-feature").filter({hasText: "Stalls, cider"})
+  // The hero card carries reactions; the description sits in its own card under the About tab.
+  const heroCard = bob.locator(".card.z-feature").first()
 
-  await expect(eventCard).toBeVisible()
+  await expect(bob.getByText("Stalls, cider and a tug of war.")).toBeVisible()
 
-  await pickParty(bob, emojiButton(eventCard))
+  await pickParty(bob, emojiButton(heroCard))
 
-  const bobsPill = eventCard.getByRole("button", {name: PARTY})
+  const bobsPill = heroCard.getByRole("button", {name: PARTY})
 
   await expect(bobsPill).toHaveCount(1)
   await expect(bobsPill).toHaveClass(/button-primary/)
   await expect(bobsPill).toHaveAttribute("data-tip", "Bob Barker reacted")
 
+  await bob.getByRole("button", {name: /^Discussion/}).click()
   await bob.getByRole("button", {name: "Leave comment"}).click()
 
   const reply = bob.locator("form").filter({has: bob.locator(".note-editor")})
@@ -798,12 +804,15 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
 
   await openCard(alice.getByRole("link").filter({hasText: "Autumn Fair"}), "Autumn Fair")
 
-  const alicesView = alice.locator(".card.z-feature").filter({hasText: "Stalls, cider"})
+  const alicesHeroCard = alice.locator(".card.z-feature").first()
 
-  await expect(alicesView.getByRole("button", {name: PARTY})).toHaveAttribute(
+  await expect(alicesHeroCard.getByRole("button", {name: PARTY})).toHaveAttribute(
     "data-tip",
     "Bob Barker reacted",
   )
+
+  await alice.getByRole("button", {name: /^Discussion/}).click()
+
   await expect(alice.getByText("Is there parking at The Green?")).toBeVisible()
 
   await alice.getByRole("button", {name: "Leave comment"}).click()

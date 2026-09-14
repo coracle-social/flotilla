@@ -1,24 +1,39 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
+  import cx from "classnames"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
   import {page} from "$app/stores"
-  import {now, last, formatTimestampAsDate} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {EVENT_TIME, tagValue, tagSpec} from "@welshman/util"
-  import {fly} from "@lib/transition"
+  import {EVENT_TIME} from "@welshman/util"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
+  import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Add from "@assets/icons/add.svg?dataurl"
+  import {fade} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Divider from "@lib/components/Divider.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
-  import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
+  import CalendarAgenda from "@app/components/CalendarAgenda.svelte"
+  import CalendarMonth from "@app/components/CalendarMonth.svelte"
+  import CalendarWeek from "@app/components/CalendarWeek.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import {pushModal} from "@app/modal"
+  import type {CalendarView} from "@app/calendar"
+  import {
+    addDays,
+    addMonths,
+    calendarView,
+    formatMonth,
+    formatWeekRange,
+    getMonthDays,
+    getWeekDays,
+    groupEventsByDay,
+    isCurrentMonth,
+    isCurrentWeek,
+  } from "@app/calendar"
+  import {getModal, pushModal} from "@app/modal"
   import {decodeRelay} from "@app/relays"
   import {makeCommentFilter} from "@app/content"
   import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
@@ -28,7 +43,46 @@
 
   const makeEvent = () => pushModal(CalendarEventCreate, {url})
 
-  const getStart = (event: TrustedEvent) => parseInt(tagValue(tagSpec("start"), event.tags) || "")
+  const showView = (target: CalendarView) => () => calendarView.set(target)
+
+  const showToday = () => {
+    cursor = new Date()
+  }
+
+  const showPrevious = () => {
+    cursor = view === "month" ? addMonths(cursor, -1) : addDays(cursor, -7)
+  }
+
+  const showNext = () => {
+    cursor = view === "month" ? addMonths(cursor, 1) : addDays(cursor, 7)
+  }
+
+  // Paging a month at a time is a lot of clicking, so mirror what other calendars bind
+  const onKeyDown = (event: KeyboardEvent) => {
+    const target = event.target as HTMLElement | null
+
+    if (view === "agenda" || getModal() || event.metaKey || event.ctrlKey || event.altKey) {
+      return
+    }
+
+    if (
+      target?.isContentEditable ||
+      ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName ?? "")
+    ) {
+      return
+    }
+
+    if (event.key === "ArrowLeft") showPrevious()
+    if (event.key === "ArrowRight") showNext()
+    if (event.key === "t") showToday()
+  }
+
+  const viewClass = (target: CalendarView) =>
+    cx(
+      "button join-item",
+      isNarrow ? "button-xs" : "button-sm",
+      view === target ? "button-primary" : "button-neutral",
+    )
 
   let element: HTMLElement | undefined = $state()
   onDestroy(context.cleanup)
@@ -41,67 +95,46 @@
   // between each of them would read as broken.
   const loading = $derived(!$older || $older.status !== "exhausted")
   let events: Readable<TrustedEvent[]> = $state(readable([]))
+  let feed: ReturnType<typeof makeCalendarFeed> | undefined = $state()
+  let cursor = $state(new Date())
+  let rangeLoading = $state(false)
+  let latestRange = 0
+  let width = $state(0)
 
-  type Item = {
-    event: TrustedEvent
-    dateDisplay?: string
-    isFirstFutureEvent?: boolean
-  }
+  // Month renders poorly in a narrow column, so that gets week — without touching the preference
+  const isNarrow = $derived(width > 0 && width < 768)
+  const view = $derived(isNarrow && $calendarView === "month" ? "week" : $calendarView)
 
-  const items = $derived.by(() => {
-    const todayDateDisplay = formatTimestampAsDate(now())
+  const isCurrentRange = $derived(view === "month" ? isCurrentMonth(cursor) : isCurrentWeek(cursor))
 
-    let haveISeenTheFuture = false
-    let prevDateDisplay: string
+  const rangeLabel = $derived(view === "month" ? formatMonth(cursor) : formatWeekRange(cursor))
 
-    return $events
-      .filter(event => !isNaN(getStart(event)))
-      .map<Item>(event => {
-        const newDateDisplay = formatTimestampAsDate(getStart(event))
-        const dateDisplay = prevDateDisplay === newDateDisplay ? undefined : newDateDisplay
-        const isFuture = todayDateDisplay === newDateDisplay || getStart(event) > now()
-        const isFirstFutureEvent = !haveISeenTheFuture && isFuture
+  const visibleDays = $derived(view === "month" ? getMonthDays(cursor) : getWeekDays(cursor))
 
-        prevDateDisplay = newDateDisplay
-        haveISeenTheFuture = isFuture
+  // Grouped once here so both the grid and the feed's range query agree on what is on screen
+  const eventsByDay = $derived(groupEventsByDay($events))
 
-        return {event, dateDisplay, isFirstFutureEvent}
-      })
-  })
-
-  let previousScrollHeight = 0
-  let prevFirstEventId = ""
-  let centeredEventId = ""
-
+  // The month and week grids show a fixed range instead of scrolling into one, so ask for it directly
   $effect(() => {
-    if (items.length === 0) {
-      return
+    if (feed && view !== "agenda") {
+      const days = visibleDays
+      const range = ++latestRange
+
+      rangeLoading = true
+
+      feed
+        .load(days[0].getTime() / 1000, addDays(days[days.length - 1], 1).getTime() / 1000)
+        .finally(() => {
+          // Paging faster than the relay answers would otherwise clear a newer range's spinner
+          if (range === latestRange) {
+            rangeLoading = false
+          }
+        })
     }
-
-    const {event} = items.find(({event}) => getStart(event) >= now()) || last(items)
-    const card = document.querySelector(".calendar-event-" + event.id)
-
-    // The feed arrives in batches, so the first one may hold nothing that hasn't happened yet.
-    // Centering again each time a nearer event turns up settles on the right one — and it stops
-    // once they have all arrived, because loading further out never changes which is next.
-    if (event.id !== centeredEventId && card instanceof HTMLElement) {
-      element!.scrollTop = card.offsetTop - element!.clientHeight / 2 + card.clientHeight / 2
-      centeredEventId = event.id
-    } else if (prevFirstEventId && items[0].event.id !== prevFirstEventId) {
-      // Older events prepended above the viewport would otherwise carry its contents down with them
-      const delta = element!.scrollHeight - previousScrollHeight
-
-      if (delta > 0) {
-        element!.scrollTop += delta
-      }
-    }
-
-    previousScrollHeight = element!.scrollHeight
-    prevFirstEventId = items[0].event.id
   })
 
   onMount(() => {
-    const feed = makeCalendarFeed({
+    feed = makeCalendarFeed({
       relays: [url],
       onEvent: context.add,
       filters: [{kinds: [EVENT_TIME]}, makeCommentFilter([EVENT_TIME])],
@@ -116,10 +149,12 @@
     return () => {
       older?.stop()
       newer?.stop()
-      feed.cleanup()
+      feed?.cleanup()
     }
   })
 </script>
+
+<svelte:window onkeydown={onKeyDown} />
 
 <SpaceBar>
   {#snippet leading()}
@@ -129,6 +164,25 @@
     <strong>Calendar</strong>
   {/snippet}
   {#snippet action()}
+    <div class="join">
+      <Button
+        class={viewClass("agenda")}
+        aria-pressed={view === "agenda"}
+        onclick={showView("agenda")}>
+        Agenda
+      </Button>
+      <Button class={viewClass("week")} aria-pressed={view === "week"} onclick={showView("week")}>
+        Week
+      </Button>
+      {#if !isNarrow}
+        <Button
+          class={viewClass("month")}
+          aria-pressed={view === "month"}
+          onclick={showView("month")}>
+          Month
+        </Button>
+      {/if}
+    </div>
     <Button class="button button-primary button-sm" onclick={makeEvent}>
       <Icon icon={Add} />
       Create
@@ -137,28 +191,42 @@
 </SpaceBar>
 
 <PageContent bind:element class="flex flex-col gap-2 p-2 sm:px-4">
-  {#each items as { event, dateDisplay, isFirstFutureEvent }, i (event.id)}
-    <div class="flex flex-col gap-2 calendar-event-{event.id}">
-      {#if isFirstFutureEvent}
-        <div class="flex items-center gap-2 p-2">
-          <div class="h-px grow bg-primary text-primary-content"></div>
-          <p class="text-xs uppercase text-primary">Today</p>
-          <div class="h-px grow bg-primary text-primary-content"></div>
-        </div>
-      {/if}
-      {#if dateDisplay}
-        <Divider>{dateDisplay}</Divider>
-      {/if}
-      <CalendarEventItem {url} {event} {context} />
-    </div>
-  {/each}
-  {#if loading}
-    <p class="flex h-10 items-center justify-center py-20" transition:fly>
-      <Spinner {loading}>Looking for events...</Spinner>
-    </p>
-  {:else if items.length === 0}
-    <p class="flex h-10 items-center justify-center py-20" transition:fly>No events found.</p>
-  {:else}
-    <p class="flex h-10 items-center justify-center py-20" transition:fly>That's all!</p>
-  {/if}
+  <div bind:clientWidth={width} class="flex flex-col gap-2">
+    {#if view !== "agenda"}
+      <div class="flex flex-wrap items-center gap-1 pt-2">
+        <Button
+          class="button button-neutral button-xs"
+          aria-label="Show the previous {view}"
+          onclick={showPrevious}>
+          <Icon icon={AltArrowLeft} size={4} />
+        </Button>
+        <span class="w-48 text-center font-bold">{rangeLabel}</span>
+        <Button
+          class="button button-neutral button-xs"
+          aria-label="Show the next {view}"
+          onclick={showNext}>
+          <Icon icon={AltArrowRight} size={4} />
+        </Button>
+        <Button
+          class="button button-neutral button-xs"
+          disabled={isCurrentRange}
+          onclick={showToday}>
+          Today
+        </Button>
+        <!-- Fixed width so its appearance doesn't nudge the buttons beside it -->
+        <span class="flex w-4 items-center justify-center">
+          {#if rangeLoading}
+            <span class="spinner spinner-xs" transition:fade={{duration: 150}}></span>
+          {/if}
+        </span>
+      </div>
+    {/if}
+    {#if view === "agenda"}
+      <CalendarAgenda {url} events={$events} {element} {loading} {context} />
+    {:else if view === "week"}
+      <CalendarWeek {url} {events} {eventsByDay} date={cursor} {context} />
+    {:else}
+      <CalendarMonth {url} {events} {eventsByDay} date={cursor} {context} />
+    {/if}
+  </div>
 </PageContent>

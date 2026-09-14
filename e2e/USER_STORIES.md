@@ -753,7 +753,7 @@ Acceptance:
 - The create form requires a title and a start/end time.
 - Submitting closes the modal and lists the event under its date on the Calendar
   page.
-- The calendar opens scrolled to today or the next upcoming event.
+- Switching to the Agenda view scrolls to today or the next upcoming event.
 
 ### US-047 — Manage your own calendar event
 
