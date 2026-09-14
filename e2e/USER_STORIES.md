@@ -723,8 +723,9 @@ and point people at one message.
 Acceptance:
 
 - A thread with more than 20 replies opens on its newest 20, under the opening
-  post, with a "Show earlier replies" control for the rest.
-- That control reveals the next 20 without leaving the page.
+  post, with a "Show earlier replies" control naming how many are still hidden.
+- That control reveals the next 20 without leaving the page, and its count drops
+  to match.
 - "Permalink" on a post copies a link to that post.
 - Opening that link as carol loads the thread, reveals the post it names however
   far back it is, and scrolls it into view.

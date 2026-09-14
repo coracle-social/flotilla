@@ -884,12 +884,16 @@ test("US-044 navigate a long thread", async ({seed, as}) => {
   await expect(bob.getByText("Reply 22", {exact: true})).toBeVisible()
   await expect(bob.getByText("Reply 21", {exact: true})).toHaveCount(0)
 
+  // The control says how many are still above it, so the reveal is not a blind click.
+  await expect(showEarlier).toHaveText("Show earlier replies (21)")
+
   // Each reveal reaches twenty further back without leaving the page.
   await showEarlier.click()
 
   await expect(bob.getByText("Reply 02", {exact: true})).toBeVisible()
   await expect(bob.getByText("Reply 01", {exact: true})).toHaveCount(0)
   await expect(bob.getByText("Reply 41", {exact: true})).toBeVisible()
+  await expect(showEarlier).toHaveText("Show earlier replies (1)")
 
   await showEarlier.click()
 

@@ -146,7 +146,7 @@
     {#if hiddenCount > 0}
       <div class="flex justify-center py-4">
         <Button class="button button-neutral button-sm" onclick={showEarlier}>
-          Show earlier replies
+          Show earlier replies ({hiddenCount})
         </Button>
       </div>
     {/if}
