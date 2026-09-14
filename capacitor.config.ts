@@ -1,8 +1,9 @@
 import type {CapacitorConfig} from "@capacitor/cli"
+import {loadEnv} from "vite"
 
 const config: CapacitorConfig = {
   appId: "social.flotilla",
-  appName: "Flotilla",
+  appName: loadEnv(process.env.NODE_ENV || "production", process.cwd(), "VITE_").VITE_PLATFORM_NAME,
   webDir: "build",
   ios: {
     scheme: "Flotilla Chat",

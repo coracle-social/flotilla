@@ -44,9 +44,7 @@ export const PLATFORM_TERMS = env("VITE_PLATFORM_TERMS")
 
 export const PLATFORM_PRIVACY = env("VITE_PLATFORM_PRIVACY")
 
-export const PLATFORM_LOGO = import.meta.env.PROD
-  ? PLATFORM_URL + "/logo.png"
-  : env("VITE_PLATFORM_LOGO").replace(/^static/, "") || PLATFORM_URL + "/logo.png"
+export const PLATFORM_LOGO = env("VITE_PLATFORM_LOGO").replace(/^static/, "")
 
 export const PLATFORM_NAME = env("VITE_PLATFORM_NAME")
 

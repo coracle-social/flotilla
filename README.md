@@ -47,8 +47,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Desktop development (Linux)
 
-The Electron target is a development baseline. It has no supported installers,
-release pipeline, packaging configuration, or auto-update setup.
+The Electron target and its unsigned packages are for development/testing.
+Release publishing and auto-updates are not configured.
 
 **Use disposable accounts only.** The current secure-storage plugin falls back to
 unencrypted `localStorage` on desktop. This is not secure desktop credential or
@@ -92,8 +92,48 @@ headless Linux runner, use `xvfb-run -a pnpm run test:desktop`; Electron links
 against GTK, which Playwright's chromium dependencies do not cover, so such a box
 also needs `libgtk-3-0t64`. The test drops Chromium's sandbox when it runs as
 root, because Chromium refuses to start that way. The separate smoke
-suite does not start a web dev server or test installers. Windows and macOS desktop
+suite does not start a web dev server. Windows and macOS desktop
 behavior is not verified by the Linux test. CI does not run it.
+
+### Desktop packaging
+
+After installing both sets of dependencies, run one of:
+
+```sh
+pnpm run package:desktop:linux
+pnpm run package:desktop:windows
+pnpm run package:desktop:macos
+```
+
+Each command rebuilds production assets, copies/updates Capacitor, compiles Electron,
+vendors its runtime/plugins, and invokes electron-builder without publishing or signing.
+Outputs are in `electron/dist/`: Linux x64 AppImage, Windows x64 NSIS installer,
+and separate macOS x64/arm64 DMGs. The root package version is authoritative.
+The Capacitor app ID remains stable; `VITE_PLATFORM_NAME` supplies the product name.
+Vite's `.env.local` overrides also apply; use production branding values when
+building artifacts for others. Explicit `VITE_*` environment values take precedence.
+`VITE_PLATFORM_LOGO` can be a local image or HTTPS image. Packaging resizes it
+to 1024×1024 and stages it in ignored output.
+
+Linux packaging requires Linux. Windows packaging from Linux uses the pinned
+official `electronuserland/builder` Wine image through Docker; it only mounts a
+temporary copy of the prepared Electron project. Native addons require a target-OS
+ABI rebuild and cannot use this cross-build path. Native Windows preparation needs
+Bash on PATH (for example, Git Bash). DMG creation requires macOS; on Linux,
+`pnpm run package:desktop:macos --dir` prepares unsigned bundles for inspection only.
+It does not verify macOS runtime, Gatekeeper, or signing.
+
+To smoke-test a package, run as a non-root user with the sandbox enabled:
+
+```sh
+FLOTILLA_DESKTOP_EXECUTABLE="/absolute/path/to/application" pnpm run test:desktop
+```
+
+Use the AppImage or installed executable, rather than the installer. This checks
+packaged metadata, local assets, navigation, workers and CSP using a disposable
+profile. Installation, reboot and uninstall still require target-OS testing.
+Packages must remain development-only until OS-protected secret storage and release
+signing are addressed.
 
 ## Deployment
 

@@ -1,7 +1,16 @@
+import {join} from "node:path"
+import {app} from "electron"
 import {createCapacitorElectronApp} from "@capawesome/capacitor-electron"
 
 createCapacitorElectronApp({
   window: {width: 1200, height: 800},
+  hooks: {
+    onWindowCreated: window => {
+      if (process.platform === "linux" && app.isPackaged) {
+        window.setIcon(join(app.getAppPath(), "generated/icon.png"))
+      }
+    },
+  },
   csp: {
     // SvelteKit's meta CSP owns scripts; the platform default would block its hashed bootstrap.
     policy: "base-uri 'self'; object-src 'none'",

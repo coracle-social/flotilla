@@ -1,25 +1,25 @@
-import {mkdtemp, rm} from "node:fs/promises"
+import {mkdtemp, readFile, rm} from "node:fs/promises"
 import {createRequire} from "node:module"
 import {tmpdir} from "node:os"
 import {join, resolve} from "node:path"
 import {_electron, expect, test} from "@playwright/test"
 
-test("the desktop baseline renders, navigates, and keeps external pages outside", async () => {
+test("the desktop app renders, navigates, and keeps external pages outside", async () => {
   const profile = await mkdtemp(join(tmpdir(), "flotilla-desktop-"))
 
   try {
-    const executablePath: string = createRequire(import.meta.url)(
-      resolve("electron/node_modules/electron"),
-    )
+    const packaged = process.env.FLOTILLA_DESKTOP_EXECUTABLE
+    const executablePath: string =
+      packaged || createRequire(import.meta.url)(resolve("electron/node_modules/electron"))
     const app = await _electron.launch({
       executablePath,
       // Chromium refuses to start as root with its sandbox on, which is what a CI container is.
-      chromiumSandbox: process.getuid?.() !== 0,
-      args: [resolve("electron")],
-      env: {...process.env, XDG_CONFIG_HOME: profile},
+      chromiumSandbox: packaged ? true : process.getuid?.() !== 0,
+      args: [...(packaged ? [] : [resolve("electron")]), `--user-data-dir=${profile}`],
     })
 
     try {
+      expect(await app.evaluate(({app}) => app.getPath("userData"))).toBe(profile)
       const mainWindows = () =>
         app.windows().filter(page => page.url().startsWith("capacitor-electron://"))
       await expect.poll(() => mainWindows().length).toBe(1)
@@ -38,6 +38,25 @@ test("the desktop baseline renders, navigates, and keeps external pages outside"
       ).toBe(await page.locator("body").getAttribute("data-theme"))
       const origin = await page.evaluate(() => location.origin)
       expect(origin).toMatch(/^capacitor-electron:\/\//)
+      expect(await page.locator('script[src*="@vite/client"]').count()).toBe(0)
+
+      if (packaged) {
+        const {version} = JSON.parse(await readFile("package.json", "utf8"))
+        expect(await app.evaluate(({app}) => app.isPackaged)).toBe(true)
+        expect(await app.evaluate(({app}) => app.getName())).toBe(await page.title())
+        expect(await app.evaluate(({app}) => app.getVersion())).toBe(version)
+        expect(await app.evaluate(({app}) => app.getAppPath())).toMatch(/app\.asar$/)
+        expect(await app.evaluate(({app}) => app.commandLine.hasSwitch("no-sandbox"))).toBe(false)
+        const preferences = await app.browserWindow(page).then(window =>
+          window.evaluate(window => {
+            const {sandbox, contextIsolation, nodeIntegration} =
+              window.webContents.getLastWebPreferences()
+            return {sandbox, contextIsolation, nodeIntegration}
+          }),
+        )
+        expect(preferences).toEqual({sandbox: true, contextIsolation: true, nodeIntegration: false})
+        await page.screenshot({path: test.info().outputPath("packaged-onboarding.png")})
+      }
 
       await page.getByRole("button", {name: "Log in", exact: true}).click()
       await expect(page.getByTestId("login")).toBeVisible()

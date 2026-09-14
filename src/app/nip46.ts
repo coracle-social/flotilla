@@ -14,7 +14,7 @@ import {
 import type {Nip46ResponseWithResult} from "@welshman/signer"
 import {Nip46Broker} from "@welshman/signer"
 import {makeSecret} from "@welshman/util"
-import {PLATFORM_URL, PLATFORM_NAME, PLATFORM_LOGO, SIGNER_RELAYS} from "@app/env"
+import {PLATFORM_URL, PLATFORM_NAME, SIGNER_RELAYS} from "@app/env"
 import {pushToast} from "@app/toast"
 
 const APP_SCHEME = "social.flotilla"
@@ -67,7 +67,7 @@ export class Nip46Controller {
     const url = await this.broker.makeNostrconnectUrl({
       url: PLATFORM_URL,
       name: PLATFORM_NAME,
-      image: PLATFORM_LOGO,
+      image: PLATFORM_URL + "/logo.png",
       perms: NIP46_PERMS,
     })
 

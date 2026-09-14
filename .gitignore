@@ -12,6 +12,7 @@ vite.config.ts.timestamp-*
 /playwright/.cache/
 
 # Generated assets
+static/desktop-logo.png
 static/favicon.ico
 static/pwa-64x64.png
 static/pwa-192x192.png
