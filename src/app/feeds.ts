@@ -1,5 +1,5 @@
 import {derived, get, readable, writable} from "svelte/store"
-import type {Readable, Writable} from "svelte/store"
+import type {Readable} from "svelte/store"
 import {batch, call, int, ms, now, on, sleep, uniqBy, MONTH, YEAR} from "@welshman/lib"
 import {
   COMMENT,
@@ -298,16 +298,14 @@ export type FeedContext = ReturnType<typeof makeFeedContext>
 const syncFeed = ({
   relays,
   filters,
-  events,
-  seen,
-  insertEvents,
+  addEvents,
+  removeEvents,
   requireRelay = true,
 }: {
   relays: string[]
   filters: Filter[]
-  events: Writable<TrustedEvent[]>
-  seen: Set<string>
-  insertEvents: (events: TrustedEvent[]) => void
+  addEvents: (events: TrustedEvent[]) => void
+  removeEvents: (ids: Set<string>) => void
   // Whether an event has to have been seen on one of `relays` to belong to this feed
   requireRelay?: boolean
 }) => {
@@ -323,7 +321,7 @@ const syncFeed = ({
     }
 
     if (matching.length > 0) {
-      insertEvents(matching)
+      addEvents(matching)
     }
   })
 
@@ -335,11 +333,7 @@ const syncFeed = ({
         const {added, removed} = mergeRepositoryUpdates(updates)
 
         if (removed.size > 0) {
-          events.update($events => $events.filter(e => !removed.has(e.id)))
-
-          for (const id of removed) {
-            seen.delete(id)
-          }
+          removeEvents(removed)
         }
 
         const matching = added.filter(
@@ -349,7 +343,7 @@ const syncFeed = ({
         )
 
         if (matching.length > 0) {
-          insertEvents(matching)
+          addEvents(matching)
         }
       }),
     ),
@@ -378,6 +372,13 @@ export type FeedSpan = {found: number; complete: boolean; exhausted: boolean}
 // Empty spans to walk per trigger. Enough to cross a gap; not enough to reach the end of the
 // history on a single request.
 const SPANS_PER_TRIGGER = 3
+
+// How many events one step back through the history asks for. Spans are a month wide so that a
+// quiet feed finds its history in a few requests, which in a busy one is thousands of events —
+// far more than anyone is about to read, and all of it queued ahead of what they are looking at.
+// Asking for a page instead leaves the relays to answer with the events nearest the anchor,
+// which is what NIP-01 promises a filter carrying a limit.
+const PAGE_SIZE = 100
 
 // Whether a request is actually in flight, which is not the same as whether more might exist. A
 // list that already has what it needs shouldn't sit under a spinner just because it hasn't
@@ -472,10 +473,19 @@ export const makeFeed = ({
   const events = writable<TrustedEvent[]>([])
   const seen = new Set<string>()
 
+  // Events from further back than the feed has reached. Everything the app does fills the same
+  // repository — a space-wide sync reconciling a month of every room at once, most of all — and
+  // putting each of those on screen as it lands is what walks a room backwards under the reader.
+  const held = new Map<string, TrustedEvent>()
+
   // The span the relays have been asked about, which grows outward from the anchor
   let oldest = at
   let newest = at
   let interval = int(MONTH)
+
+  // How far back the feed has been answered for, which is what decides whether an event is ready
+  // to render or has to wait for the window to come and get it.
+  let reached = at
 
   const insertEvents = (newEvents: Iterable<TrustedEvent>) => {
     const added: TrustedEvent[] = []
@@ -483,6 +493,7 @@ export const makeFeed = ({
     for (const event of newEvents) {
       if (!seen.has(event.id)) {
         seen.add(event.id)
+        held.delete(event.id)
         added.push(event)
         onEvent?.(event)
       }
@@ -495,16 +506,79 @@ export const makeFeed = ({
     }
   }
 
-  const unsubscribers = syncFeed({relays, filters, events, seen, insertEvents})
+  // What arrives from elsewhere in the app, which is only rendered as far back as the feed has
+  // got to on its own
+  const addEvents = (newEvents: TrustedEvent[]) => {
+    const ready: TrustedEvent[] = []
 
-  const loadTimeframe = async (since: number, until: number) => {
+    for (const event of newEvents) {
+      if (!seen.has(event.id) && !held.has(event.id)) {
+        if (event.created_at >= reached) {
+          ready.push(event)
+        } else {
+          held.set(event.id, event)
+        }
+      }
+    }
+
+    insertEvents(ready)
+  }
+
+  const removeEvents = (ids: Set<string>) => {
+    events.update($events => $events.filter(event => !ids.has(event.id)))
+
+    for (const id of ids) {
+      seen.delete(id)
+      held.delete(id)
+    }
+  }
+
+  // Take the feed back to `timestamp`, releasing everything that had arrived for the stretch
+  // between there and where it had got to
+  const reach = (timestamp: number) => {
+    if (timestamp < reached) {
+      reached = timestamp
+
+      const ready: TrustedEvent[] = []
+
+      for (const [id, event] of held) {
+        if (event.created_at >= reached) {
+          held.delete(id)
+          ready.push(event)
+        }
+      }
+
+      insertEvents(ready)
+    }
+  }
+
+  const unsubscribers = syncFeed({relays, filters, addEvents, removeEvents})
+
+  // One request per direction, reported per relay as well as in total: each relay answers a
+  // limit for itself, so a page only runs out where the relay that gave the least of it ran out.
+  const loadSpan = async (extension: Filter) => {
     let complete = false
+
+    const pages = new Map<string, {count: number; lowest: number}>()
+
+    const countEvent = (event: TrustedEvent, url: string) => {
+      const page = pages.get(url)
+
+      if (page) {
+        page.count += 1
+        page.lowest = Math.min(page.lowest, event.created_at)
+      } else {
+        pages.set(url, {count: 1, lowest: event.created_at})
+      }
+    }
 
     const found = await network.get().request({
       relays,
       autoClose: true,
       signal: controller.signal,
-      filters: filters.map(filter => ({...filter, since, until})),
+      filters: filters.map(filter => ({...filter, ...extension})),
+      onEvent: countEvent,
+      onDuplicate: countEvent,
       onEose: () => {
         complete = true
       },
@@ -516,7 +590,7 @@ export const makeFeed = ({
       interval = found.length > 0 ? int(MONTH) : Math.round(interval * 1.5)
     }
 
-    return {found: found.length, complete}
+    return {found, complete, pages}
   }
 
   // Ask for the next span in each direction. A span that comes back empty is normal while
@@ -529,32 +603,57 @@ export const makeFeed = ({
 
     const until = oldest
     const since = until - interval
-    const {found, complete} = await loadTimeframe(since, until)
+    const {found, complete, pages} = await loadSpan({since, until, limit: PAGE_SIZE})
 
-    if (complete) {
-      oldest = since
+    // A relay that answered with less than it was allowed has covered its whole span and holds
+    // nothing back, so the page runs out at the highest of the rest
+    let edge: Maybe<number>
+
+    for (const page of pages.values()) {
+      if (page.count >= PAGE_SIZE && (edge === undefined || page.lowest > edge)) {
+        edge = page.lowest
+      }
     }
 
-    return {found, complete, exhausted: false}
+    if (complete) {
+      // The second the edge steps back is what stops a page that filled up inside one from being
+      // asked for over and over
+      oldest = edge === undefined ? since : Math.min(edge, until - 1)
+    }
+
+    insertEvents(found)
+    reach(oldest)
+
+    return {found: found.length, complete, exhausted: false}
   }
 
+  // A limit is answered with the newest events matching it, which reaches away from an anchor in
+  // the past rather than toward it, so this direction walks spans as it always has
   const loadNewer = async (): Promise<FeedSpan> => {
     if (newest >= now()) return {found: 0, complete: true, exhausted: true}
 
     const since = newest
     const until = Math.min(now(), since + interval)
-    const {found, complete} = await loadTimeframe(since, until)
+    const {found, complete} = await loadSpan({since, until})
 
     if (complete) {
       newest = until
     }
 
-    return {found, complete, exhausted: false}
+    insertEvents(found)
+
+    return {found: found.length, complete, exhausted: false}
   }
 
-  for (const url of relays) {
-    insertEvents(getEventsForUrl(url, filters))
+  // What the repository already holds for these relays is in hand and goes in as one insert,
+  // which takes the window back with it rather than leaving the rest of that stretch behind
+  const cached = relays.flatMap(url => Array.from(getEventsForUrl(url, filters)))
+
+  for (const event of cached) {
+    reached = Math.min(reached, event.created_at)
   }
+
+  insertEvents(cached)
 
   return {
     events,
@@ -624,14 +723,21 @@ export const makeCalendarFeed = ({
     })
   }
 
+  const removeEvents = (ids: Set<string>) => {
+    events.update($events => $events.filter(event => !ids.has(event.id)))
+
+    for (const id of ids) {
+      seen.delete(id)
+    }
+  }
+
   // Calendar events are addressable and often relayed on from elsewhere, so this feed takes any
   // matching event rather than only those seen on its own relays
   const unsubscribers = syncFeed({
     relays,
     filters,
-    events,
-    seen,
-    insertEvents,
+    addEvents: insertEvents,
+    removeEvents,
     requireRelay: false,
   })
 
