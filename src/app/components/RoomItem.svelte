@@ -1,24 +1,17 @@
 <script lang="ts">
   import cx from "classnames"
   import {readable} from "svelte/store"
-  import {
-    gte,
-    now,
-    uniq,
-    displayList,
-    formatTimestampAsTime,
-    formatTimestampAsDate,
-  } from "@welshman/lib"
+  import {now, uniq, displayList, formatTimestampAsTime, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {
     MESSAGE,
     THREAD,
     getCommentFiltersForParent,
     getIdOrAddress,
-    matchTag,
     tagSpec,
     tagValue,
   } from "@welshman/util"
+  import {getContentQuote} from "@welshman/domain"
   import {isMobile} from "@lib/html"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -74,11 +67,10 @@
   const thunk = $derived($thunks.merge($thunksByEventId.get(event.id) ?? noThunks))
   const colorValue = colorFor(event.pubkey)
 
-  const qTag = matchTag(tagSpec("q"), event.tags)
-  const isQuoteOnly = Boolean(
-    gte(qTag?.length, 2) && event.content.trim().match(/^nostr:n(event|addr)1\w+\s*$/),
-  )
-  const innerEvent = isQuoteOnly ? deriveEvent(qTag![1], [url]) : readable(undefined)
+  // A message that is nothing but a reference renders as the event it quotes.
+  const isQuoteOnly = event.content.trim().split(/\s/).length === 1
+  const quote = isQuoteOnly ? getContentQuote(event.content) : undefined
+  const innerEvent = quote ? deriveEvent(quote.value, [url]) : readable(undefined)
   const innerComments = $derived(
     $innerEvent ? deriveEventsForUrl(url, getCommentFiltersForParent([$innerEvent])) : readable([]),
   )

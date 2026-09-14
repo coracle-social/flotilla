@@ -2,8 +2,9 @@ import * as nip19 from "nostr-tools/nip19"
 import {derived, get} from "svelte/store"
 import {formatTimestampAsDate, int, sortBy, uniq, MINUTE} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {MESSAGE, makeEvent, outbox, seen, toNostrURI} from "@welshman/util"
+import {outbox, relay, seen, toNostrURI} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
+import {Message} from "@welshman/domain"
 import {MembershipStatus, RoomLists, makeRoomKey, createSearch, publish} from "@welshman/app"
 import type {Room, RoomMeta} from "@welshman/app"
 import {
@@ -16,6 +17,7 @@ import {
   thunks,
   relays,
   user,
+  writer,
 } from "@app/core"
 import {deriveUserIsSpaceAdmin} from "@app/management"
 import {makeRoomPath} from "@app/routes"
@@ -83,7 +85,7 @@ export const prependParent = async (
     const resolver = router.get().resolver
     const relays = url ? [url] : await resolver.relays([seen(parent)])
     const hint = url ?? (await resolver.relay([outbox(parent.pubkey)])) ?? ""
-    const nevent = nip19.neventEncode({...parent, relays})
+    const nevent = nip19.neventEncode({id: parent.id, author: parent.pubkey, relays})
 
     content = toNostrURI(nevent) + "\n\n" + content
     tags = [...tags, ["q", parent.id, hint, parent.pubkey], ["p", parent.pubkey, hint]]
@@ -105,19 +107,19 @@ export const publishRoomQuote = async ({
   protect: boolean
   delay?: number
 }) => {
-  const tags: string[][] = []
+  const eventWriter = writer(Message).setParent(parent).setProtected(protect)
 
   if (h) {
-    tags.push([ROOM, h])
+    eventWriter.setRoom(url, h)
+  } else {
+    eventWriter.forceRoutes(relay(url))
   }
 
-  if (protect) {
-    tags.push(PROTECTED)
-  }
-
-  const event = makeEvent(MESSAGE, await prependParent(parent, {content: "", tags}, url))
-
-  return thunks.get().publish({relays: [url], event, delay})
+  return thunks.get().publish({
+    relays: [url],
+    event: await eventWriter.renderTemplate(),
+    delay,
+  })
 }
 
 // User

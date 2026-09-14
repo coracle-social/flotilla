@@ -9,7 +9,8 @@
   import {now, ifLet, ago, MINUTE} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {makeEvent, MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
+  import {relay, stamp, MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
+  import {Message} from "@welshman/domain"
   import {MembershipStatus} from "@welshman/app"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
@@ -32,11 +33,10 @@
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import VideoCallContent from "@app/components/VideoCallContent.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
-  import {deletes, relays, rooms, thunks, user} from "@app/core"
+  import {deletes, relays, rooms, thunks, user, writer} from "@app/core"
   import {joinRoom, leaveRoom} from "@app/access"
   import {CallState, callTargetRoom, callState, VideoCallLayout, videoCallLayout} from "@app/call"
   import {
-    PROTECTED,
     RoomType,
     deriveUserRoomMembershipStatus,
     getRoomType,
@@ -177,17 +177,7 @@
     }
 
     try {
-      if (h) {
-        tags.push(["h", h])
-      }
-
       const protect = await shouldProtect
-
-      if (protect) {
-        tags.push(PROTECTED)
-      }
-
-      let template: EventContent & {created_at?: number} = {content, tags}
 
       if (eventToEdit) {
         // Don't do anything if message hasn't changed
@@ -195,9 +185,7 @@
           return
         }
 
-        // Delete previous message, to be republished with same timestamp
-        template.created_at = eventToEdit.created_at
-
+        // Delete the previous message, to be republished below with the same timestamp
         const command = await $deletes.deleteEvent($state.snapshot(eventToEdit), w =>
           w.setProtected(protect),
         )
@@ -205,17 +193,30 @@
         command.publishToRelays([url])
       }
 
+      // A share is a quote rather than a reply, so it goes in the content directly and
+      // setParent prepends the reply's own reference ahead of it.
       if (sharedEvent) {
-        template = await prependParent(sharedEvent, template, url)
+        ;({content, tags} = await prependParent(sharedEvent, {content, tags}, url))
+      }
+
+      const eventWriter = writer(Message)
+        .setContent(content)
+        .addTags(...tags)
+        .setProtected(protect)
+
+      if (h) {
+        eventWriter.setRoom(url, h)
+      } else {
+        eventWriter.forceRoutes(relay(url))
       }
 
       if (parent) {
-        template = await prependParent(parent, template, url)
+        eventWriter.setParent(parent)
       }
 
       const thunk = $thunks.publish({
         relays: [url],
-        event: makeEvent(MESSAGE, template),
+        event: stamp(await eventWriter.renderTemplate(), eventToEdit?.created_at),
         delay: $userSettingsValues.send_delay,
       })
 
