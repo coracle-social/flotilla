@@ -479,7 +479,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
           .writer()
           .setTitle("New PA system")
           .setSummary("The old one hums through every song.")
-          .setAmount(50000)
+          .setAmount(toMsats(50000))
           .setUrls([space.url])
           .renderTemplate(),
       at(60, HOUR),
@@ -493,7 +493,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
           .writer()
           .setTitle("Soundproofing")
           .setSummary("The neighbours have opinions about band practice.")
-          .setAmount(20000)
+          .setAmount(toMsats(20000))
           .setUrls([space.url])
           .renderTemplate(),
       at(30, HOUR),
