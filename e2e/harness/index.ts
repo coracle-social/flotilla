@@ -1,3 +1,4 @@
+import {writeFile} from "node:fs/promises"
 import {npubEncode} from "nostr-tools/nip19"
 import {test as base, expect} from "@playwright/test"
 import type {BrowserContext, BrowserContextOptions, Page} from "@playwright/test"
@@ -193,6 +194,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     await zooid.reset()
 
     const contexts: BrowserContext[] = []
+    const browserLog: string[] = []
 
     let scenario: Maybe<Scenario>
 
@@ -217,6 +219,21 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
       })
 
       contexts.push(context)
+
+      // `use.trace` and the built-in reporting only cover contexts playwright made itself, so a
+      // failure in a context opened here arrives with the app's own account of it thrown away —
+      // which is how a spec that caught the app on its 500 page had nothing to say about why.
+      const who = user?.name ?? "anonymous"
+
+      context.on("console", message => {
+        if (["error", "warning"].includes(message.type())) {
+          browserLog.push(`[${who}] ${message.type()}: ${message.text()}`)
+        }
+      })
+
+      context.on("weberror", error => {
+        browserLog.push(`[${who}] uncaught: ${error.error().stack ?? error.error().message}`)
+      })
 
       // Playwright matches the most recently registered route first and every mock falls through
       // what it doesn't recognize, so the block-all goes in before the mocks, and all of it before
@@ -276,6 +293,15 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         return scenario
       },
     })
+
+    if (browserLog.length > 0 && testInfo.status !== testInfo.expectedStatus) {
+      // A path rather than a body: the list reporter truncates an inline attachment, and the
+      // nightly run on the box keeps test-results and nothing else.
+      const path = testInfo.outputPath("browser-console.log")
+
+      await writeFile(path, browserLog.join("\n"))
+      await testInfo.attach("browser-console", {path, contentType: "text/plain"})
+    }
 
     for (const context of contexts) {
       await context.close()

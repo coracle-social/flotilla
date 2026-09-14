@@ -414,6 +414,11 @@ pnpm test                                             # starts and stops the con
 
 Every test skips when docker is unavailable, rather than failing.
 
+A failing test attaches `browser-console`, the console errors and uncaught exceptions its pages
+raised. `use.trace` and playwright's own reporting only cover contexts playwright made itself, and
+the harness makes its own, so without that attachment a failure carries the DOM snapshot and
+nothing the app said — which is unreadable when what failed is the app rendering its error page.
+
 One engine per run. These specs exercise sockets, auth and sync, so running them under three
 engines adds little coverage. `E2E_BROWSER=webkit pnpm test` runs the whole
 suite under another one. The container listens on a fixed port and cannot be sharded, so
