@@ -11,14 +11,14 @@ Welshman is a modular TypeScript nostr toolkit extracted from the [Coracle](http
 
 | Package | Description |
 |---|---|
-| `@welshman/util` | Core nostr types, event helpers, filters, tag specs, NIPs, and the `RelaySelection` routing DSL |
+| `@welshman/util` | Core nostr types, event helpers, filters, NIP implementations, and the relay-selection routing DSL |
 | `@welshman/lib` | General-purpose utilities: LRU cache, event emitter, deferred promises, task queue |
-| `@welshman/net` | Relay connections, request/publish lifecycle, and auth handling |
-| `@welshman/domain` | A typed Reader/Writer pair per event kind, so you never hand-parse tags |
-| `@welshman/store` | Svelte stores and a Repository for indexing/querying nostr events client-side |
+| `@welshman/net` | Relay connections, request/publish lifecycle, auth, and the `Repository`/`Tracker`/`WrapManager` stores |
+| `@welshman/store` | Svelte store primitives over a `Repository` — live event and domain-object collections, cached loaders, persistence |
 | `@welshman/signer` | Signing and login methods: NIP-01 (privkey), NIP-07 (extension), NIP-46 (bunker), NIP-55 (app), NIP-59 (gift wrap) |
+| `@welshman/domain` | Typed Reader/Writer classes per event kind (profiles, notes, lists, rooms, relay management) that parse events, build templates, and emit relay routing |
 | `@welshman/feeds` | Dynamic feed construction, filtering, and composition |
-| `@welshman/app` | The `App` instance and its plugin registry, composing net, store, domain, signer, and feeds into a full application framework |
+| `@welshman/app` | Instance-based application framework: an `App` composes net, store, signer, feeds, and domain, exposing data modules via `app.use(...)` |
 | `@welshman/content` | Parser and renderer for nostr note content (links, mentions, media, custom formatting) |
 | `@welshman/editor` | Batteries-included Svelte rich-text editor component with mention and embed support |
 
@@ -27,43 +27,28 @@ Welshman is a modular TypeScript nostr toolkit extracted from the [Coracle](http
 Packages are layered so lower-level ones have no welshman dependencies:
 
 - **Foundational** (no welshman deps): `@welshman/lib`, `@welshman/util`
-- **Mid-level** (depend only on foundational): `@welshman/net`, `@welshman/store`, `@welshman/signer`, `@welshman/domain`
-- **Composing** (depend on mid-level + foundational): `@welshman/feeds`, `@welshman/app`
+- **Mid-level** (depend only on foundational): `@welshman/net`, `@welshman/store`, `@welshman/signer`
+- **Composing** (depend on mid-level + foundational): `@welshman/feeds`, `@welshman/domain`
+- **Application** (composes everything above): `@welshman/app`
 - **UI-focused** (largely independent, UI rendering concerns): `@welshman/content`, `@welshman/editor`
 
-For deep-dives on any package, load the `welshman-<name>` skill (e.g. `welshman-net`, `welshman-app`, `welshman-domain`).
+For deep-dives on any package, load the `welshman-<name>` skill (e.g. `welshman-net`, `welshman-app`, `welshman-domain`, `welshman-signer`).
 
-## The App instance
+Relay selection spans two packages. The `RelaySelection` DSL, `Resolver` and `RelayScenario` are in `@welshman/util` (`welshman-util` skill); the `Router` plugin that dereferences them is in `@welshman/app` (`welshman-app` skill). There is no `@welshman/router` package.
 
-Everything in the framework hangs off one `App`. An app owns the primitives a single identity
-needs — repository, socket pool, tracker, wrap manager — so data never bleeds across sessions.
+## Getting started
 
-```typescript
-import {createApp, Network, Profiles, User} from "@welshman/app"
+Install only what you need:
 
-// `createApp` = `new App` plus the default policies (ingest, relay stats, gift-wrap unwrapping)
-const app = createApp({
-  user: await User.fromSigner(signer),   // omit for a signed-out app
-  config: {
-    getDefaultRelays: () => ["wss://relay.example.com"],
-    getIndexerRelays: () => ["wss://indexer.example.com"],
-  },
-})
+```bash
+# Full application framework (includes app, net, store, signer, feeds, domain)
+npm i @welshman/app
 
-app.use(Profiles).load(pubkey)           // plugins are per-app singletons, constructed on demand
-app.use(Network).load({relays, filters})
+# Or assemble manually for more control
+npm i @welshman/util @welshman/net @welshman/signer
 ```
 
-Three rules follow from this design:
-
-1. **`app.use(Plugin)` is memoized and cheap** — call it inline rather than caching the result.
-2. **An app is scoped to one identity.** Logging in means building a *new* app and calling
-   `cleanup()` on the old one, not attaching a user to the existing one.
-3. **Side effects live in policies**, not in the data classes. An `AppPolicy` is
-   `(app) => Unsubscriber`, applied once at construction and torn down by `cleanup()`.
-
-Svelte apps typically wrap `app` in a store so plugin reads re-subscribe when login swaps the
-instance. That binding layer is app-specific and deliberately not part of welshman.
+If you're building a conventional nostr web client, use `@welshman/app` for batteries-included functionality. For more advanced usage, use the lower-level modules without `app` for more control.
 
 ## Key nostr concepts
 
@@ -79,67 +64,72 @@ instance. That binding layer is app-specific and deliberately not part of welshm
 
 | Goal | Package(s) to use |
 |---|---|
-| Fetch notes from relays | `app.use(Network)`, or `@welshman/net` directly for low-level control |
-| Select which relays to use | `RelaySelection` helpers in `@welshman/util` + `app.use(Router)` |
-| Read or write a specific kind | `@welshman/domain` via `app.use(Domain)` |
-| Sign and publish events | `@welshman/signer` + `Command` from `@welshman/app` |
-| Build a feed UI | `@welshman/feeds` + `app.use(Feeds)` |
+| Fetch notes from relays | `@welshman/net` (low-level) or `@welshman/app` (high-level) |
+| Compose typed events (notes, profiles, lists) | `@welshman/domain` |
+| Select which relays to read from / publish to | `@welshman/util` (routing DSL) + `@welshman/app` (Router plugin) |
+| Sign and publish events | `@welshman/domain` + `@welshman/app`, or `@welshman/signer` + `@welshman/net` |
+| Build a feed UI | `@welshman/feeds` + `@welshman/app` |
 | Parse note text and media | `@welshman/content` |
 | Embed a composer / editor | `@welshman/editor` |
-| Cache nostr events client-side | `@welshman/store` + `app.repository` |
-| Core event/filter/tag utilities | `@welshman/util` |
+| Cache nostr events client-side | `@welshman/net` (`Repository`) + `@welshman/store` (reactive views over it) |
+| Core event/filter utilities | `@welshman/util` |
 | Low-level helpers (LRU, emitter, utility functions) | `@welshman/lib` |
 
-## App example
+### App Example
 
 ```typescript
-import {createApp, Domain, Profiles, User} from "@welshman/app"
-import {Note} from "@welshman/domain"
-import {Nip07Signer} from "@welshman/signer"
+import { Nip07Signer } from "@welshman/signer"
+import { Note } from "@welshman/domain"
+import { createApp, User, Domain, Profiles } from "@welshman/app"
 
-// 1. Build an app for the signed-in user
-const signer = new Nip07Signer()
+// 1. Create an app instance. Each App owns its own repository, socket pool,
+//    tracker, and (optional) signing user, so data never leaks across identities.
+//    Pass the user at construction rather than assigning app.user afterwards.
+const user = await User.fromSigner(new Nip07Signer())
+
 const app = createApp({
-  user: await User.fromSigner(signer),
+  user,
   config: {
-    getDefaultRelays: () => ["wss://relay.example.com"],
+    getDefaultRelays: () => ["wss://relay.example.com", "wss://relay2.example.com"],
     getIndexerRelays: () => ["wss://indexer.example.com"],
   },
 })
 
-// 2. Read the user's profile (loads from their write relays if not cached)
-const profile = await app.use(Profiles).load(app.user!.pubkey)
+// 2. Hydrate the repository from storage and flush changes back to it.
+//    See the welshman-net skill for repository.load() and the "update" listener.
 
-console.log("Hello,", profile?.display())
+// 3. Load the user's profile through the Profiles data module
+//    (triggers a network fetch via the outbox model if not cached)
+const profile = await app.use(Profiles).forceLoad(user.pubkey)
+if (profile) console.log("Hello,", profile.display())
 
-// 3. Publish a note — build a writer, wrap it in a command, publish it
+// ...or subscribe reactively:
+app.use(Profiles).one(user.pubkey).subscribe($profile => {
+  if ($profile) console.log("Profile:", $profile.display())
+})
+
+// 4. Compose and publish a note. Domain builds the event and resolves relays;
+//    the returned Command sends it through the publish pipeline.
 const writer = app.use(Domain).writer(Note).setContent("Hello, Nostr!")
 const command = await app.use(Domain).command(writer)
 
-await command.publish().waitForError()
+await command.publish()
 ```
 
-Publishing goes through a `Command`, which owns the rendered event and its resolved relays:
-`command.publish()`, `.publishToRelays(urls)`, or `.publishAsRelay(url)`. Plugin mutators
-(`app.use(FollowLists).follow(...)`, `app.use(Rooms).joinRoom(...)`) already return a `Command`,
-so `.then(publish)` is usually all you need.
-
-## Lower-level example
-
-The net layer takes an explicit context, so it can be used without an `App` at all.
+### Lower-level Example
 
 ```typescript
-import {AbstractAdapter, isClientEvent, publish, request} from "@welshman/net"
-import type {ClientMessage, NetContext} from "@welshman/net"
-import {call, sleep} from "@welshman/lib"
-import {Nip01Signer} from "@welshman/signer"
-import {makeEvent, NOTE} from "@welshman/util"
+import { AbstractAdapter, ClientMessage, isClientEvent, publish, request } from '@welshman/net'
+import type { NetContext } from '@welshman/net'
+import { call, sleep } from '@welshman/lib'
+import { Nip01Signer } from '@welshman/signer'
+import { makeEvent, NOTE } from '@welshman/util'
 
 const pingSigner = Nip01Signer.fromSecret(/* nostr hex secret key */)
 const pongSigner = Nip01Signer.fromSecret(/* nostr hex secret key */)
 const RELAY_URL = "bogus.relay"
 
-// An adapter for our relay url which just prints the content
+// Create an adapter for our relay url which just prints the content
 export class PrintAdapter extends AbstractAdapter {
   get sockets() { return [] }
   get urls() { return [] }
@@ -151,29 +141,38 @@ export class PrintAdapter extends AbstractAdapter {
   }
 }
 
-// Context is passed explicitly. An `App` supplies its own via `app.netContext`; here we build one.
+// A net context that routes our relay url to the custom adapter. Context is
+// passed per call now — there is no module-level singleton.
 const context: NetContext = {
-  getAdapter: (url: string) => (url === RELAY_URL ? new PrintAdapter() : undefined),
+  getAdapter: (url: string) => {
+    if (url === RELAY_URL) {
+      return new PrintAdapter()
+    }
+  },
 }
 
+// Loop, sending off pings every so often
 call(async () => {
   while (true) {
     await sleep(1000)
 
-    const ping = await pingSigner.sign(makeEvent(NOTE, {content: "ping"}))
+    const ping = await pingSigner.sign(
+      makeEvent(NOTE, {content: 'ping'})
+    )
 
     await publish({event: ping, relays: [RELAY_URL], context})
   }
 })
 
+// Meanwhile, listen for pings and quote-note with a pong
 call(async () => {
   request({
     relays: [RELAY_URL],
-    filters: [{kinds: [NOTE], authors: [await pingSigner.getPubkey()]}],
     context,
+    filters: [{kinds: [NOTE], authors: [await pingSigner.getPubkey()]}],
     onEvent: async (ping, url) => {
       const pong = await pongSigner.sign(
-        makeEvent(NOTE, {content: "pong", tags: [["q", ping.id, RELAY_URL, ping.pubkey]]}),
+        makeEvent(NOTE, {content: 'pong', tags: [["q", ping.id, RELAY_URL, ping.pubkey]]})
       )
 
       await publish({event: pong, relays: [RELAY_URL], context})

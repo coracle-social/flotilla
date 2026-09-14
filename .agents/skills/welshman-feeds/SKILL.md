@@ -115,11 +115,12 @@ class FeedCompiler {
 }
 
 type FeedCompilerOptions = {
+  router: FeedRouter                 // REQUIRED — resolves relay selections
   getPubkeysForScope: (scope: Scope) => string[]
   getPubkeysForWOTRange: (min: number, max: number) => string[]
   signer?: ISigner
   signal?: AbortSignal
-  context?: AdapterContext
+  context?: AdapterContext           // net context: {pool, repository, getAdapter?}
 }
 ```
 
@@ -147,6 +148,32 @@ type FeedControllerOptions = FeedCompilerOptions & {
 }
 ```
 
+### Routing (`FeedRouter`)
+
+`@welshman/feeds` has no way to turn a pubkey into relay urls, so it declares the capability as an interface and the caller supplies it.
+
+```typescript
+import type {RelaySelection, RelayScenario} from '@welshman/util'
+
+export interface FeedRouter {
+  resolve(selections: RelaySelection[]): Promise<RelayScenario>
+}
+
+// Decide which relays serve which filters under the outbox model
+getFilterSelections(filters: Filter[], router: FeedRouter): Promise<RelaysAndFilters[]>
+// RelaysAndFilters = {relays: string[]; filters: Filter[]}
+```
+
+`getFilterSelections` applies one rule per outbox source: a `search` filter goes to `searchRelays(10)`; a gift-wrap filter with no `authors` goes to `userMessaging()`; a filter with `authors` is chunked and sent to each author's `outbox()`; and everything additionally gets a low-weight `userInbox(0.2)` pass. Each group resolves with `addMinimalFallbacks`.
+
+`@welshman/app`'s `Router` plugin implements `FeedRouter`, and `app.use(Feeds).makeFeedController(...)` supplies it (along with `getPubkeysForScope`, `getPubkeysForWOTRange`, the signer, and the app's net context) so you only pass `feed` and your callbacks. The `RelaySelection` DSL itself is documented in the `welshman-util` skill.
+
+### Display & validation helpers
+
+`display*` functions render a feed definition as human-readable text — `displayFeed(feed)` dispatches on type, with `displayAuthorFeed`, `displayKindFeed`, `displayScopeFeed`, `displayTagFeed`, … underneath, plus `displayFeeds(feeds)` for a list.
+
+`validate*` functions throw on a malformed feed tuple — `validateFeed(feed)` dispatches, with `validateAuthorFeed`, `validateDVMFeed`, `validateFeedArgs`, `validateTagFeedMapping`, … underneath. Run `validateFeed` on anything decoded from a kind-31890 event before compiling it.
+
 ## Common Patterns
 
 ### 1. Simple author + kind feed
@@ -156,6 +183,7 @@ import { FeedController, makeIntersectionFeed, makeAuthorFeed, makeKindFeed } fr
 import { Scope } from '@welshman/feeds'
 
 const controller = new FeedController({
+  router,                                   // a FeedRouter — e.g. app.use(Router)
   feed: makeIntersectionFeed(
     makeAuthorFeed("pubkey1", "pubkey2"),
     makeKindFeed(1),
@@ -178,6 +206,7 @@ import {
 } from '@welshman/feeds'
 
 const controller = new FeedController({
+  router,
   feed: makeIntersectionFeed(
     makeScopeFeed(Scope.Follows),
     makeWOTFeed({ min: 0.1 }),
@@ -206,6 +235,7 @@ import {
 
 // DVMItem.mappings controls how DVM result tags become sub-feeds
 const controller = new FeedController({
+  router,
   feed: makeIntersectionFeed(
     makeDVMFeed({
       kind: 5300,
@@ -227,6 +257,7 @@ await controller.load(30)
 import { FeedController, makeListFeed, makeKindFeed, makeUnionFeed, FeedType } from '@welshman/feeds'
 
 const controller = new FeedController({
+  router,
   feed: makeUnionFeed(
     makeListFeed({
       addresses: ["10003:pubkey:identifier"],
@@ -255,6 +286,7 @@ const filters = [
 const feed = feedFromFilters(filters)
 
 const compiler = new FeedCompiler({
+  router,
   getPubkeysForScope: () => [],
   getPubkeysForWOTRange: () => [],
 })
@@ -285,10 +317,12 @@ console.log('Authors in feed:', [...authors])
 - **`@welshman/util`** — `Filter`, `TrustedEvent`, and nostr primitives used throughout. `getIdFilters()` is used internally by the compiler for address feeds.
 - **`@welshman/signer`** — `ISigner` interface, passed optionally through `FeedCompilerOptions` for DVM requests that require signing.
 - **`@welshman/net`** — The `FeedController` delegates to `requestPage` for relay communication. The `FeedCompiler` delegates to `requestDVM` for DVM-based feeds. Neither accepts `request` or `requestDVM` as constructor options. `AdapterContext` from net is passed through `FeedCompilerOptions`.
-- **`@welshman/app`** — Higher-level app packages typically wire up `getPubkeysForScope` and `getPubkeysForWOTRange` using their own follow/WOT stores, then construct `FeedController` instances from user-facing feed definitions.
+- **`@welshman/app`** — `app.use(Feeds).makeFeedController({feed, onEvent, …})` supplies `router` (the `Router` plugin), `getPubkeysForScope`/`getPubkeysForWOTRange` (from `Wot`), the user's signer, and the app's `{pool, repository}` context. `Feeds` is also the kind-31890 saved-feed collection.
 - **`Tracker`** — Optional deduplication helper (from `@welshman/net` or app layer). Pass a shared `Tracker` instance to avoid re-emitting events seen in other controllers.
 
 ## Gotchas & Tips
+
+- **`router` is required.** `FeedCompilerOptions.router` has no default; a `FeedController` or `FeedCompiler` constructed without one will fail when it tries to resolve relays. In an app, go through `app.use(Feeds).makeFeedController(...)`.
 
 - **Always use factory functions** (`makeAuthorFeed`, etc.) rather than constructing raw tuples — the tuple structure is internal and type safety depends on using factories.
 - **`useWindowing: true`** is for relays that may return events out of chronological order. Do not use it for DVM/algorithmic feeds where order is part of the result.

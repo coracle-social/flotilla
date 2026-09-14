@@ -41,6 +41,7 @@ import "@welshman/editor/index.css"
 | `BreakOrSubmit` | Keyboard handler: `Mod-Enter` always submits; `Enter` submits only when `aggressive: true` (chat-style); `Shift-Enter` inserts a hard break. |
 | `CodeInline` | Inline `code` node with backtick input/paste rules. |
 | `WordCount` | Extension that tracks `editor.storage.wordCount.words` and `editor.storage.wordCount.chars` on every document update. |
+| `CommandExtension` | Inline atom node (`name: "command"`) holding a slash-command invocation — `{command, pubkey?}` attributes. `renderText` emits the canonical invocation via `renderCommandInvocation` from `@welshman/util`, so an executor that knows nothing about this client can read it back out of the note. |
 
 ### Node Views
 
@@ -57,8 +58,9 @@ These are drop-in Tiptap node-view factory functions that render inline pill ele
 
 | Export | Description |
 |--------|-------------|
-| `TippySuggestion` | Generic Tippy.js-powered `@tiptap/suggestion` wrapper. Requires `char`, `name`, `editor`, `search`, and `select`. Optional: `updateSignal`, `createSuggestion`. |
-| `MentionSuggestion` | Pre-configured `TippySuggestion` for `@`-triggered nprofile autocomplete. Requires `editor`, `search`, and `getRelays`. Optional: `updateSignal`, `createSuggestion`. |
+| `TippySuggestion` | Generic Tippy.js-powered `@tiptap/suggestion` wrapper. Requires `char`, `name`, `editor`, `search`, and `select`. |
+| `MentionSuggestion` | Pre-configured `TippySuggestion` for `@`-triggered nprofile autocomplete. Requires `editor`, `search`, and `getRelays`. |
+| `CommandSuggestion` | Pre-configured `TippySuggestion` for `/`-triggered slash commands. Requires `editor`, `search`, and `getAttributes(value) => CommandAttributes \| undefined`. Sets `showOnEmpty: true` (a bare `/` lists what's available) and `allow: ({range}) => range.from === 1` (an invocation is only valid at the very start of the content). |
 | `DefaultSuggestionsWrapper` | Default dropdown renderer used by `TippySuggestion`. Implements `ISuggestionsWrapper`; replace to use a framework component. |
 
 **`TippySuggestion` options:**
@@ -71,7 +73,11 @@ These are drop-in Tiptap node-view factory functions that render inline pill ele
 | `search` | yes | `(term: string) => string[]` — returns item values matching the query |
 | `select` | yes | `(value: string, props) => void` — called when the user picks an item; call `props.command({...attrs})` to insert the node |
 | `updateSignal` | no | A Svelte `Readable` store; when it emits, the suggestion list re-renders (use for async/reactive search results) |
+| `allowCreate` | no | Let the user commit the raw term as an item (default `false`) |
+| `showOnEmpty` | no | Show the whole list before anything is typed (default `false`). Right for a small closed set the user browses; wrong for profiles, where a bare trigger matches everything |
+| `allow` | no | `({state, range}) => boolean` — narrow where the suggestion can fire, on top of the schema check |
 | `createSuggestion` | no | `(value: string) => Element` — renders a custom DOM element for each dropdown item |
+| `createSuggestionsWrapper` | no | `(target, props) => ISuggestionsWrapper` — swap the dropdown for a framework component |
 
 `MentionSuggestion` is a pre-wired `TippySuggestion` for nprofile nodes. It handles `select` internally (encodes the pubkey as an nprofile with relay hints from `getRelays`) so you only need to supply `editor`, `search`, and `getRelays`.
 
@@ -81,7 +87,6 @@ These are drop-in Tiptap node-view factory functions that render inline pill ele
 |--------|--------|
 | `Editor` | `@tiptap/core` — the editor instance class |
 | `NodeViewProps` | `@tiptap/core` — prop type for node view factories (Tiptap's type) |
-| `NodeViewRendererProps` | `@tiptap/core` — alternate props type used in `Node.create({ addNodeView })` |
 | `UploadTask` | `nostr-editor` — shape of an in-progress or completed file upload |
 | `FileAttributes` | `nostr-editor` — `{ file: File, … }` passed to the `upload` callback |
 | `editorProps` | `nostr-editor` — base ProseMirror `editorProps` used by nostr-editor; pass directly to `new Editor({ editorProps })` |
@@ -138,7 +143,7 @@ import {get, writable} from "svelte/store"
 import {Node, Extension, mergeAttributes} from "@tiptap/core"
 import {Plugin, PluginKey} from "@tiptap/pm/state"
 import type {NodeViewRendererProps} from "@tiptap/core"
-import {Profiles, Router, createSearch} from "@welshman/app"
+import {Profiles, Router} from "@welshman/app"
 import {outbox} from "@welshman/util"
 import {
   Editor, WelshmanExtension, MentionSuggestion, TippySuggestion, editorProps,
@@ -187,11 +192,8 @@ export const makeEditor = ({
   charCount?: ReturnType<typeof writable<number>>
   submit: () => void
 }) => {
-  const profileSearch = createSearch(get(profiles), {
-    onSearch: searchProfiles,
-    getValue: (p: any) => p.event.pubkey,
-    fuseOptions: {keys: ["nip05", "name", "display_name"], threshold: 0.3},
-  })
+  // The Profiles plugin maintains a ready-made fuzzy search over known profiles
+  const profileSearch = get(app.use(Profiles).profileSearch)
 
   const editor = new Editor({
     content,
@@ -232,7 +234,7 @@ export const makeEditor = ({
               addNodeView: () => ({node}: NodeViewRendererProps) => {
                 const dom = document.createElement("span")
                 dom.classList.add("mention")
-                const unsub = deriveProfileDisplay(node.attrs.pubkey)
+                const unsub = app.use(Profiles).display(node.attrs.pubkey).$
                   .subscribe($d => { dom.textContent = "@" + $d })
                 return {
                   dom, destroy: unsub,
@@ -246,7 +248,8 @@ export const makeEditor = ({
                   MentionSuggestion({
                     editor: (this as any).editor,
                     search: term => profileSearch.searchValues(term),
-                    getRelays: pubkey => Router.get().FromPubkeys([pubkey]).getUrls(),
+                    getRelays: async pubkey =>
+                      (await app.use(Router).resolve([outbox(pubkey)])).getUrls(),
                     createSuggestion: pubkey => {
                       const el = document.createElement("span")
                       el.textContent = pubkey.slice(0, 12) + "…"
@@ -324,7 +327,7 @@ const onSubmit = (editor: Editor) => {
 ## Integration Notes
 
 - **`@welshman/app`** — `app.use(Profiles).profileSearch` and `app.use(Profiles).display(pubkey)` are the typical sources for mention autocomplete data and display names.
-- **`@welshman/app`** — relay hints for nprofile bech32 strings come from `app.use(Router).resolve([outbox(pubkey)])`.
+- **`@welshman/app`** — `app.use(Router).resolve([outbox(pubkey)])` provides the relay hints encoded into nprofile bech32 strings.
 - **`@welshman/util`** — `fromNostrURI` is used internally by `EventNodeView` to strip the `nostr:` scheme before displaying.
 - **`nostr-editor`** — `WelshmanExtension` extends `NostrExtension` from this package. Storage at `editor.storage.nostr` (including `getEditorTags()`) is provided by `nostr-editor`, not welshman itself.
 - **`@tiptap/core`** — `Editor`, `NodeViewProps`, and all extension primitives come from Tiptap. Welshman does not re-export every Tiptap helper; import additional ones directly from `@tiptap/core` as needed.

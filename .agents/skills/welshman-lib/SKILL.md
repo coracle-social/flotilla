@@ -23,7 +23,7 @@ pnpm add @welshman/lib
 |--------|-------------|
 | `Deferred<T, E>` | Type: a `Promise<T>` with `.resolve(T)` and `.reject(E)` methods attached |
 | `defer<T, E>()` | Creates a `Deferred<T, E>` — a promise with exposed `.resolve()` and `.reject()` |
-| `makePromise<T, E>(executor)` | Creates a strongly-typed promise with typed error |
+| `makePromise<T, E>(executor)` | Creates a strongly-typed promise with typed error (`CustomPromise<T, E>`) |
 
 `E` defaults to `T` when omitted. `defer<void>()` for a signal-style deferred. `thunk.complete` in `@welshman/app` is a `Deferred<void>`.
 
@@ -54,8 +54,8 @@ bus.emit('login', { pubkey: '...' })
 | Export | Description |
 |--------|-------------|
 | `LRUCache<K, V>` | LRU cache; evicts least-recently-used entries when full |
+| `simpleCache(getValue)` | Minimal memoization wrapper over an `LRUCache` with default settings |
 | `cached(options)` | Memoizes a function with an LRU backing cache; exposes `.cache` and `.pop()` |
-| `simpleCache(getValue)` | Minimal memoization wrapper with default settings |
 
 ```typescript
 import { LRUCache, cached } from '@welshman/lib'
@@ -125,6 +125,7 @@ displayDomain('relay.damus.io/path')         // => 'relay.damus.io'
 | `batch(t, fn)` | First call fires `fn([item])` immediately; subsequent calls within `t` ms are collected and `fn` is called with all accumulated items |
 | `batcher(t, execute)` | Collects calls for `t` ms, then calls `execute` with all accumulated requests; each individual call returns a `Promise<U>` resolved with its result from the batch. Unlike `batch`, the first call is also deferred — nothing fires immediately. |
 | `race(threshold, promises)` | Resolves when `threshold` fraction of promises complete |
+| `makeQueue()` | Returns `(f: () => Promise<unknown>) => Promise<unknown>` — chains every call onto one serial promise, logging and swallowing rejections so a failure doesn't stall the chain |
 
 ### Timestamp / Time Constants
 
@@ -160,6 +161,7 @@ displayDomain('relay.damus.io/path')         // => 'relay.damus.io'
 | `within([low, high], n)` | `n >= low && n <= high` (inclusive) |
 | `clamp([min, max], n)` | Constrains `n` to the range |
 | `round(precision, x)` | Rounds to `precision` decimal places |
+| `toInt(x)` | `parseInt` that returns `undefined` instead of `NaN` — accepts `number \| string \| undefined` |
 
 ### Array / Sequence Utilities
 
@@ -250,6 +252,8 @@ type MaybeStr = Maybe<string> // string | undefined
 | `ifLet(x, f)` | Calls `f(x)` only if `x` is defined |
 | `doLet(x, f)` | Calls `f(x)` and returns the result — scoped binding without a variable |
 | `isDefined(x)` / `isUndefined(x)` / `assertDefined(x)` | `undefined` checks (not null) |
+| `maybe(x?)` | Identity, typed `T \| undefined` — widens a value to `Maybe<T>` |
+| `allPass(...preds)` / `somePass(...preds)` | Combine predicates into one `(x) => boolean` |
 
 ### Curried Collection Helpers
 
@@ -388,7 +392,6 @@ const label = formatTimestampRelative(event.created_at) // "3 hours ago"
 ```typescript
 import { on } from '@welshman/lib'
 
-// Each App owns its repository.
 const unsub = on(app.repository, 'update', updates => {
   console.log('added', updates.flatMap(u => u.added).length, 'events')
 })
