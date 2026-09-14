@@ -102,8 +102,7 @@
         style="border-color: var(--line)">
         <div class="flex flex-col gap-2 p-4">
           <Spinner>
-            <strong class="overflow-hidden text-ellipsis whitespace-nowrap"
-              >{displayUrl(url)}</strong>
+            <span class="overflow-hidden text-ellipsis whitespace-nowrap">{displayUrl(url)}</span>
           </Spinner>
         </div>
       </div>
