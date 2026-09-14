@@ -1,6 +1,7 @@
 import * as nip19 from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE, bech32ToHex, int} from "@welshman/lib"
 import {MESSAGE, POLL_RESPONSE, getLnUrl, tagSpec, tagValues, toMsats} from "@welshman/util"
+import type {SignedEvent} from "@welshman/util"
 import {ClientMessageType} from "@welshman/net"
 import {
   Comment,
@@ -34,7 +35,7 @@ import {
 import type {TestUser} from "../harness"
 
 // A handle to a seeded event, which only reads once seed() has drained its queue.
-type Seeded = {readonly id: string}
+type Seeded = {readonly id: string; readonly event: SignedEvent}
 
 // A shelf is a card and its menu button side by side, so the menu is reached through the wrapper
 // the two share.
@@ -513,8 +514,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
               .setAmount(toMsats(sats))
               .setLnurl(lnurl)
               .setRecipient(user.bob.pubkey)
-              .setEventId(soundproofing.id)
-              .setUrls([space.url])
+              .setEvent(soundproofing.event)
               .renderTemplate()),
             created_at: createdAt,
           })
