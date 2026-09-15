@@ -59,13 +59,14 @@
   onMount(async () => {
     // If we have an encryption algorithm, fetch and decrypt
     if (algorithm === "aes-gcm" && key && nonce) {
-      const response = await fetch(url)
-
-      if (response.ok) {
+      try {
+        const response = await fetch(url)
         const ciphertext = new Uint8Array(await response.arrayBuffer())
         const decryptedData = await decryptFile({ciphertext, key, nonce, algorithm})
 
         setBlobSrc(new Uint8Array(decryptedData), mime)
+      } catch {
+        hasError = true
       }
     } else {
       src = url

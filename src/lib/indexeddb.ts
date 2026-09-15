@@ -16,6 +16,7 @@ export type IDBOptions = {
 export class IDB {
   connection: Maybe<Promise<Maybe<IDBPDatabase>>>
   failedToConnect = false
+  private generation = 0
 
   constructor(readonly options: IDBOptions) {}
 
@@ -70,10 +71,20 @@ export class IDB {
     return this.connection
   }
 
+  // Deleting an account closes the database out from under writes that already awaited it, and
+  // the transaction they go on to open throws where nobody is catching. What they were going to
+  // read or write is gone with the connection, so hand them nothing instead.
+  private live = async () => {
+    const generation = this.generation
+    const connection = await this.connect()
+
+    return generation === this.generation ? connection : undefined
+  }
+
   table = <T>(name: string) => new IDBTable<T>(this, name)
 
   getAll = async <T>(table: string): Promise<T[]> => {
-    const connection = await this.connect()
+    const connection = await this.live()
 
     if (!connection) return []
 
@@ -87,7 +98,7 @@ export class IDB {
   }
 
   bulkPut = async <T>(table: string, data: Iterable<T>) => {
-    const connection = await this.connect()
+    const connection = await this.live()
 
     if (!connection) return
 
@@ -108,7 +119,7 @@ export class IDB {
   }
 
   bulkDelete = async (table: string, ids: Iterable<string>) => {
-    const connection = await this.connect()
+    const connection = await this.live()
 
     if (!connection) return
 
@@ -123,6 +134,7 @@ export class IDB {
     const connection = this.connection
 
     this.connection = undefined
+    this.generation += 1
 
     await connection?.then(c => c?.close())
   }
