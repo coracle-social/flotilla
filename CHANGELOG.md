@@ -1,6 +1,6 @@
 # Changelog
 
-# 1.10.0
+# 1.11.0
 
 * Replace the home page with a dashboard of unread conversations, space activity and a network feed
 * Redesign the calendar with month, week and agenda views, and add RSVPs
@@ -22,6 +22,10 @@
 * Update welshman library to 0.10.9
 * Performance improvements to feeds, room chat and reactions
 * Add an end-to-end test suite covering the user story catalog
+
+# 1.10.0
+
+* There is no 1.10 version 👻
 
 # 1.9.1
 
