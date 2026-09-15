@@ -1008,8 +1008,9 @@ Acceptance:
   quote strip.
 - Clicking that strip takes alice to (or scrolls her to) her original message.
 - A room message quoting a thread post renders as a bordered card naming the
-  author and content, briefly showing a loading state first.
+  author and content.
 - Clicking that card opens the quoted post.
+- A quote whose event has not arrived shows a loading placeholder in its place.
 
 ### US-066 — See distinctive inline tokens
 

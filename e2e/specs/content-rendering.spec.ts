@@ -1,4 +1,4 @@
-import {npubEncode} from "nostr-tools/nip19"
+import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE} from "@welshman/lib"
 import {MESSAGE, makeEvent} from "@welshman/util"
 import {Article, Thread} from "@welshman/domain"
@@ -13,6 +13,11 @@ const INVOICE =
   "lnbc2500u1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfq" +
   "ypqdq5xysxxatsyp3k7enxv4jsxqzpuaztrnwngzn3kdzw5hydlzf03qdgm2hdq27cqv3" +
   "agm2awhz5se903vruatfhq77w3ls4evs3ch9zw97j25emudupq63nyw24cg27h2rspfj9"
+
+// An event id no fixture publishes. A quote card is in its loading state until the quoted event
+// arrives, and only one that never arrives holds it there long enough to assert: the relay is a
+// container on loopback, so a quote it can answer resolves before a locator has resolved.
+const UNKNOWN_EVENT_ID = "6f1ac4b0d2e37f5981c6ab4e2d0937fc85be1a2d3c4f5061728394a5b6c7d8e9"
 
 // A cashu token keeps its own scheme in the value, and needs fifty-odd payload characters after
 // it before the parser will take it.
@@ -298,6 +303,7 @@ test("US-065 see quoted and embedded content", async ({seed, as}) => {
   let reply!: Seeded
   let thread!: Seeded
   let threadQuote!: Seeded
+  let unresolvable!: Seeded
 
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -338,6 +344,12 @@ test("US-065 see quoted and embedded content", async ({seed, as}) => {
     thread = topic
     reply = space.reply(user.bob, point, "totally agree with this", at(20, MINUTE))
     threadQuote = space.reply(user.bob, topic, "worth a read", at(15, MINUTE))
+    unresolvable = space.message(
+      user.bob,
+      "general",
+      `nostr:${neventEncode({id: UNKNOWN_EVENT_ID, relays: [space.url]})}\n\nand this one`,
+      at(10, MINUTE),
+    )
   })
 
   const {url} = scenario.space("space")
@@ -345,9 +357,12 @@ test("US-065 see quoted and embedded content", async ({seed, as}) => {
 
   const threadMessage = page.locator(`[data-event="${threadQuote.id}"]`)
 
-  // First, because it is the state a quote card is in until the quoted event arrives, and a
-  // thread is not part of the room's own feed — the card has to go and fetch it.
-  await expect(threadMessage.getByText("Loading event...")).toBeVisible()
+  // The state a quote card is in until the quoted event arrives. It is asserted on the quote
+  // nothing can answer rather than on the thread below, which resolves off an open socket to
+  // loopback and is as likely to be a card by the time this runs as a placeholder.
+  const unresolvableMessage = page.locator(`[data-event="${unresolvable.id}"]`)
+
+  await expect(unresolvableMessage.getByText("Loading event...")).toBeVisible()
 
   const replyMessage = page.locator(`[data-event="${reply.id}"]`)
   const quoteStrip = replyMessage.locator(".border-l-2")
