@@ -414,10 +414,17 @@ pnpm test                                             # starts and stops the con
 
 Every test skips when docker is unavailable, rather than failing.
 
-A failing test attaches `browser-console`, the console errors and uncaught exceptions its pages
-raised. `use.trace` and playwright's own reporting only cover contexts playwright made itself, and
-the harness makes its own, so without that attachment a failure carries the DOM snapshot and
-nothing the app said — which is unreadable when what failed is the app rendering its error page.
+A test fails when the app broke while it ran, whatever it asserted: an uncaught exception on any
+of its pages, or code of ours the browser refused under the content security policy. A refusal
+reaches the console and nothing else, which is how a policy that had rotted past the script it
+names stayed invisible to every spec for a week (#535). A failed request or a warning is neither,
+and a dev server is full of both, so those are logged and left alone — as is the route chunk
+sveltekit loses when the per-test container churns the network out from under it (#529).
+
+Either way a failing test attaches `browser-console`, everything both sides said. `use.trace` and
+playwright's own reporting only cover contexts playwright made itself, and the harness makes its
+own, so without that attachment a failure carries the DOM snapshot and nothing the app said —
+which is unreadable when what failed is the app rendering its error page.
 
 One engine per run. These specs exercise sockets, auth and sync, so running them under three
 engines adds little coverage. `E2E_BROWSER=webkit pnpm test` runs the whole
