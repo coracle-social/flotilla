@@ -20,10 +20,12 @@ export const topDialog = (page: Page) => page.getByRole("dialog").last()
 export const modalForm = (page: Page, title: string) =>
   page.locator("form").filter({has: page.getByRole("heading", {name: title})})
 
-// EventActions renders zap, emoji and menu into one join, in that order, and every one of them is
-// an icon with no accessible name.
-export const emojiButton = (scope: Locator) => scope.locator(".join").getByRole("button").nth(1)
+// Named rather than counted into the join EventActions renders, since a card is free to put a join
+// of its own above it — a calendar event's rsvp buttons are one.
+export const emojiButton = (scope: Locator) => scope.getByRole("button", {name: "Add a reaction"})
 
+// The menu is the one action with no accessible name, and the last thing in the last join a card
+// has.
 export const menuButton = (scope: Locator) => scope.locator(".join").getByRole("button").last()
 
 // The picker is a web component with an open shadow root, so its search field and its results are
