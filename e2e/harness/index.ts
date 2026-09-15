@@ -82,8 +82,15 @@ export {
   mockDufflepud,
   mockLivekit,
   mockOpenRouterSpeech,
+  mockOpenRouterTranscription,
 } from "./net/http"
-export type {DufflepudFixtures, HostingFixtures, HostingHandle, HostingRecord} from "./net/http"
+export type {
+  DufflepudFixtures,
+  HostingFixtures,
+  HostingHandle,
+  HostingRecord,
+  Transcription,
+} from "./net/http"
 export type {WebLnInfo} from "./app/webln"
 
 // Mirrors encodeRelay in src/app/relays.ts. Importing it reaches the app's module graph, and with

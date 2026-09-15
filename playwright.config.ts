@@ -9,7 +9,17 @@ const deviceNames: Record<string, string> = {
   webkit: "Desktop Safari",
 }
 
-const device = devices[deviceNames[process.env.E2E_BROWSER ?? "chromium"]]
+const browserName = process.env.E2E_BROWSER ?? "chromium"
+
+const device = devices[deviceNames[browserName]]
+
+// Dictation records from a microphone, and headless chromium has none. The fake device answers
+// getUserMedia with a generated tone and the fake ui grants it without a prompt. Both are launch
+// arguments rather than context options, so they belong to the whole run.
+const launchOptions =
+  browserName === "chromium"
+    ? {args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"]}
+    : {}
 
 // vite.config.ts's port, and what the harness lets past its block-all. Overridable so a run can
 // stand up its own dev server next to one that is already holding the default port.
@@ -37,6 +47,10 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${port}`,
     trace: "on-first-retry",
+    launchOptions,
+    // Granted for every context: the fake device is the only one there is, so nothing is reachable
+    // through it that a spec has not asked for.
+    permissions: ["microphone"],
   },
   // Boots the SvelteKit dev server before the suite and reuses one if already running locally. The
   // app resolves its VITE_ values against a key the harness injects per browser context, so any

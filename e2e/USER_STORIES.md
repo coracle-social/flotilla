@@ -935,6 +935,19 @@ Acceptance:
 - The composer returns to composing a new message with its previous draft
   intact.
 
+### US-125 — Dictate a message
+
+As alice, I want to speak a message instead of typing it, so that I can write
+one without my hands.
+
+Acceptance:
+
+- The dictation button with no OpenRouter key saved asks for one, the same
+  prompt reading a message out loud uses.
+- Recording and stopping puts the transcript in the composer, ready to send.
+- Leaving the room while a transcription is still out does not lose it: the
+  transcript lands in the composer that is there when it comes back.
+
 ## Rich content & media rendering
 
 ### US-060 — Reveal a flagged sensitive message

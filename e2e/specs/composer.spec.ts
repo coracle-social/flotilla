@@ -7,11 +7,14 @@ import {
   chooseFile,
   composer,
   composerEnabled,
+  dialog,
   expect,
   gifFile,
   makeTestUser,
   messageActions,
   mockBlossom,
+  mockOpenRouterTranscription,
+  roomLink,
   roomPath,
   sendButton,
   test,
@@ -415,4 +418,71 @@ test("US-059 cancel a reply or an edit in progress", async ({seed, as}) => {
   await expect(timeline(page).getByText("morning all")).toHaveCount(1)
   await expect(timeline(page).getByText("my first message")).toHaveCount(1)
   await expect(timeline(page).getByText("half-written thought")).toHaveCount(0)
+})
+
+// Dictation's two buttons are one button in two states, so the label is what says which.
+const dictateButton = (page: Page) => page.getByRole("button", {name: "Start dictation"})
+
+const stopButton = (page: Page) => page.getByRole("button", {name: "Stop recording"})
+
+test("US-125 dictate a message", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.room("lounge", {name: "Lounge"})
+    space.join(user.alice, "general")
+    space.join(user.alice, "lounge")
+    space.join(user.bob, "general")
+  })
+
+  const {url} = scenario.space("space")
+  const alice = await as(users.alice, roomPath(url, "general"))
+  const transcription = await mockOpenRouterTranscription(alice.context(), "the tide turns at six")
+
+  // With no key saved, dictation asks for one, the same prompt reading a message out loud uses.
+  await dictateButton(alice).click()
+
+  const enable = dialog(alice, "Enable voice input?")
+
+  await enable.locator('input[name="flotilla-openrouter-key"]').fill("sk-or-test")
+  await enable.getByRole("button", {name: "Enable voice input"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("Voice input is ready to use!")
+
+  await dictateButton(alice).click()
+  await expect(stopButton(alice)).toBeVisible()
+
+  await stopButton(alice).click()
+
+  await expect(composer(alice)).toContainText("the tide turns at six")
+
+  // OpenRouter picks its decoder off the extension, so what the recorder produced has to reach it
+  // under a name that names the format.
+  expect(transcription.uploads).toEqual([expect.stringMatching(/^dictation\.\w+$/)])
+
+  await composer(alice).press("Enter")
+
+  await expect(timeline(alice)).toContainText("the tide turns at six")
+
+  // A transcription outlives the composer that asked for it: the room it was recorded in can be
+  // left while the request is still out, and the transcript waits for whichever composer is next.
+  transcription.hold()
+
+  await dictateButton(alice).click()
+  await expect(stopButton(alice)).toBeVisible()
+
+  await stopButton(alice).click()
+
+  // In-app rather than a fresh load: a dictation is held by the app rather than by the composer
+  // that started one, so reloading the page is losing it rather than leaving it.
+  await roomLink(alice, "Lounge").click()
+
+  await expect(composer(alice)).toBeVisible()
+
+  await roomLink(alice, "General").click()
+
+  transcription.release()
+
+  await expect(composer(alice)).toContainText("the tide turns at six")
 })

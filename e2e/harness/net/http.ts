@@ -1,6 +1,7 @@
 import {createHash} from "node:crypto"
 import type {BrowserContext} from "@playwright/test"
 import {HOUR, int, now, omit} from "@welshman/lib"
+import type {Maybe} from "@welshman/lib"
 import type {Handle} from "@welshman/util"
 import type {ZapperValues} from "@welshman/domain"
 import {tenantByUrl} from "../zooid/config"
@@ -253,6 +254,52 @@ export const mockOpenRouterSpeech = async (context: BrowserContext, seconds = 3)
   })
 
   return spoken
+}
+
+export type Transcription = {
+  // The name each recording was uploaded under, in the order it was uploaded. OpenRouter picks a
+  // decoder off the extension, so this is how a spec reads what the recorder produced.
+  uploads: string[]
+  // Stops answering. A request that arrives while this is on is held open until `release`, which
+  // is what a spec needs to watch a transcription that is still out.
+  hold(): void
+  release(): void
+}
+
+/**
+ * OpenRouter's speech to text, answering every recording with the same transcript.
+ */
+export const mockOpenRouterTranscription = async (
+  context: BrowserContext,
+  text: string,
+): Promise<Transcription> => {
+  const uploads: string[] = []
+
+  let held: Maybe<Promise<void>>
+  let release: Maybe<() => void>
+
+  await context.route(`${OPENROUTER_ORIGIN}/api/v1/audio/transcriptions`, async route => {
+    const body = route.request().postData() ?? ""
+
+    uploads.push(body.match(/filename="([^"]+)"/)?.[1] ?? "")
+
+    await held
+
+    return route.fulfill({json: {text}})
+  })
+
+  return {
+    uploads,
+    hold: () => {
+      held = new Promise<void>(resolve => {
+        release = resolve
+      })
+    },
+    release: () => {
+      release?.()
+      held = undefined
+    },
+  }
 }
 
 // Where an upload lands when nothing else is configured. getBlossomServer probes the space's own
