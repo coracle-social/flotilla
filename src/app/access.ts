@@ -22,7 +22,7 @@ import {PLATFORM_URL} from "@app/env"
 import {relaysMostlyRestricted} from "@app/policies"
 import {Push} from "@app/push"
 import {deriveSocket} from "@app/relays"
-import {notificationSettings, setSpaceNotifications} from "@app/settings"
+import {notificationSettings, removeTrustedRelay, setSpaceNotifications} from "@app/settings"
 import {syncApplicationData} from "@app/sync"
 
 export const ROOM_CREATE_INVITE = 9009
@@ -147,6 +147,12 @@ export const leaveRoom = async (url: string, h: string) => {
   }
 
   await roomLists.get().removeRoom(h, url).then(publish)
+}
+
+export const leaveSpace = async (url: string) => {
+  await roomLists.get().removeRelay(url).then(publish)
+  await publishLeaveRequest(url)
+  await removeTrustedRelay(url)
 }
 
 export const publishRoomInvite = async (url: string, h: string) => {

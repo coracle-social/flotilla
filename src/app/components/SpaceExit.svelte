@@ -1,7 +1,6 @@
 <script lang="ts">
   import {navigate} from "@app/modal"
   import {displayRelayUrl} from "@welshman/util"
-  import {publish} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -12,9 +11,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {publishLeaveRequest} from "@app/access"
-  import {roomLists} from "@app/core"
-  import {removeTrustedRelay} from "@app/settings"
+  import {leaveSpace} from "@app/access"
 
   const {url} = $props()
 
@@ -24,14 +21,11 @@
     loading = true
 
     try {
-      await $roomLists.removeRelay(url).then(publish)
-      await publishLeaveRequest(url)
-      await removeTrustedRelay(url)
+      await leaveSpace(url)
+      await navigate("/home")
     } finally {
       loading = false
     }
-
-    navigate("/home")
   }
 
   let loading = $state(false)

@@ -1,7 +1,6 @@
 <script lang="ts">
   import {displayRelayUrl} from "@welshman/util"
   import {parse, renderAsHtml} from "@welshman/content"
-  import {publish} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
@@ -15,10 +14,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
-  import {publishLeaveRequest} from "@app/access"
-  import {roomLists} from "@app/core"
+  import {leaveSpace} from "@app/access"
   import {clearModals, navigate, pushModal} from "@app/modal"
-  import {removeTrustedRelay} from "@app/settings"
 
   type Props = {
     url: string
@@ -31,18 +28,15 @@
 
   const requestAccess = () => pushModal(SpaceAccessRequest, {url, callback: clearModals})
 
-  const leaveSpace = async () => {
+  const leave = async () => {
     loading = true
 
     try {
-      await $roomLists.removeRelay(url).then(publish)
-      await publishLeaveRequest(url)
-      await removeTrustedRelay(url)
+      await leaveSpace(url)
+      await navigate("/home")
     } finally {
       loading = false
     }
-
-    navigate("/home")
   }
 
   let loading = $state(false)
@@ -69,8 +63,7 @@
       Go Home
     </Button>
     <div class="flex gap-2">
-      <Button class="button button-error" onclick={leaveSpace} disabled={loading}
-        >Leave Space</Button>
+      <Button class="button button-error" onclick={leave} disabled={loading}>Leave Space</Button>
       <Button type="submit" class="button button-primary" disabled={loading}>
         Request Access
         <Icon icon={AltArrowRight} />
