@@ -13,6 +13,16 @@ const cachedFirstSpace = async (page: Page, pubkey: string) => {
   return newest?.tags.find(tag => tag[0] === "r")?.[1]
 }
 
+// A drop reorders the list in place and publishes a new room list behind it, so the order on screen
+// is ahead of the one the app has settled on. Reading the next drag off that optimistic order is
+// what made this spec fail under a full suite and pass alone: the relay is slower when the box is
+// busy, and a room list landing back from it after the next drop replaces the order that drop
+// applied. Waiting for the copy on disk to name the new first space is waiting for the round trip.
+const expectReordered = async (page: Page, pubkey: string, url: string) => {
+  await expect(page.getByRole("listitem").first()).toContainText(url)
+  await expect.poll(() => cachedFirstSpace(page, pubkey)).toBe(url)
+}
+
 test("US-009 browse, search, and reorder your spaces", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
@@ -91,27 +101,21 @@ test("US-009 browse, search, and reorder your spaces", async ({seed, as}) => {
   await rail.nth(0).dispatchEvent("dragstart", {dataTransfer})
   await rail.nth(1).dispatchEvent("drop", {dataTransfer})
 
-  await expect(joined.first()).toContainText(other.url)
+  await expectReordered(page, users.alice.pubkey, other.url)
 
   await rail.nth(1).dispatchEvent("dragstart", {dataTransfer})
   await rail.nth(0).dispatchEvent("drop", {dataTransfer})
 
-  await expect(joined.first()).toContainText(space.url)
+  await expectReordered(page, users.alice.pubkey, space.url)
 
-  // Dragging in the page's own list moves the same room list. It goes last because it shows the new
-  // order the moment it is dropped, ahead of the room list it publishes, so a drag in the rail
-  // straight afterwards would be working from the order it replaced.
+  // Dragging in the page's own list moves the same room list.
   const source = joined.filter({hasText: other.url})
   const target = joined.filter({hasText: space.url})
 
   await source.dispatchEvent("dragstart", {dataTransfer})
   await target.dispatchEvent("drop", {dataTransfer})
 
-  await expect(joined.first()).toContainText(other.url)
-
-  // The reload restores the list from disk, so wait for the new order to land there rather than
-  // racing it — a page that read the old copy back keeps the order it started with.
-  await expect.poll(() => cachedFirstSpace(page, users.alice.pubkey)).toBe(other.url)
+  await expectReordered(page, users.alice.pubkey, other.url)
 
   await page.reload()
 
