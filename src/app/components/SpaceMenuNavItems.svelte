@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {page} from "$app/stores"
   import {getJson, setJson} from "@welshman/lib"
   import {EVENT_TIME, ZAP_GOAL, THREAD, CLASSIFIED, PINBOARD, POLL, LONG_FORM} from "@welshman/util"
   import {deriveDeduplicatedByValue} from "@welshman/store"
@@ -22,7 +23,7 @@
   import {deriveSpaceSupportedMethods} from "@app/management"
   import {deriveEventsForUrl} from "@app/repository"
   import {makeSpacePath} from "@app/routes"
-  import {notifications} from "@app/notifications"
+  import {allNotifications, notifications} from "@app/notifications"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -39,6 +40,7 @@
   const articlesPath = makeSpacePath(url, "articles")
   const calendarPath = makeSpacePath(url, "calendar")
   const pollsPath = makeSpacePath(url, "polls")
+  const libraryPath = makeSpacePath(url, "library")
 
   // Content events aren't retained across page loads, so seed with the kinds seen last time
   // to keep the nav from re-populating as they load in the background.
@@ -50,9 +52,17 @@
     $events => new Set([...cachedKinds, ...$events.map(e => e.kind)]),
   )
 
+  // A section is also offered while something under it is unread, or while we're in it. A comment
+  // can name content this space doesn't have, and it counts toward the space either way — hiding
+  // the section it belongs to is what leaves a space lit up with nothing to read.
+  const showSection = (kind: number, path: string) =>
+    $spaceKinds.has(kind) || $allNotifications.has(path) || $page.url.pathname.startsWith(path)
+
   const hasNip29 = $derived($relay?.hasNip(29) ?? false)
   const supportedMethods = deriveSpaceSupportedMethods(url)
-  const showLibrary = $derived($spaceKinds.has(PINBOARD) || $supportedMethods.includes("signevent"))
+  const showLibrary = $derived(
+    showSection(PINBOARD, libraryPath) || $supportedMethods.includes("signevent"),
+  )
 
   const openSearch = () => pushModal(SpaceSearch, {url})
 
@@ -71,36 +81,36 @@
   <Icon icon={UsersGroup} /> Directory
 </SecondaryNavItem>
 {#if showLibrary}
-  <SecondaryNavItem href={makeSpacePath(url, "library")}>
+  <SecondaryNavItem href={libraryPath} notification={$notifications.has(libraryPath)}>
     <Icon icon={GalleryWide} /> Library
   </SecondaryNavItem>
 {/if}
-{#if ENABLE_ZAPS && $spaceKinds.has(ZAP_GOAL)}
+{#if ENABLE_ZAPS && showSection(ZAP_GOAL, goalsPath)}
   <SecondaryNavItem href={goalsPath} notification={$notifications.has(goalsPath)}>
     <Icon icon={StarFallMinimalistic} /> Goals
   </SecondaryNavItem>
 {/if}
-{#if $spaceKinds.has(THREAD)}
+{#if showSection(THREAD, threadsPath)}
   <SecondaryNavItem href={threadsPath} notification={$notifications.has(threadsPath)}>
     <Icon icon={NotesMinimalistic} /> Threads
   </SecondaryNavItem>
 {/if}
-{#if $spaceKinds.has(LONG_FORM)}
+{#if showSection(LONG_FORM, articlesPath)}
   <SecondaryNavItem href={articlesPath} notification={$notifications.has(articlesPath)}>
     <Icon icon={DocumentText} /> Articles
   </SecondaryNavItem>
 {/if}
-{#if $spaceKinds.has(CLASSIFIED)}
+{#if showSection(CLASSIFIED, classifiedsPath)}
   <SecondaryNavItem href={classifiedsPath} notification={$notifications.has(classifiedsPath)}>
     <Icon icon={CaseMinimalistic} /> Classifieds
   </SecondaryNavItem>
 {/if}
-{#if $spaceKinds.has(EVENT_TIME)}
+{#if showSection(EVENT_TIME, calendarPath)}
   <SecondaryNavItem href={calendarPath} notification={$notifications.has(calendarPath)}>
     <Icon icon={CalendarMinimalistic} /> Calendar
   </SecondaryNavItem>
 {/if}
-{#if $spaceKinds.has(POLL)}
+{#if showSection(POLL, pollsPath)}
   <SecondaryNavItem href={pollsPath} notification={$notifications.has(pollsPath)}>
     <Icon icon={Revote} /> Polls
   </SecondaryNavItem>

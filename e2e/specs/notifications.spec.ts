@@ -1,8 +1,8 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
-import {HOUR, MINUTE} from "@welshman/lib"
-import {displayRelayUrl} from "@welshman/util"
+import {DAY, HOUR, MINUTE} from "@welshman/lib"
+import {POLL, displayRelayUrl} from "@welshman/util"
 import {RelayMessageType} from "@welshman/net"
-import {Classified, FollowList, Note, Thread} from "@welshman/domain"
+import {Classified, Comment, FollowList, Note, Poll, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
   composer,
@@ -679,8 +679,8 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
   await expect(unreadDot(menuButton)).toHaveCount(0)
 })
 
-// SpaceMenuNavItems hides a content type until the space has an event of that kind, so this link
-// appearing at all is what says the seeded threads loaded.
+// SpaceMenuNavItems offers a content type once the space has an event of that kind or something
+// under it is unread, so this link appearing at all is what says the seeded content loaded.
 const contentNavItem = (page: Page, name: string) =>
   page.locator(".secondary-nav").getByRole("link", {name})
 
@@ -834,6 +834,103 @@ test("US-114 see which listings are unread", async ({seed, as}) => {
 
   await expect(unreadDot(hers)).toBeVisible()
   await expect(unreadDot(his)).toHaveCount(0)
+})
+
+const seedPoll = (space: SeededSpace, user: TestUser, title: string, createdAt: number) =>
+  space.event(
+    user,
+    () =>
+      space
+        .kind(Poll)
+        .writer()
+        .setTitle(title)
+        .setPollType("singlechoice")
+        .addOption("Yes", "poll-yes")
+        .addOption("No", "poll-no")
+        .setUrls([space.url])
+        .renderTemplate(),
+    createdAt,
+  )
+
+test("US-123 find a section whose newest item is older than the sync window", async ({
+  seed,
+  as,
+}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    // Older than the month the space sync asks for, so the nav can only know about it by asking
+    // the relay what the space holds rather than by reading what has loaded.
+    seedPoll(space, user.alice, "which sextant should we buy", at(60, DAY))
+  })
+
+  const space = scenario.space("space")
+  const bob = await as(users.bob, roomPath(space.url, "general"))
+
+  const pollsNav = contentNavItem(bob, "Polls")
+
+  await expect(pollsNav).toBeVisible()
+
+  await pollsNav.click()
+
+  await expect(bob.getByText("which sextant should we buy")).toBeVisible()
+})
+
+test("US-124 reach a badge raised by content the space doesn't have", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+    const other = relay("other")
+
+    space.room("general", {name: "General"})
+    other.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    other.join(user.bob, "general")
+
+    // A comment on a poll nothing holds — the relay kept the comment and dropped its subject.
+    // It counts toward the space either way, so the section it belongs to has to be reachable.
+    space.event(
+      user.alice,
+      () =>
+        space
+          .kind(Comment)
+          .writer()
+          .setRoot(POLL, "f".repeat(64), users.alice.pubkey)
+          .setContent("the second option, surely")
+          .renderTemplate(),
+      at(2, HOUR),
+    )
+  })
+
+  const space = scenario.space("space")
+  const other = scenario.space("other")
+
+  // A space hides its own dot while you are in it, so the badge is only readable from elsewhere
+  const bob = await as(users.bob, roomPath(other.url, "general"))
+  const spaceButton = spaceNavItem(bob, space.name)
+
+  await expect(unreadDot(spaceButton)).toBeVisible()
+
+  await spaceButton.click()
+
+  const pollsNav = contentNavItem(bob, "Polls")
+
+  await expect(pollsNav).toBeVisible()
+  await expect(unreadDot(pollsNav)).toBeVisible()
+
+  await pollsNav.click()
+
+  await expect(bob.getByText("No polls found.")).toBeVisible()
+
+  // Reading it is the end of it: with nothing unread and no poll to list, the space stops
+  // offering the section at all
+  await roomLink(bob, "General").click()
+
+  await expect(pollsNav).toHaveCount(0)
 })
 
 test("US-120 read what a notification says", async ({seed, as}) => {

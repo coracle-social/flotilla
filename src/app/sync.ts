@@ -290,6 +290,15 @@ const syncSpace = (url: string) => {
     ],
   })
 
+  // Which sections a space offers is a question about its whole history rather than about the
+  // recent window above — a space whose newest poll is a year old still has polls. One event
+  // per kind answers it.
+  network.get().load({
+    relays: [url],
+    signal: controller.signal,
+    filters: CONTENT_KINDS.map(kind => ({kinds: [kind], limit: 1})),
+  })
+
   return () => controller.abort()
 }
 

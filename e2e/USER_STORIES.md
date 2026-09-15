@@ -1690,6 +1690,28 @@ Acceptance:
 - Opening the list keeps the dot on the corner of alice's card, and bob's own
   card carries none.
 
+### US-123 — Find a section whose newest item is old
+
+As bob, I want a space to offer every kind of content it holds, so that a quiet
+section is something I can reach rather than something I have to guess at.
+
+Acceptance:
+
+- A poll older than the window the space sync asks for still puts the Polls nav
+  item on the menu, and opening it lists the poll.
+
+### US-124 — Reach a badge raised by content the space doesn't have
+
+As bob, I want a badge on a space to lead me to whatever raised it, so that an
+indicator I can see is one I can clear.
+
+Acceptance:
+
+- A comment on a poll the space doesn't hold raises a dot on the space, and the
+  Polls nav item carries the same dot once the space is open.
+- Opening the list says there are no polls, and afterwards the space stops
+  offering the section.
+
 ## Out of scope
 
 Features the e2e suite cannot exercise, and what stops it.
