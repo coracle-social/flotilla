@@ -30,7 +30,7 @@
 
   onMount(async () => {
     if (!pubkey) {
-      return goto("/people", {replaceState: true})
+      return goto("/", {replaceState: true})
     }
 
     try {

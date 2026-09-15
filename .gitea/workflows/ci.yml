@@ -60,8 +60,8 @@ jobs:
           export VITE_BUILD_HASH="${HEAD_SHA:0:8}"
           pnpm run build
 
-          # src/app.html hardcodes plausible with data-domain="flotilla.social";
-          # a preview must not report into production analytics.
+          # src/app.html carries a plausible tag pointed at production analytics,
+          # whatever its data-domain says; a preview must not report into them.
           perl -0777 -i -pe \
             's|<script\s+defer\s+data-domain="[^"]*"\s+src="https://plausible\.coracle\.social/[^"]*"\s*></script>||gs' \
             build/index.html
