@@ -16,7 +16,7 @@ import {
   mockRelayInfo,
 } from "./net/http"
 import type {BlossomOptions, HostingFixtures, RelayInfoOverrides} from "./net/http"
-import {assertNoLeaks, installWebSocketRoutes} from "./net/websocket"
+import {assertNoLeaks, installWebSocketRoutes, silenceRelay} from "./net/websocket"
 import {watchFaults} from "./faults"
 import {boot} from "./app/boot"
 import {injectNip07} from "./app/nip07"
@@ -41,6 +41,7 @@ export {
   getPublished,
   getPublishedEvents,
   getTranscript,
+  silenceRelay,
 } from "./net/websocket"
 export {readCachedEvents} from "./app/cache"
 export {
@@ -137,6 +138,10 @@ export type PageOptions = {
   // What the hosting backend already knows about this user. Read `getHosting(page.context())` for
   // the handle that changes it mid-test.
   hosting?: HostingFixtures
+  // Relay urls that take the socket and answer nothing, from the page's first connection onward.
+  // `silenceRelay(page.context(), url)` is the same fault applied mid-test, which takes effect on
+  // the next connection rather than this one.
+  silent?: string[]
 }
 
 export type Harness = {
@@ -240,6 +245,11 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
       // the page navigates.
       await installHttpRoutes(context)
       await installWebSocketRoutes(context, zooid)
+
+      for (const url of options.silent ?? []) {
+        silenceRelay(context, url)
+      }
+
       await mockRelayInfo(context, options.relayInfo ?? {})
       await mockAnalytics(context)
       await mockDufflepud(context)

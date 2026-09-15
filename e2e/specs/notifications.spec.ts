@@ -512,6 +512,47 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
   expect(fromSpace).toEqual([])
 })
 
+test("US-117 read the network feed when one relay never answers", async ({seed, as}) => {
+  // Nothing serves this url, and nothing needs to: the fault is a relay that takes the socket and
+  // then says nothing, which is all the spec asks of it.
+  const stalled = "wss://stalled.test/"
+  const note = "the drawbridge has been stuck open since noon"
+
+  await seed(({relay, open, user, at}) => {
+    const space = relay("space")
+    const indexer = open("indexer")
+    const outbox = open("outbox")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    // The relays the feed will ask are somewhere she writes and nowhere she reads, which is what
+    // lets her client identify to them: zooid answers no REQ without nip-42, and Flotilla only
+    // identifies to relays her own lists name.
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url],
+      write: [space.url, indexer.url, outbox.url, stalled],
+    })
+    indexer.follows(user.alice, [user.bob])
+
+    // Bob writes to both, so the feed asks both, and one of them is never going to answer.
+    indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url, stalled]})
+    outbox.profile(user.bob, {name: "Bob Barker"})
+    outbox.note(user.bob, note, at(30, MINUTE))
+  })
+
+  const page = await as(users.alice, "/home", {silent: [stalled]})
+
+  const network = page
+    .locator("section")
+    .filter({has: page.getByRole("heading", {name: "Network"})})
+
+  // A span releases the events it found once it is done waiting, so a span that waits on every
+  // relay it asked is a span one silent relay holds empty.
+  await expect(network.getByText(note)).toBeVisible({timeout: 20_000})
+  await expect(network.getByText("Bob Barker")).toBeVisible()
+})
+
 test("US-106 share text into the app", async ({seed, as}) => {
   const shared = "the offsite is moving to the 14th"
 

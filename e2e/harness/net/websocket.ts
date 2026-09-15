@@ -27,6 +27,7 @@ type Traffic = {
   transcript: TranscriptEntry[]
   leaks: Set<string>
   forgotten: Set<string>
+  silenced: Set<string>
 }
 
 const trafficStore = makeContextStore<Traffic>("installWebSocketRoutes")
@@ -51,9 +52,22 @@ const openEmptyRelay = (): RelayConnection => {
   }
 }
 
+// A relay that takes the socket and then says nothing at all: no events, no eose, no closed. It is
+// the fault a client cannot see, since a request it never answers is indistinguishable from one it
+// is still working on, and the only way out is the caller's own deadline.
+const openSilentRelay = (): RelayConnection => ({
+  onMessage() {},
+  send() {},
+  close() {},
+})
+
 const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
   const url = normalizeRelayUrl(route.url())
   const connection = call(() => {
+    if (traffic.silenced.has(url)) {
+      return openSilentRelay()
+    }
+
     if (traffic.forgotten.has(url)) {
       return openEmptyRelay()
     }
@@ -100,6 +114,7 @@ export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) =>
     transcript: [],
     leaks: new Set(),
     forgotten: new Set(),
+    silenced: new Set(),
   })
 
   return context.routeWebSocket(
@@ -131,6 +146,13 @@ export const getPublishedEvents = (context: BrowserContext, kind: number) =>
 // the next connection. A reload is what gives it one.
 export const forgetRelay = (context: BrowserContext, url: string) =>
   trafficStore.get(context).forgotten.add(normalizeRelayUrl(url))
+
+// Makes a relay answer nothing at all, without its url becoming a leak. Silence is all this relay
+// is, so it needs no tenant behind it: the url never reaches the container, and naming it here is
+// what says the app was meant to open it. Resolved at open, like `forgetRelay`, so a spec that
+// wants a page to boot into the fault passes `silent` to `as` instead of calling this.
+export const silenceRelay = (context: BrowserContext, url: string) =>
+  trafficStore.get(context).silenced.add(normalizeRelayUrl(url))
 
 // Every frame in both directions, oldest first. Attach it to a failing test to see what the client
 // actually said, and to whom.

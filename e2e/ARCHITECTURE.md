@@ -75,6 +75,12 @@ on, without the url becoming a leak. A reload after it is a client coming back t
 dropped what it was holding, which is what separates history a client kept from history it is
 reading back off the wire.
 
+Silence is expressible the same way, and it is the fault a client cannot see: a relay that takes the
+socket and then sends nothing at all leaves every request it was given indistinguishable from one
+still in flight. `as(user, path, {silent: [url]})` is that from the first connection, which is where
+a spec about a page failing to fill needs it; `silenceRelay(context, url)` applies it mid-test. Such
+a url needs no tenant behind it, since nothing it says is ever served.
+
 Interception is installed by `as()` and `visit()`, on a context each of them creates, so a page that
 came from anywhere else has none of it. Playwright's own `context` fixture — and the `page` fixture
 built on it — is therefore overridden to throw, so a spec written the ordinary way fails immediately
