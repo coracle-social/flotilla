@@ -8,6 +8,7 @@ A discord-like nostr client based on the idea of "relays as groups". Supports NI
 
 - **Web** — [app.flotilla.social](https://app.flotilla.social), installable as a PWA
 - **Android** — [Google Play](https://play.google.com/store/apps/details?id=social.flotilla)
+- **Android APK** — [releases](https://gitea.coracle.social/coracle/flotilla/releases), see [Android releases](#android-releases)
 - **iOS** — [App Store](https://apps.apple.com/us/app/flotilla-chat/id6741344107)
 - **Your own server** — see [Deployment](#deployment)
 
@@ -152,6 +153,34 @@ FLOTILLA_DESKTOP_EXECUTABLE="/absolute/path/to/application" pnpm run test:deskto
 Use the AppImage or installed executable rather than the installer. This checks packaged metadata,
 local assets, navigation, workers, and CSP using a disposable profile. Installation, reboot, and
 uninstall still require target-OS testing.
+
+## Android releases
+
+Signed APKs are attached to releases on the
+[releases page](https://gitea.coracle.social/coracle/flotilla/releases), so Android users can
+install and update outside an app store.
+
+Bump the version, write its `CHANGELOG.md` section and push the matching tag, then:
+
+```sh
+pnpm run release:android
+GITEA_TOKEN=... pnpm run publish:android
+```
+
+`publish:android` creates the release for the tag, takes its notes from the changelog, and attaches
+the APK as `flotilla-<version>.apk`, replacing any existing asset of that name. It reads the
+repository and the APK path from `zapstore.yaml`, so a release and a zapstore publish ship the same
+file.
+
+### Obtainium
+
+[Obtainium](https://obtainium.imranr.dev/) installs and updates Android apps from their release
+pages. Gitea and Forgejo share a release API, so it works against this repository:
+
+- App source URL: `https://gitea.coracle.social/coracle/flotilla`
+- Override source: `Forgejo (Codeberg)`
+
+Obtainium reports the git tag as the version.
 
 ## Deployment
 
