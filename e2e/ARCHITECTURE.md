@@ -389,6 +389,18 @@ and refreshed on the way up — zooid saves a relay's toml back when a NIP-86 ca
 every test starts against the same relays with nothing in them. The container is a worker fixture,
 so the docker start-up cost is paid once per worker rather than once per test.
 
+It is recreated in the teardown of the test that finishes, not the setup of the one that starts.
+Creating a container tears down a veth pair and builds another, and the bridge behind it loses
+carrier with them; chromium watches the host's interfaces and aborts everything it has in flight
+when they move, which the app meets as a route chunk that failed to import and, with `ssr = false`,
+a 500 page.
+Recreating from teardown puts the next test's seeding — an authenticated socket per identity, and
+every fixture written over it — between the churn and the first page that test opens. That is not
+on its own enough: every netlink event lands before `compose up --wait` returns, but chromium
+coalesces interface changes for up to two seconds before acting on one. So a recreate also stamps
+the moment it settles, and a page waits out whatever is left of that window when it opens — which
+for most tests is nothing, the teardown and the seeding having spent it already.
+
 Seeding then writes over a real authenticated socket, one per identity per relay, held open for the
 rest of the test. A fixture must therefore be signed by an identity `harness/keys.ts` holds, since
 zooid authenticates every write.

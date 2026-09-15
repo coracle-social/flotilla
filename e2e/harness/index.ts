@@ -172,8 +172,8 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         "them. Anything the app fetches belongs in a mock installed by `as(user, path)`.",
     )
   },
-  // One container per worker, torn down when the worker ends. It is reset between tests rather
-  // than recreated, so the docker start-up cost is paid once.
+  // One container per worker, torn down when the worker ends. It is recreated between tests, in
+  // the teardown of the test that finishes rather than the setup of the one that starts.
   zooid: [
     // playwright reads a fixture's dependencies off this pattern, so it has to stay a pattern
     // even when there are none.
@@ -192,7 +192,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     testInfo.skip(Boolean(dockerProblem), dockerProblem)
 
     await zooid.start()
-    await zooid.reset()
+    await zooid.ensure()
 
     const contexts: BrowserContext[] = []
     const faults = watchFaults()
@@ -207,6 +207,8 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
     const open = async (path: string, options: PageOptions, user?: TestUser) => {
       const {urls, indexerUrls, cache} = requireScenario()
+
+      await zooid.settle()
       // The project's own `use` first, so a viewport or device descriptor set in
       // playwright.config.ts reaches the context rather than being dropped.
       //
@@ -290,6 +292,11 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     for (const context of contexts) {
       await context.close()
     }
+
+    // Before the assertions below, which throw: a test that fails still owes the next one a
+    // container, and with every page already closed there is nothing left for the recreate's
+    // network churn to interrupt.
+    await zooid.reset()
 
     if (faults.found.length > 0 || testInfo.status !== testInfo.expectedStatus) {
       // A path rather than a body: the list reporter truncates an inline attachment, and the
