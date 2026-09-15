@@ -255,13 +255,13 @@ the story catalog in <code>e2e/USER_STORIES.md</code>.</p>
 </tr>
 <tr>
 <td>Monthly calendar view</td>
-<td><span class="status s-no">Not implemented</span></td>
-<td>The calendar renders a chronological agenda, centered on today or the next event</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>CalendarMonth.svelte</code>, <code>CalendarWeek.svelte</code>, <code>CalendarAgenda.svelte</code>; month, week and agenda views, remembered per user</td>
 </tr>
 <tr>
-<td>RSVP / ticketing</td>
-<td><span class="status s-no">Not implemented</span></td>
-<td>No attendance or ticket kinds</td>
+<td>RSVPs</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>CalendarRsvp.svelte</code>, <code>app/calendar.ts</code>; NIP-52 going, maybe and can&#39;t go. No ticketing or paid attendance</td>
 </tr>
 <tr>
 <td>Event detail with location and host</td>
@@ -324,11 +324,6 @@ the story catalog in <code>e2e/USER_STORIES.md</code>.</p>
 <td><code>SpaceMemberMenu.svelte</code>, <code>SpaceMembersBanned.svelte</code>; NIP-86 <code>banpubkey</code> / <code>unbanpubkey</code>. US-095</td>
 </tr>
 <tr>
-<td>Allow list</td>
-<td><span class="status s-no">Not implemented</span></td>
-<td>Only banning is wired up; no <code>allowpubkey</code> path</td>
-</tr>
-<tr>
 <td>Member management</td>
 <td><span class="status s-ok">Implemented</span></td>
 <td><code>/spaces/[relay]/directory</code>, <code>SpaceMembersAdd.svelte</code>, <code>RoomMembersAdd.svelte</code>. US-022, US-095</td>
@@ -345,13 +340,8 @@ the story catalog in <code>e2e/USER_STORIES.md</code>.</p>
 </tr>
 <tr>
 <td>Granular RBAC / role permissions</td>
-<td><span class="status s-partial">Partial</span></td>
-<td>Roles are assignable labels; effective permissions remain relay-level (member/admin), not per-role grants</td>
-</tr>
-<tr>
-<td>Tier entitlements</td>
-<td><span class="status s-partial">Partial</span></td>
-<td>Hosting plans gate Blossom and LiveKit toggles in <code>app/hosting.ts</code>; not a general entitlement system. US-099, US-100</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td>Roles are assigned in <code>/spaces/[relay]/directory</code>; a relay extension enforces the per-role permissions</td>
 </tr>
 <tr>
 <td>Reports and content moderation</td>
@@ -480,8 +470,8 @@ the story catalog in <code>e2e/USER_STORIES.md</code>.</p>
 </tr>
 <tr>
 <td>Branded desktop app</td>
-<td><span class="status s-partial">Partial</span></td>
-<td><code>electron/</code>, <code>scripts/build-desktop.sh</code>; dev baseline only, no installers, release pipeline or auto-update</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>electron/</code>, <code>scripts/package-desktop.mjs</code>; <code>pnpm run package:desktop:linux</code> / <code>:windows</code> / <code>:macos</code></td>
 </tr>
 <tr>
 <td>PWA / installable web app</td>
@@ -559,14 +549,9 @@ the story catalog in <code>e2e/USER_STORIES.md</code>.</p>
 </tr>
 </thead>
 <tbody><tr>
-<td>SAML / OIDC / SCIM / Workspace SSO</td>
-<td><span class="status s-no">Not implemented</span></td>
-<td>No enterprise identity provider integration</td>
-</tr>
-<tr>
 <td>Email / OTP sign-in</td>
-<td><span class="status s-partial">Partial</span></td>
-<td><code>LogInEmail.svelte</code>, <code>LogInOTP.svelte</code>, <code>app/pomade.ts</code>; custodial Pomade flow, enabled only when <code>VITE_POMADE_SIGNERS</code> is set. Out of e2e scope</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>LogInEmail.svelte</code>, <code>LogInOTP.svelte</code>, <code>app/pomade.ts</code>; custodial Pomade flow, enabled when <code>VITE_POMADE_SIGNERS</code> is set. Out of e2e scope</td>
 </tr>
 <tr>
 <td>Browser extension sign-in</td>
@@ -595,8 +580,8 @@ the story catalog in <code>e2e/USER_STORIES.md</code>.</p>
 </tr>
 <tr>
 <td>Data export</td>
-<td><span class="status s-no">Not implemented</span></td>
-<td>No user-data export; the privacy page only sends diagnostic logs to the developer</td>
+<td><span class="status s-ok">Implemented</span></td>
+<td><code>hosting/DataTransferModal.svelte</code>, <code>app/hosting.ts</code>; a space&#39;s events download as JSONL and re-import into another relay</td>
 </tr>
 <tr>
 <td>Account deletion</td>

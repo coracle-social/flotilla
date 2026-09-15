@@ -1,5 +1,28 @@
 # Changelog
 
+# 1.10.0
+
+* Replace the home page with a dashboard of unread conversations, space activity and a network feed
+* Redesign the calendar with month, week and agenda views, and add RSVPs
+* Redesign classifieds as a browsable marketplace
+* Rework threads as one continuous list with unread indicators on every board
+* Add slash commands
+* Add read out loud and voice dictation
+* Add a desktop app with Linux, Windows and macOS packaging
+* Add relay data import and export to the hosting panel
+* Add a mute setting for rooms
+* Show NIP-38 statuses and a pinned note on profiles
+* Rework search dialogs
+* Improve link previews, falling back to an inline link when one fails
+* Persist direct messages so history survives relay retention
+* Add an image by upload or url from one dialog, and play audio attachments inline
+* Let space icons be dragged to reorder in the sidebar
+* Open the space menu in a drawer instead of navigating away from the room
+* Fix push notification delivery, taps and badge counts
+* Update welshman library to 0.10.9
+* Performance improvements to feeds, room chat and reactions
+* Add an end-to-end test suite covering the user story catalog
+
 # 1.9.1
 
 * Re-work how claims work under the hood
