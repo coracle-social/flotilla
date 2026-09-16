@@ -77,11 +77,17 @@ const comment = (page: Page, text: string) =>
 // Clicked near its top-left corner rather than at its centre: the link is an overlay covering the
 // whole card, and a card whose footer wraps onto a second line puts that interactive row under the
 // centre point, where it swallows the click.
-const openArticle = (page: Page, title: string) =>
-  articleCards(page)
+const openArticle = async (page: Page, title: string) => {
+  await articleCards(page)
     .filter({hasText: title})
     .getByRole("link", {name: title, exact: true})
     .click({position: {x: 20, y: 20}})
+
+  // The card's own action bar carries a data-component the article page carries too, and the list
+  // is still on screen while the route loads, so a spec that names one straight after this click
+  // gets the card's. The article body is only on the page it navigated to.
+  await expect(page.locator("article header").getByRole("heading", {name: title})).toBeVisible()
+}
 
 test("US-037 write and publish an article", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
