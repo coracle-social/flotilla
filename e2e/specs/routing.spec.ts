@@ -1,7 +1,7 @@
 import {spec} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {RelayMessageType} from "@welshman/net"
-import {expect, getTranscript, roomPath, spacePath, test, users} from "../harness"
+import {expect, getTranscript, pathPattern, roomPath, spacePath, test, users} from "../harness"
 
 test("keeps two spaces' contents on their own relays", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
@@ -181,4 +181,24 @@ test("switches spaces inside the space menu without closing it", async ({seed, a
 
   await expect(page).toHaveURL(new RegExp(`${roomPath(other.url, "garden")}$`))
   await expect(drawer).toHaveCount(0)
+})
+
+test("enters a space on its details page whatever its relay advertises", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("lounge", {name: "Space Lounge"})
+    space.join(user.alice, "lounge")
+  })
+
+  const space = scenario.space("space")
+
+  // A relay whose document claims no nip-29. The entry path used to read that as "open the chat
+  // page", which a cold load could never get right: the document arrives after the first
+  // navigation, so a space opened on chat and corrected itself to about a moment later.
+  const relayInfo = {[space.url]: {supported_nips: [1, 11, 42]}}
+  const page = await as(users.alice, spacePath(space.url), {relayInfo})
+
+  await expect(page).toHaveURL(pathPattern(spacePath(space.url) + "/about"))
+  await expect(page.locator('[data-component="PageBar"]')).toContainText("Space Details")
 })

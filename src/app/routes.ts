@@ -18,7 +18,7 @@ import {
   tagValue,
   tagValues,
 } from "@welshman/util"
-import {app, messagingRelayLists, relays, user} from "@app/core"
+import {app, messagingRelayLists, user} from "@app/core"
 import {makeChatId} from "@app/chats"
 import {entityLink, PLATFORM_URL, PLATFORM_RELAYS} from "@app/env"
 import {decodeRelay, encodeRelay} from "@app/relays"
@@ -95,19 +95,8 @@ export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => 
 
 export const forgetSpacePage = (url: string) => lastPageBySpaceUrl.delete(url)
 
-export const makeSpaceEntryPath = (url: string) => {
-  const prevPath = lastPageBySpaceUrl.get(url)
-
-  if (prevPath) {
-    return prevPath
-  }
-
-  if (!relays.get().get(url)?.hasNip(29)) {
-    return makeSpaceChatPath(url)
-  }
-
-  return makeSpacePath(url, "about")
-}
+export const makeSpaceEntryPath = (url: string) =>
+  lastPageBySpaceUrl.get(url) ?? makeSpacePath(url, "about")
 
 export const goToSpace = (url: string, options: {replaceState?: boolean} = {}) =>
   navigate(makeSpaceEntryPath(url), options)
