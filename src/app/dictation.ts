@@ -12,12 +12,11 @@ const EXTENSIONS_BY_MIME_TYPE: Record<string, string> = {
   "audio/wav": "wav",
 }
 
-const transcribe = async (audio: Blob) => {
-  const [mimeType] = audio.type.split(";")
+const transcribe = async (audio: File) => {
   const body = new FormData()
 
   body.append("model", TRANSCRIPTION_MODEL)
-  body.append("file", audio, `dictation.${EXTENSIONS_BY_MIME_TYPE[mimeType] || "webm"}`)
+  body.append("file", audio, audio.name)
 
   const response = await fetch("https://openrouter.ai/api/v1/audio/transcriptions", {
     method: "POST",
@@ -37,9 +36,12 @@ const transcribe = async (audio: Blob) => {
 export type Dictation = {
   recording: boolean
   stop: () => void
-  // Resolves once the transcript or the error is on the dictation, so that awaiting it never takes
-  // the result out of the registry — whoever is still around when it lands reads it from there.
-  finished: Promise<void>
+  // Resolves once recording has stopped, with the audio named for the format the recorder chose.
+  audio: Promise<File>
+  // Set when the speaker asks for a transcript, and resolves once that or the error is on the
+  // dictation, so that awaiting it never takes the result out of the registry — whoever is still
+  // around when it lands reads it from there.
+  finished?: Promise<void>
   transcript?: string
   error?: unknown
 }
@@ -52,6 +54,17 @@ const dictations = new Map<string, Dictation>()
 export const getDictation = (key: string) => dictations.get(key)
 
 export const clearDictation = (key: string) => dictations.delete(key)
+
+export const transcribeDictation = (dictation: Dictation) => {
+  dictation.finished = dictation.audio.then(transcribe).then(
+    transcript => {
+      dictation.transcript = transcript
+    },
+    error => {
+      dictation.error = error
+    },
+  )
+}
 
 // Reports how loud the microphone is once per frame, so the caller can show the speaker that we're
 // hearing them. Levels follow the waveform's envelope — jumping to each peak, then decaying — since
@@ -93,7 +106,7 @@ export const startDictation = async (key: string, onLevel: (level: number) => vo
 
   let frame = requestAnimationFrame(measure)
 
-  const audio = new Promise<Blob>(resolve => {
+  const audio = new Promise<File>(resolve => {
     recorder.addEventListener("stop", () => {
       cancelAnimationFrame(frame)
       context.close()
@@ -102,7 +115,12 @@ export const startDictation = async (key: string, onLevel: (level: number) => vo
         track.stop()
       }
 
-      resolve(new Blob(chunks, {type: recorder.mimeType}))
+      // The recorder names its codec alongside the container, which is more than the imeta on a
+      // voice note or the extension on a blossom url can carry, so keep the container alone.
+      const [type] = recorder.mimeType.split(";")
+      const extension = EXTENSIONS_BY_MIME_TYPE[type] || "webm"
+
+      resolve(new File(chunks, `dictation.${extension}`, {type}))
     })
   })
 
@@ -112,14 +130,7 @@ export const startDictation = async (key: string, onLevel: (level: number) => vo
       dictation.recording = false
       recorder.stop()
     },
-    finished: audio.then(transcribe).then(
-      transcript => {
-        dictation.transcript = transcript
-      },
-      error => {
-        dictation.error = error
-      },
-    ),
+    audio,
   }
 
   dictations.set(key, dictation)

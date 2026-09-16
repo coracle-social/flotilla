@@ -425,6 +425,15 @@ const dictateButton = (page: Page) => page.getByRole("button", {name: "Start dic
 
 const stopButton = (page: Page) => page.getByRole("button", {name: "Stop recording"})
 
+// Every recording ends at the same question, so each spec starts from the answer it is about.
+const record = async (page: Page) => {
+  await dictateButton(page).click()
+  await expect(stopButton(page)).toBeVisible()
+  await stopButton(page).click()
+
+  return dialog(page, "Transcribe or send?")
+}
+
 test("US-125 dictate a message", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
@@ -440,8 +449,11 @@ test("US-125 dictate a message", async ({seed, as}) => {
   const alice = await as(users.alice, roomPath(url, "general"))
   const transcription = await mockOpenRouterTranscription(alice.context(), "the tide turns at six")
 
-  // With no key saved, dictation asks for one, the same prompt reading a message out loud uses.
-  await dictateButton(alice).click()
+  // Recording asks for nothing. Asking for a transcript with no key saved asks for one, the same
+  // prompt reading a message out loud uses.
+  const action = await record(alice)
+
+  await action.getByRole("button", {name: "Transcribe it"}).click()
 
   const enable = dialog(alice, "Enable voice input?")
 
@@ -450,10 +462,8 @@ test("US-125 dictate a message", async ({seed, as}) => {
 
   await expect(alice.getByRole("alert")).toContainText("Voice input is ready to use!")
 
-  await dictateButton(alice).click()
-  await expect(stopButton(alice)).toBeVisible()
-
-  await stopButton(alice).click()
+  // The recording is still waiting behind that prompt for the answer it asked for.
+  await action.getByRole("button", {name: "Transcribe it"}).click()
 
   await expect(composer(alice)).toContainText("the tide turns at six")
 
@@ -469,10 +479,7 @@ test("US-125 dictate a message", async ({seed, as}) => {
   // left while the request is still out, and the transcript waits for whichever composer is next.
   transcription.hold()
 
-  await dictateButton(alice).click()
-  await expect(stopButton(alice)).toBeVisible()
-
-  await stopButton(alice).click()
+  await (await record(alice)).getByRole("button", {name: "Transcribe it"}).click()
 
   // In-app rather than a fresh load: a dictation is held by the app rather than by the composer
   // that started one, so reloading the page is losing it rather than leaving it.
@@ -485,4 +492,36 @@ test("US-125 dictate a message", async ({seed, as}) => {
   transcription.release()
 
   await expect(composer(alice)).toContainText("the tide turns at six")
+})
+
+test("US-126 send a voice note", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+  })
+
+  const {url} = scenario.space("space")
+  const alice = await as(users.alice, roomPath(url, "general"))
+
+  await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
+
+  // Leaving the question unanswered throws the recording away, so nothing is uploaded and the
+  // composer is where it was.
+  await (await record(alice)).getByRole("button", {name: "Discard"}).click()
+
+  await expect(dialog(alice, "Transcribe or send?")).toHaveCount(0)
+  await expect(composer(alice)).toHaveText("")
+
+  // Sending the recording as it is needs no OpenRouter key, only somewhere to upload it.
+  await (await record(alice)).getByRole("button", {name: "Send a voice note"}).click()
+
+  await expect(composer(alice)).toContainText(DEFAULT_BLOSSOM_ORIGIN)
+
+  await composer(alice).press("Enter")
+
+  // The imeta on the message says the upload is audio, which is what gives it a player rather
+  // than a link.
+  await expect(timeline(alice).locator(`audio[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
 })

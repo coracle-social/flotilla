@@ -159,8 +159,8 @@
         {#snippet info()}
           <p>
             Add an <Link external href="https://openrouter.ai/settings/keys" class="text-primary"
-              >OpenRouter API key</Link> to dictate messages using the microphone button in your composer,
-            and to have messages read out loud to you.
+              >OpenRouter API key</Link> to transcribe what you record with the microphone button in your
+            composer, and to have messages read out loud to you.
           </p>
         {/snippet}
       </Field>

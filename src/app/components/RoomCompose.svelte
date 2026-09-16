@@ -76,6 +76,14 @@
     ed.chain().focus().insertContent(escapeHtml(transcript)).run()
   }
 
+  const attachVoiceNote = async (audio: File) => {
+    const ed = await editor
+
+    ed.chain()
+      .addFile(audio, ed.state.selection.from + 1)
+      .run()
+  }
+
   // Argument tokens are whitespace-delimited, so separate one from whatever precedes it.
   const insertCommandToken = async (token: string) => {
     const ed = await editor
@@ -183,7 +191,11 @@
     <EditorContent {autofocus} {editor} />
   </div>
   {#if dictating || $empty}
-    <DictationButton {key} bind:dictating onTranscript={insertTranscript} />
+    <DictationButton
+      {key}
+      bind:dictating
+      onTranscript={insertTranscript}
+      onVoiceNote={attachVoiceNote} />
   {:else}
     <Button
       data-tip="{window.navigator.platform.includes('Mac') ? 'cmd' : 'ctrl'}+enter to send"

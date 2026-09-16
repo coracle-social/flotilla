@@ -944,9 +944,25 @@ Acceptance:
 
 - The dictation button with no OpenRouter key saved asks for one, the same
   prompt reading a message out loud uses.
-- Recording and stopping puts the transcript in the composer, ready to send.
+- Stopping a recording asks whether to transcribe it or send it as a voice
+  note.
+- Choosing to transcribe puts the transcript in the composer, ready to send.
 - Leaving the room while a transcription is still out does not lose it: the
   transcript lands in the composer that is there when it comes back.
+
+### US-126 — Send a voice note
+
+As alice, I want to send a recording as it is, so that the message carries my
+voice rather than a transcript of it.
+
+Acceptance:
+
+- Choosing to send a voice note uploads the recording and attaches it to the
+  composer.
+- Sending it publishes the message with the audio, which renders as a player in
+  the timeline.
+- Discarding the recording instead leaves the composer empty and uploads
+  nothing.
 
 ## Rich content & media rendering
 
