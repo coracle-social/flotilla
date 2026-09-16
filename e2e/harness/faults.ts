@@ -1,5 +1,5 @@
 import {inspect} from "node:util"
-import type {BrowserContext} from "@playwright/test"
+import type {BrowserContext, ConsoleMessage} from "@playwright/test"
 
 // A CSP refusal reaches the console and nothing else, so a policy that has rotted past the script
 // it names is invisible to every spec: app.html's requestIdleCallback shim was refused on every
@@ -11,6 +11,16 @@ const isRefusal = (text: string) => text.includes("Content Security Policy")
 // reaches nearly every spec — 256 of the 258 faults a full survey run raised — so it stays in the
 // log and out of the fault set until #529 stops the churn.
 const isChunkLoss = (text: string) => text.includes("Failed to fetch dynamically imported module")
+
+// Chrome reports a failed request as "Failed to load resource: the server responded with a status
+// of 404 (Not Found)" and carries the url nowhere but the message's location, so a line built from
+// the text alone cannot say which resource went missing.
+const locate = (message: ConsoleMessage) => {
+  const text = message.text()
+  const {url} = message.location()
+
+  return url && !text.includes(url) ? `${text} ${url}` : text
+}
 
 // Playwright builds this from the page's exception details, and a page that throws something other
 // than an Error leaves it with neither message nor stack — which is how a fault used to reach the
@@ -45,7 +55,7 @@ export const watchFaults = (): FaultWatch => {
     observe(context, who) {
       context.on("console", message => {
         const type = message.type()
-        const text = message.text()
+        const text = locate(message)
 
         if (["error", "warning"].includes(type)) {
           record(`[${who}] ${type}: ${text}`, type === "error" && isRefusal(text))
