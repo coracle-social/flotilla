@@ -1,7 +1,33 @@
-import {spec} from "@welshman/lib"
+import {HOUR, spec} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {RelayMessageType} from "@welshman/net"
+import {Article} from "@welshman/domain"
+import type {Page} from "@playwright/test"
 import {expect, getTranscript, pathPattern, roomPath, spacePath, test, users} from "../harness"
+
+// Every page in a space renders one PageContent, so the number added to the document is the number
+// of times the page was built.
+const watchPageBuilds = (page: Page) =>
+  page.evaluate(() => {
+    const selector = "[data-component='PageContent']"
+
+    let builds = 0
+
+    document.documentElement.dataset.pageBuilds = "0"
+
+    new MutationObserver(records => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (node instanceof Element && (node.matches(selector) || node.querySelector(selector))) {
+            document.documentElement.dataset.pageBuilds = String(++builds)
+          }
+        }
+      }
+    }).observe(document.body, {childList: true, subtree: true})
+  })
+
+const expectPageBuilds = (page: Page, builds: number) =>
+  expect(page.locator("html")).toHaveAttribute("data-page-builds", String(builds))
 
 test("keeps two spaces' contents on their own relays", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
@@ -201,4 +227,64 @@ test("enters a space on its details page whatever its relay advertises", async (
 
   await expect(page).toHaveURL(pathPattern(spacePath(space.url) + "/about"))
   await expect(page.locator('[data-component="PageBar"]')).toContainText("Space Details")
+})
+
+test("builds a page once when it opens and again when its params change", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anderson"})
+    space.relayList(user.alice)
+
+    const article = (identifier: string, title: string, hours: number) =>
+      space.event(
+        user.alice,
+        () =>
+          space
+            .kind(Article)
+            .writer()
+            .setIdentifier(identifier)
+            .setTitle(title)
+            .setPublishedAt(at(hours, HOUR))
+            .setContent("Gardens are worth the trouble.")
+            .renderTemplate(),
+        at(hours, HOUR),
+      )
+
+    article("tending-the-garden", "Tending the Garden", 4)
+    article("repotting-in-winter", "Repotting in Winter", 3)
+  })
+
+  const {url} = scenario.space("space")
+  const page = await as(users.bob, `${spacePath(url)}/articles`)
+
+  await watchPageBuilds(page)
+
+  await page
+    .locator('[data-component="ArticleItem"]')
+    .filter({hasText: "Tending the Garden"})
+    .getByRole("link", {name: "Tending the Garden", exact: true})
+    .click({position: {x: 20, y: 20}})
+
+  await expect(
+    page.locator("article header").getByRole("heading", {name: "Tending the Garden"}),
+  ).toBeVisible()
+
+  // The rebuild this guards against landed 20ms after the first build, which is before the article
+  // itself is on screen on a slower run.
+  await page.waitForTimeout(250)
+  await expectPageBuilds(page, 1)
+
+  // Another article is the same route with different params, which SvelteKit answers by keeping the
+  // page it has. The page reads the address it renders once, so this one does have to be rebuilt.
+  await page.getByRole("link", {name: "Repotting in Winter"}).click()
+
+  await expect(
+    page.locator("article header").getByRole("heading", {name: "Repotting in Winter"}),
+  ).toBeVisible()
+
+  await expectPageBuilds(page, 2)
 })

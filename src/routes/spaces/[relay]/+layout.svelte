@@ -28,9 +28,10 @@
 
   type Props = {
     children?: Snippet
+    params: Record<string, string>
   }
 
-  const {children}: Props = $props()
+  const {children, params}: Props = $props()
 
   const url = decodeRelay($page.params.relay!)
 
@@ -113,7 +114,10 @@
     <SpaceMenu {url} />
   </SecondaryNav>
   <Page>
-    {#key $page.url.pathname}
+    <!-- SvelteKit builds a new page when the route changes and keeps the one it has when only the
+         params change, so this rebuilds it for the second case. The url the page store reports
+         arrives a tick after the page is built, so keying on that throws the new page away. -->
+    {#key JSON.stringify(params)}
       {@render children?.()}
     {/key}
   </Page>

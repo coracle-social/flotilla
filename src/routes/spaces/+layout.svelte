@@ -1,14 +1,14 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {page} from "$app/stores"
 
   type Props = {
     children?: Snippet
+    params: {relay?: string}
   }
 
-  const {children}: Props = $props()
+  const {children, params}: Props = $props()
 </script>
 
-{#key $page.params.relay}
+{#key params.relay}
   {@render children?.()}
 {/key}
