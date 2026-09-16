@@ -16,7 +16,7 @@
   import {setNip55Plugin} from "@welshman/signer"
   import * as util from "@welshman/util"
   import * as lib from "@welshman/lib"
-  import {Logger} from "@welshman/app"
+  import * as plugins from "@welshman/app"
   import {isMobile, documentActive} from "@lib/html"
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
@@ -60,7 +60,7 @@
   document.body.setAttribute("data-theme", initialTheme)
 
   // Add stuff to window for convenience
-  Object.assign(window, {get, nip19, theme, Logger, ...lib, ...util, ...core})
+  Object.assign(window, {get, nip19, theme, ...plugins, ...lib, ...util, ...core})
 
   // Set up context for various modules
   pomadeContext.setSignerUrls(env.POMADE_SIGNERS)
