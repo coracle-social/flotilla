@@ -1,8 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {page} from "$app/stores"
   import {goto} from "$app/navigation"
-  import type {MakeNonOptional} from "@welshman/lib"
   import type {Filter} from "@welshman/util"
   import {ROOMS, NOTE, FOLLOWS} from "@welshman/util"
   import {outbox} from "@welshman/util"
@@ -23,8 +21,11 @@
     router,
     user,
   } from "@app/core"
+  import type {PageProps} from "./$types"
 
-  const {npub} = $page.params as MakeNonOptional<typeof $page.params>
+  const {params}: PageProps = $props()
+
+  const {npub} = params
 
   const pubkey = decodePubkey(npub)
 

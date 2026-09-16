@@ -6,9 +6,7 @@
   import {onDestroy} from "svelte"
   import cx from "classnames"
   import {derived, readable} from "svelte/store"
-  import {page} from "$app/stores"
   import {sleep} from "@welshman/lib"
-  import type {MakeNonOptional} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {getCommentFiltersForRoot} from "@welshman/util"
   import {TimeEvent} from "@welshman/domain"
@@ -29,8 +27,11 @@
   import {deriveEvent, deriveEvents} from "@app/repository"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
+  import type {PageProps} from "./$types"
 
-  const {relay, address} = $page.params as MakeNonOptional<typeof $page.params>
+  const {params}: PageProps = $props()
+
+  const {relay, address} = params
   const url = decodeRelay(relay)
   const context = makeFeedContext({relays: [url]})
   const event = deriveEvent(address, [url])

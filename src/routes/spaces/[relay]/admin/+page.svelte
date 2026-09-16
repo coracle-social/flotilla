@@ -1,6 +1,5 @@
 <script lang="ts">
   import {derived} from "svelte/store"
-  import {page} from "$app/stores"
   import Server from "@assets/icons/server.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
@@ -11,8 +10,11 @@
   import ActivityFeed from "@app/components/hosting/ActivityFeed.svelte"
   import {deriveHostedRelay, deriveRelayActivity} from "@app/hosting"
   import {decodeRelay} from "@app/relays"
+  import type {PageProps} from "./$types"
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
   const hostedRelay = deriveHostedRelay(url)
   const relayActivity = deriveRelayActivity(derived(hostedRelay, $h => $h.relay?.id))
 </script>

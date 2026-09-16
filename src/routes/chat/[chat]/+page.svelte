@@ -11,8 +11,6 @@
 
 <script lang="ts">
   import {onMount} from "svelte"
-  import {page} from "$app/stores"
-  import type {MakeNonOptional} from "@welshman/lib"
   import {append, uniq} from "@welshman/lib"
   import Chat from "@app/components/Chat.svelte"
   import {splitChatId} from "@app/chats"
@@ -20,8 +18,11 @@
   import {pushToast} from "@app/toast"
   import {Push} from "@app/push"
   import {user} from "@app/core"
+  import type {PageProps} from "./$types"
 
-  const {chat} = $page.params as MakeNonOptional<typeof $page.params>
+  const {params}: PageProps = $props()
+
+  const {chat} = params
   const pubkeys = uniq(append($user.pubkey, splitChatId(chat)))
 
   onMount(async () => {

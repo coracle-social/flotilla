@@ -1,14 +1,9 @@
 <script lang="ts">
-  import type {Snippet} from "svelte"
-  import {page} from "$app/stores"
+  import type {LayoutProps} from "./$types"
 
-  type Props = {
-    children?: Snippet
-  }
-
-  const {children}: Props = $props()
+  const {children, params}: LayoutProps = $props()
 </script>
 
-{#key $page.params.npub}
+{#key params.npub}
   {@render children?.()}
 {/key}

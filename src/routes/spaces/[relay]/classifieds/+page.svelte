@@ -35,8 +35,11 @@
   } from "@app/classifieds"
   import {reader} from "@app/core"
   import {pushModal} from "@app/modal"
+  import type {PageProps} from "./$types"
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)

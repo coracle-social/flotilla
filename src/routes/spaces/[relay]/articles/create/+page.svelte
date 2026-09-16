@@ -28,6 +28,7 @@
   import {makeArticlePath} from "@app/routes"
   import {compressFileForUpload, uploadFile} from "@app/uploads"
   import {pushToast} from "@app/toast"
+  import type {PageProps} from "./$types"
 
   type Values = {
     d?: string
@@ -38,7 +39,9 @@
     topics?: string[]
   }
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
 
   const h = $page.url.searchParams.get("h") ?? undefined
   const shareToChat = $page.url.searchParams.has("shareToChat")

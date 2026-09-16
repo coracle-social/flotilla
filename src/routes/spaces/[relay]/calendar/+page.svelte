@@ -3,7 +3,6 @@
   import cx from "classnames"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
-  import {page} from "$app/stores"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {EVENT_TIME} from "@welshman/util"
@@ -37,8 +36,11 @@
   import {decodeRelay} from "@app/relays"
   import {makeCommentFilter} from "@app/content"
   import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import type {PageProps} from "./$types"
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
   const context = makeFeedContext({relays: [url]})
 
   const makeEvent = () => pushModal(CalendarEventCreate, {url})

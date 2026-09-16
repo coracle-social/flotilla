@@ -1,12 +1,7 @@
 <script lang="ts">
-  import type {Snippet} from "svelte"
+  import type {LayoutProps} from "./$types"
 
-  type Props = {
-    children?: Snippet
-    params: {relay?: string}
-  }
-
-  const {children, params}: Props = $props()
+  const {children, params}: LayoutProps = $props()
 </script>
 
 {#key params.relay}

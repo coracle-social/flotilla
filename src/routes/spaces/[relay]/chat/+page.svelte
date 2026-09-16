@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {page} from "$app/stores"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
@@ -9,8 +8,11 @@
   import RoomChat from "@app/components/RoomChat.svelte"
   import {decodeRelay} from "@app/relays"
   import {pushModal} from "@app/modal"
+  import type {PageProps} from "./$types"
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
 
   const showSpaceSearch = () => pushModal(SpaceSearch, {url})
 </script>

@@ -1,12 +1,14 @@
 <script lang="ts">
-  import {page} from "$app/stores"
   import theme from "tailwindcss/defaultTheme"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import {decodeRelay} from "@app/relays"
   import {goToSpace} from "@app/routes"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
+  import type {PageProps} from "./$types"
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
   const md = parseFloat(theme.screens.md) * 16
 
   let width = $state(window.innerWidth)

@@ -172,6 +172,9 @@ callbacks and hot paths.
 2. Use `+page.svelte` for page component
 3. Use `+layout.svelte` for shared layouts
 4. Top-level sync logic goes in root `+layout.svelte`
+5. Read params from the `params` prop, typed with `PageProps`/`LayoutProps` from the route's own
+   `./$types`. SvelteKit passes them down in the same update as the component swap, while the
+   `page` store is set a tick later. Only code outside `src/routes/` reads `$page.params`.
 
 ### Loading Data from Network
 

@@ -1,9 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {derived} from "svelte/store"
-  import {page} from "$app/stores"
   import {formatTimestamp, sleep, uniq} from "@welshman/lib"
-  import type {MakeNonOptional} from "@welshman/lib"
   import {Article} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -24,8 +22,11 @@
   import {decodeRelay} from "@app/relays"
   import {displayReadingTime} from "@app/articles"
   import {makeSpacePath} from "@app/routes"
+  import type {PageProps} from "./$types"
 
-  const {relay, address} = $page.params as MakeNonOptional<typeof $page.params>
+  const {params}: PageProps = $props()
+
+  const {relay, address} = params
   const url = decodeRelay(relay)
   const context = makeFeedContext({relays: [url]})
   const event = deriveEvent(address, [url])

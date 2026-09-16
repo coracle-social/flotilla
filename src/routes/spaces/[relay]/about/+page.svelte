@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {page} from "$app/stores"
   import {displayRelayUrl} from "@welshman/util"
   import Home from "@assets/icons/home.svg?dataurl"
   import ShieldUser from "@assets/icons/shield-user.svg?dataurl"
@@ -16,8 +15,11 @@
   import SpaceFeaturedContent from "@app/components/SpaceFeaturedContent.svelte"
   import {relays} from "@app/core"
   import {decodeRelay} from "@app/relays"
+  import type {PageProps} from "./$types"
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
   const relay = $relays.one(url)
 </script>
 

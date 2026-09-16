@@ -1,6 +1,4 @@
 <script lang="ts">
-  import {page} from "$app/stores"
-  import type {MakeNonOptional} from "@welshman/lib"
   import InfoCircle from "@assets/icons/info-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
@@ -13,8 +11,11 @@
   import RoomSearch from "@app/components/RoomSearch.svelte"
   import {decodeRelay} from "@app/relays"
   import {pushModal} from "@app/modal"
+  import type {PageProps} from "./$types"
 
-  const {h, relay} = $page.params as MakeNonOptional<typeof $page.params>
+  const {params}: PageProps = $props()
+
+  const {h, relay} = params
   const url = decodeRelay(relay)
 
   const showRoomSearch = () => pushModal(RoomSearch, {url, h})

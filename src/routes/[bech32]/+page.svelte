@@ -1,18 +1,19 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import * as nip19 from "nostr-tools/nip19"
-  import type {MakeNonOptional} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {Address, getIdFilters} from "@welshman/util"
   import {LOCAL_RELAY_URL} from "@welshman/net"
-  import {page} from "$app/stores"
   import {goto} from "$app/navigation"
   import {decodePubkey} from "@lib/util"
   import Spinner from "@lib/components/Spinner.svelte"
   import {network} from "@app/core"
   import {goToEvent, makeProfilePath} from "@app/routes"
+  import type {PageProps} from "./$types"
 
-  const {bech32} = $page.params as MakeNonOptional<typeof $page.params>
+  const {params}: PageProps = $props()
+
+  const {bech32} = params
 
   const attemptToNavigate = async () => {
     const profilePubkey = decodePubkey(bech32)

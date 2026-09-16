@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type {Snippet} from "svelte"
   import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {sleep} from "@welshman/lib"
@@ -21,12 +20,9 @@
   import {chatSearch} from "@app/chats"
   import {pushModal} from "@app/modal"
   import {shouldUnwrap} from "@app/sync"
+  import type {LayoutProps} from "./$types"
 
-  type Props = {
-    children?: Snippet
-  }
-
-  const {children}: Props = $props()
+  const {children, params}: LayoutProps = $props()
 
   const startChat = () => pushModal(ChatStart)
 
@@ -78,7 +74,7 @@
   {/key}
 </Page>
 
-{#if !$page.params.chat}
+{#if !params.chat}
   <FAB onclick={startChat}>
     <Icon icon={ChatSquarePlus} size={7} />
   </FAB>

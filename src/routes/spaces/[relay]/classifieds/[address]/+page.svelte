@@ -1,9 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {derived} from "svelte/store"
-  import {page} from "$app/stores"
   import {sleep} from "@welshman/lib"
-  import type {MakeNonOptional} from "@welshman/lib"
   import {Classified} from "@welshman/domain"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -16,8 +14,11 @@
   import {deriveEvent} from "@app/repository"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
+  import type {PageProps} from "./$types"
 
-  const {relay, address} = $page.params as MakeNonOptional<typeof $page.params>
+  const {params}: PageProps = $props()
+
+  const {relay, address} = params
   const url = decodeRelay(relay)
   const context = makeFeedContext({relays: [url]})
   const event = deriveEvent(address, [url])

@@ -1,8 +1,6 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {page} from "$app/stores"
   import {sleep} from "@welshman/lib"
-  import type {MakeNonOptional} from "@welshman/lib"
   import {POLL, POLL_RESPONSE, getCommentFiltersForRoot} from "@welshman/util"
   import {deriveEventsAsc} from "@welshman/store"
   import SortVertical from "@assets/icons/sort-vertical.svg?dataurl"
@@ -19,8 +17,11 @@
   import {deriveEvent, deriveEventsById} from "@app/repository"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
+  import type {PageProps} from "./$types"
 
-  const {relay, id} = $page.params as MakeNonOptional<typeof $page.params>
+  const {params}: PageProps = $props()
+
+  const {relay, id} = params
   const url = decodeRelay(relay)
   const context = makeFeedContext({relays: [url]})
   const event = deriveEvent(id, [url])

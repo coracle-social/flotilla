@@ -1,6 +1,5 @@
 <script lang="ts">
   import {derived} from "svelte/store"
-  import {page} from "$app/stores"
   import {removeUndefined, sortBy} from "@welshman/lib"
   import UsersGroup from "@assets/icons/users-group-rounded.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
@@ -23,8 +22,11 @@
   import {deriveDisplaysByPubkey} from "@app/social"
   import {decodeRelay} from "@app/relays"
   import {pushModal} from "@app/modal"
+  import type {PageProps} from "./$types"
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
   const roles = $relayRoles.forUrl(url).$
   const members = $relayMemberLists.forUrl(url)
   const memberRoles = deriveSpaceMemberRoles(url)

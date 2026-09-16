@@ -2,7 +2,6 @@
   import {onDestroy, onMount} from "svelte"
   import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
-  import {page} from "$app/stores"
   import {sortBy, partition, spec, pushToMapKey, max} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
@@ -21,8 +20,11 @@
   import {makeCommentFilter} from "@app/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {pushModal} from "@app/modal"
+  import type {PageProps} from "./$types"
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)

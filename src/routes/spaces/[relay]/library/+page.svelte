@@ -24,8 +24,11 @@
   import {deriveUserIsSpaceAdmin} from "@app/management"
   import {makeLibraryPath} from "@app/routes"
   import {pushModal} from "@app/modal"
+  import type {PageProps} from "./$types"
 
-  const url = decodeRelay($page.params.relay!)
+  const {params}: PageProps = $props()
+
+  const url = decodeRelay(params.relay)
 
   const relay = $relays.one(url)
 

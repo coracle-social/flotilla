@@ -1,9 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import * as nip19 from "nostr-tools/nip19"
-  import {page} from "$app/stores"
   import {call, sleep, spec, tryCatch} from "@welshman/lib"
-  import type {MakeNonOptional} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {deriveEventsAsc} from "@welshman/store"
   import {getCommentFiltersForRoot, tagValue, tagSpec} from "@welshman/util"
@@ -22,10 +20,13 @@
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
   import {makeSpacePath, scrollToEvent} from "@app/routes"
+  import type {PageProps} from "./$types"
 
   const REPLY_BATCH_SIZE = 20
 
-  const {relay, id} = $page.params as MakeNonOptional<typeof $page.params>
+  const {params}: PageProps = $props()
+
+  const {relay, id} = params
   const url = decodeRelay(relay)
   const event = deriveEvent(id, [url])
   // Rows register themselves with `related`, so the whole page's reactions load in one batch

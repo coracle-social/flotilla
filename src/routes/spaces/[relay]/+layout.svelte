@@ -4,7 +4,6 @@
 </script>
 
 <script lang="ts">
-  import type {Snippet} from "svelte"
   import {page} from "$app/stores"
   import type {Maybe} from "@welshman/lib"
   import {once} from "@welshman/lib"
@@ -25,15 +24,11 @@
   import {relaysPendingTrust} from "@app/policies"
   import {decodeRelay} from "@app/relays"
   import {makeSpacePath} from "@app/routes"
+  import type {LayoutProps} from "./$types"
 
-  type Props = {
-    children?: Snippet
-    params: Record<string, string>
-  }
+  const {children, params}: LayoutProps = $props()
 
-  const {children, params}: Props = $props()
-
-  const url = decodeRelay($page.params.relay!)
+  const url = decodeRelay(params.relay)
 
   const authError = deriveRelayAuthError(url)
 
