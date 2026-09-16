@@ -58,7 +58,6 @@ export const onNotification = call(() => {
     {kinds: [MESSAGE, ...CONTENT_KINDS, ...DM_KINDS]},
     makeCommentFilter(CONTENT_KINDS),
   ]
-  const filters = allFilters.map(assoc("since", now()))
   const subscribers: Subscriber<TrustedEvent>[] = []
 
   let unsubscribe: Unsubscriber | undefined
@@ -67,29 +66,36 @@ export const onNotification = call(() => {
     subscribers.push(f)
 
     if (!unsubscribe) {
-      unsubscribe = on(app.get().repository, "update", ({added}: RepositoryUpdate) => {
-        const $pubkey = app.get().user?.pubkey
+      let unsubscribeRepository: Unsubscriber | undefined
+      const unsubscribeApp = app.subscribe($app => {
+        unsubscribeRepository?.()
+        const filters = allFilters.map(assoc("since", now()))
+        unsubscribeRepository = on($app.repository, "update", ({added}: RepositoryUpdate) => {
+          const $pubkey = $app.user?.pubkey
 
-        for (const event of added) {
-          if (event.pubkey == $pubkey) {
-            continue
-          }
+          for (const event of added) {
+            if (event.pubkey == $pubkey) {
+              continue
+            }
 
-          const h = tagValue(tagSpec("h"), event.tags)
+            const h = tagValue(tagSpec("h"), event.tags)
 
-          if (
-            Array.from(app.get().tracker.getRelays(event.id)).every(url => !shouldNotify(url, h))
-          ) {
-            continue
-          }
+            if (Array.from($app.tracker.getRelays(event.id)).every(url => !shouldNotify(url, h))) {
+              continue
+            }
 
-          if (matchFilters(filters, event)) {
-            for (const f of subscribers) {
-              f(event)
+            if (matchFilters(filters, event)) {
+              for (const f of subscribers) {
+                f(event)
+              }
             }
           }
-        }
+        })
       })
+      unsubscribe = () => {
+        unsubscribeApp()
+        unsubscribeRepository?.()
+      }
     }
 
     return () => {

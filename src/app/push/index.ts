@@ -1,6 +1,7 @@
 import {Capacitor} from "@capacitor/core"
 import {notificationSettings} from "@app/settings"
 import {pushState} from "@app/push/adapters/common"
+import {ElectronNotifications} from "@app/push/adapters/electron"
 import {WebNotifications} from "@app/push/adapters/web"
 import {CapacitorNotifications} from "@app/push/adapters/capacitor"
 import {AndroidFallbackNotifications} from "@app/push/adapters/android"
@@ -15,7 +16,9 @@ export class Push {
     if (!Push._adapter) {
       const {useFallback} = pushState.get()
 
-      if (Capacitor.getPlatform() === "android" && useFallback) {
+      if (Capacitor.getPlatform() === "electron") {
+        Push._adapter = new ElectronNotifications()
+      } else if (Capacitor.getPlatform() === "android" && useFallback) {
         Push._adapter = new AndroidFallbackNotifications()
       } else if (Capacitor.isPluginAvailable("PushNotifications")) {
         Push._adapter = new CapacitorNotifications()

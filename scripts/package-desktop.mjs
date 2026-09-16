@@ -43,6 +43,18 @@ try {
 
   await run("bash", ["scripts/build-desktop.sh"])
   await cp(join(root, env.VITE_PLATFORM_LOGO), join(root, "electron/generated/icon.png"))
+  await cp(join(root, "static/favicon.ico"), join(root, "electron/generated/icon.ico"))
+  for (const [size, name] of [
+    [16, "trayTemplate.png"],
+    [32, "trayTemplate@2x.png"],
+  ]) {
+    await sharp({create: {width: size, height: size, channels: 3, background: "black"}})
+      .joinChannel(
+        await sharp(logo).resize(size, size).ensureAlpha().extractChannel("alpha").toBuffer(),
+      )
+      .png()
+      .toFile(join(root, "electron/generated", name))
+  }
   await cp(join(root, "LICENSE"), join(root, "electron/generated/LICENSE"))
   await run(
     process.execPath,

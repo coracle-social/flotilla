@@ -56,6 +56,9 @@ importers:
       '@capawesome/capacitor-electron':
         specifier: 0.1.1
         version: 0.1.1(@capacitor/core@8.3.4)
+      '@flotilla/desktop-window':
+        specifier: file:packages/desktop-window
+        version: file:packages/desktop-window
       '@getalby/lightning-tools':
         specifier: ^6.1.0
         version: 6.1.0
@@ -1141,6 +1144,9 @@ packages:
   '@eslint/plugin-kit@0.7.2':
     resolution: {integrity: sha512-+CNAzxglkrpNf/kKywqQfk74QjtceuOE7Qm+AF8miRvPF/wmmK5+OJOgVh3AVTT3RP2mH3+FOaxlE5v72owk0A==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@flotilla/desktop-window@file:packages/desktop-window':
+    resolution: {directory: packages/desktop-window, type: directory}
 
   '@frostr/bifrost@1.0.7':
     resolution: {integrity: sha512-9PO8s8ra7Cf94HqsF0sArRkLLFYqDyGfRKUOflTWMGgaDvSWIksNA8PckcXvy5/G6u4RtAkTAqki47+ga+7yow==}
@@ -6424,6 +6430,8 @@ snapshots:
     dependencies:
       '@eslint/core': 1.2.1
       levn: 0.4.1
+
+  '@flotilla/desktop-window@file:packages/desktop-window': {}
 
   '@frostr/bifrost@1.0.7(typescript@5.9.3)':
     dependencies:

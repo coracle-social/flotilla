@@ -1,0 +1,11 @@
+{
+  "name": "@flotilla/desktop-window",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "capacitor": {
+    "electron": {
+      "src": "electron"
+    }
+  }
+}
