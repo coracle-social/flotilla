@@ -5,13 +5,16 @@
 
   type Props = {
     url: string
+    icon?: string
     size?: number
     class?: string
   }
 
-  const {url, size = 7, ...props}: Props = $props()
+  const {url, icon, size = 7, ...props}: Props = $props()
 
   const relay = $relays.one(url)
+
+  const src = $derived(icon || $relay?.icon)
 
   const rem = $derived(size * 0.25)
 
@@ -20,8 +23,8 @@
   )
 </script>
 
-{#if $relay?.icon}
-  <ImageIcon {size} alt="" src={$relay?.icon} class="rounded-full {props.class}" />
+{#if src}
+  <ImageIcon {size} {src} alt="" class="rounded-full {props.class}" />
 {:else}
   <div
     class="flex select-none items-center justify-center rounded-full font-bold {props.class}"

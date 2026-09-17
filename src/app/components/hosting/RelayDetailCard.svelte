@@ -5,7 +5,6 @@
   import Pen from "@assets/icons/pen.svg?dataurl"
   import Power from "@assets/icons/power.svg?dataurl"
   import Play from "@assets/icons/play.svg?dataurl"
-  import Server from "@assets/icons/server.svg?dataurl"
   import Danger from "@assets/icons/danger.svg?dataurl"
   import VerifiedCheck from "@assets/icons/verified-check.svg?dataurl"
   import ShieldWarning from "@assets/icons/shield-warning.svg?dataurl"
@@ -19,13 +18,13 @@
   import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
   import Link from "@lib/components/Link.svelte"
-  import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Popover from "@lib/components/Popover.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
   import CustomDomainModal from "@app/components/hosting/CustomDomainModal.svelte"
   import DataTransferModal from "@app/components/hosting/DataTransferModal.svelte"
   import PlanModal from "@app/components/hosting/PlanModal.svelte"
@@ -228,9 +227,7 @@
 <div class="card flex flex-col gap-6">
   <div class="flex items-start justify-between gap-4">
     <div class="flex min-w-0 items-start gap-4">
-      <div class="rounded-full border border-line aspect-square px-2 pt-2">
-        <ImageIcon size={8} alt="" src={current.info_icon || Server} />
-      </div>
+      <RelayIcon url={getHostedRelayUrl(current)} icon={current.info_icon} size={12} />
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
           <h2 class="text-xl font-bold">{relayLabel}</h2>
