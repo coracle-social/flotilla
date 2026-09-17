@@ -411,6 +411,16 @@
       </FieldInline>
       <FieldInline>
         {#snippet label()}
+          <span>Members can invite others</span>
+        {/snippet}
+        {#snippet input()}
+          <ToggleInput
+            checked={flagToBool(current.members_can_invite, true)}
+            onchange={setFlag("members_can_invite")} />
+        {/snippet}
+      </FieldInline>
+      <FieldInline>
+        {#snippet label()}
           <span>Strip signatures</span>
         {/snippet}
         {#snippet input()}

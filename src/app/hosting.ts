@@ -41,6 +41,7 @@ export type HostedRelay = {
   policy_strip_signatures: number
   groups_enabled: number
   management_enabled: number
+  members_can_invite: number
   blossom_enabled: number
   livekit_enabled: number
   push_enabled: number
@@ -54,6 +55,7 @@ export type RelayFlag =
   | "policy_strip_signatures"
   | "groups_enabled"
   | "management_enabled"
+  | "members_can_invite"
   | "blossom_enabled"
   | "livekit_enabled"
   | "push_enabled"
@@ -72,6 +74,7 @@ export type CreateRelayInput = {
   policy_strip_signatures?: number
   groups_enabled?: number
   management_enabled?: number
+  members_can_invite?: number
   blossom_enabled?: number
   livekit_enabled?: number
   push_enabled?: number
@@ -91,6 +94,7 @@ export type UpdateRelayInput = {
   policy_strip_signatures?: number
   groups_enabled?: number
   management_enabled?: number
+  members_can_invite?: number
   blossom_enabled?: number
   livekit_enabled?: number
   push_enabled?: number
