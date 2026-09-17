@@ -135,7 +135,7 @@
         {/snippet}
         {#snippet info()}
           <p>
-            Delay sending chat messages for {$settings.send_delay / 1000}
+            Delay sending messages and comments for {$settings.send_delay / 1000}
             {$settings.send_delay === 1000 ? "second" : "seconds"}.
           </p>
         {/snippet}

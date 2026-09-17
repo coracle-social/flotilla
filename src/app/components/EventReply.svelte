@@ -3,7 +3,6 @@
   import {writable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
   import {tagSpec, tagValue} from "@welshman/util"
-  import {publishToRelays} from "@welshman/app"
   import {Comment} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import {fly} from "@lib/transition"
@@ -17,7 +16,8 @@
   import {makeEditor} from "@app/editor"
   import {DraftKey} from "@app/drafts"
   import {pushToast} from "@app/toast"
-  import {command, relays, writer} from "@app/core"
+  import {relays, thunks, writer} from "@app/core"
+  import {getSetting} from "@app/settings"
 
   type Values = {
     content?: string | object
@@ -72,7 +72,11 @@
       eventWriter.setRoom(url, h)
     }
 
-    const thunk = await command(eventWriter).then(publishToRelays([url]))
+    const thunk = $thunks.publish({
+      relays: [url],
+      event: await eventWriter.renderTemplate(),
+      delay: getSetting("send_delay"),
+    })
 
     draftKey.clear()
     onSubmit(thunk)

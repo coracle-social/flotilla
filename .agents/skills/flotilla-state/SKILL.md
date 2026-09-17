@@ -360,9 +360,10 @@ Plugin mutators already return a `Command`: `roomLists.get().addRelay(url).then(
 `forceLoad` before writing. A replaceable event you build yourself needs the same, as in
 `publishSettings`.
 
-Some call sites call `thunks.get().publish({event, relays, delay})` directly. Room chat
-(`RoomChat.svelte`) does, because `Command` cannot carry the `send_delay` window, and so do
-`publishRoomQuote` in `rooms.ts`, the push adapters and `ProfileDelete.svelte`. DMs go through
+Some call sites call `thunks.get().publish({event, relays, delay})` directly. Anything that
+honours the `send_delay` window does, because `Command` cannot carry it: room chat
+(`RoomChat.svelte`), the comment composers (`CommentCompose.svelte` and `EventReply.svelte`) and
+`publishRoomQuote` in `rooms.ts`. So do the push adapters and `ProfileDelete.svelte`. DMs go through
 `wraps.get().publish({event, recipients})`, which returns a merged thunk (see `reactions.ts`).
 NIP-86 calls (`relayManagement.get().forUrl(url)`) are not thunks. They return
 `{result, error}`, and the caller handles `error`.
@@ -373,7 +374,8 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) are not thunks. They return
   relays when it is enqueued, so every derived store sees it immediately. Signing then swaps the
   unsigned event for the signed one.
 - **Undo.** `thunk.abort()` during the `delay` removes the event from the repository and from
-  `history`. When `send_delay` is set, room chat shows a `ThunkToast` whose Cancel button aborts.
+  `history`. When `send_delay` is set, room chat shows a `ThunkToast` whose Cancel button aborts,
+  and a comment carries the same Cancel in the `ThunkPending` row under it.
 - **Editing.** Editing a message deletes it and republishes with the same `created_at` (see
   `RoomChat.svelte`).
 - **Status in rows.** Rows look up `$thunksByEventId.get(event.id) ?? noThunks` and pass

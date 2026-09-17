@@ -1129,8 +1129,8 @@ Acceptance:
   confirms.
 - On confirmation the status disappears silently and the normal reaction and
   menu actions take its place.
-- Cancelling removes the post entirely from the list or thread it was posted
-  into, and bob never sees it.
+- Cancelling during the send delay removes the post entirely from the list or
+  thread it was posted into.
 - A failed post shows "Failed to send!" in the same row, opening the same
   per-relay detail popover.
 

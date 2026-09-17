@@ -177,11 +177,11 @@ test("US-088 adjust send delay and media servers", async ({seed, as}) => {
   const sendDelay = page.locator('input[type="range"]')
   const servers = page.getByRole("listitem")
 
-  await expect(page.getByText("Delay sending chat messages for 0 seconds.")).toBeVisible()
+  await expect(page.getByText("Delay sending messages and comments for 0 seconds.")).toBeVisible()
 
   await sendDelay.fill("3000")
 
-  await expect(page.getByText("Delay sending chat messages for 3 seconds.")).toBeVisible()
+  await expect(page.getByText("Delay sending messages and comments for 3 seconds.")).toBeVisible()
 
   await expect(servers).toHaveCount(0)
 
@@ -208,7 +208,7 @@ test("US-088 adjust send delay and media servers", async ({seed, as}) => {
   await waitForToastToClear(page)
   await page.reload()
 
-  await expect(page.getByText("Delay sending chat messages for 3 seconds.")).toBeVisible()
+  await expect(page.getByText("Delay sending messages and comments for 3 seconds.")).toBeVisible()
   await expect(page.locator('input[type="range"]')).toHaveValue("3000")
 })
 

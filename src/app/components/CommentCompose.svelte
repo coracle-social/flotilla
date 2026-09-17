@@ -2,7 +2,6 @@
   import {writable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
   import {tagSpec, tagValue} from "@welshman/util"
-  import {publishToRelays} from "@welshman/app"
   import {Comment} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
@@ -10,9 +9,10 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {command, relays, writer} from "@app/core"
+  import {relays, thunks, writer} from "@app/core"
   import {DraftKey} from "@app/drafts"
   import {makeEditor} from "@app/editor"
+  import {getSetting} from "@app/settings"
   import {pushToast} from "@app/toast"
 
   type Values = {
@@ -63,7 +63,11 @@
         eventWriter.setRoom(url, h)
       }
 
-      const thunk = await command(eventWriter).then(publishToRelays([url]))
+      const thunk = $thunks.publish({
+        relays: [url],
+        event: await eventWriter.renderTemplate(),
+        delay: getSetting("send_delay"),
+      })
       const error = await thunk.waitForError()
 
       if (error) {

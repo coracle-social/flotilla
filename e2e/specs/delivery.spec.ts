@@ -87,7 +87,11 @@ const setSendDelay = async (page: Page, seconds: number) => {
   await page.goto("/settings/content")
   await slider.fill(String(seconds * 1000))
 
-  await expect(page.getByText(`Delay sending chat messages for ${seconds} seconds.`)).toBeVisible()
+  const unit = seconds === 1 ? "second" : "seconds"
+
+  await expect(
+    page.getByText(`Delay sending messages and comments for ${seconds} ${unit}.`),
+  ).toBeVisible()
 
   await page.getByRole("button", {name: "Save Changes"}).click()
 
@@ -336,6 +340,11 @@ test("US-071 content posts show delivery status in place", async ({seed, as}) =>
   const alice = await as(users.alice, `${spacePath(url)}/articles`, {
     env: {VITE_BLOCKED_RELAYS: quiet},
   })
+
+  // A comment leaves after the send delay the way a chat message does, so the window in which its
+  // Cancel link is live is hers to set.
+  await setSendDelay(alice, 1)
+  await alice.goto(`${spacePath(url)}/articles`)
 
   await writeArticle(alice, "Signals in the Noise", "Everything worth hearing is quiet.")
 
