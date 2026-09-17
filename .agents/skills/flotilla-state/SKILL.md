@@ -179,7 +179,6 @@ space content be keyed by relay.
 - `deriveEvent`, `deriveEvents`, `deriveEventsById`, `deriveIsDeleted`
 - relay-scoped: `deriveEventsForUrl`, `deriveEventsByIdForUrl`, `deriveEventsByIdByUrl`,
   `getEventsForUrl`
-- `deriveRelaySignedEvents`, which keeps only events signed by the relay's NIP-11 `self` key
 - `deriveLatestEvent`
 
 Use these for raw event queries. Welshman's `Events` plugin has the same surface returning
@@ -352,7 +351,7 @@ if (error) {
 ```
 
 `publish` sends to the writer's own routes, which is why the excerpt forces them with
-`forceRoutes`. `publishToRelays(urls)` and `publishAsRelay(url)` override those routes instead.
+`forceRoutes`. `publishToRelays(urls)` overrides those routes instead.
 flotilla-model's "Which relays an event goes to" says which one each kind needs.
 
 Plugin mutators already return a `Command`: `roomLists.get().addRelay(url).then(publish)`,

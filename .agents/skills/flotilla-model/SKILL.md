@@ -43,6 +43,7 @@ domain `Relay`. These fields drive protocol decisions:
 | `hasNip(29)` | whether the space has rooms. Without it everything lives in the space chat: `makeSpaceEntryPath` (`src/app/routes.ts`), `shareEvent` (`src/app/share.ts`), room search, notification grouping, `SpaceMenuRooms` |
 | `hasNip(70)` | whether space content is marked protected (below) |
 | `self` | the relay's own pubkey, the trust anchor for relay-signed state |
+| `pubkey` | the space's owner, who writes space-wide content that has no other author (`deriveUserIsSpaceOwner`) |
 | `redirect_to` | the relay has moved. The space layout offers `SpaceRedirect`, which runs `roomLists.migrateRelay` and `goToMovedSpace` |
 | `hasNip(50)`, `hasNip("BUD-02")`, `hasNip("9a")` | search, blossom uploads, push |
 
@@ -53,13 +54,13 @@ members and pins, the space member list, and roles. Anyone can publish events of
 readers must check the author. The welshman collections do: `Rooms` and every
 `RelaySignedDerivedPlugin` (`RelayMemberLists`, `RelayRoles`, `RoomPinLists`) drop events whose
 author isn't the relay's `self`, and re-check when NIP-11 loads. For a relay-authored kind with no
-plugin, read through `deriveRelaySignedEvents(url, filters)` in `src/app/repository.ts`, as
-`src/app/featured.ts` does, rather than a bare `deriveEventsForUrl`.
+plugin, filter `deriveEventsForUrl(url, filters)` on that `self` key yourself rather than reading a
+bare `deriveEventsForUrl`.
 
-Content the space owns is published as the relay: `command.publishAsRelay(url)` has the relay
-sign the event with its own key through the NIP-86 `signevent` method, then sends it back. Featured
-content (`setFeaturedContent` in `src/app/featured.ts`) is written this way, and only users the
-relay allows to call `signevent` can write it.
+The app signs everything it publishes with the user's own key. Space-wide content with no author of
+its own belongs to the space's owner, the pubkey NIP-11 names: featured content
+(`setFeaturedContent` in `src/app/featured.ts`) is published by that person and read back scoped to
+them, so `deriveUserIsSpaceOwner(url)` is what shows the editor.
 
 The library is written by its members. A shelf or a pin is signed with the member's own key and
 published to the space like any other space content, so the library reads every `PINBOARD` seen on
@@ -170,12 +171,11 @@ relay's URL, each call signed with a fresh NIP-98 event. Every method resolves t
 | `createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole` | `RoleCreate`, `RoleEdit`, `SpaceRoleMenu`, `SpaceMemberRoles`, `RoleAddMembers` |
 | `listClaims`, `createClaim` | `Access.prepareInvite` |
 | `changeRelayName`, `changeRelayDescription`, `changeRelayIcon` | `SpaceEdit` |
-| `signEvent` | `Command.publishAsRelay` |
 
 Admin status is inferred. A relay answers `supportedmethods` with everything it implements rather
 than what the caller may use, and refuses non-admins outright, so `deriveUserIsSpaceAdmin(url)`
 only means the list came back non-empty (re-checked at most every five minutes per URL). To gate
-one capability, check the method (`$supportedMethods.includes("signevent")`) and still handle an
+one capability, check the method (`$supportedMethods.includes("banpubkey")`) and still handle an
 error from the call, since a listed method can be blocked for a particular user.
 `deriveUserCanCreateRoom` adds `ROOM_CREATE_PERMISSION` grants to space admins.
 
@@ -215,7 +215,6 @@ Space content goes to the space relay and nowhere else. The writer's routes deci
 | `writer.forceRoutes(relay(url))` | forces the relay, no `h` | space-wide content, NIP-43 requests |
 | default routes | the user's outbox plus inboxes of `p`-tagged pubkeys | profile, lists, settings, anything outside a space |
 | `command.publishToRelays(urls)` | ignores the writer's relays | reactions, deletes, reports, comments, replies |
-| `command.publishAsRelay(url)` | the relay signs via NIP-86 `signevent` | space-owned content |
 | `wraps.get().publish({event, recipients})` | a NIP-59 wrap per recipient, to their `MESSAGING_RELAYS` | DMs and DM reactions and deletes |
 
 `validate()` throws when an `h` tag has no forced route, and every room and relay-membership writer
@@ -258,7 +257,7 @@ it. Zaps and goals are off on iOS (`ENABLE_ZAPS` in `src/app/env.ts`).
 4. If users sign it through a remote signer, add it to `NIP46_PERMS` in `src/app/nip46.ts`.
 5. If it is relay-scoped state that has to survive a reload, add it to the `kinds` map in
    `src/app/storage.ts`.
-6. If the relay signs it, read it through a `RelaySignedDerivedPlugin` or `deriveRelaySignedEvents`.
+6. If the relay signs it, read it through a `RelaySignedDerivedPlugin`.
 
 ## Parsing and building events
 

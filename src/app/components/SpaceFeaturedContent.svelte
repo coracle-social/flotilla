@@ -7,7 +7,7 @@
   import Content from "@app/components/Content.svelte"
   import EditFeaturedContent from "@app/components/EditFeaturedContent.svelte"
   import {deriveFeaturedContent} from "@app/featured"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deriveUserIsSpaceOwner} from "@app/management"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -17,7 +17,7 @@
   const {url}: Props = $props()
 
   const content = deriveFeaturedContent(url)
-  const canEdit = deriveUserIsSpaceAdmin(url)
+  const canEdit = deriveUserIsSpaceOwner(url)
 
   const edit = () => pushModal(EditFeaturedContent, {url, initial: $content})
 </script>

@@ -1,11 +1,11 @@
-import {derived, readable} from "svelte/store"
+import {readable} from "svelte/store"
 import type {Unsubscriber} from "svelte/store"
-import {filter, first, on, spec} from "@welshman/lib"
+import {first, on} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {sortEventsDesc} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import * as store from "@welshman/store"
-import {Network, Relays} from "@welshman/app"
+import {Network} from "@welshman/app"
 import {app, fromApp} from "@app/core"
 
 // Events
@@ -57,12 +57,6 @@ export const deriveEventsForUrl = (url: string, filters: Filter[] = [{}]) =>
 export const deriveEventsByIdByUrl = (filters: Filter[] = [{}]) =>
   fromApp($app =>
     store.deriveEventsByIdByUrl({filters, tracker: $app.tracker, repository: $app.repository}),
-  )
-
-export const deriveRelaySignedEvents = (url: string, filters: Filter[] = [{}]) =>
-  derived(
-    [fromApp($app => $app.use(Relays).one(url)), deriveEventsForUrl(url, filters)],
-    ([$relay, $events]) => filter(spec({pubkey: $relay?.self}), $events as TrustedEvent[]),
   )
 
 // The most recent event held from one author.

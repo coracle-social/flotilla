@@ -1,6 +1,7 @@
 import {derived, readable, writable} from "svelte/store"
 import {ago, MINUTE, now, simpleCache} from "@welshman/lib"
 import {ROOM_CREATE_PERMISSION, hexTags, tagValues} from "@welshman/util"
+import {Relays} from "@welshman/app"
 import {fromApp, relayManagement, user} from "@app/core"
 import {deriveEventsForUrl} from "@app/repository"
 
@@ -58,6 +59,14 @@ export const deriveSpaceSupportedMethods = (url?: string) =>
 // answers relay-wide tells us only that the call wasn't refused outright.
 export const deriveUserIsSpaceAdmin = (url?: string) =>
   derived(deriveSpaceSupportedMethods(url), $methods => $methods.length > 0)
+
+// The one identity a space names as its own, in its NIP-11 `pubkey`. Space-wide content with no
+// author to scope it to belongs to that person.
+export const deriveUserIsSpaceOwner = (url: string) =>
+  derived(
+    [user, fromApp($app => $app.use(Relays).one(url))],
+    ([$user, $relay]) => $user.pubkey === $relay?.pubkey,
+  )
 
 export const deriveUserCanCreateRoom = (url: string) =>
   derived(

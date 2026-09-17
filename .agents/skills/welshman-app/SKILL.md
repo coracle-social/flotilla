@@ -96,7 +96,7 @@ setNip55Plugin(NostrSignerPlugin)
 
 All follow the same shape — `get(key)` (sync), `one(key)` (reactive, lazy-loads), `load(key)`/`forceLoad(key)` (promises), plus convenience accessors returning `Projection`. Resolve with `app.use(...)`.
 
-Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) is `async` and returns a **`Command`**, not a `Thunk` — it builds the event but does not publish it. Call `.publish()` (or `.publishAsRelay(url)`) on the result to actually send it. See [Commands](#commands-deferred-publishing) below.
+Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) is `async` and returns a **`Command`**, not a `Thunk` — it builds the event but does not publish it. Call `.publish()` on the result to actually send it. See [Commands](#commands-deferred-publishing) below.
 
 | Plugin | Data | Notable accessors |
 |---|---|---|
@@ -115,7 +115,7 @@ Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) i
 | `Pinboards` | kind-30067 pinboards (many per author, keyed by address) | `forAuthor(pk)`, `loadForAuthor(pk)`, `create(fields)`, `update(addr, fn)` → `Command` |
 | `Pins` | kind-39067 pins (keyed by address; each pin has its own `d` tag) | `forBoard(addr)`, `forProfile(pk)`, `loadForBoard(addr)`, `loadForProfile(pk)`, `create`, `update`, `addToBoard`, `removeFromBoard` → `Command` |
 | `Relays` | NIP-11 relay info (HTTP) | `display(url)`, `hasNip(url, n)`, `hasNegentropy(url)`; `relaySearch` |
-| `RelayManagement` | NIP-86 mgmt API | `forUrl(url)` → a `ManagementApi` client that signs auth as the app's user (`forUrl(url).signEvent(event)`, role/member ops, …) |
+| `RelayManagement` | NIP-86 mgmt API | `forUrl(url)` → a `ManagementApi` client that signs auth as the app's user (role/member ops, ban/allow, …) |
 | `RelayStats` | per-relay connection counters | `get(url)`, `getQuality(url)` (0–1, drives router ranking) |
 | `RelayRoles` / `RelayMemberLists` / `RoomPinLists` | relay-signed state, keyed per relay | relay-scoped collections (see `RelaySignedDerivedPlugin`) |
 | `Handles` | NIP-05 (HTTP, batched) | `forPubkey(pk)`, `display(nip05)`, `loadForPubkey(pk)` |
@@ -145,9 +145,9 @@ const writeRelays = app.use(RelayLists).writeUrls(pubkey).get()  // string[]
 // Mutations return a Command — build it, then decide how to publish it
 const command = await app.use(RelayLists).addWriteUrl("wss://relay.example")
 command.publish()                              // normal outbox/relays flow via Thunks
-// or: command.publishAsRelay("wss://relay.example")   // sign + send straight to one relay (NIP-86 style)
+// or: command.publishToRelays(["wss://relay.example"])  // send straight to one relay
 
-// Since these methods are async, `publish`/`publishAsRelay` free functions avoid a double-await:
+// Since these methods are async, `publish`/`publishToRelays` free functions avoid a double-await:
 import {publish} from "@welshman/app"
 await app.use(RelayLists).addWriteUrl("wss://relay.example").then(publish)
 ```
@@ -203,21 +203,18 @@ command.relays   // string[] — where publish() will send it
 
 command.publish()               // normal path: app.use(Thunks).publish({event, relays: command.relays})
 command.publishToRelays(urls)   // publish to a specific relay set instead of command.relays
-command.publishAsRelay(url)     // NIP-86: the relay signs the event with its own key
-                                // (signevent), then publish the relay-signed event back to `url`
-command.signAsRelay(url)        // just the NIP-86 signevent step (returns {result, error})
 ```
 
 This lets a caller preview/log a command, choose a different transport, or drop it entirely, instead of every plugin method publishing unconditionally. `Wraps.publish` is the one exception — it fans a single rumor out to a `MergedThunk` of per-recipient wraps (each with its own relays), which doesn't fit the one-event/one-relay-set `Command` shape, so it still publishes directly.
 
-`publish`/`publishToRelays`/`publishAsRelay`/`signAsRelay` are also exported as free functions (e.g. `(command) => command.publish()`, `(url) => (command) => command.publishAsRelay(url)`) so you can chain straight off the mutation method's promise instead of double-awaiting:
+`publish`/`publishToRelays` are also exported as free functions (e.g. `(command) => command.publish()`, `(urls) => (command) => command.publishToRelays(urls)`) so you can chain straight off the mutation method's promise instead of double-awaiting:
 
 ```typescript
-import {publish, publishAsRelay} from "@welshman/app"
+import {publish, publishToRelays} from "@welshman/app"
 
 await app.use(FollowLists).follow(["p", otherPubkey]).then(publish)
 await app.use(Rooms).leave(relayUrl, roomMeta).then(publish)
-await app.use(Rooms).join(relayUrl, roomMeta).then(publishAsRelay(relayUrl))
+await app.use(Rooms).join(relayUrl, roomMeta).then(publishToRelays([relayUrl]))
 ```
 
 ## Requests & sync

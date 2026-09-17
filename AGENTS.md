@@ -186,7 +186,7 @@ callbacks and hot paths.
 
 1. Build a writer: `app.use(Domain).writer(Kind, reader?)`, then chain its setters
 2. Wrap it: `const command = await app.use(Domain).command(writer)`
-3. Publish it: `command.publish()`, `.publishToRelays(urls)`, or `.publishAsRelay(url)`
+3. Publish it: `command.publish()` or `.publishToRelays(urls)`
 4. Display thunk status to user (for cancel/error handling)
 
 Plugin mutators (`app.use(FollowLists).follow(...)`, `app.use(Rooms).joinRoom(...)`, …) already

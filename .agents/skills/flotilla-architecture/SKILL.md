@@ -100,7 +100,7 @@ only gate.
 - `access.ts`: joining, invites, relay auth errors
 - `management.ts` (NIP-86 admin checks, bans), `roles.ts` (member roles)
 - `actionItems.ts`: the admin review queue (reports and pending joins)
-- `featured.ts` (relay-signed featured content), `roomPins.ts`, `commands.ts` (NIP-CD slash
+- `featured.ts` (the space owner's featured content), `roomPins.ts`, `commands.ts` (NIP-CD slash
   commands)
 - `hosting.ts`: client for the hosting backend's HTTP API
 
