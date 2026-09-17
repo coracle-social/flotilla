@@ -386,6 +386,11 @@ const SPANS_PER_TRIGGER = 3
 // which is what NIP-01 promises a filter carrying a limit.
 const PAGE_SIZE = 100
 
+// A span that turns up nothing widens the next one, so walking a sparse history doesn't take
+// dozens of round trips
+const nextInterval = (interval: number, found: number) =>
+  found > 0 ? int(MONTH) : Math.round(interval * 1.5)
+
 // Whether a request is actually in flight, which is not the same as whether more might exist. A
 // list that already has what it needs shouldn't sit under a spinner just because it hasn't
 // walked to the end of the history.
@@ -484,10 +489,13 @@ export const makeFeed = ({
   // putting each of those on screen as it lands is what walks a room backwards under the reader.
   const held = new Map<string, TrustedEvent>()
 
-  // The span the relays have been asked about, which grows outward from the anchor
+  // The span the relays have been asked about, which grows outward from the anchor. Each
+  // direction widens its own: what one of them is walking through says nothing about the other,
+  // and sharing a width lets a backward walk finding history reset the forward walk's growth.
   let oldest = at
   let newest = at
-  let interval = int(MONTH)
+  let olderInterval = int(MONTH)
+  let newerInterval = int(MONTH)
 
   // How far back the feed has been answered for, which is what decides whether an event is ready
   // to render or has to wait for the window to come and get it.
@@ -591,12 +599,6 @@ export const makeFeed = ({
       },
     })
 
-    // A span that turns up nothing widens the next one, so walking a sparse history doesn't
-    // take dozens of round trips
-    if (complete) {
-      interval = found.length > 0 ? int(MONTH) : Math.round(interval * 1.5)
-    }
-
     return {found, complete, pages}
   }
 
@@ -609,7 +611,7 @@ export const makeFeed = ({
     if (oldest < now() - int(2, YEAR)) return {found: 0, complete: true, exhausted: true}
 
     const until = oldest
-    const since = until - interval
+    const since = until - olderInterval
     const {found, complete, pages} = await loadSpan({since, until, limit: PAGE_SIZE})
 
     // A relay that answered with less than it was allowed has covered its whole span and holds
@@ -623,6 +625,8 @@ export const makeFeed = ({
     }
 
     if (complete) {
+      olderInterval = nextInterval(olderInterval, found.length)
+
       // The second the edge steps back is what stops a page that filled up inside one from being
       // asked for over and over
       oldest = edge === undefined ? since : Math.min(edge, until - 1)
@@ -640,10 +644,11 @@ export const makeFeed = ({
     if (newest >= now()) return {found: 0, complete: true, exhausted: true}
 
     const since = newest
-    const until = Math.min(now(), since + interval)
+    const until = Math.min(now(), since + newerInterval)
     const {found, complete} = await loadSpan({since, until})
 
     if (complete) {
+      newerInterval = nextInterval(newerInterval, found.length)
       newest = until
     }
 
