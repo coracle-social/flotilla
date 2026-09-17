@@ -2,6 +2,7 @@
   import type {Snippet} from "svelte"
   import cx from "classnames"
   import {Profiles} from "@welshman/app"
+  import Compass from "@assets/icons/compass.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
@@ -67,6 +68,11 @@
         <ImageIcon alt="Settings" src={UserRounded} class="rounded-full" size={8} />
       {/if}
     </PrimaryNavItem>
+    {#if PLATFORM_RELAYS.length === 0}
+      <PrimaryNavItem href="/spaces" title="All Spaces" prefix="no-highlight">
+        <ImageIcon alt="All Spaces" src={Compass} size={8} />
+      </PrimaryNavItem>
+    {/if}
     <PrimaryNavItem
       title="Messages"
       onclick={chatHandler}

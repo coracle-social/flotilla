@@ -1,6 +1,5 @@
 <script lang="ts">
   import cx from "classnames"
-  import Widget from "@assets/icons/widget-4.svg?dataurl"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
@@ -46,11 +45,11 @@
     <PrimaryNavItem title="Home" href="/home">
       <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={10} />
     </PrimaryNavItem>
-    <Divider />
+    <Divider class="w-full" />
     <div
       bind:this={element}
       onscroll={measure}
-      class="primary-nav__spaces"
+      class="primary-nav__spaces mb-2"
       style:--fade-top="{Math.min(hiddenAbove, fadeSize)}px"
       style:--fade-bottom="{Math.min(hiddenBelow, fadeSize)}px">
       <DragList
@@ -62,8 +61,5 @@
         {/snippet}
       </DragList>
     </div>
-    <PrimaryNavItem href="/spaces" title="All Spaces" prefix="no-highlight">
-      <ImageIcon alt="All Spaces" src={Widget} size={8} />
-    </PrimaryNavItem>
   {/each}
 </div>

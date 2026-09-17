@@ -1519,8 +1519,9 @@ space carries my branding.
 Acceptance:
 
 - Saving a domain under "Manage" shows it on the relay card with a "Pending"
-  badge and the CNAME record to configure, whose copy button puts the target on
-  the clipboard.
+  badge and the DNS record to configure, whose copy button puts the target on
+  the clipboard. A subdomain gets a CNAME; a bare domain, which DNS won't let
+  take one, gets an ALIAS.
 - "Verify DNS record" flips the badge to "Verified" once the backend reports it.
 - The relay's displayed address then switches to the custom domain.
 

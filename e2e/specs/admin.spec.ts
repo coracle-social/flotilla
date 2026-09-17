@@ -931,15 +931,23 @@ test("US-101 point a custom domain at a hosted relay", async ({seed, as}) => {
 
   const domainForm = dialog(page, "Custom domain")
 
-  await domainForm.getByPlaceholder("relay.example.com").fill("other.test")
+  await domainForm.getByPlaceholder("relay.example.com").fill("relay.other.test")
   await domainForm.getByRole("button", {name: "Save", exact: true}).click()
 
   await expect(page.getByRole("alert")).toContainText("Custom domain saved.")
-  await expect(page.getByText("other.test", {exact: true})).toBeVisible()
+  await expect(page.getByText("relay.other.test", {exact: true})).toBeVisible()
   await expect(page.getByText("Pending", {exact: true})).toBeVisible()
-  await expect(page.getByText("other.test CNAME space.test")).toBeVisible()
+  await expect(page.getByText("relay.other.test CNAME space.test")).toBeVisible()
 
-  await page.locator('[data-tip="Copy CNAME target"]').click()
+  // A bare domain can't take a CNAME, so it's shown as an ALIAS at the same target
+  await page.getByRole("button", {name: "Manage"}).click()
+  await domainForm.getByPlaceholder("relay.example.com").fill("other.test")
+  await domainForm.getByRole("button", {name: "Save", exact: true}).click()
+
+  await expect(page.getByText("other.test", {exact: true})).toBeVisible()
+  await expect(page.getByText("other.test ALIAS space.test")).toBeVisible()
+
+  await page.locator('[data-tip="Copy ALIAS target"]').click()
 
   await expect(page.getByRole("alert")).toContainText("Copied to clipboard!")
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("space.test")

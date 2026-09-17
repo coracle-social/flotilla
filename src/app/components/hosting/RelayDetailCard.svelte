@@ -70,7 +70,11 @@
   const host = $derived(relayHost(current))
   const relayLabel = $derived(current.info_name || current.subdomain)
   const domainVerified = $derived(flagToBool(current.custom_domain_verified, false))
-  const cnameTarget = $derived(canonicalRelayHost(current))
+  const recordTarget = $derived(canonicalRelayHost(current))
+  // DNS forbids a CNAME at a zone apex, so those domains point at the same
+  // target using their provider's ALIAS/ANAME record instead.
+  const isApex = $derived(current.custom_domain.split(".").length === 2)
+  const recordType = $derived(isApex ? "ALIAS" : "CNAME")
   const isPaidPlan = $derived(current.plan_id !== "free")
 
   // Adding, removing or verifying a custom domain moves the relay's host, so
@@ -156,7 +160,7 @@
     showMenu = false
   }
 
-  const copyCname = () => clip(cnameTarget)
+  const copyTarget = () => clip(recordTarget)
 
   // Verification runs in a backend poller; reload to pick up the result.
   const verify = async () => {
@@ -346,18 +350,23 @@
         </div>
         <div class="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
           <code class="min-w-0 flex-1 break-all font-mono text-xs text-content">
-            {current.custom_domain} CNAME {cnameTarget}
+            {current.custom_domain}
+            {recordType}
+            {recordTarget}
           </code>
           <Button
             class="button button-neutral button-sm shrink-0"
-            data-tip="Copy CNAME target"
-            onclick={copyCname}>
+            data-tip="Copy {recordType} target"
+            onclick={copyTarget}>
             <Icon icon={Copy} size={4} />
           </Button>
         </div>
-        <p class="text-xs text-content-muted">
-          For apex domains (e.g. example.com), use an ALIAS or ANAME record instead.
-        </p>
+        {#if isApex}
+          <p class="text-xs text-content-muted">
+            A bare domain can't use a CNAME. Your provider may call this record ANAME, or offer
+            CNAME flattening instead.
+          </p>
+        {/if}
         <Button
           class="button button-neutral button-sm self-start"
           onclick={verify}

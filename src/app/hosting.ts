@@ -367,7 +367,7 @@ export const relayHost = (relay: HostedRelay): string =>
     ? relay.custom_domain
     : canonicalRelayHost(relay)
 
-// The host a custom domain must CNAME to.
+// The host a custom domain's DNS record must point at.
 export const canonicalRelayHost = (relay: HostedRelay): string =>
   `${relay.subdomain}.${relay.zooid_domain}`
 
