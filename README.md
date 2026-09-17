@@ -1,12 +1,33 @@
-# Flotilla
+<p align="center">
+  <img src="static/banner.png" alt="Flotilla" width="640">
+</p>
 
-A discord-like nostr client based on the idea of "relays as groups".
+A discord-like nostr client based on the idea of "relays as groups". Supports NIP 29 groups, chat, DMs, threads, calendars, classifieds, zap goals, articles, microblogging, and cross-posting between different contexts.
 
-If you would like to be interoperable with Flotilla, please check out this guide: https://habla.news/u/hodlbod@coracle.social/1741286140797
+## Install
+
+- **Web** — [app.flotilla.social](https://app.flotilla.social), installable as a PWA
+- **Android** — [Google Play](https://play.google.com/store/apps/details?id=social.flotilla)
+- **iOS** — [App Store](https://apps.apple.com/us/app/flotilla-chat/id6741344107)
+- **Your own server** — see [Deployment](#deployment)
+
+Hosted spaces are available at [flotilla.social](https://flotilla.social).
+
+## Features
+
+- Spaces and rooms, threads, direct and group messages
+- Voice and video calls
+- Calendar events, long-form articles, and polls
+- Reactions, custom emoji, zaps, link previews, and media sharing
+- Invite codes, member management, bans, roles, and reports
+- Push notifications, unread indicators, and per-room mute
+
+If you would like to be interoperable with Flotilla, please check out
+[this guide](https://habla.news/u/hodlbod@coracle.social/1741286140797).
 
 ## Environment
 
-You can also optionally create an `.env.local` file and populate it with the following environment variables (see `.env.template` for examples):
+Create an `.env.local` file to override any of the values in `.env`:
 
 **Platform branding**
 - `VITE_PLATFORM_URL` - The url where the app will be hosted
@@ -14,9 +35,11 @@ You can also optionally create an `.env.local` file and populate it with the fol
 - `VITE_PLATFORM_LOGO` - A logo url for the app. Can be a local path or https link. Must be a PNG file.
 - `VITE_PLATFORM_ACCENT` - A hex color for the app's accent color (used only for generated manifest, for more control create a custom theme file)
 - `VITE_PLATFORM_DESCRIPTION` - A description of the app
+- `VITE_PLATFORM_ABOUT` - URL to your marketing or about page
 - `VITE_PLATFORM_TERMS` - URL to your terms of service page
 - `VITE_PLATFORM_PRIVACY` - URL to your privacy policy page
 - `VITE_PLATFORM_LOGEE` - A hex pubkey which will receive logs users send from their privacy settings
+- `VITE_THEME` - The visual preset components are styled with: `clay`, `flat`, or `navy`
 
 **Platform mode**
 - `VITE_PLATFORM_RELAYS` - A comma-separated list of relay urls that will make flotilla operate in "platform mode". Disables all space browse/add/select functionality and makes the first platform relay the home page.
@@ -26,6 +49,7 @@ You can also optionally create an `.env.local` file and populate it with the fol
 - `VITE_DEFAULT_SPACES` - A comma-separated list of relay urls that new users will be automatically joined to on signup. Each one may optionally include an invite code, delimited by `|`, e.g. `my.space.com|CODE`.
 - `VITE_DEFAULT_RELAYS` - A comma-separated list of relay urls used as default outbox/inbox relays
 - `VITE_DEFAULT_MESSAGING_RELAYS` - A comma-separated list of relay urls used for encrypted direct messages
+- `VITE_DEFAULT_SEARCH_RELAYS` - A comma-separated list of relay urls used for search
 - `VITE_DEFAULT_BLOSSOM_SERVERS` - A comma-separated list of blossom server urls used for file uploads
 
 **Infrastructure**
@@ -43,20 +67,24 @@ If you're deploying a custom version of flotilla, be sure to remove the `plausib
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+```sh
+pnpm install
+pnpm run dev
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and workflow.
 
 ### Desktop development (Linux)
 
-The Electron target and its unsigned packages are for development/testing.
-Release publishing and auto-updates are not configured.
+The Electron target and its unsigned packages are for development and testing. Release publishing
+and auto-updates are not configured.
 
-**Use disposable accounts only.** The current secure-storage plugin falls back to
-unencrypted `localStorage` on desktop. This is not secure desktop credential or
-private-key storage. OS-protected secret storage is required before distribution.
+**Use disposable accounts only.** The secure-storage plugin falls back to unencrypted
+`localStorage` on desktop, so it is not secure credential or private-key storage. Packages must
+remain development-only until OS-protected secret storage and release signing are addressed.
 
-Install the root dependencies with pnpm and the Electron subproject with npm,
-following the platform's documented setup. Installing that subproject separately avoids
-downloading Electron for ordinary web/mobile installs:
+The Electron subproject installs separately, so ordinary web and mobile installs don't download
+Electron:
 
 ```sh
 pnpm install --frozen-lockfile
@@ -64,13 +92,11 @@ npm ci --prefix electron
 pnpm run dev:desktop
 ```
 
-`dev:desktop` starts Vite in development mode on `127.0.0.1`, then runs the
-Capawesome Electron platform against that server with the Capacitor plugin bridge
-and frontend HMR. No previous frontend build is needed. It uses the existing Vite
-port (1847 by default) and fails if the port is occupied. Quit another desktop
-instance before switching modes; the platform allows one instance at a time.
-Restart the command after editing Electron TypeScript. Quit Electron or press
-Ctrl+C to stop the development environment.
+`dev:desktop` starts Vite on `127.0.0.1` and runs the Capawesome Electron platform against it, with
+the Capacitor plugin bridge and frontend HMR. No previous frontend build is needed. It uses the
+existing Vite port (1847 by default) and fails if that port is occupied. The platform allows one
+instance at a time, so quit any other desktop instance before switching modes. Restart the command
+after editing Electron TypeScript, and quit Electron or press Ctrl+C to stop.
 
 To build and run local production assets instead:
 
@@ -79,25 +105,21 @@ pnpm run build:desktop
 pnpm run start:desktop
 ```
 
-`build:desktop` builds the frontend without PWA/service-worker registration,
-synchronizes the Electron platform, and compiles its TypeScript entrypoint. It uses
-the same branding environment as the web build and does not synchronize Android
-or iOS. `start:desktop` opens the last build without Vite; rerun `build:desktop` after
-frontend changes. The development URL is supplied only to the desktop run process.
-Capawesome records it in ignored generated configuration during development;
-production synchronization removes it.
+`build:desktop` builds the frontend without PWA/service-worker registration, synchronizes the
+Electron platform, and compiles its TypeScript entrypoint. It uses the same branding environment as
+the web build, and does not synchronize Android or iOS. `start:desktop` opens the last build without
+Vite, so rerun `build:desktop` after frontend changes. The development URL goes only to the desktop
+run process. Capawesome records it in ignored generated configuration, and production
+synchronization removes it.
 
-Run `pnpm run test:desktop` after building to check the Linux desktop window. On a
-headless Linux runner, use `xvfb-run -a pnpm run test:desktop`; Electron links
-against GTK, which Playwright's chromium dependencies do not cover, so such a box
-also needs `libgtk-3-0t64`. The test drops Chromium's sandbox when it runs as
-root, because Chromium refuses to start that way. The separate smoke
-suite does not start a web dev server. Windows and macOS desktop
-behavior is not verified by the Linux test. CI does not run it.
+Run `pnpm run test:desktop` after building to check the Linux desktop window. On a headless Linux
+runner, use `xvfb-run -a pnpm run test:desktop`. Such a runner also needs `libgtk-3-0t64`, since
+Playwright's chromium dependencies do not cover the GTK libraries Electron links against. The test
+drops Chromium's sandbox when it runs as root, because Chromium refuses to start that way. This
+smoke suite does not start a web dev server, and does not run in CI. It verifies nothing about
+Windows or macOS.
 
 ### Desktop packaging
-
-After installing both sets of dependencies, run one of:
 
 ```sh
 pnpm run package:desktop:linux
@@ -105,23 +127,21 @@ pnpm run package:desktop:windows
 pnpm run package:desktop:macos
 ```
 
-Each command rebuilds production assets, copies/updates Capacitor, compiles Electron,
-vendors its runtime/plugins, and invokes electron-builder without publishing or signing.
-Outputs are in `electron/dist/`: Linux x64 AppImage, Windows x64 NSIS installer,
-and separate macOS x64/arm64 DMGs. The root package version is authoritative.
-The Capacitor app ID remains stable; `VITE_PLATFORM_NAME` supplies the product name.
-Vite's `.env.local` overrides also apply; use production branding values when
-building artifacts for others. Explicit `VITE_*` environment values take precedence.
-`VITE_PLATFORM_LOGO` can be a local image or HTTPS image. Packaging resizes it
-to 1024×1024 and stages it in ignored output.
+Each command rebuilds production assets, copies and updates Capacitor, compiles Electron, vendors
+its runtime and plugins, and invokes electron-builder without publishing or signing. Outputs land in
+`electron/dist/`: a Linux x64 AppImage, a Windows x64 NSIS installer, and separate macOS x64 and
+arm64 DMGs. The root package version is authoritative, the Capacitor app ID stays stable, and
+`VITE_PLATFORM_NAME` supplies the product name. Vite's `.env.local` overrides apply, and explicit
+`VITE_*` environment values take precedence. Use production branding values when building artifacts
+for others. `VITE_PLATFORM_LOGO` can be a local or HTTPS image, which packaging resizes to 1024×1024
+and stages in ignored output.
 
-Linux packaging requires Linux. Windows packaging from Linux uses the pinned
-official `electronuserland/builder` Wine image through Docker; it only mounts a
-temporary copy of the prepared Electron project. Native addons require a target-OS
-ABI rebuild and cannot use this cross-build path. Native Windows preparation needs
-Bash on PATH (for example, Git Bash). DMG creation requires macOS; on Linux,
-`pnpm run package:desktop:macos --dir` prepares unsigned bundles for inspection only.
-It does not verify macOS runtime, Gatekeeper, or signing.
+Linux packaging requires Linux. Windows packaging from Linux uses the pinned official
+`electronuserland/builder` Wine image through Docker, mounting only a temporary copy of the prepared
+Electron project. Native addons need a target-OS ABI rebuild and cannot use this cross-build path.
+Native Windows preparation needs Bash on PATH, for example Git Bash. DMG creation requires macOS. On
+Linux, `pnpm run package:desktop:macos --dir` prepares unsigned bundles for inspection only, and
+verifies nothing about the macOS runtime, Gatekeeper, or signing.
 
 To smoke-test a package, run as a non-root user with the sandbox enabled:
 
@@ -129,11 +149,9 @@ To smoke-test a package, run as a non-root user with the sandbox enabled:
 FLOTILLA_DESKTOP_EXECUTABLE="/absolute/path/to/application" pnpm run test:desktop
 ```
 
-Use the AppImage or installed executable, rather than the installer. This checks
-packaged metadata, local assets, navigation, workers and CSP using a disposable
-profile. Installation, reboot and uninstall still require target-OS testing.
-Packages must remain development-only until OS-protected secret storage and release
-signing are addressed.
+Use the AppImage or installed executable rather than the installer. This checks packaged metadata,
+local assets, navigation, workers, and CSP using a disposable profile. Installation, reboot, and
+uninstall still require target-OS testing.
 
 ## Deployment
 
@@ -157,3 +175,7 @@ Alternatively, you can copy the build files into a directory of your choice and 
 mkdir ./mount
 docker run -v ./mount:/app/mount gitea.coracle.social/coracle/flotilla:latest bash -c 'cp -r build/* mount'
 ```
+
+## License
+
+[MIT](LICENSE)
