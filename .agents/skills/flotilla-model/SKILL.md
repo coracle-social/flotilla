@@ -57,12 +57,14 @@ plugin, read through `deriveRelaySignedEvents(url, filters)` in `src/app/reposit
 `src/app/featured.ts` does, rather than a bare `deriveEventsForUrl`.
 
 Content the space owns is published as the relay: `command.publishAsRelay(url)` has the relay
-sign the event with its own key through the NIP-86 `signevent` method, then sends it back.
-Featured content (`setFeaturedContent` in `src/app/featured.ts`) and library shelves and pins
-(`PinboardEdit`, `PinAdd`, `PinEdit`, `PinMenu`, `BoardMenu`) are written this way, which is why the
-library lists boards with `Pinboards.forAuthor($relay.self)`. Only users the relay allows to call
-`signevent` can do it, so `SpaceMenuNavItems` shows the library when the space already has boards or
-lists `signevent` among its supported methods.
+sign the event with its own key through the NIP-86 `signevent` method, then sends it back. Featured
+content (`setFeaturedContent` in `src/app/featured.ts`) is written this way, and only users the
+relay allows to call `signevent` can write it.
+
+The library is written by its members. A shelf or a pin is signed with the member's own key and
+published to the space like any other space content, so the library reads every `PINBOARD` seen on
+the relay rather than only the relay's own. Whoever signed a shelf is the only one who can edit or
+delete it, and anyone can pin to it.
 
 ## NIP-29 rooms
 

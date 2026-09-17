@@ -1,7 +1,9 @@
 <script lang="ts">
+  import {derived} from "svelte/store"
+  import {PINBOARD} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
+  import {Pinboard} from "@welshman/domain"
   import type {PinboardReader} from "@welshman/domain"
-  import {Pinboards} from "@welshman/app"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -13,8 +15,9 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import PinAdd from "@app/components/PinAdd.svelte"
-  import {app, relays} from "@app/core"
+  import {reader} from "@app/core"
   import {eventToReference} from "@app/pinboards"
+  import {deriveEventsForUrl} from "@app/repository"
   import {makeSpacePath} from "@app/routes"
   import {pushModal} from "@app/modal"
 
@@ -25,9 +28,9 @@
 
   const {url, event}: Props = $props()
 
-  const relay = $relays.one(url)
-
-  const boards = $derived($app.use(Pinboards).forAuthor($relay?.self ?? "").$)
+  const boards = derived(deriveEventsForUrl(url, [{kinds: [PINBOARD]}]), $events =>
+    $events.map(reader(Pinboard)),
+  )
 
   const reference = eventToReference(event)
 

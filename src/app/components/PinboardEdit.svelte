@@ -1,7 +1,7 @@
 <script lang="ts">
   import {navigate} from "@app/modal"
-  import {getAddress} from "@welshman/util"
-  import {publishAsRelay} from "@welshman/app"
+  import {getAddress, relay} from "@welshman/util"
+  import {publish} from "@welshman/app"
   import {Pinboard} from "@welshman/domain"
   import type {PinboardReader} from "@welshman/domain"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -16,7 +16,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {command, writer} from "@app/core"
+  import {command, relays, writer} from "@app/core"
   import {makeLibraryPath} from "@app/routes"
   import {pushToast} from "@app/toast"
 
@@ -33,13 +33,17 @@
     loading = true
 
     try {
-      const eventWriter = writer(Pinboard, board).setTitle(title).setDescription(description)
+      const eventWriter = writer(Pinboard, board)
+        .setTitle(title)
+        .setDescription(description)
+        .setProtected(await $relays.hasNip(url, 70))
+        .forceRoutes(relay(url))
 
       if (!board) {
-        eventWriter.setIdentifier()
+        eventWriter.setIdentifier().setCollaborative(true)
       }
 
-      const thunk = await command(eventWriter).then(publishAsRelay(url))
+      const thunk = await command(eventWriter).then(publish)
       const error = await thunk.waitForError()
 
       if (error) {

@@ -20,7 +20,6 @@
   import {relays} from "@app/core"
   import {ENABLE_ZAPS} from "@app/env"
   import {CONTENT_KINDS} from "@app/content"
-  import {deriveSpaceSupportedMethods} from "@app/management"
   import {deriveEventsForUrl} from "@app/repository"
   import {makeSpacePath} from "@app/routes"
   import {allNotifications, notifications} from "@app/notifications"
@@ -59,10 +58,6 @@
     $spaceKinds.has(kind) || $allNotifications.has(path) || $page.url.pathname.startsWith(path)
 
   const hasNip29 = $derived($relay?.hasNip(29) ?? false)
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const showLibrary = $derived(
-    showSection(PINBOARD, libraryPath) || $supportedMethods.includes("signevent"),
-  )
 
   const openSearch = () => pushModal(SpaceSearch, {url})
 
@@ -80,7 +75,7 @@
 <SecondaryNavItem href={makeSpacePath(url, "directory")}>
   <Icon icon={UsersGroup} /> Directory
 </SecondaryNavItem>
-{#if showLibrary}
+{#if showSection(PINBOARD, libraryPath)}
   <SecondaryNavItem href={libraryPath} notification={$notifications.has(libraryPath)}>
     <Icon icon={GalleryWide} /> Library
   </SecondaryNavItem>

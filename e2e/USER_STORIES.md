@@ -847,11 +847,12 @@ Acceptance:
   topics match.
 - Selecting a shelf shows its pins as a gallery; an empty shelf shows a message
   instead.
-- As a non-admin, alice sees no "Create Shelf" or "Add a link" controls.
+- Alice is offered "Create Shelf" and "Add a link", and "Add link" on someone
+  else's shelf, but not that shelf's "Edit shelf" or "Delete shelf".
 
 ### US-054 — Curate the library
 
-As admin, I want to organize shelves and the links on them, so that members find
+As bob, I want to organize shelves and the links on them, so that members find
 good material first.
 
 Acceptance:

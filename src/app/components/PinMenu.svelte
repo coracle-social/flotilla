@@ -11,8 +11,7 @@
   import Confirm from "@lib/components/Confirm.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import PinEdit from "@app/components/PinEdit.svelte"
-  import {deletes} from "@app/core"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deletes, relays, user} from "@app/core"
   import {shareEvent} from "@app/share"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
@@ -25,8 +24,6 @@
 
   const {url, pin, onClick}: Props = $props()
 
-  const canManage = deriveUserIsSpaceAdmin(url)
-
   const showInfo = () => pushModal(EventInfo, {url, event: pin.event})
 
   const share = () => shareEvent(url, "Link", pin.event)
@@ -35,8 +32,9 @@
 
   const deletePin = async () => {
     try {
-      const command = await $deletes.deleteEvent(pin.event)
-      const error = await command.publishAsRelay(url).then(thunk => thunk.waitForError())
+      const protect = await $relays.hasNip(url, 70)
+      const command = await $deletes.deleteEvent(pin.event, writer => writer.setProtected(protect))
+      const error = await command.publishToRelays([url]).waitForError()
 
       if (error) {
         pushToast({theme: "error", message: error})
@@ -76,7 +74,7 @@
       Share to chat
     </Button>
   </li>
-  {#if $canManage}
+  {#if pin.event.pubkey === $user.pubkey}
     <li>
       <Button onclick={edit}>
         <Icon icon={Pen} />

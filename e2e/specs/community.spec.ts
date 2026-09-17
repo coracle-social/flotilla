@@ -1,10 +1,20 @@
 import * as nip19 from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE, bech32ToHex, int} from "@welshman/lib"
-import {MESSAGE, POLL_RESPONSE, getLnUrl, tagSpec, tagValues, toMsats} from "@welshman/util"
+import {
+  MESSAGE,
+  POLL_RESPONSE,
+  getAddress,
+  getLnUrl,
+  tagSpec,
+  tagValues,
+  toMsats,
+} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {ClientMessageType} from "@welshman/net"
 import {
   Comment,
+  Pin,
+  Pinboard,
   Poll,
   PollResponse,
   Profile,
@@ -836,6 +846,8 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
 })
 
 test("US-053 browse and search the library", async ({seed, as}) => {
+  let gettingStarted!: Seeded
+
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
 
@@ -845,42 +857,52 @@ test("US-053 browse and search the library", async ({seed, as}) => {
     space.profile(user.admin, {name: "Ada Admin"})
     space.profile(user.alice, {name: "Alice Anderson"})
     space.message(user.admin, "general", "welcome to the space", at(2, HOUR))
+
+    gettingStarted = space.event(
+      user.admin,
+      () =>
+        space
+          .kind(Pinboard)
+          .writer()
+          .setIdentifier()
+          .setTitle("Getting Started")
+          .setDescription("Reading for new members")
+          .setCollaborative(true)
+          .renderTemplate(),
+      at(2, HOUR),
+    )
+
+    space.event(
+      user.admin,
+      () =>
+        space
+          .kind(Pinboard)
+          .writer()
+          .setIdentifier()
+          .setTitle("Recipes")
+          .setDescription("Food and drink from the kitchen")
+          .setCollaborative(true)
+          .renderTemplate(),
+      at(2, HOUR),
+    )
+
+    space.event(
+      user.admin,
+      () =>
+        space
+          .kind(Pin)
+          .writer()
+          .setIdentifier()
+          .addBoard(getAddress(gettingStarted.event))
+          .setTitle("The Handbook")
+          .setExternal("https://handbook.test/start-here")
+          .renderTemplate(),
+      at(1, HOUR),
+    )
   })
 
   const {url} = scenario.space("space")
   const libraryPath = `${spacePath(url)}/library`
-
-  // A shelf is signed by the relay itself, so nothing this process holds a key for can seed one
-  // and the only way to stand one up is through the admin's own ui.
-  const admin = await as(users.admin, libraryPath)
-
-  const createShelf = async (title: string, description: string) => {
-    await admin.getByRole("button", {name: "Create Shelf"}).click()
-
-    const form = dialog(admin, "Create Shelf")
-
-    await form.getByPlaceholder("Shelf title").fill(title)
-    await form.getByPlaceholder("What's this shelf about?").fill(description)
-    await form.getByRole("button", {name: "Save changes"}).click()
-    await expect(admin.getByRole("alert")).toContainText("Shelf created!")
-  }
-
-  await createShelf("Getting Started", "Reading for new members")
-  await createShelf("Recipes", "Food and drink from the kitchen")
-
-  await expect(admin.getByRole("button", {name: /Getting Started/})).toBeVisible()
-  await expect(admin.getByRole("button", {name: /Recipes/})).toBeVisible()
-
-  await shelfCard(admin, "Getting Started").getByRole("button", {name: "More options"}).click()
-  await admin.getByRole("button", {name: "Add link", exact: true}).click()
-
-  const linkForm = dialog(admin, "Add Link")
-
-  await linkForm.getByPlaceholder("URL or nevent...").fill("https://handbook.test/start-here")
-  await linkForm.getByPlaceholder("Optional title").fill("The Handbook")
-  await linkForm.getByRole("button", {name: "Add link"}).click()
-
-  await expect(admin.getByRole("alert")).toContainText("Link added!")
 
   const alice = await as(users.alice, libraryPath)
   const term = alice.getByPlaceholder("Search library...")
@@ -910,10 +932,17 @@ test("US-053 browse and search the library", async ({seed, as}) => {
 
   await expect(alice.getByText("This shelf doesn't have any links yet.")).toBeVisible()
 
-  // Curating is the admin's, so none of it is offered to an ordinary member — not even on the
-  // empty shelf where the admin is offered it directly.
-  await expect(alice.getByRole("button", {name: "Create Shelf"})).toHaveCount(0)
-  await expect(alice.getByRole("button", {name: "Add a link"})).toHaveCount(0)
+  // The library is the whole space's, so an ordinary member is offered the same controls the
+  // shelves were made with.
+  await expect(alice.getByRole("button", {name: "Create Shelf"})).toBeVisible()
+  await expect(alice.getByRole("button", {name: "Add a link"})).toBeVisible()
+
+  // Someone else's shelf is hers to add to and not to rewrite.
+  await shelfCard(alice, "Recipes").getByRole("button", {name: "More options"}).click()
+
+  await expect(alice.getByRole("button", {name: "Add link", exact: true})).toBeVisible()
+  await expect(alice.getByRole("button", {name: "Edit shelf"})).toHaveCount(0)
+  await expect(alice.getByRole("button", {name: "Delete shelf"})).toHaveCount(0)
 })
 
 test("US-054 curate the library", async ({seed, as}) => {
@@ -950,7 +979,9 @@ test("US-054 curate the library", async ({seed, as}) => {
   const {url} = scenario.space("space")
   const libraryPath = `${spacePath(url)}/library`
   const pollPath = `${spacePath(url)}/polls/${poll.id}`
-  const page = await as(users.admin, pollPath)
+
+  // Curating is nobody's privilege here, so this is an ordinary member doing all of it.
+  const page = await as(users.bob, pollPath)
 
   const pollCard = page
     .locator(".card.z-feature")
@@ -973,7 +1004,7 @@ test("US-054 curate the library", async ({seed, as}) => {
   await shelfForm.getByPlaceholder("What's this shelf about?").fill("Things worth reading")
   await shelfForm.getByRole("button", {name: "Save changes"}).click()
 
-  // Creating a shelf lists it and drops the admin straight into it.
+  // Creating a shelf lists it and drops its author straight into it.
   await expect(page.getByRole("alert")).toContainText("Shelf created!")
   await expect(page).toHaveURL(/[?&]board=/)
   await expect(page.getByRole("button", {name: /Reading List/})).toHaveAttribute(

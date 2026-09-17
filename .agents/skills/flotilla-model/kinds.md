@@ -16,7 +16,7 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 | Classifieds | `CLASSIFIED` (30402) | `Classified` | `src/app/classifieds.ts` | `spaces/[relay]/classifieds`, `classifieds/[address]` (`ClassifiedForm`) |
 | Goals | `ZAP_GOAL` (9041) | `ZapGoal` | none | `spaces/[relay]/goals`, `goals/[id]` (`GoalCreate`) |
 | Polls | `POLL` (1068), `POLL_RESPONSE` (1018) | `Poll`, `PollResponse` | none | `spaces/[relay]/polls`, `polls/[id]` (`PollCreate`, `PollVotes`) |
-| Library | `PINBOARD` (30067), `PIN` (39067) | `Pinboard`, `Pin` | `src/app/pinboards.ts` | `spaces/[relay]/library` (`PinboardEdit`, `PinAdd`); published as the relay |
+| Library | `PINBOARD` (30067), `PIN` (39067) | `Pinboard`, `Pin` | `src/app/pinboards.ts` | `spaces/[relay]/library` (`PinboardEdit`, `PinAdd`); published by any member |
 | Room pins | `ROOM_PINS` (39005), `ROOM_UPDATE_PINS` (9010) | `RoomPins`, `RoomUpdatePins` | `src/app/roomPins.ts` | `RoomItemMenu`, `RoomPinnedMessagesAll` |
 | Featured content | `APP_DATA` (30078), `d` = `flotilla/featured-content` | `AppData` | `src/app/featured.ts` | `SpaceFeaturedContent`; published as the relay |
 | Bot commands (NIP-CD) | `COMMAND` (31992) | `Command` | `src/app/commands.ts` | `RoomCompose`, `ContentCommand` |

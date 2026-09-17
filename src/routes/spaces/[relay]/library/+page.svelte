@@ -2,8 +2,10 @@
   import {onMount} from "svelte"
   import {goto} from "$app/navigation"
   import {page} from "$app/stores"
+  import {derived} from "svelte/store"
   import {PIN, PINBOARD} from "@welshman/util"
-  import {Pinboards, Pins} from "@welshman/app"
+  import {Pins} from "@welshman/app"
+  import {Pinboard} from "@welshman/domain"
   import type {PinboardReader} from "@welshman/domain"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
@@ -19,9 +21,9 @@
   import PinAdd from "@app/components/PinAdd.svelte"
   import PinboardItem from "@app/components/PinboardItem.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
-  import {app, network, relays} from "@app/core"
+  import {app, network, reader} from "@app/core"
   import {decodeRelay} from "@app/relays"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deriveEventsForUrl} from "@app/repository"
   import {makeLibraryPath} from "@app/routes"
   import {pushModal} from "@app/modal"
   import type {PageProps} from "./$types"
@@ -30,16 +32,14 @@
 
   const url = decodeRelay(params.relay)
 
-  const relay = $relays.one(url)
-
-  const canManage = deriveUserIsSpaceAdmin(url)
-
   let term = $state("")
   let loading = $state(true)
 
-  // Shelves are signed by the relay itself, so the relay's own pubkey scopes them
-  // to this space.
-  const boards = $derived($app.use(Pinboards).forAuthor($relay?.self ?? "").$)
+  // A shelf belongs to the space it was published to, so the relay it was seen on
+  // scopes it rather than the pubkey that signed it.
+  const boards = derived(deriveEventsForUrl(url, [{kinds: [PINBOARD]}]), $events =>
+    $events.map(reader(Pinboard)),
+  )
 
   const address = $derived($page.url.searchParams.get("board") ?? "")
 
@@ -89,12 +89,10 @@
     <strong>Library</strong>
   {/snippet}
   {#snippet action()}
-    {#if $canManage}
-      <Button class="button button-primary button-sm" onclick={createBoard}>
-        <Icon icon={Add} />
-        Create Shelf
-      </Button>
-    {/if}
+    <Button class="button button-primary button-sm" onclick={createBoard}>
+      <Icon icon={Add} />
+      Create Shelf
+    </Button>
   {/snippet}
 </SpaceBar>
 
@@ -131,12 +129,10 @@
     {:else if selected}
       <div class="flex flex-col items-center gap-4 py-20 text-center">
         <p class="opacity-70">This shelf doesn't have any links yet.</p>
-        {#if $canManage}
-          <Button class="button button-primary" onclick={addLink}>
-            <Icon icon={AddCircle} />
-            Add a link
-          </Button>
-        {/if}
+        <Button class="button button-primary" onclick={addLink}>
+          <Icon icon={AddCircle} />
+          Add a link
+        </Button>
       </div>
     {:else}
       <p class="py-20 text-center opacity-70">Select a shelf to see what's on it.</p>
