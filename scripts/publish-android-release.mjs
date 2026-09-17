@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import {readFile} from "node:fs/promises"
+import {config} from "dotenv"
 
 const read = path => readFile(new URL(path, import.meta.url), "utf-8")
+
+config({path: new URL("../.env.local", import.meta.url)})
 
 const token = process.env.GITEA_TOKEN
 const {name, version} = JSON.parse(await read("../package.json"))
@@ -44,7 +47,7 @@ const api = async (method, path, {body, allow404} = {}) => {
 }
 
 if (!token) {
-  throw new Error("Set GITEA_TOKEN to a token with write access to the repository")
+  throw new Error("Set GITEA_TOKEN in .env.local to a token with write access to the repository")
 }
 
 const lines = changelog.split("\n")

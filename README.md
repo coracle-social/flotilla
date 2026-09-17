@@ -160,11 +160,13 @@ Signed APKs are attached to releases on the
 [releases page](https://gitea.coracle.social/coracle/flotilla/releases), so Android users can
 install and update outside an app store.
 
-Bump the version, write its `CHANGELOG.md` section and push the matching tag, then:
+Publishing needs `GITEA_TOKEN` in `.env.local`, set to a gitea access token with `write:repository`
+(Settings → Applications → Access Tokens). Bump the version, write its `CHANGELOG.md` section and
+push the matching tag, then:
 
 ```sh
 pnpm run release:android
-GITEA_TOKEN=... pnpm run publish:android
+pnpm run publish:android
 ```
 
 `publish:android` creates the release for the tag, takes its notes from the changelog, and attaches
