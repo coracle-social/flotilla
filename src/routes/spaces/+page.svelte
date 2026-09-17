@@ -1,20 +1,18 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {derived as _derived} from "svelte/store"
-  import {addToMapKey, dec, sleep, spec} from "@welshman/lib"
+  import {addToMapKey, dec, sleep} from "@welshman/lib"
   import {ROOMS} from "@welshman/util"
   import type {Relay} from "@welshman/domain"
   import {throttled} from "@welshman/store"
   import {Sync, createSearch} from "@welshman/app"
   import {createScroller, isMobile} from "@lib/html"
   import {fly} from "@lib/transition"
-  import DragHandle from "@assets/icons/drag-handle.svg?dataurl"
   import Widget from "@assets/icons/widget-4.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import DragList from "@lib/components/DragList.svelte"
   import Page from "@lib/components/Page.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -26,13 +24,12 @@
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import {app, relays, roomLists, user} from "@app/core"
-  import {reorderSpaceUrls, userSpaceUrls} from "@app/rooms"
+  import {userSpaceUrls} from "@app/rooms"
   import {PLATFORM_RELAYS, DEFAULT_RELAYS} from "@app/env"
   import {bootstrapPubkeys} from "@app/social"
   import {parseInviteLink} from "@app/access"
   import {pushModal} from "@app/modal"
-  import {goToSpace, makeSpacePath} from "@app/routes"
-  import {notifications} from "@app/notifications"
+  import {goToSpace} from "@app/routes"
 
   const addSpace = () => pushModal(SpaceAdd)
 
@@ -91,9 +88,6 @@
   const inviteData = $derived(parseInviteLink(term))
   const searchResults = $derived($relaySearch.searchOptions(term))
   const userSpaceSet = $derived(new Set($userSpaceUrls))
-  const filteredUserUrls = $derived(
-    term ? $userSpaceUrls.filter(url => searchResults.some(spec({url}))) : $userSpaceUrls,
-  )
   const otherSpaces = $derived(
     searchResults.filter(r => !userSpaceSet.has(r.url) && r.url !== inviteData?.url),
   )
@@ -158,7 +152,7 @@
             {#await userSpacesLoaded}
               <div class="flex items-center justify-center py-20">
                 <Spinner size="sm" class="mr-3" />
-                Loading your spaces...
+                Loading spaces...
               </div>
             {:then}
               {#if inviteData}
@@ -170,36 +164,6 @@
                     <RelaySummary url={inviteData.url} />
                   </Button>
                 {/key}
-              {/if}
-              {#if filteredUserUrls.length > 0}
-                <Divider>Your spaces</Divider>
-                <DragList
-                  class="flex flex-col gap-2"
-                  role="list"
-                  itemRole="listitem"
-                  items={filteredUserUrls}
-                  onReorder={reorderSpaceUrls}>
-                  {#snippet item(url)}
-                    <Button
-                      class="group card card-interactive w-full relative min-w-0"
-                      onclick={() => openSpace(url)}>
-                      <div class="flex w-full items-start gap-2">
-                        <div
-                          class="mt-4 flex cursor-grab p-1 text-content-subtle transition-colors group-hover:text-content-muted">
-                          <Icon icon={DragHandle} />
-                        </div>
-                        <RelaySummary hideFavorites {url} />
-                      </div>
-                      {#if $notifications.has(makeSpacePath(url))}
-                        <div
-                          class="absolute right-3 top-3 h-2 w-2 rounded-full bg-primary text-primary-content">
-                        </div>
-                      {/if}
-                    </Button>
-                  {/snippet}
-                </DragList>
-              {:else if !term}
-                <p class="py-12 text-center">You haven't joined any spaces yet.</p>
               {/if}
               {#if otherSpaces.length > 0}
                 <Divider>Browse Spaces</Divider>
@@ -214,7 +178,7 @@
                   <Spinner loading>Looking for spaces...</Spinner>
                 {:then}
                   {#if otherSpaces.length === 0}
-                    <Spinner>No other spaces found.</Spinner>
+                    <Spinner>No spaces found.</Spinner>
                   {/if}
                 {/await}
               </div>

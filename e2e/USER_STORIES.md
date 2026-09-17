@@ -141,20 +141,20 @@ Acceptance:
 
 ## Spaces
 
-### US-009 — Browse, search, and reorder your spaces
+### US-009 — Browse and search spaces, and reorder your own
 
-As alice, I want to see the spaces I've joined and find new ones, so that I can
-get where I'm going and discover communities.
+As alice, I want to find new spaces and keep the ones I'm in in the order I
+want, so that I can discover communities and get where I'm going.
 
 Acceptance:
 
-- `/spaces` shows a "Your spaces" section listing every space alice has joined
-  and a "Browse Spaces" section of the rest.
-- Typing a term filters both sections live, matching name, url, or description.
-- Clicking a joined space opens it; clicking one she hasn't joined opens a join
-  prompt instead.
-- Dragging a joined space above another, on the page or in the sidebar rail,
-  reorders the list immediately, and the order survives a reload.
+- `/spaces` lists the spaces alice hasn't joined, under "Browse Spaces". The
+  ones she has are in the sidebar rail, all of them, and the rail scrolls.
+- Typing a term filters the list live, matching name, url, or description.
+- Clicking a space she hasn't joined opens a join prompt; a space in the rail
+  opens.
+- Dragging a space above another in the rail reorders the list immediately, and
+  the order survives a reload.
 
 ### US-010 — Join a space from an invite link
 
@@ -1564,10 +1564,9 @@ check first.
 Acceptance:
 
 - After alice posts in a room bob hasn't opened, an unread dot appears on that
-  room and on its space in his sidebar, and on the space's row in `/spaces`,
-  without a reload.
-- Opening the room clears its dot, and the dot stays cleared when he returns to
-  the space list.
+  room and on its space in his sidebar, without a reload.
+- Opening the room clears its dot, and the dot stays cleared when he leaves the
+  space.
 
 ### US-104 — Mute a room or a whole space
 

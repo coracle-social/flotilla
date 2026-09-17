@@ -1,7 +1,9 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import Home from "@assets/icons/home.svg?dataurl"
+  import Widget from "@assets/icons/widget-4.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
+  import Link from "@lib/components/Link.svelte"
   import Page from "@lib/components/Page.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -27,9 +29,15 @@
 
 <Page>
   <PageBar>
-    <div class="flex items-center gap-2">
-      <Icon icon={Home} size={6} />
-      <strong>Home</strong>
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <Icon icon={Home} size={6} />
+        <strong>Home</strong>
+      </div>
+      <Link href="/spaces" class="button button-neutral button-sm">
+        <Icon icon={Widget} size={4} />
+        Browse spaces
+      </Link>
     </div>
   </PageBar>
   <PageContent noPad bind:element class="flex flex-col bg-surface">

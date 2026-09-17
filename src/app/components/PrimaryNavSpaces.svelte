@@ -1,47 +1,45 @@
 <script lang="ts">
-  import {splitAt} from "@welshman/lib"
+  import cx from "classnames"
   import Widget from "@assets/icons/widget-4.svg?dataurl"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Divider from "@lib/components/Divider.svelte"
-  import Tippy from "@lib/components/Tippy.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import DragList from "@lib/components/DragList.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
-  import PrimaryNavSpacesOverflow from "@app/components/PrimaryNavSpacesOverflow.svelte"
   import {reorderSpaceUrls, userSpaceUrls} from "@app/rooms"
   import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/env"
-  import {notifications} from "@app/notifications"
-  import {makeSpacePath} from "@app/routes"
 
-  type Props = {
-    overflow?: boolean
+  const fadeSize = 24
+
+  let element: HTMLElement | undefined = $state()
+  let hiddenAbove = $state(0)
+  let hiddenBelow = $state(0)
+
+  const measure = () => {
+    if (element) {
+      hiddenAbove = element.scrollTop
+      hiddenBelow = element.scrollHeight - element.clientHeight - element.scrollTop
+    }
   }
 
-  const {overflow = true}: Props = $props()
-
-  let windowHeight = $state(0)
-
-  const itemHeight = 56
-  const navPadding = 8 * itemHeight
-  const itemLimit = $derived(
-    overflow ? Math.max(0, (windowHeight - navPadding) / itemHeight) : $userSpaceUrls.length,
-  )
-  const [primarySpaceUrls, secondarySpaceUrls] = $derived(splitAt(itemLimit, $userSpaceUrls))
-  const otherSpaceNotifications = $derived(
-    secondarySpaceUrls.some(url => $notifications.has(makeSpacePath(url))),
-  )
-
-  // Tippy mounts its content component once, so pass a stable reactive object it can read from
-  const overflowProps = $state({urls: [] as string[]})
-
+  // Nothing fires on a change of scroll height, and the list has one whenever a space is joined
+  // or left, or the window resizes under it.
   $effect(() => {
-    overflowProps.urls = secondarySpaceUrls
+    const observer = new ResizeObserver(measure)
+
+    if (element) {
+      observer.observe(element)
+
+      for (const child of element.children) {
+        observer.observe(child)
+      }
+    }
+
+    return () => observer.disconnect()
   })
 </script>
 
-<svelte:window bind:innerHeight={windowHeight} />
-
-<div class="flex flex-col items-center">
+<div class={cx("flex min-h-0 flex-col items-center", {"flex-1": PLATFORM_RELAYS.length === 0})}>
   {#each PLATFORM_RELAYS as url (url)}
     <PrimaryNavItemSpace {url} />
   {:else}
@@ -49,32 +47,23 @@
       <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={10} />
     </PrimaryNavItem>
     <Divider />
-    <DragList
-      class="flex flex-col items-center"
-      items={primarySpaceUrls}
-      onReorder={reorderSpaceUrls}>
-      {#snippet item(url)}
-        <PrimaryNavItemSpace {url} />
-      {/snippet}
-    </DragList>
-    {#snippet allSpaces(title: string)}
-      <PrimaryNavItem
-        href="/spaces"
-        {title}
-        prefix="no-highlight"
-        notification={otherSpaceNotifications}>
-        <ImageIcon alt="All Spaces" src={Widget} size={8} />
-      </PrimaryNavItem>
-    {/snippet}
-    {#if secondarySpaceUrls.length > 0}
-      <Tippy
-        component={PrimaryNavSpacesOverflow}
-        props={overflowProps}
-        params={{placement: "right", interactive: true}}>
-        {@render allSpaces("")}
-      </Tippy>
-    {:else}
-      {@render allSpaces("All Spaces")}
-    {/if}
+    <div
+      bind:this={element}
+      onscroll={measure}
+      class="primary-nav__spaces"
+      style:--fade-top="{Math.min(hiddenAbove, fadeSize)}px"
+      style:--fade-bottom="{Math.min(hiddenBelow, fadeSize)}px">
+      <DragList
+        class="flex flex-col items-center"
+        items={$userSpaceUrls}
+        onReorder={reorderSpaceUrls}>
+        {#snippet item(url)}
+          <PrimaryNavItemSpace {url} />
+        {/snippet}
+      </DragList>
+    </div>
+    <PrimaryNavItem href="/spaces" title="All Spaces" prefix="no-highlight">
+      <ImageIcon alt="All Spaces" src={Widget} size={8} />
+    </PrimaryNavItem>
   {/each}
 </div>

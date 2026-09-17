@@ -28,10 +28,10 @@
 
 <div class="@container flex h-full min-h-0 w-full">
   <div
-    class="primary-nav flex overflow-y-auto pb-2"
+    class="primary-nav flex min-h-0 pb-2"
     in:translate={slide(0)}
     out:translate={slide(parallax)}>
-    <PrimaryNavSpaces overflow={false} />
+    <PrimaryNavSpaces />
   </div>
   <div class="flex w-0 min-w-0 grow" in:translate={slide(parallax)} out:translate={slide(0)}>
     <SecondaryNav visible class="secondary-nav--mobile-space mt-0 h-full w-0 min-w-0 grow pb-0">

@@ -7,6 +7,41 @@
     @apply hidden;
   }
 
+  .primary-nav__spaces {
+    @apply flex min-h-0 w-full flex-1 flex-col items-center self-start overflow-y-auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    /* Fades whichever end of the list has spaces past it */
+    mask-image: linear-gradient(
+      to bottom,
+      transparent 0,
+      black var(--fade-top, 0px),
+      black calc(100% - var(--fade-bottom, 0px)),
+      transparent 100%
+    );
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  /* Hover tooltips reach past the rail, and a scroll container clips whatever leaves it. The extra
+     width is padding, so it holds them without moving the items, and passes its pointer events to
+     the page underneath. Tooltips are a desktop affair, so the rail in the mobile drawer keeps the
+     width it draws in. */
+  @media (min-width: 768px) {
+    .primary-nav__spaces {
+      width: calc(100% + 12rem);
+      padding-right: 12rem;
+      pointer-events: none;
+
+      & > * {
+        pointer-events: auto;
+      }
+    }
+  }
+
   .primary-nav__nav-item {
     @apply text-content relative my-1 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full transition-all;
   }

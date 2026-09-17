@@ -135,23 +135,19 @@ test("US-103 see and clear unread indicators", async ({seed, as}) => {
   const bob = await as(users.bob, "/spaces")
   const alice = await as(users.alice, roomPath(space.url, "general"))
 
-  const spaceRow = bob.getByRole("listitem").filter({hasText: space.url})
   const navItem = spaceNavItem(bob, space.name)
 
-  await expect(spaceRow).toBeVisible()
   await expect(navItem).toBeVisible()
-  await expect(unreadDot(spaceRow)).toHaveCount(0)
   await expect(unreadDot(navItem)).toHaveCount(0)
 
   await post(alice, "the server is on fire")
 
-  // Bob is sitting on the space list the whole time, so both dots arrive without a navigation
-  await expect(unreadDot(spaceRow)).toBeVisible()
+  // Bob is sitting on the spaces page the whole time, so the dot arrives without a navigation
   await expect(unreadDot(navItem)).toBeVisible()
 
   // Inside the space, the dot points at the room the message landed in. A space's room list only
-  // exists in its own menu, so this is the one indicator the list above can't show.
-  await spaceRow.click()
+  // exists in its own menu, so this is the one indicator the rail can't show.
+  await navItem.click()
 
   const general = roomLink(bob, "General")
   const random = roomLink(bob, "Random")
@@ -172,11 +168,10 @@ test("US-103 see and clear unread indicators", async ({seed, as}) => {
   await expect(general).toBeVisible()
   await expect(unreadDot(general)).toHaveCount(0)
 
-  // ...and it stays cleared back on the space list he started from
+  // ...and it stays cleared back on the page he started from
   await bob.locator('.primary-nav a[href="/spaces"]').click()
 
-  await expect(spaceRow).toBeVisible()
-  await expect(unreadDot(spaceRow)).toHaveCount(0)
+  await expect(navItem).toBeVisible()
   await expect(unreadDot(navItem)).toHaveCount(0)
 })
 

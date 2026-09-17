@@ -1,6 +1,7 @@
 import {DAY, HOUR, WEEK, sortBy} from "@welshman/lib"
 import {ROOMS} from "@welshman/util"
 import type {Page} from "@playwright/test"
+import type {SeededSpace} from "../harness"
 import {expect, readCachedEvents, roomPath, spacePath, test, users} from "../harness"
 
 // The space this user's room list names first, read from the copy on disk the app restores itself
@@ -13,17 +14,27 @@ const cachedFirstSpace = async (page: Page, pubkey: string) => {
   return newest?.tags.find(tag => tag[0] === "r")?.[1]
 }
 
+// The rail shows icons and no text, so a row is read by the tooltip naming its relay. See
+// spaceNavItem in notifications.spec.ts for why that is a tooltip rather than an accessible name.
+const railSpaces = (page: Page) => page.locator(".primary-nav [draggable=true]")
+
+const expectRailFirst = (page: Page, name: string) =>
+  expect(railSpaces(page).first().locator("[data-tip]")).toHaveAttribute(
+    "data-tip",
+    new RegExp(`^${name}`),
+  )
+
 // A drop reorders the list in place and publishes a new room list behind it, so the order on screen
 // is ahead of the one the app has settled on. Reading the next drag off that optimistic order is
 // what made this spec fail under a full suite and pass alone: the relay is slower when the box is
 // busy, and a room list landing back from it after the next drop replaces the order that drop
 // applied. Waiting for the copy on disk to name the new first space is waiting for the round trip.
-const expectReordered = async (page: Page, pubkey: string, url: string) => {
-  await expect(page.getByRole("listitem").first()).toContainText(url)
-  await expect.poll(() => cachedFirstSpace(page, pubkey)).toBe(url)
+const expectReordered = async (page: Page, pubkey: string, space: SeededSpace) => {
+  await expectRailFirst(page, space.name)
+  await expect.poll(() => cachedFirstSpace(page, pubkey)).toBe(space.url)
 }
 
-test("US-009 browse, search, and reorder your spaces", async ({seed, as}) => {
+test("US-009 browse and search spaces, and reorder your own", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
     const other = relay("other")
@@ -50,76 +61,56 @@ test("US-009 browse, search, and reorder your spaces", async ({seed, as}) => {
   // bootstraps from, so pointing that at bob is what puts his other space in front of alice.
   const page = await as(users.alice, "/spaces", {env: {VITE_DEFAULT_PUBKEYS: users.bob.pubkey}})
 
-  await expect(page.getByText("Your spaces")).toBeVisible()
-  await expect(page.getByText(space.url)).toBeVisible()
-  await expect(page.getByText(other.url)).toBeVisible()
-
-  // ...and the rest of them in a section of their own
+  // The page is for spaces she hasn't joined. The ones she has are in the rail, all of them.
   await expect(page.getByText("Browse Spaces")).toBeVisible()
   await expect(page.getByText(unsigned.url)).toBeVisible()
+  await expect(page.getByText(space.url)).toHaveCount(0)
+  await expect(page.getByText(other.url)).toHaveCount(0)
+  await expect(railSpaces(page)).toHaveCount(2)
 
   const term = page.getByPlaceholder("Search for spaces...")
 
   await term.fill("unsigned")
 
   await expect(page.getByText(unsigned.url)).toBeVisible()
-  await expect(page.getByText(space.url)).toHaveCount(0)
-  await expect(page.getByText(other.url)).toHaveCount(0)
+
+  await term.fill("nothing by that name")
+
+  await expect(page.getByText(unsigned.url)).toHaveCount(0)
 
   await term.fill("")
 
-  await expect(page.getByText(space.url)).toBeVisible()
-
-  // A space she's joined opens
-  await page.getByRole("listitem").filter({hasText: space.url}).click()
-
-  await expect(page).toHaveURL(/\/spaces\/space\.test\//)
-
-  // A space she hasn't asks her to join first
-  await page.goto("/spaces")
+  // A space she hasn't joined asks her to join first
   await page.getByRole("button").filter({hasText: unsigned.url}).click()
 
   await expect(page.getByRole("button", {name: "Join Space"})).toBeVisible()
   await expect(page.getByRole("button", {name: "Go back"})).toBeEnabled()
 
+  // A space she has joined opens from the rail
+  await page.goto("/spaces")
+  await railSpaces(page).first().click()
+
+  await expect(page).toHaveURL(/\/spaces\/space\.test\//)
+
   // Reordering by dragging, which lives in her room list and so outlives the page
   await page.goto("/spaces")
 
-  const joined = page.getByRole("listitem")
-
-  await expect(joined.first()).toContainText(space.url)
+  await expectRailFirst(page, space.name)
 
   // Html5 drag and drop, dispatched rather than mimed with the mouse: chromium's synthetic drag
   // starts the drag and moves it, but never delivers the drop the reorder is committed in, so the
   // row would snap back to where it came from.
   const dataTransfer = await page.evaluateHandle(() => new DataTransfer())
-
-  // The sidebar rail is the same list and reorders the same way. It shows icons and no text, so
-  // its rows are named by position and the list on the page is where the result is read.
-  const rail = page.locator(".primary-nav [draggable=true]")
+  const rail = railSpaces(page)
 
   await rail.nth(0).dispatchEvent("dragstart", {dataTransfer})
   await rail.nth(1).dispatchEvent("drop", {dataTransfer})
 
-  await expectReordered(page, users.alice.pubkey, other.url)
-
-  await rail.nth(1).dispatchEvent("dragstart", {dataTransfer})
-  await rail.nth(0).dispatchEvent("drop", {dataTransfer})
-
-  await expectReordered(page, users.alice.pubkey, space.url)
-
-  // Dragging in the page's own list moves the same room list.
-  const source = joined.filter({hasText: other.url})
-  const target = joined.filter({hasText: space.url})
-
-  await source.dispatchEvent("dragstart", {dataTransfer})
-  await target.dispatchEvent("drop", {dataTransfer})
-
-  await expectReordered(page, users.alice.pubkey, other.url)
+  await expectReordered(page, users.alice.pubkey, other)
 
   await page.reload()
 
-  await expect(page.getByRole("listitem").first()).toContainText(other.url)
+  await expectRailFirst(page, other.name)
 })
 
 test("US-010 join a space from an invite link", async ({seed, as}) => {
@@ -268,7 +259,7 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
 
   await bob.goto("/spaces")
 
-  await expect(bob.getByText("You haven't joined any spaces yet.")).toBeVisible()
+  await expect(railSpaces(bob)).toHaveCount(0)
 })
 
 test("US-012 decide whether to trust an unsigned space", async ({seed, as}) => {
@@ -296,7 +287,7 @@ test("US-012 decide whether to trust an unsigned space", async ({seed, as}) => {
   // page that reloads before it reaches disk reads the list he had a moment ago.
   await bob.getByRole("link", {name: "All Spaces"}).click()
 
-  await expect(bob.getByText("You haven't joined any spaces yet.")).toBeVisible()
+  await expect(railSpaces(bob)).toHaveCount(0)
 
   const alice = await as(users.alice, roomPath(unsigned.url, "general"))
 
@@ -343,10 +334,8 @@ test("US-013 follow a space that has moved", async ({seed, as}) => {
   // that reloads before it reaches disk reads the old address back.
   await alice.getByRole("link", {name: "All Spaces"}).click()
 
-  const aliceSpaces = alice.getByRole("listitem")
-
-  await expect(aliceSpaces).toHaveCount(1)
-  await expect(aliceSpaces.first()).toContainText(other.url)
+  await expect(railSpaces(alice)).toHaveCount(1)
+  await expectRailFirst(alice, other.name)
 
   const bob = await as(users.bob, spacePath(space.url) + "/about", {relayInfo})
 
@@ -358,10 +347,8 @@ test("US-013 follow a space that has moved", async ({seed, as}) => {
 
   await bob.goto("/spaces")
 
-  const bobSpaces = bob.getByRole("listitem")
-
-  await expect(bobSpaces).toHaveCount(1)
-  await expect(bobSpaces.first()).toContainText(space.url)
+  await expect(railSpaces(bob)).toHaveCount(1)
+  await expectRailFirst(bob, space.name)
 })
 
 test("US-014 leave a space", async ({seed, as}) => {
@@ -389,7 +376,7 @@ test("US-014 leave a space", async ({seed, as}) => {
   // reloads before it reaches disk reads the list he had a moment ago.
   await page.getByRole("link", {name: "All Spaces"}).click()
 
-  await expect(page.getByText("You haven't joined any spaces yet.")).toBeVisible()
+  await expect(railSpaces(page)).toHaveCount(0)
 
   // Nothing stops him coming back
   await page.getByRole("button", {name: "Add Space"}).click()
