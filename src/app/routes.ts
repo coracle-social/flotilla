@@ -23,7 +23,6 @@ import {makeChatId} from "@app/chats"
 import {entityLink, PLATFORM_URL, PLATFORM_RELAYS} from "@app/env"
 import {decodeRelay, encodeRelay} from "@app/relays"
 import {DM_KINDS} from "@app/content"
-import {ROOM} from "@app/rooms"
 import {navigate, pushModal} from "@app/modal"
 import ChatEnable from "@app/components/ChatEnable.svelte"
 
@@ -113,7 +112,7 @@ export const goToHome = () => {
 // Content types, events
 
 export const makeMessagePath = (url: string, event: TrustedEvent) => {
-  const h = tagValue(tagSpec(ROOM), event.tags)
+  const h = tagValue(tagSpec("h"), event.tags)
   const path = h ? makeRoomPath(url, h) : makeSpaceChatPath(url)
   const qp = new URLSearchParams({at: String(event.created_at)})
 

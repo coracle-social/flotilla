@@ -20,7 +20,7 @@
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {app, relayManagement, roomPinLists, user} from "@app/core"
   import {deriveSpaceSupportedMethods} from "@app/management"
-  import {ROOM, deriveUserIsRoomAdmin} from "@app/rooms"
+  import {deriveUserIsRoomAdmin} from "@app/rooms"
   import {shareEvent} from "@app/share"
   import {readAloud} from "@app/speech"
   import {pushModal} from "@app/modal"
@@ -34,7 +34,7 @@
 
   const {url, event, onClick}: Props = $props()
 
-  const h = tagValue(tagSpec(ROOM), event.tags) ?? ""
+  const h = tagValue(tagSpec("h"), event.tags) ?? ""
   const pinIds = $roomPinLists.pins(url, h).$
   const supportedMethods = deriveSpaceSupportedMethods(url)
   const userIsRoomAdmin = deriveUserIsRoomAdmin(url, h)

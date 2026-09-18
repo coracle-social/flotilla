@@ -22,8 +22,6 @@ import {
 import {deriveUserIsSpaceStaff} from "@app/management"
 import {makeRoomPath} from "@app/routes"
 
-export const ROOM = "h"
-
 export const PROTECTED = ["-"]
 
 export enum RoomType {

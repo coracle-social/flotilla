@@ -14,7 +14,7 @@ import {TimeEvent} from "@welshman/domain"
 import {synced} from "@welshman/store"
 import {deletes, reader, relays, thunks} from "@app/core"
 import {deriveEvents} from "@app/repository"
-import {PROTECTED, ROOM} from "@app/rooms"
+import {PROTECTED} from "@app/rooms"
 import {kv} from "@app/storage"
 
 // Views
@@ -269,7 +269,7 @@ export const getRsvpsByStatus = (rsvps: TrustedEvent[]) => {
 // An RSVP is addressable, so identifying it by its target makes a new one supersede the old.
 export const publishRsvp = async (url: string, event: TrustedEvent, status: RsvpStatus) => {
   const address = getAddress(event)
-  const h = tagValue(tagSpec(ROOM), event.tags)
+  const h = tagValue(tagSpec("h"), event.tags)
   const tags = [
     ["a", address, url],
     ["e", event.id, url],
@@ -283,7 +283,7 @@ export const publishRsvp = async (url: string, event: TrustedEvent, status: Rsvp
   }
 
   if (h) {
-    tags.push([ROOM, h])
+    tags.push(["h", h])
   }
 
   return thunks.get().publish({relays: [url], event: makeEvent(EVENT_RSVP, {tags})})

@@ -28,7 +28,7 @@
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {reactions, relays, roomPinLists, user} from "@app/core"
-  import {ROOM, deriveUserIsRoomAdmin} from "@app/rooms"
+  import {deriveUserIsRoomAdmin} from "@app/rooms"
   import {ENABLE_ZAPS} from "@app/env"
   import {makeContentPath} from "@app/routes"
   import {shareEvent} from "@app/share"
@@ -45,7 +45,7 @@
 
   const {url, event, reply, edit}: Props = $props()
 
-  const h = tagValue(tagSpec(ROOM), event.tags) ?? ""
+  const h = tagValue(tagSpec("h"), event.tags) ?? ""
   const path = makeContentPath(url, event.kind, getIdOrAddress(event))
   const pinIds = $roomPinLists.pins(url, h).$
   const userIsRoomAdmin = deriveUserIsRoomAdmin(url, h)
