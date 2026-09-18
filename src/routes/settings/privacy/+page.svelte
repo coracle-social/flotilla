@@ -15,6 +15,7 @@
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {PLATFORM_NAME} from "@app/env"
+  import {analyticsAvailable} from "@app/analytics"
   import {sendLogs} from "@app/logger"
   import {
     RelayAuthMode,
@@ -110,17 +111,19 @@
           <p>These relays won't be used unless explicitly requested.</p>
         {/snippet}
       </FieldInline>
-      <FieldInline>
-        {#snippet label()}
-          <p>Report usage?</p>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput bind:checked={$settings.report_usage} />
-        {/snippet}
-        {#snippet info()}
-          <p>Allow {PLATFORM_NAME} to collect anonymous usage data.</p>
-        {/snippet}
-      </FieldInline>
+      {#if analyticsAvailable}
+        <FieldInline>
+          {#snippet label()}
+            <p>Report usage?</p>
+          {/snippet}
+          {#snippet input()}
+            <ToggleInput bind:checked={$settings.report_usage} />
+          {/snippet}
+          {#snippet info()}
+            <p>Allow {PLATFORM_NAME} to collect anonymous usage data.</p>
+          {/snippet}
+        </FieldInline>
+      {/if}
       <FieldInline>
         {#snippet label()}
           <p>Something went wrong?</p>

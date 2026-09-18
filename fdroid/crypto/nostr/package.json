@@ -1,0 +1,6 @@
+{
+  "name": "@flotilla/fdroid-nostr",
+  "private": true,
+  "type": "module",
+  "exports": "./index.js"
+}

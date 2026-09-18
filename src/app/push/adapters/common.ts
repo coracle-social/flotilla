@@ -1,14 +1,6 @@
 import {writable} from "svelte/store"
 import type {Subscriber, Unsubscriber} from "svelte/store"
-import {
-  PushNotifications,
-  type ActionPerformed,
-  type RegistrationError,
-  type Token,
-} from "@capacitor/push-notifications"
-import type {PluginListenerHandle} from "@capacitor/core"
-import {navigate} from "@app/modal"
-import {assoc, call, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
+import {assoc, call, ms, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
 import {LOCAL_RELAY_URL} from "@welshman/net"
 import type {RepositoryUpdate} from "@welshman/net"
 import {
@@ -24,6 +16,7 @@ import {
 } from "@welshman/util"
 import {merged, withGetter} from "@welshman/store"
 import {User} from "@welshman/app"
+import {navigate} from "@app/modal"
 import {app, messagingRelayLists, network, roomLists} from "@app/core"
 import {DM_KINDS, CONTENT_KINDS, makeCommentFilter} from "@app/content"
 import {getMutedRooms, notificationSettings, shouldNotify, userSettingsValues} from "@app/settings"
@@ -46,11 +39,6 @@ export interface IPushAdapter {
   request: (prompt?: boolean) => Promise<string>
   disable: () => Promise<void>
   enable: () => Promise<void>
-}
-
-export type PushPermissionResult = {
-  token?: string
-  error?: string
 }
 
 export const onNotification = call(() => {
@@ -124,7 +112,7 @@ const ingestNotification = async (relay: string, id: string, json?: string) => {
       // The local relay eoses immediately, so anything less waits on it alone
       threshold: 1,
       autoClose: true,
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(ms(5)),
     })
 
     return events[0]
@@ -135,12 +123,14 @@ const ingestNotification = async (relay: string, id: string, json?: string) => {
 const loadNotificationRumor = async (wrap: TrustedEvent) => {
   const getRumor = () => app.get().wrapManager.getRumor(wrap.id)
 
-  await poll({condition: () => Boolean(getRumor()), signal: AbortSignal.timeout(5000)})
+  await poll({condition: () => Boolean(getRumor()), signal: AbortSignal.timeout(ms(5))})
 
   return getRumor()
 }
 
-export const onPushNotificationAction = async (action: ActionPerformed) => {
+export const onPushNotificationAction = async (action: {
+  notification: {data: {relay: string; id: string; event?: string}}
+}) => {
   const {relay, id, event: json} = action.notification.data
   const event = await ingestNotification(relay, id, json)
   const target = event?.kind === WRAP ? await loadNotificationRumor(event) : event
@@ -154,44 +144,6 @@ export const onPushNotificationAction = async (action: ActionPerformed) => {
   } else {
     goToSpace(relay)
   }
-}
-
-export const requestPermissions = async (): Promise<string> => {
-  let status = await PushNotifications.checkPermissions()
-
-  if (["prompt", "prompt-with-rationale"].includes(status.receive)) {
-    status = await PushNotifications.requestPermissions()
-  }
-
-  return status.receive
-}
-
-export const requestToken = async (): Promise<PushPermissionResult> => {
-  let {token} = pushState.get()
-  let error = "failed to retrieve token"
-
-  if (!token) {
-    const listeners = [
-      PushNotifications.addListener("registration", ({value}: Token) => {
-        token = value
-      }),
-      PushNotifications.addListener("registrationError", (err: RegistrationError) => {
-        error = err.error
-      }),
-    ]
-
-    await Promise.all([
-      PushNotifications.register(),
-      poll({
-        condition: () => Boolean(token),
-        signal: AbortSignal.timeout(5000),
-      }),
-    ])
-
-    listeners.forEach(p => p.then((listener: PluginListenerHandle) => listener.remove()))
-  }
-
-  return token ? {token} : {error}
 }
 
 export const syncRelaySubscriptions = (

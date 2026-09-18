@@ -18,7 +18,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import fr.acinq.secp256k1.Secp256k1
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -47,7 +46,7 @@ class AndroidPushFallbackWorker(context: Context, params: WorkerParameters) : Wo
     private const val REJECTED = "__REJECTED__"
     private const val KIND_RELAY_AUTH = 22242
     private const val KIND_NIP46_RPC = 24133
-    private val SECP = Secp256k1.get()
+    private val SECP = fallbackSecp256k1
   }
 
   private val prefs: SharedPreferences =

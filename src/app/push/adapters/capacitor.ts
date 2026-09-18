@@ -1,6 +1,6 @@
 import {Capacitor} from "@capacitor/core"
 import {PushNotifications} from "@capacitor/push-notifications"
-import {assoc, hash, maybe} from "@welshman/lib"
+import {assoc, hash, maybe, ms, poll} from "@welshman/lib"
 import type {Filter} from "@welshman/util"
 import {Address, DELETE, makeEvent} from "@welshman/util"
 import {Relays, User} from "@welshman/app"
@@ -10,28 +10,54 @@ import {device} from "@app/device"
 import {PUSH_BRIDGE, PUSH_SERVER} from "@app/env"
 import {pushState} from "@app/push/adapters/common"
 import type {IPushAdapter} from "@app/push/adapters/common"
-import {
-  onPushNotificationAction,
-  syncRelaySubscriptions,
-  requestPermissions,
-  requestToken,
-} from "@app/push/adapters/common"
+import {onPushNotificationAction, syncRelaySubscriptions} from "@app/push/adapters/common"
+
+const requestPermissions = async () => {
+  let status = await PushNotifications.checkPermissions()
+
+  if (["prompt", "prompt-with-rationale"].includes(status.receive)) {
+    status = await PushNotifications.requestPermissions()
+  }
+
+  return status.receive
+}
+
+const requestToken = async () => {
+  let {token} = pushState.get()
+  let error = "failed to retrieve token"
+
+  if (!token) {
+    const listeners = [
+      PushNotifications.addListener("registration", ({value}) => {
+        token = value
+      }),
+      PushNotifications.addListener("registrationError", err => {
+        error = err.error
+      }),
+    ]
+
+    await Promise.all([
+      PushNotifications.register(),
+      poll({
+        condition: () => Boolean(token),
+        signal: AbortSignal.timeout(ms(5)),
+      }),
+    ])
+
+    listeners.forEach(p => p.then(listener => listener.remove()))
+  }
+
+  pushState.update(assoc("token", token))
+
+  return token ? "granted" : error
+}
 
 export class CapacitorNotifications implements IPushAdapter {
   _controller = maybe<AbortController>()
 
   async request() {
     const status = await requestPermissions()
-
-    if (status !== "granted") {
-      return status
-    }
-
-    const {token, error = "denied"} = await requestToken()
-
-    pushState.update(assoc("token", token))
-
-    return token ? "granted" : error
+    return status === "granted" ? requestToken() : status
   }
 
   async _syncServer(signal: AbortSignal) {

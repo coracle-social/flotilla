@@ -3,6 +3,8 @@
 import {page} from "$app/stores"
 import {getSetting} from "@app/settings"
 
+export const analyticsAvailable = true
+
 const w = window as any
 
 w.plausible =

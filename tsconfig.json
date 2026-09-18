@@ -12,7 +12,7 @@
     "moduleResolution": "bundler"
   },
   // TypeScript does not merge includes, so this repeats .svelte-kit/tsconfig.json's list in order
-  // to add the e2e harness, which runs in node and is otherwise checked by nothing.
+  // to check the e2e harness and F-Droid overlays alongside the app.
   "include": [
     ".svelte-kit/ambient.d.ts",
     ".svelte-kit/non-ambient.d.ts",
@@ -24,7 +24,8 @@
     "src/**/*.svelte",
     "test/**/*.ts",
     "tests/**/*.ts",
-    "e2e/**/*.ts"
+    "e2e/**/*.ts",
+    "fdroid/**/*.ts"
   ]
   // Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
   // except $lib which is handled by https://kit.svelte.dev/docs/configuration#files

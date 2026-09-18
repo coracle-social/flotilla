@@ -34,6 +34,9 @@ ios/App/Podfile.lock
 ios/DerivedData/
 android/app/src/main/assets/public/
 
+# F-Droid preparation output
+.fdroid/
+
 # Web/JavaScript
 node_modules/
 .pnpm-store/

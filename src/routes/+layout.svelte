@@ -80,7 +80,7 @@
     const id = url.searchParams.get("id")
 
     if (relay && id) {
-      onPushNotificationAction({notification: {data: {relay, id}}} as any)
+      onPushNotificationAction({notification: {data: {relay, id}}})
       return
     }
 

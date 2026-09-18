@@ -7,7 +7,7 @@ import type {Session} from "@welshman/app"
 import {app, session} from "@app/core"
 import {pushState} from "@app/push/adapters/common"
 import type {IPushAdapter} from "@app/push/adapters/common"
-import {requestPermissions, syncRelaySubscriptions} from "@app/push/adapters/common"
+import {syncRelaySubscriptions} from "@app/push/adapters/common"
 
 type AndroidFallbackSubscription = {
   relay: string
@@ -26,6 +26,7 @@ type AndroidPushFallbackState = {
 }
 
 type AndroidPushFallbackPlugin = {
+  requestNotificationPermission: () => Promise<{receive: string}>
   syncState: (args: {state: AndroidPushFallbackState}) => Promise<void>
 }
 
@@ -37,7 +38,7 @@ export class AndroidFallbackNotifications implements IPushAdapter {
   _activeSince = now()
 
   async request() {
-    return requestPermissions()
+    return (await AndroidPushFallback.requestNotificationPermission()).receive
   }
 
   async enable() {

@@ -1,7 +1,9 @@
 package social.flotilla.notifications
 
+import android.Manifest
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.Build
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
@@ -11,16 +13,22 @@ import androidx.work.OutOfQuotaPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.getcapacitor.JSObject
+import com.getcapacitor.PermissionState
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
+import com.getcapacitor.annotation.Permission
+import com.getcapacitor.annotation.PermissionCallback
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
-@CapacitorPlugin(name = "AndroidPushFallback")
+@CapacitorPlugin(
+  name = "AndroidPushFallback",
+  permissions = [Permission(alias = "notifications", strings = [Manifest.permission.POST_NOTIFICATIONS])],
+)
 class AndroidPushFallbackPlugin : Plugin() {
   companion object {
     const val PREFS_NAME = "CapacitorStorage"
@@ -31,6 +39,21 @@ class AndroidPushFallbackPlugin : Plugin() {
 
   private fun getPrefs(): SharedPreferences {
     return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+  }
+
+  @PluginMethod
+  fun requestNotificationPermission(call: PluginCall) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || getPermissionState("notifications") == PermissionState.GRANTED) {
+      call.resolve(JSObject().put("receive", "granted"))
+    } else {
+      requestPermissionForAlias("notifications", call, "permissionCallback")
+    }
+  }
+
+  @PermissionCallback
+  private fun permissionCallback(call: PluginCall) {
+    val receive = if (getPermissionState("notifications") == PermissionState.GRANTED) "granted" else "denied"
+    call.resolve(JSObject().put("receive", receive))
   }
 
   @PluginMethod

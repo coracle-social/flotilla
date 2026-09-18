@@ -1,0 +1,16 @@
+android {
+    flavorDimensions "distribution"
+    productFlavors {
+        fdroid {
+            dimension "distribution"
+            applicationIdSuffix ".fdroid"
+        }
+    }
+    sourceSets {
+        test.java.srcDir '../../fdroid/tests'
+    }
+}
+
+dependencies {
+    implementation "org.bouncycastle:bcprov-jdk18on:1.86"
+}
