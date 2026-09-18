@@ -3,9 +3,12 @@
   import {page} from "$app/stores"
   import {displayRelayUrl} from "@welshman/util"
   import ArrowLeft from "@assets/icons/arrow-left.svg?dataurl"
+  import {fade} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
+  import Spinner from "@lib/components/Spinner.svelte"
+  import {pageLoading} from "@app/loading"
   import {decodeRelay} from "@app/relays"
 
   interface Props {
@@ -37,6 +40,11 @@
           <div class="min-w-0">
             {@render title?.()}
           </div>
+          {#if $pageLoading}
+            <div transition:fade={{duration: 200}} class="shrink-0 place-self-center">
+              <Spinner size="xs" />
+            </div>
+          {/if}
         </div>
         <div class="truncate text-xs text-primary md:hidden">
           {displayRelayUrl(url)}

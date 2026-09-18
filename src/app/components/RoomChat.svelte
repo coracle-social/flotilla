@@ -44,7 +44,8 @@
     prependParent,
   } from "@app/rooms"
   import {userSettingsValues} from "@app/settings"
-  import {makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import {pageLoading} from "@app/loading"
   import {checked, deferredRoomPath, setChecked} from "@app/notifications"
   import {makeRoomPath} from "@app/routes"
   import {pendingShare, type Share} from "@app/share"
@@ -396,10 +397,15 @@
   // held back for that frame rather than showing the wrong end of the conversation and jumping.
   const awaitingJump = $derived(!isNaN(at) && !jumpSettled)
 
-  // There is always more history until the feed says otherwise, so this stays up rather than
-  // blinking between spans while it walks a quiet room.
-  const loadingBackward = $derived($older?.status !== "exhausted")
   const reachedStartOfHistory = $derived($older?.status === "exhausted")
+
+  // A room paged from an anchor walks in both directions at once, and neither walk is worth a
+  // loader of its own in the transcript — the page bar carries one for the pair of them.
+  $effect(() => {
+    pageLoading.set(isFeedLoading($older) || isFeedLoading($newer))
+
+    return () => pageLoading.set(false)
+  })
 
   // Claim the share once we're on screen. Sharing into the room you're already looking at
   // doesn't re-create this component, so this can't be read once on mount.
@@ -439,10 +445,6 @@
   // The window only stops short of the present after jumping into history — anything published
   // from here on arrives through the repository rather than through a forward walk.
   const windowStopsShort = $derived(!isNaN(at) && $newer?.status !== "exhausted")
-
-  // With no messages between them the two loaders would sit against each other, so this one yields
-  // while the other is still running.
-  const loadingForward = $derived(windowStopsShort && !(elements.length === 0 && loadingBackward))
 
   // While the window stops short, the bottom of the container is not the bottom of the
   // conversation, so the button is the way back to the live end rather than a scroll — which is
@@ -636,11 +638,6 @@
             </div>
           </div>
         {:else}
-          {#if loadingForward}
-            <p class="py-20 flex justify-center">
-              <Spinner loading={loadingForward}>Looking for messages...</Spinner>
-            </p>
-          {/if}
           <VirtualList
             items={elements}
             getKey={getElementKey}
@@ -678,9 +675,7 @@
             {/snippet}
           </VirtualList>
           <p class="flex h-10 items-center justify-center py-20">
-            {#if loadingBackward}
-              <Spinner loading>Looking for messages...</Spinner>
-            {:else if reachedStartOfHistory}
+            {#if reachedStartOfHistory}
               End of message history
             {/if}
           </p>
