@@ -7,6 +7,7 @@
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Divider from "@lib/components/Divider.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
@@ -64,16 +65,14 @@
         </Button>
       {/each}
     </div>
-    <div class="flex flex-col gap-2">
-      <p class="text-xs uppercase tracking-wide opacity-60">Or copy a link</p>
-      <label class="input flex min-w-0 items-center gap-2">
-        <Icon icon={LinkRound} class="shrink-0" />
-        <input value={permalink} class="min-w-0 flex-1 truncate" type="text" readonly />
-        <Button class="shrink-0" aria-label="Copy link" onclick={copyPermalink}>
-          <Icon icon={Copy} />
-        </Button>
-      </label>
-    </div>
+    <Divider>Or copy a link</Divider>
+    <label class="input flex min-w-0 items-center gap-2">
+      <Icon icon={LinkRound} class="shrink-0" />
+      <input value={permalink} class="min-w-0 flex-1 truncate" type="text" readonly />
+      <Button class="shrink-0" aria-label="Copy link" onclick={copyPermalink}>
+        <Icon icon={Copy} />
+      </Button>
+    </label>
   </ModalBody>
   <ModalFooter>
     <Button class="button button-link" onclick={back}>
