@@ -94,6 +94,8 @@ export const makeSpacePath = (url: string, ...extra: (string | undefined)[]) => 
 
 export const forgetSpacePage = (url: string) => lastPageBySpaceUrl.delete(url)
 
+export const hasSpacePage = (url: string) => lastPageBySpaceUrl.has(url)
+
 export const makeSpaceEntryPath = (url: string) =>
   lastPageBySpaceUrl.get(url) ?? makeSpacePath(url, "about")
 

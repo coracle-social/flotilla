@@ -4,7 +4,7 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import {relays} from "@app/core"
   import {navigate} from "@app/modal"
-  import {makeSpacePath, makeSpaceEntryPath} from "@app/routes"
+  import {makeSpacePath, makeSpaceEntryPath, hasSpacePage} from "@app/routes"
   import {notifications} from "@app/notifications"
 
   type Props = {
@@ -17,7 +17,10 @@
   const onClick = () => {
     const entryPath = makeSpaceEntryPath(url)
 
-    navigate(entryPath, {keepModal: true, replaceState: entryPath === $page.url.pathname})
+    navigate(entryPath, {
+      keepModal: !hasSpacePage(url),
+      replaceState: entryPath === $page.url.pathname,
+    })
   }
 
   const path = makeSpacePath(url)

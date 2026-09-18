@@ -173,7 +173,10 @@ test("takes over the space menu's history entry when you navigate out of it", as
   await expect(drawer).toHaveCount(0)
 })
 
-test("switches spaces inside the space menu without closing it", async ({seed, as}) => {
+test("switches spaces inside the space menu, and out of one it has a page for", async ({
+  seed,
+  as,
+}) => {
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
     const other = relay("other")
@@ -206,6 +209,14 @@ test("switches spaces inside the space menu without closing it", async ({seed, a
   await drawer.getByRole("link", {name: "Other Garden"}).click()
 
   await expect(page).toHaveURL(new RegExp(`${roomPath(other.url, "garden")}$`))
+  await expect(drawer).toHaveCount(0)
+
+  // The space she started in has a page behind it now, so picking it needs no second tap and the
+  // menu has nothing left to ask.
+  await page.getByRole("button", {name: "Open space menu"}).click()
+  await drawer.locator('.primary-nav [data-tip^="space"]').click()
+
+  await expect(page).toHaveURL(new RegExp(`${roomPath(space.url, "lounge")}$`))
   await expect(drawer).toHaveCount(0)
 })
 
