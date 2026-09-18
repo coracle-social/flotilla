@@ -439,7 +439,10 @@ that I can pass it along without retyping it.
 
 Acceptance:
 
-- "Share" on a message inside a space opens a picker of that space's rooms.
+- "Share Message" on a message inside a space opens a picker of that space's
+  rooms.
+- The picker also offers a link to the message, which copies to the clipboard
+  and opens the room scrolled to it.
 - Choosing a destination navigates there with the composer pre-filled with a
   quote of the shared message.
 - Sending posts the quoted message in the destination, visible to bob there.

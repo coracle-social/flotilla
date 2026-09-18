@@ -1,4 +1,4 @@
-import {npubEncode} from "nostr-tools/nip19"
+import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE, WEEK, bech32ToHex} from "@welshman/lib"
 import {getLnUrl} from "@welshman/util"
 import {Profile, displayPubkey} from "@welshman/domain"
@@ -871,6 +871,8 @@ test("US-027a a permalink near the newest end lands at the bottom", async ({seed
 })
 
 test("US-028 share a message somewhere else", async ({seed, as}) => {
+  let shared!: SeededEvent
+
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
 
@@ -880,7 +882,7 @@ test("US-028 share a message somewhere else", async ({seed, as}) => {
     space.join(user.bob, "general", "random")
     space.profile(user.alice, {name: "Alice Anchor"})
     space.profile(user.bob, {name: "Bob Barnacle"})
-    space.message(user.bob, "general", "the dock is closed on sunday", at(2, HOUR))
+    shared = space.message(user.bob, "general", "the dock is closed on sunday", at(2, HOUR))
 
     seedChatter(space, user.alice)
     seedChatter(space, user.bob)
@@ -888,19 +890,31 @@ test("US-028 share a message somewhere else", async ({seed, as}) => {
 
   const {url} = scenario.space("space")
 
-  const alice = await as(users.alice, roomPath(url, "general"))
+  const alice = await as(users.alice, roomPath(url, "general"), {
+    context: {permissions: ["clipboard-read", "clipboard-write"]},
+  })
   const bob = await as(users.bob, roomPath(url, "random"))
 
   await expect(message(alice, "the dock is closed on sunday")).toBeVisible()
 
   await openMessageMenu(alice, "the dock is closed on sunday")
-  await alice.getByRole("button", {name: "Share"}).click()
+  await alice.getByRole("button", {name: "Share Message"}).click()
 
   // ShareEvent is titled after the noun it was opened with, so its subtitle names it instead.
   const picker = alice
     .locator(".dialog")
     .filter({hasText: "Which room would you like to share this event to?"})
     .last()
+
+  // The same dialog hands out a link to the message, for anywhere flotilla cannot reach.
+  await picker.getByRole("button", {name: "Copy link"}).click()
+  await expect(alice.getByRole("alert")).toContainText("Copied to clipboard!")
+
+  const permalink = new URL(await alice.evaluate(() => navigator.clipboard.readText()))
+
+  expect(permalink.pathname).toBe(roomPath(url, "general"))
+  expect(permalink.search).toBe(`?at=${shared.event.created_at}`)
+  expect(permalink.hash).toBe(`#${neventEncode({id: shared.id, relays: [url]})}`)
 
   await picker.getByRole("button", {name: "Random"}).click()
   await picker.getByRole("button", {name: /^Share/}).click()

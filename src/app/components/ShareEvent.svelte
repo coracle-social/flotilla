@@ -3,6 +3,8 @@
   import {preventDefault} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+  import Copy from "@assets/icons/copy.svg?dataurl"
+  import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -12,8 +14,9 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
-  import {makeRoomPath} from "@app/routes"
+  import {makeEventPermalink, makeRoomPath} from "@app/routes"
   import {shareTo} from "@app/share"
+  import {clip} from "@app/toast"
   import {rooms} from "@app/core"
 
   type Props = {
@@ -36,6 +39,10 @@
     selection = h === selection ? "" : h
   }
 
+  const permalink = makeEventPermalink(event, url)
+
+  const copyPermalink = () => clip(permalink)
+
   let selection = $state("")
 </script>
 
@@ -56,6 +63,16 @@
           <RoomNameWithImage {url} h={room.h} />
         </Button>
       {/each}
+    </div>
+    <div class="flex flex-col gap-2">
+      <p class="text-xs uppercase tracking-wide opacity-60">Or copy a link</p>
+      <label class="input flex min-w-0 items-center gap-2">
+        <Icon icon={LinkRound} class="shrink-0" />
+        <input value={permalink} class="min-w-0 flex-1 truncate" type="text" readonly />
+        <Button class="shrink-0" aria-label="Copy link" onclick={copyPermalink}>
+          <Icon icon={Copy} />
+        </Button>
+      </label>
     </div>
   </ModalBody>
   <ModalFooter>

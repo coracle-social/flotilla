@@ -127,7 +127,7 @@
   <li>
     <Button onclick={share}>
       <Icon size={4} icon={ShareCircle} />
-      Share
+      Share Message
     </Button>
   </li>
   <li>

@@ -157,7 +157,7 @@
           {/if}
           <Button class="button button-neutral w-full" onclick={share}>
             <Icon size={4} icon={ShareCircle} />
-            Share
+            Share Message
           </Button>
           <Button class="button button-neutral w-full" onclick={read}>
             <Icon size={4} icon={VolumeLoud} />
