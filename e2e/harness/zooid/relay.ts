@@ -20,7 +20,13 @@ import type {PublishOptions} from "./types"
 import {connectToZooid, port, requestZooid} from "./transport"
 import type {ZooidConnection} from "./transport"
 
-const image = "gitea.coracle.social/coracle/zooid:latest"
+// The relay every test runs against, pinned by digest so a spec is checked against one zooid rather
+// than whatever this machine last pulled. The tag is there to read; docker resolves the digest, and
+// `docker pull` of a newer tag prints the digest to paste beside it. A zooid built from a checkout
+// has no published digest, so ZOOID_IMAGE is how an unreleased one is tried.
+const image =
+  process.env.ZOOID_IMAGE ??
+  "gitea.coracle.social/coracle/zooid:0.2.2@sha256:70ecf2d3ad0ac338d48f14fe8e5ab9964193d2eb30d6b6f7d8972ca179cad513"
 
 // How long after a recreate chromium can still abort what a page has in flight. Every netlink
 // event a create-and-destroy produces lands before `compose up --wait` returns — measured at 26 of
@@ -63,11 +69,13 @@ const isRelayPortTaken = () =>
     socket.once("error", () => resolve(false))
   })
 
-// Every invocation carries ZOOID_CONFIG, `down` included. The compose file names it without a
-// default, so a call that left it out fails to interpolate rather than quietly mounting something
-// else.
+// Every invocation carries the config directory and the image, `down` included. The compose file
+// names both without a default, so a call that left one out fails to interpolate rather than
+// quietly mounting something else or running a relay nothing here chose.
 const docker = (...args: string[]) =>
-  execFileAsync(dockerCommand, args, {env: {...process.env, ZOOID_CONFIG: configDir}})
+  execFileAsync(dockerCommand, args, {
+    env: {...process.env, ZOOID_CONFIG: configDir, ZOOID_IMAGE: image},
+  })
 
 const compose = (...args: string[]) => docker("compose", "-f", composeFile, ...args)
 
@@ -196,11 +204,7 @@ export class Zooid {
     )
 
     if (!hasImage) {
-      throw new Error(
-        `The zooid image ${image} is not present locally. Fetch it with ` +
-          `\`${dockerCommand} pull ${image}\`, or build it from a zooid checkout with ` +
-          `\`${dockerCommand} build -t ${image} .\`.`,
-      )
+      await this.fetchImage()
     }
 
     if (await isRelayPortTaken()) {
@@ -208,8 +212,8 @@ export class Zooid {
         `127.0.0.1:${port} is already in use, but the zooid relay container publishes ` +
           "exactly that port and the harness talks to whatever answers there. This is a leftover " +
           "container from an interrupted run, or another copy of this suite running on the machine " +
-          `(under any user). Free it before running — \`${dockerCommand} compose -f ` +
-          "e2e/harness/zooid/docker/compose.yaml down\` clears one this project started.",
+          `(under any user). Free it before running — \`${dockerCommand} rm -f ` +
+          "flotilla-e2e-zooid-relay-1` clears the one this project starts.",
       )
     }
 
@@ -278,6 +282,25 @@ export class Zooid {
 
       this.started = false
       this.running = false
+    }
+  }
+
+  // Fetching unasked is safe for a pinned reference: the pull can only produce the relay this suite
+  // was written against, and a machine that already has it never gets here.
+  private fetchImage = async () => {
+    console.warn(`\nFetching the zooid image this suite is pinned to:\n  ${image}\n`)
+
+    try {
+      await docker("pull", image)
+    } catch (error) {
+      const {stderr} = Object(error) as {stderr?: string}
+
+      throw new Error(
+        `Could not fetch ${image}: ${stderr?.trim() || String(error)}\n\n` +
+          `Fetch it by hand with \`${dockerCommand} pull ${image}\`, or point ZOOID_IMAGE at a ` +
+          "zooid you built yourself.",
+        {cause: error},
+      )
     }
   }
 

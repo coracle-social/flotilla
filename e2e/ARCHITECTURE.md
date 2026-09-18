@@ -425,12 +425,16 @@ stranger.
 The suite is not run by agents (see CLAUDE.md).
 
 ```sh
-pnpm exec playwright install                          # once
-docker pull gitea.coracle.social/coracle/zooid:latest # once; the harness never pulls
-pnpm test                                             # starts and stops the container itself
+pnpm exec playwright install # once
+pnpm test                    # starts and stops the container itself
 ```
 
 Every test skips when docker is unavailable, rather than failing.
+
+The relay is one pinned zooid, named by digest in `harness/zooid/relay.ts`, and the harness fetches
+that image the first time a machine needs it. So a spec asserting relay behaviour runs against the
+relay the diff names, and needing a newer zooid is a bump in that file. `ZOOID_IMAGE` overrides the
+pin, which is how a spec is tried against a zooid built from a checkout.
 
 A test fails when the app broke while it ran, whatever it asserted: an uncaught exception on any
 of its pages, or code of ours the browser refused under the content security policy. A refusal

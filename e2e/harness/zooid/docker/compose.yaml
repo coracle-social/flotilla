@@ -10,7 +10,9 @@ name: flotilla-e2e-zooid
 
 services:
   relay:
-    image: gitea.coracle.social/coracle/zooid:latest
+    # Pinned by digest in e2e/harness/zooid/relay.ts, the only thing that brings this container up.
+    # No default, for the same reason the config mount below has none.
+    image: ${ZOOID_IMAGE:?staged by e2e/harness/zooid/relay.ts, which starts this container}
     # The harness dials this published port and sends a `Host` per virtual relay, which is what the
     # dispatcher matches against the `host` in each file under config/.
     ports:
