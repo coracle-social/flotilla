@@ -178,16 +178,22 @@ run and prints the command to pick up from there.
 | --- | --- |
 | `web` | `scripts/build.sh`: web bundle, `cap sync`, generated icons and splash screens |
 | `apk` | `assembleRelease` signed with the distribution key, renamed to the path in `zapstore.yaml` |
+| `fdroid` | reruns F-Droid's own preparation and build against the tag in a throwaway worktree |
 | `play` | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft |
 | `ios` | `cap build ios` to an archive and IPA, uploaded with `altool` |
 | `desktop` | `package:desktop:*` for this OS |
 | `gitea` | creates the release for the tag from the changelog, attaches the APK and any desktop packages |
 | `zapstore` | `zsp publish zapstore.yaml` |
-| `fdroid` | nothing to upload; F-Droid builds from the tag, see [fdroid/README.md](fdroid/README.md) |
 
 Release notes come from the `CHANGELOG.md` section matching `package.json`'s version, so every
 store shows the same text. The APK and zapstore share one artifact, whose path lives in
 `zapstore.yaml`.
+
+F-Droid has nothing to upload — their servers build from the tag themselves — so the `fdroid` step
+is a gate instead: it runs [their preparation and build](fdroid/README.md) against the tag in a
+throwaway git worktree, and fails the release before anything is published if that build no longer
+works. Preparation patches source with exact-match replacements, so it breaks quietly when the
+files it rewrites change. Expect it to take a while; it installs and builds from scratch.
 
 ### Credentials
 

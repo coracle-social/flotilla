@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import {existsSync} from "node:fs"
-import {readFile, readdir, rename} from "node:fs/promises"
+import {mkdtemp, readFile, readdir, rename, rm} from "node:fs/promises"
+import {tmpdir} from "node:os"
 import {dirname, join, resolve} from "node:path"
 import {fileURLToPath} from "node:url"
 import {parseArgs} from "node:util"
@@ -141,6 +142,52 @@ const steps = [
       const {outputFile} = await apkMetadata()
 
       await rename(join(dirname(apk), outputFile), apk)
+    },
+  },
+  {
+    name: "fdroid",
+    title: "Rebuild the tag the way F-Droid will",
+    missing: () =>
+      git("cat-file", "-e", `${version}:scripts/prepare-fdroid-source.sh`) === undefined
+        ? [`F-Droid support in the ${version} tag`]
+        : [],
+    setup: [
+      `The ${version} tag is older than fdroid/, so there is nothing for F-Droid to build from it.`,
+      "Name the steps you do want, or release a tag that has it.",
+    ],
+    run: async () => {
+      const parent = await mkdtemp(join(tmpdir(), "flotilla-fdroid-"))
+      const checkout = join(parent, "flotilla")
+
+      // Preparation rewrites source and dependencies in place, so it only runs against a checkout
+      // that can be thrown away
+      try {
+        await run("git", ["worktree", "add", "--detach", checkout, version], {cwd: root})
+        await run("./scripts/prepare-fdroid-source.sh", [], {cwd: checkout})
+        await run("./scripts/build-fdroid-assets.sh", [], {cwd: checkout})
+
+        // F-Droid signs its own builds, so keep the distribution key out of gradle's environment
+        const env = {...process.env}
+
+        delete env.ANDROID_KEYSTORE_PATH
+
+        await run("./gradlew", ["--no-daemon", "assembleFdroidRelease"], {
+          cwd: join(checkout, "android"),
+          env,
+        })
+
+        const built = join(
+          checkout,
+          "android/app/build/outputs/apk/fdroid/release/app-fdroid-release-unsigned.apk",
+        )
+
+        if (!existsSync(built)) {
+          throw new Error(`the F-Droid build produced no apk at ${built}`)
+        }
+      } finally {
+        await rm(parent, {recursive: true, force: true})
+        await run("git", ["worktree", "prune"], {cwd: root})
+      }
     },
   },
   {
@@ -288,16 +335,6 @@ const steps = [
       "nsec, a bunker:// url, or `browser` to sign with a nostr extension.",
     ],
     run: () => run("zsp", ["publish", "zapstore.yaml"], {cwd: root}),
-  },
-  {
-    name: "fdroid",
-    title: "F-Droid",
-    optional: true,
-    manual: [
-      "F-Droid builds from source on their own servers, so a release has nothing to upload: the",
-      "metadata tracks version tags, which makes pushing the tag the whole story. The fdroiddata",
-      "submission is still open — see fdroid/README.md.",
-    ],
   },
 ]
 
