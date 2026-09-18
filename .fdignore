@@ -8,7 +8,6 @@ build
 *.ttf
 gradlew*
 _app
-release
 ios/DerivedData/
 ios/App/Pods/
 android/capacitor-cordova-android-plugins

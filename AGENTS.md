@@ -231,7 +231,7 @@ See `.env.template` for all options.
 
 **Capacitor Integration:**
 
-- Android: Full support, APK builds via `pnpm run release:android`
+- Android: Full support, release builds via `pnpm release` (see README for the release flow)
 - iOS: Full support (zaps disabled due to App Store policy)
 - PWA: Progressive Web App with service worker
 

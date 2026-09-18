@@ -8,7 +8,7 @@ A discord-like nostr client based on the idea of "relays as groups". Supports NI
 
 - **Web** — [app.flotilla.social](https://app.flotilla.social), installable as a PWA
 - **Android** — [Google Play](https://play.google.com/store/apps/details?id=social.flotilla)
-- **Android APK** — [releases](https://gitea.coracle.social/coracle/flotilla/releases), see [Android releases](#android-releases)
+- **Android APK** — [releases](https://gitea.coracle.social/coracle/flotilla/releases), see [Releasing](#releasing)
 - **iOS** — [App Store](https://apps.apple.com/us/app/flotilla-chat/id6741344107)
 - **Your own server** — see [Deployment](#deployment)
 
@@ -154,25 +154,61 @@ Use the AppImage or installed executable rather than the installer. This checks 
 local assets, navigation, workers, and CSP using a disposable profile. Installation, reboot, and
 uninstall still require target-OS testing.
 
-## Android releases
+## Releasing
 
-Signed APKs are attached to releases on the
-[releases page](https://gitea.coracle.social/coracle/flotilla/releases), so Android users can
-install and update outside an app store.
-
-Publishing needs `GITEA_TOKEN` in `.env.local`, set to a gitea access token with `write:repository`
-(Settings → Applications → Access Tokens). Bump the version, write its `CHANGELOG.md` section and
-push the matching tag, then:
+`pnpm release` takes a tagged commit and ships it everywhere: the web bundle and native projects,
+the signed APK on gitea and zapstore, the AAB on Google Play, the iOS build on App Store Connect,
+and the desktop packages. It checks the tag, the changelog section, every credential and every
+tool up front, and refuses to start if one of them is missing rather than getting halfway. What's
+left — rolling out on Play, submitting for review — comes back as a list when it finishes.
 
 ```sh
-pnpm run release:android
-pnpm run publish:android
+pnpm bump minor            # or patch, major, or an explicit x.y.z
+# write the CHANGELOG.md section for the new version
+git commit -am "Bump version"
+git tag 1.12.0 && git push origin dev 1.12.0
+pnpm release
 ```
 
-`publish:android` creates the release for the tag, takes its notes from the changelog, and attaches
-the APK as `flotilla-<version>.apk`, replacing any existing asset of that name. It reads the
-repository and the APK path from `zapstore.yaml`, so a release and a zapstore publish ship the same
-file.
+`pnpm release --check` runs those checks and reports the plan without building anything. Naming
+steps runs a subset — `pnpm release ios`, or `pnpm release apk gitea`. A step that fails stops the
+run and prints the command to pick up from there.
+
+| step | what it does |
+| --- | --- |
+| `web` | `scripts/build.sh`: web bundle, `cap sync`, generated icons and splash screens |
+| `apk` | `assembleRelease` signed with the distribution key, renamed to the path in `zapstore.yaml` |
+| `play` | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft |
+| `ios` | `cap build ios` to an archive and IPA, uploaded with `altool` |
+| `desktop` | `package:desktop:*` for this OS |
+| `gitea` | creates the release for the tag from the changelog, attaches the APK and any desktop packages |
+| `zapstore` | `zsp publish zapstore.yaml` |
+| `fdroid` | nothing to upload; F-Droid builds from the tag, see [fdroid/README.md](fdroid/README.md) |
+
+Release notes come from the `CHANGELOG.md` section matching `package.json`'s version, so every
+store shows the same text. The APK and zapstore share one artifact, whose path lives in
+`zapstore.yaml`.
+
+### Credentials
+
+These go in `.env.local`, which is gitignored. `pnpm release --check` lists whichever are missing
+along with how to get them.
+
+| variable | what it is |
+| --- | --- |
+| `GITEA_TOKEN` | gitea access token with `write:repository`, from Settings → Applications |
+| `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEYSTORE_ALIAS` | the key APKs outside the app stores are signed with; it can never change without breaking updates |
+| `PLAY_KEYSTORE_PATH`, `PLAY_KEYSTORE_PASSWORD`, `PLAY_KEYSTORE_ALIAS` | the Play upload key |
+| `PLAY_SERVICE_ACCOUNT` | path to a service account json with the Release manager role, from Play Console → Setup → API access |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` | App Store Connect API key with the App Manager role, from Users and Access → Integrations |
+| `SIGN_WITH` | nostr key for zapstore: an nsec, a `bunker://` url, or `browser` |
+
+Add `_ALIAS_PASSWORD` to either keystore prefix when the alias has its own password. `PLAY_TRACK`
+(default `production`) and `PLAY_STATUS` (default `draft`) choose where a Play upload lands.
+Keystores and API keys belong outside the repository; only their paths go in `.env.local`.
+
+Gradle signs from those variables, so Android Studio still opens and builds the project without
+them — it just produces an unsigned release build.
 
 ### Obtainium
 
