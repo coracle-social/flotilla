@@ -10,6 +10,7 @@
   import RoleEdit from "@app/components/RoleEdit.svelte"
   import RoleAddMembers from "@app/components/RoleAddMembers.svelte"
   import {relayManagement} from "@app/core"
+  import {deriveSpaceSupportedMethods} from "@app/management"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
@@ -20,6 +21,11 @@
   }
 
   const {url, role, onClick}: Props = $props()
+
+  const supportedMethods = deriveSpaceSupportedMethods(url)
+  const canEdit = $derived($supportedMethods.includes("editrole"))
+  const canDelete = $derived($supportedMethods.includes("deleterole"))
+  const canAssign = $derived($supportedMethods.includes("assignrole"))
 
   const back = () => history.back()
 
@@ -53,22 +59,28 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
-  <li>
-    <Button onclick={addMembers}>
-      <Icon icon={AddCircle} />
-      Add members
-    </Button>
-  </li>
-  <li>
-    <Button onclick={editRole}>
-      <Icon icon={Pen} />
-      Edit role
-    </Button>
-  </li>
-  <li>
-    <Button class="text-error" onclick={confirmDelete}>
-      <Icon icon={TrashBin} />
-      Delete role
-    </Button>
-  </li>
+  {#if canAssign}
+    <li>
+      <Button onclick={addMembers}>
+        <Icon icon={AddCircle} />
+        Add members
+      </Button>
+    </li>
+  {/if}
+  {#if canEdit}
+    <li>
+      <Button onclick={editRole}>
+        <Icon icon={Pen} />
+        Edit role
+      </Button>
+    </li>
+  {/if}
+  {#if canDelete}
+    <li>
+      <Button class="text-error" onclick={confirmDelete}>
+        <Icon icon={TrashBin} />
+        Delete role
+      </Button>
+    </li>
+  {/if}
 </ul>

@@ -16,7 +16,7 @@
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
   import SpaceRoles from "@app/components/SpaceRoles.svelte"
   import SpaceMembersBanned from "@app/components/SpaceMembersBanned.svelte"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deriveSpaceSupportedMethods} from "@app/management"
   import {deriveSpaceMemberRoles} from "@app/roles"
   import {relayMemberLists, relayRoles} from "@app/core"
   import {deriveDisplaysByPubkey} from "@app/social"
@@ -30,7 +30,11 @@
   const roles = $relayRoles.forUrl(url).$
   const members = $relayMemberLists.forUrl(url)
   const memberRoles = deriveSpaceMemberRoles(url)
-  const userIsAdmin = deriveUserIsSpaceAdmin(url)
+  const supportedMethods = deriveSpaceSupportedMethods(url)
+  const canManageRoles = $derived(
+    ["createrole", "editrole", "deleterole"].some(method => $supportedMethods.includes(method)),
+  )
+  const canListBans = $derived($supportedMethods.includes("listbannedpubkeys"))
 
   // Each member with their resolved roles (sorted by order).
   const memberList = derived([members, memberRoles, roles], ([$members, $memberRoles, $roles]) => {
@@ -104,7 +108,7 @@
       <Icon icon={AddCircle} />
       Invite people
     </Button>
-    {#if $userIsAdmin}
+    {#if canManageRoles || canListBans}
       <div class="relative">
         <Button
           class="button button-neutral button-sm button-square"
@@ -117,18 +121,22 @@
             <ul
               transition:fly
               class="menu bg-surface absolute right-0 z-popover mt-2 w-48 gap-1 rounded-2xl p-2">
-              <li>
-                <Button onclick={manageRoles}>
-                  <Icon icon={UsersGroup} />
-                  Manage Roles
-                </Button>
-              </li>
-              <li>
-                <Button onclick={bannedMembers}>
-                  <Icon icon={MinusCircle} />
-                  Banned Members
-                </Button>
-              </li>
+              {#if canManageRoles}
+                <li>
+                  <Button onclick={manageRoles}>
+                    <Icon icon={UsersGroup} />
+                    Manage Roles
+                  </Button>
+                </li>
+              {/if}
+              {#if canListBans}
+                <li>
+                  <Button onclick={bannedMembers}>
+                    <Icon icon={MinusCircle} />
+                    Banned Members
+                  </Button>
+                </li>
+              {/if}
             </ul>
           </Popover>
         {/if}

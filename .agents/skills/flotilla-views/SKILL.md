@@ -299,7 +299,7 @@ How you bind depends on what the method returns:
 
 In a handler, call `.get()` on a projection instead of subscribing. The app modules add `derive*`
 factories over the same data: `deriveEvent` and `deriveEventsById` in `src/app/repository.ts`,
-`deriveUserIsSpaceAdmin` in `src/app/management.ts`, `deriveRelayAuthError` in
+`deriveSpaceSupportedMethods` in `src/app/management.ts`, `deriveRelayAuthError` in
 `src/app/access.ts`. Call them at the top of the script with fixed arguments, and wrap one in
 `$derived` only when its arguments change, as the thread page does for filters that wait on the
 root event.

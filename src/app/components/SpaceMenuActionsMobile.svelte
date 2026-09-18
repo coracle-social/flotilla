@@ -19,7 +19,7 @@
   import SpaceActionItems from "@app/components/SpaceActionItems.svelte"
   import {relays, user} from "@app/core"
   import {deriveHostedRelay, HOSTING_ENABLED} from "@app/hosting"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deriveSpaceSupportedMethods} from "@app/management"
   import {userSpaceUrls} from "@app/rooms"
   import {deriveSpaceActionItems} from "@app/actionItems"
   import {notificationSettings, deriveShouldNotify, setSpaceNotifications} from "@app/settings"
@@ -33,7 +33,15 @@
   const {url}: Props = $props()
 
   const relay = $relays.one(url)
-  const userIsAdmin = deriveUserIsSpaceAdmin(url)
+  const supportedMethods = deriveSpaceSupportedMethods(url)
+  const canReview = $derived(
+    ["banevent", "allowpubkey"].some(method => $supportedMethods.includes(method)),
+  )
+  const canEditSpace = $derived(
+    ["changerelayname", "changerelaydescription", "changerelayicon"].some(method =>
+      $supportedMethods.includes(method),
+    ),
+  )
   const hostedRelay = deriveHostedRelay(url)
   const actionItems = deriveSpaceActionItems(url)
   const shouldNotify = deriveShouldNotify(url)
@@ -76,7 +84,7 @@
 {/snippet}
 
 {@render actionButton(createInvite, LinkRound, "Create Invite")}
-{#if $userIsAdmin}
+{#if canReview}
   <Button class="button button-neutral w-full justify-start" onclick={showActionItems}>
     <Icon size={4} icon={Danger} />
     Action Items ({$actionItems.length})
@@ -105,7 +113,7 @@
     <Icon size={4} icon={ServerPath} />
     Hosting settings
   </Link>
-{:else if $userIsAdmin}
+{:else if canEditSpace}
   {@render actionButton(startEdit, Pen, "Edit Space")}
 {/if}
 {#if $userSpaceUrls.includes(url)}

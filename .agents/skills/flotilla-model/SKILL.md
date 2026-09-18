@@ -95,11 +95,12 @@ that state, so a room re-created after deletion comes back. Membership (`members
 `membershipStatus(url, h)`) replays the 39002 snapshot, then newer 9000/9001 ops authored by an
 admin or the relay, then pending 9021/9022 requests, into `MembershipStatus.Initial | Pending |
 Granted`. `pendingJoins(url, h?)` lists unanswered join requests, and `deriveSpaceActionItems`
-(`src/app/actionItems.ts`) merges them with reports into the admin queue.
+(`src/app/actionItems.ts`) merges them with reports into the admin queue, keeping the half the
+user holds a method for — reports under `banevent`, join requests under `allowpubkey`.
 
 `src/app/rooms.ts` puts space authority on top:
 
-- `deriveUserIsRoomAdmin`: a space admin administers every room.
+- `deriveUserIsRoomAdmin`: a space's staff administer every room.
 - `deriveUserRoomMembershipStatus`: an admin is always `Granted`.
 - `addRoomMembers`: allows each non-member at the relay (NIP-86 `allowPubkey`) before publishing
   9000, because a room member the relay won't serve can't read the room.
@@ -172,12 +173,13 @@ relay's URL, each call signed with a fresh NIP-98 event. Every method resolves t
 | `listClaims`, `createClaim` | `Access.prepareInvite` |
 | `changeRelayName`, `changeRelayDescription`, `changeRelayIcon` | `SpaceEdit` |
 
-Admin status is inferred. A relay answers `supportedmethods` with everything it implements rather
-than what the caller may use, and refuses non-admins outright, so `deriveUserIsSpaceAdmin(url)`
-only means the list came back non-empty (re-checked at most every five minutes per URL). To gate
-one capability, check the method (`$supportedMethods.includes("banpubkey")`) and still handle an
-error from the call, since a listed method can be blocked for a particular user.
-`deriveUserCanCreateRoom` adds `ROOM_CREATE_PERMISSION` grants to space admins.
+A relay answers `supportedmethods` with what the authenticated pubkey may call, so every control
+is gated on the method behind it: `deriveSpaceSupportedMethods(url)` (re-checked at most every
+five minutes per pubkey and URL) and `$supportedMethods.includes("banpubkey")`. Still handle an
+error from the call, since a listed method can be refused for a particular event or target.
+`deriveUserIsSpaceStaff(url)` is only "the list came back non-empty", which is all there is to go
+on for the room permissions NIP-86 has no method for — `deriveUserIsRoomAdmin` and
+`deriveUserCanCreateRoom`, which also takes `ROOM_CREATE_PERMISSION` grants.
 
 The hosting backend in `src/app/hosting.ts` is a separate HTTP API at `HOSTING_BACKEND_URL` for
 relays the platform hosts. It authenticates with one NIP-98 header per pubkey, cached for a TTL,

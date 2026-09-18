@@ -1146,3 +1146,60 @@ test("US-122 export and import a hosted relay's data", async ({seed, as}) => {
   await expect(modal.getByText("Imported 1 event, skipped 1.")).toBeVisible()
   await expect(modal.getByText("line 2: invalid event")).toBeVisible()
 })
+
+// The space menu button is labeled with the space's host, the way `openSpaceMenu` relies on for
+// space.test. delegated.test grants every member one management method, so `supportedmethods` comes
+// back with a single entry for a member and the whole list for admin, who owns the relay.
+const openDelegatedMenu = (page: Page) =>
+  page.getByRole("button", {name: /delegated\.test/}).click()
+
+test("US-127 a member holding one method gets only that control", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("delegated")
+
+    space.room("general", {name: "General"})
+    space.join(user.admin, "general")
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anchor"})
+    space.profile(user.bob, {name: "Bob Barnacle"})
+    space.message(user.bob, "general", "aye captain", at(2, HOUR))
+  })
+
+  const {url} = scenario.space("delegated")
+
+  // alice holds allowpubkey, which covers the join requests in the queue and nothing else
+  const alice = await as(users.alice, roomPath(url, "general"))
+
+  await expect(alice.getByText("aye captain")).toBeVisible()
+
+  await openMessageMenu(alice, "aye captain")
+
+  await expect(menuItem(alice, "Report Content")).toBeVisible()
+  await expect(alice.getByRole("button", {name: "Delete Message", exact: true})).toHaveCount(0)
+
+  await alice.goto(spacePath(url) + "/directory")
+
+  await expect(alice.getByRole("button", {name: "Invite people"})).toBeVisible()
+  await expect(alice.getByRole("button", {name: "More options"})).toHaveCount(0)
+
+  await openDelegatedMenu(alice)
+
+  await expect(alice.getByRole("button", {name: /^Action Items/})).toBeVisible()
+  await expect(alice.getByRole("button", {name: "Edit Space", exact: true})).toHaveCount(0)
+
+  // admin owns the relay, so every method comes back and every control is there
+  const admin = await as(users.admin, roomPath(url, "general"))
+
+  await openMessageMenu(admin, "aye captain")
+
+  await expect(menuItem(admin, "Delete Message")).toBeVisible()
+
+  await admin.goto(spacePath(url) + "/directory")
+
+  await expect(admin.getByRole("button", {name: "More options"})).toBeVisible()
+
+  await openDelegatedMenu(admin)
+
+  await expect(menuItem(admin, "Edit Space")).toBeVisible()
+})

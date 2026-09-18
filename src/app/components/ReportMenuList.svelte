@@ -10,7 +10,7 @@
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import {app, deletes, profiles, relayManagement, relays, user} from "@app/core"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deriveSpaceSupportedMethods} from "@app/management"
   import {pushToast} from "@app/toast"
   import {pushModal} from "@app/modal"
 
@@ -23,7 +23,9 @@
 
   const {url, event, onResolved, onClick}: Props = $props()
 
-  const userIsAdmin = deriveUserIsSpaceAdmin(url)
+  const supportedMethods = deriveSpaceSupportedMethods(url)
+  const canBanEvent = $derived($supportedMethods.includes("banevent"))
+  const canBanPubkey = $derived($supportedMethods.includes("banpubkey"))
   const etag = matchTag(tagSpec("e"), event.tags)
   const ptag = matchTag(tagSpec("p"), event.tags)
 
@@ -106,7 +108,7 @@
       </Button>
     </li>
   {/if}
-  {#if $userIsAdmin}
+  {#if canBanEvent}
     <li>
       <Button onclick={dismissReport}>
         <Icon icon={InboxOut} />
@@ -121,13 +123,13 @@
         </Button>
       </li>
     {/if}
-    {#if ptag}
-      <li>
-        <Button class="text-error" onclick={banMember}>
-          <Icon icon={MinusCircle} />
-          Ban User
-        </Button>
-      </li>
-    {/if}
+  {/if}
+  {#if ptag && canBanPubkey}
+    <li>
+      <Button class="text-error" onclick={banMember}>
+        <Icon icon={MinusCircle} />
+        Ban User
+      </Button>
+    </li>
   {/if}
 </ul>

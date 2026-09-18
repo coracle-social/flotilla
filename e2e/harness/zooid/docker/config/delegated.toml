@@ -1,0 +1,42 @@
+# A space that hands its ordinary members one management method. `member_methods` is what zooid
+# answers `supportedmethods` with for a member who has been assigned nothing else, so a member here
+# holds `allowpubkey` and nothing more — which is the case the client has to gate each admin control
+# against. Everything else matches space.toml.
+#
+# `host` must equal the Host header the harness sends, which is the hostname of the url the client
+# is given; anything else gets a 404 from the dispatcher instead of a relay. Keep it in step with
+# `tenants` in harness/zooid/config.ts, and see harness/zooid/transport.ts for why it is a name
+# that resolves nowhere.
+host = "delegated.test"
+schema = "e2e_delegated"
+secret = "de1e6a7ed000000000000000000000000000000000000000000000000000000f"
+
+[info]
+# Served to the client as nip-11. `name` is what a spec sees as the space's name, so it matches the
+# name scenarios pass to `relay()`. `pubkey` is the owner, and on current zooid ownership is the
+# grant that lets an identity manage the relay (IsOwner → CanManage), so it is admin's key — the
+# identity seeding signs its room fixtures as.
+name = "delegated"
+pubkey = "6ada7b6eabb3a8349f88667d278a275c704b553a7c57f9d8156555986884a08e"
+description = "Throwaway relay for Flotilla's end-to-end suite."
+
+[policy]
+public_read = false
+public_write = false
+public_join = true
+strip_signatures = false
+
+[groups]
+enabled = true
+
+[management]
+enabled = true
+member_methods = ["allowpubkey"]
+
+# Blossom and push are off, and [livekit] is omitted entirely, because each of them would have
+# the relay or the client talk to a service the test did not create.
+[blossom]
+enabled = false
+
+[push]
+enabled = false

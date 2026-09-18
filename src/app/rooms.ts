@@ -19,7 +19,7 @@ import {
   user,
   writer,
 } from "@app/core"
-import {deriveUserIsSpaceAdmin} from "@app/management"
+import {deriveUserIsSpaceStaff} from "@app/management"
 import {makeRoomPath} from "@app/routes"
 
 export const ROOM = "h"
@@ -167,12 +167,12 @@ export const deriveOtherVoiceRooms = (url: string) =>
     return sortBy(roomComparator(url), uniq(result))
   })
 
-// A space admin administers every room in it, so space admin implies room admin.
+// A space's staff administer every room in it, so space staff implies room admin.
 export const deriveUserIsRoomAdmin = (url: string, h: string) =>
   derived(
-    [user, rooms.get().forRoom(url, h), deriveUserIsSpaceAdmin(url)],
-    ([$user, $room, $isSpaceAdmin]) =>
-      $isSpaceAdmin || Boolean($room?.admins?.pubkeys().includes($user.pubkey)),
+    [user, rooms.get().forRoom(url, h), deriveUserIsSpaceStaff(url)],
+    ([$user, $room, $isStaff]) =>
+      $isStaff || Boolean($room?.admins?.pubkeys().includes($user.pubkey)),
   )
 
 // Room membership is the relay's business, but a space admin outranks it.

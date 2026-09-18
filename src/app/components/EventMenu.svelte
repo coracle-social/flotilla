@@ -16,7 +16,7 @@
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
   import {shareEvent} from "@app/share"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deriveSpaceSupportedMethods} from "@app/management"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {app, relayManagement, user} from "@app/core"
@@ -32,7 +32,8 @@
   const {url, noun, event, onClick, customActions}: Props = $props()
 
   const isRoot = event.kind !== COMMENT
-  const userIsAdmin = deriveUserIsSpaceAdmin(url)
+  const supportedMethods = deriveSpaceSupportedMethods(url)
+  const canBanEvent = $derived($supportedMethods.includes("banevent"))
 
   const report = () => pushModal(Report, {url, event})
 
@@ -104,7 +105,7 @@
         Report Content
       </Button>
     </li>
-    {#if $userIsAdmin}
+    {#if canBanEvent}
       <li>
         <Button class="text-error" onclick={showAdminDelete}>
           <Icon size={4} icon={TrashBin2} />

@@ -17,8 +17,9 @@ identities:
 - **alice**, **bob**, **carol** — ordinary members. Multi-user stories give each
   their own browser context against the same relay, so one genuinely observes
   another's writes over the wire.
-- **admin** — the space admin, recognized by the relay's NIP-86 answers, which
-  is what unlocks the space, room, event and directory management surfaces.
+- **admin** — the relay's owner, so every NIP-86 method comes back for them and
+  every space, room, event and directory management control is unlocked. A
+  member the relay answers with fewer methods gets fewer controls (US-127).
 
 The test architecture is described in `e2e/ARCHITECTURE.md`: real zooid relays in
 docker, with every socket and http request terminated in the test process.
@@ -1466,6 +1467,20 @@ Acceptance:
   clears it without granting membership.
 - "Remove Content" on a report deletes the reported message and clears the item;
   dismissing clears the item and leaves the content alone.
+
+### US-127 — Show a member only the controls their methods cover
+
+As a space, we want each admin control gated on the management method behind it,
+so that a member granted one method doesn't get an admin surface that only fails
+when they use it.
+
+Acceptance:
+
+- On a space whose members hold `allowpubkey` alone, alice sees "Report Content"
+  on bob's message and no delete, no "Edit Space" in the space menu, and no
+  "More options" in the directory.
+- She still sees "Action Items", which is the queue `allowpubkey` resolves.
+- admin, who owns the relay and so holds every method, sees all three.
 
 ### US-098 — Browse and create hosted spaces
 

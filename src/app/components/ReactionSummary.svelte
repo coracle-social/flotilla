@@ -28,7 +28,7 @@
   import ZapModal from "@app/components/Zap.svelte"
   import {app, user} from "@app/core"
   import type {FeedContext} from "@app/feeds"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deriveSpaceSupportedMethods} from "@app/management"
   import {pushModal} from "@app/modal"
   import {deriveDisplaysByPubkey} from "@app/social"
 
@@ -123,7 +123,8 @@
     }
   }
 
-  const userIsAdmin = deriveUserIsSpaceAdmin(url)
+  const supportedMethods = deriveSpaceSupportedMethods(url)
+  const canBanEvent = $derived($supportedMethods.includes("banevent"))
 
   const onReportClick = () => pushModal(ReportDetails, {url, event})
 
@@ -150,7 +151,7 @@
 
 {#if $reactions.length > 0 || $zaps.length || $reports.length > 0 || children}
   <div class="flex min-w-0 flex-wrap gap-2">
-    {#if url && $reports.length > 0 && $userIsAdmin}
+    {#if url && $reports.length > 0 && canBanEvent}
       <Button
         data-tip={`This content has been reported as "${displayList(reportReasons)}".`}
         class={cx(

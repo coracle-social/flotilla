@@ -55,9 +55,10 @@ export const deriveSpaceSupportedMethods = (url?: string) =>
 
 // User
 
-// Holding any management method at all is what makes someone staff here. A relay that still
-// answers relay-wide tells us only that the call wasn't refused outright.
-export const deriveUserIsSpaceAdmin = (url?: string) =>
+// Holding any management method at all is what makes someone staff. Every control the relay
+// answers for is gated on its own method instead, so this is only for the room-level permissions
+// NIP-86 has no method for.
+export const deriveUserIsSpaceStaff = (url?: string) =>
   derived(deriveSpaceSupportedMethods(url), $methods => $methods.length > 0)
 
 // The one identity a space names as its own, in its NIP-11 `pubkey`. Space-wide content with no
@@ -73,8 +74,8 @@ export const deriveUserCanCreateRoom = (url: string) =>
     [
       user,
       deriveEventsForUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}]),
-      deriveUserIsSpaceAdmin(url),
+      deriveUserIsSpaceStaff(url),
     ],
-    ([$user, $events, $isAdmin]) =>
-      $isAdmin || $events.some(event => tagValues(hexTags("p"), event.tags).includes($user.pubkey)),
+    ([$user, $events, $isStaff]) =>
+      $isStaff || $events.some(event => tagValues(hexTags("p"), event.tags).includes($user.pubkey)),
   )

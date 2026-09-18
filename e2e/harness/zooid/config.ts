@@ -17,9 +17,11 @@ export const spaceTenants = {
   space: "space.test",
   other: "other.test",
   // Policy space.toml cannot express at the same time. `closed` refuses a join without an invite,
-  // `unsigned` serves events with their signatures stripped.
+  // `unsigned` serves events with their signatures stripped, `delegated` gives every member one
+  // management method.
   closed: "closed.test",
   unsigned: "unsigned.test",
+  delegated: "delegated.test",
 } as const
 
 // Public relays with no groups, which is where anything outside a space lives: `indexer` is what a

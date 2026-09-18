@@ -19,7 +19,7 @@
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {app, relayManagement, roomPinLists, user} from "@app/core"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deriveSpaceSupportedMethods} from "@app/management"
   import {ROOM, deriveUserIsRoomAdmin} from "@app/rooms"
   import {shareEvent} from "@app/share"
   import {readAloud} from "@app/speech"
@@ -36,9 +36,10 @@
 
   const h = tagValue(tagSpec(ROOM), event.tags) ?? ""
   const pinIds = $roomPinLists.pins(url, h).$
-  const userIsAdmin = deriveUserIsSpaceAdmin(url)
+  const supportedMethods = deriveSpaceSupportedMethods(url)
   const userIsRoomAdmin = deriveUserIsRoomAdmin(url, h)
   const isPinned = $derived($pinIds.includes(event.id))
+  const canBanEvent = $derived($supportedMethods.includes("banevent"))
 
   const share = () => {
     onClick()
@@ -171,7 +172,7 @@
         Report Content
       </Button>
     </li>
-    {#if $userIsAdmin}
+    {#if canBanEvent}
       <li>
         <Button class="text-error" onclick={showAdminDelete}>
           <Icon size={4} icon={TrashBin2} />

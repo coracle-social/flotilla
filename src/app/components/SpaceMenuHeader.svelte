@@ -10,7 +10,6 @@
   import SpaceMenuMobile from "@app/components/SpaceMenuMobile.svelte"
   import SpaceMenuActions from "@app/components/SpaceMenuActions.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
   import {deriveSpaceActionItems} from "@app/actionItems"
   import {notificationSettings, deriveShouldNotify} from "@app/settings"
   import {pushModal} from "@app/modal"
@@ -22,7 +21,6 @@
 
   const {url, mobile = false}: Props = $props()
 
-  const userIsAdmin = deriveUserIsSpaceAdmin(url)
   const actionItems = deriveSpaceActionItems(url)
   const shouldNotify = deriveShouldNotify(url)
 
@@ -54,7 +52,7 @@
       <div
         class={cx(
           "absolute -right-3 top-0 h-2 w-2 rounded-full bg-primary text-primary-content transition-all",
-          $userIsAdmin && $actionItems.length > 0 ? "opacity-100" : "opacity-0",
+          $actionItems.length > 0 ? "opacity-100" : "opacity-0",
         )}>
       </div>
       {#if $notificationSettings.push && !$shouldNotify}

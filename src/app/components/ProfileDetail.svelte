@@ -20,7 +20,7 @@
   import ProfilePinnedNote from "@app/components/ProfilePinnedNote.svelte"
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
   import {messagingRelayLists, profiles, relayManagement, user} from "@app/core"
-  import {deriveUserIsSpaceAdmin} from "@app/management"
+  import {deriveSpaceSupportedMethods} from "@app/management"
   import {navigate, popModal, pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {goToChat, makeProfilePath} from "@app/routes"
@@ -32,7 +32,11 @@
 
   const {pubkey, url}: Props = $props()
 
-  const userIsAdmin = deriveUserIsSpaceAdmin(url)
+  const supportedMethods = deriveSpaceSupportedMethods(url)
+  const canBan = $derived($supportedMethods.includes("banpubkey"))
+  const canUnallow = $derived($supportedMethods.includes("unallowpubkey"))
+  const canAllow = $derived($supportedMethods.includes("allowpubkey"))
+  const canListBans = $derived($supportedMethods.includes("listbannedpubkeys"))
 
   const isSelf = $derived($user.pubkey === pubkey)
 
@@ -80,7 +84,7 @@
   let isBanned = $state(false)
 
   $effect(() => {
-    if (url && $userIsAdmin) {
+    if (url && canListBans) {
       $relayManagement
         .forUrl(url)
         .listBannedPubkeys()
@@ -110,21 +114,25 @@
                 </Button>
               </li>
             {/if}
-            {#if $userIsAdmin}
-              {#if isBanned}
+            {#if isBanned}
+              {#if canAllow}
                 <li>
                   <Button onclick={restoreMember}>
                     <Icon size={4} icon={Restart} />
                     Restore Membership
                   </Button>
                 </li>
-              {:else}
+              {/if}
+            {:else}
+              {#if canUnallow}
                 <li>
                   <Button onclick={removeMember}>
                     <Icon size={4} icon={UserMinus} />
                     Remove Member
                   </Button>
                 </li>
+              {/if}
+              {#if canBan}
                 <li>
                   <Button class="text-error" onclick={banMember}>
                     <Icon size={4} icon={MinusCircle} />

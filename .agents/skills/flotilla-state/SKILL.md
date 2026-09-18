@@ -194,8 +194,16 @@ projections and repository derivations:
 // src/app/actionItems.ts
 export const deriveSpaceActionItems = (url: string) =>
   derived(
-    [deriveEventsForUrl(url, [{kinds: [REPORT]}]), rooms.get().pendingJoins(url).$],
-    ([$reports, $pendingJoins]) => sortEventsDesc([...$reports, ...$pendingJoins]),
+    [
+      deriveEventsForUrl(url, [{kinds: [REPORT]}]),
+      rooms.get().pendingJoins(url).$,
+      deriveSpaceSupportedMethods(url),
+    ],
+    ([$reports, $pendingJoins, $methods]) =>
+      sortEventsDesc([
+        ...($methods.includes("banevent") ? $reports : []),
+        ...($methods.includes("allowpubkey") ? $pendingJoins : []),
+      ]),
   )
 ```
 
@@ -206,7 +214,7 @@ export const deriveSpaceActionItems = (url: string) =>
 - plain verbs mutate: `addRoomMembers`, `reorderSpaceUrls`
 
 Rules that involve more than one plugin belong in these functions rather than in components.
-"A space admin is a room admin" lives in `deriveUserIsRoomAdmin`.
+"A space's staff are room admins" lives in `deriveUserIsRoomAdmin`.
 
 ### Hand-built indexes for hot paths
 
