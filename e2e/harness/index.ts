@@ -16,7 +16,12 @@ import {
   mockRelayInfo,
 } from "./net/http"
 import type {BlossomOptions, HostingFixtures, RelayInfoOverrides} from "./net/http"
-import {assertNoLeaks, installWebSocketRoutes, silenceRelay} from "./net/websocket"
+import {
+  assertNoLeaks,
+  formatTranscript,
+  installWebSocketRoutes,
+  silenceRelay,
+} from "./net/websocket"
 import {watchFaults} from "./faults"
 import {boot} from "./app/boot"
 import {injectNip07} from "./app/nip07"
@@ -206,7 +211,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     await zooid.start()
     await zooid.ensure()
 
-    const contexts: BrowserContext[] = []
+    const contexts: {name: string; context: BrowserContext}[] = []
     const faults = watchFaults()
 
     let scenario: Maybe<Scenario>
@@ -233,7 +238,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         ...options.context,
       })
 
-      contexts.push(context)
+      contexts.push({name: user?.name ?? "anonymous", context})
 
       // `use.trace` and the built-in reporting only cover contexts playwright made itself, so a
       // failure in a context opened here arrives with the app's own account of it thrown away —
@@ -306,7 +311,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
     // Closed before anything is read off it: an $effect teardown reading a binding svelte has
     // already cleared throws on unmount, and that is the fault the suite was blindest to.
-    for (const context of contexts) {
+    for (const {context} of contexts) {
       await context.close()
     }
 
@@ -318,15 +323,29 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     if (faults.found.length > 0 || testInfo.status !== testInfo.expectedStatus) {
       // A path rather than a body: the list reporter truncates an inline attachment, and the
       // nightly run on the box keeps test-results and nothing else.
-      const path = testInfo.outputPath("browser-console.log")
+      const consolePath = testInfo.outputPath("browser-console.log")
 
-      await writeFile(path, faults.log.join("\n"))
-      await testInfo.attach("browser-console", {path, contentType: "text/plain"})
+      await writeFile(consolePath, faults.log.join("\n"))
+      await testInfo.attach("browser-console", {path: consolePath, contentType: "text/plain"})
+
+      // What each user said to each relay and what came back. The console says what the app did
+      // with an event; this says whether it ever had one, which is the only way to tell a client
+      // that dropped a message from a relay that never sent it.
+      const transcriptPath = testInfo.outputPath("relay-transcript.log")
+
+      await writeFile(
+        transcriptPath,
+        contexts.map(({name, context}) => `== ${name}\n${formatTranscript(context)}`).join("\n"),
+      )
+      await testInfo.attach("relay-transcript", {
+        path: transcriptPath,
+        contentType: "text/plain",
+      })
     }
 
     faults.assertNone()
 
-    for (const context of contexts) {
+    for (const {context} of contexts) {
       assertNoLeaks(context)
     }
   },

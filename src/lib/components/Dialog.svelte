@@ -104,7 +104,14 @@
   })
 
   onMount(() => {
+    const overlay = element
     const autofocus = panel.querySelector<HTMLElement>("[autofocus]")
+
+    const holdsFocus = () => {
+      const {activeElement} = document
+
+      return !activeElement || activeElement === document.body || overlay.contains(activeElement)
+    }
 
     trap = createFocusTrap(element, {
       allowOutsideClick: true,
@@ -113,7 +120,7 @@
       ...(autofocus ? {initialFocus: autofocus} : {}),
       isolateSubtrees: false,
       returnFocusOnDeactivate: false,
-      setReturnFocus: previous => (previous.isConnected ? previous : false),
+      setReturnFocus: previous => (previous.isConnected && holdsFocus() ? previous : false),
       tabbableOptions: {getShadowRoot: true},
     })
 

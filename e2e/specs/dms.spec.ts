@@ -630,6 +630,10 @@ test("US-036 receive a new conversation live", async ({seed, as}) => {
 
   await sendDm(bob, "starting a chat with you")
 
+  // His own copy first, so a send that lost keystrokes to something else on the page fails here
+  // rather than thirty seconds later as a message that never reached her
+  await expect(bubble(bob, "starting a chat with you")).toBeVisible()
+
   // Her list picks the conversation up on its own
   const fromBob = chatItems(alice).filter({hasText: "Bob Barnacle"})
 

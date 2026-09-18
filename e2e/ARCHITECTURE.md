@@ -448,6 +448,9 @@ playwright's own reporting only cover contexts playwright made itself, and the h
 own, so without that attachment a failure carries the DOM snapshot and nothing the app said —
 which is unreadable when what failed is the app rendering its error page.
 
+It also attaches `relay-transcript`, what each user said to each relay and what came back. The
+console says what the app did with an event, and the transcript says whether it ever had one.
+
 One engine per run. These specs exercise sockets, auth and sync, so running them under three
 engines adds little coverage. `E2E_BROWSER=webkit pnpm test` runs the whole
 suite under another one. The container listens on a fixed port and cannot be sharded, so
