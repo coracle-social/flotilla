@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
+  import {onDestroy, onMount, untrack} from "svelte"
   import {readable} from "svelte/store"
   import {page} from "$app/stores"
   import {navigate} from "@app/modal"
@@ -372,6 +372,7 @@
   let jumpSettled = $state(false)
   let released = false
   let pinned: Maybe<{id: string; top: number}>
+  let feedAnchor: Maybe<number>
   let isProgrammaticScroll = $state(false)
   let isUserScrolling = $state(false)
   let virtualList: Maybe<VirtualListController> = $state()
@@ -449,6 +450,19 @@
   // the whole answer.
   const showScrollButton = $derived(scrolledUp || windowStopsShort)
 
+  // A search result or a notification jumping into the room already on screen changes the url
+  // without re-creating this component, so the feed built on the old anchor has to be rebuilt
+  // on the new one. `at` is NaN when there is no anchor, and NaN never equals itself.
+  $effect(() => {
+    if (!isNaN(at) && feedAnchor && at !== feedAnchor) {
+      released = false
+      pinned = undefined
+      jumpSettled = false
+
+      untrack(() => start(at))
+    }
+  })
+
   $effect(() => {
     if (elements.length > 0 && !isUserScrolling) {
       requestAnimationFrame(manageScrollPosition)
@@ -484,6 +498,8 @@
 
   const start = (anchor: number) => {
     cleanup?.()
+
+    feedAnchor = anchor
 
     const feed = makeFeed({
       relays: [url],
