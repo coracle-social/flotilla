@@ -18,10 +18,7 @@ export class Push {
 
       if (Capacitor.getPlatform() === "electron") {
         Push._adapter = new ElectronNotifications()
-      } else if (
-        Capacitor.getPlatform() === "android" &&
-        (useFallback || !Capacitor.isPluginAvailable("PushNotifications"))
-      ) {
+      } else if (Capacitor.getPlatform() === "android" && useFallback) {
         Push._adapter = new AndroidFallbackNotifications()
       } else if (Capacitor.isPluginAvailable("PushNotifications")) {
         Push._adapter = new CapacitorNotifications()

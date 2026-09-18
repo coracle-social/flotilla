@@ -5,7 +5,7 @@ import {maybe, now} from "@welshman/lib"
 import type {Filter} from "@welshman/util"
 import type {Session} from "@welshman/app"
 import {app, session} from "@app/core"
-import {pushState} from "@app/push/adapters/common"
+import {pushState, requiresFallback} from "@app/push/adapters/common"
 import type {IPushAdapter} from "@app/push/adapters/common"
 import {syncRelaySubscriptions} from "@app/push/adapters/common"
 
@@ -92,6 +92,6 @@ export class AndroidFallbackNotifications implements IPushAdapter {
 
     await AndroidPushFallback.syncState({state: {}})
 
-    pushState.set({})
+    pushState.set({useFallback: requiresFallback})
   }
 }

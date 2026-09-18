@@ -1,5 +1,6 @@
 import {writable} from "svelte/store"
 import type {Subscriber, Unsubscriber} from "svelte/store"
+import {Capacitor} from "@capacitor/core"
 import {assoc, call, ms, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
 import {LOCAL_RELAY_URL} from "@welshman/net"
 import type {RepositoryUpdate} from "@welshman/net"
@@ -33,7 +34,11 @@ export type PushState = {
   subscription?: PushSubscription
 }
 
-export const pushState = withGetter(writable<PushState>({}))
+// The F-Droid build ships without the push plugin, so those installs can only ever poll
+export const requiresFallback =
+  Capacitor.getPlatform() === "android" && !Capacitor.isPluginAvailable("PushNotifications")
+
+export const pushState = withGetter(writable<PushState>({useFallback: requiresFallback}))
 
 export interface IPushAdapter {
   request: (prompt?: boolean) => Promise<string>
