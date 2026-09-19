@@ -43,7 +43,8 @@
   }
 
   .primary-nav__nav-item {
-    @apply text-content relative my-1 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full transition-all;
+    @apply text-content relative my-1 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full transition-all select-none;
+    -webkit-touch-callout: none;
   }
 
   .primary-nav__nav-item:hover,
