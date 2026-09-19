@@ -1716,8 +1716,10 @@ Acceptance:
   posted himself does not.
 - Opening the list keeps the dot on alice's row, so he can tell which thread is
   new, and bob's row still carries none.
-- Leaving the list marks its threads read, and neither the row nor the nav item
-  shows a dot afterwards.
+- Opening a thread takes its own row's dot down, and one he left alone keeps its
+  dot.
+- The nav item stays clear once he has opened the list, whether or not a thread
+  under it is still unread.
 
 ### US-113 — See which threads are unread on a phone
 

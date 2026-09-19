@@ -761,6 +761,7 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
     // A thread bob wrote raises no indicator of its own, so it is the control for a row with no dot
     seedThread(space, user.bob, "where is the sextant", at(3, HOUR))
     seedThread(space, user.alice, "the server is on fire", at(2, HOUR))
+    seedThread(space, user.alice, "the anchor is dragging", at(1, HOUR))
   })
 
   const space = scenario.space("space")
@@ -774,6 +775,7 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
   await threadsNav.click()
 
   const hers = bob.getByRole("row").filter({hasText: "the server is on fire"})
+  const unopened = bob.getByRole("row").filter({hasText: "the anchor is dragging"})
   const his = bob.getByRole("row").filter({hasText: "where is the sextant"})
 
   await expect(his).toBeVisible()
@@ -784,20 +786,22 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
   await bob.waitForTimeout(1500)
 
   await expect(unreadDot(hers)).toBeVisible()
+  await expect(unreadDot(unopened)).toBeVisible()
   await expect(unreadDot(his)).toHaveCount(0)
 
   await hers.click()
 
   await expect(pageBar(bob)).toContainText("the server is on fire")
 
-  // Leaving the list is what marks its threads read, so the dot is gone on the way back
+  // Opening a thread is what marks it read, so only the one he opened loses its dot
   await bob.goBack()
 
-  await expect(hers).toBeVisible()
   await expect(unreadDot(hers)).toHaveCount(0)
+  await expect(unreadDot(unopened)).toBeVisible()
 
   await roomLink(bob, "General").click()
 
+  // The nav item is clear even with a thread under it still unread
   await expect(threadsNav).toBeVisible()
   await expect(unreadDot(threadsNav)).toHaveCount(0)
 })

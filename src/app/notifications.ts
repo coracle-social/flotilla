@@ -18,7 +18,6 @@ import {Relays, RoomLists} from "@welshman/app"
 import {deriveEventsByIdByUrl} from "@app/repository"
 import {app, fromApp} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
-import {decodeRelay} from "@app/relays"
 import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
 import {getIsMuted, notificationSettings, userSettingsValues} from "@app/settings"
 import {chatsById} from "@app/chats"
@@ -47,20 +46,6 @@ const getPaths = (path: string) =>
     .split("/")
     .map((_, i, segments) => segments.slice(0, i + 1).join("/"))
     .slice(1)
-
-const getExitPaths = (pathname: string, relay?: string) => {
-  const paths = getPaths(pathname)
-
-  if (relay) {
-    const url = decodeRelay(relay)
-
-    if (CONTENT_KINDS.some(kind => makeContentPath(url, kind) === pathname)) {
-      paths.push(pathname + "*")
-    }
-  }
-
-  return paths
-}
 
 export const syncChecked = () => {
   let prev: string[] = []
@@ -91,7 +76,7 @@ export const syncChecked = () => {
       })
     }, 300)
 
-    prev = getExitPaths($page.url.pathname, $page.params.relay)
+    prev = paths
   })
 }
 
