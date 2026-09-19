@@ -9,17 +9,16 @@
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import Danger from "@assets/icons/danger.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
-  import Confirm from "@lib/components/Confirm.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import Report from "@app/components/Report.svelte"
+  import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
   import {shareEvent} from "@app/share"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveUserAdminDelete} from "@app/rooms"
   import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {app, relayManagement, user} from "@app/core"
+  import {user} from "@app/core"
 
   type Props = {
     url: string
@@ -32,8 +31,7 @@
   const {url, noun, event, onClick, customActions}: Props = $props()
 
   const isRoot = event.kind !== COMMENT
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canBanEvent = $derived($supportedMethods.includes("banevent"))
+  const adminDelete = deriveUserAdminDelete(url, event)
 
   const report = () => pushModal(Report, {url, event})
 
@@ -45,22 +43,7 @@
 
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 
-  const showAdminDelete = () =>
-    pushModal(Confirm, {
-      title: `Delete ${noun}`,
-      message: `Are you sure you want to delete this ${noun.toLowerCase()} from the space?`,
-      confirm: async () => {
-        const {error} = await $relayManagement.forUrl(url).banEvent(event.id)
-
-        if (error) {
-          pushToast({theme: "error", message: error})
-        } else {
-          pushToast({message: "Event has successfully been deleted!"})
-          $app.repository.removeEvent(event.id)
-          history.back()
-        }
-      },
-    })
+  const showAdminDelete = () => pushModal(EventAdminDeleteConfirm, {url, noun, event})
 
   let ul: Element
 
@@ -105,7 +88,7 @@
         Report Content
       </Button>
     </li>
-    {#if canBanEvent}
+    {#if $adminDelete}
       <li>
         <Button class="text-error" onclick={showAdminDelete}>
           <Icon size={4} icon={TrashBin2} />

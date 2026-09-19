@@ -25,10 +25,11 @@
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
+  import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {reactions, relays, roomPinLists, user} from "@app/core"
-  import {deriveUserIsRoomAdmin} from "@app/rooms"
+  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/rooms"
   import {ENABLE_ZAPS} from "@app/env"
   import {makeContentPath} from "@app/routes"
   import {shareEvent} from "@app/share"
@@ -49,6 +50,7 @@
   const path = makeContentPath(url, event.kind, getIdOrAddress(event))
   const pinIds = $roomPinLists.pins(url, h).$
   const userIsRoomAdmin = deriveUserIsRoomAdmin(url, h)
+  const adminDelete = deriveUserAdminDelete(url, event)
   const isPinned = $derived($pinIds.includes(event.id))
   const tile = "button h-auto flex-col gap-1.5 py-4 text-xs"
 
@@ -97,6 +99,8 @@
   const showInfo = () => pushModal(EventInfo, {url, event}, {replaceState: true})
 
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
+
+  const showAdminDelete = () => pushModal(EventAdminDeleteConfirm, {url, noun: "Message", event})
 
   const toggleMore = () => {
     showMore = !showMore
@@ -189,6 +193,11 @@
           </Button>
           {#if event.pubkey === $user.pubkey}
             <Button class="button button-neutral w-full text-error" onclick={showDelete}>
+              <Icon size={4} icon={TrashBin2} />
+              Delete Message
+            </Button>
+          {:else if $adminDelete}
+            <Button class="button button-neutral w-full text-error" onclick={showAdminDelete}>
               <Icon size={4} icon={TrashBin2} />
               Delete Message
             </Button>

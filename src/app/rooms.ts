@@ -2,7 +2,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {derived, get} from "svelte/store"
 import {formatTimestampAsDate, int, sortBy, uniq, MINUTE} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {outbox, relay, seen, toNostrURI} from "@welshman/util"
+import {outbox, relay, seen, tagSpec, tagValue, toNostrURI} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
 import {Message} from "@welshman/domain"
 import {MembershipStatus, RoomLists, makeRoomKey, createSearch, publish} from "@welshman/app"
@@ -19,7 +19,7 @@ import {
   user,
   writer,
 } from "@app/core"
-import {deriveUserIsSpaceStaff} from "@app/management"
+import {deriveSpaceSupportedMethods, deriveUserIsSpaceStaff} from "@app/management"
 import {makeRoomPath} from "@app/routes"
 
 export const PROTECTED = ["-"]
@@ -172,6 +172,33 @@ export const deriveUserIsRoomAdmin = (url: string, h: string) =>
     ([$user, $room, $isStaff]) =>
       $isStaff || Boolean($room?.admins?.pubkeys().includes($user.pubkey)),
   )
+
+// Deleting someone else's content goes one of two ways, and a space answers for either one.
+export enum AdminDelete {
+  Room = "room",
+  Space = "space",
+}
+
+// A room admin deletes over NIP-29, which is scoped to the room the content is in. NIP-86 is the
+// wider grant and the only one that reaches content belonging to no room, so it comes second.
+export const deriveUserAdminDelete = (url: string, event: TrustedEvent) => {
+  const h = tagValue(tagSpec("h"), event.tags) ?? ""
+
+  return derived(
+    [deriveUserIsRoomAdmin(url, h), deriveSpaceSupportedMethods(url)],
+    ([$isRoomAdmin, $methods]): Maybe<AdminDelete> => {
+      if (h && $isRoomAdmin) {
+        return AdminDelete.Room
+      }
+
+      if ($methods.includes("banevent")) {
+        return AdminDelete.Space
+      }
+
+      return undefined
+    },
+  )
+}
 
 // Room membership is the relay's business, but a space admin outranks it.
 export const deriveUserRoomMembershipStatus = (url: string, h: string) =>

@@ -12,15 +12,14 @@
   import VolumeLoud from "@assets/icons/volume-loud.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import Confirm from "@lib/components/Confirm.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import Report from "@app/components/Report.svelte"
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
+  import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import {app, relayManagement, roomPinLists, user} from "@app/core"
-  import {deriveSpaceSupportedMethods} from "@app/management"
-  import {deriveUserIsRoomAdmin} from "@app/rooms"
+  import {roomPinLists, user} from "@app/core"
+  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/rooms"
   import {shareEvent} from "@app/share"
   import {readAloud} from "@app/speech"
   import {pushModal} from "@app/modal"
@@ -36,10 +35,9 @@
 
   const h = tagValue(tagSpec("h"), event.tags) ?? ""
   const pinIds = $roomPinLists.pins(url, h).$
-  const supportedMethods = deriveSpaceSupportedMethods(url)
   const userIsRoomAdmin = deriveUserIsRoomAdmin(url, h)
+  const adminDelete = deriveUserAdminDelete(url, event)
   const isPinned = $derived($pinIds.includes(event.id))
-  const canBanEvent = $derived($supportedMethods.includes("banevent"))
 
   const share = () => {
     onClick()
@@ -80,22 +78,10 @@
     pushModal(EventDeleteConfirm, {url, event})
   }
 
-  const showAdminDelete = () =>
-    pushModal(Confirm, {
-      title: `Delete Message`,
-      message: `Are you sure you want to delete this message from the space?`,
-      confirm: async () => {
-        const {error} = await $relayManagement.forUrl(url).banEvent(event.id)
-
-        if (error) {
-          pushToast({theme: "error", message: error})
-        } else {
-          pushToast({message: "Event has successfully been deleted!"})
-          $app.repository.removeEvent(event.id)
-          history.back()
-        }
-      },
-    })
+  const showAdminDelete = () => {
+    onClick()
+    pushModal(EventAdminDeleteConfirm, {url, noun: "Message", event})
+  }
 
   const togglePin = async () => {
     onClick()
@@ -174,7 +160,7 @@
         Report Content
       </Button>
     </li>
-    {#if canBanEvent}
+    {#if $adminDelete}
       <li>
         <Button class="text-error" onclick={showAdminDelete}>
           <Icon size={4} icon={TrashBin2} />
