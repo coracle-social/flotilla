@@ -1,5 +1,5 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
-import {DAY, HOUR, MINUTE, WEEK, bech32ToHex} from "@welshman/lib"
+import {DAY, HOUR, MINUTE, WEEK, bech32ToHex, now} from "@welshman/lib"
 import {getLnUrl} from "@welshman/util"
 import {Profile, displayPubkey} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
@@ -577,9 +577,13 @@ test("US-024 edit or delete a message you sent", async ({seed, as}) => {
   await expect(message(bob, "we sail at dwan")).toBeVisible()
 
   // Her edit republishes with her original timestamp, and two messages sharing a second are
-  // ordered by event id (US-118) -- which the edit changes. His reply lands in a later second, so
+  // ordered by event id (US-118) -- which the edit changes. His reply waits her second out, so
   // the order asserted below is about the timestamp rather than a coin flip on the new id.
-  await alice.waitForTimeout(1000 - (Date.now() % 1000) + 50)
+  const sent = now()
+
+  while (now() === sent) {
+    await alice.waitForTimeout(50)
+  }
 
   await send(bob, "spelling?")
 
