@@ -336,7 +336,7 @@ export const toggleVideoPrimaryTile = (key: string) => {
 }
 
 export const loadCallParticipants = (url: string, h: string) =>
-  network.get().load({
+  network.get().loadLenient({
     relays: [url],
     filters: [{kinds: [LIVEKIT_PARTICIPANTS], "#d": [h]}],
   })

@@ -96,7 +96,7 @@
       history.back()
 
       if (shareToChat) {
-        publishRoomQuote({url, h: room, parent: thunk.event, protect})
+        publishRoomQuote({url, h: room, parent: thunk.options.event, protect})
       }
     } finally {
       loading = false

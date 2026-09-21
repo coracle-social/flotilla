@@ -53,7 +53,7 @@
         back()
       } else {
         pushToast({message: "Shelf created!"})
-        navigate(makeLibraryPath(url, getAddress(thunk.event)))
+        navigate(makeLibraryPath(url, getAddress(thunk.options.event)))
       }
     } catch (e) {
       console.error(e)

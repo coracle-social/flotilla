@@ -314,7 +314,7 @@ data every page needs lives in `src/app/sync.ts`.
 
 **One entity, or a handful of lists:** call plugin `load` in `onMount`, and toast on failure, as
 `people/[npub]/+page.svelte` does for the profile, relay list, follow, pin, room and messaging
-lists before loading the author's outbox with `$network.load`.
+lists before loading the author's outbox with `$network.loadLenient`.
 
 **A detail page:** `deriveEvent(address, [url])` loads when nothing local matches. While it is
 empty, seven pages show a spinner that turns into a failure message:

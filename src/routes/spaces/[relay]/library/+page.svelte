@@ -72,7 +72,7 @@
     const controller = new AbortController()
 
     $network
-      .load({relays: [url], filters: [{kinds: [PINBOARD, PIN]}], signal: controller.signal})
+      .loadLenient({relays: [url], filters: [{kinds: [PINBOARD, PIN]}], signal: controller.signal})
       .then(() => {
         loading = false
       })

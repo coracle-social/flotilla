@@ -156,7 +156,7 @@
       history.back()
 
       if (shareToChat) {
-        publishRoomQuote({url, h, parent: pollThunk.event, protect})
+        publishRoomQuote({url, h, parent: pollThunk.options.event, protect})
       }
     } finally {
       loading = false

@@ -19,7 +19,7 @@ export const derivePinnedEvents = (pubkey: string): Readable<TrustedEvent[]> =>
           .get()
           .resolver.relays([outbox(pubkey)])
           .then($relays =>
-            network.get().load({relays: $relays, filters, signal: controller.signal}),
+            network.get().loadLenient({relays: $relays, filters, signal: controller.signal}),
           )
 
         const unsubscribe = deriveEvents(filters).subscribe(set)

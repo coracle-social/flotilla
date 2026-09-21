@@ -145,10 +145,10 @@
       }
 
       draftKey.clear()
-      goto(makeArticlePath(url, getAddress(thunk.event)))
+      goto(makeArticlePath(url, getAddress(thunk.options.event)))
 
       if (shareToChat) {
-        publishRoomQuote({url, h, parent: thunk.event, protect})
+        publishRoomQuote({url, h, parent: thunk.options.event, protect})
       }
     } finally {
       loading = false

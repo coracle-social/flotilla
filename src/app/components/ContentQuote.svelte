@@ -56,7 +56,7 @@
       mergedRelays.set(urls)
 
       if (!$quote) {
-        $network.load({filters: getIdFilters([idOrAddress]), relays: urls})
+        $network.loadLenient({filters: getIdFilters([idOrAddress]), relays: urls})
       }
     })
 

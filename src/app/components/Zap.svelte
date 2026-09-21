@@ -74,7 +74,7 @@
     const {relays, invoice, filters} = await requestInvoice()
 
     await payInvoice(invoice)
-    await $network.load({relays, filters})
+    await $network.loadLenient({relays, filters})
 
     pushToast({message: "Zap successfully sent!"})
     back()

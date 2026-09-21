@@ -17,7 +17,7 @@ export const thunksByEventId = derived(
     const byId = new Map<string, Thunk[]>()
 
     for (const thunk of $history) {
-      pushToMapKey(byId, thunk.event.id, thunk)
+      pushToMapKey(byId, thunk.options.event.id, thunk)
     }
 
     // Hand back the array from last time wherever an event's thunks are unchanged. A row derives

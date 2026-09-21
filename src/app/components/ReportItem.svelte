@@ -57,7 +57,7 @@
   {/if}
   <div class="card card-sm">
     {#if etag}
-      {#await $network.load({relays: [url, LOCAL_RELAY_URL], filters: getIdFilters([etag[1]])})}
+      {#await $network.loadComplete( {relays: [url, LOCAL_RELAY_URL], filters: getIdFilters( [etag[1]], )}, )}
         <p>Loading</p>
       {:then reportedEvents}
         {#if reportedEvents.length === 0}

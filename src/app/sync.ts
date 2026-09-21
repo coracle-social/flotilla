@@ -224,7 +224,7 @@ const syncUserData = () => {
     if (authors.length > 0) {
       const scenario = await router.get().resolve(authors.map(author => outbox(author)))
 
-      network.get().load({
+      network.get().loadLenient({
         filters: [{kinds: [FOLLOWS, MUTES], authors}],
         relays: scenario.limit(8).getUrls(),
       })
@@ -295,7 +295,7 @@ const syncSpace = (url: string) => {
   // Which sections a space offers is a question about its whole history rather than about the
   // recent window above — a space whose newest poll is a year old still has polls. One event
   // per kind answers it.
-  network.get().load({
+  network.get().loadLenient({
     relays: [url],
     signal: controller.signal,
     filters: CONTENT_KINDS.map(kind => ({kinds: [kind], limit: 1})),

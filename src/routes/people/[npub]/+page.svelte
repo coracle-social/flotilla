@@ -57,7 +57,7 @@
         filters.push({kinds: [FOLLOWS], "#p": [pubkey], limit: 500})
       }
 
-      $network.load({
+      $network.loadLenient({
         relays: await $router.resolver.relays([outbox(pubkey)]),
         filters,
       })

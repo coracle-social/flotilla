@@ -30,7 +30,7 @@
 
     let found = false
 
-    $network.load({
+    $network.loadComplete({
       relays: [LOCAL_RELAY_URL, ...data.relays],
       filters: getIdFilters([type === "nevent" ? data.id : Address.fromNaddr(bech32).toString()]),
       onEvent: (event: TrustedEvent) => {

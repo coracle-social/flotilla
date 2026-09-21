@@ -20,7 +20,7 @@
 
   onDestroy(context.cleanup)
 
-  const events = $network.load({
+  const events = $network.loadComplete({
     relays: [url],
     filters: [{authors: [pubkey], kinds: [NOTE], limit}],
   })

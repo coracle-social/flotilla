@@ -16,7 +16,7 @@ export const deriveEvent = (idOrAddress: string, relays: string[] = []) =>
       repository: $app.repository,
       includeDeleted: true,
       onDerive: (filters: Filter[], hints: string[]) =>
-        $app.use(Network).load({filters, relays: hints}),
+        $app.use(Network).loadLenient({filters, relays: hints}),
     })(idOrAddress, relays),
   )
 

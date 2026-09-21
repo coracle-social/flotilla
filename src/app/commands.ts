@@ -48,15 +48,16 @@ export class Commands extends RelayScopedDerivedPlugin<CommandReader> {
     const [url, address] = splitCommandKey(key)
     const {pubkey, identifier} = Address.from(address)
 
-    return this.app
-      .use(Network)
-      .load({relays: [url], filters: [{kinds: [COMMAND], authors: [pubkey], "#d": [identifier]}]})
+    return this.app.use(Network).loadComplete({
+      relays: [url],
+      filters: [{kinds: [COMMAND], authors: [pubkey], "#d": [identifier]}],
+    })
   }
 
   ensureLoaded = (url: string) => {
     if (!this.pulled.has(url)) {
       this.pulled.add(url)
-      this.app.use(Network).load({relays: [url], filters: [{kinds: [COMMAND]}]})
+      this.app.use(Network).loadLenient({relays: [url], filters: [{kinds: [COMMAND]}]})
     }
   }
 

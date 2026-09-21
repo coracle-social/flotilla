@@ -129,7 +129,7 @@
       history.back()
 
       if (shareToChat) {
-        publishRoomQuote({url, h, parent: classifiedThunk.event, protect})
+        publishRoomQuote({url, h, parent: classifiedThunk.options.event, protect})
       }
     } finally {
       loading = false

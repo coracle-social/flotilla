@@ -40,7 +40,7 @@
   const isOwn = event.pubkey === $user.pubkey
   const profileDisplay = $profiles.display(event.pubkey).$
   const thunks = $app.use(Thunks).history
-  const thunk = $app.use(Thunks).merge($thunks.filter(t => t.event.id === event.id))
+  const thunk = $app.use(Thunks).merge($thunks.filter(t => t.options.event.id === event.id))
   const colorValue = colorFor(event.pubkey)
 
   const reply = () => replyTo(event)

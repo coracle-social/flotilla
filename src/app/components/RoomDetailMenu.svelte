@@ -58,7 +58,7 @@
         const message = await thunk.waitForError()
 
         if (message) {
-          $app.repository.removeEvent(thunk.event.id)
+          $app.repository.removeEvent(thunk.options.event.id)
           pushToast({theme: "error", message})
         } else {
           await $roomLists.removeRoom(h, url).then(publish)

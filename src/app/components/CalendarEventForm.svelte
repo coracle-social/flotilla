@@ -127,7 +127,7 @@
       history.back()
 
       if (shareToChat) {
-        publishRoomQuote({url, h, parent: calendarThunk.event, protect})
+        publishRoomQuote({url, h, parent: calendarThunk.options.event, protect})
       }
 
       pushToast({message: "Your event has been saved!"})

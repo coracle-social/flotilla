@@ -146,7 +146,7 @@ export const makeFeedContext = ({
   }
 
   const loadFrom = async (urls: string[], events: TrustedEvent[]) => {
-    const context = await network.get().load({
+    const context = await network.get().loadComplete({
       relays: urls,
       signal: controller.signal,
       filters: [
@@ -156,7 +156,7 @@ export const makeFeedContext = ({
     })
 
     if (context.length > 0) {
-      network.get().load({
+      network.get().loadLenient({
         relays: urls,
         signal: controller.signal,
         filters: getReplyFilters(context, {kinds: [DELETE]}),
