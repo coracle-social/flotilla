@@ -21,7 +21,6 @@
   import {attemptRelayAccess} from "@app/access"
   import {
     POMADE_SIGNERS,
-    PLATFORM_NAME,
     INDEXER_RELAYS,
     DEFAULT_RELAYS,
     DEFAULT_MESSAGING_RELAYS,
@@ -106,9 +105,9 @@
 
 <Modal>
   <ModalBody>
-    <ModalTitle>Join {PLATFORM_NAME}</ModalTitle>
+    <ModalTitle>Create an Account</ModalTitle>
     <p class="m-auto max-w-sm text-center">
-      Censorship resistant digital spaces for communities. Meet new people, own your identity.
+      Get started in just a few clicks by picking one of the options below.
     </p>
     {#if hasPomade}
       <Button onclick={flows.email.start} class="button button-primary">
