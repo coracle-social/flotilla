@@ -247,15 +247,29 @@
   // Messages loading in below the pinned row are inserted at the scroll origin, which pushes
   // everything else away from it. The browser has no reason to compensate for that, so put the
   // row back where it was. scrollBy is in visual terms, so this reads the same way either way up.
-  const keepPinned = () => {
+  //
+  // A row the scroll clamped at the origin is the exception: it is pinned to the live end of the
+  // loaded window, and once the forward walk reaches the present that is the live end of the
+  // conversation, where an arriving message belongs on screen. Settling there while the origin is
+  // still within reach of the row leaves a jump deep into history — clamped the same way with
+  // nothing newer loaded yet — where it landed.
+  const keepPinned = (caughtUp: boolean) => {
     const target = pinned && element?.querySelector(`[data-event="${pinned.id}"]`)
 
     if (target instanceof HTMLElement && pinned) {
-      const drift = topOf(target) - pinned.top
+      const origin = Math.abs(element!.scrollTop)
 
-      if (Math.abs(drift) >= 1) {
+      if (pinned.clamped && caughtUp && topOf(target) > origin) {
+        release()
         isProgrammaticScroll = true
-        element!.scrollBy({top: drift})
+        element!.scrollTo({top: 0})
+      } else {
+        const drift = topOf(target) - pinned.top
+
+        if (Math.abs(drift) >= 1) {
+          isProgrammaticScroll = true
+          element!.scrollBy({top: drift})
+        }
       }
     }
   }
@@ -291,7 +305,9 @@
         }
 
         if (pin) {
-          pinned = {id, top: topOf(target)}
+          // A scroll that ended at the origin is one the browser clamped there, so the offset
+          // below is as close to centred as the row could get rather than where it was put.
+          pinned = {id, top: topOf(target), clamped: Math.abs(element!.scrollTop) < 1}
         }
       }
 
@@ -372,7 +388,7 @@
   let leaving = $state(false)
   let jumpSettled = $state(false)
   let released = false
-  let pinned: Maybe<{id: string; top: number}>
+  let pinned: Maybe<{id: string; top: number; clamped: boolean}>
   let feedAnchor: Maybe<number>
   let isProgrammaticScroll = $state(false)
   let isUserScrolling = $state(false)
@@ -471,10 +487,14 @@
     }
   })
 
-  // Content can arrive mid-scroll too, so this runs whether or not the reader is moving
+  // Content can arrive mid-scroll too, so this runs whether or not the reader is moving. The
+  // forward walk reaching the present is the other thing a pin watches for, and it can land after
+  // the last message does, so it is read here where the effect sees it change.
   $effect(() => {
+    const caughtUp = !windowStopsShort
+
     if (elements.length > 0) {
-      const frame = requestAnimationFrame(keepPinned)
+      const frame = requestAnimationFrame(() => keepPinned(caughtUp))
 
       return () => cancelAnimationFrame(frame)
     }
