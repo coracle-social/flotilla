@@ -87,27 +87,27 @@
     }
 
     if (url.protocol === "flotilla:" && url.host === "shortcut") {
-      if (!core.app.get().user) return
+      if (core.app.get().user) {
+        switch (url.pathname) {
+          case "/messages":
+            goToChat()
+            break
+          case "/search": {
+            const modal = getModal()
 
-      switch (url.pathname) {
-        case "/messages":
-          goToChat()
-          break
-        case "/search": {
-          const modal = getModal()
-
-          if (modal?.component !== Search) {
-            pushModal(Search, {}, {replaceState: Boolean(modal)})
+            if (modal?.component !== Search) {
+              pushModal(Search, {}, {replaceState: Boolean(modal)})
+            }
+            break
           }
-          break
+          case "/spaces":
+            navigate("/spaces")
+            break
+          case "/inbox":
+            clearModals()
+            goToHome()
+            break
         }
-        case "/spaces":
-          navigate("/spaces")
-          break
-        case "/inbox":
-          clearModals()
-          goToHome()
-          break
       }
 
       return
