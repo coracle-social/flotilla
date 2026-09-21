@@ -119,14 +119,24 @@
     const matches = goals.filter(event => {
       const progress = $progressById.get(event.id)
 
-      if (tab === "live") return Boolean(progress && !progress.isEnded && !progress.isFunded)
-      if (tab === "funded") return Boolean(progress?.isFunded)
-      if (tab === "ended") return Boolean(progress?.isEnded)
+      if (tab === "live") {
+        return Boolean(progress && !progress.isEnded && !progress.isFunded)
+      }
+
+      if (tab === "funded") {
+        return Boolean(progress?.isFunded)
+      }
+
+      if (tab === "ended") {
+        return Boolean(progress?.isEnded)
+      }
 
       return true
     })
 
-    if (sort === "new") return sortBy(event => -event.created_at, matches)
+    if (sort === "new") {
+      return sortBy(event => -event.created_at, matches)
+    }
 
     if (sort === "progress") {
       return sortBy(event => -($progressById.get(event.id)?.percent ?? 0), matches)
