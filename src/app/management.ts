@@ -22,6 +22,93 @@ export const deriveSpaceBannedPubkeyItems = (url: string) => {
   return store
 }
 
+// NIP-86 has no way to ask a relay which methods it can hand out — `supportedmethods` answers for
+// the pubkey that signed the request — so the catalog of grantable methods is the client's own.
+export const MANAGEMENT_METHOD_GROUPS = [
+  {
+    label: "Members",
+    methods: [
+      {method: "allowpubkey", label: "Add members"},
+      {method: "unallowpubkey", label: "Remove members"},
+      {method: "listallowedpubkeys", label: "List members"},
+      {method: "banpubkey", label: "Ban members"},
+      {method: "unbanpubkey", label: "Unban members"},
+      {method: "listbannedpubkeys", label: "List banned members"},
+    ],
+  },
+  {
+    label: "Content",
+    methods: [
+      {method: "banevent", label: "Delete content"},
+      {method: "allowevent", label: "Dismiss reports"},
+      {method: "listbannedevents", label: "List deleted content"},
+    ],
+  },
+  {
+    label: "Roles",
+    methods: [
+      {method: "createrole", label: "Create roles"},
+      {method: "editrole", label: "Edit roles"},
+      {method: "deleterole", label: "Delete roles"},
+      {method: "assignrole", label: "Assign roles"},
+      {method: "unassignrole", label: "Unassign roles"},
+    ],
+  },
+  {
+    label: "Invites",
+    methods: [
+      {method: "createclaim", label: "Create invites"},
+      {method: "deleteclaim", label: "Delete invites"},
+      {method: "listclaims", label: "List invites"},
+    ],
+  },
+  {
+    label: "Space",
+    methods: [
+      {method: "changerelayname", label: "Change the name"},
+      {method: "changerelaydescription", label: "Change the description"},
+      {method: "changerelayicon", label: "Change the icon"},
+    ],
+  },
+  {
+    label: "Admins",
+    methods: [
+      {method: "assignmethod", label: "Grant permissions"},
+      {method: "unassignmethod", label: "Revoke permissions"},
+      {method: "listmethodassignees", label: "List admins"},
+    ],
+  },
+]
+
+const methodLabels = new Map(
+  MANAGEMENT_METHOD_GROUPS.flatMap(group =>
+    group.methods.map(({method, label}): [string, string] => [method, label]),
+  ),
+)
+
+export const displayManagementMethod = (method: string) => methodLabels.get(method) ?? method
+
+export type MethodAssigneeItem = {
+  pubkey: string
+  methods: string[]
+}
+
+// One store per space rather than per user: the relay answers the same assignments to anyone
+// allowed to ask, and the admin list has to agree with the editor that changes it.
+export const deriveSpaceMethodAssignees = simpleCache(([url]: [url: string]) =>
+  writable<MethodAssigneeItem[]>([]),
+)
+
+export const loadSpaceMethodAssignees = async (url: string) => {
+  const {result, error} = await relayManagement.get().forUrl(url).listMethodAssignees()
+
+  if (result) {
+    deriveSpaceMethodAssignees(url).set(result)
+  }
+
+  return error
+}
+
 const deriveSupportedMethodsForPubkey = simpleCache(([, url]: [pubkey: string, url: string]) => {
   let checkedAt = 0
 

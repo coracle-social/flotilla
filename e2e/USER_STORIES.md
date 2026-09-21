@@ -1521,6 +1521,20 @@ Acceptance:
 - She still sees "Action Items", which is the queue `allowpubkey` resolves.
 - admin, who owns the relay and so holds every method, sees all three.
 
+### US-130 — Share out admin permissions
+
+As admin, I want to hand a member individual management permissions and see who
+holds what, so that moderation is shared without handing anyone the whole relay.
+
+Acceptance:
+
+- "Admins" in the directory's menu lists the space's owner and everyone holding
+  assigned methods, each with a badge per permission they hold.
+- Checking permissions under a member's "Edit permissions" puts them in that
+  list, and unchecking those permissions takes them back out.
+- A member given "List banned members" finds "Banned Members" in the directory
+  menu they had no menu in before, and still no "Admins".
+
 ### US-098 — Browse and create hosted spaces
 
 As a space owner, I want to see the spaces I host and spin up new ones, so that

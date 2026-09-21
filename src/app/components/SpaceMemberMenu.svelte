@@ -1,11 +1,13 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import Pen from "@assets/icons/pen.svg?dataurl"
+  import ShieldUser from "@assets/icons/shield-user.svg?dataurl"
   import UserMinus from "@assets/icons/user-minus.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
+  import SpaceMemberMethods from "@app/components/SpaceMemberMethods.svelte"
   import SpaceMemberRoles from "@app/components/SpaceMemberRoles.svelte"
   import {profiles, relayManagement} from "@app/core"
   import {deriveSpaceSupportedMethods} from "@app/management"
@@ -26,10 +28,16 @@
   const canBan = $derived($supportedMethods.includes("banpubkey"))
   const canAssign = $derived($supportedMethods.includes("assignrole"))
   const canUnassign = $derived($supportedMethods.includes("unassignrole"))
+  const canEditMethods = $derived(
+    $supportedMethods.includes("listmethodassignees") &&
+      ["assignmethod", "unassignmethod"].some(method => $supportedMethods.includes(method)),
+  )
 
   const back = () => history.back()
 
   const editRoles = () => pushModal(SpaceMemberRoles, {url, pubkey})
+
+  const editMethods = () => pushModal(SpaceMemberMethods, {url, pubkey})
 
   const removeMember = () =>
     pushModal(Confirm, {
@@ -76,6 +84,14 @@
       <Button onclick={editRoles}>
         <Icon icon={Pen} />
         Edit roles
+      </Button>
+    </li>
+  {/if}
+  {#if canEditMethods}
+    <li>
+      <Button onclick={editMethods}>
+        <Icon icon={ShieldUser} />
+        Edit permissions
       </Button>
     </li>
   {/if}

@@ -6,6 +6,7 @@
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
+  import ShieldUser from "@assets/icons/shield-user.svg?dataurl"
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -14,6 +15,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import SpaceMember from "@app/components/SpaceMember.svelte"
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
+  import SpaceAdmins from "@app/components/SpaceAdmins.svelte"
   import SpaceRoles from "@app/components/SpaceRoles.svelte"
   import SpaceMembersBanned from "@app/components/SpaceMembersBanned.svelte"
   import {deriveSpaceSupportedMethods} from "@app/management"
@@ -35,6 +37,7 @@
     ["createrole", "editrole", "deleterole"].some(method => $supportedMethods.includes(method)),
   )
   const canListBans = $derived($supportedMethods.includes("listbannedpubkeys"))
+  const canListAdmins = $derived($supportedMethods.includes("listmethodassignees"))
 
   // Each member with their resolved roles (sorted by order).
   const memberList = derived([members, memberRoles, roles], ([$members, $memberRoles, $roles]) => {
@@ -59,6 +62,11 @@
   const manageRoles = () => {
     menuOpen = false
     pushModal(SpaceRoles, {url})
+  }
+
+  const spaceAdmins = () => {
+    menuOpen = false
+    pushModal(SpaceAdmins, {url})
   }
 
   const bannedMembers = () => {
@@ -110,7 +118,7 @@
       <Icon icon={AddCircle} />
       Invite people
     </Button>
-    {#if canManageRoles || canListBans}
+    {#if canManageRoles || canListBans || canListAdmins}
       <div class="relative">
         <Button
           class="button button-neutral button-sm button-square"
@@ -128,6 +136,14 @@
                   <Button onclick={manageRoles}>
                     <Icon icon={UsersGroup} />
                     Manage Roles
+                  </Button>
+                </li>
+              {/if}
+              {#if canListAdmins}
+                <li>
+                  <Button onclick={spaceAdmins}>
+                    <Icon icon={ShieldUser} />
+                    Admins
                   </Button>
                 </li>
               {/if}

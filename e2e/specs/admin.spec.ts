@@ -83,6 +83,11 @@ const openSpaceMenu = (page: Page) => page.getByRole("button", {name: /space\.te
 const memberCard = (page: Page, name: string) =>
   page.locator(".card-interactive").filter({hasText: name})
 
+// Exact, because several permission names are a substring of another — "Ban members" of "Unban
+// members".
+const permission = (scope: Locator, name: string) =>
+  scope.getByRole("checkbox", {name, exact: true})
+
 const openEventMenu = (card: Locator) => menuButton(card).click()
 
 const articleCard = (page: Page, title: string) =>
@@ -713,6 +718,75 @@ test("US-097 work through the action-items queue", async ({seed, as}) => {
 
   await expect(menuItem(bobsSpace, "Create Invite")).toBeVisible()
   await expect(bobsSpace.getByRole("button", {name: /^Action Items/})).toHaveCount(0)
+})
+
+test("US-130 share out admin permissions", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.admin, "general")
+    space.join(user.bob, "general")
+    space.profile(user.bob, {name: "Bob Barnacle"})
+  })
+
+  const {url} = scenario.space("space")
+  const admin = await as(users.admin, spacePath(url) + "/directory")
+
+  await expect(memberCard(admin, "Bob Barnacle")).toBeVisible()
+
+  await admin.getByRole("button", {name: "More options"}).click()
+  await menuItem(admin, "Admins").click()
+
+  const admins = dialog(admin, "Admins")
+
+  // The owner holds every method implicitly, so the relay leaves them out of listmethodassignees
+  // and the client names them from the space's nip 11 pubkey instead.
+  await expect(admins.locator(".badge").filter({hasText: "Owner"})).toBeVisible()
+  await expect(admins.getByText("Nobody else has been given management permissions.")).toBeVisible()
+
+  await admins.getByRole("button", {name: "Go back"}).click()
+
+  await memberCard(admin, "Bob Barnacle").getByRole("button").last().click()
+  await menuItem(admin, "Edit permissions").click()
+
+  const permissions = dialog(admin, "Edit Permissions")
+
+  await permission(permissions, "Ban members").check()
+  await permission(permissions, "List banned members").check()
+  await permissions.getByRole("button", {name: "Save changes"}).click()
+
+  await expect(admin.getByRole("alert")).toContainText("Permissions updated!")
+
+  await admin.getByRole("button", {name: "More options"}).click()
+  await menuItem(admin, "Admins").click()
+
+  await expect(
+    admins.locator(".card").filter({hasText: "Bob Barnacle"}).locator(".badge"),
+  ).toHaveText(["Ban members", "List banned members"])
+
+  await admins.getByRole("button", {name: "Go back"}).click()
+
+  // bob holds two methods now, so he gets the one control they cover and nothing else
+  const bob = await as(users.bob, spacePath(url) + "/directory")
+
+  await bob.getByRole("button", {name: "More options"}).click()
+
+  await expect(menuItem(bob, "Banned Members")).toBeVisible()
+  await expect(menuItem(bob, "Admins")).toHaveCount(0)
+
+  await memberCard(admin, "Bob Barnacle").getByRole("button").last().click()
+  await menuItem(admin, "Edit permissions").click()
+  await permission(permissions, "Ban members").uncheck()
+  await permission(permissions, "List banned members").uncheck()
+  await permissions.getByRole("button", {name: "Save changes"}).click()
+
+  await expect(admin.getByRole("alert")).toContainText("Permissions updated!")
+
+  await admin.getByRole("button", {name: "More options"}).click()
+  await menuItem(admin, "Admins").click()
+
+  await expect(admins.getByText("Nobody else has been given management permissions.")).toBeVisible()
 })
 
 test("US-098 browse and create hosted spaces", async ({seed, as}) => {
