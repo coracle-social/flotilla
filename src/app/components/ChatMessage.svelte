@@ -21,6 +21,7 @@
   import ChatMessageMenu from "@app/components/ChatMessageMenu.svelte"
   import ChatMessageMenuMobile from "@app/components/ChatMessageMenuMobile.svelte"
   import {app, profiles, user} from "@app/core"
+  import {highlightedEvent} from "@app/routes"
   import {colorFor} from "@app/theme"
   import {pushModal} from "@app/modal"
 
@@ -61,7 +62,10 @@
 <ThunkFailure showToastOnRetry {thunk} class="mt-1" />
 <div
   data-event={event.id}
-  class={cx("group flex items-center justify-end gap-1 px-2", {"flex-row-reverse": !isOwn})}>
+  class={cx("group flex items-center justify-end gap-1 px-2", {
+    "flex-row-reverse": !isOwn,
+    "highlight-target": $highlightedEvent === event.id,
+  })}>
   {#if !isMobile}
     <Tippy
       bind:controller={tippy}

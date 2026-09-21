@@ -1,4 +1,5 @@
 <script lang="ts">
+  import cx from "classnames"
   import {formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {COMMENT, displayHandle} from "@welshman/util"
@@ -14,7 +15,7 @@
   import type {FeedContext} from "@app/feeds"
   import ThreadActions from "@app/components/ThreadActions.svelte"
   import {handles, profiles} from "@app/core"
-  import {makeEventPermalink} from "@app/routes"
+  import {highlightedEvent, makeEventPermalink} from "@app/routes"
   import {pushModal} from "@app/modal"
   import {clip} from "@app/toast"
 
@@ -43,7 +44,7 @@
 <article
   id="post-{event.id}"
   data-event={event.id}
-  class="bg-surface border-b @container"
+  class={cx("bg-surface border-b @container", {"highlight-target": $highlightedEvent === event.id})}
   style="border-color: var(--line)">
   <div class="flex flex-col @2xl:flex-row">
     <aside

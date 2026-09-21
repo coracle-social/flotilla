@@ -129,24 +129,13 @@
     width: var(--rule-bleed-r, 100vw);
   }
 }
-/* Marks the event a link pointed at, so the reader can pick it out of the conversation once the
-   jump lands. Brightness rather than a background so it works over any row's own surface. */
+/* Marks the event a link pointed at. The mark stays until another link is followed, so the reader
+   can scroll away and still find their place. The wash is a spread inset shadow rather than a
+   background because a row's hover rule sets its own background and would paint over it. */
 @utility highlight-target {
-  animation: highlight-target 1.6s ease-out;
-}
-@keyframes highlight-target {
-  0%,
-  50% {
-    filter: brightness(1.5);
-  }
-  100% {
-    filter: brightness(1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .highlight-target {
-    animation: none;
-  }
+  box-shadow:
+    inset 3px 0 0 var(--primary),
+    inset 0 0 0 9999px color-mix(in srgb, var(--primary) 16%, transparent);
 }
 /* Breathes a control in and out while it's listening to the user's voice. */
 @utility pulse-scale {

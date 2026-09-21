@@ -38,7 +38,7 @@
   import {ENABLE_ZAPS} from "@app/env"
   import type {FeedContext} from "@app/feeds"
   import {deriveEvent, deriveEventsForUrl} from "@app/repository"
-  import {makeContentPath, makeThreadPath} from "@app/routes"
+  import {highlightedEvent, makeContentPath, makeThreadPath} from "@app/routes"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -103,7 +103,7 @@
   {onTap}
   class={cx(
     "room__item group relative flex w-full cursor-default flex-col px-2 py-0.5 text-left transition-colors",
-    {"mt-1.5": showPubkey},
+    {"mt-1.5": showPubkey, "highlight-target": $highlightedEvent === event.id},
   )}>
   <div class="flex w-full gap-3 overflow-auto">
     {#if showPubkey}

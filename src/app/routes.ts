@@ -32,6 +32,10 @@ export let lastChatUrl: string | undefined = undefined
 
 export const lastPageBySpaceUrl = new Map<string, string>()
 
+// The event a link pointed at. A store rather than a class set on the node, because each row owns
+// its own class attribute and drops anything written behind its back on the next render.
+export const highlightedEvent = writable<string | undefined>(undefined)
+
 // The space the user was in most recently, so the space menu can be opened from a page that isn't
 // in a space. A store because it's read from markup, unlike lastChatUrl.
 export const lastSpaceUrl = writable<string | undefined>(undefined)
@@ -241,7 +245,7 @@ export const scrollToEvent = (id: string) => {
 
   if (element instanceof HTMLElement) {
     element.scrollIntoView({behavior: "smooth", block: "center"})
-    element.classList.add("highlight-target")
+    highlightedEvent.set(id)
   }
 
   return element instanceof HTMLElement

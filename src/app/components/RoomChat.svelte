@@ -47,7 +47,7 @@
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {pageLoading} from "@app/loading"
   import {checked, deferredRoomPath, setChecked} from "@app/notifications"
-  import {makeRoomPath} from "@app/routes"
+  import {highlightedEvent, makeRoomPath} from "@app/routes"
   import {pendingShare, type Share} from "@app/share"
   import {pushToast} from "@app/toast"
 
@@ -301,7 +301,7 @@
         target.scrollIntoView({behavior, block: "center"})
 
         if (highlight) {
-          target.classList.add("highlight-target")
+          highlightedEvent.set(id)
         }
 
         if (pin) {
