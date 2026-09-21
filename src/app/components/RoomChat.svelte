@@ -6,7 +6,7 @@
   import type {Readable} from "svelte/store"
   import {debounce} from "throttle-debounce"
   import cx from "classnames"
-  import {now, ifLet, ago, MINUTE} from "@welshman/lib"
+  import {now, ifLet, ago, spec, MINUTE} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {relay, stamp, MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
@@ -47,7 +47,7 @@
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {pageLoading} from "@app/loading"
   import {checked, deferredRoomPath, setChecked} from "@app/notifications"
-  import {highlightedEvent, makeRoomPath} from "@app/routes"
+  import {getPermalinkTarget, highlightedEvent, makeRoomPath} from "@app/routes"
   import {pendingShare, type Share} from "@app/share"
   import {pushToast} from "@app/toast"
 
@@ -117,6 +117,7 @@
     : readable(MembershipStatus.Granted)
   const at = $derived(parseInt($page.url.searchParams.get("at")!))
   const inviteCode = $derived($page.url.searchParams.get("code") || "")
+  const target = $derived(getPermalinkTarget($page.url))
 
   const join = async () => {
     if (h) {
@@ -334,7 +335,9 @@
     }
 
     if (!released && !pinned && !isNaN(at)) {
-      const targetEvent = $events.find(event => event.created_at >= at)
+      // The pointer only helps once that message has arrived, so the anchor still carries the jump.
+      const pointedAt = target ? $events.find(spec({id: target})) : undefined
+      const targetEvent = pointedAt ?? $events.find(event => event.created_at >= at)
 
       if (targetEvent) {
         scrollToRow(targetEvent.id, {highlight: true, pin: true})
@@ -697,6 +700,8 @@
           <p class="flex h-10 items-center justify-center py-20">
             {#if reachedStartOfHistory}
               End of message history
+            {:else}
+              <Spinner loading>Looking for messages...</Spinner>
             {/if}
           </p>
         {/if}

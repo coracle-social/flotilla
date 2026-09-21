@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import * as nip19 from "nostr-tools/nip19"
-  import {call, sleep, spec, tryCatch} from "@welshman/lib"
+  import {page} from "$app/state"
+  import {sleep, spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {deriveEventsAsc} from "@welshman/store"
   import {getCommentFiltersForRoot, tagValue, tagSpec} from "@welshman/util"
@@ -19,7 +19,7 @@
   import {network} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
-  import {makeSpacePath, scrollToEvent} from "@app/routes"
+  import {getPermalinkTarget, makeSpacePath, scrollToEvent} from "@app/routes"
   import type {PageProps} from "./$types"
 
   const REPLY_BATCH_SIZE = 20
@@ -42,19 +42,7 @@
   // A permalink's target. Replies stream in newest first, so the post it names is usually here
   // long before the ones above it — its position is only right once the thread has finished
   // arriving, so this is kept and re-read rather than acted on the first time it shows up.
-  let target: string | undefined = $state(
-    call(() => {
-      const hash = window.location.hash.replace(/^#/, "")
-
-      if (hash.startsWith("nevent1")) {
-        const decoded = tryCatch(() => nip19.decode(hash))
-
-        if (decoded?.type === "nevent") {
-          return decoded.data.id
-        }
-      }
-    }),
-  )
+  let target: string | undefined = $state(getPermalinkTarget(page.url))
 
   let revealed = $state(REPLY_BATCH_SIZE)
 

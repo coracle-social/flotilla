@@ -9,6 +9,6 @@
   const {children}: Props = $props()
 </script>
 
-{#key $page.url.searchParams.get("at")}
+{#key [$page.url.searchParams.get("at"), $page.url.searchParams.get("event")].join()}
   {@render children?.()}
 {/key}

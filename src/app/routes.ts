@@ -1,7 +1,7 @@
 import {get, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {page} from "$app/stores"
-import {identity} from "@welshman/lib"
+import {identity, tryCatch} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {
   CLASSIFIED,
@@ -32,8 +32,7 @@ export let lastChatUrl: string | undefined = undefined
 
 export const lastPageBySpaceUrl = new Map<string, string>()
 
-// The event a link pointed at. A store rather than a class set on the node, because each row owns
-// its own class attribute and drops anything written behind its back on the next render.
+// A store rather than a class on the node, which each row's class attribute would overwrite.
 export const highlightedEvent = writable<string | undefined>(undefined)
 
 // The space the user was in most recently, so the space menu can be opened from a page that isn't
@@ -237,7 +236,16 @@ export const makeEventPermalink = (event: TrustedEvent, url?: string) => {
     return path
   }
 
-  return `${PLATFORM_URL}${path}#${nip19.neventEncode({id: event.id, relays: urls})}`
+  const pointer = nip19.neventEncode({id: event.id, relays: urls})
+
+  return `${PLATFORM_URL}${path}${path.includes("?") ? "&" : "?"}event=${pointer}`
+}
+
+export const getPermalinkTarget = (url: URL) => {
+  const pointer = url.searchParams.get("event")
+  const decoded = pointer ? tryCatch(() => nip19.decode(pointer)) : undefined
+
+  return decoded?.type === "nevent" ? decoded.data.id : undefined
 }
 
 export const scrollToEvent = (id: string) => {

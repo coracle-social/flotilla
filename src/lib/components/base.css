@@ -129,9 +129,7 @@
     width: var(--rule-bleed-r, 100vw);
   }
 }
-/* Marks the event a link pointed at. The mark stays until another link is followed, so the reader
-   can scroll away and still find their place. The wash is a spread inset shadow rather than a
-   background because a row's hover rule sets its own background and would paint over it. */
+/* The wash is an inset shadow because a row's hover rule sets a background that would cover it. */
 @utility highlight-target {
   box-shadow:
     inset 3px 0 0 var(--primary),
