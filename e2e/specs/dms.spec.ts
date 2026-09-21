@@ -39,7 +39,7 @@ const seedPerson = (space: SeededSpace, user: TestUser, name: string, ...rooms: 
 
 const chatFilter = (page: Page) => page.locator(".secondary-nav input[type='text']")
 
-// The chat list renders twice, once per breakpoint, so a tab is named inside the sidebar.
+// The chat list renders twice, once per breakpoint, so this scopes the tab to the sidebar.
 const chatTab = (page: Page, name: string) =>
   page.locator(".secondary-nav").getByRole("button", {name})
 

@@ -623,13 +623,13 @@ care about, so that a stranger cannot bury them.
 
 Acceptance:
 
-- The chat list has a Conversations tab and a Requests tab, each carrying its own count.
+- The chat list has a Conversations tab and a Requests tab, each with its own count.
 - Someone I follow opens under Conversations and someone I share nothing with opens under Requests.
   A member of a space I belong to, a sender enough of my follows follow, and a message carrying
   enough proof of work each count as a connection too.
-- Choosing Requests shows the held conversation, which reads and opens like any other.
-- A chat I have written in is mine whatever I know about the other person, so answering a request
-  moves it to Conversations.
+- Choosing Requests shows the chat held there, and it reads and opens like any other.
+- A chat I have written in appears under Conversations whatever I know about the other person,
+  so answering a request moves it there.
 
 ## Articles & threads
 

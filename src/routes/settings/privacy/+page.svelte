@@ -148,8 +148,8 @@
         Message Requests
       </strong>
       <p class="text-sm opacity-50">
-        Messages from people you have no connection to wait in the Requests tab of your chat list.
-        These two thresholds are the other ways in.
+        Messages from people you have no connection to appear in the Requests tab of your chat list.
+        A sender who meets either threshold below reaches your conversations instead.
       </p>
       <Field>
         {#snippet label()}
@@ -170,8 +170,8 @@
         {#snippet info()}
           <p>
             A sender who spends this much proof of work reaches your conversations whether or not
-            you know them. Each step up doubles what it costs them, and {PLATFORM_NAME} spends 16 bits
-            on every message you send.
+            you know them. Each step up doubles the work they have to do, and {PLATFORM_NAME} spends 16
+            bits on every message you send.
           </p>
         {/snippet}
       </Field>
@@ -192,10 +192,7 @@
             bind:value={$settings.min_dm_wot} />
         {/snippet}
         {#snippet info()}
-          <p>
-            How many of the people you follow have to follow a sender for you to count as knowing
-            them.
-          </p>
+          <p>A sender counts as known when this many of the people you follow also follow them.</p>
         {/snippet}
       </Field>
     </Card>
