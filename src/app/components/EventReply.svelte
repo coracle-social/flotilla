@@ -105,10 +105,6 @@
   })
 
   onMount(() => {
-    setTimeout(() => {
-      spacer.scrollIntoView({block: "end", behavior: "smooth"})
-    })
-
     const observer = new ResizeObserver(() => {
       spacer!.style.minHeight = `${form!.offsetHeight + 60}px`
     })

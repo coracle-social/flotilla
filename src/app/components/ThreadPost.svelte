@@ -10,7 +10,7 @@
   import Badge from "@lib/components/Badge.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import Content from "@app/components/Content.svelte"
+  import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import type {FeedContext} from "@app/feeds"
   import ThreadActions from "@app/components/ThreadActions.svelte"
@@ -78,7 +78,7 @@
         </Button>
       </div>
       <div class="px-3 py-4 @lg:px-4">
-        <Content showEntire {event} {url} />
+        <NoteContent showEntire {event} {url} />
       </div>
       <div
         class="bg-surface flex shrink-0 flex-col gap-2 border-t px-3 py-3 @lg:flex-row @lg:items-center @lg:justify-between @lg:px-4"

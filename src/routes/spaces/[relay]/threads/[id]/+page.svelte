@@ -4,22 +4,23 @@
   import {sleep, spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {deriveEventsAsc} from "@welshman/store"
-  import {getCommentFiltersForRoot, tagValue, tagSpec} from "@welshman/util"
+  import {getCommentFiltersForRoot} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
+  import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
+  import {fade, fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Link from "@lib/components/Link.svelte"
-  import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadPost from "@app/components/ThreadPost.svelte"
+  import ThreadSummaryBar from "@app/components/ThreadSummaryBar.svelte"
   import EventReply from "@app/components/EventReply.svelte"
-  import RoomName from "@app/components/RoomName.svelte"
   import {deriveEvent, deriveEventsById} from "@app/repository"
   import {network} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
+  import {getChecked} from "@app/notifications"
   import {decodeRelay} from "@app/relays"
-  import {getPermalinkTarget, makeSpacePath, scrollToEvent} from "@app/routes"
+  import {getPermalinkTarget, scrollToEvent} from "@app/routes"
   import type {PageProps} from "./$types"
 
   const REPLY_BATCH_SIZE = 20
@@ -34,22 +35,29 @@
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
   const replies = $derived(deriveEventsAsc(deriveEventsById(filters)))
 
-  const back = () => history.back()
+  const scrollToTop = () => element?.scrollTo({top: 0, behavior: "smooth"})
 
-  const replyCount = $derived($replies.length)
-  const h = $derived(tagValue(tagSpec("h"), $event?.tags || []))
+  const scrollToBottom = () => element?.scrollTo({top: element.scrollHeight, behavior: "smooth"})
 
-  // A permalink's target. Replies stream in newest first, so the post it names is usually here
-  // long before the ones above it — its position is only right once the thread has finished
-  // arriving, so this is kept and re-read rather than acted on the first time it shows up.
-  let target: string | undefined = $state(getPermalinkTarget(page.url))
+  const permalink = getPermalinkTarget(page.url)
+
+  // Visiting the thread clears its badge 300ms later, so the cutoff is read on the way in.
+  const unreadAfter = getChecked(page.url.pathname)
+
+  const oldestUnread = $derived(
+    unreadAfter ? $replies.find(reply => reply.created_at > unreadAfter) : undefined,
+  )
+
+  let released = $state(false)
+
+  // Replies stream in newest first, so a target's position is only right once they've all arrived.
+  const target = $derived(released ? undefined : (permalink ?? oldestUnread?.id))
 
   let revealed = $state(REPLY_BATCH_SIZE)
 
   const targetIndex = $derived(target ? $replies.findIndex(spec({id: target})) : -1)
 
-  // A thread reads from its newest end, and the reader pulls earlier replies in from there. A
-  // permalink reaches back as far as it has to on its own.
+  // A thread reads from its newest end, and a target reaches back as far as it has to on its own.
   const visibleCount = $derived(
     targetIndex < 0 ? revealed : Math.max(revealed, $replies.length - targetIndex),
   )
@@ -62,7 +70,7 @@
   const showEarlier = () => {
     const nextCount = visibleCount + REPLY_BATCH_SIZE
 
-    target = undefined
+    released = true
     revealed = nextCount
   }
 
@@ -92,10 +100,56 @@
 
   let showReply = $state(false)
   let replyTo: TrustedEvent | undefined = $state()
+  let element: Element | undefined = $state()
+  let panel: HTMLElement | undefined = $state()
+  let root: HTMLElement | undefined = $state()
+  let unreadDivider: HTMLElement | undefined = $state()
+  let scrolledPastRoot = $state(false)
+  let scrolledUp = $state(false)
 
   $effect(() => {
     if (target && (target === $event?.id || targetIndex >= 0)) {
-      setTimeout(() => scrollToEvent(target!), 100)
+      setTimeout(() => {
+        if (permalink) {
+          scrollToEvent(permalink)
+        } else {
+          unreadDivider?.scrollIntoView({behavior: "smooth", block: "center"})
+        }
+      }, 100)
+    }
+  })
+
+  $effect(() => {
+    const container = element
+    const rootPost = root
+
+    if (container && rootPost) {
+      const onScroll = () => {
+        scrolledPastRoot = container.scrollTop > rootPost.offsetHeight
+        scrolledUp = container.scrollHeight - container.scrollTop - container.clientHeight > 500
+      }
+
+      container.addEventListener("scroll", onScroll, {passive: true})
+      onScroll()
+
+      return () => container.removeEventListener("scroll", onScroll)
+    }
+  })
+
+  // A reader who's caught up lands at the bottom. Replies arrive after the page does and the
+  // images in them later still, so the bottom moves until the thread has finished settling.
+  $effect(() => {
+    const container = element
+    const content = panel
+
+    if (container && content && unreadAfter && !target && !released) {
+      const observer = new ResizeObserver(() => {
+        container.scrollTo({top: container.scrollHeight, behavior: "smooth"})
+      })
+
+      observer.observe(content)
+
+      return () => observer.disconnect()
     }
   })
 
@@ -110,38 +164,35 @@
   })
 </script>
 
-<SpaceBar {back} class="!h-auto min-h-20 py-3">
-  {#snippet title()}
-    <div class="flex min-w-0 flex-col gap-0.5">
-      <h1 class="truncate min-w-0 font-bold sm:text-xl">
-        {tagValue(tagSpec("title"), $event?.tags || []) || ""}
-      </h1>
-      <p class="text-xs opacity-75">
-        {replyCount}
-        {replyCount === 1 ? "reply" : "replies"}
-        {#if h}
-          · <Link href={makeSpacePath(url, h)} class="link">#<RoomName {url} {h} /></Link>
+<div class="relative flex min-h-0 flex-1 flex-col">
+  <PageContent bind:element noPad class="flex flex-col">
+    {#if $event}
+      <div bind:this={panel} class="bg-surface border-y" style="border-color: var(--line)">
+        <div bind:this={root}>
+          <ThreadPost
+            {url}
+            {context}
+            event={$event}
+            threadPubkey={$event.pubkey}
+            onReply={openReply} />
+        </div>
+        {#if hiddenCount > 0}
+          <div class="flex justify-center py-4">
+            <Button class="button button-neutral button-sm" onclick={showEarlier}>
+              Show earlier replies ({hiddenCount})
+            </Button>
+          </div>
         {/if}
-      </p>
-    </div>
-  {/snippet}
-</SpaceBar>
-
-<PageContent noPad class="flex flex-col">
-  {#if $event}
-    <div class="bg-surface border-y" style="border-color: var(--line)">
-      <ThreadPost {url} {context} event={$event} threadPubkey={$event.pubkey} onReply={openReply} />
-    </div>
-    {#if hiddenCount > 0}
-      <div class="flex justify-center py-4">
-        <Button class="button button-neutral button-sm" onclick={showEarlier}>
-          Show earlier replies ({hiddenCount})
-        </Button>
-      </div>
-    {/if}
-    {#if visibleReplies.length > 0}
-      <div class="bg-surface border-y" style="border-color: var(--line)">
         {#each visibleReplies as reply (reply.id)}
+          {#if reply.id === oldestUnread?.id}
+            <div bind:this={unreadDivider} class="flex items-center gap-2 px-4 py-2 text-xs">
+              <div class="h-px grow bg-primary"></div>
+              <p class="rounded-full bg-primary px-2 py-1" style="color: var(--primary-content)">
+                New replies
+              </p>
+              <div class="h-px grow bg-primary"></div>
+            </div>
+          {/if}
           <ThreadPost
             {url}
             {context}
@@ -150,30 +201,45 @@
             onReply={openReply} />
         {/each}
       </div>
-    {/if}
-    {#if showReply && replyTo && $event}
-      <EventReply
-        {url}
-        event={$event}
-        parent={replyTo.id === $event.id ? undefined : replyTo}
-        onClose={closeReply}
-        onClearParent={clearReplyParent}
-        onSubmit={closeReply} />
+      {#if showReply && replyTo && $event}
+        <EventReply
+          {url}
+          event={$event}
+          parent={replyTo.id === $event.id ? undefined : replyTo}
+          onClose={closeReply}
+          onClearParent={clearReplyParent}
+          onSubmit={closeReply} />
+      {:else}
+        <div class="flex justify-end p-4">
+          <Button class="button button-primary" onclick={openThreadReply}>
+            <Icon icon={Reply} />
+            Reply to thread
+          </Button>
+        </div>
+      {/if}
     {:else}
-      <div class="flex justify-end p-4">
-        <Button class="button button-primary" onclick={openThreadReply}>
-          <Icon icon={Reply} />
-          Reply to thread
-        </Button>
+      <div class="flex justify-center py-20">
+        {#await sleep(5000)}
+          <Spinner loading>Loading thread...</Spinner>
+        {:then}
+          <p>Failed to load thread.</p>
+        {/await}
       </div>
     {/if}
-  {:else}
-    <div class="flex justify-center py-20">
-      {#await sleep(5000)}
-        <Spinner loading>Loading thread...</Spinner>
-      {:then}
-        <p>Failed to load thread.</p>
-      {/await}
+  </PageContent>
+  {#if $event && scrolledPastRoot}
+    <div transition:fly={{y: -20, duration: 200}} class="absolute inset-x-0 top-0 z-nav">
+      <ThreadSummaryBar {url} event={$event} onClick={scrollToTop} />
     </div>
   {/if}
-</PageContent>
+  {#if scrolledUp && !showReply}
+    <div transition:fade class="absolute right-4 bottom-20 z-nav mb-sai md:bottom-4 md:mb-0">
+      <Button
+        aria-label="Scroll to newest"
+        class="button button-neutral button-circle shadow-xl"
+        onclick={scrollToBottom}>
+        <Icon icon={AltArrowDown} />
+      </Button>
+    </div>
+  {/if}
+</div>
