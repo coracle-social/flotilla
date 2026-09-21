@@ -7,8 +7,47 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        if let shortcutItem = launchOptions?[.shortcutItem] as? UIApplicationShortcutItem,
+           let url = shortcutURL(for: shortcutItem.type) {
+            // The proxy retains lastURL for App.getLaunchUrl() before the bridge is ready.
+            _ = ApplicationDelegateProxy.shared.application(application, open: url, options: [:])
+            return false
+        }
+
         // Override point for customization after application launch.
         return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        performActionFor shortcutItem: UIApplicationShortcutItem,
+        completionHandler: @escaping (Bool) -> Void
+    ) {
+        guard let url = shortcutURL(for: shortcutItem.type) else {
+            completionHandler(false)
+            return
+        }
+
+        completionHandler(ApplicationDelegateProxy.shared.application(application, open: url, options: [:]))
+    }
+
+    private func shortcutURL(for type: String) -> URL? {
+        let path: String
+
+        switch type {
+        case "social.flotilla.shortcut.messages":
+            path = "messages"
+        case "social.flotilla.shortcut.search":
+            path = "search"
+        case "social.flotilla.shortcut.spaces":
+            path = "spaces"
+        case "social.flotilla.shortcut.inbox":
+            path = "inbox"
+        default:
+            return nil
+        }
+
+        return URL(string: "flotilla://shortcut/\(path)")
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

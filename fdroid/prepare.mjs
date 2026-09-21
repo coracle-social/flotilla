@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
 import {appendFile, cp, readFile, rm, writeFile} from "node:fs/promises"
 
-const replace = async (file, pattern, replacement) => {
+const replace = async (file, pattern, replacement, count = 1) => {
   const source = await readFile(file, "utf8")
-  assert.equal([...source.matchAll(pattern)].length, 1, `Expected one match in ${file}`)
+  assert.equal([...source.matchAll(pattern)].length, count, `Expected ${count} matches in ${file}`)
   await writeFile(file, source.replace(pattern, replacement))
 }
 
@@ -58,6 +58,12 @@ await replace(
   "android/app/src/main/AndroidManifest.xml",
   /\n {8}<!-- FCM uses[\s\S]*?android:value="@string\/default_notification_channel_id"\n {8}\/>/g,
   "",
+)
+await replace(
+  "android/app/src/main/res/xml/shortcuts.xml",
+  /android:targetPackage="social\.flotilla"/g,
+  'android:targetPackage="social.flotilla.fdroid"',
+  4,
 )
 await replace(
   "src/app.html",

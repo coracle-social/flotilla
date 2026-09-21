@@ -21,7 +21,9 @@
   import AppContainer from "@app/components/AppContainer.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import * as core from "@app/core"
-  import {setupHistory} from "@app/routes"
+  import {goToChat, goToHome, setupHistory} from "@app/routes"
+  import Search from "@app/components/Search.svelte"
+  import {clearModals, getModal, navigate, pushModal} from "@app/modal"
   import {setupAnalytics} from "@app/analytics"
   import {setupLogging} from "@app/logger"
   import "@app/policies"
@@ -81,6 +83,33 @@
 
     if (relay && id) {
       onPushNotificationAction({notification: {data: {relay, id}}})
+      return
+    }
+
+    if (url.protocol === "flotilla:" && url.host === "shortcut") {
+      if (!core.app.get().user) return
+
+      switch (url.pathname) {
+        case "/messages":
+          goToChat()
+          break
+        case "/search": {
+          const modal = getModal()
+
+          if (modal?.component !== Search) {
+            pushModal(Search, {}, {replaceState: Boolean(modal)})
+          }
+          break
+        }
+        case "/spaces":
+          navigate("/spaces")
+          break
+        case "/inbox":
+          clearModals()
+          goToHome()
+          break
+      }
+
       return
     }
 

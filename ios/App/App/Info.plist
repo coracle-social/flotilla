@@ -31,6 +31,41 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>social.flotilla.shortcut.messages</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Messages</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>message</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>social.flotilla.shortcut.search</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Search</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>magnifyingglass</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>social.flotilla.shortcut.spaces</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Spaces</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>square.grid.2x2</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>social.flotilla.shortcut.inbox</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Inbox</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>tray</string>
+		</dict>
+	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>LSRequiresIPhoneOS</key>

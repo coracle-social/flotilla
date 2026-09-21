@@ -5,4 +5,8 @@
     <string name="package_name">social.flotilla</string>
     <string name="custom_url_scheme">social.flotilla</string>
     <string name="default_notification_channel_id">flotilla_push</string>
+    <string name="shortcut_messages">Messages</string>
+    <string name="shortcut_search">Search</string>
+    <string name="shortcut_spaces">Spaces</string>
+    <string name="shortcut_inbox">Inbox</string>
 </resources>
