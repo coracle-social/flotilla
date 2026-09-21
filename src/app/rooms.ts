@@ -2,7 +2,17 @@ import * as nip19 from "nostr-tools/nip19"
 import {derived, get} from "svelte/store"
 import {formatTimestampAsDate, int, sortBy, uniq, MINUTE} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {outbox, relay, seen, tagSpec, tagValue, toNostrURI} from "@welshman/util"
+import {
+  ROOM_DELETE_EVENT,
+  hexTags,
+  outbox,
+  relay,
+  seen,
+  tagSpec,
+  tagValue,
+  tagValueMatcher,
+  toNostrURI,
+} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
 import {Message} from "@welshman/domain"
 import {MembershipStatus, RoomLists, makeRoomKey, createSearch, publish} from "@welshman/app"
@@ -173,6 +183,15 @@ export const deriveUserIsRoomAdmin = (url: string, h: string) =>
       $isStaff || Boolean($room?.admins?.pubkeys().includes($user.pubkey)),
   )
 
+// The room's admin list names the management kinds each admin may publish, so the ops the relay
+// will answer for the user are readable before one is sent.
+export const deriveUserRoomPermissions = (url: string, h: string) =>
+  derived([user, rooms.get().forRoom(url, h)], ([$user, $room]) => {
+    const tag = $room?.admins?.tags().find(tagValueMatcher(hexTags("p"), $user.pubkey))
+
+    return tag?.slice(2).map(Number) ?? []
+  })
+
 // Deleting someone else's content goes one of two ways, and a space answers for either one.
 export enum AdminDelete {
   Room = "room",
@@ -185,9 +204,9 @@ export const deriveUserAdminDelete = (url: string, event: TrustedEvent) => {
   const h = tagValue(tagSpec("h"), event.tags) ?? ""
 
   return derived(
-    [deriveUserIsRoomAdmin(url, h), deriveSpaceSupportedMethods(url)],
-    ([$isRoomAdmin, $methods]): Maybe<AdminDelete> => {
-      if (h && $isRoomAdmin) {
+    [deriveUserRoomPermissions(url, h), deriveSpaceSupportedMethods(url)],
+    ([$permissions, $methods]): Maybe<AdminDelete> => {
+      if (h && $permissions.includes(ROOM_DELETE_EVENT)) {
         return AdminDelete.Room
       }
 
