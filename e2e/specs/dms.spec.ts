@@ -2,7 +2,7 @@ import {npubEncode} from "nostr-tools/nip19"
 import type {Locator, Page} from "@playwright/test"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
 import {DIRECT_MESSAGE, REACTION} from "@welshman/util"
-import {MessagingRelayList} from "@welshman/domain"
+import {FollowList, MessagingRelayList} from "@welshman/domain"
 import {
   bubble,
   chatItems,
@@ -38,6 +38,10 @@ const seedPerson = (space: SeededSpace, user: TestUser, name: string, ...rooms: 
 }
 
 const chatFilter = (page: Page) => page.locator(".secondary-nav input[type='text']")
+
+// The chat list renders twice, once per breakpoint, so a tab is named inside the sidebar.
+const chatTab = (page: Page, name: string) =>
+  page.locator(".secondary-nav").getByRole("button", {name})
 
 // ChatItem's unread mark is a bare dot with no text of its own.
 const unreadDots = (scope: Locator) => scope.locator(".rounded-full.bg-primary")
@@ -642,6 +646,69 @@ test("US-036 receive a new conversation live", async ({seed, as}) => {
   await fromBob.click()
 
   await expect(bubble(alice, "starting a chat with you")).toBeVisible()
+})
+
+test("US-128 keep messages from strangers out of your conversations", async ({seed, as}) => {
+  const dave = makeTestUser("dave")
+  const eve = makeTestUser("eve")
+
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+    const inbox = relay("other")
+
+    // Bob she follows. Carol she knows only through the space they are both in, which is the
+    // weakest thing that still counts as knowing someone.
+    seedPerson(space, user.alice, "Alice Anchor")
+    seedPerson(space, user.bob, "Bob Barnacle")
+    seedPerson(space, user.carol, "Carol Cutter")
+    space.messagingRelayList(user.bob)
+    space.messagingRelayList(user.carol)
+    space.event(user.alice, () =>
+      space.kind(FollowList).writer().follow(user.bob.pubkey).renderTemplate(),
+    )
+
+    // Dave and Eve write from a relay alice reads her messages on and has not joined, as US-108
+    // does. Membership of it is what lets a wrap addressed to someone be stored there, and it
+    // never reaches a room list, so writing from it vouches for nobody.
+    space.messagingRelayList(user.alice, [space.url, inbox.url])
+    inbox.member(user.alice)
+    inbox.member(dave)
+    inbox.member(eve)
+
+    space.dm(user.bob, [user.alice], "lunch tomorrow?", at(30, MINUTE))
+    space.dm(user.carol, [user.alice], "the hull is patched", at(1, HOUR))
+    inbox.dm(dave, [user.alice], "you have won a prize", at(2, HOUR))
+
+    // Eve is as much a stranger as Dave, and answering her is the whole difference between them.
+    inbox.dm(eve, [user.alice], "are you the alice from the boatyard?", at(4, HOUR))
+    inbox.dm(user.alice, [eve], "I am, who is this?", at(3, HOUR))
+  })
+
+  // Only her space indexes, as in US-108: the socket a client opens before it knows what a relay
+  // is for never identifies itself to it, and the inbox relay serves an anonymous reader nothing.
+  const page = await as(users.alice, "/chat", {
+    env: {VITE_INDEXER_RELAYS: scenario.space("space").url},
+  })
+
+  await expect(chatTab(page, "Conversations")).toContainText("3")
+  await expect(chatTab(page, "Requests")).toContainText("1")
+
+  await expect(chatItems(page)).toHaveCount(3)
+  await expect(chatItems(page).nth(0)).toContainText("lunch tomorrow?")
+  await expect(chatItems(page).nth(1)).toContainText("the hull is patched")
+  await expect(chatItems(page).nth(2)).toContainText("I am, who is this?")
+
+  await chatTab(page, "Requests").click()
+
+  const fromDave = chatItems(page).filter({hasText: "you have won a prize"})
+
+  await expect(chatItems(page)).toHaveCount(1)
+  await expect(fromDave).toBeVisible()
+
+  // A request is a chat like any other, so it opens and reads as one.
+  await fromDave.click()
+
+  await expect(bubble(page, "you have won a prize")).toBeVisible()
 })
 
 test("US-108 read messages from a relay you only use for messages", async ({seed, as}) => {

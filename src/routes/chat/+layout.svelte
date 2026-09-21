@@ -17,7 +17,8 @@
   import ChatMenu from "@app/components/ChatMenu.svelte"
   import ChatStart from "@app/components/ChatStart.svelte"
   import ChatItem from "@app/components/ChatItem.svelte"
-  import {chatSearch} from "@app/chats"
+  import ChatTabs from "@app/components/ChatTabs.svelte"
+  import {ChatTab, chatContext, chatSearch, groupChatsByTab} from "@app/chats"
   import {pushModal} from "@app/modal"
   import {shouldUnwrap} from "@app/sync"
   import type {LayoutProps} from "./$types"
@@ -27,8 +28,10 @@
   const startChat = () => pushModal(ChatStart)
 
   let term = $state("")
+  let tab = $state(ChatTab.Conversations)
 
   const chats = $derived($chatSearch.searchOptions(term))
+  const chatsByTab = $derived(groupChatsByTab(chats, $chatContext))
 
   const promise = sleep(10000)
 
@@ -37,7 +40,7 @@
   })
 </script>
 
-<SecondaryNav class="relative">
+<SecondaryNav class="relative w-72 lg:w-80">
   <SecondaryNavSection>
     <SecondaryNavHeader>
       Chats
@@ -55,9 +58,10 @@
       <Icon icon={Magnifier} />
       <input bind:value={term} class="grow" type="text" />
     </label>
+    <ChatTabs bind:tab {chatsByTab} />
   </SecondaryNavSection>
   <div class="overflow-auto">
-    {#each chats as { id, pubkeys, messages } (id)}
+    {#each chatsByTab[tab] as { id, pubkeys, messages } (id)}
       <ChatItem {id} {pubkeys} {messages} />
     {/each}
     {#await promise}

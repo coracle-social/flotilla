@@ -17,6 +17,12 @@ const relayCard = (scope: Locator, name: string) => scope.locator(".card").filte
 // makes the assertion that follows about persistence rather than about timing.
 const waitForToastToClear = (page: Page) => expect(toast(page)).toHaveCount(0)
 
+// A Field lays its slider out under the row holding the label and the current value, so the card
+// around both is what a slider is named from.
+const requestsCard = (page: Page) => page.locator(".card").filter({hasText: "Message Requests"})
+
+const requestSliders = (page: Page) => requestsCard(page).locator('input[type="range"]')
+
 test("US-084 block a relay you never want used", async ({seed, as}) => {
   await seed(({relay, user}) => {
     const space = relay("space")
@@ -248,6 +254,42 @@ test("US-089 configure privacy preferences", async ({seed, as}) => {
 
   await expect(settingToggle(page, "Authenticate with unknown relays?")).toBeChecked()
   await expect(settingToggle(page, "Report usage?")).not.toBeChecked()
+})
+
+test("US-129 raise the thresholds a stranger has to meet", async ({seed, as}) => {
+  await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    space.relayList(user.alice)
+  })
+
+  const page = await as(users.alice, "/settings/privacy")
+  const pow = requestSliders(page).first()
+  const wot = requestSliders(page).last()
+
+  await expect(pow).toHaveValue("16")
+  await expect(wot).toHaveValue("3")
+  await expect(requestsCard(page).getByText("16 bits")).toBeVisible()
+  await expect(requestsCard(page).getByText("3 people")).toBeVisible()
+
+  await pow.fill("24")
+  await wot.fill("1")
+
+  await expect(requestsCard(page).getByText("24 bits")).toBeVisible()
+  await expect(requestsCard(page).getByText("1 person")).toBeVisible()
+
+  await page.getByRole("button", {name: "Save Changes"}).click()
+
+  await expect(page.getByRole("alert")).toContainText("Your settings have been saved!")
+
+  await waitForToastToClear(page)
+  await page.reload()
+
+  await expect(requestSliders(page).first()).toHaveValue("24")
+  await expect(requestSliders(page).last()).toHaveValue("1")
 })
 
 test("US-090 change the app's appearance", async ({seed, as}) => {

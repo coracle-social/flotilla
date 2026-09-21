@@ -616,6 +616,21 @@ Acceptance:
 - A message deleted or edited out of that conversation stays gone across the same restart.
 - A reaction I left on one of its messages is still there after the same restart.
 
+### US-128 — Keep messages from strangers out of my conversations
+
+As alice, I want messages from people I have no connection to held apart from the conversations I
+care about, so that a stranger cannot bury them.
+
+Acceptance:
+
+- The chat list has a Conversations tab and a Requests tab, each carrying its own count.
+- Someone I follow opens under Conversations and someone I share nothing with opens under Requests.
+  A member of a space I belong to, a sender enough of my follows follow, and a message carrying
+  enough proof of work each count as a connection too.
+- Choosing Requests shows the held conversation, which reads and opens like any other.
+- A chat I have written in is mine whatever I know about the other person, so answering a request
+  moves it to Conversations.
+
 ## Articles & threads
 
 ### US-037 — Write and publish an article
@@ -1359,6 +1374,17 @@ Acceptance:
   reload.
 - Turning off "Report usage" and saving persists across a reload.
 - "Discard Changes" reverts unsaved toggles.
+
+### US-129 — Raise the thresholds a stranger has to meet
+
+As alice, I want to set how much proof of work and how many vouches a stranger
+needs, so that I decide what reaches my conversations.
+
+Acceptance:
+
+- The proof-of-work and web-of-trust sliders start at 16 bits and 3 people, and
+  moving either updates the value beside its label live.
+- Saving persists both across a reload.
 
 ### US-090 — Change the app's appearance
 

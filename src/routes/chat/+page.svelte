@@ -10,14 +10,17 @@
   import ChatItem from "@app/components/ChatItem.svelte"
   import ChatStart from "@app/components/ChatStart.svelte"
   import ChatMenu from "@app/components/ChatMenu.svelte"
-  import {chatSearch} from "@app/chats"
+  import ChatTabs from "@app/components/ChatTabs.svelte"
+  import {ChatTab, chatContext, chatSearch, groupChatsByTab} from "@app/chats"
   import {pushModal} from "@app/modal"
 
   let term = $state("")
+  let tab = $state(ChatTab.Conversations)
 
   const startChat = () => pushModal(ChatStart)
 
   const chats = $derived($chatSearch.searchOptions(term))
+  const chatsByTab = $derived(groupChatsByTab(chats, $chatContext))
 </script>
 
 <PageContent class="flex flex-col gap-2 p-2 sm:gap-4 sm:p-4">
@@ -34,29 +37,39 @@
   </div>
   <ContentSearch class="md:hidden">
     {#snippet input()}
-      <div class="flex gap-2 min-w-0 grow items-center">
-        <label class="input input-group flex grow items-center gap-2">
-          <Icon icon={Magnifier} />
-          <input
-            bind:value={term}
-            class="grow"
-            type="text"
-            placeholder="Search for conversations..." />
-        </label>
-        <MenuButton component={ChatMenu} class="button button-neutral" aria-label="Chat options" />
+      <div class="flex flex-col gap-2 min-w-0 grow">
+        <div class="flex gap-2 min-w-0 items-center">
+          <label class="input input-group flex grow items-center gap-2">
+            <Icon icon={Magnifier} />
+            <input
+              bind:value={term}
+              class="grow"
+              type="text"
+              placeholder="Search for conversations..." />
+          </label>
+          <MenuButton
+            component={ChatMenu}
+            class="button button-neutral"
+            aria-label="Chat options" />
+        </div>
+        <ChatTabs bind:tab {chatsByTab} />
       </div>
     {/snippet}
     {#snippet content()}
       <div class="flex flex-col gap-2">
-        {#each chats as { id, pubkeys, messages } (id)}
+        {#each chatsByTab[tab] as { id, pubkeys, messages } (id)}
           <ChatItem {id} {pubkeys} {messages} class="card" />
         {:else}
           <div class="py-20 max-w-sm flex flex-col gap-4 items-center m-auto text-center">
-            <p>No chats found! Try starting one up.</p>
-            <Button class="button button-primary" onclick={startChat}>
-              <Icon icon={AddCircle} />
-              Start a Chat
-            </Button>
+            {#if tab === ChatTab.Requests}
+              <p>No message requests.</p>
+            {:else}
+              <p>No chats found! Try starting one up.</p>
+              <Button class="button button-primary" onclick={startChat}>
+                <Icon icon={AddCircle} />
+                Start a Chat
+              </Button>
+            {/if}
           </div>
         {/each}
       </div>

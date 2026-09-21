@@ -2,7 +2,9 @@
   import {publish} from "@welshman/app"
   import ShieldMinimalistic from "@assets/icons/shield-minimalistic.svg?dataurl"
   import ForbiddenCircle from "@assets/icons/forbidden-circle.svg?dataurl"
+  import LetterUnread from "@assets/icons/letter-unread.svg?dataurl"
   import {preventDefault} from "@lib/html"
+  import Field from "@lib/components/Field.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
   import Icon from "@lib/components/Icon.svelte"
@@ -139,6 +141,63 @@
           </p>
         {/snippet}
       </FieldInline>
+    </Card>
+    <Card class="flex flex-col gap-4">
+      <strong class="flex items-center gap-3 text-lg">
+        <Icon icon={LetterUnread} />
+        Message Requests
+      </strong>
+      <p class="text-sm opacity-50">
+        Messages from people you have no connection to wait in the Requests tab of your chat list.
+        These two thresholds are the other ways in.
+      </p>
+      <Field>
+        {#snippet label()}
+          <p>Proof of work</p>
+        {/snippet}
+        {#snippet secondary()}
+          <p>{$settings.min_dm_pow} bits</p>
+        {/snippet}
+        {#snippet input()}
+          <input
+            class="range w-full"
+            type="range"
+            min="1"
+            max="32"
+            step="1"
+            bind:value={$settings.min_dm_pow} />
+        {/snippet}
+        {#snippet info()}
+          <p>
+            A sender who spends this much proof of work reaches your conversations whether or not
+            you know them. Each step up doubles what it costs them, and {PLATFORM_NAME} spends 16 bits
+            on every message you send.
+          </p>
+        {/snippet}
+      </Field>
+      <Field>
+        {#snippet label()}
+          <p>Web of trust</p>
+        {/snippet}
+        {#snippet secondary()}
+          <p>{$settings.min_dm_wot} {$settings.min_dm_wot === 1 ? "person" : "people"}</p>
+        {/snippet}
+        {#snippet input()}
+          <input
+            class="range w-full"
+            type="range"
+            min="1"
+            max="10"
+            step="1"
+            bind:value={$settings.min_dm_wot} />
+        {/snippet}
+        {#snippet info()}
+          <p>
+            How many of the people you follow have to follow a sender for you to count as knowing
+            them.
+          </p>
+        {/snippet}
+      </Field>
     </Card>
     <Card class="sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}
