@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {derived} from "svelte/store"
+  import {derived, readable} from "svelte/store"
   import type {Snippet} from "svelte"
   import {
     displayList,
@@ -38,6 +38,7 @@
     createReaction: (event: EventContent) => void
     url?: string
     reactionClass?: string
+    hideZaps?: boolean
     noTooltip?: boolean
     innerEvent?: TrustedEvent
     context: FeedContext
@@ -50,6 +51,7 @@
     createReaction,
     url,
     reactionClass = "",
+    hideZaps = false,
     noTooltip = false,
     innerEvent = undefined,
     context,
@@ -66,18 +68,22 @@
   const reactions = derived(related, $related => filter(spec({kind: REACTION}), $related))
   const receipts = derived(related, $related => filter(spec({kind: ZAP_RECEIPT}), $related))
 
-  // A receipt can be a zap of either the event or the one it wraps
-  const zaps = derived<typeof receipts, Zap[]>(
-    receipts,
-    ($receipts, set) =>
-      derived(
-        removeUndefined([event, innerEvent]).map(
-          parent => $app.use(Zappers).validZapReceipts($receipts, parent, removeUndefined([url])).$,
-        ),
-        (zapsByParent: Zap[][]) => uniqBy(zap => zap.response.id, zapsByParent.flat()),
-      ).subscribe(set),
-    [],
-  )
+  // A receipt can be a zap of either the event or the one it wraps; skip validating
+  // (each zapper's lnurl) entirely when zaps won't even be shown.
+  const zaps = hideZaps
+    ? readable<Zap[]>([])
+    : derived<typeof receipts, Zap[]>(
+        receipts,
+        ($receipts, set) =>
+          derived(
+            removeUndefined([event, innerEvent]).map(
+              parent =>
+                $app.use(Zappers).validZapReceipts($receipts, parent, removeUndefined([url])).$,
+            ),
+            (zapsByParent: Zap[][]) => uniqBy(zap => zap.response.id, zapsByParent.flat()),
+          ).subscribe(set),
+        [],
+      )
 
   const reactorPubkeys = $derived(
     uniq([...$reactions.map(e => e.pubkey), ...$zaps.map(zap => zap.request.pubkey)]),
@@ -149,7 +155,7 @@
   const groupedZaps = $derived(groupBy(e => getReactionKey(e.request), $zaps.values()))
 </script>
 
-{#if $reactions.length > 0 || $zaps.length || $reports.length > 0 || children}
+{#if $reactions.length > 0 || (!hideZaps && $zaps.length > 0) || $reports.length > 0 || children}
   <div class="flex min-w-0 flex-wrap gap-2">
     {#if url && $reports.length > 0 && canBanEvent}
       <Button
@@ -165,29 +171,31 @@
         <span>{$reports.length}</span>
       </Button>
     {/if}
-    {#each groupedZaps.entries() as [key, zaps] (key)}
-      {@const amount = fromMsats(sum(zaps.map(zap => zap.invoiceAmount)))}
-      {@const pubkeys = uniq(zaps.map(zap => zap.request.pubkey))}
-      {@const isOwn = pubkeys.includes($user.pubkey)}
-      {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
-      {@const tooltip = `${info} zapped`}
-      {@const onZapClickHandler = () => onZapClick(pubkeys, tooltip)}
-      <Button
-        data-tip={tooltip}
-        class={cx(
-          reactionClass,
-          "button button-xs flex-inline flex items-center gap-1 rounded-full text-xs font-normal",
-          {
-            tip: !noTooltip && !isMobile,
-            "button-primary": isOwn,
-            "button-neutral": !isOwn,
-          },
-        )}
-        onclick={stopPropagation(onZapClickHandler)}>
-        <Reaction event={zaps[0].request} />
-        <span>{amount}</span>
-      </Button>
-    {/each}
+    {#if !hideZaps}
+      {#each groupedZaps.entries() as [key, zaps] (key)}
+        {@const amount = fromMsats(sum(zaps.map(zap => zap.invoiceAmount)))}
+        {@const pubkeys = uniq(zaps.map(zap => zap.request.pubkey))}
+        {@const isOwn = pubkeys.includes($user.pubkey)}
+        {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
+        {@const tooltip = `${info} zapped`}
+        {@const onZapClickHandler = () => onZapClick(pubkeys, tooltip)}
+        <Button
+          data-tip={tooltip}
+          class={cx(
+            reactionClass,
+            "button button-xs flex-inline flex items-center gap-1 rounded-full text-xs font-normal",
+            {
+              tip: !noTooltip && !isMobile,
+              "button-primary": isOwn,
+              "button-neutral": !isOwn,
+            },
+          )}
+          onclick={stopPropagation(onZapClickHandler)}>
+          <Reaction event={zaps[0].request} />
+          <span>{amount}</span>
+        </Button>
+      {/each}
+    {/if}
     {#each groupedReactions.entries() as [key, events] (key)}
       {@const pubkeys = events.map(e => e.pubkey)}
       {@const isOwn = pubkeys.includes($user.pubkey)}

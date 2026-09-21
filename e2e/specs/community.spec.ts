@@ -594,23 +594,25 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
 
   await openCard(roof, "Repair the roof")
 
-  await expect(page.getByRole("heading", {name: "Repair the roof"})).toBeVisible()
+  // The space bar names the goal alongside the hero, so both carry it as a heading.
+  await expect(page.getByRole("heading", {name: "Repair the roof"}).first()).toBeVisible()
 
-  const goalCard = page.locator(".card.z-feature").filter({hasText: "funded of 6000 sats"})
+  // Amounts are localized, so the thousands separator is the environment's to decide.
+  const goalCard = page.locator(".card.z-feature").filter({hasText: /of 6,?000 sats/})
 
-  // Exactly, since "funded of 6000 sats" carries "0 sats" inside it.
-  await expect(goalCard.getByText("0 sats", {exact: true})).toBeVisible()
-  await expect(goalCard.locator("progress")).toHaveJSProperty("value", 0)
-  await expect(goalCard.locator("progress")).toHaveJSProperty("max", 6000)
+  await expect(goalCard.getByText("0%", {exact: true})).toBeVisible()
+  await expect(goalCard.getByText("sats to go", {exact: true}).locator("xpath=..")).toContainText(
+    /6,?000/,
+  )
 
   await page.goto(`${spacePath(url)}/goals/${running.id}`)
 
-  const paCard = page.locator(".card.z-feature").filter({hasText: "funded of 50000 sats"})
+  const paCard = page.locator(".card.z-feature").filter({hasText: /of 50,?000 sats/})
 
-  await expect(paCard.getByText("contributors", {exact: true}).locator("xpath=..")).toContainText(
-    "0",
+  await expect(paCard.getByText("backers", {exact: true}).locator("xpath=..")).toContainText("0")
+  await expect(paCard.getByText("days running", {exact: true}).locator("xpath=..")).toContainText(
+    "3",
   )
-  await expect(paCard.getByText("days old", {exact: true}).locator("xpath=..")).toContainText("3")
 
   // Registered after the page was opened, so it answers ahead of the empty dufflepud `as()`
   // installs, and before the navigation below, since a zapper is looked up once per page load.
@@ -625,16 +627,24 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
 
   await page.goto(`${spacePath(url)}/goals/${soundproofing.id}`)
 
-  const soundCard = page.locator(".card.z-feature").filter({hasText: "funded of 20000 sats"})
+  const soundCard = page.locator(".card.z-feature").filter({hasText: /of 20,?000 sats/})
 
-  await expect(soundCard.getByText("1500 sats", {exact: true})).toBeVisible()
-  await expect(soundCard.locator("progress")).toHaveJSProperty("value", 1500)
+  await expect(soundCard.getByText(/^1,?500$/)).toBeVisible()
+  await expect(soundCard.getByText("8%", {exact: true})).toBeVisible()
+  await expect(soundCard.getByText("backers", {exact: true}).locator("xpath=..")).toContainText("2")
   await expect(
-    soundCard.getByText("contributors", {exact: true}).locator("xpath=.."),
+    soundCard.getByText("days running", {exact: true}).locator("xpath=.."),
   ).toContainText("2")
-  await expect(soundCard.getByText("days old", {exact: true}).locator("xpath=..")).toContainText(
-    "2",
-  )
+
+  // Each backer is named and ranked by what they gave, biggest first.
+  const supporters = page
+    .locator(".card")
+    .filter({has: page.getByRole("heading", {name: "Supporters"})})
+    .last()
+
+  await expect(supporters).toContainText("Alice Anderson")
+  await expect(supporters.getByText(/^1,?000$/)).toBeVisible()
+  await expect(supporters.getByText(/^500$/)).toBeVisible()
 })
 
 test("US-051 post, edit, and close out a classified listing", async ({seed, as}) => {

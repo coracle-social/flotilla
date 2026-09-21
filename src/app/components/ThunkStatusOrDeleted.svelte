@@ -24,7 +24,7 @@
   <div class="button button-error button-xs rounded-full">Deleted</div>
 {:else}
   {#if $thunk.thunks.length > 0 && !$thunk.hasStatus(PublishStatus.Success)}
-    <ThunkStatus {thunk} />
+    <ThunkStatus {thunk} inline />
   {:else}
     {@render status?.()}
   {/if}

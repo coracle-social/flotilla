@@ -89,7 +89,8 @@
     var(--shadow-inset);
 }
 
-[data-fl-theme="clay"] .card-interactive:active {
+/* excludes presses on nested buttons/links, which :active otherwise cascades to too */
+[data-fl-theme="clay"] .card-interactive:active:not(:has(button:active, a:active)) {
   transform: translateY(2px);
   box-shadow: 2px 2px 0 rgba(var(--shadow-color), 0.3);
 }

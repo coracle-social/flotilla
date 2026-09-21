@@ -6,17 +6,18 @@
   interface Props {
     thunk: BaseThunk
     showToastOnRetry?: boolean
+    inline?: boolean
     class?: string
   }
 
-  const {thunk, showToastOnRetry, ...restProps}: Props = $props()
+  const {thunk, showToastOnRetry, inline = false, ...restProps}: Props = $props()
 
   const showFailure = $derived($thunk.isComplete() && $thunk.getFailedUrls().length > 0)
   const showPending = $derived(!$thunk.isComplete())
 </script>
 
 {#if showFailure}
-  <ThunkFailure class={restProps.class} {thunk} {showToastOnRetry} />
+  <ThunkFailure class={restProps.class} {thunk} {showToastOnRetry} {inline} />
 {:else if showPending}
-  <ThunkPending class={restProps.class} {thunk} />
+  <ThunkPending class={restProps.class} {thunk} {inline} />
 {/if}

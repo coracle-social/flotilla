@@ -1,4 +1,5 @@
 <script lang="ts">
+  import cx from "classnames"
   import {stopPropagation} from "svelte/legacy"
   import {noop} from "@welshman/lib"
   import type {BaseThunk} from "@welshman/app"
@@ -13,10 +14,12 @@
   type Props = {
     thunk: BaseThunk
     showToastOnRetry?: boolean
+    // See ThunkPending's `inline` — same trade-off, same default.
+    inline?: boolean
     class?: string
   }
 
-  const {thunk, showToastOnRetry, ...restProps}: Props = $props()
+  const {thunk, showToastOnRetry, inline = false, ...restProps}: Props = $props()
 
   const showFailure = $derived($thunk.isComplete() && $thunk.getFailedUrls().length > 0)
 
@@ -47,7 +50,7 @@
 
 {#if showFailure}
   <button
-    class="flex w-full justify-end px-1 text-xs {restProps.class}"
+    class={cx("flex px-1 text-xs", {"w-full justify-end": !inline}, restProps.class)}
     onclick={stopPropagation(noop)}>
     <Tippy
       class="flex items-center"

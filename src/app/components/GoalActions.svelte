@@ -31,7 +31,7 @@
   const createReaction = (values: EventContent) => publishReaction(event, values, {url})
 </script>
 
-<div class="flex grow flex-wrap justify-end gap-2">
+<div class="flex min-w-0 grow flex-wrap justify-end gap-2">
   {#if h && showRoom}
     <Link href={makeSpacePath(url, h)} class="button button-neutral button-xs rounded-full">
       Posted in #<RoomName {h} {url} />
@@ -39,6 +39,7 @@
   {/if}
   <ThunkStatusOrDeleted {event} {context}>
     <ReactionSummary
+      hideZaps
       {url}
       {event}
       {context}

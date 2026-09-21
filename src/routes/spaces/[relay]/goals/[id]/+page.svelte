@@ -1,24 +1,27 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {derived} from "svelte/store"
-  import {sleep} from "@welshman/lib"
-  import {getCommentFiltersForRoot} from "@welshman/util"
-  import {deriveEventsAsc} from "@welshman/store"
+  import {DAY, formatTimestampRelative, now, sleep} from "@welshman/lib"
   import {ZapGoal} from "@welshman/domain"
-  import SortVertical from "@assets/icons/sort-vertical.svg?dataurl"
-  import Reply from "@assets/icons/reply-2.svg?dataurl"
+  import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import Button from "@lib/components/Button.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
-  import NoteContent from "@app/components/NoteContent.svelte"
+  import Content from "@app/components/Content.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
+  import ProfileCircles from "@app/components/ProfileCircles.svelte"
+  import RoomLink from "@app/components/RoomLink.svelte"
+  import ZapButton from "@app/components/ZapButton.svelte"
   import GoalActions from "@app/components/GoalActions.svelte"
-  import CommentActions from "@app/components/CommentActions.svelte"
-  import EventReply from "@app/components/EventReply.svelte"
-  import {network, reader} from "@app/core"
-  import {deriveEvent, deriveEventsById} from "@app/repository"
+  import GoalMeter from "@app/components/GoalMeter.svelte"
+  import GoalStatus from "@app/components/GoalStatus.svelte"
+  import GoalSupporters from "@app/components/GoalSupporters.svelte"
+  import EventComments from "@app/components/EventComments.svelte"
+  import {reader} from "@app/core"
+  import {ENABLE_ZAPS} from "@app/env"
+  import {deriveGoalProgress} from "@app/goals"
+  import {deriveEvent} from "@app/repository"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
   import type {PageProps} from "./$types"
@@ -29,83 +32,90 @@
   const url = decodeRelay(relay)
   const context = makeFeedContext({relays: [url]})
   const event = deriveEvent(id, [url])
-  const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
-  const replies = $derived(deriveEventsAsc(deriveEventsById(filters)))
   const goal = derived(event, $event => ($event ? reader(ZapGoal)($event) : undefined))
-  const summary = $derived($goal?.summary() ?? "")
+  const progress = $derived($event ? deriveGoalProgress($event, url) : undefined)
+  const remaining = $derived($progress ? Math.max(0, $progress.target - $progress.raised) : 0)
+  const deadline = $derived($progress?.isEnded ? undefined : $progress?.closedAt)
+
+  const days = $derived(
+    deadline
+      ? Math.ceil((deadline - now()) / DAY)
+      : Math.ceil((now() - ($event?.created_at ?? now())) / DAY),
+  )
 
   const back = () => history.back()
 
-  const openReply = () => {
-    showReply = true
-  }
-
-  const closeReply = () => {
-    showReply = false
-  }
-
-  const expand = () => {
-    showAll = true
-  }
-
   onDestroy(context.cleanup)
-
-  let showAll = $state(false)
-  let showReply = $state(false)
-
-  $effect(() => {
-    if (filters.length > 0) {
-      const controller = new AbortController()
-
-      $network.request({relays: [url], filters, signal: controller.signal})
-
-      return () => controller.abort()
-    }
-  })
 </script>
 
 <SpaceBar {back}>
   {#snippet title()}
-    <h1 class="text-xl">{$event?.content}</h1>
+    <h1 class="truncate text-xl">{$goal?.title() ?? "Funding goal"}</h1>
   {/snippet}
 </SpaceBar>
 
-<PageContent class="flex flex-col gap-2 p-2 sm:gap-4 sm:p-4">
-  {#if $event}
-    <div class="flex flex-col gap-3">
-      <NoteCard event={$event} {url} class="card z-feature w-full">
-        <div class="flex flex-col gap-3 ml-12">
-          <NoteContent showEntire event={{...$event, content: summary}} {url} />
-          <GoalActions showRoom event={$event} {url} {context} />
-        </div>
-      </NoteCard>
-      {#if !showAll && $replies.length > 4}
-        <div class="flex justify-center">
-          <Button class="button button-link" onclick={expand}>
-            <Icon icon={SortVertical} />
-            Show all {$replies.length} replies
-          </Button>
-        </div>
-      {/if}
-      {#each $replies.slice(0, showAll ? undefined : 4) as reply (reply.id)}
-        <NoteCard event={reply} {url} class="card z-feature w-full">
-          <div class="flex flex-col gap-3 ml-12">
-            <NoteContent showEntire event={reply} {url} />
-            <CommentActions event={reply} {url} {context} />
+<PageContent class="flex flex-col gap-3 p-2 sm:gap-4 sm:p-4">
+  {#if $event && $goal && $progress}
+    <NoteCard event={$event} {url} class="card z-feature w-full">
+      <div class="flex flex-col gap-4">
+        {#if $goal.image()}
+          <img src={$goal.image()} alt="" class="h-56 w-full max-w-full rounded-2xl object-cover" />
+        {/if}
+        <div class="flex flex-col gap-2">
+          <h2 class="wrap-break-word text-3xl">{$goal.title()}</h2>
+          <div class="flex flex-wrap items-center gap-2 text-sm text-content-muted">
+            <GoalStatus progress={$progress} />
+            {#if $goal.room()}
+              <span>in <RoomLink {url} h={$goal.room()!} /></span>
+            {/if}
+            <span>started {formatTimestampRelative($event.created_at)}</span>
           </div>
-        </NoteCard>
-      {/each}
-    </div>
-    {#if showReply}
-      <EventReply {url} event={$event} onClose={closeReply} onSubmit={closeReply} />
-    {:else}
-      <div class="flex justify-end">
-        <Button class="button button-primary" onclick={openReply}>
-          <Icon icon={Reply} />
-          Comment on this goal
-        </Button>
+        </div>
+        <GoalMeter progress={$progress} />
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="flex flex-col items-center gap-1 rounded-2xl bg-surface-more p-3">
+            <span class="text-xl font-bold">{$progress.backers.length}</span>
+            {#if $progress.backers.length > 0}
+              <ProfileCircles pubkeys={$progress.backers} size={5} limit={5} />
+            {/if}
+            <span class="text-xs text-content-muted">
+              {$progress.backers.length === 1 ? "backer" : "backers"}
+            </span>
+          </div>
+          <div class="flex flex-col items-center gap-1 rounded-2xl bg-surface-more p-3">
+            <span class="text-xl font-bold">{remaining.toLocaleString()}</span>
+            <span class="text-xs text-content-muted">sats to go</span>
+          </div>
+          <div class="flex flex-col items-center gap-1 rounded-2xl bg-surface-more p-3">
+            <span class="text-xl font-bold">{$progress.isEnded ? "—" : days}</span>
+            <span class="text-xs text-content-muted">
+              {#if $progress.isEnded && $progress.closedAt}
+                ended {formatTimestampRelative($progress.closedAt)}
+              {:else if deadline}
+                {days === 1 ? "day" : "days"} left
+              {:else}
+                {days === 1 ? "day" : "days"} running
+              {/if}
+            </span>
+          </div>
+        </div>
+        {#if ENABLE_ZAPS && !$progress.isEnded}
+          <ZapButton {url} event={$event} class="button button-primary button-block lg:px-20">
+            <Icon icon={Bolt} />
+            {$progress.isFunded ? "Chip in anyway" : "Contribute to this goal"}
+          </ZapButton>
+        {/if}
+        <GoalActions event={$event} {url} {context} />
+      </div>
+    </NoteCard>
+    {#if $goal.summary()}
+      <div class="flex flex-col gap-3 card w-full">
+        <h2 class="text-lg font-bold">About this goal</h2>
+        <Content showEntire event={{content: $goal.summary(), tags: $event.tags}} {url} />
       </div>
     {/if}
+    <GoalSupporters {url} event={$event} progress={$progress} />
+    <EventComments event={$event} {url} {context} />
   {:else}
     <div class="flex justify-center py-20">
       {#await sleep(5000)}

@@ -133,7 +133,7 @@
   <div class="flex justify-end gap-2">
     <Button class="button button-link" onclick={onCancel} disabled={loading}>Cancel</Button>
     <Button type="submit" class="button button-primary button-sm" disabled={$uploading || loading}>
-      <Spinner {loading}>
+      <Spinner {loading} reserveSpace>
         {#if parent}
           Reply
         {:else}

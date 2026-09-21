@@ -1,4 +1,5 @@
 <script lang="ts">
+  import cx from "classnames"
   import type {Maybe} from "@welshman/lib"
   import {randomId} from "@welshman/lib"
   import {removeAt, insertAt} from "@welshman/lib"
@@ -26,7 +27,8 @@
 
   const addFiles = (files: FileList | File[]) => {
     const newFiles = Array.from(files).filter(file => file.type.startsWith("image/"))
-    value = [...value, ...newFiles]
+
+    value = multiple ? [...value, ...newFiles] : newFiles.slice(0, 1)
   }
 
   const removeItem = (index: number) => {
@@ -87,44 +89,52 @@
 </script>
 
 <div class="flex flex-col gap-2">
-  <div class="grid grid-cols-3 gap-3" role="list">
+  <div class={cx("grid gap-3", multiple ? "grid-cols-3" : "grid-cols-1")} role="list">
     {#each value as item, index (index)}
       <div
-        class="relative aspect-square cursor-move rounded-2xl"
-        style:border={draggedIndex === index
-          ? "var(--border-thin) solid var(--primary)"
-          : undefined}
-        draggable="true"
+        class={cx(
+          "border-line bg-surface-more relative overflow-hidden rounded-2xl border border-solid",
+          multiple ? "aspect-square cursor-move" : "aspect-video",
+        )}
+        style:border-color={draggedIndex === index ? "var(--primary)" : undefined}
+        draggable={multiple}
         role="listitem"
-        aria-label="Draggable image"
+        aria-label={multiple ? "Draggable image" : "Image"}
         ondragstart={e => handleDragStart(e, index)}
         ondragover={e => handleDragOver(e, index)}
         ondragend={handleDragEnd}>
-        <img
-          src={getImageUrl(item)}
-          alt="Upload preview"
-          class="h-full w-full object-cover rounded-2xl" />
+        <img src={getImageUrl(item)} alt="Upload preview" class="h-full w-full object-cover" />
         <Button
+          aria-label="Remove image"
           class="button button-neutral button-xs button-circle bg-surface absolute right-1 top-1"
           onclick={() => removeItem(index)}>
           <Icon icon={CloseCircle} size={4} />
         </Button>
       </div>
     {/each}
-    <label
-      for={id}
-      class="flex aspect-square cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed text-sm"
-      style:border-color={dropActive ? "var(--primary)" : undefined}
-      aria-label="Drag and drop images here or click to select"
-      ondragenter={stopPropagation(preventDefault(onDragEnter))}
-      ondragover={stopPropagation(preventDefault(onDragOver))}
-      ondragleave={stopPropagation(preventDefault(onDragLeave))}
-      ondrop={stopPropagation(preventDefault(onDrop))}>
-      <div class="flex flex-col items-center gap-2 text-center">
-        <Icon icon={GallerySend} size={8} />
-        <p class="text-content-muted text-sm">Drag and drop images or click to select</p>
-      </div>
-    </label>
+    {#if multiple || value.length === 0}
+      <label
+        for={id}
+        class={cx(
+          "border-line flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed p-3 text-sm",
+          multiple ? "aspect-square" : "aspect-video",
+        )}
+        style:border-color={dropActive ? "var(--primary)" : undefined}
+        aria-label={multiple
+          ? "Drag and drop images here or click to select"
+          : "Drag and drop an image here or click to select"}
+        ondragenter={stopPropagation(preventDefault(onDragEnter))}
+        ondragover={stopPropagation(preventDefault(onDragOver))}
+        ondragleave={stopPropagation(preventDefault(onDragLeave))}
+        ondrop={stopPropagation(preventDefault(onDrop))}>
+        <div class="flex flex-col items-center gap-2 text-center">
+          <Icon icon={GallerySend} size={8} />
+          <p class="text-content-muted text-sm">
+            Drag and drop {multiple ? "images" : "an image"} or click to select
+          </p>
+        </div>
+      </label>
+    {/if}
   </div>
   <input {id} type="file" accept="image/*" {multiple} onchange={onFileChange} class="hidden" />
 </div>

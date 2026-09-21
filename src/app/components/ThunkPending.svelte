@@ -1,21 +1,25 @@
 <script lang="ts">
+  import cx from "classnames"
   import {stopPropagation} from "svelte/legacy"
   import {PublishStatus} from "@welshman/net"
   import type {BaseThunk} from "@welshman/app"
 
   type Props = {
     thunk: BaseThunk
+    // A standalone usage (a DM bubble) needs to fill and justify its own row; one already
+    // inside a flex row (an actions row) doesn't, and forcing it costs that row a line.
+    inline?: boolean
     class?: string
   }
 
-  const {thunk, ...restProps}: Props = $props()
+  const {thunk, inline = false, ...restProps}: Props = $props()
 
   const abort = () => thunk.abort()
 
   const isSending = $derived($thunk.hasStatus(PublishStatus.Sending))
 </script>
 
-<div class="flex w-full justify-end px-1 text-xs {restProps.class}">
+<div class={cx("flex px-1 text-xs", {"w-full justify-end": !inline}, restProps.class)}>
   <span class="flex items-center gap-1">
     <span class="spinner spinner-xs mx-1 translate-y-px"></span>
     <span class="opacity-50">Sending...</span>

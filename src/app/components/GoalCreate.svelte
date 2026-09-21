@@ -1,5 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
+  import {now} from "@welshman/lib"
   import {relay, toMsats} from "@welshman/util"
   import {ZapGoal} from "@welshman/domain"
   import {publish} from "@welshman/app"
@@ -12,6 +13,8 @@
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import DateTimeInput from "@lib/components/DateTimeInput.svelte"
+  import ImagesInput from "@lib/components/ImagesInput.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
@@ -24,11 +27,14 @@
   import {publishRoomQuote} from "@app/rooms"
   import {makeEditor} from "@app/editor"
   import {DraftKey} from "@app/drafts"
+  import {compressFileForUpload, uploadFile} from "@app/uploads"
 
   type Values = {
     title: string
     content: string | object
     amount: number
+    images: (string | File)[]
+    closedAt?: number
   }
 
   type Props = {
@@ -76,9 +82,30 @@
       })
     }
 
+    if (closedAt && closedAt < now()) {
+      return pushToast({
+        theme: "error",
+        message: "Please choose a deadline in the future.",
+      })
+    }
+
     loading = true
 
     try {
+      const [image] = images
+
+      let imageUrl = typeof image === "string" ? image : undefined
+
+      if (image instanceof File) {
+        const {result, error} = await uploadFile(await compressFileForUpload(image), {url})
+
+        if (error) {
+          return pushToast({theme: "error", message: `Failed to upload ${image.name}`})
+        }
+
+        imageUrl = result?.url
+      }
+
       const protect = await shouldProtect
       const eventWriter = writer(ZapGoal)
         .setTitle(title)
@@ -88,6 +115,14 @@
         .setProtected(protect)
         .addTags(...ed.storage.nostr.getEditorTags())
         .forceRoutes(relay(url))
+
+      if (imageUrl) {
+        eventWriter.setImage(imageUrl)
+      }
+
+      if (closedAt) {
+        eventWriter.setClosedAt(closedAt)
+      }
 
       if (h) {
         eventWriter.setRoom(url, h)
@@ -116,6 +151,8 @@
   let title = $state(initialValues?.title ?? "")
   let amount = $state(initialValues?.amount ?? 1000)
   let content = $state(initialValues?.content ?? "")
+  let images = $state(initialValues?.images ?? [])
+  let closedAt: number | undefined = $state(initialValues?.closedAt)
 
   const onChange = (json: object) => {
     content = json
@@ -131,7 +168,7 @@
   })
 
   $effect(() => {
-    draftKey.update({title, content, amount})
+    draftKey.update({title, content, amount, images, closedAt})
   })
 </script>
 
@@ -204,6 +241,25 @@
           step="1000"
           bind:value={amount} />
       </div>
+      <Field>
+        {#snippet label()}
+          <p>Deadline (optional)</p>
+        {/snippet}
+        {#snippet input()}
+          <DateTimeInput bind:value={closedAt} />
+        {/snippet}
+        {#snippet info()}
+          Contributions made after this date won't count toward the goal.
+        {/snippet}
+      </Field>
+      <Field>
+        {#snippet label()}
+          <p>Cover image (optional)</p>
+        {/snippet}
+        {#snippet input()}
+          <ImagesInput bind:value={images} multiple={false} />
+        {/snippet}
+      </Field>
     </div>
   </ModalBody>
   <ModalFooter>

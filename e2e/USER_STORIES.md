@@ -812,11 +812,14 @@ members can see the momentum.
 Acceptance:
 
 - Creating a goal requires a title and details; the sats target defaults to 1000
-  and can be set by field or slider.
+  and can be set by field or slider, and a deadline and cover image are optional.
+- The goals page is a board: space-wide totals, live/funded/ended filters, and a
+  sort by recent activity, age, progress or deadline.
 - The goal's detail page shows the amount funded against its target on a
-  progress bar.
-- A goal with contributions shows a contributor count and how long it has been
-  running.
+  progress meter, with what is left to raise and how long it has left or has
+  been running.
+- A goal with contributions names its backers, ranked by what each gave, with
+  the comment that came with the zap.
 
 ### US-051 — Post, edit, and close out a classified listing
 
