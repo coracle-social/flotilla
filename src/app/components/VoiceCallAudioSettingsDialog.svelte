@@ -35,7 +35,9 @@
       ?.mediaStreamTrack
 
   const loadDevices = async () => {
-    if (!navigator.mediaDevices?.enumerateDevices) return
+    if (!navigator.mediaDevices?.enumerateDevices) {
+      return
+    }
     try {
       const devices = await navigator.mediaDevices.enumerateDevices()
       audioInputs = devices.filter(spec({kind: "audioinput"}))
@@ -85,7 +87,9 @@
     // place with a new MediaStreamTrack rather than emitting a publish event,
     // so the meter needs an explicit re-read here.
     const session = $currentCallSession
-    if (session) micTrack = readMicTrack(session)
+    if (session) {
+      micTrack = readMicTrack(session)
+    }
   }
 
   const onOutputChange = () => {

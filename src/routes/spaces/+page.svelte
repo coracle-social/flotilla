@@ -57,7 +57,9 @@
       return createSearch(options, {
         getValue: (relay: Relay) => relay.url,
         sortFn: ({score, item}) => {
-          if (score && score > 0.1) return -score!
+          if (score && score > 0.1) {
+            return -score!
+          }
 
           const wotScore = $spacePubkeysByUrl.get(item.url)?.size || 0
 

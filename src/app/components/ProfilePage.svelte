@@ -55,7 +55,9 @@
   const openChat = () => goToChat([target])
 
   const toggleFollow = async () => {
-    if (isSelf) return
+    if (isSelf) {
+      return
+    }
 
     if (isFollowing) {
       await $followLists.unfollow(target).then(publish)
@@ -72,7 +74,9 @@
 
     input.value = ""
 
-    if (!file || !$profile) return
+    if (!file || !$profile) {
+      return
+    }
 
     bannerLoading = true
 

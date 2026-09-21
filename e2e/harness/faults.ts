@@ -46,7 +46,9 @@ export const watchFaults = (): FaultWatch => {
   const record = (line: string, fault: boolean) => {
     log.push(line)
 
-    if (fault) found.push(line)
+    if (fault) {
+      found.push(line)
+    }
   }
 
   return {

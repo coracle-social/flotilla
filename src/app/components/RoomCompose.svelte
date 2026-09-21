@@ -100,7 +100,9 @@
   const hidePopover = () => tippy?.hide()
 
   const submit = async () => {
-    if ($uploading) return
+    if ($uploading) {
+      return
+    }
 
     const ed = await editor
     const content = ed.getText({blockSeparator: "\n"}).trim()

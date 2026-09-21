@@ -27,7 +27,9 @@
   const copyCode = () => clip(code)
 
   const shareProfile = async () => {
-    if (!canShare) return
+    if (!canShare) {
+      return
+    }
 
     try {
       await Share.share({url: code})

@@ -79,8 +79,12 @@
   const pubkeyFromEntity = (entity: string) => {
     const {type, data} = nip19.decode(entity)
 
-    if (type === "npub") return data
-    if (type === "nprofile") return data.pubkey
+    if (type === "npub") {
+      return data
+    }
+    if (type === "nprofile") {
+      return data.pubkey
+    }
   }
 
   // Everyone the content mentions, so their names are asked for and awaited rather than read

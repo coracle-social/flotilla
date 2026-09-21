@@ -139,7 +139,9 @@ const describeClockDrift = (drift: number) => {
 const getTestUser = (pubkey: string) => {
   const user = testUsersByPubkey.get(pubkey)
 
-  if (user) return user
+  if (user) {
+    return user
+  }
 
   throw new Error(
     `Cannot publish as ${pubkey}: zooid authenticates every write, so seeded events must be ` +
@@ -190,7 +192,9 @@ export class Zooid {
   // Verifies docker rather than bringing the container up, which `reset` does. Repeat calls are
   // free, so the fixture can call this per test.
   start = async () => {
-    if (this.started) return
+    if (this.started) {
+      return
+    }
 
     const problem = await describeDockerProblem()
 
@@ -381,7 +385,9 @@ export class Zooid {
     const key = `${host} ${user.pubkey}`
     const session = this.sessions.get(key)
 
-    if (session) return session
+    if (session) {
+      return session
+    }
 
     const connection = connectToZooid(host)
     const [, challenge] = await connection.wait(isRelayAuth)

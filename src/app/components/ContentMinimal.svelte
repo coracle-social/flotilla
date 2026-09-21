@@ -48,8 +48,12 @@
   const isBoundary = (i: number) => {
     const parsed = fullContent[i]
 
-    if (!parsed || isNewline(parsed)) return true
-    if (isText(parsed)) return Boolean(parsed.value.match(/^\s+$/))
+    if (!parsed || isNewline(parsed)) {
+      return true
+    }
+    if (isText(parsed)) {
+      return Boolean(parsed.value.match(/^\s+$/))
+    }
 
     return false
   }

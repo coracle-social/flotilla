@@ -40,9 +40,15 @@
   })
 
   const [href, external] = call(() => {
-    if (roomReference) return [makeRoomPath(roomReference.url, roomReference.h), false]
-    if (relayReference) return [makeSpacePath(relayReference), false]
-    if (url.startsWith(PLATFORM_URL)) return [url.replace(PLATFORM_URL, ""), false]
+    if (roomReference) {
+      return [makeRoomPath(roomReference.url, roomReference.h), false]
+    }
+    if (relayReference) {
+      return [makeSpacePath(relayReference), false]
+    }
+    if (url.startsWith(PLATFORM_URL)) {
+      return [url.replace(PLATFORM_URL, ""), false]
+    }
 
     return [url, true]
   })

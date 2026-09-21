@@ -90,7 +90,9 @@
   }
 
   const submit = async () => {
-    if ($uploading || uploadingCover || loading) return
+    if ($uploading || uploadingCover || loading) {
+      return
+    }
 
     if (!title) {
       return pushToast({

@@ -129,8 +129,12 @@ export const deriveIsMuted = (url: string, h: string) =>
 export const getNotifyPreference = ({alerts}: SettingsValues, url: string, h?: string) => {
   const pref = alerts.find(spec({url}))
 
-  if (!pref) return true
-  if (!h) return pref.notify
+  if (!pref) {
+    return true
+  }
+  if (!h) {
+    return pref.notify
+  }
 
   return pref.notify ? !pref.exceptions.includes(h) : pref.exceptions.includes(h)
 }

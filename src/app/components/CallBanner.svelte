@@ -37,7 +37,9 @@
   const spaceName = $derived($callTargetRoom ? displayRelayUrl($callTargetRoom.url) : "")
 
   const goToRoom = () => {
-    if (!$callTargetRoom) return
+    if (!$callTargetRoom) {
+      return
+    }
     void navigate(makeRoomPath($callTargetRoom.url, $callTargetRoom.h))
   }
 

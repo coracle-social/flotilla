@@ -56,7 +56,9 @@
   // The tenant's autopay wallet (a backend NWC, write-only), distinct from the
   // app's own wallet.
   const persistNwc = async (url?: string) => {
-    if (!url || saving) return
+    if (!url || saving) {
+      return
+    }
 
     saving = true
 
@@ -79,7 +81,9 @@
   const useSpendingWallet = () => persistNwc(spendingWalletUrl)
 
   const disconnectNwc = async () => {
-    if (saving) return
+    if (saving) {
+      return
+    }
 
     saving = true
 

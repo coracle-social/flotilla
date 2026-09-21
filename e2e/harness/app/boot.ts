@@ -86,7 +86,9 @@ export const boot = async (
       await shell.waitFor({state: "attached", timeout: ms(15)})
       break
     } catch (e) {
-      if (attempt === 3) throw e
+      if (attempt === 3) {
+        throw e
+      }
 
       await page.reload()
     }

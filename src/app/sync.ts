@@ -78,7 +78,9 @@ type SyncOpts = {
 }
 
 const pullAndListen = ({url, signal, filters}: SyncOpts) => {
-  if (signal.aborted) return
+  if (signal.aborted) {
+    return
+  }
 
   app
     .get()

@@ -49,7 +49,9 @@
   }
 
   const save = async () => {
-    if (!canSave) return
+    if (!canSave) {
+      return
+    }
 
     saving = true
 

@@ -55,7 +55,9 @@
   const {loading, bunker} = controller
 
   const onSubmit = async () => {
-    if ($loading) return
+    if ($loading) {
+      return
+    }
 
     try {
       const {signerPubkey, connectSecret, relays} = Nip46Broker.parseBunkerUrl($bunker)

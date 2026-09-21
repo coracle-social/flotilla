@@ -82,7 +82,9 @@
   const isBlock = (i: number) => {
     const parsed = fullContent[i]
 
-    if (!parsed) return false
+    if (!parsed) {
+      return false
+    }
 
     if (isLink(parsed) && $userSettingsValues.show_media && isStartAndEnd(i)) {
       return true
@@ -98,8 +100,12 @@
   const isBoundary = (i: number) => {
     const parsed = fullContent[i]
 
-    if (!parsed || isNewline(parsed)) return true
-    if (isText(parsed)) return Boolean(parsed.value.match(/^\s+$/))
+    if (!parsed || isNewline(parsed)) {
+      return true
+    }
+    if (isText(parsed)) {
+      return Boolean(parsed.value.match(/^\s+$/))
+    }
 
     return false
   }

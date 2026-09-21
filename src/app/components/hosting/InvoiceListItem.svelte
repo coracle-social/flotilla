@@ -14,9 +14,15 @@
 
   // The backend models the invoice lifecycle as timestamps, not a status field.
   const status = $derived.by(() => {
-    if (isDraft) return "draft"
-    if (invoice.paid_at) return "paid"
-    if (invoice.voided_at) return "void"
+    if (isDraft) {
+      return "draft"
+    }
+    if (invoice.paid_at) {
+      return "paid"
+    }
+    if (invoice.voided_at) {
+      return "void"
+    }
     return "open"
   })
   const isOpen = $derived(status === "open")

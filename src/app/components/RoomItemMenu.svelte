@@ -100,7 +100,9 @@
   const togglePin = async () => {
     onClick()
 
-    if (!h) return
+    if (!h) {
+      return
+    }
 
     // The optimistic write flips isPinned while the publish is in flight, so what this did is read
     // before it goes out rather than after.

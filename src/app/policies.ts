@@ -44,8 +44,12 @@ export const ingestPolicy: AppPolicy = app =>
         const event = message[2]
         const trusted = getSetting("trusted_relays").includes(socket.url)
 
-        if (isDVMKind(event.kind) || isEphemeralKind(event.kind)) return
-        if (!trusted && !verifyEvent(event)) return
+        if (isDVMKind(event.kind) || isEphemeralKind(event.kind)) {
+          return
+        }
+        if (!trusted && !verifyEvent(event)) {
+          return
+        }
 
         app.tracker.track(event.id, socket.url)
         app.repository.publish(event)
@@ -62,13 +66,27 @@ export const ingestPolicy: AppPolicy = app =>
 export const authPolicy = makeAppPolicyAuth((socket, $app) => {
   const $pubkey = app.get().user?.pubkey
 
-  if (!$pubkey) return false
-  if ($app.use(BlockedRelayLists).urls($pubkey).get().includes(socket.url)) return false
-  if (getSetting("relay_auth") === RelayAuthMode.Aggressive) return true
-  if ($app.use(RoomLists).urls($pubkey).get().includes(socket.url)) return true
-  if ($app.use(RelayLists).urls($pubkey).get().includes(socket.url)) return true
-  if (get($app.use(Thunks).history).some(t => t.options.relays.includes(socket.url))) return true
-  if ($app.use(MessagingRelayLists).urls($pubkey).get().includes(socket.url)) return true
+  if (!$pubkey) {
+    return false
+  }
+  if ($app.use(BlockedRelayLists).urls($pubkey).get().includes(socket.url)) {
+    return false
+  }
+  if (getSetting("relay_auth") === RelayAuthMode.Aggressive) {
+    return true
+  }
+  if ($app.use(RoomLists).urls($pubkey).get().includes(socket.url)) {
+    return true
+  }
+  if ($app.use(RelayLists).urls($pubkey).get().includes(socket.url)) {
+    return true
+  }
+  if (get($app.use(Thunks).history).some(t => t.options.relays.includes(socket.url))) {
+    return true
+  }
+  if ($app.use(MessagingRelayLists).urls($pubkey).get().includes(socket.url)) {
+    return true
+  }
 
   return false
 })
@@ -79,8 +97,12 @@ const makeBlockPolicy = ($app: IApp) => (socket: Socket) => {
   socket.open = () => {
     const $pubkey = $app.user?.pubkey
 
-    if (BLOCKED_RELAYS.includes(socket.url)) return
-    if ($pubkey && $app.use(BlockedRelayLists).urls($pubkey).get().includes(socket.url)) return
+    if (BLOCKED_RELAYS.includes(socket.url)) {
+      return
+    }
+    if ($pubkey && $app.use(BlockedRelayLists).urls($pubkey).get().includes(socket.url)) {
+      return
+    }
 
     previousOpen()
   }

@@ -41,7 +41,9 @@
   const url = value.url.toString()
   const isRoomOrRelay = isRoomId(url) || isRelayUrl(url)
   const [href, external] = call(() => {
-    if (url.startsWith(PLATFORM_URL)) return [url.replace(PLATFORM_URL, ""), false]
+    if (url.startsWith(PLATFORM_URL)) {
+      return [url.replace(PLATFORM_URL, ""), false]
+    }
 
     return [url, true]
   })

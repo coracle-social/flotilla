@@ -74,9 +74,15 @@
       return
     }
 
-    if (event.key === "ArrowLeft") showPrevious()
-    if (event.key === "ArrowRight") showNext()
-    if (event.key === "t") showToday()
+    if (event.key === "ArrowLeft") {
+      showPrevious()
+    }
+    if (event.key === "ArrowRight") {
+      showNext()
+    }
+    if (event.key === "t") {
+      showToday()
+    }
   }
 
   const viewClass = (target: CalendarView) =>

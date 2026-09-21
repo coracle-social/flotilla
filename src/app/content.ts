@@ -100,7 +100,11 @@ export const displayContentCount = (kind: number, count: number) => {
 export const DM_KINDS = [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]
 
 export const displayReaction = (content: string) => {
-  if (!content || content === "+") return "❤️"
-  if (content === "-") return "👎"
+  if (!content || content === "+") {
+    return "❤️"
+  }
+  if (content === "-") {
+    return "👎"
+  }
   return content
 }

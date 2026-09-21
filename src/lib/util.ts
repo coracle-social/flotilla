@@ -29,7 +29,9 @@ export const nsecEncode = (secret: string) => nip19.nsecEncode(hexToBytes(secret
 export const nsecDecode = (nsec: string) => {
   const {type, data} = nip19.decode(nsec)
 
-  if (type !== "nsec") throw new Error(`Invalid nsec: ${nsec}`)
+  if (type !== "nsec") {
+    throw new Error(`Invalid nsec: ${nsec}`)
+  }
 
   return bytesToHex(data)
 }
@@ -58,12 +60,17 @@ export class TimeoutError extends Error {
 
 /** Returns a promise that rejects with AbortError when signal aborts. Use with Promise.race. */
 export const whenAborted = (signal?: AbortSignal) => {
-  if (!signal) return new Promise<never>(() => {})
+  if (!signal) {
+    return new Promise<never>(() => {})
+  }
 
   return new Promise<never>((_, reject) => {
     const onAborted = () => reject(new AbortError())
-    if (signal.aborted) onAborted()
-    else signal.addEventListener("abort", onAborted, {once: true})
+    if (signal.aborted) {
+      onAborted()
+    } else {
+      signal.addEventListener("abort", onAborted, {once: true})
+    }
   })
 }
 

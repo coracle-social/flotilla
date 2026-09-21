@@ -31,7 +31,9 @@
       return
     }
 
-    if (toastId || timeout) return
+    if (toastId || timeout) {
+      return
+    }
 
     // deriveSocketStatus is throttled, so a socket that opens immediately still reports
     // "Connecting" for the length of the throttle. Wait that out instead of flashing.

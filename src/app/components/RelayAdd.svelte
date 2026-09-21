@@ -62,10 +62,18 @@
     $relaySearch
       .searchValues(term)
       .filter((url: string) => {
-        if (matchRelay?.(url) === false) return false
-        if ($relays.includes(url)) return false
-        if (isIPAddress(url)) return false
-        if ($blockedRelayUrls.includes(url)) return false
+        if (matchRelay?.(url) === false) {
+          return false
+        }
+        if ($relays.includes(url)) {
+          return false
+        }
+        if (isIPAddress(url)) {
+          return false
+        }
+        if ($blockedRelayUrls.includes(url)) {
+          return false
+        }
 
         return true
       })

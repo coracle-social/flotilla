@@ -12,7 +12,9 @@ export {preventDefault, stopPropagation} from "svelte/legacy"
 export const documentActive = readable(
   typeof document === "undefined" ? true : !document.hidden && document.hasFocus(),
   set => {
-    if (typeof document === "undefined") return
+    if (typeof document === "undefined") {
+      return
+    }
 
     const update = () => set(!document.hidden && document.hasFocus())
 
@@ -36,7 +38,9 @@ export const anchorDatepicker = (wrapper: HTMLElement) => {
     const anchor = wrapper.querySelector("label")
     const container = wrapper.querySelector(".calendars-container") as HTMLElement | null
 
-    if (!anchor || !container) return
+    if (!anchor || !container) {
+      return
+    }
 
     const margin = 8
     const rect = anchor.getBoundingClientRect()

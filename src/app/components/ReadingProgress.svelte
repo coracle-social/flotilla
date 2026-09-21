@@ -9,7 +9,9 @@
   let progress = $state(0)
 
   $effect(() => {
-    if (!element) return
+    if (!element) {
+      return
+    }
 
     const target = element
 

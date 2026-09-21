@@ -41,8 +41,12 @@ const mergeSorted = <T>(left: T[], right: T[], compare: (a: T, b: T) => number) 
     merged.push(compare(left[i], right[j]) <= 0 ? left[i++] : right[j++])
   }
 
-  while (i < left.length) merged.push(left[i++])
-  while (j < right.length) merged.push(right[j++])
+  while (i < left.length) {
+    merged.push(left[i++])
+  }
+  while (j < right.length) {
+    merged.push(right[j++])
+  }
 
   return merged
 }
@@ -119,7 +123,9 @@ export const makeFeedContext = ({
     if (deletedChecks.size > 0) {
       if (removed.size > 0) {
         for (const checks of deletedChecks.values()) {
-          for (const check of checks) check()
+          for (const check of checks) {
+            check()
+          }
         }
       } else {
         for (const event of added) {
@@ -403,7 +409,9 @@ const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
   let running = false
 
   const run = async () => {
-    if (running || get(state).status === "exhausted") return
+    if (running || get(state).status === "exhausted") {
+      return
+    }
 
     running = true
 
@@ -425,7 +433,9 @@ const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
           break
         }
 
-        if (found > 0) break
+        if (found > 0) {
+          break
+        }
       }
     } finally {
       running = false
@@ -608,7 +618,9 @@ export const makeFeed = ({
   // The window only moves once the relays have answered: a request the socket dropped looks
   // exactly like an empty span, and walking past it would leave a hole nothing goes back for.
   const loadOlder = async (): Promise<FeedSpan> => {
-    if (oldest < now() - int(2, YEAR)) return {found: 0, complete: true, exhausted: true}
+    if (oldest < now() - int(2, YEAR)) {
+      return {found: 0, complete: true, exhausted: true}
+    }
 
     const until = oldest
     const since = until - olderInterval
@@ -641,7 +653,9 @@ export const makeFeed = ({
   // A limit is answered with the newest events matching it, which reaches away from an anchor in
   // the past rather than toward it, so this direction walks spans as it always has
   const loadNewer = async (): Promise<FeedSpan> => {
-    if (newest >= now()) return {found: 0, complete: true, exhausted: true}
+    if (newest >= now()) {
+      return {found: 0, complete: true, exhausted: true}
+    }
 
     const since = newest
     const until = Math.min(now(), since + newerInterval)
@@ -714,7 +728,9 @@ export const makeCalendarFeed = ({
   const insertEvents = (newEvents: TrustedEvent[]) => {
     const valid = newEvents.filter(e => !isNaN(getStart(e)) && !isNaN(getEnd(e)) && !seen.has(e.id))
 
-    if (valid.length === 0) return
+    if (valid.length === 0) {
+      return
+    }
 
     for (const event of valid) {
       seen.add(event.id)
@@ -771,7 +787,9 @@ export const makeCalendarFeed = ({
   }
 
   const loadOlder = async (): Promise<FeedSpan> => {
-    if (oldest < now() - int(2, YEAR)) return {found: 0, complete: true, exhausted: true}
+    if (oldest < now() - int(2, YEAR)) {
+      return {found: 0, complete: true, exhausted: true}
+    }
 
     const until = oldest
     const since = until - interval
@@ -785,7 +803,9 @@ export const makeCalendarFeed = ({
   }
 
   const loadNewer = async (): Promise<FeedSpan> => {
-    if (newest > now() + int(2, YEAR)) return {found: 0, complete: true, exhausted: true}
+    if (newest > now() + int(2, YEAR)) {
+      return {found: 0, complete: true, exhausted: true}
+    }
 
     const since = newest
     const until = since + interval

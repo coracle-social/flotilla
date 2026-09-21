@@ -86,7 +86,9 @@
   const visibleMembers = $derived.by(() => {
     const t = term.trim().toLowerCase()
 
-    if (!t) return $memberList
+    if (!t) {
+      return $memberList
+    }
 
     return $memberList.filter(
       ({pubkey, roleList}) =>

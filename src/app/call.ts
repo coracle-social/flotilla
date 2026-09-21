@@ -81,7 +81,9 @@ const compareScores = (a: LayoutScore, b: LayoutScore): number => {
     "aspectDeviation",
   ]
   for (const field of fields) {
-    if (a[field] !== b[field]) return a[field] - b[field]
+    if (a[field] !== b[field]) {
+      return a[field] - b[field]
+    }
   }
   return 0
 }
@@ -121,7 +123,9 @@ const buildCandidate = (
 
   const availHeight = (containerHeight - (totalRowCount - 1) * gap) / totalRowCount
   const availWidth = (containerWidth - (columnCount - 1) * gap) / columnCount
-  if (availWidth <= 0 || availHeight <= 0) return undefined
+  if (availWidth <= 0 || availHeight <= 0) {
+    return undefined
+  }
 
   const {tileWidth, tileHeight, aspectRatio} = fitTile(availWidth, availHeight, minAspect)
 
@@ -171,7 +175,9 @@ export const computeAdaptiveGrid = (
   containerWidth: number,
   containerHeight: number,
 ): AdaptiveTileGrid | undefined => {
-  if (tileCount <= 0 || containerWidth <= 0 || containerHeight <= 0) return undefined
+  if (tileCount <= 0 || containerWidth <= 0 || containerHeight <= 0) {
+    return undefined
+  }
 
   const minAspect = containerWidth / containerHeight >= 4 / 3 ? 1 : TILE_ASPECT_PORTRAIT
 
@@ -186,7 +192,9 @@ export const computeAdaptiveGrid = (
       containerHeight,
       minAspect,
     )
-    if (!candidate) continue
+    if (!candidate) {
+      continue
+    }
 
     const {tileWidth, tileHeight, aspectRatio} = candidate.rows[0]
     const verticalOverflow = Math.max(0, candidate.totalHeight - containerHeight)

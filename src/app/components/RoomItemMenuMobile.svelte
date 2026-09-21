@@ -103,7 +103,9 @@
   }
 
   const togglePin = async () => {
-    if (!h) return
+    if (!h) {
+      return
+    }
 
     history.back()
 

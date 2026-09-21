@@ -103,7 +103,9 @@
   }
 
   const submit = async () => {
-    if (loading) return
+    if (loading) {
+      return
+    }
 
     if (!title.trim()) {
       return pushToast({theme: "error", message: "Please provide a title for your poll."})

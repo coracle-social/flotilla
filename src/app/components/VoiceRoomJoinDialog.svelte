@@ -38,7 +38,9 @@
   let micError = $state(false)
 
   const loadDevices = async () => {
-    if (!navigator.mediaDevices?.enumerateDevices) return
+    if (!navigator.mediaDevices?.enumerateDevices) {
+      return
+    }
     try {
       const devices = await navigator.mediaDevices.enumerateDevices()
       audioInputs = devices.filter(spec({kind: "audioinput"}))
@@ -75,7 +77,9 @@
     stopMicPreview()
     micError = false
 
-    if (withoutMic || !navigator.mediaDevices?.getUserMedia) return
+    if (withoutMic || !navigator.mediaDevices?.getUserMedia) {
+      return
+    }
 
     let cancelled = false
     const deviceId = selectedDeviceId
@@ -92,7 +96,9 @@
         previewStream = stream
         previewTrack = stream.getAudioTracks()[0]
       } catch {
-        if (!cancelled) micError = true
+        if (!cancelled) {
+          micError = true
+        }
       }
     })()
 
@@ -108,12 +114,16 @@
   }
 
   const handleJoinError = (e: unknown) => {
-    if (e instanceof AbortError) return
+    if (e instanceof AbortError) {
+      return
+    }
     console.error("Failed to join voice room", e)
     let message = "Failed to join voice room"
-    if (e instanceof TimeoutError)
+    if (e instanceof TimeoutError) {
       message = "Connection timed out. Please check your network and try again."
-    else if (e instanceof Error) message = e.message
+    } else if (e instanceof Error) {
+      message = e.message
+    }
     pushToast({theme: "error", message})
   }
 

@@ -19,7 +19,9 @@ export const signerRequests = derived(
     const requestsById = new Map<string, SignerRequest>()
 
     for (const message of $messages) {
-      if (message.source !== "signer") continue
+      if (message.source !== "signer") {
+        continue
+      }
 
       if (message.status === "pending") {
         requestsById.set(message.id, {

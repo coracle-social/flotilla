@@ -61,7 +61,9 @@
 
     if (isWebkit && isRemoteSvg(url)) {
       fetchSvg(url).then(blobUrl => {
-        if (!blobUrl) return
+        if (!blobUrl) {
+          return
+        }
 
         if (canceled) {
           URL.revokeObjectURL(blobUrl)

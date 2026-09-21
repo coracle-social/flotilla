@@ -46,11 +46,21 @@ export const makeTestRelay = ({name, url, publish}: TestRelayOptions): TestRelay
 
       const tags = [["h", h]]
 
-      if (meta.name) tags.push(["name", meta.name])
-      if (meta.about) tags.push(["about", meta.about])
-      if (meta.picture) tags.push(["picture", meta.picture])
-      if (meta.closed) tags.push(["closed"])
-      if (meta.private) tags.push(["private"])
+      if (meta.name) {
+        tags.push(["name", meta.name])
+      }
+      if (meta.about) {
+        tags.push(["about", meta.about])
+      }
+      if (meta.picture) {
+        tags.push(["picture", meta.picture])
+      }
+      if (meta.closed) {
+        tags.push(["closed"])
+      }
+      if (meta.private) {
+        tags.push(["private"])
+      }
 
       await event(users.admin, makeEvent(ROOM_EDIT_META, {tags, created_at: createdAt}))
     },

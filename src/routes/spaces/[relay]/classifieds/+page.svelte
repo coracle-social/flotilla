@@ -92,7 +92,9 @@
   const items = $derived.by(() => {
     const matches = scoped.filter(event => tab === "all" || getStatus(event) === tab)
 
-    if (sort === "new") return sortBy(event => -event.created_at, matches)
+    if (sort === "new") {
+      return sortBy(event => -event.created_at, matches)
+    }
 
     if (sort === "price-asc") {
       return sortBy(event => reader(Classified)(event).price()?.amount ?? Infinity, matches)

@@ -42,7 +42,9 @@
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
   const submit = async () => {
-    if ($uploading) return
+    if ($uploading) {
+      return
+    }
 
     const ed = await editor
     let content = ed.getText({blockSeparator: "\n"}).trim()

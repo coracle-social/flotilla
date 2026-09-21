@@ -91,7 +91,9 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
   let testRelay: Maybe<TestRelay>
 
   const relay = () => {
-    if (testRelay) return testRelay
+    if (testRelay) {
+      return testRelay
+    }
 
     throw new Error(`Space "${name}" has not been seeded yet, await seed() first`)
   }

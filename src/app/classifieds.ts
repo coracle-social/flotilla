@@ -62,7 +62,9 @@ export const matchesTopic = (event: TrustedEvent, topic: string) =>
 export const matchesQuery = (event: TrustedEvent, query: string) => {
   const q = query.trim().toLowerCase()
 
-  if (!q) return true
+  if (!q) {
+    return true
+  }
 
   const classified = reader(Classified)(event)
   const haystack = [classified.title(), classified.summary(), event.content]

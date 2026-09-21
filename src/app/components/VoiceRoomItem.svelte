@@ -48,7 +48,9 @@
   )
 
   const handleClick = async (e: MouseEvent) => {
-    if (isActive) return
+    if (isActive) {
+      return
+    }
 
     if (isJoining) {
       e.preventDefault()
@@ -67,7 +69,9 @@
 
   $effect(() => {
     for (const p of $participants) {
-      if (p.pubkey) $profiles.load(p.pubkey, [url])
+      if (p.pubkey) {
+        $profiles.load(p.pubkey, [url])
+      }
     }
   })
 </script>

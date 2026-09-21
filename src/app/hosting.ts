@@ -207,7 +207,9 @@ const getAuthHeader = (): Promise<string> => {
 
     // A declined signature shouldn't be cached, or the user can't retry.
     header.catch(() => {
-      if (cachedAuth?.header === header) cachedAuth = undefined
+      if (cachedAuth?.header === header) {
+        cachedAuth = undefined
+      }
     })
 
     cachedAuth = {pubkey, expiresAt: Date.now() + AUTH_TTL, header}
@@ -232,7 +234,9 @@ const hostingRequest = async (method: string, path: string, init: RequestInit = 
 const hostingJson = async <T>(response: Response): Promise<T> => {
   const payload: Maybe<HostingResponse<T>> = await response.json().catch(() => undefined)
 
-  if (response.ok && payload) return payload.data
+  if (response.ok && payload) {
+    return payload.data
+  }
 
   throw new HostingError(payload?.error || `Request failed (${response.status})`, response.status)
 }
@@ -299,7 +303,9 @@ export const listRelayActivity = (id: string) =>
 export const exportRelayData = async (id: string) => {
   const response = await hostingRequest("GET", `/relays/${id}/export`)
 
-  if (response.ok) return response.text()
+  if (response.ok) {
+    return response.text()
+  }
 
   // Only the failure path is a json envelope; success is the dump itself.
   return hostingJson<string>(response)
@@ -336,8 +342,12 @@ export const reconcileInvoice = (invoiceId: string) =>
 // API utils
 
 export const flagToBool = (value: number | undefined, fallback: boolean): boolean => {
-  if (value === 0) return false
-  if (value === 1) return true
+  if (value === 0) {
+    return false
+  }
+  if (value === 1) {
+    return true
+  }
   return fallback
 }
 
@@ -391,7 +401,9 @@ export const ensureSessionTenant = async () => {
     const promise = createTenant(hostingReturnUrl())
 
     promise.catch(() => {
-      if (tenantPromise?.promise === promise) tenantPromise = undefined
+      if (tenantPromise?.promise === promise) {
+        tenantPromise = undefined
+      }
     })
 
     tenantPromise = {pubkey: $pubkey, promise}
@@ -423,7 +435,9 @@ export const deriveRelayActivity = (id: Readable<Maybe<string>>) =>
   derived<Readable<Maybe<string>>, RelayActivityState>(
     id,
     ($id, set) => {
-      if (!$id) return set({loading: false, activity: []})
+      if (!$id) {
+        return set({loading: false, activity: []})
+      }
 
       set({loading: true, activity: []})
 

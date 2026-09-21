@@ -66,9 +66,15 @@
   })
 
   const status = $derived.by(() => {
-    if (!tenant) return "inactive"
-    if (tenant.churned_at) return "delinquent"
-    if (hasPaidSubscription || openInvoice || autopayConfigured(tenant)) return "active"
+    if (!tenant) {
+      return "inactive"
+    }
+    if (tenant.churned_at) {
+      return "delinquent"
+    }
+    if (hasPaidSubscription || openInvoice || autopayConfigured(tenant)) {
+      return "active"
+    }
     return "inactive"
   })
 
@@ -77,15 +83,23 @@
   )
 
   const nwc = $derived.by<PaymentMethodState>(() => {
-    if (!tenant?.nwc_is_set) return {kind: "not_set_up"}
-    if (tenant.nwc_error) return {kind: "error", message: tenant.nwc_error}
+    if (!tenant?.nwc_is_set) {
+      return {kind: "not_set_up"}
+    }
+    if (tenant.nwc_error) {
+      return {kind: "error", message: tenant.nwc_error}
+    }
     return {kind: "ok"}
   })
 
   const card = $derived.by<PaymentMethodState>(() => {
-    if (!tenant?.stripe_payment_method_id) return {kind: "not_set_up"}
+    if (!tenant?.stripe_payment_method_id) {
+      return {kind: "not_set_up"}
+    }
     // Don't surface Stripe's raw decline text to the tenant.
-    if (tenant.stripe_error) return {kind: "error", message: "Payment failed"}
+    if (tenant.stripe_error) {
+      return {kind: "error", message: "Payment failed"}
+    }
     return {kind: "ok"}
   })
 
@@ -95,7 +109,9 @@
 
   const refetch = async () => {
     const pk = user.get().pubkey
-    if (!pk) return
+    if (!pk) {
+      return
+    }
 
     const results = await Promise.allSettled([
       getTenant(pk),
@@ -106,10 +122,18 @@
 
     const [t, inv, rel, draft] = results
 
-    if (t.status === "fulfilled") tenant = t.value
-    if (inv.status === "fulfilled") invoices = sortBy(invoice => -invoice.created_at, inv.value)
-    if (rel.status === "fulfilled") relays = rel.value
-    if (draft.status === "fulfilled") draftInvoice = draft.value
+    if (t.status === "fulfilled") {
+      tenant = t.value
+    }
+    if (inv.status === "fulfilled") {
+      invoices = sortBy(invoice => -invoice.created_at, inv.value)
+    }
+    if (rel.status === "fulfilled") {
+      relays = rel.value
+    }
+    if (draft.status === "fulfilled") {
+      draftInvoice = draft.value
+    }
 
     if (results.some(spec({status: "rejected"}))) {
       pushToast({theme: "error", message: "Failed to refresh billing data"})
@@ -127,7 +151,9 @@
   // invoices is left to the backend's dunning poll, which collects all of them.
   const reconcile = async () => {
     const pk = user.get().pubkey
-    if (!pk || reconciling) return
+    if (!pk || reconciling) {
+      return
+    }
 
     reconciling = true
     error = ""
@@ -178,7 +204,9 @@
     // Re-run on foreground return (native browser round-trip) to pick up a
     // completed checkout or a portal-added card.
     const resumeListener = App.addListener("appStateChange", ({isActive}) => {
-      if (isActive) void reconcile()
+      if (isActive) {
+        void reconcile()
+      }
     })
 
     return () => {

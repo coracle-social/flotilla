@@ -68,7 +68,9 @@ export const syncChecked = () => {
 
       checked.update($checked => {
         for (const path of paths) {
-          if (defer && path === defer) continue
+          if (defer && path === defer) {
+            continue
+          }
           $checked[path] = now()
         }
 
@@ -212,7 +214,9 @@ const latestContentActivity = (url: string, events: TrustedEvent[]) => {
   for (const event of events) {
     const target = getContentTarget(event)
 
-    if (!target) continue
+    if (!target) {
+      continue
+    }
 
     const path = makeContentPath(url, target.kind, target.idOrAddress)
 
@@ -329,8 +333,12 @@ export const notifications = derived(
   ([$page, $allNotifications, $deferredRoomPath]) =>
     new Set(
       [...$allNotifications].filter(p => {
-        if (!$page.url.pathname.startsWith(p)) return true
-        if ($deferredRoomPath && p === $deferredRoomPath) return true
+        if (!$page.url.pathname.startsWith(p)) {
+          return true
+        }
+        if ($deferredRoomPath && p === $deferredRoomPath) {
+          return true
+        }
         return false
       }),
     ),

@@ -38,7 +38,9 @@
   const copyInvite = () => clip(invite)
 
   const shareInvite = async () => {
-    if (!canShare) return
+    if (!canShare) {
+      return
+    }
 
     try {
       await Share.share({url: invite})

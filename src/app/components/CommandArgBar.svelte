@@ -26,8 +26,12 @@
   const activeArg = $derived(draft?.args[draft.activeIndex])
 
   const choices = $derived.by(() => {
-    if (activeArg?.type === "enum") return activeArg.choices
-    if (activeArg?.type === "bool") return ["true", "false"]
+    if (activeArg?.type === "enum") {
+      return activeArg.choices
+    }
+    if (activeArg?.type === "bool") {
+      return ["true", "false"]
+    }
 
     return []
   })

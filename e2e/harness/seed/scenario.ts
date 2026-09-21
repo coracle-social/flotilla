@@ -115,7 +115,9 @@ export const seed = async (
   const getSpace = (name: SpaceName) => {
     const space = spaces.get(name)
 
-    if (space) return space
+    if (space) {
+      return space
+    }
 
     throw new Error(`No space named "${name}" was seeded`)
   }
@@ -123,7 +125,9 @@ export const seed = async (
   const getOpenRelay = (name: OpenRelayName) => {
     const relay = opened.find(candidate => candidate.name === name)
 
-    if (relay) return relay
+    if (relay) {
+      return relay
+    }
 
     throw new Error(`No open relay named "${name}" was seeded`)
   }
@@ -133,8 +137,12 @@ export const seed = async (
     const roomList = roomLists.get(user.pubkey)
     const relayList = relayLists.get(user.pubkey)
 
-    if (roomList) events.push(roomList)
-    if (relayList) events.push(relayList)
+    if (roomList) {
+      events.push(roomList)
+    }
+    if (relayList) {
+      events.push(relayList)
+    }
 
     return events
   }

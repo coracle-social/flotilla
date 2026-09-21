@@ -24,8 +24,12 @@
   // When no date is provided the library initializes its time inputs from the
   // epoch (a locale-dependent afternoon); reset them for the create flow
   onMount(() => {
-    if (!startDate) startDateTime = "12:00"
-    if (!endDate) endDateTime = "13:00"
+    if (!startDate) {
+      startDateTime = "12:00"
+    }
+    if (!endDate) {
+      endDateTime = "13:00"
+    }
   })
 
   const toggle = () => {

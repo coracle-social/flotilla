@@ -27,7 +27,9 @@
   const {url, event, rsvps, onShowPeople}: Props = $props()
 
   const setStatus = async (status: RsvpStatus) => {
-    if (loading) return
+    if (loading) {
+      return
+    }
 
     loading = true
 

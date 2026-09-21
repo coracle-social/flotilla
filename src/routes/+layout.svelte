@@ -228,7 +228,9 @@
     // Listen for signer errors, report to user via toast
     unsubscribers.push(
       throttled(10_000, signerRequests).subscribe($requests => {
-        if ($toast) return
+        if ($toast) {
+          return
+        }
 
         const longCutoff = Date.now() - 30_000
         const shortCutoff = Date.now() - 10_000

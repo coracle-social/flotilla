@@ -38,7 +38,9 @@ export const loadPomadeSessions = async () => {
     const result = await client.listSessions()
 
     for (const message of result.messages) {
-      if (!message.res?.items) continue
+      if (!message.res?.items) {
+        continue
+      }
 
       for (const item of message.res.items) {
         const existing = sessionMap.get(item.client)

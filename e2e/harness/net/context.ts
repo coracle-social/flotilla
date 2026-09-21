@@ -15,7 +15,9 @@ export const makeContextStore = <T>(installer: string) => {
     get: (context: BrowserContext) => {
       const value = byContext.get(context)
 
-      if (value) return value
+      if (value) {
+        return value
+      }
 
       throw new Error(`${installer} was never called for this browser context`)
     },

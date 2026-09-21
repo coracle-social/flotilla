@@ -56,7 +56,9 @@ export const makePublisher = ({name, enqueue, startedAt, sign}: PublisherOptions
     })
 
     return () => {
-      if (value) return value
+      if (value) {
+        return value
+      }
 
       throw new Error(`An event seeded into "${name}" was read before seed() published it`)
     }

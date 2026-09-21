@@ -53,10 +53,14 @@ export const payInvoice = async (invoice: string, msats?: number) => {
 
   if (isNWCWallet($wallet)) {
     const params: {invoice: string; amount?: number} = {invoice}
-    if (msats) params.amount = msats
+    if (msats) {
+      params.amount = msats
+    }
     return getNwcClient().payInvoice(params)
   } else if (isWebLNWallet($wallet)) {
-    if (msats) throw new Error("Unable to pay zero invoices with webln")
+    if (msats) {
+      throw new Error("Unable to pay zero invoices with webln")
+    }
     return getWebLn()
       .enable()
       .then(() => getWebLn().sendPayment(invoice))

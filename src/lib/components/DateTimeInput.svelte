@@ -23,7 +23,9 @@
   // When no date is provided the library initializes its time input from the
   // epoch (a locale-dependent afternoon); reset it to something friendlier
   onMount(() => {
-    if (!startDate) startDateTime = "12:00"
+    if (!startDate) {
+      startDateTime = "12:00"
+    }
   })
 
   const toggle = () => {

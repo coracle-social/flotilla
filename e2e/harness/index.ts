@@ -217,7 +217,9 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     let scenario: Maybe<Scenario>
 
     const requireScenario = () => {
-      if (scenario) return scenario
+      if (scenario) {
+        return scenario
+      }
 
       throw new Error("Seed a scenario before opening a page for a user")
     }

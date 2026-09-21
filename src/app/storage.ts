@@ -56,7 +56,9 @@ export const kv = call(() => {
 
   const get = async <T>(key: string): Promise<T | undefined> => {
     const result = await Preferences.get({key})
-    if (!result.value) return undefined
+    if (!result.value) {
+      return undefined
+    }
     try {
       return JSON.parse(result.value)
     } catch (e) {
@@ -91,7 +93,9 @@ export const ss = call(() => {
       }
     }
 
-    if (!value) return undefined
+    if (!value) {
+      return undefined
+    }
 
     try {
       return JSON.parse(value)
@@ -402,7 +406,9 @@ class Storage {
     )
 
     return this.app.use(Relays).onItem((_url, relay) => {
-      if (relay) enqueue(relay)
+      if (relay) {
+        enqueue(relay)
+      }
     })
   }
 
@@ -416,7 +422,9 @@ class Storage {
     const enqueue = batch(FLUSH_INTERVAL, idleWrite(table.bulkPut))
 
     return this.app.use(RelayStats).onItem((_url, stats) => {
-      if (stats) enqueue(stats)
+      if (stats) {
+        enqueue(stats)
+      }
     })
   }
 
@@ -430,7 +438,9 @@ class Storage {
     const enqueue = batch(FLUSH_INTERVAL, idleWrite(table.bulkPut))
 
     return this.app.use(Handles).onItem((_nip05, handle) => {
-      if (handle) enqueue(handle)
+      if (handle) {
+        enqueue(handle)
+      }
     })
   }
 
@@ -451,7 +461,9 @@ class Storage {
     )
 
     return this.app.use(Zappers).onItem((_lnurl, zapper) => {
-      if (zapper) enqueue(zapper)
+      if (zapper) {
+        enqueue(zapper)
+      }
     })
   }
 
@@ -465,7 +477,9 @@ class Storage {
     const enqueue = batch(FLUSH_INTERVAL, idleWrite(table.bulkPut))
 
     return this.app.use(Plaintext).onItem((key, value) => {
-      if (value) enqueue({key, value})
+      if (value) {
+        enqueue({key, value})
+      }
     })
   }
 

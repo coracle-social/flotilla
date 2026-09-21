@@ -60,7 +60,9 @@
   // offsetTop is relative to the nearest positioned ancestor, which the scroll container itself
   // isn't — comparing bounding rects instead keeps this correct regardless of that
   const recenter = (target: HTMLElement) => {
-    if (!element) return
+    if (!element) {
+      return
+    }
 
     const elementRect = element.getBoundingClientRect()
     const targetRect = target.getBoundingClientRect()
@@ -70,7 +72,9 @@
   }
 
   $effect(() => {
-    if (!element || !contentEl) return
+    if (!element || !contentEl) {
+      return
+    }
 
     const unpin = () => {
       pinnedTarget = undefined
@@ -82,7 +86,9 @@
     // every one of those (unlike a MutationObserver, which misses an image's own load-driven
     // reflow) and keeps the pin centered until the visitor scrolls themselves.
     const observer = new ResizeObserver(() => {
-      if (pinnedTarget) recenter(pinnedTarget)
+      if (pinnedTarget) {
+        recenter(pinnedTarget)
+      }
     })
 
     observer.observe(contentEl)

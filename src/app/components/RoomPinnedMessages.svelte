@@ -61,26 +61,34 @@
   }
 
   const prev = () => {
-    if (total === 0) return
+    if (total === 0) {
+      return
+    }
 
     currentIndex = (currentIndex - 1 + total) % total
   }
 
   const next = () => {
-    if (total === 0) return
+    if (total === 0) {
+      return
+    }
 
     currentIndex = (currentIndex + 1) % total
   }
 
   const jumpToMessage = () => {
-    if (!currentEvent) return
+    if (!currentEvent) {
+      return
+    }
 
     collapse()
     goToEvent(currentEvent)
   }
 
   const onDocumentPointerDown = (event: PointerEvent) => {
-    if (!expanded || !root) return
+    if (!expanded || !root) {
+      return
+    }
 
     if (!root.contains(event.target as Node)) {
       collapse()
@@ -98,7 +106,9 @@
   })
 
   $effect(() => {
-    if (!expanded) return
+    if (!expanded) {
+      return
+    }
 
     document.addEventListener("pointerdown", onDocumentPointerDown)
 

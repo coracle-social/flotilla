@@ -10,7 +10,9 @@ export const argon2id = ({
   hashLength,
   outputType,
 }) => {
-  if (outputType !== "binary") throw new Error("Expected Pomade's binary Argon2id output")
+  if (outputType !== "binary") {
+    throw new Error("Expected Pomade's binary Argon2id output")
+  }
   return argon2idAsync(password, salt, {
     t: iterations,
     m: memorySize,

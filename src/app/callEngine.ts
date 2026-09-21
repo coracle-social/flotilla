@@ -71,14 +71,18 @@ export const joinVoiceRoom = async (
         whenTimeout(15_000, {message: "Leaving previous call timed out.", signal: settle.signal}),
         whenAborted(signal),
       ]).catch(e => {
-        if (e instanceof AbortError) throw e
+        if (e instanceof AbortError) {
+          throw e
+        }
       })
 
       // leaveVoiceRoom flips callState to Disconnected; re-assert Joining.
       callState.set(CallState.Joining)
     }
 
-    if (signal.aborted) throw new AbortError()
+    if (signal.aborted) {
+      throw new AbortError()
+    }
 
     const {server_url, participant_token} = await Promise.race([
       fetchLivekitToken(url, h, signal),
@@ -89,7 +93,9 @@ export const joinVoiceRoom = async (
       whenAborted(signal),
     ])
 
-    if (signal.aborted) throw new AbortError()
+    if (signal.aborted) {
+      throw new AbortError()
+    }
 
     const liveKitRoom = new LiveKitRoom({adaptiveStream: true, dynacast: true})
     activeRoom = liveKitRoom
@@ -157,7 +163,9 @@ export const joinVoiceRoom = async (
     clearReconnectSchedule()
     playJoinSound()
   } catch (e) {
-    if (isActive()) callState.set(CallState.Disconnected)
+    if (isActive()) {
+      callState.set(CallState.Disconnected)
+    }
     if (e instanceof AbortError) {
       clearReconnectSchedule()
       return
@@ -165,14 +173,18 @@ export const joinVoiceRoom = async (
     throw e
   } finally {
     settle.abort()
-    if (isActive()) joinAbortController = undefined
+    if (isActive()) {
+      joinAbortController = undefined
+    }
   }
 }
 
 export const leaveVoiceRoom = async () => {
   clearReconnectSchedule()
   const session = get(currentCallSession)
-  if (!session) return
+  if (!session) {
+    return
+  }
 
   const audio = new Audio("/leave-voice-room.mp3")
   audio.play().catch(() => {})
@@ -220,7 +232,9 @@ export const cancelJoinVoiceRoom = () => {
 
 export const toggleMute = async () => {
   const session = get(currentCallSession)
-  if (!session) return
+  if (!session) {
+    return
+  }
 
   callMicMuted.update(not)
 
@@ -238,7 +252,9 @@ export const toggleMute = async () => {
 
 export const toggleCamera = async () => {
   const session = get(currentCallSession)
-  if (!session) return
+  if (!session) {
+    return
+  }
 
   const cameraOn = !session.cameraOn
   try {
@@ -254,7 +270,9 @@ export const toggleCamera = async () => {
 
 export const toggleScreenShare = async () => {
   const session = get(currentCallSession)
-  if (!session) return
+  if (!session) {
+    return
+  }
 
   const screenShareOn = !session.screenShareOn
   try {
@@ -273,7 +291,9 @@ export const switchCallActiveDevice = async (
   targetDeviceId: string,
 ): Promise<void> => {
   const session = get(currentCallSession)
-  if (!session) return
+  if (!session) {
+    return
+  }
   const id = targetDeviceId === "" ? LIVEKIT_DEFAULT_DEVICE_ID : targetDeviceId
   try {
     await session.livekit.switchActiveDevice(kind, id)
@@ -321,11 +341,15 @@ currentCallSession.subscribe(session => {
   if (session) {
     hadCallSession = true
     audioResumeListener ??= App.addListener("appStateChange", ({isActive}) => {
-      if (isActive) void reacquireMicrophoneIfNeeded()
+      if (isActive) {
+        void reacquireMicrophoneIfNeeded()
+      }
     })
     return
   }
-  if (!hadCallSession) return
+  if (!hadCallSession) {
+    return
+  }
   hadCallSession = false
   void audioResumeListener?.then(l => l.remove())
   audioResumeListener = undefined
@@ -334,7 +358,9 @@ currentCallSession.subscribe(session => {
 })
 
 const teardownRoom = (livekit: LiveKitRoom) => {
-  if (activeRoom === livekit) activeRoom = undefined
+  if (activeRoom === livekit) {
+    activeRoom = undefined
+  }
 
   // Dropping the listeners keeps TrackUnsubscribed from removing the hidden
   // audio elements onTrackSubscribed appended, so detach them here instead.
@@ -361,7 +387,9 @@ const syncParticipantMedia = (participant: Participant) => {
   const state = participantMediaFrom(participant)
   participantMediaState.update(m => {
     const prev = m.get(participant.identity)
-    if (prev?.muted === state.muted && prev?.cameraOn === state.cameraOn) return m
+    if (prev?.muted === state.muted && prev?.cameraOn === state.cameraOn) {
+      return m
+    }
     const next = new Map(m)
     next.set(participant.identity, state)
     return next
@@ -370,7 +398,9 @@ const syncParticipantMedia = (participant: Participant) => {
 
 // LiveKit does not emit ParticipantConnected/Disconnected during reconnect.
 const resyncAfterReconnect = (livekit: LiveKitRoom) => {
-  if (livekit !== activeRoom) return
+  if (livekit !== activeRoom) {
+    return
+  }
 
   const next = new Map<string, ParticipantMediaState>()
   for (const p of [livekit.localParticipant, ...livekit.remoteParticipants.values()]) {
@@ -379,7 +409,9 @@ const resyncAfterReconnect = (livekit: LiveKitRoom) => {
   participantMediaState.set(next)
 
   const session = get(currentCallSession)
-  if (!session) return
+  if (!session) {
+    return
+  }
 
   const {localParticipant} = livekit
   callMicMuted.set(!localParticipant.isMicrophoneEnabled)
@@ -398,7 +430,9 @@ const fetchLivekitToken = async (
 ): Promise<{server_url: string; participant_token: string}> => {
   const endpoint = getLivekitEndpoint(url, roomId)
 
-  if (signal?.aborted) throw new DOMException("Aborted", "AbortError")
+  if (signal?.aborted) {
+    throw new DOMException("Aborted", "AbortError")
+  }
 
   const template = await makeHttpAuth(endpoint, "GET")
   const signedEvent = await user.get().signer.sign(template)
@@ -443,7 +477,9 @@ const setUpMicrophone = async (
   } catch (e) {
     // Timeout or microphone rejection: join muted, the call is still usable. A
     // genuine abort is surfaced to the caller so it can tear down the room.
-    if (e instanceof AbortError) throw e
+    if (e instanceof AbortError) {
+      throw e
+    }
     if (!(e instanceof TimeoutError)) {
       pushToast({theme: "error", message: "Could not access microphone"})
     }
@@ -453,12 +489,16 @@ const setUpMicrophone = async (
 
 const reacquireMicrophoneIfNeeded = async () => {
   const session = get(currentCallSession)
-  if (!session || get(callMicMuted)) return
+  if (!session || get(callMicMuted)) {
+    return
+  }
 
   const track = session.livekit.localParticipant.getTrackPublication(
     Track.Source.Microphone,
   )?.audioTrack
-  if (!track || track.isMuted || track.isUserProvided) return
+  if (!track || track.isMuted || track.isUserProvided) {
+    return
+  }
 
   // Mirrors LiveKit's own (mobile-only, video-track-only) reacquisition
   // check: a capture device that died silently still reports readyState
@@ -468,7 +508,9 @@ const reacquireMicrophoneIfNeeded = async () => {
   const {mediaStreamTrack} = track
   const needsReacquisition =
     mediaStreamTrack.readyState !== "live" || mediaStreamTrack.muted || !mediaStreamTrack.enabled
-  if (!needsReacquisition) return
+  if (!needsReacquisition) {
+    return
+  }
 
   try {
     await track.restartTrack()
@@ -488,7 +530,9 @@ const clearReconnectSchedule = () => {
 
 const attemptReconnect = async () => {
   const target = get(callTargetRoom)
-  if (!target) return
+  if (!target) {
+    return
+  }
 
   try {
     await joinVoiceRoom(target.url, target.h, reconnectMicMuted, reconnectMicDeviceId)
@@ -503,8 +547,12 @@ const attemptReconnect = async () => {
 }
 
 const scheduleReconnect = () => {
-  if (reconnectTimeout !== undefined) return
-  if (!get(callTargetRoom)) return
+  if (reconnectTimeout !== undefined) {
+    return
+  }
+  if (!get(callTargetRoom)) {
+    return
+  }
   if (reconnectAttempt >= RECONNECT_DELAYS.length) {
     pushToast({theme: "error", message: "Voice connection lost."})
     return
@@ -519,13 +567,17 @@ const scheduleReconnect = () => {
 }
 
 const makeOnRoomReconnected = (livekit: LiveKitRoom) => () => {
-  if (livekit !== activeRoom) return
+  if (livekit !== activeRoom) {
+    return
+  }
   resyncAfterReconnect(livekit)
 }
 
 const makeOnRoomDisconnected = (livekit: LiveKitRoom) => (reason?: DisconnectReason) => {
   // Ignore disconnects from rooms that are no longer the active session.
-  if (livekit !== activeRoom) return
+  if (livekit !== activeRoom) {
+    return
+  }
 
   // Livekit unsubscribes remote tracks before emitting Disconnected, so
   // onTrackUnsubscribed has already removed their audio elements by now.
@@ -599,10 +651,16 @@ const onLocalTrackUnpublished = (
   publication: LocalTrackPublication,
   participant: LocalParticipant,
 ) => {
-  if (publication.source !== Track.Source.ScreenShare) return
+  if (publication.source !== Track.Source.ScreenShare) {
+    return
+  }
   const session = get(currentCallSession)
-  if (!session || participant.identity !== session.livekit.localParticipant.identity) return
-  if (!session.screenShareOn) return
+  if (!session || participant.identity !== session.livekit.localParticipant.identity) {
+    return
+  }
+  if (!session.screenShareOn) {
+    return
+  }
   currentCallSession.set({...session, screenShareOn: false})
 }
 

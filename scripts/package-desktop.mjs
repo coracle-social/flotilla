@@ -15,8 +15,11 @@ const run = (command, args, options = {}) =>
     const child = spawn(command, args, {cwd: root, env, stdio: "inherit", ...options})
     child.on("error", reject)
     child.on("exit", (code, signal) => {
-      if (code === 0) resolve()
-      else reject(new Error(`${command} failed (${signal || code})`))
+      if (code === 0) {
+        resolve()
+      } else {
+        reject(new Error(`${command} failed (${signal || code})`))
+      }
     })
   })
 

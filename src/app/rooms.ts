@@ -244,7 +244,9 @@ export const groupRoomMessages = ({
   let previousCreatedAt = 0
 
   for (const event of events) {
-    if (seenIds.has(event.id)) continue
+    if (seenIds.has(event.id)) {
+      continue
+    }
 
     seenIds.add(event.id)
 

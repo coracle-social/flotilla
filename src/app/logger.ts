@@ -8,8 +8,12 @@ import {logger, wraps, writer} from "@app/core"
 import {PLATFORM_LOGEE} from "@app/env"
 
 const formatValue = (value: unknown) => {
-  if (value instanceof Error) return value.stack || value.message
-  if (typeof value === "string") return value
+  if (value instanceof Error) {
+    return value.stack || value.message
+  }
+  if (typeof value === "string") {
+    return value
+  }
 
   return tryCatch(() => JSON.stringify(value)) || String(value)
 }
@@ -72,7 +76,9 @@ export const sendLogs = async () => {
 
     size += line.length
 
-    if (size > 32_000) break
+    if (size > 32_000) {
+      break
+    }
 
     lines.unshift(line)
   }

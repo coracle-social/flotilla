@@ -82,13 +82,17 @@
   }
 
   const submit = async () => {
-    if ($uploading || disabled) return
+    if ($uploading || disabled) {
+      return
+    }
 
     const ed = await editor
     const content = ed.getText({blockSeparator: "\n"}).trim()
     const tags = ed.storage.nostr.getEditorTags()
 
-    if (!content) return
+    if (!content) {
+      return
+    }
 
     try {
       await onSubmit({content, tags})

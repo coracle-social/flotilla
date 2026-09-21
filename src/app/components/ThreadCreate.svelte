@@ -49,7 +49,9 @@
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
   const submit = async () => {
-    if ($uploading || loading) return
+    if ($uploading || loading) {
+      return
+    }
 
     if (!title) {
       return pushToast({

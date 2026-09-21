@@ -17,7 +17,9 @@
     const t = track
     level = 0
 
-    if (!t || error) return
+    if (!t || error) {
+      return
+    }
 
     let frame: number | undefined
     const context = new AudioContext()
@@ -50,14 +52,18 @@
       const NOISE_FLOOR = 0.03
       const gated = rms < NOISE_FLOOR ? 0 : (rms - NOISE_FLOOR) / (1 - NOISE_FLOOR)
       smoothed += (Math.min(1, gated * 4) - smoothed) * 0.5
-      if (smoothed < 0.005) smoothed = 0
+      if (smoothed < 0.005) {
+        smoothed = 0
+      }
       level = smoothed
       frame = requestAnimationFrame(tick)
     }
     tick()
 
     return () => {
-      if (frame !== undefined) cancelAnimationFrame(frame)
+      if (frame !== undefined) {
+        cancelAnimationFrame(frame)
+      }
       context.close().catch(() => {})
     }
   })

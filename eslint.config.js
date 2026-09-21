@@ -46,6 +46,7 @@ export default [
       "no-useless-escape": "off",
       "no-extra-semi": "off",
       "no-async-promise-executor": "off",
+      curly: ["error", "all"],
       "prefer-const": ["error", {destructuring: "all"}],
       "no-eq-null": "error",
       "no-restricted-syntax": [

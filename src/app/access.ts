@@ -235,7 +235,9 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
   const thunk = await publishJoinRequest(url, claim)
   const error = await thunk.waitForError()
 
-  if (shouldIgnoreError(error)) return
+  if (shouldIgnoreError(error)) {
+    return
+  }
 
   if (error.includes("invite code")) {
     return "join request rejected"
@@ -282,11 +284,21 @@ export class Access {
         this.claimFailed,
       ],
       ([$loading, $isGeneric, $isExplicit, $roomInviteError, $roomCode, $claimFailed]) => {
-        if ($loading) return "loading" as const
-        if ($isGeneric) return "network" as const
-        if ($isExplicit || $roomInviteError) return "auth" as const
-        if (requireCode && !$roomCode) return "failed" as const
-        if ($claimFailed) return "noclaim" as const
+        if ($loading) {
+          return "loading" as const
+        }
+        if ($isGeneric) {
+          return "network" as const
+        }
+        if ($isExplicit || $roomInviteError) {
+          return "auth" as const
+        }
+        if (requireCode && !$roomCode) {
+          return "failed" as const
+        }
+        if ($claimFailed) {
+          return "noclaim" as const
+        }
 
         return "ready" as const
       },

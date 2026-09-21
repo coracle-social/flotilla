@@ -86,7 +86,9 @@ export class IDB {
   getAll = async <T>(table: string): Promise<T[]> => {
     const connection = await this.live()
 
-    if (!connection) return []
+    if (!connection) {
+      return []
+    }
 
     const tx = connection.transaction(table, "readonly")
     const store = tx.objectStore(table)
@@ -100,7 +102,9 @@ export class IDB {
   bulkPut = async <T>(table: string, data: Iterable<T>) => {
     const connection = await this.live()
 
-    if (!connection) return
+    if (!connection) {
+      return
+    }
 
     const tx = connection.transaction(table, "readwrite")
     const store = tx.objectStore(table)
@@ -121,7 +125,9 @@ export class IDB {
   bulkDelete = async (table: string, ids: Iterable<string>) => {
     const connection = await this.live()
 
-    if (!connection) return
+    if (!connection) {
+      return
+    }
 
     const tx = connection.transaction(table, "readwrite")
     const store = tx.objectStore(table)

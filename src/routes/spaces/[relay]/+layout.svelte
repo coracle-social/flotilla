@@ -77,7 +77,9 @@
   // Watch for relay errors and notify the user
   // Direct links skip Discover — prompt to join when relay is not in the user's space list.
   $effect(() => {
-    if (getModal()) return
+    if (getModal()) {
+      return
+    }
 
     if (redirectUrl && redirectUrl !== url && !redirectPrompted.has(url)) {
       redirectPrompted.add(url)

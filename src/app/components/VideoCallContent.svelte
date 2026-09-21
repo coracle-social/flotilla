@@ -127,13 +127,17 @@
 
   const primaryTile = $derived.by(() => {
     const k = $videoPrimaryTileKey
-    if (k === undefined) return undefined
+    if (k === undefined) {
+      return undefined
+    }
     return videoTiles.find(t => tileKey(t) === k)
   })
 
   const secondaryTiles = $derived.by(() => {
     const p = primaryTile
-    if (p === undefined) return videoTiles
+    if (p === undefined) {
+      return videoTiles
+    }
     const pk = tileKey(p)
     return videoTiles.filter(t => tileKey(t) !== pk)
   })
@@ -150,7 +154,9 @@
 
   $effect(() => {
     const k = $videoPrimaryTileKey
-    if (k === undefined) return
+    if (k === undefined) {
+      return
+    }
     if (!videoTiles.some(t => tileKey(t) === k)) {
       videoPrimaryTileKey.set(undefined)
     }

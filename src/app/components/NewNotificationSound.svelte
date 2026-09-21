@@ -17,7 +17,9 @@
   }
 
   onMount(() => {
-    if (Capacitor.isNativePlatform()) return
+    if (Capacitor.isNativePlatform()) {
+      return
+    }
 
     audioElement.load()
 

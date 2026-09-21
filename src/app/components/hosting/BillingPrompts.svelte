@@ -48,7 +48,9 @@
   const updateMethod = () => openSetup(tenant?.nwc_error ? "nwc" : "card")
 
   const payOpenInvoice = () => {
-    if (openInvoice) openPayInvoice(openInvoice)
+    if (openInvoice) {
+      openPayInvoice(openInvoice)
+    }
   }
 
   const dismissAutopay = () => {
@@ -60,7 +62,9 @@
   let handledInvoiceId: string | undefined
   $effect(() => {
     const id = $page.url.searchParams.get("invoice") ?? undefined
-    if (!id || id === handledInvoiceId) return
+    if (!id || id === handledInvoiceId) {
+      return
+    }
 
     handledInvoiceId = id
 

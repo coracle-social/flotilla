@@ -77,7 +77,9 @@
   }
 
   const markPaid = () => {
-    if (paid) return
+    if (paid) {
+      return
+    }
 
     paid = true
     stopPolling()
@@ -121,10 +123,14 @@
 
   // Silent poll until paid or the modal closes.
   const pollOnce = async () => {
-    if (destroyed || paid) return
+    if (destroyed || paid) {
+      return
+    }
 
     try {
-      if (await reconcile()) return
+      if (await reconcile()) {
+        return
+      }
     } catch {
       // keep polling
     }
@@ -135,7 +141,9 @@
   }
 
   const checkPayment = async () => {
-    if (checking) return
+    if (checking) {
+      return
+    }
 
     checking = true
 
@@ -161,7 +169,9 @@
   }
 
   const payWithCard = async () => {
-    if (redirecting) return
+    if (redirecting) {
+      return
+    }
 
     redirecting = true
 

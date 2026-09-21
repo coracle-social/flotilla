@@ -16,7 +16,9 @@
   $effect(() => {
     const element = videoElement
     const activeTrack = track
-    if (!element) return
+    if (!element) {
+      return
+    }
     activeTrack.attach(element)
     return () => {
       activeTrack.detach(element)

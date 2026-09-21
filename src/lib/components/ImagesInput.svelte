@@ -18,7 +18,9 @@
   const id = randomId()
 
   const getImageUrl = (item: string | File): string => {
-    if (typeof item === "string") return item
+    if (typeof item === "string") {
+      return item
+    }
     return URL.createObjectURL(item)
   }
 

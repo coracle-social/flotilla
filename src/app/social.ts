@@ -118,19 +118,37 @@ export const isEventMuted = withGetter(
         : undefined
 
     return (e: TrustedEvent) => {
-      if (!$muteList) return false
-      if ($user.pubkey === e.pubkey) return false
-      if (mutedPubkeys.has(e.pubkey)) return true
-      if (mutedEvents.has(e.id)) return true
-      if (mutedAddresses.has(getAddress(e))) return true
-      if (getParents(e).some(v => mutedEvents.has(v) || mutedAddresses.has(v))) return true
-      if (tagValues(topicTags("t"), e.tags).some(t => mutedTopics.has(t))) return true
+      if (!$muteList) {
+        return false
+      }
+      if ($user.pubkey === e.pubkey) {
+        return false
+      }
+      if (mutedPubkeys.has(e.pubkey)) {
+        return true
+      }
+      if (mutedEvents.has(e.id)) {
+        return true
+      }
+      if (mutedAddresses.has(getAddress(e))) {
+        return true
+      }
+      if (getParents(e).some(v => mutedEvents.has(v) || mutedAddresses.has(v))) {
+        return true
+      }
+      if (tagValues(topicTags("t"), e.tags).some(t => mutedTopics.has(t))) {
+        return true
+      }
 
       if (regex) {
         const profile = profiles.get().get(e.pubkey)
 
-        if (profile?.display().toLowerCase().match(regex)) return true
-        if (profile?.nip05()?.match(regex)) return true
+        if (profile?.display().toLowerCase().match(regex)) {
+          return true
+        }
+        if (profile?.nip05()?.match(regex)) {
+          return true
+        }
       }
 
       return false
