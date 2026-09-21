@@ -170,6 +170,8 @@ Acceptance:
 - An unparseable link leaves the join button disabled and shows no preview.
 - Navigating directly to the url of a space she hasn't joined opens the same
   join prompt automatically, and going back leaves her un-joined.
+- That prompt stays up once the space has finished opening, however slowly the
+  page it opens on arrives.
 
 ### US-011 — Request access when a space turns you away
 

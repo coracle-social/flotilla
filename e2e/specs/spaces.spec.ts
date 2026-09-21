@@ -1,8 +1,8 @@
-import {DAY, HOUR, WEEK, sortBy} from "@welshman/lib"
+import {DAY, HOUR, WEEK, sleep, sortBy} from "@welshman/lib"
 import {ROOMS} from "@welshman/util"
 import type {Page} from "@playwright/test"
 import type {SeededSpace} from "../harness"
-import {expect, readCachedEvents, roomPath, spacePath, test, users} from "../harness"
+import {expect, pathPattern, readCachedEvents, roomPath, spacePath, test, users} from "../harness"
 
 // The space this user's room list names first, read from the copy on disk the app restores itself
 // from. Room lists reach indexeddb in three-second batches with nothing in the ui to say when one
@@ -159,6 +159,44 @@ test("US-010 join a space from an invite link", async ({seed, as}) => {
 
   await expect(page.getByText("Welcome to the space!")).toBeVisible()
   await expect(page).toHaveURL(/\/spaces\/other\.test/)
+})
+
+test("US-010 a direct link's join prompt outlives the entry redirect", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+    const other = relay("other")
+
+    space.room("general", {name: "General"})
+    other.room("lounge", {name: "Lounge"})
+    space.join(user.alice, "general")
+  })
+
+  const other = scenario.space("other")
+  const page = await as(users.alice, "/")
+
+  // A space's own path redirects to the page it opens on, and a modal raised while that navigation
+  // is in flight is overwritten when it lands. Holding the entry page's module back is what puts
+  // the prompt inside the redirect here; on a phone the chunk arriving late does it by itself.
+  let held = 0
+
+  await page.context().route(
+    url => url.pathname.endsWith("/about/+page.svelte"),
+    async route => {
+      held++
+
+      await sleep(15000)
+      await route.continue()
+    },
+  )
+
+  await page.goto(spacePath(other.url))
+
+  await expect(page.getByRole("button", {name: "Join Space"})).toBeEnabled({timeout: 60000})
+  await expect(page).toHaveURL(pathPattern(spacePath(other.url) + "/about"))
+  await expect(page.getByRole("button", {name: "Join Space"})).toBeVisible()
+
+  // A page that stops asking for that module is a spec that no longer covers the race.
+  expect(held).toBeGreaterThan(0)
 })
 
 test("US-011 request access when a space turns you away", async ({seed, as}) => {

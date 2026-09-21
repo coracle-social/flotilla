@@ -5,6 +5,7 @@
 
 <script lang="ts">
   import {page} from "$app/stores"
+  import {navigating} from "$app/state"
   import type {Maybe} from "@welshman/lib"
   import {once} from "@welshman/lib"
   import {normalizeRelayUrl} from "@welshman/util"
@@ -76,8 +77,11 @@
 
   // Watch for relay errors and notify the user
   // Direct links skip Discover — prompt to join when relay is not in the user's space list.
+  // A modal owns a history entry, and a navigation landing after one opens takes that entry over.
+  // The redirect from a space's own path to its entry page is one, so nothing opens until the page
+  // has settled.
   $effect(() => {
-    if (getModal()) {
+    if (getModal() || navigating.to) {
       return
     }
 
