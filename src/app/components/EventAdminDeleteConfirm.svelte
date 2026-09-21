@@ -37,7 +37,7 @@
       return pushToast({theme: "error", message: error})
     }
 
-    pushToast({message: `${noun} has successfully been deleted!`})
+    pushToast({message: "Event has successfully been deleted!"})
     $app.repository.removeEvent(event.id)
     history.back()
   }
