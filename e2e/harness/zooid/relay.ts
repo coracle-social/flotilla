@@ -26,7 +26,7 @@ import type {ZooidConnection} from "./transport"
 // has no published digest, so ZOOID_IMAGE is how an unreleased one is tried.
 const image =
   process.env.ZOOID_IMAGE ??
-  "gitea.coracle.social/coracle/zooid:0.2.2@sha256:70ecf2d3ad0ac338d48f14fe8e5ab9964193d2eb30d6b6f7d8972ca179cad513"
+  "gitea.coracle.social/coracle/zooid:latest@sha256:7950843900cbb1c7c1f17de5524f6999badd1002cde94476855e90e67e0f2248"
 
 // How long after a recreate chromium can still abort what a page has in flight. Every netlink
 // event a create-and-destroy produces lands before `compose up --wait` returns — measured at 26 of
