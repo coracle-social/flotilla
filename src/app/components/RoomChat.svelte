@@ -245,25 +245,22 @@
   const topOf = (target: HTMLElement) =>
     target.getBoundingClientRect().top - element!.getBoundingClientRect().top
 
-  // Messages loading in below the pinned row are inserted at the scroll origin, which pushes
-  // everything else away from it. The browser has no reason to compensate for that, so put the
-  // row back where it was. scrollBy is in visual terms, so this reads the same way either way up.
-  //
-  // A row the scroll clamped at the origin is the exception: it is pinned to the live end of the
-  // loaded window, and once the forward walk reaches the present that is the live end of the
-  // conversation, where an arriving message belongs on screen. Settling there while the origin is
-  // still within reach of the row leaves a jump deep into history — clamped the same way with
-  // nothing newer loaded yet — where it landed.
+  // Messages arriving at the origin push the pinned row away, and the browser does not compensate.
   const keepPinned = (caughtUp: boolean) => {
     const target = pinned && element?.querySelector(`[data-event="${pinned.id}"]`)
 
     if (target instanceof HTMLElement && pinned) {
       const origin = Math.abs(element!.scrollTop)
 
+      // A pin clamped at the origin belongs at the live end once the forward walk catches up.
       if (pinned.clamped && caughtUp && topOf(target) > origin) {
         release()
-        isProgrammaticScroll = true
-        element!.scrollTo({top: 0})
+
+        // Only a scroll event clears the flag, so claiming one that never fires discards the next.
+        if (origin >= 1) {
+          isProgrammaticScroll = true
+          element!.scrollTo({top: 0})
+        }
       } else {
         const drift = topOf(target) - pinned.top
 
