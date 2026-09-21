@@ -917,8 +917,10 @@ test("US-028 share a message somewhere else", async ({seed, as}) => {
   const permalink = new URL(await alice.evaluate(() => navigator.clipboard.readText()))
 
   expect(permalink.pathname).toBe(roomPath(url, "general"))
-  expect(permalink.search).toBe(`?at=${shared.event.created_at}`)
-  expect(permalink.hash).toBe(`#${neventEncode({id: shared.id, relays: [url]})}`)
+  expect(permalink.search).toBe(
+    `?at=${shared.event.created_at}&event=${neventEncode({id: shared.id, relays: [url]})}`,
+  )
+  expect(permalink.hash).toBe("")
 
   await picker.getByRole("button", {name: "Random"}).click()
   await picker.getByRole("button", {name: /^Share/}).click()
