@@ -1,8 +1,10 @@
 import {get, writable} from "svelte/store"
-import {on, call, dissoc, assoc, uniq} from "@welshman/lib"
+import {on, call, dissoc, assoc, noop, uniq} from "@welshman/lib"
 import {isDVMKind, isEphemeralKind, verifyEvent} from "@welshman/util"
 import type {Socket, RelayMessage, ClientMessage} from "@welshman/net"
 import {
+  AuthStateEvent,
+  AuthStatus,
   SocketEvent,
   isRelayEvent,
   isRelayOk,
@@ -16,16 +18,10 @@ import {
   matchReason,
   RelayReasonPrefix,
 } from "@welshman/net"
-import {
-  BlockedRelayLists,
-  MessagingRelayLists,
-  RelayLists,
-  RoomLists,
-  Thunks,
-  makeAppPolicyAuth,
-} from "@welshman/app"
+import {BlockedRelayLists, MessagingRelayLists, RelayLists, RoomLists, Thunks} from "@welshman/app"
 import type {AppPolicy, IApp} from "@welshman/app"
-import {app, logger, appPolicies} from "@app/core"
+import {merged} from "@welshman/store"
+import {logger, appPolicies} from "@app/core"
 import {BLOCKED_RELAYS} from "@app/env"
 import {userSettingsValues, getSetting, RelayAuthMode} from "@app/settings"
 
@@ -63,8 +59,8 @@ export const ingestPolicy: AppPolicy = app =>
 
 // Welshman's appPolicyAuthUnlessBlocked, plus the conservative mode: only identify to relays
 // the user already has a relationship with.
-export const authPolicy = makeAppPolicyAuth((socket, $app) => {
-  const $pubkey = app.get().user?.pubkey
+const shouldAuth = (socket: Socket, $app: IApp) => {
+  const $pubkey = $app.user?.pubkey
 
   if (!$pubkey) {
     return false
@@ -89,7 +85,53 @@ export const authPolicy = makeAppPolicyAuth((socket, $app) => {
   }
 
   return false
-})
+}
+
+// Everything `shouldAuth` reads, so a socket can ask it again when the answer changes.
+const makeAuthInputs = ($app: IApp, pubkey: string) =>
+  merged([
+    $app.use(BlockedRelayLists).urls(pubkey).$,
+    $app.use(MessagingRelayLists).urls(pubkey).$,
+    $app.use(RelayLists).urls(pubkey).$,
+    $app.use(RoomLists).urls(pubkey).$,
+    $app.use(Thunks).history,
+    userSettingsValues,
+  ])
+
+// Welshman asks whether to authenticate once, when the challenge arrives. On a first login the
+// user's lists have not loaded by then, so a space they open answers "no relationship" and stays
+// unauthenticated for as long as the relay repeats the challenge it already sent. Ask again
+// whenever one of those lists changes.
+export const authPolicy: AppPolicy = $app => {
+  const $user = $app.user
+
+  if (!$user) {
+    return noop
+  }
+
+  const authInputs = makeAuthInputs($app, $user.pubkey)
+
+  const policy = (socket: Socket) => {
+    const attemptAuth = () => {
+      if (socket.auth.status === AuthStatus.Requested && shouldAuth(socket, $app)) {
+        socket.auth.doAuth($user.sign)
+      }
+    }
+
+    const unsubscribers = [
+      on(socket.auth, AuthStateEvent.Status, attemptAuth),
+      authInputs.subscribe(attemptAuth),
+    ]
+
+    return () => unsubscribers.forEach(call)
+  }
+
+  $app.pool.socketPolicies.push(policy)
+
+  return () => {
+    $app.pool.socketPolicies = $app.pool.socketPolicies.filter(p => p !== policy)
+  }
+}
 
 const makeBlockPolicy = ($app: IApp) => (socket: Socket) => {
   const previousOpen = socket.open
