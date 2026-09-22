@@ -25,9 +25,10 @@
     threadPubkey: string
     onReply: (event: TrustedEvent) => void
     context: FeedContext
+    replyCount?: number
   }
 
-  const {url, event, threadPubkey, onReply, context}: Props = $props()
+  const {url, event, threadPubkey, onReply, context, replyCount}: Props = $props()
 
   const profileDisplay = $profiles.display(event.pubkey, [url]).$
   const handle = $handles.forPubkey(event.pubkey).$
@@ -69,7 +70,13 @@
       <div
         class="bg-surface flex flex-wrap items-center justify-between gap-2 border-b px-3 py-2 text-xs @lg:px-4 @lg:text-sm"
         style="border-color: var(--line)">
-        <span class="opacity-75">{formatTimestamp(event.created_at)}</span>
+        <div class="flex items-center gap-2 opacity-75">
+          <span>{formatTimestamp(event.created_at)}</span>
+          {#if replyCount !== undefined}
+            <span>·</span>
+            <span>{replyCount} {replyCount === 1 ? "reply" : "replies"}</span>
+          {/if}
+        </div>
         <Button
           class="button button-ghost button-xs h-auto min-h-0 gap-1 px-1 py-0"
           onclick={copyPermalink}>

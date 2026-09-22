@@ -727,7 +727,7 @@ so that responses connect to the right thing.
 Acceptance:
 
 - "Reply to thread" opens a composer with no quoted parent, and submitting
-  appends a post and increments the reply count in the header.
+  appends a post and increments the reply count on the opening post.
 - "Reply" on a single post shows "Replying to" that post, which can be cleared
   before submitting.
 - A reply to a thread in a room is tagged into that room, so the relay handles

@@ -393,7 +393,7 @@ test("US-065 see quoted and embedded content", async ({seed, as}) => {
 
   await page.waitForURL(next => next.pathname === `${spacePath(url)}/threads/${thread.id}`)
 
-  await expect(page.getByRole("heading", {name: "Roadmap for Q3"})).toBeVisible()
+  await expect(page.locator(`[data-event="${thread.id}"]`)).toContainText("Roadmap for Q3")
 })
 
 test("US-066 see distinctive inline tokens", async ({seed, as}) => {

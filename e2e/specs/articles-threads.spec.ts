@@ -754,8 +754,8 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
   await expect(openingPost.getByText("OP", {exact: true})).toBeVisible()
   await expect(bob.getByText("20 replies")).toBeVisible()
 
-  // The page bar carries the title, so the opening post does not repeat it.
-  await expect(bob.getByText("Bed rotation")).toHaveCount(1)
+  // The opening post carries the title, and the summary bar replaces it once it scrolls away.
+  await expect(openingPost).toContainText("Bed rotation")
 
   await bob.getByRole("button", {name: "Reply to thread"}).click()
 
@@ -975,6 +975,6 @@ test("US-045 turn a chat message into a thread", async ({seed, as}) => {
 
   await row.click()
 
-  await expect(page.getByRole("heading", {name: "Deploy failures"})).toBeVisible()
+  await expect(page.locator("article").filter({hasText: "Deploy failures"})).toBeVisible()
   await expect(page.getByText("the deploy broke again")).toBeVisible()
 })

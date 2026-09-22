@@ -791,7 +791,7 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
 
   await hers.click()
 
-  await expect(pageBar(bob)).toContainText("the server is on fire")
+  await expect(bob.locator("article").filter({hasText: "the server is on fire"})).toBeVisible()
 
   // Opening a thread is what marks it read, so only the one he opened loses its dot
   await bob.goBack()

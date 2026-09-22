@@ -174,6 +174,7 @@
             {context}
             event={$event}
             threadPubkey={$event.pubkey}
+            replyCount={$replies.length}
             onReply={openReply} />
         </div>
         {#if hiddenCount > 0}
