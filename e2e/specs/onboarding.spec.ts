@@ -83,7 +83,7 @@ test("US-001 sign-in gate for logged-out visitors", async ({seed, visit}) => {
 
   await page.getByRole("button", {name: "Create an account"}).click()
 
-  await expect(page.getByRole("heading", {name: "Join Flotilla"})).toBeVisible()
+  await expect(page.getByRole("heading", {name: "Create an Account"})).toBeVisible()
 })
 
 test("US-002 sign up by generating a new key", async ({seed, visit}) => {
