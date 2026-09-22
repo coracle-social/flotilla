@@ -8,13 +8,12 @@
   import {displayContentCount} from "@app/content"
   import {inboxSpaceContent} from "@app/inbox"
   import {makeSpacePath} from "@app/routes"
-
-  const {class: className = ""}: {class?: string} = $props()
 </script>
 
 {#if $inboxSpaceContent.length > 0}
-  <HomeSection title="Activity" icon={Feed} class={className}>
-    <div class="scroll-container flex items-stretch gap-3 overflow-x-auto px-4 pb-4">
+  <HomeSection title="Activity" icon={Feed}>
+    <div
+      class="scroll-container flex items-stretch gap-3 overflow-x-auto border-t border-line bg-surface-less p-4">
       {#each $inboxSpaceContent as { url, timestamp, countsByKind } (url)}
         <Link
           href={makeSpacePath(url)}

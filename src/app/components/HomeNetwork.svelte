@@ -84,7 +84,7 @@
 </script>
 
 <HomeSection title="Network" icon={Planet} class={className}>
-  <div class="flex flex-col gap-3 px-4 pb-4" bind:this={element}>
+  <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4" bind:this={element}>
     {#if isEmpty}
       <div class="flex flex-col items-center gap-3 pb-4 text-center">
         <p class="font-medium">Follow a few people to fill this out</p>

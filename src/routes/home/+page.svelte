@@ -5,7 +5,6 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Page from "@lib/components/Page.svelte"
-  import PageBar from "@lib/components/PageBar.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import ScrollToTop from "@lib/components/ScrollToTop.svelte"
   import HomeInbox from "@app/components/HomeInbox.svelte"
@@ -28,37 +27,32 @@
 </script>
 
 <Page>
-  <PageBar>
-    <div class="flex items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <Icon icon={Home} size={6} />
-        <strong>Home</strong>
+  <PageContent bind:element class="p-0 md:p-4">
+    <div class="mx-auto flex w-full max-w-[1200px] min-w-0 flex-col gap-3">
+      <div class="flex items-center justify-between gap-4 px-4 py-3 md:px-2 md:pt-0">
+        <h1 class="flex items-center gap-2 text-xl font-bold">
+          <Icon icon={Home} size={6} />
+          Home
+        </h1>
+        <Link href="/spaces" class="button button-neutral button-sm">
+          <Icon icon={Widget} size={4} />
+          Browse spaces
+        </Link>
       </div>
-      <Link href="/spaces" class="button button-neutral button-sm">
-        <Icon icon={Widget} size={4} />
-        Browse spaces
-      </Link>
-    </div>
-  </PageBar>
-  <PageContent noPad bind:element class="flex flex-col bg-surface">
-    <!-- Content is centered and capped, but the section rules still reach the page edge. At lg
-         each column bleeds only on the side facing the page, so no rule crosses the divider. -->
-    <div
-      class="mx-auto flex w-full max-w-[1000px] min-w-0 flex-1 flex-col lg:flex-row lg:items-stretch">
-      <!-- The columns are `contents` below lg, which puts every section in one flow and lets the
-           rail's health checks sit between the inbox and the rest of the main column. -->
-      <div
-        class="contents lg:flex lg:min-w-0 lg:flex-[2] lg:flex-col lg:border-r lg:border-line lg:[--rule-bleed-r:0px]">
-        <HomeInbox />
-        <HomeActivity class="order-last" />
-        <HomeNetwork class="order-last border-b-0" />
-      </div>
-      <div
-        class="contents lg:flex lg:w-96 lg:min-w-0 lg:shrink-0 lg:flex-col lg:[--rule-bleed-l:0px]">
-        <HomeHealthChecks />
-        {#if HOSTING_ENABLED}
-          <HomeHosting class="border-b-0 max-lg:hidden" />
-        {/if}
+      <div class="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start">
+        <!-- Both columns are `contents` below lg, which puts every section in one flow and lets
+             the rail sit between the day's activity and the feed that would otherwise bury it. -->
+        <div class="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-3">
+          <HomeInbox />
+          <HomeActivity />
+          <HomeNetwork class="order-last lg:order-none" />
+        </div>
+        <div class="contents lg:flex lg:w-80 lg:shrink-0 lg:flex-col lg:gap-3">
+          <HomeHealthChecks />
+          {#if HOSTING_ENABLED}
+            <HomeHosting class="max-lg:hidden" />
+          {/if}
+        </div>
       </div>
     </div>
   </PageContent>

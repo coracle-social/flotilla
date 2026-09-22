@@ -13,9 +13,10 @@
   const {title, icon, action, children, class: className = ""}: Props = $props()
 </script>
 
-<section class="rule-bleed flex min-w-0 flex-col border-b border-line {className}">
-  <div class="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
-    <h2 class="flex items-center gap-2 text-base font-bold tracking-wide uppercase">
+<section
+  class="flex min-w-0 flex-col overflow-hidden border-line bg-surface md:rounded-3xl md:border {className}">
+  <div class="flex items-center justify-between gap-3 px-4 py-3">
+    <h2 class="flex items-center gap-2 text-base font-bold">
       <Icon {icon} size={5} />
       {title}
     </h2>

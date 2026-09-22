@@ -25,13 +25,14 @@
     {/if}
   {/snippet}
   {#if conversations.length > 0}
-    <div class="flex flex-col gap-3 px-4 pb-4">
+    <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4">
       {#each conversations as conversation (conversation.path)}
         <HomeInboxItem {conversation} />
       {/each}
     </div>
   {:else}
-    <div class="flex flex-col items-center gap-3 px-4 pb-8 text-center">
+    <div
+      class="flex flex-col items-center gap-3 border-t border-line bg-surface-less px-4 py-8 text-center">
       <p class="font-medium">You're all caught up</p>
       <p class="max-w-md text-sm opacity-75">
         The rooms, space chats and direct messages you belong to show what's unread here.

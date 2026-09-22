@@ -105,30 +105,6 @@
   content-visibility: auto;
   contain-intrinsic-size: auto 16rem;
 }
-/* Carries a bottom border out past the element's own box, so a centered column can still rule the
-   page from edge to edge. The pseudo-elements inherit that border, so an element without one draws
-   nothing; --rule-bleed-l and --rule-bleed-r turn off the side that faces a neighbor. */
-@utility rule-bleed {
-  position: relative;
-
-  &::before,
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: calc(-1 * var(--border-thin));
-    border-bottom: inherit;
-  }
-
-  &::before {
-    right: 100%;
-    width: var(--rule-bleed-l, 100vw);
-  }
-
-  &::after {
-    left: 100%;
-    width: var(--rule-bleed-r, 100vw);
-  }
-}
 /* The wash is an inset shadow because a row's hover rule sets a background that would cover it. */
 @utility highlight-target {
   box-shadow:

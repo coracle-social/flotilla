@@ -28,13 +28,16 @@
       <span class="truncate opacity-50">{@render subtitle()}</span>
     </div>
     <div class="flex min-w-0 items-center gap-1 text-sm opacity-75">
-      <span class="shrink-0">
-        {#if event.pubkey === $user.pubkey}
-          You:
-        {:else}
-          <ProfileName pubkey={event.pubkey} {url} />:
-        {/if}
-      </span>
+      <div class="flex max-w-1/2 shrink-0 items-center">
+        <span class="truncate">
+          {#if event.pubkey === $user.pubkey}
+            You
+          {:else}
+            <ProfileName pubkey={event.pubkey} {url} />
+          {/if}
+        </span>
+        <span>:</span>
+      </div>
       <div class="min-w-0 flex-1">
         <NoteContentMinimal {event} {url} singleLine />
       </div>
