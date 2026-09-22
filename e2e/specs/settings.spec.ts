@@ -272,14 +272,14 @@ test("US-129 raise the thresholds a stranger has to meet", async ({seed, as}) =>
 
   await expect(pow).toHaveValue("16")
   await expect(wot).toHaveValue("3")
-  await expect(requestsCard(page).getByText("16 bits")).toBeVisible()
-  await expect(requestsCard(page).getByText("3 people")).toBeVisible()
+  await expect(requestsCard(page).getByText("16 bits", {exact: true})).toBeVisible()
+  await expect(requestsCard(page).getByText("3 people", {exact: true})).toBeVisible()
 
   await pow.fill("24")
   await wot.fill("1")
 
-  await expect(requestsCard(page).getByText("24 bits")).toBeVisible()
-  await expect(requestsCard(page).getByText("1 person")).toBeVisible()
+  await expect(requestsCard(page).getByText("24 bits", {exact: true})).toBeVisible()
+  await expect(requestsCard(page).getByText("1 person", {exact: true})).toBeVisible()
 
   await page.getByRole("button", {name: "Save Changes"}).click()
 
