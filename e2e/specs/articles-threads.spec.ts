@@ -911,14 +911,13 @@ test("US-044 navigate a long thread", async ({seed, as}) => {
   await oldestPost.getByRole("button", {name: "Permalink"}).click()
   await expect(bob.getByRole("alert")).toContainText("Copied to clipboard!")
 
-  const permalink = await bob.evaluate(() => navigator.clipboard.readText())
-  const {pathname, hash} = new URL(permalink)
+  const permalink = new URL(await bob.evaluate(() => navigator.clipboard.readText()))
 
-  expect(pathname).toBe(threadPath)
-  expect(hash).toBe(`#${nip19.neventEncode({id: firstReply.id, relays: [url]})}`)
+  expect(permalink.pathname).toBe(threadPath)
+  expect(permalink.search).toBe(`?event=${nip19.neventEncode({id: firstReply.id, relays: [url]})}`)
 
   // A permalink reaches back as far as it has to on its own, so carol never sees the control.
-  const carol = await as(users.carol, pathname + hash)
+  const carol = await as(users.carol, permalink.pathname + permalink.search)
   const target = carol.locator(`[data-event="${firstReply.id}"]`)
 
   await expect(target).toBeVisible()
