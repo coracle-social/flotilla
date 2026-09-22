@@ -78,7 +78,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and workflow.
 ### Desktop development (Linux)
 
 The Electron target and its unsigned packages are for development and testing. Release publishing
-and auto-updates are not configured. Desktop secrets are encrypted using the OS keyring or keychain.
+and production signing remain prerequisites for public distribution. Desktop secrets are encrypted
+using the OS keyring or keychain.
 If protected storage is unavailable or unreadable, the app warns and keeps secrets only in
 memory until it closes, leaving the saved file untouched. Unlock or configure the OS keyring
 and restart to restore persistence. Linux’s insecure `basic_text` backend is never used.
@@ -133,11 +134,18 @@ pnpm run package:desktop:macos
 Each command rebuilds production assets, copies and updates Capacitor, compiles Electron, vendors
 its runtime and plugins, and invokes electron-builder without publishing or signing. Outputs land in
 `electron/dist/`: a Linux x64 AppImage, a Windows x64 NSIS installer, and separate macOS x64 and
-arm64 DMGs. The root package version is authoritative, the Capacitor app ID stays stable, and
+arm64 DMGs and ZIPs. The root package version is authoritative, the Capacitor app ID stays stable, and
 `VITE_PLATFORM_NAME` supplies the product name. Vite's `.env.local` overrides apply, and explicit
 `VITE_*` environment values take precedence. Use production branding values when building artifacts
 for others. `VITE_PLATFORM_LOGO` can be a local or HTTPS image, which packaging resizes to 1024×1024
 and stages in ignored output.
+
+Window and Dock icons use the bundled branding image, including during local runs. The default
+`VITE_PLATFORM_LOGO=static/logo.png` is the official logo; custom branding remains supported.
+On Linux, packaged startup registers a hidden desktop entry and a persistent icon under `XDG_DATA_HOME`
+(normally `~/.local/share`) so Wayland docks can identify the app. Existing user or system launchers
+are preserved, and development runs never write an entry. The generated entry follows the AppImage
+path, including immediately after an update renames it. Windows uses the executable icon resources.
 
 Linux packaging requires Linux. Windows packaging from Linux uses the pinned official
 `electronuserland/builder` Wine image through Docker, mounting only a temporary copy of the prepared
@@ -155,6 +163,33 @@ FLOTILLA_DESKTOP_EXECUTABLE="/absolute/path/to/application" pnpm run test:deskto
 Use the AppImage or installed executable rather than the installer. This checks packaged metadata,
 local assets, navigation, workers, and CSP using a disposable profile. Installation, reboot, and
 uninstall still require target-OS testing.
+
+### Desktop updates
+
+Packaged apps check once at startup, download available updates, and install them on normal quit.
+There is no update notification or custom updater UI. Unpackaged development runs do not check.
+Update errors are logged and leave the app usable. The generic feed is configured in
+`electron/electron-builder.config.mjs`; electron-builder generates `app-update.yml` and the
+`latest*.yml` files alongside the installers, including when packaging with `--publish never`.
+
+Before public desktop auto-updates ship, the release pipeline must guarantee that **every stable
+release selected by Gitea's latest route includes all desktop updater metadata and matching
+artifacts**. A newer mobile-only release would break the desktop feed. Production acceptance also
+requires platform signing and native Windows/macOS testing.
+The existing release task does not yet upload updater metadata or macOS ZIPs; that is follow-up work.
+Until it does, the public feed returns 404 for channel metadata and packaged startup logs an update
+check failure. This PR provides packaging and runtime support, not an operational public update feed.
+Do not publish desktop builds to users until the publishing follow-up is complete.
+
+For local updater QA, use disposable copies with temporary A/B versions and an isolated user-data
+directory. In those copies only, point the builder's generic feed at a local HTTP server. Package
+both versions and serve B's generated metadata and artifacts. Run AppImage A, wait for B to
+download, quit normally, and relaunch the installed AppImage to verify its version and saved state.
+Check that preferences, protected secrets, tray controls, and notification activation survive.
+Also exercise unavailable/missing files, interrupted downloads, invalid checksums/versions, and
+an already-current version; failed updates must not install. Never bypass integrity checks.
+On macOS, build both architectures together and verify the single generated manifest references
+both ZIPs with matching hashes. Do not hand-create or merge updater manifests.
 
 ## Releasing
 

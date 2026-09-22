@@ -32,7 +32,10 @@ export default {
     {from: "vendor/node_modules", to: "node_modules"},
   ],
   allowMissingDependencies: false,
-  publish: [],
+  publish: {
+    provider: "generic",
+    url: "https://gitea.coracle.social/coracle/flotilla/releases/download/latest/",
+  },
   toolsets: {appimage: "1.0.3"},
   linux: {
     target: [{target: "AppImage", arch: ["x64"]}],
@@ -41,7 +44,10 @@ export default {
   },
   win: {target: [{target: "nsis", arch: ["x64"]}], signExecutable: false},
   mac: {
-    target: [{target: "dmg", arch: ["x64", "arm64"]}],
+    target: [
+      {target: "dmg", arch: ["x64", "arm64"]},
+      {target: "zip", arch: ["x64", "arm64"]},
+    ],
     category: "public.app-category.social-networking",
     notarize: false,
   },
