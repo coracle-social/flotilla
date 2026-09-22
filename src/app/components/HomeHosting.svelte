@@ -50,7 +50,7 @@
     {#if relays.length > 0}
       <div class="flex flex-col divide-y divide-line border-y border-line">
         {#each relays as relay (relay.id)}
-          <RelayListItem {relay} class="px-4 py-3" />
+          <RelayListItem {relay} compact class="px-4 py-3" />
         {/each}
       </div>
     {/if}

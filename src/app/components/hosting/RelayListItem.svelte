@@ -1,4 +1,5 @@
 <script lang="ts">
+  import cx from "classnames"
   import Server from "@assets/icons/server.svg?dataurl"
   import {ucFirst} from "@lib/util"
   import Badge from "@lib/components/Badge.svelte"
@@ -9,17 +10,23 @@
 
   type Props = {
     relay: HostedRelay
+    compact?: boolean
     class?: string
   }
 
-  const {relay, class: className = "card p-3 sm:p-4"}: Props = $props()
+  const {relay, compact = false, class: className = "card p-3 sm:p-4"}: Props = $props()
 
   const name = $derived(relay.info_name || relay.subdomain)
   const host = $derived(canonicalRelayHost(relay))
   const href = $derived(makeSpacePath(getHostedRelayUrl(relay), "admin"))
 </script>
 
-<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 {className}">
+<div
+  class={cx(
+    "flex gap-3",
+    className,
+    compact ? "items-center" : "flex-col sm:flex-row sm:items-center sm:gap-4",
+  )}>
   <div class="flex min-w-0 flex-1 items-center gap-3">
     <ImageIcon size={8} alt="" class="rounded-xl" src={relay.info_icon || Server} />
     <div class="min-w-0">
@@ -35,9 +42,11 @@
         {ucFirst(relay.status.replace(/_/g, " "))}
       </Badge>
     {/if}
-    <Badge variant={relay.plan_id === "free" ? "neutral" : "primary"}>
-      {ucFirst(relay.plan_id)}
-    </Badge>
-    <Link class="button button-neutral button-sm ml-auto" {href}>Manage</Link>
+    {#if !compact}
+      <Badge variant={relay.plan_id === "free" ? "neutral" : "primary"}>
+        {ucFirst(relay.plan_id)}
+      </Badge>
+      <Link class="button button-neutral button-sm ml-auto" {href}>Manage</Link>
+    {/if}
   </div>
 </div>
