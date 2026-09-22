@@ -77,15 +77,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and workflow.
 
 ### Desktop development (Linux)
 
-The Electron target and its unsigned packages are for development and testing. Release publishing
-and production signing remain prerequisites for public distribution. Desktop secrets are encrypted
-using the OS keyring or keychain.
-If protected storage is unavailable or unreadable, the app warns and keeps secrets only in
-memory until it closes, leaving the saved file untouched. Unlock or configure the OS keyring
-and restart to restore persistence. Linux’s insecure `basic_text` backend is never used.
+Desktop secrets are encrypted with the OS keyring or keychain. If protected storage is unavailable
+or unreadable, the app warns, keeps secrets in memory until it closes, and leaves the saved file
+untouched. Unlocking or configuring the keyring and restarting restores persistence. The app never
+uses Linux's insecure `basic_text` backend.
 
-**Use disposable accounts only with unsigned development packages.** Production distribution
-still requires release signing and publishing configuration.
+**Use only disposable accounts with unsigned development packages.**
 
 The Electron subproject installs separately, so ordinary web and mobile installs don't download
 Electron:
@@ -112,16 +109,12 @@ pnpm run start:desktop
 `build:desktop` builds the frontend without PWA/service-worker registration, synchronizes the
 Electron platform, and compiles its TypeScript entrypoint. It uses the same branding environment as
 the web build, and does not synchronize Android or iOS. `start:desktop` opens the last build without
-Vite, so rerun `build:desktop` after frontend changes. The development URL goes only to the desktop
-run process. Capawesome records it in ignored generated configuration, and production
-synchronization removes it.
+Vite, so rerun `build:desktop` after frontend changes.
 
 Run `pnpm run test:desktop` after building to check the Linux desktop window. On a headless Linux
-runner, use `xvfb-run -a pnpm run test:desktop`. Such a runner also needs `libgtk-3-0t64`, since
-Playwright's chromium dependencies do not cover the GTK libraries Electron links against. The test
-drops Chromium's sandbox when it runs as root, because Chromium refuses to start that way. This
-smoke suite does not start a web dev server, and does not run in CI. It verifies nothing about
-Windows or macOS.
+runner, use `xvfb-run -a pnpm run test:desktop`, and install `libgtk-3-0t64`, which Playwright's
+Chromium dependencies leave out. The test drops Chromium's sandbox when it runs as root. It does not
+start a web dev server, does not run in CI, and verifies nothing about Windows or macOS.
 
 ### Desktop packaging
 
@@ -132,20 +125,22 @@ pnpm run package:desktop:macos
 ```
 
 Each command rebuilds production assets, copies and updates Capacitor, compiles Electron, vendors
-its runtime and plugins, and invokes electron-builder without publishing or signing. Outputs land in
-`electron/dist/`: a Linux x64 AppImage, a Windows x64 NSIS installer, and separate macOS x64 and
-arm64 DMGs and ZIPs. The root package version is authoritative, the Capacitor app ID stays stable, and
-`VITE_PLATFORM_NAME` supplies the product name. Vite's `.env.local` overrides apply, and explicit
-`VITE_*` environment values take precedence. Use production branding values when building artifacts
-for others. `VITE_PLATFORM_LOGO` can be a local or HTTPS image, which packaging resizes to 1024×1024
-and stages in ignored output.
+its runtime and plugins, and runs electron-builder without publishing. Packages land in
+`electron/dist/`: a Linux x64 AppImage, a Windows x64 NSIS installer, and macOS x64 and arm64 DMGs
+and ZIPs. The version comes from the root `package.json`, the product name from
+`VITE_PLATFORM_NAME`, and the Capacitor app ID stays fixed. Vite's `.env.local` overrides apply and
+explicit `VITE_*` environment values take precedence, so use production branding when building for
+others. `VITE_PLATFORM_LOGO` can be a local or HTTPS image, and packaging resizes it to 1024×1024.
 
-Window and Dock icons use the bundled branding image, including during local runs. The default
-`VITE_PLATFORM_LOGO=static/logo.png` is the official logo; custom branding remains supported.
-On Linux, packaged startup registers a hidden desktop entry and a persistent icon under `XDG_DATA_HOME`
-(normally `~/.local/share`) so Wayland docks can identify the app. Existing user or system launchers
-are preserved, and development runs never write an entry. The generated entry follows the AppImage
-path, including immediately after an update renames it. Windows uses the executable icon resources.
+macOS packages are signed and notarized when `CSC_NAME` names a Developer ID Application certificate
+in the keychain and `APPLE_API_KEY`, `APPLE_API_KEY_ID` and `APPLE_API_ISSUER` are set. All other
+packages are unsigned.
+
+Window and Dock icons use the branding image, including in local runs. On Linux, a packaged app
+registers a hidden desktop entry and an icon under `XDG_DATA_HOME` (normally `~/.local/share`) so
+Wayland docks can identify it. It leaves existing user and system launchers alone, never writes an
+entry from a development run, and updates the entry when an update renames the AppImage. Windows
+uses the executable's icon resources.
 
 Linux packaging requires Linux. Windows packaging from Linux uses the pinned official
 `electronuserland/builder` Wine image through Docker, mounting only a temporary copy of the prepared
@@ -162,32 +157,25 @@ FLOTILLA_DESKTOP_EXECUTABLE="/absolute/path/to/application" pnpm run test:deskto
 
 Use the AppImage or installed executable rather than the installer. This checks packaged metadata,
 local assets, navigation, workers, and CSP using a disposable profile. Installation, reboot, and
-uninstall still require target-OS testing.
+uninstall need testing on the target OS.
 
 ### Desktop updates
 
-Packaged apps check once at startup, download available updates, and install them on normal quit.
-There is no update notification or custom updater UI. Unpackaged development runs do not check.
-Update errors are logged and leave the app usable. The generic feed is configured in
-`electron/electron-builder.config.mjs`; electron-builder generates `app-update.yml` and the
-`latest*.yml` files alongside the installers, including when packaging with `--publish never`.
-
-Before public desktop auto-updates ship, the release pipeline must guarantee that **every stable
-release selected by Gitea's latest route includes all desktop updater metadata and matching
-artifacts**. A newer mobile-only release would break the desktop feed. Production acceptance also
-requires platform signing and native Windows/macOS testing.
-The existing release task does not yet upload updater metadata or macOS ZIPs; that is follow-up work.
-Until it does, the public feed returns 404 for channel metadata and packaged startup logs an update
-check failure. This PR provides packaging and runtime support, not an operational public update feed.
-Do not publish desktop builds to users until the publishing follow-up is complete.
+Packaged apps check for an update once at startup, download it, and install it on a normal quit.
+There is no update notification or updater UI, and development runs never check. Update errors are
+logged and leave the app usable. The feed is Gitea's latest release, set in
+`electron/electron-builder.config.mjs`. [Releasing](#releasing) covers how a release fills it.
+electron-builder writes `app-update.yml` and the `latest*.yml` manifests beside the installers, even
+with `--publish never`. macOS only installs updates to a signed app. Windows and Linux packages
+update unsigned.
 
 For local updater QA, use disposable copies with temporary A/B versions and an isolated user-data
 directory. In those copies only, point the builder's generic feed at a local HTTP server. Package
 both versions and serve B's generated metadata and artifacts. Run AppImage A, wait for B to
 download, quit normally, and relaunch the installed AppImage to verify its version and saved state.
 Check that preferences, protected secrets, tray controls, and notification activation survive.
-Also exercise unavailable/missing files, interrupted downloads, invalid checksums/versions, and
-an already-current version; failed updates must not install. Never bypass integrity checks.
+Also exercise missing files, interrupted downloads, invalid checksums and versions, and an
+already-current version. A failed update must not install. Never bypass integrity checks.
 On macOS, build both architectures together and verify the single generated manifest references
 both ZIPs with matching hashes. Do not hand-create or merge updater manifests.
 
@@ -196,8 +184,8 @@ both ZIPs with matching hashes. Do not hand-create or merge updater manifests.
 `pnpm release` takes a tagged commit and ships it everywhere: the web bundle and native projects,
 the signed APK on gitea and zapstore, the AAB on Google Play, the iOS build on App Store Connect,
 and the desktop packages. It checks the tag, the changelog section, every credential and every
-tool up front, and refuses to start if one of them is missing rather than getting halfway. What's
-left — rolling out on Play, submitting for review — comes back as a list when it finishes.
+tool up front, and refuses to start if any is missing. It finishes with a list of what's left to do
+by hand, such as rolling out on Play and submitting for review.
 
 ```sh
 pnpm bump minor            # or patch, major, or an explicit x.y.z
@@ -208,7 +196,7 @@ pnpm release
 ```
 
 `pnpm release --check` runs those checks and reports the plan without building anything. Naming
-steps runs a subset — `pnpm release ios`, or `pnpm release apk gitea`. A step that fails stops the
+steps runs a subset, such as `pnpm release ios` or `pnpm release apk gitea`. A step that fails stops the
 run and prints the command to pick up from there.
 
 | step | what it does |
@@ -218,19 +206,25 @@ run and prints the command to pick up from there.
 | `fdroid` | reruns F-Droid's own preparation and build against the tag in a throwaway worktree |
 | `play` | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft |
 | `ios` | `cap build ios` to an archive and IPA, uploaded with `altool` |
-| `desktop` | `package:desktop:*` for this OS |
-| `gitea` | creates the release for the tag from the changelog, attaches the APK and any desktop packages |
+| `desktop` | `package:desktop:*` for this OS: Linux and Windows from Linux, signed and notarized macOS from a Mac |
+| `gitea` | creates a draft release from the changelog, attaches the APK, desktop packages and update manifests, and publishes it once every platform is there |
 | `zapstore` | `zsp publish zapstore.yaml` |
+
+Linux builds the Linux and Windows packages and a Mac builds the macOS ones, so a release takes a
+run on each, both ending in `gitea`. Gitea's latest release is the desktop update feed, so the release stays a
+draft, hidden from updaters and Obtainium, until it has the APK and all three `latest*.yml`
+manifests. Each manifest is uploaded after the files it lists. A mobile-only release can't be
+published, so package the desktop apps for every release.
 
 Release notes come from the `CHANGELOG.md` section matching `package.json`'s version, so every
 store shows the same text. The APK and zapstore share one artifact, whose path lives in
 `zapstore.yaml`.
 
-F-Droid has nothing to upload — their servers build from the tag themselves — so the `fdroid` step
-is a gate instead: it runs [their preparation and build](fdroid/README.md) against the tag in a
-throwaway git worktree, and fails the release before anything is published if that build no longer
-works. Preparation patches source with exact-match replacements, so it breaks quietly when the
-files it rewrites change. Expect it to take a while; it installs and builds from scratch.
+F-Droid builds from the tag on its own servers, so the `fdroid` step uploads nothing. It runs
+[their preparation and build](fdroid/README.md) against the tag in a throwaway git worktree and
+fails the release before anything is published if that build breaks. Preparation patches source
+with exact-match replacements, so it breaks quietly when the files it rewrites change. The step is
+slow because it installs and builds from scratch.
 
 ### Credentials
 
@@ -243,15 +237,16 @@ along with how to get them.
 | `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEYSTORE_ALIAS` | the key APKs outside the app stores are signed with; it can never change without breaking updates |
 | `PLAY_KEYSTORE_PATH`, `PLAY_KEYSTORE_PASSWORD`, `PLAY_KEYSTORE_ALIAS` | the Play upload key |
 | `PLAY_SERVICE_ACCOUNT` | path to a service account json with the Release manager role, from Play Console → Setup → API access |
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` | App Store Connect API key with the App Manager role, from Users and Access → Integrations |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` | App Store Connect API key with the App Manager role, from Users and Access → Integrations; also notarizes the macOS app |
+| `CSC_NAME` | the Developer ID Application certificate in the keychain that signs the macOS app, without its prefix |
 | `SIGN_WITH` | nostr key for zapstore: an nsec, a `bunker://` url, or `browser` |
 
 Add `_ALIAS_PASSWORD` to either keystore prefix when the alias has its own password. `PLAY_TRACK`
 (default `production`) and `PLAY_STATUS` (default `draft`) choose where a Play upload lands.
 Keystores and API keys belong outside the repository; only their paths go in `.env.local`.
 
-Gradle signs from those variables, so Android Studio still opens and builds the project without
-them — it just produces an unsigned release build.
+Without the keystore variables, Android Studio still builds the project and produces an unsigned
+release build.
 
 ### Obtainium
 
@@ -265,7 +260,7 @@ Obtainium reports the git tag as the version.
 
 ## Deployment
 
-To run your own Flotilla, it's as simple as:
+To run your own Flotilla:
 
 ```sh
 pnpm install

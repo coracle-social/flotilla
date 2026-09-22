@@ -49,7 +49,6 @@ export default {
       {target: "zip", arch: ["x64", "arm64"]},
     ],
     category: "public.app-category.social-networking",
-    notarize: false,
   },
   dmg: {sign: false},
 }

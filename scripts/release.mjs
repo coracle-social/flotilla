@@ -108,14 +108,35 @@ const apkMetadata = async () => {
 }
 
 const desktopTargets = {darwin: ["macos"], linux: ["linux", "windows"], win32: []}
-const desktopTarget = desktopTargets[process.platform]?.[0]
+const hostTargets = desktopTargets[process.platform] ?? []
 
-const packagedDesktop = async () =>
-  existsSync(desktopDist)
-    ? (await readdir(desktopDist)).filter(
-        file => file.includes(version) && /\.(dmg|AppImage|exe)$/.test(file),
-      )
-    : []
+// Gitea's latest release is the desktop update feed, so it only goes public once every platform's
+// manifest is on it
+const desktopManifests = ["latest.yml", "latest-linux.yml", "latest-mac.yml"]
+
+const packagedDesktop = async () => {
+  const files = existsSync(desktopDist) ? await readdir(desktopDist) : []
+  const manifests = []
+
+  // Manifest names carry no version, so a leftover from an older build is told apart by its contents
+  for (const file of files.filter(file => desktopManifests.includes(file))) {
+    const text = await readFile(join(desktopDist, file), "utf-8")
+
+    if (text.match(/^version: '?([^'\s]+)'?$/m)?.[1] === version) {
+      manifests.push({
+        file,
+        urls: [...text.matchAll(/^\s*- url: '?(.+?)'?$/gm)].map(match => match[1]),
+      })
+    }
+  }
+
+  return {
+    artifacts: files.filter(
+      file => file.includes(version) && /\.(dmg|zip|AppImage|exe|blockmap)$/.test(file),
+    ),
+    manifests,
+  }
+}
 
 const followUps = []
 
@@ -269,22 +290,42 @@ const steps = [
     name: "desktop",
     title: "Package the desktop app",
     missing: () => [
-      ...(desktopTarget ? [] : [`desktop packaging on ${process.platform}`]),
+      ...(hostTargets.length > 0 ? [] : [`desktop packaging on ${process.platform}`]),
       ...(existsSync(join(root, "electron/node_modules")) ? [] : ["electron dependencies"]),
+      ...(hostTargets.includes("windows") && !installed("docker") ? ["docker"] : []),
+      ...(hostTargets.includes("macos")
+        ? missingEnv("CSC_NAME", "ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_PATH")
+        : []),
     ],
     setup: [
       "Run npm ci --prefix electron. Each platform's packages have to be built on that platform,",
       "so run pnpm release desktop gitea on the others to add theirs to the same release.",
+      "Linux also cross-builds the Windows installer, which needs docker.",
+      "macOS only installs updates to a signed app, so macOS packages are signed and notarized:",
+      "set CSC_NAME to the name of the Developer ID Application certificate in your keychain,",
+      "without its prefix, and the ASC_* key the ios step uses notarizes them.",
     ],
     run: async () => {
-      await run("pnpm", ["run", `package:desktop:${desktopTarget}`], {cwd: root})
+      for (const target of hostTargets) {
+        await run("pnpm", ["run", `package:desktop:${target}`], {
+          cwd: root,
+          env: {
+            ...process.env,
+            ...(target === "macos" && {
+              APPLE_API_KEY: resolve(root, process.env.ASC_KEY_PATH),
+              APPLE_API_KEY_ID: process.env.ASC_KEY_ID,
+              APPLE_API_ISSUER: process.env.ASC_ISSUER_ID,
+            }),
+          },
+        })
+      }
 
       const elsewhere = Object.values(desktopTargets)
         .flat()
-        .filter(target => !desktopTargets[process.platform].includes(target))
+        .filter(target => !hostTargets.includes(target))
 
       followUps.push(
-        `Desktop: ${elsewhere.join(" and ")} packages have to be built on those platforms, then attached with pnpm release gitea`,
+        `Desktop: ${elsewhere.join(" and ")} packages have to be built on those platforms, then attached with pnpm release desktop gitea`,
       )
     },
   },
@@ -307,19 +348,49 @@ const steps = [
         await apkMetadata()
       }
 
+      const apkName = `${name}-${version}.apk`
+      const {artifacts, manifests} = await packagedDesktop()
       const files = [
-        ...(existsSync(apk) ? [[apk, `${name}-${version}.apk`]] : []),
-        ...(await packagedDesktop()).map(file => [join(desktopDist, file), file]),
+        ...(existsSync(apk) ? [[apk, apkName]] : []),
+        ...artifacts.map(file => [join(desktopDist, file), file]),
       ]
 
-      if (files.length === 0) {
+      if (files.length + manifests.length === 0) {
         throw new Error("Nothing to attach; build the apk or the desktop packages first")
       }
 
       const release = await api.upsertRelease(version, notes)
+      const attach = async (path, filename) =>
+        console.log(dim(`  ${await api.attach(release.id, filename, await readFile(path))}`))
 
       for (const [path, filename] of files) {
-        console.log(dim(`  ${await api.attach(release.id, filename, await readFile(path))}`))
+        await attach(path, filename)
+      }
+
+      // An updater acts on a manifest the moment it can read one, so what it points to goes up first
+      const attached = await api.assetNames(release.id)
+
+      for (const {file, urls} of manifests) {
+        const absent = urls.filter(url => !attached.includes(url))
+
+        if (absent.length > 0) {
+          throw new Error(`${file} points to ${absent.join(", ")}, which the release doesn't have`)
+        }
+
+        await attach(join(desktopDist, file), file)
+      }
+
+      if (release.draft) {
+        const names = await api.assetNames(release.id)
+        const missing = [apkName, ...desktopManifests].filter(file => !names.includes(file))
+
+        if (missing.length > 0) {
+          followUps.push(
+            `Gitea: ${version} stays a draft until it has ${missing.join(", ")}; build them and run pnpm release gitea to publish it`,
+          )
+        } else {
+          await api.publish(release.id)
+        }
       }
     },
   },

@@ -28,7 +28,14 @@ export const gitea = ({repository, token}) => {
 
     upsertRelease: async (tag, notes) =>
       (await api("GET", `/releases/tags/${tag}`, {allow404: true})) ??
-      (await api("POST", "/releases", {body: {tag_name: tag, name: tag, body: notes}})),
+      (await api("POST", "/releases", {
+        body: {tag_name: tag, name: tag, body: notes, draft: true},
+      })),
+
+    assetNames: async releaseId =>
+      ((await api("GET", `/releases/${releaseId}`)).assets ?? []).map(asset => asset.name),
+
+    publish: releaseId => api("PATCH", `/releases/${releaseId}`, {body: {draft: false}}),
 
     attach: async (releaseId, filename, data) => {
       const {assets} = await api("GET", `/releases/${releaseId}`)
