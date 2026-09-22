@@ -21,12 +21,7 @@
   const href = $derived(makeSpacePath(getHostedRelayUrl(relay), "admin"))
 </script>
 
-<div
-  class={cx(
-    "flex gap-3",
-    className,
-    compact ? "items-center" : "flex-col sm:flex-row sm:items-center sm:gap-4",
-  )}>
+{#snippet details()}
   <div class="flex min-w-0 flex-1 items-center gap-3">
     <ImageIcon size={8} alt="" class="rounded-xl" src={relay.info_icon || Server} />
     <div class="min-w-0">
@@ -49,4 +44,16 @@
       <Link class="button button-neutral button-sm ml-auto" {href}>Manage</Link>
     {/if}
   </div>
-</div>
+{/snippet}
+
+{#if compact}
+  <Link
+    {href}
+    class={cx("hover:bg-surface-less flex items-center gap-3 transition-colors", className)}>
+    {@render details()}
+  </Link>
+{:else}
+  <div class={cx("flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4", className)}>
+    {@render details()}
+  </div>
+{/if}
