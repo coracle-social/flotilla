@@ -7,15 +7,11 @@
   import Button from "@lib/components/Button.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HealthCheckItem from "@app/components/HealthCheckItem.svelte"
-  import {healthChecks} from "@app/healthChecks"
+  import {healthChecks, reviewPlans} from "@app/healthChecks"
 
   const pending = $healthChecks.pending.$
 
-  const applyAll = () => {
-    for (const healthCheck of $pending) {
-      $healthChecks.apply(healthCheck)
-    }
-  }
+  const reviewAll = () => reviewPlans($pending.map(check => $healthChecks.plan(check)))
 </script>
 
 <HomeSection title="Health checks" icon={Stethoscope}>
@@ -36,7 +32,7 @@
       {/each}
       {#if $pending.length > 1}
         <div class="flex justify-center p-3">
-          <Button class="button button-primary button-sm" onclick={applyAll}>
+          <Button class="button button-primary button-sm" onclick={reviewAll}>
             <Icon icon={Stars} size={4} />
             Apply all recommendations
           </Button>

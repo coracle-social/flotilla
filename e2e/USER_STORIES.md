@@ -55,7 +55,10 @@ Acceptance:
 - The dashboard shows a pending "Back Up Your Key" health check until the existing
   backup flow completes successfully; leaving the modal keeps the check pending.
 - Reloading preserves both the pending reminder and a completed backup.
-- Applying all recommendations opens the backup flow alongside the automatic relay fixes.
+- Applying all recommendations first lists the relay changes, and leaving that
+  review changes nothing. Confirming it opens the backup flow alongside the relay fixes.
+- The "Back Up Your Key" check opens the backup flow directly, since it has nothing
+  to review.
 - Choosing the encrypted download requires a password of at least 12 characters
   and produces a file containing an ncryptsec rather than a plain nsec.
 - The display name entered during signup appears on the new user's own profile.
@@ -1691,8 +1694,9 @@ Acceptance:
   disappears once its space is read.
 - A conversation carries an unread dot, and "Mark all read" empties the inbox.
 - Selecting a conversation opens it.
-- Relay health checks are listed alongside the inbox, with the recommendation
-  each one applies.
+- Relay health checks are listed alongside the inbox, each naming what is wrong.
+  Applying one opens a review naming the relays it adds and removes, and
+  publishes nothing until it is confirmed.
 - Hosting is offered whether or not she hosts a space: a shortcut to the hosting
   panel when she has one, an invitation to start one when she doesn't.
 

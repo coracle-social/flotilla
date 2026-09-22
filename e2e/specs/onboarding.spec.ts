@@ -134,16 +134,23 @@ test("US-002 sign up by generating a new key", async ({seed, visit}) => {
   const backupCheck = page.getByRole("group", {name: "Back Up Your Key"})
 
   await page.getByRole("button", {name: "Apply all recommendations"}).click()
+  await expect(page.getByRole("heading", {name: "Review changes"})).toBeVisible()
+  await page.getByRole("button", {name: "Go back"}).click()
+  await expect(backupCheck).toBeVisible()
+
+  await page.getByRole("button", {name: "Apply all recommendations"}).click()
+  await page.getByRole("button", {name: "Confirm"}).click()
+  await expect(page.getByRole("heading", {name: "Review changes"})).toHaveCount(0)
   await expect(page.getByRole("heading", {name: "Backup your Key"})).toBeVisible()
   await page.getByRole("button", {name: "Go back"}).click()
   await expect(backupCheck).toBeVisible()
 
-  await backupCheck.getByRole("button", {name: "Back Up"}).click()
+  await backupCheck.getByRole("button", {name: "Fix"}).click()
   await expect(page.getByRole("heading", {name: "Backup your Key"})).toBeVisible()
   await page.getByRole("button", {name: "Go back"}).click()
   await expect(page.getByText("Back Up Your Key")).toBeVisible()
 
-  await backupCheck.getByRole("button", {name: "Back Up"}).click()
+  await backupCheck.getByRole("button", {name: "Fix"}).click()
 
   const doneButton = page.getByRole("button", {name: "Done"})
   const password = page.locator('input[type="password"]')
