@@ -15,14 +15,13 @@ const SPEECH_MODEL = "hexgrad/kokoro-82m"
 
 const SPEECH_VOICE = "af_bella"
 
-// The endpoint encodes mp3 and raw pcm, and its mp3 carries a xing header naming a fraction of the
-// frames it holds, so a browser reads a fifth more audio than is there and the scrubber never
-// reaches the end. Raw pcm claims no length at all, so the wav header below is the only one.
-const SPEECH_FORMAT = "pcm"
+// The endpoint encodes mp3 and raw pcm. Raw pcm carries no header, so playing it means assuming a
+// sample rate and a sample format the response never states, and either assumption wrong is static
+// rather than an error. Decoding the mp3 reads both off the audio.
+const SPEECH_FORMAT = "mp3"
 
-const SPEECH_RATE = 24000
-
-const SPEECH_CHANNELS = 1
+// Decoding resamples to the context's rate, so this is the rate the wav ends up at.
+const SPEECH_RATE = 48000
 
 const SPEECH_BIT_DEPTH = 16
 
@@ -36,9 +35,15 @@ export type Speech = {
 
 export const speech = writable<Maybe<Speech>>(undefined)
 
-const toWav = (pcm: ArrayBuffer) => {
-  const bytesPerFrame = (SPEECH_CHANNELS * SPEECH_BIT_DEPTH) / 8
-  const wav = new ArrayBuffer(WAV_HEADER_LENGTH + pcm.byteLength)
+// An offline context never reaches for the speakers.
+const decode = (data: ArrayBuffer) =>
+  new OfflineAudioContext(1, 1, SPEECH_RATE).decodeAudioData(data)
+
+const toWav = (audio: AudioBuffer) => {
+  const {numberOfChannels, sampleRate, length} = audio
+  const bytesPerFrame = (numberOfChannels * SPEECH_BIT_DEPTH) / 8
+  const dataLength = length * bytesPerFrame
+  const wav = new ArrayBuffer(WAV_HEADER_LENGTH + dataLength)
   const view = new DataView(wav)
   const ascii = (offset: number, value: string) => {
     for (let i = 0; i < value.length; i++) {
@@ -47,19 +52,33 @@ const toWav = (pcm: ArrayBuffer) => {
   }
 
   ascii(0, "RIFF")
-  view.setUint32(4, 36 + pcm.byteLength, true)
+  view.setUint32(4, 36 + dataLength, true)
   ascii(8, "WAVEfmt ")
   view.setUint32(16, 16, true)
   view.setUint16(20, 1, true)
-  view.setUint16(22, SPEECH_CHANNELS, true)
-  view.setUint32(24, SPEECH_RATE, true)
-  view.setUint32(28, SPEECH_RATE * bytesPerFrame, true)
+  view.setUint16(22, numberOfChannels, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * bytesPerFrame, true)
   view.setUint16(32, bytesPerFrame, true)
   view.setUint16(34, SPEECH_BIT_DEPTH, true)
   ascii(36, "data")
-  view.setUint32(40, pcm.byteLength, true)
+  view.setUint32(40, dataLength, true)
 
-  new Uint8Array(wav, WAV_HEADER_LENGTH).set(new Uint8Array(pcm))
+  const channels = Array.from({length: numberOfChannels}, (_, i) => audio.getChannelData(i))
+
+  let offset = WAV_HEADER_LENGTH
+
+  for (let frame = 0; frame < length; frame++) {
+    for (const samples of channels) {
+      // A decoded sample runs from -1 to 1, and the two ends of a signed 16 bit range are not the
+      // same size, so each end scales by its own bound.
+      const sample = Math.max(-1, Math.min(1, samples[frame]))
+
+      view.setInt16(offset, Math.round(sample * (sample < 0 ? 0x8000 : 0x7fff)), true)
+
+      offset += 2
+    }
+  }
 
   return new Blob([wav], {type: "audio/wav"})
 }
@@ -87,7 +106,7 @@ export const synthesize = async (text: string) => {
     throw new Error(error?.message || `OpenRouter returned a ${response.status}.`)
   }
 
-  return toWav(await response.arrayBuffer())
+  return toWav(await decode(await response.arrayBuffer()))
 }
 
 export const stopSpeech = () =>

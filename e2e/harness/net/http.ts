@@ -214,23 +214,41 @@ export const mockDufflepud = (context: BrowserContext, fixtures: DufflepudFixtur
     return route.fallback()
   })
 
-// The rate the endpoint documents for raw pcm, at 16 bits a sample, which is what the app assumes
-// when it writes a wav header for one.
+// The rate the harness writes its silence at. Nothing downstream reads it: the app decodes what it
+// is answered and writes its own header from the result.
 const SPEECH_RATE = 24000
 
-// Headerless silence. Nothing in it says how long it is, so the duration a spec reads off the
-// player is the one the app computed.
-const silence = (seconds: number) => Buffer.alloc(seconds * SPEECH_RATE * 2)
+// Silence as a wav, built rather than inlined so a spec can ask for a length and then assert the
+// duration the player reads off it.
+const silence = (seconds: number) => {
+  const bytes = seconds * SPEECH_RATE * 2
+  const wav = Buffer.alloc(44 + bytes)
 
-// mp3 is the other format the real endpoint encodes, and the harness has no encoder for it, so
-// asking for one here is a mistake rather than a case to serve.
-const SPEECH_FORMAT = "pcm"
+  wav.write("RIFF", 0)
+  wav.writeUInt32LE(36 + bytes, 4)
+  wav.write("WAVEfmt ", 8)
+  wav.writeUInt32LE(16, 16)
+  wav.writeUInt16LE(1, 20)
+  wav.writeUInt16LE(1, 22)
+  wav.writeUInt32LE(SPEECH_RATE, 24)
+  wav.writeUInt32LE(SPEECH_RATE * 2, 28)
+  wav.writeUInt16LE(2, 32)
+  wav.writeUInt16LE(16, 34)
+  wav.write("data", 36)
+  wav.writeUInt32LE(bytes, 40)
+
+  return wav
+}
+
+// The format the app asks the real endpoint for. The harness has no mp3 encoder, so it answers a
+// wav instead — the app decodes either, and only an answer a browser can decode exercises that.
+const SPEECH_FORMAT = "mp3"
 
 /**
  * OpenRouter's text to speech, answering every request with the same silence. The array it returns
- * collects what the app asked to have read, in the order it asked. Answering a decodable wav to a
- * request for some other format would prove nothing about the container the app builds, so anything
- * but raw pcm is refused.
+ * collects what the app asked to have read, in the order it asked. Asking for raw pcm is refused
+ * the way the real endpoint refuses an unknown format, since pcm is the one answer whose sample
+ * rate and sample format the app would have to guess at.
  */
 export const mockOpenRouterSpeech = async (context: BrowserContext, seconds = 3) => {
   const spoken: string[] = []
@@ -241,10 +259,7 @@ export const mockOpenRouterSpeech = async (context: BrowserContext, seconds = 3)
     if (response_format === SPEECH_FORMAT) {
       spoken.push(input)
 
-      return route.fulfill({
-        contentType: `audio/pcm;rate=${SPEECH_RATE};channels=1`,
-        body: silence(seconds),
-      })
+      return route.fulfill({contentType: "audio/wav", body: silence(seconds)})
     }
 
     return route.fulfill({

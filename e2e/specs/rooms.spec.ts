@@ -986,8 +986,8 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
     "another message\n\nheads up Alice Anchor, the notice is at a link to harbor.example",
   ])
 
-  // The mock answers headerless pcm, so the duration is only right if the wav header the app put
-  // in front of it is, which is what makes the whole clip scrubbable.
+  // The app decodes what it is answered and rebuilds the container around the samples, so the
+  // duration is only right if that round trip kept every one of them.
   await expect(alice.getByText("/ 0:10")).toBeVisible()
 
   // The clip carries autoplay and the button follows the audio element's own play event, so it
