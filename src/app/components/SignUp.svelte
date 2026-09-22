@@ -26,7 +26,6 @@
     DEFAULT_MESSAGING_RELAYS,
     DEFAULT_SPACES,
   } from "@app/env"
-  import {setChecked} from "@app/notifications"
   import {forceHealthChecks} from "@app/healthChecks"
   import {loginWithPomade} from "@app/pomade"
   import {pushModal, clearModals} from "@app/modal"
@@ -67,9 +66,6 @@
 
     // Wait for all the thunks to complete
     await Promise.all(thunks.map(thunk => thunk.waitForCompletion()))
-
-    // Don't show any notifications for old content
-    setChecked("*")
 
     // Go to the dashboard
     clearModals()
