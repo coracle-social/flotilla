@@ -34,6 +34,7 @@
 
   const relay = fromApp($app => $app.use(Relays).one(url))
   const assignees = deriveSpaceMethodAssignees(url)
+  const others = $derived($assignees.filter(({pubkey}) => pubkey !== $relay?.pubkey))
   const supportedMethods = deriveSpaceSupportedMethods(url)
   const canEdit = $derived(
     ["assignmethod", "unassignmethod"].some(method => $supportedMethods.includes(method)),
@@ -73,12 +74,12 @@
       {/if}
       {#if loading}
         <Spinner loading>Loading admins...</Spinner>
-      {:else if $assignees.length === 0}
+      {:else if others.length === 0}
         <div class="card bg-surface p-4 text-sm opacity-70">
           Nobody else has been given management permissions.
         </div>
       {:else}
-        {#each $assignees as { pubkey, methods } (pubkey)}
+        {#each others as { pubkey, methods } (pubkey)}
           <div class="card flex flex-col gap-2">
             <div class="flex items-center justify-between gap-2">
               <div class="min-w-0 flex-1">
