@@ -1,11 +1,11 @@
 <script lang="ts">
   import {onMount, onDestroy} from "svelte"
   import {displayUrl, once} from "@welshman/lib"
-  import {getBlob, decryptFile, makeBlossomAuthEvent, tagSpec, tagValue} from "@welshman/util"
+  import {getBlob, makeBlossomAuthEvent, tagSpec, tagValue} from "@welshman/util"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import {user} from "@app/core"
-  import {getUrlTags} from "@app/content"
+  import {decryptUrl, getUrlTags} from "@app/content"
 
   const {value, event, ...props} = $props()
 
@@ -14,10 +14,7 @@
 
   // Fallback to filename if hash was omitted from the message for interoperability
   const hash = tagValue(tagSpec("x"), meta) || url.split(/[\/\.]/).slice(-2)[0]
-  const key = tagValue(tagSpec("decryption-key"), meta)
-  const nonce = tagValue(tagSpec("decryption-nonce"), meta)
-  const algorithm = tagValue(tagSpec("encryption-algorithm"), meta)
-  const mime = tagValue(tagSpec("m"), meta)
+  const controller = new AbortController()
   const fileName =
     tagValue(tagSpec("filename"), meta) ||
     tagValue(tagSpec("name"), meta) ||
@@ -57,23 +54,18 @@
   let src = $state("")
 
   onMount(async () => {
-    // If we have an encryption algorithm, fetch and decrypt
-    if (algorithm === "aes-gcm" && key && nonce) {
-      try {
-        const response = await fetch(url)
-        const ciphertext = new Uint8Array(await response.arrayBuffer())
-        const decryptedData = await decryptFile({ciphertext, key, nonce, algorithm})
-
-        setBlobSrc(new Uint8Array(decryptedData), mime)
-      } catch {
+    try {
+      src = await decryptUrl(url, event, controller.signal)
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        console.error(error)
         hasError = true
       }
-    } else {
-      src = url
     }
   })
 
   onDestroy(() => {
+    controller.abort()
     revokeSrc()
   })
 </script>

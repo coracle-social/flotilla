@@ -22,6 +22,7 @@
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
+  import ContentLinkBlockAudio from "@app/components/ContentLinkBlockAudio.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
   import {pushModal} from "@app/modal"
@@ -78,7 +79,7 @@
 {#if isRoomOrRelay}
   <ContentLinkUrl {url} class="link-content whitespace-nowrap" />
 {:else if isAudio}
-  <audio controls src={url} preload="metadata" class="my-2 w-full max-w-xl"></audio>
+  <ContentLinkBlockAudio {url} {event} />
 {:else if isVideo}
   <Link {external} {href} class="my-2 block">
     <video

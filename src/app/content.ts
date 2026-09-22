@@ -16,6 +16,7 @@ import {
   ZAP_GOAL,
   ZAP_RECEIPT,
   matchTags,
+  decryptFile,
   tagSpec,
   tagValue,
 } from "@welshman/util"
@@ -55,6 +56,28 @@ export const getUrlContentType = (url: string, event: TrustedEvent) => {
   const tags = getUrlTags(url, event)
 
   return tagValue(tagSpec("m"), tags) || tagValue(tagSpec("file-type"), tags) || ""
+}
+
+export const decryptUrl = async (url: string, event: TrustedEvent, signal?: AbortSignal) => {
+  const tags = getUrlTags(url, event)
+  const algorithm = tagValue(tagSpec("encryption-algorithm"), tags)
+  const key = tagValue(tagSpec("decryption-key"), tags)
+  const nonce = tagValue(tagSpec("decryption-nonce"), tags)
+
+  if (algorithm === "aes-gcm" && key && nonce) {
+    const response = await fetch(url, {signal})
+    if (!response.ok) {
+      throw new Error(`Attachment download failed (HTTP ${response.status}).`)
+    }
+    const ciphertext = new Uint8Array(await response.arrayBuffer())
+    const data = await decryptFile({ciphertext, key, nonce, algorithm})
+    signal?.throwIfAborted()
+    return URL.createObjectURL(
+      new Blob([new Uint8Array(data)], {type: getUrlContentType(url, event)}),
+    )
+  }
+
+  return url
 }
 
 export const makeCommentFilter = (kinds: number[], extra: Filter = {}) => ({
