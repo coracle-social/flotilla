@@ -2,6 +2,7 @@ import {writable} from "svelte/store"
 import type {Unsubscriber} from "svelte/store"
 import {deleteDB} from "idb"
 import {SecureStorage} from "@aparajita/capacitor-secure-storage"
+import {Capacitor, registerPlugin} from "@capacitor/core"
 import {Preferences} from "@capacitor/preferences"
 import {WEEK, ago, noop, now, on, throttle, batch, call, makeQueue} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
@@ -77,22 +78,50 @@ export const kv = call(() => {
   return {get, set, clear}
 })
 
+const secretStorage =
+  Capacitor.getPlatform() === "electron"
+    ? call(() => {
+        const plugin = registerPlugin<{
+          get(options: {key: string}): Promise<{value?: string}>
+          set(options: {key: string; value: string}): Promise<void>
+          remove(options: {key: string}): Promise<void>
+          clear(): Promise<void>
+        }>("DesktopSecureStorage")
+
+        return {
+          get: async (key: string) => (await plugin.get({key})).value,
+          set: (key: string, value: string | undefined) =>
+            value === undefined ? plugin.remove({key}) : plugin.set({key, value}),
+          clear: () => plugin.clear(),
+        }
+      })
+    : {
+        get: async (key: string) => {
+          let value = await SecureStorage.getItem(key)
+
+          if (!value) {
+            const legacy = await Preferences.get({key})
+
+            if (legacy.value) {
+              value = legacy.value
+              await SecureStorage.setItem(key, legacy.value)
+              await Preferences.remove({key})
+            }
+          }
+
+          return value
+        },
+        // Android's SecureStorage rejects undefined
+        set: (key: string, value: string | undefined) =>
+          value === undefined ? SecureStorage.removeItem(key) : SecureStorage.setItem(key, value),
+        clear: () => SecureStorage.clear(),
+      }
+
 export const ss = call(() => {
   const enqueue = makeQueue()
 
   const get = async <T>(key: string): Promise<T | undefined> => {
-    let value = await SecureStorage.getItem(key)
-
-    if (!value) {
-      const legacy = await Preferences.get({key})
-
-      if (legacy.value) {
-        value = legacy.value
-        await SecureStorage.setItem(key, legacy.value)
-        await Preferences.remove({key})
-      }
-    }
-
+    const value = await secretStorage.get(key)
     if (!value) {
       return undefined
     }
@@ -104,17 +133,12 @@ export const ss = call(() => {
     }
   }
 
-  // Android's SecureStorage rejects undefined
   const set = async <T>(key: string, value: T): Promise<void> => {
-    await enqueue(() =>
-      value === undefined
-        ? SecureStorage.removeItem(key)
-        : SecureStorage.setItem(key, JSON.stringify(value)),
-    )
+    await enqueue(() => secretStorage.set(key, JSON.stringify(value)))
   }
 
   const clear = async () => {
-    await enqueue(() => SecureStorage.clear())
+    await enqueue(() => secretStorage.clear())
   }
 
   return {get, set, clear}

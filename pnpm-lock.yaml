@@ -56,6 +56,9 @@ importers:
       '@capawesome/capacitor-electron':
         specifier: 0.1.1
         version: 0.1.1(@capacitor/core@8.3.4)
+      '@flotilla/desktop-secure-storage':
+        specifier: file:packages/desktop-secure-storage
+        version: file:packages/desktop-secure-storage
       '@flotilla/desktop-window':
         specifier: file:packages/desktop-window
         version: file:packages/desktop-window
@@ -1144,6 +1147,9 @@ packages:
   '@eslint/plugin-kit@0.7.2':
     resolution: {integrity: sha512-+CNAzxglkrpNf/kKywqQfk74QjtceuOE7Qm+AF8miRvPF/wmmK5+OJOgVh3AVTT3RP2mH3+FOaxlE5v72owk0A==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
+
+  '@flotilla/desktop-secure-storage@file:packages/desktop-secure-storage':
+    resolution: {directory: packages/desktop-secure-storage, type: directory}
 
   '@flotilla/desktop-window@file:packages/desktop-window':
     resolution: {directory: packages/desktop-window, type: directory}
@@ -6430,6 +6436,8 @@ snapshots:
     dependencies:
       '@eslint/core': 1.2.1
       levn: 0.4.1
+
+  '@flotilla/desktop-secure-storage@file:packages/desktop-secure-storage': {}
 
   '@flotilla/desktop-window@file:packages/desktop-window': {}
 

@@ -4,6 +4,19 @@ import {tmpdir} from "node:os"
 import {join, resolve} from "node:path"
 import {_electron, expect, test} from "@playwright/test"
 
+declare global {
+  interface Window {
+    Capacitor: {
+      Plugins: {
+        DesktopSecureStorage: {
+          get(options: {key: string}): Promise<{value?: string}>
+          set(options: {key: string; value: string}): Promise<void>
+        }
+      }
+    }
+  }
+}
+
 test("the desktop app renders, navigates, and keeps external pages outside", async () => {
   const profile = await mkdtemp(join(tmpdir(), "flotilla-desktop-"))
 
@@ -11,7 +24,7 @@ test("the desktop app renders, navigates, and keeps external pages outside", asy
     const packaged = process.env.FLOTILLA_DESKTOP_EXECUTABLE
     const executablePath: string =
       packaged || createRequire(import.meta.url)(resolve("electron/node_modules/electron"))
-    const app = await _electron.launch({
+    let app = await _electron.launch({
       executablePath,
       // Chromium refuses to start as root with its sandbox on, which is what a CI container is.
       chromiumSandbox: packaged ? true : process.getuid?.() !== 0,
@@ -118,6 +131,40 @@ test("the desktop app renders, navigates, and keeps external pages outside", asy
       })
       await expect(page.locator("html")).toHaveAttribute("data-csp-violation", "script-src-elem")
       await expect(page.locator("html")).not.toHaveAttribute("data-inline-script-executed")
+
+      if (packaged) {
+        const contract = await app.evaluate(async ({safeStorage}) => ({
+          available: await safeStorage.isAsyncEncryptionAvailable(),
+          decrypted: await safeStorage.decryptStringAsync(
+            await safeStorage.encryptStringAsync("api-contract"),
+          ),
+        }))
+        expect(contract.available).toBe(true)
+        expect(contract.decrypted.result).toBe("api-contract")
+        expect(typeof contract.decrypted.shouldReEncrypt).toBe("boolean")
+        const fixture = "packaged-desktop-secret"
+        await page.evaluate(async value => {
+          await window.Capacitor.Plugins.DesktopSecureStorage.set({key: "session", value})
+        }, fixture)
+        expect((await readFile(join(profile, "secure-storage.bin"))).includes(fixture)).toBe(false)
+
+        await app.close()
+        app = await _electron.launch({
+          executablePath,
+          chromiumSandbox: true,
+          args: [`--user-data-dir=${profile}`],
+        })
+        await expect
+          .poll(async () => {
+            const relaunched = app
+              .windows()
+              .find(candidate => candidate.url().startsWith("capacitor-electron://"))
+            return relaunched?.evaluate(async () =>
+              window.Capacitor.Plugins.DesktopSecureStorage.get({key: "session"}),
+            )
+          })
+          .toEqual({value: fixture})
+      }
     } finally {
       await app.close()
     }

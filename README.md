@@ -78,11 +78,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for conventions and workflow.
 ### Desktop development (Linux)
 
 The Electron target and its unsigned packages are for development and testing. Release publishing
-and auto-updates are not configured.
+and auto-updates are not configured. Desktop secrets are encrypted using the OS keyring or keychain.
+If protected storage is unavailable or unreadable, the app warns and keeps secrets only in
+memory until it closes, leaving the saved file untouched. Unlock or configure the OS keyring
+and restart to restore persistence. Linux’s insecure `basic_text` backend is never used.
 
-**Use disposable accounts only.** The secure-storage plugin falls back to unencrypted
-`localStorage` on desktop, so it is not secure credential or private-key storage. Packages must
-remain development-only until OS-protected secret storage and release signing are addressed.
+**Use disposable accounts only with unsigned development packages.** Production distribution
+still requires release signing and publishing configuration.
 
 The Electron subproject installs separately, so ordinary web and mobile installs don't download
 Electron:

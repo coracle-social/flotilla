@@ -1,0 +1,14 @@
+{
+  "name": "@flotilla/desktop-secure-storage",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./electron/dist/plugin.mjs": "./electron/dist/plugin.mjs"
+  },
+  "capacitor": {
+    "electron": {
+      "src": "electron"
+    }
+  }
+}
