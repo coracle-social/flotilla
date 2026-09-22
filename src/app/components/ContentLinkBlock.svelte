@@ -130,6 +130,6 @@
       </div>
     </Link>
   {:catch}
-    <ContentLinkUrl {url} class="link-content whitespace-nowrap" />
+    <ContentLinkUrl {url} class="link-content link-content--wrap" />
   {/await}
 {/if}

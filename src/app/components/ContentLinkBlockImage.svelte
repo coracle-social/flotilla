@@ -71,7 +71,7 @@
 </script>
 
 {#if hasError}
-  <a href={url} class="link-content whitespace-nowrap">
+  <a href={url} class="link-content link-content--wrap">
     <Icon icon={LinkRound} size={3} class="inline-block" />
     {displayUrl(url)}
   </a>

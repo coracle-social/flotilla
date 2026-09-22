@@ -394,6 +394,11 @@ body.keyboard-open .room {
   border-radius: 3px;
 }
 
+.link-content--wrap {
+  @apply whitespace-normal;
+  overflow-wrap: anywhere;
+}
+
 /* welshman/content */
 .welshman-content a {
   @apply text-primary cursor-pointer underline underline-offset-2;

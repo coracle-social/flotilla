@@ -178,7 +178,7 @@
     </Card>
   {:else}
     <div
-      class="overflow-hidden text-ellipsis wrap-break-word"
+      class="overflow-hidden text-ellipsis wrap-anywhere"
       style={expandBlock ? "mask-image: linear-gradient(0deg, transparent 0px, black 100px)" : ""}>
       {#each shortContent as parsed, i (i)}
         {#if isCommand(parsed)}
