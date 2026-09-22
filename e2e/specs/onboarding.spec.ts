@@ -100,36 +100,7 @@ test("US-002 sign up by generating a new key", async ({seed, visit}) => {
   await page.locator('input[type="text"]').fill("Nova Tester")
   await page.getByRole("button", {name: "Create Account"}).click()
 
-  await expect(page.getByRole("heading", {name: "Your Keys are Ready!"})).toBeVisible()
-
-  const continueButton = page.getByRole("button", {name: "Continue"})
-  const password = page.locator('input[type="password"]')
-
-  await expect(continueButton).toBeDisabled()
-
-  await page.getByRole("button", {name: "I want to download an encrypted version"}).click()
-  await password.fill("hunter2")
-  await page.getByRole("button", {name: "Download my key"}).click()
-
-  await expect(page.getByRole("alert")).toContainText(
-    "Your password must be at least 12 characters long.",
-  )
-  await expect(continueButton).toBeDisabled()
-
-  await password.fill("correct horse battery staple")
-
-  const download = page.waitForEvent("download")
-
-  await page.getByRole("button", {name: "Download my key"}).click()
-
-  const contents = await readFile(await (await download).path(), "utf8")
-
-  expect(contents).toContain("ncryptsec1")
-  expect(contents).not.toContain("nsec1")
-
-  await expect(continueButton).toBeEnabled()
-  await continueButton.click()
-
+  await expect(page.getByRole("heading", {name: "Backup your Key"})).toHaveCount(0)
   await expect(page.getByRole("heading", {name: "You're all set!"})).toBeVisible()
 
   await page.getByRole("button", {name: "Go to Dashboard"}).click()
@@ -138,6 +109,7 @@ test("US-002 sign up by generating a new key", async ({seed, visit}) => {
   await expect(page.locator(".primary-nav")).toBeVisible()
   await expect(page.getByRole("heading", {name: "You're all set!"})).toHaveCount(0)
   await expect(gate(page)).toHaveCount(0)
+  await expect(page.getByText("Back Up Your Key")).toBeVisible()
 
   // A space's nav item is a button rather than a link — PrimaryNavItemSpace passes an onclick, and
   // PrimaryNavItem renders a Button whenever it has one — so it is addressed by the tooltip it
@@ -151,6 +123,58 @@ test("US-002 sign up by generating a new key", async ({seed, visit}) => {
   await openSettings(page)
 
   await expect(page.getByText("Nova Tester")).toBeVisible()
+
+  await page.goto("/home")
+  await expect(page.getByText("Back Up Your Key")).toBeVisible()
+
+  await page.reload()
+
+  await expect(page.getByText("Back Up Your Key")).toBeVisible()
+
+  const backupCheck = page.getByRole("group", {name: "Back Up Your Key"})
+
+  await page.getByRole("button", {name: "Apply all recommendations"}).click()
+  await expect(page.getByRole("heading", {name: "Backup your Key"})).toBeVisible()
+  await page.getByRole("button", {name: "Go back"}).click()
+  await expect(backupCheck).toBeVisible()
+
+  await backupCheck.getByRole("button", {name: "Back Up"}).click()
+  await expect(page.getByRole("heading", {name: "Backup your Key"})).toBeVisible()
+  await page.getByRole("button", {name: "Go back"}).click()
+  await expect(page.getByText("Back Up Your Key")).toBeVisible()
+
+  await backupCheck.getByRole("button", {name: "Back Up"}).click()
+
+  const doneButton = page.getByRole("button", {name: "Done"})
+  const password = page.locator('input[type="password"]')
+
+  await page.getByRole("button", {name: "I want to download an encrypted version"}).click()
+  await password.fill("hunter2")
+  await page.getByRole("button", {name: "Download my key"}).click()
+
+  await expect(page.getByRole("alert")).toContainText(
+    "Your password must be at least 12 characters long.",
+  )
+  await expect(doneButton).toBeDisabled()
+
+  await password.fill("correct horse battery staple")
+
+  const download = page.waitForEvent("download")
+
+  await page.getByRole("button", {name: "Download my key"}).click()
+
+  const contents = await readFile(await (await download).path(), "utf8")
+
+  expect(contents).toContain("ncryptsec1")
+  expect(contents).not.toContain("nsec1")
+
+  await expect(doneButton).toBeEnabled()
+  await doneButton.click()
+
+  await expect(page.getByText("Back Up Your Key")).toHaveCount(0)
+  await page.reload()
+  await expect(page.locator(".primary-nav")).toBeVisible()
+  await expect(page.getByText("Back Up Your Key")).toHaveCount(0)
 })
 
 test("US-003 log in with an existing private key", async ({seed, visit}) => {
@@ -166,6 +190,7 @@ test("US-003 log in with an existing private key", async ({seed, visit}) => {
 
   await logInWithKey(withNsec, nsecFor(users.alice))
   await expect(withNsec.locator(".primary-nav")).toBeVisible()
+  await expect(withNsec.getByText("Back Up Your Key")).toHaveCount(0)
   await openSettings(withNsec)
   await expect(npubField(withNsec)).toHaveValue(aliceNpub)
 
@@ -173,6 +198,7 @@ test("US-003 log in with an existing private key", async ({seed, visit}) => {
 
   await logInWithKey(withHex, users.alice.secret)
   await expect(withHex.locator(".primary-nav")).toBeVisible()
+  await expect(withHex.getByText("Back Up Your Key")).toHaveCount(0)
   await openSettings(withHex)
   await expect(npubField(withHex)).toHaveValue(aliceNpub)
 
@@ -201,6 +227,7 @@ test("US-003 log in with an existing private key", async ({seed, visit}) => {
   await submit.click()
 
   await expect(withNcryptsec.locator(".primary-nav")).toBeVisible()
+  await expect(withNcryptsec.getByText("Back Up Your Key")).toHaveCount(0)
   await openSettings(withNcryptsec)
   await expect(npubField(withNcryptsec)).toHaveValue(aliceNpub)
 

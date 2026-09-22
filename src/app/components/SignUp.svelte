@@ -1,6 +1,7 @@
 <script lang="ts">
   import cx from "classnames"
   import type {ClientOptions} from "@pomade/core"
+  import {assoc} from "@welshman/lib"
   import {makeSecret, RELAYS, MESSAGING_RELAYS, makeEvent} from "@welshman/util"
   import {Profile} from "@welshman/domain"
   import {Thunks, nip01, publish, toSession} from "@welshman/app"
@@ -13,7 +14,6 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import LogIn from "@app/components/LogIn.svelte"
-  import SignUpKey from "@app/components/SignUpKey.svelte"
   import SignUpEmail from "@app/components/SignUpEmail.svelte"
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import type {ProfileValues} from "@app/components/ProfileEditForm.svelte"
@@ -27,6 +27,7 @@
     DEFAULT_SPACES,
   } from "@app/env"
   import {setChecked} from "@app/notifications"
+  import {forceHealthChecks} from "@app/healthChecks"
   import {loginWithPomade} from "@app/pomade"
   import {pushModal, clearModals} from "@app/modal"
   import {app, domain, login, roomLists} from "@app/core"
@@ -89,14 +90,14 @@
       },
     },
     nostr: {
-      start: () => pushModal(SignUpProfile, {next: flows.nostr.key, step: 1, totalSteps: 3}),
-      key: () => pushModal(SignUpKey, {next: flows.nostr.complete, step: 2, totalSteps: 3}),
+      start: () => pushModal(SignUpProfile, {next: flows.nostr.complete, step: 1, totalSteps: 2}),
       complete: () =>
-        pushModal(SignUpComplete, {next: flows.nostr.finalize, step: 3, totalSteps: 3}),
+        pushModal(SignUpComplete, {next: flows.nostr.finalize, step: 2, totalSteps: 2}),
       finalize: async () => {
         const secret = getKey<string>("signup.secret")!
 
         await login(toSession(nip01, {secret}))
+        forceHealthChecks.update(assoc("backup-key", true))
         await completeSignup()
       },
     },

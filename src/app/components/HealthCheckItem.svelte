@@ -14,7 +14,10 @@
   const apply = () => $healthChecks.apply(healthCheck)
 </script>
 
-<div class="flex items-start justify-between gap-3 px-4 py-3">
+<div
+  role="group"
+  aria-label={healthCheck.title}
+  class="flex items-start justify-between gap-3 px-4 py-3">
   <div class="flex min-w-0 flex-col gap-1">
     <strong class="text-sm">{healthCheck.title}</strong>
     <p class="text-sm opacity-75">{healthCheck.description}</p>

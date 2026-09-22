@@ -66,7 +66,7 @@
       const ncryptsec = encrypt(hexToBytes(secret), password)
       instructions = `
       This file contains a backup of your Nostr secret key, downloaded from ${PLATFORM_NAME} and encrypted using
-      a password you chose when you signed up.
+      a password you chose when you backed up your key.
 
       ${sharedCopy}
 
@@ -95,15 +95,15 @@
 
     try {
       await downloadText("Nostr Secret Key.txt", cleanupCopy(instructions))
+      didDownload = true
     } catch (e) {
       // Dismissing the native share sheet rejects with "Share canceled" — leave
       // the flow gated so the user can try again rather than showing an error.
       if (!errorMessage(e).toLowerCase().includes("cancel")) {
+        console.error(e)
         pushToast({theme: "error", message: "We couldn't save your key. Please try again."})
       }
     }
-
-    didDownload = true
   }
 
   const onPasswordChange = () => {
@@ -123,7 +123,7 @@
 <Modal tag="form" onsubmit={preventDefault(next)}>
   <ModalBody>
     <ModalHeader>
-      <ModalTitle>Your Keys are Ready!</ModalTitle>
+      <ModalTitle>Backup your Key</ModalTitle>
     </ModalHeader>
     <p>
       A cryptographic key pair has two parts: your <strong>public key</strong> identifies your

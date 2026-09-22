@@ -48,12 +48,16 @@ key in the app, so that I can start participating without an external tool.
 
 Acceptance:
 
-- Entering a display name advances to a key-backup step whose "Continue" button
-  stays disabled until a key file has been downloaded.
-- Choosing the encrypted download requires a password of at least 12 characters
-  and produces a file containing an ncryptsec rather than a plain nsec.
+- Entering a display name advances directly to the completion step without showing
+  the key-backup modal.
 - Finishing the flow logs the new user in, dismisses the dialog, and lands on
   the dashboard with the platform's default space visible.
+- The dashboard shows a pending "Back Up Your Key" health check until the existing
+  backup flow completes successfully; leaving the modal keeps the check pending.
+- Reloading preserves both the pending reminder and a completed backup.
+- Applying all recommendations opens the backup flow alongside the automatic relay fixes.
+- Choosing the encrypted download requires a password of at least 12 characters
+  and produces a file containing an ncryptsec rather than a plain nsec.
 - The display name entered during signup appears on the new user's own profile.
 
 ### US-003 — Log in with an existing private key
@@ -68,6 +72,7 @@ Acceptance:
 - Pasting an ncryptsec reveals a password field: the correct password logs in, a
   wrong one shows an error and stays logged out.
 - Text that is not a valid key leaves the submit button disabled.
+- Logging in with an existing private key does not enable the "Back Up Your Key" health check.
 - bob logging in with his own key in a separate context sees his own identity,
   not alice's.
 

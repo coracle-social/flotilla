@@ -31,7 +31,7 @@
     </p>
   {:else}
     <div class="flex flex-col divide-y divide-line border-t border-line">
-      {#each $pending as healthCheck (healthCheck.title)}
+      {#each $pending as healthCheck (healthCheck.id)}
         <HealthCheckItem {healthCheck} />
       {/each}
       {#if $pending.length > 1}

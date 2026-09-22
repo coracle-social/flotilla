@@ -41,8 +41,8 @@
       <ModalTitle>You're all set!</ModalTitle>
     </ModalHeader>
     <p>
-      You've created your profile, saved your keys, and now you're ready to start chatting — all
-      without asking permission!
+      You've created your profile, and now you're ready to start chatting — all without asking
+      permission!
     </p>
     <p>
       From your dashboard, you can use invite links, discover community spaces, and keep up-to-date

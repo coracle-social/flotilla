@@ -33,6 +33,7 @@
   import {kv, ss, storage} from "@app/storage"
   import {device} from "@app/device"
   import {userSettingsValues, notificationSettings} from "@app/settings"
+  import {forceHealthChecks} from "@app/healthChecks"
   import {setupShareIntents, shareFromNative} from "@app/share"
   import {shouldUnwrap, syncApplicationData} from "@app/sync"
   import * as env from "@app/env"
@@ -192,6 +193,11 @@
       sync({
         key: "notificationState",
         store: pushState,
+        storage: kv,
+      }),
+      sync({
+        key: "forceHealthChecks",
+        store: forceHealthChecks,
         storage: kv,
       }),
     ])
