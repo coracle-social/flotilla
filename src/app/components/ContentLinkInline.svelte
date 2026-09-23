@@ -21,11 +21,11 @@
   <!-- Use a real link so people can copy the href -->
   <a
     href={url}
-    class="link-content link-content--wrap"
+    class="link-content whitespace-normal wrap-anywhere"
     onclick={stopPropagation(preventDefault(expand))}>
     <Icon icon={LinkRound} size={3} class="inline-block" />
     {displayUrl(url)}
   </a>
 {:else}
-  <ContentLinkUrl {url} class="link-content link-content--wrap" />
+  <ContentLinkUrl {url} class="link-content whitespace-normal wrap-anywhere" />
 {/if}

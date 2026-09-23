@@ -129,6 +129,7 @@ callbacks and hot paths.
 - Never hard-code the app's name. The brand is a build-time `VITE_PLATFORM_*` variable, so user-facing copy interpolates `PLATFORM_NAME` from `@app/env`, and `PLATFORM_URL`, `PLATFORM_LOGO`, `PLATFORM_ABOUT` for the rest of it. Each is set by the deployment, so don't write a `"Flotilla"` fallback behind one either.
 - Svelte 5 runes (`$state`, `$derived`, `$effect`) only in UI components
 - TailwindCSS styling with css components customized by theme. See lib/components for examples.
+- A component class goes in `@layer components`, in its own file under `lib/components`. An unlayered rule beats a layered one whatever the specificity, so a class outside the layer can never be overridden by a utility in markup. The third-party overrides in `base.css` stay unlayered. The library defaults they beat are unlayered too.
 - Comments, naming, conditionals and single-use indirection are covered by the Cleanup Pass above.
 - Do not use `any`. If there are type errors related to `unknown`, they are likely because the upstream definition of the data is incorrect.
 - When dynamically building classes, use `cx` from `classnames` rather than embedded ternaries or svelte 4's old `class:` syntax.

@@ -10,4 +10,13 @@
       @apply p-2 sm:p-4;
     }
   }
+
+  /* left edge of the content column, for fixed elements the page cannot position */
+  .left-content {
+    left: var(--sail);
+
+    @media (min-width: 768px) {
+      left: calc(18.5rem + var(--sail));
+    }
+  }
 }

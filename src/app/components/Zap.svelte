@@ -146,7 +146,7 @@
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Send a Zap</ModalTitle>
-      <ModalSubtitle>To <ProfileLink {pubkey} class="text-primary!" /></ModalSubtitle>
+      <ModalSubtitle>To <ProfileLink {pubkey} class="text-primary" /></ModalSubtitle>
     </ModalHeader>
 
     {#if invoice}

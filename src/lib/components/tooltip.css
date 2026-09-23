@@ -41,4 +41,13 @@
   .mobile .tip[data-tip]::before {
     display: none !important;
   }
+
+  /* the host tippy renders its popovers into; see getTippyTarget in lib/html.ts */
+  .tippy-target {
+    @apply z-tooltip pointer-events-none fixed inset-0;
+  }
+
+  .tippy-target > * {
+    @apply pointer-events-auto;
+  }
 }

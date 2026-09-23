@@ -2,7 +2,7 @@
    Design-system entry point (imported once, in src/routes/+layout.svelte).
 
      tailwindcss  — framework + our @theme token registration (via base.css)
-     base.css     — theme-independent structure (components, utilities, base)
+     base.css     — theme-independent structure (base, utilities, integrations)
      clay.css     — clay theme token values ([data-fl-theme="clay"] + dark)
      flat.css     — flat theme token values ([data-fl-theme="flat"] + dark)
      navy.css     — navy theme token values ([data-fl-theme="navy"] + dark)

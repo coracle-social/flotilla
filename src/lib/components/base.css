@@ -189,7 +189,9 @@
 }
 
 /* ----------------------------------------------------------------------------
-   Keyboard-open adjustments
+   Keyboard-open adjustments — unlayered on purpose. Every element carrying
+   .hide-on-keyboard also carries display utilities (flex, md:hidden), and a
+   utility beats @layer components whatever the specificity.
    ---------------------------------------------------------------------------- */
 
 body.keyboard-open {
@@ -246,8 +248,14 @@ body.keyboard-open .room {
 }
 
 /* ----------------------------------------------------------------------------
-   Integrations — rewired onto the shared tokens (unlayered so they win over
-   third-party defaults)
+   Integrations — third-party class names rewired onto the shared tokens.
+
+   These stay unlayered. Every library here ships its own stylesheet outside any
+   cascade layer, and an unlayered rule beats a layered one whatever the
+   specificity, so a layered override would lose to the default it overrides.
+   @welshman/editor sets `.tiptap {min-height: 0}`, which beats a layered
+   `.note-editor .tiptap`. Our own classes go in @layer components, in the file
+   that owns them.
    ---------------------------------------------------------------------------- */
 
 /* tiptap editor */
@@ -388,25 +396,6 @@ body.keyboard-open .room {
   box-shadow: none;
 }
 
-/* link-content (tiptap pill) */
-.link-content {
-  @apply bg-surface-more text-content max-w-full overflow-hidden px-1 text-ellipsis whitespace-nowrap;
-  border-radius: 3px;
-}
-
-.link-content--wrap {
-  @apply whitespace-normal;
-  overflow-wrap: anywhere;
-}
-
-/* welshman/content */
-.welshman-content a {
-  @apply text-primary cursor-pointer underline underline-offset-2;
-}
-.welshman-content-error a {
-  @apply underline;
-}
-
 /* date picker. @svelte-plugins/datepicker renders its own markup, so these class
    names appear nowhere in src/ — don't delete them on a grep. */
 .picker {
@@ -431,12 +420,6 @@ body.keyboard-open .room {
 }
 
 /* tippy popover */
-.tippy-target {
-  @apply z-tooltip pointer-events-none fixed inset-0;
-}
-.tippy-target > * {
-  @apply pointer-events-auto;
-}
 .tippy-box {
   @apply rounded-3xl;
   box-shadow: var(--shadow-lg);
@@ -470,14 +453,4 @@ emoji-picker {
 .tippy-box:has(emoji-picker) {
   overflow: visible;
   max-width: none;
-}
-
-/* content width for fixed elements (sidebar offsets) */
-.left-content {
-  left: var(--sail);
-}
-@media (min-width: 768px) {
-  .left-content {
-    left: calc(18.5rem + var(--sail));
-  }
 }

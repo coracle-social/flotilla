@@ -1,9 +1,22 @@
 @layer components {
-  .link {
+  /* .welshman-content wraps rendered note content, whose links are raw anchors */
+  .link,
+  .welshman-content a {
     @apply text-primary cursor-pointer underline underline-offset-2;
 
     &:hover {
       @apply text-primary-bold;
     }
+  }
+
+  /* an error toast colors its own text, so the link only needs the underline */
+  .welshman-content-error a {
+    @apply underline;
+  }
+
+  /* an inline pill for a link, mention or topic inside rendered content */
+  .link-content {
+    @apply bg-surface-more text-content max-w-full overflow-hidden px-1 text-ellipsis whitespace-nowrap;
+    border-radius: 3px;
   }
 }

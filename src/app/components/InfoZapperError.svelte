@@ -30,7 +30,7 @@
       <ModalTitle>Unable to Zap</ModalTitle>
     </ModalHeader>
     <p>
-      Zapping <ProfileLink {pubkey} class="text-primary!" /> isn't possible right now because
+      Zapping <ProfileLink {pubkey} class="text-primary" /> isn't possible right now because
       {#if $zapper}
         their zap receiver isn't correctly set up.
       {:else}

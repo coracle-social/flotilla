@@ -69,7 +69,8 @@
   .room-pins__message {
     @apply text-primary-content text-sm leading-relaxed;
 
-    :where(.link-content, a, p, span, code) {
+    /* a pill draws its own background, so it keeps its own color */
+    :where(a, p, span, code):not(.link-content) {
       color: inherit;
     }
   }

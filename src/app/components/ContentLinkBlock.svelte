@@ -77,7 +77,7 @@
 </script>
 
 {#if isRoomOrRelay}
-  <ContentLinkUrl {url} class="link-content whitespace-nowrap" />
+  <ContentLinkUrl {url} class="link-content" />
 {:else if isAudio}
   <ContentLinkBlockAudio {url} {event} />
 {:else if isVideo}
@@ -130,6 +130,6 @@
       </div>
     </Link>
   {:catch}
-    <ContentLinkUrl {url} class="link-content link-content--wrap" />
+    <ContentLinkUrl {url} class="link-content whitespace-normal wrap-anywhere" />
   {/await}
 {/if}

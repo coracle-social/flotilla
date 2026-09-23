@@ -46,7 +46,7 @@
 </script>
 
 {#if failed}
-  <a href={url} class="link-content link-content--wrap">{displayUrl(url)}</a>
+  <a href={url} class="link-content whitespace-normal wrap-anywhere">{displayUrl(url)}</a>
 {:else if source}
   <audio controls src={source} preload="metadata" class="my-2 w-full max-w-xl" onerror={onError}
   ></audio>
