@@ -8,7 +8,7 @@
   import {Sync, createSearch} from "@welshman/app"
   import {createScroller, isMobile} from "@lib/html"
   import {fly} from "@lib/transition"
-  import Widget from "@assets/icons/widget-4.svg?dataurl"
+  import Compass from "@assets/icons/compass.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -117,7 +117,7 @@
   <PageBar>
     <div class="flex items-center justify-between gap-4" in:fly>
       <div class="truncate min-w-0 flex items-center gap-2 whitespace-nowrap">
-        <Icon icon={Widget} size={6} />
+        <Icon icon={Compass} size={6} />
         <strong>Spaces</strong>
       </div>
       <div class="flex items-center gap-2">

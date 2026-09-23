@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import Home from "@assets/icons/home.svg?dataurl"
-  import Widget from "@assets/icons/widget-4.svg?dataurl"
+  import Compass from "@assets/icons/compass.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Page from "@lib/components/Page.svelte"
@@ -35,7 +35,7 @@
           Home
         </h1>
         <Link href="/spaces" class="button button-neutral button-sm">
-          <Icon icon={Widget} size={4} />
+          <Icon icon={Compass} size={4} />
           Browse spaces
         </Link>
       </div>
