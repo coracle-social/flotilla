@@ -142,9 +142,10 @@ Wayland docks can identify it. It leaves existing user and system launchers alon
 entry from a development run, and updates the entry when an update renames the AppImage. Windows
 uses the executable's icon resources.
 
-Linux packaging requires Linux. Windows packaging from Linux uses the pinned official
+Linux packaging from macOS and Windows packaging from Linux or macOS use the pinned official
 `electronuserland/builder` Wine image through Docker, mounting only a temporary copy of the prepared
-Electron project. Native addons need a target-OS ABI rebuild and cannot use this cross-build path.
+Electron project. Set `DOCKER=podman` in `.env.local` to use Podman instead. Native addons need a
+target-OS ABI rebuild and cannot use this cross-build path.
 Native Windows preparation needs Bash on PATH, for example Git Bash. DMG creation requires macOS. On
 Linux, `pnpm run package:desktop:macos --dir` prepares unsigned bundles for inspection only, and
 verifies nothing about the macOS runtime, Gatekeeper, or signing.
@@ -206,12 +207,13 @@ run and prints the command to pick up from there.
 | `fdroid` | reruns F-Droid's own preparation and build against the tag in a throwaway worktree |
 | `play` | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft |
 | `ios` | `cap build ios` to an archive and IPA, uploaded with `altool` |
-| `desktop` | `package:desktop:*` for this OS: Linux and Windows from Linux, signed and notarized macOS from a Mac |
+| `desktop` | `package:desktop:*` for this OS: Linux and Windows from Linux, all three from a Mac, with macOS signed and notarized |
 | `gitea` | creates a draft release from the changelog, attaches the APK, desktop packages and update manifests, and publishes it once every platform is there |
 | `zapstore` | `zsp publish zapstore.yaml` |
 
-Linux builds the Linux and Windows packages and a Mac builds the macOS ones, so a release takes a
-run on each, both ending in `gitea`. Gitea's latest release is the desktop update feed, so the release stays a
+A Mac builds every desktop package, the Linux and Windows ones in a container. Linux can't build
+the macOS ones, so a release run from Linux needs a `pnpm release desktop gitea` on a Mac as well.
+Gitea's latest release is the desktop update feed, so the release stays a
 draft, hidden from updaters and Obtainium, until it has the APK and all three `latest*.yml`
 manifests. Each manifest is uploaded after the files it lists. A mobile-only release can't be
 published, so package the desktop apps for every release.

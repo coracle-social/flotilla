@@ -107,8 +107,13 @@ const apkMetadata = async () => {
   return element
 }
 
-const desktopTargets = {darwin: ["macos"], linux: ["linux", "windows"], win32: []}
+const desktopTargets = {
+  darwin: ["macos", "linux", "windows"],
+  linux: ["linux", "windows"],
+  win32: [],
+}
 const hostTargets = desktopTargets[process.platform] ?? []
+const docker = process.env.DOCKER || "docker"
 
 // Gitea's latest release is the desktop update feed, so it only goes public once every platform's
 // manifest is on it
@@ -292,15 +297,16 @@ const steps = [
     missing: () => [
       ...(hostTargets.length > 0 ? [] : [`desktop packaging on ${process.platform}`]),
       ...(existsSync(join(root, "electron/node_modules")) ? [] : ["electron dependencies"]),
-      ...(hostTargets.includes("windows") && !installed("docker") ? ["docker"] : []),
+      ...(hostTargets.includes("windows") && !installed(docker) ? [docker] : []),
       ...(hostTargets.includes("macos")
         ? missingEnv("CSC_NAME", "ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_PATH")
         : []),
     ],
     setup: [
       "Run npm ci --prefix electron. Each platform's packages have to be built on that platform,",
-      "so run pnpm release desktop gitea on the others to add theirs to the same release.",
-      "Linux also cross-builds the Windows installer, which needs docker.",
+      "so on Linux run pnpm release desktop gitea on a Mac to add the macOS ones to the release.",
+      "Linux and macOS build the other platforms' packages in a container, which needs docker,",
+      "or set DOCKER=podman in .env.local.",
       "macOS only installs updates to a signed app, so macOS packages are signed and notarized:",
       "set CSC_NAME to the name of the Developer ID Application certificate in your keychain,",
       "without its prefix, and the ASC_* key the ios step uses notarizes them.",
@@ -324,9 +330,11 @@ const steps = [
         .flat()
         .filter(target => !hostTargets.includes(target))
 
-      followUps.push(
-        `Desktop: ${elsewhere.join(" and ")} packages have to be built on those platforms, then attached with pnpm release desktop gitea`,
-      )
+      if (elsewhere.length > 0) {
+        followUps.push(
+          `Desktop: ${elsewhere.join(" and ")} packages have to be built on those platforms, then attached with pnpm release desktop gitea`,
+        )
+      }
     },
   },
   {

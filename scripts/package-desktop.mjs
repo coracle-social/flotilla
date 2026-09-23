@@ -8,7 +8,11 @@ import {loadEnv} from "vite"
 const root = fileURLToPath(new URL("../", import.meta.url))
 const [target, option, ...rest] = process.argv.slice(2)
 const platforms = {linux: "--linux", windows: "--win", macos: "--mac"}
-const env = {...process.env, ...loadEnv("production", root, "VITE_"), NODE_ENV: "production"}
+const env = {
+  ...process.env,
+  ...loadEnv("production", root, ["VITE_", "DOCKER"]),
+  NODE_ENV: "production",
+}
 
 const run = (command, args, options = {}) =>
   new Promise((resolve, reject) => {
@@ -70,12 +74,13 @@ try {
     // --dir replaces configured targets, including their architectures.
     args.push("--x64", "--arm64")
   }
-  if (target === "windows" && process.platform === "linux") {
+  if (
+    (target === "windows" && process.platform !== "win32") ||
+    (target === "linux" && process.platform !== "linux")
+  ) {
     const files = await readdir(join(root, "electron/vendor"), {recursive: true})
     if (files.some(file => file.endsWith(".node"))) {
-      throw new Error(
-        "Native Electron addons require a Windows ABI rebuild before packaging on Windows",
-      )
+      throw new Error(`Native Electron addons require a rebuild before packaging for ${target}`)
     }
     await mkdir(join(root, "electron/dist"), {recursive: true})
     const directory = await mkdtemp(join(root, "electron/dist/package-"))
@@ -92,7 +97,7 @@ try {
       ]) {
         await cp(join(root, "electron", file), join(directory, "electron", file), {recursive: true})
       }
-      await run("docker", [
+      await run(env.DOCKER || "docker", [
         "run",
         "--rm",
         "--platform",
