@@ -23,12 +23,10 @@
   const goToReplies = () => goToEvent(event)
 </script>
 
-<div class="card card-interactive flex flex-col gap-3">
-  <NoteItem {event} {context} card={false} interactive>
-    <Button class="button button-neutral button-xs rounded-full" onclick={goToReplies}>
-      <Icon icon={Reply} size={4} />
-      {replyCount}
-      {replyCount === 1 ? "reply" : "replies"}
-    </Button>
-  </NoteItem>
-</div>
+<NoteItem {event} {context}>
+  <Button class="button button-neutral button-xs rounded-full" onclick={goToReplies}>
+    <Icon icon={Reply} size={4} />
+    {replyCount}
+    {replyCount === 1 ? "reply" : "replies"}
+  </Button>
+</NoteItem>

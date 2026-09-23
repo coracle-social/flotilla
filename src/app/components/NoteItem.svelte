@@ -13,19 +13,10 @@
     context: FeedContext
     url?: string
     card?: boolean
-    interactive?: boolean
     showEntire?: boolean
   }
 
-  const {
-    url,
-    event,
-    children,
-    context,
-    card = true,
-    interactive = card,
-    showEntire = false,
-  }: Props = $props()
+  const {url, event, children, context, card = true, showEntire = false}: Props = $props()
 </script>
 
 {#snippet body()}
@@ -37,11 +28,11 @@
 {/snippet}
 
 {#if card}
-  <Cv tag={NoteCard} {event} {url} {interactive} class="card card-interactive">
+  <Cv tag={NoteCard} {event} {url} interactive class="card card-interactive">
     {@render body()}
   </Cv>
 {:else}
-  <NoteCard {event} {url} {interactive}>
+  <NoteCard {event} {url}>
     {@render body()}
   </NoteCard>
 {/if}
