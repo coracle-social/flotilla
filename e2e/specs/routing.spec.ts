@@ -3,7 +3,18 @@ import type {TrustedEvent} from "@welshman/util"
 import {RelayMessageType} from "@welshman/net"
 import {Article} from "@welshman/domain"
 import type {Page} from "@playwright/test"
-import {expect, getTranscript, pathPattern, roomPath, spacePath, test, users} from "../harness"
+import {
+  dialog,
+  expect,
+  getTranscript,
+  message,
+  pathPattern,
+  profilePath,
+  roomPath,
+  spacePath,
+  test,
+  users,
+} from "../harness"
 
 // Every page in a space renders one PageContent, so the number added to the document is the number
 // of times the page was built.
@@ -150,6 +161,7 @@ test("takes over the space menu's history entry when you navigate out of it", as
     space.room("garden", {name: "Space Garden"})
     space.join(user.alice, "lounge")
     space.join(user.alice, "garden")
+    space.message(user.alice, "lounge", "the lounge is this way")
   })
 
   const space = scenario.space("space")
@@ -159,18 +171,23 @@ test("takes over the space menu's history entry when you navigate out of it", as
 
   const drawer = page.locator(".drawer")
 
+  await expect(message(page, "the lounge is this way")).toBeVisible()
+
   await page.getByRole("button", {name: "Open space menu"}).click()
   await drawer.getByRole("link", {name: "Space Garden"}).click()
 
   await expect(page).toHaveURL(new RegExp(`${roomPath(space.url, "garden")}$`))
   await expect(drawer).toHaveCount(0)
 
-  // The menu held the entry the room it opened now holds, so one step back is the room it opened
-  // over. Stacked instead, this lands on the menu again.
+  // The menu gave its entry back and the room pushed its own, so one step back is the room the
+  // menu was opened over. Stacked instead, this lands on the menu again. The room's content is
+  // asserted as well as the url, since a back that only rewrites the url passes every assertion
+  // about the address.
   await page.goBack()
 
   await expect(page).toHaveURL(new RegExp(`${roomPath(space.url, "lounge")}$`))
   await expect(drawer).toHaveCount(0)
+  await expect(message(page, "the lounge is this way")).toBeVisible()
 })
 
 test("switches spaces inside the space menu, and out of one it has a page for", async ({
@@ -298,4 +315,39 @@ test("builds a page once when it opens and again when its params change", async 
   ).toBeVisible()
 
   await expectPageBuilds(page, 2)
+})
+
+test("goes back to the room a profile modal was opened over", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("lounge", {name: "Space Lounge"})
+    space.join(user.alice, "lounge")
+    space.join(user.bob, "lounge")
+    space.profile(user.bob, {name: "Bob Barnacle"})
+    space.message(user.bob, "lounge", "anyone seen the anchor")
+  })
+
+  const space = scenario.space("space")
+  const page = await as(users.alice, roomPath(space.url, "lounge"))
+
+  await expect(message(page, "anyone seen the anchor")).toBeVisible()
+
+  // The whole message is a button too, and its accessible name carries the author's, so the
+  // name on its own is the one that opens the profile.
+  await message(page, "anyone seen the anchor")
+    .getByRole("button", {name: "Bob Barnacle", exact: true})
+    .click()
+  await expect(dialog(page, "Profile details")).toBeVisible()
+
+  await page.getByRole("button", {name: "View Full Profile"}).click()
+  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob.pubkey)}$`))
+
+  // The modal gave its entry back before the profile page pushed its own, so one step back is the
+  // room. Replacing that entry instead left SvelteKit with the navigation index the room already
+  // had, and it answered the back by writing the url without building the page again.
+  await page.goBack()
+
+  await expect(page).toHaveURL(new RegExp(`${roomPath(space.url, "lounge")}$`))
+  await expect(message(page, "anyone seen the anchor")).toBeVisible()
 })

@@ -34,15 +34,39 @@ export const getModal = () => last(getModalStack())
 
 export type NavigateOptions = Parameters<typeof goto>[1] & {keepModal?: boolean}
 
-// An open modal owns the current history entry, so a navigation that drops it takes that entry over
-export const navigate = (path: string, {keepModal, ...options}: NavigateOptions = {}) => {
+const popHistory = () =>
+  new Promise(resolve => {
+    addEventListener("popstate", resolve, {once: true})
+
+    history.back()
+  })
+
+// Each open modal owns a history entry, and a navigation that drops them gives those entries back
+// rather than replacing them. SvelteKit reuses its navigation index for a `goto` that replaces, and
+// a back out of the new page would then match the entry underneath and update the url without
+// rendering it.
+const dropModalEntries = async () => {
+  let dropped = false
+
+  while (getModalStack().length > 0) {
+    await popHistory()
+
+    dropped = true
+  }
+
+  return dropped
+}
+
+export const navigate = async (path: string, {keepModal, ...options}: NavigateOptions = {}) => {
   const ids = page.state.modals ?? []
 
   if (keepModal && ids.length > 0) {
     return goto(path, {...options, state: {modals: ids}, replaceState: true})
   }
 
-  return goto(path, {...options, replaceState: options.replaceState || ids.length > 0})
+  const dropped = await dropModalEntries()
+
+  return goto(path, {...options, replaceState: options.replaceState && !dropped})
 }
 
 export const pushModal = (

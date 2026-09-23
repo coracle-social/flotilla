@@ -1,9 +1,20 @@
 <script lang="ts">
   import type {Component, ComponentProps} from "svelte"
   import {mount, unmount, untrack} from "svelte"
+  import {beforeNavigate} from "$app/navigation"
   import Drawer from "@lib/components/Drawer.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
-  import {getModal, getModalStack, popModal} from "@app/modal"
+  import {getModal, getModalStack, navigate, popModal} from "@app/modal"
+
+  // A link inside a modal is SvelteKit's to handle, and it would stack the page it opens on
+  // top of the modal's own history entry. Hand it to `navigate`, which gives that entry back
+  // first.
+  beforeNavigate(navigation => {
+    if (navigation.type === "link" && navigation.to && getModalStack().length > 0) {
+      navigation.cancel()
+      navigate(navigation.to.url.href)
+    }
+  })
 
   const closeModal = () => {
     const modal = getModal()
@@ -80,4 +91,4 @@
 
 <svelte:window onkeydown={onKeyDown} />
 
-<div bind:this={element} data-sveltekit-replacestate="true"></div>
+<div bind:this={element}></div>

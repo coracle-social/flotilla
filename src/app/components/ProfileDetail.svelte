@@ -42,7 +42,7 @@
 
   const back = () => history.back()
 
-  const viewProfile = () => navigate(makeProfilePath(pubkey), {replaceState: true})
+  const viewProfile = () => navigate(makeProfilePath(pubkey))
 
   const sendMessage = () => {
     popModal()

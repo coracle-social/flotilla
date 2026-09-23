@@ -198,8 +198,9 @@ return a `Command`, so `.then(publish)` is usually all you need.
 - Import from `app/modal.ts` or `app/toast.ts`
 - Pass component objects with parameters
 - Use `$state.snapshot` if calling component might unmount
-- Navigate with `navigate` from `app/modal.ts` rather than `goto` — an open modal owns the current
-  history entry, so a navigation that drops it replaces that entry instead of stacking on it
+- Navigate with `navigate` from `app/modal.ts` rather than `goto` — an open modal owns a history
+  entry, and a navigation that drops the modal gives that entry back before it pushes its own.
+  A plain `<a>` inside a modal goes the same way, through `ModalContainer`'s `beforeNavigate`
 - Pass `keepModal` to `navigate` to change the page under a modal and leave it open
 
 ## Development Workflow
