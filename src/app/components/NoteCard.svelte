@@ -16,23 +16,40 @@
     children?: Snippet
     minimal?: boolean
     hideProfile?: boolean
+    interactive?: boolean
     url?: string
     class?: string
     style?: string
   }
 
-  const {event, children, minimal = false, hideProfile = false, url, ...restProps}: Props = $props()
+  const {
+    event,
+    children,
+    minimal = false,
+    hideProfile = false,
+    interactive = false,
+    url,
+    ...restProps
+  }: Props = $props()
 
   const ignoreMute = () => {
     muted = false
   }
 
-  const goToNote = () => goToEvent(event)
+  const goToNote = () => {
+    // Releasing a text selection inside the card is not a click on it.
+    if (!window.getSelection()?.toString()) {
+      goToEvent(event)
+    }
+  }
 
   let muted = $state($isEventMuted(event))
 </script>
 
-<div {...restProps} class={cx("flex flex-col gap-2", restProps.class)}>
+<div
+  {...restProps}
+  onclick={interactive ? goToNote : undefined}
+  class={cx("flex flex-col gap-2", restProps.class)}>
   {#if muted}
     <div class="flex items-center justify-between">
       <div class="flex gap-2 relative">

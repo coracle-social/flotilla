@@ -8,6 +8,7 @@ import {
   EVENT_TIME,
   LONG_FORM,
   MESSAGE,
+  NOTE,
   PINBOARD,
   POLL,
   THREAD,
@@ -223,6 +224,13 @@ export const makeEventPath = (event: TrustedEvent, urls: string[]) => {
         return parentPath
       }
     }
+  }
+
+  // A note belongs to no space, so its path carries the relays it was found on.
+  if (event.kind === NOTE) {
+    const {id, pubkey: author, kind} = event
+
+    return `/notes/${nip19.neventEncode({id, author, kind, relays: urls.slice(0, 3)})}`
   }
 
   return entityLink(nip19.neventEncode({id: event.id, relays: urls}))

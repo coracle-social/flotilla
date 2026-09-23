@@ -1,21 +1,43 @@
-import {derived} from "svelte/store"
-import {noop, pushToMapKey, removeUndefined, shuffle, sortBy, uniqBy} from "@welshman/lib"
+import * as nip19 from "nostr-tools/nip19"
+import {derived, readable} from "svelte/store"
+import {
+  first,
+  noop,
+  pushToMapKey,
+  removeUndefined,
+  shuffle,
+  sortBy,
+  tryCatch,
+  uniq,
+  uniqBy,
+} from "@welshman/lib"
+import type {Maybe} from "@welshman/lib"
 import {
   COMMENT,
+  NOTE,
   addressTags,
+  eventOutbox,
+  fromNostrURI,
   getAddress,
+  getCommentFiltersForRoot,
   getIdAndAddress,
+  getIdFilters,
   hexTags,
+  relays as relaySelections,
+  seen,
   tagSpec,
   tagValues,
   topicTags,
 } from "@welshman/util"
-import type {TrustedEvent} from "@welshman/util"
+import type {EventRef, TrustedEvent} from "@welshman/util"
 import {withGetter} from "@welshman/store"
-import {displayPubkey, getCommentTagValues, getReplyTagValues} from "@welshman/domain"
-import {FollowLists, MuteLists, Profiles} from "@welshman/app"
-import {deriveUserItem, fromApp, profiles, user} from "@app/core"
+import {displayPubkey, getCommentTagValues, getReplyTagValues, getReplyTags} from "@welshman/domain"
+import {Events, FollowLists, MuteLists, Network, Profiles, Router} from "@welshman/app"
+import type {IApp} from "@welshman/app"
+import {deriveUserItem, fromApp, profiles, user, usePlugin} from "@app/core"
 import {DEFAULT_PUBKEYS} from "@app/env"
+
+// People
 
 const profileIndex = fromApp($app => $app.use(Profiles).index.$)
 
@@ -49,11 +71,67 @@ export const bootstrapPubkeys = derived(deriveUserItem(FollowLists), $userFollow
   return userPubkeys.length > 5 ? userPubkeys : [...userPubkeys, ...appPubkeys]
 })
 
+// Pointers
+//
+// How a note is named before it has been loaded: an id, and whatever hints came with it.
+
+export type NotePointer = EventRef & {id: string}
+
+export const decodeNotePointer = (entity: string): Maybe<NotePointer> => {
+  const decoded = tryCatch(() => nip19.decode(fromNostrURI(entity)))
+
+  if (decoded?.type === "nevent") {
+    return {id: decoded.data.id, relays: decoded.data.relays, pubkey: decoded.data.author}
+  }
+
+  if (decoded?.type === "note") {
+    return {id: decoded.data}
+  }
+}
+
+// Structure
+//
+// The shape of a conversation, read off tags alone. Nothing here loads anything.
+
 // Ids and addresses of an event's immediate parents, falling back to its thread roots.
-const getParents = ({kind, tags}: TrustedEvent) => {
+export const getParents = ({kind, tags}: TrustedEvent) => {
   const {roots, replies} = kind === COMMENT ? getCommentTagValues(tags) : getReplyTagValues(tags)
 
   return replies.length > 0 ? replies : roots
+}
+
+// A reply names the note it answers with an `e` tag; a deeper one names the thread root as well.
+// Asking by root is what finds the replies more than one level down.
+export const getThreadFilters = (event: TrustedEvent) => {
+  const roots = tagValues(hexTags("e"), getReplyTags(event.tags).roots)
+
+  return [...getCommentFiltersForRoot([event]), {kinds: [NOTE], "#e": uniq([event.id, ...roots])}]
+}
+
+// Everything hanging off a note, however deep. A reply names only the event directly above it, so
+// the set grows a generation at a time out of whatever has been loaded.
+export const getDescendants = (root: TrustedEvent, events: TrustedEvent[]) => {
+  const values = new Set(getIdAndAddress(root))
+  const descendants: TrustedEvent[] = []
+
+  let growing = true
+
+  while (growing) {
+    growing = false
+
+    for (const event of events) {
+      if (!values.has(event.id) && getParents(event).some(value => values.has(value))) {
+        for (const value of getIdAndAddress(event)) {
+          values.add(value)
+        }
+
+        descendants.push(event)
+        growing = true
+      }
+    }
+  }
+
+  return descendants
 }
 
 export type CommentNode = {
@@ -74,16 +152,16 @@ export const buildCommentTree = (root: TrustedEvent, comments: TrustedEvent[]) =
 
   // Nothing stops a comment from naming several parents, which would let the tree cycle, so
   // walk down from the root and keep each comment at the first place it turns up.
-  const seen = new Set<string>()
+  const seenIds = new Set<string>()
 
   const build = (parent: TrustedEvent): CommentNode[] => {
     const children = uniqBy(
       e => e.id,
       getIdAndAddress(parent).flatMap(value => byParent.get(value) ?? []),
-    ).filter(e => !seen.has(e.id))
+    ).filter(e => !seenIds.has(e.id))
 
     for (const child of children) {
-      seen.add(child.id)
+      seenIds.add(child.id)
     }
 
     return children.map(comment => ({comment, children: build(comment)}))
@@ -95,14 +173,16 @@ export const buildCommentTree = (root: TrustedEvent, comments: TrustedEvent[]) =
   // or a parent that failed to load — so adopt whatever's left rather than dropping it.
   // `comments` is oldest first, so a parent is always adopted before its own children.
   for (const comment of comments) {
-    if (!seen.has(comment.id)) {
-      seen.add(comment.id)
+    if (!seenIds.has(comment.id)) {
+      seenIds.add(comment.id)
       nodes.push({comment, children: build(comment)})
     }
   }
 
   return sortBy(node => node.comment.created_at, nodes)
 }
+
+// Muting
 
 export const isEventMuted = withGetter(
   derived([user, deriveUserItem(MuteLists)], ([$user, $muteList]) => {
@@ -155,3 +235,60 @@ export const isEventMuted = withGetter(
     }
   }),
 )
+
+// Loading
+//
+// The only part that goes to the network: where a note lives, and the stores a page reads it
+// and its conversation from.
+
+export class Notes {
+  constructor(private readonly app: IApp) {}
+
+  // Where a note and the conversation around it live: the hints it arrived with, the relays it
+  // has been seen on, and its author's outbox.
+  relays = (ref: EventRef) =>
+    this.app
+      .use(Router)
+      .resolver.relays([...relaySelections(ref.relays ?? []), seen(ref), eventOutbox(ref)])
+
+  load = async (pointer: NotePointer) =>
+    this.app.repository.getEvent(pointer.id) ??
+    first(
+      await this.app
+        .use(Network)
+        .loadComplete({relays: await this.relays(pointer), filters: getIdFilters([pointer.id])}),
+    )
+
+  // The note itself. Its hints are asked by the derived store and its author's relays by the
+  // load beside it, since a pointer carrying no hints would otherwise never resolve.
+  deriveEvent = (pointer: NotePointer) => {
+    this.load(pointer)
+
+    return this.app.use(Events).one(pointer.id, pointer.relays ?? []).$
+  }
+
+  // The conversation below a note. The filters reach past its direct replies to catch deeper
+  // ones, which brings back events belonging to other threads, so the tree is built from what
+  // actually hangs off the note.
+  deriveReplies = (event: TrustedEvent) =>
+    readable<CommentNode[]>([], set => {
+      const filters = getThreadFilters(event)
+      const controller = new AbortController()
+
+      this.relays(event).then(relays =>
+        this.app.use(Network).request({relays, filters, signal: controller.signal}),
+      )
+
+      const unsubscribe = this.app
+        .use(Events)
+        .asc(filters)
+        .$.subscribe($events => set(buildCommentTree(event, getDescendants(event, $events))))
+
+      return () => {
+        controller.abort()
+        unsubscribe()
+      }
+    })
+}
+
+export const notes = usePlugin(Notes)

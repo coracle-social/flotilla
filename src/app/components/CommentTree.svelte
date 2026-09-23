@@ -11,6 +11,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import Content from "@app/components/Content.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
+  import EventReactions from "@app/components/EventReactions.svelte"
   import type {FeedContext} from "@app/feeds"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import {pushModal} from "@app/modal"
@@ -69,21 +70,23 @@
           </span>
         </div>
         <Content showEntire event={node.comment} {url} />
-        {#if url}
-          <div class="mt-1 flex flex-wrap items-center justify-end gap-2">
-            {#if setReplyTo}
-              <Button class="button button-neutral button-xs mr-auto" onclick={reply}>
-                <Icon icon={Reply} size={4} />
-                Reply
-              </Button>
-            {/if}
+        <div class="mt-1 flex flex-wrap items-center justify-end gap-2">
+          {#if setReplyTo}
+            <Button class="button button-neutral button-xs mr-auto" onclick={reply}>
+              <Icon icon={Reply} size={4} />
+              Reply
+            </Button>
+          {/if}
+          {#if url}
             <CommentActions event={node.comment} {url} {context} />
-          </div>
-        {/if}
+          {:else}
+            <EventReactions event={node.comment} {context} reactionClass="tip-left" />
+          {/if}
+        </div>
       </div>
     </div>
   {/if}
-  {#if composing && url}
+  {#if composing}
     <div class="ml-11 pb-3">
       <CommentCompose
         {url}

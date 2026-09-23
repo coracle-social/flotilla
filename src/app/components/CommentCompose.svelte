@@ -2,7 +2,7 @@
   import {writable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
   import {tagSpec, tagValue} from "@welshman/util"
-  import {Comment} from "@welshman/domain"
+  import {Comment, Note} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -20,14 +20,15 @@
   }
 
   type Props = {
-    url: string
     event: TrustedEvent
-    parent?: TrustedEvent
     onCancel: () => void
     onSubmit: () => void
+    parent?: TrustedEvent
+    url?: string
+    noun?: string
   }
 
-  const {url, event, parent, onCancel, onSubmit}: Props = $props()
+  const {event, onCancel, onSubmit, parent, url, noun = "Comment"}: Props = $props()
 
   const h = $derived(tagValue(tagSpec("h"), event.tags))
 
@@ -36,6 +37,34 @@
   const uploading = writable(false)
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
+
+  // A reply to a room event is a NIP-22 comment on the space's own relay. A reply to a kind 1
+  // note is a NIP-10 note, which the outbox model routes to the note's author and back to the
+  // replier's own relays.
+  const renderReply = async (content: string, tags: string[][]) => {
+    if (url) {
+      const eventWriter = writer(Comment)
+        .setContent(content)
+        .addTags(...tags)
+        .setRootFromEvent(event)
+        .setParentFromEvent(parent ?? event)
+        .setProtected(await $relays.hasNip(url, 70))
+
+      // A comment on a room event is a room event too: an untagged one isn't visible to the
+      // group at all, so the relay neither gates it with the room nor deletes it with it.
+      if (h) {
+        eventWriter.setRoom(url, h)
+      }
+
+      return {relays: [url], event: await eventWriter.renderTemplate()}
+    }
+
+    return writer(Note)
+      .setContent(content)
+      .addTags(...tags)
+      .setParent(parent ?? event)
+      .render()
+  }
 
   const submit = async () => {
     if ($uploading || loading) {
@@ -52,24 +81,8 @@
     loading = true
 
     try {
-      const eventWriter = writer(Comment)
-        .setContent(content)
-        .addTags(...ed.storage.nostr.getEditorTags())
-        .setRootFromEvent(event)
-        .setParentFromEvent(parent ?? event)
-        .setProtected(await $relays.hasNip(url, 70))
-
-      // A comment on a room event is a room event too: an untagged one isn't visible to the
-      // group at all, so the relay neither gates it with the room nor deletes it with it.
-      if (h) {
-        eventWriter.setRoom(url, h)
-      }
-
-      const thunk = $thunks.publish({
-        relays: [url],
-        event: await eventWriter.renderTemplate(),
-        delay: getSetting("send_delay"),
-      })
+      const reply = await renderReply(content, ed.storage.nostr.getEditorTags())
+      const thunk = $thunks.publish({...reply, delay: getSetting("send_delay")})
       const error = await thunk.waitForError()
 
       if (error) {
@@ -99,7 +112,7 @@
     onChange,
     content,
     empty,
-    placeholder: parent ? "Write a reply..." : "Write a comment...",
+    placeholder: parent ? "Write a reply..." : `Write a ${noun.toLowerCase()}...`,
   })
 
   $effect(() => {
@@ -137,7 +150,7 @@
         {#if parent}
           Reply
         {:else}
-          Comment
+          {noun}
         {/if}
       </Spinner>
     </Button>
