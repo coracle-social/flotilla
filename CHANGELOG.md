@@ -1,5 +1,31 @@
 # Changelog
 
+# 1.11.1
+
+* Open notes in flotilla
+* Split the DM list into conversations and requests
+* Redesign the goal list and detail pages
+* List a space's admins and edit a member's permissions
+* Let any member curate the space library, and add an option to let members invite
+* Add native app shortcuts for common features
+* Review what a health check will do before applying it
+* Move the key backup reminder out of onboarding
+* Simplify hosting rows on the home page
+* Ask whether to transcribe a recording or send it as a voice note
+* Refine thread detail view
+* Scroll the space sidebar instead of using an overflow menu
+* Re-enter a space on the page it was left on
+* Improve permalinks and message sharing
+* Start new users out with some dashboard activity
+* Improve DM message style
+* Fix long words and links overflowing chat bubbles
+* Fix encrypted audio playback and read out loud
+* Fix unread indicators, modal navigation and several scrolling issues
+* Speed up feeds by not waiting on slow relays
+* Retry auth more proactively to prevent hanging connections
+* Add desktop build pipeline
+* Add Obtainium and F-Droid publishing
+
 # 1.11.0
 
 * Replace the home page with a dashboard of unread conversations, space activity and a network feed

@@ -8,7 +8,7 @@ import {readFileSync, writeFileSync} from "node:fs"
 import {setAndroidVersionAndBuild} from "capacitor-set-version/dist/common/utils-android.js"
 import {setIOSVersionAndBuild} from "capacitor-set-version/dist/common/utils-ios.js"
 
-const arg = process.argv[2] || "patch"
+const arg = process.argv[2]
 
 const pkg = JSON.parse(readFileSync("package.json", "utf-8"))
 
@@ -24,7 +24,7 @@ if (/^\d+\.\d+\.\d+$/.test(arg)) {
   } else if (arg === "patch") {
     version = `${major}.${minor}.${patch + 1}`
   } else {
-    console.error(`Usage: pnpm bump [major|minor|patch|x.y.z] (got "${arg}")`)
+    console.error("Usage: pnpm bump <major|minor|patch|x.y.z>")
     process.exit(1)
   }
 }
