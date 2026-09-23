@@ -1,24 +1,14 @@
 @layer components {
   .chat-bubble {
-    @apply bg-surface-less text-content mx-1 mb-2 flex min-w-[100px] cursor-auto flex-col gap-1 rounded-2xl p-2 text-left lg:max-w-2xl;
+    @apply bg-surface-less text-content border-line mx-1 mb-2 flex min-w-[100px] cursor-auto flex-col gap-1 rounded-2xl border-solid p-2 text-left lg:max-w-2xl;
+    border-width: var(--border-thin);
   }
 
   .chat-bubble--user {
-    @apply bg-primary text-primary-content;
+    @apply border-primary;
   }
 }
 
 [data-fl-theme="clay"] .chat-bubble {
-  @apply border-line border-solid;
-  border-width: var(--border-thin);
   box-shadow: var(--shadow-sm), var(--shadow-inset);
-}
-
-[data-fl-theme="clay"] .chat-bubble--user {
-  /* background-image (not the `background` shorthand) so the opaque bg-primary
-     from the base layer stays as a fallback — matches the primary button's
-     clay fill: gradient, dark hairline border, stronger inset */
-  background-image: linear-gradient(135deg, var(--primary) 0%, var(--primary-soft) 100%);
-  border-color: rgba(0, 0, 0, 0.1);
-  box-shadow: var(--shadow-sm), var(--shadow-inset-strong);
 }
