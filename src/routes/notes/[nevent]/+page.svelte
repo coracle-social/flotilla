@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import NotePage from "@app/components/NotePage.svelte"
-  import {navigate} from "@app/modal"
+  import Spinner from "@lib/components/Spinner.svelte"
+  import {goToHome, goToNote} from "@app/routes"
   import {decodeNotePointer} from "@app/social"
   import type {PageProps} from "./$types"
 
@@ -10,12 +10,12 @@
   const pointer = decodeNotePointer(params.nevent)
 
   onMount(() => {
-    if (!pointer) {
-      navigate("/", {replaceState: true})
+    if (pointer) {
+      goToNote(pointer)
+    } else {
+      goToHome()
     }
   })
 </script>
 
-{#if pointer}
-  <NotePage {pointer} />
-{/if}
+<Spinner />

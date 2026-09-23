@@ -25,7 +25,9 @@ import {entityLink, PLATFORM_URL, PLATFORM_RELAYS} from "@app/env"
 import {decodeRelay, encodeRelay} from "@app/relays"
 import {DM_KINDS} from "@app/content"
 import {navigate, pushModal} from "@app/modal"
+import type {NotePointer} from "@app/social"
 import ChatEnable from "@app/components/ChatEnable.svelte"
+import NoteDetail from "@app/components/NoteDetail.svelte"
 
 // State
 
@@ -267,8 +269,23 @@ export const scrollToEvent = (id: string) => {
   return element instanceof HTMLElement
 }
 
+// A note opens over whatever is on screen rather than on a page of its own.
+export const pushNote = (pointer: NotePointer) => pushModal(NoteDetail, {pointer}, {size: "large"})
+
+// A url resolving to a note has nothing on screen to open it over, so the app goes behind it.
+export const goToNote = (pointer: NotePointer) => {
+  pushNote(pointer)
+
+  return goToHome()
+}
+
 export const goToEvent = (event: TrustedEvent, options: Record<string, any> = {}) => {
   const urls = Array.from(app.get().tracker.getRelays(event.id))
+
+  if (event.kind === NOTE) {
+    return pushNote({id: event.id, pubkey: event.pubkey, relays: urls})
+  }
+
   const path = makeEventPath(event, urls)
 
   if (path.includes("://")) {
