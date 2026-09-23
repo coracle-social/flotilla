@@ -201,6 +201,8 @@ return a `Command`, so `.then(publish)` is usually all you need.
 - Navigate with `navigate` from `app/modal.ts` rather than `goto` — an open modal owns a history
   entry, and a navigation that drops the modal gives that entry back before it pushes its own.
   A plain `<a>` inside a modal goes the same way, through `ModalContainer`'s `beforeNavigate`
+- `navigate` is async and gives those entries back before it goes anywhere, so the page store
+  notifies again at the page being left — state cleared before the call has to survive that
 - Pass `keepModal` to `navigate` to change the page under a modal and leave it open
 
 ## Development Workflow

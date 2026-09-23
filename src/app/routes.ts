@@ -42,22 +42,34 @@ export const highlightedEvent = writable<string | undefined>(undefined)
 // in a space. A store because it's read from markup, unlike lastChatUrl.
 export const lastSpaceUrl = writable<string | undefined>(undefined)
 
-export const setupHistory = () =>
-  page.subscribe($page => {
-    if ($page.params.relay) {
-      const url = decodeRelay($page.params.relay)
+// The page store notifies on a modal opening or closing as well as on a navigation, and a modal
+// leaves the url where it is. Only a changed path is somewhere the user went, and recording an
+// unchanged one puts back a `lastPageBySpaceUrl` entry `forgetSpacePage` has just dropped.
+export const setupHistory = () => {
+  let lastPath: string | undefined
 
-      if ($page.url.pathname !== makeSpacePath(url)) {
-        lastPageBySpaceUrl.set(url, $page.url.pathname)
+  return page.subscribe($page => {
+    const path = $page.url.pathname
+
+    if (path !== lastPath) {
+      lastPath = path
+
+      if ($page.params.relay) {
+        const url = decodeRelay($page.params.relay)
+
+        if (path !== makeSpacePath(url)) {
+          lastPageBySpaceUrl.set(url, path)
+        }
+
+        lastSpaceUrl.set(url)
       }
 
-      lastSpaceUrl.set(url)
-    }
-
-    if ($page.params.chat) {
-      lastChatUrl = $page.url.pathname
+      if ($page.params.chat) {
+        lastChatUrl = path
+      }
     }
   })
+}
 
 // Profiles
 
