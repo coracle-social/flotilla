@@ -1,0 +1,9 @@
+* Open notes in flotilla
+* Split the DM list into conversations and requests
+* Redesign the goal list and detail pages
+* List a space's admins and edit a member's permissions
+* Let any member curate the space library, and add an option to let members invite
+* Add native app shortcuts for common features
+* Review what a health check will do before applying it
+* Move the key backup reminder out of onboarding
+* Simplify hosting rows on the home page

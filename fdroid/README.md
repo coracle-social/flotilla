@@ -42,7 +42,8 @@ F-Droid should run preparation before its source scan, run the asset build after
 and use its configured Gradle runner for `assembleFdroidRelease`.
 
 [`metadata/social.flotilla.fdroid.yml`](metadata/social.flotilla.fdroid.yml) is the recipe to submit
-to `fdroiddata`. Preparation installs dependencies before F-Droid's source scan, so the recipe
+to `fdroiddata`. The listing's text, icon, feature graphic and per-version changelogs come from
+`fastlane/metadata/android/en-US/` at the tag F-Droid builds. Preparation installs dependencies before F-Droid's source scan, so the recipe
 scan-ignores `node_modules`, which holds FLOSS build tools such as esbuild and sharp. The build
 server's JDK is older than the 21 Capacitor needs, so the recipe installs it from Debian trixie,
 along with Node from nodejs.org at a pinned checksum. None of that has been through `fdroid build`

@@ -1,0 +1,3 @@
+Flotilla is a Nostr client for community chat, in the style of Discord. Each space is a relay, and its rooms are NIP-29 groups inside it. It also has encrypted direct messages, threads, a calendar, classifieds and goals.
+
+This build leaves out Firebase, Google Services and analytics. Instead of push notifications it checks your relays in the background about every 15 minutes, and Android may delay that further.

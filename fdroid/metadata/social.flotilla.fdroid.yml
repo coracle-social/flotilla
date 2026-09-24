@@ -8,15 +8,6 @@ IssueTracker: https://gitea.coracle.social/coracle/flotilla/issues
 Changelog: https://gitea.coracle.social/coracle/flotilla/src/branch/master/CHANGELOG.md
 
 AutoName: Flotilla
-Summary: Digital communities for free people
-Description: |-
-  Flotilla is a Nostr client for community chat, in the style of Discord. Each space is
-  a relay, and its rooms are NIP-29 groups inside it. It also has encrypted direct
-  messages, threads, a calendar, classifieds and goals.
-
-  This build leaves out Firebase, Google Services and analytics. Instead of push
-  notifications it checks your relays in the background about every 15 minutes, and
-  Android may delay that further.
 
 RepoType: git
 Repo: https://gitea.coracle.social/coracle/flotilla.git
@@ -34,9 +25,8 @@ Builds:
       - curl -Lo node.tar.xz https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
       - echo "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de  node.tar.xz"
         | sha256sum -c -
-      - tar xJf node.tar.xz
-      - cp -a node-v22.23.3-linux-x64/. /usr/local/
-      - rm -rf node.tar.xz node-v22.23.3-linux-x64
+      - tar xJf node.tar.xz --strip-components=1 -C /usr/local/
+      - rm node.tar.xz
       - corepack enable
     gradle:
       - fdroid
