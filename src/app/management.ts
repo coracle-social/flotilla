@@ -22,8 +22,7 @@ export const deriveSpaceBannedPubkeyItems = (url: string) => {
   return store
 }
 
-// NIP-86 has no way to ask a relay which methods it can hand out — `supportedmethods` answers for
-// the pubkey that signed the request — so the catalog of grantable methods is the client's own.
+// `supportedmethods` answers for the pubkey that signed the request, so this catalog is the client's.
 export const MANAGEMENT_METHOD_GROUPS = [
   {
     label: "Members",
@@ -93,8 +92,7 @@ export type MethodAssigneeItem = {
   methods: string[]
 }
 
-// One store per space rather than per user: the relay answers the same assignments to anyone
-// allowed to ask, and the admin list has to agree with the editor that changes it.
+// The relay answers the same assignments to anyone allowed to ask, so one store per space.
 export const deriveSpaceMethodAssignees = simpleCache(([url]: [url: string]) =>
   writable<MethodAssigneeItem[]>([]),
 )
@@ -129,8 +127,7 @@ const deriveSupportedMethodsForPubkey = simpleCache(([, url]: [pubkey: string, u
   })
 })
 
-// The request is signed as the logged in user and answered for that pubkey, so the methods
-// belong to a user as much as to a url and logging in has to swap them out.
+// The request is answered for the pubkey that signed it, so logging in swaps the methods out.
 export const deriveSpaceSupportedMethods = (url?: string) =>
   fromApp($app => {
     if (url && $app.user) {
@@ -142,14 +139,11 @@ export const deriveSpaceSupportedMethods = (url?: string) =>
 
 // User
 
-// Holding any management method at all is what makes someone staff. Every control the relay
-// answers for is gated on its own method instead, so this is only for the room-level permissions
-// NIP-86 has no method for.
+// Holding any management method makes someone staff, for the room permissions NIP-86 has no method for.
 export const deriveUserIsSpaceStaff = (url?: string) =>
   derived(deriveSpaceSupportedMethods(url), $methods => $methods.length > 0)
 
-// The one identity a space names as its own, in its NIP-11 `pubkey`. Space-wide content with no
-// author to scope it to belongs to that person.
+// The one identity a space names as its own, in its NIP-11 `pubkey`.
 export const deriveUserIsSpaceOwner = (url: string) =>
   derived(
     [user, fromApp($app => $app.use(Relays).one(url))],

@@ -80,8 +80,7 @@
       .slice(0, limit),
   )
 
-  // Suggestions come from relay search, which only knows about relays whose NIP-11
-  // document has been fetched — so seed it from everyone's relay lists.
+  // Relay search only knows relays whose NIP-11 has been fetched, so seed it from everyone's lists.
   onMount(() => {
     const urls = uniq($relayLists.all.get().flatMap(list => list.urls()))
 

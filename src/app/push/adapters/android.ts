@@ -16,8 +16,7 @@ type AndroidFallbackSubscription = {
   ignore: Array<Filter>
 }
 
-// A Session no longer carries the pubkey it belongs to, but the worker needs it to build auth
-// events, so it's passed alongside. Keep this in sync with AndroidPushFallbackWorker.kt.
+// The worker needs the pubkey to build auth events. Keep in sync with AndroidPushFallbackWorker.kt.
 type AndroidPushFallbackState = {
   pubkey?: string
   session?: Session

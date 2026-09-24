@@ -22,12 +22,9 @@ test("opens the space menu in a drawer on a phone", async ({seed, as}) => {
   await expect(drawer.getByRole("link", {name: "General"})).toBeVisible()
 
   // The space rail sits beside the menu inside the panel, so the menu gets what the rail leaves.
-  // Sized to the panel instead, it runs off the right of the screen.
   await expect(drawer.locator(".space-menu")).toBeInViewport({ratio: 1})
 
-  // The panel is full width, so the only way back out is the bottom bar, which the drawer stops
-  // short of rather than covering. Playwright's hit-target check is what proves it: a drawer over
-  // the bar would take the click itself.
+  // The drawer stops short of the bottom bar, and playwright's hit-target check is what proves it.
   const closeButton = page.getByRole("button", {name: "Close space menu"})
 
   await closeButton.click()
@@ -43,8 +40,7 @@ test("opens the space menu in a drawer on a phone", async ({seed, as}) => {
 
   await expect(drawer).toHaveCount(0)
 
-  // The button is the bottom bar's rather than the page's, so it still opens the menu from a page
-  // that is in no space at all, on the last space the reader was in.
+  // The button is the bottom bar's rather than the page's, so it opens on the last space visited.
   await page.goto("/chat")
 
   await page.getByRole("button", {name: "Open space menu"}).click()

@@ -8,11 +8,7 @@ import type {TestUser} from "../keys"
 import {makePublisher} from "./publish"
 import type {Enqueue, ProfileValues, RelayListUrls, SeededEvent, SeededTemplate} from "./publish"
 
-/**
- * One public relay's fixtures. Unlike a space it has no rooms, no members and nothing behind an
- * `h` tag: it holds the things a client reaches for by pubkey rather than by space — a relay list,
- * a follow list, a profile, a note.
- */
+/** One public relay's fixtures. Unlike a space it holds what a client reaches for by pubkey rather than by space. */
 export type SeededOpenRelay = {
   readonly name: OpenRelayName
   // Known before seeding runs, since a relay list has to name the relay a note is seeded on.
@@ -21,14 +17,11 @@ export type SeededOpenRelay = {
   readonly relayLists: SeededEvent[]
   note(user: TestUser, content: string, createdAt?: number): SeededEvent
   profile(user: TestUser, values: ProfileValues, createdAt?: number): SeededEvent
-  // Where this user reads and writes. A relay a scenario expects the client to read from has to
-  // appear in the reader's own list: zooid answers no REQ without nip-42, and Flotilla only
-  // identifies to relays that list names.
+  // A relay a scenario expects the client to read from has to appear in the reader's own list.
   relayList(user: TestUser, urls: RelayListUrls, createdAt?: number): SeededEvent
   follows(user: TestUser, follows: TestUser[], createdAt?: number): SeededEvent
   event(user: TestUser, template: SeededTemplate, createdAt?: number): SeededEvent
-  // This relay's domain kinds, bound to a resolver that answers with its url, the same way a
-  // space's `kind()` does.
+  // This relay's domain kinds, bound to a resolver that answers with its url.
   kind<R extends BaseEventReader, W extends EventWriter<R>, Q extends EventQuery>(
     factory: KindFactory<R, W, Q>,
   ): ConfiguredKind<R, W, Q>

@@ -14,8 +14,7 @@
   let currentTime = $state(0)
   let duration = $state(0)
 
-  // Duration is NaN until the browser has read the metadata, so the scrubber stays at zero
-  // length rather than rendering a range with no end.
+  // Duration is NaN until the browser has read the metadata.
   const scrubbable = $derived(Number.isFinite(duration) ? duration : 0)
 
   const toggle = () => (playing ? audio?.pause() : audio?.play())

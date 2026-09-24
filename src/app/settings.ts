@@ -79,12 +79,7 @@ export const settings = usePlugin(Settings)
 
 export const userSettingsValues = withGetter(fromApp($app => $app.use(Settings).values.$))
 
-// A settings form store that mirrors userSettingsValues until the user starts editing it. Settings
-// are read from an encrypted APP_DATA event, so a cold load of a settings page starts on defaults
-// and the real values only arrive once the event has been fetched and decrypted. The form adopts
-// them once they load — but only while it is still pristine, so edits already in progress aren't
-// stomped, and a save from a form that had reverted to defaults can't write those defaults back over
-// real settings. Bind to `$form.field` and reset with `form.set({...userSettingsValues.get()})`.
+// Settings arrive from an encrypted APP_DATA event, so the form adopts them while it is still pristine.
 export const createSettingsForm = (): Writable<SettingsValues> => {
   let current = {...userSettingsValues.get()}
   let baseline = userSettingsValues.get()
@@ -128,8 +123,7 @@ export const getIsMuted = (settings: SettingsValues, url: string, h: string) =>
 export const deriveIsMuted = (url: string, h: string) =>
   derived(userSettingsValues, $settings => getIsMuted($settings, url, h))
 
-// The stored notification preference, ignoring mute. Toggling notifications writes this, so it is
-// preserved while a room is muted and comes back as it was when the room is unmuted.
+// Ignores mute, so a room's preference survives being muted and comes back as it was.
 export const getNotifyPreference = ({alerts}: SettingsValues, url: string, h?: string) => {
   const pref = alerts.find(spec({url}))
 
@@ -143,10 +137,7 @@ export const getNotifyPreference = ({alerts}: SettingsValues, url: string, h?: s
   return pref.notify ? !pref.exceptions.includes(h) : pref.exceptions.includes(h)
 }
 
-// Muting a room is stronger than turning its notifications off: it forces notifications off and
-// also hides unread badges, which `notifications` handles by dropping muted rooms from the
-// activity it tracks. This is what the room settings toggle displays; it is only editable when the
-// room is not muted, so what it shows and what clicking it writes cannot disagree.
+// Muting forces notifications off, and this is only editable while the room is not muted.
 export const getShouldNotify = (settings: SettingsValues, url: string, h?: string) =>
   h && getIsMuted(settings, url, h) ? false : getNotifyPreference(settings, url, h)
 

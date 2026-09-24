@@ -68,8 +68,7 @@
   const reactions = derived(related, $related => filter(spec({kind: REACTION}), $related))
   const receipts = derived(related, $related => filter(spec({kind: ZAP_RECEIPT}), $related))
 
-  // A receipt can be a zap of either the event or the one it wraps; skip validating
-  // (each zapper's lnurl) entirely when zaps won't even be shown.
+  // Validating each zapper's lnurl is wasted where zaps aren't shown.
   const zaps = hideZaps
     ? readable<Zap[]>([])
     : derived<typeof receipts, Zap[]>(

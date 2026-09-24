@@ -26,8 +26,7 @@ export const emitter = new Emitter()
 
 const modals: Record<string, Modal> = {}
 
-// Open modal ids live in SvelteKit page state (shallow routing): each modal owns a history entry
-// without a navigation, and any `goto` that does not pass `state` along closes them.
+// Modal ids live in SvelteKit page state, so a `goto` that drops `state` closes them.
 export const getModalStack = () => (page.state.modals ?? []).map(id => modals[id]).filter(Boolean)
 
 export const getModal = () => last(getModalStack())
@@ -41,10 +40,7 @@ const popHistory = () =>
     history.back()
   })
 
-// Each open modal owns a history entry, and a navigation that drops them gives those entries back
-// rather than replacing them. SvelteKit reuses its navigation index for a `goto` that replaces, and
-// a back out of the new page would then match the entry underneath and update the url without
-// rendering it.
+// SvelteKit reuses its navigation index for a replacing `goto`, so entries are given back instead.
 const dropModalEntries = async () => {
   let dropped = false
 

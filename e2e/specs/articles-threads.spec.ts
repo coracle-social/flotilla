@@ -26,13 +26,11 @@ type Seeded = {readonly id: string; readonly event: SignedEvent}
 
 const PARTY = "🎉"
 
-// The comment and thread-reply composers are the only forms on their pages carrying a rich text
-// editor.
+// The comment and thread-reply composers are the only forms on their pages with a rich text editor.
 const composerForm = (page: Page) =>
   page.locator("form").filter({has: page.locator(".note-editor")})
 
-// RoomCompose's join is the upload button and then the compose menu, which is where an article or
-// a thread written from inside a room is started.
+// RoomCompose's join is the upload button and then the compose menu.
 const openComposeMenu = (page: Page) =>
   page
     .locator("form")
@@ -56,36 +54,28 @@ const expectReactionRoundTrip = async (page: Page, scope: Locator, opener: Locat
   await expect(pill).toHaveCount(0)
 }
 
-// formatTimestamp renders a short date and a short time, so the date half of it is what a spec can
-// name without pinning a format. Formatted by the browser rather than by node, so the locale and the
-// timezone are the ones the app rendered with — see dayLabel in dms.spec.ts.
+// Formatted by the browser rather than by node, so the locale and the timezone are the app's.
 const shortDate = (page: Page, seconds: number) =>
   page.evaluate(
     ts => new Intl.DateTimeFormat(undefined, {dateStyle: "short"}).format(new Date(ts * 1000)),
     seconds,
   )
 
-// The card is a div carrying an overlay link, so it is found by its component rather than by a
-// role — its own contents include a profile button and the room and action links.
+// The card is a div carrying an overlay link, so it is found by its component rather than a role.
 const articleCards = (page: Page) => page.locator('[data-component="ArticleItem"]')
 
-// A comment is a flat block in the tree rather than a card, so it carries a component marker for
-// the specs to name; the marker sits on the comment's own row, not on its replies.
+// A comment is a flat block rather than a card, and the marker sits on its own row, not its replies.
 const comment = (page: Page, text: string) =>
   page.locator('[data-component="Comment"]').filter({hasText: text})
 
-// Clicked near its top-left corner rather than at its centre: the link is an overlay covering the
-// whole card, and a card whose footer wraps onto a second line puts that interactive row under the
-// centre point, where it swallows the click.
+// Clicked near its top-left: a card whose footer wraps puts an interactive row under the centre.
 const openArticle = async (page: Page, title: string) => {
   await articleCards(page)
     .filter({hasText: title})
     .getByRole("link", {name: title, exact: true})
     .click({position: {x: 20, y: 20}})
 
-  // The card's own action bar carries a data-component the article page carries too, and the list
-  // is still on screen while the route loads, so a spec that names one straight after this click
-  // gets the card's. The article body is only on the page it navigated to.
+  // The card's own action bar carries the same data-component, and the list is still on screen.
   await expect(page.locator("article header").getByRole("heading", {name: title})).toBeVisible()
 }
 
@@ -278,8 +268,7 @@ test("US-038 browse, filter, and read articles", async ({seed, as}) => {
   await expect(garden).toContainText("A short teaser about gardens.")
   await expect(garden).toContainText(await shortDate(page, at(4, HOUR)))
 
-  // A card with more topics than fit on one line wraps them, rather than widening its action row
-  // until the reactions and the action menu fall off the card's edge.
+  // A card with more topics than fit on one line wraps them rather than widening its action row.
   const winter = articleCards(page).filter({hasText: "Winter Reading"})
   const winterBox = (await winter.boundingBox())!
   const winterActions = (await winter.locator('[data-component="ArticleActions"]').boundingBox())!
@@ -358,13 +347,10 @@ test("US-039 comment on an article", async ({seed, as}) => {
   await noteEditor(composerForm(bob)).pressSequentially("The soil chapter is the good one.")
   await composerForm(bob).getByRole("button", {name: "Comment"}).click()
 
-  // The comment renders from the optimistic write, but the composer holds what was typed until the
-  // relay confirms it, so for a moment the page carries this text twice. Match the rendered comment.
+  // The composer holds what was typed until the relay confirms it, so the page carries this text twice.
   await expect(comment(bob, "The soil chapter is the good one.")).toBeVisible()
 
-  // A comment on a room event is a room event, so it carries the room the root lives in. Without
-  // that tag the relay doesn't see it as part of the group, and neither its access rules nor a
-  // room deletion ever reach it.
+  // A comment on a room event is a room event, so without the room tag the relay sees no group.
   await expect
     .poll(() =>
       getPublishedEvents(bob.context(), COMMENT).map(event => tagValue(tagSpec("h"), event.tags)),
@@ -413,8 +399,7 @@ test("US-039 comment on an article", async ({seed, as}) => {
   await composer.locator('[data-tip="Add an image"]').click()
   await (await chooser).setFiles({name: "bed.gif", mimeType: "image/gif", buffer: GIF})
 
-  // The attachment carries an uploading marker from the moment the request goes out until the
-  // blossom descriptor comes back and replaces its blob url.
+  // The attachment carries an uploading marker until the blossom descriptor replaces its blob url.
   await expect(composer.locator(".tiptap-object")).not.toHaveClass(/tiptap-uploading/)
 
   await composer.getByRole("button", {name: "Comment"}).click()
@@ -437,8 +422,7 @@ test("US-040 react to a post with an emoji", async ({seed, as}) => {
     space.profile(user.alice, {name: "Alice Anderson"})
     space.profile(user.bob, {name: "Bob Barker"})
 
-    // A profile's notes are loaded through its author's outbox relays, so alice needs a relay list
-    // for her note to be findable at all.
+    // A profile's notes are loaded through its author's outbox relays, so alice needs a relay list.
     space.relayList(user.alice)
 
     const article = space.event(
@@ -561,9 +545,7 @@ test("US-041 publish an article from a room", async ({seed, as}) => {
 
   await expect(page.getByRole("heading", {name: "Repotting in Winter"}).first()).toBeVisible()
 
-  // The room hears about the article without alice posting it a second time. Its copy is published
-  // after the composer has moved on, so wait for it to leave — a page that unloads mid-publish
-  // takes it with it.
+  // The room's copy is published after the composer has moved on, and a page that unloads takes it.
   await expect.poll(() => getPublishedEvents(page.context(), MESSAGE)).toHaveLength(1)
 
   await page.goto(roomPath(url, "lounge"))
@@ -578,8 +560,7 @@ test("US-041 publish an article from a room", async ({seed, as}) => {
 
   await openArticle(page, "Repotting in Winter")
 
-  // A card says which room an article was posted in; the article's own page carries that in its
-  // page bar instead.
+  // A card says which room an article was posted in; the article's own page carries it in the page bar.
   const roomLink = pageBar(page).getByRole("link", {name: /#\s*Lounge/})
 
   await expect(roomLink).toBeVisible()
@@ -600,8 +581,7 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
     space.profile(user.alice, {name: "Alice Anderson"})
     space.profile(user.bob, {name: "Bob Barker"})
 
-    // An older topic with replies, so the board's reply count and last-post time are statements
-    // about the thread rather than about an empty row.
+    // An older topic with replies, so the reply count and last-post time are about a thread.
     const topic = space.event(
       user.bob,
       () =>
@@ -670,8 +650,7 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
     .locator("section")
     .filter({has: page.getByRole("heading", {name: "General", exact: true})})
 
-  // Each board creates its own threads, so the room comes from the button that was clicked rather
-  // than from a picker.
+  // Each board creates its own threads, so the room comes from the button that was clicked.
   await general.getByRole("button", {name: "Create", exact: true}).click()
 
   const fromThreads = modalForm(page, "Create a Thread")
@@ -724,8 +703,7 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
       at(3, HOUR),
     )
 
-    // Twenty replies is exactly the window a thread opens with, and the last of them is alice's,
-    // so her OP badge has to survive bob's own reply pushing the oldest one out of it.
+    // Twenty replies is exactly the window a thread opens with, and the last of them is alice's.
     for (let i = 1; i <= 20; i++) {
       space.event(
         i === 20 ? user.alice : i % 2 === 0 ? user.carol : user.bob,
@@ -777,8 +755,7 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
     )
     .toEqual(["lounge"])
 
-  // His is the twenty first reply, so the oldest one drops out of the window, and the opening
-  // post stays above whatever the window holds.
+  // His is the twenty first reply, so the oldest one drops out of the window.
   const showEarlier = bob.getByRole("button", {name: "Show earlier replies"})
 
   await expect(showEarlier).toBeVisible()
@@ -880,8 +857,7 @@ test("US-044 navigate a long thread", async ({seed, as}) => {
 
   const showEarlier = bob.getByRole("button", {name: "Show earlier replies"})
 
-  // Every assertion below is about which of the replies are in the window, so wait until they
-  // have all arrived.
+  // Every assertion below is about which of the replies are in the window, so wait for all of them.
   await expect(bob.getByText("41 replies")).toBeVisible()
 
   // The thread opens on its newest twenty replies, with the opening post above them.
@@ -955,8 +931,7 @@ test("US-045 turn a chat message into a thread", async ({seed, as}) => {
   const composer = modalForm(page, "Create a Thread")
   const nevent = nip19.neventEncode({id: promoted.id, kind: MESSAGE, relays: [url]})
 
-  // The seeded entity is parsed, so the composer shows the editor's chip for it rather than
-  // the raw uri — which is also what makes the thread carry a q tag for the message.
+  // The seeded entity is parsed, which is also what makes the thread carry a q tag for the message.
   await expect(noteEditor(composer)).toContainText(`${nevent.slice(0, 16)}...`)
 
   await composer.getByPlaceholder("What is this thread about?").fill("Deploy failures")

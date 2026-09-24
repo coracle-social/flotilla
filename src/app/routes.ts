@@ -38,13 +38,10 @@ export const lastPageBySpaceUrl = new Map<string, string>()
 // A store rather than a class on the node, which each row's class attribute would overwrite.
 export const highlightedEvent = writable<string | undefined>(undefined)
 
-// The space the user was in most recently, so the space menu can be opened from a page that isn't
-// in a space. A store because it's read from markup, unlike lastChatUrl.
+// The space the user was in most recently, so the space menu opens from a page outside a space.
 export const lastSpaceUrl = writable<string | undefined>(undefined)
 
-// The page store notifies on a modal opening or closing as well as on a navigation, and a modal
-// leaves the url where it is. Only a changed path is somewhere the user went, and recording an
-// unchanged one puts back a `lastPageBySpaceUrl` entry `forgetSpacePage` has just dropped.
+// The page store notifies on a modal opening as well as on a navigation, and a modal leaves the url where it is.
 export const setupHistory = () => {
   let lastPath: string | undefined
 
@@ -174,8 +171,7 @@ export const makeCalendarPath = (url: string, address?: string) =>
 
 export const makePollPath = (url: string, id?: string) => makeSpacePath(url, "polls", id)
 
-// Shelves are selected in place on the library page rather than having their own
-// route, so the address goes in a query param.
+// Shelves are selected in place on the library page, so the address goes in a query param.
 export const makeLibraryPath = (url: string, address?: string) => {
   const path = makeSpacePath(url, "library")
 

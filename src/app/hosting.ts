@@ -7,8 +7,7 @@ import {makeHttpAuth, makeHttpAuthHeader, normalizeRelayUrl} from "@welshman/uti
 import {user} from "@app/core"
 import {HOSTING_BACKEND_URL, PLATFORM_URL} from "@app/env"
 
-// Apple doesn't allow selling hosting outside their payment system, so on iOS we
-// point people at the platform's website instead.
+// Apple doesn't allow selling hosting outside their payment system.
 export const HOSTING_ENABLED = Capacitor.getPlatform() !== "ios"
 
 export type Plan = {
@@ -191,10 +190,7 @@ export class HostingError extends Error {
 
 const AUTH_TTL = ms(int(10, MINUTE))
 
-// The backend checks the signature and `u` tag but not freshness, so one token
-// per pubkey is reusable. Cache the promise rather than the value so a burst of
-// concurrent requests shares a single signature, and key it on the pubkey so
-// switching accounts doesn't keep signing as the old one.
+// The backend checks the signature and `u` tag but not freshness, so one token per pubkey is reusable.
 let cachedAuth: Maybe<{pubkey: string; expiresAt: number; header: Promise<string>}>
 
 const getAuthHeader = (): Promise<string> => {
@@ -298,8 +294,7 @@ export const listRelayMembers = (id: string) =>
 export const listRelayActivity = (id: string) =>
   hostingFetch<{activity: Activity[]}>("GET", `/relays/${id}/activity`)
 
-// Every event the relay holds, as JSONL. Fetched rather than linked, since the
-// nip 98 auth header can't ride on an <a href>.
+// Fetched rather than linked, since the nip 98 auth header can't ride on an <a href>.
 export const exportRelayData = async (id: string) => {
   const response = await hostingRequest("GET", `/relays/${id}/export`)
 
@@ -311,8 +306,7 @@ export const exportRelayData = async (id: string) => {
   return hostingJson<string>(response)
 }
 
-// Events keep their own signatures, so the relay validates them itself and
-// reports the lines it refused.
+// Events keep their own signatures, so the relay validates them and reports the lines it refused.
 export const importRelayData = async (id: string, file: Blob) =>
   hostingJson<ImportResult>(
     await hostingRequest("POST", `/relays/${id}/import`, {
@@ -357,8 +351,7 @@ export const autopayConfigured = (
   t: Pick<Tenant, "nwc_is_set" | "stripe_payment_method_id">,
 ): boolean => t.nwc_is_set || Boolean(t.stripe_payment_method_id)
 
-// The oldest open positive invoice, matching the backend's dunning order. The
-// backend models the lifecycle as timestamps, not a status field.
+// The oldest open positive invoice, matching the backend's dunning order.
 export const selectPayableInvoice = (invoices: Invoice[]): Invoice | undefined =>
   sortBy(invoice => invoice.created_at, invoices).find(
     invoice => !invoice.paid_at && !invoice.voided_at && invoice.amount > 0,
@@ -384,14 +377,11 @@ export const canonicalRelayHost = (relay: HostedRelay): string =>
 export const getHostedRelayUrl = (relay: HostedRelay): string =>
   normalizeRelayUrl("wss://" + relayHost(relay))
 
-// On native, redirects can't round-trip through location.origin; use the
-// platform's hosted url.
+// On native, a redirect can't round-trip through location.origin.
 export const hostingReturnUrl = (path = "/settings/hosting"): string =>
   Capacitor.isNativePlatform() ? PLATFORM_URL + path : location.origin + path
 
-// Provisioning is idempotent, so this runs once per login. The shared promise
-// dedupes concurrent callers, and a failure drops the cache so the next call
-// retries.
+// Provisioning is idempotent, and the shared promise dedupes concurrent callers.
 let tenantPromise: Maybe<{pubkey: string; promise: Promise<Tenant>}>
 
 export const ensureSessionTenant = async () => {
@@ -429,8 +419,7 @@ export const deriveRelayMembers = (id: string) =>
 
 export type RelayActivityState = {loading: boolean; activity: Activity[]}
 
-// Takes a store because the id comes from the hosted relay lookup, which hasn't
-// resolved when the page mounts.
+// The id comes from the hosted relay lookup, which hasn't resolved when the page mounts.
 export const deriveRelayActivity = (id: Readable<Maybe<string>>) =>
   derived<Readable<Maybe<string>>, RelayActivityState>(
     id,
@@ -449,8 +438,7 @@ export const deriveRelayActivity = (id: Readable<Maybe<string>>) =>
     {loading: false, activity: []},
   )
 
-// Loading is distinct from "not hosted here" — both leave `relay` undefined, but
-// only one of them should keep the caller waiting.
+// Loading and "not hosted here" both leave `relay` undefined, and only one keeps the caller waiting.
 export type HostedRelayState = {loading: boolean; relay: Maybe<HostedRelay>}
 
 export const deriveHostedRelay = (url: string) =>

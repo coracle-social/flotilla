@@ -86,12 +86,10 @@
   let dragged = $state<string | undefined>()
   let dropped = $state(false)
 
-  // Reordering is previewed locally, so a drag reads as movement without the caller hearing about
-  // every position the item passes through. It hears about it once, on drop.
+  // Reordering is previewed locally, so the caller hears about it once, on drop.
   const order = $derived(preview ?? items)
 
-  // The preview outlives the drop, since the caller takes a moment to publish the new order, and
-  // is dropped as soon as the items it was built from change.
+  // The preview outlives the drop, since the caller takes a moment to publish the new order.
   $effect(() => {
     if (!isSameOrder(items, lastItems)) {
       lastItems = items

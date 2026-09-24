@@ -43,9 +43,7 @@ import type {AppPolicy, DerivedPlugin, Plugin, Session} from "@welshman/app"
 import type {BaseEventReader, EventQuery, EventWriter, KindFactory} from "@welshman/domain"
 import {DEFAULT_RELAYS, DEFAULT_SEARCH_RELAYS, DUFFLEPUD_URL, INDEXER_RELAYS} from "@app/env"
 
-// Flotilla's own policies (ingest, sockets, storage) can't be imported here — they depend on
-// this module — so they push themselves in on import, and the first app is built lazily so
-// they're all registered by the time it exists.
+// Flotilla's own policies depend on this module, so the first app is built after they push themselves in.
 export const appPolicies: AppPolicy[] = [
   appPolicyWraps,
   appPolicyRelayStats,
@@ -78,8 +76,7 @@ const setApp = (instance: App) => {
   return instance
 }
 
-// An app is scoped to a single identity, so logging in replaces it wholesale rather than
-// attaching a user to the anonymous one.
+// An app is scoped to a single identity, so logging in replaces it wholesale.
 export const app: ReadableWithGetter<App> = {
   get: getApp,
   subscribe: run => {
@@ -91,12 +88,10 @@ export const app: ReadableWithGetter<App> = {
 
 export const session = withGetter(writable<Maybe<Session>>(undefined))
 
-// The signed-in user, for the paths that require one — reading it while signed out throws, so
-// use `$app.user` where absence is a legitimate state.
+// Throws while signed out, so use `$app.user` where absence is a legitimate state.
 export const user = withGetter(derived(app, $app => User.require($app)))
 
-// Read a store off the current app, re-subscribing when login swaps in a new one. Anything
-// bound at module load has to go through this or it will keep reading a discarded app.
+// Anything bound at module load reads through this, or it keeps reading a discarded app.
 export const fromApp = <T>(read: ($app: App) => Readable<T>): Readable<T> =>
   derived(app, ($app, set: (value: T) => void) => read($app).subscribe(set))
 
@@ -122,16 +117,13 @@ export const login = async ($session: Session) => {
     throw new Error(`Unable to log in using ${$session.method}`)
   }
 
-  // Read the store directly, so restoring a session at startup doesn't build an anonymous app
-  // just to tear it down.
+  // Read the store directly, so restoring a session doesn't build an anonymous app to tear it down.
   appStore.get()?.cleanup()
   setApp(makeApp($user))
   session.set($session)
 }
 
-// Plugins bound to the current app, so `$profiles` in a component and `profiles.get()` in a
-// module both stay pointed at the right one after login swaps it. Flotilla's own plugins expose
-// themselves the same way.
+// Plugins bound to the current app, so login swapping the app repoints every reader.
 export const usePlugin = <T>(Ctor: Plugin<T>) => withGetter(derived(app, $app => $app.use(Ctor)))
 
 export const blockedRelayLists = usePlugin(BlockedRelayLists)
@@ -162,8 +154,7 @@ export const thunks = usePlugin(Thunks)
 export const wot = usePlugin(Wot)
 export const wraps = usePlugin(Wraps)
 
-// The relays profile search runs against, with a fallback so search still works before the user
-// has chosen any of their own.
+// The relays profile search runs against, falling back so search works before the user has any.
 export const userSearchRelayUrls = withGetter(
   derived(
     fromApp($app =>

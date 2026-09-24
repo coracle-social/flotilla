@@ -19,8 +19,7 @@
 
   const draft = $derived(describeCommandDraft($available, content))
 
-  // Without a qualifier an invocation reaches every executor whose trigger matches, so offer
-  // the choice rather than picking one silently.
+  // Without a qualifier an invocation reaches every executor whose trigger matches.
   const ambiguous = $derived((draft?.matches.length ?? 0) > 1 && !draft?.invocation.pubkey)
 
   const activeArg = $derived(draft?.args[draft.activeIndex])
@@ -36,8 +35,7 @@
     return []
   })
 
-  // An argument the user has moved past that didn't parse. The one being typed is legitimately
-  // incomplete, so flagging it would just blink red on every keystroke.
+  // The argument being typed is legitimately incomplete, so flagging it would blink on every keystroke.
   const invalid = $derived(
     draft?.bindings.find((binding, i) => i < draft.activeIndex && !binding.value)?.arg,
   )

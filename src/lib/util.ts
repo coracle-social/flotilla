@@ -74,10 +74,7 @@ export const whenAborted = (signal?: AbortSignal) => {
   })
 }
 
-/**
- * Returns a promise that rejects with TimeoutError after ms. Use with Promise.race.
- * Pass an optional signal to clear the timer when that signal aborts (self-cleaning).
- */
+/** Rejects with TimeoutError after ms, clearing the timer when `signal` aborts. */
 export const whenTimeout = (ms: number, opts: {message?: string; signal?: AbortSignal} = {}) => {
   return new Promise<never>((_, reject) => {
     const timeout = setTimeout(() => reject(new TimeoutError(opts.message)), ms)

@@ -55,8 +55,7 @@
 
   const joiningHere = $derived($callState === CallState.Joining && isTargetingThisRoom)
   const connectedHere = $derived($callState === CallState.Connected && isTargetingThisRoom)
-  // callTargetRoom isn't cleared on cancel/leave, so it can still point at this room
-  // after the call has ended — check actual state, not just "is this the last target".
+  // callTargetRoom isn't cleared on cancel or leave, so it can still point at this room.
   const showJoin = $derived(isVoiceRoom && !joiningHere && !connectedHere)
 
   const openJoinDialog = () => pushModal(VoiceRoomJoinDialog, {url, h})

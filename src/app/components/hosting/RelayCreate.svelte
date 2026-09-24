@@ -49,8 +49,7 @@
     const relay = await createRelayForActiveTenant(values)
     const url = getHostedRelayUrl(relay)
 
-    // Join the space we just made, otherwise the space layout prompts us to join
-    // it, displacing the payment modals below.
+    // Join the space now, or the space layout prompts for it and displaces the payment modals.
     await $roomLists.addRelay(url).then(publish)
     await reconcileTenant($user.pubkey)
 

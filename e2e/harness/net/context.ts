@@ -1,8 +1,6 @@
 import type {BrowserContext} from "@playwright/test"
 
-// State the harness keeps per browser context, outside the browser: recorded traffic, blocked
-// requests, the hosting fake's store. Reading one before the route installer that owns it has run
-// is a spec calling things out of order, which the error names.
+// Reading one before the route installer that owns it has run is a spec calling things out of order.
 export const makeContextStore = <T>(installer: string) => {
   const byContext = new WeakMap<BrowserContext, T>()
 

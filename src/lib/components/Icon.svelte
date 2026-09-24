@@ -21,8 +21,7 @@
 
   const px = size * 4
 
-  // The ios app's wkwebview has no "Safari" token in its user agent, so
-  // detect the engine instead of sniffing for the Safari browser.
+  // The ios wkwebview has no "Safari" token in its user agent, so detect the engine instead.
   const isWebkit =
     typeof navigator !== "undefined" &&
     /applewebkit/i.test(navigator.userAgent) &&

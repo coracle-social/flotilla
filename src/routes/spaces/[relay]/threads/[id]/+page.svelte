@@ -136,8 +136,7 @@
     }
   })
 
-  // A reader who's caught up lands at the bottom. Replies arrive after the page does and the
-  // images in them later still, so the bottom moves until the thread has finished settling.
+  // Replies arrive after the page and their images later, so the bottom moves as the thread settles.
   $effect(() => {
     const container = element
     const content = panel

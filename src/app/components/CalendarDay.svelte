@@ -25,9 +25,7 @@
 
   const {url, date, events, context}: Props = $props()
 
-  // A modal's props are frozen at the time it's pushed, so this has to re-derive from the feed's
-  // own store rather than receive a pre-filtered list — otherwise creating an event from here
-  // would leave the modal showing the stale, empty list it opened with.
+  // A modal's props are frozen at push time, so re-derive from the feed's own store.
   const dayEvents = $derived(groupEventsByDay($events).get(makeDayKey(date)) ?? [])
 
   const back = () => history.back()

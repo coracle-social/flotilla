@@ -37,7 +37,6 @@ test("authenticates over nip-42 before a members-only relay serves anything", as
     pubkey: users.alice.pubkey,
   })
 
-  // The whole point of intercepting the transport rather than swapping in an adapter: until the
-  // client proves who it is, the relay hands it nothing at all.
+  // Until the client proves who it is, the relay hands it nothing at all.
   expect(firstEventAt).toBeGreaterThan(authenticatedAt)
 })

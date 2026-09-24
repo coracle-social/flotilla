@@ -7,20 +7,16 @@ import {expect, roomPath, spacePath, test, users} from "../harness"
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string}
 
-// A bolt11 invoice as @welshman/content recognizes one: only behind a `lightning:` scheme, and
-// what the chip renders and copies is what follows the scheme.
+// @welshman/content takes an invoice only behind a `lightning:` scheme, and renders what follows.
 const INVOICE =
   "lnbc2500u1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfq" +
   "ypqdq5xysxxatsyp3k7enxv4jsxqzpuaztrnwngzn3kdzw5hydlzf03qdgm2hdq27cqv3" +
   "agm2awhz5se903vruatfhq77w3ls4evs3ch9zw97j25emudupq63nyw24cg27h2rspfj9"
 
-// An event id no fixture publishes. A quote card is in its loading state until the quoted event
-// arrives, and only one that never arrives holds it there long enough to assert: the relay is a
-// container on loopback, so a quote it can answer resolves before a locator has resolved.
+// The relay is a container on loopback, so only a quote that never arrives holds the loading state.
 const UNKNOWN_EVENT_ID = "6f1ac4b0d2e37f5981c6ab4e2d0937fc85be1a2d3c4f5061728394a5b6c7d8e9"
 
-// A cashu token keeps its own scheme in the value, and needs fifty-odd payload characters after
-// it before the parser will take it.
+// A cashu token keeps its own scheme in the value, and needs fifty-odd payload characters after it.
 const CASHU =
   "cashu:cashuAeyJ0b2tlbiI6W3sicHJvb2ZzIjpbeyJpZCI6IjAwOWExZjI5MzI1M2U0MWUiLCJhbW91bnQiOjIs" +
   "InNlY3JldCI6ImFhYSIsIkMiOiJiYmIifV0sIm1pbnQiOiJodHRwczovL21pbnQudGVzdCJ9XX0="
@@ -52,8 +48,7 @@ test("US-060 reveal a flagged sensitive message", async ({seed, as}) => {
   const {url} = scenario.space("space")
   const page = await as(users.alice, roomPath(url, "general"))
 
-  // Scoped to bob's own message, so "in place of his text" is a claim about this message rather
-  // than about the room as a whole.
+  // Scoped to bob's own message, so this is a claim about it rather than about the room.
   const message = page.locator(`[data-event="${flagged.id}"]`)
   const warning = message.getByText('flagged by the author as "spoilers"')
 
@@ -110,8 +105,7 @@ test("US-061 expand a long post", async ({seed, as}) => {
 
   await expect(page.getByText(paragraphs[11])).toBeVisible()
 
-  // The whole card is a link into the article, so expanding in place means the click never
-  // reached it.
+  // The whole card is a link into the article, so expanding in place means the click never reached.
   expect(page.url()).toBe(before)
 })
 
@@ -196,8 +190,7 @@ test("US-063 preview a shared link", async ({seed, as}) => {
 
   const {url} = scenario.space("space")
 
-  // The room is opened by hand below rather than by as(): a preview is fetched once per url and
-  // memoized for the life of the page, so the backend has to be standing before the first render.
+  // A preview is fetched once per url and memoized for the life of the page.
   const page = await as(users.alice, "/")
 
   let servePreview = () => {}
@@ -206,8 +199,7 @@ test("US-063 preview a shared link", async ({seed, as}) => {
     servePreview = resolve
   })
 
-  // Registered after as(), so it answers ahead of the harness's own dufflepud. Holding the one
-  // preview open makes the loading state a fact rather than a race.
+  // Registered after as(), so it answers ahead of the harness's own dufflepud.
   await page.context().route(
     requestUrl => requestUrl.pathname === "/link/preview",
     async route => {
@@ -246,8 +238,7 @@ test("US-063 preview a shared link", async ({seed, as}) => {
   await expect(card.getByText("Everything new in this release.")).toBeVisible()
   await expect(card.locator(previewImage)).toBeVisible()
 
-  // The same url mid-sentence, now that the preview it would have shown is known to resolve: a
-  // compact link, and none of the card.
+  // The same url mid-sentence, now that the preview it would have shown is known to resolve.
   await expect(inline.getByRole("link", {name: "example.test/announcement"})).toBeVisible()
   await expect(inline.getByText("Flotilla ships v1")).toHaveCount(0)
   await expect(inline.locator(previewImage)).toHaveCount(0)
@@ -323,8 +314,7 @@ test("US-065 see quoted and embedded content", async ({seed, as}) => {
       space.message(user.bob, "general", `filler message number ${i}`, at(300 - i * 5, MINUTE))
     }
 
-    // Carol says something in the room too, so her profile is loaded by the time her name has to
-    // render on a card quoting her thread.
+    // Carol says something in the room too, so her profile is loaded before her name has to render.
     space.message(user.carol, "general", "posted a roadmap", at(140, MINUTE))
 
     const topic = space.event(
@@ -357,9 +347,7 @@ test("US-065 see quoted and embedded content", async ({seed, as}) => {
 
   const threadMessage = page.locator(`[data-event="${threadQuote.id}"]`)
 
-  // The state a quote card is in until the quoted event arrives. It is asserted on the quote
-  // nothing can answer rather than on the thread below, which resolves off an open socket to
-  // loopback and is as likely to be a card by the time this runs as a placeholder.
+  // Asserted on the quote nothing can answer, since the thread resolves off a socket to loopback.
   const unresolvableMessage = page.locator(`[data-event="${unresolvable.id}"]`)
 
   await expect(unresolvableMessage.getByText("Loading event...")).toBeVisible()
@@ -379,8 +367,7 @@ test("US-065 see quoted and embedded content", async ({seed, as}) => {
 
   await expect(originalMessage).toBeInViewport()
 
-  // The quoted thread's card, once it has loaded: the profile circle beside the message carries
-  // the same border classes, so the title is what says which of them is meant.
+  // The profile circle beside the message carries the same border classes, so the title says which.
   const quotedThread = threadMessage.locator(".border.border-solid").filter({
     hasText: "Roadmap for Q3",
   })
@@ -421,8 +408,7 @@ test("US-066 see distinctive inline tokens", async ({seed, as}) => {
     // Bob posts too, so his profile is loaded against this space before he is mentioned.
     space.message(user.bob, "general", "morning all", at(50, MINUTE))
 
-    // The shortcode's image comes off the message's own emoji tag, which is what a client writes
-    // when someone picks a custom emoji.
+    // The shortcode's image comes off the message's own emoji tag.
     tokens = space.event(
       user.carol,
       makeEvent(MESSAGE, {
@@ -443,8 +429,7 @@ test("US-066 see distinctive inline tokens", async ({seed, as}) => {
 
   await expect(message.getByText("#nostr", {exact: true})).toHaveClass(/link-content/)
   await expect(message.getByAltText(":partyparrot:")).toBeVisible()
-  // An img contributes no text, so this is the "instead of the raw text" half of the story: with
-  // no emoji tag to resolve, the shortcode is rendered verbatim.
+  // An img contributes no text, so with no emoji tag to resolve the shortcode is rendered verbatim.
   await expect(message.getByText(":partyparrot:")).toHaveCount(0)
 
   const inlineCode = message.locator("code").filter({hasText: "npm install"})
@@ -502,8 +487,7 @@ test("US-067 copy a shared invoice or token", async ({seed, as}) => {
   await expect(toast).toContainText("Copied to clipboard!")
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(INVOICE)
 
-  // Both copies raise the same toast, so this one is dismissed rather than waited out — otherwise
-  // the second assertion would pass on the first toast.
+  // Both copies raise the same toast, so this one is dismissed rather than waited out.
   await toast.getByRole("button").click()
 
   await expect(toast).toHaveCount(0)

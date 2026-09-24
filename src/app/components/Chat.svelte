@@ -141,8 +141,7 @@
 
     addTemplate(DIRECT_MESSAGE, buffer.splice(0).join(""), tags)
 
-    // Split the message into multiple pieces so that we can use kind 15 to send images per nip 17
-    // Sleep 1 second between each one to make sure timestamps are distinct
+    // Kind 15 carries one image each per nip 17, and a second's sleep keeps the timestamps distinct.
     const thunks = await Promise.all(
       Array.from(enumerate(templates)).map(([i, event]) =>
         $wraps.publish({
@@ -154,9 +153,7 @@
       ),
     )
 
-    // Only once the message exists. Publishing has to read each recipient's messaging relays first,
-    // and a failed read throws before any thunk is made — so the reply or edit this was part of has
-    // to survive that along with the draft the composer is holding on to.
+    // Publishing reads each recipient's messaging relays first, and a failed read throws before any thunk.
     clearParent()
     clearEventToEdit()
 
@@ -192,8 +189,7 @@
   let eventToEdit: TrustedEvent | undefined = $state()
   let share: Maybe<Share> = $state()
 
-  // Claim the share once we're on screen. Sharing into the conversation you're already looking at
-  // doesn't re-create this component, so this can't be read once on mount.
+  // Sharing into the conversation already on screen doesn't re-create this component.
   $effect(() => {
     if ($pendingShare) {
       share = $pendingShare

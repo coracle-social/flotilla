@@ -36,8 +36,7 @@
 
   const showSearch = () => pushModal(Search)
 
-  // The menu is reachable from every page, so it opens on the space the user is in, or the last one
-  // they were in when they're somewhere else.
+  // The menu is reachable everywhere, so it opens on the space the user is in, or the last one.
   const spaceUrl = $derived($lastSpaceUrl ?? PLATFORM_RELAYS[0] ?? $userSpaceUrls[0])
 
   const spaceMenuIsOpen = $derived(getModal()?.component === SpaceMenuDrawer)

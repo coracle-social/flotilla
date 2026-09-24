@@ -19,8 +19,7 @@
 
   const {event, context, url, reactionClass = ""}: Props = $props()
 
-  // A reaction goes where the thing it is about lives: the space's own relay in a space, and
-  // wherever the event has been seen outside one.
+  // A reaction goes where its subject lives: the space's own relay, or wherever the event was seen.
   const getRelays = () => (url ? [url] : $router.resolver.relays([seen(event)]))
 
   const deleteReaction = async (reaction: TrustedEvent) =>

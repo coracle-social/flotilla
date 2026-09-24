@@ -66,8 +66,7 @@
     selectedOutput = selectValueForActiveDevice(session, DeviceKind.AudioOutput)
     selectedVideo = selectValueForActiveDevice(session, DeviceKind.VideoInput)
 
-    // Mic mute/unmute publishes or unpublishes the microphone track; keep the
-    // level meter in sync with whichever track is actually live right now.
+    // Mute and unmute publishes or unpublishes the microphone track.
     const {livekit} = session
     const refreshMicTrack = () => {
       micTrack = readMicTrack(session)
@@ -83,9 +82,7 @@
 
   const onInputChange = async () => {
     await switchCallActiveDevice(DeviceKind.AudioInput, selectedInput)
-    // Switching the active device restarts the existing LocalAudioTrack in
-    // place with a new MediaStreamTrack rather than emitting a publish event,
-    // so the meter needs an explicit re-read here.
+    // Switching device restarts the LocalAudioTrack in place rather than emitting a publish event.
     const session = $currentCallSession
     if (session) {
       micTrack = readMicTrack(session)

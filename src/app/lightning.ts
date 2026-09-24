@@ -6,11 +6,7 @@ import {isNWCWallet, isWebLNWallet} from "@welshman/util"
 import type {Wallet} from "@welshman/util"
 import {withGetter} from "@welshman/store"
 
-/**
- * A profile's lnurl is the bech32 form zapping needs — both lud06 and lud16 normalize
- * into it — so decode it before showing it to anyone. The well-known endpoint a
- * lightning address encodes to becomes the address again; anything else is a plain url.
- */
+/** Both lud06 and lud16 normalize into the bech32 lnurl zapping needs, so decode it before display. */
 export const displayLnurl = (lnurl: string) => {
   const url = tryCatch(() => bech32ToHex(lnurl))
   const address = url?.match(/^https?:\/\/([^/]+)\/\.well-known\/lnurlp\/(.+)$/)

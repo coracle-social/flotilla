@@ -9,8 +9,7 @@ import {kv, ss, storage} from "@app/storage"
 import {deactivateCurrentPomadeSession} from "@app/pomade"
 import {Push} from "@app/push"
 
-// Sessions used to be a Record<pubkey, session> keyed by an active pubkey, and carried their
-// pubkey plus method-specific fields inline. Convert one so upgrading doesn't log people out.
+// Sessions were a Record keyed by an active pubkey, so convert one rather than logging people out.
 type LegacySession = {
   method: string
   pubkey: string
@@ -59,11 +58,9 @@ const readLegacySession = async () => {
   return legacy ? toCurrentSession(legacy) : undefined
 }
 
-// The session is derived from the app's user, so it can't be synced to storage directly —
-// read it back once at startup, then persist it whenever the identity changes.
+// The session derives from the app's user, so read it back at startup and persist it on a change.
 export const restoreSession = async () => {
-  // Test-only: when Playwright has injected window.__TEST_SESSION__, that identity wins over
-  // whatever is in storage. No-op for real users; stripped from production builds.
+  // Test-only: an injected window.__TEST_SESSION__ wins over storage and is stripped from production.
   const testSession = import.meta.env.DEV ? maybeGetTestSession() : undefined
   const $session = testSession ?? (await ss.get<Session>("session")) ?? (await readLegacySession())
 
@@ -71,10 +68,7 @@ export const restoreSession = async () => {
     await login($session)
   }
 
-  // Logging in builds a fresh app, so the test's cached events go into its repository afterwards,
-  // the same way storage loads what the last session left behind. Storage gets there first and
-  // loads with Repository.load, which clears the repository before inserting, so these have to
-  // wait for it or they are wiped before anything reads them.
+  // Storage loads with Repository.load, which clears the repository, so these wait for it.
   if (testSession) {
     await storage.get()?.ready
 

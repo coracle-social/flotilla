@@ -5,8 +5,7 @@ import {Relays, publish} from "@welshman/app"
 import {command, fromApp, relays, writer} from "@app/core"
 import {deriveEventsForUrl} from "@app/repository"
 
-// NIP-78 app data published by the space's owner, the pubkey its NIP-11 document names. Each
-// featured entry is a ["content", <value>] tag (freeform text, intended to be a url or nevent).
+// NIP-78 app data from the pubkey the space's NIP-11 names, one ["content", <value>] tag per entry.
 export const FEATURED_CONTENT_D = "flotilla/featured-content"
 
 export const deriveFeaturedContent = (url: string) =>

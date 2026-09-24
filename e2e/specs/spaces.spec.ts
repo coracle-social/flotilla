@@ -4,9 +4,7 @@ import type {Page} from "@playwright/test"
 import type {SeededSpace} from "../harness"
 import {expect, pathPattern, readCachedEvents, roomPath, spacePath, test, users} from "../harness"
 
-// The space this user's room list names first, read from the copy on disk the app restores itself
-// from. Room lists reach indexeddb in three-second batches with nothing in the ui to say when one
-// has landed, so a spec about what survives a reload waits on this before it reloads.
+// Room lists reach indexeddb in three-second batches, so a spec about a reload waits on this first.
 const cachedFirstSpace = async (page: Page, pubkey: string) => {
   const events = (await readCachedEvents(page, pubkey)).filter(event => event.kind === ROOMS)
   const newest = sortBy(event => -event.created_at, events)[0]
@@ -14,8 +12,7 @@ const cachedFirstSpace = async (page: Page, pubkey: string) => {
   return newest?.tags.find(tag => tag[0] === "r")?.[1]
 }
 
-// The rail shows icons and no text, so a row is read by the tooltip naming its relay. See
-// spaceNavItem in notifications.spec.ts for why that is a tooltip rather than an accessible name.
+// The rail shows icons and no text, so a row is read by the tooltip naming its relay.
 const railSpaces = (page: Page) => page.locator(".primary-nav [draggable=true]")
 
 const expectRailFirst = (page: Page, name: string) =>
@@ -24,11 +21,7 @@ const expectRailFirst = (page: Page, name: string) =>
     new RegExp(`^${name}`),
   )
 
-// A drop reorders the list in place and publishes a new room list behind it, so the order on screen
-// is ahead of the one the app has settled on. Reading the next drag off that optimistic order is
-// what made this spec fail under a full suite and pass alone: the relay is slower when the box is
-// busy, and a room list landing back from it after the next drop replaces the order that drop
-// applied. Waiting for the copy on disk to name the new first space is waiting for the round trip.
+// A drop reorders the list in place and publishes behind it, so the copy on disk is the round trip.
 const expectReordered = async (page: Page, pubkey: string, space: SeededSpace) => {
   await expectRailFirst(page, space.name)
   await expect.poll(() => cachedFirstSpace(page, pubkey)).toBe(space.url)
@@ -57,8 +50,7 @@ test("US-009 browse and search spaces, and reorder your own", async ({seed, as})
   const other = scenario.space("other")
   const unsigned = scenario.space("unsigned")
 
-  // The spaces page discovers unjoined spaces by pulling the room lists of the pubkeys it
-  // bootstraps from, so pointing that at bob is what puts his other space in front of alice.
+  // The spaces page discovers unjoined spaces by pulling the room lists of its bootstrap pubkeys.
   const page = await as(users.alice, "/spaces", {env: {VITE_DEFAULT_PUBKEYS: users.bob.pubkey}})
 
   // The page is for spaces she hasn't joined. The ones she has are in the rail, all of them.
@@ -97,9 +89,7 @@ test("US-009 browse and search spaces, and reorder your own", async ({seed, as})
 
   await expectRailFirst(page, space.name)
 
-  // Html5 drag and drop, dispatched rather than mimed with the mouse: chromium's synthetic drag
-  // starts the drag and moves it, but never delivers the drop the reorder is committed in, so the
-  // row would snap back to where it came from.
+  // Chromium's synthetic drag starts and moves it but never delivers the drop the reorder needs.
   const dataTransfer = await page.evaluateHandle(() => new DataTransfer())
   const rail = railSpaces(page)
 
@@ -148,8 +138,7 @@ test("US-010 join a space from an invite link", async ({seed, as}) => {
   await expect(page.getByRole("button", {name: "Join Space"})).toBeDisabled()
   await expect(page.getByText("You're about to join:")).toHaveCount(0)
 
-  // The link makeInviteLink builds, typed rather than followed — an absolute platform url is an
-  // off-origin navigation, and parseInviteLink only ever reads its query params.
+  // An absolute platform url is an off-origin navigation, and parseInviteLink reads query params.
   await invite.fill("https://app.flotilla.social/join?r=other.test&c=")
 
   await expect(page.getByText("You're about to join:")).toBeVisible()
@@ -174,9 +163,7 @@ test("US-010 a direct link's join prompt outlives the entry redirect", async ({s
   const other = scenario.space("other")
   const page = await as(users.alice, "/")
 
-  // A space's own path redirects to the page it opens on, and a modal raised while that navigation
-  // is in flight is overwritten when it lands. Holding the entry page's module back is what puts
-  // the prompt inside the redirect here; on a phone the chunk arriving late does it by itself.
+  // A space's own path redirects, and a modal raised while that navigation is in flight is lost.
   let held = 0
 
   await page.context().route(
@@ -204,9 +191,7 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
     const closed = relay("closed")
     const space = relay("space")
 
-    // This relay refuses a join that carries no claim. A claim is not an event a scenario can
-    // publish — the relay only registers one through the nip-86 method the invite dialog calls —
-    // so the code alice needs comes out of that dialog below.
+    // The relay only registers a claim through the nip-86 method the invite dialog calls.
     closed.room("lobby", {name: "Lobby"})
 
     space.room("general", {name: "General"})
@@ -218,8 +203,7 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
   const closed = scenario.space("closed")
   const space = scenario.space("space")
 
-  // Administering a relay is not the same as belonging to it, so the space asks admin to join
-  // like anyone else — and issues him an invite code all the same.
+  // Administering a relay is not the same as belonging to it.
   const admin = await as(users.admin, spacePath(closed.url) + "/about")
 
   await admin.locator("form").getByRole("button", {name: "Go back"}).click()
@@ -321,8 +305,7 @@ test("US-012 decide whether to trust an unsigned space", async ({seed, as}) => {
 
   await expect(bob).toHaveURL(/\/home/)
 
-  // In-app rather than a fresh load: leaving the space is published in the background, and a
-  // page that reloads before it reaches disk reads the list he had a moment ago.
+  // In-app rather than a fresh load: leaving is published in the background and reaches disk late.
   await bob.getByRole("link", {name: "All Spaces"}).click()
 
   await expect(railSpaces(bob)).toHaveCount(0)
@@ -368,8 +351,7 @@ test("US-013 follow a space that has moved", async ({seed, as}) => {
 
   await expect(alice).toHaveURL(/\/spaces\/other\.test\/about/)
 
-  // In-app rather than a fresh load: the updated list is published in the background, and a page
-  // that reloads before it reaches disk reads the old address back.
+  // In-app rather than a fresh load: the updated list is published in the background.
   await alice.getByRole("link", {name: "All Spaces"}).click()
 
   await expect(railSpaces(alice)).toHaveCount(1)
@@ -410,8 +392,7 @@ test("US-014 leave a space", async ({seed, as}) => {
 
   await expect(page).toHaveURL(/\/home/)
 
-  // In-app rather than a fresh load: leaving is published in the background, and a page that
-  // reloads before it reaches disk reads the list he had a moment ago.
+  // In-app rather than a fresh load: leaving is published in the background.
   await page.getByRole("link", {name: "All Spaces"}).click()
 
   await expect(railSpaces(page)).toHaveCount(0)
@@ -446,8 +427,7 @@ test("US-015 view a space's details", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // Contact, terms, privacy and the limitation warnings are nip-11 fields zooid doesn't publish
-  // on its own, so the scenario merges them over the relay's real document.
+  // Contact, terms, privacy and the limitation warnings are nip-11 fields zooid doesn't publish.
   const relayInfo = {
     [space.url]: {
       icon: "https://space.test/icon.png",
@@ -512,8 +492,7 @@ test("US-017 search across a space", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // The directory rather than a feed: search is reachable from every page in a space, and this is
-  // one where a result's own text can't also be on the page behind the dialog.
+  // The directory rather than a feed, since a result's own text can't be on the page behind it.
   const page = await as(users.alice, spacePath(space.url) + "/directory")
 
   await page.locator(".secondary-nav").getByRole("button", {name: "Search"}).click()

@@ -98,9 +98,7 @@
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
   let newer: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
 
-  // Unlike the other feeds this one asks whether more might exist rather than whether a request
-  // is in flight: a digest fills in progressively across many spans, and a spinner that blinked
-  // between each of them would read as broken.
+  // A digest fills in across many spans, so a spinner keyed on a request in flight would blink.
   const loading = $derived(!$older || $older.status !== "exhausted")
   let events: Readable<TrustedEvent[]> = $state(readable([]))
   let feed: ReturnType<typeof makeCalendarFeed> | undefined = $state()

@@ -49,8 +49,7 @@
 
   const {children} = $props()
 
-  // Do this asap to avoid a flash of the wrong font size or theme. The stores these mirror live in
-  // indexeddb, which doesn't load until well after first paint.
+  // The stores these mirror are in indexeddb, which loads well after first paint.
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
   const savedTheme = localStorage.getItem("theme")
   const initialTheme =
@@ -73,10 +72,7 @@
     setNip55Plugin(NostrSignerPlugin)
   }
 
-  // Handle a deep link (universal/app link or custom scheme). Used for both
-  // warm-start links (via the appUrlOpen event) and cold-start links (via
-  // getLaunchUrl below) so the invite relay/claim query params are preserved
-  // in either case.
+  // Handles warm-start links from appUrlOpen and cold-start links from getLaunchUrl.
   const handleDeepLink = (rawUrl: string) => {
     const url = new URL(rawUrl)
     const relay = url.searchParams.get("relay")
@@ -114,8 +110,7 @@
       return
     }
 
-    // The iOS share extension can't talk to us directly, so it hands its payload over as a
-    // flotilla://share url
+    // The iOS share extension has no channel to the app, so it posts a flotilla://share url.
     if (url.host === "share") {
       shareFromNative(Object.fromEntries(url.searchParams))
       return
@@ -140,9 +135,7 @@
     goto(target, {replaceState: false, noScroll: false})
   }
 
-  // Listen for deep link events. Capacitor only emits this from onNewIntent, so
-  // it fires when the app is already running (warm start). Cold-start links are
-  // handled by getLaunchUrl in the setup block below.
+  // Capacitor emits this from onNewIntent only, so it covers a warm start and not a cold one.
   App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => handleDeepLink(event.url))
 
   // Handle back button on mobile
@@ -205,11 +198,7 @@
     // Wait for critical storage data only
     await storage.get()?.ready
 
-    // Handle cold-start deep links. When a link launches the app from a killed
-    // state the intent arrives via onCreate, so Capacitor never emits
-    // appUrlOpen for it — the URL is only reachable through getLaunchUrl.
-    // Without this, invite links opened while the app is closed lose their
-    // relay/claim params and the space is never joined.
+    // A link launching the app from a killed state arrives via onCreate, which emits no appUrlOpen.
     const launch = await App.getLaunchUrl()
 
     if (launch?.url) {
@@ -240,9 +229,7 @@
     // Initialize background notifications
     unsubscribers.push(Push.sync())
 
-    // Logging in swaps in a fresh app — its policies rebind themselves, we just have to sync
-    // application data against the new identity's relays. Wait for the new app's storage to
-    // load the way startup does, so sync reconciles against cached events.
+    // Wait for the new app's storage the way startup does, so sync reconciles against cached events.
     let currentApp = core.app.get()
 
     const resync = async () => {

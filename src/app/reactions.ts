@@ -9,8 +9,7 @@ export type ReactionTarget = {
   urls?: string[]
 }
 
-// A reaction has to travel the same way as the event it's about — protected on relays that
-// enforce NIP-70, and tagged into the room the event lives in.
+// A reaction travels the way its subject does: protected under NIP-70, and tagged into its room.
 export const publishReaction = async (
   event: TrustedEvent,
   {content, tags}: EventContent,

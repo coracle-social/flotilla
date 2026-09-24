@@ -68,8 +68,7 @@
 
   const uploadFiles = () => editor.then(ed => ed.chain().selectFiles().run())
 
-  // Tiptap parses a string handed to insertContent as html, so an angle bracket in the
-  // transcript would eat the rest of the sentence.
+  // Tiptap parses a string handed to insertContent as html, so an angle bracket would eat the sentence.
   const insertTranscript = async (transcript: string) => {
     const ed = await editor
 

@@ -11,8 +11,7 @@ const gate = (page: Page) => page.getByRole("heading", {name: "Welcome to Flotil
 
 const nsecFor = (user: TestUser) => nsecEncode(hexToBytes(user.secret))
 
-// Landing → "Log in" → "Log in with Key" → paste → submit, which is the only way to watch a
-// session come into existence: a session injected by `as()` is re-applied on every navigation.
+// The only way to watch a session come into existence: one `as()` injects is re-applied on every navigation.
 const logInWithKey = async (page: Page, key: string) => {
   await page.getByRole("button", {name: "Log in"}).click()
   await page.getByRole("button", {name: "Log in with Key"}).click()
@@ -21,14 +20,11 @@ const logInWithKey = async (page: Page, key: string) => {
   await page.locator("form").getByRole("button", {name: "Log in", exact: true}).click()
 }
 
-// The nav's settings link carries its label as a tooltip rather than as an accessible name — its
-// icon is a masked svg with no alt text — so it is addressed by where it goes.
+// The nav's settings link carries its label as a tooltip, so it is addressed by where it goes.
 const openSettings = (page: Page) =>
   page.locator('.primary-nav a[href="/settings/profile"]').click()
 
-// The profile page's Public Key field. A nip01 login also renders a masked Private Key input right
-// below it, so `getByRole("textbox")` on this page is two elements — the npub is the readonly one
-// that isn't a password.
+// A nip01 login renders a masked Private Key too, so the npub is the readonly non-password one.
 const npubField = (page: Page) => page.locator('input[readonly]:not([type="password"])')
 
 test("US-001 sign-in gate for logged-out visitors", async ({seed, visit}) => {
@@ -38,8 +34,7 @@ test("US-001 sign-in gate for logged-out visitors", async ({seed, visit}) => {
 
   const {url} = scenario.space("space")
 
-  // A room url rather than the root: the gate stands in front of the whole app, so where the
-  // visitor landed makes no difference.
+  // A room url rather than the root: the gate stands in front of the whole app.
   const page = await visit(roomPath(url, "general"))
 
   await expect(gate(page)).toBeVisible()
@@ -111,9 +106,7 @@ test("US-002 sign up by generating a new key", async ({seed, visit}) => {
   await expect(gate(page)).toHaveCount(0)
   await expect(page.getByText("Back Up Your Key")).toBeVisible()
 
-  // A space's nav item is a button rather than a link — PrimaryNavItemSpace passes an onclick, and
-  // PrimaryNavItem renders a Button whenever it has one — so it is addressed by the tooltip it
-  // carries, which is the relay's nip-11 name, and clicking it is what says which space it is.
+  // A space's nav item is a button carrying the relay's nip-11 name as its tooltip.
   const spaceItem = page.locator('.primary-nav [data-tip="space"]')
 
   await expect(spaceItem).toBeVisible()
@@ -238,8 +231,7 @@ test("US-003 log in with an existing private key", async ({seed, visit}) => {
   await openSettings(withNcryptsec)
   await expect(npubField(withNcryptsec)).toHaveValue(aliceNpub)
 
-  // A second browser context with its own storage: bob's session is his own, not a second view
-  // of alice's.
+  // A second browser context with its own storage: bob's session is his own.
   const asBob = await visit()
 
   await logInWithKey(asBob, nsecFor(users.bob))
@@ -287,8 +279,7 @@ test("US-005 log in with a remote signer", async ({seed, visit}) => {
   const bunker = page.getByPlaceholder("bunker://")
   const next = page.getByRole("button", {name: "Next"})
 
-  // The relay named here belongs to no scenario, so a connection attempt would be recorded as a
-  // leak and fail this test rather than passing unnoticed.
+  // The relay named here belongs to no scenario, so a connection attempt is recorded as a leak.
   await bunker.fill("bunker://not-a-signer-pubkey?relay=wss://nowhere.test/")
   await next.click()
 
@@ -459,15 +450,12 @@ test("US-008 delete your nostr account", async ({seed, as, visit}) => {
 
   const bob = await as(users.bob, `/people/${npubEncode(users.alice.pubkey)}`)
 
-  // zooid honours the kind-62 right-to-vanish, so alice's profile — including the "[deleted]" name
-  // the app blanks it to first — is gone rather than renamed. Bob sees the npub fallback the app
-  // shows for anyone with no profile: displayPubkey, which is npub.slice(0,8)+"…"+npub.slice(-5).
+  // zooid honours the kind-62 right-to-vanish, so the profile is gone rather than renamed.
   const aliceNpub = npubEncode(users.alice.pubkey)
   const fallback = aliceNpub.slice(0, 8) + "…" + aliceNpub.slice(-5)
 
   await expect(bob.getByRole("heading", {name: fallback})).toBeVisible()
 
-  // Her relay list went with the account, so the feed has nowhere to ask and keeps looking rather
-  // than settling on its empty state. What the story is about is that nothing of hers comes back.
+  // Her relay list went with the account, so the feed has nowhere to ask and keeps looking.
   await expect(bob.locator(".card.card-interactive")).toHaveCount(0)
 })

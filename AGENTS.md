@@ -56,7 +56,7 @@ These are the things that most often get fixed by hand after the fact. Go throug
 them before handing work back. The full style reference is under Development
 Conventions below.
 
-- **Comments** — only for genuinely surprising things: a workaround, a constraint imposed by a backend or platform, an invariant that isn't visible from the code in front of you. Never comment props, never restate what the next line does, never justify an ordinary decision. If a small refactor would make the comment stale, don't write it.
+- **Comments** — a comment is one line, for a genuinely surprising thing: a workaround, a constraint imposed by a backend or platform, an invariant that isn't visible from the code in front of you. Never comment props, never restate what the next line does, never justify an ordinary decision. Where one line can't hold it, the argument belongs in the pull request rather than in the code. If a small refactor would make the comment stale, don't write it.
 - **Used once, inlined** — a derived value, helper, type, or named constant with a single use is indirection. Write `setTimeout(pollOnce, 3500)`, not a `POLL_INTERVAL` referenced twice in one file. Name something only when the name is what makes the code readable.
 - **Positive conditionals** — prefer `if (ready) { ... }` over `if (!ready) return`. Nesting is fine; when it gets deep that's the signal the function is doing too much, so split it. Many early returns belong in validation or pipeline functions, not everywhere else.
 - **Truthiness** — test values directly (`if (invoice.paid_at)`) instead of comparing against `null`/`undefined`, and put the truthy branch first in a ternary.

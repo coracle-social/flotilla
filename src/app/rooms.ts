@@ -52,8 +52,7 @@ export const roomComparator = (url: string) => (h: string) => displayRoom(url, h
 export const deriveRoomMembers = (url: string, h: string) =>
   derived(rooms.get().members(url, h).$, $members => Array.from($members))
 
-// A room member also has to be allowed at the relay level, or they won't be able to read the
-// room at all.
+// A room member also has to be allowed at the relay level to read the room at all.
 export const addRoomMembers = async (url: string, room: RoomMeta, pubkeys: string[]) => {
   const members = relayMemberLists.get().get(url)
   const management = relayManagement.get().forUrl(url)
@@ -136,8 +135,7 @@ export const userRoomList = deriveUserItem(RoomLists)
 
 export const userSpaceUrls = derived(userRoomList, $userRoomList => $userRoomList?.urls() ?? [])
 
-// Spaces get reordered from lists that show only some of them, so the urls given here go back
-// in the slots the ones they replace occupied.
+// Spaces get reordered from lists showing only some of them, so urls go back in the slots they replace.
 export const reorderSpaceUrls = (urls: string[]) => {
   let index = 0
 
@@ -183,8 +181,7 @@ export const deriveUserIsRoomAdmin = (url: string, h: string) =>
       $isStaff || Boolean($room?.admins?.pubkeys().includes($user.pubkey)),
   )
 
-// The room's admin list names the management kinds each admin may publish, so the ops the relay
-// will answer for the user are readable before one is sent.
+// The room's admin list names the management kinds each admin may publish.
 export const deriveUserRoomPermissions = (url: string, h: string) =>
   derived([user, rooms.get().forRoom(url, h)], ([$user, $room]) => {
     const tag = $room?.admins?.tags().find(tagValueMatcher(hexTags("p"), $user.pubkey))
@@ -198,8 +195,7 @@ export enum AdminDelete {
   Space = "space",
 }
 
-// A room admin deletes over NIP-29, which is scoped to the room the content is in. NIP-86 is the
-// wider grant and the only one that reaches content belonging to no room, so it comes second.
+// NIP-29 delete is scoped to a room, and NIP-86 is the wider grant, so it comes second.
 export const deriveUserAdminDelete = (url: string, event: TrustedEvent) => {
   const h = tagValue(tagSpec("h"), event.tags) ?? ""
 
@@ -253,15 +249,12 @@ export const deriveUserRoomSearch = () =>
     },
   )
 
-// A row of a room transcript: the messages themselves, the date dividers between them, and the
-// marker for where the reader left off.
+// A row of a room transcript: a message, a date divider, or the reader's unread marker.
 export type RoomRow =
   | {type: "new-messages"; id: string}
   | {type: "date"; id: string; value: string}
   | {type: "note"; id: string; value: TrustedEvent; showPubkey: boolean}
 
-// Groups messages for display: a divider wherever the day changes, an unread marker at the point
-// the reader left off, and the author shown only when it changes or enough quiet has passed.
 // Returned newest first, which is the order a reversed transcript renders in.
 export const groupRoomMessages = ({
   events,

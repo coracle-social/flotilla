@@ -99,8 +99,7 @@ export type {
 } from "./net/http"
 export type {WebLnInfo} from "./app/webln"
 
-// Mirrors encodeRelay in src/app/relays.ts. Importing it reaches the app's module graph, and with
-// it sveltekit.
+// Mirrors encodeRelay in src/app/relays.ts, which cannot be imported without pulling in sveltekit.
 const encodeRelay = (url: string) =>
   encodeURIComponent(
     normalizeRelayUrl(url)
@@ -112,51 +111,40 @@ export const spacePath = (url: string) => `/spaces/${encodeRelay(url)}`
 
 export const roomPath = (url: string, h: string) => `${spacePath(url)}/${h}`
 
-// The path the app builds for a conversation: the other participants' pubkeys, sorted and joined
-// with commas — see makeChatId in src/app/chats.ts.
+// Mirrors makeChatId in src/app/chats.ts.
 export const chatPath = (...pubkeys: string[]) => `/chat/${[...pubkeys].sort().join(",")}`
 
 export const profilePath = (pubkey: string) => `/people/${npubEncode(pubkey)}`
 
-// A literal as a pattern, for a url that carries a query string or a modal's hash alongside the
-// path being matched, or a host whose dots would otherwise be wildcards.
+// Matches a path literally, for one whose query string, hash or dots would otherwise be wildcards.
 export const pathPattern = (path: string) => new RegExp(path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
 
 // What a page is opened with, over and above the scenario's own relays.
 export type PageOptions = {
-  // Overrides the project's context options, for a spec that needs a viewport or a permission of
-  // its own.
+  // Overrides the project's context options, for a spec needing its own viewport or permission.
   context?: BrowserContextOptions
-  // VITE_ values applied over the ones derived from the scenario's relays, e.g. a platform space or
-  // the domain hosted relays are created under. See BootOptions in app/boot.ts.
+  // VITE_ values applied over the ones derived from the scenario's relays. See BootOptions in app/boot.ts.
   env?: Record<string, string>
   // A NIP-07 provider signing as this user, for a login that goes through an extension.
   nip07?: TestUser
   // A WebLN provider on window, for a wallet that gets connected through an extension.
   webln?: WebLnInfo
-  // A blossom server, installed before the page boots. mockBlossom called on the page `as()`
-  // returns arrives after src/app/sync.ts has probed and cached a space's own url, so a spec whose
-  // server is one the app probes on load has to name it here instead.
+  // A blossom server installed before boot, for a url src/app/sync.ts probes and caches on load.
   blossom?: BlossomOptions
   // Fields merged over a relay's own nip-11 document, keyed by relay url.
   relayInfo?: RelayInfoOverrides
-  // What the hosting backend already knows about this user. Read `getHosting(page.context())` for
-  // the handle that changes it mid-test.
+  // What the hosting backend already knows about this user; getHosting changes it mid-test.
   hosting?: HostingFixtures
-  // Relay urls that take the socket and answer nothing, from the page's first connection onward.
-  // `silenceRelay(page.context(), url)` is the same fault applied mid-test, which takes effect on
-  // the next connection rather than this one.
+  // Relay urls that take the socket and answer nothing; silenceRelay does the same mid-test.
   silent?: string[]
 }
 
 export type Harness = {
   zooid: Zooid
   seed(build: (tools: SeedTools) => MaybeAsync<void>): Promise<Scenario>
-  // A logged-in page for a user, in its own browser context, with its own storage and its own
-  // sockets into the relays every other user is talking to.
+  // A logged-in page for a user, in its own browser context.
   as(user: TestUser, path?: string, options?: PageOptions): Promise<Page>
-  // The same page with no session injected, which is the only way to watch a login or a logout
-  // happen.
+  // The same page with no session injected, which is the only way to watch a login or a logout.
   visit(path?: string, options?: PageOptions): Promise<Page>
 }
 
@@ -172,8 +160,7 @@ export type HarnessWorkerFixtures = {
 }
 
 export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
-  // Playwright's own context, and the `page` fixture built on it, is unrouted, so a page born
-  // there boots the app against the relays baked into .env.
+  // Playwright's own context is unrouted, so a page born there boots against the relays in .env.
   context: async () => {
     throw new Error(
       "The built-in `context` and `page` fixtures reach the real network. Open a page with the " +
@@ -181,19 +168,16 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         "they navigate.",
     )
   },
-  // Playwright builds this one with `playwright.request.newContext()`, an http client in this
-  // process that belongs to no browser context, so `installHttpRoutes` cannot see it.
+  // Playwright builds this with request.newContext(), which belongs to no browser context.
   request: async () => {
     throw new Error(
       "The built-in `request` fixture makes http requests from node, where nothing intercepts " +
         "them. Anything the app fetches belongs in a mock installed by `as(user, path)`.",
     )
   },
-  // One container per worker, torn down when the worker ends. It is recreated between tests, in
-  // the teardown of the test that finishes rather than the setup of the one that starts.
+  // One container per worker, recreated in the teardown of the test that finishes.
   zooid: [
-    // playwright reads a fixture's dependencies off this pattern, so it has to stay a pattern
-    // even when there are none.
+    // playwright reads a fixture's dependencies off this pattern, so it stays a pattern.
     // eslint-disable-next-line no-empty-pattern
     async ({}, use) => {
       const zooid = new Zooid()
@@ -228,12 +212,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
       const {urls, indexerUrls, cache} = requireScenario()
 
       await zooid.settle()
-      // The project's own `use` first, so a viewport or device descriptor set in
-      // playwright.config.ts reaches the context rather than being dropped.
-      //
-      // context.route does not see a request a service worker makes, and sveltekit registers
-      // src/service-worker.js on every navigation in dev, so registration is blocked rather than
-      // left as the thing containment rests on.
+      // context.route does not see a request a service worker makes, and sveltekit registers one in dev.
       const context = await browser.newContext({
         ...testInfo.project.use,
         serviceWorkers: "block",
@@ -242,14 +221,10 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
       contexts.push({name: user?.name ?? "anonymous", context})
 
-      // `use.trace` and the built-in reporting only cover contexts playwright made itself, so a
-      // failure in a context opened here arrives with the app's own account of it thrown away —
-      // which is how a spec that caught the app on its 500 page had nothing to say about why.
+      // use.trace and the built-in reporting only cover contexts playwright made itself.
       faults.observe(context, user?.name ?? "anonymous")
 
-      // Playwright matches the most recently registered route first and every mock falls through
-      // what it doesn't recognize, so the block-all goes in before the mocks, and all of it before
-      // the page navigates.
+      // Playwright matches the most recently registered route first, so the block-all goes in first.
       await installHttpRoutes(context)
       await installWebSocketRoutes(context, zooid)
 
@@ -276,9 +251,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         await injectWebLn(context, options.webln)
       }
 
-      // Headless Chromium reports `Notification.permission` as "denied" even where playwright has
-      // granted the permission at the browser level, so the grant is reflected into the API the app
-      // reads.
+      // Headless Chromium reports Notification.permission as "denied" whatever playwright granted.
       if (options.context?.permissions?.includes("notifications")) {
         await context.addInitScript(() => {
           Object.defineProperty(Notification, "permission", {
@@ -311,28 +284,22 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
       },
     })
 
-    // Closed before anything is read off it: an $effect teardown reading a binding svelte has
-    // already cleared throws on unmount, and that is the fault the suite was blindest to.
+    // Closed before anything is read off it: an $effect teardown reading a cleared binding throws.
     for (const {context} of contexts) {
       await context.close()
     }
 
-    // Before the assertions below, which throw: a test that fails still owes the next one a
-    // container, and with every page already closed there is nothing left for the recreate's
-    // network churn to interrupt.
+    // Before the assertions below, which throw: a failing test still owes the next one a container.
     await zooid.reset()
 
     if (faults.found.length > 0 || testInfo.status !== testInfo.expectedStatus) {
-      // A path rather than a body: the list reporter truncates an inline attachment, and the
-      // nightly run on the box keeps test-results and nothing else.
+      // A path rather than a body, since the list reporter truncates an inline attachment.
       const consolePath = testInfo.outputPath("browser-console.log")
 
       await writeFile(consolePath, faults.log.join("\n"))
       await testInfo.attach("browser-console", {path: consolePath, contentType: "text/plain"})
 
-      // What each user said to each relay and what came back. The console says what the app did
-      // with an event; this says whether it ever had one, which is the only way to tell a client
-      // that dropped a message from a relay that never sent it.
+      // Whether a user ever had an event, which tells a client that dropped one from a relay that never sent it.
       const transcriptPath = testInfo.outputPath("relay-transcript.log")
 
       await writeFile(

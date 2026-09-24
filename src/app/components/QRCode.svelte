@@ -11,8 +11,7 @@
 
   const copy = () => clip(code)
 
-  // qrcode is imported here rather than at the top of the module because svelte strips effect
-  // bodies when compiling for SSR, which would leave the import with no remaining use.
+  // Imported here because svelte strips effect bodies for SSR, leaving a top-level import unused.
   const draw = async (canvas: HTMLCanvasElement, wrapper: Element, code: string) => {
     const QRCode = await import("qrcode")
 

@@ -6,9 +6,7 @@
   import Dialog from "@lib/components/Dialog.svelte"
   import {getModal, getModalStack, navigate, popModal} from "@app/modal"
 
-  // A link inside a modal is SvelteKit's to handle, and it would stack the page it opens on
-  // top of the modal's own history entry. Hand it to `navigate`, which gives that entry back
-  // first.
+  // SvelteKit would stack the page a link opens on top of the modal's own history entry.
   beforeNavigate(navigation => {
     if (navigation.type === "link" && navigation.to && getModalStack().length > 0) {
       navigation.cancel()

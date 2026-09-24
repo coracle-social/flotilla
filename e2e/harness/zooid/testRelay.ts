@@ -17,11 +17,7 @@ export type TestRelayOptions = {
   publish: (event: SignedEvent, options?: PublishOptions) => Promise<void>
 }
 
-// Seeding signs the events a real client would send and publishes them over a socket. Room
-// administration is signed by `admin`, the only test identity the tomls grant can_manage.
-//
-// Every timestamp is the caller's. Reading the wall clock here would stamp two fixtures that
-// describe the same thing seconds apart, which is enough to decide which of them wins.
+// admin is the only test identity the tomls grant can_manage, and every timestamp is the caller's.
 export const makeTestRelay = ({name, url, publish}: TestRelayOptions): TestRelay => {
   const event = async (user: TestUser, template: StampedEvent) => {
     const signed = await user.signer.sign(template)
@@ -37,8 +33,7 @@ export const makeTestRelay = ({name, url, publish}: TestRelayOptions): TestRelay
     event,
     publish,
     room: async (h, meta, createdAt) => {
-      // A relay stamps the metadata it derives from these ops with the op's own created_at, so
-      // creation has to be strictly older than the edit or the edit is dropped as stale.
+      // A relay stamps derived metadata with the op's created_at, so creation must be older than an edit.
       await event(
         users.admin,
         makeEvent(ROOM_CREATE, {tags: [["h", h]], created_at: createdAt - 1}),

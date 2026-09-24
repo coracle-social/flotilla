@@ -29,14 +29,11 @@ const roomUploadButton = (page: Page) => page.locator(".room__compose-inner .joi
 
 const chatUploadButton = (page: Page) => page.locator("button[data-tip='Add an image']")
 
-// Both things the composer puts above itself — the message being replied to and the editing
-// indicator — are the same bordered strip, each with a single button in it: its X.
+// The reply preview and the editing indicator are the same bordered strip, each with its own X.
 const banner = (page: Page, text: string) =>
   page.locator(".room__compose .border-l-2").filter({hasText: text})
 
-// Both of these are DataTransfer dispatches rather than anything native: prosemirror reads the file
-// straight off the event, and playwright's own dispatchEvent builds a plain Event, which would drop
-// the dataTransfer the handler needs.
+// prosemirror reads the file off the event, and playwright's dispatchEvent drops the dataTransfer.
 const dropImage = (editor: Locator, name: string) =>
   editor.evaluate(
     (node, {name, data}) => {
@@ -91,8 +88,7 @@ test("US-056 autocomplete a mention or a room reference", async ({seed, as}) => 
     space.relayList(user.bob)
     space.message(user.bob, "general", "morning all", at(2, HOUR))
 
-    // Someone whose name matches the same term but who belongs to a different space, so the
-    // dropdown has a non-member to rank below this space's own members.
+    // Someone matching the same term from a different space, to rank below this space's own members.
     other.room("lounge", {name: "Lounge"})
     other.join(user.alice, "lounge")
     other.join(outsider, "lounge")
@@ -104,9 +100,7 @@ test("US-056 autocomplete a mention or a room reference", async ({seed, as}) => 
   const space = scenario.space("space")
   const other = scenario.space("other")
 
-  // Alice arrives through the other space so that the outsider's profile is in her client before
-  // she composes: a profile reaches her by being rendered, and his never renders in the space she
-  // is about to type in.
+  // A profile reaches her by being rendered, and his never renders in the space she is typing in.
   const page = await as(users.alice, roomPath(other.url, "lounge"))
 
   // Exactly, since the join notice above his message carries his name too, as "@Bobbin Amaranth".
@@ -114,8 +108,7 @@ test("US-056 autocomplete a mention or a room reference", async ({seed, as}) => 
     timeline(page).getByRole("button", {name: "Bobbin Amaranth", exact: true}),
   ).toBeVisible()
 
-  // A space's nav item is labeled with the name its nip-11 document reports, and the two tenants
-  // report "space" and "other".
+  // A space's nav item is labeled with the name its nip-11 document reports.
   await page.locator('.primary-nav [data-tip="space"]').click()
   await page.locator(".secondary-nav").getByRole("link", {name: "General"}).click()
 
@@ -224,8 +217,7 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   await expect(composer(alice)).toContainText("pasted.gif")
   await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)
 
-  // The same thing in a conversation. Its composer stays disabled until the recipient's messaging
-  // relays have been read, which is what waiting on the composer waits out.
+  // Its composer stays disabled until the recipient's messaging relays have been read.
   await alice.goto(chatPath(users.bob.pubkey))
   await bob.goto(chatPath(users.alice.pubkey))
 
@@ -235,19 +227,15 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
   await expect(composer(alice)).toContainText("selfie.gif")
 
-  // The file node appears the moment it is attached, which is also the moment `uploading` goes
-  // true — and submit returns without a word while it is. Encryption makes that window wide enough
-  // to press enter into, so wait the upload out rather than losing the message to it.
+  // Submit returns without a word while `uploading` is true, and encryption makes that window wide.
   await expect(sendButton(alice)).toBeEnabled()
 
   await composer(alice).press("Enter")
 
-  // A conversation's image is uploaded encrypted, so the recipient fetches the ciphertext and
-  // decrypts it into a blob url rather than pointing an <img> at the server.
+  // A conversation's image is uploaded encrypted, so the recipient decrypts it into a blob url.
   await expect(bob.locator('.chat-bubble img[src^="blob:"]')).toBeVisible()
 
-  // Back to the room on a fresh page, so no toast the conversation raised is still standing and the
-  // one asserted below can only be the rejected upload's own.
+  // Back to the room on a fresh page, so no toast the conversation raised is still standing.
   await alice.goto(path)
 
   await expect(timeline(alice).getByText("morning all")).toBeVisible()
@@ -285,8 +273,7 @@ test("US-058 drafts survive navigating away", async ({seed, as}) => {
     space.join(user.bob, "general")
     space.message(user.bob, "general", "morning all", at(2, HOUR))
 
-    // Alice's own kind-10050 is what lets the Messages nav item navigate rather than stop to ask
-    // her to enable chat; bob's is what enables the conversation's composer.
+    // Her kind-10050 lets the Messages nav navigate; his enables the conversation's composer.
     for (const person of [user.alice, user.bob]) {
       space.profile(person, {name: person.name})
       space.relayList(person)
@@ -294,8 +281,7 @@ test("US-058 drafts survive navigating away", async ({seed, as}) => {
     }
   })
 
-  // Drafts live in memory, so every move here is an in-app navigation — a reload would clear them
-  // whether or not they were kept.
+  // Drafts live in memory, so every move here is an in-app navigation.
   const page = await as(users.alice, chatPath(users.bob.pubkey))
   const editor = composer(page)
   const rooms = page.locator(".secondary-nav")
@@ -331,8 +317,7 @@ test("US-058 drafts survive navigating away", async ({seed, as}) => {
 
   await expect(editor).toHaveText("half a thought")
 
-  // The composer is remounted around a restored draft, so put the caret in it before sending
-  // rather than typing into whatever had focus when the room came back.
+  // The composer is remounted around a restored draft, so put the caret in it before sending.
   await editor.click()
   await editor.press("Enter")
 
@@ -449,8 +434,7 @@ test("US-125 dictate a message", async ({seed, as}) => {
   const alice = await as(users.alice, roomPath(url, "general"))
   const transcription = await mockOpenRouterTranscription(alice.context(), "the tide turns at six")
 
-  // Recording asks for nothing. Asking for a transcript with no key saved asks for one, the same
-  // prompt reading a message out loud uses.
+  // Recording asks for nothing. Asking for a transcript with no key saved asks for one.
   const action = await record(alice)
 
   await action.getByRole("button", {name: "Transcribe it"}).click()
@@ -467,22 +451,19 @@ test("US-125 dictate a message", async ({seed, as}) => {
 
   await expect(composer(alice)).toContainText("the tide turns at six")
 
-  // OpenRouter picks its decoder off the extension, so what the recorder produced has to reach it
-  // under a name that names the format.
+  // OpenRouter picks its decoder off the extension, so the upload has to name the format.
   expect(transcription.uploads).toEqual([expect.stringMatching(/^dictation\.\w+$/)])
 
   await composer(alice).press("Enter")
 
   await expect(timeline(alice)).toContainText("the tide turns at six")
 
-  // A transcription outlives the composer that asked for it: the room it was recorded in can be
-  // left while the request is still out, and the transcript waits for whichever composer is next.
+  // A transcription outlives the composer that asked for it, and waits for whichever comes next.
   transcription.hold()
 
   await (await record(alice)).getByRole("button", {name: "Transcribe it"}).click()
 
-  // In-app rather than a fresh load: a dictation is held by the app rather than by the composer
-  // that started one, so reloading the page is losing it rather than leaving it.
+  // A dictation is held by the app rather than by the composer, so reloading the page is losing it.
   await roomLink(alice, "Lounge").click()
 
   await expect(composer(alice)).toBeVisible()
@@ -507,8 +488,7 @@ test("US-126 send a voice note", async ({seed, as}) => {
 
   await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
 
-  // Leaving the question unanswered throws the recording away, so nothing is uploaded and the
-  // composer is where it was.
+  // Leaving the question unanswered throws the recording away.
   await (await record(alice)).getByRole("button", {name: "Discard"}).click()
 
   await expect(dialog(alice, "Transcribe or send?")).toHaveCount(0)
@@ -521,7 +501,6 @@ test("US-126 send a voice note", async ({seed, as}) => {
 
   await composer(alice).press("Enter")
 
-  // The imeta on the message says the upload is audio, which is what gives it a player rather
-  // than a link.
+  // The imeta on the message says the upload is audio, which gives it a player rather than a link.
   await expect(timeline(alice).locator(`audio[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
 })

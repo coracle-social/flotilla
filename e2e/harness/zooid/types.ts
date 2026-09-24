@@ -3,9 +3,7 @@ import type {ClientMessage, RelayMessage} from "@welshman/net"
 import type {TestUser} from "../keys"
 
 export type PublishOptions = {
-  // Which identity the seeding connection authenticates as. Defaults to the event's own author,
-  // which then has to be a test identity. A gift wrap is signed by an ephemeral key nothing in this
-  // process can authenticate as, so its connection belongs to the sender instead.
+  // Which identity the seeding connection authenticates as, defaulting to the event's own author.
   as?: TestUser
 }
 
@@ -17,9 +15,7 @@ export type RoomOptions = {
   private?: boolean
 }
 
-// A handle to one relay, plus the seeding affordances scenarios build on. Every seeding call
-// publishes over a real socket rather than inserting into storage, so the relay stores exactly what
-// it would have stored for a real client.
+// Every seeding call publishes over a real socket, so the relay stores what it would for a client.
 export type TestRelay = {
   readonly name: string
   readonly url: string
@@ -29,13 +25,11 @@ export type TestRelay = {
   member(user: TestUser, h: string | undefined, createdAt: number): Promise<void>
   // Escape hatch for kinds with no affordance of their own: profiles, reactions, threads, DMs.
   event(user: TestUser, event: StampedEvent): Promise<SignedEvent>
-  // An event this process did not sign, sent over `as`'s connection. A gift wrap, whose author is
-  // the ephemeral key that wrapped it, is the case that needs this.
+  // An event this process did not sign, sent over `as`'s connection, which a gift wrap needs.
   publish(event: SignedEvent, options: PublishOptions): Promise<void>
 }
 
-// One client's connection to a relay. Every connection to a url reaches the same container, so one
-// browser context observes another's writes over the wire.
+// Every connection to a url reaches the same container, so one context observes another's writes.
 export type RelayConnection = {
   onMessage(listener: (message: RelayMessage) => void): void
   send(message: ClientMessage): void

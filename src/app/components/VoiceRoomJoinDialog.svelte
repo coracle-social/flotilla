@@ -54,12 +54,7 @@
     void loadDevices()
   })
 
-  // Live mic level meter so the user can confirm their selected microphone is
-  // actually picking up sound before joining, rather than finding out mid-call.
-  // The stream handle stays a plain local while only the track is reactive: the
-  // effect below both reads and writes it, and reading reactive state an effect
-  // also writes makes that effect depend on its own output, so it would re-run
-  // forever and cancel the in-flight getUserMedia every time.
+  // The stream stays a plain local, since reading reactive state this effect writes would re-run it.
   let previewStream: MediaStream | undefined
   let previewTrack = $state<MediaStreamTrack | undefined>(undefined)
 

@@ -33,8 +33,7 @@
   const canAssign = $derived($supportedMethods.includes("assignmethod"))
   const canUnassign = $derived($supportedMethods.includes("unassignmethod"))
 
-  // A relay can grant methods this client knows nothing about, and a list that left them out
-  // would revoke them on the next save.
+  // A relay can grant methods this client doesn't know, and leaving them out would revoke them.
   const groups = $derived.by(() => {
     const known = MANAGEMENT_METHOD_GROUPS.flatMap(group => group.methods.map(({method}) => method))
     const extra = [...assigned].filter(method => !known.includes(method))

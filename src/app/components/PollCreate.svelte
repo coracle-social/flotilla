@@ -91,8 +91,7 @@
     reorderOptions(targetId)
   }
 
-  // Dragover has already moved the option, so dropping only has to end the drag. Reordering again
-  // here would move it a second time, relative to the position it just took, undoing the move.
+  // Dragover has already moved the option, so reordering on drop would move it a second time.
   const onDrop = (e: DragEvent) => {
     e.preventDefault()
     draggedOptionId = undefined

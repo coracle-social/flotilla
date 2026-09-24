@@ -158,8 +158,7 @@
     }
   }
 
-  // Set up the tenant's server-side wallet (nested so this dialog stays mounted);
-  // onSaved collects right away and the poll is the backstop.
+  // Nested so this dialog stays mounted, with onSaved collecting and the poll as the backstop.
   const connectWallet = () => {
     pushModal(
       PaymentSetup,

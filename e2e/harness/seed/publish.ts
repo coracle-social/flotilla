@@ -5,20 +5,16 @@ import type {TestUser} from "../keys"
 // A queued write, drained in declaration order by `seed` in scenario.ts.
 export type Enqueue = (write: () => Promise<void>) => void
 
-// A handle to an event the scenario is going to publish. Seeding calls record what to write and
-// return before anything is written, so the event is filled in when its turn in the queue comes up.
+// Seeding calls record what to write and return before anything is written.
 export type SeededEvent = {
   readonly event: SignedEvent
   readonly id: string
 }
 
-// An event to seed, either already rendered or built when its turn comes up. A domain writer needs
-// a relay url to resolve its hints against, and a relay has none until the queue has drained, so
-// anything built by one has to be deferred.
+// A domain writer needs a relay url to resolve its hints against, so anything it builds is deferred.
 export type SeededTemplate = StampedEvent | (() => MaybeAsync<EventTemplate>)
 
-// A nip-65 relay list, as the two sets a client reads off it: `write` is what an outbox-routed load
-// for this pubkey resolves to, `read` is what a feed asks for that pubkey's context.
+// `write` is what an outbox-routed load resolves to, `read` is what a feed asks for that pubkey.
 export type RelayListUrls = {
   read?: string[]
   write?: string[]
@@ -35,17 +31,13 @@ export type PublisherOptions = {
   // The relay these events are seeded into, for the error a read-too-early raises.
   name: string
   enqueue: Enqueue
-  // The moment the scenario began. A fixture declared without a timestamp is stamped with it
-  // rather than with the wall clock, so two fixtures describing the same thing cannot land
-  // seconds apart and decide which of them wins.
+  // The moment the scenario began. A fixture with no timestamp is stamped with it, not the wall clock.
   startedAt: number
-  // How an event this process signs reaches the relay, deferred because a space's relay handle
-  // only exists once the queue has started draining.
+  // Deferred, since a space's relay handle only exists once the queue has started draining.
   sign: (user: TestUser, template: StampedEvent) => Promise<SignedEvent>
 }
 
-// The queue every seeding call goes through: what to write is recorded now and published when
-// `seed()` drains, and what it produced only reads back after that.
+// What to write is recorded now and published when `seed()` drains.
 export const makePublisher = ({name, enqueue, startedAt, sign}: PublisherOptions) => {
   // Queues a write and hands back a getter for whatever it produced.
   const seeded = <T>(write: () => Promise<T>) => {

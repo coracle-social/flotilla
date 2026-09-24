@@ -23,20 +23,16 @@ import type {TestUser} from "../keys"
 import {makePublisher} from "./publish"
 import type {Enqueue, ProfileValues, RelayListUrls, SeededEvent, SeededTemplate} from "./publish"
 
-// @welshman/domain has no writer for NIP-29 kind-9 messages, and none of its readers describe one,
-// so this pairs the base writer with the base reader. The behavior tags it renders are everything a
-// room message carries: `h` via setRoom, `q` and `p` via addQuote and addMention.
+// @welshman/domain has no writer for NIP-29 kind-9 messages, so this pairs the base writer and reader.
 class MessageWriter extends EventWriter<BaseEventReader> {}
 
-// The kind-14 a direct message really is. It is never published, since each participant gets it
-// inside a gift wrap, so this is what a spec asserts on.
+// The kind-14 a direct message really is. It is never published, since each participant gets a wrap.
 export type SeededRumor = {
   readonly rumor: HashedEvent
   readonly id: string
 }
 
-// A user's membership as their own client sees it, which the scenario turns into one room list
-// per user once every space has been seeded.
+// A user's membership as their own client sees it, turned into a room list once every space is seeded.
 export type SeededMembership = {
   user: TestUser
   rooms: string[]
@@ -48,26 +44,19 @@ export type SeededSpace = {
   readonly memberships: SeededMembership[]
   room(h: string, options?: RoomOptions): void
   member(user: TestUser, h?: string): void
-  // Relay and room membership, plus a place in the user's own room list, which is what a user who
-  // joined this space through the ui ends up with.
+  // Relay and room membership, plus a place in the user's own room list.
   join(user: TestUser, ...rooms: string[]): void
   message(user: TestUser, h: string, content: string, createdAt?: number): SeededEvent
   reply(user: TestUser, parent: SeededEvent, content: string, createdAt?: number): SeededEvent
   profile(user: TestUser, values: ProfileValues, createdAt?: number): SeededEvent
-  // Where this user reads and writes, this space by default. Outbox routing resolves everything
-  // about a person through their relay list — their profile, the events they authored, the wraps
-  // addressed to them — so a fixture is only loadable by somebody else once its author has one.
+  // Outbox routing resolves everything about a person through their relay list.
   relayList(user: TestUser, urls?: RelayListUrls, createdAt?: number): SeededEvent
-  // The kind-10050 that says where someone's direct messages go, this space by default. Having one
-  // is what makes a person reachable, so a story about messaging being off is a person without one.
+  // Having one is what makes a person reachable, so messaging being off is a person without one.
   messagingRelayList(user: TestUser, urls?: string[], createdAt?: number): SeededEvent
   event(user: TestUser, template: SeededTemplate, createdAt?: number): SeededEvent
-  // A nip-17 conversation. One kind-14 rumor, gift-wrapped once per participant including the
-  // sender, whose own copy is the half of the thread their client reads back.
+  // One kind-14 rumor, gift-wrapped once per participant including the sender.
   dm(from: TestUser, to: TestUser[], content: string, createdAt?: number): SeededRumor
-  // This space's domain kinds, bound to a resolver that answers with its url, so a writer built
-  // here renders its relay hints as this space. For everything `event()` takes a template for:
-  // `space.event(user, () => space.kind(Article).writer().setTitle("x").renderTemplate())`.
+  // This space's domain kinds, bound to a resolver that answers with its url.
   kind<R extends BaseEventReader, W extends EventWriter<R>, Q extends EventQuery>(
     factory: KindFactory<R, W, Q>,
   ): ConfiguredKind<R, W, Q>
@@ -76,16 +65,14 @@ export type SeededSpace = {
 export type SeedSpaceOptions = {
   zooid: Zooid
   enqueue: Enqueue
-  // The moment the scenario began. A fixture declared without a timestamp is stamped with it
-  // rather than with the wall clock.
+  // A fixture declared without a timestamp is stamped with the scenario's start, not the wall clock.
   startedAt: number
   name: SpaceName
 }
 
 export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): SeededSpace => {
   const memberships: SeededMembership[] = []
-  // Known before seeding runs, unlike the relay handle below, so a fixture on another relay can
-  // name this one.
+  // Known before seeding runs, unlike the relay handle below, so another relay's fixture can name it.
   const url = tenantUrl(name)
 
   let testRelay: Maybe<TestRelay>
@@ -138,9 +125,7 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
   const message = (user: TestUser, h: string, content: string, createdAt = startedAt) =>
     publish(() => relay().message(user, h, content, createdAt))
 
-  // Flotilla replies in a room by quoting. Content.svelte renders a quote from the nostr uri in the
-  // content rather than from the q tag, so the uri is prepended as prependParent does in
-  // src/app/rooms.ts.
+  // Content.svelte renders a quote from the nostr uri rather than the q tag, as prependParent does.
   const reply = (user: TestUser, parent: SeededEvent, content: string, createdAt = startedAt) =>
     event(
       user,
@@ -188,9 +173,7 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
   const messagingRelayList = (user: TestUser, urls = [url], createdAt = startedAt) =>
     event(user, () => kind(MessagingRelayList).writer().setUrls(urls).renderTemplate(), createdAt)
 
-  // Every wrap is published over the sender's own connection, since a gift wrap's author is an
-  // ephemeral key nobody in this process can authenticate as. zooid stores it anyway, authorizing a
-  // kind-1059 by the member named in its p tag.
+  // A gift wrap's author is an ephemeral key nobody here can authenticate as, so the sender sends it.
   const dm = (from: TestUser, to: TestUser[], content: string, createdAt = startedAt) => {
     const rumor = seeded(async () => {
       const writer = kind(DirectMessage).writer().setContent(content)

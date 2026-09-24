@@ -71,14 +71,12 @@
   const relayLabel = $derived(current.info_name || current.subdomain)
   const domainVerified = $derived(flagToBool(current.custom_domain_verified, false))
   const recordTarget = $derived(canonicalRelayHost(current))
-  // DNS forbids a CNAME at a zone apex, so those domains point at the same
-  // target using their provider's ALIAS/ANAME record instead.
+  // DNS forbids a CNAME at a zone apex, so those use the provider's ALIAS or ANAME record.
   const isApex = $derived(current.custom_domain.split(".").length === 2)
   const recordType = $derived(isApex ? "ALIAS" : "CNAME")
   const isPaidPlan = $derived(current.plan_id !== "free")
 
-  // Adding, removing or verifying a custom domain moves the relay's host, so
-  // migrate the admin's groups list and follow the space to its new url.
+  // A custom domain moves the relay's host, so migrate the groups list and follow the space.
   const setCurrentAndFollowHost = async (next: HostedRelay) => {
     const previousUrl = getHostedRelayUrl(current)
     const nextUrl = getHostedRelayUrl(next)

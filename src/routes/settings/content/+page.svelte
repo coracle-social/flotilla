@@ -58,9 +58,7 @@
   let loadedMutes = Boolean($userMuteList)
   let loadedServers = Boolean($userBlossomServerList)
 
-  // Both lists come off the wire, so on a fresh load they land after this page has mounted. Each
-  // field takes its stored value up when it arrives, since a form that never saw it would publish
-  // its own emptiness back over it.
+  // Both lists land after this page mounts, and a field that never saw one would publish over it.
   $effect(() => {
     if (!loadedMutes && $userMuteList) {
       loadedMutes = true

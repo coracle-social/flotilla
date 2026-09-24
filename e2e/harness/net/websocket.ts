@@ -32,8 +32,7 @@ type Traffic = {
 
 const trafficStore = makeContextStore<Traffic>("installWebSocketRoutes")
 
-// A relay that holds nothing. REQs get an immediate EOSE and events are accepted and dropped, so a
-// leak fails on the assertion that names it rather than on a timeout three layers away.
+// A relay that holds nothing, so a leak fails on the assertion naming it rather than on a timeout.
 const openEmptyRelay = (): RelayConnection => {
   let listener: (message: RelayMessage) => void = () => undefined
 
@@ -52,9 +51,7 @@ const openEmptyRelay = (): RelayConnection => {
   }
 }
 
-// A relay that takes the socket and then says nothing at all: no events, no eose, no closed. It is
-// the fault a client cannot see, since a request it never answers is indistinguishable from one it
-// is still working on, and the only way out is the caller's own deadline.
+// A relay that takes the socket and says nothing, so the only way out is the caller's own deadline.
 const openSilentRelay = (): RelayConnection => ({
   onMessage() {},
   send() {},
@@ -100,15 +97,7 @@ const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
   route.onClose(() => connection.close())
 }
 
-/**
- * The single interception point for relay traffic. It goes on the context rather than a page, so
- * every page in it is covered including ones opened later, and it is safe to call before any page
- * exists.
- *
- * Vite's hmr socket is the one url left alone. Everything else is answered from this process, and
- * a url that is not one of the container's virtual relays is served by an empty relay and recorded
- * as a leak.
- */
+/** The single interception point for relay traffic. On the context, so it covers a page opened later. */
 export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) => {
   const traffic = trafficStore.set(context, {
     transcript: [],
@@ -125,8 +114,7 @@ export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) =>
 
 export const getTranscript = (context: BrowserContext) => trafficStore.get(context).transcript
 
-// Every event this context put on the wire, oldest first, with the relay it went to. One event
-// published to three relays is three entries.
+// Every event this context put on the wire, oldest first. One event on three relays is three entries.
 export const getPublished = (context: BrowserContext): PublishedEvent[] =>
   getTranscript(context)
     .filter(
@@ -134,28 +122,21 @@ export const getPublished = (context: BrowserContext): PublishedEvent[] =>
     )
     .map(({url, message}) => ({url, event: message[1] as TrustedEvent}))
 
-// The same, narrowed to one kind, which is how a spec asks what the client published rather than
-// what it rendered.
+// The same, narrowed to one kind, for asking what the client published rather than what it rendered.
 export const getPublishedEvents = (context: BrowserContext, kind: number) =>
   getPublished(context)
     .filter(({event}) => event.kind === kind)
     .map(({event}) => event)
 
-// Makes a relay answer like one that never held anything, without its url becoming a leak. `serve`
-// resolves a relay once, at open, so sockets already open keep theirs and the drop takes effect on
-// the next connection. A reload is what gives it one.
+// `serve` resolves a relay once, at open, so a socket already open keeps its relay until a reload.
 export const forgetRelay = (context: BrowserContext, url: string) =>
   trafficStore.get(context).forgotten.add(normalizeRelayUrl(url))
 
-// Makes a relay answer nothing at all, without its url becoming a leak. Silence is all this relay
-// is, so it needs no tenant behind it: the url never reaches the container, and naming it here is
-// what says the app was meant to open it. Resolved at open, like `forgetRelay`, so a spec that
-// wants a page to boot into the fault passes `silent` to `as` instead of calling this.
+// Resolved at open, like forgetRelay, so a page that boots into the fault passes `silent` to `as`.
 export const silenceRelay = (context: BrowserContext, url: string) =>
   trafficStore.get(context).silenced.add(normalizeRelayUrl(url))
 
-// Every frame in both directions, oldest first. Attach it to a failing test to see what the client
-// actually said, and to whom.
+// Every frame in both directions, oldest first. Attach it to a failing test.
 export const formatTranscript = (context: BrowserContext) =>
   getTranscript(context)
     .map(

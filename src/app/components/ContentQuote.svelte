@@ -41,10 +41,7 @@
 
   const quote = deriveEvent(idOrAddress, hints)
 
-  // Start with the hints we were handed, then widen to everything the router can work out:
-  // where the quoted event has been seen, its author's outbox, and — since whoever quoted it
-  // must have seen it — the relays the quoting event came from. Resolving that may take a
-  // round trip for the author's relay list, so only load again if the hints came up empty.
+  // Whoever quoted the event must have seen it, so the quoting event's relays are asked too.
   $router.resolver
     .relays([
       ...relaySelections(removeUndefined([url])),

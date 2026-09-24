@@ -114,13 +114,11 @@ export const publishJoinRequest = (url: string, claim?: string) => {
 export const publishLeaveRequest = (url: string) =>
   command(writer(RelayLeave).forceRoutes(relay(url))).then(publish)
 
-// A relay answers a re-sent request with "duplicate:" and a membership it already has with
-// "already a member" — both leave us where we wanted to be, so only anything else is a refusal.
+// "duplicate:" and "already a member" both leave us where we wanted to be.
 const isMembershipRefusal = (error: string) =>
   Boolean(error) && !error.startsWith("duplicate:") && !error.includes("already")
 
-// Joining a room takes two publishes: a NIP-29 request the relay can refuse, and the user's
-// own room list, which is what puts the room in their sidebar. `code` is a room invite code.
+// Joining takes two publishes: the NIP-29 request the relay can refuse, and the user's room list.
 export const joinRoom = async (url: string, h: string, code?: string) => {
   const eventWriter = writer(RoomJoin).setRoom(url, h)
 
@@ -401,8 +399,7 @@ export class Access {
         sleep(300),
       ])
 
-      // A relay that reports methods relay-wide rather than per-user can still come back
-      // "blocked" for this particular user — treat that as having no claim.
+      // A relay reporting methods relay-wide can still come back "blocked" for this user.
       if (methods?.includes("createclaim")) {
         const {result: claims} = await management.listClaims()
 

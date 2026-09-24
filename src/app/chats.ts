@@ -34,9 +34,7 @@ export const makeChatId = (pubkeys: string[]) => {
 
 export const splitChatId = (id: string) => getChatPubkeys(id.split(","))
 
-// A message the user is party to: they wrote it, or it names them. Anything else decrypted out of
-// a wrap addressed to them is a rumor about other people, which is either a mistake or an attempt
-// to plant a conversation in their list.
+// Anything else decrypted out of a wrap addressed to the user is a rumor about other people.
 export const isUserMessage = (event: TrustedEvent) => {
   const pubkey = user.get().pubkey
 
@@ -105,13 +103,7 @@ export const chatsById = call(() => {
     const removeEvents = (removed: Set<string>) => {
       let dirty = false
 
-      // Drop the removed ids from whatever chats hold them, matching on id alone. A removed event
-      // can't be looked up in the repository — a cancelled delayed send is dropped from it outright
-      // (unlike a delete, which leaves the target flagged), so `getEvent` would return nothing and
-      // the message would linger. Replace each affected chat with a fresh object rather than mutating
-      // its messages in place: deriveChat is deduplicated by reference (see makeDeriveItem/
-      // deriveDeduplicated), so a chat whose identity is unchanged never reaches the ui. A chat
-      // that loses its last message goes with it, since a chat is only ever its messages.
+      // deriveChat dedupes by reference, so an affected chat is replaced rather than mutated in place.
       for (const [chatId, chat] of chatsById) {
         const messages = chat.messages.filter(e => !removed.has(e.id))
 
@@ -131,10 +123,7 @@ export const chatsById = call(() => {
       }
     }
 
-    // Login swaps the whole app — a new identity gets a new repository — so a listener bound to
-    // `app.get().repository` once at start would keep reading the discarded one after login (see the
-    // note on `fromApp` in core.ts). Re-bind through the `app` store instead: on each app, rebuild
-    // the list from that repository and listen to it, tearing down the previous binding first.
+    // A listener bound to `app.get().repository` would keep reading the app login discarded.
     let repoUnsubscribe: (() => void) | undefined
 
     const bindRepository = ($app: App) => {
@@ -187,8 +176,7 @@ export const CHAT_TABS = [
   {value: ChatTab.Requests, label: "Requests"},
 ]
 
-// Both thresholds are at least one: a pubkey nobody vouches for and a message carrying no nonce
-// have met nothing, so a zero would wave the whole list through.
+// Both thresholds are at least one, since a zero would wave the whole list through.
 export type ChatContext = {
   pubkey: string
   follows: Set<string>
@@ -198,23 +186,18 @@ export type ChatContext = {
   minWot: number
 }
 
-// The wrap manager keeps everything about a wrap but its ciphertext, and proof of work is read off
-// the id and the nonce tag, so an empty content stands in for what it dropped.
+// The wrap manager drops the ciphertext, and proof of work reads off the id and the nonce tag.
 const getWrapPow = (wrap: WrapItem) => getPow({...wrap, content: ""})
 
-// A gift wrap is the event a sender has to mint, so the work is on it rather than on the rumor
-// sealed inside. A message can arrive in more than one wrap; the best of them is what was paid.
+// The work is on the wrap rather than the rumor, and the best of several is what was paid.
 const getMessagePow = (event: TrustedEvent) =>
   Math.max(0, ...app.get().wrapManager.getWraps(event.id).map(getWrapPow))
 
-// Someone the user has a standing relationship with, whether or not they have ever written to
-// each other.
+// Someone the user has a standing relationship with, written to or not.
 const isKnown = (pubkey: string, ctx: ChatContext) =>
   ctx.follows.has(pubkey) || ctx.members.has(pubkey) || (ctx.scores.get(pubkey) ?? 0) >= ctx.minWot
 
-// A chat the user asked for rather than one that arrived: they have written in it, they know
-// everyone else in it, or somebody spent proof of work to reach them. Every other participant has
-// to be known, so a stranger cannot get in by adding the user to a group with their friends.
+// Every other participant has to be known, so a stranger can't get in by adding the user to a group.
 export const isConversation = (chat: Chat, ctx: ChatContext) => {
   const others = remove(ctx.pubkey, chat.pubkeys)
 
@@ -236,9 +219,7 @@ export const groupChatsByTab = (chats: Chat[], ctx: ChatContext): ChatsByTab => 
 
 const userFollowList = deriveUserItem(FollowLists)
 
-// The spaces the user belongs to, read here rather than imported from @app/rooms: that module
-// and @app/routes already require each other, and joining the cycle leaves this one holding an
-// uninitialized binding.
+// Read here rather than imported from @app/rooms, which already cycles with @app/routes.
 const userRoomList = deriveUserItem(RoomLists)
 
 const wotScores = fromApp($app => $app.use(Wot).scores(WotScope.Follows).$)

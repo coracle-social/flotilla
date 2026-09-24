@@ -3,11 +3,7 @@
 
   let instance: Maybe<IntersectionObserver>
 
-  /** Browsers only paint a `content-visibility: auto` element within half a viewport of the scroll
-   * position, which a fast scroll outruns, leaving empty cards behind. There is no css control over
-   * that distance, so the element is painted two viewports ahead instead. The observer has to watch
-   * the element carrying `cv` — a descendant of one is inside the subtree being skipped, which is
-   * why the class and the attachment live in the same component. */
+  /** Browsers paint a `content-visibility: auto` element within half a viewport, which a fast scroll outruns. */
   const renderAhead = (element: HTMLElement) => {
     const observer = (instance ||= new IntersectionObserver(
       entries => {
@@ -30,10 +26,7 @@
   import type {Component, Snippet} from "svelte"
   import cx from "classnames"
 
-  // The root of anything rendered in a long list. `cv` lets the browser skip an offscreen one,
-  // and `renderAhead` is what keeps a fast scroll from outrunning that; `tag` takes whatever the
-  // item was already using as its root, so nothing gains a wrapper element and everything else
-  // passes through to it.
+  // The root of anything rendered in a long list, where `cv` lets the browser skip an offscreen one.
   type Props = {
     children?: Snippet
     tag?: string | Component<any>

@@ -18,8 +18,7 @@
 
   const {class: className = ""}: {class?: string} = $props()
 
-  // The hubs most of the user's follows publish to, which is the same set and the same limit
-  // `syncFollowNetwork` reads their lists from.
+  // The same set and limit `syncFollowNetwork` reads the follows' relay lists from.
   const RELAY_LIMIT = 8
 
   const context = makeFeedContext({
@@ -36,8 +35,7 @@
   let started = false
   let stop: Maybe<() => void>
 
-  // Kind 1 replies are left out - without their parent they read as half a conversation. Every
-  // other kind here is a root, and an edited one is shown once, at its latest version.
+  // Kind 1 replies read as half a conversation without their parent.
   const isRoot = (event: TrustedEvent) =>
     event.kind !== NOTE || getReplyTags(event.tags).replies.length === 0
 
@@ -68,8 +66,7 @@
     }
   }
 
-  // The follow list is what the feed is made of, so it waits for one rather than asking about
-  // nobody. Follows added later don't rebuild it - the feed keeps what is already on screen.
+  // The follow list is what the feed is made of, and follows added later don't rebuild it.
   $effect(() => {
     if (!started && follows && follows.length > 0) {
       started = true

@@ -2,8 +2,7 @@ import {derived} from "svelte/store"
 import {sortBy} from "@welshman/lib"
 import {allNotifications, latestActivityByPath} from "@app/notifications"
 
-// Every room, space chat and direct message with something unread, newest first. The inbox shows
-// exactly what the badges show, so reading a conversation is what takes it out of the list.
+// The inbox shows what the badges show, so reading a conversation takes it out of the list.
 export const inboxConversations = derived(
   [latestActivityByPath, allNotifications],
   ([$latestActivityByPath, $allNotifications]) =>
@@ -21,8 +20,7 @@ export type SpaceContent = {
   countsByKind: Map<number, number>
 }
 
-// What a space has waiting that isn't a message: threads, events, classifieds and the rest,
-// counted only where they're unread, since a total would be the same number every day.
+// Counted only where unread, since a total would be the same number every day.
 export const inboxSpaceContent = derived(
   [latestActivityByPath, allNotifications],
   ([$latestActivityByPath, $allNotifications]) => {

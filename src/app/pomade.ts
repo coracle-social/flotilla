@@ -10,8 +10,7 @@ export type PomadeSession = Session<"pomade", {clientOptions: ClientOptions; ema
 export const isPomadeSession = ($session: Maybe<Session>): $session is PomadeSession =>
   $session?.method === pomade.method
 
-// The pomade-only screens are only reachable from a pomade session, so narrow rather than
-// thread undefined through every field they read off it.
+// The pomade-only screens are only reachable from a pomade session.
 export const requirePomadeSession = ($session: Maybe<Session>) => {
   if (!isPomadeSession($session)) {
     throw new Error("This action requires an email login")

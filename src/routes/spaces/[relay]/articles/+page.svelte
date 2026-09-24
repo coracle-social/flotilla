@@ -74,8 +74,7 @@
 
     events = feed.events
 
-    // These lists are sorted newest first, so reaching the bottom is reaching the oldest thing
-    // loaded.
+    // These lists are newest first, so the bottom is the oldest thing loaded.
     older = makeScrollLoader(element!, feed.loadOlder)
 
     return () => {

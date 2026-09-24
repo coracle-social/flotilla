@@ -30,9 +30,7 @@
 
   const target = document.createElement("div")
 
-  // `mount` only tracks prop changes when the props come from a `$state` object,
-  // so sync incoming props into a reactive one. Without this the popover keeps
-  // the props it was first mounted with, showing stale data after the source updates.
+  // `mount` only tracks prop changes when the props come from a `$state` object.
   const mountedProps = $state({...props})
 
   let element: Element
@@ -41,9 +39,7 @@
   let returnFocus: HTMLElement | undefined
   let visible = $state(false)
 
-  // Building a tippy costs a popper element and a set of listeners, which is wasted on the
-  // hover menus of a chat row nobody ever opens. Only a real trigger needs the instance up
-  // front — tippy is the one listening for it. A manual one can wait to be shown.
+  // A popper element and its listeners are wasted on a hover menu nobody opens.
   const create = () => {
     popover ??= tippy(element, {
       content: target,

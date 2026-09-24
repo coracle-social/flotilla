@@ -21,8 +21,7 @@
     }
   }
 
-  // Nothing fires on a change of scroll height, and the list has one whenever a space is joined
-  // or left, or the window resizes under it.
+  // Nothing fires on a change of scroll height, which joining or leaving a space causes.
   $effect(() => {
     const observer = new ResizeObserver(measure)
 

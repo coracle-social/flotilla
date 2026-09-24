@@ -68,8 +68,7 @@
       .setParentFromEvent(event)
       .setProtected(await $relays.hasNip(url, 70))
 
-    // A comment on a room event is a room event too: an untagged one isn't visible to the
-    // group at all, so the relay neither gates it with the room nor deletes it with it.
+    // An untagged comment isn't visible to the group, so the relay neither gates nor deletes it with the room.
     if (h) {
       eventWriter.setRoom(url, h)
     }

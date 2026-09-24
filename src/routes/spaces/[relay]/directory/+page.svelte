@@ -74,12 +74,10 @@
     pushModal(SpaceMembersBanned, {url})
   }
 
-  // In-place search: filter member cards by member info, and keep role sections
-  // whose name matches the term even when their members don't.
+  // A role section matches on its own name, so it survives a term its members don't match.
   let term = $state("")
 
-  // Subscribed rather than read: a display is the member's npub until their profile loads, and a
-  // search that read it once would go on matching against npubs after the names arrived.
+  // A display is the npub until the profile loads, so search subscribes rather than reading once.
   const displays = $derived(
     deriveDisplaysByPubkey(
       $memberList.map(m => m.pubkey),

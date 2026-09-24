@@ -146,9 +146,7 @@
   // Pre-init failures render the error card instead of a toast over an empty page.
   let initialized = false
 
-  // This page is the Stripe portal/checkout return target, so reconcile on landing
-  // to settle a completed checkout and pick up a portal-added card. Charging open
-  // invoices is left to the backend's dunning poll, which collects all of them.
+  // This page is Stripe's portal and checkout return target, so landing on it settles a checkout.
   const reconcile = async () => {
     const pk = user.get().pubkey
     if (!pk || reconciling) {
@@ -201,8 +199,7 @@
   onMount(() => {
     reconcile().finally(() => (loading = false))
 
-    // Re-run on foreground return (native browser round-trip) to pick up a
-    // completed checkout or a portal-added card.
+    // A native browser round-trip comes back as a foreground return rather than as a page load.
     const resumeListener = App.addListener("appStateChange", ({isActive}) => {
       if (isActive) {
         void reconcile()

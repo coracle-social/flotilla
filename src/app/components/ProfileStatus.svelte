@@ -15,8 +15,7 @@
 
   const status = $statuses.one(pubkey, removeUndefined([url]))
 
-  // Empty content is how NIP-38 says there is nothing to report, and an expiration is the author
-  // asking relays to stop serving it. Both read as no status at all.
+  // NIP-38 reports nothing with empty content, and an expiration asks relays to stop serving it.
   const expiration = $derived($status ? getExpiration($status) : undefined)
   const text = $derived(expiration && expiration <= now() ? "" : $status?.content)
   const link = $derived($status?.tags.find(t => t[0] === "r")?.[1])

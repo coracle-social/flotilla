@@ -88,8 +88,7 @@ export type UploadFileResult = {
   result?: UploadResult
 }
 
-// Mirrors the imeta the editor builds for the media it holds as a node, for the files it
-// doesn't.
+// Mirrors the imeta the editor builds for media it holds as a node.
 export const makeImetaTag = (file: File, result: UploadResult) => {
   const meta: Record<string, string> = {
     url: result.url,
@@ -131,8 +130,7 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
       })
     }
 
-    // A subtype worth putting on a url is a plain word. Anything else (an office document, a
-    // file the platform gave no type at all) keeps whatever the server named it.
+    // A subtype worth putting on a url is a plain word.
     const [, subtype = ""] = type.split("/")
     const ext = /^[a-z0-9]+$/.test(subtype) ? "." + subtype : ""
     const server = await getBlossomServer(options)
@@ -141,8 +139,7 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
     const authTemplate = makeBlossomAuthEvent({action: "upload", server, hashes})
     const authEvent = await $signer.sign(authTemplate)
 
-    // What a server takes is its own business, so ask before spending the upload. A 404 or a
-    // 405 is a server that doesn't implement BUD-06 rather than one saying no.
+    // A 404 or a 405 is a server that doesn't implement BUD-06 rather than one saying no.
     const check = await canUploadBlob(server, {
       authEvent,
       headers: {

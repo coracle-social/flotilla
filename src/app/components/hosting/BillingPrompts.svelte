@@ -57,8 +57,7 @@
     dismissedAutopay = true
   }
 
-  // Deep link (?invoice=<id>, e.g. from the billing DM) opens the pay dialog,
-  // once per id.
+  // A ?invoice=<id> deep link from the billing DM opens the pay dialog, once per id.
   let handledInvoiceId: string | undefined
   $effect(() => {
     const id = $page.url.searchParams.get("invoice") ?? undefined

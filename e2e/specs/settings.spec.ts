@@ -5,20 +5,15 @@ import {dialog, expect, roomPath, settingToggle, test, toast, topDialog, users} 
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string}
 
-// The relay picker, which has no heading of its own — and is pushed over the list modal rather
-// than alongside it, so it is the only dialog in the dom while it is open.
+// The relay picker is pushed over the list modal, so it is the only dialog in the dom.
 const relayPicker = (page: Page) => topDialog(page)
 
 const relayCard = (scope: Locator, name: string) => scope.locator(".card").filter({hasText: name})
 
-// A saved setting reaches indexeddb in batches, and a settings page reads its values once when it
-// mounts — so a reload only sees the new value after the batch has been flushed. A toast clears
-// itself after five seconds, which is longer than the batch window, so waiting it out is what
-// makes the assertion that follows about persistence rather than about timing.
+// A toast clears after five seconds, which outlasts the batch a saved setting reaches disk in.
 const waitForToastToClear = (page: Page) => expect(toast(page)).toHaveCount(0)
 
-// A Field lays its slider out under the row holding the label and the current value, so the card
-// around both is what a slider is named from.
+// A Field lays its slider out under the row holding the label and the current value.
 const requestsCard = (page: Page) => page.locator(".card").filter({hasText: "Message Requests"})
 
 const requestSliders = (page: Page) => requestsCard(page).locator('input[type="range"]')
@@ -27,9 +22,7 @@ test("US-084 block a relay you never want used", async ({seed, as}) => {
   await seed(({relay, user}) => {
     const space = relay("space")
 
-    // A second relay for the picker to offer. Nobody is a member of it — what puts a relay in the
-    // suggestion pool is its nip-11 document having been fetched, and every scenario relay is an
-    // indexer, so bob's client reads this one at startup.
+    // A relay is offered as a suggestion once its nip-11 document has been fetched.
     relay("other")
 
     space.room("general", {name: "General"})
@@ -57,8 +50,7 @@ test("US-084 block a relay you never want used", async ({seed, as}) => {
 
   await expect(blocked).toContainText("1 Blocked")
 
-  // A blocked relay is one bob never wants used, so it stops being offered as a suggestion. It was
-  // the picker's only offer a moment ago, which is what makes its absence about the block.
+  // It was the picker's only offer a moment ago, which is what makes its absence about the block.
   await blocked.click()
   await dialog(page, "Blocked Relays").getByRole("button", {name: "Add Relays"}).click()
 
@@ -346,8 +338,7 @@ test("US-090 change the app's appearance", async ({seed, as}) => {
   await expect(page.getByText("125%")).toBeVisible()
   await expect(page.locator("html")).toHaveAttribute("style", /font-size:\s*1\.25rem/)
 
-  // Moving the slider is the save, so the size the document is rendered at survives a reload
-  // without anything else having been pressed.
+  // Moving the slider is the save.
   await page.reload()
 
   await expect(page.locator("html")).toHaveAttribute("style", /font-size:\s*1\.25rem/)
@@ -378,8 +369,7 @@ test("US-091 set up how people zap you", async ({seed, as}) => {
   await address.getByPlaceholder("user@domain.com").fill("alice@example.test")
   await address.getByRole("button", {name: "Save Changes"}).click()
 
-  // The dialog closes itself once the profile has gone out, and the page behind it carries its own
-  // "Save Changes" — so wait it out rather than leaving that name ambiguous.
+  // The dialog closes itself once the profile has gone out, and the page behind it has its own Save.
   await expect(address).toHaveCount(0)
   await expect(page.getByText("alice@example.test")).toBeVisible()
   await expect(page.getByText("Not set")).toHaveCount(0)
@@ -391,8 +381,7 @@ test("US-091 set up how people zap you", async ({seed, as}) => {
   await expect(address).toHaveCount(0)
   await expect(page.getByText("Not set")).toBeVisible()
 
-  // Each preset is a row with a remove button and an amount input. The same utility classes land on
-  // other rows (a button's spinner), so pin it to the zap-amounts form's rows that hold an input.
+  // The same utility classes land on other rows, so this is pinned to the zap form's input rows.
   const zapForm = page.locator("form").filter({hasText: "Zap Amounts"})
   const presets = zapForm.locator("div.items-center.gap-2:has(input)")
 
@@ -410,8 +399,7 @@ test("US-091 set up how people zap you", async ({seed, as}) => {
 
   await waitForToastToClear(page)
 
-  // Discarding puts back the last saved values, which are still alice's original four — the zero
-  // never reached them.
+  // Discarding puts back the last saved values, which are still alice's original four.
   await page.getByRole("button", {name: "Discard Changes"}).click()
 
   await expect(presets).toHaveCount(4)

@@ -47,22 +47,17 @@ import type {TestUser} from "../harness"
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string; readonly event: SignedEvent}
 
-// A shelf is a card and its menu button side by side, so the menu is reached through the wrapper
-// the two share.
+// A shelf is a card and its menu button side by side, so the menu is reached through their wrapper.
 const shelfCard = (page: Page, title: string) =>
   page.getByRole("button", {name: new RegExp(title)}).locator("xpath=..")
 
-// A list item is one big link, but Button swallows both the default and the propagation of every
-// click it handles, and the middle of a card is usually one of those — a poll's radio, a goal's
-// zap button, a listing's image. Opening a card by its title lands on inert text instead.
+// Button swallows both the default and the propagation of a click, and the middle of a card is one.
 const openCard = (card: Locator, title: string) => card.getByText(title).click()
 
-// One option of a poll, which PollOption renders as a small card carrying its label, its count and
-// its progress bar.
+// PollOption renders an option as a small card carrying its label, its count and its progress bar.
 const pollOption = (page: Page, label: string) => page.locator(".card-sm").filter({hasText: label})
 
-// The selections of every poll response this page put on the wire, oldest first. A multiple choice
-// vote goes out once the delay window closes, so this is where "both publish" is visible.
+// A multiple choice vote goes out once the delay window closes, so "both publish" is visible here.
 const pollResponses = (page: Page, pollId: string) =>
   getTranscript(page.context())
     .filter(
@@ -104,9 +99,7 @@ test("US-046 create and browse a calendar event", async ({seed, as}) => {
         at(1, HOUR),
       )
 
-    // Ten events that have already happened, so the list is taller than the viewport and "opens
-    // scrolled to the next upcoming event" is a statement about where it sits rather than about a
-    // list that fits on one screen anyway.
+    // Ten events that have already happened, so the list is taller than the viewport.
     for (let i = 1; i <= 10; i++) {
       addEvent(`Past Meetup ${String(i).padStart(2, "0")}`, at((11 - i) * 4, DAY))
     }
@@ -127,8 +120,7 @@ test("US-046 create and browse a calendar event", async ({seed, as}) => {
 
   await expect(cards).toHaveCount(12)
 
-  // The calendar opens on the first event that hasn't happened yet, with the oldest one scrolled
-  // out of the way above it.
+  // The calendar opens on the first event that hasn't happened yet.
   await expect(card("Autumn Fair")).toBeInViewport()
   await expect(card("Past Meetup 01")).not.toBeInViewport()
 
@@ -136,9 +128,7 @@ test("US-046 create and browse a calendar event", async ({seed, as}) => {
 
   const composer = modalForm(page, "Create an Event")
 
-  // Field renders its label and its input as siblings rather than wiring them together, so the
-  // form's two writable text fields are taken in document order: title, then location. The date
-  // range's own input is readonly, which is what leaves those two.
+  // Field renders its label and input as siblings, so the writable fields are taken in document order.
   const textInputs = composer.locator('input[type="text"]:not([readonly])')
   const title = textInputs.first()
   const location = textInputs.last()
@@ -154,8 +144,7 @@ test("US-046 create and browse a calendar event", async ({seed, as}) => {
   await composer.getByRole("button", {name: "Save Event"}).click()
   await expect(page.getByRole("alert")).toContainText("Please provide start and end times.")
 
-  // The picker takes two clicks for a range: the first is the start, the second the end, each at
-  // the time its own time input carries — noon and one, for a range that starts empty.
+  // The picker takes two clicks for a range, each at the time its own time input carries.
   const target = new Date()
 
   target.setMonth(target.getMonth() + 1, 15)
@@ -217,8 +206,7 @@ test("US-047 manage your own calendar event", async ({seed, as}) => {
 
   await openCard(page.getByRole("link").filter({hasText: "Harvest Supper"}), "Harvest Supper")
 
-  // The hero card (date, header, meta, actions) is always the first feature card on the page;
-  // the About tab renders its own feature card below it for the description.
+  // The hero card is always the first feature card on the page; the About tab renders one below it.
   const eventCard = page.locator(".card.z-feature").first()
 
   await expect(page.getByRole("heading", {name: "Harvest Supper", exact: true})).toBeVisible()
@@ -251,8 +239,7 @@ test("US-047 manage your own calendar event", async ({seed, as}) => {
 
   await confirmDelete.click()
 
-  // The badge is an optimistic local write, so it says nothing about the relay. The confirmation
-  // stays up until the retraction has been published, which is what makes it safe to reload.
+  // The badge is an optimistic local write, and the confirmation stays up until the retraction is out.
   await expect(eventCard.getByText("Deleted", {exact: true})).toBeVisible()
   await expect(confirmDelete).toHaveCount(0)
 
@@ -275,8 +262,7 @@ test("US-048 create a poll and vote on it", async ({seed, as}) => {
     space.profile(user.alice, {name: "Alice Anderson"})
     space.profile(user.bob, {name: "Bob Barker"})
 
-    // The multiple choice half of the story is about voting rather than about creating, and a
-    // wire assertion needs option ids known up front, so these two are fixtures.
+    // A wire assertion needs option ids known up front, so these two are fixtures.
     snacks = space.event(
       user.alice,
       () =>
@@ -460,12 +446,10 @@ test("US-049 a closed poll shows final results only", async ({seed, as}) => {
 })
 
 test("US-050 create a funding goal and track its progress", async ({seed, as}) => {
-  // The lightning address on bob's profile, and the lnurl endpoint the client resolves it to. A
-  // receipt is only counted once that endpoint answers with the zapper that signed it.
+  // A receipt is only counted once the lnurl endpoint answers with the zapper that signed it.
   const lud16 = "bob@zap.test"
   const lnurl = getLnUrl(lud16)!
-  // A zap receipt is signed by the recipient's lightning provider rather than by either party to
-  // the zap, so the provider is an identity of its own — and one zooid will take a write from.
+  // A zap receipt is signed by the recipient's lightning provider rather than by either party.
   const provider = makeTestUser("zapper")
 
   let running!: Seeded
@@ -483,8 +467,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
       space.kind(Profile).writer().update({name: "Bob Barker", lud16}).renderTemplate(),
     )
 
-    // Two and a half days old, so "how long it has been running" rounds to three whatever second
-    // of the run this renders on.
+    // Two and a half days old, so how long it has been running rounds to three whenever this renders.
     running = space.event(
       user.bob,
       () =>
@@ -513,10 +496,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
       at(30, HOUR),
     )
 
-    // What a wallet publishes once an invoice is paid: the payer's own zap request carried as the
-    // receipt's description, signed by the provider the recipient's lnurl names. A receipt whose
-    // invoice disagrees with the amount its request asked for is thrown away by the client, so the
-    // two are rendered from the same number.
+    // A receipt whose invoice disagrees with the amount its request asked for is thrown away.
     const contribute = (from: TestUser, sats: number, createdAt: number) =>
       space.event(
         provider,
@@ -533,8 +513,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
             created_at: createdAt,
           })
 
-          // What was paid is read straight out of the invoice's human-readable part, where an `n`
-          // is a tenth of a sat, so that prefix is all of a bolt11 that has to be real.
+          // What was paid is read out of the invoice's human-readable part, where an `n` is a tenth of a sat.
           return space
             .kind(ZapReceipt)
             .writer()
@@ -614,8 +593,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
     "3",
   )
 
-  // Registered after the page was opened, so it answers ahead of the empty dufflepud `as()`
-  // installs, and before the navigation below, since a zapper is looked up once per page load.
+  // Registered after the page opened, so it answers ahead of the empty dufflepud `as()` installs.
   await mockDufflepud(page.context(), {
     zappers: [
       {
@@ -773,8 +751,7 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
       at(3, HOUR),
     )
 
-    // Three comments already there, so bob's fills the four the page shows without asking and
-    // alice's tips it past them.
+    // Three comments already there, so bob's fills the four the page shows and alice's tips it past.
     for (let i = 1; i <= 3; i++) {
       space.event(
         user.carol,
@@ -942,8 +919,7 @@ test("US-053 browse and search the library", async ({seed, as}) => {
 
   await expect(alice.getByText("This shelf doesn't have any links yet.")).toBeVisible()
 
-  // The library is the whole space's, so an ordinary member is offered the same controls the
-  // shelves were made with.
+  // The library is the whole space's, so an ordinary member is offered the same controls.
   await expect(alice.getByRole("button", {name: "Create Shelf"})).toBeVisible()
   await expect(alice.getByRole("button", {name: "Add a link"})).toBeVisible()
 
@@ -1140,8 +1116,7 @@ test("US-055 create community content from a room", async ({seed, as}) => {
 
   await expect(page.getByRole("heading", {name: "Create a Poll"})).toHaveCount(0)
 
-  // The room gets a quote of the poll rather than a second post written by hand. A room item is
-  // itself a role=button tap target wrapping its content, so the quote is the inner of the two.
+  // A room item is itself a role=button wrapping its content, so the quote is the inner of the two.
   const quote = page.getByRole("button").filter({hasText: "Pizza or tacos?"}).last()
 
   await expect(quote).toBeVisible()

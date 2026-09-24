@@ -34,15 +34,13 @@ import type {SeededSpace, TestUser} from "../harness"
 const articlePath = (url: string, address: string) =>
   `${spacePath(url)}/articles/${encodeURIComponent(address)}`
 
-// Outbox routing resolves everything about a person through their relay list, so a person here is
-// a membership, a profile and a kind-10002.
+// Outbox routing resolves a person through their relay list, so a person here has a kind-10002.
 const seedPerson = (space: SeededSpace, user: TestUser, name: string) => {
   space.profile(user, {name})
   space.relayList(user)
 }
 
-// A tippy is appended to the layout's own target rather than beside its trigger, and it keeps its
-// content mounted after it hides, so the visible card there is the popover that was just opened.
+// A tippy is appended to the layout's own target and keeps its content mounted after it hides.
 const detail = (page: Page) => page.locator(".tippy-target .card").filter({visible: true})
 
 // A comment is a flat block in the comment tree rather than a card, named by its text.
@@ -71,16 +69,13 @@ const writeComment = async (page: Page, body: string) => {
 
   const form = page.locator("form").filter({has: page.locator(".note-editor")})
 
-  // The editor takes focus itself once it has mounted, and typing into it before that puts the
-  // caret back at the start partway through the sentence.
+  // The editor takes focus itself once it has mounted, and typing before that puts the caret back.
   await expect(noteEditor(form)).toBeFocused()
   await noteEditor(form).pressSequentially(body)
   await form.getByRole("button", {name: "Comment"}).click()
 }
 
-// The send delay is a user setting rather than a page's own state, so it is set the way a person
-// sets it. Reading it back off a freshly loaded page is what says the client has taken it up: the
-// slider is initialised from the settings store on mount.
+// The slider is initialised from the settings store on mount, so a fresh page says the client took it.
 const setSendDelay = async (page: Page, seconds: number) => {
   const slider = page.locator("input[type=range]")
 
@@ -158,8 +153,7 @@ test("US-068 watch a delayed send, and cancel it", async ({seed, as}) => {
   await expect(message(alice, "wrong room, sorry")).toHaveCount(0)
   await expect(toast(alice)).toHaveCount(0)
 
-  // Sent after the cancelled one and delayed by as long, so bob having this means the window the
-  // cancelled one would have left in has been and gone.
+  // Sent after the cancelled one and delayed by as long, so its window has been and gone.
   await send(alice, "still here")
 
   await expect(message(bob, "still here")).toBeVisible()
@@ -175,8 +169,7 @@ test("US-068 watch a delayed send, and cancel it", async ({seed, as}) => {
 
   await toast(alice).getByRole("button", {name: "Cancel"}).click()
 
-  // That was her only message to him, so the conversation goes with it rather than staying in
-  // the list with nothing left to name it by.
+  // That was her only message to him, so the conversation goes with it.
   await expect(chatItems(alice)).toHaveCount(0)
 
   await send(alice, "actually, hi")
@@ -202,8 +195,7 @@ test("US-069 see why a message failed to deliver", async ({seed, as}) => {
     }
 
     space.messagingRelayList(user.alice)
-    // Bob's client says his messages go to both relays, but he is not a member of the second, so a
-    // wrap addressed to him is stored by one and refused by the other.
+    // Bob's client names both relays, but he is a member of one, so the other refuses a wrap for him.
     space.messagingRelayList(user.bob, [space.url, other.url])
 
     space.message(user.bob, "general", "morning all", at(2, HOUR))
@@ -211,8 +203,7 @@ test("US-069 see why a message failed to deliver", async ({seed, as}) => {
 
   const {url} = scenario.space("space")
 
-  // A room the relay never created, which is where a link to a room that has since been deleted
-  // lands. Everything else about the space still works, so only this one publish is refused.
+  // A room the relay never created, which is where a link to a room that has since been deleted lands.
   const ghost = roomPath(url, "archive")
 
   const alice = await as(users.alice, ghost)
@@ -224,8 +215,7 @@ test("US-069 see why a message failed to deliver", async ({seed, as}) => {
 
   await expect(failure).toBeVisible()
 
-  // The text is still hers to see, and the publish is finished and was refused, so there is
-  // nothing left for bob to receive.
+  // The text is still hers to see, and the publish is finished and was refused.
   await expect(message(alice, "anyone here?")).toContainText("anyone here?")
   await expect(message(bob, "anyone here?")).toHaveCount(0)
 
@@ -269,13 +259,10 @@ test("US-070 retry a failed relay", async ({seed, as}) => {
   const ghost = roomPath(url, "archive")
   const alice = await as(users.alice, ghost)
 
-  // Opened now rather than once the room exists: seeding again below replaces the scenario, and a
-  // page opened from that one carries no room list — which is the only thing telling authPolicy it
-  // may answer a members-only relay's challenge, so bob would never get to read anything.
+  // Seeding again replaces the scenario, and a page opened from that one carries no room list.
   const bob = await as(users.bob, roomPath(url, "general"))
 
-  // A delay is what makes the retry's own "Sending..." a state rather than an instant, so this
-  // watches a retry the way the person who asked for it does.
+  // A delay is what makes the retry's own "Sending..." a state rather than an instant.
   await setSendDelay(alice, 5)
   await alice.goto(ghost)
 
@@ -290,13 +277,11 @@ test("US-070 retry a failed relay", async ({seed, as}) => {
 
   await expect(toast(alice)).toContainText("Sending...")
 
-  // The room still does not exist, so this attempt is refused too: the toast goes without ever
-  // having said the message was sent, and the message is still marked failed.
+  // The room still does not exist, so this attempt is refused too.
   await expect(toast(alice)).toHaveCount(0)
   await expect(failure).toBeVisible()
 
-  // The admin creates the room the message was addressed to. Seeding again is the only way the
-  // relay changes its mind about something it has already refused.
+  // Seeding again is the only way the relay changes its mind about something it has already refused.
   await seed(({relay}) => {
     relay("space").room("archive", {name: "Archive"})
   })
@@ -335,14 +320,12 @@ test("US-071 content posts show delivery status in place", async ({seed, as}) =>
   const {url} = scenario.space("space")
   const quiet = scenario.space("other").url
 
-  // A space whose relay this browser will not open a socket to, which is what a post that sits
-  // unconfirmed looks like from the inside: it is sent, and nothing comes back.
+  // A space whose relay this browser will not open a socket to, so a post is sent and nothing returns.
   const alice = await as(users.alice, `${spacePath(url)}/articles`, {
     env: {VITE_BLOCKED_RELAYS: quiet},
   })
 
-  // A comment leaves after the send delay the way a chat message does, so the window in which its
-  // Cancel link is live is hers to set.
+  // A comment leaves after the send delay the way a chat message does.
   await setSendDelay(alice, 1)
   await alice.goto(`${spacePath(url)}/articles`)
 
@@ -367,9 +350,7 @@ test("US-071 content posts show delivery status in place", async ({seed, as}) =>
   await alice.goto(`${spacePath(quiet)}/articles`)
   await writeArticle(alice, "Into the Void", "Nobody is listening.")
 
-  // The composer holds the reader until publishing gives up, then lands on the article anyway.
-  // Nothing was refused, so there is no toast — the action bar under the article is what says the
-  // relay never answered.
+  // Nothing was refused, so there is no toast; the action bar says the relay never answered.
   const stuck = articleActions(alice)
 
   await expect(stuck.getByText("Failed to send!")).toBeVisible()
@@ -482,8 +463,7 @@ test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
   await alice.getByRole("button", {name: "Delete Article"}).click()
   await alice.getByRole("button", {name: "Confirm"}).click()
 
-  // But this page is the article's own view, so it stays and is marked deleted rather than
-  // vanishing, and the "Deleted" pill stands in place of the actions it offered before.
+  // This page is the article's own view, so it stays and is marked deleted rather than vanishing.
   await expect(article.getByText("Deleted", {exact: true})).toBeVisible()
   await expect(article.getByRole("button", {name: "Add a reaction"})).toHaveCount(0)
 })
@@ -502,8 +482,7 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
 
     space.messagingRelayList(user.alice)
     space.messagingRelayList(user.bob)
-    // Carol's client names a relay she does not belong to, so every part of a message to her is
-    // stored by one of her two relays and refused by the other.
+    // Carol's client names a relay she does not belong to, so one of the two refuses each part.
     space.messagingRelayList(user.carol, [space.url, other.url])
   })
 
@@ -519,8 +498,7 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
   await composer(alice).pressSequentially("here is the harbour")
   await chooseFile(alice, alice.locator("button[data-tip='Add an image']"), gifFile("harbour.gif"))
 
-  // The editor names the file the moment it is attached, so the name alone does not mean the
-  // upload is done — and a submit while it is still running is dropped on the floor.
+  // The editor names the file the moment it is attached, and a submit while it uploads is dropped.
   await expect(composer(alice)).toContainText("harbour.gif")
   await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)
   await expect(sendButton(alice)).toBeEnabled()

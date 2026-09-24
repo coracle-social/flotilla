@@ -90,8 +90,7 @@
       return
     }
 
-    // The optimistic write flips isPinned while the publish is in flight, so what this did is read
-    // before it goes out rather than after.
+    // The optimistic write flips isPinned while the publish is in flight, so read it before it goes out.
     const wasPinned = isPinned
     const pins = wasPinned ? $pinIds.filter(pin => pin !== event.id) : [...$pinIds, event.id]
     const command = await $roomPinLists.setPins(url, h, pins)

@@ -50,8 +50,7 @@
 
   let pending = true
 
-  // Leaving without choosing throws the recording away, whether that was the discard button, the
-  // escape key or a navigation out of the conversation.
+  // Leaving without choosing throws the recording away.
   onDestroy(() => {
     if (pending) {
       onDiscard()

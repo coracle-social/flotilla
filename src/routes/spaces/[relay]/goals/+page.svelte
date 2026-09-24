@@ -54,8 +54,7 @@
   let tab = $state("all")
   let sort = $state("active")
 
-  // Stable references — the array and its stores — unless the goal set itself changes,
-  // since progressById otherwise resubscribes every goal's zap receipts on any update.
+  // progressById resubscribes every goal's zap receipts, so these change only with the goal set.
   let goals: TrustedEvent[] = $state([])
   let progressStoresById: Map<string, Readable<GoalProgress>> = $state(new Map())
 
@@ -162,8 +161,7 @@
 
     events = feed.events
 
-    // These lists are sorted newest first, so reaching the bottom is reaching the oldest thing
-    // loaded.
+    // These lists are newest first, so the bottom is the oldest thing loaded.
     older = makeScrollLoader(element!, feed.loadOlder)
 
     return () => {

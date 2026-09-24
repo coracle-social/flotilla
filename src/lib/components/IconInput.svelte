@@ -18,8 +18,7 @@
 
   const initialUrlValue = $derived(preview?.startsWith("data:") ? undefined : preview)
 
-  // Decode a built-in icon's base64 SVG data: URL into a File so it uploads on
-  // submit like any image.
+  // A built-in icon is a base64 SVG data url, so decode it into a File and upload it like any image.
   const handleIconSelect = (iconUrl: string) => {
     preview = iconUrl
 

@@ -1,7 +1,4 @@
-/**
- * Voice rooms via LiveKit. Note: Voice does not work on localhost in Firefox
- * (ICE candidate gathering fails). Use Chrome or test from deployed HTTPS.
- */
+/** Voice rooms via LiveKit. Voice does not work on localhost in Firefox, where ICE candidate gathering fails. */
 import {
   DisconnectReason,
   Room as LiveKitRoom,
@@ -58,13 +55,11 @@ export const joinVoiceRoom = async (
   const signal = controller.signal
   const isActive = () => joinAbortController === controller
 
-  // Self-cleaning controller: aborted in finally so whenTimeout/whenAborted
-  // helpers clear their timers/listeners once the races below have settled.
+  // Aborted in finally, so whenTimeout and whenAborted clear their timers once the races settle.
   const settle = new AbortController()
 
   try {
-    // Tear down any existing session before joining. Bound it so a slow leave
-    // (camera/screenshare renegotiation can take ~15s) cannot block this join.
+    // Camera and screenshare renegotiation can take ~15s, so a slow leave is bounded.
     if (get(currentCallSession)) {
       await Promise.race([
         leaveVoiceRoom(),
@@ -134,8 +129,7 @@ export const joinVoiceRoom = async (
       syncParticipantMedia(p)
     }
 
-    // Bounded against timeout/abort inside setUpMicrophone: a stuck permission
-    // prompt resolves to muted rather than hanging the join forever.
+    // A stuck permission prompt resolves to muted rather than hanging the join.
     const muted = await setUpMicrophone(
       startMuted,
       preferredMicId,
@@ -144,8 +138,7 @@ export const joinVoiceRoom = async (
       settle.signal,
     )
 
-    // A cancel during the mic step must tear down the connected room rather
-    // than leaking it.
+    // A cancel during the mic step leaks the connected room unless it is torn down here.
     if (signal.aborted) {
       teardownRoom(liveKitRoom)
       throw new AbortError()
@@ -208,14 +201,7 @@ export const leaveVoiceRoom = async () => {
   // Always tear down this room's connection and listeners.
   teardownRoom(session.livekit)
 
-  // Only reset shared UI state if this session is still current. A slow leave
-  // that was superseded by a new join (bounded by a timeout in joinVoiceRoom)
-  // must not clobber the freshly-joined session when it finally completes.
-  //
-  // Compare the LiveKit room rather than the session object: turning off the
-  // screen share above emits LocalTrackUnpublished, whose handler replaces the
-  // store value with a new object for the same call. An identity check would
-  // fail there and leave the UI stuck in a connected state.
+  // LocalTrackUnpublished replaces the store value with a new object, so compare the LiveKit room.
   if (get(currentCallSession)?.livekit === session.livekit) {
     callState.set(CallState.Disconnected)
     callMicMuted.set(true)
@@ -314,29 +300,18 @@ export const switchCallActiveDevice = async (
   }
 }
 
-// The room whose events are allowed to mutate shared state. Abandoned rooms
-// (after switching calls or an engine reconnect give-up) must not clobber it.
+// The room whose events may mutate shared state, so an abandoned one cannot clobber it.
 let activeRoom: LiveKitRoom | undefined
 let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 let reconnectAttempt = 0
-// Captured from the dropped session so a full rejoin (as opposed to LiveKit's
-// own internal reconnect, which reuses the existing tracks) restores the
-// user's mic state instead of always rejoining muted.
+// A full rejoin restores mic state from these, unlike LiveKit's reconnect, which reuses its tracks.
 let reconnectMicMuted = true
 let reconnectMicDeviceId: string | undefined
 let joinAbortController: AbortController | undefined
 let hadCallSession = false
 let audioResumeListener: Promise<PluginListenerHandle> | undefined
 
-/**
- * On mobile, locking the screen can suspend microphone capture without ever
- * ending the underlying MediaStreamTrack: the local participant still looks
- * connected and unmuted, but publishes silence until the track is manually
- * reacquired. LiveKit only guards against this for tracks attached to a DOM
- * element (i.e. video), so the mic needs the same treatment on foreground
- * return. `App.addListener("appStateChange", ...)` fires from Capacitor's web
- * fallback too, so this covers both native and browser tabs.
- */
+/** Locking the screen can suspend mic capture without ending the track, and LiveKit only guards video. */
 currentCallSession.subscribe(session => {
   if (session) {
     hadCallSession = true
@@ -362,8 +337,7 @@ const teardownRoom = (livekit: LiveKitRoom) => {
     activeRoom = undefined
   }
 
-  // Dropping the listeners keeps TrackUnsubscribed from removing the hidden
-  // audio elements onTrackSubscribed appended, so detach them here instead.
+  // Dropping the listeners first keeps TrackUnsubscribed from removing these audio elements.
   for (const participant of livekit.remoteParticipants.values()) {
     for (const publication of participant.audioTrackPublications.values()) {
       publication.track?.detach().forEach(el => el.remove())
@@ -475,8 +449,7 @@ const setUpMicrophone = async (
     ])
     muted = false
   } catch (e) {
-    // Timeout or microphone rejection: join muted, the call is still usable. A
-    // genuine abort is surfaced to the caller so it can tear down the room.
+    // A timeout or a rejected microphone joins muted, and only a genuine abort reaches the caller.
     if (e instanceof AbortError) {
       throw e
     }
@@ -500,11 +473,7 @@ const reacquireMicrophoneIfNeeded = async () => {
     return
   }
 
-  // Mirrors LiveKit's own (mobile-only, video-track-only) reacquisition
-  // check: a capture device that died silently still reports readyState
-  // "live", but the browser flips `muted`/`enabled` on the underlying
-  // MediaStreamTrack. Checking for actual silence instead would false-
-  // positive any time the user simply isn't talking.
+  // A capture device that died silently still reports readyState "live", but flips `muted` on the track.
   const {mediaStreamTrack} = track
   const needsReacquisition =
     mediaStreamTrack.readyState !== "live" || mediaStreamTrack.muted || !mediaStreamTrack.enabled
@@ -515,8 +484,7 @@ const reacquireMicrophoneIfNeeded = async () => {
   try {
     await track.restartTrack()
   } catch {
-    // Best-effort: the user can still recover via mute/unmute or by
-    // rejoining if reacquiring the mic fails here.
+    // Mute and unmute or a rejoin recovers the mic if this fails.
   }
 }
 
@@ -579,14 +547,11 @@ const makeOnRoomDisconnected = (livekit: LiveKitRoom) => (reason?: DisconnectRea
     return
   }
 
-  // Livekit unsubscribes remote tracks before emitting Disconnected, so
-  // onTrackUnsubscribed has already removed their audio elements by now.
+  // Livekit unsubscribes remote tracks before Disconnected, so their audio elements are already gone.
   activeRoom = undefined
   livekit.removeAllListeners()
 
-  // Capture mic state before resetting it, so a subsequent full rejoin (see
-  // scheduleReconnect/attemptReconnect below) can restore it instead of
-  // silently coming back muted regardless of what the user had set.
+  // Captured before the reset, so a full rejoin restores it instead of coming back muted.
   reconnectMicMuted = get(callMicMuted)
   reconnectMicDeviceId = livekit.getActiveDevice(DeviceKind.AudioInput)
 

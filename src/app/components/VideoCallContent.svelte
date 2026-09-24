@@ -42,8 +42,7 @@
 
   const videoTiles = $derived.by(() => {
     const session = $currentCallSession
-    // LiveKit mutates remoteParticipants/tracks in place; these stores are what
-    // actually change on join/leave and track subscribe/unsubscribe.
+    // LiveKit mutates remoteParticipants and tracks in place, so these stores are what change.
     void $participantMediaState
     void $videoTrackRevision
     if (!session || $callTargetRoom?.url !== url || $callTargetRoom?.h !== h) {
@@ -188,8 +187,7 @@
   {@const label = labelFor(tile.liveKitIdentity, tile.source)}
   <div
     class={cx(
-      // bg-surface-more (rather than bg-surface, same as the panel behind it) so a
-      // camera-off tile reads as its own card instead of blending into the panel.
+      // bg-surface-more so a camera-off tile reads as its own card instead of blending into the panel.
       "relative isolate overflow-hidden rounded-2xl border border-line shadow-sm",
       layout === "spotlight" && "min-h-0 flex-1",
       layout === "default" && "min-h-0 h-full w-full",

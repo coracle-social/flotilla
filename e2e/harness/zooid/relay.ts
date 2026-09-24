@@ -20,39 +20,27 @@ import type {PublishOptions} from "./types"
 import {connectToZooid, port, requestZooid} from "./transport"
 import type {ZooidConnection} from "./transport"
 
-// The relay every test runs against, pinned by digest so a spec is checked against one zooid rather
-// than whatever this machine last pulled. The tag is there to read; docker resolves the digest, and
-// `docker pull` of a newer tag prints the digest to paste beside it. A zooid built from a checkout
-// has no published digest, so ZOOID_IMAGE is how an unreleased one is tried.
+// Pinned by digest so a spec runs against one zooid. ZOOID_IMAGE is how an unreleased build is tried.
 const image =
   process.env.ZOOID_IMAGE ??
   "gitea.coracle.social/coracle/zooid:latest@sha256:7950843900cbb1c7c1f17de5524f6999badd1002cde94476855e90e67e0f2248"
 
-// How long after a recreate chromium can still abort what a page has in flight. Every netlink
-// event a create-and-destroy produces lands before `compose up --wait` returns — measured at 26 of
-// them, all of them within a second, none after — but chromium coalesces interface changes for up
-// to two seconds before acting on one, so the abort arrives well after the harness has moved on.
+// How long after a recreate chromium can still abort what a page has in flight.
 const SETTLE = 2500
 
 const composeFile = fileURLToPath(new URL("docker/compose.yaml", import.meta.url))
 
 const configSource = fileURLToPath(new URL("docker/config", import.meta.url))
 
-// What the container mounts as /app/config. zooid saves a relay's toml back whenever a nip-86 call
-// edits that relay's name, description or icon. A read-only mount fails those calls, and mounting
-// the repo's own directory would leave one test rewriting the fixtures the rest read, so it is
-// handed a copy. The image is distroless, so the copy is staged here rather than in an entrypoint.
+// zooid saves a relay's toml back on a nip-86 edit, so it is handed a copy rather than the repo's.
 const configDir = join(tmpdir(), "flotilla-e2e-zooid-config")
 
 const execFileAsync = promisify(execFile)
 
-// execFile does not go through a shell, so a `docker` that exists only as an alias or a function is
-// invisible to it however well it works when typed. Name the executable to drive with E2E_DOCKER in
-// that case.
+// execFile does not go through a shell, so a docker that exists only as an alias needs E2E_DOCKER.
 const dockerCommand = process.env.E2E_DOCKER ?? "docker"
 
-// Whether something already answers on the port the container publishes, asked before this run
-// brings its own up.
+// Whether something already answers on the port the container publishes.
 const isRelayPortTaken = () =>
   new Promise<boolean>(resolve => {
     const socket = createConnection({port, host: "127.0.0.1"})
@@ -69,9 +57,7 @@ const isRelayPortTaken = () =>
     socket.once("error", () => resolve(false))
   })
 
-// Every invocation carries the config directory and the image, `down` included. The compose file
-// names both without a default, so a call that left one out fails to interpolate rather than
-// quietly mounting something else or running a relay nothing here chose.
+// The compose file names both without a default, so a call that left one out fails to interpolate.
 const docker = (...args: string[]) =>
   execFileAsync(dockerCommand, args, {
     env: {...process.env, ZOOID_CONFIG: configDir, ZOOID_IMAGE: image},
@@ -79,9 +65,7 @@ const docker = (...args: string[]) =>
 
 const compose = (...args: string[]) => docker("compose", "-f", composeFile, ...args)
 
-// Why the container cannot be driven, or undefined when it can. A cli that is not on this process's
-// PATH and a daemon that is not running need different answers, so they are reported apart rather
-// than as one boolean.
+// Why the container cannot be driven, or undefined when it can.
 const probeDocker = async () => {
   try {
     await docker("compose", "version")
@@ -105,9 +89,7 @@ const probeDocker = async () => {
   }
 }
 
-// How far the container's clock is from this host's, in seconds, read off the Date header of the
-// relay's own http answer. Positive means the container is behind, so an event the harness has just
-// signed looks like it comes from the future.
+// How far the container's clock is from this host's, in seconds. Positive means the container is behind.
 const getClockDrift = async (host: string) => {
   const {headers} = await requestZooid(host, "GET", "/", {accept: "application/nostr+json"})
 
@@ -116,9 +98,7 @@ const getClockDrift = async (host: string) => {
   }
 }
 
-// nip-42 accepts an auth event within ten minutes of the relay's own clock (nip42.go), and under a
-// container runtime's vm the two clocks belong to different machines. The relay's own one-line
-// detail says nothing about how to fix that.
+// nip-42 accepts an auth event within ten minutes of the relay's own clock (nip42.go).
 const describeClockDrift = (drift: number) => {
   const [minutes, direction] =
     drift > 0 ? [drift / 60, "behind"] : [Math.abs(drift) / 60, "ahead of"]
@@ -151,8 +131,7 @@ const getTestUser = (pubkey: string) => {
 
 let problem: Maybe<Promise<Maybe<string>>>
 
-// Asked once a worker, since docker does not come and go mid-run. The answer is also written to the
-// terminal, because a skip reason otherwise reaches only the html report.
+// Also written to the terminal, since a skip reason otherwise reaches only the html report.
 export const describeDockerProblem = () =>
   (problem ??= probeDocker().then(reason => {
     if (reason) {
@@ -164,14 +143,9 @@ export const describeDockerProblem = () =>
     return reason
   }))
 
-/**
- * The relay every test runs against. One zooid container on loopback serves a virtual relay per
- * entry in `tenants`, and each relay's policy is its toml in docker/config, the only place policy
- * is written down. A scenario describes what is on a relay, never what the relay is.
- */
+/** The relay every test runs against. One container serves a virtual relay per entry in `tenants`. */
 export class Zooid {
-  // Every socket into the container, the client's and seeding's alike, is one this process opened,
-  // so this map is also the definition of a url that is not a leak.
+  // Every socket into the container is one this process opened, so this map also defines a url that is not a leak.
   relays = new Map(
     tenantNames.map(name => [
       tenantUrl(name),
@@ -189,8 +163,7 @@ export class Zooid {
   // When the last recreate's interface churn stops being able to abort a request.
   private settledAt = 0
 
-  // Verifies docker rather than bringing the container up, which `reset` does. Repeat calls are
-  // free, so the fixture can call this per test.
+  // Verifies docker rather than bringing the container up, which reset does. Repeat calls are free.
   start = async () => {
     if (this.started) {
       return
@@ -246,11 +219,7 @@ export class Zooid {
     }
   }
 
-  // Leaves a fresh container for whoever runs next. Recreating one churns the host's network
-  // interfaces — a veth pair torn down and rebuilt, the project's bridge losing carrier with it —
-  // and chromium aborts every request it has in flight when it acts on that, which reaches the app
-  // as a route chunk that failed to import and, with `ssr = false`, a 500 page. So this is called
-  // from teardown rather than setup, and everything after it counts towards `settle` below.
+  // Recreating churns the host's network interfaces, and chromium aborts what it has in flight.
   reset = async () => {
     this.closeSessions()
 
@@ -267,9 +236,7 @@ export class Zooid {
     }
   }
 
-  // Waited out before a page is opened, which is as late as it can be left: teardown, the next
-  // test's fixtures and its seeding are all inside the window already, so most tests pay nothing
-  // here.
+  // As late as the wait can be left: teardown, the next test's fixtures and its seeding are inside it.
   settle = async () => {
     const remaining = this.settledAt - Date.now()
 
@@ -289,8 +256,7 @@ export class Zooid {
     }
   }
 
-  // Fetching unasked is safe for a pinned reference: the pull can only produce the relay this suite
-  // was written against, and a machine that already has it never gets here.
+  // A pull of a pinned reference can only produce the relay this suite was written against.
   private fetchImage = async () => {
     console.warn(`\nFetching the zooid image this suite is pinned to:\n  ${image}\n`)
 
@@ -308,8 +274,7 @@ export class Zooid {
     }
   }
 
-  // Whatever the relay wrote before it died. Compose reports only that a container exited, so
-  // without this a startup failure is a status code and no reason.
+  // Compose reports only that a container exited, so without this a startup failure has no reason.
   private logs = () =>
     compose("logs", "--no-color", "--tail", "50").then(
       ({stdout, stderr}) => [stdout, stderr].filter(Boolean).join("\n").trim(),
@@ -322,13 +287,9 @@ export class Zooid {
     throw new Error(logs ? `${summary}\n\nzooid said:\n${logs}` : summary)
   }
 
-  // Storage is tmpfs with no volume mounted for it, so a new container is a new database and
-  // recreating is what makes this a reset.
+  // Storage is tmpfs with no volume mounted for it, so a new container is a new database.
   private up = async () => {
-    // A fresh copy on every recreate is what restores relay metadata a test edited through nip-86.
-    // The modes are permissive because the container runs as uid 65532 while the copy belongs to
-    // whoever ran the suite, and a runtime that keeps host ownership leaves zooid unable to write
-    // the file it was told to save.
+    // A fresh copy restores metadata a test edited through nip-86, and the container runs as uid 65532.
     await rm(configDir, {recursive: true, force: true})
     await cp(configSource, configDir, {recursive: true})
     await chmod(configDir, 0o777)
@@ -348,8 +309,7 @@ export class Zooid {
     const deadline = Date.now() + ms(30)
 
     while (Date.now() < deadline) {
-      // A 404 means the dispatcher has no relay bound to that host yet, so the configs are still
-      // loading. Anything a relay itself answers means every tenant is ready.
+      // A 404 means the dispatcher has no relay bound to that host yet, so the configs are still loading.
       const isUp = await Promise.all(
         tenantNames.map(name =>
           requestZooid(tenants[name], "GET", "/", {accept: "application/nostr+json"}).then(
@@ -378,9 +338,7 @@ export class Zooid {
     )
   }
 
-  // NIP-42 binds an identity to a connection, so each test user seeds over its own, per relay. The
-  // url signed into the auth event is the one the client uses, since that is what khatru rebuilds
-  // from the headers transport.ts sends.
+  // NIP-42 binds an identity to a connection, and khatru rebuilds the signed url from transport.ts's headers.
   private authenticate = async (host: string, user: TestUser) => {
     const key = `${host} ${user.pubkey}`
     const session = this.sessions.get(key)
@@ -403,8 +361,7 @@ export class Zooid {
     const summary = `Failed to authenticate as ${user.name} on ${host}: ${detail}`
     const drift = await getClockDrift(host).catch(() => undefined)
 
-    // Nearly always the clock rather than the key. Every identity here is one zooid's toml names,
-    // and the signature is checked after the timestamp the relay compares against its own.
+    // Nearly always the clock: the signature is checked after the timestamp the relay compares against.
     if (drift !== undefined && Math.abs(drift) > int(10, MINUTE)) {
       throw new Error(`${summary}\n\n${describeClockDrift(drift)}`)
     }
@@ -412,8 +369,7 @@ export class Zooid {
     throw new Error(summary)
   }
 
-  // Both halves of seeding, the auth that opens a connection and every event written over it, are
-  // answered with an OK naming the event that was sent.
+  // Both the auth that opens a connection and every event written over it are answered with an OK.
   private send = async (connection: ZooidConnection, message: ClientMessage, id: string) => {
     connection.send(message)
 

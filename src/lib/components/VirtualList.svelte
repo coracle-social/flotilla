@@ -32,14 +32,10 @@
     row,
   }: Props = $props()
 
-  // Rows are only ever added — never removed, never stood in for by a spacer, never assigned a
-  // guessed height. Everything on screen is real, so the scrollbar is honest and nothing the
-  // reader is looking at can shift under them. Guessing at the height of rows that have never
-  // been mounted is what makes a virtualised list lurch, and a list that only grows never has to.
+  // Rows are only ever added, never removed and never given a guessed height.
   let edgeKey: Maybe<string> = $state()
 
-  // Held by key rather than index: messages arriving at the origin shift every index along, and
-  // a window pinned to a number would slide off the rows already on screen.
+  // Held by key because messages arriving at the origin shift every index along.
   const mounted = $derived.by(() => {
     const index = edgeKey ? items.findIndex(item => getKey(item) === edgeKey) : -1
 
@@ -56,9 +52,7 @@
     }
   }
 
-  // Distance left between the viewport and the end of what's rendered. Measured off the
-  // container rather than modelled, so anything else the caller puts in there — a spinner, an
-  // end-of-history notice — is simply part of it.
+  // Measured off the container, so a spinner or an end-of-history notice is part of it.
   const fill = () => {
     if (container && mounted < items.length) {
       const scrolled = Math.abs(container.scrollTop)

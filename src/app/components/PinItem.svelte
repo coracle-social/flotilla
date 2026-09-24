@@ -19,8 +19,7 @@
 
   const {url, pin, minimal, ...props}: Props = $props()
 
-  // Encode nostr references as nostr: entities (i tags are already urls) so
-  // Content parses them into rich embeds rather than rendering raw ids/coords.
+  // Encoded as nostr: entities (i tags are already urls) so Content parses them into embeds.
   const reference = $derived(pin.reference())
 
   const content = $derived.by(() => {

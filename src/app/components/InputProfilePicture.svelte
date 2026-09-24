@@ -17,8 +17,7 @@
 
   const id = randomId()
 
-  // Profile pictures are shown small (avatar-sized), so compress hard: this keeps
-  // the base64 fallback below small enough to embed directly in the profile event.
+  // Compressed hard, so the base64 fallback fits in the profile event.
   const compressOptions = {maxWidth: 128, maxHeight: 128, quality: 0.6, mimeType: "image/jpeg"}
 
   const onDragEnter = () => {

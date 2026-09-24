@@ -15,9 +15,7 @@ const SPEECH_MODEL = "hexgrad/kokoro-82m"
 
 const SPEECH_VOICE = "af_bella"
 
-// The endpoint encodes mp3 and raw pcm. Raw pcm carries no header, so playing it means assuming a
-// sample rate and a sample format the response never states, and either assumption wrong is static
-// rather than an error. Decoding the mp3 reads both off the audio.
+// Raw pcm carries no header, so decoding the mp3 is what reads the sample rate and format.
 const SPEECH_FORMAT = "mp3"
 
 // Decoding resamples to the context's rate, so this is the rate the wav ends up at.
@@ -70,8 +68,7 @@ const toWav = (audio: AudioBuffer) => {
 
   for (let frame = 0; frame < length; frame++) {
     for (const samples of channels) {
-      // A decoded sample runs from -1 to 1, and the two ends of a signed 16 bit range are not the
-      // same size, so each end scales by its own bound.
+      // A decoded sample runs from -1 to 1, and the two ends of a signed 16 bit range differ in size.
       const sample = Math.max(-1, Math.min(1, samples[frame]))
 
       view.setInt16(offset, Math.round(sample * (sample < 0 ? 0x8000 : 0x7fff)), true)
@@ -98,8 +95,7 @@ export const synthesize = async (text: string) => {
     }),
   })
 
-  // A successful response is audio rather than json, so the error body is only worth reading once
-  // the status says there is one.
+  // A successful response is audio rather than json.
   if (!response.ok) {
     const {error} = await response.json().catch(() => ({error: undefined}))
 

@@ -21,8 +21,7 @@
 
   const openCreate = () => pushModal(RelayCreate)
 
-  // A pubkey with no tenant yet answers with a HostingError, which is the ordinary case for
-  // anyone who has never hosted a space.
+  // A pubkey with no tenant answers with a HostingError.
   onMount(async () => {
     try {
       relays = await listTenantRelays($user.pubkey)

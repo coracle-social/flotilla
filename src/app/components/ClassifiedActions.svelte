@@ -42,8 +42,7 @@
     showStatus = true,
   }: Props = $props()
 
-  // Editing a listing hands this a new version of the event, so every value read off it has to be
-  // recomputed rather than captured when the component was created.
+  // Editing hands this a new version of the event, so every value is recomputed rather than captured.
   const classified = $derived(reader(Classified)(event))
   const h = $derived(classified.room())
   const topics = $derived(classified.topics() ?? [])

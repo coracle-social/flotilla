@@ -28,8 +28,7 @@
   }
 
   const start = async () => {
-    // Granting microphone access can sit on a permission prompt for a while, so hold the button
-    // until it resolves — a second click would open a stream nothing is left holding on to.
+    // A permission prompt can sit for a while, and a second click would open a stream nobody holds.
     loading = true
 
     try {
@@ -48,8 +47,7 @@
 
     recording = false
     loud = false
-    // Hold the button until the recording has been spent, rather than offering a second one
-    // behind the modal.
+    // Hold the button until the recording has been spent.
     loading = true
 
     choose()
@@ -98,8 +96,7 @@
 
       await dictation.finished
 
-      // A composer that has gone away has nowhere to put the transcript, so leave the dictation
-      // where it is for whichever one mounts next.
+      // A composer that has gone away has nowhere to put the transcript, so leave the dictation where it is.
       if (!destroyed) {
         if (dictation.error) {
           console.error(dictation.error)
@@ -122,8 +119,7 @@
 
   let destroyed = false
   let recording = $state(false)
-  // Starts out in flight when a dictation is already waiting to be picked up, so that the composer
-  // keeps rendering this button until the recording has been spent.
+  // In flight from the start when a dictation is already waiting to be picked up.
   let loading = $state(Boolean(getDictation(key)))
   let loud = $state(false)
 
@@ -139,8 +135,7 @@
     dictating = recording || loading
   })
 
-  // Pick up a dictation an earlier composer left running, either where it was already transcribing
-  // or at the choice the speaker never got to make.
+  // Pick up a dictation an earlier composer left running.
   onMount(() => {
     const dictation = getDictation(key)
 

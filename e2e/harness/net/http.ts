@@ -8,9 +8,7 @@ import {tenantByUrl} from "../zooid/config"
 import {requestZooid} from "../zooid/transport"
 import {makeContextStore} from "./context"
 
-// Mirrors the service urls in src/app/env.ts and .env, which this process can't import because
-// env.ts reads import.meta.env and pulls in Capacitor. These are route patterns rather than urls
-// anything fetches, and every handler answers from memory.
+// Mirrors the service urls in src/app/env.ts, which reads import.meta.env and pulls in Capacitor.
 const DUFFLEPUD_ORIGIN = "https://dufflepud.coracle.social"
 const PUSH_SERVER_ORIGIN = "https://nps.flotilla.social"
 const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
@@ -21,8 +19,7 @@ const PLAUSIBLE_ORIGIN = "https://plausible.coracle.social"
 // Transcription and speech both go here, against whichever key the user has saved.
 const OPENROUTER_ORIGIN = "https://openrouter.ai"
 
-// Where the hosting api sends a browser to pay. `.test` resolves nowhere and the block-all aborts
-// the navigation, so a spec sees the redirect without one leaving.
+// .test resolves nowhere and the block-all aborts the navigation, so a spec sees the redirect.
 const CHECKOUT_ORIGIN = "https://checkout.test"
 
 // Relay-hosted livekit lives under a well-known path rather than an origin of its own.
@@ -34,9 +31,7 @@ const PNG = Buffer.from(
   "base64",
 )
 
-// The dev server from vite.config.ts, on the port playwright.config.ts started it on. Traffic to it
-// is the app loading itself rather than egress, so it is the one host both layers here let past,
-// websockets included for Vite's hmr socket.
+// The dev server. Traffic to it is the app loading itself, so it is the one host both layers pass.
 export const isDevServerUrl = (url: URL) =>
   url.port === (process.env.E2E_PORT ?? "1847") &&
   ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)
@@ -55,18 +50,11 @@ export type BlockedRequest = {
 
 const blockedStore = makeContextStore<BlockedRequest[]>("installHttpRoutes")
 
-/**
- * Blocks every http request the app makes, except to the dev server and to a relay's own origin,
- * which is forwarded to the container so that the nip-11 document and the nip-86 management api the
- * app reads are the real relay's. Install this first. The per-service mocks below are registered
- * later and therefore take priority, so a request that still reaches this handler is one nothing
- * has mocked.
- */
+/** Blocks every http request but the dev server's and a relay's own origin. Install this first. */
 export const installHttpRoutes = (context: BrowserContext) => {
   const blocked = blockedStore.set(context, [])
 
-  // The dev server is left unrouted rather than matched and continued. A sveltekit page in dev is
-  // hundreds of module requests, and none of them is egress.
+  // A sveltekit page in dev is hundreds of module requests, and none of them is egress.
   return context.route(
     url => !isDevServerUrl(url),
     async route => {
@@ -94,12 +82,7 @@ export const installHttpRoutes = (context: BrowserContext) => {
   )
 }
 
-/**
- * Opt-in, for a spec that wants every request the app made to have been answered by something the
- * scenario stood up. Some of what a page asks for is meant to be refused, such as the blossom probe
- * against a relay with blossom off, so call this from a spec that has mocked what it exercises
- * rather than from teardown.
- */
+/** Opt-in: some of what a page asks for is meant to be refused, so call it from a spec rather than teardown. */
 export const assertNoBlockedRequests = (context: BrowserContext) => {
   const blocked = blockedStore.get(context)
 
@@ -116,14 +99,7 @@ export const assertNoBlockedRequests = (context: BrowserContext) => {
 // Fields to merge over a relay's own nip-11 document, keyed by its url.
 export type RelayInfoOverrides = Record<string, object>
 
-/**
- * A relay's real document with a few fields replaced, such as a `redirect_to`, a `limitation`, or a
- * NIP the relay does not implement. It is merged rather than fabricated because `self`, `pubkey`,
- * `name` and `supported_nips` are what room state is trusted from, and a hand-written document
- * breaks every room on the page.
- *
- * Install it before the page navigates. The document is read at startup and cached from then on.
- */
+/** A relay's real document with a few fields replaced. It is read at startup, so install it before navigating. */
 export const mockRelayInfo = (context: BrowserContext, overrides: RelayInfoOverrides) => {
   const overrideByOrigin = new Map(
     Object.entries(overrides).map(([url, override]): [string, object] => [
@@ -140,8 +116,7 @@ export const mockRelayInfo = (context: BrowserContext, overrides: RelayInfoOverr
       const host = hostByOrigin.get(origin)
       const override = overrideByOrigin.get(origin)
 
-      // The nip-86 management api posts to this same path, and what it answers decides what the
-      // admin ui offers, so only the document request is touched.
+      // The nip-86 management api posts to this same path, so only the document request is touched.
       if (request.method() === "GET" && host && override) {
         const {status, headers, body} = await requestZooid(host, "GET", "/", {
           ...request.headers(),
@@ -151,8 +126,7 @@ export const mockRelayInfo = (context: BrowserContext, overrides: RelayInfoOverr
 
         return route.fulfill({
           status,
-          // khatru's Access-Control-Allow-Origin is what makes the fetch legal, so the relay's own
-          // headers are kept, all but the length of a body that is about to change.
+          // khatru's Access-Control-Allow-Origin is what makes the fetch legal, so the relay's headers are kept.
           headers: omit(["content-length"], headers),
           body: JSON.stringify({...JSON.parse(body.toString()), ...override}),
         })
@@ -163,11 +137,7 @@ export const mockRelayInfo = (context: BrowserContext, overrides: RelayInfoOverr
   )
 }
 
-/**
- * The analytics script src/app.html loads on every page. Answering with an empty body leaves
- * `window.plausible` as the queueing shim src/app/analytics.ts installs, so pageviews accumulate in
- * memory and nothing is ever sent.
- */
+/** The analytics script src/app.html loads. An empty body leaves window.plausible as the queueing shim. */
 export const mockAnalytics = (context: BrowserContext) =>
   context.route(`${PLAUSIBLE_ORIGIN}/**`, route =>
     route.fulfill({contentType: "application/javascript", body: ""}),
@@ -183,12 +153,7 @@ export type DufflepudFixtures = {
   zappers?: {lnurl: string; info?: Omit<ZapperValues, "lnurl">}[]
 }
 
-/**
- * Dufflepud, whose origin is the one service url the app hard-codes rather than reading from a
- * `VITE_` value. `as()` installs it with no fixtures, so a spec that needs one calls this again
- * with its own. Playwright matches the most recently registered route first, so the spec's answers
- * win over the empty defaults.
- */
+/** Dufflepud, the one service url the app hard-codes. `as()` installs it with no fixtures, so a spec calls this again. */
 export const mockDufflepud = (context: BrowserContext, fixtures: DufflepudFixtures = {}) =>
   context.route(`${DUFFLEPUD_ORIGIN}/**`, route => {
     const {pathname} = new URL(route.request().url())
@@ -214,12 +179,10 @@ export const mockDufflepud = (context: BrowserContext, fixtures: DufflepudFixtur
     return route.fallback()
   })
 
-// The rate the harness writes its silence at. Nothing downstream reads it: the app decodes what it
-// is answered and writes its own header from the result.
+// The app decodes what it is answered and writes its own header from the result.
 const SPEECH_RATE = 24000
 
-// Silence as a wav, built rather than inlined so a spec can ask for a length and then assert the
-// duration the player reads off it.
+// Built rather than inlined, so a spec can ask for a length and assert the duration read off it.
 const silence = (seconds: number) => {
   const bytes = seconds * SPEECH_RATE * 2
   const wav = Buffer.alloc(44 + bytes)
@@ -240,16 +203,10 @@ const silence = (seconds: number) => {
   return wav
 }
 
-// The format the app asks the real endpoint for. The harness has no mp3 encoder, so it answers a
-// wav instead — the app decodes either, and only an answer a browser can decode exercises that.
+// The harness has no mp3 encoder, so it answers a wav, which the app decodes either way.
 const SPEECH_FORMAT = "mp3"
 
-/**
- * OpenRouter's text to speech, answering every request with the same silence. The array it returns
- * collects what the app asked to have read, in the order it asked. Asking for raw pcm is refused
- * the way the real endpoint refuses an unknown format, since pcm is the one answer whose sample
- * rate and sample format the app would have to guess at.
- */
+/** OpenRouter's text to speech, answering every request with the same silence. Raw pcm is refused. */
 export const mockOpenRouterSpeech = async (context: BrowserContext, seconds = 3) => {
   const spoken: string[] = []
 
@@ -272,18 +229,14 @@ export const mockOpenRouterSpeech = async (context: BrowserContext, seconds = 3)
 }
 
 export type Transcription = {
-  // The name each recording was uploaded under, in the order it was uploaded. OpenRouter picks a
-  // decoder off the extension, so this is how a spec reads what the recorder produced.
+  // OpenRouter picks a decoder off the extension, so this is how a spec reads what the recorder made.
   uploads: string[]
-  // Stops answering. A request that arrives while this is on is held open until `release`, which
-  // is what a spec needs to watch a transcription that is still out.
+  // Stops answering. A request that arrives while this is on is held open until `release`.
   hold(): void
   release(): void
 }
 
-/**
- * OpenRouter's speech to text, answering every recording with the same transcript.
- */
+/** OpenRouter's speech to text, answering every recording with the same transcript. */
 export const mockOpenRouterTranscription = async (
   context: BrowserContext,
   text: string,
@@ -317,9 +270,7 @@ export const mockOpenRouterTranscription = async (
   }
 }
 
-// Where an upload lands when nothing else is configured. getBlossomServer probes the space's own
-// origin first — blossom is off in every tenant's toml, so that probe is meant to fail — then the
-// user's kind-10063 list, and VITE_DEFAULT_BLOSSOM_SERVERS is what is left.
+// getBlossomServer probes the space's own origin, then the user's kind-10063 list, then this.
 export const DEFAULT_BLOSSOM_ORIGIN = "https://blossom.primal.net"
 
 export type BlossomOptions = {
@@ -327,27 +278,18 @@ export type BlossomOptions = {
   server: string
 }
 
-/**
- * What a spec can turn on. Each of these is off by default, so a scenario that only needs somewhere
- * for an upload to land ignores all of it.
- */
+/** What a spec can turn on. Each of these is off by default. */
 export type BlossomHandle = {
-  // The same server, blobs included, in another user's context. A conversation's image is uploaded
-  // encrypted and decrypted by the recipient, so the bytes one end puts in have to be the bytes the
-  // other reads back.
+  // A conversation's image is uploaded encrypted, so one end's bytes have to be the other's.
   install(context: BrowserContext): Promise<void>
-  // Holds every upload open until `release`, which makes the in-flight state a fact rather than a
-  // race against a mock that answers in a microtask.
+  // Holds every upload open until `release`, which makes the in-flight state a fact rather than a race.
   hold(): void
   release(): void
   // Refuses every upload probe from here on, with a reason the app has to show.
   refuse(reason: string): void
 }
 
-/**
- * A blossom server that keeps what it was given. An upload is hashed exactly as the real thing
- * would be, so the descriptor it answers with points at a blob this mock can then serve back.
- */
+/** A blossom server that keeps what it was given, hashing an upload exactly as the real thing would. */
 export const mockBlossom = async (context: BrowserContext, {server}: BlossomOptions) => {
   const {origin} = new URL(server)
   const blobs = new Map<string, {body: Buffer; type: string}>()
@@ -364,8 +306,7 @@ export const mockBlossom = async (context: BrowserContext, {server}: BlossomOpti
         const {pathname} = new URL(request.url())
 
         if (pathname === "/upload") {
-          // BUD-06, which the app asks before spending an upload. A refusal has to expose its
-          // reason cross-origin or all the toast can say is the status code.
+          // BUD-06, which the app asks before spending an upload. A refusal exposes its reason cross-origin.
           if (method === "HEAD") {
             if (refusal) {
               return route.fulfill({
@@ -424,10 +365,7 @@ export const mockBlossom = async (context: BrowserContext, {server}: BlossomOpti
   return handle
 }
 
-/**
- * The push server from src/app/push/adapters/capacitor.ts. Only the native adapters talk to it,
- * so a browser run reaches this only if the platform detection regresses.
- */
+/** The push server. Only the native adapters talk to it, so a browser run reaching this is a regression. */
 export const mockPushServer = (context: BrowserContext) =>
   context.route(`${PUSH_SERVER_ORIGIN}/**`, route => {
     const [resource] = new URL(route.request().url()).pathname.split("/").filter(Boolean)
@@ -437,8 +375,7 @@ export const mockPushServer = (context: BrowserContext) =>
         return route.fulfill({json: {}})
       }
 
-      // Registration is only usable if it comes back with both. The relay is told to post
-      // notifications to the callback rather than the client ever fetching it.
+      // The relay is told to post notifications to the callback rather than the client ever fetching it.
       const key = "test-push-subscription"
 
       return route.fulfill({json: {key, callback: `${PUSH_SERVER_ORIGIN}/callback/${key}`}})
@@ -447,26 +384,20 @@ export const mockPushServer = (context: BrowserContext) =>
     return route.fallback()
   })
 
-// One record straight off the hosting api, whose shapes live in src/app/hosting.ts. They're left
-// as loose objects here so that mocking a payment flow doesn't pull the app's module graph, and
-// with it import.meta.env, into the node process. A relay record may also carry `members` and
-// `activity`, and an invoice `items` and `bolt11`, which is where those endpoints answer from.
+// One record off the hosting api, left loose so mocking a flow doesn't pull import.meta.env in.
 export type HostingRecord = Record<string, unknown>
 
-// The backend's state when the page opens. Everything after that is what the app wrote, plus
-// whatever the handle below changed.
+// The backend's state when the page opens.
 export type HostingFixtures = {
   plans?: HostingRecord[]
-  // Provisioning runs on every login and ignores what it gets back, so the empty default carries
-  // any spec that isn't actually exercising the hosting ui.
+  // Provisioning runs on every login and ignores what it gets back.
   tenant?: HostingRecord
   relays?: HostingRecord[]
   invoices?: HostingRecord[]
   draftInvoice?: HostingRecord
 }
 
-// The backend changing its mind between two of the user's clicks, such as a custom domain that
-// verifies or an invoice that gets paid. It is the half of those flows no click can reach.
+// The backend changing its mind between two of the user's clicks, which no click can reach.
 export type HostingHandle = {
   setTenant(patch: HostingRecord): void
   setRelay(id: string, patch: HostingRecord): void
@@ -477,12 +408,7 @@ const hostingStore = makeContextStore<HostingHandle>("mockHosting")
 
 export const getHosting = (context: BrowserContext) => hostingStore.get(context)
 
-/**
- * The hosting api as a small stateful fake. A write mutates the record it names and the next read
- * sees it, which is what makes editing a space's details, deactivating it, changing its plan or
- * saving a custom domain observable. Each browser context gets its own store, so one user's spaces
- * are not another's.
- */
+/** The hosting api as a small stateful fake. Each browser context gets its own store. */
 export const mockHosting = async (context: BrowserContext, fixtures: HostingFixtures = {}) => {
   const plans = fixtures.plans ?? []
   const relays = new Map((fixtures.relays ?? []).map(relay => [String(relay.id), relay]))
@@ -568,8 +494,7 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
           custom_domain: "",
           custom_domain_verified: 0,
           ...body,
-          // A created space is opened straight away, so its url has to be one the container
-          // serves. The client names the domain from VITE_HOSTING_RELAY_DOMAIN.
+          // A created space is opened straight away, so its url has to be one the container serves.
           zooid_domain: body.zooid_domain || "test",
         }
 
@@ -592,8 +517,7 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
         return route.fulfill({json: {data: {activity: relay.activity ?? []}}})
       }
 
-      // The dump is whatever the fixture left on the record, served as the download itself rather
-      // than in a json envelope.
+      // The dump is served as the download itself rather than in a json envelope.
       if (sub === "export") {
         return route.fulfill({
           contentType: "application/x-ndjson",
@@ -601,8 +525,7 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
         })
       }
 
-      // Storing events is the relay's own business, so the fake counts the lines and refuses the
-      // ones that don't look signed, which is the shape zooid reports problems in.
+      // The fake counts the lines and refuses the ones that don't look signed, as zooid reports them.
       if (sub === "import") {
         const lines = (request.postData() ?? "").split("\n").filter(line => line.trim())
         const problems = lines.flatMap((line, index) =>
@@ -659,8 +582,7 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
         return route.fulfill({json: {data: {url: `${CHECKOUT_ORIGIN}/invoices/${id}`}}})
       }
 
-      // GET and reconcile both answer with the invoice as it now stands, which is how a spec marks
-      // one paid. Flip `paid_at` with the handle and let the dialog's next poll find it.
+      // GET and reconcile both answer with the invoice as it stands, which is how a spec marks one paid.
       return route.fulfill({json: {data: invoice}})
     }
 
@@ -671,8 +593,7 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
 }
 
 export type LivekitOptions = {
-  // Where the client is told to connect. Point it at something the test owns, since the token this
-  // hands out is accepted by nothing else.
+  // Point it at something the test owns, since the token this hands out is accepted by nothing else.
   serverUrl: string
   token?: string
 }
@@ -694,10 +615,7 @@ export const mockLivekit = (context: BrowserContext, {serverUrl, token}: Livekit
     },
   )
 
-/**
- * Serves a png for anything the browser is loading as an image, so a scenario's fixtures can
- * reference avatar, banner, blob and poster urls without any of them being fetched.
- */
+/** Serves a png for anything loaded as an image, so a fixture's avatar and blob urls are never fetched. */
 export const mockImages = (context: BrowserContext) =>
   context.route(
     url => !isDevServerUrl(url),

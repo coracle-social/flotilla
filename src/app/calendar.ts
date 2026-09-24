@@ -119,8 +119,7 @@ export const startsOnDay = (event: TrustedEvent, day: Date) => {
   return Boolean(start && isSameDay(secondsToDate(start), day))
 }
 
-// Multi-day events show up on each day they cover, in start order within each day. A malformed
-// end date could span an unbounded number of days, so stop after a year.
+// A malformed end date could span an unbounded number of days, so stop after a year.
 export const groupEventsByDay = (events: TrustedEvent[]) => {
   const result = new Map<string, TrustedEvent[]>()
 
@@ -177,8 +176,7 @@ export type CalendarBar = {
 const daysApart = (a: Date, b: Date) =>
   Math.round((a.getTime() - b.getTime()) / (24 * 60 * 60 * 1000))
 
-// Lays multi-day events spanning `days` out as bars instead of a chip per day, packing
-// overlapping ones into as few vertical lanes as possible.
+// Multi-day events spanning `days` are laid out as bars, packed into as few lanes as possible.
 export const layoutMultiDayBars = (
   days: Date[],
   eventsByDay: Map<string, TrustedEvent[]>,
@@ -247,8 +245,7 @@ export const deriveRsvps = (event: TrustedEvent) => deriveEvents([makeRsvpFilter
 
 export const getRsvpStatus = (rsvp: TrustedEvent) => tagValue(tagSpec("status"), rsvp.tags)
 
-// An RSVP replaces the sender's previous one, but a relay can still be holding both, so the
-// newest per person is the one that counts.
+// A relay can still hold a replaced RSVP, so the newest per person is the one that counts.
 export const getRsvpsByStatus = (rsvps: TrustedEvent[]) => {
   const latest = uniqBy(
     rsvp => rsvp.pubkey,

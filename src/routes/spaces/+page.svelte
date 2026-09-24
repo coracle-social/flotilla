@@ -35,8 +35,7 @@
 
   const userSpacesLoaded = $roomLists.load($user.pubkey)
 
-  // How many people list each space, used both to limit search to spaces someone
-  // has joined and to rank them.
+  // How many people list each space, which both scopes and ranks search.
   const spacePubkeysByUrl = _derived($roomLists.all.$, $roomLists => {
     const result = new Map<string, Set<string>>()
 

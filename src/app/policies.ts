@@ -31,8 +31,7 @@ export const relaysPendingTrust = writable<string[]>([])
 // Relays that mostly send restricted responses to requests and events
 export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
-// Welshman's default ingest policy drops anything that fails signature verification, but relays
-// the user has explicitly trusted are allowed to send events with an empty signature.
+// Relays the user has explicitly trusted may send events with an empty signature.
 export const ingestPolicy: AppPolicy = app =>
   app.pool.subscribe(socket => {
     const onReceive = (message: RelayMessage) => {
@@ -57,8 +56,7 @@ export const ingestPolicy: AppPolicy = app =>
     return () => socket.off(SocketEvent.Receive, onReceive)
   })
 
-// Welshman's appPolicyAuthUnlessBlocked, plus the conservative mode: only identify to relays
-// the user already has a relationship with.
+// Welshman's appPolicyAuthUnlessBlocked, plus the conservative mode's relationship check.
 const shouldAuth = (socket: Socket, $app: IApp) => {
   const $pubkey = $app.user?.pubkey
 
@@ -98,10 +96,7 @@ const makeAuthInputs = ($app: IApp, pubkey: string) =>
     userSettingsValues,
   ])
 
-// Welshman asks whether to authenticate once, when the challenge arrives. On a first login the
-// user's lists have not loaded by then, so a space they open answers "no relationship" and stays
-// unauthenticated for as long as the relay repeats the challenge it already sent. Ask again
-// whenever one of those lists changes.
+// A first login answers "no relationship" before the user's lists load, so ask again when one changes.
 export const authPolicy: AppPolicy = $app => {
   const $user = $app.user
 
@@ -166,8 +161,7 @@ const trustPolicy = (socket: Socket) => {
         }
       }
     }),
-    // When we get an event with no signature from an untrusted relay, remove it from
-    // the receive queue. If trust status is undefined, buffer it for later.
+    // An unsigned event from an untrusted relay is dropped, and one of undefined trust is buffered.
     on(socket, SocketEvent.Receiving, (message: RelayMessage) => {
       if (isRelayEvent(message) && !message[2]?.sig) {
         logger.get().log("trustPolicy", {url: socket.url, message})
@@ -269,8 +263,7 @@ const mostlyRestrictedPolicy = (socket: Socket) => {
   }
 }
 
-// Socket policies are installed on the pool rather than the app, so wrap them in an app policy
-// to get the same construction/cleanup lifecycle as everything else.
+// Socket policies install on the pool, so this wraps them for the app's construction and cleanup.
 export const socketPolicy: AppPolicy = $app => {
   const policies = [makeBlockPolicy($app), trustPolicy, mostlyRestrictedPolicy]
 

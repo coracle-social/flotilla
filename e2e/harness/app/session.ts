@@ -7,9 +7,7 @@ const TEST_SESSION_KEY = "__TEST_SESSION__"
 
 const TEST_EVENTS_KEY = "__TEST_EVENTS__"
 
-// A nip01 session in the {method, data} shape @welshman/app's session handlers deserialize, so
-// restoreSession can build a signer from it without the storage encoding a real login goes through.
-// addInitScript runs before any page script, so this has to be called before navigating.
+// The {method, data} shape @welshman/app's session handlers deserialize, installed before navigating.
 export const injectSession = (context: BrowserContext, user: TestUser) =>
   context.addInitScript(
     ([key, session]) => {
@@ -18,8 +16,7 @@ export const injectSession = (context: BrowserContext, user: TestUser) =>
     [TEST_SESSION_KEY, {method: "nip01", data: {secret: user.secret}}] as const,
   )
 
-// The repository contents the app loads once the injected session is restored, the local cache a
-// returning user would boot with.
+// The local cache a returning user would boot with, loaded once the injected session is restored.
 export const injectEvents = (context: BrowserContext, events: TrustedEvent[]) =>
   context.addInitScript(
     ([key, value]) => {

@@ -12,8 +12,7 @@
     children?: Snippet
     size?: "md" | "sm" | "xs"
     loading?: boolean
-    // Reserves the spinner's slot even while idle, so toggling `loading` doesn't resize
-    // (and reflow) the button. Off by default since it costs unused width otherwise.
+    // Reserves the spinner's slot while idle, so toggling `loading` doesn't reflow the button.
     reserveSpace?: boolean
     class?: string
   } = $props()

@@ -1,15 +1,10 @@
 import type {Page} from "@playwright/test"
 import type {TrustedEvent} from "@welshman/util"
 
-// Must match the database name and the `events` table in src/app/storage.ts, which are scoped to
-// one identity.
+// Must match the database name and the `events` table in src/app/storage.ts.
 const databaseName = (pubkey: string) => `flotilla-9gl-${pubkey}`
 
-/**
- * What this user's client has written to disk so far. Events reach indexeddb in three-second
- * batches with nothing in the ui to say when one has landed, so a spec about what survives a
- * restart waits on this before it reloads.
- */
+/** What this user's client has written to disk. Events reach indexeddb in three-second batches. */
 export const readCachedEvents = (page: Page, pubkey: string): Promise<TrustedEvent[]> =>
   page.evaluate(async name => {
     const open = await new Promise<IDBDatabase>((resolve, reject) => {
@@ -19,8 +14,7 @@ export const readCachedEvents = (page: Page, pubkey: string): Promise<TrustedEve
       request.onerror = () => reject(request.error)
     })
 
-    // An unversioned open creates the database when it is missing, so a client that has not written
-    // anything yet has no store to read.
+    // An unversioned open creates the database when it is missing, so a client with no writes has no store.
     if (!open.objectStoreNames.contains("events")) {
       open.close()
 

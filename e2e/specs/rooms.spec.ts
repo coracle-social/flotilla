@@ -30,9 +30,7 @@ import type {SeededEvent, SeededSpace, TestUser} from "../harness"
 // The room's way back to the live end, up only while the bottom of the container isn't it.
 const jumpToNewest = (page: Page) => page.getByRole("button", {name: "Jump to newest"})
 
-// Each of these menus hides itself once the pointer leaves it, which is how one is dismissed
-// without clicking an item. The popper sits against the right hand end of the message, so the top
-// left corner of the viewport is outside it.
+// Each of these menus hides itself once the pointer leaves it, and the top left corner is outside.
 const dismissMenu = (page: Page) => page.mouse.move(0, 0)
 
 const roomDetail = (page: Page) => page.getByRole("dialog", {name: "Room details"})
@@ -40,8 +38,7 @@ const roomDetail = (page: Page) => page.getByRole("dialog", {name: "Room details
 const openRoomDetailMenu = (page: Page) =>
   roomDetail(page).getByRole("button", {name: "Room options"}).click()
 
-// The space menu's sections are flat siblings — a header, then the rooms under it — so which
-// section a room is in is a question about document order rather than nesting.
+// The space menu's sections are flat siblings, so a room's section is a question of document order.
 const roomSection = (page: Page, name: string) =>
   page.locator(".space-menu__scroll").evaluate((menu, roomName) => {
     let section: string | undefined
@@ -63,8 +60,7 @@ const field = (form: Locator, label: string) =>
     .locator("xpath=following-sibling::div")
     .locator("input[type=text]")
 
-// RoomForm's permission toggles are a bare checkbox beside their own text rather than a labelled
-// control.
+// RoomForm's permission toggles are a bare checkbox beside their own text.
 const permission = (form: Locator, label: string) =>
   form.getByText(label).locator("xpath=preceding-sibling::input")
 
@@ -73,8 +69,7 @@ const reactionPill = (page: Page, text: string) =>
 
 const react = (page: Page, opener: Locator) => pickEmoji(page, opener, "party popper")
 
-// Outbox routing resolves everything about a person through their relay list, and a gift wrap only
-// reaches somebody who has said where their messages go.
+// Outbox routing resolves a person through their relay list, and a gift wrap needs one too.
 const seedChatter = (space: SeededSpace, user: TestUser) => {
   space.relayList(user)
   space.messagingRelayList(user)
@@ -94,8 +89,7 @@ test("US-018 send and receive a room message in real time", async ({seed, as}) =
   const {url} = scenario.space("space")
   const path = roomPath(url, "general")
 
-  // Two browser contexts, two identities, one relay: bob's page is already listening when alice
-  // sends, so the message reaches him over the wire.
+  // Two browser contexts, two identities, one relay: bob's page is already listening when alice sends.
   const alice = await as(users.alice, path)
   const bob = await as(users.bob, path)
 
@@ -131,9 +125,7 @@ test("US-018 send and receive a room message in real time", async ({seed, as}) =
   await expect(message(bob, "second line")).toContainText("first line")
 })
 
-// Two people typing in the same second used to leave every client with a different transcript,
-// since the timestamp alone gave the merge nothing to break the tie on and each client saw its own
-// message arrive first. Ordering falls back to the event id, which is the same everywhere.
+// Two messages sharing a second are ordered by event id, which is the same on every client.
 test("US-118 messages sent in the same second are in one order for everyone", async ({
   seed,
   as,
@@ -167,8 +159,7 @@ test("US-118 messages sent in the same second are in one order for everyone", as
     items.map(item => item.getAttribute("data-event")),
   )
 
-  // The room reads newest first in the dom, so the ids run the other way from the order the feed
-  // holds them in
+  // The room reads newest first in the dom, so the ids run the other way from the feed.
   expect(rendered.reverse()).toEqual(tied.map(({id}) => id).sort())
 })
 
@@ -199,8 +190,7 @@ test("US-019 join and leave a room", async ({seed, as}) => {
 
   await expect.poll(() => roomSection(bob, "General")).toBe("Your Rooms")
 
-  // Everyone else in the room finds him there. The membership events a client listens for live are
-  // the ones naming itself, so somebody else's arrival is read with the rest of the room.
+  // The membership events a client listens for live are the ones naming itself.
   await alice.reload()
 
   const joined = alice.getByText("joined the room").filter({hasText: "Bob Barnacle"})
@@ -342,8 +332,7 @@ test("US-121 land somewhere after deleting the room you are in", async ({seed, a
   await admin.getByRole("button", {name: "Delete Room"}).click()
   await admin.getByRole("button", {name: "Confirm"}).click()
 
-  // The space root renders nothing on a wide screen; it hands off to whichever page of the space
-  // was open last, and the room that was just deleted is the page it remembers.
+  // The space root renders nothing on a wide screen, handing off to the page of the space open last.
   await expect(admin).toHaveURL(pathPattern(spacePath(url) + "/"))
   await expect(roomLink(admin, "General")).toBeVisible()
 
@@ -359,8 +348,7 @@ test("US-021 request access to a private room and get approved", async ({seed, a
     const space = relay("space")
 
     space.room("general", {name: "General"})
-    // `private` is what hides the room's history from non-members; `closed` is what keeps a join
-    // request from admitting her on its own, so an admin has to act on it.
+    // `private` hides the room's history from non-members; `closed` makes a join a request.
     space.room("wardroom", {name: "Wardroom", private: true, closed: true})
     space.join(user.admin, "general", "wardroom")
     space.join(user.alice, "general", "wardroom")
@@ -381,8 +369,7 @@ test("US-021 request access to a private room and get approved", async ({seed, a
   await expect(carol.getByText("You aren't currently a member of this room.")).toBeVisible()
   await expect(carol.getByText("the charts are in the locker")).toHaveCount(0)
 
-  // A private room offers to join rather than to ask, and a closed one turns that into a request
-  // an admin has to act on.
+  // A private room offers to join rather than to ask, and a closed one turns that into a request.
   await carol.getByRole("button", {name: "Join Room"}).click()
 
   await expect(carol.getByRole("button", {name: "Access Pending"})).toBeVisible()
@@ -399,8 +386,7 @@ test("US-021 request access to a private room and get approved", async ({seed, a
 
   await expect(admin.getByText("Member has been added to the room!")).toBeVisible()
 
-  // The history the relay refused her is fetched when the room is next read, so this is what she
-  // finds on her way back in rather than something that fills in behind her.
+  // The history the relay refused her is fetched when the room is next read.
   await carol.reload()
 
   await expect(carol.getByText("the charts are in the locker")).toBeVisible()
@@ -422,8 +408,7 @@ test("US-022 bring people into a room", async ({seed, as}) => {
     space.join(user.admin, "general")
     space.join(user.bob, "general")
     space.profile(user.bob, {name: "Bob Barnacle"})
-    // A space member who isn't in the room yet. Her message is what loads her profile into the
-    // client that goes looking for her.
+    // A space member who isn't in the room yet, whose message loads her profile into the client.
     space.join(dora)
     space.profile(dora, {name: "Dora Deckhand"})
     space.message(dora, "general", "passing through", at(3, HOUR))
@@ -449,8 +434,7 @@ test("US-022 bring people into a room", async ({seed, as}) => {
 
   await expect(admin.getByText("Copied to clipboard!")).toBeVisible()
 
-  // The link is opened as a path rather than as an absolute url, which would leave the test's own
-  // dev server for the platform's.
+  // A path rather than an absolute url, which would leave the test's own dev server for the platform's.
   const link = new URL(await invite.inputValue())
   const carol = await as(users.carol, `/join${link.search}`)
 
@@ -478,8 +462,7 @@ test("US-022 bring people into a room", async ({seed, as}) => {
   await expect(admin.getByText("Members have successfully been added!")).toBeVisible()
   await expect(members.getByText("Dora Deckhand")).toBeVisible()
 
-  // Somebody who isn't in the space yet has to be let into it first. A pubkey pasted into the
-  // search field selects that person outright, which is how erik is reachable without a profile.
+  // A pubkey pasted into the search field selects that person outright, with no profile needed.
   await admin.getByRole("button", {name: "Add members"}).click()
   await admin.getByPlaceholder("Search for profiles...").fill(erik.pubkey)
   await admin.getByRole("button", {name: "Save changes"}).click()
@@ -576,9 +559,7 @@ test("US-024 edit or delete a message you sent", async ({seed, as}) => {
 
   await expect(message(bob, "we sail at dwan")).toBeVisible()
 
-  // Her edit republishes with her original timestamp, and two messages sharing a second are
-  // ordered by event id (US-118) -- which the edit changes. His reply waits her second out, so
-  // the order asserted below is about the timestamp rather than a coin flip on the new id.
+  // Her edit republishes with her original timestamp, and it changes the event id US-118 ties on.
   const sent = now()
 
   while (now() === sent) {
@@ -717,17 +698,14 @@ test("US-025 react to a message", async ({seed, as}) => {
   await expect(phone.getByRole("button", {name: "Open space menu"})).toBeVisible()
   await expect(reactionPill(phone, "we made port")).toBeVisible()
 
-  // Her retraction has to have reached this page first: a pill she is part of toggles her reaction
-  // off instead of opening the list.
+  // A pill she is part of toggles her reaction off instead of opening the list.
   await expect(reactionPill(phone, "we made port")).not.toHaveClass(/button-primary/)
 
   await reactionPill(phone, "we made port").click()
 
   await expect(phone.getByText("Reacted to this message")).toBeVisible()
 
-  // The list resolves each reactor's profile as it renders; the dialog's own title is whatever name
-  // was known when the pill was clicked, which on a page this fresh is often still an npub. Exact,
-  // because the room behind the dialog names him too, as "@Bob Barnacle".
+  // Exact, because the room behind the dialog names him too, as "@Bob Barnacle".
   await expect(phone.getByRole("button", {name: "Bob Barnacle", exact: true})).toBeVisible()
 })
 
@@ -829,9 +807,7 @@ test("US-027 find a past message and jump to it", async ({seed, as}) => {
   await expect(search).toHaveCount(0)
   await expect(page.locator(`[data-event="${lastWeek.id}"]`)).toBeInViewport()
 
-  // A permalink to one message lands on it. This room is three messages long, so the window that
-  // opens with it runs all the way to the present and the newest message is loaded alongside —
-  // US-027a is where the button that stands in for that gap is exercised.
+  // This room is three messages long, so the window runs to the present and the newest loads too.
   await page.goto(`${path}?at=${older.event.created_at}`)
 
   await expect(page.locator(`[data-event="${older.id}"]`)).toBeInViewport()
@@ -839,11 +815,7 @@ test("US-027 find a past message and jump to it", async ({seed, as}) => {
   await expect(jumpToNewest(page)).toHaveCount(0)
 })
 
-// A push notification links to the message it announced, which is near the newest end of the room,
-// so the jump lands at the bottom with nowhere left to scroll down to. Anything published since —
-// another message, a membership event — is newer than the one linked to, so "is this the last
-// event in the room" is the wrong question to hang the button on; whether the loaded window has
-// caught up to the present is the right one.
+// A push notification links near the newest end, so the jump lands at the bottom with nothing below.
 test("US-027a a permalink near the newest end lands at the bottom", async ({seed, as}) => {
   let recent!: SeededEvent
 
@@ -980,19 +952,15 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
 
   await expect(alice.getByText("a message from Bob Barnacle")).toBeVisible()
 
-  // The quote, the mention and the url are each named rather than spelled out, since none of them
-  // is intelligible read a character at a time.
+  // The quote, the mention and the url are named rather than spelled out a character at a time.
   expect(spoken).toEqual([
     "another message\n\nheads up Alice Anchor, the notice is at a link to harbor.example",
   ])
 
-  // The app decodes what it is answered and rebuilds the container around the samples, so the
-  // duration is only right if that round trip kept every one of them.
+  // The app decodes what it is answered and rebuilds the container around the samples.
   await expect(alice.getByText("/ 0:10")).toBeVisible()
 
-  // The clip carries autoplay and the button follows the audio element's own play event, so it
-  // reads "Play message" until that fires. Waiting for it is what keeps the click below a pause:
-  // reading the label instead races the autoplay, and loses whenever playback starts in between.
+  // The clip carries autoplay and the button follows the audio element's own play event.
   const playPause = alice.getByRole("button", {name: /^(Play|Pause) message$/})
 
   await expect(playPause).toHaveAttribute("aria-label", "Pause message")
@@ -1013,11 +981,9 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
 })
 
 test("US-115 connect a wallet without losing the zap you were composing", async ({seed, as}) => {
-  // The lightning address on bob's profile, and the lnurl endpoint it resolves to. Zapping only gets
-  // as far as a dialog once dufflepud answers with a zapper for that endpoint.
+  // Zapping only gets as far as a dialog once dufflepud answers with a zapper for that endpoint.
   const lud16 = "bob@zap.test"
-  // A zapper's receipts are signed by the recipient's lightning provider, so it is an identity of
-  // its own even where, as here, nothing is ever paid.
+  // A zapper's receipts are signed by the recipient's lightning provider, so it is an identity of its own.
   const provider = makeTestUser("zapper")
 
   const scenario = await seed(({relay, user}) => {
@@ -1037,8 +1003,7 @@ test("US-115 connect a wallet without losing the zap you were composing", async 
   const path = roomPath(url, "general")
   const page = await as(users.alice, path, {webln: {node: {alias: "Test Node"}}})
 
-  // Registered after the page was opened, so it answers ahead of the empty dufflepud `as()`
-  // installs, and before the navigation below, since a zapper is looked up once per page load.
+  // Registered after the page opened, so it answers ahead of the empty dufflepud `as()` installs.
   await mockDufflepud(page.context(), {
     zappers: [
       {
@@ -1070,8 +1035,7 @@ test("US-115 connect a wallet without losing the zap you were composing", async 
   await expect(page.getByRole("alert")).toContainText("Wallet successfully connected!")
   await expect(connect).toHaveCount(0)
 
-  // The zap dialog was underneath rather than replaced, so it answers to the wallet she now has
-  // instead of still asking for one, and the amount she had typed survived the detour.
+  // The zap dialog was underneath rather than replaced, so the amount she had typed survived.
   await expect(zap.getByRole("button", {name: "Connect a lightning wallet"})).toHaveCount(0)
   await expect(zap.getByRole("button", {name: "Send Zap"})).toBeVisible()
   await expect(amount).toHaveValue("210")

@@ -51,9 +51,7 @@ const mergeSorted = <T>(left: T[], right: T[], compare: (a: T, b: T) => number) 
   return merged
 }
 
-// Reactions, zaps and reports point at their subject with `e`/`a`. A NIP-22 comment instead
-// points at its thread *root* with `E`/`A`, so filing it by those tags puts a whole thread in
-// the root's bucket — which is the scope a reply count wants.
+// A NIP-22 comment points at its thread root with `E`/`A`, which is the scope a reply count wants.
 const getTargets = ({kind, tags}: TrustedEvent) =>
   kind === COMMENT
     ? [...tagValues(hexTags("E"), tags), ...tagValues(addressTags("A"), tags)]
@@ -70,8 +68,7 @@ export const makeFeedContext = ({
   relays: string[] | Promise<string[]>
   withReplies?: boolean
 }) => {
-  // Every feed loads NIP-22 comments. Kind 1 notes reply to each other with `e` tags instead,
-  // so a feed that renders those replies has to ask for them as well.
+  // Kind 1 notes reply with `e` tags rather than as NIP-22 comments.
   const contextKinds = withReplies ? [...EVENT_CONTEXT_KINDS, NOTE] : EVENT_CONTEXT_KINDS
   const requestKinds = withReplies ? [...REACTION_KINDS, NOTE] : REACTION_KINDS
   const {repository, tracker} = app.get()
@@ -83,8 +80,7 @@ export const makeFeedContext = ({
   const deletedChecks = new Map<string, Set<() => void>>()
 
   const addEvent = (event: TrustedEvent, touched: Set<string>) => {
-    // An event seen before its target was tracked stays unfiled, so that adding the target
-    // later can pick it up out of the repository
+    // An event seen before its target stays unfiled, so adding the target picks it up from the repository.
     if (!targetsByEventId.has(event.id)) {
       const eventTargets = getTargets(event).filter(target => targets.has(target))
 
@@ -167,8 +163,7 @@ export const makeFeedContext = ({
   const loadContext = batch(100, async (events: TrustedEvent[]) => {
     const touched = new Set<string>()
 
-    // What's already local — an earlier page, our own optimistic reactions — never comes
-    // through the update listener, so file it before asking the network for the rest
+    // Local events never come through the update listener, so file them before asking the network.
     for (const event of repository.query([
       ...getReplyFilters(events, {kinds: contextKinds}),
       ...getCommentFiltersForRoot(events),
@@ -180,8 +175,7 @@ export const makeFeedContext = ({
 
     const urls = await relays
 
-    // A space relay holds the whole conversation for its own feed. A feed built out of other
-    // people's outboxes does not, so ask each event's own relays for its context too.
+    // A feed built out of other people's outboxes has no relay holding the whole conversation.
     const eventsByRelay = new Map<string, TrustedEvent[]>()
 
     for (const event of events) {
@@ -282,8 +276,7 @@ export const makeFeedContext = ({
 
       const [key, ...rest] = getKeys(event)
 
-      // A replaceable event collects both its buckets, and something tagging it by id and
-      // address at once lands in both
+      // A replaceable event collects both buckets, and something tagging it by id and address lands in both.
       return rest.length > 0
         ? derived([relatedForKey(key), ...rest.map(relatedForKey)], buckets =>
             uniqBy(event => event.id, buckets.flat()),
@@ -299,8 +292,7 @@ export const makeFeedContext = ({
 
 export type FeedContext = ReturnType<typeof makeFeedContext>
 
-// Keeps a feed's store in step with the repository: events that arrive later, events that get
-// deleted, and events already held that have only now been seen on one of the feed's relays.
+// Keeps a feed's store in step with the repository: later arrivals, deletions, and events newly seen.
 const syncFeed = ({
   relays,
   filters,
@@ -361,18 +353,14 @@ const syncFeed = ({
   ]
 }
 
-// One direction of a feed. A span that comes back empty is a gap in the timeline, not the end of
-// it — conflating the two either stops loading at the first gap or walks the whole history
-// looking for the end of one.
+// One direction of a feed. An empty span is a gap in the timeline rather than the end of it.
 export type FeedLoadState =
   | {status: "idle"}
   | {status: "loading"}
   | {status: "searching"}
   | {status: "exhausted"}
 
-// One span of a feed's timeline. `complete` is whether the relays actually answered for it: a
-// request the socket dropped reports nothing found, which is not the same thing as a span with
-// nothing in it, and the two have to move the window differently.
+// One span of a feed's timeline. `complete` is whether the relays answered, which a dropped request is not.
 export type FeedSpan = {found: number; complete: boolean; exhausted: boolean}
 
 // Relatively high because quiet relays eose first.
@@ -385,25 +373,17 @@ const SPAN_TIMEOUT = 3000
 const spanSignal = (signal: AbortSignal) =>
   AbortSignal.any([signal, AbortSignal.timeout(SPAN_TIMEOUT)])
 
-// Empty spans to walk per trigger. Enough to cross a gap; not enough to reach the end of the
-// history on a single request.
+// Enough to cross a gap, not enough to reach the end of the history in one trigger.
 const SPANS_PER_TRIGGER = 3
 
-// How many events one step back through the history asks for. Spans are a month wide so that a
-// quiet feed finds its history in a few requests, which in a busy one is thousands of events —
-// far more than anyone is about to read, and all of it queued ahead of what they are looking at.
-// Asking for a page instead leaves the relays to answer with the events nearest the anchor,
-// which is what NIP-01 promises a filter carrying a limit.
+// A month-wide span is thousands of events in a busy feed, so ask for a page and let relays answer from the anchor.
 const PAGE_SIZE = 100
 
-// A span that turns up nothing widens the next one, so walking a sparse history doesn't take
-// dozens of round trips
+// A span that finds nothing widens the next one, so a sparse history takes fewer round trips.
 const nextInterval = (interval: number, found: number) =>
   found > 0 ? int(MONTH) : Math.round(interval * 1.5)
 
-// Whether a request is actually in flight, which is not the same as whether more might exist. A
-// list that already has what it needs shouldn't sit under a spinner just because it hasn't
-// walked to the end of the history.
+// Whether a request is in flight, which is not whether more might exist.
 export const isFeedLoading = (state: Maybe<FeedLoadState>) =>
   state?.status === "loading" || state?.status === "searching"
 
@@ -430,8 +410,7 @@ const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
           return
         }
 
-        // A span nobody answered for hasn't moved the window, so hold here rather than walking
-        // past it, and give the socket a moment before the scroller comes back around
+        // A span nobody answered for has not moved the window, so hold here rather than walking past it.
         if (!complete) {
           await sleep(ms(3))
           break
@@ -446,9 +425,7 @@ const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
     }
   }
 
-  // A run covers a few spans and the scroller starts another one a moment later, so settling at
-  // the end of a run blinks the spinner once per page. What ends a load is the trigger going
-  // quiet — the list grown long enough that nothing more is wanted.
+  // A run covers a few spans, so settling at the end of one blinks the spinner once per page.
   const settle = () => {
     if (!running && isFeedLoading(get(state))) {
       state.set({status: "idle"})
@@ -458,10 +435,7 @@ const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
   return {subscribe: state.subscribe, run, settle}
 }
 
-// A loader triggered by proximity to the end of a scroll container, which is how every list in
-// the app pages. The container's orientation decides which direction `reverse` reaches, so the
-// caller passes it — a reversed chat scrolls away from its origin to find older messages, an
-// ordinary feed scrolls toward the end of its own content.
+// The container's orientation decides which direction `reverse` reaches, so the caller passes it.
 export const makeScrollLoader = (
   element: HTMLElement,
   load: () => Promise<FeedSpan>,
@@ -480,9 +454,7 @@ export const makeScrollLoader = (
   return {subscribe: loader.subscribe, stop: scroller.stop}
 }
 
-// Holds every event a view has loaded, sorted oldest to newest, and knows how to ask for the
-// next span in either direction. It does not decide *when* to ask — the view does, because the
-// view is what knows what is on screen.
+// Holds what a view has loaded and knows how to ask for the next span, while the view decides when.
 export const makeFeed = ({
   relays,
   filters,
@@ -498,21 +470,16 @@ export const makeFeed = ({
   const events = writable<TrustedEvent[]>([])
   const seen = new Set<string>()
 
-  // Events from further back than the feed has reached. Everything the app does fills the same
-  // repository — a space-wide sync reconciling a month of every room at once, most of all — and
-  // putting each of those on screen as it lands is what walks a room backwards under the reader.
+  // Events from further back than the feed has reached, held rather than rendered as they land.
   const held = new Map<string, TrustedEvent>()
 
-  // The span the relays have been asked about, which grows outward from the anchor. Each
-  // direction widens its own: what one of them is walking through says nothing about the other,
-  // and sharing a width lets a backward walk finding history reset the forward walk's growth.
+  // Each direction widens its own span, since what one walks through says nothing about the other.
   let oldest = at
   let newest = at
   let olderInterval = int(MONTH)
   let newerInterval = int(MONTH)
 
-  // How far back the feed has been answered for, which is what decides whether an event is ready
-  // to render or has to wait for the window to come and get it.
+  // How far back the feed has been answered for, which decides whether an event is ready to render.
   let reached = at
 
   const insertEvents = (newEvents: Iterable<TrustedEvent>) => {
@@ -559,8 +526,7 @@ export const makeFeed = ({
     }
   }
 
-  // Take the feed back to `timestamp`, releasing everything that had arrived for the stretch
-  // between there and where it had got to
+  // Take the feed back to `timestamp`, releasing everything held for the stretch it gains.
   const reach = (timestamp: number) => {
     if (timestamp < reached) {
       reached = timestamp
@@ -580,8 +546,7 @@ export const makeFeed = ({
 
   const unsubscribers = syncFeed({relays, filters, addEvents, removeEvents})
 
-  // One request per direction, reported per relay as well as in total: each relay answers a
-  // limit for itself, so a page only runs out where the relay that gave the least of it ran out.
+  // Each relay answers a limit for itself, so a page runs out where the relay that gave least ran out.
   const loadSpan = async (extension: Filter) => {
     let complete = false
 
@@ -614,11 +579,7 @@ export const makeFeed = ({
     return {found, complete, pages}
   }
 
-  // Ask for the next span in each direction. A span that comes back empty is normal while
-  // walking a sparse history, so the count is reported separately from whether there is any
-  // history left — a caller watching its list for changes would never hear about an empty one.
-  // The window only moves once the relays have answered: a request the socket dropped looks
-  // exactly like an empty span, and walking past it would leave a hole nothing goes back for.
+  // The window only moves once the relays have answered, since a dropped request looks like an empty span.
   const loadOlder = async (): Promise<FeedSpan> => {
     if (oldest < now() - int(2, YEAR)) {
       return {found: 0, complete: true, exhausted: true}
@@ -628,8 +589,7 @@ export const makeFeed = ({
     const since = until - olderInterval
     const {found, complete, pages} = await loadSpan({since, until, limit: PAGE_SIZE})
 
-    // A relay that answered with less than it was allowed has covered its whole span and holds
-    // nothing back, so the page runs out at the highest of the rest
+    // A relay that answered with less than its limit has covered its whole span.
     let edge: Maybe<number>
 
     for (const page of pages.values()) {
@@ -641,8 +601,7 @@ export const makeFeed = ({
     if (complete) {
       olderInterval = nextInterval(olderInterval, found.length)
 
-      // The second the edge steps back is what stops a page that filled up inside one from being
-      // asked for over and over
+      // Stepping the edge back is what stops a page that filled up inside one span being asked for again.
       oldest = edge === undefined ? since : Math.min(edge, until - 1)
     }
 
@@ -653,8 +612,7 @@ export const makeFeed = ({
     return {found: found.length, complete, exhausted: false}
   }
 
-  // A limit is answered with the newest events matching it, which reaches away from an anchor in
-  // the past rather than toward it, so this direction walks spans as it always has
+  // A limit is answered with the newest events matching it, which reaches away from an anchor in the past.
   const loadNewer = async (): Promise<FeedSpan> => {
     if (newest >= now()) {
       return {found: 0, complete: true, exhausted: true}
@@ -687,9 +645,7 @@ export const makeFeed = ({
   }
 }
 
-// Same split as makeFeed: it holds what has been loaded and knows how to reach further out in
-// either direction, while the page decides when to ask. Calendar events are addressed by the
-// days they cover rather than by when they were published, so the spans are date hashes.
+// Calendar events are addressed by the days they cover, so the spans are date hashes.
 export const makeCalendarFeed = ({
   relays,
   filters,
@@ -754,8 +710,7 @@ export const makeCalendarFeed = ({
     }
   }
 
-  // Calendar events are addressable and often relayed on from elsewhere, so this feed takes any
-  // matching event rather than only those seen on its own relays
+  // Calendar events are addressable and often relayed on, so this takes any match rather than its own relays'.
   const unsubscribers = syncFeed({
     relays,
     filters,
@@ -817,8 +772,7 @@ export const makeCalendarFeed = ({
     events,
     loadOlder,
     loadNewer,
-    // The month and week views jump to arbitrary ranges rather than scrolling through them, and
-    // wait on the request so they can show progress for the range on screen
+    // The month and week views jump to a range rather than scrolling, and wait to show progress for it.
     load: loadTimeframe,
     cleanup: () => {
       controller.abort()

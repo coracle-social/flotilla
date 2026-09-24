@@ -16,8 +16,7 @@ export const syncKeyboard = () => {
     document.body.classList.remove("keyboard-open")
   })
 
-  // On Android, system-dismissing the IME during pause doesn't fire keyboardWillHide,
-  // so on resume we force a hide to re-sync native insets and clear our CSS state.
+  // On Android a system-dismissed IME fires no keyboardWillHide, so resume forces a hide.
   const resumeListener = App.addListener("appStateChange", ({isActive}) => {
     if (isActive) {
       Keyboard.hide()

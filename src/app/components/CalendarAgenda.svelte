@@ -52,13 +52,10 @@
   let prevFirstEventId = ""
   let initialScrollDone = false
 
-  // The item an in-progress centering has settled on. A profile name or a reaction count that
-  // resolves after the item has already rendered shifts everything below it, so this stays
-  // pinned — and gets re-centered by the observer below — until the visitor scrolls themselves.
+  // A name or a count resolving late shifts everything below it, so the item stays pinned.
   let pinnedTarget: HTMLElement | undefined = undefined
 
-  // offsetTop is relative to the nearest positioned ancestor, which the scroll container itself
-  // isn't — comparing bounding rects instead keeps this correct regardless of that
+  // offsetTop is relative to the nearest positioned ancestor, which the scroll container isn't.
   const recenter = (target: HTMLElement) => {
     if (!element) {
       return
@@ -80,11 +77,7 @@
       pinnedTarget = undefined
     }
 
-    // A resolved profile name, a reaction count, an RSVP tally, an avatar image — all arrive well
-    // after the item itself renders and can reflow the whole list, and none of them touch
-    // `events`, so nothing here re-runs the effect below on its own. A ResizeObserver catches
-    // every one of those (unlike a MutationObserver, which misses an image's own load-driven
-    // reflow) and keeps the pin centered until the visitor scrolls themselves.
+    // A ResizeObserver catches an image's own load-driven reflow, which a MutationObserver misses.
     const observer = new ResizeObserver(() => {
       if (pinnedTarget) {
         recenter(pinnedTarget)

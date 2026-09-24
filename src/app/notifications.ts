@@ -194,10 +194,7 @@ const getContentTarget = (event: TrustedEvent) => {
   }
 }
 
-// Where an activity happened, alongside the event itself. The map is built from room lists, chats
-// and content targets, all of which know what they are - a consumer handed only a path would have
-// to parse it back apart. `contentKind` is what an activity is filed under when it belongs to a
-// content item rather than to a conversation, and a comment files under its subject's kind.
+// Where an activity happened. `contentKind` files one under a content item rather than a conversation.
 export type Activity = {
   path: string
   event: TrustedEvent

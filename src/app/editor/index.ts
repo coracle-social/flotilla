@@ -81,8 +81,7 @@ export const makeEditor = async ({
   const roomReferenceSearch = derived(
     [throttled(800, userSpaceUrls), throttled(800, rooms.get().byUrl.$)],
     ([$userSpaceUrls, $roomsByUrl]) => {
-      // When platform relays are configured, restrict suggestions to those spaces.
-      // Otherwise suggest rooms from the user's joined spaces plus the current one.
+      // Platform relays, where configured, are the only spaces suggestions come from.
       const spaceUrls =
         PLATFORM_RELAYS.length > 0
           ? PLATFORM_RELAYS
@@ -115,8 +114,7 @@ export const makeEditor = async ({
     commandTarget ? createCommandSearch(commandTarget) : undefined,
   )
 
-  // The spec prefers a bare trigger, so qualify with the executor's pubkey only where the
-  // trigger would otherwise reach more than one of them.
+  // The spec prefers a bare trigger, so qualify only where one would reach more than one executor.
   const getCommandAttributes = (address: string) => {
     if (commandTarget) {
       const command = getCommandByAddress(commandTarget.url ?? "", address)
@@ -132,8 +130,7 @@ export const makeEditor = async ({
     }
   }
 
-  // A file the editor has no node for is uploaded here instead, so its imeta has to join what
-  // the nostr extension collects off the document, and it has to hold `uploading` open itself.
+  // A file the editor has no node for is uploaded here, so it holds `uploading` open itself.
   const attachments: {url: string; tag: string[]}[] = []
 
   let attaching = 0
@@ -187,9 +184,7 @@ export const makeEditor = async ({
           },
           fileUpload: {
             config: {
-              // nostr-editor reads this twice: as the file picker's `accept`, where the
-              // wildcard is what we want, and as an exact match against the file's own type,
-              // which no wildcard satisfies. addFile below is the gate that decides.
+              // nostr-editor reads this as the picker's `accept` and as an exact match against the file's type.
               allowedMimeTypes: Object.assign(["*/*"], {includes: () => true}),
               upload: async (attrs: FileAttributes) =>
                 uploadFile(await compressFileForUpload(attrs.file), {url, encrypt: encryptFiles}),
@@ -202,9 +197,7 @@ export const makeEditor = async ({
               },
             },
             extend: {
-              // The picker, a drop and a paste all reach the uploader through addFile, which
-              // only knows how to make an image or a video node. Everything else is uploaded on
-              // its own, so what you can attach is the server's call rather than a list here.
+              // addFile only knows how to make an image or a video node, so everything else uploads on its own.
               onCreate() {
                 const {uploader} = this.storage
                 const addFile = uploader.addFile.bind(uploader)
@@ -308,22 +301,16 @@ export const makeEditor = async ({
     },
   })
 
-  // nostr-editor turns a `nostr:` entity into a node from a paste rule, and the constructor's
-  // `content` option runs none, so seeded text stays text and contributes no tags. Set it here
-  // instead, flagged as a paste. A restored draft is already a document and needs no parse.
+  // The constructor's `content` option runs no paste rules, so seeded text would contribute no tags.
   if (typeof content === "string" && content) {
     ed.chain().setMeta("uiEvent", "paste").setContent(escapeHtml(content)).run()
   }
 
-  // Seed the caller's store from the document tiptap actually parsed — a restored draft is a
-  // document even when it holds no text, so the caller can't tell from `content` alone. Callers
-  // clear their draft when this reads true, so it has to be set before they render: keep every
-  // await in this function inside a callback, below the constructor.
+  // Callers clear their draft when this reads true, so keep every await below the constructor.
   empty?.set(isEmpty(ed))
   text?.set(ed.getText({blockSeparator: "\n"}))
 
-  // Deleting the url an attachment was inserted as is how you remove it, since there is no node
-  // to delete.
+  // Deleting the url an attachment was inserted as is how you remove it, since there is no node.
   const getEditorTags = ed.storage.nostr.getEditorTags
 
   ed.storage.nostr.getEditorTags = (...args: unknown[]) => {

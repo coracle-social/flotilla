@@ -48,13 +48,11 @@
   let saved = $state(false)
   let redirecting = $state(false)
 
-  // Offer to reuse the app's spending wallet instead of re-pasting its NWC url.
-  // The two wallets stay separate records, this just reuses the same connection.
+  // The two wallets stay separate records, and this reuses the same connection.
   const spendingWalletUrl =
     $wallet?.type === WalletType.NWC ? getNwcClient().nostrWalletConnectUrl : undefined
 
-  // The tenant's autopay wallet (a backend NWC, write-only), distinct from the
-  // app's own wallet.
+  // The tenant's autopay wallet is a write-only backend NWC, distinct from the app's own.
   const persistNwc = async (url?: string) => {
     if (!url || saving) {
       return

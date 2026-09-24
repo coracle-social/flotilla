@@ -6,8 +6,7 @@ import {deriveEventsForUrl} from "@app/repository"
 
 // Action items (admin review queue)
 
-// A report is resolved by banning the event it names, a join request by allowing the pubkey, so
-// the queue holds whichever of the two the user can actually act on.
+// A report is resolved by banning the event it names, a join request by allowing the pubkey.
 export const deriveSpaceActionItems = (url: string) =>
   derived(
     [

@@ -86,8 +86,7 @@ const getChatTitle = (chatId: string | undefined, pubkey: string | undefined) =>
     return "Chat"
   }
 
-  // Read the id directly rather than through splitChatId, which resolves it against the signed-in
-  // user and throws when there isn't one.
+  // splitChatId resolves against the signed-in user and throws when there isn't one.
   const others = uniq(chatId.split(",")).filter(pk => pk !== pubkey)
 
   if (others.length === 1) {

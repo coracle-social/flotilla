@@ -19,9 +19,7 @@ import {Domain, Network, RelayScopedDerivedPlugin, createSearch, projectFrom} fr
 import type {IApp, Projection} from "@welshman/app"
 import {fromApp, usePlugin} from "@app/core"
 
-// NIP-CD definitions count where they're published, since a space curates its own command
-// namespace by controlling who may write to it. `|` never appears in a url, and keeps these
-// distinct from the `'`-separated room keys.
+// `|` never appears in a url, and keeps these distinct from the `'`-separated room keys.
 const makeCommandKey = (url: string, address: string) => `${url}|${address}`
 
 const splitCommandKey = (key: string): [string, string] => {
@@ -31,9 +29,7 @@ const splitCommandKey = (key: string): [string, string] => {
 }
 
 export class Commands extends RelayScopedDerivedPlugin<CommandReader> {
-  // Definitions are replaceable, so one pull per space keeps the repository current. The set
-  // lives on the plugin rather than the module so logging in, which swaps the app and its
-  // repository, starts over.
+  // The set lives on the plugin, so logging in and swapping the repository starts over.
   private pulled = new Set<string>()
 
   constructor(app: IApp) {
@@ -79,9 +75,7 @@ export const getCommandsForTarget = (target: CommandScopeTarget) =>
     .get()
     .filter(command => command.matches(target))
 
-// A space's definitions are the same for everything rendered in it, so one store per url is
-// shared rather than every message deriving its own. Subscribing is also what pulls them, so
-// reading a space loads its definitions whether or not anything is being composed.
+// One store per url, and subscribing to it is what pulls the definitions.
 const commandsByUrl = new Map<string, Readable<CommandReader[]>>()
 
 const deriveCommandsForUrl = (url: string): Readable<CommandReader[]> => {
@@ -106,16 +100,13 @@ const deriveCommandsForUrl = (url: string): Readable<CommandReader[]> => {
   return store
 }
 
-// The definitions a piece of content is read against: the ones its space publishes that also
-// scope to it. Content outside a space has no url, and so no commands.
+// Content outside a space has no url, and so no commands.
 export const deriveValidCommands = (target: CommandScopeTarget): Readable<CommandReader[]> =>
   derived(deriveCommandsForUrl(target.url ?? ""), $commands =>
     $commands.filter(command => command.matches(target)),
   )
 
-// Without a qualifier an invocation targets every definition whose trigger matches, so more
-// than one here is what tells a composer to disambiguate. Takes an invocation from either
-// side: the one a composer is typing, or the one a message was parsed into.
+// Without a qualifier an invocation targets every definition whose trigger matches.
 export const getCommandsForInvocation = (
   available: CommandReader[],
   invocation: Pick<CommandInvocation, "command" | "pubkey">,
@@ -143,16 +134,13 @@ export const createCommandSearch = (target: CommandScopeTarget) =>
 export const getCommandByAddress = (url: string, address: string) =>
   commands.get().get(makeCommandKey(url, address))
 
-// An invocation in progress, as the composer understands it. `matches` holds every definition
-// the text currently targets, so an ambiguous trigger is visible rather than guessed at, and
-// `command` is the one whose arguments shape the input.
+// `matches` holds every definition the text targets, and `command` is the one shaping the input.
 export type CommandDraft = {
   invocation: CommandInvocation
   command: CommandReader
   matches: CommandReader[]
   args: CommandArg[]
-  // One entry per argument the text supplies, in order, so an argument already typed can be
-  // shown as bound or as wrong while the rest are still being entered
+  // One entry per argument the text supplies, in order.
   bindings: CommandArgBinding[]
   activeIndex: number
 }

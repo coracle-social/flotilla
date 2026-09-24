@@ -1,20 +1,13 @@
 import {inspect} from "node:util"
 import type {BrowserContext, ConsoleMessage} from "@playwright/test"
 
-// A CSP refusal reaches the console and nothing else, so a policy that has rotted past the script
-// it names is invisible to every spec: app.html's requestIdleCallback shim was refused on every
-// platform for a week with the suite green (#535).
+// A CSP refusal reaches the console and nothing else, so a policy that has rotted is invisible (#535).
 const isRefusal = (text: string) => text.includes("Content Security Policy")
 
-// Every test recreates the zooid container, chromium aborts what the page had in flight when the
-// interfaces churn, and sveltekit reports a route chunk lost that way as an uncaught TypeError. It
-// reaches nearly every spec — 256 of the 258 faults a full survey run raised — so it stays in the
-// log and out of the fault set until #529 stops the churn.
+// Recreating the container between tests aborts route chunks in flight, until #529 stops the churn.
 const isChunkLoss = (text: string) => text.includes("Failed to fetch dynamically imported module")
 
-// Chrome reports a failed request as "Failed to load resource: the server responded with a status
-// of 404 (Not Found)" and carries the url nowhere but the message's location, so a line built from
-// the text alone cannot say which resource went missing.
+// Chrome carries a failed request's url nowhere but the message's location.
 const locate = (message: ConsoleMessage) => {
   const text = message.text()
   const {url} = message.location()
@@ -22,9 +15,7 @@ const locate = (message: ConsoleMessage) => {
   return url && !text.includes(url) ? `${text} ${url}` : text
 }
 
-// Playwright builds this from the page's exception details, and a page that throws something other
-// than an Error leaves it with neither message nor stack — which is how a fault used to reach the
-// console log as a bare "uncaught:".
+// A page that throws something other than an Error leaves playwright neither message nor stack.
 const describe = (error: Error) => error.stack || error.message || inspect(error)
 
 export type FaultWatch = {
@@ -33,9 +24,7 @@ export type FaultWatch = {
   // The subset of it that means the app broke rather than the box being noisy.
   found: string[]
   observe(context: BrowserContext, who: string): void
-  // Throws when the app itself broke while the test ran: an uncaught exception, or code of ours the
-  // browser refused to run. A failed request or a noisy warning is neither — a dev server is full
-  // of both — so those stay in the log.
+  // Throws on an uncaught exception or code the browser refused to run, not on a failed request.
   assertNone(): void
 }
 

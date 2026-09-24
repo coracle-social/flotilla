@@ -13,15 +13,13 @@
 
   let {value = $bindable()}: Props = $props()
 
-  // The picker works in millisecond timestamps that include the time of day
-  // selected via its time input; we expose unix seconds
+  // The picker works in millisecond timestamps, and we expose unix seconds.
   let element: HTMLElement
   let isOpen = $state(false)
   let startDate: number | undefined = $state(value ? value * 1000 : undefined)
   let startDateTime = $state("")
 
-  // When no date is provided the library initializes its time input from the
-  // epoch (a locale-dependent afternoon); reset it to something friendlier
+  // With no date the library initializes its time input from the epoch.
   onMount(() => {
     if (!startDate) {
       startDateTime = "12:00"

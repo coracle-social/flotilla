@@ -63,9 +63,7 @@
     url,
   }: Props = $props()
 
-  // An invocation is plain text and carries no tags, so it's only recognizable against the
-  // definitions the space it was written in publishes. Anything else — including a command
-  // nobody here answers to — falls through and renders as the text it is.
+  // An invocation is plain text, so it is only recognizable against the space's own definitions.
   const available = deriveValidCommands({
     url,
     kind: event.kind,

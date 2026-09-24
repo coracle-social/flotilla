@@ -24,8 +24,7 @@
   const {relay, h} = $derived($page.params)
   const routeUrl = $derived(relay ? decodeRelay(relay) : undefined)
 
-  // The call's own room page already shows full controls (CallControlBar), so
-  // the banner would just be redundant clutter there.
+  // CallControlBar already shows full controls on the call's own room page.
   const isCallActiveElsewhere = $derived(
     deriveIsCallActiveElsewhere(routeUrl, typeof h === "string" ? h : undefined),
   )

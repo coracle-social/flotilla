@@ -5,9 +5,7 @@
     items: T[]
     child: Snippet<[T]>
     getKey: (item: T) => PropertyKey
-    // Minimum column width, in tailwind spacing units (1 = 0.25rem). The browser
-    // fits as many columns as the container allows, so the layout stays
-    // responsive without media queries.
+    // Minimum column width, in tailwind spacing units (1 = 0.25rem).
     columnWidth?: number
     // Space between columns and between stacked items, in tailwind units.
     gap?: number

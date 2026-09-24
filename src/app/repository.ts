@@ -97,8 +97,7 @@ export const deriveLatestEvent = (pubkey: string) =>
         }
       }
 
-      // A removal can take the very event a row is showing, so that author has to be looked up
-      // again rather than just dropped
+      // A removal can take the very event a row is showing, so that author is looked up again.
       for (const [author, event] of latestByPubkey) {
         if (event && removed.has(event.id)) {
           latestByPubkey.set(author, readLatest(author))

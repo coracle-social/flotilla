@@ -11,8 +11,7 @@ export type SignerRequest = {
   ok?: boolean
 }
 
-// The logger records one entry per state transition, correlated by id. Fold them back into one
-// entry per request so callers can reason about how long each took and how it ended.
+// The logger records one entry per state transition, so fold them back into one per request.
 export const signerRequests = derived(
   fromApp($app => $app.use(Logger).messages.$),
   ($messages: LogMessage[]) => {

@@ -34,8 +34,7 @@
 
   const {url, h, notification = false}: Props = $props()
 
-  // Beyond this many participants, a full name+avatar row per person makes the
-  // sidebar item too tall — fall back to the compact ProfileCircles cluster instead.
+  // Beyond this many, a name and avatar per person makes the sidebar item too tall.
   const ACTIVE_LIST_MAX = 5
 
   const participants = deriveCallParticipants(url, h)

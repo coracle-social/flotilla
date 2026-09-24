@@ -48,9 +48,7 @@ const bindLogging = ($logger: Logger) => {
   }
 }
 
-// Errors are only useful after the fact if someone kept them around, so collect them into the
-// app's logger, which the user can hand over via `sendLogs` when something goes wrong. Logging in
-// swaps in a fresh app with an empty log, so re-bind against the new one when that happens.
+// Logging in swaps in a fresh app with an empty log, so re-bind against the new one.
 export const setupLogging = () => {
   let unbind: Maybe<Unsubscriber>
 

@@ -38,9 +38,7 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  // A reply to a room event is a NIP-22 comment on the space's own relay. A reply to a kind 1
-  // note is a NIP-10 note, which the outbox model routes to the note's author and back to the
-  // replier's own relays.
+  // A reply to a room event is a NIP-22 comment, and a reply to a kind 1 note is a NIP-10 note.
   const renderReply = async (content: string, tags: string[][]) => {
     if (url) {
       const eventWriter = writer(Comment)
@@ -50,8 +48,7 @@
         .setParentFromEvent(parent ?? event)
         .setProtected(await $relays.hasNip(url, 70))
 
-      // A comment on a room event is a room event too: an untagged one isn't visible to the
-      // group at all, so the relay neither gates it with the room nor deletes it with it.
+      // An untagged comment isn't visible to the group, so the relay neither gates nor deletes it with the room.
       if (h) {
         eventWriter.setRoom(url, h)
       }

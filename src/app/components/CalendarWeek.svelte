@@ -28,8 +28,7 @@
 
   const {url, events, eventsByDay, date, context}: Props = $props()
 
-  // The feed's own store is passed through rather than a pre-filtered list, since a modal's
-  // props are frozen at push time and wouldn't pick up an event created from inside it.
+  // A modal's props are frozen at push time, so pass the feed's store rather than a filtered list.
   const showDay = (day: Date) =>
     pushModal(CalendarDay, {
       url,

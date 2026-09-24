@@ -54,10 +54,7 @@
     const currentPubkey = user.get().pubkey
 
     if (currentPubkey) {
-      // Force a fresh fetch rather than `load`, which can resolve immediately from an
-      // hour-stale cache and make a space the user has since joined look unjoined.
-      // Unlike `load`, `forceLoad` doesn't swallow fetch errors, so catch them here —
-      // otherwise a failed fetch would leave spacesLoaded false forever.
+      // forceLoad skips the hour-stale cache and, unlike load, rethrows fetch errors.
       try {
         await $roomLists.forceLoad(currentPubkey, [url])
       } catch (error) {
@@ -75,11 +72,7 @@
 
   $effect(checkRedirect)
 
-  // Watch for relay errors and notify the user
-  // Direct links skip Discover — prompt to join when relay is not in the user's space list.
-  // A modal owns a history entry, and a navigation landing after one opens takes that entry over.
-  // The redirect from a space's own path to its entry page is one, so nothing opens until the page
-  // has settled.
+  // A modal owns a history entry, so the join prompt waits for the page to settle.
   $effect(() => {
     if (getModal() || navigating.to) {
       return

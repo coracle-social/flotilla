@@ -1,13 +1,11 @@
 <script lang="ts" module>
   import DOMPurify from "dompurify"
 
-  // Only the entity links linkEntities builds are internal. Testing for a leading slash would
-  // also match a protocol-relative `//evil.com`, which is very much not.
+  // A leading slash would also match a protocol-relative `//evil.com`.
   const isEntityPath = (href: string) =>
     Boolean(href.match(/^\/n(event|ote|pub|profile|addr)1\w+$/))
 
-  // DOMPurify's defaults are wider than markdown needs — they keep `style` (overlay and
-  // click-jacking surface) and `form`. Allow only what marked actually emits.
+  // DOMPurify's defaults keep `style` and `form`, so allow only what marked emits.
   const SANITIZE_OPTIONS = {
     ALLOWED_TAGS: [
       "a",
@@ -42,8 +40,7 @@
     ALLOWED_ATTR: ["align", "alt", "href", "rel", "src", "start", "target", "title"],
   }
 
-  // DOMPurify has no option for target, so its docs point at this hook. It runs once at module
-  // load rather than per render, since hooks live on the DOMPurify instance.
+  // DOMPurify has no option for target, and its hooks live on the instance rather than per render.
   DOMPurify.addHook("afterSanitizeAttributes", node => {
     if (node.tagName === "A" && !isEntityPath(node.getAttribute("href") ?? "")) {
       node.setAttribute("target", "_blank")
@@ -71,9 +68,7 @@
 
   const entityPattern = /(nostr:)?n(event|ote|pub|profile|addr)\w{10,1000}/g
 
-  // A display name is attacker-controlled, and it goes into markdown link syntax. Without this,
-  // a name containing `](` re-points its own link (phishing) and a name containing `<` injects
-  // raw html. Escaping also means a name renders as written rather than as markdown.
+  // A display name is attacker-controlled, and `](` in one would re-point its own link.
   const escapeMarkdown = (text: string) => text.replace(/[\\[\]<`*_]/g, "\\$&")
 
   const pubkeyFromEntity = (entity: string) => {
@@ -87,8 +82,7 @@
     }
   }
 
-  // Everyone the content mentions, so their names are asked for and awaited rather than read
-  // once: a display is bech32 until the profile arrives, and nothing would parse it again.
+  // A display is bech32 until the profile arrives, and nothing would parse the markdown again.
   const mentionedPubkeys = $derived(
     removeUndefined(
       Array.from(event.content.matchAll(entityPattern)).map(([match]) =>
@@ -99,8 +93,7 @@
 
   const displays = $derived(deriveDisplaysByPubkey(mentionedPubkeys, url))
 
-  // Bech32 entities aren't markdown, so swap them for links before parsing. Profiles get their
-  // display name, so an article reads as prose rather than a wall of bech32.
+  // Bech32 entities aren't markdown, so swap them for links before parsing.
   const linkEntities = (markdown: string) =>
     markdown.replace(entityPattern, match => {
       const entity = fromNostrURI(match)

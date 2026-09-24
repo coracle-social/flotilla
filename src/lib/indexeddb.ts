@@ -20,8 +20,7 @@ export class IDB {
 
   constructor(readonly options: IDBOptions) {}
 
-  // Object stores can only be created during a version change, and which stores we need depends
-  // on who is logged in, so open at whatever version exists and bump it to reconcile the schema.
+  // Object stores are only created during a version change, and which ones we need depends on the login.
   private open = async () => {
     const {name, stores} = this.options
     const blocking = () => this.close()
@@ -71,9 +70,7 @@ export class IDB {
     return this.connection
   }
 
-  // Deleting an account closes the database out from under writes that already awaited it, and
-  // the transaction they go on to open throws where nobody is catching. What they were going to
-  // read or write is gone with the connection, so hand them nothing instead.
+  // Deleting an account closes the database under writes that already awaited it.
   private live = async () => {
     const generation = this.generation
     const connection = await this.connect()

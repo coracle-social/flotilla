@@ -10,25 +10,14 @@ import {deriveEventsForUrl} from "@app/repository"
 
 export const LIVEKIT_PARTICIPANTS = 39004
 
-/**
- * Aspect ratio constraints for tiles. The lower bound is dynamic
- * (1:1 on landscape, 3:4 on portrait); the upper bound is 16:9.
- */
+/** The lower aspect bound is 1:1 on landscape and 3:4 on portrait, and the upper is 16:9. */
 const TILE_ASPECT_PORTRAIT = 3 / 4
 const TILE_ASPECT_LANDSCAPE = 16 / 9
 const TILE_GAP = 8
 
-/**
- * Minimum pixel height for a tile before we allow the grid to
- * overflow (scroll) instead of forcing tiles into portrait mode.
- * Calibrated so ~6-8 tiles on a standard portrait phone fit
- * without scrolling; beyond that, scroll is acceptable.
- */
+/** Below this the grid scrolls rather than forcing portrait tiles, which is ~6-8 tiles on a portrait phone. */
 const MIN_TILE_HEIGHT = 120
 
-/**
- * A single row in an adaptive tile grid.
- */
 export type TileRow = {
   columnCount: number
   tileWidth: number
@@ -38,24 +27,14 @@ export type TileRow = {
   aspectRatio: number
 }
 
-/**
- * Adaptive tile grid: all tiles share the same dimensions. Full rows
- * fill the container width; partial rows are centered.
- *
- * Example (3 tiles, 2 columns):
- *   row 0: [ square ] [ square ]
- *   row 1: [    square    ]   (centered, same size)
- */
+/** All tiles share one size. Full rows fill the container width and a partial row is centered. */
 export type AdaptiveTileGrid = {
   rows: TileRow[]
   totalWidth: number
   totalHeight: number
 }
 
-/**
- * Score for comparing candidate layouts. Lower is better.
- * Uses named fields instead of opaque array "keys" (per review feedback).
- */
+/** Score for comparing candidate layouts. Lower is better. */
 type LayoutScore = {
   /** Penalty for vertical overflow: 0 if none, else huge */
   verticalOverflowPenalty: number
@@ -88,11 +67,7 @@ const compareScores = (a: LayoutScore, b: LayoutScore): number => {
   return 0
 }
 
-/**
- * Compute the largest tile size that fits within a given width and height,
- * bounded by [minAspect, TILE_ASPECT_LANDSCAPE]. The tile is shrunk to fit
- * whichever dimension is more constraining, so it never overflows.
- */
+/** The largest tile that fits, shrunk to whichever dimension is more constraining. */
 const fitTile = (availWidth: number, availHeight: number, minAspect: number) => {
   const fillAspect = availWidth / availHeight
   const aspectRatio = Math.max(minAspect, Math.min(TILE_ASPECT_LANDSCAPE, fillAspect))
@@ -104,11 +79,7 @@ const fitTile = (availWidth: number, availHeight: number, minAspect: number) => 
   return {tileWidth: availWidth, tileHeight, aspectRatio}
 }
 
-/**
- * Build a candidate grid for a given column count. All tiles share the
- * same dimensions; the partial last row (if any) is centered with the
- * same tile size as full rows.
- */
+/** A candidate grid for a given column count, with the partial last row centered. */
 const buildCandidate = (
   tileCount: number,
   columnCount: number,
@@ -155,21 +126,7 @@ const buildCandidate = (
   return {rows, totalWidth, totalHeight}
 }
 
-/**
- * Compute an adaptive tile grid. All tiles share the same dimensions;
- * partial rows are centered. Tiles flex between a minimum aspect
- * (1:1 on landscape, 3:4 on portrait) and 16:9, capped so they never
- * overflow the container.
- *
- * Only allows overflow (scroll) when tiles would be below
- * MIN_TILE_HEIGHT (~6-8 tiles on portrait phone).
- *
- * Prioritises:
- *  1. No overflow (tiles shrink to fit within aspect bounds)
- *  2. Minimal whitespace
- *  3. Aspect ratios close to 16:9
- *  4. Larger tiles
- */
+/** Scored on overflow first, then whitespace, then distance from 16:9, then tile size. */
 export const computeAdaptiveGrid = (
   tileCount: number,
   containerWidth: number,
@@ -284,8 +241,7 @@ export const deriveIsCallActiveElsewhere = (url: string | undefined, h: string |
       !($targetRoom.url === url && $targetRoom.h === h),
   )
 
-// leaveVoiceRoom no-ops during Joining, since no session exists yet to leave — cancel the
-// in-flight join instead, otherwise ending a call that is still connecting does nothing.
+// leaveVoiceRoom no-ops during Joining, so cancel the in-flight join instead.
 export const endCall = async () => {
   const engine = await import("@app/callEngine")
 

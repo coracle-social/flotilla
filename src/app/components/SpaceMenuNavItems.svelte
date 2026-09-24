@@ -41,8 +41,7 @@
   const pollsPath = makeSpacePath(url, "polls")
   const libraryPath = makeSpacePath(url, "library")
 
-  // Content events aren't retained across page loads, so seed with the kinds seen last time
-  // to keep the nav from re-populating as they load in the background.
+  // Content events aren't retained across page loads, so seed from the kinds seen last time.
   const spaceKindsKey = `space-kinds:${url}`
   const cachedKinds: number[] = getJson(spaceKindsKey) ?? []
 
@@ -51,9 +50,7 @@
     $events => new Set([...cachedKinds, ...$events.map(e => e.kind)]),
   )
 
-  // A section is also offered while something under it is unread, or while we're in it. A comment
-  // can name content this space doesn't have, and it counts toward the space either way — hiding
-  // the section it belongs to is what leaves a space lit up with nothing to read.
+  // A comment can name content this space doesn't have, and it counts toward the space either way.
   const showSection = (kind: number, path: string) =>
     $spaceKinds.has(kind) || $allNotifications.has(path) || $page.url.pathname.startsWith(path)
 

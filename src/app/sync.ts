@@ -63,8 +63,7 @@ import {Settings} from "@app/settings"
 import {kv} from "@app/storage"
 import {hasBlossomSupport} from "@app/uploads"
 
-// Whether to sync gift wraps. Unwrapping itself is unconditional, so this is the only
-// thing keeping a signer from being asked to decrypt the user's entire DM history.
+// Unwrapping is unconditional, so this is what keeps a signer from decrypting the whole DM history.
 export const shouldUnwrap = withGetter(
   synced({key: "shouldUnwrap", storage: kv, defaultValue: false}),
 )
@@ -292,9 +291,7 @@ const syncSpace = (url: string) => {
     ],
   })
 
-  // Which sections a space offers is a question about its whole history rather than about the
-  // recent window above — a space whose newest poll is a year old still has polls. One event
-  // per kind answers it.
+  // Which sections a space offers is a question about its whole history, and one event per kind answers it.
   network.get().loadLenient({
     relays: [url],
     signal: controller.signal,

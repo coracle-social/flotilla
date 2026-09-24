@@ -37,8 +37,7 @@
 
   const controller = new Nip46Controller({
     onNostrConnect: async (response: Nip46ResponseWithResult) => {
-      // Use the broker's current relays rather than the ones we started with, since
-      // the signer may have asked us to switch relays during the connection handshake.
+      // The signer may have asked us to switch relays during the handshake.
       await login(
         toSession(nip46, {
           clientSecret: controller.clientSecret,

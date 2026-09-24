@@ -23,14 +23,12 @@ import type {TestUser} from "../harness"
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string; readonly event: SignedEvent}
 
-// The profile page keeps its Reputation and Spaces panels in a sidebar that only exists above
-// tailwind's xl breakpoint, and the default 1280 viewport sits exactly on it.
+// The Reputation and Spaces panels only exist above tailwind's xl breakpoint, where 1280 sits.
 const DESKTOP = {viewport: {width: 1440, height: 900}}
 
 const CLIPBOARD = {...DESKTOP, permissions: ["clipboard-read", "clipboard-write"]}
 
-// uploadFile appends the extension when the descriptor's url carries none, which the mock's never
-// does.
+// uploadFile appends the extension when the descriptor's url carries none, as the mock's never does.
 const uploadedUrl = (body: Buffer, extension: string) =>
   `${DEFAULT_BLOSSOM_ORIGIN}/${createHash("sha256").update(body).digest("hex")}.${extension}`
 
@@ -41,16 +39,13 @@ const shortNpub = (user: TestUser) => {
   return npub.slice(0, 8) + "…" + npub.slice(-5)
 }
 
-// The page's own region, so an assertion about an avatar isn't satisfied by the copy of it the
-// nav renders.
+// The page's own region, so an assertion about an avatar isn't satisfied by the copy the nav renders.
 const pageContent = (page: Page) => page.locator(".page__content")
 
-// ProfileTrust and ProfileSharedSpaces are rendered twice — stacked for narrow viewports, and in
-// the sidebar — so anything said about them is scoped to the copy that is actually on screen.
+// ProfileTrust and ProfileSharedSpaces are rendered twice, stacked for narrow viewports and here.
 const sidebar = (page: Page) => page.locator("aside")
 
-// A space path redirects to the space's entry room as the page mounts, and modal.ts closes every
-// open modal on navigation, so a dialog opened before the redirect lands is thrown away with it.
+// A space path redirects as the page mounts, and modal.ts closes every open modal on navigation.
 const enteredSpace = (page: Page) => expect(page).toHaveURL(new RegExp("/spaces/[^/]+/."))
 
 // Search is a dialog the nav opens rather than a page of its own.
@@ -71,8 +66,7 @@ const profileMenu = (page: Page) => page.locator("button.button-circle.button-gh
 const viewProfile = (card: Locator) => card.getByRole("link", {name: "View Profile"}).first()
 
 test("US-074 find a person", async ({seed, as}) => {
-  // Sixty of them, so that the ten the dialog lists are visibly the best matches rather than
-  // everyone who matched.
+  // Sixty of them, so the ten the dialog lists are visibly the best matches rather than everyone.
   const searchers = Array.from({length: 60}, (_, i) => makeTestUser(`searcher-${i}`))
   const searcherName = (i: number) => `Searcher ${String(i).padStart(2, "0")}`
   const searcherAvatar = (i: number) => `https://images.test/searcher-${i}.png`
@@ -90,8 +84,7 @@ test("US-074 find a person", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
 
-    // Bob is the one person whose name shares no token with the others, so narrowing the term is
-    // visibly a filter rather than a reordering.
+    // Bob is the one person whose name shares no token with the others.
     space.profile(user.bob, {
       name: "Bob Barnacle",
       about: "Dockside cook and keeper of the ship's cat.",
@@ -113,8 +106,7 @@ test("US-074 find a person", async ({seed, as}) => {
   await openSearch(page)
   await term.fill("Searcher")
 
-  // Which of them ranks first is fuse's business, so a result is described by what every
-  // result carries rather than by which one it turned out to be.
+  // Which of them ranks first is fuse's business.
   const first = cards.first()
 
   await expect(first).toBeVisible()
@@ -150,8 +142,7 @@ test("US-075 view someone's profile", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
 
-    // A second space alice does not belong to, so "Member" is a claim about the overlap rather
-    // than about every space bob is in.
+    // A second space alice does not belong to, so "Member" is a claim about the overlap.
     other.room("lounge", {name: "Lounge"})
     other.join(user.bob, "lounge")
 
@@ -183,8 +174,7 @@ test("US-075 view someone's profile", async ({seed, as}) => {
     // Carol belongs to no space at all, which is what the panel's empty state is about.
     space.member(user.carol)
     space.profile(user.carol, {name: "Carol Cutter"})
-    // An expired status is one its author asked relays to stop serving, so it is not what she is
-    // up to any more.
+    // An expired status is one its author asked relays to stop serving.
     space.event(
       user.carol,
       makeEvent(STATUS, {
@@ -294,15 +284,13 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
     space.relayList(user.bob)
     space.relayList(user.carol)
 
-    // Carol already follows bob, so alice following carol is the one thing that has to happen
-    // through the ui for his standing to move.
+    // Carol already follows bob, so alice following carol is the one thing that goes through the ui.
     space.event(user.carol, () =>
       space.kind(FollowList).writer().follow(user.bob.pubkey).renderTemplate(),
     )
   })
 
-  // Every hop here is a link click rather than a navigation, so the follow alice publishes stays
-  // in the client that published it.
+  // Every hop here is a link click rather than a navigation, so the follow stays in one client.
   const page = await as(users.alice, spacePath(scenario.space("space").url), {context: DESKTOP})
   const term = searchTerm(page)
   const cards = searchResults(page)
@@ -326,8 +314,7 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
   await viewProfile(bobCard).click()
 
   await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob.pubkey)}$`))
-  // Word-bounded: a plain "0 / 100" is also a substring of "10 / 100" and "20 / 100", which are
-  // exactly the readings this is supposed to rule out.
+  // Word-bounded: a plain "0 / 100" is also a substring of "10 / 100" and "20 / 100".
   await expect(reputation()).toContainText(/\b0 \/ 100\b/)
   await expect(reputation()).toContainText("This user is not well known in your network.")
 
@@ -465,8 +452,7 @@ test("US-079 read a person's notes", async ({seed, as}) => {
       makeEvent(NOTE, {content: "Anyone seen the tide charts?", created_at: at(4, HOUR)}),
     )
 
-    // Older than the feed's first window, so the pin is fetched by id while the feed only
-    // reaches it by paging — the order in which one note arrives down both routes.
+    // Older than the feed's first window, so the pin is fetched by id while the feed only pages to it.
     pinned = space.event(
       user.alice,
       makeEvent(NOTE, {content: "PINNED how to read a tide chart", created_at: at(2, MONTH)}),
@@ -514,9 +500,7 @@ test("US-079 read a person's notes", async ({seed, as}) => {
   await expect(newest).toBeVisible()
   await expect(newest.getByText("Alice Anderson")).toBeVisible()
   await expect(newest.locator(`img[src="${avatar}"]`)).toBeVisible()
-  // The story asks for a relative timestamp; the app renders formatTimestamp — a short date plus a
-  // clock time — the same way every other content item does (thread items, chat items), so that
-  // shared convention is what a note's stamp reads as here.
+  // The app renders formatTimestamp, a short date plus a clock time, as every content item does.
   await expect(newest).toContainText(/\d{1,2}\/\d{1,2}\/\d{2,4}/)
 
   await expect(list.filter({hasText: "REPLY"})).toHaveCount(0)
@@ -527,13 +511,10 @@ test("US-079 read a person's notes", async ({seed, as}) => {
   await expect(list.nth(1)).toContainText("NEWEST")
   await expect(list.nth(2)).toContainText("MIDDLE")
 
-  // Nothing is scrolled here: the feed keeps widening its window until the page is full, which is
-  // what "loads older notes automatically" means.
+  // Nothing is scrolled here: the feed keeps widening its window until the page is full.
   await expect(list.filter({hasText: "OLDEST"})).toBeVisible()
 
-  // A note alice publishes while bob is looking. Flotilla has no composer for a kind-1 note, so
-  // it goes out through the app's own primitives in her signed-in session, over her socket to the
-  // space — which is the half of this the story is about.
+  // Flotilla has no composer for a kind-1 note, so it goes out through the app's own primitives.
   const alice = await as(users.alice, spacePath(url), {context: DESKTOP})
 
   await alice.evaluate(
@@ -556,8 +537,7 @@ test("US-079 read a person's notes", async ({seed, as}) => {
     [url, "LIVE straight off the deck"] as const,
   )
 
-  // The profile feed fetches on load rather than subscribing live, so bob sees it the next time he
-  // opens the page — where it lands above every unpinned note, below the pin.
+  // The profile feed fetches on load rather than subscribing live.
   await page.reload()
 
   await expect(list.filter({hasText: "LIVE"})).toBeVisible()
@@ -594,10 +574,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
 
   const {url} = scenario.space("space")
   const page = await as(users.alice, `${spacePath(url)}/directory`, {context: DESKTOP})
-  // SpaceMember covers its whole card with one button, whose aria-label is interpolated from
-  // `$profiles.display(pubkey).get()` — a plain call, so the label keeps whatever the name was at
-  // first render, which is the npub the card falls back to before the profile has loaded. The
-  // name it *displays* comes from a store and does update, so the card is found by that.
+  // The card's aria-label keeps the npub it fell back to at first render, so it is found by the name.
   const preview = page
     .locator(".card.card-interactive")
     .filter({hasText: "Bob Barnacle"})
@@ -669,9 +646,7 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
   const link = linkField.locator('input[type="text"]')
   const pubkey = pubkeyField.locator('input[type="text"]')
 
-  // The profile was signed during this test, so the creation date is today's. A FieldInline puts
-  // its value in the div right after its label, which keeps this a claim about the date rather
-  // than about anything else in the dialog that happens to carry four digits.
+  // A FieldInline puts its value in the div right after its label.
   const createdAt = info
     .locator("label")
     .filter({hasText: "Created At"})
@@ -701,8 +676,7 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
   await profileMenu(page).click()
   await page.getByRole("button", {name: "Share"}).click()
 
-  // The menu that opened it is still mounted behind the dialog, and its own items run together as
-  // "Share Profile Info", so the dialog's heading is matched exactly.
+  // The menu that opened it is still mounted behind the dialog, and its items run together.
   await expect(page.getByText("Share Profile", {exact: true})).toBeVisible()
 
   const share = topDialog(page)
@@ -748,9 +722,7 @@ test("US-082 mute an account", async ({seed, as}) => {
   const badge = page.locator(".badge").filter({hasText: "Bob Barnacle"})
   const save = page.getByRole("button", {name: "Save Changes"})
 
-  // Typed rather than filled, and slower than the search's own debounce: the suggestion list is
-  // rebuilt per keystroke, and the profile it is searching for only arrives from the relay once a
-  // pause in the typing has let the query go out.
+  // Typed slower than the search's own debounce, since the profile only arrives after a pause.
   await page
     .getByPlaceholder("Search for profiles...")
     .pressSequentially("Bob Barnacle", {delay: 700})
@@ -767,8 +739,7 @@ test("US-082 mute an account", async ({seed, as}) => {
 
   await expect(page.getByRole("alert")).toContainText("Your settings have been saved!")
 
-  // Through the nav rather than a fresh navigation, so what is on screen is what the client that
-  // just published the mute believes.
+  // Through the nav rather than a fresh navigation, so this is what the publishing client believes.
   const openBobsProfile = async () => {
     await openSearch(page)
     await searchTerm(page).fill("Barnacle")

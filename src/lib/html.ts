@@ -4,11 +4,7 @@ import type {Maybe} from "@welshman/lib"
 import {Capacitor} from "@capacitor/core"
 export {preventDefault, stopPropagation} from "svelte/legacy"
 
-/** Whether the user is actually looking at this tab right now. Display-only concern,
- * kept separate from any data store — consult it wherever "is someone watching" should
- * affect what's rendered. `document.hidden` alone misses window blur: switching to
- * another app without switching tabs leaves visibilityState "visible", so we also track
- * focus and require both. */
+/** Whether the tab is visible and focused, since `document.hidden` alone misses window blur. */
 export const documentActive = readable(
   typeof document === "undefined" ? true : !document.hidden && document.hasFocus(),
   set => {
@@ -30,9 +26,7 @@ export const documentActive = readable(
   },
 )
 
-// Anchors an @svelte-plugins/datepicker popup with fixed positioning so it
-// escapes scroll-container clipping (e.g. inside modals). Call when the picker
-// opens; returns a cleanup function that removes the listeners.
+// Fixed positioning so an @svelte-plugins/datepicker popup escapes scroll-container clipping.
 export const anchorDatepicker = (wrapper: HTMLElement) => {
   const reposition = () => {
     const anchor = wrapper.querySelector("label")
@@ -98,8 +92,7 @@ export const copyToClipboard = (text: string) => {
 
 export type ScrollerOpts = {
   onScroll: () => any
-  // Called by a check that decides nothing more is wanted, which is the only signal that paging
-  // has stopped rather than paused between requests.
+  // Called when a check decides nothing more is wanted, rather than between requests.
   onSettle?: () => any
   element: Element
   threshold?: number
@@ -129,9 +122,7 @@ export const createScroller = ({
   const check = async () => {
     const isHidden = (el: Element) => !(el as HTMLElement).offsetParent || el.clientHeight === 0
 
-    // A relay that rejects — a dropped socket, an aborted request — must not take the loop with
-    // it. Letting it throw skips the rAF below, which silently ends scrolling for the life of
-    // the component and leaves whatever spinner the caller is showing up forever.
+    // A throw here skips the rAF below and ends scrolling for the life of the component.
     try {
       if (container && !isHidden(container)) {
         // While we have empty space, fill it
@@ -174,8 +165,7 @@ export const createScroller = ({
 
 export const isMobile = "ontouchstart" in document.documentElement
 
-// The layout's single popover host. Cached, because with a couple of popovers per chat row
-// this runs thousands of times against a document that is itself thousands of nodes.
+// Cached because a couple of popovers per chat row runs this thousands of times.
 let tippyTarget: Maybe<Element>
 
 export const getTippyTarget = (trigger?: Element) => {
@@ -193,11 +183,7 @@ export const getTippyTarget = (trigger?: Element) => {
 }
 
 export const downloadText = async (filename: string, text: string) => {
-  // The <a download> blob trick is a no-op in native WebViews (Android in
-  // particular never triggers a download), so on device we write the file and
-  // hand it to the native share sheet, letting the user save it to Files,
-  // Drive, a password manager, etc. Cache is the directory our FileProvider
-  // (android/app/src/main/res/xml/file_paths.xml) is configured to serve.
+  // The <a download> blob trick is a no-op in native WebViews, so write the file and share it.
   if (["android", "ios"].includes(Capacitor.getPlatform())) {
     const {Filesystem, Directory, Encoding} = await import("@capacitor/filesystem")
     const {Share} = await import("@capacitor/share")
@@ -249,9 +235,7 @@ export const compressFile = async (
       convertTypes: ["image/png"],
       ...options,
       success: result => {
-        // canvas.toBlob() returns a Blob, not a File. Capacitor's fetch interceptor
-        // checks instanceof File to handle binary uploads correctly, so we must ensure
-        // we always have a real File, not just a Blob with name/lastModified tacked on.
+        // Capacitor's fetch interceptor checks instanceof File, and canvas.toBlob returns a Blob.
         const f =
           result instanceof File
             ? result

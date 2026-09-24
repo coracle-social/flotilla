@@ -200,19 +200,13 @@ const shouldPersistEvent = (event: TrustedEvent, pubkey: string) =>
 
 type EventItem = {id: string; event: TrustedEvent; relays: string[]; cachedAt?: number}
 
-// A command definition is only advisory, and a space's set drifts as bots come and go, so one
-// we haven't seen republished in a week is dropped rather than offered as still available.
-// Everything else is kept until it's superseded or deleted.
+// A command definition is advisory, so one not republished in a week is dropped.
 const isExpired = (item: EventItem) =>
   item.event.kind === COMMAND && (item.cachedAt ?? now()) < ago(1, WEEK)
 
 type PlaintextItem = {key: string; value: string}
 
-/**
- * Caches an app's repository, tracker and local collections in indexeddb. Everything stored
- * here belongs to a single identity, so each gets its own database, named for the pubkey the
- * policy below requires before it builds one.
- */
+/** Caches an app's repository, tracker and local collections in indexeddb, one database per identity. */
 class Storage {
   ready: Promise<void>
 
@@ -278,12 +272,7 @@ class Storage {
     }
   }
 
-  /**
-   * Each row holds an event together with the relays it came from, since a relay-scoped event
-   * that lost its provenance can never be keyed to a space again — it sits in the repository
-   * invisible, and negentropy reconciles it away as already-present, so it never comes back.
-   * Drop those and let the next sync pull them down again.
-   */
+  /** A relay-scoped event that lost its provenance can never be keyed to a space again, so drop it. */
   private loadCriticalData = async () => {
     const table = this.db.table<EventItem>("events")
     const items: EventItem[] = []
@@ -310,8 +299,7 @@ class Storage {
     const relaysById = new Map<string, Set<string>>()
 
     for (const {id, relays} of items) {
-      // Anything the repository rejected was superseded by an event that arrived before we
-      // finished loading
+      // Anything the repository rejected was superseded while we were loading.
       if (this.app.repository.getEvent(id)) {
         relaysById.set(id, new Set(relays))
       } else {
@@ -352,8 +340,7 @@ class Storage {
         if (add.length > 0) {
           const cachedAt = now()
 
-          // The ingest policy tracks an event before publishing it, so by the time the
-          // repository reports it, its provenance is already in the tracker
+          // The ingest policy tracks an event before publishing it, so the tracker already has its provenance.
           await table.bulkPut(
             add.map(event => {
               this.cachedAt.set(event.id, cachedAt)
@@ -386,9 +373,7 @@ class Storage {
       for (const id of ids) {
         const event = this.app.repository.getEvent(id)
 
-        // A brand-new event is tracked before it's published, so it isn't queryable here —
-        // syncEvents persists its provenance along with the event itself. This pass only
-        // records relay changes for events we already have.
+        // A brand-new event isn't queryable here, so syncEvents persists its provenance with the event.
         if (event && shouldPersistEvent(event, this.pubkey)) {
           items.push({
             id,
@@ -472,8 +457,7 @@ class Storage {
     const table = this.db.table<ZapperValues>("zappers")
 
     for (const row of await table.getAll()) {
-      // Validation is meaningless without these, and rows cached before they were required
-      // won't have them.
+      // Validation is meaningless without these, and rows cached before they were required lack them.
       if (row.pubkey && row.nostrPubkey) {
         this.app.use(Zappers).set(row.lnurl, new Zapper(row))
       }
@@ -528,8 +512,7 @@ class Storage {
 // The current app's cache, which only exists once there's an identity to cache for.
 export const storage = withGetter(writable<Maybe<Storage>>(undefined))
 
-// Storage is scoped to one app's repository, tracker and caches, so it's built and torn down
-// with the app rather than living on as a module-level singleton.
+// Storage is scoped to one app's repository, tracker and caches, so it is built and torn down with it.
 export const storagePolicy: AppPolicy = $app => {
   if ($app.user) {
     const $storage = new Storage($app)

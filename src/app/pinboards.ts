@@ -53,8 +53,7 @@ export const setPinReference = (writer: PinWriter, reference: string) => {
       return true
     }
 
-    // Pins have no pubkey reference type, so a person gets stored as an external
-    // id — keep the bech32 the user gave us so it round-trips and still embeds.
+    // Pins have no pubkey reference type, so a person is stored as the external id the user gave.
     if (decoded.type === "npub" || decoded.type === "nprofile") {
       writer.setExternal(fromNostrURI(trimmed))
       return true

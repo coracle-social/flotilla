@@ -6,8 +6,7 @@
 
   type Props = {
     thunk: BaseThunk
-    // A standalone usage (a DM bubble) needs to fill and justify its own row; one already
-    // inside a flex row (an actions row) doesn't, and forcing it costs that row a line.
+    // A standalone usage fills its own row, and forcing that inside a flex row costs that row a line.
     inline?: boolean
     class?: string
   }

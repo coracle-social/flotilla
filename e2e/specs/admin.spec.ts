@@ -19,9 +19,7 @@ import {
 
 const ICON = gifFile("icon.gif")
 
-// The plans the hosting backend offers. `free` is what RelayForm starts on, and `basic` is the paid
-// one every upgrade story moves to. PricingTable names a plan by its member limit, which is the
-// only part of a card that differs between the two.
+// `free` is what RelayForm starts on. PricingTable names a plan by its member limit.
 const PLANS = [
   {id: "free", name: "Free", amount: 0, hidden: false, members: 50, blossom: false, livekit: false},
   {
@@ -29,7 +27,7 @@ const PLANS = [
     name: "Basic",
     amount: 500,
     hidden: false,
-    // Plan["members"] is number | null upstream; null is how the hosting API spells "unlimited".
+    // Plan["members"] is number | null upstream, and null is how the hosting API spells unlimited.
     // eslint-disable-next-line no-restricted-syntax
     members: null,
     blossom: true,
@@ -37,8 +35,7 @@ const PLANS = [
   },
 ]
 
-// One relay as the hosting api serves it. Every field RelayDetailCard reads is present, since it
-// calls .trim() and .replace() on several of them.
+// Every field RelayDetailCard reads is present, since it calls .trim() and .replace() on several.
 const hostedRelay = (overrides: Record<string, unknown> = {}) => ({
   id: "relay-1",
   tenant_pubkey: users.alice.pubkey,
@@ -65,26 +62,18 @@ const hostedRelay = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
-// Tippy mounts a menu the first time it is opened and leaves it in the dom when it hides, so a page
-// that has opened two of them holds both — only the one on screen is visible. Exact, because
-// "Edit role" and "Edit roles" are two different menus in the same directory.
+// Tippy leaves a menu in the dom when it hides. Exact, since "Edit role" and "Edit roles" differ.
 const menuItem = (page: Page, name: string) =>
   page.getByRole("button", {name, exact: true}).filter({visible: true})
 
-// Every space-level admin action hangs off the space menu, which opens from the header button in
-// the secondary nav. That button is labeled with the space's name and its host, and only the host
-// survives a rename.
+// That button is labeled with the space's name and its host, and only the host survives a rename.
 const openSpaceMenu = (page: Page) => page.getByRole("button", {name: /space\.test/}).click()
 
-// SpaceMember covers its card with a button whose aria-label is baked from the profile display at
-// first render — before the profile has loaded — so the card is found by the name it shows rather
-// than by that label. It is the only interactive card in the directory, and the member's own menu
-// is the last button inside it.
+// The card's aria-label is baked at first render, so the card is found by the name it shows.
 const memberCard = (page: Page, name: string) =>
   page.locator(".card-interactive").filter({hasText: name})
 
-// Exact, because several permission names are a substring of another — "Ban members" of "Unban
-// members".
+// Exact, because several permission names are a substring of another: "Ban members" of "Unban members".
 const permission = (scope: Locator, name: string) =>
   scope.getByRole("checkbox", {name, exact: true})
 
@@ -93,8 +82,7 @@ const openEventMenu = (card: Locator) => menuButton(card).click()
 const articleCard = (page: Page, title: string) =>
   page.locator('[data-component="ArticleItem"]').filter({hasText: title})
 
-// A FieldInline puts its control in the div immediately after its label, which is how one row of
-// the hosting card is told apart from the others in the same grid.
+// A FieldInline puts its control in the div immediately after its label.
 const setting = (page: Page, label: string) =>
   page.locator("label").filter({hasText: label}).locator("xpath=following-sibling::div")
 
@@ -126,8 +114,7 @@ test("US-092 edit a space's profile and featured content", async ({seed, as}) =>
 
   await editor.getByRole("button", {name: "Add an image"}).click()
 
-  // The upload's file input is hidden inside its own label, so the chooser is opened by clicking
-  // the label rather than by writing to the input. Picking a file dismisses the picker.
+  // The upload's file input is hidden inside its own label, so the chooser opens by clicking it.
   const picker = dialog(admin, "Add an image")
   const chooser = admin.waitForEvent("filechooser")
 
@@ -321,8 +308,7 @@ test("US-094 invite people to a space", async ({seed, as}) => {
     space.join(user.bob, "general")
     space.profile(user.bob, {name: "Bob Barnacle"})
 
-    // Somebody who belongs to a different space, so adding her here is a change to this space's
-    // member list rather than something the scenario already seeded.
+    // Somebody who belongs to a different space, so adding her here is a change to this one.
     other.room("lounge", {name: "Lounge"})
     other.join(user.admin, "lounge")
     other.join(newcomer, "lounge")
@@ -332,8 +318,7 @@ test("US-094 invite people to a space", async ({seed, as}) => {
 
   const other = scenario.space("other")
 
-  // Arriving through the other space is what loads Nadia's profile: the invite dialog's search
-  // reads the profiles this client already holds.
+  // The invite dialog's search reads the profiles this client already holds.
   const page = await as(users.admin, roomPath(other.url, "lounge"), {
     context: {permissions: ["clipboard-read", "clipboard-write"]},
   })
@@ -577,8 +562,7 @@ test("US-097 work through the action-items queue", async ({seed, as}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
-    // A room the relay will not admit anyone to on their own say-so, so a join request stays
-    // pending instead of being granted the moment it lands.
+    // A room the relay will not admit anyone to on their own say-so, so a join request stays pending.
     space.room("vault", {name: "Vault", closed: true, private: true})
     space.join(user.admin, "general", "vault")
     space.join(user.alice, "general")
@@ -740,8 +724,7 @@ test("US-130 share out admin permissions", async ({seed, as}) => {
 
   const admins = dialog(admin, "Admins")
 
-  // The owner holds every method implicitly, so the relay leaves them out of listmethodassignees
-  // and the client names them from the space's nip 11 pubkey instead.
+  // The owner holds every method implicitly, so the relay leaves them out of listmethodassignees.
   await expect(admins.locator(".badge").filter({hasText: "Owner"})).toBeVisible()
   await expect(admins.getByText("Nobody else has been given management permissions.")).toBeVisible()
 
@@ -802,8 +785,7 @@ test("US-098 browse and create hosted spaces", async ({seed, as}) => {
 
   const page = await as(users.alice, "/settings/hosting", {
     hosting: {plans: PLANS},
-    // A space created here is opened at wss://<subdomain>.<domain>/, so the domain has to be one
-    // the container serves and the subdomain has to name one of its tenants.
+    // A space created here is opened at wss://<subdomain>.<domain>/, which has to name a tenant.
     env: {VITE_HOSTING_RELAY_DOMAIN: "test"},
   })
 
@@ -987,8 +969,7 @@ test("US-101 point a custom domain at a hosted relay", async ({seed, as}) => {
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
 
-    // Where the space ends up once the domain verifies, so the client has somewhere real to follow
-    // it to.
+    // Where the space ends up once the domain verifies.
     other.room("general", {name: "General"})
     other.join(user.alice, "general")
   })
@@ -1062,9 +1043,7 @@ test("US-102 pause a relay and settle the bill", async ({seed, as}) => {
     hosting: {
       plans: PLANS,
       relays: [hostedRelay({plan_id: "basic"})],
-      // Declared oldest first, which is not the order payment history reads in. Invoice's
-      // paid_at/voided_at/method are number | null / InvoiceMethod | null upstream, so null is
-      // how the hosting API spells "hasn't happened yet".
+      // Declared oldest first, which is not the order payment history reads in. null is "not yet".
       /* eslint-disable no-restricted-syntax */
       invoices: [
         {
@@ -1168,9 +1147,7 @@ test("US-102 pause a relay and settle the bill", async ({seed, as}) => {
   const history = page.locator(".card").filter({hasText: "Payment History"}).first()
   const invoices = history.getByRole("listitem")
 
-  // The whole period, not just its start: the two invoices meet at a month boundary, so either
-  // date on its own reads the same on both of them. Formatted by the browser rather than by node,
-  // so the locale is the one the app rendered with — see dayLabel in dms.spec.ts.
+  // The two invoices meet at a month boundary, so either date on its own reads the same on both.
   const period = ({start, end}: {start: number; end: number}) =>
     page.evaluate(
       ([from, to]) =>
@@ -1221,9 +1198,7 @@ test("US-122 export and import a hosted relay's data", async ({seed, as}) => {
   await expect(modal.getByText("line 2: invalid event")).toBeVisible()
 })
 
-// The space menu button is labeled with the space's host, the way `openSpaceMenu` relies on for
-// space.test. delegated.test grants every member one management method, so `supportedmethods` comes
-// back with a single entry for a member and the whole list for admin, who owns the relay.
+// delegated.test grants every member one management method, so `supportedmethods` differs by user.
 const openDelegatedMenu = (page: Page) =>
   page.getByRole("button", {name: /delegated\.test/}).click()
 

@@ -39,8 +39,7 @@
       if (error) {
         pushToast({theme: "error", message: error})
       } else {
-        // Pull the relay's freshly-signed role event so the UI reflects the change
-        // immediately, rather than waiting for the live subscription to catch up.
+        // Pull the relay's freshly-signed role event rather than waiting for the subscription.
         await $relayRoles.forceLoad(makeRelayRoleKey(url, id))
 
         pushToast({message: "Role updated!"})

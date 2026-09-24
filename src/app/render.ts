@@ -28,8 +28,7 @@ const splitLines = (parsed: Parsed[]) => {
 const hasProse = (line: Parsed[]) =>
   line.some(node => node.type === ParsedType.Text && node.value.trim().length > 0)
 
-// A reply prepends the message it answers, so the first line of one describes the quote and says
-// nothing about the reply. The first line carrying words of its own is what the message is about.
+// A reply prepends the message it answers, so the first line with words of its own is the summary.
 export const renderEventAsSummary = (event: TrustedEvent) => {
   const lines = splitLines(parse(event))
 

@@ -6,9 +6,7 @@ import {maybeGetTestEnv} from "@lib/test/env"
 
 const fromCsv = (s: string) => (s || "").split(",").filter(identity)
 
-// Test-only: when Playwright has injected window.__TEST_ENV__, VITE_ values resolve against it, so
-// each browser context can be pointed at the relays its own test created. Vite folds DEV to false
-// in a production build, so the branch and the import are stripped from it.
+// Test-only: vite folds DEV to false in a production build, stripping the branch and the import.
 const env = (key: string): string =>
   (import.meta.env.DEV ? maybeGetTestEnv(key) : undefined) ?? import.meta.env[key]
 
@@ -52,9 +50,7 @@ export const PLATFORM_LOGEE = env("VITE_PLATFORM_LOGEE")
 
 export const PLATFORM_ACCENT = env("VITE_PLATFORM_ACCENT")
 
-// components visual preset (see src/lib/components/theme.css). Selected per
-// deployment via VITE_THEME, which is assumed to be set to a known theme
-// (e.g. "clay" or "flat") — there is no default.
+// Components visual preset (see src/lib/components/theme.css), set per deployment with no default.
 export const FL_THEME = env("VITE_THEME")
 
 export const PLATFORM_DESCRIPTION = env("VITE_PLATFORM_DESCRIPTION")

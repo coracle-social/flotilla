@@ -80,8 +80,7 @@
     doSearch(term, controller)
   }
 
-  // The modal container ignores Escape inside a text field, so the focused search input has to
-  // close the modal itself
+  // The modal container ignores Escape inside a text field.
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === "Escape") {
       popModal()

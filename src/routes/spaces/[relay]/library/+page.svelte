@@ -35,8 +35,7 @@
   let term = $state("")
   let loading = $state(true)
 
-  // A shelf belongs to the space it was published to, so the relay it was seen on
-  // scopes it rather than the pubkey that signed it.
+  // A shelf belongs to the space it was published to rather than to the pubkey that signed it.
   const boards = derived(deriveEventsForUrl(url, [{kinds: [PINBOARD]}]), $events =>
     $events.map(reader(Pinboard)),
   )

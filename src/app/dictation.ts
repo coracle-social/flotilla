@@ -2,8 +2,7 @@ import {getSetting} from "@app/settings"
 
 const TRANSCRIPTION_MODEL = "openai/whisper-large-v3-turbo"
 
-// OpenRouter chooses a decoder using the uploaded file's extension, and MediaRecorder's output
-// format varies by engine — webm on chromium, mp4 on webkit.
+// OpenRouter chooses a decoder from the file extension, and MediaRecorder's format varies by engine.
 const EXTENSIONS_BY_MIME_TYPE: Record<string, string> = {
   "audio/webm": "webm",
   "audio/ogg": "ogg",
@@ -38,17 +37,13 @@ export type Dictation = {
   stop: () => void
   // Resolves once recording has stopped, with the audio named for the format the recorder chose.
   audio: Promise<File>
-  // Set when the speaker asks for a transcript, and resolves once that or the error is on the
-  // dictation, so that awaiting it never takes the result out of the registry — whoever is still
-  // around when it lands reads it from there.
+  // Resolves once the transcript or the error is on the dictation, which stays in the registry.
   finished?: Promise<void>
   transcript?: string
   error?: unknown
 }
 
-// Dictations are held here rather than by the composer that started one, so navigating away from a
-// conversation transcribes in the background and leaves the transcript for the next composer the
-// way a draft is left.
+// Held here rather than by the composer, so navigating away transcribes in the background.
 const dictations = new Map<string, Dictation>()
 
 export const getDictation = (key: string) => dictations.get(key)
@@ -66,9 +61,7 @@ export const transcribeDictation = (dictation: Dictation) => {
   )
 }
 
-// Reports how loud the microphone is once per frame, so the caller can show the speaker that we're
-// hearing them. Levels follow the waveform's envelope — jumping to each peak, then decaying — since
-// the raw root mean square drops to nothing in the gaps between words.
+// Levels follow the waveform's envelope, since raw root mean square drops to nothing between words.
 export const startDictation = async (key: string, onLevel: (level: number) => void) => {
   const stream = await navigator.mediaDevices.getUserMedia({audio: true})
   const recorder = new MediaRecorder(stream)
@@ -115,8 +108,7 @@ export const startDictation = async (key: string, onLevel: (level: number) => vo
         track.stop()
       }
 
-      // The recorder names its codec alongside the container, which is more than the imeta on a
-      // voice note or the extension on a blossom url can carry, so keep the container alone.
+      // The recorder names its codec alongside the container, which an imeta or a blossom url can't carry.
       const [type] = recorder.mimeType.split(";")
       const extension = EXTENSIONS_BY_MIME_TYPE[type] || "webm"
 

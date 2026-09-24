@@ -11,16 +11,13 @@ import type {SeededSpace} from "./space"
 import {seedOpenRelay} from "./openRelay"
 import type {SeededOpenRelay} from "./openRelay"
 
-// A fixture timestamp, as an offset from the moment the scenario started. `at(2, HOUR)` is two
-// hours before the test began, count-first like int and ago.
+// A fixture timestamp as an offset from the scenario's start. `at(2, HOUR)` is two hours before it.
 export type At = (count: number, unit: number) => number
 
 export type SeedTools = {
   // Names a space the container already serves. Its policy is its toml in zooid/docker/config.
   relay: (name: SpaceName) => SeededSpace
-  // Names one of the public relays, which is where the follow graph lives: `indexer` is what a
-  // pubkey's own lists are resolved from, `outbox` is a followed pubkey's write relay. See
-  // ARCHITECTURE.md, "The follow graph".
+  // Names one of the public relays, where the follow graph lives. See ARCHITECTURE.md, "The follow graph".
   open: (name: OpenRelayName) => SeededOpenRelay
   user: typeof users
   at: At
@@ -31,14 +28,11 @@ export type Scenario = {
   readonly at: At
   // The spaces this scenario seeded, which are the relays the app is handed as its own.
   readonly urls: string[]
-  // What a pubkey's own lists are resolved from: the open indexer when a scenario declared one,
-  // and the spaces otherwise, which is what a scenario that knows nothing about open relays gets.
+  // The open indexer when a scenario declared one, and the spaces otherwise.
   readonly indexerUrls: string[]
   space(name: SpaceName): SeededSpace
   open(name: OpenRelayName): SeededOpenRelay
-  // The events a returning user's client would already have on disk: their room list, and their
-  // relay list when the scenario seeded one. A relay won't serve the list that would tell
-  // authPolicy it may identify to it. See ARCHITECTURE.md, "Users and sessions".
+  // A relay won't serve the list that would tell authPolicy it may identify to it.
   cache(user: TestUser): SignedEvent[]
 }
 
@@ -74,16 +68,14 @@ export const seed = async (
 
   await build({relay, open, user: users, at})
 
-  // Seeding is async and fixtures depend on one another, so the builder only records what to
-  // write. Draining the queue here publishes each fixture in the order it was declared.
+  // Fixtures depend on one another, so the builder only records what to write and this drains it.
   for (const write of writes) {
     await write()
   }
 
   const seeded = Array.from(spaces.values())
 
-  // A room list is replaceable and covers every space at once, so it can only be written after
-  // all of them have been seeded.
+  // A room list is replaceable and covers every space, so it is written after all of them are seeded.
   const membershipsByPubkey = new Map<string, {user: TestUser; urls: string[]; tags: string[][]}>()
 
   for (const space of seeded) {

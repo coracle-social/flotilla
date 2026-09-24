@@ -28,10 +28,7 @@
     context.createMediaStreamSource(new MediaStream([t])).connect(analyser)
     const data = new Uint8Array(analyser.frequencyBinCount)
 
-    // Smooth into a plain local, not into `level` itself: reading the `$state`
-    // we also write would make this effect depend on its own output, so every
-    // frame would invalidate and re-run it, tearing down the AudioContext
-    // before it ever produced a reading.
+    // Reading the `$state` this effect writes would make it depend on its own output.
     let smoothed = 0
 
     const tick = () => {

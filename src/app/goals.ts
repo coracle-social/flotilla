@@ -19,8 +19,7 @@ export type GoalProgress = {
   closedAt?: number
 }
 
-// Welshman tallies a goal in millisats; the pages show sats, and compare in millisats so a
-// goal isn't funded a rounded sat early.
+// Welshman tallies a goal in millisats, and comparing there avoids funding a rounded sat early.
 export const deriveGoalProgress = (event: TrustedEvent, url?: string): Readable<GoalProgress> => {
   const closedAt = reader(ZapGoal)(event).closedAt()
   const progress = app

@@ -4,8 +4,7 @@ import {DerivedPlugin, Network} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {usePlugin} from "@app/core"
 
-// NIP-38 keys a status by its `d` tag. "general" is the one clients read as what someone is up to;
-// "music" is the other one in the spec and belongs to a player rather than a profile.
+// NIP-38 keys a status by its `d` tag, and "general" is the one clients read as what someone is up to.
 const filter = {kinds: [STATUS], "#d": ["general"]}
 
 export class Statuses extends DerivedPlugin<TrustedEvent> {

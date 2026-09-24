@@ -52,8 +52,7 @@ type NativeShare = {
   type?: string
 }
 
-// Shared media is copied somewhere capacitor's file server can reach, since neither an android
-// content uri nor an ios app group url means anything to the web view.
+// Neither an android content uri nor an ios app group url means anything to the web view.
 export const shareFromNative = async ({
   text,
   path,

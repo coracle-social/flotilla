@@ -24,54 +24,39 @@ import {
 } from "../harness"
 import type {SeededEvent, SeededSpace, TestUser} from "../harness"
 
-// The unread indicator, which every surface renders the same way: a small primary-colored dot in
-// the corner of the thing it belongs to. RelaySummary's "you're a member" check is the same shape
-// at h-5 w-5, so the size is part of what says which one this is.
+// A small primary-colored dot in the corner. RelaySummary's member check is the same shape at h-5 w-5.
 const unreadDot = (scope: Locator) => scope.locator("div.h-2.w-2.rounded-full.bg-primary")
 
-// The bell SpaceMenuRoomItem hangs off a muted room. An icon is a css mask built from a data url,
-// so which bell it is can't be read out of the class list, but a room only renders one when it is
-// muted.
+// An icon is a css mask built from a data url, so a room only renders this one when it is muted.
 const mutedRoomBell = (room: Locator) => room.locator("div.ml-auto.opacity-50")
 
-// The bell SpaceMenuHeader puts beside the space's name once the space itself is muted. The only
-// other absolutely-positioned dot in that button is the admin action-items one, which is opacity-0.
+// The only other absolutely-positioned dot in that button is the admin action-items one, at opacity-0.
 const mutedSpaceBell = (header: Locator) => header.locator("div.opacity-50")
 
-// PrimaryNavItemSpace carries the relay's name as a tooltip rather than as an accessible name — its
-// icon is a masked svg with no alt text — and it has an onclick, so PrimaryNavItem renders it as a
-// button rather than a link. The name comes from nip-11; until that document lands the tooltip is
-// the relay's host instead, and each tenant's toml names it after itself, so both start the same.
+// The name comes from nip-11; until that document lands the tooltip is the relay's host instead.
 const spaceNavItem = (page: Page, name: string) =>
   page.locator(`.primary-nav [data-tip^="${name}"]`)
 
-// The phone's bottom bar opens the space menu in a drawer; the desktop rail has no equivalent,
-// since the menu is always on screen there.
+// The desktop rail has no equivalent, since the menu is always on screen there.
 const spaceMenuNavItem = (page: Page) => page.getByRole("button", {name: "Open space menu"})
 
 // The space menu's header, the one button in the secondary nav carrying the relay's address.
 const spaceMenu = (page: Page, url: string) =>
   page.locator(".secondary-nav").getByRole("button", {name: pathPattern(displayRelayUrl(url))})
 
-// The menu it opens closes itself on the next mouseup anywhere, and a click whose press and release
-// land in the same instant can reach that listener as it mounts, shutting the menu again. A human's
-// click has a gap between the two; playwright's has one only when it is asked for.
+// The menu closes on the next mouseup, which a click with no gap between press and release reaches.
 const openSpaceMenu = (menu: Locator) => menu.click({delay: 200})
 
-// Every story here goes on to assert something that depends on the message having landed, so
-// posting is only finished once it has rendered.
+// Every story here depends on the message having landed, so posting is finished once it renders.
 const post = async (page: Page, content: string) => {
   await send(page, content)
   await expect(message(page, content)).toBeVisible()
 }
 
-// RoomItem's hover actions are icons with no accessible names, in a fixed order: zap, emoji, reply,
-// edit (only on your own recent message), menu.
+// RoomItem's hover actions are icons with no accessible names, in a fixed order: zap, emoji, reply, edit, menu.
 const replyToMessage = (page: Page, text: string) => messageActions(page, text).nth(2).click()
 
-// Chromium's own notifications are invisible to a test, and a tab playwright drives is never
-// hidden, so both of the things the adapter reads are stubbed on the page. It takes the global at
-// notify time, which is what lets this land after boot.
+// Chromium's own notifications are invisible to a test, and a tab playwright drives is never hidden.
 const captureNotifications = async (page: Page) => {
   const notifications: {title: string; body: string}[] = []
 
@@ -101,17 +86,14 @@ const captureNotifications = async (page: Page) => {
   return notifications
 }
 
-// The page bar names the room, so waiting for it is what says the composer below now belongs to
-// the room that was just opened rather than to the one being torn down.
+// The page bar names the room, so waiting for it says the composer belongs to the room just opened.
 const postTo = async (page: Page, room: string, content: string) => {
   await roomLink(page, room).click()
   await expect(pageBar(page)).toContainText(room)
   await post(page, content)
 }
 
-// Outbox routing resolves everything about a person through their relay list: settings are
-// published to the relays it names, and a gift wrap only reaches somebody who has said where their
-// messages go.
+// Settings are published to the relays a person's list names, and a gift wrap needs one too.
 const seedRelays = (space: SeededSpace, user: TestUser) => {
   space.relayList(user)
   space.messagingRelayList(user)
@@ -126,8 +108,7 @@ test("US-103 see and clear unread indicators", async ({seed, as}) => {
     space.join(user.alice, "general", "random")
     space.join(user.bob, "general", "random")
 
-    // History bob wrote himself, so the space has something in it while nothing in it is unread
-    // for him — his own messages never raise an indicator.
+    // History bob wrote himself, since his own messages never raise an indicator.
     space.message(user.bob, "general", "anyone around?", at(2, HOUR))
   })
 
@@ -145,15 +126,13 @@ test("US-103 see and clear unread indicators", async ({seed, as}) => {
   // Bob is sitting on the spaces page the whole time, so the dot arrives without a navigation
   await expect(unreadDot(navItem)).toBeVisible()
 
-  // Inside the space, the dot points at the room the message landed in. A space's room list only
-  // exists in its own menu, so this is the one indicator the rail can't show.
+  // A space's room list only exists in its own menu, so this is the one indicator the rail can't show.
   await navItem.click()
 
   const general = roomLink(bob, "General")
   const random = roomLink(bob, "Random")
 
-  // Both rooms are on screen first, so a room with no dot is a room raising none rather than a
-  // row that never rendered
+  // Both rooms are on screen first, so a room with no dot is one raising none rather than not rendered.
   await expect(random).toBeVisible()
   await expect(unreadDot(general)).toBeVisible()
   await expect(unreadDot(random)).toHaveCount(0)
@@ -189,8 +168,7 @@ test("US-104 mute a room or a whole space", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // Silencing a whole space is only offered once push notifications are on, so that is where alice
-  // has to start.
+  // Silencing a whole space is only offered once push notifications are on.
   const alice = await as(users.alice, "/settings/alerts", {
     context: {permissions: ["notifications"]},
   })
@@ -209,8 +187,7 @@ test("US-104 mute a room or a whole space", async ({seed, as}) => {
 
   await expect(alice).toHaveURL(pathPattern(roomPath(space.url, "general")))
 
-  // Silence this one room from its detail panel. Mute is the stronger of the two settings there: it
-  // forces the room's notifications off and hides its unread badges too.
+  // Mute is the stronger of the two settings there: it forces notifications off and hides badges.
   await openRoomDetail(alice)
 
   const roomMute = settingRow(alice, "Mute").getByRole("checkbox")
@@ -261,15 +238,12 @@ test("US-104 mute a room or a whole space", async ({seed, as}) => {
   await openSpaceMenu(menu)
   await alice.getByRole("button", {name: "Turn off notifications"}).click()
 
-  // Silencing the space is about its alerts — hiding unread badges is the room mute's job — so the
-  // bell appears beside its name and the dots the rooms are carrying stay up.
+  // Hiding unread badges is the room mute's job, so the dots the rooms are carrying stay up.
   await expect(mutedSpaceBell(menu)).toBeVisible()
   await expect(unreadDot(general)).toBeVisible()
   await expect(unreadDot(random)).toBeVisible()
 
-  // Reopening the menu shows the label the mute flipped, and turning it back on clears the bell.
-  // Clicking the header while the menu is still on its way out toggles it straight back shut, so
-  // wait for it to go before reopening it.
+  // Clicking the header while the menu is still on its way out toggles it straight back shut.
   const turnOn = alice.getByRole("button", {name: "Turn on notifications"})
 
   await expect(turnOn).toHaveCount(0)
@@ -351,8 +325,7 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
   await expect(conversation).toContainText("General")
   await expect(unreadDot(conversation)).toBeVisible()
 
-  // A space's threads, events and classifieds are counted per space in Activity rather than listed
-  // as conversations, so the inbox stays a list of messages
+  // Threads, events and classifieds are counted per space in Activity rather than listed as conversations.
   const activity = page.getByRole("link").filter({hasText: "1 thread"})
 
   await expect(page.getByRole("heading", {name: "Activity"})).toBeVisible()
@@ -388,8 +361,7 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
 
-    // The feed asks each follow's write relays for their notes, so a note is only reachable
-    // through a relay list naming one.
+    // The feed asks each follow's write relays for their notes, so a note needs a relay list naming one.
     seedRelays(space, user.alice)
     seedRelays(space, user.bob)
 
@@ -427,8 +399,7 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
   await expect(page.getByRole("heading", {name: "Network"})).toBeVisible()
   await expect(page.getByText(note)).toBeVisible()
 
-  // The feed is notes only: a reply is counted on the note it answers rather than drawn
-  // underneath it, and it never gets a card of its own.
+  // The feed is notes only: a reply is counted on the note it answers and gets no card of its own.
   await expect(page.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
   await expect(page.getByText(reply)).toHaveCount(0)
 
@@ -457,18 +428,14 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
 
-    // Alice reads from her space and the indexer. Bob's relay is somewhere she writes and nowhere
-    // she reads, which is enough for her client to identify to it -- zooid answers no REQ without
-    // nip-42, and Flotilla only identifies to relays her own lists name -- while leaving it out of
-    // the read urls a feed's context is asked of.
+    // Bob's relay is somewhere she writes and nowhere she reads, which is enough to identify to it.
     indexer.relayList(user.alice, {
       read: [space.url, indexer.url],
       write: [space.url, indexer.url, outbox.url],
     })
     indexer.follows(user.alice, [user.bob])
 
-    // Bob is in none of her spaces and writes nowhere she reads, so his relay list is the only
-    // thing that can point the feed at his notes.
+    // Bob is in none of her spaces, so his relay list is the only thing that can point the feed at him.
     indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url]})
     outbox.profile(user.bob, {name: "Bob Barker"})
 
@@ -491,8 +458,7 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
   await expect(network.getByText(note)).toBeVisible()
   await expect(network.getByText("Bob Barker")).toBeVisible()
 
-  // The reply is on bob's relay too, and alice reads from her space rather than from that relay,
-  // so a context asked of her own read relays comes back with nothing.
+  // Alice reads from her space rather than bob's relay, so a context asked of hers comes back empty.
   await expect(network.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
 
   // Her space never held any of it.
@@ -558,8 +524,7 @@ test("US-117 read a network feed whose relays answer from different depths", asy
 })
 
 test("US-117 read the network feed when one relay never answers", async ({seed, as}) => {
-  // Nothing serves this url, and nothing needs to: the fault is a relay that takes the socket and
-  // then says nothing, which is all the spec asks of it.
+  // Nothing serves this url: the fault is a relay that takes the socket and then says nothing.
   const stalled = "wss://stalled.test/"
   const note = "the drawbridge has been stuck open since noon"
 
@@ -571,9 +536,7 @@ test("US-117 read the network feed when one relay never answers", async ({seed, 
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
 
-    // The relays the feed will ask are somewhere she writes and nowhere she reads, which is what
-    // lets her client identify to them: zooid answers no REQ without nip-42, and Flotilla only
-    // identifies to relays her own lists name.
+    // Somewhere she writes and nowhere she reads, which is what lets her client identify to them.
     indexer.relayList(user.alice, {
       read: [space.url, indexer.url],
       write: [space.url, indexer.url, outbox.url, stalled],
@@ -592,8 +555,7 @@ test("US-117 read the network feed when one relay never answers", async ({seed, 
     .locator("section")
     .filter({has: page.getByRole("heading", {name: "Network"})})
 
-  // A span releases the events it found once it is done waiting, so a span that waits on every
-  // relay it asked is a span one silent relay holds empty.
+  // A span releases what it found once it is done waiting, so one silent relay holds it empty.
   await expect(network.getByText(note)).toBeVisible({timeout: 20_000})
   await expect(network.getByText("Bob Barker")).toBeVisible()
 })
@@ -618,14 +580,12 @@ test("US-106 share text into the app", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // A client only unwraps direct messages once its owner has opened chat, so a conversation the
-  // share dialog can offer is one alice has already seen.
+  // A client only unwraps direct messages once its owner has opened chat.
   const page = await as(users.alice, "/chat")
 
   await expect(page.getByText("are you around?").first()).toBeVisible()
 
-  // The text arrives in the query string rather than through a native share intent, which is the
-  // same thing src/routes/share reads either way.
+  // The text arrives in the query string rather than through a native share intent.
   await page.goto(`/share?text=${encodeURIComponent(shared)}`)
 
   const share = dialog(page, "Share")
@@ -681,8 +641,7 @@ test("US-107 open a nostr link", async ({seed, as}) => {
 
   await expect(page.getByRole("heading", {name: "Event Details"})).toBeVisible()
 
-  // EventInfo renders the link on mount rather than during setup, so wait for it rather than
-  // copying an empty field
+  // EventInfo renders the link on mount rather than during setup.
   const eventLink = settingRow(page, "Event Link")
 
   await expect(eventLink.getByRole("textbox")).toHaveValue(/^nostr:nevent1/)
@@ -731,8 +690,7 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
   const space = scenario.space("space")
   const other = scenario.space("other")
 
-  // A phone has no room list on screen while a room is open, so the bottom bar is the only place
-  // activity elsewhere can surface
+  // A phone has no room list on screen while a room is open.
   const bob = await as(users.bob, roomPath(space.url, "general"), {
     context: {viewport: {width: 390, height: 844}, hasTouch: true},
   })
@@ -757,16 +715,14 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
 
   await expect(message(bob, "the server is on fire")).toBeVisible()
 
-  // Reading the other space empties the bar, even though bob's own space still has an unread room
-  // — that one is the space's business, and its own indicators carry it
+  // Bob's own space still has an unread room, which is that space's own business.
   await bob.goto(spacePath(space.url))
 
   await expect(unreadDot(roomLink(bob, "Random"))).toBeVisible()
   await expect(unreadDot(menuButton)).toHaveCount(0)
 })
 
-// SpaceMenuNavItems offers a content type once the space has an event of that kind or something
-// under it is unread, so this link appearing at all is what says the seeded content loaded.
+// SpaceMenuNavItems offers a content type once the space has an event of that kind or an unread.
 const contentNavItem = (page: Page, name: string) =>
   page.locator(".secondary-nav").getByRole("link", {name})
 
@@ -830,9 +786,7 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
 
   await expect(his).toBeVisible()
 
-  // syncChecked marks the landed-on page read 300ms later and latestActivityByPath is throttled to
-  // a second, so a dot the list is about to clear stays up well past the click. Nothing on screen
-  // reports the tick — the nav dot goes down on the route change either way — so wait it out.
+  // syncChecked marks the page read 300ms later and latestActivityByPath is throttled to a second.
   await bob.waitForTimeout(1500)
 
   await expect(unreadDot(hers)).toBeVisible()
@@ -870,9 +824,7 @@ test("US-113 see which threads are unread on a phone", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // ThreadBoard swaps its table for a list of links when the board is too narrow for the table,
-  // and the two branches render the thread separately, so a dot on one says nothing about the
-  // other.
+  // ThreadBoard swaps its table for a list of links when the board is narrow, and renders each apart.
   const bob = await as(users.bob, `${spacePath(space.url)}/threads`, {
     context: {viewport: {width: 390, height: 844}, hasTouch: true},
   })
@@ -882,16 +834,14 @@ test("US-113 see which threads are unread on a phone", async ({seed, as}) => {
 
   await expect(his).toBeVisible()
 
-  // Same tick and throttle as US-112: a dot read before both have run is one the list may still be
-  // about to clear.
+  // Same tick and throttle as US-112: a dot read before both have run may still be about to clear.
   await bob.waitForTimeout(1500)
 
   await expect(unreadDot(hers)).toBeVisible()
   await expect(unreadDot(his)).toHaveCount(0)
 })
 
-// Classifieds stands in for the five boards whose items are cards rather than rows — they all
-// render the same UnreadDot off the same content path, and only the corner it sits in differs.
+// Classifieds stands in for the five boards whose items are cards, which differ only in the corner.
 test("US-114 see which listings are unread", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -953,8 +903,7 @@ test("US-123 find a section whose newest item is older than the sync window", as
     space.join(user.alice, "general")
     space.join(user.bob, "general")
 
-    // Older than the month the space sync asks for, so the nav can only know about it by asking
-    // the relay what the space holds rather than by reading what has loaded.
+    // Older than the month the space sync asks for, so the nav can only know by asking the relay.
     seedPoll(space, user.alice, "which sextant should we buy", at(60, DAY))
   })
 
@@ -981,8 +930,7 @@ test("US-124 reach a badge raised by content the space doesn't have", async ({se
     space.join(user.bob, "general")
     other.join(user.bob, "general")
 
-    // A comment on a poll nothing holds — the relay kept the comment and dropped its subject.
-    // It counts toward the space either way, so the section it belongs to has to be reachable.
+    // A comment on a poll nothing holds: the relay kept the comment and dropped its subject.
     space.event(
       user.alice,
       () =>
@@ -1016,8 +964,7 @@ test("US-124 reach a badge raised by content the space doesn't have", async ({se
 
   await expect(bob.getByText("No polls found.")).toBeVisible()
 
-  // Reading it is the end of it: with nothing unread and no poll to list, the space stops
-  // offering the section at all
+  // With nothing unread and no poll to list, the space stops offering the section at all.
   await roomLink(bob, "General").click()
 
   await expect(pollsNav).toHaveCount(0)
@@ -1037,8 +984,7 @@ test("US-120 read what a notification says", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // Push notifications are off until they are asked for, and the tab has to be in the background
-  // before one is raised at all.
+  // The tab has to be in the background before a push notification is raised at all.
   const alice = await as(users.alice, "/settings/alerts", {
     context: {permissions: ["notifications"]},
   })
@@ -1064,9 +1010,7 @@ test("US-120 read what a notification says", async ({seed, as}) => {
 
   await expect(message(bob, "sunday, the notice is at")).toBeVisible()
 
-  // A reply prepends the message it answers, so its first line is an entity and says nothing about
-  // the reply. The preview is the words bob wrote, with the url named by its host rather than
-  // spelled out, and the quote of alice's message tags her, so it reads as a mention.
+  // A reply prepends the message it answers, so its first line is an entity rather than the reply.
   await expect
     .poll(() => notifications.at(-1))
     .toEqual({

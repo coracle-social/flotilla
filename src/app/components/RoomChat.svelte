@@ -72,10 +72,7 @@
     isVoiceRoom && $callState === CallState.Connected && isCallTargetingThisRoom,
   )
 
-  // During a call the chat is toggled from the call controls — it takes over the pane,
-  // or sits beside the video once there's room for both. Reuses voiceConnectedHere
-  // rather than re-deriving isVoiceRoom/callState so it can't stay true for a voice
-  // room the call isn't targeting, which would hide that room's messages.
+  // voiceConnectedHere can't stay true for a voice room the call isn't targeting.
   const callChatOpen = $derived(voiceConnectedHere && $videoCallLayout === VideoCallLayout.Split)
   const callChatHidden = $derived(voiceConnectedHere && !callChatOpen)
 
@@ -103,8 +100,7 @@
       return
     }
 
-    // Land on the call view as soon as the call starts here, whether or not anyone's
-    // camera is on — chat is one tap away via the control bar's chat toggle.
+    // Chat is one tap away on the control bar, so land on the call view whether or not a camera is on.
     if (!wasConnectedHere) {
       videoCallLayout.set(VideoCallLayout.Video)
       wasConnectedHere = true
@@ -195,8 +191,7 @@
         command.publishToRelays([url])
       }
 
-      // A share is a quote rather than a reply, so it goes in the content directly and
-      // setParent prepends the reply's own reference ahead of it.
+      // A share is a quote rather than a reply, so setParent prepends the reply's own reference ahead of it.
       if (sharedEvent) {
         ;({content, tags} = await prependParent(sharedEvent, {content, tags}, url))
       }
@@ -240,8 +235,7 @@
 
   const getElementKey = (element: {id: string}) => element.id
 
-  // Where a row sits inside the scroll container, in screen terms rather than scroll terms, so
-  // the reversed layout doesn't come into it
+  // In screen terms rather than scroll terms, so the reversed layout doesn't come into it.
   const topOf = (target: HTMLElement) =>
     target.getBoundingClientRect().top - element!.getBoundingClientRect().top
 
@@ -278,9 +272,7 @@
     pinned = undefined
   }
 
-  // The list renders from the newest message outward, so a row deep in history isn't on the page
-  // until it's asked for — and asking renders it on the next flush, which the lookup has to wait
-  // for. Messages carry the id as a data attribute; the new-messages divider as its element id.
+  // A row deep in history renders on the next flush after it is asked for, so the lookup waits for it.
   const scrollToRow = (
     id: string,
     {
@@ -303,8 +295,7 @@
         }
 
         if (pin) {
-          // A scroll that ended at the origin is one the browser clamped there, so the offset
-          // below is as close to centred as the row could get rather than where it was put.
+          // A scroll that ended at the origin is one the browser clamped there.
           pinned = {id, top: topOf(target), clamped: Math.abs(element!.scrollTop) < 1}
         }
       }
@@ -357,9 +348,7 @@
 
   const scrollToNewMessages = () => scrollToRow("new-messages", {behavior: "smooth"})
 
-  // While the window stops short, dropping the anchor only takes the button away: where the reader
-  // lands is then whatever the list settles on as it re-windows and the forward walk catches up,
-  // which is not reliably the live end. Anchoring a fresh feed on the present puts it there.
+  // Anchoring a fresh feed on the present is what puts the reader at the live end.
   const scrollToBottom = async () => {
     const anchored = !isNaN(at)
 
@@ -372,8 +361,7 @@
     element?.scrollTo({top: 0, behavior: anchored ? "auto" : "smooth"})
   }
 
-  // A tab can be `visible` but unfocused (user alt-tabbed to another app), so we
-  // can't rely on document.hidden alone to know the room is actually being watched.
+  // A tab can be `visible` but unfocused, so `document.hidden` alone doesn't say the room is watched.
   const onActiveChange = (active: boolean) => {
     if (!active) {
       lastVisibleAt = now()
@@ -409,22 +397,19 @@
   let compose: RoomCompose | undefined = $state()
   let eventToEdit: TrustedEvent | undefined = $state()
 
-  // A link into history renders the newest messages first and only then scrolls, so the room is
-  // held back for that frame rather than showing the wrong end of the conversation and jumping.
+  // A link into history renders the newest messages first and only then scrolls.
   const awaitingJump = $derived(!isNaN(at) && !jumpSettled)
 
   const reachedStartOfHistory = $derived($older?.status === "exhausted")
 
-  // A room paged from an anchor walks in both directions at once, and neither walk is worth a
-  // loader of its own in the transcript — the page bar carries one for the pair of them.
+  // The page bar carries one loader for both directions of an anchored walk.
   $effect(() => {
     pageLoading.set(isFeedLoading($older) || isFeedLoading($newer))
 
     return () => pageLoading.set(false)
   })
 
-  // Claim the share once we're on screen. Sharing into the room you're already looking at
-  // doesn't re-create this component, so this can't be read once on mount.
+  // Sharing into the room already on screen doesn't re-create this component.
   $effect(() => {
     if ($pendingShare) {
       share = $pendingShare
@@ -458,19 +443,13 @@
     }),
   )
 
-  // The window only stops short of the present after jumping into history — anything published
-  // from here on arrives through the repository rather than through a forward walk.
+  // The window only stops short of the present after jumping into history.
   const windowStopsShort = $derived(!isNaN(at) && $newer?.status !== "exhausted")
 
-  // While the window stops short, the bottom of the container is not the bottom of the
-  // conversation, so the button is the way back to the live end rather than a scroll — which is
-  // why it clears `at` instead of scrolling. Once the two are the same place, scroll position is
-  // the whole answer.
+  // While the window stops short, the bottom of the container isn't the bottom of the conversation.
   const showScrollButton = $derived(scrolledUp || windowStopsShort)
 
-  // A search result or a notification jumping into the room already on screen changes the url
-  // without re-creating this component, so the feed built on the old anchor has to be rebuilt
-  // on the new one. `at` is NaN when there is no anchor, and NaN never equals itself.
+  // `at` is NaN when there is no anchor, and NaN never equals itself.
   $effect(() => {
     if (!isNaN(at) && feedAnchor && at !== feedAnchor) {
       released = false
@@ -487,9 +466,7 @@
     }
   })
 
-  // Content can arrive mid-scroll too, so this runs whether or not the reader is moving. The
-  // forward walk reaching the present is the other thing a pin watches for, and it can land after
-  // the last message does, so it is read here where the effect sees it change.
+  // The forward walk can reach the present after the last message does, so the effect watches both.
   $effect(() => {
     const caughtUp = !windowStopsShort
 
@@ -500,8 +477,7 @@
     }
   })
 
-  // Bound here rather than in the markup: these watch for the reader taking over, they don't make
-  // the transcript a control, and declaring them as handlers would claim it is one.
+  // Declaring these as handlers would claim the transcript is a control.
   $effect(() => {
     if (element) {
       const target = element
@@ -532,8 +508,7 @@
       onEvent: context.add,
     })
 
-    // The container is reversed, so scrolling away from its origin reaches older messages and
-    // sitting at the origin is the newest end.
+    // The container is reversed, so scrolling away from the origin reaches older messages.
     older = makeScrollLoader(element!, feed.loadOlder)
     newer = makeScrollLoader(element!, feed.loadNewer, {reverse: true})
 

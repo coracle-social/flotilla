@@ -47,8 +47,7 @@ export const getUrlTags = (url: string, event: TrustedEvent) => {
     return imeta
   }
 
-  // A nip 17 file message describes its one file on the event itself, but an event carrying imeta
-  // has said all it has to say about each url, so any other link in it is described by nothing.
+  // An event carrying imeta has said all it has to say about each url.
   return imetas.length > 0 ? [] : event.tags
 }
 

@@ -7,10 +7,7 @@ export type TestFile = {
   buffer: Buffer
 }
 
-// A real 1x1 gif. Gif rather than png because compressFileForUpload passes it through untouched
-// instead of re-encoding it through a canvas, so the bytes the server hashes are the bytes chosen
-// here and the url an upload resolves to is predictable from node. The base64 is what a spec hands
-// to the page, since a Buffer does not survive the trip into evaluate().
+// Gif rather than png, since compressFileForUpload passes it through instead of re-encoding it.
 export const GIF_BASE64 = "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 
 export const GIF = Buffer.from(GIF_BASE64, "base64")
@@ -20,8 +17,7 @@ export const WEBP = Buffer.from("UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA=
 
 export const gifFile = (name: string): TestFile => ({name, mimeType: "image/gif", buffer: GIF})
 
-// Every picker in the app opens the browser's own chooser, which is the only place a spec can hand
-// it a file: the input behind it is never on screen.
+// Every picker opens the browser's own chooser, and the input behind it is never on screen.
 export const chooseFile = async (page: Page, button: Locator, file: TestFile) => {
   const chooser = page.waitForEvent("filechooser")
 
