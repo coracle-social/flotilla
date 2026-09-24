@@ -35,6 +35,13 @@ Builds:
       - node_modules
     build: ../../scripts/fdroid/build.sh
 
+MaintainerNotes: |-
+  scripts/fdroid/prepare.sh removes Firebase, Google Services, Plausible and the ACINQ
+  native secp256k1 library, then installs dependencies, so it runs as prebuild ahead of
+  the scanner. node_modules holds FLOSS build tools (esbuild, sharp), hence scanignore.
+  Capacitor needs JDK 21, installed from trixie, and Node comes from nodejs.org at a
+  pinned checksum to match the lts/jod in .nvmrc.
+
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$
 UpdateCheckData: android/app/build.gradle|(?m)^\s*versionCode\s+(\d+)\s*$|.|(?m)^\s*versionName\s+"([^"]+)"\s*$
