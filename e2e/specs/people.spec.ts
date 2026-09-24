@@ -652,22 +652,27 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
 
   await mockGeocoding(page.context(), [
     {
+      type: "city",
       name: "Portland",
-      admin1: "Oregon",
+      state: "Oregon",
       country: "United States",
-      feature_code: "PPLA2",
-      population: 652503,
       latitude: 45.52345,
       longitude: -122.67621,
     },
     {
-      name: "Portlaw",
-      admin1: "Munster",
-      country: "Ireland",
-      feature_code: "PPL",
-      population: 900,
-      latitude: 52.28833,
-      longitude: -7.32056,
+      type: "state",
+      name: "Oregon",
+      country: "United States",
+      latitude: 43.93179,
+      longitude: -120.76562,
+    },
+    {
+      type: "street",
+      name: "Portland Avenue",
+      state: "Oregon",
+      country: "United States",
+      latitude: 45.51,
+      longitude: -122.65,
     },
   ])
 
@@ -679,10 +684,13 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
 
   const form = await openEditForm()
 
-  await form.getByPlaceholder("Search for a town").fill("portl")
+  await form.getByPlaceholder("Search for a city").fill("portl")
 
-  // A town of under a thousand people is not somewhere to be from.
-  await expect(form.getByRole("button", {name: "Portlaw, Munster, Ireland"})).toHaveCount(0)
+  // A state is a place to be from; a street is not.
+  await expect(form.getByRole("button", {name: "Oregon, United States"})).toBeVisible()
+  await expect(
+    form.getByRole("button", {name: "Portland Avenue, Oregon, United States"}),
+  ).toHaveCount(0)
 
   await form.getByRole("button", {name: "Portland, Oregon, United States"}).click()
   await form.getByRole("button", {name: "Save Changes"}).click()
@@ -725,7 +733,7 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
 
   await expect(pins).toHaveCount(0)
 
-  // A country is not a pin, so choosing one takes alice off the map.
+  // A state is not a pin, so choosing one takes alice off the map.
   await page.goto(profilePath(users.alice.pubkey))
 
   const secondForm = await openEditForm()
@@ -733,18 +741,14 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
   await expect(secondForm.getByText("Portland, Oregon, United States")).toBeVisible()
 
   await secondForm.getByRole("button", {name: "Clear location"}).click()
-  await secondForm.getByPlaceholder("Search for a town").fill("portl")
-  await secondForm.getByRole("button", {name: "Portland, Oregon, United States"}).click()
-  await secondForm.getByLabel("How much of your location to show").selectOption({label: "Country"})
-
-  await expect(secondForm.getByText("United States", {exact: true})).toBeVisible()
-
+  await secondForm.getByPlaceholder("Search for a city").fill("oreg")
+  await secondForm.getByRole("button", {name: "Oregon, United States"}).click()
   await secondForm.getByRole("button", {name: "Save Changes"}).click()
 
   await expect(page.getByRole("alert")).toContainText("Your profile has been updated!")
 
   const republished = getPublishedEvents(page.context(), PROFILE)
 
-  expect(JSON.parse(republished[1].content).location).toBe("United States")
+  expect(JSON.parse(republished[1].content).location).toBe("Oregon, United States")
   expect(republished[1].tags.map(tag => tag[0])).not.toContain("g")
 })

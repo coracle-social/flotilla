@@ -1,86 +1,57 @@
-import {removeUndefined} from "@welshman/lib"
+import {removeUndefined, uniqBy} from "@welshman/lib"
 import {tagSpec, tagValue} from "@welshman/util"
 import type {ProfileReader} from "@welshman/domain"
 import {encodeGeohash} from "@lib/geohash"
 
 export type Place = {
-  city?: string
-  region?: string
-  country: string
-  latitude: number
-  longitude: number
-}
-
-export type Granularity = "city" | "region" | "country"
-
-export const granularityLabels: Record<Granularity, string> = {
-  city: "City",
-  region: "State or region",
-  country: "Country",
-}
-
-type GeocodingResult = {
+  type: "city" | "state" | "country"
   name: string
-  admin1?: string
+  state?: string
   country?: string
-  feature_code: string
-  population?: number
   latitude: number
   longitude: number
 }
 
-// Open-Meteo indexes GeoNames' populated places and countries, never a state on its own.
-export const searchPlaces = async (term: string) => {
-  const url = new URL("https://geocoding-api.open-meteo.com/v1/search")
-
-  url.searchParams.set("name", term)
-  url.searchParams.set("count", "20")
-  url.searchParams.set("language", "en")
-  url.searchParams.set("format", "json")
-
-  const response = await fetch(url)
-  const {results = []}: {results?: GeocodingResult[]} = await response.json()
-  const places: Place[] = []
-
-  for (const result of results) {
-    const {name, admin1, country, feature_code, population, latitude, longitude} = result
-
-    if (feature_code === "PCLI") {
-      places.push({country: name, latitude, longitude})
-    } else if (country && population && population >= 1000) {
-      places.push({city: name, region: admin1, country, latitude, longitude})
-    }
-  }
-
-  return places
+type GeocodingFeature = {
+  geometry: {coordinates: [number, number]}
+  properties: {type: string; name: string; state?: string; country?: string}
 }
 
-export const placeGranularities = (place: Place) => {
-  const granularities: Granularity[] = []
+const isPlaceType = (type: string): type is Place["type"] =>
+  type === "city" || type === "state" || type === "country"
 
-  if (place.city) {
-    granularities.push("city")
-  }
+const toPlace = ({geometry, properties}: GeocodingFeature): Place | undefined => {
+  const {type, name, state, country} = properties
+  const [longitude, latitude] = geometry.coordinates
 
-  if (place.region) {
-    granularities.push("region")
-  }
-
-  granularities.push("country")
-
-  return granularities
+  return isPlaceType(type) ? {type, name, state, country, latitude, longitude} : undefined
 }
 
-export const displayPlace = (place: Place, granularity: Granularity) =>
+export const displayPlace = (place: Place) =>
   removeUndefined([
-    granularity === "city" ? place.city : undefined,
-    granularity === "country" ? undefined : place.region,
-    place.country,
+    place.name,
+    place.state,
+    place.type === "country" ? undefined : place.country,
   ]).join(", ")
 
+// Photon indexes OpenStreetMap for autocomplete; osm_tag=place keeps streets and buildings out.
+export const searchPlaces = async (term: string) => {
+  const url = new URL("https://photon.komoot.io/api/")
+
+  url.searchParams.set("q", term)
+  url.searchParams.set("limit", "15")
+  url.searchParams.set("lang", "en")
+  url.searchParams.set("osm_tag", "place")
+
+  const response = await fetch(url)
+  const {features = []}: {features?: GeocodingFeature[]} = await response.json()
+
+  return uniqBy(displayPlace, removeUndefined(features.map(toPlace)))
+}
+
 // A pin is finer than a state or a country asked to be, so only a city publishes one.
-export const placeGeohash = (place: Place, granularity: Granularity) =>
-  granularity === "city" ? encodeGeohash(place.latitude, place.longitude, 5) : undefined
+export const placeGeohash = (place: Place) =>
+  place.type === "city" ? encodeGeohash(place.latitude, place.longitude, 5) : undefined
 
 export const getProfileLocation = (profile?: ProfileReader): string | undefined =>
   profile?.values.location

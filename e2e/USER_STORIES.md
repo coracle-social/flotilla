@@ -1560,14 +1560,14 @@ Acceptance:
 
 ### US-131 — Say where you are and find members on a map
 
-As a member, I want to give a town, state or country on my profile and see where
+As a member, I want to give a city, state or country on my profile and see where
 the rest of a space is, so that I can find the people near me.
 
 Acceptance:
 
-- The location field on the profile form searches places by name, leaves out
-  towns of under a thousand people, and publishes what was picked to kind 0.
-- Choosing a town publishes a geohash with it; choosing a state or a country
+- The location field on the profile form searches places by name, offers cities,
+  states and countries, and publishes what was picked to kind 0.
+- Choosing a city publishes a geohash with it; choosing a state or a country
   publishes the name alone, so nothing finer than the answer given goes out.
 - The directory offers a map whenever a member has a geohash, pins each of them
   with their avatar, and opens a pin's profile when it is clicked.

@@ -111,7 +111,7 @@
         <InputLocation bind:location={values.profile.location} bind:geohash={values.geohash} />
       {/snippet}
       {#snippet info()}
-        A town, state or country. Only a town puts you on a space's member map.
+        A city, state or country. Only a city puts you on a space's member map.
       {/snippet}
     </Field>
     {#if !isSignup}

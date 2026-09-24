@@ -19,9 +19,6 @@ const PLAUSIBLE_ORIGIN = "https://plausible.coracle.social"
 // Transcription and speech both go here, against whichever key the user has saved.
 const OPENROUTER_ORIGIN = "https://openrouter.ai"
 
-// The place search behind the profile's location field, in src/app/location.ts.
-const GEOCODING_ORIGIN = "https://geocoding-api.open-meteo.com"
-
 // .test resolves nowhere and the block-all aborts the navigation, so a spec sees the redirect.
 const CHECKOUT_ORIGIN = "https://checkout.test"
 
@@ -618,20 +615,28 @@ export const mockLivekit = (context: BrowserContext, {serverUrl, token}: Livekit
     },
   )
 
-// One row of Open-Meteo's answer. `feature_code` is PCLI for a country and PPL* for a town.
+// One row of Photon's answer. Anything but a city, state or country is left out of the results.
 export type GeocodedPlace = {
+  type: string
   name: string
-  admin1?: string
+  state?: string
   country?: string
-  feature_code: string
-  population?: number
   latitude: number
   longitude: number
 }
 
-/** The place search, answering every term with the same places. */
-export const mockGeocoding = (context: BrowserContext, results: GeocodedPlace[]) =>
-  context.route(`${GEOCODING_ORIGIN}/**`, route => route.fulfill({json: {results}}))
+/** The place search behind the profile's location field, answering every term with the same places. */
+export const mockGeocoding = (context: BrowserContext, places: GeocodedPlace[]) =>
+  context.route("https://photon.komoot.io/**", route =>
+    route.fulfill({
+      json: {
+        features: places.map(({type, name, state, country, latitude, longitude}) => ({
+          geometry: {coordinates: [longitude, latitude]},
+          properties: {type, name, state, country},
+        })),
+      },
+    }),
+  )
 
 /** Serves a png for anything loaded as an image, so a fixture's avatar and blob urls are never fetched. */
 export const mockImages = (context: BrowserContext) =>
