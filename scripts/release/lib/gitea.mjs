@@ -26,6 +26,8 @@ export const gitea = ({repository, token}) => {
   return {
     hasTag: async tag => Boolean(await api("GET", `/tags/${tag}`, {allow404: true})),
 
+    latestRelease: () => api("GET", "/releases/latest", {allow404: true}),
+
     upsertRelease: async (tag, notes) =>
       (await api("GET", `/releases/tags/${tag}`, {allow404: true})) ??
       (await api("POST", "/releases", {

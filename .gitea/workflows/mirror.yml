@@ -4,6 +4,10 @@ on:
   push:
     branches: [master]
     tags: ["*"]
+  # A release goes public whenever its last artifact lands, which can be from a local run hours
+  # after the tag, so its copy on GitHub is kept up to date by polling
+  schedule:
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 # Serialized rather than cancel-in-progress: aborting a push halfway leaves the
@@ -14,7 +18,7 @@ concurrency:
 jobs:
   push-to-github:
     runs-on: ubuntu-latest
-    if: github.repository == 'coracle/flotilla'
+    if: github.repository == 'coracle/flotilla' && github.event_name != 'schedule'
 
     steps:
       - name: Push master and tags to GitHub
@@ -32,3 +36,24 @@ jobs:
             "https://x-access-token:$GH_MIRROR_TOKEN@github.com/coracle-social/flotilla.git" \
             'refs/heads/master:refs/heads/master' \
             'refs/tags/*:refs/tags/*'
+
+  # Obtainium reads releases from whichever url a user added, and many added the GitHub one
+  copy-release-to-github:
+    runs-on: ubuntu-latest
+    needs: push-to-github
+    if: ${{ !cancelled() && github.repository == 'coracle/flotilla' && needs.push-to-github.result != 'failure' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Copy gitea's latest release to GitHub
+        env:
+          GITEA_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_MIRROR_TOKEN: ${{ secrets.GH_MIRROR_TOKEN }}
+        run: node scripts/release/github.mjs
