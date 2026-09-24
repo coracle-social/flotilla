@@ -507,6 +507,61 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
   expect(fromSpace).toEqual([])
 })
 
+test("US-117 read a network feed whose relays answer from different depths", async ({seed, as}) => {
+  // What each relay is asked for one page at a time. A relay that fills its page has only covered
+  // as far back as the page reaches, so a busy one is what decides how far the feed has got.
+  const pageSize = 100
+  const recent = "the harbourmaster moved the moorings again"
+  const deep = "the old crane was scrapped in the spring"
+
+  await seed(({relay, open, user, at}) => {
+    const space = relay("space")
+    const indexer = open("indexer")
+    const outbox = open("outbox")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url],
+      write: [space.url, indexer.url, outbox.url],
+    })
+    indexer.follows(user.alice, [user.bob])
+
+    // Bob writes to both, so the feed asks both. His busy relay holds more than one page of the
+    // last couple of hours; his quiet one holds a single note from a week ago.
+    indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url, indexer.url]})
+    outbox.profile(user.bob, {name: "Bob Barker"})
+
+    outbox.note(user.bob, recent, at(1, MINUTE))
+
+    // More than one page, so the page comes back full however the relay rounds it
+    for (let minute = 2; minute <= pageSize + 10; minute++) {
+      outbox.note(user.bob, `mooring report ${minute}`, at(minute, MINUTE))
+    }
+
+    indexer.note(user.bob, deep, at(7, DAY))
+  })
+
+  const page = await as(users.alice, "/home")
+
+  const network = page
+    .locator("section")
+    .filter({has: page.getByRole("heading", {name: "Network"})})
+
+  await expect(network.getByText(recent)).toBeVisible()
+
+  // The quiet relay answered from a week back, which is days below where the busy one has been
+  // asked about. Drawing it would put a note under the end of the list with the whole week
+  // between still missing.
+  await expect(network.getByText(deep)).toHaveCount(0)
+
+  // It is held rather than dropped, so the feed hands it over once it has paged back that far.
+  await network.locator(".card").last().scrollIntoViewIfNeeded()
+
+  await expect(network.getByText(deep)).toBeVisible()
+})
+
 test("US-117 read the network feed when one relay never answers", async ({seed, as}) => {
   // Nothing serves this url, and nothing needs to: the fault is a relay that takes the socket and
   // then says nothing, which is all the spec asks of it.

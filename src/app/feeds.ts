@@ -530,8 +530,8 @@ export const makeFeed = ({
     }
   }
 
-  // What arrives from elsewhere in the app, which is only rendered as far back as the feed has
-  // got to on its own
+  // The one door into the feed, so that what it renders is one unbroken stretch back from the
+  // anchor: anything older than the feed has reached waits there until the window gets to it.
   const addEvents = (newEvents: TrustedEvent[]) => {
     const ready: TrustedEvent[] = []
 
@@ -644,7 +644,11 @@ export const makeFeed = ({
       oldest = edge === undefined ? since : Math.min(edge, until - 1)
     }
 
-    insertEvents(found)
+    // A span reaches further back than it covers. A relay holding few of these authors answers
+    // a page from days deeper than a busy one does, and rendering that stretch leaves a list
+    // whose bottom is a scatter the window then fills in above — so it waits for the window
+    // like anything else arriving early.
+    addEvents(found)
     reach(oldest)
 
     return {found: found.length, complete, exhausted: false}
@@ -666,20 +670,14 @@ export const makeFeed = ({
       newest = until
     }
 
-    insertEvents(found)
+    addEvents(found)
 
     return {found: found.length, complete, exhausted: false}
   }
 
-  // What the repository already holds for these relays is in hand and goes in as one insert,
-  // which takes the window back with it rather than leaving the rest of that stretch behind
-  const cached = relays.flatMap(url => Array.from(getEventsForUrl(url, filters)))
-
-  for (const event of cached) {
-    reached = Math.min(reached, event.created_at)
-  }
-
-  insertEvents(cached)
+  // What the repository already holds is a scatter rather than a stretch — an earlier visit's
+  // pages, a reply pulled in as context from weeks back — so it waits for the window too.
+  addEvents(relays.flatMap(url => Array.from(getEventsForUrl(url, filters))))
 
   return {
     events,
