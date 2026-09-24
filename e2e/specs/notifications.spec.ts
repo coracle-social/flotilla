@@ -507,6 +507,56 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
   expect(fromSpace).toEqual([])
 })
 
+test("US-117 read a network feed whose relays answer from different depths", async ({seed, as}) => {
+  // Mirrors PAGE_SIZE: a full page covers only as far back as it reaches.
+  const pageSize = 100
+  const recent = "the harbourmaster moved the moorings again"
+  const deep = "the old crane was scrapped in the spring"
+
+  await seed(({relay, open, user, at}) => {
+    const space = relay("space")
+    const indexer = open("indexer")
+    const outbox = open("outbox")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url],
+      write: [space.url, indexer.url, outbox.url],
+    })
+    indexer.follows(user.alice, [user.bob])
+
+    // Bob's outbox holds a full page of recent notes, the indexer one week-old note.
+    indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url, indexer.url]})
+    outbox.profile(user.bob, {name: "Bob Barker"})
+
+    outbox.note(user.bob, recent, at(1, MINUTE))
+
+    // More than pageSize so the page comes back full.
+    for (let minute = 2; minute <= pageSize + 10; minute++) {
+      outbox.note(user.bob, `mooring report ${minute}`, at(minute, MINUTE))
+    }
+
+    indexer.note(user.bob, deep, at(7, DAY))
+  })
+
+  const page = await as(users.alice, "/home")
+
+  const network = page
+    .locator("section")
+    .filter({has: page.getByRole("heading", {name: "Network"})})
+
+  await expect(network.getByText(recent)).toBeVisible()
+
+  // Below the stretch the outbox covered, so it is held until the scroll.
+  await expect(network.getByText(deep)).toHaveCount(0)
+
+  await network.locator(".card").last().scrollIntoViewIfNeeded()
+
+  await expect(network.getByText(deep)).toBeVisible()
+})
+
 test("US-117 read the network feed when one relay never answers", async ({seed, as}) => {
   // Nothing serves this url, and nothing needs to: the fault is a relay that takes the socket and
   // then says nothing, which is all the spec asks of it.

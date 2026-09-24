@@ -375,11 +375,15 @@ export type FeedLoadState =
 // nothing in it, and the two have to move the window differently.
 export type FeedSpan = {found: number; complete: boolean; exhausted: boolean}
 
-// The share of the relays a span asked that have to answer before it stops waiting on the rest. A
-// request otherwise waits on every one of them, and a relay that accepts a socket and then says
-// nothing neither answers nor drops. A span is also what releases the events it found, so one
-// silent relay leaves the feed empty rather than slow.
-const SPAN_THRESHOLD = 0.5
+// Relatively high because quiet relays eose first.
+const SPAN_THRESHOLD = 0.8
+
+// Short because a relay can accept a socket and never eose.
+const SPAN_TIMEOUT = 3000
+
+// Abort resolves a request with what arrived.
+const spanSignal = (signal: AbortSignal) =>
+  AbortSignal.any([signal, AbortSignal.timeout(SPAN_TIMEOUT)])
 
 // Empty spans to walk per trigger. Enough to cross a gap; not enough to reach the end of the
 // history on a single request.
@@ -530,8 +534,6 @@ export const makeFeed = ({
     }
   }
 
-  // What arrives from elsewhere in the app, which is only rendered as far back as the feed has
-  // got to on its own
   const addEvents = (newEvents: TrustedEvent[]) => {
     const ready: TrustedEvent[] = []
 
@@ -599,7 +601,7 @@ export const makeFeed = ({
     const found = await network.get().request({
       relays,
       autoClose: true,
-      signal: controller.signal,
+      signal: spanSignal(controller.signal),
       threshold: SPAN_THRESHOLD,
       filters: filters.map(filter => ({...filter, ...extension})),
       onEvent: countEvent,
@@ -644,7 +646,8 @@ export const makeFeed = ({
       oldest = edge === undefined ? since : Math.min(edge, until - 1)
     }
 
-    insertEvents(found)
+    // addEvents, not insertEvents: found can reach below oldest.
+    addEvents(found)
     reach(oldest)
 
     return {found: found.length, complete, exhausted: false}
@@ -666,20 +669,12 @@ export const makeFeed = ({
       newest = until
     }
 
-    insertEvents(found)
+    addEvents(found)
 
     return {found: found.length, complete, exhausted: false}
   }
 
-  // What the repository already holds for these relays is in hand and goes in as one insert,
-  // which takes the window back with it rather than leaving the rest of that stretch behind
-  const cached = relays.flatMap(url => Array.from(getEventsForUrl(url, filters)))
-
-  for (const event of cached) {
-    reached = Math.min(reached, event.created_at)
-  }
-
-  insertEvents(cached)
+  addEvents(relays.flatMap(url => Array.from(getEventsForUrl(url, filters))))
 
   return {
     events,
@@ -775,7 +770,7 @@ export const makeCalendarFeed = ({
     const found = await network.get().request({
       relays,
       autoClose: true,
-      signal: controller.signal,
+      signal: spanSignal(controller.signal),
       threshold: SPAN_THRESHOLD,
       filters: [{kinds: [EVENT_TIME], "#D": daysBetween(since, until).map(String)}],
       onEose: () => {
