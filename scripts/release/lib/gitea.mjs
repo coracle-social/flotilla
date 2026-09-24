@@ -61,3 +61,48 @@ export const gitea = ({repository, token}) => {
     },
   }
 }
+
+// Gitea's generic package registry, for files that shouldn't sit on the release itself
+export const giteaPackage = ({repository, token, name, version}) => {
+  const [, owner] = repository.pathname.split("/")
+  const url = file =>
+    `${repository.origin}/api/packages/${owner}/generic/${name}/${version}/${encodeURIComponent(file)}`
+
+  const request = async (method, file, body) => {
+    const response = await fetch(url(file), {
+      method,
+      headers: {Authorization: `token ${token}`},
+      body,
+    })
+
+    if (response.status === 404 && method !== "PUT") {
+      return undefined
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        `${method} ${url(file)} responded ${response.status}: ${await response.text()}`,
+      )
+    }
+
+    return response
+  }
+
+  return {
+    url,
+
+    download: async file => {
+      const response = await request("GET", file)
+
+      return response && new Uint8Array(await response.arrayBuffer())
+    },
+
+    // A package file can't be overwritten, so a rebuild of the same version replaces it
+    upload: async (file, data) => {
+      await request("DELETE", file)
+      await request("PUT", file, data)
+
+      return url(file)
+    },
+  }
+}

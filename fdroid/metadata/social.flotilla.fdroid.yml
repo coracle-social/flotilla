@@ -2,6 +2,7 @@ Categories:
   - Internet
 License: MIT
 AuthorName: Jon Staab
+AuthorWebSite: https://flotilla.social
 WebSite: https://app.flotilla.social
 SourceCode: https://gitea.coracle.social/coracle/flotilla
 IssueTracker: https://gitea.coracle.social/coracle/flotilla/issues
@@ -11,6 +12,7 @@ AutoName: Flotilla
 
 RepoType: git
 Repo: https://gitea.coracle.social/coracle/flotilla.git
+Binaries: https://gitea.coracle.social/api/packages/coracle/generic/flotilla-fdroid/%v/flotilla-fdroid-%v.apk
 
 Builds:
   - versionName: 1.11.1
@@ -35,12 +37,18 @@ Builds:
       - node_modules
     build: ../../scripts/fdroid/build.sh
 
+AllowedAPKSigningKeys: 6daf683e1ca83a4cd88573e9739e2aa944c85d56154e344230557cffed4ad78c
+
 MaintainerNotes: |-
   scripts/fdroid/prepare.sh removes Firebase, Google Services, Plausible and the ACINQ
   native secp256k1 library, then installs dependencies, so it runs as prebuild ahead of
   the scanner. node_modules holds FLOSS build tools (esbuild, sharp), hence scanignore.
   Capacitor needs JDK 21, installed from trixie, and Node comes from nodejs.org at a
   pinned checksum to match the lts/jod in .nvmrc.
+
+  Builds are reproducible: upstream's release workflow runs this recipe in the
+  buildserver-trixie image (scripts/fdroid/reproduce.sh) and publishes that apk, signed
+  with the distribution key, at Binaries.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$

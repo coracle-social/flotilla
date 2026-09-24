@@ -213,7 +213,8 @@ step that fails stops the run and prints the command to pick up from there.
 | `apk` | local | `assembleRelease` signed with the distribution key, renamed to the path in `zapstore.yaml` |
 | `play` | local | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft (or `PLAY_STATUS`) |
 | `ios` | local | `cap build ios` to an archive and IPA, uploaded with `altool`, then attached to the App Store version with its release notes once processed |
-| `fdroid` | ci | reruns F-Droid's own preparation and build against the tag in a throwaway worktree |
+| `fdroid` | ci | builds the tag with F-Droid's recipe in their buildserver image and uploads the unsigned apk to the `flotilla-fdroid` package |
+| `fdroid-sign` | local | waits for that apk, signs it with the distribution key, and uploads it beside it for F-Droid to verify its own build against |
 | `desktop` | both | `package:desktop:*` for this OS: signed and notarized macOS from a Mac, Linux and Windows from Linux |
 | `gitea` | both | creates a draft release from the changelog, attaches what this run built, and publishes it once every platform is there |
 | `zapstore` | local | `zsp publish --skip-preview --quiet zapstore.yaml` |
@@ -227,12 +228,12 @@ Release notes come from the `CHANGELOG.md` section matching `package.json`'s ver
 store shows the same text. The APK and zapstore share one artifact, whose path lives in
 `zapstore.yaml`.
 
-F-Droid builds from the tag on its own servers, so the `fdroid` step uploads nothing. It runs
-[their preparation and build](fdroid/README.md) against the tag in a throwaway git worktree, and if
-that build breaks, the workflow stops before attaching the Linux and Windows packages, which keeps
-the release a draft. Preparation patches source
-with exact-match replacements, so it breaks quietly when the files it rewrites change. The step is
-slow because it installs and builds from scratch.
+F-Droid builds from the tag on its own servers and ships our apk instead of its own when the two
+match, so it keeps our signature ([reproducible builds](fdroid/README.md)). The `fdroid` step makes
+that apk the way F-Droid will, and if the build breaks, the workflow stops before attaching the
+Linux and Windows packages, which keeps the release a draft. Preparation patches source with
+exact-match replacements, so it breaks quietly when the files it rewrites change. The step is slow
+because it installs and builds from scratch.
 
 ### Credentials
 
@@ -241,7 +242,7 @@ along with how to get them.
 
 | variable | what it is |
 | --- | --- |
-| `GITEA_TOKEN` | gitea access token with `write:repository`, from Settings → Applications |
+| `GITEA_TOKEN` | gitea access token with `write:repository` and `write:package`, from Settings → Applications |
 | `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEYSTORE_ALIAS` | the key APKs outside the app stores are signed with; it can never change without breaking updates |
 | `PLAY_KEYSTORE_PATH`, `PLAY_KEYSTORE_PASSWORD`, `PLAY_KEYSTORE_ALIAS` | the Play upload key |
 | `PLAY_SERVICE_ACCOUNT` | path to a service account json with the Release manager role, from Play Console → Setup → API access |

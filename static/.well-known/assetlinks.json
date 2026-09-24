@@ -12,5 +12,17 @@
         "8C:EE:37:F9:8A:08:02:A7:BB:55:2B:64:E5:A5:93:D8:58:73:14:26:66:71:DD:B0:4F:AB:9D:D5:4C:DF:FB:F7"
       ]
     }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "social.flotilla.fdroid",
+      "sha256_cert_fingerprints": [
+        "6D:AF:68:3E:1C:A8:3A:4C:D8:85:73:E9:73:9E:2A:A9:44:C8:5D:56:15:4E:34:42:30:55:7C:FF:ED:4A:D7:8C"
+      ]
+    }
   }
 ]

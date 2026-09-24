@@ -67,17 +67,6 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: platform-tools
-
       - name: Install dependencies
         run: |
           corepack enable
@@ -87,4 +76,5 @@ jobs:
       - name: Release
         env:
           GITEA_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITEA_PACKAGE_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
         run: pnpm release:ci --yes

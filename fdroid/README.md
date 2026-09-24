@@ -43,11 +43,23 @@ and use its configured Gradle runner for `assembleFdroidRelease`.
 
 [`metadata/social.flotilla.fdroid.yml`](metadata/social.flotilla.fdroid.yml) is the recipe to submit
 to `fdroiddata`. The listing's text, icon, feature graphic and per-version changelogs come from
-`fastlane/metadata/android/en-US/` at the tag F-Droid builds. Preparation installs dependencies before F-Droid's source scan, so the recipe
-scan-ignores `node_modules`, which holds FLOSS build tools such as esbuild and sharp. The build
-server's JDK is older than the 21 Capacitor needs, so the recipe installs it from Debian trixie,
-along with Node from nodejs.org at a pinned checksum. None of that has been through `fdroid build`
-yet.
+`fastlane/metadata/android/en-US/` at the tag F-Droid builds. Preparation installs dependencies
+before F-Droid's source scan, so the recipe scan-ignores `node_modules`, which holds FLOSS build
+tools such as esbuild and sharp. The build server's JDK is older than the 21 Capacitor needs, so
+the recipe installs it from Debian trixie, along with Node from nodejs.org at a pinned checksum.
+
+## Reproducible builds
+
+F-Droid rebuilds each tag, downloads the apk at the recipe's `Binaries` url, and ships that apk
+instead of its own when copying its signature onto F-Droid's build verifies. So the F-Droid app
+carries the distribution key, the one `AllowedAPKSigningKeys` names, and can never switch to
+F-Droid's key.
+
+The release workflow's `fdroid` step runs `scripts/fdroid/reproduce.sh` in F-Droid's
+`buildserver-trixie` image, the way fdroiddata's own CI builds a recipe, against the recipe in
+`metadata/` pointed at the tag. It uploads the unsigned apk to the `flotilla-fdroid` generic
+package on gitea, and `pnpm release:local fdroid-sign` signs it and uploads the result beside it.
+The recipe in `metadata/` is the one both builds read, so a change to it goes to `fdroiddata` too.
 
 ## Updates
 
@@ -56,5 +68,4 @@ Stable releases use bare version tags such as `1.9.1`, and the recipe checks tag
 `android/app/build.gradle` at that tag.
 
 The initial `fdroiddata` submission must still review scanner exceptions for FLOSS
-build tools, optional OpenRouter use for a possible `NonFreeNet` declaration, and
-the final F-Droid signing certificate for Android App Links.
+build tools and optional OpenRouter use for a possible `NonFreeNet` declaration.
