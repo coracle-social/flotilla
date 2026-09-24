@@ -187,8 +187,9 @@ key, so those keys never leave your machine: the web bundle and native projects,
 gitea and zapstore, the AAB on Google Play, the iOS build on App Store Connect, and the signed and
 notarized macOS packages. Pushing the tag starts the release workflow in
 `.gitea/workflows/release.yml`, which needs nothing but its own gitea token and the registry's: it
-builds the container image as `latest` and the version, checks the F-Droid build, and runs
-`pnpm release:ci` to package the Linux and Windows apps.
+builds the container image as `latest` and the version, and runs `pnpm release:ci` to build the
+F-Droid apk and package the Linux and Windows apps. `.agents/skills/flotilla-release` has the
+checklist.
 
 Both runs check the tag, the changelog section, every credential and every tool up front, and
 refuse to start if any is missing. Each finishes with a list of what's left to do by hand, such as
