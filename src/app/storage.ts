@@ -206,6 +206,14 @@ const isExpired = (item: EventItem) =>
 
 type PlaintextItem = {key: string; value: string}
 
+const DATABASE_PREFIX = "flotilla-9gl"
+
+// indexeddb goes with the app container on every platform; the iOS keychain the session lives in does not.
+export const hasCachedIdentity = async () =>
+  typeof indexedDB.databases === "function"
+    ? (await indexedDB.databases()).some(db => db.name?.startsWith(DATABASE_PREFIX))
+    : true
+
 /** Caches an app's repository, tracker and local collections in indexeddb, one database per identity. */
 class Storage {
   ready: Promise<void>
@@ -220,10 +228,10 @@ class Storage {
 
   constructor(private readonly app: IApp) {
     // Every identity used to share one database; drop it rather than leave it on disk.
-    void deleteDB("flotilla-9gl")
+    void deleteDB(DATABASE_PREFIX)
 
     this.pubkey = User.require(app).pubkey
-    this.db = new IDB({name: `flotilla-9gl-${this.pubkey}`, stores: TABLES})
+    this.db = new IDB({name: `${DATABASE_PREFIX}-${this.pubkey}`, stores: TABLES})
     this.ready = this.start()
   }
 

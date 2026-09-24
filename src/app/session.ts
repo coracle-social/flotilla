@@ -5,7 +5,7 @@ import type {Session} from "@welshman/app"
 import {getTestEvents, maybeGetTestSession} from "@lib/test/session"
 import {app, login, session} from "@app/core"
 import {wallet} from "@app/lightning"
-import {kv, ss, storage} from "@app/storage"
+import {hasCachedIdentity, kv, ss, storage} from "@app/storage"
 import {deactivateCurrentPomadeSession} from "@app/pomade"
 import {Push} from "@app/push"
 
@@ -58,11 +58,24 @@ const readLegacySession = async () => {
   return legacy ? toCurrentSession(legacy) : undefined
 }
 
+const readStoredSession = async () => {
+  const session = (await ss.get<Session>("session")) ?? (await readLegacySession())
+
+  // A nip01 secret is the account rather than a credential, and a local signer can't stall startup.
+  if (session && session.method !== "nip01" && !(await hasCachedIdentity())) {
+    await ss.set("session", undefined)
+
+    return undefined
+  }
+
+  return session
+}
+
 // The session derives from the app's user, so read it back at startup and persist it on a change.
 export const restoreSession = async () => {
   // Test-only: an injected window.__TEST_SESSION__ wins over storage and is stripped from production.
   const testSession = import.meta.env.DEV ? maybeGetTestSession() : undefined
-  const $session = testSession ?? (await ss.get<Session>("session")) ?? (await readLegacySession())
+  const $session = testSession ?? (await readStoredSession())
 
   if ($session) {
     await login($session)
