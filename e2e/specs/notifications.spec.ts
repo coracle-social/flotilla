@@ -508,7 +508,7 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
 })
 
 test("US-117 read a network feed whose relays answer from different depths", async ({seed, as}) => {
-  // A relay that fills its page has covered only as far back as the page reaches.
+  // Mirrors PAGE_SIZE: a full page covers only as far back as it reaches.
   const pageSize = 100
   const recent = "the harbourmaster moved the moorings again"
   const deep = "the old crane was scrapped in the spring"
@@ -527,13 +527,13 @@ test("US-117 read a network feed whose relays answer from different depths", asy
     })
     indexer.follows(user.alice, [user.bob])
 
-    // Bob's busy relay holds a page of the last two hours, his quiet one a week-old note.
+    // Bob's outbox holds a full page of recent notes, the indexer one week-old note.
     indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url, indexer.url]})
     outbox.profile(user.bob, {name: "Bob Barker"})
 
     outbox.note(user.bob, recent, at(1, MINUTE))
 
-    // More than one page, so the page comes back full however the relay rounds it
+    // More than pageSize so the page comes back full.
     for (let minute = 2; minute <= pageSize + 10; minute++) {
       outbox.note(user.bob, `mooring report ${minute}`, at(minute, MINUTE))
     }
@@ -549,7 +549,7 @@ test("US-117 read a network feed whose relays answer from different depths", asy
 
   await expect(network.getByText(recent)).toBeVisible()
 
-  // A week back is days below where the busy relay has been asked about, so it is held.
+  // Below the stretch the outbox covered, so it is held until the scroll.
   await expect(network.getByText(deep)).toHaveCount(0)
 
   await network.locator(".card").last().scrollIntoViewIfNeeded()

@@ -375,13 +375,13 @@ export type FeedLoadState =
 // nothing in it, and the two have to move the window differently.
 export type FeedSpan = {found: number; complete: boolean; exhausted: boolean}
 
-// How far a span covered is set by its least generous relay, and quiet relays answer first.
+// Relatively high because quiet relays eose first.
 const SPAN_THRESHOLD = 0.8
 
-// A relay that accepts a socket and then says nothing neither answers nor drops.
+// Short because a relay can accept a socket and never eose.
 const SPAN_TIMEOUT = 3000
 
-// Aborting a request resolves it with what arrived, the same way closing it does.
+// Abort resolves a request with what arrived.
 const spanSignal = (signal: AbortSignal) =>
   AbortSignal.any([signal, AbortSignal.timeout(SPAN_TIMEOUT)])
 
@@ -534,7 +534,6 @@ export const makeFeed = ({
     }
   }
 
-  // The one door into the feed, and anything older than it has reached waits for the window.
   const addEvents = (newEvents: TrustedEvent[]) => {
     const ready: TrustedEvent[] = []
 
@@ -647,7 +646,7 @@ export const makeFeed = ({
       oldest = edge === undefined ? since : Math.min(edge, until - 1)
     }
 
-    // A span reaches further back than it covers, so its deepest events wait for the window.
+    // addEvents, not insertEvents: found can reach below oldest.
     addEvents(found)
     reach(oldest)
 
