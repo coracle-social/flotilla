@@ -215,7 +215,7 @@ step that fails stops the run and prints the command to pick up from there.
 | `fdroid` | ci | reruns F-Droid's own preparation and build against the tag in a throwaway worktree |
 | `desktop` | both | `package:desktop:*` for this OS: signed and notarized macOS from a Mac, Linux and Windows from Linux |
 | `gitea` | both | creates a draft release from the changelog, attaches what this run built, and publishes it once every platform is there |
-| `zapstore` | local | `zsp publish zapstore.yaml` |
+| `zapstore` | local | `zsp publish --skip-preview --quiet zapstore.yaml` |
 
 Gitea's latest release is the desktop update feed, so the release stays a draft, hidden from
 updaters and Obtainium, until it has the APK and all three `latest*.yml` manifests. Whichever run

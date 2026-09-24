@@ -9,5 +9,5 @@ export default {
     "Install zsp from https://github.com/zapstore/zsp, then set SIGN_WITH in .env.local to an",
     "nsec, a bunker:// url, or `browser` to sign with a nostr extension.",
   ],
-  run: () => run("zsp", ["publish", "zapstore.yaml"], {cwd: root}),
+  run: () => run("zsp", ["publish", "--skip-preview", "--quiet", "zapstore.yaml"], {cwd: root}),
 }
