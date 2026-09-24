@@ -1,7 +1,17 @@
 import {existsSync, readFileSync} from "node:fs"
-import {join} from "node:path"
+import {join, relative} from "node:path"
 import {parseArgs} from "node:util"
-import {followUps, git, name, notes, repository, root, version} from "./context.mjs"
+import {
+  fastlaneChangelog,
+  followUps,
+  git,
+  name,
+  notes,
+  repository,
+  root,
+  shortNotes,
+  version,
+} from "./context.mjs"
 import {ask, bold, dim, fail, green, red, yellow} from "./shell.mjs"
 
 export const release = async (command, steps) => {
@@ -46,6 +56,16 @@ export const release = async (command, steps) => {
 
   if (!notes) {
     problems.push({missing: [`CHANGELOG.md has no "# ${version}" section`]})
+  } else if (
+    !existsSync(fastlaneChangelog) ||
+    readFileSync(fastlaneChangelog, "utf-8") !== `${shortNotes}\n`
+  ) {
+    // F-Droid reads it from the tag, so it has to be committed before tagging
+    problems.push({
+      missing: [
+        `${relative(root, fastlaneChangelog)} doesn't match CHANGELOG.md: pnpm release:changelog`,
+      ],
+    })
   }
 
   if (git("rev-parse", `refs/tags/${version}`)) {

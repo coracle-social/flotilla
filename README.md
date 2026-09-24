@@ -197,7 +197,8 @@ rolling out on Play and submitting for review.
 ```sh
 pnpm bump minor            # or patch, major, or an explicit x.y.z
 # write the CHANGELOG.md section for the new version
-git commit -am "Bump version"
+pnpm release:changelog     # copies it to fastlane/ for F-Droid, which reads it from the tag
+git add -A && git commit -m "Bump version"
 git tag 1.12.0 && git push origin dev 1.12.0
 pnpm release:local
 ```

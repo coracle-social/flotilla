@@ -14,6 +14,7 @@
     "build:server": "vite build --config vite.config.server.ts",
     "start": "node server.js",
     "release:check": "node scripts/release/local.mjs --check && node scripts/release/ci.mjs --check",
+    "release:changelog": "node scripts/release/changelog.mjs",
     "release:local": "node scripts/release/local.mjs",
     "release:ci": "node scripts/release/ci.mjs",
     "bump": "node scripts/release/bump.mjs",

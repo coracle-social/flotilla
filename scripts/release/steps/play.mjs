@@ -4,7 +4,7 @@ import {readFile} from "node:fs/promises"
 import {join, resolve} from "node:path"
 import {spec} from "@welshman/lib"
 import {gradle, keystoreEnv} from "../lib/android.mjs"
-import {followUps, missingEnv, notes, root, version} from "../lib/context.mjs"
+import {followUps, missingEnv, root, shortNotes, version, versionCode} from "../lib/context.mjs"
 import {play} from "../lib/play.mjs"
 
 const aab = join(root, "android/app/build/outputs/bundle/release/app-release.aab")
@@ -30,7 +30,6 @@ export default {
   ],
   run: async () => {
     const gradleConfig = await readFile(join(root, "android/app/build.gradle"), "utf-8")
-    const versionCode = Number(gradleConfig.match(/versionCode (\d+)/)[1])
     const track = process.env.PLAY_TRACK ?? "production"
     const status = process.env.PLAY_STATUS ?? "draft"
     const api = await play({
@@ -68,8 +67,7 @@ export default {
       versionCode,
       track,
       status,
-      // Play rejects release notes over 500 characters
-      notes: notes.slice(0, 500),
+      notes: shortNotes,
     })
 
     followUps.push(
