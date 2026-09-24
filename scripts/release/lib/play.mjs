@@ -33,7 +33,7 @@ const getAccessToken = async ({client_email, private_key}) => {
   return body.access_token
 }
 
-export const uploadToPlay = async ({credentials, packageName, bundle, track, status, notes}) => {
+export const play = async ({credentials, packageName}) => {
   const accessToken = await getAccessToken(credentials)
   const base = `https://androidpublisher.googleapis.com/androidpublisher/v3/applications/${packageName}`
 
@@ -48,6 +48,10 @@ export const uploadToPlay = async ({credentials, packageName, bundle, track, sta
       body: binary ? body : body && JSON.stringify(body),
     })
 
+    if (response.status === 204) {
+      return undefined
+    }
+
     const result = await response.json()
 
     if (!response.ok) {
@@ -57,25 +61,41 @@ export const uploadToPlay = async ({credentials, packageName, bundle, track, sta
     return result
   }
 
-  const edit = await api("POST", `${base}/edits`)
-  const {versionCode} = await api(
-    "POST",
-    `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${packageName}/edits/${edit.id}/bundles?uploadType=media`,
-    bundle,
-  )
+  return {
+    // Listing bundles needs an edit, which is thrown away so the build can run before the real one
+    bundles: async () => {
+      const edit = await api("POST", `${base}/edits`)
 
-  await api("PUT", `${base}/edits/${edit.id}/tracks/${track}`, {
-    track,
-    releases: [
-      {
-        status,
-        versionCodes: [String(versionCode)],
-        releaseNotes: [{language: "en-US", text: notes}],
-      },
-    ],
-  })
+      try {
+        return (await api("GET", `${base}/edits/${edit.id}/bundles`)).bundles ?? []
+      } finally {
+        await api("DELETE", `${base}/edits/${edit.id}`)
+      }
+    },
 
-  await api("POST", `${base}/edits/${edit.id}:commit`)
+    release: async ({bundle, versionCode, track, status, notes}) => {
+      const edit = await api("POST", `${base}/edits`)
 
-  return versionCode
+      if (bundle) {
+        await api(
+          "POST",
+          `https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/${packageName}/edits/${edit.id}/bundles?uploadType=media`,
+          bundle,
+        )
+      }
+
+      await api("PUT", `${base}/edits/${edit.id}/tracks/${track}`, {
+        track,
+        releases: [
+          {
+            status,
+            versionCodes: [String(versionCode)],
+            releaseNotes: [{language: "en-US", text: notes}],
+          },
+        ],
+      })
+
+      await api("POST", `${base}/edits/${edit.id}:commit`)
+    },
+  }
 }

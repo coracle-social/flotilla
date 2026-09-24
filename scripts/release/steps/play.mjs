@@ -1,8 +1,13 @@
+import {createHash} from "node:crypto"
+import {existsSync} from "node:fs"
 import {readFile} from "node:fs/promises"
 import {join, resolve} from "node:path"
+import {spec} from "@welshman/lib"
 import {gradle, keystoreEnv} from "../lib/android.mjs"
 import {followUps, missingEnv, notes, root, version} from "../lib/context.mjs"
-import {uploadToPlay} from "../lib/play.mjs"
+import {play} from "../lib/play.mjs"
+
+const aab = join(root, "android/app/build/outputs/bundle/release/app-release.aab")
 
 export default {
   name: "play",
@@ -24,19 +29,43 @@ export default {
     "PLAY_TRACK (default production) and PLAY_STATUS (default draft) are optional.",
   ],
   run: async () => {
-    await gradle("bundleRelease", keystoreEnv("PLAY"))
-
     const gradleConfig = await readFile(join(root, "android/app/build.gradle"), "utf-8")
+    const versionCode = Number(gradleConfig.match(/versionCode (\d+)/)[1])
     const track = process.env.PLAY_TRACK ?? "production"
     const status = process.env.PLAY_STATUS ?? "draft"
-    const versionCode = await uploadToPlay({
+    const api = await play({
       credentials: JSON.parse(
         await readFile(resolve(root, process.env.PLAY_SERVICE_ACCOUNT), "utf-8"),
       ),
       packageName: gradleConfig.match(/applicationId "(.+)"/)[1],
-      bundle: await readFile(
-        join(root, "android/app/build/outputs/bundle/release/app-release.aab"),
-      ),
+    })
+
+    // Play never takes a version code twice, so a rerun after an upload goes on to finish the
+    // release with that bundle. Rebuilding would change its bytes, so it only counts as this
+    // build while the aab on disk is the one that went up.
+    const uploaded = (await api.bundles()).find(spec({versionCode}))
+
+    if (uploaded) {
+      const local =
+        existsSync(aab) &&
+        createHash("sha256")
+          .update(await readFile(aab))
+          .digest("hex")
+
+      if (local !== uploaded.sha256) {
+        throw new Error(
+          `Play already has version code ${versionCode} from a build that isn't ${aab}; bump versionCode in android/app/build.gradle`,
+        )
+      }
+
+      console.log(`Play already has version code ${versionCode} from this build, releasing it`)
+    } else {
+      await gradle("bundleRelease", keystoreEnv("PLAY"))
+    }
+
+    await api.release({
+      bundle: uploaded ? undefined : await readFile(aab),
+      versionCode,
       track,
       status,
       // Play rejects release notes over 500 characters
