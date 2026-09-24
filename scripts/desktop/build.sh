@@ -4,7 +4,7 @@ set -e
 export FLOTILLA_DESKTOP=1
 export NODE_ENV=production
 unset FLOTILLA_DESKTOP_DEV_URL CAPACITOR_ELECTRON_DEV_SERVER_URL
-source ./scripts/build-web.sh
+source ./scripts/build/web.sh
 
 export VITE_PLATFORM_NAME
 # Capacitor sync swallows copy failures; its rejection handler also leaves exit 0.

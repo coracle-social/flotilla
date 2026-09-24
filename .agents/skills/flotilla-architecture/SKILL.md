@@ -167,10 +167,10 @@ One web build runs in several shells:
 
 - **Web/PWA.** `SvelteKitPWA` in `vite.config.ts` generates the service worker and manifest,
   except when `FLOTILLA_DESKTOP=1`. `src/service-worker.js` only claims clients.
-- **Android/iOS.** Capacitor wraps `build/` (`capacitor.config.ts`). `scripts/build.sh` runs the
+- **Android/iOS.** Capacitor wraps `build/` (`capacitor.config.ts`). `scripts/build/app.sh` runs the
   web build, `cap sync`, and native asset generation.
 - **Desktop.** `electron/main.ts` starts the Capawesome Electron platform, driven by
-  `scripts/build-desktop.sh` and `scripts/dev-desktop.mjs`.
+  `scripts/desktop/build.sh` and `scripts/desktop/dev.mjs`.
 - **`server.js`.** A Hono server that serves `build/`. For `/join` and `/spaces/...` URLs it
   rewrites the OpenGraph tags from the relay's NIP-11 document, fetched through welshman's
   `Relays`. `vite.config.server.ts` bundles it and the `Dockerfile` runs it. It is not an API, and
@@ -210,7 +210,7 @@ guards.
 
 - `.env` is committed and holds working defaults. `.env.local` (gitignored) overrides it. There is
   no `.env.template`, though AGENTS.md and the README refer to one.
-- Env is read at build time. `scripts/build-web.sh` sources `.env` without overwriting variables
+- Env is read at build time. `scripts/build/web.sh` sources `.env` without overwriting variables
   already set, then fills the `{NAME}`, `{URL}`, `{ACCENT}` and `{DESCRIPTION}` placeholders from
   `src/app.html` in `build/index.html`. `server.js` reads `VITE_PLATFORM_NAME` and
   `VITE_PLATFORM_DESCRIPTION` at runtime.

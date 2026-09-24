@@ -62,7 +62,7 @@ Create an `.env.local` file to override any of the values in `.env`:
 - `VITE_POMADE_SIGNERS` - A comma-separated list of Pomade signer server URLs (3+ required to enable email signup)
 - `VITE_THUMBNAIL_URL` - URL of the image thumbnail service
 
-These values **won't** be used for a built version. Instead, env variables should be provided to `scripts/build.sh` directly or to the built container.
+These values **won't** be used for a built version. Instead, env variables should be provided to `scripts/build/app.sh` directly or to the built container.
 
 If you're deploying a custom version of flotilla, be sure to remove the `plausible.coracle.social` script from `app.html`. This sends analytics to a server hosted by the developer.
 
@@ -143,7 +143,7 @@ entry from a development run, and updates the entry when an update renames the A
 uses the executable's icon resources.
 
 Linux packaging from macOS and Windows packaging from Linux or macOS use the pinned official
-`electronuserland/builder` Wine image through Docker, mounting only a temporary copy of the prepared
+`electronuserland/builder` Wine image through Docker, copying in only a temporary copy of the prepared
 Electron project. Set `DOCKER=podman` in `.env.local` to use Podman instead. Native addons need a
 target-OS ABI rebuild and cannot use this cross-build path.
 Native Windows preparation needs Bash on PATH, for example Git Bash. DMG creation requires macOS. On
@@ -182,55 +182,60 @@ both ZIPs with matching hashes. Do not hand-create or merge updater manifests.
 
 ## Releasing
 
-`pnpm release` takes a tagged commit and ships it everywhere: the web bundle and native projects,
-the signed APK on gitea and zapstore, the AAB on Google Play, the iOS build on App Store Connect,
-and the desktop packages. It checks the tag, the changelog section, every credential and every
-tool up front, and refuses to start if any is missing. It finishes with a list of what's left to do
-by hand, such as rolling out on Play and submitting for review.
+A release is two runs against one tag. `pnpm release:local` does everything that needs a signing
+key, so those keys never leave your machine: the web bundle and native projects, the signed APK on
+gitea and zapstore, the AAB on Google Play, the iOS build on App Store Connect, and the signed and
+notarized macOS packages. Pushing the tag starts the release workflow in
+`.gitea/workflows/release.yml`, which needs nothing but its own gitea token and the registry's: it
+builds the container image as `latest` and the version, checks the F-Droid build, and runs
+`pnpm release:ci` to package the Linux and Windows apps.
+
+Both runs check the tag, the changelog section, every credential and every tool up front, and
+refuse to start if any is missing. Each finishes with a list of what's left to do by hand, such as
+rolling out on Play and submitting for review.
 
 ```sh
 pnpm bump minor            # or patch, major, or an explicit x.y.z
 # write the CHANGELOG.md section for the new version
 git commit -am "Bump version"
 git tag 1.12.0 && git push origin dev 1.12.0
-pnpm release
+pnpm release:local
 ```
 
-`pnpm release --check` runs those checks and reports the plan without building anything. Naming
-steps runs a subset, such as `pnpm release ios` or `pnpm release apk gitea`. A step that fails stops the
-run and prints the command to pick up from there.
+`pnpm release:local --check` runs those checks and reports the plan without building anything.
+Naming steps runs a subset, such as `pnpm release:local ios` or `pnpm release:local apk gitea`. A
+step that fails stops the run and prints the command to pick up from there.
 
-| step | what it does |
-| --- | --- |
-| `web` | `scripts/build.sh`: web bundle, `cap sync`, generated icons and splash screens |
-| `apk` | `assembleRelease` signed with the distribution key, renamed to the path in `zapstore.yaml` |
-| `fdroid` | reruns F-Droid's own preparation and build against the tag in a throwaway worktree |
-| `play` | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft |
-| `ios` | `cap build ios` to an archive and IPA, uploaded with `altool` |
-| `desktop` | `package:desktop:*` for this OS: Linux and Windows from Linux, all three from a Mac, with macOS signed and notarized |
-| `gitea` | creates a draft release from the changelog, attaches the APK, desktop packages and update manifests, and publishes it once every platform is there |
-| `zapstore` | `zsp publish zapstore.yaml` |
+| step | run by | what it does |
+| --- | --- | --- |
+| `web` | local | `scripts/build/app.sh`: web bundle, `cap sync`, generated icons and splash screens |
+| `apk` | local | `assembleRelease` signed with the distribution key, renamed to the path in `zapstore.yaml` |
+| `play` | local | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft |
+| `ios` | local | `cap build ios` to an archive and IPA, uploaded with `altool` |
+| `fdroid` | ci | reruns F-Droid's own preparation and build against the tag in a throwaway worktree |
+| `desktop` | both | `package:desktop:*` for this OS: signed and notarized macOS from a Mac, Linux and Windows from Linux |
+| `gitea` | both | creates a draft release from the changelog, attaches what this run built, and publishes it once every platform is there |
+| `zapstore` | local | `zsp publish zapstore.yaml` |
 
-A Mac builds every desktop package, the Linux and Windows ones in a container. Linux can't build
-the macOS ones, so a release run from Linux needs a `pnpm release desktop gitea` on a Mac as well.
-Gitea's latest release is the desktop update feed, so the release stays a
-draft, hidden from updaters and Obtainium, until it has the APK and all three `latest*.yml`
-manifests. Each manifest is uploaded after the files it lists. A mobile-only release can't be
-published, so package the desktop apps for every release.
+Gitea's latest release is the desktop update feed, so the release stays a draft, hidden from
+updaters and Obtainium, until it has the APK and all three `latest*.yml` manifests. Whichever run
+attaches the last of them publishes it. Each manifest is uploaded after the files it lists. A
+mobile-only release can't be published, so package the desktop apps for every release.
 
 Release notes come from the `CHANGELOG.md` section matching `package.json`'s version, so every
 store shows the same text. The APK and zapstore share one artifact, whose path lives in
 `zapstore.yaml`.
 
 F-Droid builds from the tag on its own servers, so the `fdroid` step uploads nothing. It runs
-[their preparation and build](fdroid/README.md) against the tag in a throwaway git worktree and
-fails the release before anything is published if that build breaks. Preparation patches source
+[their preparation and build](fdroid/README.md) against the tag in a throwaway git worktree, and if
+that build breaks, the workflow stops before attaching the Linux and Windows packages, which keeps
+the release a draft. Preparation patches source
 with exact-match replacements, so it breaks quietly when the files it rewrites change. The step is
 slow because it installs and builds from scratch.
 
 ### Credentials
 
-These go in `.env.local`, which is gitignored. `pnpm release --check` lists whichever are missing
+These go in `.env.local`, which is gitignored. `pnpm release:local --check` lists whichever are missing
 along with how to get them.
 
 | variable | what it is |

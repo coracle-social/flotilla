@@ -4,7 +4,7 @@
 #   docker run -p 3000:3000 flotilla
 #
 # Pass --build-arg VITE_BUILD_HASH=$(git rev-parse --short HEAD) to stamp the build.
-# A .env in the build context is picked up by scripts/build.sh for branding config.
+# A .env in the build context is picked up by scripts/build/app.sh for branding config.
 
 # https://pnpm.io/docker#example-3-build-on-cicd
 FROM node:24-slim AS builder

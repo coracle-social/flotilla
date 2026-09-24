@@ -21,8 +21,8 @@ with the Node, pnpm, Java, Android SDK, and Gradle versions pinned by this repos
 
 ```sh
 corepack enable
-./scripts/prepare-fdroid-source.sh
-./scripts/build-fdroid-assets.sh
+./scripts/fdroid/prepare.sh
+./scripts/fdroid/build.sh
 cd android
 ./gradlew assembleFdroidRelease
 ```
@@ -48,9 +48,9 @@ subdir: android/app
 gradle:
   - fdroid
 prebuild:
-  - ../../scripts/prepare-fdroid-source.sh
+  - ../../scripts/fdroid/prepare.sh
 build:
-  - ../../scripts/build-fdroid-assets.sh
+  - ../../scripts/fdroid/build.sh
 ```
 
 ## Updates

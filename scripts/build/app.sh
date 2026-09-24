@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./scripts/build-web.sh
+source ./scripts/build/web.sh
 
 npx cap sync
 npx @capacitor/assets generate \
@@ -10,4 +10,4 @@ npx @capacitor/assets generate \
   --splashBackgroundColorDark '#191E24'
 
 # @capacitor/assets doesn't generate Android notification icons
-node scripts/generate-notification-icon.mjs
+node scripts/build/notification-icon.mjs

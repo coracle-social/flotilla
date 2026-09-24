@@ -39,3 +39,8 @@ export const ask = async question => {
     readline.close()
   }
 }
+
+export const fail = message => {
+  console.error(red(message))
+  process.exit(1)
+}

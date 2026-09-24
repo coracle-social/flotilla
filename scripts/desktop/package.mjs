@@ -5,7 +5,7 @@ import {fileURLToPath} from "node:url"
 import sharp from "sharp"
 import {loadEnv} from "vite"
 
-const root = fileURLToPath(new URL("../", import.meta.url))
+const root = fileURLToPath(new URL("../../", import.meta.url))
 const [target, option, ...rest] = process.argv.slice(2)
 const platforms = {linux: "--linux", windows: "--win", macos: "--mac"}
 const env = {
@@ -29,7 +29,7 @@ const run = (command, args, options = {}) =>
 
 try {
   if (!Object.hasOwn(platforms, target) || rest.length || (option && option !== "--dir")) {
-    throw new Error("Usage: node scripts/package-desktop.mjs linux|windows|macos [--dir]")
+    throw new Error("Usage: node scripts/desktop/package.mjs linux|windows|macos [--dir]")
   }
   delete env.FLOTILLA_DESKTOP_DEV_URL
   delete env.CAPACITOR_ELECTRON_DEV_SERVER_URL
@@ -48,7 +48,7 @@ try {
   env.VITE_PLATFORM_LOGO = "static/desktop-logo.png"
   await sharp(logo).resize(1024, 1024).png().toFile(join(root, env.VITE_PLATFORM_LOGO))
 
-  await run("bash", ["scripts/build-desktop.sh"])
+  await run("bash", ["scripts/desktop/build.sh"])
   await cp(join(root, env.VITE_PLATFORM_LOGO), join(root, "electron/generated/icon.png"))
   await cp(join(root, "static/favicon.ico"), join(root, "electron/generated/icon.ico"))
   for (const [size, name] of [
@@ -84,6 +84,8 @@ try {
     }
     await mkdir(join(root, "electron/dist"), {recursive: true})
     const directory = await mkdtemp(join(root, "electron/dist/package-"))
+    const docker = env.DOCKER || "docker"
+    const container = `flotilla-package-${process.pid}`
     try {
       await cp(join(root, "package.json"), join(directory, "package.json"))
       for (const file of [
@@ -97,13 +99,14 @@ try {
       ]) {
         await cp(join(root, "electron", file), join(directory, "electron", file), {recursive: true})
       }
-      await run(env.DOCKER || "docker", [
-        "run",
-        "--rm",
+      // Copied in and out rather than mounted: a CI job that shares the host's docker socket
+      // would mount the host's path, not its own
+      await run(docker, [
+        "create",
+        "--name",
+        container,
         "--platform",
         "linux/amd64",
-        "--volume",
-        `${directory}:/project:Z`,
         "--workdir",
         "/project/electron",
         "--env",
@@ -113,14 +116,19 @@ try {
         "electronuserland/builder@sha256:41ae540902461b6cbc988987db79547fcc10cda04d2a6c6367504f59d4b37c64",
         "bash",
         "-c",
-        'owner=$1; group=$2; shift 2; npm ci --ignore-scripts && npm run pack -- "$@"; result=$?; chown -R "$owner:$group" /project; exit "$result"',
+        'npm ci --ignore-scripts && npm run pack -- "$@"',
         "--",
-        String(process.getuid()),
-        String(process.getgid()),
         ...args,
       ])
-      await cp(join(directory, "electron/dist"), join(root, "electron/dist"), {recursive: true})
+      await run(docker, ["cp", `${directory}/.`, `${container}:/project`])
+      await run(docker, ["start", "--attach", container])
+      await run(docker, [
+        "cp",
+        `${container}:/project/electron/dist/.`,
+        join(root, "electron/dist"),
+      ])
     } finally {
+      await run(docker, ["rm", "--force", container], {stdio: "ignore"}).catch(() => {})
       await rm(directory, {recursive: true, force: true})
     }
   } else {
