@@ -375,11 +375,15 @@ export type FeedLoadState =
 // nothing in it, and the two have to move the window differently.
 export type FeedSpan = {found: number; complete: boolean; exhausted: boolean}
 
-// The share of the relays a span asked that have to answer before it stops waiting on the rest. A
-// request otherwise waits on every one of them, and a relay that accepts a socket and then says
-// nothing neither answers nor drops. A span is also what releases the events it found, so one
-// silent relay leaves the feed empty rather than slow.
-const SPAN_THRESHOLD = 0.5
+// How far a span covered is set by its least generous relay, and quiet relays answer first.
+const SPAN_THRESHOLD = 0.8
+
+// A relay that accepts a socket and then says nothing neither answers nor drops.
+const SPAN_TIMEOUT = 3000
+
+// Aborting a request resolves it with what arrived, the same way closing it does.
+const spanSignal = (signal: AbortSignal) =>
+  AbortSignal.any([signal, AbortSignal.timeout(SPAN_TIMEOUT)])
 
 // Empty spans to walk per trigger. Enough to cross a gap; not enough to reach the end of the
 // history on a single request.
@@ -530,8 +534,7 @@ export const makeFeed = ({
     }
   }
 
-  // The one door into the feed, so that what it renders is one unbroken stretch back from the
-  // anchor: anything older than the feed has reached waits there until the window gets to it.
+  // The one door into the feed, and anything older than it has reached waits for the window.
   const addEvents = (newEvents: TrustedEvent[]) => {
     const ready: TrustedEvent[] = []
 
@@ -599,7 +602,7 @@ export const makeFeed = ({
     const found = await network.get().request({
       relays,
       autoClose: true,
-      signal: controller.signal,
+      signal: spanSignal(controller.signal),
       threshold: SPAN_THRESHOLD,
       filters: filters.map(filter => ({...filter, ...extension})),
       onEvent: countEvent,
@@ -644,10 +647,7 @@ export const makeFeed = ({
       oldest = edge === undefined ? since : Math.min(edge, until - 1)
     }
 
-    // A span reaches further back than it covers. A relay holding few of these authors answers
-    // a page from days deeper than a busy one does, and rendering that stretch leaves a list
-    // whose bottom is a scatter the window then fills in above — so it waits for the window
-    // like anything else arriving early.
+    // A span reaches further back than it covers, so its deepest events wait for the window.
     addEvents(found)
     reach(oldest)
 
@@ -675,8 +675,6 @@ export const makeFeed = ({
     return {found: found.length, complete, exhausted: false}
   }
 
-  // What the repository already holds is a scatter rather than a stretch — an earlier visit's
-  // pages, a reply pulled in as context from weeks back — so it waits for the window too.
   addEvents(relays.flatMap(url => Array.from(getEventsForUrl(url, filters))))
 
   return {
@@ -773,7 +771,7 @@ export const makeCalendarFeed = ({
     const found = await network.get().request({
       relays,
       autoClose: true,
-      signal: controller.signal,
+      signal: spanSignal(controller.signal),
       threshold: SPAN_THRESHOLD,
       filters: [{kinds: [EVENT_TIME], "#D": daysBetween(since, until).map(String)}],
       onEose: () => {

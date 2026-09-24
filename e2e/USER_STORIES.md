@@ -1715,9 +1715,8 @@ Acceptance:
   drawn underneath it, and never appears as an item of its own.
 - Every note carries its reply count, including the ones with no replies.
 - Scrolling to the end of the feed loads more rather than asking her to.
-- The feed is one unbroken stretch back from now. A relay that answers a page
-  from further back than the rest have been asked about waits for the feed to
-  reach it, so nothing lands below the end of the list.
+- The feed is one unbroken stretch back from now, so nothing appears below the
+  end of the list.
 - The section fills from the relays that answer. One that takes the connection
   and then says nothing does not hold it empty.
 

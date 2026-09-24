@@ -508,8 +508,7 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
 })
 
 test("US-117 read a network feed whose relays answer from different depths", async ({seed, as}) => {
-  // What each relay is asked for one page at a time. A relay that fills its page has only covered
-  // as far back as the page reaches, so a busy one is what decides how far the feed has got.
+  // A relay that fills its page has covered only as far back as the page reaches.
   const pageSize = 100
   const recent = "the harbourmaster moved the moorings again"
   const deep = "the old crane was scrapped in the spring"
@@ -528,8 +527,7 @@ test("US-117 read a network feed whose relays answer from different depths", asy
     })
     indexer.follows(user.alice, [user.bob])
 
-    // Bob writes to both, so the feed asks both. His busy relay holds more than one page of the
-    // last couple of hours; his quiet one holds a single note from a week ago.
+    // Bob's busy relay holds a page of the last two hours, his quiet one a week-old note.
     indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url, indexer.url]})
     outbox.profile(user.bob, {name: "Bob Barker"})
 
@@ -551,12 +549,9 @@ test("US-117 read a network feed whose relays answer from different depths", asy
 
   await expect(network.getByText(recent)).toBeVisible()
 
-  // The quiet relay answered from a week back, which is days below where the busy one has been
-  // asked about. Drawing it would put a note under the end of the list with the whole week
-  // between still missing.
+  // A week back is days below where the busy relay has been asked about, so it is held.
   await expect(network.getByText(deep)).toHaveCount(0)
 
-  // It is held rather than dropped, so the feed hands it over once it has paged back that far.
   await network.locator(".card").last().scrollIntoViewIfNeeded()
 
   await expect(network.getByText(deep)).toBeVisible()
