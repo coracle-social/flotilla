@@ -5,6 +5,7 @@
     picture?: string
     banner?: string
     website?: string
+    location?: string
     nip05?: string
     lud06?: string
     lud16?: string
@@ -12,6 +13,7 @@
 
   export type Values = {
     profile: ProfileValues
+    geohash?: string
   }
 </script>
 
@@ -27,6 +29,7 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import InputLocation from "@app/components/InputLocation.svelte"
   import InputProfilePicture from "@app/components/InputProfilePicture.svelte"
   import InfoHandle from "@app/components/InfoHandle.svelte"
   import {pushModal} from "@app/modal"
@@ -98,6 +101,17 @@
       {/snippet}
       {#snippet info()}
         Give a brief introduction to why you're here.
+      {/snippet}
+    </Field>
+    <Field>
+      {#snippet label()}
+        <p>Location</p>
+      {/snippet}
+      {#snippet input()}
+        <InputLocation bind:location={values.profile.location} bind:geohash={values.geohash} />
+      {/snippet}
+      {#snippet info()}
+        A town, state or country. Only a town puts you on a space's member map.
       {/snippet}
     </Field>
     {#if !isSignup}

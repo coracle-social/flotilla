@@ -32,7 +32,9 @@ import {withGetter} from "@welshman/store"
 import {displayPubkey, getCommentTagValues, getReplyTagValues, getReplyTags} from "@welshman/domain"
 import {Events, FollowLists, MuteLists, Network, Profiles, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
+import {decodeGeohash} from "@lib/geohash"
 import {deriveUserItem, fromApp, profiles, user, usePlugin} from "@app/core"
+import {getProfileGeohash} from "@app/location"
 import {DEFAULT_PUBKEYS} from "@app/env"
 
 // People
@@ -59,6 +61,34 @@ export const deriveDisplaysByPubkey = (pubkeys: string[], url?: string) => {
         ]),
       ),
     new Map<string, string>(),
+  )
+}
+
+export type MemberPin = {
+  pubkey: string
+  display: string
+  latitude: number
+  longitude: number
+}
+
+export const deriveMemberPins = (pubkeys: string[], url?: string) => {
+  const relays = removeUndefined([url])
+
+  for (const pubkey of pubkeys) {
+    profiles.get().load(pubkey, relays).catch(noop)
+  }
+
+  return derived(profileIndex, $index =>
+    removeUndefined(
+      pubkeys.map(pubkey => {
+        const profile = $index.get(pubkey)
+        const coordinates = decodeGeohash(getProfileGeohash(profile))
+
+        return coordinates
+          ? {pubkey, display: profile?.display() ?? displayPubkey(pubkey), ...coordinates}
+          : undefined
+      }),
+    ),
   )
 }
 

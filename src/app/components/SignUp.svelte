@@ -34,6 +34,7 @@
   setKey("signup.email", "")
   setKey("signup.secret", makeSecret())
   setKey("signup.profile", {})
+  setKey("signup.geohash", undefined)
   setKey("signup.clientOptions", undefined)
 
   const hasPomade = POMADE_SIGNERS.length >= 3
@@ -43,6 +44,13 @@
   const completeSignup = async () => {
     // Join default spaces so the relay is warmed up before we publish below
     await Promise.all(DEFAULT_SPACES.map(url => attemptRelayAccess(url)))
+
+    const geohash = getKey<string>("signup.geohash")
+    const profileWriter = $domain.writer(Profile).update(getKey<ProfileValues>("signup.profile")!)
+
+    if (geohash) {
+      profileWriter.addTags(["g", geohash])
+    }
 
     // Add default outbox/inbox/messaging relays, profile, spaces
     const publications = await Promise.all([
@@ -55,10 +63,7 @@
         relays: [...DEFAULT_RELAYS, ...DEFAULT_SPACES],
       }),
       $app.use(Publisher).publish({
-        event: await $domain
-          .writer(Profile)
-          .update(getKey<ProfileValues>("signup.profile")!)
-          .renderTemplate(),
+        event: await profileWriter.renderTemplate(),
         relays: [...DEFAULT_RELAYS, ...DEFAULT_SPACES],
       }),
       $roomLists.setRelays(DEFAULT_SPACES).then(publish),

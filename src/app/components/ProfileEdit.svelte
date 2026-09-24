@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {spec} from "@welshman/lib"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import {errorMessage} from "@lib/util"
   import Icon from "@lib/components/Icon.svelte"
@@ -9,16 +10,26 @@
   import {clearModals} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {profiles, user} from "@app/core"
+  import {getProfileGeohash} from "@app/location"
 
-  const initialValues = {profile: {...$profiles.get($user.pubkey)?.values}}
+  const existingProfile = $profiles.get($user.pubkey)
+
+  const initialValues = {
+    profile: {...existingProfile?.values},
+    geohash: getProfileGeohash(existingProfile),
+  }
 
   const back = () => history.back()
 
-  const onsubmit = async ({profile}: Values) => {
+  const onsubmit = async ({profile, geohash}: Values) => {
     loading = true
 
     try {
-      const command = await $profiles.update(writer => writer.update(profile))
+      const command = await $profiles.update(writer => {
+        writer.update(profile).dropTags(spec(["g"]))
+
+        return geohash ? writer.addTags(["g", geohash]) : writer
+      })
       const error = (await command.publish().settled()).getError()
 
       if (error) {

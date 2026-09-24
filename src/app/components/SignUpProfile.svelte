@@ -16,14 +16,16 @@
 
   const {next, step, totalSteps}: Props = $props()
 
-  const profile = getKey<Values["profile"]>("signup.profile")!
-
-  const initialValues = {profile}
+  const initialValues = {
+    profile: getKey<Values["profile"]>("signup.profile")!,
+    geohash: getKey<Values["geohash"]>("signup.geohash"),
+  }
 
   const back = () => history.back()
 
-  const onsubmit = ({profile}: Values) => {
+  const onsubmit = ({profile, geohash}: Values) => {
     setKey("signup.profile", profile)
+    setKey("signup.geohash", geohash)
     next()
   }
 </script>

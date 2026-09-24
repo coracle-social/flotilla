@@ -16,6 +16,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import ProfileLocation from "@app/components/ProfileLocation.svelte"
   import ProfileTrust from "@app/components/ProfileTrust.svelte"
   import ProfileSharedSpaces from "@app/components/ProfileSharedSpaces.svelte"
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
@@ -201,6 +202,8 @@
               </div>
 
               <ProfileStatus pubkey={target} />
+
+              <ProfileLocation pubkey={target} />
 
               {#if website}
                 <Link

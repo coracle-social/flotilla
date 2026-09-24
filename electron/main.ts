@@ -133,12 +133,12 @@ createCapacitorElectronApp({
   csp: {
     // SvelteKit's meta CSP owns scripts; the platform default would block its hashed bootstrap.
     policy: "base-uri 'self'; object-src 'none'",
-    // Capawesome 0.1.1's dev policy, plus Flotilla's analytics origin and blob workers.
+    // Capawesome 0.1.1's dev policy, plus Flotilla's analytics origin, blob workers and map tiles.
     devPolicy: [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.coracle.social",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      "img-src 'self' data: blob: https://*.basemaps.cartocdn.com",
       "font-src 'self' data:",
       "media-src 'self' blob:",
       "connect-src 'self' https: wss: ws: http:",

@@ -19,6 +19,9 @@ const PLAUSIBLE_ORIGIN = "https://plausible.coracle.social"
 // Transcription and speech both go here, against whichever key the user has saved.
 const OPENROUTER_ORIGIN = "https://openrouter.ai"
 
+// The place search behind the profile's location field, in src/app/location.ts.
+const GEOCODING_ORIGIN = "https://geocoding-api.open-meteo.com"
+
 // .test resolves nowhere and the block-all aborts the navigation, so a spec sees the redirect.
 const CHECKOUT_ORIGIN = "https://checkout.test"
 
@@ -614,6 +617,21 @@ export const mockLivekit = (context: BrowserContext, {serverUrl, token}: Livekit
       return route.fulfill({status: 204, body: ""})
     },
   )
+
+// One row of Open-Meteo's answer. `feature_code` is PCLI for a country and PPL* for a town.
+export type GeocodedPlace = {
+  name: string
+  admin1?: string
+  country?: string
+  feature_code: string
+  population?: number
+  latitude: number
+  longitude: number
+}
+
+/** The place search, answering every term with the same places. */
+export const mockGeocoding = (context: BrowserContext, results: GeocodedPlace[]) =>
+  context.route(`${GEOCODING_ORIGIN}/**`, route => route.fulfill({json: {results}}))
 
 /** Serves a png for anything loaded as an image, so a fixture's avatar and blob urls are never fetched. */
 export const mockImages = (context: BrowserContext) =>

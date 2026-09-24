@@ -88,12 +88,14 @@ export {
   getHosting,
   mockBlossom,
   mockDufflepud,
+  mockGeocoding,
   mockLivekit,
   mockOpenRouterSpeech,
   mockOpenRouterTranscription,
 } from "./net/http"
 export type {
   DufflepudFixtures,
+  GeocodedPlace,
   HostingFixtures,
   HostingHandle,
   HostingRecord,

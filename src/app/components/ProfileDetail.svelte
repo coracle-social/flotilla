@@ -18,6 +18,7 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
+  import ProfileLocation from "@app/components/ProfileLocation.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import ProfilePinnedNote from "@app/components/ProfilePinnedNote.svelte"
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
@@ -141,6 +142,7 @@
         <MenuButton component={ProfileMenu} componentProps={{pubkey, url, customActions}} />
       </div>
       <ProfileStatus {pubkey} {url} />
+      <ProfileLocation {pubkey} {url} />
       <ProfileAbout {pubkey} {url} />
       <ProfileBadges {pubkey} {url} />
       <ProfilePinnedNote {pubkey} {url} />

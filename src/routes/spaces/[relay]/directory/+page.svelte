@@ -4,18 +4,20 @@
   import UsersGroup from "@assets/icons/users-group-rounded.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
+  import MapIcon from "@assets/icons/map.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import SpaceMember from "@app/components/SpaceMember.svelte"
+  import SpaceMemberMap from "@app/components/SpaceMemberMap.svelte"
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
   import SpaceDirectoryMenu from "@app/components/SpaceDirectoryMenu.svelte"
   import {deriveSpacePermissions} from "@app/management"
   import {deriveSpaceMemberRoles} from "@app/roles"
   import {relayMemberLists, relayRoles} from "@app/core"
-  import {deriveDisplaysByPubkey} from "@app/social"
+  import {deriveDisplaysByPubkey, deriveMemberPins} from "@app/social"
   import {decodeRelay} from "@app/relays"
   import {pushModal} from "@app/modal"
   import type {PageProps} from "./$types"
@@ -54,6 +56,13 @@
     ),
   )
 
+  const pins = $derived(
+    deriveMemberPins(
+      $memberList.map(m => m.pubkey),
+      url,
+    ),
+  )
+
   const matchesTerm = (pubkey: string, t: string) =>
     ($displays.get(pubkey) ?? "").toLowerCase().includes(t) || pubkey.toLowerCase().includes(t)
 
@@ -71,6 +80,16 @@
         roleList.some(role => (role.label() ?? "").toLowerCase().includes(t)),
     )
   })
+
+  const visiblePins = $derived.by(() => {
+    const visible = new Set(visibleMembers.map(m => m.pubkey))
+
+    return $pins.filter(pin => visible.has(pin.pubkey))
+  })
+
+  const toggleMap = () => (showMap = !showMap)
+
+  let showMap = $state(false)
 </script>
 
 <SpaceBar>
@@ -97,15 +116,25 @@
 </SpaceBar>
 
 <PageContent class="@container flex flex-col gap-4 p-4">
-  <label class="input input-group flex w-full items-center gap-2 card">
-    <Icon size={4} icon={Magnifier} />
-    <input
-      bind:value={term}
-      class="min-w-0 grow"
-      type="text"
-      placeholder="Search people or roles..." />
-  </label>
-  {#if visibleMembers.length === 0}
+  <div class="flex items-center gap-2">
+    <label class="input input-group flex w-full items-center gap-2 card">
+      <Icon size={4} icon={Magnifier} />
+      <input
+        bind:value={term}
+        class="min-w-0 grow"
+        type="text"
+        placeholder="Search people or roles..." />
+    </label>
+    {#if $pins.length > 0}
+      <Button class="button button-neutral shrink-0" onclick={toggleMap}>
+        <Icon size={4} icon={showMap ? UsersGroup : MapIcon} />
+        {showMap ? "List" : "Map"}
+      </Button>
+    {/if}
+  </div>
+  {#if showMap}
+    <SpaceMemberMap {url} pins={visiblePins} />
+  {:else if visibleMembers.length === 0}
     <p class="flex flex-col items-center py-20 text-center">No members found.</p>
   {:else}
     <div class="grid grid-cols-1 gap-4 @3xl:grid-cols-2 @5xl:grid-cols-3">

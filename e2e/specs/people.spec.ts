@@ -2,7 +2,7 @@ import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
 import {npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE, MONTH, uniq} from "@welshman/lib"
-import {NOTE, STATUS, makeEvent} from "@welshman/util"
+import {NOTE, PROFILE, STATUS, makeEvent} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {FollowList, Note, PinList, Profile} from "@welshman/domain"
 import {
@@ -11,7 +11,9 @@ import {
   WEBP,
   expect,
   getPublished,
+  getPublishedEvents,
   mockBlossom,
+  mockGeocoding,
   noteEditor,
   profilePath,
   spacePath,
@@ -620,4 +622,129 @@ test("US-082 mute an account", async ({seed, as}) => {
   await expect(list).toHaveCount(2)
   await expect(pageContent(page).getByText("Salt on the rigging this morning")).toBeVisible()
   await expect(pageContent(page).getByText("The gulls have taken the mainsail")).toBeVisible()
+})
+
+test("US-131 say where you are and find members on a map", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anders"})
+
+    // Bob shares a town already, so the directory has a pin before alice adds hers.
+    space.event(user.bob, () =>
+      space
+        .kind(Profile)
+        .writer()
+        .update({name: "Bob Barnacle", location: "Wellington, New Zealand"})
+        .addTags(["g", "rbsm1"])
+        .renderTemplate(),
+    )
+
+    space.relayList(user.alice)
+    space.relayList(user.bob)
+  })
+
+  const {url} = scenario.space("space")
+  const page = await as(users.alice, profilePath(users.alice.pubkey))
+
+  await mockGeocoding(page.context(), [
+    {
+      name: "Portland",
+      admin1: "Oregon",
+      country: "United States",
+      feature_code: "PPLA2",
+      population: 652503,
+      latitude: 45.52345,
+      longitude: -122.67621,
+    },
+    {
+      name: "Portlaw",
+      admin1: "Munster",
+      country: "Ireland",
+      feature_code: "PPL",
+      population: 900,
+      latitude: 52.28833,
+      longitude: -7.32056,
+    },
+  ])
+
+  const openEditForm = async () => {
+    await page.getByRole("button", {name: "Edit profile"}).click()
+
+    return topDialog(page)
+  }
+
+  const form = await openEditForm()
+
+  await form.getByPlaceholder("Search for a town").fill("portl")
+
+  // A town of under a thousand people is not somewhere to be from.
+  await expect(form.getByRole("button", {name: "Portlaw, Munster, Ireland"})).toHaveCount(0)
+
+  await form.getByRole("button", {name: "Portland, Oregon, United States"}).click()
+  await form.getByRole("button", {name: "Save Changes"}).click()
+
+  await expect(page.getByRole("alert")).toContainText("Your profile has been updated!")
+  await expect(pageContent(page).getByText("Portland, Oregon, United States")).toBeVisible()
+
+  const published = getPublishedEvents(page.context(), PROFILE)
+
+  expect(JSON.parse(published[0].content).location).toBe("Portland, Oregon, United States")
+  expect(published[0].tags).toContainEqual(["g", "c20fb"])
+
+  await page.goto(`${spacePath(url)}/directory`)
+
+  const showMap = page.getByRole("button", {name: "Map"})
+
+  await expect(showMap).toBeVisible()
+
+  await showMap.click()
+
+  const pins = page.locator(".leaflet-marker-icon")
+
+  await expect(pins).toHaveCount(2)
+
+  await pins.and(page.locator('[title="Bob Barnacle"]')).click()
+
+  const profile = page.getByRole("dialog", {name: "Profile details"})
+
+  await expect(profile.getByText("Bob Barnacle")).toBeVisible()
+  await expect(profile.getByText("Wellington, New Zealand")).toBeVisible()
+
+  await profile.getByRole("button", {name: "Close dialog"}).click()
+
+  // Searching narrows the map the same way it narrows the list.
+  await page.getByPlaceholder("Search people or roles...").fill("Anders")
+
+  await expect(pins).toHaveCount(1)
+
+  await page.getByRole("button", {name: "List"}).click()
+
+  await expect(pins).toHaveCount(0)
+
+  // A country is not a pin, so choosing one takes alice off the map.
+  await page.goto(profilePath(users.alice.pubkey))
+
+  const secondForm = await openEditForm()
+
+  await expect(secondForm.getByText("Portland, Oregon, United States")).toBeVisible()
+
+  await secondForm.getByRole("button", {name: "Clear location"}).click()
+  await secondForm.getByPlaceholder("Search for a town").fill("portl")
+  await secondForm.getByRole("button", {name: "Portland, Oregon, United States"}).click()
+  await secondForm.getByLabel("How much of your location to show").selectOption({label: "Country"})
+
+  await expect(secondForm.getByText("United States", {exact: true})).toBeVisible()
+
+  await secondForm.getByRole("button", {name: "Save Changes"}).click()
+
+  await expect(page.getByRole("alert")).toContainText("Your profile has been updated!")
+
+  const republished = getPublishedEvents(page.context(), PROFILE)
+
+  expect(JSON.parse(republished[1].content).location).toBe("United States")
+  expect(republished[1].tags.map(tag => tag[0])).not.toContain("g")
 })
