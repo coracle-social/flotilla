@@ -1569,8 +1569,9 @@ Acceptance:
   states and countries, and publishes what was picked to kind 0.
 - Choosing a city publishes a geohash with it; choosing a state or a country
   publishes the name alone, so nothing finer than the answer given goes out.
-- The directory offers a map whenever a member has a geohash, pins each of them
-  with their avatar, and opens a pin's profile when it is clicked.
+- The directory offers a map, pins every member who has a geohash with their
+  avatar, and opens a pin's profile when it is clicked. A map with nobody on it
+  says so.
 - The directory's search narrows the map as it narrows the list.
 
 ### US-098 — Browse and create hosted spaces

@@ -687,7 +687,7 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
   await form.getByPlaceholder("Search for a city").fill("portl")
 
   // A state is a place to be from; a street is not.
-  await expect(form.getByRole("button", {name: "Oregon, United States"})).toBeVisible()
+  await expect(form.getByRole("button", {name: "Oregon, United States", exact: true})).toBeVisible()
   await expect(
     form.getByRole("button", {name: "Portland Avenue, Oregon, United States"}),
   ).toHaveCount(0)
@@ -742,7 +742,7 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
 
   await secondForm.getByRole("button", {name: "Clear location"}).click()
   await secondForm.getByPlaceholder("Search for a city").fill("oreg")
-  await secondForm.getByRole("button", {name: "Oregon, United States"}).click()
+  await secondForm.getByRole("button", {name: "Oregon, United States", exact: true}).click()
   await secondForm.getByRole("button", {name: "Save Changes"}).click()
 
   await expect(page.getByRole("alert")).toContainText("Your profile has been updated!")
@@ -751,4 +751,11 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
 
   expect(JSON.parse(republished[1].content).location).toBe("Oregon, United States")
   expect(republished[1].tags.map(tag => tag[0])).not.toContain("g")
+
+  // The map is offered whether or not anyone is on it, so an empty one says so.
+  await page.goto(`${spacePath(url)}/directory`)
+  await page.getByPlaceholder("Search people or roles...").fill("Anders")
+  await page.getByRole("button", {name: "Map"}).click()
+
+  await expect(pageContent(page).getByText("No locations found.")).toBeVisible()
 })

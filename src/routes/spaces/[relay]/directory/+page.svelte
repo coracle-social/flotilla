@@ -125,15 +125,15 @@
         type="text"
         placeholder="Search people or roles..." />
     </label>
-    {#if $pins.length > 0}
-      <Button class="button button-neutral shrink-0" onclick={toggleMap}>
-        <Icon size={4} icon={showMap ? UsersGroup : MapIcon} />
-        {showMap ? "List" : "Map"}
-      </Button>
-    {/if}
+    <Button class="button button-neutral shrink-0" onclick={toggleMap}>
+      <Icon size={4} icon={showMap ? UsersGroup : MapIcon} />
+      {showMap ? "List" : "Map"}
+    </Button>
   </div>
-  {#if showMap}
+  {#if showMap && visiblePins.length > 0}
     <SpaceMemberMap {url} pins={visiblePins} />
+  {:else if showMap}
+    <p class="flex flex-col items-center py-20 text-center">No locations found.</p>
   {:else if visibleMembers.length === 0}
     <p class="flex flex-col items-center py-20 text-center">No members found.</p>
   {:else}
