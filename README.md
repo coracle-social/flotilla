@@ -210,8 +210,8 @@ step that fails stops the run and prints the command to pick up from there.
 | --- | --- | --- |
 | `web` | local | `scripts/build/app.sh`: web bundle, `cap sync`, generated icons and splash screens |
 | `apk` | local | `assembleRelease` signed with the distribution key, renamed to the path in `zapstore.yaml` |
-| `play` | local | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft |
-| `ios` | local | `cap build ios` to an archive and IPA, uploaded with `altool` |
+| `play` | local | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft (or `PLAY_STATUS`) |
+| `ios` | local | `cap build ios` to an archive and IPA, uploaded with `altool`, then attached to the App Store version with its release notes once processed |
 | `fdroid` | ci | reruns F-Droid's own preparation and build against the tag in a throwaway worktree |
 | `desktop` | both | `package:desktop:*` for this OS: signed and notarized macOS from a Mac, Linux and Windows from Linux |
 | `gitea` | both | creates a draft release from the changelog, attaches what this run built, and publishes it once every platform is there |
