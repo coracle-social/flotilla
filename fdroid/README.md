@@ -41,27 +41,18 @@ The unsigned APK is written to
 F-Droid should run preparation before its source scan, run the asset build afterward,
 and use its configured Gradle runner for `assembleFdroidRelease`.
 
-The F-Droid recipe can use:
-
-```yaml
-subdir: android/app
-gradle:
-  - fdroid
-prebuild:
-  - ../../scripts/fdroid/prepare.sh
-build:
-  - ../../scripts/fdroid/build.sh
-```
+[`metadata/social.flotilla.fdroid.yml`](metadata/social.flotilla.fdroid.yml) is the recipe to submit
+to `fdroiddata`. Preparation installs dependencies before F-Droid's source scan, so the recipe
+scan-ignores `node_modules`, which holds FLOSS build tools such as esbuild and sharp. The build
+server's JDK is older than the 21 Capacitor needs, so the recipe installs it from Debian trixie,
+along with Node from nodejs.org at a pinned checksum. None of that has been through `fdroid build`
+yet.
 
 ## Updates
 
-Stable releases use bare version tags such as `1.9.1`. Proposed update metadata:
-
-```yaml
-UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$
-UpdateCheckData: 'android/app/build.gradle|(?m)^\s*versionCode\s+(\d+)\s*$|.|(?m)^\s*versionName\s+"([^"]+)"\s*$'
-AutoUpdateMode: Version
-```
+Stable releases use bare version tags such as `1.9.1`, and the recipe checks tags matching
+`^[0-9]+\.[0-9]+\.[0-9]+$` against `versionCode` and `versionName` in
+`android/app/build.gradle` at that tag.
 
 The initial `fdroiddata` submission must still review scanner exceptions for FLOSS
 build tools, optional OpenRouter use for a possible `NonFreeNet` declaration, and

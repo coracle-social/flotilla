@@ -1,0 +1,52 @@
+Categories:
+  - Internet
+License: MIT
+AuthorName: Jon Staab
+WebSite: https://app.flotilla.social
+SourceCode: https://gitea.coracle.social/coracle/flotilla
+IssueTracker: https://gitea.coracle.social/coracle/flotilla/issues
+Changelog: https://gitea.coracle.social/coracle/flotilla/src/branch/master/CHANGELOG.md
+
+AutoName: Flotilla
+Summary: Digital communities for free people
+Description: |-
+  Flotilla is a Nostr client for community chat, in the style of Discord. Each space is
+  a relay, and its rooms are NIP-29 groups inside it. It also has encrypted direct
+  messages, threads, a calendar, classifieds and goals.
+
+  This build leaves out Firebase, Google Services and analytics. Instead of push
+  notifications it checks your relays in the background about every 15 minutes, and
+  Android may delay that further.
+
+RepoType: git
+Repo: https://gitea.coracle.social/coracle/flotilla.git
+
+Builds:
+  - versionName: 1.11.1
+    versionCode: 53
+    commit: 04bd38429e60768b21ec2c79c38438b47d97b3a2
+    subdir: android/app
+    sudo:
+      - echo "deb https://deb.debian.org/debian trixie main" > /etc/apt/sources.list.d/trixie.list
+      - apt-get update
+      - apt-get install -y -t trixie openjdk-21-jdk-headless
+      - update-alternatives --auto java
+      - curl -Lo node.tar.xz https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.xz
+      - echo "df450af89261115ef9f9e3830c3eeb2cc9213b63c720b1af623cb5dcbe2e02de  node.tar.xz"
+        | sha256sum -c -
+      - tar xJf node.tar.xz
+      - cp -a node-v22.23.3-linux-x64/. /usr/local/
+      - rm -rf node.tar.xz node-v22.23.3-linux-x64
+      - corepack enable
+    gradle:
+      - fdroid
+    prebuild: ../../scripts/fdroid/prepare.sh
+    scanignore:
+      - node_modules
+    build: ../../scripts/fdroid/build.sh
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$
+UpdateCheckData: android/app/build.gradle|(?m)^\s*versionCode\s+(\d+)\s*$|.|(?m)^\s*versionName\s+"([^"]+)"\s*$
+CurrentVersion: 1.11.1
+CurrentVersionCode: 53
