@@ -1,5 +1,7 @@
+import {existsSync, readFileSync} from "node:fs"
+import {join} from "node:path"
 import {parseArgs} from "node:util"
-import {followUps, git, name, notes, repository, version} from "./context.mjs"
+import {followUps, git, name, notes, repository, root, version} from "./context.mjs"
 import {ask, bold, dim, fail, green, red, yellow} from "./shell.mjs"
 
 export const release = async (command, steps) => {
@@ -28,6 +30,19 @@ export const release = async (command, steps) => {
   const width = Math.max(...selected.map(step => step.name.length))
   const problems = selected.map(step => ({step, missing: step.missing?.() ?? []}))
   const warnings = []
+
+  // pnpm keeps a copy of the lockfile it last installed from, so any difference means a pull or
+  // checkout since then changed dependencies the build would silently go without
+  const installed = join(root, "node_modules/.pnpm/lock.yaml")
+
+  if (
+    !existsSync(installed) ||
+    readFileSync(installed, "utf-8") !== readFileSync(join(root, "pnpm-lock.yaml"), "utf-8")
+  ) {
+    problems.push({
+      missing: ["node_modules doesn't match pnpm-lock.yaml: pnpm install --frozen-lockfile"],
+    })
+  }
 
   if (!notes) {
     problems.push({missing: [`CHANGELOG.md has no "# ${version}" section`]})

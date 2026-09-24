@@ -1,4 +1,4 @@
-import {existsSync} from "node:fs"
+import {existsSync, readFileSync} from "node:fs"
 import {join, resolve} from "node:path"
 import {followUps, missingEnv, root} from "../lib/context.mjs"
 import {installed, run} from "../lib/shell.mjs"
@@ -6,12 +6,29 @@ import {installed, run} from "../lib/shell.mjs"
 const targets = {darwin: ["macos"], linux: ["linux", "windows"]}[process.platform] ?? []
 const docker = process.env.DOCKER || "docker"
 
+// Optional packages for other platforms are in the lockfile but never installed
+const electronInstalled = () => {
+  const path = join(root, "electron/node_modules/.package-lock.json")
+
+  if (!existsSync(path)) {
+    return false
+  }
+
+  const {packages: wanted} = JSON.parse(readFileSync(join(root, "electron/package-lock.json")))
+  const {packages: installed} = JSON.parse(readFileSync(path))
+
+  return Object.entries(wanted).every(
+    ([key, {version, optional}]) =>
+      !key || installed[key]?.version === version || (optional && !installed[key]),
+  )
+}
+
 export default {
   name: "desktop",
   title: "Package the desktop app",
   missing: () => [
     ...(targets.length > 0 ? [] : [`desktop packaging on ${process.platform}`]),
-    ...(existsSync(join(root, "electron/node_modules")) ? [] : ["electron dependencies"]),
+    ...(electronInstalled() ? [] : ["electron dependencies that match electron/package-lock.json"]),
     ...(targets.includes("windows") && !installed(docker) ? [docker] : []),
     ...(targets.includes("macos")
       ? missingEnv("CSC_NAME", "ASC_KEY_ID", "ASC_ISSUER_ID", "ASC_KEY_PATH")
