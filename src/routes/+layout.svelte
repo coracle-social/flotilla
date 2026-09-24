@@ -19,6 +19,7 @@
   import * as plugins from "@welshman/app"
   import {isMobile, documentActive} from "@lib/html"
   import AppContainer from "@app/components/AppContainer.svelte"
+  import Startup from "@app/components/Startup.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import * as core from "@app/core"
   import {goToChat, goToHome, setupHistory} from "@app/routes"
@@ -320,15 +321,17 @@
   {/if}
 </svelte:head>
 
-{#await unsubscribe}
-  <!-- pass -->
-{:then}
-  <div class={isMobile ? "fl mobile" : "fl"} data-fl-theme={$flTheme}>
+<div class={isMobile ? "fl mobile" : "fl"} data-fl-theme={$flTheme}>
+  {#await unsubscribe}
+    <Startup />
+  {:then}
     <AppContainer>
       {@render children()}
     </AppContainer>
     <ModalContainer />
     <div class="tippy-target"></div>
     <NewNotificationSound />
-  </div>
-{/await}
+  {:catch error}
+    <Startup {error} />
+  {/await}
+</div>

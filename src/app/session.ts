@@ -84,15 +84,19 @@ export const restoreSession = async () => {
   })
 }
 
-export const logout = async () => {
-  await deactivateCurrentPomadeSession()
-  await Push.disable()
+// A revoked signer can leave the app unable to start, so this clears the device without asking it anything.
+export const resetSession = async () => {
   await kv.clear()
   await ss.clear()
   await storage.get()?.clear()
 
-  app.get().cleanup()
   localStorage.clear()
 
   window.location.href = "/"
+}
+
+export const logout = async () => {
+  await deactivateCurrentPomadeSession()
+  await Push.disable()
+  await resetSession()
 }
