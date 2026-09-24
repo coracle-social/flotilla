@@ -7,7 +7,7 @@ on:
   # A release goes public whenever its last artifact lands, which can be from a local run hours
   # after the tag, so its copy on GitHub is kept up to date by polling
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 */3 * * *"
   workflow_dispatch:
 
 # Serialized rather than cancel-in-progress: aborting a push halfway leaves the
