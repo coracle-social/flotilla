@@ -31,7 +31,7 @@
 </script>
 
 {#if initialValues}
-  <ClassifiedForm {url} {initialValues}>
+  <ClassifiedForm {url} h={classified.room()} {initialValues}>
     {#snippet header()}
       <ModalHeader>
         <ModalTitle>Edit this Listing</ModalTitle>

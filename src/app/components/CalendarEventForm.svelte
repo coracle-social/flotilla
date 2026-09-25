@@ -53,9 +53,11 @@
     defaultEnd,
   }: Props = $props()
 
-  const draftKey = new DraftKey<Values>(`calendar:${url}:${h ?? ""}`)
+  // An edit starts from the event, and saving it as a draft would carry it into the next create.
+  const editing = Boolean(initialValues)
+  const draftKey = editing ? undefined : new DraftKey<Values>(`calendar:${url}:${h ?? ""}`)
 
-  if (!initialValues) {
+  if (draftKey) {
     initialValues = draftKey.get()
   }
 
@@ -123,7 +125,7 @@
         return pushToast({theme: "error", message: error})
       }
 
-      draftKey.clear()
+      draftKey?.clear()
       history.back()
 
       if (shareToChat) {
@@ -153,7 +155,7 @@
   const editor = makeEditor({url, submit, uploading, onChange, content})
 
   $effect(() => {
-    draftKey.set({d, title, location, start, end, content})
+    draftKey?.set({d, title, location, start, end, content})
   })
 </script>
 

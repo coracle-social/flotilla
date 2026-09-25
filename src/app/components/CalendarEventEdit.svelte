@@ -29,7 +29,7 @@
 </script>
 
 {#if initialValues}
-  <CalendarEventForm {url} {initialValues}>
+  <CalendarEventForm {url} h={timeEvent.room()} {initialValues}>
     {#snippet header()}
       <ModalHeader>
         <ModalTitle>Edit this Event</ModalTitle>

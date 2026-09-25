@@ -40,17 +40,14 @@
   type Props = {
     url: string
     h?: string
-    initialValues?: Values
     shareToChat?: boolean
   }
 
-  let {url, h, initialValues, shareToChat = false}: Props = $props()
+  const {url, h, shareToChat = false}: Props = $props()
 
   const draftKey = new DraftKey<Values>(`goal:${url}:${h ?? ""}`)
 
-  if (!initialValues) {
-    initialValues = draftKey.get()
-  }
+  const initialValues = draftKey.get()
 
   const shouldProtect = $relays.hasNip(url, 70)
 
