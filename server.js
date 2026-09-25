@@ -5,10 +5,9 @@ import {fileURLToPath} from "node:url"
 import "dotenv/config"
 import {serve} from "@hono/node-server"
 import {serveStatic} from "@hono/node-server/serve-static"
-import {App, Relays} from "@welshman/app"
-import {normalizeRelayUrl} from "@welshman/util"
-import {load} from "cheerio"
 import {Hono} from "hono"
+
+import {createPreview} from "./server/preview.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -25,202 +24,6 @@ try {
 } catch (error) {
   console.error(`Unable to read ${INDEX_PATH}. Run "pnpm run build" first.`)
   process.exit(1)
-}
-
-const PLATFORM_NAME = process.env.VITE_PLATFORM_NAME
-const PLATFORM_DESCRIPTION = process.env.VITE_PLATFORM_DESCRIPTION
-
-// Match client-side decode logic
-const decodeRelay = url => {
-  try {
-    return normalizeRelayUrl(decodeURIComponent(url))
-  } catch {
-    return undefined
-  }
-}
-
-const requestUrlFromContext = context => {
-  const requestUrl = new URL(context.req.url)
-  const forwardedProto = context.req.header("x-forwarded-proto")?.split(",")[0]?.trim()
-  const forwardedHost = context.req.header("x-forwarded-host")?.split(",")[0]?.trim()
-
-  if (forwardedProto === "http" || forwardedProto === "https") {
-    requestUrl.protocol = `${forwardedProto}:`
-  }
-
-  if (forwardedHost) {
-    requestUrl.host = forwardedHost
-  }
-
-  return requestUrl
-}
-
-const relays = new App().use(Relays)
-
-const fetchRelayMeta = async relayUrl => {
-  if (!relayUrl) return undefined
-  try {
-    return await relays.load(normalizeRelayUrl(relayUrl))
-  } catch (err) {
-    console.error(`Failed to fetch relay metadata for ${relayUrl}:`, err)
-    return undefined
-  }
-}
-
-const buildDefaultImage = requestUrl => {
-  return new URL("/maskable-icon-512x512.png", requestUrl.origin).toString()
-}
-
-const getMetadataForInvite = async (url, match) => {
-  const relayParam = url.searchParams.get("r")
-  if (!relayParam) return undefined
-
-  const relayMetadata = await fetchRelayMeta(relayParam)
-  if (!relayMetadata) return undefined
-
-  const relayDisplay = relayMetadata.displayUrl()
-  const spaceName = relayMetadata.name
-  const relayDescription = relayMetadata.description
-
-  const title = spaceName
-    ? `Invite to ${spaceName} on ${PLATFORM_NAME}`
-    : `Invite to a Space on ${PLATFORM_NAME}`
-
-  const parts = []
-  if (spaceName) {
-    parts.push(`You are invited to join ${spaceName} on ${PLATFORM_NAME}.`)
-  } else {
-    parts.push(`You are invited to join a space on ${PLATFORM_NAME}.`)
-  }
-
-  if (relayDisplay) parts.push(`Relay: ${relayDisplay}.`)
-  if (relayDescription) parts.push(relayDescription)
-  else parts.push(PLATFORM_DESCRIPTION)
-
-  const description = parts.join(" ")
-  const image =
-    relayMetadata.icon || relayMetadata.picture || relayMetadata.image || buildDefaultImage(url)
-
-  return {
-    title,
-    description,
-    image,
-    url: url.toString(),
-    site: url.origin,
-  }
-}
-
-const getMetadataForSpace = async (url, match) => {
-  const relayParam = decodeRelay(match[1])
-  if (!relayParam) return undefined
-
-  const relayMetadata = await fetchRelayMeta(relayParam)
-  if (!relayMetadata) return undefined
-
-  const spaceName = relayMetadata.display()
-
-  return {
-    title: `${spaceName} on ${PLATFORM_NAME}`,
-    description: relayMetadata.description || PLATFORM_DESCRIPTION,
-    image:
-      relayMetadata.icon || relayMetadata.picture || relayMetadata.image || buildDefaultImage(url),
-    url: url.toString(),
-    site: url.origin,
-  }
-}
-
-const getMetadataForSpaceSection = async (url, match) => {
-  const spaceMeta = await getMetadataForSpace(url, match)
-  if (!spaceMeta) return undefined
-
-  const section = match[2]
-  const sectionName = section.charAt(0).toUpperCase() + section.slice(1)
-  spaceMeta.title = `${sectionName} on ${spaceMeta.title}`
-  return spaceMeta
-}
-
-const getMetadataForSpaceItem = async (url, match) => {
-  const spaceMeta = await getMetadataForSpace(url, match)
-  if (!spaceMeta) return undefined
-
-  const section = match[2]
-  let itemType = "Item"
-  if (section === "calendar") itemType = "Event"
-  if (section === "threads") itemType = "Thread"
-  if (section === "polls") itemType = "Poll"
-  if (section === "goals") itemType = "Goal"
-  if (section === "classifieds") itemType = "Listing"
-
-  spaceMeta.title = `${itemType} on ${spaceMeta.title}`
-  return spaceMeta
-}
-
-const getMetadataForRoom = async (url, match) => {
-  const spaceMeta = await getMetadataForSpace(url, match)
-  if (!spaceMeta) return undefined
-
-  // Room metadata requires fetching from Nostr, which can be added later.
-  spaceMeta.title = `Room on ${spaceMeta.title}`
-  return spaceMeta
-}
-
-const routes = [
-  [/^\/join\/?$/, getMetadataForInvite],
-  [
-    /^\/spaces\/([^/]+)\/(calendar|chat|threads|polls|goals|classifieds|recent)\/?$/,
-    getMetadataForSpaceSection,
-  ],
-  [
-    /^\/spaces\/([^/]+)\/(calendar|threads|polls|goals|classifieds)\/([^/]+)\/?$/,
-    getMetadataForSpaceItem,
-  ],
-  [/^\/spaces\/([^/]+)\/([^/]+)\/?$/, getMetadataForRoom],
-  [/^\/spaces\/([^/]+)\/?$/, getMetadataForSpace],
-]
-
-const getMetadataForRoute = async url => {
-  for (const [regex, getMetadata] of routes) {
-    const match = url.pathname.match(regex)
-    if (match) {
-      try {
-        return await getMetadata(url, match)
-      } catch (err) {
-        console.error(`Error generating metadata for route ${url.pathname}:`, err)
-        return undefined
-      }
-    }
-  }
-  return undefined
-}
-
-const injectMeta = metadata => {
-  const $ = load(TEMPLATE_HTML)
-
-  if (metadata.title) {
-    $("title").text(metadata.title)
-    $('meta[property="og:title"]').attr("content", metadata.title)
-    $('meta[name="twitter:title"]').attr("content", metadata.title)
-  }
-
-  if (metadata.description) {
-    $('meta[name="description"]').attr("content", metadata.description)
-    $('meta[property="og:description"]').attr("content", metadata.description)
-    $('meta[name="twitter:description"]').attr("content", metadata.description)
-  }
-
-  if (metadata.image) {
-    $('meta[property="og:image"]').attr("content", metadata.image)
-    $('meta[name="twitter:image"]').attr("content", metadata.image)
-  }
-
-  if (metadata.url) {
-    $('meta[property="og:url"]').attr("content", metadata.url)
-    $('meta[name="twitter:site"]').attr("content", metadata.site)
-    $('meta[name="twitter:url"]').attr("content", metadata.url)
-    $('link[rel="canonical"]').attr("href", metadata.url)
-  }
-
-  return $.html()
 }
 
 const app = new Hono()
@@ -261,16 +64,8 @@ app.use(
   }),
 )
 
-// SPA fallback for routes that don't match static files
-app.get("*", async context => {
-  const requestUrl = requestUrlFromContext(context)
-  const metadata = await getMetadataForRoute(requestUrl)
-  const html = metadata ? injectMeta(metadata) : TEMPLATE_HTML
-
-  return context.html(html, 200, {
-    "Cache-Control": metadata ? "no-store" : "no-cache",
-  })
-})
+// A tld looks like a file extension, so a client route can arrive looking like a missing asset.
+app.route("/", createPreview(TEMPLATE_HTML))
 
 serve(
   {

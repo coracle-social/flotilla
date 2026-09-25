@@ -286,7 +286,9 @@ Or, if you prefer to use a container:
 docker run -d -p 3000:3000 gitea.coracle.social/coracle/flotilla:latest
 ```
 
-Alternatively, you can copy the build files into a directory of your choice and serve it yourself:
+Either one serves the build through `server.js`, which fills in the link preview for each page from the space, person or note its url names.
+
+Alternatively, you can copy the build files into a directory of your choice and serve it yourself, in which case every page gets the platform's own preview:
 
 ```sh
 mkdir ./mount

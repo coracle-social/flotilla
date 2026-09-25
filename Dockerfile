@@ -26,7 +26,8 @@ FROM node:24-slim AS production
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=builder /app/build /app/build
-COPY --from=builder /app/build-server/server.js /app/server.js
+# The bundle splits, and the chunks it imports at runtime sit beside it.
+COPY --from=builder /app/build-server/ /app/
 EXPOSE 3000
 USER node
 CMD ["node", "server.js"]
