@@ -9,9 +9,10 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {relays, thunks, writer} from "@app/core"
+  import {thunks, writer} from "@app/core"
   import {DraftKey} from "@app/drafts"
   import {makeEditor} from "@app/editor"
+  import {toSpace} from "@app/rooms"
   import {loadSendDelay} from "@app/settings"
   import {pushToast} from "@app/toast"
 
@@ -41,17 +42,15 @@
   // A reply to a room event is a NIP-22 comment, and a reply to a kind 1 note is a NIP-10 note.
   const renderReply = async (content: string, tags: string[][]) => {
     if (url) {
-      const eventWriter = writer(Comment)
-        .setContent(content)
-        .addTags(...tags)
-        .setRootFromEvent(event)
-        .setParentFromEvent(parent ?? event)
-        .setProtected(await $relays.hasNip(url, 70))
-
-      // An untagged comment isn't visible to the group, so the relay neither gates nor deletes it with the room.
-      if (h) {
-        eventWriter.setRoom(url, h)
-      }
+      const eventWriter = await toSpace(
+        writer(Comment)
+          .setContent(content)
+          .addTags(...tags)
+          .setRootFromEvent(event)
+          .setParentFromEvent(parent ?? event),
+        url,
+        h,
+      )
 
       return {relays: [url], event: await eventWriter.renderTemplate()}
     }

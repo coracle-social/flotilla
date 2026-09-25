@@ -1,8 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
-  import {relay} from "@welshman/util"
   import {Thread} from "@welshman/domain"
-  import {publish} from "@welshman/app"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -17,10 +15,10 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {command, relays, writer} from "@app/core"
+  import {writer} from "@app/core"
   import {DraftKey} from "@app/drafts"
   import {makeEditor} from "@app/editor"
-  import {displayRoom, publishRoomQuote} from "@app/rooms"
+  import {displayRoom, publishToSpace} from "@app/rooms"
   import {pushToast} from "@app/toast"
 
   type Values = {
@@ -39,7 +37,6 @@
   const {url, h, shareToChat = false, initialValues}: Props = $props()
   const draftKey = new DraftKey<Values>(`thread:${url}:${h ?? ""}`)
   const draft = draftKey.get()
-  const shouldProtect = $relays.hasNip(url, 70)
   const room = h ?? initialValues?.h ?? draft?.h ?? ""
 
   const uploading = writable(false)
@@ -73,20 +70,12 @@
     loading = true
 
     try {
-      const protect = await shouldProtect
       const eventWriter = writer(Thread)
         .setContent(content)
         .setTitle(title)
-        .setProtected(protect)
         .addTags(...ed.storage.nostr.getEditorTags())
-        .forceRoutes(relay(url))
 
-      if (room) {
-        eventWriter.setRoom(url, room)
-      }
-
-      const thunk = await command(eventWriter).then(publish)
-      const error = await thunk.waitForError()
+      const {error} = await publishToSpace(eventWriter, {url, h: room, shareToChat})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -94,10 +83,6 @@
 
       draftKey.clear()
       history.back()
-
-      if (shareToChat) {
-        publishRoomQuote({url, h: room, parent: thunk.options.event, protect})
-      }
     } finally {
       loading = false
     }

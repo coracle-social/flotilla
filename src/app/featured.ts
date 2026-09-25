@@ -1,9 +1,10 @@
 import {derived} from "svelte/store"
-import {APP_DATA, relay, sortEventsDesc, tagSpec, tagValues} from "@welshman/util"
+import {APP_DATA, sortEventsDesc, tagSpec, tagValues} from "@welshman/util"
 import {AppData} from "@welshman/domain"
 import {Relays, publish} from "@welshman/app"
-import {command, fromApp, relays, writer} from "@app/core"
+import {command, fromApp, writer} from "@app/core"
 import {deriveEventsForUrl} from "@app/repository"
+import {toSpace} from "@app/rooms"
 
 // NIP-78 app data from the pubkey the space's NIP-11 names, one ["content", <value>] tag per entry.
 export const FEATURED_CONTENT_D = "flotilla/featured-content"
@@ -29,9 +30,7 @@ export const setFeaturedContent = async (url: string, content: string[]) => {
 
   const eventWriter = writer(AppData)
     .setIdentifier(FEATURED_CONTENT_D)
-    .setProtected(await relays.get().hasNip(url, 70))
-    .forceRoutes(relay(url))
     .addTags(...tags)
 
-  return command(eventWriter).then(publish)
+  return command(await toSpace(eventWriter, url)).then(publish)
 }

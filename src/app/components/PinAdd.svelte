@@ -1,10 +1,10 @@
 <script lang="ts">
-  import {relay} from "@welshman/util"
   import {Pin} from "@welshman/domain"
   import {publish} from "@welshman/app"
   import PinForm, {type PinFormValues} from "@app/components/PinForm.svelte"
-  import {command, relays, writer} from "@app/core"
+  import {command, writer} from "@app/core"
   import {setPinReference} from "@app/pinboards"
+  import {toSpace} from "@app/rooms"
 
   type Props = {
     url: string
@@ -15,11 +15,7 @@
   const {url, address, reference}: Props = $props()
 
   const submit = async ({title, topics, value, content}: PinFormValues) => {
-    const eventWriter = writer(Pin)
-      .setIdentifier()
-      .addBoard(address)
-      .setProtected(await $relays.hasNip(url, 70))
-      .forceRoutes(relay(url))
+    const eventWriter = await toSpace(writer(Pin).setIdentifier().addBoard(address), url)
 
     if (!setPinReference(eventWriter, value)) {
       return "Please enter a valid URL or nostr link."

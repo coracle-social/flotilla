@@ -1,6 +1,6 @@
 <script lang="ts">
   import {navigate} from "@app/modal"
-  import {getAddress, relay} from "@welshman/util"
+  import {getAddress} from "@welshman/util"
   import {publish} from "@welshman/app"
   import {Pinboard} from "@welshman/domain"
   import type {PinboardReader} from "@welshman/domain"
@@ -16,7 +16,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {command, relays, writer} from "@app/core"
+  import {command, writer} from "@app/core"
+  import {toSpace} from "@app/rooms"
   import {makeLibraryPath} from "@app/routes"
   import {pushToast} from "@app/toast"
 
@@ -33,11 +34,10 @@
     loading = true
 
     try {
-      const eventWriter = writer(Pinboard, board)
-        .setTitle(title)
-        .setDescription(description)
-        .setProtected(await $relays.hasNip(url, 70))
-        .forceRoutes(relay(url))
+      const eventWriter = await toSpace(
+        writer(Pinboard, board).setTitle(title).setDescription(description),
+        url,
+      )
 
       if (!board) {
         eventWriter.setIdentifier().setCollaborative(true)

@@ -4,9 +4,8 @@
   import {page} from "$app/stores"
   import {goto} from "$app/navigation"
   import {now, randomId} from "@welshman/lib"
-  import {getAddress, relay} from "@welshman/util"
+  import {getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
-  import {publish} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import DocumentText from "@assets/icons/document-text.svg?dataurl"
@@ -20,11 +19,11 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import TopicMultiSelect from "@app/components/TopicMultiSelect.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {command, relays, writer} from "@app/core"
+  import {writer} from "@app/core"
   import {DraftKey} from "@app/drafts"
   import {makeEditor} from "@app/editor"
   import {decodeRelay} from "@app/relays"
-  import {publishRoomQuote} from "@app/rooms"
+  import {publishToSpace} from "@app/rooms"
   import {makeArticlePath} from "@app/routes"
   import {compressFileForUpload, uploadFile} from "@app/uploads"
   import {pushToast} from "@app/toast"
@@ -48,7 +47,6 @@
 
   const draftKey = new DraftKey<Values>(`article:${url}:${h ?? ""}`)
   const initialValues = draftKey.get()
-  const shouldProtect = $relays.hasNip(url, 70)
   const coverInputId = randomId()
 
   const uploading = writable(false)
@@ -114,16 +112,13 @@
     loading = true
 
     try {
-      const protect = await shouldProtect
       const eventWriter = writer(Article)
         .setIdentifier(d)
         .setContent(content)
         .setTitle(title)
         .setTopics(topics)
         .setPublishedAt(now())
-        .setProtected(protect)
         .addTags(...ed.storage.nostr.getEditorTags())
-        .forceRoutes(relay(url))
 
       if (summary) {
         eventWriter.setSummary(summary)
@@ -133,12 +128,7 @@
         eventWriter.setImage(image)
       }
 
-      if (h) {
-        eventWriter.setRoom(url, h)
-      }
-
-      const thunk = await command(eventWriter).then(publish)
-      const error = await thunk.waitForError()
+      const {thunk, error} = await publishToSpace(eventWriter, {url, h, shareToChat})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -146,10 +136,6 @@
 
       draftKey.clear()
       goto(makeArticlePath(url, getAddress(thunk.options.event)))
-
-      if (shareToChat) {
-        publishRoomQuote({url, h, parent: thunk.options.event, protect})
-      }
     } finally {
       loading = false
     }

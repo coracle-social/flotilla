@@ -2,8 +2,6 @@
   import type {Snippet} from "svelte"
   import {writable} from "svelte/store"
   import {randomId} from "@welshman/lib"
-  import {relay} from "@welshman/util"
-  import {publish} from "@welshman/app"
   import {TimeEvent} from "@welshman/domain"
   import {preventDefault} from "@lib/html"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
@@ -18,11 +16,11 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import DateTimeRangeInput from "@lib/components/DateTimeRangeInput.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {publishRoomQuote} from "@app/rooms"
+  import {publishToSpace} from "@app/rooms"
   import {makeEditor} from "@app/editor"
   import {DraftKey} from "@app/drafts"
   import {pushToast} from "@app/toast"
-  import {command, relays, writer} from "@app/core"
+  import {writer} from "@app/core"
 
   type Values = {
     d: string
@@ -60,8 +58,6 @@
   if (draftKey) {
     initialValues = draftKey.get()
   }
-
-  const shouldProtect = $relays.hasNip(url, 70)
 
   const uploading = writable(false)
 
@@ -101,7 +97,6 @@
     loading = true
 
     try {
-      const protect = await shouldProtect
       const eventWriter = writer(TimeEvent)
         .setIdentifier(d)
         .setTitle(title)
@@ -109,17 +104,9 @@
         .setStart(start)
         .setEnd(end)
         .setContent(content)
-        .setProtected(protect)
         .addTags(...ed.storage.nostr.getEditorTags())
 
-      if (h) {
-        eventWriter.setRoom(url, h)
-      } else {
-        eventWriter.forceRoutes(relay(url))
-      }
-
-      const calendarThunk = await command(eventWriter).then(publish)
-      const error = await calendarThunk.waitForError()
+      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -127,11 +114,6 @@
 
       draftKey?.clear()
       history.back()
-
-      if (shareToChat) {
-        publishRoomQuote({url, h, parent: calendarThunk.options.event, protect})
-      }
-
       pushToast({message: "Your event has been saved!"})
     } finally {
       loading = false

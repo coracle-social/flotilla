@@ -2,8 +2,6 @@
   import type {Snippet} from "svelte"
   import cx from "classnames"
   import {removeUndefined, randomId, uniq, toggle} from "@welshman/lib"
-  import {relay} from "@welshman/util"
-  import {publish} from "@welshman/app"
   import {Classified} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import {normalizeTopic} from "@lib/util"
@@ -20,9 +18,9 @@
   import CurrencyInput from "@app/components/CurrencyInput.svelte"
   import TopicMultiSelect from "@app/components/TopicMultiSelect.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {command, relays, writer} from "@app/core"
+  import {writer} from "@app/core"
   import {pushToast} from "@app/toast"
-  import {publishRoomQuote} from "@app/rooms"
+  import {publishToSpace} from "@app/rooms"
   import {makeEditor} from "@app/editor"
   import {DraftKey} from "@app/drafts"
   import {compressFileForUpload, uploadFile} from "@app/uploads"
@@ -100,8 +98,6 @@
         }
       }
 
-      const protect = await $relays.hasNip(url, 70)
-
       const eventWriter = writer(Classified)
         .setIdentifier(d)
         .setContent(content)
@@ -111,17 +107,9 @@
         .setStatus(status)
         .setTopics(topics)
         .setImages(imageUrls)
-        .setProtected(protect)
         .addTags(...ed.storage.nostr.getEditorTags())
 
-      if (h) {
-        eventWriter.setRoom(url, h)
-      } else {
-        eventWriter.forceRoutes(relay(url))
-      }
-
-      const classifiedThunk = await command(eventWriter).then(publish)
-      const error = await classifiedThunk.waitForError()
+      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -129,10 +117,6 @@
 
       draftKey?.clear()
       history.back()
-
-      if (shareToChat) {
-        publishRoomQuote({url, h, parent: classifiedThunk.options.event, protect})
-      }
     } finally {
       loading = false
     }

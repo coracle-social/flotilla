@@ -1,9 +1,8 @@
 <script lang="ts">
   import {writable} from "svelte/store"
   import {now} from "@welshman/lib"
-  import {relay, toMsats} from "@welshman/util"
+  import {toMsats} from "@welshman/util"
   import {ZapGoal} from "@welshman/domain"
-  import {publish} from "@welshman/app"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
@@ -22,9 +21,9 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {command, relays, writer} from "@app/core"
+  import {writer} from "@app/core"
   import {pushToast} from "@app/toast"
-  import {publishRoomQuote} from "@app/rooms"
+  import {publishToSpace} from "@app/rooms"
   import {makeEditor} from "@app/editor"
   import {DraftKey} from "@app/drafts"
   import {compressFileForUpload, uploadFile} from "@app/uploads"
@@ -48,8 +47,6 @@
   const draftKey = new DraftKey<Values>(`goal:${url}:${h ?? ""}`)
 
   const initialValues = draftKey.get()
-
-  const shouldProtect = $relays.hasNip(url, 70)
 
   const uploading = writable(false)
 
@@ -103,15 +100,12 @@
         imageUrl = result?.url
       }
 
-      const protect = await shouldProtect
       const eventWriter = writer(ZapGoal)
         .setTitle(title)
         .setSummary(content)
         .setAmount(toMsats(amount))
         .setUrls([url])
-        .setProtected(protect)
         .addTags(...ed.storage.nostr.getEditorTags())
-        .forceRoutes(relay(url))
 
       if (imageUrl) {
         eventWriter.setImage(imageUrl)
@@ -121,12 +115,7 @@
         eventWriter.setClosedAt(closedAt)
       }
 
-      if (h) {
-        eventWriter.setRoom(url, h)
-      }
-
-      const goalThunk = await command(eventWriter).then(publish)
-      const error = await goalThunk.waitForError()
+      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -134,10 +123,6 @@
 
       draftKey.clear()
       history.back()
-
-      if (shareToChat) {
-        publishRoomQuote({url, h, parent: goalThunk.options.event, protect})
-      }
     } finally {
       loading = false
     }

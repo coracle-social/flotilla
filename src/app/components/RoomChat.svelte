@@ -9,7 +9,7 @@
   import {now, ifLet, ago, spec, MINUTE} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {relay, stamp, MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
+  import {stamp, MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
   import {Message} from "@welshman/domain"
   import {MembershipStatus} from "@welshman/app"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
@@ -42,6 +42,7 @@
     getRoomType,
     groupRoomMessages,
     prependParent,
+    toSpace,
   } from "@app/rooms"
   import {loadSendDelay} from "@app/settings"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
@@ -174,13 +175,13 @@
       return
     }
 
-    const protect = await shouldProtect
-
     if (eventToEdit) {
       // Don't do anything if message hasn't changed
       if (eventToEdit.content === content) {
         return clearEventToEdit()
       }
+
+      const protect = await shouldProtect
 
       // Delete the previous message, to be republished below with the same timestamp
       const command = await $deletes.deleteEvent($state.snapshot(eventToEdit), w =>
@@ -195,16 +196,13 @@
       ;({content, tags} = await prependParent(sharedEvent, {content, tags}, url))
     }
 
-    const eventWriter = writer(Message)
-      .setContent(content)
-      .addTags(...tags)
-      .setProtected(protect)
-
-    if (h) {
-      eventWriter.setRoom(url, h)
-    } else {
-      eventWriter.forceRoutes(relay(url))
-    }
+    const eventWriter = await toSpace(
+      writer(Message)
+        .setContent(content)
+        .addTags(...tags),
+      url,
+      h,
+    )
 
     if (parent) {
       eventWriter.setParent(parent)

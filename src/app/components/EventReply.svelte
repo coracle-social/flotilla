@@ -12,11 +12,11 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import ComposeParent from "@app/components/ComposeParent.svelte"
-  import {prependParent} from "@app/rooms"
+  import {prependParent, toSpace} from "@app/rooms"
   import {makeEditor} from "@app/editor"
   import {DraftKey} from "@app/drafts"
   import {pushToast} from "@app/toast"
-  import {relays, thunks, writer} from "@app/core"
+  import {thunks, writer} from "@app/core"
   import {loadSendDelay} from "@app/settings"
 
   type Values = {
@@ -61,17 +61,15 @@
       ;({content, tags} = await prependParent(parent, {content, tags}, url))
     }
 
-    const eventWriter = writer(Comment)
-      .setContent(content)
-      .addTags(...tags)
-      .setRootFromEvent(event)
-      .setParentFromEvent(event)
-      .setProtected(await $relays.hasNip(url, 70))
-
-    // An untagged comment isn't visible to the group, so the relay neither gates nor deletes it with the room.
-    if (h) {
-      eventWriter.setRoom(url, h)
-    }
+    const eventWriter = await toSpace(
+      writer(Comment)
+        .setContent(content)
+        .addTags(...tags)
+        .setRootFromEvent(event)
+        .setParentFromEvent(event),
+      url,
+      h,
+    )
 
     const thunk = $thunks.publish({
       relays: [url],

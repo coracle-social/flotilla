@@ -1,7 +1,5 @@
 <script lang="ts">
   import {insertAt, now, randomId, removeAt, removeUndefined, spec} from "@welshman/lib"
-  import {relay} from "@welshman/util"
-  import {publish} from "@welshman/app"
   import {Poll} from "@welshman/domain"
   import type {PollType} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
@@ -21,9 +19,9 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {command, relays, writer} from "@app/core"
+  import {writer} from "@app/core"
   import {pushToast} from "@app/toast"
-  import {publishRoomQuote} from "@app/rooms"
+  import {publishToSpace} from "@app/rooms"
   import {DraftKey} from "@app/drafts"
 
   type Option = {
@@ -123,12 +121,7 @@
     loading = true
 
     try {
-      const protect = await $relays.hasNip(url, 70)
-      const eventWriter = writer(Poll)
-        .setTitle(title.trim())
-        .setPollType(pollType)
-        .setUrls([url])
-        .setProtected(protect)
+      const eventWriter = writer(Poll).setTitle(title.trim()).setPollType(pollType).setUrls([url])
 
       for (const option of nonEmptyOptions) {
         eventWriter.addOption(option)
@@ -138,14 +131,7 @@
         eventWriter.setEndsAt(endsAt)
       }
 
-      if (h) {
-        eventWriter.setRoom(url, h)
-      } else {
-        eventWriter.forceRoutes(relay(url))
-      }
-
-      const pollThunk = await command(eventWriter).then(publish)
-      const error = await pollThunk.waitForError()
+      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -153,10 +139,6 @@
 
       draftKey.clear()
       history.back()
-
-      if (shareToChat) {
-        publishRoomQuote({url, h, parent: pollThunk.options.event, protect})
-      }
     } finally {
       loading = false
     }

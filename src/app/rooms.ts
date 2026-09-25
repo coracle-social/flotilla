@@ -15,10 +15,12 @@ import {
 } from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
 import {Message} from "@welshman/domain"
+import type {BaseEventReader, EventWriter} from "@welshman/domain"
 import {MembershipStatus, RoomLists, makeRoomKey, createSearch, publish} from "@welshman/app"
 import type {Room, RoomMeta} from "@welshman/app"
 import {
   deriveUserItem,
+  command,
   relayManagement,
   relayMemberLists,
   roomLists,
@@ -101,20 +103,12 @@ export const prependParent = async (
   return {content, tags}
 }
 
-export const publishRoomQuote = async ({
-  url,
-  h,
-  parent,
-  protect,
-  delay,
-}: {
-  url: string
-  h?: string
-  parent: TrustedEvent
-  protect: boolean
-  delay?: number
-}) => {
-  const eventWriter = writer(Message).setParent(parent).setProtected(protect)
+export const toSpace = async <W extends EventWriter<BaseEventReader>>(
+  eventWriter: W,
+  url: string,
+  h?: string,
+) => {
+  eventWriter.setProtected(await relays.get().hasNip(url, 70))
 
   if (h) {
     eventWriter.setRoom(url, h)
@@ -122,11 +116,41 @@ export const publishRoomQuote = async ({
     eventWriter.forceRoutes(relay(url))
   }
 
+  return eventWriter
+}
+
+export const publishRoomQuote = async ({
+  url,
+  h,
+  parent,
+  delay,
+}: {
+  url: string
+  h?: string
+  parent: TrustedEvent
+  delay?: number
+}) => {
+  const eventWriter = await toSpace(writer(Message).setParent(parent), url, h)
+
   return thunks.get().publish({
     relays: [url],
     event: await eventWriter.renderTemplate(),
     delay,
   })
+}
+
+export const publishToSpace = async (
+  eventWriter: EventWriter<BaseEventReader>,
+  {url, h, shareToChat}: {url: string; h?: string; shareToChat?: boolean},
+) => {
+  const thunk = await command(await toSpace(eventWriter, url, h)).then(publish)
+  const error = await thunk.waitForError()
+
+  if (shareToChat && !error) {
+    publishRoomQuote({url, h, parent: thunk.options.event})
+  }
+
+  return {thunk, error}
 }
 
 // User
