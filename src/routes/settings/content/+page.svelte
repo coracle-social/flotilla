@@ -1,5 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
+  import {difference} from "@welshman/lib"
   import {BlossomServerLists, MuteLists, publish} from "@welshman/app"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Accessibility from "@assets/icons/accessibility.svg?dataurl"
@@ -46,9 +47,19 @@
     try {
       await publishSettings($settings)
 
-      await $muteLists
-        .setMutes({publicTags: mutedPubkeys.map(pubkey => ["p", pubkey])})
-        .then(publish)
+      const previous = $userMuteList?.pubkeys() ?? []
+      const added = difference(mutedPubkeys, previous)
+      const removed = difference(previous, mutedPubkeys)
+
+      // Private and non-pubkey mutes aren't shown here, so only the pubkeys the user changed are touched.
+      if (added.length > 0 || removed.length > 0) {
+        await $muteLists
+          .update(writer => {
+            added.forEach(pubkey => writer.mutePublicly(pubkey))
+            removed.forEach(pubkey => writer.unmute(pubkey))
+          })
+          .then(publish)
+      }
 
       await $blossomServerLists.setUrls($state.snapshot(blossomServers)).then(publish)
 
