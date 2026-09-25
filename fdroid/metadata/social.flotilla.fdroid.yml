@@ -15,9 +15,9 @@ Repo: https://gitea.coracle.social/coracle/flotilla.git
 Binaries: https://gitea.coracle.social/api/packages/coracle/generic/flotilla-fdroid/%v/flotilla-fdroid-%v.apk
 
 Builds:
-  - versionName: 1.11.1
-    versionCode: 53
-    commit: 04bd38429e60768b21ec2c79c38438b47d97b3a2
+  - versionName: 1.11.2
+    versionCode: 55
+    commit: 95cbb9b6f736df21199185ac4c8dc5c841e2c1b1
     subdir: android/app
     sudo:
       - echo "deb https://deb.debian.org/debian trixie main" > /etc/apt/sources.list.d/trixie.list
@@ -53,5 +53,5 @@ MaintainerNotes: |-
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$
 UpdateCheckData: android/app/build.gradle|(?m)^\s*versionCode\s+(\d+)\s*$|.|(?m)^\s*versionName\s+"([^"]+)"\s*$
-CurrentVersion: 1.11.1
-CurrentVersionCode: 53
+CurrentVersion: 1.11.2
+CurrentVersionCode: 55
