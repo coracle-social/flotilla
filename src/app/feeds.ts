@@ -1,6 +1,18 @@
 import {derived, get, readable, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {batch, call, int, ms, now, on, sleep, uniqBy, MONTH, YEAR} from "@welshman/lib"
+import {
+  batch,
+  call,
+  int,
+  ms,
+  now,
+  on,
+  removeUndefined,
+  sleep,
+  uniqBy,
+  MONTH,
+  YEAR,
+} from "@welshman/lib"
 import {
   COMMENT,
   DELETE,
@@ -17,7 +29,7 @@ import {
   matchFilters,
   tagValues,
 } from "@welshman/util"
-import {TimeEvent} from "@welshman/domain"
+import {Comment, TimeEvent} from "@welshman/domain"
 import type {Maybe} from "@welshman/lib"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {mergeRepositoryUpdates} from "@welshman/net"
@@ -51,10 +63,15 @@ const mergeSorted = <T>(left: T[], right: T[], compare: (a: T, b: T) => number) 
 }
 
 // A NIP-22 comment points at its thread root with `E`/`A`, which is the scope a reply count wants.
-const getTargets = ({kind, tags}: TrustedEvent) =>
-  kind === COMMENT
-    ? [...tagValues(hexTags("E"), tags), ...tagValues(addressTags("A"), tags)]
-    : [...tagValues(hexTags("e"), tags), ...tagValues(addressTags("a"), tags)]
+const getTargets = (event: TrustedEvent) => {
+  if (event.kind === COMMENT) {
+    const {id, address} = reader(Comment)(event).root()
+
+    return removeUndefined([id, address])
+  }
+
+  return [...tagValues(hexTags("e"), event.tags), ...tagValues(addressTags("a"), event.tags)]
+}
 
 // A related event may point at a replaceable one by either id or address, so both are keys
 const getKeys = (event: TrustedEvent) =>

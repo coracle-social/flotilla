@@ -5,6 +5,7 @@ import {identity, tryCatch} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {
   CLASSIFIED,
+  COMMENT,
   EVENT_TIME,
   LONG_FORM,
   MESSAGE,
@@ -19,7 +20,8 @@ import {
   tagValue,
   tagValues,
 } from "@welshman/util"
-import {app, messagingRelayLists, user} from "@app/core"
+import {Comment} from "@welshman/domain"
+import {app, messagingRelayLists, reader, user} from "@app/core"
 import {makeChatId} from "@app/chats"
 import {entityLink, PLATFORM_URL, PLATFORM_RELAYS} from "@app/env"
 import {decodeRelay, encodeRelay} from "@app/relays"
@@ -219,19 +221,20 @@ export const makeEventPath = (event: TrustedEvent, urls: string[]) => {
       return path
     }
 
-    const parentKind = tagValue(tagSpec("K"), event.tags)
-    const parentIdOrAddress =
-      tagValue(tagSpec("A"), event.tags) ?? tagValue(tagSpec("E"), event.tags)
+    if (event.kind === COMMENT) {
+      const root = reader(Comment)(event).root()
+      const rootIdOrAddress = root.address ?? root.id
 
-    if (parentKind && parentIdOrAddress) {
-      if (parseInt(parentKind) === MESSAGE) {
-        return makeMessagePath(url, event)
-      }
+      if (root.kind && rootIdOrAddress) {
+        if (parseInt(root.kind) === MESSAGE) {
+          return makeMessagePath(url, event)
+        }
 
-      const parentPath = makeContentPath(url, parseInt(parentKind), parentIdOrAddress)
+        const rootPath = makeContentPath(url, parseInt(root.kind), rootIdOrAddress)
 
-      if (parentPath) {
-        return parentPath
+        if (rootPath) {
+          return rootPath
+        }
       }
     }
   }

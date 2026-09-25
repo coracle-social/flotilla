@@ -13,10 +13,11 @@ import {
   makeHttpAuth,
   makeHttpAuthHeader,
 } from "@welshman/util"
+import {Comment} from "@welshman/domain"
 import {synced, throttled, withGetter} from "@welshman/store"
 import {Relays, RoomLists} from "@welshman/app"
 import {deriveEventsByIdByUrl} from "@app/repository"
-import {app, fromApp} from "@app/core"
+import {app, fromApp, reader} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
 import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
 import {getIsMuted, notificationSettings, userSettingsValues} from "@app/settings"
@@ -185,8 +186,9 @@ const getContentTarget = (event: TrustedEvent) => {
   }
 
   if (event.kind === COMMENT) {
-    const kind = parseInt(tagValue(tagSpec("K"), event.tags) || "")
-    const idOrAddress = tagValue(tagSpec("A"), event.tags) || tagValue(tagSpec("E"), event.tags)
+    const root = reader(Comment)(event).root()
+    const kind = parseInt(root.kind || "")
+    const idOrAddress = root.address || root.id
 
     if (CONTENT_KINDS.includes(kind) && idOrAddress) {
       return {kind, idOrAddress}
