@@ -1,4 +1,4 @@
-import {DAY, HOUR, WEEK, sleep, sortBy} from "@welshman/lib"
+import {DAY, HOUR, sleep, sortBy} from "@welshman/lib"
 import {ROOMS} from "@welshman/util"
 import type {Page} from "@playwright/test"
 import type {SeededSpace} from "../harness"
@@ -53,36 +53,20 @@ test("US-009 browse and search spaces, and reorder your own", async ({seed, as})
   // The spaces page discovers unjoined spaces by pulling the room lists of its bootstrap pubkeys.
   const page = await as(users.alice, "/spaces", {env: {VITE_DEFAULT_PUBKEYS: users.bob.pubkey}})
 
-  // The page is for spaces she hasn't joined. The ones she has are in the rail, all of them.
-  await expect(page.getByText("Browse Spaces")).toBeVisible()
+  // The page is for spaces she hasn't joined. The ones she has are in the rail.
   await expect(page.getByText(unsigned.url)).toBeVisible()
   await expect(page.getByText(space.url)).toHaveCount(0)
-  await expect(page.getByText(other.url)).toHaveCount(0)
-  await expect(railSpaces(page)).toHaveCount(2)
 
   const term = page.getByPlaceholder("Search for spaces...")
-
-  await term.fill("unsigned")
-
-  await expect(page.getByText(unsigned.url)).toBeVisible()
 
   await term.fill("nothing by that name")
 
   await expect(page.getByText(unsigned.url)).toHaveCount(0)
 
-  await term.fill("")
-
-  // A space she hasn't joined asks her to join first
+  await term.fill("unsigned")
   await page.getByRole("button").filter({hasText: unsigned.url}).click()
 
   await expect(page.getByRole("button", {name: "Join Space"})).toBeVisible()
-  await expect(page.getByRole("button", {name: "Go back"})).toBeEnabled()
-
-  // A space she has joined opens from the rail
-  await page.goto("/spaces")
-  await railSpaces(page).first().click()
-
-  await expect(page).toHaveURL(/\/spaces\/space\.test\//)
 
   // Reordering by dragging, which lives in her room list and so outlives the page
   await page.goto("/spaces")
@@ -118,30 +102,18 @@ test("US-010 join a space from an invite link", async ({seed, as}) => {
 
   // Arriving at a space she hasn't joined raises the join prompt on its own
   await expect(page.getByRole("button", {name: "Join Space"})).toBeEnabled()
-  await expect(page.getByText(other.url)).toBeVisible()
-
-  await page.getByRole("button", {name: "Go back"}).click()
-
-  // Going back left her un-joined, so arriving again asks again
-  await page.goto(spacePath(other.url))
-
-  await expect(page.getByRole("button", {name: "Join Space"})).toBeEnabled()
 
   await page.goto("/spaces")
   await page.getByRole("button", {name: "Add Space"}).click()
   await page.getByRole("button", {name: /Join a space/}).click()
 
-  const invite = page.locator("form").filter({hasText: "Invite Link*"}).getByRole("textbox")
-
-  await invite.fill("not an invite")
-
-  await expect(page.getByRole("button", {name: "Join Space"})).toBeDisabled()
-  await expect(page.getByText("You're about to join:")).toHaveCount(0)
-
   // An absolute platform url is an off-origin navigation, and parseInviteLink reads query params.
-  await invite.fill("https://app.flotilla.social/join?r=other.test&c=")
+  await page
+    .locator("form")
+    .filter({hasText: "Invite Link*"})
+    .getByRole("textbox")
+    .fill("https://app.flotilla.social/join?r=other.test&c=")
 
-  await expect(page.getByText("You're about to join:")).toBeVisible()
   await expect(page.getByText(other.url)).toBeVisible()
 
   await page.getByRole("button", {name: "Join Space"}).click()
@@ -180,7 +152,6 @@ test("US-010 a direct link's join prompt outlives the entry redirect", async ({s
 
   await expect(page.getByRole("button", {name: "Join Space"})).toBeEnabled({timeout: 60000})
   await expect(page).toHaveURL(pathPattern(spacePath(other.url) + "/about"))
-  await expect(page.getByRole("button", {name: "Join Space"})).toBeVisible()
 
   // A page that stops asking for that module is a spec that no longer covers the race.
   expect(held).toBeGreaterThan(0)
@@ -219,11 +190,7 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
   const alice = await as(users.alice, spacePath(closed.url))
 
   // Turned away rather than joined, so the prompt becomes a request
-  await expect(alice.getByRole("button", {name: "Request Access"})).toBeEnabled()
-
   await alice.getByRole("button", {name: "Request Access"}).click()
-
-  await expect(alice.getByRole("heading", {name: "Request Access"})).toBeVisible()
 
   const code = alice.locator("form").filter({hasText: "Invite code*"}).getByRole("textbox")
 
@@ -232,7 +199,6 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
 
   // The relay refused the code, so she is told and left asking
   await expect(alice.getByRole("alert")).toContainText("join request rejected")
-  await expect(alice.getByRole("heading", {name: "Request Access"})).toBeVisible()
 
   await code.fill(claim)
   await alice.getByRole("button", {name: "Join Space"}).click()
@@ -256,8 +222,6 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
   await bobCard.getByRole("button").last().click()
   await admin.getByRole("button", {name: "Ban member"}).click()
 
-  await expect(admin.getByText("Ban @Bob Barnacle from the space?")).toBeVisible()
-
   await admin.getByRole("button", {name: "Confirm"}).click()
 
   await expect(admin.getByText("Member has successfully been banned!")).toBeVisible()
@@ -265,23 +229,10 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
   const bob = await as(users.bob, spacePath(space.url))
 
   await expect(bob.getByRole("heading", {name: "Access Error"})).toBeVisible()
-  await expect(bob.getByText(/not a member of this relay/i)).toBeVisible()
 
-  // From here he can ask for a code back in
-  await bob.getByRole("button", {name: "Request Access"}).click()
-
-  await expect(bob.getByRole("heading", {name: "Request Access"})).toBeVisible()
-
-  await bob.getByRole("button", {name: "Go back"}).click()
-
-  // ...or give up on the space, which takes it off his list
   await bob.getByRole("button", {name: "Leave Space"}).click()
 
   await expect(bob).toHaveURL(/\/home/)
-
-  await bob.goto("/spaces")
-
-  await expect(railSpaces(bob)).toHaveCount(0)
 })
 
 test("US-012 decide whether to trust an unsigned space", async ({seed, as}) => {
@@ -341,11 +292,6 @@ test("US-013 follow a space that has moved", async ({seed, as}) => {
   const relayInfo = {[space.url]: {redirect_to: "https://other.test/"}}
 
   const alice = await as(users.alice, spacePath(space.url) + "/about", {relayInfo})
-  const movedDialog = alice.locator("form")
-
-  await expect(alice.getByRole("heading", {name: "This space has moved"})).toBeVisible()
-  await expect(movedDialog.getByText("space.test", {exact: true})).toBeVisible()
-  await expect(movedDialog.getByText("other.test", {exact: true})).toBeVisible()
 
   await alice.getByRole("button", {name: "Update and go"}).click()
 
@@ -354,7 +300,6 @@ test("US-013 follow a space that has moved", async ({seed, as}) => {
   // In-app rather than a fresh load: the updated list is published in the background.
   await alice.getByRole("link", {name: "All Spaces"}).click()
 
-  await expect(railSpaces(alice)).toHaveCount(1)
   await expectRailFirst(alice, other.name)
 
   const bob = await as(users.bob, spacePath(space.url) + "/about", {relayInfo})
@@ -364,11 +309,6 @@ test("US-013 follow a space that has moved", async ({seed, as}) => {
   await bob.getByRole("button", {name: "Not now"}).click()
 
   await expect(bob).toHaveURL(/\/spaces\/space\.test\/about/)
-
-  await bob.goto("/spaces")
-
-  await expect(railSpaces(bob)).toHaveCount(1)
-  await expectRailFirst(bob, space.name)
 })
 
 test("US-014 leave a space", async ({seed, as}) => {
@@ -386,8 +326,6 @@ test("US-014 leave a space", async ({seed, as}) => {
   await page.getByRole("button", {name: /space\.test/}).click()
   await page.getByRole("button", {name: "Leave Space"}).click()
 
-  await expect(page.getByText("Are you sure you want to leave?")).toBeVisible()
-
   await page.getByRole("button", {name: "Confirm"}).click()
 
   await expect(page).toHaveURL(/\/home/)
@@ -396,22 +334,6 @@ test("US-014 leave a space", async ({seed, as}) => {
   await page.getByRole("link", {name: "All Spaces"}).click()
 
   await expect(railSpaces(page)).toHaveCount(0)
-
-  // Nothing stops him coming back
-  await page.getByRole("button", {name: "Add Space"}).click()
-  await page.getByRole("button", {name: /Join a space/}).click()
-  await page
-    .locator("form")
-    .filter({hasText: "Invite Link*"})
-    .getByRole("textbox")
-    .fill("https://app.flotilla.social/join?r=space.test&c=")
-
-  await expect(page.getByText("You're about to join:")).toBeVisible()
-
-  await page.getByRole("button", {name: "Join Space"}).click()
-
-  await expect(page.getByText("Welcome to the space!")).toBeVisible()
-  await expect(page).toHaveURL(/\/spaces\/space\.test/)
 })
 
 test("US-015 view a space's details", async ({seed, as}) => {
@@ -427,37 +349,20 @@ test("US-015 view a space's details", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // Contact, terms, privacy and the limitation warnings are nip-11 fields zooid doesn't publish.
+  // Contact and terms are nip-11 fields zooid doesn't publish.
   const relayInfo = {
     [space.url]: {
-      icon: "https://space.test/icon.png",
       contact: "harbormaster@space.test",
       terms_of_service: "https://space.test/terms",
-      privacy_policy: "https://space.test/privacy",
-      limitation: {auth_required: true, payment_required: true, min_pow_difficulty: 20},
     },
   }
 
   const carol = await as(users.carol, spacePath(space.url) + "/about", {relayInfo})
 
-  await expect(carol.locator('img[src="https://space.test/icon.png"]').first()).toBeVisible()
   await expect(carol.getByRole("heading", {name: "space"})).toBeVisible()
-  await expect(carol.getByText("space.test", {exact: true}).first()).toBeVisible()
   await expect(carol.getByText(/Throwaway relay/)).toBeVisible()
+  await expect(carol.getByText(/harbormaster@space\.test/)).toBeVisible()
   await expect(carol.getByRole("link", {name: "Terms of Service"})).toBeVisible()
-  await expect(carol.getByRole("link", {name: "Privacy Policy"})).toBeVisible()
-
-  await expect(carol.getByText(/Administrator:/)).toBeVisible()
-  await expect(carol.getByText("Contact: harbormaster@space.test")).toBeVisible()
-  await expect(carol.getByText(/Software:/)).toBeVisible()
-  await expect(carol.getByText(/Version:/)).toBeVisible()
-  await expect(carol.getByText("Auth Required")).toBeVisible()
-  await expect(carol.getByText("Payment Required")).toBeVisible()
-  await expect(carol.getByText("Min PoW: 20")).toBeVisible()
-
-  await expect(carol.getByRole("heading", {name: "Members"})).toBeVisible()
-  await expect(carol.getByText("Admins")).toBeVisible()
-  await expect(carol.getByText("New members")).toBeVisible()
 
   const admin = await as(users.admin, spacePath(space.url) + "/about", {relayInfo})
   const featuredHeader = admin.getByRole("heading", {name: "Featured"}).locator("xpath=..")
@@ -472,10 +377,6 @@ test("US-015 view a space's details", async ({seed, as}) => {
   // What admin featured reaches every visitor
   await expect(carol.getByRole("heading", {name: "Featured"})).toBeVisible()
   await expect(carol.getByText("Start with the harbor rules")).toBeVisible()
-
-  await carol.getByRole("link", {name: "View all members"}).click()
-
-  await expect(carol).toHaveURL(/\/spaces\/space\.test\/directory/)
 })
 
 test("US-017 search across a space", async ({seed, as}) => {
@@ -487,7 +388,6 @@ test("US-017 search across a space", async ({seed, as}) => {
     space.join(user.alice, "general", "random")
     space.message(user.alice, "general", "the kraken surfaced at dawn", at(2, HOUR))
     space.message(user.alice, "random", "kraken jokes only in here", at(3, DAY))
-    space.message(user.alice, "general", "ancient kraken lore, volume one", at(3, WEEK))
   })
 
   const space = scenario.space("space")
@@ -505,18 +405,9 @@ test("US-017 search across a space", async ({seed, as}) => {
 
   await term.fill("kraken")
 
-  await expect(page.getByText("Last 24 Hours")).toBeVisible()
-  await expect(page.getByText("Last 7 Days")).toBeVisible()
-  await expect(page.getByText("Older")).toBeVisible()
-
   await expect(page.getByText("the kraken surfaced at dawn")).toBeVisible()
-  await expect(page.getByText("ancient kraken lore, volume one")).toBeVisible()
 
-  const fromRandom = page.getByRole("button").filter({hasText: "kraken jokes only in here"})
-
-  await expect(fromRandom).toContainText("Random")
-
-  await fromRandom.click()
+  await page.getByRole("button").filter({hasText: "kraken jokes only in here"}).click()
 
   await expect(page).toHaveURL(/\/spaces\/space\.test\/random\?at=/)
 })

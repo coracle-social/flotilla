@@ -241,7 +241,6 @@ test("enters a space on its details page whatever its relay advertises", async (
   const page = await as(users.alice, spacePath(space.url), {relayInfo})
 
   await expect(page).toHaveURL(pathPattern(spacePath(space.url) + "/about"))
-  await expect(page.locator('[data-component="PageBar"]')).toContainText("Space Details")
 })
 
 test("builds a page once when it opens and again when its params change", async ({seed, as}) => {

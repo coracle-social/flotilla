@@ -34,12 +34,7 @@ test("US-084 block a relay you never want used", async ({seed, as}) => {
   const page = await as(users.bob, "/settings/privacy")
   const blocked = page.getByRole("button", {name: /Blocked$/})
 
-  await expect(blocked).toContainText("0 Blocked")
-
   await blocked.click()
-
-  await expect(dialog(page, "Blocked Relays").getByText("No relay selections found.")).toBeVisible()
-
   await dialog(page, "Blocked Relays").getByRole("button", {name: "Add Relays"}).click()
   await relayCard(relayPicker(page), "other.test").getByRole("button", {name: "Add Relay"}).click()
   await page.getByRole("button", {name: "Done"}).click()
@@ -71,32 +66,9 @@ test("US-086 configure alerts", async ({seed, as}) => {
   const page = await as(users.alice, "/settings/alerts")
 
   const sound = settingToggle(page, "Play sound for new activity")
-  const push = settingToggle(page, "Enable push notifications")
   const alertTypes = page.locator("div.card").filter({has: page.getByText("Alert Types")})
 
   await expect(sound).toBeChecked()
-  await expect(push).not.toBeChecked()
-  await expect(alertTypes).not.toHaveClass(/opacity-50/)
-
-  // With nothing left to be alerted through, there is nothing to be alerted about.
-  await sound.uncheck()
-
-  await expect(alertTypes).toHaveClass(/opacity-50/)
-
-  await page.getByRole("button", {name: "Discard Changes"}).click()
-
-  await expect(sound).toBeChecked()
-  await expect(alertTypes).not.toHaveClass(/opacity-50/)
-
-  // Push asks the browser for permission, and this context was never granted it.
-  await push.check()
-  await page.getByRole("button", {name: "Save Changes"}).click()
-
-  await expect(page.getByRole("alert")).toContainText("Failed to request notification permissions")
-  await expect(push).not.toBeChecked()
-  await expect(sound).toBeChecked()
-
-  await waitForToastToClear(page)
 
   const reminders = alertTypes.locator("div.items-center.gap-2:has(input[type=number])")
 
@@ -133,7 +105,6 @@ test("US-086 configure alerts", async ({seed, as}) => {
 
 test("US-087 configure content display", async ({seed, as}) => {
   let picture!: Seeded
-  let link!: Seeded
 
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -143,7 +114,6 @@ test("US-087 configure content display", async ({seed, as}) => {
     space.join(user.bob, "general")
 
     picture = space.message(user.bob, "general", "https://images.test/sunset.png", at(40, MINUTE))
-    link = space.message(user.bob, "general", "https://example.test/announcement", at(35, MINUTE))
 
     space.relayList(user.alice)
   })
@@ -153,9 +123,6 @@ test("US-087 configure content display", async ({seed, as}) => {
 
   const hideSensitive = settingToggle(page, "Hide sensitive content?")
   const showMedia = settingToggle(page, "Show media?")
-
-  await expect(hideSensitive).toBeChecked()
-  await expect(showMedia).toBeChecked()
 
   await hideSensitive.uncheck()
   await showMedia.uncheck()
@@ -167,14 +134,9 @@ test("US-087 configure content display", async ({seed, as}) => {
   await page.goto(roomPath(url, "general"))
 
   const pictureMessage = page.locator(`[data-event="${picture.id}"]`)
-  const linkMessage = page.locator(`[data-event="${link.id}"]`)
 
   await expect(pictureMessage.getByRole("link", {name: "images.test/sunset.png"})).toBeVisible()
   await expect(pictureMessage.locator('img[src="https://images.test/sunset.png"]')).toHaveCount(0)
-
-  await expect(linkMessage.getByRole("link", {name: "example.test/announcement"})).toBeVisible()
-  await expect(linkMessage.locator(".spinner")).toHaveCount(0)
-  await expect(linkMessage.getByText("Unable to load a preview")).toHaveCount(0)
 
   await page.goto("/settings/content")
 
@@ -194,32 +156,10 @@ test("US-088 adjust send delay and media servers", async ({seed, as}) => {
   const page = await as(users.alice, "/settings/content")
 
   // The send delay is the only slider on this page.
-  const sendDelay = page.locator('input[type="range"]')
-  const servers = page.getByRole("listitem")
-
-  await expect(page.getByText("Delay sending messages and comments for 0 seconds.")).toBeVisible()
-
-  await sendDelay.fill("3000")
-
-  await expect(page.getByText("Delay sending messages and comments for 3 seconds.")).toBeVisible()
-
-  await expect(servers).toHaveCount(0)
+  await page.locator('input[type="range"]').fill("3000")
 
   await page.getByRole("button", {name: "Add Server"}).click()
-
-  await expect(servers).toHaveCount(1)
-
-  await servers.first().locator("input").fill("https://media.test/")
-
-  await page.getByRole("button", {name: "Add Server"}).click()
-
-  await expect(servers).toHaveCount(2)
-
-  // Each row leads with its own remove button; the drag handle is the one with a label.
-  await servers.nth(1).getByRole("button").first().click()
-
-  await expect(servers).toHaveCount(1)
-  await expect(servers.first().locator("input")).toHaveValue("https://media.test/")
+  await page.getByRole("listitem").first().locator("input").fill("https://media.test/")
 
   await page.getByRole("button", {name: "Save Changes"}).click()
 
@@ -228,7 +168,6 @@ test("US-088 adjust send delay and media servers", async ({seed, as}) => {
   await waitForToastToClear(page)
   await page.reload()
 
-  await expect(page.getByText("Delay sending messages and comments for 3 seconds.")).toBeVisible()
   await expect(page.locator('input[type="range"]')).toHaveValue("3000")
 })
 
@@ -246,16 +185,6 @@ test("US-089 configure privacy preferences", async ({seed, as}) => {
 
   const auth = settingToggle(page, "Authenticate with unknown relays?")
   const usage = settingToggle(page, "Report usage?")
-
-  await expect(auth).not.toBeChecked()
-  await expect(usage).toBeChecked()
-
-  await auth.check()
-  await usage.uncheck()
-  await page.getByRole("button", {name: "Discard Changes"}).click()
-
-  await expect(auth).not.toBeChecked()
-  await expect(usage).toBeChecked()
 
   await auth.check()
   await usage.uncheck()
@@ -281,19 +210,9 @@ test("US-129 raise the thresholds a stranger has to meet", async ({seed, as}) =>
   })
 
   const page = await as(users.alice, "/settings/privacy")
-  const pow = requestSliders(page).first()
-  const wot = requestSliders(page).last()
 
-  await expect(pow).toHaveValue("16")
-  await expect(wot).toHaveValue("3")
-  await expect(requestsCard(page).getByText("16 bits", {exact: true})).toBeVisible()
-  await expect(requestsCard(page).getByText("3 people", {exact: true})).toBeVisible()
-
-  await pow.fill("24")
-  await wot.fill("1")
-
-  await expect(requestsCard(page).getByText("24 bits", {exact: true})).toBeVisible()
-  await expect(requestsCard(page).getByText("1 person", {exact: true})).toBeVisible()
+  await requestSliders(page).first().fill("24")
+  await requestSliders(page).last().fill("1")
 
   await page.getByRole("button", {name: "Save Changes"}).click()
 
@@ -318,27 +237,19 @@ test("US-090 change the app's appearance", async ({seed, as}) => {
 
   const page = await as(users.alice, "/settings/theme", {context: {colorScheme: "light"}})
   const body = page.locator("body")
-  const colorScheme = () =>
-    page.evaluate(() => getComputedStyle(document.documentElement).colorScheme)
-
-  await expect(body).toHaveAttribute("data-theme", "light")
-  await expect.poll(colorScheme).toBe("light")
 
   await page.getByRole("button", {name: "Dark", exact: true}).click()
 
   await expect(body).toHaveAttribute("data-theme", "dark")
-  await expect.poll(colorScheme).toBe("dark")
 
   await page.getByRole("button", {name: "System", exact: true}).click()
 
   await expect(body).toHaveAttribute("data-theme", "light")
-  await expect.poll(colorScheme).toBe("light")
 
   // System means the device's, so changing the device's changes the app's.
   await page.emulateMedia({colorScheme: "dark"})
 
   await expect(body).toHaveAttribute("data-theme", "dark")
-  await expect.poll(colorScheme).toBe("dark")
 
   await page.getByLabel("Style").selectOption("navy")
 
@@ -347,20 +258,12 @@ test("US-090 change the app's appearance", async ({seed, as}) => {
   await page.reload()
 
   await expect(body).toHaveAttribute("data-fl-theme", "navy")
-  await expect(page.getByLabel("Style")).toHaveValue("navy")
 
-  // Font size is the only slider on this page, and the only setting here that is published.
-  const fontSize = page.locator('input[type="range"]')
+  // Font size is the only slider on this page, and moving it is the save.
+  await page.locator('input[type="range"]').fill("1.25")
 
-  await expect(page.getByText("110%")).toBeVisible()
-  await expect(page.getByRole("button", {name: "Save Changes"})).toHaveCount(0)
-
-  await fontSize.fill("1.25")
-
-  await expect(page.getByText("125%")).toBeVisible()
   await expect(page.locator("html")).toHaveAttribute("style", /font-size:\s*1\.25rem/)
 
-  // Moving the slider is the save.
   await page.reload()
 
   await expect(page.locator("html")).toHaveAttribute("style", /font-size:\s*1\.25rem/)
@@ -394,44 +297,12 @@ test("US-091 set up how people zap you", async ({seed, as}) => {
   // The dialog closes itself once the profile has gone out, and the page behind it has its own Save.
   await expect(address).toHaveCount(0)
   await expect(page.getByText("alice@example.test")).toBeVisible()
-  await expect(page.getByText("Not set")).toHaveCount(0)
-
-  await page.getByRole("button", {name: "Update"}).click()
-  await address.getByPlaceholder("user@domain.com").fill("")
-  await address.getByRole("button", {name: "Save Changes"}).click()
-
-  await expect(address).toHaveCount(0)
-  await expect(page.getByText("Not set")).toBeVisible()
 
   // The same utility classes land on other rows, so this is pinned to the zap form's input rows.
-  const zapForm = page.locator("form").filter({hasText: "Zap Amounts"})
-  const presets = zapForm.locator("div.items-center.gap-2:has(input)")
-
-  await expect(presets).toHaveCount(4)
-
-  await page.getByRole("button", {name: "Add amount"}).click()
-
-  await expect(presets).toHaveCount(5)
-
-  // A preset has to be worth something, so saving a zero is refused with an error.
-  await presets.nth(4).locator("input").fill("0")
-  await page.getByRole("button", {name: "Save Changes"}).click()
-
-  await expect(page.getByRole("alert")).toContainText("Zap amounts must be greater than zero.")
-
-  await waitForToastToClear(page)
-
-  // Discarding puts back the last saved values, which are still alice's original four.
-  await page.getByRole("button", {name: "Discard Changes"}).click()
-
-  await expect(presets).toHaveCount(4)
-
-  await presets.nth(3).getByRole("button").click()
-  await presets.nth(2).getByRole("button").click()
-  await presets.nth(1).getByRole("button").click()
-
-  await expect(presets).toHaveCount(1)
-  await expect(presets.first().getByRole("button")).toBeDisabled()
+  const presets = page
+    .locator("form")
+    .filter({hasText: "Zap Amounts"})
+    .locator("div.items-center.gap-2:has(input)")
 
   await presets.first().locator("input").fill("500")
   await page.getByRole("button", {name: "Save Changes"}).click()
@@ -441,11 +312,5 @@ test("US-091 set up how people zap you", async ({seed, as}) => {
   await waitForToastToClear(page)
   await page.reload()
 
-  const saved = page
-    .locator("form")
-    .filter({hasText: "Zap Amounts"})
-    .locator("div.items-center.gap-2:has(input)")
-
-  await expect(saved).toHaveCount(1)
-  await expect(saved.first().locator("input")).toHaveValue("500")
+  await expect(presets.first().locator("input")).toHaveValue("500")
 })

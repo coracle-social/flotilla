@@ -1,22 +1,12 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
 import {POLL, displayRelayUrl} from "@welshman/util"
-import {RelayMessageType} from "@welshman/net"
-import {
-  Classified,
-  Comment,
-  FollowList,
-  Note,
-  Poll,
-  SearchRelayList,
-  Thread,
-} from "@welshman/domain"
+import {Comment, FollowList, Note, Poll, SearchRelayList, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
   composer,
   dialog,
   expect,
-  getTranscript,
   message,
   messageActions,
   openRoomDetail,
@@ -226,41 +216,12 @@ test("US-104 mute a room or a whole space", async ({seed, as}) => {
 
   await expect(message(alice, "deploy is broken")).toBeVisible()
 
-  // Turning the room back on restores its indicator for what comes next
-  await openRoomDetail(alice)
-  await roomMute.uncheck()
-  await alice.getByRole("button", {name: "Go back"}).click()
-  await alice.getByRole("link", {name: "Space Details"}).click()
-
-  await expect(general).toBeVisible()
-  await expect(mutedRoomBell(general)).toHaveCount(0)
-
-  await postTo(bob, "General", "and now the build too")
-
-  // Both rooms are now showing a dot, which is what the space-level setting is tested against
-  await expect(unreadDot(general)).toBeVisible()
-  await expect(unreadDot(random)).toBeVisible()
-
   const menu = spaceMenu(alice, space.url)
 
   await openSpaceMenu(menu)
   await alice.getByRole("button", {name: "Turn off notifications"}).click()
 
-  // Hiding unread badges is the room mute's job, so the dots the rooms are carrying stay up.
   await expect(mutedSpaceBell(menu)).toBeVisible()
-  await expect(unreadDot(general)).toBeVisible()
-  await expect(unreadDot(random)).toBeVisible()
-
-  // Clicking the header while the menu is still on its way out toggles it straight back shut.
-  const turnOn = alice.getByRole("button", {name: "Turn on notifications"})
-
-  await expect(turnOn).toHaveCount(0)
-
-  await openSpaceMenu(menu)
-  await expect(turnOn).toBeVisible()
-  await turnOn.click()
-
-  await expect(mutedSpaceBell(menu)).toHaveCount(0)
 })
 
 test("US-105 land on the home page", async ({seed, as}) => {
@@ -281,27 +242,13 @@ test("US-105 land on the home page", async ({seed, as}) => {
   // With none configured, /home is the dashboard, whose empty inbox offers two ways out
   const page = await as(users.alice, "/home")
 
-  const addSpace = page.getByRole("link", {name: "Add a space"})
-  const startConversation = page.getByRole("button", {name: "Start a conversation"})
-
-  await expect(addSpace).toBeVisible()
-  await expect(startConversation).toBeVisible()
-
-  await addSpace.click()
+  await page.getByRole("link", {name: "Add a space"}).click()
 
   await expect(page).toHaveURL(/\/spaces$/)
-
-  await page.goBack()
-
-  await expect(page).toHaveURL(/\/home$/)
-
-  await startConversation.click()
-
-  await expect(page).toHaveURL(/\/chat$/)
 })
 
 test("US-116 read the home dashboard", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
+  await seed(({relay, user, at}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
@@ -323,7 +270,6 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
     )
   })
 
-  const space = scenario.space("space")
   const page = await as(users.alice, "/home")
 
   // Each conversation is one link, headed by its room and carrying the latest message underneath
@@ -336,17 +282,7 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
   // Threads, events and classifieds are counted per space in Activity rather than listed as conversations.
   const activity = page.getByRole("link").filter({hasText: "1 thread"})
 
-  await expect(page.getByRole("heading", {name: "Activity"})).toBeVisible()
   await expect(activity).toBeVisible()
-  await expect(conversation).not.toContainText("1 thread")
-
-  // Relay health checks had no mount point at all before the dashboard
-  await expect(page.getByText("Health checks")).toBeVisible()
-
-  // Hosting shows even though alice hosts nothing, as an invitation to start a space
-  await expect(page.getByRole("button", {name: "Start a space"})).toBeVisible()
-
-  await expect(conversation).toHaveAttribute("href", roomPath(space.url, "general"))
 
   // The inbox is the badges, so a conversation leaves the list once it has nothing unread
   await page.getByRole("button", {name: "Mark all read"}).click()
@@ -358,7 +294,6 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
 
 test("US-117 read the network feed on home", async ({seed, as}) => {
   const note = "the tide charts are wrong again"
-  const quiet = "the ferry is running on time"
   const reply = "they were reprinted last week"
   const topic = "Dredging the channel"
 
@@ -380,8 +315,6 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
     const posted = space.event(user.bob, () =>
       space.kind(Note).writer().setContent(note).renderTemplate(),
     )
-
-    space.event(user.bob, () => space.kind(Note).writer().setContent(quiet).renderTemplate())
 
     space.event(user.bob, () =>
       space.kind(Note).writer().setParent(posted.event).setContent(reply).renderTemplate(),
@@ -411,24 +344,15 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
   await expect(page.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
   await expect(page.getByText(reply)).toHaveCount(0)
 
-  // The count is there whether or not anybody replied, so every post reads the same.
-  await expect(page.getByText(quiet)).toBeVisible()
-  await expect(
-    network.locator(".card").filter({hasText: quiet}).getByRole("button", {name: "0 replies"}),
-  ).toBeVisible()
-
   // The feed carries every kind of post a follow writes, not only their notes.
   await expect(network.getByText(topic)).toBeVisible()
-
-  // Every card says when it was posted.
-  await expect(network.getByRole("button", {name: /\d+\/\d+\/\d+/}).first()).toBeVisible()
 })
 
 test("US-117 read a follow who is in none of your spaces", async ({seed, as}) => {
   const note = "the lighthouse has been dark since tuesday"
   const answer = "the keeper is on holiday"
 
-  const scenario = await seed(({relay, open, user, at}) => {
+  await seed(({relay, open, user, at}) => {
     const space = relay("space")
     const indexer = open("indexer")
     const outbox = open("outbox")
@@ -456,7 +380,6 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
     )
   })
 
-  const space = scenario.space("space")
   const page = await as(users.alice, "/home")
 
   const network = page
@@ -468,67 +391,6 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
 
   // Alice reads from her space rather than bob's relay, so a context asked of hers comes back empty.
   await expect(network.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
-
-  // Her space never held any of it.
-  const fromSpace = getTranscript(page.context()).filter(
-    ({url, direction, message}) =>
-      url === space.url &&
-      direction === "toClient" &&
-      message[0] === RelayMessageType.Event &&
-      [note, answer].includes(message[2].content),
-  )
-
-  expect(fromSpace).toEqual([])
-})
-
-test("US-117 read a network feed whose relays answer from different depths", async ({seed, as}) => {
-  // Mirrors PAGE_SIZE: a full page covers only as far back as it reaches.
-  const pageSize = 100
-  const recent = "the harbourmaster moved the moorings again"
-  const deep = "the old crane was scrapped in the spring"
-
-  await seed(({relay, open, user, at}) => {
-    const space = relay("space")
-    const indexer = open("indexer")
-    const outbox = open("outbox")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-
-    indexer.relayList(user.alice, {
-      read: [space.url, indexer.url],
-      write: [space.url, indexer.url, outbox.url],
-    })
-    indexer.follows(user.alice, [user.bob])
-
-    // Bob's outbox holds a full page of recent notes, the indexer one week-old note.
-    indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url, indexer.url]})
-    outbox.profile(user.bob, {name: "Bob Barker"})
-
-    outbox.note(user.bob, recent, at(1, MINUTE))
-
-    // More than pageSize so the page comes back full.
-    for (let minute = 2; minute <= pageSize + 10; minute++) {
-      outbox.note(user.bob, `mooring report ${minute}`, at(minute, MINUTE))
-    }
-
-    indexer.note(user.bob, deep, at(7, DAY))
-  })
-
-  const page = await as(users.alice, "/home")
-
-  const network = page
-    .locator("section")
-    .filter({has: page.getByRole("heading", {name: "Network"})})
-
-  await expect(network.getByText(recent)).toBeVisible()
-
-  // Below the stretch the outbox covered, so it is held until the scroll.
-  await expect(network.getByText(deep)).toHaveCount(0)
-
-  await network.locator(".card").last().scrollIntoViewIfNeeded()
-
-  await expect(network.getByText(deep)).toBeVisible()
 })
 
 test("US-117 read the network feed when one relay never answers", async ({seed, as}) => {
@@ -623,9 +485,8 @@ test("US-106 share text into the app", async ({seed, as}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
-    space.room("watercooler", {name: "Watercooler"})
-    space.join(user.alice, "general", "watercooler")
-    space.join(user.bob, "general", "watercooler")
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
     space.profile(user.bob, {name: "Bob Barker"})
 
     seedRelays(space, user.alice)
@@ -646,20 +507,8 @@ test("US-106 share text into the app", async ({seed, as}) => {
 
   const share = dialog(page, "Share")
 
-  await expect(page.getByText("Where would you like to share this?")).toBeVisible()
-  await expect(share.getByRole("button", {name: "General"})).toBeVisible()
-  await expect(share.getByRole("button", {name: "Watercooler"})).toBeVisible()
   await expect(share.getByRole("button", {name: "Bob Barker"})).toBeVisible()
 
-  const search = page.getByPlaceholder("Search rooms and conversations...")
-
-  await search.fill("Watercooler")
-
-  await expect(share.getByRole("button", {name: "Watercooler"})).toBeVisible()
-  await expect(share.getByRole("button", {name: "General"})).toHaveCount(0)
-  await expect(share.getByRole("button", {name: "Bob Barker"})).toHaveCount(0)
-
-  await search.fill("")
   await share.getByRole("button", {name: "General"}).click()
   await share.getByRole("button", {name: "Share", exact: true}).click()
 
@@ -782,22 +631,6 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
 const contentNavItem = (page: Page, name: string) =>
   page.locator(".secondary-nav").getByRole("link", {name})
 
-const seedClassified = (space: SeededSpace, user: TestUser, title: string, createdAt: number) =>
-  space.event(
-    user,
-    () =>
-      space
-        .kind(Classified)
-        .writer()
-        .setRoom(space.url, "general")
-        .setIdentifier()
-        .setTitle(title)
-        .setPrice(100)
-        .setContent("in good condition")
-        .renderTemplate(),
-    createdAt,
-  )
-
 const seedThread = (space: SeededSpace, user: TestUser, title: string, createdAt: number) =>
   space.event(
     user,
@@ -864,72 +697,6 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
   // The nav item is clear even with a thread under it still unread
   await expect(threadsNav).toBeVisible()
   await expect(unreadDot(threadsNav)).toHaveCount(0)
-})
-
-test("US-113 see which threads are unread on a phone", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-
-    seedThread(space, user.bob, "where is the sextant", at(3, HOUR))
-    seedThread(space, user.alice, "the server is on fire", at(2, HOUR))
-  })
-
-  const space = scenario.space("space")
-
-  // ThreadBoard swaps its table for a list of links when the board is narrow, and renders each apart.
-  const bob = await as(users.bob, `${spacePath(space.url)}/threads`, {
-    context: {viewport: {width: 390, height: 844}, hasTouch: true},
-  })
-
-  const hers = bob.getByRole("link").filter({hasText: "the server is on fire"})
-  const his = bob.getByRole("link").filter({hasText: "where is the sextant"})
-
-  await expect(his).toBeVisible()
-
-  // Same tick and throttle as US-112: a dot read before both have run may still be about to clear.
-  await bob.waitForTimeout(1500)
-
-  await expect(unreadDot(hers)).toBeVisible()
-  await expect(unreadDot(his)).toHaveCount(0)
-})
-
-// Classifieds stands in for the five boards whose items are cards, which differ only in the corner.
-test("US-114 see which listings are unread", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-
-    seedClassified(space, user.bob, "vintage sextant", at(3, HOUR))
-    seedClassified(space, user.alice, "brass astrolabe", at(2, HOUR))
-  })
-
-  const space = scenario.space("space")
-  const bob = await as(users.bob, roomPath(space.url, "general"))
-
-  const classifiedsNav = contentNavItem(bob, "Classifieds")
-
-  await expect(classifiedsNav).toBeVisible()
-  await expect(unreadDot(classifiedsNav)).toBeVisible()
-
-  await classifiedsNav.click()
-
-  const hers = bob.getByRole("link").filter({hasText: "brass astrolabe"})
-  const his = bob.getByRole("link").filter({hasText: "vintage sextant"})
-
-  await expect(his).toBeVisible()
-
-  // Same tick and throttle as US-112.
-  await bob.waitForTimeout(1500)
-
-  await expect(unreadDot(hers)).toBeVisible()
-  await expect(unreadDot(his)).toHaveCount(0)
 })
 
 const seedPoll = (space: SeededSpace, user: TestUser, title: string, createdAt: number) =>

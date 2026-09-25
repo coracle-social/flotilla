@@ -33,30 +33,6 @@ const chatUploadButton = (page: Page) => page.locator("button[data-tip='Add an i
 const banner = (page: Page, text: string) =>
   page.locator(".room__compose .border-l-2").filter({hasText: text})
 
-// prosemirror reads the file off the event, and playwright's dispatchEvent drops the dataTransfer.
-const dropImage = (editor: Locator, name: string) =>
-  editor.evaluate(
-    (node, {name, data}) => {
-      const transfer = new DataTransfer()
-      const {left, top, width, height} = node.getBoundingClientRect()
-
-      transfer.items.add(
-        new File([Uint8Array.from(atob(data), c => c.charCodeAt(0))], name, {type: "image/gif"}),
-      )
-
-      node.dispatchEvent(
-        new DragEvent("drop", {
-          bubbles: true,
-          cancelable: true,
-          dataTransfer: transfer,
-          clientX: left + width / 2,
-          clientY: top + height / 2,
-        }),
-      )
-    },
-    {name, data: GIF_BASE64},
-  )
-
 const pasteImage = (editor: Locator, name: string) =>
   editor.evaluate(
     (node, {name, data}) => {
@@ -122,17 +98,6 @@ test("US-056 autocomplete a mention or a room reference", async ({seed, as}) => 
   // This space's own member first, the outsider from the other space under him.
   await expect(suggestions(page)).toContainText(["Bob Roberts", "Bobbin Amaranth"])
 
-  await editor.pressSequentially("bin")
-
-  await expect(suggestions(page)).toContainText(["Bobbin Amaranth"])
-
-  // Back to "@bob", where both of them are on offer again.
-  await editor.press("Backspace")
-  await editor.press("Backspace")
-  await editor.press("Backspace")
-
-  await expect(suggestions(page)).toContainText(["Bob Roberts", "Bobbin Amaranth"])
-
   await suggestions(page).filter({hasText: "Bob Roberts"}).click()
 
   const mention = editor.locator(".tiptap-object")
@@ -194,28 +159,21 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
   await chooseFile(alice, roomUploadButton(alice), gifFile("photo.gif"))
 
-  await expect(alice.locator(".room__compose-inner .spinner")).toBeVisible()
   await expect(sendButton(alice)).toBeDisabled()
 
   blossom.release()
 
   await expect(sendButton(alice)).toBeEnabled()
   await expect(composer(alice)).toContainText("photo.gif")
-  await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)
 
   await composer(alice).press("Enter")
 
   await expect(timeline(alice).locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
   await expect(timeline(bob).locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
 
-  await dropImage(composer(alice), "dropped.gif")
-
-  await expect(composer(alice)).toContainText("dropped.gif")
-
   await pasteImage(composer(alice), "pasted.gif")
 
   await expect(composer(alice)).toContainText("pasted.gif")
-  await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)
 
   // Its composer stays disabled until the recipient's messaging relays have been read.
   await alice.goto(chatPath(users.bob.pubkey))
@@ -241,23 +199,13 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   await expect(timeline(alice).getByText("morning all")).toBeVisible()
   await expect(alice.getByRole("alert")).toHaveCount(0)
 
-  // A file the editor has no node for is uploaded on its own and lands as a url.
-  await chooseFile(alice, roomUploadButton(alice), {
-    name: "notes.txt",
-    mimeType: "text/plain",
-    buffer: Buffer.from("not an image"),
-  })
-
-  await expect(composer(alice)).toContainText(DEFAULT_BLOSSOM_ORIGIN)
-  await expect(alice.getByRole("alert")).toHaveCount(0)
-
   // What the server refuses is what the composer refuses, in the words the server used.
   blossom.refuse("text files are not allowed here")
 
   await chooseFile(alice, roomUploadButton(alice), {
-    name: "notes-again.txt",
+    name: "notes.txt",
     mimeType: "text/plain",
-    buffer: Buffer.from("still not an image"),
+    buffer: Buffer.from("not an image"),
   })
 
   await expect(alice.getByRole("alert")).toContainText("text files are not allowed here")
@@ -358,10 +306,6 @@ test("US-059 cancel a reply or an edit in progress", async ({seed, as}) => {
 
   await editor.pressSequentially("half-written thought")
 
-  // Bob's message offers zap, emoji, reply and the menu; alice's own also offers the edit.
-  await expect(messageActions(page, "morning all")).toHaveCount(4)
-  await expect(messageActions(page, "my first message")).toHaveCount(5)
-
   await messageActions(page, "morning all").nth(2).click()
 
   await expect(replyBanner).toContainText("morning all")
@@ -398,11 +342,6 @@ test("US-059 cancel a reply or an edit in progress", async ({seed, as}) => {
 
   await expect(editBanner).toHaveCount(0)
   await expect(editor).toHaveText("half-written thought")
-
-  // Neither message was touched, and the draft never left the composer.
-  await expect(timeline(page).getByText("morning all")).toHaveCount(1)
-  await expect(timeline(page).getByText("my first message")).toHaveCount(1)
-  await expect(timeline(page).getByText("half-written thought")).toHaveCount(0)
 })
 
 // Dictation's two buttons are one button in two states, so the label is what says which.

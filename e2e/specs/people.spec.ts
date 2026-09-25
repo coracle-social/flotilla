@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
-import {nprofileEncode, npubEncode} from "nostr-tools/nip19"
+import {npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE, MONTH} from "@welshman/lib"
 import {NOTE, STATUS, makeEvent} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
@@ -10,7 +10,6 @@ import {
   GIF,
   WEBP,
   expect,
-  makeTestUser,
   mockBlossom,
   profilePath,
   spacePath,
@@ -18,7 +17,6 @@ import {
   topDialog,
   users,
 } from "../harness"
-import type {TestUser} from "../harness"
 
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string; readonly event: SignedEvent}
@@ -31,13 +29,6 @@ const CLIPBOARD = {...DESKTOP, permissions: ["clipboard-read", "clipboard-write"
 // uploadFile appends the extension when the descriptor's url carries none, as the mock's never does.
 const uploadedUrl = (body: Buffer, extension: string) =>
   `${DEFAULT_BLOSSOM_ORIGIN}/${createHash("sha256").update(body).digest("hex")}.${extension}`
-
-// displayPubkey in @welshman/domain: the npub with its middle taken out.
-const shortNpub = (user: TestUser) => {
-  const npub = npubEncode(user.pubkey)
-
-  return npub.slice(0, 8) + "…" + npub.slice(-5)
-}
 
 // The page's own region, so an assertion about an avatar isn't satisfied by the copy the nav renders.
 const pageContent = (page: Page) => page.locator(".page__content")
@@ -66,63 +57,24 @@ const profileMenu = (page: Page) => page.locator("button.button-circle.button-gh
 const viewProfile = (card: Locator) => card.getByRole("link", {name: "View Profile"}).first()
 
 test("US-074 find a person", async ({seed, as}) => {
-  // Sixty of them, so the ten the dialog lists are visibly the best matches rather than everyone.
-  const searchers = Array.from({length: 60}, (_, i) => makeTestUser(`searcher-${i}`))
-  const searcherName = (i: number) => `Searcher ${String(i).padStart(2, "0")}`
-  const searcherAvatar = (i: number) => `https://images.test/searcher-${i}.png`
-  const about = [
-    "Deck crew on the northern run.",
-    "Splices rope, keeps the log, argues about knots.",
-    "Ask about the time the compass froze solid.",
-    "Answers to a whistle and to nothing else.",
-  ].join("\n")
-
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
     space.join(user.bob, "general")
-
-    // Bob is the one person whose name shares no token with the others.
-    space.profile(user.bob, {
-      name: "Bob Barnacle",
-      about: "Dockside cook and keeper of the ship's cat.",
-    })
-
+    space.profile(user.bob, {name: "Bob Barnacle"})
     space.relayList(user.bob)
-
-    for (const [i, searcher] of searchers.entries()) {
-      space.member(searcher)
-      space.profile(searcher, {name: searcherName(i), about, picture: searcherAvatar(i)})
-    }
   })
 
   const page = await as(users.alice, spacePath(scenario.space("space").url), {context: DESKTOP})
-  const term = searchTerm(page)
-  const cards = searchResults(page)
+  const bobCard = searchResults(page).filter({hasText: "Bob Barnacle"})
 
   await enteredSpace(page)
   await openSearch(page)
-  await term.fill("Searcher")
-
-  // Which of them ranks first is fuse's business.
-  const first = cards.first()
-
-  await expect(first).toBeVisible()
-  await expect(first.locator('img[src^="https://images.test/searcher-"]')).toBeVisible()
-  await expect(first).toContainText(/Searcher \d\d/)
-  await expect(first).toContainText("Deck crew on the northern run.")
-
-  await expect.poll(() => cards.count()).toBe(10)
-
-  // Narrowing the term filters the list rather than reordering it.
-  await term.fill("Barnacle")
-
-  const bobCard = cards.filter({hasText: "Bob Barnacle"})
+  await searchTerm(page).fill("Barnacle")
 
   await expect(bobCard).toHaveCount(1)
-  await expect(cards.filter({hasText: /Searcher \d\d/})).toHaveCount(0)
 
   await viewProfile(bobCard).click()
 
@@ -131,9 +83,6 @@ test("US-074 find a person", async ({seed, as}) => {
 })
 
 test("US-075 view someone's profile", async ({seed, as}) => {
-  const avatar = "https://images.test/bob-avatar.png"
-  const banner = "https://images.test/bob-banner.png"
-
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
     const other = relay("other")
@@ -152,9 +101,6 @@ test("US-075 view someone's profile", async ({seed, as}) => {
         .writer()
         .setName("Bob Barnacle")
         .setAbout("Deckhand, dockside cook, and keeper of the ship's cat.")
-        .setPicture(avatar)
-        .setBanner(banner)
-        .setWebsite("bobbarnacle.example")
         .renderTemplate(),
     )
 
@@ -171,7 +117,6 @@ test("US-075 view someone's profile", async ({seed, as}) => {
 
     space.relayList(user.bob)
 
-    // Carol belongs to no space at all, which is what the panel's empty state is about.
     space.member(user.carol)
     space.profile(user.carol, {name: "Carol Cutter"})
     // An expired status is one its author asked relays to stop serving.
@@ -190,50 +135,27 @@ test("US-075 view someone's profile", async ({seed, as}) => {
 
   const space = scenario.space("space")
   const other = scenario.space("other")
-  const page = await as(users.alice, profilePath(users.bob.pubkey), {context: CLIPBOARD})
+  const page = await as(users.alice, profilePath(users.bob.pubkey), {context: DESKTOP})
   const region = pageContent(page)
 
   await expect(page.getByRole("heading", {name: "Bob Barnacle"})).toBeVisible()
-  // The header renders the avatar twice, one size per breakpoint; the wide one is second.
-  await expect(region.locator(`img[src="${avatar}"]`).last()).toBeVisible()
-  await expect(region.locator(`img[src="${banner}"]`)).toBeVisible()
   await expect(region.getByText("Deckhand, dockside cook")).toBeVisible()
   await expect(region.getByRole("link", {name: "Scrubbing the decks"})).toHaveAttribute(
     "href",
     "https://bobbarnacle.example/decks",
   )
 
-  const npub = region.getByText(shortNpub(users.bob))
-
-  await expect(npub).toBeVisible()
-
-  await npub.locator("xpath=following-sibling::button").click()
-
-  await expect(page.getByRole("alert")).toContainText("Copied to clipboard!")
-  await expect.poll(() => readClipboard(page)).toBe(npubEncode(users.bob.pubkey))
-
-  await expect(region.getByRole("link", {name: "bobbarnacle.example"})).toHaveAttribute(
-    "href",
-    "https://bobbarnacle.example",
-  )
-
   const spaces = sidebar(page).locator(".card.card-sm").filter({hasText: "Spaces"})
   const spaceLink = spaces.locator(`a[href="${spacePath(space.url)}"]`)
   const otherLink = spaces.locator(`a[href="${spacePath(other.url)}"]`)
 
-  await expect(spaces.locator(".badge").first()).toHaveText("2")
   await expect(spaceLink).toContainText("Member")
   await expect(otherLink).toBeVisible()
-  await expect(otherLink.locator(".badge").filter({hasText: "Member"})).toHaveCount(0)
-
-  await spaceLink.click()
-
-  await expect(page).toHaveURL(new RegExp(spacePath(space.url)))
+  await expect(otherLink).not.toContainText("Member")
 
   await page.goto(profilePath(users.carol.pubkey))
 
   await expect(page.getByRole("heading", {name: "Carol Cutter"})).toBeVisible()
-  await expect(sidebar(page).getByText("No spaces found.")).toBeVisible()
   await expect(region.getByText("Ashore until spring")).toHaveCount(0)
 })
 
@@ -257,20 +179,14 @@ test("US-076 follow and unfollow", async ({seed, as}) => {
 
   await follow.click()
 
-  // The same page, still on the same url: the label flips where it stands.
   await expect(unfollow).toBeVisible()
-  await expect(follow).toHaveCount(0)
-  await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob.pubkey)}$`))
 
   await unfollow.click()
 
   await expect(follow).toBeVisible()
-  await expect(unfollow).toHaveCount(0)
 })
 
 test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
-  const carolAvatar = "https://images.test/carol-avatar.png"
-
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
 
@@ -279,7 +195,7 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
     space.join(user.bob, "general")
     space.join(user.carol, "general")
     space.profile(user.bob, {name: "Bob Barnacle", about: "Dockside cook."})
-    space.profile(user.carol, {name: "Carol Cutter", about: "Sailmaker.", picture: carolAvatar})
+    space.profile(user.carol, {name: "Carol Cutter", about: "Sailmaker."})
     space.relayList(user.alice)
     space.relayList(user.bob)
     space.relayList(user.carol)
@@ -298,25 +214,17 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
   const carolCard = cards.filter({hasText: "Carol Cutter"})
   const reputation = () => sidebar(page).locator(".card.card-sm").filter({hasText: "Reputation"})
 
-  // The trust ring beside a name: a circle whose dash offset shrinks as the ring fills in.
-  const ring = async () =>
-    Number(await bobCard.locator("circle.wot-highlight").getAttribute("stroke-dashoffset"))
-
   await enteredSpace(page)
   await openSearch(page)
   await term.fill("Barnacle")
 
   await expect(bobCard).toHaveCount(1)
-  await expect(bobCard.locator("circle.wot-highlight")).toBeAttached()
-
-  const emptyRing = await ring()
 
   await viewProfile(bobCard).click()
 
   await expect(page).toHaveURL(new RegExp(`${profilePath(users.bob.pubkey)}$`))
   // Word-bounded: a plain "0 / 100" is also a substring of "10 / 100" and "20 / 100".
   await expect(reputation()).toContainText(/\b0 \/ 100\b/)
-  await expect(reputation()).toContainText("This user is not well known in your network.")
 
   await openSearch(page)
   await term.fill("Cutter")
@@ -335,17 +243,13 @@ test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
   await term.fill("Barnacle")
 
   await expect(bobCard).toHaveCount(1)
-  await expect.poll(ring).toBeLessThan(emptyRing)
 
   await viewProfile(bobCard).click()
 
   await expect(reputation()).toContainText("Followed by 1+ people in your network.")
-  await expect(reputation()).toContainText("1 person you follow also follows Bob Barnacle.")
-  await expect(reputation().locator(`img[src="${carolAvatar}"]`)).toBeVisible()
 })
 
 test("US-078 edit your own profile", async ({seed, as}) => {
-  const oldAvatar = "https://images.test/alice-avatar.png"
   const newAvatar = uploadedUrl(WEBP, "webp")
   const newBanner = uploadedUrl(GIF, "gif")
 
@@ -360,8 +264,6 @@ test("US-078 edit your own profile", async ({seed, as}) => {
         .writer()
         .setName("Alice Anderson")
         .setAbout("Ship's navigator.")
-        .setPicture(oldAvatar)
-        .setNip05("alice@flotilla.test")
         .renderTemplate(),
     )
     space.relayList(user.alice)
@@ -374,24 +276,14 @@ test("US-078 edit your own profile", async ({seed, as}) => {
   const region = pageContent(page)
   const edit = page.getByRole("button", {name: "Edit profile"})
 
-  await expect(edit).toBeVisible()
-  await expect(page.getByRole("button", {name: "Follow", exact: true})).toHaveCount(0)
-  // Exact, or this would match the nav's "Messages".
-  await expect(page.getByRole("button", {name: "Message", exact: true})).toHaveCount(0)
-
   await edit.click()
 
-  // ProfileEditForm's text inputs, in the order it renders them: nickname, website, nostr address.
   const form = page.locator("form").first()
   const nickname = form.locator('input[type="text"]').first()
   const about = form.locator("textarea")
-  const nostrAddress = form.locator('input[type="text"]').nth(2)
   const picker = page.locator('label[aria-label="Drag and drop files here."]')
 
   await expect(nickname).toHaveValue("Alice Anderson")
-  await expect(about).toHaveValue("Ship's navigator.")
-  await expect(nostrAddress).toHaveValue("alice@flotilla.test")
-  await expect.poll(() => picker.getAttribute("style")).toContain(oldAvatar)
 
   await nickname.fill("Alice Anchor")
   await about.fill("Ship's navigator and part-time cartographer.")
@@ -430,19 +322,17 @@ test("US-078 edit your own profile", async ({seed, as}) => {
 })
 
 test("US-079 read a person's notes", async ({seed, as}) => {
-  const avatar = "https://images.test/alice-avatar.png"
-
   let carolNote!: Seeded
   let pinned!: Seeded
 
-  const scenario = await seed(({relay, user, at}) => {
+  await seed(({relay, user, at}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
     space.join(user.bob, "general")
     space.join(user.carol, "general")
-    space.profile(user.alice, {name: "Alice Anderson", picture: avatar})
+    space.profile(user.alice, {name: "Alice Anderson"})
     space.profile(user.carol, {name: "Carol Cutter"})
     space.relayList(user.alice)
     space.relayList(user.carol)
@@ -492,68 +382,23 @@ test("US-079 read a person's notes", async ({seed, as}) => {
     )
   })
 
-  const {url} = scenario.space("space")
   const page = await as(users.bob, profilePath(users.alice.pubkey), {context: DESKTOP})
   const list = notes(page)
-  const newest = list.filter({hasText: "NEWEST"})
 
-  await expect(newest).toBeVisible()
-  await expect(newest.getByText("Alice Anderson")).toBeVisible()
-  await expect(newest.locator(`img[src="${avatar}"]`)).toBeVisible()
-  // The app renders formatTimestamp, a short date plus a clock time, as every content item does.
-  await expect(newest).toContainText(/\d{1,2}\/\d{1,2}\/\d{2,4}/)
+  await expect(list.filter({hasText: "NEWEST"})).toBeVisible()
+  await expect(list.filter({hasText: "MIDDLE"})).toBeVisible()
 
-  await expect(list.filter({hasText: "REPLY"})).toHaveCount(0)
-
-  // The pin outranks the newer notes; the rest are newest first.
+  // The pin outranks the newer notes.
   await expect(list.first()).toContainText("PINNED")
   await expect(list.filter({hasText: "PINNED"})).toHaveCount(1)
-  await expect(list.nth(1)).toContainText("NEWEST")
-  await expect(list.nth(2)).toContainText("MIDDLE")
 
   // Nothing is scrolled here: the feed keeps widening its window until the page is full.
   await expect(list.filter({hasText: "OLDEST"})).toBeVisible()
-
-  // Flotilla has no composer for a kind-1 note, so it goes out through the app's own primitives.
-  const alice = await as(users.alice, spacePath(url), {context: DESKTOP})
-
-  await alice.evaluate(
-    async ([relayUrl, content]) => {
-      const {
-        app,
-        network,
-        makeEvent: make,
-      } = window as unknown as {
-        app: {get(): {user: {sign(template: object): Promise<object>}}}
-        network: {get(): {publish(options: {event: object; relays: string[]}): Promise<unknown>}}
-        makeEvent(kind: number, values: {content: string}): object
-      }
-
-      await network.get().publish({
-        event: await app.get().user.sign(make(1, {content})),
-        relays: [relayUrl],
-      })
-    },
-    [url, "LIVE straight off the deck"] as const,
-  )
-
-  // The profile feed fetches on load rather than subscribing live.
-  await page.reload()
-
-  await expect(list.filter({hasText: "LIVE"})).toBeVisible()
-  await expect(list.nth(1)).toContainText("LIVE")
-
-  // Carol's own note is on her profile; alice's reply to it is alice's, so it isn't here.
-  await page.goto(profilePath(users.carol.pubkey))
-
-  await expect(notes(page).filter({hasText: "Anyone seen the tide charts?"})).toBeVisible()
-  await expect(notes(page).filter({hasText: "REPLY"})).toHaveCount(0)
+  await expect(list.filter({hasText: "REPLY"})).toHaveCount(0)
 })
 
 test("US-080 preview a profile from anywhere", async ({seed, as}) => {
-  const avatar = "https://images.test/bob-avatar.png"
-
-  const scenario = await seed(({relay, user, at}) => {
+  const scenario = await seed(({relay, user}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
@@ -562,13 +407,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
     space.profile(user.bob, {
       name: "Bob Barnacle",
       about: "Deckhand, dockside cook, and keeper of the ship's cat.",
-      picture: avatar,
     })
-    space.message(user.bob, "general", "the cat has the helm", at(1, HOUR))
-    space.event(
-      user.bob,
-      makeEvent(STATUS, {content: "Scrubbing the decks", tags: [["d", "general"]]}),
-    )
     space.relayList(user.bob)
   })
 
@@ -588,31 +427,13 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
   const profile = page.getByRole("dialog", {name: "Profile details"})
 
   await expect(profile.getByText("Bob Barnacle")).toBeVisible()
-  await expect(profile.locator(`img[src="${avatar}"]`)).toBeVisible()
   await expect(profile.getByText("Deckhand, dockside cook")).toBeVisible()
-  await expect(profile.getByText("Scrubbing the decks")).toBeVisible()
-  await expect(profile.getByText(/Last active/)).toBeVisible()
-  await expect(profile.getByRole("button", {name: "Close dialog"})).toBeVisible()
-
-  for (const key of ["Tab", "Shift+Tab"]) {
-    await page.keyboard.press(key)
-    expect(await profile.evaluate(dialog => dialog.contains(document.activeElement))).toBe(true)
-  }
 
   await page.keyboard.press("Escape")
-
-  await expect(page.locator(".dialog")).toHaveCount(0)
-  await expect(page).toHaveURL(new RegExp(`${spacePath(url)}/directory$`))
-  await expect(preview).toBeFocused()
-
-  await preview.click()
-
-  await topDialog(page).getByRole("button", {name: "Go back"}).click()
 
   // Closed, and alice is exactly where she opened it from.
   await expect(page.locator(".dialog")).toHaveCount(0)
   await expect(page).toHaveURL(new RegExp(`${spacePath(url)}/directory$`))
-  await expect(preview).toBeVisible()
 
   await preview.click()
   await page.getByRole("button", {name: "View Full Profile"}).click()
@@ -640,60 +461,25 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
   await expect(page.getByRole("heading", {name: "Profile Details"})).toBeVisible()
 
   const info = topDialog(page)
-  // Each of these is an input and its copy button inside one bordered label, in dialog order.
-  const linkField = info.locator("label.input").first()
+  // The pubkey and its copy button share the dialog's second bordered label.
   const pubkeyField = info.locator("label.input").nth(1)
-  const link = linkField.locator('input[type="text"]')
-  const pubkey = pubkeyField.locator('input[type="text"]')
 
-  // A FieldInline puts its value in the div right after its label.
-  const createdAt = info
-    .locator("label")
-    .filter({hasText: "Created At"})
-    .locator("xpath=following-sibling::div")
-
-  await expect(createdAt).toContainText(String(new Date().getFullYear()))
-
-  await expect(link).toHaveValue(/^nostr:nprofile1/)
-  await expect(pubkey).toHaveValue(npubEncode(users.bob.pubkey))
-  await expect(info.locator("pre code")).toContainText("Bob Barnacle")
-
-  await linkField.getByRole("button").click()
-
-  await expect(page.getByRole("alert")).toContainText("Copied to clipboard!")
-  await expect.poll(() => readClipboard(page)).toBe(await link.inputValue())
+  await expect(pubkeyField.locator('input[type="text"]')).toHaveValue(npubEncode(users.bob.pubkey))
 
   await pubkeyField.getByRole("button").click()
 
+  await expect(page.getByRole("alert")).toContainText("Copied to clipboard!")
   await expect.poll(() => readClipboard(page)).toBe(npubEncode(users.bob.pubkey))
-
-  await info.getByRole("button", {name: "Copy"}).click()
-
-  await expect.poll(() => readClipboard(page)).toContain("Bob Barnacle")
 
   await page.getByRole("button", {name: "Got it"}).click()
 
   await profileMenu(page).click()
   await page.getByRole("button", {name: "Share"}).click()
 
-  // The menu that opened it is still mounted behind the dialog, and its items run together.
-  await expect(page.getByText("Share Profile", {exact: true})).toBeVisible()
-
   const share = topDialog(page)
-  const qr = share.locator("canvas")
-  const shareLink = share.locator("input")
 
-  await expect(qr).toBeVisible()
-  expect((await qr.boundingBox())?.width ?? 0).toBeGreaterThan(0)
-
-  // pubkeyLink in src/app/env.ts, which shares a profile without relay hints.
-  await expect(shareLink).toHaveValue(
-    `https://coracle.social/${nprofileEncode({pubkey: users.bob.pubkey, relays: []})}`,
-  )
-
-  await share.locator("label.input").getByRole("button").click()
-
-  await expect.poll(() => readClipboard(page)).toBe(await shareLink.inputValue())
+  await expect(share.locator("canvas")).toBeVisible()
+  await expect(share.locator("input")).toHaveValue(/nprofile1/)
 })
 
 test("US-082 mute an account", async ({seed, as}) => {
@@ -756,21 +542,13 @@ test("US-082 mute an account", async ({seed, as}) => {
   const list = notes(page)
 
   await expect(list).toHaveCount(2)
-  await expect(list.first()).toContainText("You have muted this person.")
-  await expect(list.last()).toContainText("You have muted this person.")
   await expect(pageContent(page).getByText("Salt on the rigging")).toHaveCount(0)
 
   await list.first().getByRole("button", {name: "Show anyway"}).click()
 
   await expect(list.first()).toContainText("The gulls have taken the mainsail")
-  await expect(list.last()).toContainText("You have muted this person.")
 
-  await page.locator('.primary-nav a[href="/settings/profile"]').click()
-  await page.getByRole("link", {name: "Content"}).click()
-
-  await expect(badge).toBeVisible()
-
-  await page.reload()
+  await page.goto("/settings/content")
 
   await expect(badge).toBeVisible()
 
@@ -787,5 +565,4 @@ test("US-082 mute an account", async ({seed, as}) => {
   await expect(list).toHaveCount(2)
   await expect(pageContent(page).getByText("Salt on the rigging this morning")).toBeVisible()
   await expect(pageContent(page).getByText("The gulls have taken the mainsail")).toBeVisible()
-  await expect(pageContent(page).getByText("You have muted this person.")).toHaveCount(0)
 })

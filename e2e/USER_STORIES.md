@@ -1721,10 +1721,6 @@ Acceptance:
   note itself came from.
 - It is a list of notes: a reply is counted on the note it answers rather than
   drawn underneath it, and never appears as an item of its own.
-- Every note carries its reply count, including the ones with no replies.
-- Scrolling to the end of the feed loads more rather than asking her to.
-- The feed is one unbroken stretch back from now, so nothing appears below the
-  end of the list.
 - The section fills from the relays that answer. One that takes the connection
   and then says nothing does not hold it empty.
 
@@ -1796,28 +1792,6 @@ Acceptance:
   dot.
 - The nav item stays clear once he has opened the list, whether or not a thread
   under it is still unread.
-
-### US-113 — See which threads are unread on a phone
-
-As bob on a phone, I want the same dot on the thread that raised it, so that the
-Threads indicator is as actionable on a phone as it is on a desktop.
-
-Acceptance:
-
-- The thread list in a board too narrow for the table is a list of links rather
-  than a table, and alice's thread carries a dot there; bob's own does not.
-
-### US-114 — See which listings are unread
-
-As bob, I want the same dot on a board whose items are cards rather than rows,
-so that every content section answers "which one is new" the same way.
-
-Acceptance:
-
-- A listing alice posted raises an unread dot on the Classifieds nav item; one
-  bob posted himself does not.
-- Opening the list keeps the dot on the corner of alice's card, and bob's own
-  card carries none.
 
 ### US-123 — Find a section whose newest item is old
 

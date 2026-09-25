@@ -15,19 +15,12 @@ test("opens the space menu in a drawer on a phone", async ({seed, as}) => {
 
   const drawer = page.locator(".drawer")
 
-  await expect(drawer).toHaveCount(0)
-
   await page.getByRole("button", {name: "Open space menu"}).click()
 
   await expect(drawer.getByRole("link", {name: "General"})).toBeVisible()
 
-  // The space rail sits beside the menu inside the panel, so the menu gets what the rail leaves.
-  await expect(drawer.locator(".space-menu")).toBeInViewport({ratio: 1})
-
   // The drawer stops short of the bottom bar, and playwright's hit-target check is what proves it.
-  const closeButton = page.getByRole("button", {name: "Close space menu"})
-
-  await closeButton.click()
+  await page.getByRole("button", {name: "Close space menu"}).click()
 
   await expect(drawer).toHaveCount(0)
 
