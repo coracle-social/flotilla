@@ -1,52 +1,35 @@
 <script lang="ts">
-  import {onDestroy, onMount, untrack} from "svelte"
+  import {onDestroy} from "svelte"
   import {readable} from "svelte/store"
-  import {page} from "$app/stores"
-  import {navigate} from "@app/modal"
   import type {Readable} from "svelte/store"
-  import {debounce} from "throttle-debounce"
   import cx from "classnames"
-  import {now, ago, spec, MINUTE} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
+  import {ago, MINUTE} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {stamp, MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
+  import {stamp} from "@welshman/util"
   import {Message} from "@welshman/domain"
   import {MembershipStatus} from "@welshman/app"
-  import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
-  import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
-  import Login2 from "@assets/icons/login-3.svg?dataurl"
   import Close from "@assets/icons/close.svg?dataurl"
-  import {fade, fly} from "@lib/transition"
-  import {documentActive} from "@lib/html"
   import Button from "@lib/components/Button.svelte"
-  import Divider from "@lib/components/Divider.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
-  import VirtualList from "@lib/components/VirtualList.svelte"
-  import type {VirtualListController} from "@lib/components/VirtualList.svelte"
   import ComposeArea, {type ComposeValues} from "@app/components/ComposeArea.svelte"
-  import RoomItem from "@app/components/RoomItem.svelte"
-  import RoomItemAddMember from "@app/components/RoomItemAddMember.svelte"
+  import RoomCallPane from "@app/components/RoomCallPane.svelte"
+  import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
   import RoomPinnedMessages from "@app/components/RoomPinnedMessages.svelte"
+  import RoomTranscript from "@app/components/RoomTranscript.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
-  import VideoCallContent from "@app/components/VideoCallContent.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
   import {deletes, relays, rooms, thunks, user, writer} from "@app/core"
-  import {joinRoom, leaveRoom} from "@app/access"
   import {CallState, callTargetRoom, callState, VideoCallLayout, videoCallLayout} from "@app/call"
   import {
     RoomType,
     deriveUserRoomMembershipStatus,
     getRoomType,
-    groupRoomMessages,
     prependParent,
     toSpace,
   } from "@app/rooms"
   import {loadSendDelay} from "@app/settings"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {pageLoading} from "@app/loading"
-  import {checked, deferredRoomPath, setChecked} from "@app/notifications"
-  import {getPermalinkTarget, highlightedEvent, makeRoomPath} from "@app/routes"
+  import {deferredRoomPath, setChecked} from "@app/notifications"
+  import {makeRoomPath} from "@app/routes"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -56,12 +39,7 @@
 
   const {url, h}: Props = $props()
 
-  const context = makeFeedContext({relays: [url]})
-
-  onDestroy(context.cleanup)
-
   const room = h ? $rooms.forRoom(url, h) : readable(undefined)
-  const addMemberKind = h ? ROOM_ADD_MEMBER : RELAY_ADD_MEMBER
   const isVoiceRoom = $derived($room && getRoomType($room) === RoomType.Voice)
 
   const isCallTargetingThisRoom = $derived($callTargetRoom?.url === url && $callTargetRoom?.h === h)
@@ -109,46 +87,9 @@
   const membershipStatus = h
     ? deriveUserRoomMembershipStatus(url, h)
     : readable(MembershipStatus.Granted)
-  const at = $derived(parseInt($page.url.searchParams.get("at")!))
-  const inviteCode = $derived($page.url.searchParams.get("code") || "")
-  const target = $derived(getPermalinkTarget($page.url))
 
-  const join = async () => {
-    if (h) {
-      joining = true
-
-      try {
-        const message = await joinRoom(url, h, inviteCode)
-
-        if (message) {
-          pushToast({theme: "error", message})
-        } else {
-          // Restart the feed now that we're a member
-          start(at || now())
-        }
-      } finally {
-        joining = false
-      }
-    }
-  }
-
-  const leave = async () => {
-    if (h) {
-      leaving = true
-
-      try {
-        const message = await leaveRoom(url, h)
-
-        if (message) {
-          pushToast({theme: "error", message})
-        } else {
-          pushToast({message: "You have left the room."})
-        }
-      } finally {
-        leaving = false
-      }
-    }
-  }
+  // Restart the feed now that we're a member
+  const onJoin = () => transcript?.restart()
 
   const replyTo = (event: TrustedEvent) => composeArea?.reply(event)
 
@@ -200,308 +141,15 @@
     }
   }
 
-  const getElementKey = (element: {id: string}) => element.id
-
-  // In screen terms rather than scroll terms, so the reversed layout doesn't come into it.
-  const topOf = (target: HTMLElement) =>
-    target.getBoundingClientRect().top - element!.getBoundingClientRect().top
-
-  // Messages arriving at the origin push the pinned row away, and the browser does not compensate.
-  const keepPinned = (caughtUp: boolean) => {
-    const target = pinned && element?.querySelector(`[data-event="${pinned.id}"]`)
-
-    if (target instanceof HTMLElement && pinned) {
-      const origin = Math.abs(element!.scrollTop)
-
-      // A pin clamped at the origin belongs at the live end once the forward walk catches up.
-      if (pinned.clamped && caughtUp && topOf(target) > origin) {
-        release()
-
-        // Only a scroll event clears the flag, so claiming one that never fires discards the next.
-        if (origin >= 1) {
-          isProgrammaticScroll = true
-          element!.scrollTo({top: 0})
-        }
-      } else {
-        const drift = topOf(target) - pinned.top
-
-        if (Math.abs(drift) >= 1) {
-          isProgrammaticScroll = true
-          element!.scrollBy({top: drift})
-        }
-      }
-    }
-  }
-
-  // Any scroll event at all fires while content loads, so taking over has to be a real gesture
-  const release = () => {
-    released = true
-    pinned = undefined
-  }
-
-  // A row deep in history renders on the next flush after it is asked for, so the lookup waits for it.
-  const scrollToRow = (
-    id: string,
-    {
-      behavior = "auto",
-      highlight = false,
-      pin = false,
-    }: {behavior?: ScrollBehavior; highlight?: boolean; pin?: boolean} = {},
-  ) => {
-    virtualList?.reveal(id)
-
-    requestAnimationFrame(() => {
-      const target = element?.querySelector(`[data-event="${id}"]`) ?? document.getElementById(id)
-
-      if (target instanceof HTMLElement) {
-        isProgrammaticScroll = true
-        target.scrollIntoView({behavior, block: "center"})
-
-        if (highlight) {
-          highlightedEvent.set(id)
-        }
-
-        if (pin) {
-          // A scroll that ended at the origin is one the browser clamped there.
-          pinned = {id, top: topOf(target), clamped: Math.abs(element!.scrollTop) < 1}
-        }
-      }
-
-      jumpSettled = true
-    })
-  }
-
-  const manageScrollPosition = () => {
-    scrolledUp = Math.abs(element?.scrollTop || 0) > 1500
-
-    const newMessages = document.getElementById("new-messages")
-
-    if (newMessagesSeen) {
-      showFixedNewMessages = false
-    } else if (newMessages) {
-      const {y} = newMessages.getBoundingClientRect()
-
-      if (y > 0 && y < 300) {
-        newMessagesSeen = true
-        showFixedNewMessages = false
-      } else {
-        showFixedNewMessages = y < 0
-      }
-    }
-
-    if (!released && !pinned && !isNaN(at)) {
-      // The pointer only helps once that message has arrived, so the anchor still carries the jump.
-      const pointedAt = target ? $events.find(spec({id: target})) : undefined
-      const targetEvent = pointedAt ?? $events.find(event => event.created_at >= at)
-
-      if (targetEvent) {
-        scrollToRow(targetEvent.id, {highlight: true, pin: true})
-      } else {
-        // Nothing to jump to yet, so don't hold the room back waiting for it
-        jumpSettled = true
-      }
-    }
-  }
-
-  const onScroll = () => {
-    if (!isProgrammaticScroll) {
-      isUserScrolling = true
-      clearIsUserScrolling()
-      manageScrollPosition()
-    }
-
-    isProgrammaticScroll = false
-  }
-
-  const scrollToNewMessages = () => scrollToRow("new-messages", {behavior: "smooth"})
-
-  // Anchoring a fresh feed on the present is what puts the reader at the live end.
-  const scrollToBottom = async () => {
-    const anchored = !isNaN(at)
-
-    if (anchored) {
-      release()
-      await navigate($page.url.pathname, {replaceState: true})
-      start(now())
-    }
-
-    element?.scrollTo({top: 0, behavior: anchored ? "auto" : "smooth"})
-  }
-
-  // A tab can be `visible` but unfocused, so `document.hidden` alone doesn't say the room is watched.
-  const onActiveChange = (active: boolean) => {
-    if (!active) {
-      lastVisibleAt = now()
-    } else if ($events.some(e => e.pubkey !== $user.pubkey && e.created_at > lastVisibleAt)) {
-      newMessagesAfter = lastVisibleAt
-      newMessagesBefore = now()
-      newMessagesSeen = false
-    }
-  }
-
-  let joining = $state(false)
-  let leaving = $state(false)
-  let jumpSettled = $state(false)
-  let released = false
-  let pinned: Maybe<{id: string; top: number; clamped: boolean}>
-  let feedAnchor: Maybe<number>
-  let isProgrammaticScroll = $state(false)
-  let isUserScrolling = $state(false)
-  let virtualList: Maybe<VirtualListController> = $state()
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-  let newer: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-  let element: HTMLElement | undefined = $state()
-  let lastVisibleAt = now()
-  let newMessagesAfter = $state($checked[$page.url.pathname])
-  let newMessagesBefore = $state(now())
-  let newMessagesSeen = false
-  let showFixedNewMessages = $state(false)
-  let scrolledUp = $state(false)
-  let cleanup: () => void
-  let events: Readable<TrustedEvent[]> = $state(readable([]))
-  let composeArea: ComposeArea | undefined = $state()
-
-  // A link into history renders the newest messages first and only then scrolls.
-  const awaitingJump = $derived(!isNaN(at) && !jumpSettled)
-
-  const reachedStartOfHistory = $derived($older?.status === "exhausted")
-
-  // The page bar carries one loader for both directions of an anchored walk.
-  $effect(() => {
-    pageLoading.set(isFeedLoading($older) || isFeedLoading($newer))
-
-    return () => pageLoading.set(false)
-  })
-
-  const clearIsUserScrolling = debounce(150, () => {
-    isUserScrolling = false
-  })
-
-  const elements = $derived(
-    groupRoomMessages({
-      events: $events,
-      pubkey: $user.pubkey,
-      addMemberKind,
-      unreadAfter: newMessagesAfter,
-      unreadBefore: newMessagesBefore,
-    }),
-  )
-
-  // The window only stops short of the present after jumping into history.
-  const windowStopsShort = $derived(!isNaN(at) && $newer?.status !== "exhausted")
-
-  // While the window stops short, the bottom of the container isn't the bottom of the conversation.
-  const showScrollButton = $derived(scrolledUp || windowStopsShort)
-
-  // `at` is NaN when there is no anchor, and NaN never equals itself.
-  $effect(() => {
-    if (!isNaN(at) && feedAnchor && at !== feedAnchor) {
-      released = false
-      pinned = undefined
-      jumpSettled = false
-
-      untrack(() => start(at))
-    }
-  })
-
-  $effect(() => {
-    if (elements.length > 0 && !isUserScrolling) {
-      requestAnimationFrame(manageScrollPosition)
-    }
-  })
-
-  // The forward walk can reach the present after the last message does, so the effect watches both.
-  $effect(() => {
-    const caughtUp = !windowStopsShort
-
-    if (elements.length > 0) {
-      const frame = requestAnimationFrame(() => keepPinned(caughtUp))
-
-      return () => cancelAnimationFrame(frame)
-    }
-  })
-
-  // Declaring these as handlers would claim the transcript is a control.
-  $effect(() => {
-    if (element) {
-      const target = element
-
-      for (const type of ["wheel", "touchmove", "keydown"]) {
-        target.addEventListener(type, release, {passive: true})
-      }
-
-      return () => {
-        for (const type of ["wheel", "touchmove", "keydown"]) {
-          target.removeEventListener(type, release)
-        }
-      }
-    }
-  })
-
-  const start = (anchor: number) => {
-    cleanup?.()
-
-    feedAnchor = anchor
-
-    const feed = makeFeed({
-      relays: [url],
-      at: anchor,
-      filters: [
-        h ? {kinds: [MESSAGE, addMemberKind], "#h": [h]} : {kinds: [MESSAGE, addMemberKind]},
-      ],
-      onEvent: context.add,
-    })
-
-    // The container is reversed, so scrolling away from the origin reaches older messages.
-    older = makeScrollLoader(element!, feed.loadOlder)
-    newer = makeScrollLoader(element!, feed.loadNewer, {reverse: true})
-
-    events = feed.events
-    cleanup = () => {
-      older?.stop()
-      newer?.stop()
-      feed.cleanup()
-    }
-  }
-
   const canEditEvent = (event: TrustedEvent) =>
     event.pubkey === $user.pubkey && event.created_at >= ago(5, MINUTE)
 
   const onEditEvent = (event: TrustedEvent) => composeArea?.edit(event)
 
-  onMount(() => {
-    // Defer rendering until navigation finishes
-    let frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(() => start(at || now()))
-    })
-
-    const unsubscribeActive = documentActive.subscribe(onActiveChange)
-
-    return () => {
-      cleanup?.()
-      unsubscribeActive()
-      cancelAnimationFrame(frame)
-    }
-  })
+  let events: Readable<TrustedEvent[]> = $state(readable([]))
+  let transcript: RoomTranscript | undefined = $state()
+  let composeArea: ComposeArea | undefined = $state()
 </script>
-
-{#snippet membershipButton(label: string)}
-  {#if $membershipStatus === MembershipStatus.Pending}
-    <Button class="button button-neutral button-sm" disabled={leaving} onclick={leave}>
-      <Icon icon={ClockCircle} />
-      Access Pending
-    </Button>
-  {:else}
-    <Button class="button button-neutral button-sm" disabled={joining} onclick={join}>
-      {#if joining}
-        <Spinner size="sm" />
-      {:else}
-        <Icon icon={Login2} />
-      {/if}
-      {label}
-    </Button>
-  {/if}
-{/snippet}
 
 <div
   class={cx(
@@ -509,19 +157,7 @@
     voiceConnectedHere && "bg-surface xl:flex-row xl:overflow-hidden",
   )}>
   {#if h && voiceConnectedHere}
-    <!-- The controls belong to the video, so they share its column and the chat panel
-         runs the full height beside it. Below xl the open chat takes the pane over
-         instead of sharing it, leaving this column to shrink to just the controls. -->
-    <div
-      class={cx(
-        "flex min-h-0 min-w-0 flex-col max-xl:order-last",
-        callChatOpen ? "xl:flex-1" : "flex-1",
-      )}>
-      <VideoCallContent {url} {h} class={cx(callChatOpen && "max-xl:hidden")} />
-      <div class="hide-on-keyboard flex shrink-0 items-center justify-center pb-2">
-        <CallControlBar {url} {h} />
-      </div>
-    </div>
+    <RoomCallPane {url} {h} />
   {/if}
 
   <!-- Closed at xl, the negative margin takes the panel out of the flex line without
@@ -550,98 +186,23 @@
       <RoomPinnedMessages {url} {h} />
     {/if}
 
-    <div class="relative flex min-h-0 flex-1 flex-col">
-      <div
-        bind:this={element}
-        onscroll={onScroll}
-        class={cx("room__content scroll-container transition-opacity", {
-          "opacity-0": awaitingJump,
-        })}>
-        {#if $room?.meta?.isPrivate() && $membershipStatus !== MembershipStatus.Granted}
-          <div class="py-20">
-            <div class="card flex flex-col gap-8 m-auto max-w-md items-center text-center">
-              <p class="opacity-75">You aren't currently a member of this room.</p>
-              {@render membershipButton("Join Room")}
-            </div>
-          </div>
-        {:else}
-          <VirtualList
-            items={elements}
-            getKey={getElementKey}
-            container={element}
-            bind:controller={virtualList}>
-            {#snippet row(item)}
-              {#if item.type === "new-messages"}
-                <div
-                  id={item.id}
-                  class={cx("flex items-center py-2 text-xs transition-colors", {
-                    "opacity-0": showFixedNewMessages,
-                  })}>
-                  <div class="h-px grow bg-primary text-primary-content"></div>
-                  <p
-                    class="rounded-full bg-primary text-primary-content px-2 py-1"
-                    style="color: var(--primary-content)">
-                    New Messages
-                  </p>
-                  <div class="h-px grow bg-primary text-primary-content"></div>
-                </div>
-              {:else if item.type === "date"}
-                <Divider>{item.value}</Divider>
-              {:else if item.value.kind === addMemberKind}
-                <RoomItemAddMember {url} event={item.value} />
-              {:else}
-                <RoomItem
-                  {url}
-                  {replyTo}
-                  {context}
-                  event={item.value}
-                  showPubkey={item.showPubkey}
-                  canEdit={canEditEvent}
-                  onEdit={onEditEvent} />
-              {/if}
-            {/snippet}
-          </VirtualList>
-          <p class="flex h-10 items-center justify-center py-20">
-            {#if reachedStartOfHistory}
-              End of message history
-            {:else}
-              <Spinner loading>Looking for messages...</Spinner>
-            {/if}
-          </p>
-        {/if}
-        <div class="h-screen"></div>
-      </div>
-
-      {#if showScrollButton}
-        <div in:fade class="absolute bottom-2 right-4 z-popover">
-          <Button
-            aria-label="Jump to newest"
-            class="button button-neutral button-circle"
-            onclick={scrollToBottom}>
-            <Icon icon={AltArrowDown} />
-          </Button>
-        </div>
-      {/if}
-
-      {#if showFixedNewMessages}
-        <div
-          transition:fly={{duration: 200}}
-          class="absolute inset-x-0 top-2 z-popover flex justify-center">
-          <Button class="button button-primary button-xs button-pill" onclick={scrollToNewMessages}>
-            New Messages
-          </Button>
-        </div>
-      {/if}
-    </div>
+    <RoomTranscript
+      {url}
+      {h}
+      {replyTo}
+      canEdit={canEditEvent}
+      onEdit={onEditEvent}
+      bind:events
+      bind:this={transcript} />
 
     <div class="room__compose flex items-center gap-1 px-2">
       <div class="room__compose-inner min-w-0 flex-1">
         {#if $room?.meta?.isPrivate() && $membershipStatus !== MembershipStatus.Granted}
           <!-- pass -->
-        {:else if $room?.meta?.isRestricted() && $membershipStatus !== MembershipStatus.Granted}
+        {:else if h && $room?.meta?.isRestricted() && $membershipStatus !== MembershipStatus.Granted}
           <div class="card m-4 flex flex-row items-center justify-between px-4 py-3">
             <p class="opacity-75">Only members are allowed to post to this room.</p>
-            {@render membershipButton("Ask to Join")}
+            <RoomMembershipButton {url} {h} label="Ask to Join" {onJoin} />
           </div>
         {:else}
           <ComposeArea
