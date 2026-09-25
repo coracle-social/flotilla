@@ -32,7 +32,12 @@ Builds:
       - corepack enable
     gradle:
       - fdroid
-    prebuild: ../../scripts/fdroid/prepare.sh
+    prebuild:
+      - cd ../..
+      - V='version:{name:process.env.VITE_BUILD_HASH},'
+      - F=svelte.config.js
+      - grep -q BUILD_HASH $F || sed -i "/serviceWorker:/i $V" $F
+      - scripts/fdroid/prepare.sh
     scanignore:
       - node_modules
     build: ../../scripts/fdroid/build.sh
@@ -49,6 +54,10 @@ MaintainerNotes: |-
   Builds are reproducible: upstream's release workflow runs this recipe in the
   buildserver-trixie image (scripts/fdroid/reproduce.sh) and publishes that apk, signed
   with the distribution key, at Binaries.
+
+  Tags before 1.11.3 version the SvelteKit build by build time, which no two builds share,
+  so prebuild sets it from the commit instead. Later tags do that themselves, and the
+  patch skips them.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$
