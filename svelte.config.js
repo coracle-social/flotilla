@@ -19,6 +19,10 @@ export default {
     serviceWorker: {
       register: process.env.FLOTILLA_DESKTOP !== "1",
     },
+    // The default is the build time, which changes every chunk hash and breaks F-Droid's reproducible build
+    version: {
+      name: process.env.VITE_BUILD_HASH,
+    },
     adapter: adapter({
       fallback: "index.html",
     }),
