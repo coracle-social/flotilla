@@ -40,13 +40,10 @@
     <ModalHeader>
       <ModalTitle>You're all set!</ModalTitle>
     </ModalHeader>
+    <p>Your profile is ready, and you can start chatting right away.</p>
     <p>
-      You've created your profile, and now you're ready to start chatting — all without asking
-      permission!
-    </p>
-    <p>
-      From your dashboard, you can use invite links, discover community spaces, and keep up-to-date
-      on spaces you've already joined. Click below to get started!
+      Your dashboard is where you open invite links, discover community spaces, and keep up with the
+      ones you have already joined.
     </p>
   </ModalBody>
   {#if step && totalSteps}
