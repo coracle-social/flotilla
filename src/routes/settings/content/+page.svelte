@@ -1,8 +1,14 @@
 <script lang="ts">
+  import cx from "classnames"
   import {BlossomServerLists, MuteLists, publish} from "@welshman/app"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
+  import Accessibility from "@assets/icons/accessibility.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Microphone from "@assets/icons/microphone.svg?dataurl"
+  import Monitor from "@assets/icons/monitor.svg?dataurl"
+  import Moon from "@assets/icons/moon.svg?dataurl"
+  import Palette from "@assets/icons/palette.svg?dataurl"
+  import Sun from "@assets/icons/sun.svg?dataurl"
   import {preventDefault} from "@lib/html"
   import Field from "@lib/components/Field.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -18,6 +24,7 @@
   import {blossomServerLists, deriveUserItem, muteLists} from "@app/core"
   import {pushToast} from "@app/toast"
   import {PLATFORM_NAME} from "@app/env"
+  import {flTheme, flThemes, theme} from "@app/theme"
   import {userSettingsValues, publishSettings, createSettingsForm} from "@app/settings"
 
   const userMuteList = deriveUserItem(MuteLists)
@@ -74,6 +81,16 @@
   })
 </script>
 
+{#snippet colorScheme(value: string, label: string, icon: string)}
+  <Button
+    type="button"
+    class={cx("join-item button button-xs", $theme === value ? "button-primary" : "button-neutral")}
+    onclick={() => theme.set(value)}>
+    <Icon {icon} size={4} />
+    {label}
+  </Button>
+{/snippet}
+
 <form {onsubmit}>
   <PageContent>
     <Card class="flex flex-col gap-4">
@@ -116,6 +133,66 @@
         {/snippet}
       </Field>
     </Card>
+    <Card class="flex flex-col gap-4">
+      <strong class="flex items-center gap-3 text-lg">
+        <Icon icon={Palette} />
+        Theme Settings
+      </strong>
+      <FieldInline>
+        {#snippet label()}
+          <p>Color scheme</p>
+        {/snippet}
+        {#snippet input()}
+          <div class="join">
+            {@render colorScheme("system", "System", Monitor)}
+            {@render colorScheme("light", "Light", Sun)}
+            {@render colorScheme("dark", "Dark", Moon)}
+          </div>
+        {/snippet}
+        {#snippet info()}
+          <p>System follows whatever your device is set to.</p>
+        {/snippet}
+      </FieldInline>
+      <FieldInline>
+        {#snippet label()}
+          <p>App theme</p>
+        {/snippet}
+        {#snippet input()}
+          <select class="select input capitalize" bind:value={$flTheme} aria-label="Style">
+            {#each flThemes as option (option)}
+              <option value={option}>{option}</option>
+            {/each}
+          </select>
+        {/snippet}
+        {#snippet info()}
+          <p>Changes the shape and texture of everything, not just its colors.</p>
+        {/snippet}
+      </FieldInline>
+    </Card>
+    <Card class="flex flex-col gap-4">
+      <strong class="flex items-center gap-3 text-lg">
+        <Icon icon={Accessibility} />
+        Accessibility
+      </strong>
+      <Field>
+        {#snippet label()}
+          <p>Font size</p>
+        {/snippet}
+        {#snippet secondary()}
+          <p>{Math.round($settings.font_size * 100)}%</p>
+        {/snippet}
+        {#snippet input()}
+          <input
+            class="range w-full"
+            type="range"
+            min="0.8"
+            max="1.3"
+            step="0.05"
+            aria-label="Font size"
+            bind:value={$settings.font_size} />
+        {/snippet}
+      </Field>
+    </Card>
     <Card class="flex flex-col gap-4 shadow-md">
       <strong class="text-lg">Editor Settings</strong>
       <Field>
@@ -129,6 +206,7 @@
             min="0"
             max="10000"
             step="1000"
+            aria-label="Send delay"
             bind:value={$settings.send_delay} />
         {/snippet}
         {#snippet info()}

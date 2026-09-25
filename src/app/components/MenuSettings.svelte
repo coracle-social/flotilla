@@ -67,8 +67,6 @@
         </Link>
       </div>
       <div class="flex gap-3 items-center opacity-75 text-sm">
-        <Link href="/settings/theme">Theme</Link>
-        /
         <Link href="/settings/about">About</Link>
         /
         <Button onclick={logout}>Log Out</Button>

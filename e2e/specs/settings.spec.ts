@@ -155,8 +155,7 @@ test("US-088 adjust send delay and media servers", async ({seed, as}) => {
 
   const page = await as(users.alice, "/settings/content")
 
-  // The send delay is the only slider on this page.
-  await page.locator('input[type="range"]').fill("3000")
+  await page.getByLabel("Send delay").fill("3000")
 
   await page.getByRole("button", {name: "Add Server"}).click()
   await page.getByRole("listitem").first().locator("input").fill("https://media.test/")
@@ -168,7 +167,7 @@ test("US-088 adjust send delay and media servers", async ({seed, as}) => {
   await waitForToastToClear(page)
   await page.reload()
 
-  await expect(page.locator('input[type="range"]')).toHaveValue("3000")
+  await expect(page.getByLabel("Send delay")).toHaveValue("3000")
 })
 
 test("US-089 configure privacy preferences", async ({seed, as}) => {
@@ -235,7 +234,7 @@ test("US-090 change the app's appearance", async ({seed, as}) => {
     space.relayList(user.alice)
   })
 
-  const page = await as(users.alice, "/settings/theme", {context: {colorScheme: "light"}})
+  const page = await as(users.alice, "/settings/content", {context: {colorScheme: "light"}})
   const body = page.locator("body")
 
   await page.getByRole("button", {name: "Dark", exact: true}).click()
@@ -259,11 +258,14 @@ test("US-090 change the app's appearance", async ({seed, as}) => {
 
   await expect(body).toHaveAttribute("data-fl-theme", "navy")
 
-  // Font size is the only slider on this page, and moving it is the save.
-  await page.locator('input[type="range"]').fill("1.25")
+  // Font size is a setting, so it goes out with the rest of the page.
+  await page.getByLabel("Font size").fill("1.25")
+  await page.getByRole("button", {name: "Save Changes"}).click()
 
+  await expect(page.getByRole("alert")).toContainText("Your settings have been saved!")
   await expect(page.locator("html")).toHaveAttribute("style", /font-size:\s*1\.25rem/)
 
+  await waitForToastToClear(page)
   await page.reload()
 
   await expect(page.locator("html")).toHaveAttribute("style", /font-size:\s*1\.25rem/)

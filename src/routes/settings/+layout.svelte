@@ -4,7 +4,6 @@
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import ServerPath from "@assets/icons/server-path.svg?dataurl"
-  import Moon from "@assets/icons/moon.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
   import Exit from "@assets/icons/logout-3.svg?dataurl"
   import GalleryMinimalistic from "@assets/icons/gallery-minimalistic.svg?dataurl"
@@ -54,9 +53,6 @@
     </SecondaryNavItem>
     <SecondaryNavItem href="/settings/privacy">
       <Icon icon={Shield} /> Privacy
-    </SecondaryNavItem>
-    <SecondaryNavItem href="/settings/theme">
-      <Icon icon={Moon} /> Theme
     </SecondaryNavItem>
     <SecondaryNavItem href="/settings/about">
       <Icon icon={Code2} /> About
