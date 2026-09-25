@@ -4,7 +4,7 @@ import {deleteDB} from "idb"
 import {SecureStorage} from "@aparajita/capacitor-secure-storage"
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import {Preferences} from "@capacitor/preferences"
-import {WEEK, ago, noop, now, on, throttle, batch, call, makeQueue} from "@welshman/lib"
+import {WEEK, ago, noop, now, on, batch, call, makeQueue} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   ALERT_ANDROID,
@@ -505,7 +505,9 @@ class Storage {
     this.app.wrapManager.load(await table.getAll())
 
     const addOne = batch(3000, table.bulkPut)
-    const removeOne = throttle(3000, table.bulkDelete)
+    const removeOne = batch(3000, (items: WrapItem[]) =>
+      table.bulkDelete(items.map(item => item.id)),
+    )
 
     this.app.wrapManager.on("add", addOne)
     this.app.wrapManager.on("remove", removeOne)
