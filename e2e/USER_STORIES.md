@@ -1724,6 +1724,18 @@ Acceptance:
 - The section fills from the relays that answer. One that takes the connection
   and then says nothing does not hold it empty.
 
+### US-133 — Keep the search relays that work
+
+As alice, I want the search health check to leave alone the relays that do
+support search, so that fixing it does not cost me the ones I chose.
+
+Acceptance:
+
+- The check reads each search relay's own metadata, so a relay that advertises
+  search is never offered for removal, and neither is one whose metadata never
+  arrives.
+- A relay that answers and advertises no search is.
+
 ### US-106 — Share text into the app
 
 As alice, I want to hand text to Flotilla and choose where it lands, so that I

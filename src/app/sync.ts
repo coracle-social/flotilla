@@ -36,6 +36,7 @@ import {
   MessagingRelayLists,
   RelayLists,
   RoomLists,
+  SearchRelayLists,
   Sync,
   makeRoomKey,
 } from "@welshman/app"
@@ -53,6 +54,7 @@ import {
   relays,
   roomLists,
   router,
+  searchRelayLists,
 } from "@app/core"
 import {LIVEKIT_PARTICIPANTS} from "@app/call"
 import {REACTION_KINDS, CONTENT_KINDS, makeCommentFilter} from "@app/content"
@@ -100,6 +102,8 @@ const userFollowList = deriveUserItem(FollowLists)
 
 const userMessagingRelayList = deriveUserItem(MessagingRelayLists)
 
+const userSearchRelayList = deriveUserItem(SearchRelayLists)
+
 const getSpaceUrls = ($roomList: Maybe<RoomListReader>) =>
   PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : ($roomList?.urls() ?? [])
 
@@ -125,9 +129,16 @@ const syncRelays = () => {
     }
   })
 
+  const unsubscribeSearchRelayUrls = userSearchRelayList.subscribe($searchRelayList => {
+    for (const url of $searchRelayList?.urls() ?? []) {
+      relays.get().load(url)
+    }
+  })
+
   return () => {
     unsubscribePage()
     unsubscribeSpaceUrls()
+    unsubscribeSearchRelayUrls()
   }
 }
 
@@ -213,6 +224,7 @@ const syncUserData = () => {
       roomLists.get().load($pubkey)
       muteLists.get().load($pubkey)
       profiles.get().load($pubkey)
+      searchRelayLists.get().load($pubkey)
       app.get().use(Settings).load($pubkey)
     }
   }

@@ -2,7 +2,15 @@ import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
 import {POLL, displayRelayUrl} from "@welshman/util"
 import {RelayMessageType} from "@welshman/net"
-import {Classified, Comment, FollowList, Note, Poll, Thread} from "@welshman/domain"
+import {
+  Classified,
+  Comment,
+  FollowList,
+  Note,
+  Poll,
+  SearchRelayList,
+  Thread,
+} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
   composer,
@@ -558,6 +566,54 @@ test("US-117 read the network feed when one relay never answers", async ({seed, 
   // A span releases what it found once it is done waiting, so one silent relay holds it empty.
   await expect(network.getByText(note)).toBeVisible({timeout: 20_000})
   await expect(network.getByText("Bob Barker")).toBeVisible()
+})
+
+// A url the container does not serve, so its nip-11 document never arrives and nothing knows what it supports.
+const unreachableRelayUrl = "wss://unreachable.test/"
+
+test("US-133 keep the search relays that support search", async ({seed, as}) => {
+  const scenario = await seed(({relay, open, user}) => {
+    const space = relay("space")
+    const indexer = open("indexer")
+    const outbox = open("outbox")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url],
+      write: [space.url, indexer.url],
+    })
+
+    // No search relay of hers is a space, so the health check is the only thing asking for their metadata.
+    indexer.event(user.alice, () =>
+      indexer
+        .kind(SearchRelayList)
+        .writer()
+        .setUrls([indexer.url, outbox.url, unreachableRelayUrl])
+        .renderTemplate(),
+    )
+  })
+
+  const indexer = scenario.open("indexer")
+  const outbox = scenario.open("outbox")
+
+  const page = await as(users.alice, "/home", {
+    relayInfo: {[indexer.url]: {supported_nips: [1, 50]}},
+  })
+
+  const healthCheck = page.getByRole("group", {name: "Invalid Search Relays"})
+
+  await expect(healthCheck).toBeVisible()
+
+  await healthCheck.getByRole("button", {name: "Fix"}).click()
+
+  const review = dialog(page, "Review changes")
+
+  // Outbox answered and advertised no search; the other two are a relay that does and one nobody can ask.
+  await expect(review.getByText(displayRelayUrl(outbox.url))).toBeVisible()
+  await expect(review.getByText(displayRelayUrl(indexer.url))).toHaveCount(0)
+  await expect(review.getByText(displayRelayUrl(unreachableRelayUrl))).toHaveCount(0)
 })
 
 test("US-106 share text into the app", async ({seed, as}) => {

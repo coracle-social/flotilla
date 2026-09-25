@@ -109,13 +109,15 @@ export class HealthChecks {
     )
 
     this.pending = projection(
-      derived([this.context.$, forceHealthChecks], ([$context, $forceHealthChecks]) =>
-        this.checks.filter(check => $forceHealthChecks[check.id] ?? check.isPending($context)),
+      derived(
+        [this.context.$, forceHealthChecks, app.use(Relays).index.$],
+        ([$context, $forceHealthChecks]) =>
+          this.checks.filter(check => $forceHealthChecks[check.id] ?? check.isPending($context)),
       ),
     )
   }
 
-  private supportsSearch = (url: string) => this.app.use(Relays).get(url)?.hasNip(50)
+  private supportsSearch = (url: string) => this.app.use(Relays).get(url)?.hasNip(50) ?? true
 
   private checks: HealthCheck[] = [
     {
