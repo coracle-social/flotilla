@@ -3,6 +3,7 @@
   import {sortBy} from "@welshman/lib"
   import {RelayRoles} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import UsersGroup from "@assets/icons/users-group-rounded.svg?dataurl"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
@@ -13,8 +14,11 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RoleItem from "@app/components/RoleItem.svelte"
+  import SpaceRoles from "@app/components/SpaceRoles.svelte"
   import {app, profiles, relayManagement} from "@app/core"
+  import {deriveUserCanManageRoles} from "@app/management"
   import {deriveSpaceMemberRoles} from "@app/roles"
+  import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -30,8 +34,11 @@
   const profileDisplay = $profiles.display(pubkey, [url]).$
   const memberRoles = deriveSpaceMemberRoles(url)
   const initial = new Set(get(memberRoles).get(pubkey) ?? [])
+  const canManageRoles = deriveUserCanManageRoles(url)
 
   const back = () => history.back()
+
+  const manageRoles = () => pushModal(SpaceRoles, {url})
 
   const toggle = (id: string) => {
     const next = new Set(selected)
@@ -114,8 +121,15 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button class="button button-primary" onclick={submit} disabled={loading}>
-      <Spinner {loading}>Save changes</Spinner>
-    </Button>
+    {#if roles.length > 0}
+      <Button class="button button-primary" onclick={submit} disabled={loading}>
+        <Spinner {loading}>Save changes</Spinner>
+      </Button>
+    {:else if $canManageRoles}
+      <Button class="button button-primary" onclick={manageRoles}>
+        <Icon icon={UsersGroup} />
+        Manage Roles
+      </Button>
+    {/if}
   </ModalFooter>
 </Modal>

@@ -18,7 +18,7 @@
   import SpaceAdmins from "@app/components/SpaceAdmins.svelte"
   import SpaceRoles from "@app/components/SpaceRoles.svelte"
   import SpaceMembersBanned from "@app/components/SpaceMembersBanned.svelte"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpaceSupportedMethods, deriveUserCanManageRoles} from "@app/management"
   import {deriveSpaceMemberRoles} from "@app/roles"
   import {relayMemberLists, relayRoles} from "@app/core"
   import {deriveDisplaysByPubkey} from "@app/social"
@@ -33,9 +33,7 @@
   const members = $relayMemberLists.forUrl(url)
   const memberRoles = deriveSpaceMemberRoles(url)
   const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canManageRoles = $derived(
-    ["createrole", "editrole", "deleterole"].some(method => $supportedMethods.includes(method)),
-  )
+  const canManageRoles = deriveUserCanManageRoles(url)
   const canListBans = $derived($supportedMethods.includes("listbannedpubkeys"))
   const canListAdmins = $derived($supportedMethods.includes("listmethodassignees"))
 
@@ -116,7 +114,7 @@
       <Icon icon={AddCircle} />
       Invite people
     </Button>
-    {#if canManageRoles || canListBans || canListAdmins}
+    {#if $canManageRoles || canListBans || canListAdmins}
       <div class="relative">
         <Button
           class="button button-neutral button-sm button-square"
@@ -129,7 +127,7 @@
             <ul
               transition:fly
               class="menu bg-surface absolute right-0 z-popover mt-2 w-48 gap-1 rounded-2xl p-2">
-              {#if canManageRoles}
+              {#if $canManageRoles}
                 <li>
                   <Button onclick={manageRoles}>
                     <Icon icon={UsersGroup} />

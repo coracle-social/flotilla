@@ -150,6 +150,11 @@ export const deriveUserIsSpaceOwner = (url: string) =>
     ([$user, $relay]) => $user.pubkey === $relay?.pubkey,
   )
 
+export const deriveUserCanManageRoles = (url: string) =>
+  derived(deriveSpaceSupportedMethods(url), $methods =>
+    ["createrole", "editrole", "deleterole"].some(method => $methods.includes(method)),
+  )
+
 export const deriveUserCanCreateRoom = (url: string) =>
   derived(
     [

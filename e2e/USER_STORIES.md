@@ -1451,6 +1451,8 @@ Acceptance:
 - Searching the directory for the role's name filters to members holding it.
 - Deleting a role warns that members keep their space membership, and confirming
   removes it from the list; bob sees no "Manage Roles" option.
+- A member's "Edit roles" in a space with no roles opens the roles list rather
+  than ending there.
 
 ### US-094 — Invite people to a space
 

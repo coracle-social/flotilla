@@ -290,6 +290,18 @@ test("US-093 create roles and assign them", async ({seed, as}) => {
   await expect(memberCard(admin, "Bob Barnacle")).toBeVisible()
   await expect(memberCard(admin, "Bob Barnacle").locator(".role-badge")).toHaveCount(0)
 
+  // A space with no roles left offers the roles list from the member's own dialog
+  await memberCard(admin, "Bob Barnacle").getByRole("button").last().click()
+  await menuItem(admin, "Edit roles").click()
+
+  const bobsRoles = dialog(admin, "Edit Member")
+
+  await expect(bobsRoles.getByText("This space has no roles yet.")).toBeVisible()
+
+  await bobsRoles.getByRole("button", {name: "Manage Roles"}).click()
+
+  await expect(emptyState).toBeVisible()
+
   const bob = await as(users.bob, spacePath(url) + "/directory")
 
   await expect(memberCard(bob, "Carol Cutter")).toBeVisible()
