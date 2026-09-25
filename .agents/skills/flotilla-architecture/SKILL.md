@@ -319,7 +319,7 @@ export const getStatus = (event: TrustedEvent) => reader(Classified)(event).stat
 **Components.** `ClassifiedForm` builds and publishes the event, and `ClassifiedCreate` and
 `ClassifiedEdit` wrap it, supplying only the header. The list page and `ComposeMenu` open
 `ClassifiedCreate` as a modal. From a room, `ComposeMenu` sets `shareToChat`, which also quotes the
-new listing into the room. `ClassifiedActions` opens `ClassifiedEdit`. `ClassifiedItem` is the
+new listing into the room. Its `ContentActions` row opens `ClassifiedEdit` through `editForm`. `ClassifiedItem` is the
 card, and `NoteContentClassified` renders a listing wherever `NoteContent` is used.
 
 **Routes.** `src/routes/spaces/[relay]/classifieds/+page.svelte` loads listings and their comments

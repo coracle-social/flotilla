@@ -15,7 +15,8 @@
   import Button from "@lib/components/Button.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import Content from "@app/components/Content.svelte"
-  import CalendarEventActions from "@app/components/CalendarEventActions.svelte"
+  import ContentActions from "@app/components/ContentActions.svelte"
+  import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import CalendarEventMeta from "@app/components/CalendarEventMeta.svelte"
   import CalendarEventDate from "@app/components/CalendarEventDate.svelte"
@@ -92,7 +93,13 @@
         <CalendarEventHeader event={$event} />
         <CalendarEventMeta event={$event} {url} />
         <CalendarRsvp {url} event={$event} rsvps={$rsvps} onShowPeople={showTab("people")} />
-        <CalendarEventActions showRoom {url} event={$event} {context} />
+        <ContentActions
+          showRoom
+          noun="Event"
+          editForm={CalendarEventEdit}
+          {url}
+          event={$event}
+          {context} />
       </div>
     </div>
     <!-- One event carries three unrelated conversations, so give each its own tab instead of

@@ -11,7 +11,7 @@
   import ContentMarkdown from "@app/components/ContentMarkdown.svelte"
   import Profile from "@app/components/Profile.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import ArticleActions from "@app/components/ArticleActions.svelte"
+  import ArticleActionBar from "@app/components/ArticleActionBar.svelte"
   import ArticleAuthorSidebar from "@app/components/ArticleAuthorSidebar.svelte"
   import EventComments from "@app/components/EventComments.svelte"
   import EventMenu from "@app/components/EventMenu.svelte"
@@ -117,7 +117,7 @@
         </article>
         <div class="border-t px-5 py-4 sm:px-8" style="border-color: var(--line)">
           <div class="mx-auto flex w-full max-w-[68ch]">
-            <ArticleActions event={$event} {url} {context} showActivity detail />
+            <ArticleActionBar event={$event} {url} {context} />
           </div>
         </div>
         <!-- lg carries this in the sidebar instead, which sits below the comments here. -->

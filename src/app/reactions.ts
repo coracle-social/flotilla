@@ -1,10 +1,10 @@
 import {removeUndefined} from "@welshman/lib"
+import {tagSpec, tagValue} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
 import {deletes, reactions, relays, wraps} from "@app/core"
 
 export type ReactionTarget = {
   url?: string
-  h?: string
   // Where to publish, when it isn't just the space's own relay.
   urls?: string[]
 }
@@ -13,12 +13,14 @@ export type ReactionTarget = {
 export const publishReaction = async (
   event: TrustedEvent,
   {content, tags}: EventContent,
-  {url, h, urls}: ReactionTarget,
+  {url, urls}: ReactionTarget,
 ) => {
   const protect = url ? await relays.get().hasNip(url, 70) : false
+  const h = tagValue(tagSpec("h"), event.tags)
   const command = await reactions.get().react(event, content, writer => {
     writer.addTags(...tags).setProtected(protect)
 
+    // welshman tags the room only once the tracker knows the target's relay, which an unconfirmed message lacks.
     if (url && h) {
       writer.setRoom(url, h)
     }

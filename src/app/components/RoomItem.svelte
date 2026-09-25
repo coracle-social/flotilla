@@ -60,7 +60,6 @@
     onEdit,
   }: Props = $props()
 
-  const h = tagValue(tagSpec("h"), event.tags)
   const today = formatTimestampAsDate(now())
   const profileDisplay = $profiles.display(event.pubkey, [url]).$
   const thunk = $derived($thunks.merge($thunksByEventId.get(event.id) ?? noThunks))
@@ -92,9 +91,9 @@
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey, url})
 
-  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url, h})
+  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url})
 
-  const createReaction = (values: EventContent) => publishReaction(event, values, {url, h})
+  const createReaction = (values: EventContent) => publishReaction(event, values, {url})
 </script>
 
 <TapTarget

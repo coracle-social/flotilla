@@ -26,7 +26,7 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `src/app/reactions.ts` | `RoomItem`, `EventReactButtons`, the `*Actions` components |
+| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `src/app/reactions.ts` | `RoomItem`, `EventReactButtons`, `ContentActions`, `CommentActions`, `ArticleActionBar` |
 | Zaps | `ZAP_REQUEST` (9734), `ZAP_RECEIPT` (9735) | `ZapRequest`; receipts checked by `Zappers.validZapReceipts` | `src/app/lightning.ts` (wallets) | `Zap`, `ZapButton`, `GoalSummary`; off on iOS |
 | Reports | `REPORT` (1984) | `Report` | `src/app/actionItems.ts` | `Report`, `ReportMenuList` |
 | Deletes | `DELETE` (5) | `Delete`, through the `Deletes` plugin | none | `EventDeleteConfirm`, `ReportMenuList` |

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
-  import {tagSpec, tagValue} from "@welshman/util"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -18,9 +17,7 @@
 
   const {url, event, hideZap, class: className = ""}: Props = $props()
 
-  const h = tagValue(tagSpec("h"), event.tags)
-
-  const onEmoji = (emoji: string) => publishReaction(event, {content: emoji, tags: []}, {url, h})
+  const onEmoji = (emoji: string) => publishReaction(event, {content: emoji, tags: []}, {url})
 </script>
 
 {#if ENABLE_ZAPS && !hideZap}

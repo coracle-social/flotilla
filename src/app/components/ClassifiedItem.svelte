@@ -13,7 +13,8 @@
   import CurrencySymbol from "@lib/components/CurrencySymbol.svelte"
   import {reader} from "@app/core"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import ClassifiedActions from "@app/components/ClassifiedActions.svelte"
+  import ContentActions from "@app/components/ContentActions.svelte"
+  import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
   import type {FeedContext} from "@app/feeds"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import {makeClassifiedPath} from "@app/routes"
@@ -99,6 +100,6 @@
       </span>
       <span class="truncate">{formatTimestampRelative(event.created_at)}</span>
     </span>
-    <ClassifiedActions {url} {event} {context} showTopics={false} showStatus={false} />
+    <ContentActions noun="Listing" editForm={ClassifiedEdit} {url} {event} {context} />
   </div>
 </Cv>

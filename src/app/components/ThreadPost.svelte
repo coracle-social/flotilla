@@ -13,7 +13,7 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import type {FeedContext} from "@app/feeds"
-  import ThreadActions from "@app/components/ThreadActions.svelte"
+  import ContentActions from "@app/components/ContentActions.svelte"
   import {handles, profiles} from "@app/core"
   import {highlightedEvent, makeEventPermalink} from "@app/routes"
   import {pushModal} from "@app/modal"
@@ -97,7 +97,7 @@
         {#if isComment}
           <CommentActions {event} {url} {context} />
         {:else}
-          <ThreadActions {event} {url} {context} />
+          <ContentActions noun="Thread" {event} {url} {context} />
         {/if}
       </div>
     </div>

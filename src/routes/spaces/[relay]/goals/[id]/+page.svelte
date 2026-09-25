@@ -13,7 +13,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
-  import GoalActions from "@app/components/GoalActions.svelte"
+  import ContentActions from "@app/components/ContentActions.svelte"
   import GoalMeter from "@app/components/GoalMeter.svelte"
   import GoalStatus from "@app/components/GoalStatus.svelte"
   import GoalSupporters from "@app/components/GoalSupporters.svelte"
@@ -104,7 +104,7 @@
             {$progress.isFunded ? "Chip in anyway" : "Contribute to this goal"}
           </ZapButton>
         {/if}
-        <GoalActions event={$event} {url} {context} />
+        <ContentActions hideZap noun="Goal" event={$event} {url} {context} />
       </div>
     </NoteCard>
     {#if $goal.summary()}

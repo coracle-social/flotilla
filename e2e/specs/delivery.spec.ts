@@ -48,7 +48,7 @@ const commentCard = (page: Page, text: string) =>
   page.locator('[data-component="Comment"]').filter({hasText: text})
 
 // The action bar under an article on its own page, which is where that article's status shows.
-const articleActions = (page: Page) => page.locator('[data-component="ArticleActions"]')
+const articleActions = (page: Page) => page.locator('[data-component="ArticleActionBar"]')
 
 // Which relays a given event was sent to, oldest first — one entry per attempt.
 const publishedTo = (page: Page, id: string) =>

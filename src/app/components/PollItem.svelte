@@ -4,7 +4,7 @@
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
-  import PollActions from "@app/components/PollActions.svelte"
+  import ContentActions from "@app/components/ContentActions.svelte"
   import type {FeedContext} from "@app/feeds"
   import RoomLink from "@app/components/RoomLink.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
@@ -33,6 +33,6 @@
         in <RoomLink {url} {h} />
       {/if}
     </span>
-    <PollActions showActivity {url} {event} {context} />
+    <ContentActions showActivity noun="Poll" {url} {event} {context} />
   </div>
 </Cv>

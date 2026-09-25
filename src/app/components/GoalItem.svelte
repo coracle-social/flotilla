@@ -7,7 +7,7 @@
   import {reader} from "@app/core"
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import GoalActions from "@app/components/GoalActions.svelte"
+  import ContentActions from "@app/components/ContentActions.svelte"
   import type {FeedContext} from "@app/feeds"
   import type {GoalProgress} from "@app/goals"
   import GoalSummary from "@app/components/GoalSummary.svelte"
@@ -57,6 +57,6 @@
         in <RoomLink {url} {h} />
       {/if}
     </span>
-    <GoalActions showActivity {url} {event} {context} />
+    <ContentActions showActivity hideZap noun="Goal" {url} {event} {context} />
   </div>
 </Cv>

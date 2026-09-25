@@ -8,7 +8,7 @@ PascalCase. This is what the qualifiers mean, drawn from the ~320 components the
 | Suffix | Means | Examples |
 |---|---|---|
 | `Item` | one row or card in a list | `ClassifiedItem`, `NoteItem`, `PeopleItem`, `ReportItem`, `RoomItem` (a message in a room), `SpaceMenuRoomItem` |
-| `Actions` | the footer row under an event: reactions, status, overflow menu | `ClassifiedActions`, `ThreadActions`, `GoalActions`, `EventActions` |
+| `Actions` | the footer row under an event: reactions, status, overflow menu | `ContentActions`, `CommentActions`, `EventActions` |
 | `Menu` | the contents of a popover, taking an `onClick` that closes it | `EventMenu`, `ChatMenu`, `RoomItemMenu`, `SpaceMemberMenu` |
 | `MenuList` | the popover contents when `*Menu` is the trigger instead | `ProfileMenu` → `ProfileMenuList`, `ReportMenu` → `ReportMenuList` |
 | `Mobile` | the same actions as a modal, pushed on tap instead of hovered | `RoomItemMenuMobile`, `ChatMessageMenuMobile`, `SpaceMenuMobile` |

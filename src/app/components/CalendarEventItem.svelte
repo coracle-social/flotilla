@@ -3,7 +3,8 @@
   import {getAddress, tagValue, tagSpec} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
-  import CalendarEventActions from "@app/components/CalendarEventActions.svelte"
+  import ContentActions from "@app/components/ContentActions.svelte"
+  import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
   import type {FeedContext} from "@app/feeds"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
@@ -33,6 +34,12 @@
         in <RoomLink {url} {h} />
       {/if}
     </span>
-    <CalendarEventActions showActivity {url} {event} {context} />
+    <ContentActions
+      showActivity
+      noun="Event"
+      editForm={CalendarEventEdit}
+      {url}
+      {event}
+      {context} />
   </div>
 </Cv>

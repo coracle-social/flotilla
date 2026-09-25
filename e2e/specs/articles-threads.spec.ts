@@ -332,7 +332,7 @@ test("US-040 react to a post with an emoji", async ({seed, as}) => {
   await openArticle(page, "Tending the Garden")
 
   // An article's own reactions live in the action bar under it rather than on the article itself.
-  const articleActions = page.locator('[data-component="ArticleActions"]')
+  const articleActions = page.locator('[data-component="ArticleActionBar"]')
   const commentCard = comment(page, "A note about the soil")
 
   await expect(articleActions).toBeVisible()

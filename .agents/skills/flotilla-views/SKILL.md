@@ -238,8 +238,7 @@ New components go in the flat folder.
 ## Naming
 
 Names are `<Entity><Qualifier>`: the prefix says what it's about, the suffix what it does, which
-keeps families adjacent in a flat listing. `ClassifiedActions`, `ClassifiedCreate`,
-`ClassifiedEdit`, `ClassifiedForm`, `ClassifiedItem`, `ClassifiedStatus`.
+keeps families adjacent in a flat listing. `ClassifiedCreate`, `ClassifiedEdit`, `ClassifiedForm`, `ClassifiedItem`, `ClassifiedStatus`.
 
 Name a modal for what it does (`SpaceJoin`, `ClassifiedCreate`, `EventDeleteConfirm`); only a
 handful carry a `Modal` or `Dialog` suffix. The suffix vocabulary, the prefix families, and the
@@ -262,7 +261,7 @@ domain reader: `RoleEdit` takes `role: RelayRoleReader`.
 
 Identifier props are read once, `const room = $rooms.forRoom(url, h)`, since pages remount on a
 param change and lists key by id. A prop that does change while mounted needs `$derived`:
-`ClassifiedActions` reads its event that way, because editing a listing hands it a new version.
+`ContentActions` reads its event that way, because editing a listing hands it a new version.
 
 ### The rest of the vocabulary
 
@@ -374,7 +373,7 @@ onMount(() => {
 
 The feed is built in `onMount` because the loader needs the bound scroll element from
 `<PageContent bind:element>`. `context.add` batches the reactions, comments and deletions for
-every event the feed yields, rows get the same `context`, and their `*Actions` read
+every event the feed yields, rows get the same `context`, and their action rows read
 `context.related(event)` and `context.deleted(event)`. Close the list with `<Spinner {loading}>`
 and an `{#if}` chain over loading, empty and exhausted. Calendars use
 `makeCalendarFeed`, which pages by date tag rather than `created_at`.
@@ -417,8 +416,8 @@ return a `Command` as well: `$deletes.deleteEvent(event, w => w.setProtected(pro
 
 The hosting backend isn't nostr. Toast a readable message, and `console.error` anything that
 isn't a `HostingError`, as `HomeHosting` and `hosting/CustomDomainModal` do. Publishes are
-optimistic, so rows show progress in place: the seven per-kind `*Actions` components wrap their
-contents in `ThunkStatusOrDeleted`, and chat pushes a `ThunkToast`.
+optimistic, so rows show progress in place: `ContentActions`, `CommentActions` and `ArticleActionBar`
+wrap their contents in `ThunkStatusOrDeleted`, and chat pushes a `ThunkToast`.
 
 ## Forms
 

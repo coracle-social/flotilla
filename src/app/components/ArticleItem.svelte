@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {formatTimestamp} from "@welshman/lib"
+  import {formatTimestamp, uniq} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
@@ -7,7 +7,7 @@
   import Cv from "@lib/components/Cv.svelte"
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import ArticleActions from "@app/components/ArticleActions.svelte"
+  import ContentActions from "@app/components/ContentActions.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import type {FeedContext} from "@app/feeds"
   import {reader} from "@app/core"
@@ -26,7 +26,14 @@
   const title = $derived(article.title())
   const summary = $derived(article.summary())
   const image = $derived(article.image())
+  const topics = $derived(uniq(article.topics()))
 </script>
+
+{#snippet topicLabels()}
+  {#each topics as topic (topic)}
+    <span class="button button-xs rounded-full font-normal">#{topic}</span>
+  {/each}
+{/snippet}
 
 <Cv data-component="ArticleItem" class="relative w-full card card-interactive">
   <!-- An overlay rather than a wrapper: the card carries a profile button and the room and action
@@ -55,7 +62,14 @@
         <ProfileLink pubkey={event.pubkey} {url} />
       </span>
       <div class="pointer-events-auto">
-        <ArticleActions showRoom showActivity {url} {event} {context} />
+        <ContentActions
+          showRoom
+          showActivity
+          noun="Article"
+          labels={topics.length > 0 ? topicLabels : undefined}
+          {url}
+          {event}
+          {context} />
       </div>
     </div>
   </div>

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {tagSpec, tagValue} from "@welshman/util"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import type {FeedContext} from "@app/feeds"
   import {publishReaction, retractReaction} from "@app/reactions"
@@ -17,11 +16,9 @@
 
   const {url, event, showActivity = false, context}: Props = $props()
 
-  const h = tagValue(tagSpec("h"), event.tags)
+  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url})
 
-  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url, h})
-
-  const createReaction = (values: EventContent) => publishReaction(event, values, {url, h})
+  const createReaction = (values: EventContent) => publishReaction(event, values, {url})
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-2">
