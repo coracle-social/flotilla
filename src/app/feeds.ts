@@ -482,6 +482,9 @@ export const makeFeed = ({
   // How far back the feed has been answered for, which decides whether an event is ready to render.
   let reached = at
 
+  // A span reaches only as far as its shallowest relay, so every one of them has to have answered.
+  const relayCount = new Set(relays).size
+
   const insertEvents = (newEvents: Iterable<TrustedEvent>) => {
     const added: TrustedEvent[] = []
 
@@ -547,7 +550,7 @@ export const makeFeed = ({
   const unsubscribers = syncFeed({relays, filters, addEvents, removeEvents})
 
   // Each relay answers a limit for itself, so a page runs out where the relay that gave least ran out.
-  const loadSpan = async (extension: Filter, onAnswer?: (event: TrustedEvent) => void) => {
+  const loadSpan = async (extension: Filter, onCover?: (timestamp: number) => void) => {
     let complete = false
 
     const pages = new Map<string, {count: number; lowest: number}>()
@@ -562,7 +565,9 @@ export const makeFeed = ({
         pages.set(url, {count: 1, lowest: event.created_at})
       }
 
-      onAnswer?.(event)
+      if (pages.size === relayCount) {
+        onCover?.(Math.max(...Array.from(pages.values(), page => page.lowest)))
+      }
     }
 
     const found = await network.get().request({
@@ -592,10 +597,8 @@ export const makeFeed = ({
     const until = oldest
     const since = until - olderInterval
 
-    // A page comes back newest first, so each event proves the stretch above it has been answered.
-    const {found, complete, pages} = await loadSpan({since, until, limit: PAGE_SIZE}, event =>
-      reach(event.created_at),
-    )
+    // A page comes back newest first, so a relay's lowest answer proves the stretch above it.
+    const {found, complete, pages} = await loadSpan({since, until, limit: PAGE_SIZE}, reach)
 
     // A relay that answered with less than its limit has covered its whole span.
     let edge: Maybe<number>
@@ -641,16 +644,15 @@ export const makeFeed = ({
   }
 
   // What the repository already holds is an answer too, so a page of it renders before any relay replies.
-  const stored = relays
-    .flatMap(url => Array.from(getEventsForUrl(url, filters)))
-    .sort(compareEventsAsc)
-    .slice(-PAGE_SIZE)
+  const stored = relays.map(url =>
+    Array.from(getEventsForUrl(url, filters)).sort(compareEventsAsc).slice(-PAGE_SIZE),
+  )
 
-  if (stored.length > 0) {
-    reach(stored[0].created_at)
+  if (stored.every(page => page.length > 0)) {
+    reach(Math.max(...stored.map(page => page[0].created_at)))
   }
 
-  addEvents(stored)
+  addEvents(stored.flat())
 
   return {
     events,
