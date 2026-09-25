@@ -24,6 +24,10 @@
   const canBan = $derived($supportedMethods.includes("banpubkey"))
   const canAssign = $derived($supportedMethods.includes("assignrole"))
   const canUnassign = $derived($supportedMethods.includes("unassignrole"))
+  const canEditMethods = $derived(
+    $supportedMethods.includes("listmethodassignees") &&
+      ["assignmethod", "unassignmethod"].some(method => $supportedMethods.includes(method)),
+  )
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey, url})
 </script>
@@ -49,7 +53,7 @@
         <ProfileAbout {pubkey} {url} singleLine />
       </div>
     </div>
-    {#if canAssign || canUnassign || canUnallow || canBan}
+    {#if canAssign || canUnassign || canUnallow || canBan || canEditMethods}
       <div class="pointer-events-auto shrink-0">
         <MenuButton
           class="button button-ghost button-sm button-square"
