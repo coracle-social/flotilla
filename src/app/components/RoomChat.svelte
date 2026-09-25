@@ -43,7 +43,7 @@
     groupRoomMessages,
     prependParent,
   } from "@app/rooms"
-  import {userSettingsValues} from "@app/settings"
+  import {loadSendDelay} from "@app/settings"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {pageLoading} from "@app/loading"
   import {checked, deferredRoomPath, setChecked} from "@app/notifications"
@@ -211,13 +211,15 @@
         eventWriter.setParent(parent)
       }
 
+      const delay = await loadSendDelay()
+
       const thunk = $thunks.publish({
         relays: [url],
         event: stamp(await eventWriter.renderTemplate(), eventToEdit?.created_at),
-        delay: $userSettingsValues.send_delay,
+        delay,
       })
 
-      if ($userSettingsValues.send_delay) {
+      if (delay) {
         pushToast({
           timeout: 30_000,
           children: {

@@ -41,7 +41,7 @@
   import ComposeParent from "@app/components/ComposeParent.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import {app, deletes, router, user, wraps} from "@app/core"
-  import {userSettingsValues} from "@app/settings"
+  import {loadSendDelay} from "@app/settings"
   import {deriveChat, makeChatId} from "@app/chats"
   import {makeFeedContext} from "@app/feeds"
   import {navigate, pushModal} from "@app/modal"
@@ -141,13 +141,15 @@
 
     addTemplate(DIRECT_MESSAGE, buffer.splice(0).join(""), tags)
 
+    const delay = await loadSendDelay()
+
     // Kind 15 carries one image each per nip 17, and a second's sleep keeps the timestamps distinct.
     const thunks = await Promise.all(
       Array.from(enumerate(templates)).map(([i, event]) =>
         $wraps.publish({
           event,
           recipients: pubkeys,
-          delay: $userSettingsValues.send_delay + ms(i),
+          delay: delay + ms(i),
           pow: 16,
         }),
       ),

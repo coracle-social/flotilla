@@ -12,7 +12,7 @@
   import {relays, thunks, writer} from "@app/core"
   import {DraftKey} from "@app/drafts"
   import {makeEditor} from "@app/editor"
-  import {getSetting} from "@app/settings"
+  import {loadSendDelay} from "@app/settings"
   import {pushToast} from "@app/toast"
 
   type Values = {
@@ -79,7 +79,7 @@
 
     try {
       const reply = await renderReply(content, ed.storage.nostr.getEditorTags())
-      const thunk = $thunks.publish({...reply, delay: getSetting("send_delay")})
+      const thunk = $thunks.publish({...reply, delay: await loadSendDelay()})
       const error = await thunk.waitForError()
 
       if (error) {

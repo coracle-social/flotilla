@@ -110,6 +110,18 @@ export const createSettingsForm = (): Writable<SettingsValues> => {
   }
 }
 
+// A send reads the delay when it is clicked, and a room can paint before the user's own settings arrive.
+export const loadSendDelay = async () => {
+  const $app = app.get()
+  const {pubkey} = User.require($app)
+
+  if (!$app.use(Settings).get(pubkey)) {
+    await $app.use(Settings).load(pubkey)
+  }
+
+  return userSettingsValues.get().send_delay
+}
+
 export const zapAmounts = derived(userSettingsValues, $settings => $settings.zap_amounts)
 
 export const getSetting = <K extends keyof SettingsValues>(key: K) => userSettingsValues.get()[key]

@@ -17,7 +17,7 @@
   import {DraftKey} from "@app/drafts"
   import {pushToast} from "@app/toast"
   import {relays, thunks, writer} from "@app/core"
-  import {getSetting} from "@app/settings"
+  import {loadSendDelay} from "@app/settings"
 
   type Values = {
     content?: string | object
@@ -76,7 +76,7 @@
     const thunk = $thunks.publish({
       relays: [url],
       event: await eventWriter.renderTemplate(),
-      delay: getSetting("send_delay"),
+      delay: await loadSendDelay(),
     })
 
     draftKey.clear()
