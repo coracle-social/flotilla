@@ -5,8 +5,7 @@ import {deriveDeduplicated} from "@welshman/store"
 import {makeRoomKey} from "@welshman/app"
 import type {Room} from "@welshman/app"
 import type {Room as LiveKitRoom} from "livekit-client"
-import {network} from "@app/core"
-import {deriveEventsForUrl} from "@app/repository"
+import {events, network} from "@app/core"
 
 export const LIVEKIT_PARTICIPANTS = 39004
 
@@ -304,7 +303,7 @@ export const deriveCallParticipants = (url: string, h: string) =>
       participantMediaState,
       callTargetRoom,
       deriveDeduplicated(
-        deriveEventsForUrl(url, [{kinds: [LIVEKIT_PARTICIPANTS], "#d": [h]}]),
+        events.get().forUrl(url, [{kinds: [LIVEKIT_PARTICIPANTS], "#d": [h]}]).$,
         events => first(sortEventsDesc(events)),
       ),
     ],

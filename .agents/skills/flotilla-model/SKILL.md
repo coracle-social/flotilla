@@ -54,8 +54,8 @@ members and pins, the space member list, and roles. Anyone can publish events of
 readers must check the author. The welshman collections do: `Rooms` and every
 `RelaySignedDerivedPlugin` (`RelayMemberLists`, `RelayRoles`, `RoomPinLists`) drop events whose
 author isn't the relay's `self`, and re-check when NIP-11 loads. For a relay-authored kind with no
-plugin, filter `deriveEventsForUrl(url, filters)` on that `self` key yourself rather than reading a
-bare `deriveEventsForUrl`.
+plugin, read `$events.relaySignedForUrl(url, filters)`, which keeps only events signed by that
+`self` key, rather than a bare `$events.forUrl`.
 
 The app signs everything it publishes with the user's own key. Space-wide content with no author of
 its own belongs to the space's owner, the pubkey NIP-11 names: featured content
@@ -235,7 +235,7 @@ space it lists or used to list, so each relay hears about joins and leaves. Kind
 so `RoomChat` and `publishRoomQuote` publish raw templates through `Thunks`.
 
 Reads are scoped the same way. Request from the space relay (`relays: [url]`, plus `"#h": [h]` for
-a room) and read results with `deriveEventsForUrl(url, filters)`, which uses the tracker to keep
+a room) and read results with `$events.forUrl(url, filters)`, which uses the tracker to keep
 only events seen on that relay. A repository-wide query would mix rooms that share an `h` across
 relays. `src/app/sync.ts` pulls each space's room state, membership and recent content in the
 background; see flotilla-state.

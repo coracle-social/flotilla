@@ -15,9 +15,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import PinAdd from "@app/components/PinAdd.svelte"
-  import {reader} from "@app/core"
+  import {events, reader} from "@app/core"
   import {eventToReference} from "@app/pinboards"
-  import {deriveEventsForUrl} from "@app/repository"
   import {makeSpacePath} from "@app/routes"
   import {pushModal} from "@app/modal"
 
@@ -28,8 +27,8 @@
 
   const {url, event}: Props = $props()
 
-  const boards = derived(deriveEventsForUrl(url, [{kinds: [PINBOARD]}]), $events =>
-    $events.map(reader(Pinboard)),
+  const boards = derived($events.forUrl(url, [{kinds: [PINBOARD]}]).$, $pinboards =>
+    $pinboards.map(reader(Pinboard)),
   )
 
   const reference = eventToReference(event)

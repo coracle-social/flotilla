@@ -254,7 +254,7 @@ stores, so a component takes the key and looks up the rest: `RoomName` takes `{u
 `$rooms.forRoom(url, h)`, `ProfileName` takes `pubkey` and reads `$profiles.display`.
 
 Events are the exception, and 66 components take `event: TrustedEvent`, since the parent already
-holds the event from a feed or a `deriveEvent`. An event prop usually travels with `url`, the
+holds the event from a feed or `$events.one`. An event prop usually travels with `url`, the
 relay it lives on, which routes its replies and reactions, and with `context: FeedContext`, the
 shared loader below. A component takes a pointer instead only when it has to load the event
 itself, as `ContentQuote` does. Anything with neither a store nor an event is passed as its
@@ -281,7 +281,7 @@ param change and lists key by id. A prop that does change while mounted needs `$
 ## Reading state in a component
 
 Components read plugins through the `usePlugin` stores exported from `src/app/core.ts`
-(`$profiles`, `$relays`, `$rooms`, `$roomLists`, `$network`, `$thunks`, `$deletes`,
+(`$profiles`, `$relays`, `$rooms`, `$roomLists`, `$events`, `$network`, `$thunks`, `$deletes`,
 `$relayManagement`, …). `$app.use(X)` covers plugins with no export, such as `Zappers`,
 `Pinboards` and `Feeds`; flotilla-state has the rules about which to use where.
 
@@ -291,6 +291,7 @@ How you bind depends on what the method returns:
 <script lang="ts">
   const room = $rooms.forRoom(url, h)                                 // Readable: one, forRoom
   const display = $profiles.display(pubkey, removeUndefined([url])).$ // Projection: take .$
+  const replies = $events.asc(filters).$                              // raw repository queries
   const shouldProtect = $relays.hasNip(url, 70)                       // Promise: load, hasNip
 </script>
 
@@ -298,7 +299,7 @@ How you bind depends on what the method returns:
 ```
 
 In a handler, call `.get()` on a projection instead of subscribing. The app modules add `derive*`
-factories over the same data: `deriveEvent` and `deriveEventsById` in `src/app/repository.ts`,
+factories over the same data: `deriveSpaceActionItems` in `src/app/actionItems.ts`,
 `deriveSpaceSupportedMethods` in `src/app/management.ts`, `deriveRelayAuthError` in
 `src/app/access.ts`. Call them at the top of the script with fixed arguments, and wrap one in
 `$derived` only when its arguments change, as the thread page does for filters that wait on the
@@ -316,7 +317,7 @@ data every page needs lives in `src/app/sync.ts`.
 `people/[npub]/+page.svelte` does for the profile, relay list, follow, pin, room and messaging
 lists before loading the author's outbox with `$network.loadLenient`.
 
-**A detail page:** `deriveEvent(address, [url])` loads when nothing local matches. While it is
+**A detail page:** `$events.one(address, [url]).$` loads when nothing local matches. While it is
 empty, seven pages show a spinner that turns into a failure message:
 
 ```svelte
@@ -328,7 +329,7 @@ empty, seven pages show a spinner that turns into a failure message:
 ```
 
 **Related events:** request them, abort on teardown, and read them back from the repository with
-`deriveEventsAsc(deriveEventsById(filters))`.
+`$events.asc(filters).$`.
 
 ```typescript
 onMount(() => {
@@ -460,8 +461,8 @@ Rich text uses `makeEditor` from `src/app/editor` with `EditorContent`.
 - `flotilla-architecture`: layer rules and exceptions, the `src/app` modules, boot, placement
 - `flotilla-state`: plugin stores, `derive*` stores, drafts, settings, thunks and commands
 - `flotilla-model`: spaces, rooms, NIP-43/29/86, content kinds, and where events are published
-- `welshman-app`: plugins, projections, `Command`, thunks, `Feeds`
-- `welshman-store`: `deriveEventsById`, `deriveEventsAsc`, the other repository stores
+- `welshman-app`: plugins, projections, `Command`, thunks, `Events`, `Feeds`
+- `welshman-store`: `deriveEventsById`, `deriveEventsAsc`, the repository stores under `Events`
 - `welshman-domain`: the readers and writers behind `reader` and `writer`
 - `welshman-feeds`: `FeedController`, still used by `ProfileFeed`
 - `welshman-editor`: the composer behind `makeEditor`

@@ -11,8 +11,7 @@
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
   import EventActionBar from "@app/components/EventActionBar.svelte"
-  import {reader} from "@app/core"
-  import {deriveIsDeleted} from "@app/repository"
+  import {events, reader} from "@app/core"
   import {makeSpacePath} from "@app/routes"
 
   type Props = {
@@ -30,7 +29,7 @@
   const article = $derived(reader(Article)(event))
   const h = $derived(article.room())
   const topics = $derived(article.topics())
-  const deleted = $derived(deriveIsDeleted(event))
+  const deleted = $derived($events.isDeleted(event).$)
 
   const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url, h})
 

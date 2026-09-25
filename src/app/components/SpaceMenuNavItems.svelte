@@ -17,10 +17,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
-  import {relays} from "@app/core"
+  import {events, relays} from "@app/core"
   import {ENABLE_ZAPS} from "@app/env"
   import {CONTENT_KINDS} from "@app/content"
-  import {deriveEventsForUrl} from "@app/repository"
   import {makeSpacePath} from "@app/routes"
   import {allNotifications, notifications} from "@app/notifications"
   import {pushModal} from "@app/modal"
@@ -46,8 +45,8 @@
   const cachedKinds: number[] = getJson(spaceKindsKey) ?? []
 
   const spaceKinds = deriveDeduplicatedByValue(
-    deriveEventsForUrl(url, [{kinds: CONTENT_KINDS}]),
-    $events => new Set([...cachedKinds, ...$events.map(e => e.kind)]),
+    $events.forUrl(url, [{kinds: CONTENT_KINDS}]).$,
+    $content => new Set([...cachedKinds, ...$content.map(e => e.kind)]),
   )
 
   // A comment can name content this space doesn't have, and it counts toward the space either way.

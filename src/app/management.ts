@@ -3,8 +3,7 @@ import {ago, MINUTE, now, simpleCache} from "@welshman/lib"
 import {ROOM_CREATE_PERMISSION, hexTags, tagValues} from "@welshman/util"
 import {RelayManagement, Relays} from "@welshman/app"
 import type {IApp} from "@welshman/app"
-import {fromApp, usePlugin, user} from "@app/core"
-import {deriveEventsForUrl} from "@app/repository"
+import {events, fromApp, usePlugin, user} from "@app/core"
 
 // `supportedmethods` answers for the pubkey that signed the request, so this catalog is the client's.
 export const MANAGEMENT_METHOD_GROUPS = [
@@ -221,7 +220,7 @@ export const deriveUserCanCreateRoom = (url: string) =>
   derived(
     [
       user,
-      deriveEventsForUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}]),
+      events.get().forUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}]).$,
       deriveUserIsSpaceStaff(url),
     ],
     ([$user, $events, $isStaff]) =>

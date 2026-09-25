@@ -9,8 +9,7 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
-  import {network, reader} from "@app/core"
-  import {deriveEventsForUrl} from "@app/repository"
+  import {events, network, reader} from "@app/core"
   import {displayReadingTime} from "@app/articles"
   import {makeArticlePath} from "@app/routes"
 
@@ -24,15 +23,15 @@
   const MAX_ARTICLES = 6
 
   const filters = [{kinds: [LONG_FORM], authors: [event.pubkey], limit: 20}]
-  const events = deriveEventsForUrl(url, filters)
+  const articles = $events.forUrl(url, filters).$
   const address = getAddress(event)
 
-  const articleCount = $derived($events.length)
+  const articleCount = $derived($articles.length)
 
   const others = $derived(
     sortBy(
       e => -reader(Article)(e).publishedAt(),
-      $events.filter(e => getAddress(e) !== address),
+      $articles.filter(e => getAddress(e) !== address),
     ).slice(0, MAX_ARTICLES),
   )
 

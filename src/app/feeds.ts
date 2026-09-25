@@ -30,6 +30,7 @@ import {
   tagValues,
 } from "@welshman/util"
 import {Comment, TimeEvent} from "@welshman/domain"
+import {Events} from "@welshman/app"
 import type {Maybe} from "@welshman/lib"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {mergeRepositoryUpdates} from "@welshman/net"
@@ -39,7 +40,6 @@ import type {ScrollerOpts} from "@lib/html"
 import {daysBetween} from "@lib/util"
 import {EVENT_CONTEXT_KINDS, REACTION_KINDS} from "@app/content"
 import {app, network, reader} from "@app/core"
-import {getEventsForUrl} from "@app/repository"
 
 const noEvents: TrustedEvent[] = []
 
@@ -661,7 +661,7 @@ export const makeFeed = ({
 
   // What the repository already holds is an answer too, so a page of it renders before any relay replies.
   const stored = relays.map(url =>
-    Array.from(getEventsForUrl(url, filters)).sort(compareEventsAsc).slice(-PAGE_SIZE),
+    app.get().use(Events).forUrl(url, filters).get().sort(compareEventsAsc).slice(-PAGE_SIZE),
   )
 
   if (stored.every(page => page.length > 0)) {
@@ -712,7 +712,7 @@ export const makeCalendarFeed = ({
   const events = writable(
     uniqBy(
       e => e.id,
-      relays.flatMap(url => Array.from(getEventsForUrl(url, filters))),
+      relays.flatMap(url => app.get().use(Events).forUrl(url, filters).get()),
     ).sort(compareByStart),
   )
 

@@ -17,8 +17,7 @@
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
-  import {network, router} from "@app/core"
-  import {deriveEvent} from "@app/repository"
+  import {events, network, router} from "@app/core"
   import {entityLink} from "@app/env"
   import {goToEvent} from "@app/routes"
 
@@ -39,7 +38,7 @@
 
   const mergedRelays = writable(hints)
 
-  const quote = deriveEvent(idOrAddress, hints)
+  const quote = $events.one(idOrAddress, hints).$
 
   // Whoever quoted the event must have seen it, so the quoting event's relays are asked too.
   $router.resolver

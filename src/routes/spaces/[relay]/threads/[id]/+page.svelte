@@ -3,7 +3,6 @@
   import {page} from "$app/state"
   import {sleep, spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {deriveEventsAsc} from "@welshman/store"
   import {getCommentFiltersForRoot} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
@@ -15,8 +14,7 @@
   import ThreadPost from "@app/components/ThreadPost.svelte"
   import ThreadSummaryBar from "@app/components/ThreadSummaryBar.svelte"
   import EventReply from "@app/components/EventReply.svelte"
-  import {deriveEvent, deriveEventsById} from "@app/repository"
-  import {network} from "@app/core"
+  import {events, network} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
   import {getChecked} from "@app/notifications"
   import {decodeRelay} from "@app/relays"
@@ -29,11 +27,11 @@
 
   const {relay, id} = params
   const url = decodeRelay(relay)
-  const event = deriveEvent(id, [url])
+  const event = $events.one(id, [url]).$
   // Rows register themselves with `related`, so the whole page's reactions load in one batch
   const context = makeFeedContext({relays: [url]})
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
-  const replies = $derived(deriveEventsAsc(deriveEventsById(filters)))
+  const replies = $derived($events.asc(filters).$)
 
   const scrollToTop = () => element?.scrollTo({top: 0, behavior: "smooth"})
 

@@ -8,8 +8,8 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {deriveEventsById} from "@app/repository"
   import ReportItem from "@app/components/ReportItem.svelte"
+  import {events} from "@app/core"
 
   type Props = {
     url: string
@@ -18,7 +18,7 @@
 
   const {url, event}: Props = $props()
 
-  const reports = deriveEventsById([{kinds: [REPORT], "#e": [event.id]}])
+  const reports = $events.byId([{kinds: [REPORT], "#e": [event.id]}]).$
 
   const back = () => history.back()
 

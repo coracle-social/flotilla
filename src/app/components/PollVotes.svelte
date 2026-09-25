@@ -6,8 +6,7 @@
   import {Poll, PollResponse} from "@welshman/domain"
   import type {Thunk} from "@welshman/app"
   import PollOption from "@app/components/PollOption.svelte"
-  import {command, reader, thunks, user, writer} from "@app/core"
-  import {deriveEvents} from "@app/repository"
+  import {command, events, reader, thunks, user, writer} from "@app/core"
 
   type Props = {
     url: string
@@ -16,7 +15,7 @@
 
   const {url, event}: Props = $props()
 
-  const responses = deriveEvents([{kinds: [POLL_RESPONSE], "#e": [event.id]}])
+  const responses = $events.desc([{kinds: [POLL_RESPONSE], "#e": [event.id]}]).$
 
   const getOwnResponse = (responses: TrustedEvent[]) => {
     let latest: TrustedEvent | undefined

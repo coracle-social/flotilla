@@ -2,8 +2,8 @@
   import {onDestroy} from "svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
+  import {events} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
-  import {deriveEvent} from "@app/repository"
 
   type Props = {
     url?: string
@@ -13,7 +13,7 @@
 
   const {url, value, relays}: Props = $props()
 
-  const event = deriveEvent(value, relays)
+  const event = $events.one(value, relays).$
   const context = makeFeedContext({relays})
 
   onDestroy(context.cleanup)

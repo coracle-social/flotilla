@@ -10,8 +10,7 @@
   import NoteCard from "@app/components/NoteCard.svelte"
   import ClassifiedActions from "@app/components/ClassifiedActions.svelte"
   import EventComments from "@app/components/EventComments.svelte"
-  import {reader} from "@app/core"
-  import {deriveEvent} from "@app/repository"
+  import {events, reader} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
   import type {PageProps} from "./$types"
@@ -21,7 +20,7 @@
   const {relay, address} = params
   const url = decodeRelay(relay)
   const context = makeFeedContext({relays: [url]})
-  const event = deriveEvent(address, [url])
+  const event = $events.one(address, [url]).$
   const classified = derived(event, $event => ($event ? reader(Classified)($event) : undefined))
 
   const back = () => history.back()

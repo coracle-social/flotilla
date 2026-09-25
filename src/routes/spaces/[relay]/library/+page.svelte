@@ -21,9 +21,8 @@
   import PinAdd from "@app/components/PinAdd.svelte"
   import PinboardItem from "@app/components/PinboardItem.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
-  import {app, network, reader} from "@app/core"
+  import {app, events, network, reader} from "@app/core"
   import {decodeRelay} from "@app/relays"
-  import {deriveEventsForUrl} from "@app/repository"
   import {makeLibraryPath} from "@app/routes"
   import {pushModal} from "@app/modal"
   import type {PageProps} from "./$types"
@@ -36,8 +35,8 @@
   let loading = $state(true)
 
   // A shelf belongs to the space it was published to rather than to the pubkey that signed it.
-  const boards = derived(deriveEventsForUrl(url, [{kinds: [PINBOARD]}]), $events =>
-    $events.map(reader(Pinboard)),
+  const boards = derived($events.forUrl(url, [{kinds: [PINBOARD]}]).$, $pinboards =>
+    $pinboards.map(reader(Pinboard)),
   )
 
   const address = $derived($page.url.searchParams.get("board") ?? "")

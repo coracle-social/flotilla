@@ -36,7 +36,7 @@ The app is therefore stable for as long as anything under the login gate is moun
 | `session` | the persisted `Session` | `undefined` |
 | `user` | `User.require($app)`, derived | subscribing or `.get()` throws |
 | `usePlugin(Plugin)` | a store holding `$app.use(Plugin)` for the current app | safe |
-| `profiles`, `rooms`, `relays`, `thunks`, … | `usePlugin` for 27 welshman plugins | safe |
+| `profiles`, `rooms`, `relays`, `events`, `thunks`, … | `usePlugin` for 28 welshman plugins | safe |
 | `fromApp(read)` | a store that re-reads `read($app)` when the app changes | safe |
 | `deriveUserItem(Plugin)` | the signed-in user's entry in a keyed plugin | `undefined` |
 | `userSearchRelayUrls` | the user's search relays, or `DEFAULT_SEARCH_RELAYS` | the defaults |
@@ -175,16 +175,19 @@ Events enter `app.repository` from `ingestPolicy` (which calls `tracker.track`, 
 optimistically. The tracker records which relays each event was seen on, which is what lets
 space content be keyed by relay.
 
-`src/app/repository.ts` wraps the `@welshman/store` derivations in `fromApp`:
+Raw event queries go through welshman's `Events` plugin, exported from `core.ts` as `events`.
+Every method returns a projection over the current app's repository:
 
-- `deriveEvent`, `deriveEvents`, `deriveEventsById`, `deriveIsDeleted`
-- relay-scoped: `deriveEventsForUrl`, `deriveEventsByIdForUrl`, `deriveEventsByIdByUrl`,
-  `getEventsForUrl`
-- `deriveLatestEvent`
+- `one(idOrAddress, relays)` (loads when nothing local matches, keeps deleted events), `byId`,
+  `all`, `asc`, `desc`, `isDeleted`
+- relay-scoped through the tracker: `forUrl`, `byIdForUrl`, `byIdByUrl`, and
+  `relaySignedForUrl`, which keeps only events signed by the relay's NIP-11 `self`
 
-Use these for raw event queries. Welshman's `Events` plugin has the same surface returning
-projections, and flotilla does not use it. Plugin reads (`get`, `one`, `load`, `index`) are
-documented in welshman-app.
+Components bind `$events.forUrl(url, filters).$`. A `derive*` function called from gated code
+binds `events.get().forUrl(...).$` at call time, and a module-scope store wraps it in
+`fromApp($app => $app.use(Events).byIdByUrl(filters).$)`, as `latestActivityByPath` does.
+`src/app/repository.ts` holds only `deriveLatestEvent`. Plugin reads (`get`, `one`, `load`,
+`index`) are documented in welshman-app.
 
 ### Free functions in an app module
 
@@ -196,7 +199,7 @@ projections and repository derivations:
 export const deriveSpaceActionItems = (url: string) =>
   derived(
     [
-      deriveEventsForUrl(url, [{kinds: [REPORT]}]),
+      events.get().forUrl(url, [{kinds: [REPORT]}]).$,
       rooms.get().pendingJoins(url).$,
       deriveSpacePermissions(url),
     ],
@@ -424,7 +427,7 @@ store, consumed in components with `$store`.
 Take the first answer that fits:
 
 1. **It is an event, or derived from events.** It is already in the repository, or should be.
-   Read it with a plugin or an `@app/repository` derivation, and put the domain logic in a
+   Read it with a plugin or the `events` projections, and put the domain logic in a
    `derive*` function in the owning app module (`deriveUserRooms`). Don't copy it into a
    writable.
 2. **It is a keyed collection of one kind, loaded by key.** Write a plugin. A generic kind goes

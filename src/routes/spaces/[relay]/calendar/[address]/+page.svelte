@@ -23,8 +23,7 @@
   import CalendarEventPeople from "@app/components/CalendarEventPeople.svelte"
   import CalendarRsvp from "@app/components/CalendarRsvp.svelte"
   import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/calendar"
-  import {network, reader} from "@app/core"
-  import {deriveEvent, deriveEvents} from "@app/repository"
+  import {events, network, reader} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
   import type {PageProps} from "./$types"
@@ -34,10 +33,10 @@
   const {relay, address} = params
   const url = decodeRelay(relay)
   const context = makeFeedContext({relays: [url]})
-  const event = deriveEvent(address, [url])
+  const event = $events.one(address, [url]).$
   const timeEvent = derived(event, $event => ($event ? reader(TimeEvent)($event) : undefined))
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
-  const replies = $derived(deriveEvents(filters))
+  const replies = $derived($events.desc(filters).$)
   const rsvps = $derived($event ? deriveRsvps($event) : readable<TrustedEvent[]>([]))
   const people = $derived(getRsvpsByStatus($rsvps))
 

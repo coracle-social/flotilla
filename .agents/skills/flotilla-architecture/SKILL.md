@@ -324,7 +324,7 @@ card, and `NoteContentClassified` renders a listing wherever `NoteContent` is us
 
 **Routes.** `src/routes/spaces/[relay]/classifieds/+page.svelte` loads listings and their comments
 with `makeFeed` and filters them with the `classifieds.ts` helpers. `[address]/+page.svelte` reads
-one listing with `deriveEvent(address, [url])`.
+one listing with `$events.one(address, [url]).$`.
 
 Articles are composed on a full page (`spaces/[relay]/articles/create`, built by
 `makeArticleCreatePath`) instead of in a modal.

@@ -11,7 +11,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ReportItem from "@app/components/ReportItem.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {deriveEventsForUrl} from "@app/repository"
+  import {events} from "@app/core"
 
   interface Props {
     url: string
@@ -19,7 +19,7 @@
 
   const {url}: Props = $props()
 
-  const reports = deriveEventsForUrl(url, [{kinds: [REPORT]}])
+  const reports = $events.forUrl(url, [{kinds: [REPORT]}]).$
 
   const back = () => history.back()
 

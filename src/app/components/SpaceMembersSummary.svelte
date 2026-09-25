@@ -6,8 +6,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Profile from "@app/components/Profile.svelte"
-  import {relayMemberLists, relays} from "@app/core"
-  import {deriveEventsForUrl} from "@app/repository"
+  import {events, relayMemberLists, relays} from "@app/core"
   import {makeSpacePath} from "@app/routes"
 
   type Props = {
@@ -18,7 +17,7 @@
 
   const relay = $relays.one(url)
   const members = $relayMemberLists.forUrl(url)
-  const memberEvents = deriveEventsForUrl(url, [{kinds: [RELAY_ADD_MEMBER, RELAY_JOIN]}])
+  const memberEvents = $events.forUrl(url, [{kinds: [RELAY_ADD_MEMBER, RELAY_JOIN]}]).$
 
   const admins = $derived($relay?.pubkey ? [$relay.pubkey] : [])
 

@@ -15,8 +15,7 @@ import {
 } from "@welshman/util"
 import {Comment} from "@welshman/domain"
 import {synced, throttled, withGetter} from "@welshman/store"
-import {Relays, RoomLists} from "@welshman/app"
-import {deriveEventsByIdByUrl} from "@app/repository"
+import {Events, Relays, RoomLists} from "@welshman/app"
 import {app, fromApp, reader} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
 import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
@@ -236,10 +235,13 @@ export const latestActivityByPath = derived(
         chatsById,
         fromApp($app => $app.use(Relays).index.$),
         fromApp($app => $app.use(RoomLists).index.$),
-        deriveEventsByIdByUrl([
-          {kinds: [MESSAGE, ...CONTENT_KINDS]},
-          makeCommentFilter(CONTENT_KINDS),
-        ]),
+        fromApp(
+          $app =>
+            $app
+              .use(Events)
+              .byIdByUrl([{kinds: [MESSAGE, ...CONTENT_KINDS]}, makeCommentFilter(CONTENT_KINDS)])
+              .$,
+        ),
         userSettingsValues,
       ],
       identity,

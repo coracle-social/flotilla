@@ -2,7 +2,6 @@
   import {onDestroy, onMount} from "svelte"
   import {sleep} from "@welshman/lib"
   import {POLL, POLL_RESPONSE, getCommentFiltersForRoot} from "@welshman/util"
-  import {deriveEventsAsc} from "@welshman/store"
   import SortVertical from "@assets/icons/sort-vertical.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -13,8 +12,7 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventReply from "@app/components/EventReply.svelte"
-  import {network} from "@app/core"
-  import {deriveEvent, deriveEventsById} from "@app/repository"
+  import {events, network} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
   import type {PageProps} from "./$types"
@@ -24,9 +22,9 @@
   const {relay, id} = params
   const url = decodeRelay(relay)
   const context = makeFeedContext({relays: [url]})
-  const event = deriveEvent(id, [url])
+  const event = $events.one(id, [url]).$
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
-  const comments = $derived(deriveEventsAsc(deriveEventsById(filters)))
+  const comments = $derived($events.asc(filters).$)
 
   const back = () => history.back()
 

@@ -2,8 +2,7 @@ import {derived} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {getIdFilters, outbox} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {network, pinLists, router} from "@app/core"
-import {deriveEvents} from "@app/repository"
+import {events, network, pinLists, router} from "@app/core"
 
 export const derivePinnedEvents = (pubkey: string): Readable<TrustedEvent[]> =>
   derived(
@@ -22,7 +21,7 @@ export const derivePinnedEvents = (pubkey: string): Readable<TrustedEvent[]> =>
             network.get().loadLenient({relays: $relays, filters, signal: controller.signal}),
           )
 
-        const unsubscribe = deriveEvents(filters).subscribe(set)
+        const unsubscribe = events.get().desc(filters).$.subscribe(set)
 
         return () => {
           controller.abort()

@@ -10,6 +10,7 @@ import {
   BlossomServerLists,
   Deletes,
   Domain,
+  Events,
   FollowLists,
   Handles,
   Logger,
@@ -130,6 +131,7 @@ export const blockedRelayLists = usePlugin(BlockedRelayLists)
 export const blossomServerLists = usePlugin(BlossomServerLists)
 export const deletes = usePlugin(Deletes)
 export const domain = usePlugin(Domain)
+export const events = usePlugin(Events)
 export const followLists = usePlugin(FollowLists)
 export const handles = usePlugin(Handles)
 export const logger = usePlugin(Logger)

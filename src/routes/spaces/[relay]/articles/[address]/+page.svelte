@@ -16,8 +16,7 @@
   import EventComments from "@app/components/EventComments.svelte"
   import EventMenu from "@app/components/EventMenu.svelte"
   import ReadingProgress from "@app/components/ReadingProgress.svelte"
-  import {reader} from "@app/core"
-  import {deriveEvent} from "@app/repository"
+  import {events, reader} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
   import {displayReadingTime} from "@app/articles"
@@ -29,7 +28,7 @@
   const {relay, address} = params
   const url = decodeRelay(relay)
   const context = makeFeedContext({relays: [url]})
-  const event = deriveEvent(address, [url])
+  const event = $events.one(address, [url]).$
   const article = derived(event, $event => ($event ? reader(Article)($event) : undefined))
   const h = $derived($article?.room())
   const topics = $derived(uniq($article?.topics() ?? []))

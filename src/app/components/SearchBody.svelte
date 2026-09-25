@@ -14,8 +14,7 @@
   import PeopleItem from "@app/components/PeopleItem.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
-  import {getEventsForUrl} from "@app/repository"
-  import {network, profiles} from "@app/core"
+  import {events, network, profiles} from "@app/core"
   import {popModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {goToEvent} from "@app/routes"
@@ -52,7 +51,7 @@
     results = sortEventsDesc(
       uniqBy(
         (e: TrustedEvent) => e.id,
-        relays.flatMap(relay => Array.from(getEventsForUrl(relay, filters))),
+        relays.flatMap(relay => events.get().forUrl(relay, filters).get()),
       ),
     )
 

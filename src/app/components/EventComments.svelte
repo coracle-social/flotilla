@@ -3,15 +3,13 @@
   import {removeUndefined} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {getCommentFiltersForRoot} from "@welshman/util"
-  import {deriveEventsAsc} from "@welshman/store"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
   import type {FeedContext} from "@app/feeds"
   import CommentCompose from "@app/components/CommentCompose.svelte"
-  import {network} from "@app/core"
-  import {deriveEventsById} from "@app/repository"
+  import {events, network} from "@app/core"
   import {buildCommentTree} from "@app/social"
 
   type Props = {
@@ -24,7 +22,7 @@
 
   const relays = removeUndefined([url])
   const filters = getCommentFiltersForRoot([event])
-  const comments = deriveEventsAsc(deriveEventsById(filters))
+  const comments = $events.asc(filters).$
 
   const nodes = $derived(buildCommentTree(event, $comments))
 

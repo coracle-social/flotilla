@@ -1,8 +1,7 @@
 import {derived} from "svelte/store"
 import {REPORT, sortEventsDesc} from "@welshman/util"
-import {rooms} from "@app/core"
+import {events, rooms} from "@app/core"
 import {deriveSpacePermissions} from "@app/management"
-import {deriveEventsForUrl} from "@app/repository"
 
 // Action items (admin review queue)
 
@@ -10,7 +9,7 @@ import {deriveEventsForUrl} from "@app/repository"
 export const deriveSpaceActionItems = (url: string) =>
   derived(
     [
-      deriveEventsForUrl(url, [{kinds: [REPORT]}]),
+      events.get().forUrl(url, [{kinds: [REPORT]}]).$,
       rooms.get().pendingJoins(url).$,
       deriveSpacePermissions(url),
     ],

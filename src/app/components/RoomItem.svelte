@@ -32,12 +32,11 @@
   import RoomItemMenuButton from "@app/components/RoomItemMenuButton.svelte"
   import RoomItemMenuMobile from "@app/components/RoomItemMenuMobile.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
-  import {profiles, thunks, user} from "@app/core"
+  import {events, profiles, thunks, user} from "@app/core"
   import {noThunks, thunksByEventId} from "@app/thunks"
   import {colorFor} from "@app/theme"
   import {ENABLE_ZAPS} from "@app/env"
   import type {FeedContext} from "@app/feeds"
-  import {deriveEvent, deriveEventsForUrl} from "@app/repository"
   import {highlightedEvent, makeContentPath, makeThreadPath} from "@app/routes"
   import {pushModal} from "@app/modal"
 
@@ -70,16 +69,16 @@
   // A message that is nothing but a reference renders as the event it quotes.
   const isQuoteOnly = event.content.trim().split(/\s/).length === 1
   const quote = isQuoteOnly ? getContentQuote(event.content) : undefined
-  const innerEvent = quote ? deriveEvent(quote.value, [url]) : readable(undefined)
+  const innerEvent = quote ? $events.one(quote.value, [url]).$ : readable(undefined)
   const innerComments = $derived(
-    $innerEvent ? deriveEventsForUrl(url, getCommentFiltersForParent([$innerEvent])) : readable([]),
+    $innerEvent ? $events.forUrl(url, getCommentFiltersForParent([$innerEvent])).$ : readable([]),
   )
 
   const path = $derived(
     $innerEvent && makeContentPath(url, $innerEvent.kind, getIdOrAddress($innerEvent)),
   )
 
-  const threads = deriveEventsForUrl(url, [{kinds: [THREAD], "#q": [event.id]}])
+  const threads = $events.forUrl(url, [{kinds: [THREAD], "#q": [event.id]}]).$
 
   const commenterDisplays = $derived(
     deriveDisplaysByPubkey(uniq($innerComments.map(e => e.pubkey)), url),

@@ -3,61 +3,8 @@ import type {Unsubscriber} from "svelte/store"
 import {first, on} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {sortEventsDesc} from "@welshman/util"
-import type {Filter, TrustedEvent} from "@welshman/util"
-import * as store from "@welshman/store"
-import {Network} from "@welshman/app"
-import {app, fromApp} from "@app/core"
-
-// Events
-
-export const deriveEvent = (idOrAddress: string, relays: string[] = []) =>
-  fromApp($app =>
-    store.makeDeriveEvent({
-      repository: $app.repository,
-      includeDeleted: true,
-      onDerive: (filters: Filter[], hints: string[]) =>
-        $app.use(Network).loadLenient({filters, relays: hints}),
-    })(idOrAddress, relays),
-  )
-
-export const deriveEventsById = (filters: Filter[] = [{}]) =>
-  fromApp($app => store.deriveEventsById({repository: $app.repository, filters}))
-
-export const deriveEvents = (filters: Filter[] = [{}]) =>
-  store.deriveEventsDesc(deriveEventsById(filters))
-
-export const deriveIsDeleted = (event: TrustedEvent) =>
-  fromApp($app => store.deriveIsDeleted($app.repository, event))
-
-// Events on a relay
-
-export const getEventsForUrl = (url: string, filters: Filter[] = [{}]) =>
-  store
-    .getEventsByIdForUrl({
-      url,
-      filters,
-      tracker: app.get().tracker,
-      repository: app.get().repository,
-    })
-    .values()
-
-export const deriveEventsByIdForUrl = (url: string, filters: Filter[] = [{}]) =>
-  fromApp($app =>
-    store.deriveEventsByIdForUrl({
-      url,
-      filters,
-      tracker: $app.tracker,
-      repository: $app.repository,
-    }),
-  )
-
-export const deriveEventsForUrl = (url: string, filters: Filter[] = [{}]) =>
-  store.deriveArray(deriveEventsByIdForUrl(url, filters))
-
-export const deriveEventsByIdByUrl = (filters: Filter[] = [{}]) =>
-  fromApp($app =>
-    store.deriveEventsByIdByUrl({filters, tracker: $app.tracker, repository: $app.repository}),
-  )
+import type {TrustedEvent} from "@welshman/util"
+import {app} from "@app/core"
 
 // The most recent event held from one author.
 

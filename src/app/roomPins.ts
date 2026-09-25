@@ -2,8 +2,7 @@ import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {getIdFilters, getIdOrAddress} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {network, roomPinLists} from "@app/core"
-import {deriveEventsForUrl} from "@app/repository"
+import {events, network, roomPinLists} from "@app/core"
 
 export const deriveRoomPinnedEvents = (url: string, h: string): Readable<TrustedEvent[]> =>
   readable<TrustedEvent[]>([], set => {
@@ -24,22 +23,25 @@ export const deriveRoomPinnedEvents = (url: string, h: string): Readable<Trusted
 
         network.get().loadLenient({relays: [url], filters, signal: controller.signal})
 
-        return deriveEventsForUrl(url, filters).subscribe($events => {
-          const byPin = new Map(
-            $events.flatMap(event => [
-              [event.id, event],
-              [getIdOrAddress(event), event],
-            ]),
-          )
+        return events
+          .get()
+          .forUrl(url, filters)
+          .$.subscribe($events => {
+            const byPin = new Map(
+              $events.flatMap(event => [
+                [event.id, event],
+                [getIdOrAddress(event), event],
+              ]),
+            )
 
-          setEvents(
-            $pins.flatMap(pin => {
-              const event = byPin.get(pin)
+            setEvents(
+              $pins.flatMap(pin => {
+                const event = byPin.get(pin)
 
-              return event ? [event] : []
-            }),
-          )
-        })
+                return event ? [event] : []
+              }),
+            )
+          })
       },
     ).subscribe(set)
 
