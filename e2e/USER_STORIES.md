@@ -1146,6 +1146,8 @@ Acceptance:
 - For a chat message, a "Sending..." toast appears and becomes "Message sent!"
   once the relay confirms; a failed retry leaves no success message and can be
   retried again.
+- A successful retry clears the "Failed to send!" indicator on the message
+  itself, in a room and in a conversation.
 - For an article or comment, a successful retry clears the "Failed to send!"
   indicator and restores the normal reaction and menu actions, with no toast.
 

@@ -247,12 +247,18 @@ test("US-069 see why a message failed to deliver", async ({seed, as}) => {
 test("US-070 retry a failed relay", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
+    const other = relay("other")
 
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
     space.join(user.bob, "general")
+    other.join(user.alice)
     seedPerson(space, user.alice, "Alice Anderson")
     seedPerson(space, user.bob, "Bob Barker")
+
+    space.messagingRelayList(user.alice)
+    // Bob names both relays and belongs to one, so the other refuses a wrap addressed to him.
+    space.messagingRelayList(user.bob, [space.url, other.url])
   })
 
   const {url} = scenario.space("space")
@@ -292,6 +298,9 @@ test("US-070 retry a failed relay", async ({seed, as}) => {
   await expect(toast(alice)).toContainText("Sending...")
   await expect(toast(alice)).toContainText("Message sent!")
 
+  // The message went out, so it no longer says it did not.
+  await expect(failure).toHaveCount(0)
+
   const [sent] = getPublishedEvents(alice.context(), MESSAGE)
 
   // One attempt and two retries, every one of them to the relay that failed and to nothing else.
@@ -300,6 +309,24 @@ test("US-070 retry a failed relay", async ({seed, as}) => {
   await bob.goto(roomPath(url, "archive"))
 
   await expect(message(bob, "is anyone here?")).toBeVisible()
+
+  // The same retry in a conversation, where one of his two messaging relays turns her wrap away.
+  await alice.goto(chatPath(users.bob.pubkey))
+  await send(alice, "did that one arrive?")
+
+  const partial = alice.getByText("Failed to send!")
+
+  await expect(partial).toBeVisible()
+
+  await seed(({relay, user}) => {
+    relay("other").join(user.bob)
+  })
+
+  await partial.click()
+  await detail(alice).getByRole("button", {name: "Retry"}).click()
+
+  await expect(toast(alice)).toContainText("Message sent!")
+  await expect(partial).toHaveCount(0)
 })
 
 test("US-071 content posts show delivery status in place", async ({seed, as}) => {

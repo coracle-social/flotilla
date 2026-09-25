@@ -3,7 +3,6 @@
   import {formatTimestampAsTime} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {Thunks} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -20,7 +19,8 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ChatMessageMenu from "@app/components/ChatMessageMenu.svelte"
   import ChatMessageMenuMobile from "@app/components/ChatMessageMenuMobile.svelte"
-  import {app, profiles, user} from "@app/core"
+  import {profiles, thunks, user} from "@app/core"
+  import {noThunks, thunksByEventId} from "@app/thunks"
   import {highlightedEvent} from "@app/routes"
   import {colorFor} from "@app/theme"
   import {pushModal} from "@app/modal"
@@ -39,8 +39,7 @@
 
   const isOwn = event.pubkey === $user.pubkey
   const profileDisplay = $profiles.display(event.pubkey).$
-  const thunks = $app.use(Thunks).history
-  const thunk = $app.use(Thunks).merge($thunks.filter(t => t.options.event.id === event.id))
+  const thunk = $derived($thunks.merge($thunksByEventId.get(event.id) ?? noThunks))
   const colorValue = colorFor(event.pubkey)
 
   const reply = () => replyTo(event)
