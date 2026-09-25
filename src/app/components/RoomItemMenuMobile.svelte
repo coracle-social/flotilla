@@ -8,6 +8,8 @@
   import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
+  import Danger from "@assets/icons/danger.svg?dataurl"
+  import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
@@ -24,6 +26,8 @@
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
+  import Report from "@app/components/Report.svelte"
+  import PinboardSelect from "@app/components/PinboardSelect.svelte"
   import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
@@ -97,6 +101,10 @@
 
   const showInfo = () => pushModal(EventInfo, {url, event}, {replaceState: true})
 
+  const addToLibrary = () => pushModal(PinboardSelect, {url, event}, {replaceState: true})
+
+  const report = () => pushModal(Report, {url, event}, {replaceState: true})
+
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 
   const showAdminDelete = () => pushModal(EventAdminDeleteConfirm, {url, noun: "Message", event})
@@ -163,6 +171,10 @@
             <Icon size={4} icon={ShareCircle} />
             Share Message
           </Button>
+          <Button class="button button-neutral w-full" onclick={addToLibrary}>
+            <Icon size={4} icon={GalleryWide} />
+            Add to Library
+          </Button>
           <Button class="button button-neutral w-full" onclick={read}>
             <Icon size={4} icon={VolumeLoud} />
             Read Out Loud
@@ -194,11 +206,17 @@
               <Icon size={4} icon={TrashBin2} />
               Delete Message
             </Button>
-          {:else if $adminDelete}
-            <Button class="button button-neutral w-full text-error" onclick={showAdminDelete}>
-              <Icon size={4} icon={TrashBin2} />
-              Delete Message
+          {:else}
+            <Button class="button button-neutral w-full text-error" onclick={report}>
+              <Icon size={4} icon={Danger} />
+              Report Content
             </Button>
+            {#if $adminDelete}
+              <Button class="button button-neutral w-full text-error" onclick={showAdminDelete}>
+                <Icon size={4} icon={TrashBin2} />
+                Delete Message
+              </Button>
+            {/if}
           {/if}
         </div>
       {/if}
