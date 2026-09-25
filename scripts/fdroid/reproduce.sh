@@ -60,9 +60,14 @@ cd "$home_vagrant"
 # --on-server builds whatever is already checked out in build/, which the host fetches in production
 curl --silent https://gitlab.com/fdroid/fdroid-bootstrap-buildserver/-/raw/master/roles/production_hardening/files/gitconfig \
   >"$home_vagrant/.gitconfig"
-chown vagrant "$home_vagrant/.gitconfig"
+mkdir -p "$home_vagrant/fdroiddata/config"
+for list in fetch.fsck fsck receive.fsck transfer.fsck; do
+  curl --silent --fail "https://gitlab.com/fdroid/fdroiddata/-/raw/master/config/$list.skipList" \
+    >"$home_vagrant/fdroiddata/config/$list.skipList"
+done
+chown -R vagrant "$home_vagrant/.gitconfig" "$home_vagrant/fdroiddata"
 fdroid fetchsrclibs "social.flotilla.fdroid:$VERSION_CODE" --verbose
-rm "$home_vagrant/.gitconfig"
+rm -r "$home_vagrant/.gitconfig" "$home_vagrant/fdroiddata"
 
 fdroid build --verbose --test --refresh-scanner --on-server --no-tarball \
   "social.flotilla.fdroid:$VERSION_CODE"
