@@ -1,9 +1,10 @@
-import {MINUTE, formatTimestampRelative, int, ms, now, uniq} from "@welshman/lib"
-import {EVENT_RSVP, addressTags, getIdFilters, isSignedEvent, matchTag} from "@welshman/util"
+import {MINUTE, first, formatTimestampRelative, int, ms, now, uniq} from "@welshman/lib"
+import {EVENT_RSVP, getIdFilters, isSignedEvent} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
+import {CalendarRsvp} from "@welshman/domain"
 import {buildUrl} from "@lib/util"
-import {getEventStart, getEventTitle, getRsvpStatus, isAttending} from "@app/calendar"
-import {app, network, roomLists} from "@app/core"
+import {getEventStart, getEventTitle, isAttending} from "@app/calendar"
+import {app, network, reader, roomLists} from "@app/core"
 import {PUSH_SERVER} from "@app/env"
 import {pushState} from "@app/push/adapters/common"
 import {notificationSettings} from "@app/settings"
@@ -70,14 +71,16 @@ const loadAttendedEvents = async (pubkey: string) => {
 
   await $network.request({signal, filters, relays, autoClose: true})
 
-  const attended = app
-    .get()
-    .repository.query(filters)
-    .flatMap(rsvp => {
-      const tag = matchTag(addressTags("a"), rsvp.tags)
+  const {repository, tracker} = app.get()
 
-      return tag?.[2] && isAttending(getRsvpStatus(rsvp)) ? [{address: tag[1], relay: tag[2]}] : []
-    })
+  // An RSVP only goes to the space holding its event, so where it was seen is where the event is.
+  const attended = repository.query(filters).flatMap(rsvp => {
+    const rsvpReader = reader(CalendarRsvp)(rsvp)
+    const address = rsvpReader.calendarEvent()
+    const relay = first(Array.from(tracker.getRelays(rsvp.id)))
+
+    return address && relay && isAttending(rsvpReader.status()) ? [{address, relay}] : []
+  })
 
   await $network.request({
     signal,

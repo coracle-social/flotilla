@@ -3,6 +3,7 @@ import {tagSpec, tagValue} from "@welshman/util"
 import {displayPubkey} from "@welshman/domain"
 import {makeRoomKey} from "@welshman/app"
 import {decodePubkey} from "@lib/util"
+import {getEventTitle} from "@app/calendar"
 import {app, profiles, rooms} from "@app/core"
 import {PLATFORM_NAME} from "@app/env"
 import {decodeRelay} from "@app/relays"
@@ -137,7 +138,7 @@ export const getPageTitle = ({page, pubkey}: PageTitleContext) => {
   }
 
   if (routeId === "/spaces/[relay]/calendar/[address]") {
-    return makeTitle(tagValue(tagSpec("title"), event?.tags || []) || "Event")
+    return makeTitle((event && getEventTitle(event)) || "Event")
   }
 
   if (routeId === "/spaces/[relay]/classifieds/[address]") {

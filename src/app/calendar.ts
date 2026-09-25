@@ -6,15 +6,17 @@ import {
   pushToMapKey,
   secondsToDate,
   sortBy,
+  spec,
   uniqBy,
 } from "@welshman/lib"
-import {EVENT_RSVP, getAddress, makeEvent, tagSpec, tagValue} from "@welshman/util"
+import {EVENT_RSVP, getAddress, tagSpec, tagValue} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {TimeEvent} from "@welshman/domain"
+import {CalendarRsvp, TimeEvent} from "@welshman/domain"
+import type {RsvpStatus} from "@welshman/domain"
 import {synced} from "@welshman/store"
-import {deletes, reader, relays, thunks} from "@app/core"
+import {deletes, reader, relays, thunks, writer} from "@app/core"
 import {deriveEvents} from "@app/repository"
-import {PROTECTED} from "@app/rooms"
+import {toSpace} from "@app/rooms"
 import {kv} from "@app/storage"
 
 // Views
@@ -230,12 +232,6 @@ export const layoutMultiDayBars = (
 
 // RSVPs (NIP-52)
 
-export enum RsvpStatus {
-  Accepted = "accepted",
-  Declined = "declined",
-  Tentative = "tentative",
-}
-
 export const makeRsvpFilter = (event: TrustedEvent) => ({
   kinds: [EVENT_RSVP],
   "#a": [getAddress(event)],
@@ -243,10 +239,7 @@ export const makeRsvpFilter = (event: TrustedEvent) => ({
 
 export const deriveRsvps = (event: TrustedEvent) => deriveEvents([makeRsvpFilter(event)])
 
-export const getRsvpStatus = (rsvp: TrustedEvent) => tagValue(tagSpec("status"), rsvp.tags)
-
-export const isAttending = (status?: string) =>
-  status === RsvpStatus.Accepted || status === RsvpStatus.Tentative
+export const isAttending = (status?: RsvpStatus) => status === "accepted" || status === "tentative"
 
 // A relay can still hold a replaced RSVP, so the newest per person is the one that counts.
 export const getRsvpsByStatus = (rsvps: TrustedEvent[]) => {
@@ -256,37 +249,32 @@ export const getRsvpsByStatus = (rsvps: TrustedEvent[]) => {
   )
 
   const byStatus = (status: RsvpStatus) =>
-    latest.filter(rsvp => getRsvpStatus(rsvp) === status).map(rsvp => rsvp.pubkey)
+    latest.filter(rsvp => reader(CalendarRsvp)(rsvp).status() === status).map(rsvp => rsvp.pubkey)
 
   return {
     latest,
-    accepted: byStatus(RsvpStatus.Accepted),
-    tentative: byStatus(RsvpStatus.Tentative),
-    declined: byStatus(RsvpStatus.Declined),
+    accepted: byStatus("accepted"),
+    tentative: byStatus("tentative"),
+    declined: byStatus("declined"),
   }
 }
 
 // An RSVP is addressable, so identifying it by its target makes a new one supersede the old.
 export const publishRsvp = async (url: string, event: TrustedEvent, status: RsvpStatus) => {
-  const address = getAddress(event)
-  const h = tagValue(tagSpec("h"), event.tags)
-  const tags = [
-    ["a", address, url],
-    ["e", event.id, url],
-    ["d", address],
-    ["status", status],
-    ["p", event.pubkey],
-  ]
+  const eventWriter = await toSpace(
+    writer(CalendarRsvp)
+      .setIdentifier(getAddress(event))
+      .setCalendarEventFromEvent(event)
+      .setStatus(status)
+      // The writer hints the organizer's outbox, but a space's event lives on the space relay.
+      .dropTags(spec(["a"]))
+      .dropTags(spec(["e"]))
+      .addTags(["a", getAddress(event), url], ["e", event.id, url]),
+    url,
+    reader(TimeEvent)(event).room(),
+  )
 
-  if (await relays.get().hasNip(url, 70)) {
-    tags.push(PROTECTED)
-  }
-
-  if (h) {
-    tags.push(["h", h])
-  }
-
-  return thunks.get().publish({relays: [url], event: makeEvent(EVENT_RSVP, {tags})})
+  return thunks.get().publish({relays: [url], event: await eventWriter.renderTemplate()})
 }
 
 export const retractRsvp = async (url: string, rsvp: TrustedEvent) => {

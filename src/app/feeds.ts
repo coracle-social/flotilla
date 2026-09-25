@@ -15,10 +15,9 @@ import {
   hexTags,
   isReplaceableKind,
   matchFilters,
-  tagSpec,
-  tagValue,
   tagValues,
 } from "@welshman/util"
+import {TimeEvent} from "@welshman/domain"
 import type {Maybe} from "@welshman/lib"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {mergeRepositoryUpdates} from "@welshman/net"
@@ -27,7 +26,7 @@ import {createScroller} from "@lib/html"
 import type {ScrollerOpts} from "@lib/html"
 import {daysBetween} from "@lib/util"
 import {EVENT_CONTEXT_KINDS, REACTION_KINDS} from "@app/content"
-import {app, network} from "@app/core"
+import {app, network, reader} from "@app/core"
 import {getEventsForUrl} from "@app/repository"
 
 const noEvents: TrustedEvent[] = []
@@ -682,12 +681,16 @@ export const makeCalendarFeed = ({
   let oldest = now()
   let newest = now()
 
-  const getStart = (event: TrustedEvent) => parseInt(tagValue(tagSpec("start"), event.tags) || "")
-
-  const getEnd = (event: TrustedEvent) => parseInt(tagValue(tagSpec("end"), event.tags) || "")
+  const getStart = (event: TrustedEvent) => reader(TimeEvent)(event).start() ?? 0
 
   const compareByStart = (a: TrustedEvent, b: TrustedEvent) =>
     getStart(a) - getStart(b) || compareEventsAsc(a, b)
+
+  const isValid = (event: TrustedEvent) => {
+    const timeEvent = reader(TimeEvent)(event)
+
+    return timeEvent.start() && timeEvent.end() && !seen.has(event.id)
+  }
 
   const events = writable(
     uniqBy(
@@ -697,7 +700,7 @@ export const makeCalendarFeed = ({
   )
 
   const insertEvents = (newEvents: TrustedEvent[]) => {
-    const valid = newEvents.filter(e => !isNaN(getStart(e)) && !isNaN(getEnd(e)) && !seen.has(e.id))
+    const valid = newEvents.filter(isValid)
 
     if (valid.length === 0) {
       return

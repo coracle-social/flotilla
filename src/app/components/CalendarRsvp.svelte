@@ -1,6 +1,8 @@
 <script lang="ts">
   import cx from "classnames"
   import type {TrustedEvent} from "@welshman/util"
+  import {CalendarRsvp} from "@welshman/domain"
+  import type {RsvpStatus} from "@welshman/domain"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import QuestionCircle from "@assets/icons/question-circle.svg?dataurl"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
@@ -8,15 +10,8 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {user} from "@app/core"
-  import {
-    RsvpStatus,
-    getRsvpStatus,
-    getRsvpsByStatus,
-    isAttending,
-    publishRsvp,
-    retractRsvp,
-  } from "@app/calendar"
+  import {reader, user} from "@app/core"
+  import {getRsvpsByStatus, isAttending, publishRsvp, retractRsvp} from "@app/calendar"
   import {setEventReminders} from "@app/reminders"
 
   type Props = {
@@ -35,7 +30,7 @@
 
     loading = true
 
-    const retracting = ownRsvp && getRsvpStatus(ownRsvp) === status
+    const retracting = ownRsvp && ownStatus === status
 
     try {
       if (retracting) {
@@ -50,11 +45,11 @@
     }
   }
 
-  const accept = () => setStatus(RsvpStatus.Accepted)
+  const accept = () => setStatus("accepted")
 
-  const maybe = () => setStatus(RsvpStatus.Tentative)
+  const maybe = () => setStatus("tentative")
 
-  const decline = () => setStatus(RsvpStatus.Declined)
+  const decline = () => setStatus("declined")
 
   const statusClass = (status: RsvpStatus) =>
     cx("button button-xs join-item", ownStatus === status ? "button-primary" : "button-neutral")
@@ -63,7 +58,7 @@
 
   const people = $derived(getRsvpsByStatus(rsvps))
   const ownRsvp = $derived(people.latest.find(rsvp => rsvp.pubkey === $user.pubkey))
-  const ownStatus = $derived(ownRsvp ? getRsvpStatus(ownRsvp) : undefined)
+  const ownStatus = $derived(ownRsvp ? reader(CalendarRsvp)(ownRsvp).status() : undefined)
   const attending = $derived([...people.accepted, ...people.tentative])
 </script>
 
@@ -71,15 +66,15 @@
   <div class="flex flex-wrap items-center gap-2">
     <span class="text-sm opacity-75">Are you going?</span>
     <div class="join">
-      <Button class={statusClass(RsvpStatus.Accepted)} disabled={loading} onclick={accept}>
+      <Button class={statusClass("accepted")} disabled={loading} onclick={accept}>
         <Icon icon={CheckCircle} size={4} />
         Going
       </Button>
-      <Button class={statusClass(RsvpStatus.Tentative)} disabled={loading} onclick={maybe}>
+      <Button class={statusClass("tentative")} disabled={loading} onclick={maybe}>
         <Icon icon={QuestionCircle} size={4} />
         Maybe
       </Button>
-      <Button class={statusClass(RsvpStatus.Declined)} disabled={loading} onclick={decline}>
+      <Button class={statusClass("declined")} disabled={loading} onclick={decline}>
         <Icon icon={CloseCircle} size={4} />
         Can't go
       </Button>
