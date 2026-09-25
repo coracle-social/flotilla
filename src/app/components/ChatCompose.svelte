@@ -11,6 +11,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import DictationButton from "@app/components/DictationButton.svelte"
+  import EditorEmojiButton from "@app/components/EditorEmojiButton.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {makeEditor} from "@app/editor"
   import {getDictation} from "@app/dictation"
@@ -163,6 +164,10 @@
       <Icon icon={GallerySend} />
     {/if}
   </Button>
+  <EditorEmojiButton
+    {editor}
+    disabled={$uploading || disabled}
+    class="button button-neutral button-square tip tip-right h-10 w-10 min-w-10 rounded-2xl transition-colors" />
   <div class={editorClass} aria-disabled={disabled}>
     <EditorContent {autofocus} {editor} />
   </div>

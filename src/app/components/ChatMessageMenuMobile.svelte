@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent} from "@welshman/util"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -30,10 +29,10 @@
 
   const tile = "button h-auto flex-col gap-1.5 py-4 text-xs"
 
-  const onEmoji = async (emoji: NativeEmoji) => {
+  const onEmoji = async (emoji: string) => {
     history.back()
 
-    const reaction = await $reactions.react(event, emoji.unicode)
+    const reaction = await $reactions.react(event, emoji)
 
     return $wraps.publish({event: reaction.event, recipients: pubkeys, pow: 16})
   }

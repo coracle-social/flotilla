@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent} from "@welshman/util"
   import {tagSpec, tagValue} from "@welshman/util"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
@@ -21,8 +20,7 @@
 
   const h = tagValue(tagSpec("h"), event.tags)
 
-  const onEmoji = (emoji: NativeEmoji) =>
-    publishReaction(event, {content: emoji.unicode, tags: []}, {url, h})
+  const onEmoji = (emoji: string) => publishReaction(event, {content: emoji, tags: []}, {url, h})
 </script>
 
 {#if ENABLE_ZAPS && !hideZap}

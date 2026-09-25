@@ -13,6 +13,7 @@
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ComposeMenu from "@app/components/ComposeMenu.svelte"
+  import EditorEmojiButton from "@app/components/EditorEmojiButton.svelte"
   import DictationButton from "@app/components/DictationButton.svelte"
   import CommandArgBar from "@app/components/CommandArgBar.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
@@ -187,6 +188,10 @@
         <Icon icon={WidgetAdd} />
       </Tippy>
     </Button>
+    <EditorEmojiButton
+      {editor}
+      disabled={$uploading}
+      class="join-item h-10 w-10 min-w-10 button button-neutral" />
   </div>
   <div class="chat-editor grow overflow-hidden">
     <EditorContent {autofocus} {editor} />

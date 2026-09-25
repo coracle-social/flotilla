@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent} from "@welshman/util"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -13,8 +12,8 @@
 
   const {event, pubkeys}: Props = $props()
 
-  const onEmoji = async (emoji: NativeEmoji) => {
-    const reaction = await $reactions.react(event, emoji.unicode)
+  const onEmoji = async (emoji: string) => {
+    const reaction = await $reactions.react(event, emoji)
 
     return $wraps.publish({event: reaction.event, recipients: pubkeys, pow: 16})
   }

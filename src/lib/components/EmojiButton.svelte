@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type {NativeEmoji} from "emoji-picker-element/shared"
+  import type {Snippet} from "svelte"
   import {between, throttle} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import Button from "@lib/components/Button.svelte"
@@ -7,11 +7,27 @@
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
 
-  const {tippyParams = {}, onEmoji, class: className, children, ...restProps} = $props()
+  type Props = {
+    tippyParams?: Record<string, unknown>
+    onEmoji: (emoji: string) => void
+    allowKaomoji?: boolean
+    class?: string
+    children?: Snippet
+    [key: string]: unknown
+  }
+
+  const {
+    tippyParams = {},
+    onEmoji,
+    allowKaomoji = false,
+    class: className,
+    children,
+    ...restProps
+  }: Props = $props()
 
   const open = () => tippy?.show()
 
-  const onClick = (emoji: NativeEmoji) => {
+  const onClick = (emoji: string) => {
     onEmoji(emoji)
     tippy?.hide()
   }
@@ -31,14 +47,14 @@
   let tippy: Maybe<TippyController> = $state()
 </script>
 
-<svelte:document onmousemove={tippy?.visible ? onMouseMove : undefined} />
+<svelte:document onmousemove={tippy?.visible && !allowKaomoji ? onMouseMove : undefined} />
 
 <Button onclick={open} class={className} {...restProps}>
   <Tippy
     bind:controller={tippy}
     class="flex"
     component={EmojiPicker}
-    props={{onClick}}
+    props={{onClick, allowKaomoji}}
     params={{trigger: "manual", interactive: true, ...tippyParams}}>
     {@render children?.()}
   </Tippy>

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent} from "@welshman/util"
   import * as nip19 from "nostr-tools/nip19"
   import {getIdOrAddress, tagSpec, tagValue, toNostrURI} from "@welshman/util"
@@ -54,11 +53,11 @@
   const isPinned = $derived($pinIds.includes(event.id))
   const tile = "button h-auto flex-col gap-1.5 py-4 text-xs"
 
-  const onEmoji = async (emoji: NativeEmoji) => {
+  const onEmoji = async (emoji: string) => {
     history.back()
 
     const protect = await $relays.hasNip(url, 70)
-    const command = await $reactions.react(event, emoji.unicode, w => w.setProtected(protect))
+    const command = await $reactions.react(event, emoji, w => w.setProtected(protect))
 
     command.publishToRelays([url])
   }

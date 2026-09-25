@@ -1,7 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
   import type {Snippet} from "svelte"
-  import type {NativeEmoji} from "emoji-picker-element/shared"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Field from "@lib/components/Field.svelte"
@@ -22,8 +21,8 @@
 
   let {amount = $bindable(), content = $bindable(), children}: Props = $props()
 
-  const onEmoji = (emoji: NativeEmoji) => {
-    content = emoji.unicode
+  const onEmoji = (emoji: string) => {
+    content = emoji
   }
 
   const selectAmount = (preset: number) => {

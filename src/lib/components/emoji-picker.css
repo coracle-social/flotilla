@@ -1,0 +1,11 @@
+@layer components {
+  .emoji-picker {
+    @apply bg-surface flex max-w-full flex-col overflow-hidden rounded-3xl;
+    width: 352px;
+    border: var(--border-thin) solid var(--line);
+  }
+
+  .dialog .emoji-picker {
+    @apply rounded-none border-none;
+  }
+}

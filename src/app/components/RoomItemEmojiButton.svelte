@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent} from "@welshman/util"
   import {tagSpec, tagValue} from "@welshman/util"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
@@ -16,11 +15,11 @@
 
   const shouldProtect = $relays.hasNip(url, 70)
 
-  const onEmoji = async (emoji: NativeEmoji) => {
+  const onEmoji = async (emoji: string) => {
     const protect = await shouldProtect
     const room = tagValue(tagSpec("h"), event.tags)
 
-    const command = await $reactions.react(event, emoji.unicode, writer => {
+    const command = await $reactions.react(event, emoji, writer => {
       writer.setProtected(protect)
 
       if (room) {

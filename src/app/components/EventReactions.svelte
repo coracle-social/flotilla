@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type {NativeEmoji} from "emoji-picker-element/shared"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {seen} from "@welshman/util"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
@@ -28,7 +27,7 @@
   const createReaction = async (values: EventContent) =>
     publishReaction(event, values, {url, urls: await getRelays()})
 
-  const onEmoji = (emoji: NativeEmoji) => createReaction({content: emoji.unicode, tags: []})
+  const onEmoji = (emoji: string) => createReaction({content: emoji, tags: []})
 </script>
 
 <ReactionSummary {url} {event} {context} {deleteReaction} {createReaction} {reactionClass}>
