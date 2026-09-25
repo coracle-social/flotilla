@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import {readable} from "svelte/store"
   import {removeUndefined, spec} from "@welshman/lib"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
@@ -20,7 +21,8 @@
   import ProfilePinnedNote from "@app/components/ProfilePinnedNote.svelte"
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
   import {messagingRelayLists, profiles, relayManagement, user} from "@app/core"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions, spaceManagement} from "@app/management"
+  import type {BannedPubkeyItem} from "@app/management"
   import {navigate, popModal, pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {goToChat, makeProfilePath} from "@app/routes"
@@ -32,11 +34,9 @@
 
   const {pubkey, url}: Props = $props()
 
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canBan = $derived($supportedMethods.includes("banpubkey"))
-  const canUnallow = $derived($supportedMethods.includes("unallowpubkey"))
-  const canAllow = $derived($supportedMethods.includes("allowpubkey"))
-  const canListBans = $derived($supportedMethods.includes("listbannedpubkeys"))
+  const permissions = deriveSpacePermissions(url)
+  const bans = url ? $spaceManagement.bannedPubkeys(url) : readable<BannedPubkeyItem[]>([])
+  const isBanned = $derived($bans.some(spec({pubkey})))
 
   const isSelf = $derived($user.pubkey === pubkey)
 
@@ -49,11 +49,18 @@
     goToChat([pubkey])
   }
 
+  const loadBans = () => {
+    if (url && $permissions.listBans) {
+      $spaceManagement.loadBannedPubkeys(url)
+    }
+  }
+
   const report = (error: string | undefined, message: string) => {
     if (error) {
       pushToast({theme: "error", message: error})
     } else {
       pushToast({message})
+      loadBans()
       back()
     }
   }
@@ -81,18 +88,7 @@
     report(error, "User has successfully been restored!")
   }
 
-  let isBanned = $state(false)
-
-  $effect(() => {
-    if (url && canListBans) {
-      $relayManagement
-        .forUrl(url)
-        .listBannedPubkeys()
-        .then(({result = []}) => {
-          isBanned = result.some(spec({pubkey}))
-        })
-    }
-  })
+  $effect(loadBans)
 
   onMount(() => {
     $messagingRelayLists.load(pubkey)
@@ -115,7 +111,7 @@
               </li>
             {/if}
             {#if isBanned}
-              {#if canAllow}
+              {#if $permissions.addMembers}
                 <li>
                   <Button onclick={restoreMember}>
                     <Icon size={4} icon={Restart} />
@@ -124,7 +120,7 @@
                 </li>
               {/if}
             {:else}
-              {#if canUnallow}
+              {#if $permissions.removeMembers}
                 <li>
                   <Button onclick={removeMember}>
                     <Icon size={4} icon={UserMinus} />
@@ -132,7 +128,7 @@
                   </Button>
                 </li>
               {/if}
-              {#if canBan}
+              {#if $permissions.ban}
                 <li>
                   <Button class="text-error" onclick={banMember}>
                     <Icon size={4} icon={MinusCircle} />

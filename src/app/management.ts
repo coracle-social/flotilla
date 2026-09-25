@@ -1,26 +1,10 @@
 import {derived, readable, writable} from "svelte/store"
 import {ago, MINUTE, now, simpleCache} from "@welshman/lib"
 import {ROOM_CREATE_PERMISSION, hexTags, tagValues} from "@welshman/util"
-import {Relays} from "@welshman/app"
-import {fromApp, relayManagement, user} from "@app/core"
+import {RelayManagement, Relays} from "@welshman/app"
+import type {IApp} from "@welshman/app"
+import {fromApp, usePlugin, user} from "@app/core"
 import {deriveEventsForUrl} from "@app/repository"
-
-export type BannedPubkeyItem = {
-  pubkey: string
-  reason: string
-}
-
-export const deriveSpaceBannedPubkeyItems = (url: string) => {
-  const store = writable<BannedPubkeyItem[]>([])
-
-  relayManagement
-    .get()
-    .forUrl(url)
-    .listBannedPubkeys()
-    .then(({result = []}) => store.set(result))
-
-  return store
-}
 
 // `supportedmethods` answers for the pubkey that signed the request, so this catalog is the client's.
 export const MANAGEMENT_METHOD_GROUPS = [
@@ -92,50 +76,133 @@ export type MethodAssigneeItem = {
   methods: string[]
 }
 
-// The relay answers the same assignments to anyone allowed to ask, so one store per space.
-export const deriveSpaceMethodAssignees = simpleCache(([url]: [url: string]) =>
-  writable<MethodAssigneeItem[]>([]),
-)
-
-export const loadSpaceMethodAssignees = async (url: string) => {
-  const {result, error} = await relayManagement.get().forUrl(url).listMethodAssignees()
-
-  if (result) {
-    deriveSpaceMethodAssignees(url).set(result)
-  }
-
-  return error
+export type BannedPubkeyItem = {
+  pubkey: string
+  reason: string
 }
 
-const deriveSupportedMethodsForPubkey = simpleCache(([, url]: [pubkey: string, url: string]) => {
-  let checkedAt = 0
+// `supportedmethods` answers for the pubkey that signed the request, so the cache lives on the app.
+export class SpaceManagement {
+  private methodRequests = new Map<string, {checkedAt: number; request: Promise<string[]>}>()
 
-  return readable<string[]>([], set => {
-    if (checkedAt < ago(5, MINUTE)) {
-      checkedAt = now()
+  constructor(private readonly app: IApp) {}
 
-      relayManagement
-        .get()
-        .forUrl(url)
-        .supportedMethods()
-        .then(({result = []}) => set(result))
-        .catch(error => {
-          checkedAt = 0
-          console.error(error)
-        })
+  loadSupportedMethods = (url: string) => {
+    const cached = this.methodRequests.get(url)
+
+    if (cached && cached.checkedAt >= ago(5, MINUTE)) {
+      return cached.request
     }
-  })
-})
 
-// The request is answered for the pubkey that signed it, so logging in swaps the methods out.
-export const deriveSpaceSupportedMethods = (url?: string) =>
+    const request = this.app
+      .use(RelayManagement)
+      .forUrl(url)
+      .supportedMethods()
+      .then(({result = []}): string[] => result)
+      .catch((error): string[] => {
+        this.methodRequests.delete(url)
+        console.error(error)
+        return []
+      })
+
+    this.methodRequests.set(url, {checkedAt: now(), request})
+
+    return request
+  }
+
+  supportedMethods = simpleCache(([url]: [url: string]) =>
+    readable<string[]>([], set => {
+      this.loadSupportedMethods(url).then(set)
+    }),
+  )
+
+  methodAssignees = simpleCache(([url]: [url: string]) => writable<MethodAssigneeItem[]>([]))
+
+  loadMethodAssignees = async (url: string) => {
+    const {result, error} = await this.app.use(RelayManagement).forUrl(url).listMethodAssignees()
+
+    if (result) {
+      this.methodAssignees(url).set(result)
+    }
+
+    return error
+  }
+
+  bannedPubkeys = simpleCache(([url]: [url: string]) => writable<BannedPubkeyItem[]>([]))
+
+  loadBannedPubkeys = async (url: string) => {
+    const {result, error} = await this.app.use(RelayManagement).forUrl(url).listBannedPubkeys()
+
+    if (result) {
+      this.bannedPubkeys(url).set(result)
+    }
+
+    return error
+  }
+}
+
+export const spaceManagement = usePlugin(SpaceManagement)
+
+const deriveSpaceSupportedMethods = (url?: string) =>
   fromApp($app => {
     if (url && $app.user) {
-      return deriveSupportedMethodsForPubkey($app.user.pubkey, url)
+      return $app.use(SpaceManagement).supportedMethods(url)
     }
 
     return readable<string[]>([])
   })
+
+const getSpacePermissions = (methods: string[]) => {
+  const can = (method: string) => methods.includes(method)
+
+  const addMembers = can("allowpubkey")
+  const removeMembers = can("unallowpubkey")
+  const ban = can("banpubkey")
+  const unban = can("unbanpubkey")
+  const listBans = can("listbannedpubkeys")
+  const deleteContent = can("banevent")
+  const createRoles = can("createrole")
+  const editRoles = can("editrole")
+  const deleteRoles = can("deleterole")
+  const assignRoles = can("assignrole")
+  const unassignRoles = can("unassignrole")
+  const assignMethods = can("assignmethod")
+  const unassignMethods = can("unassignmethod")
+  const listAdmins = can("listmethodassignees")
+  const editAdmins = assignMethods || unassignMethods
+  const editMethods = listAdmins && editAdmins
+  const manageRoles = createRoles || editRoles || deleteRoles
+
+  return {
+    addMembers,
+    removeMembers,
+    ban,
+    unban,
+    listBans,
+    deleteContent,
+    createRoles,
+    editRoles,
+    deleteRoles,
+    assignRoles,
+    unassignRoles,
+    assignMethods,
+    unassignMethods,
+    listAdmins,
+    editAdmins,
+    editMethods,
+    manageRoles,
+    editSpace: ["changerelayname", "changerelaydescription", "changerelayicon"].some(can),
+    review: deleteContent || addMembers,
+    memberMenu: assignRoles || unassignRoles || removeMembers || ban || editMethods,
+    roleMenu: editRoles || deleteRoles || assignRoles,
+    bannedMenu: unban || addMembers,
+    directoryMenu: manageRoles || listBans || listAdmins,
+  }
+}
+
+// Each control is gated on the NIP-86 method behind it, as reported for the signed-in user.
+export const deriveSpacePermissions = (url?: string) =>
+  derived(deriveSpaceSupportedMethods(url), getSpacePermissions)
 
 // User
 
@@ -148,11 +215,6 @@ export const deriveUserIsSpaceOwner = (url: string) =>
   derived(
     [user, fromApp($app => $app.use(Relays).one(url))],
     ([$user, $relay]) => $user.pubkey === $relay?.pubkey,
-  )
-
-export const deriveUserCanManageRoles = (url: string) =>
-  derived(deriveSpaceSupportedMethods(url), $methods =>
-    ["createrole", "editrole", "deleterole"].some(method => $methods.includes(method)),
   )
 
 export const deriveUserCanCreateRoom = (url: string) =>

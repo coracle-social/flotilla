@@ -19,7 +19,7 @@
   import SpaceActionItems from "@app/components/SpaceActionItems.svelte"
   import {relays, user} from "@app/core"
   import {deriveHostedRelay, HOSTING_ENABLED} from "@app/hosting"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import {userSpaceUrls} from "@app/rooms"
   import {deriveSpaceActionItems} from "@app/actionItems"
   import {notificationSettings, deriveShouldNotify, setSpaceNotifications} from "@app/settings"
@@ -33,15 +33,7 @@
   const {url}: Props = $props()
 
   const relay = $relays.one(url)
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canReview = $derived(
-    ["banevent", "allowpubkey"].some(method => $supportedMethods.includes(method)),
-  )
-  const canEditSpace = $derived(
-    ["changerelayname", "changerelaydescription", "changerelayicon"].some(method =>
-      $supportedMethods.includes(method),
-    ),
-  )
+  const permissions = deriveSpacePermissions(url)
   const hostedRelay = deriveHostedRelay(url)
   const actionItems = deriveSpaceActionItems(url)
   const shouldNotify = deriveShouldNotify(url)
@@ -85,7 +77,7 @@
 {/snippet}
 
 {@render actionButton(createInvite, LinkRound, "Create Invite")}
-{#if canReview}
+{#if $permissions.review}
   <li>
     <Button onclick={showActionItems}>
       <Icon icon={Danger} />
@@ -120,7 +112,7 @@
       Hosting settings
     </Link>
   </li>
-{:else if canEditSpace}
+{:else if $permissions.editSpace}
   {@render actionButton(startEdit, Pen, "Edit Space")}
 {/if}
 {#if $userSpaceUrls.includes(url)}

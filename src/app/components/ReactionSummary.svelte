@@ -28,7 +28,7 @@
   import ZapModal from "@app/components/Zap.svelte"
   import {app, user} from "@app/core"
   import type {FeedContext} from "@app/feeds"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import {pushModal} from "@app/modal"
   import {deriveDisplaysByPubkey} from "@app/social"
 
@@ -128,8 +128,7 @@
     }
   }
 
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canBanEvent = $derived($supportedMethods.includes("banevent"))
+  const permissions = deriveSpacePermissions(url)
 
   const onReportClick = () => pushModal(ReportDetails, {url, event})
 
@@ -156,7 +155,7 @@
 
 {#if $reactions.length > 0 || (!hideZaps && $zaps.length > 0) || $reports.length > 0 || children}
   <div class="flex min-w-0 flex-wrap gap-2">
-    {#if url && $reports.length > 0 && canBanEvent}
+    {#if url && $reports.length > 0 && $permissions.deleteContent}
       <Button
         data-tip={`This content has been reported as "${displayList(reportReasons)}".`}
         class={cx(

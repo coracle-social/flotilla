@@ -117,6 +117,7 @@ they cache is itself a rebinding store. `commandsByUrl` holds `fromApp` stores.
 | `Statuses` (`statuses.ts`) | `DerivedPlugin` | NIP-38 general status, keyed by pubkey |
 | `Commands` (`commands.ts`) | `RelayScopedDerivedPlugin` | slash-command definitions, keyed per relay |
 | `HealthChecks` (`healthChecks.ts`) | none | a plain class over `IApp` exposing `Projection`s |
+| `SpaceManagement` (`management.ts`) | none | NIP-86 supported methods (5-minute TTL), admins and bans per URL |
 
 Each is exposed with `usePlugin`. `Statuses` is the minimal shape:
 
@@ -197,12 +198,12 @@ export const deriveSpaceActionItems = (url: string) =>
     [
       deriveEventsForUrl(url, [{kinds: [REPORT]}]),
       rooms.get().pendingJoins(url).$,
-      deriveSpaceSupportedMethods(url),
+      deriveSpacePermissions(url),
     ],
-    ([$reports, $pendingJoins, $methods]) =>
+    ([$reports, $pendingJoins, $permissions]) =>
       sortEventsDesc([
-        ...($methods.includes("banevent") ? $reports : []),
-        ...($methods.includes("allowpubkey") ? $pendingJoins : []),
+        ...($permissions.deleteContent ? $reports : []),
+        ...($permissions.addMembers ? $pendingJoins : []),
       ]),
   )
 ```

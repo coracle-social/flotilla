@@ -7,7 +7,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {app, relayManagement} from "@app/core"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {addRoomMembers} from "@app/rooms"
@@ -22,8 +22,7 @@
 
   const h = tagValue(tagSpec("h"), event.tags) || ""
 
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canDismiss = $derived($supportedMethods.includes("banevent"))
+  const permissions = deriveSpacePermissions(url)
 
   const showProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey, url})
 
@@ -78,7 +77,7 @@
       </span>
     </div>
     <div class="flex gap-2">
-      {#if canDismiss}
+      {#if $permissions.deleteContent}
         <Button class="button button-neutral button-sm" onclick={dismiss} disabled={loading}
           >Dismiss</Button>
       {/if}

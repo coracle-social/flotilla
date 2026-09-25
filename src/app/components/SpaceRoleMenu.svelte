@@ -10,7 +10,7 @@
   import RoleEdit from "@app/components/RoleEdit.svelte"
   import RoleAddMembers from "@app/components/RoleAddMembers.svelte"
   import {relayManagement} from "@app/core"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
@@ -22,10 +22,7 @@
 
   const {url, role, onClick}: Props = $props()
 
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canEdit = $derived($supportedMethods.includes("editrole"))
-  const canDelete = $derived($supportedMethods.includes("deleterole"))
-  const canAssign = $derived($supportedMethods.includes("assignrole"))
+  const permissions = deriveSpacePermissions(url)
 
   const back = () => history.back()
 
@@ -59,7 +56,7 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
-  {#if canAssign}
+  {#if $permissions.assignRoles}
     <li>
       <Button onclick={addMembers}>
         <Icon icon={AddCircle} />
@@ -67,7 +64,7 @@
       </Button>
     </li>
   {/if}
-  {#if canEdit}
+  {#if $permissions.editRoles}
     <li>
       <Button onclick={editRole}>
         <Icon icon={Pen} />
@@ -75,7 +72,7 @@
       </Button>
     </li>
   {/if}
-  {#if canDelete}
+  {#if $permissions.deleteRoles}
     <li>
       <Button class="text-error" onclick={confirmDelete}>
         <Icon icon={TrashBin} />

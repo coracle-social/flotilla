@@ -13,12 +13,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {profiles, relayManagement} from "@app/core"
-  import {
-    MANAGEMENT_METHOD_GROUPS,
-    deriveSpaceMethodAssignees,
-    deriveSpaceSupportedMethods,
-    loadSpaceMethodAssignees,
-  } from "@app/management"
+  import {MANAGEMENT_METHOD_GROUPS, deriveSpacePermissions, spaceManagement} from "@app/management"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -29,9 +24,7 @@
   const {url, pubkey}: Props = $props()
 
   const profileDisplay = $profiles.display(pubkey, [url]).$
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canAssign = $derived($supportedMethods.includes("assignmethod"))
-  const canUnassign = $derived($supportedMethods.includes("unassignmethod"))
+  const permissions = deriveSpacePermissions(url)
 
   // A relay can grant methods this client doesn't know, and leaving them out would revoke them.
   const groups = $derived.by(() => {
@@ -90,7 +83,7 @@
         }
       }
 
-      await loadSpaceMethodAssignees(url)
+      await $spaceManagement.loadMethodAssignees(url)
 
       pushToast({message: "Permissions updated!"})
       back()
@@ -105,13 +98,15 @@
   let saving = $state(false)
 
   onMount(async () => {
-    const error = await loadSpaceMethodAssignees(url)
+    const error = await $spaceManagement.loadMethodAssignees(url)
 
     if (error) {
       pushToast({theme: "error", message: error})
     }
 
-    assigned = new Set(get(deriveSpaceMethodAssignees(url)).find(spec({pubkey}))?.methods ?? [])
+    assigned = new Set(
+      get($spaceManagement.methodAssignees(url)).find(spec({pubkey}))?.methods ?? [],
+    )
     selected = new Set(assigned)
     loading = false
   })
@@ -139,7 +134,9 @@
                   type="checkbox"
                   class="checkbox"
                   checked={selected.has(method)}
-                  disabled={selected.has(method) ? !canUnassign : !canAssign}
+                  disabled={selected.has(method)
+                    ? !$permissions.unassignMethods
+                    : !$permissions.assignMethods}
                   onchange={() => toggle(method)} />
               </label>
             {/each}
@@ -153,7 +150,7 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    {#if canAssign || canUnassign}
+    {#if $permissions.editAdmins}
       <Button class="button button-primary" onclick={submit} disabled={saving}>
         <Spinner loading={saving}>Save changes</Spinner>
       </Button>

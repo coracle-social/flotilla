@@ -18,7 +18,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import QRCode from "@app/components/QRCode.svelte"
   import {Access, makeInviteLink} from "@app/access"
   import {relayManagement, relayMemberLists} from "@app/core"
@@ -73,9 +73,7 @@
     }
   }
 
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-
-  const canAddMembers = $derived($supportedMethods.includes("allowpubkey"))
+  const permissions = deriveSpacePermissions(url)
 
   let canShare = $state(false)
   let invite = $derived(makeInviteLink({url, claim: $claim}))
@@ -158,7 +156,7 @@
         </div>
       {/if}
     </div>
-    {#if canAddMembers}
+    {#if $permissions.addMembers}
       <Divider>or</Divider>
       <Field>
         {#snippet label()}
@@ -171,7 +169,7 @@
     {/if}
   </ModalBody>
   <ModalFooter>
-    {#if canAddMembers}
+    {#if $permissions.addMembers}
       <Button class="button button-link" onclick={back}>
         <Icon icon={AltArrowLeft} />
         Go back

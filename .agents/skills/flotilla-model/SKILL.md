@@ -166,7 +166,7 @@ relay's URL, each call signed with a fresh NIP-98 event. Every method resolves t
 
 | Methods | Called from |
 |---|---|
-| `supportedMethods` | `deriveSpaceSupportedMethods` (`src/app/management.ts`), `Access.prepareInvite` |
+| `supportedMethods`, `listMethodAssignees`, `listBannedPubkeys` (cached) | `SpaceManagement` (`src/app/management.ts`) |
 | `banPubkey`, `unbanPubkey`, `allowPubkey`, `unallowPubkey`, `listBannedPubkeys` | `ProfileDetail`, `SpaceMemberMenu`, `SpaceMemberBannedMenu`, `SpaceInvite`, `ReportMenuList`, `addRoomMembers` |
 | `banEvent` | `RoomItemMenu`, `EventMenu`, `ReportMenuList`, `RoomJoinItem` (dismissing a join request) |
 | `createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole` | `RoleCreate`, `RoleEdit`, `SpaceRoleMenu`, `SpaceMemberRoles`, `RoleAddMembers` |
@@ -174,9 +174,14 @@ relay's URL, each call signed with a fresh NIP-98 event. Every method resolves t
 | `changeRelayName`, `changeRelayDescription`, `changeRelayIcon` | `SpaceEdit` |
 
 A relay answers `supportedmethods` with what the authenticated pubkey may call, so every control
-is gated on the method behind it: `deriveSpaceSupportedMethods(url)` (re-checked at most every
-five minutes per pubkey and URL) and `$supportedMethods.includes("banpubkey")`. Still handle an
-error from the call, since a listed method can be refused for a particular event or target.
+is gated on the method behind it through `deriveSpacePermissions(url)`, a store of named booleans
+(`$permissions.ban`, `$permissions.editRoles`). The composite gates a parent uses to decide whether
+to render a menu (`memberMenu`, `roleMenu`, `bannedMenu`, `directoryMenu`) are defined there too,
+so parent and menu can't disagree. The `SpaceManagement` plugin (`spaceManagement`) caches the
+methods per app, re-checked at most every five minutes per URL, and `Access.prepareInvite` reads
+them through `loadSupportedMethods`. It also holds the admin and ban lists, which
+`loadMethodAssignees`/`loadBannedPubkeys` refresh after a change. Still handle an error from the
+call, since a listed method can be refused for a particular event or target.
 `deriveUserIsSpaceStaff(url)` is only "the list came back non-empty", which is all there is to go
 on for the room permissions NIP-86 has no method for — `deriveUserIsRoomAdmin` and
 `deriveUserCanCreateRoom`, which also takes `ROOM_CREATE_PERMISSION` grants.

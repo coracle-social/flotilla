@@ -17,12 +17,7 @@
   import RelayName from "@app/components/RelayName.svelte"
   import SpaceMemberMethods from "@app/components/SpaceMemberMethods.svelte"
   import {fromApp} from "@app/core"
-  import {
-    deriveSpaceMethodAssignees,
-    deriveSpaceSupportedMethods,
-    displayManagementMethod,
-    loadSpaceMethodAssignees,
-  } from "@app/management"
+  import {deriveSpacePermissions, displayManagementMethod, spaceManagement} from "@app/management"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
@@ -33,12 +28,9 @@
   const {url}: Props = $props()
 
   const relay = fromApp($app => $app.use(Relays).one(url))
-  const assignees = deriveSpaceMethodAssignees(url)
+  const assignees = $spaceManagement.methodAssignees(url)
   const others = $derived($assignees.filter(({pubkey}) => pubkey !== $relay?.pubkey))
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canEdit = $derived(
-    ["assignmethod", "unassignmethod"].some(method => $supportedMethods.includes(method)),
-  )
+  const permissions = deriveSpacePermissions(url)
 
   const back = () => history.back()
 
@@ -47,7 +39,7 @@
   let loading = $state(true)
 
   onMount(async () => {
-    const error = await loadSpaceMethodAssignees(url)
+    const error = await $spaceManagement.loadMethodAssignees(url)
 
     if (error) {
       pushToast({theme: "error", message: error})
@@ -85,7 +77,7 @@
               <div class="min-w-0 flex-1">
                 <Profile {pubkey} {url} />
               </div>
-              {#if canEdit}
+              {#if $permissions.editAdmins}
                 <Button
                   class="button button-ghost button-sm button-square"
                   aria-label="Edit permissions"

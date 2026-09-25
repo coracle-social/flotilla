@@ -4,7 +4,7 @@
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions, spaceManagement} from "@app/management"
   import {pushToast} from "@app/toast"
   import {relayManagement} from "@app/core"
 
@@ -16,11 +16,7 @@
 
   const {url, pubkey, onClick}: Props = $props()
 
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canUnban = $derived($supportedMethods.includes("unbanpubkey"))
-  const canRestore = $derived($supportedMethods.includes("allowpubkey"))
-
-  const back = () => history.back()
+  const permissions = deriveSpacePermissions(url)
 
   const unbanMember = async () => {
     const {error} = await $relayManagement.forUrl(url).unbanPubkey(pubkey)
@@ -29,7 +25,7 @@
       pushToast({theme: "error", message: error})
     } else {
       pushToast({message: "User has successfully been removed from the ban list!"})
-      back()
+      $spaceManagement.loadBannedPubkeys(url)
     }
   }
 
@@ -40,7 +36,7 @@
       pushToast({theme: "error", message: error})
     } else {
       pushToast({message: "User has successfully been restored to membership!"})
-      back()
+      $spaceManagement.loadBannedPubkeys(url)
     }
   }
 
@@ -52,7 +48,7 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
-  {#if canUnban}
+  {#if $permissions.unban}
     <li>
       <Button onclick={unbanMember}>
         <Icon icon={CloseCircle} />
@@ -60,7 +56,7 @@
       </Button>
     </li>
   {/if}
-  {#if canRestore}
+  {#if $permissions.addMembers}
     <li>
       <Button onclick={restoreMember}>
         <Icon icon={Restart} />

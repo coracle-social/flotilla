@@ -12,13 +12,13 @@ import {
   MESSAGING_RELAYS,
   PROFILE,
   RELAYS,
-  type ManagementResponse,
 } from "@welshman/util"
 import {RelayJoin, RelayLeave, RoomJoin, RoomLeave} from "@welshman/domain"
 import {Sync, User, publish} from "@welshman/app"
 import {stripPrefix} from "@lib/util"
 import {app, command, relayManagement, roomLists, thunks, writer} from "@app/core"
 import {PLATFORM_URL} from "@app/env"
+import {spaceManagement} from "@app/management"
 import {relaysMostlyRestricted} from "@app/policies"
 import {Push} from "@app/push"
 import {deriveSocket} from "@app/relays"
@@ -389,18 +389,15 @@ export class Access {
     try {
       const management = relayManagement.get().forUrl(this.url)
 
-      const [{result: methods}, roomInviteResult] = await Promise.all([
-        management.supportedMethods().catch((error): ManagementResponse => {
-          console.error(error)
-          return {}
-        }),
+      const [methods, roomInviteResult] = await Promise.all([
+        spaceManagement.get().loadSupportedMethods(this.url),
         h ? publishRoomInvite(this.url, h) : Promise.resolve({code: undefined, error: undefined}),
         // Keep the spinner up long enough that a fast relay doesn't make it flash
         sleep(300),
       ])
 
       // A relay reporting methods relay-wide can still come back "blocked" for this user.
-      if (methods?.includes("createclaim")) {
+      if (methods.includes("createclaim")) {
         const {result: claims} = await management.listClaims()
 
         if (claims?.[0]) {

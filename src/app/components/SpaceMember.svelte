@@ -6,7 +6,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import SpaceMemberMenu from "@app/components/SpaceMemberMenu.svelte"
   import RoleBadge from "@app/components/RoleBadge.svelte"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import {pushModal} from "@app/modal"
   import {profiles} from "@app/core"
 
@@ -19,15 +19,7 @@
   const {url, pubkey, roles = []}: Props = $props()
 
   const profileDisplay = $profiles.display(pubkey, [url]).$
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canUnallow = $derived($supportedMethods.includes("unallowpubkey"))
-  const canBan = $derived($supportedMethods.includes("banpubkey"))
-  const canAssign = $derived($supportedMethods.includes("assignrole"))
-  const canUnassign = $derived($supportedMethods.includes("unassignrole"))
-  const canEditMethods = $derived(
-    $supportedMethods.includes("listmethodassignees") &&
-      ["assignmethod", "unassignmethod"].some(method => $supportedMethods.includes(method)),
-  )
+  const permissions = deriveSpacePermissions(url)
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey, url})
 </script>
@@ -53,7 +45,7 @@
         <ProfileAbout {pubkey} {url} singleLine />
       </div>
     </div>
-    {#if canAssign || canUnassign || canUnallow || canBan || canEditMethods}
+    {#if $permissions.memberMenu}
       <div class="pointer-events-auto shrink-0">
         <MenuButton
           class="button button-ghost button-sm button-square"

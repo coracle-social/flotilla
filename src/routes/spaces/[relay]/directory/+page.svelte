@@ -18,7 +18,7 @@
   import SpaceAdmins from "@app/components/SpaceAdmins.svelte"
   import SpaceRoles from "@app/components/SpaceRoles.svelte"
   import SpaceMembersBanned from "@app/components/SpaceMembersBanned.svelte"
-  import {deriveSpaceSupportedMethods, deriveUserCanManageRoles} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import {deriveSpaceMemberRoles} from "@app/roles"
   import {relayMemberLists, relayRoles} from "@app/core"
   import {deriveDisplaysByPubkey} from "@app/social"
@@ -32,10 +32,7 @@
   const roles = $relayRoles.forUrl(url).$
   const members = $relayMemberLists.forUrl(url)
   const memberRoles = deriveSpaceMemberRoles(url)
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canManageRoles = deriveUserCanManageRoles(url)
-  const canListBans = $derived($supportedMethods.includes("listbannedpubkeys"))
-  const canListAdmins = $derived($supportedMethods.includes("listmethodassignees"))
+  const permissions = deriveSpacePermissions(url)
 
   // Each member with their resolved roles (sorted by order).
   const memberList = derived([members, memberRoles, roles], ([$members, $memberRoles, $roles]) => {
@@ -114,7 +111,7 @@
       <Icon icon={AddCircle} />
       Invite people
     </Button>
-    {#if $canManageRoles || canListBans || canListAdmins}
+    {#if $permissions.directoryMenu}
       <div class="relative">
         <Button
           class="button button-neutral button-sm button-square"
@@ -127,7 +124,7 @@
             <ul
               transition:fly
               class="menu bg-surface absolute right-0 z-popover mt-2 w-48 gap-1 rounded-2xl p-2">
-              {#if $canManageRoles}
+              {#if $permissions.manageRoles}
                 <li>
                   <Button onclick={manageRoles}>
                     <Icon icon={UsersGroup} />
@@ -135,7 +132,7 @@
                   </Button>
                 </li>
               {/if}
-              {#if canListAdmins}
+              {#if $permissions.listAdmins}
                 <li>
                   <Button onclick={spaceAdmins}>
                     <Icon icon={ShieldUser} />
@@ -143,7 +140,7 @@
                   </Button>
                 </li>
               {/if}
-              {#if canListBans}
+              {#if $permissions.listBans}
                 <li>
                   <Button onclick={bannedMembers}>
                     <Icon icon={MinusCircle} />

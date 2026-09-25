@@ -1,7 +1,7 @@
 import {derived} from "svelte/store"
 import {REPORT, sortEventsDesc} from "@welshman/util"
 import {rooms} from "@app/core"
-import {deriveSpaceSupportedMethods} from "@app/management"
+import {deriveSpacePermissions} from "@app/management"
 import {deriveEventsForUrl} from "@app/repository"
 
 // Action items (admin review queue)
@@ -12,11 +12,11 @@ export const deriveSpaceActionItems = (url: string) =>
     [
       deriveEventsForUrl(url, [{kinds: [REPORT]}]),
       rooms.get().pendingJoins(url).$,
-      deriveSpaceSupportedMethods(url),
+      deriveSpacePermissions(url),
     ],
-    ([$reports, $pendingJoins, $methods]) =>
+    ([$reports, $pendingJoins, $permissions]) =>
       sortEventsDesc([
-        ...($methods.includes("banevent") ? $reports : []),
-        ...($methods.includes("allowpubkey") ? $pendingJoins : []),
+        ...($permissions.deleteContent ? $reports : []),
+        ...($permissions.addMembers ? $pendingJoins : []),
       ]),
   )

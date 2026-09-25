@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {onMount} from "svelte"
   import {displayRelayUrl} from "@welshman/util"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
@@ -12,7 +13,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Profile from "@app/components/Profile.svelte"
   import SpaceMemberBannedMenu from "@app/components/SpaceMemberBannedMenu.svelte"
-  import {deriveSpaceBannedPubkeyItems, deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions, spaceManagement} from "@app/management"
 
   interface Props {
     url: string
@@ -20,12 +21,14 @@
 
   const {url}: Props = $props()
 
-  const bans = deriveSpaceBannedPubkeyItems(url)
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canUnban = $derived($supportedMethods.includes("unbanpubkey"))
-  const canRestore = $derived($supportedMethods.includes("allowpubkey"))
+  const bans = $spaceManagement.bannedPubkeys(url)
+  const permissions = deriveSpacePermissions(url)
 
   const back = () => history.back()
+
+  onMount(() => {
+    $spaceManagement.loadBannedPubkeys(url)
+  })
 </script>
 
 <Modal>
@@ -44,7 +47,7 @@
             <div class="min-w-0 flex-1">
               <Profile {pubkey} {url} />
             </div>
-            {#if canUnban || canRestore}
+            {#if $permissions.bannedMenu}
               <MenuButton component={SpaceMemberBannedMenu} componentProps={{url, pubkey}} />
             {/if}
           </div>

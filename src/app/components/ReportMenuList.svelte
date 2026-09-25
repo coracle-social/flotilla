@@ -10,7 +10,7 @@
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import {app, deletes, profiles, relayManagement, relays, user} from "@app/core"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import {pushToast} from "@app/toast"
   import {pushModal} from "@app/modal"
 
@@ -23,9 +23,7 @@
 
   const {url, event, onResolved, onClick}: Props = $props()
 
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-  const canBanEvent = $derived($supportedMethods.includes("banevent"))
-  const canBanPubkey = $derived($supportedMethods.includes("banpubkey"))
+  const permissions = deriveSpacePermissions(url)
   const etag = matchTag(tagSpec("e"), event.tags)
   const ptag = matchTag(tagSpec("p"), event.tags)
 
@@ -108,7 +106,7 @@
       </Button>
     </li>
   {/if}
-  {#if canBanEvent}
+  {#if $permissions.deleteContent}
     <li>
       <Button onclick={dismissReport}>
         <Icon icon={InboxOut} />
@@ -124,7 +122,7 @@
       </li>
     {/if}
   {/if}
-  {#if ptag && canBanPubkey}
+  {#if ptag && $permissions.ban}
     <li>
       <Button class="text-error" onclick={banMember}>
         <Icon icon={MinusCircle} />

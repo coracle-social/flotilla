@@ -31,7 +31,7 @@ import {
   user,
   writer,
 } from "@app/core"
-import {deriveSpaceSupportedMethods, deriveUserIsSpaceStaff} from "@app/management"
+import {deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/management"
 import {makeRoomPath} from "@app/routes"
 
 export const PROTECTED = ["-"]
@@ -224,13 +224,13 @@ export const deriveUserAdminDelete = (url: string, event: TrustedEvent) => {
   const h = tagValue(tagSpec("h"), event.tags) ?? ""
 
   return derived(
-    [deriveUserRoomPermissions(url, h), deriveSpaceSupportedMethods(url)],
-    ([$permissions, $methods]): Maybe<AdminDelete> => {
-      if (h && $permissions.includes(ROOM_DELETE_EVENT)) {
+    [deriveUserRoomPermissions(url, h), deriveSpacePermissions(url)],
+    ([$roomPermissions, $spacePermissions]): Maybe<AdminDelete> => {
+      if (h && $roomPermissions.includes(ROOM_DELETE_EVENT)) {
         return AdminDelete.Room
       }
 
-      if ($methods.includes("banevent")) {
+      if ($spacePermissions.deleteContent) {
         return AdminDelete.Space
       }
 

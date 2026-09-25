@@ -10,7 +10,7 @@
   import SpaceMemberMethods from "@app/components/SpaceMemberMethods.svelte"
   import SpaceMemberRoles from "@app/components/SpaceMemberRoles.svelte"
   import {profiles, relayManagement} from "@app/core"
-  import {deriveSpaceSupportedMethods} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
@@ -22,16 +22,7 @@
 
   const {url, pubkey, onClick}: Props = $props()
 
-  const supportedMethods = deriveSpaceSupportedMethods(url)
-
-  const canUnallow = $derived($supportedMethods.includes("unallowpubkey"))
-  const canBan = $derived($supportedMethods.includes("banpubkey"))
-  const canAssign = $derived($supportedMethods.includes("assignrole"))
-  const canUnassign = $derived($supportedMethods.includes("unassignrole"))
-  const canEditMethods = $derived(
-    $supportedMethods.includes("listmethodassignees") &&
-      ["assignmethod", "unassignmethod"].some(method => $supportedMethods.includes(method)),
-  )
+  const permissions = deriveSpacePermissions(url)
 
   const back = () => history.back()
 
@@ -79,7 +70,7 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
-  {#if canAssign || canUnassign}
+  {#if $permissions.assignRoles || $permissions.unassignRoles}
     <li>
       <Button onclick={editRoles}>
         <Icon icon={Pen} />
@@ -87,7 +78,7 @@
       </Button>
     </li>
   {/if}
-  {#if canEditMethods}
+  {#if $permissions.editMethods}
     <li>
       <Button onclick={editMethods}>
         <Icon icon={ShieldUser} />
@@ -95,7 +86,7 @@
       </Button>
     </li>
   {/if}
-  {#if canUnallow}
+  {#if $permissions.removeMembers}
     <li>
       <Button onclick={removeMember}>
         <Icon icon={UserMinus} />
@@ -103,7 +94,7 @@
       </Button>
     </li>
   {/if}
-  {#if canBan}
+  {#if $permissions.ban}
     <li>
       <Button class="text-error" onclick={banMember}>
         <Icon icon={MinusCircle} />

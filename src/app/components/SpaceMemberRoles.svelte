@@ -16,7 +16,7 @@
   import RoleItem from "@app/components/RoleItem.svelte"
   import SpaceRoles from "@app/components/SpaceRoles.svelte"
   import {app, profiles, relayManagement} from "@app/core"
-  import {deriveUserCanManageRoles} from "@app/management"
+  import {deriveSpacePermissions} from "@app/management"
   import {deriveSpaceMemberRoles} from "@app/roles"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
@@ -34,7 +34,7 @@
   const profileDisplay = $profiles.display(pubkey, [url]).$
   const memberRoles = deriveSpaceMemberRoles(url)
   const initial = new Set(get(memberRoles).get(pubkey) ?? [])
-  const canManageRoles = deriveUserCanManageRoles(url)
+  const permissions = deriveSpacePermissions(url)
 
   const back = () => history.back()
 
@@ -125,7 +125,7 @@
       <Button class="button button-primary" onclick={submit} disabled={loading}>
         <Spinner {loading}>Save changes</Spinner>
       </Button>
-    {:else if $canManageRoles}
+    {:else if $permissions.manageRoles}
       <Button class="button button-primary" onclick={manageRoles}>
         <Icon icon={UsersGroup} />
         Manage Roles
