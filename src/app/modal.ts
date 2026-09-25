@@ -1,5 +1,5 @@
 import type {Component} from "svelte"
-import {randomId, last, Emitter} from "@welshman/lib"
+import {call, ms, randomId, last, Emitter} from "@welshman/lib"
 import {goto, pushState, replaceState} from "$app/navigation"
 import {page} from "$app/state"
 import type {DialogSize} from "@lib/components/Dialog.svelte"
@@ -26,6 +26,8 @@ export const emitter = new Emitter()
 
 const modals: Record<string, Modal> = {}
 
+let dropping: Promise<boolean> | undefined
+
 // Modal ids live in SvelteKit page state, so a `goto` that drops `state` closes them.
 export const getModalStack = () => (page.state.modals ?? []).map(id => modals[id]).filter(Boolean)
 
@@ -33,24 +35,37 @@ export const getModal = () => last(getModalStack())
 
 export type NavigateOptions = Parameters<typeof goto>[1] & {keepModal?: boolean}
 
+// A back with nothing left to pop fires no popstate, so the wait for one is bounded.
 const popHistory = () =>
-  new Promise(resolve => {
-    addEventListener("popstate", resolve, {once: true})
+  new Promise<boolean>(resolve => {
+    const finish = (popped: boolean) => {
+      clearTimeout(timeout)
+      removeEventListener("popstate", onPopState)
+      resolve(popped)
+    }
 
+    const onPopState = () => finish(true)
+    const timeout = setTimeout(() => finish(false), ms(1))
+
+    addEventListener("popstate", onPopState)
     history.back()
   })
 
 // SvelteKit reuses its navigation index for a replacing `goto`, so entries are given back instead.
-const dropModalEntries = async () => {
-  let dropped = false
+const dropModalEntries = () => {
+  dropping ??= call(async () => {
+    let dropped = false
 
-  while (getModalStack().length > 0) {
-    await popHistory()
+    while (getModalStack().length > 0 && (await popHistory())) {
+      dropped = true
+    }
 
-    dropped = true
-  }
+    return dropped
+  }).finally(() => {
+    dropping = undefined
+  })
 
-  return dropped
+  return dropping
 }
 
 export const navigate = async (path: string, {keepModal, ...options}: NavigateOptions = {}) => {
