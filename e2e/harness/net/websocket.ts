@@ -28,6 +28,7 @@ type Traffic = {
   leaks: Set<string>
   forgotten: Set<string>
   silenced: Set<string>
+  eoseless: Set<string>
 }
 
 const trafficStore = makeContextStore<Traffic>("installWebSocketRoutes")
@@ -51,6 +52,19 @@ const openEmptyRelay = (): RelayConnection => {
   }
 }
 
+// A relay that serves what it has and never says it is done, so a request runs out its own deadline.
+const openEoselessRelay = (connection: RelayConnection): RelayConnection => ({
+  onMessage(listener) {
+    connection.onMessage(message => {
+      if (message[0] !== RelayMessageType.Eose) {
+        listener(message)
+      }
+    })
+  },
+  send: message => connection.send(message),
+  close: () => connection.close(),
+})
+
 // A relay that takes the socket and says nothing, so the only way out is the caller's own deadline.
 const openSilentRelay = (): RelayConnection => ({
   onMessage() {},
@@ -72,7 +86,9 @@ const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
     const relay = zooid.relays.get(url)
 
     if (relay) {
-      return relay.connect()
+      const connection = relay.connect()
+
+      return traffic.eoseless.has(url) ? openEoselessRelay(connection) : connection
     }
 
     traffic.leaks.add(url)
@@ -104,6 +120,7 @@ export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) =>
     leaks: new Set(),
     forgotten: new Set(),
     silenced: new Set(),
+    eoseless: new Set(),
   })
 
   return context.routeWebSocket(
@@ -135,6 +152,10 @@ export const forgetRelay = (context: BrowserContext, url: string) =>
 // Resolved at open, like forgetRelay, so a page that boots into the fault passes `silent` to `as`.
 export const silenceRelay = (context: BrowserContext, url: string) =>
   trafficStore.get(context).silenced.add(normalizeRelayUrl(url))
+
+// Resolved at open too, so a page that boots into it passes `eoseless` to `as`.
+export const withholdEose = (context: BrowserContext, url: string) =>
+  trafficStore.get(context).eoseless.add(normalizeRelayUrl(url))
 
 // Every frame in both directions, oldest first. Attach it to a failing test.
 export const formatTranscript = (context: BrowserContext) =>

@@ -1040,3 +1040,20 @@ test("US-115 connect a wallet without losing the zap you were composing", async 
   await expect(zap.getByRole("button", {name: "Send Zap"})).toBeVisible()
   await expect(amount).toHaveValue("210")
 })
+
+test("fills a room from a relay that never says it is done", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.message(user.bob, "general", "the buoy is back on station", at(3, HOUR))
+  })
+
+  const {url} = scenario.space("space")
+  const page = await as(users.alice, roomPath(url, "general"), {eoseless: [url]})
+
+  // Nothing will tell the feed its page is finished, so a room that waits for that stays empty.
+  await expect(message(page, "the buoy is back on station")).toBeVisible()
+})

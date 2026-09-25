@@ -21,6 +21,7 @@ import {
   formatTranscript,
   installWebSocketRoutes,
   silenceRelay,
+  withholdEose,
 } from "./net/websocket"
 import {watchFaults} from "./faults"
 import {boot} from "./app/boot"
@@ -47,6 +48,7 @@ export {
   getPublishedEvents,
   getTranscript,
   silenceRelay,
+  withholdEose,
 } from "./net/websocket"
 export {readCachedEvents} from "./app/cache"
 export {
@@ -137,6 +139,8 @@ export type PageOptions = {
   hosting?: HostingFixtures
   // Relay urls that take the socket and answer nothing; silenceRelay does the same mid-test.
   silent?: string[]
+  // Relay urls that serve events and never eose, so every request runs out its own deadline.
+  eoseless?: string[]
 }
 
 export type Harness = {
@@ -230,6 +234,10 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
       for (const url of options.silent ?? []) {
         silenceRelay(context, url)
+      }
+
+      for (const url of options.eoseless ?? []) {
+        withholdEose(context, url)
       }
 
       await mockRelayInfo(context, options.relayInfo ?? {})
