@@ -181,11 +181,12 @@ export const isEventMuted = withGetter(
     const mutedPubkeys = new Set(tagValues(hexTags("p"), tags))
     const mutedAddresses = new Set(tagValues(addressTags("a"), tags))
     const mutedTopics = new Set(tagValues(topicTags("t"), tags))
+    // Words come from any client, so a blank or a regex character must not mute everyone or throw.
     const mutedWords = tagValues(tagSpec("word"), tags)
-    const regex =
-      mutedWords.length > 0
-        ? new RegExp(`\\b(${mutedWords.map(w => w.toLowerCase().trim()).join("|")})\\b`)
-        : undefined
+      .map(word => word.toLowerCase().trim())
+      .filter(Boolean)
+      .map(word => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    const regex = mutedWords.length > 0 ? new RegExp(`\\b(${mutedWords.join("|")})\\b`) : undefined
 
     return (e: TrustedEvent) => {
       if (!$muteList) {
@@ -216,7 +217,7 @@ export const isEventMuted = withGetter(
         if (profile?.display().toLowerCase().match(regex)) {
           return true
         }
-        if (profile?.nip05()?.match(regex)) {
+        if (profile?.nip05()?.toLowerCase().match(regex)) {
           return true
         }
       }
