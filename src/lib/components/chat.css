@@ -7,8 +7,8 @@
   .chat-bubble--user {
     @apply border-primary;
   }
-}
 
-[data-fl-theme="clay"] .chat-bubble {
-  box-shadow: var(--shadow-sm), var(--shadow-inset);
+  [data-fl-theme="clay"] .chat-bubble {
+    box-shadow: var(--shadow-sm), var(--shadow-inset);
+  }
 }

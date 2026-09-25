@@ -82,12 +82,12 @@
   .room-pins__nav {
     @apply flex items-center gap-1 text-sm;
   }
-}
 
-[data-fl-theme="clay"] .room {
-  @apply bg-surface;
+  [data-fl-theme="clay"] .room {
+    @apply bg-surface;
 
-  .room__item:hover {
-    @apply bg-surface-less/50;
+    .room__item:hover {
+      @apply bg-surface-less/50;
+    }
   }
 }

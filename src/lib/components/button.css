@@ -164,43 +164,42 @@
   .button-pill {
     @apply rounded-full;
   }
-}
 
-/* these are unlayered, so they beat the @layer rules above no matter their
-   specificity — hence the :not(.button-outline) on every filled variant */
-[data-fl-theme="clay"] .button-primary:not(.button-outline),
-[data-fl-theme="clay"] .button-secondary:not(.button-outline),
-[data-fl-theme="clay"] .button-error:not(.button-outline) {
-  box-shadow: var(--shadow-sm), var(--shadow-inset-strong);
-}
+  /* a theme rule outranks the outline variants above, hence the :not(.button-outline) */
+  [data-fl-theme="clay"] .button-primary:not(.button-outline),
+  [data-fl-theme="clay"] .button-secondary:not(.button-outline),
+  [data-fl-theme="clay"] .button-error:not(.button-outline) {
+    box-shadow: var(--shadow-sm), var(--shadow-inset-strong);
+  }
 
-/* hover lift + bigger offset shadow; active press + smaller offset shadow */
-[data-fl-theme="clay"] .button-primary:not(.button-outline):hover {
-  background: var(--primary-bold);
-  transform: translateY(-2px);
-  box-shadow:
-    6px 6px 0 rgba(var(--shadow-color), 0.3),
-    var(--shadow-inset-strong);
-}
-[data-fl-theme="clay"] .button-secondary:not(.button-outline):hover {
-  background: var(--secondary-bold);
-  transform: translateY(-2px);
-  box-shadow:
-    6px 6px 0 rgba(var(--shadow-color), 0.3),
-    var(--shadow-inset-strong);
-}
-[data-fl-theme="clay"] .button-neutral:hover,
-[data-fl-theme="clay"] .button-outline:hover,
-[data-fl-theme="clay"] .button-error:not(.button-outline):hover {
-  transform: translateY(-2px);
-}
-[data-fl-theme="clay"] .button-primary:not(.button-outline):active,
-[data-fl-theme="clay"] .button-secondary:not(.button-outline):active,
-[data-fl-theme="clay"] .button-neutral:active,
-[data-fl-theme="clay"] .button-outline:active {
-  transform: translateY(2px);
-  box-shadow: 2px 2px 0 rgba(var(--shadow-color), 0.3);
-}
-[data-fl-theme="clay"] .button-error:not(.button-outline):active {
-  transform: translateY(2px);
+  /* hover lift + bigger offset shadow; active press + smaller offset shadow */
+  [data-fl-theme="clay"] .button-primary:not(.button-outline):hover {
+    background: var(--primary-bold);
+    transform: translateY(-2px);
+    box-shadow:
+      6px 6px 0 rgba(var(--shadow-color), 0.3),
+      var(--shadow-inset-strong);
+  }
+  [data-fl-theme="clay"] .button-secondary:not(.button-outline):hover {
+    background: var(--secondary-bold);
+    transform: translateY(-2px);
+    box-shadow:
+      6px 6px 0 rgba(var(--shadow-color), 0.3),
+      var(--shadow-inset-strong);
+  }
+  [data-fl-theme="clay"] .button-neutral:hover,
+  [data-fl-theme="clay"] .button-outline:hover,
+  [data-fl-theme="clay"] .button-error:not(.button-outline):hover {
+    transform: translateY(-2px);
+  }
+  [data-fl-theme="clay"] .button-primary:not(.button-outline):active,
+  [data-fl-theme="clay"] .button-secondary:not(.button-outline):active,
+  [data-fl-theme="clay"] .button-neutral:active,
+  [data-fl-theme="clay"] .button-outline:active {
+    transform: translateY(2px);
+    box-shadow: 2px 2px 0 rgba(var(--shadow-color), 0.3);
+  }
+  [data-fl-theme="clay"] .button-error:not(.button-outline):active {
+    transform: translateY(2px);
+  }
 }

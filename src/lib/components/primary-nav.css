@@ -67,23 +67,23 @@
   .primary-nav__nav-item--active::after {
     @apply h-10;
   }
-}
 
-[data-fl-theme="clay"] .primary-nav {
-  .primary-nav__nav-item:hover {
-    background-color: color-mix(in srgb, var(--primary) 30%, transparent);
-    box-shadow: var(--shadow-sm);
-  }
+  [data-fl-theme="clay"] .primary-nav {
+    .primary-nav__nav-item:hover {
+      background-color: color-mix(in srgb, var(--primary) 30%, transparent);
+      box-shadow: var(--shadow-sm);
+    }
 
-  .primary-nav__nav-item--active {
-    background-color: var(--primary);
-    color: var(--primary-content);
-    box-shadow: var(--shadow-sm), var(--shadow-inset);
-  }
+    .primary-nav__nav-item--active {
+      background-color: var(--primary);
+      color: var(--primary-content);
+      box-shadow: var(--shadow-sm), var(--shadow-inset);
+    }
 
-  .primary-nav__nav-item:active {
-    background-color: color-mix(in srgb, var(--primary) 50%, transparent);
-    transform: translateY(1px);
-    box-shadow: none;
+    .primary-nav__nav-item:active {
+      background-color: color-mix(in srgb, var(--primary) 50%, transparent);
+      transform: translateY(1px);
+      box-shadow: none;
+    }
   }
 }
