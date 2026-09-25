@@ -1,5 +1,14 @@
 # Changelog
 
+# 1.11.2
+
+* Offer a way out when startup gets stuck waiting on a remote signer
+* Sign out of a remote signer session whose app data was cleared, instead of stalling at startup
+* Show a room's messages before its space finishes syncing
+* Fix messages missing from feeds when some relays answer more slowly than others
+* Add an F-Droid build, signed with the same key as the other APKs
+* Keep GitHub releases up to date for Obtainium
+
 # 1.11.1
 
 * Open notes in flotilla
