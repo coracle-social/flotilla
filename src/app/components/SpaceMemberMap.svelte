@@ -2,7 +2,7 @@
   import "leaflet/dist/leaflet.css"
 
   import {mount, onMount, unmount} from "svelte"
-  import type {Map as LeafletMap, Marker} from "leaflet"
+  import type {Map as LeafletMap, Marker, TileLayer} from "leaflet"
   import type {Maybe} from "@welshman/lib"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
@@ -17,8 +17,13 @@
 
   const {url, pins}: Props = $props()
 
-  const tileUrl = $derived(
-    `https://{s}.basemaps.cartocdn.com/${$activeTheme === "dark" ? "dark" : "light"}_all/{z}/{x}/{y}{r}.png`,
+  const canvas = $derived($activeTheme === "dark" ? "Dark" : "Light")
+
+  const tileUrls = $derived(
+    ["Base", "Reference"].map(
+      layer =>
+        `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${canvas}_Gray_${layer}/MapServer/tile/{z}/{y}/{x}`,
+    ),
   )
 
   const openProfile = (pubkey: string) => pushModal(ProfileDetail, {pubkey, url})
@@ -41,17 +46,23 @@
   })
 
   $effect(() => {
-    if (leaflet && map) {
-      const tiles = leaflet
-        .tileLayer(tileUrl, {
-          maxZoom: 12,
-          attribution:
-            '<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="https://carto.com/attributions">CARTO</a>',
-        })
-        .addTo(map)
+    const tiles: TileLayer[] = []
 
-      return () => tiles.remove()
+    if (leaflet && map) {
+      for (const tileUrl of tileUrls) {
+        tiles.push(
+          leaflet
+            .tileLayer(tileUrl, {
+              maxZoom: 12,
+              attribution:
+                'Esri, HERE, Garmin, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            })
+            .addTo(map),
+        )
+      }
     }
+
+    return () => tiles.forEach(tile => tile.remove())
   })
 
   $effect(() => {
