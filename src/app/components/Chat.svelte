@@ -6,7 +6,6 @@
     int,
     ms,
     partition,
-    ifLet,
     spec,
     nthEq,
     nthNe,
@@ -16,8 +15,7 @@
     enumerate,
     formatTimestampAsDate,
   } from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
-  import type {TrustedEvent, EventTemplate, EventContent} from "@welshman/util"
+  import type {TrustedEvent, EventTemplate} from "@welshman/util"
   import {makeEvent, userInbox, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE} from "@welshman/util"
   import {parse, isLink} from "@welshman/content"
   import {MessagingRelayLists, Thunks} from "@welshman/app"
@@ -36,18 +34,14 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ChatMembers from "@app/components/ChatMembers.svelte"
   import ChatMessage from "@app/components/ChatMessage.svelte"
-  import ChatCompose from "@app/components/ChatCompose.svelte"
-  import ComposeEdit from "@app/components/ComposeEdit.svelte"
-  import ComposeParent from "@app/components/ComposeParent.svelte"
+  import ComposeArea, {type ComposeValues} from "@app/components/ComposeArea.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import {app, deletes, router, user, wraps} from "@app/core"
   import {loadSendDelay} from "@app/settings"
   import {deriveChat, makeChatId} from "@app/chats"
   import {makeFeedContext} from "@app/feeds"
   import {navigate, pushModal} from "@app/modal"
-  import {DraftKey, type Draft} from "@app/drafts"
   import {prependParent} from "@app/rooms"
-  import {pendingShare, type Share} from "@app/share"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -62,7 +56,6 @@
 
   onDestroy(context.cleanup)
   const chat = deriveChat(chatId)
-  const draftKey = new DraftKey<Draft>(`dm:${chatId}`)
   const others = remove($user.pubkey, pubkeys)
   const messagingRelayLists = $app.use(MessagingRelayLists).index.$
   const missingRelayLists = $derived(others.filter(pk => !$messagingRelayLists.has(pk)))
@@ -74,35 +67,19 @@
 
   const back = () => navigate("/chat")
 
-  const replyTo = (event: TrustedEvent) => {
-    parent = event
-    compose?.focus()
-  }
+  const replyTo = (event: TrustedEvent) => composeArea?.reply(event)
 
-  const clearParent = () => {
-    parent = undefined
-  }
-
-  const clearEventToEdit = () => {
-    eventToEdit = undefined
-  }
-
-  const onSubmit = async (params: EventContent) => {
+  const onSubmit = async ({parent, edit, ...values}: ComposeValues) => {
     const ptags = others.map(pk => ["p", pk])
 
-    // Remove p tags since they result in forking the conversation
-    params.tags = params.tags.filter(nthNe(0, "p"))
+    // p tags would fork the conversation, so drop them before quoting the parent
+    const params = await prependParent(parent, {
+      content: values.content,
+      tags: values.tags.filter(nthNe(0, "p")),
+    })
 
-    // Add our reply quote to content
-    params = await prependParent(parent, params)
-
-    if (eventToEdit) {
-      // An edit that changes nothing is just a dismissal
-      if (eventToEdit.content === params.content) {
-        return clearEventToEdit()
-      }
-
-      const command = await $deletes.deleteEvent(eventToEdit)
+    if (edit) {
+      const command = await $deletes.deleteEvent(edit)
 
       await $wraps.publish({event: command.event, recipients: pubkeys, pow: 16})
     }
@@ -120,7 +97,7 @@
           makeEvent(kind, {
             content,
             tags: [...tags, ...ptags],
-            created_at: eventToEdit?.created_at,
+            created_at: edit?.created_at,
           }),
         )
       }
@@ -155,10 +132,6 @@
       ),
     )
 
-    // Publishing reads each recipient's messaging relays first, and a failed read throws before any thunk.
-    clearParent()
-    clearEventToEdit()
-
     pushToast({
       timeout: 30_000,
       children: {
@@ -168,46 +141,15 @@
     })
   }
 
-  const onEscape = () => {
-    clearParent()
-    clearEventToEdit()
-  }
-
   const canEditEvent = (event: TrustedEvent) =>
     event.pubkey === $user.pubkey &&
     event.kind === DIRECT_MESSAGE &&
     event.created_at >= ago(500, MINUTE)
 
-  const onEditEvent = (event: TrustedEvent) => {
-    clearParent()
-    eventToEdit = event
-  }
-
-  const onEditPrevious = () => ifLet($chat?.messages.find(canEditEvent), onEditEvent)
+  const onEditEvent = (event: TrustedEvent) => composeArea?.edit(event)
 
   let loading = $state(true)
-  let compose: ChatCompose | undefined = $state()
-  let parent: TrustedEvent | undefined = $state()
-  let eventToEdit: TrustedEvent | undefined = $state()
-  let share: Maybe<Share> = $state()
-
-  // Sharing into the conversation already on screen doesn't re-create this component.
-  $effect(() => {
-    if ($pendingShare) {
-      share = $pendingShare
-      pendingShare.set(undefined)
-    }
-  })
-
-  const initialValues = $derived.by((): Share | undefined => {
-    if (eventToEdit) {
-      return {type: "text", value: eventToEdit.content}
-    }
-
-    if (share) {
-      return share
-    }
-  })
+  let composeArea: ComposeArea | undefined = $state()
 
   const elements = $derived.by(() => {
     const elements = []
@@ -335,25 +277,14 @@
     </p>
   </PageContent>
 
-  <div class="room__compose bg-surface">
-    <div class="flex flex-col gap-px">
-      {#if parent}
-        <ComposeParent event={parent} clear={clearParent} verb="Replying to" />
-      {/if}
-      {#if eventToEdit}
-        <ComposeEdit clear={clearEventToEdit} />
-      {/if}
-    </div>
-    {#key initialValues}
-      <ChatCompose
-        bind:this={compose}
-        {onSubmit}
-        {onEscape}
-        {onEditPrevious}
-        {initialValues}
-        dictationKey={draftKey.key}
-        draftKey={eventToEdit ? undefined : draftKey}
-        disabled={Boolean(missingRelayLists.length)} />
-    {/key}
+  <div class="room__compose bg-surface px-2">
+    <ComposeArea
+      {onSubmit}
+      encryptFiles
+      draftKey="dm:{chatId}"
+      messages={$chat?.messages || []}
+      canEdit={canEditEvent}
+      disabled={Boolean(missingRelayLists.length)}
+      bind:this={composeArea} />
   </div>
 </div>

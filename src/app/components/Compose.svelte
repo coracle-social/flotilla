@@ -2,46 +2,69 @@
   import {onDestroy, onMount} from "svelte"
   import {writable} from "svelte/store"
   import cx from "classnames"
-  import type {MaybeAsync} from "@welshman/lib"
+  import type {Maybe, MaybeAsync} from "@welshman/lib"
+  import {MESSAGE} from "@welshman/util"
   import type {EventContent} from "@welshman/util"
   import {escapeHtml, isMobile, preventDefault} from "@lib/html"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
+  import WidgetAdd from "@assets/icons/widget-add.svg?dataurl"
   import Plane from "@assets/icons/plane-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Tippy from "@lib/components/Tippy.svelte"
+  import type {TippyController} from "@lib/components/Tippy.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import DictationButton from "@app/components/DictationButton.svelte"
+  import ComposeMenu from "@app/components/ComposeMenu.svelte"
   import EditorEmojiButton from "@app/components/EditorEmojiButton.svelte"
+  import DictationButton from "@app/components/DictationButton.svelte"
+  import CommandArgBar from "@app/components/CommandArgBar.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {makeEditor} from "@app/editor"
+  import {app} from "@app/core"
   import {getDictation} from "@app/dictation"
-  import {type DraftKey, type Draft} from "@app/drafts"
   import {pushToast} from "@app/toast"
+  import {DraftKey, type Draft} from "@app/drafts"
   import type {Share} from "@app/share"
 
   type Props = {
+    url?: string
+    h?: string
+    draftKey: string
+    encryptFiles?: boolean
     disabled?: boolean
-    dictationKey: string
-    draftKey?: DraftKey<Draft>
+    initialValues?: Share
     onEscape?: () => void
     onEditPrevious?: () => void
     onSubmit: (event: EventContent) => MaybeAsync<void>
-    initialValues?: Share
   }
 
   const {
-    initialValues,
-    disabled = false,
-    dictationKey,
+    url,
+    h,
     draftKey,
+    encryptFiles = false,
+    disabled = false,
+    initialValues,
     onEscape,
     onEditPrevious,
     onSubmit,
   }: Props = $props()
 
+  const draft = initialValues ? undefined : new DraftKey<Draft>(draftKey)
+
   const autofocus = !isMobile && !disabled
 
   const uploading = writable(false)
+
+  const text = writable("")
+
+  const commandTarget = url
+    ? {url, kind: MESSAGE, pubkey: $app.user?.pubkey, tags: h ? [["h", h]] : []}
+    : undefined
+
+  const buttonClass = url
+    ? "join-item h-10 w-10 min-w-10 button button-neutral"
+    : "button button-neutral button-square tip tip-right h-10 w-10 min-w-10 rounded-2xl transition-colors"
 
   const editorClass = $derived(
     cx("chat-editor grow overflow-hidden", {
@@ -67,10 +90,10 @@
   const uploadFiles = () => editor.then(ed => ed.chain().selectFiles().run())
 
   // Tiptap parses a string handed to insertContent as html, so an angle bracket would eat the sentence.
-  const insertTranscript = async (text: string) => {
+  const insertTranscript = async (transcript: string) => {
     const ed = await editor
 
-    ed.chain().focus().insertContent(escapeHtml(text)).run()
+    ed.chain().focus().insertContent(escapeHtml(transcript)).run()
   }
 
   const attachVoiceNote = async (audio: File) => {
@@ -81,8 +104,23 @@
       .run()
   }
 
+  // Argument tokens are whitespace-delimited, so separate one from whatever precedes it.
+  const insertCommandToken = async (token: string) => {
+    const ed = await editor
+    const separator = /\s$/.test($text) ? "" : " "
+
+    ed.chain()
+      .focus()
+      .insertContent(escapeHtml(separator + token))
+      .run()
+  }
+
+  const showMenu = () => tippy?.show()
+
+  const hideMenu = () => tippy?.hide()
+
   const submit = async () => {
-    if ($uploading || disabled) {
+    if ($uploading || disabled || sending) {
       return
     }
 
@@ -90,9 +128,7 @@
     const content = ed.getText({blockSeparator: "\n"}).trim()
     const tags = ed.storage.nostr.getEditorTags()
 
-    if (!content) {
-      return
-    }
+    sending = true
 
     try {
       await onSubmit({content, tags})
@@ -100,16 +136,20 @@
       console.error("Failed to send message", error)
 
       return pushToast({theme: "error", message: "Failed to send your message."})
+    } finally {
+      sending = false
     }
 
-    draftKey?.clear()
+    draft?.clear()
     ed.chain().clearContent(true).run()
   }
 
+  let sending = false
+  let tippy: Maybe<TippyController> = $state()
   let content = $state(
-    initialValues?.type === "text" ? initialValues.value : (draftKey?.get()?.content ?? ""),
+    initialValues?.type === "text" ? initialValues.value : (draft?.get()?.content ?? ""),
   )
-  let dictating = $state(Boolean(getDictation(dictationKey)))
+  let dictating = $state(Boolean(getDictation(draftKey)))
 
   const onChange = (json: object) => {
     content = json
@@ -118,20 +158,23 @@
   const empty = writable(true)
 
   const editor = makeEditor({
+    url,
     content,
     empty,
     submit,
+    text,
     uploading,
     onChange,
+    commandTarget,
+    encryptFiles,
     aggressive: true,
-    encryptFiles: true,
   })
 
   $effect(() => {
     if ($empty) {
-      draftKey?.clear()
+      draft?.clear()
     } else {
-      draftKey?.set({content})
+      draft?.set({content})
     }
   })
 
@@ -152,35 +195,48 @@
   })
 </script>
 
-<form class="relative z-feature flex gap-2 p-2" onsubmit={preventDefault(submit)}>
-  <Button
-    data-tip="Add an image"
-    class="button button-neutral button-square tip tip-right h-10 w-10 min-w-10 rounded-2xl transition-colors"
-    disabled={$uploading || disabled}
-    onclick={uploadFiles}>
-    {#if $uploading}
-      <Spinner size="xs" />
-    {:else}
-      <Icon icon={GallerySend} />
+{#if commandTarget}
+  <CommandArgBar target={commandTarget} content={$text} insert={insertCommandToken} />
+{/if}
+<form class="relative flex gap-2 py-2" onsubmit={preventDefault(submit)}>
+  <div class={cx({join: url, "flex gap-2": !url})}>
+    <Button
+      data-tip="Add an image"
+      class={buttonClass}
+      disabled={$uploading || disabled}
+      onclick={uploadFiles}>
+      {#if $uploading}
+        <Spinner size="xs" />
+      {:else}
+        <Icon icon={GallerySend} />
+      {/if}
+    </Button>
+    {#if url}
+      <Button disabled={$uploading} onclick={showMenu} class={buttonClass}>
+        <Tippy
+          bind:controller={tippy}
+          component={ComposeMenu}
+          props={{url, h, onClick: hideMenu}}
+          params={{trigger: "manual", interactive: true}}>
+          <Icon icon={WidgetAdd} />
+        </Tippy>
+      </Button>
     {/if}
-  </Button>
-  <EditorEmojiButton
-    {editor}
-    disabled={$uploading || disabled}
-    class="button button-neutral button-square tip tip-right h-10 w-10 min-w-10 rounded-2xl transition-colors" />
+    <EditorEmojiButton {editor} disabled={$uploading || disabled} class={buttonClass} />
+  </div>
   <div class={editorClass} aria-disabled={disabled}>
     <EditorContent {autofocus} {editor} />
   </div>
   {#if dictating || ($empty && !disabled)}
     <DictationButton
-      key={dictationKey}
+      key={draftKey}
       bind:dictating
       onTranscript={insertTranscript}
       onVoiceNote={attachVoiceNote} />
   {:else}
     <Button
       data-tip="{window.navigator.platform.includes('Mac') ? 'cmd' : 'ctrl'}+enter to send"
-      class="button button-primary button-circle tip tip-left h-10 w-10 min-w-10"
+      class="button button-primary button-circle flex justify-center items-center tip tip-left h-10 w-10 min-w-10"
       disabled={$uploading || disabled}
       onclick={submit}>
       <Icon icon={Plane} />

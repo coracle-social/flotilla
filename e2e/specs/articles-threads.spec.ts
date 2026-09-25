@@ -25,7 +25,7 @@ type Seeded = {readonly id: string; readonly event: SignedEvent}
 const composerForm = (page: Page) =>
   page.locator("form").filter({has: page.locator(".note-editor")})
 
-// RoomCompose's join is the upload button and then the compose menu.
+// A room composer's join is the upload button and then the compose menu.
 const openComposeMenu = (page: Page) =>
   page
     .locator("form")

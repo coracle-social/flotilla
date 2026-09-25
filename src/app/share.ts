@@ -16,7 +16,7 @@ export type Share =
   | {type: "text"; value: string}
   | {type: "file"; value: File}
 
-export const pendingShare = writable<Maybe<Share>>(undefined)
+export const pendingShare = writable<Maybe<{path: string; share: Share}>>(undefined)
 
 // Set pendingShare after navigating so the current view doesn't pop it
 export const shareTo = async (
@@ -26,7 +26,7 @@ export const shareTo = async (
 ) => {
   await navigate(path, options)
 
-  pendingShare.set(share)
+  pendingShare.set({path, share})
 }
 
 export const shareEvent = (url: string, noun: string, event: TrustedEvent) => {

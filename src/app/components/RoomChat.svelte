@@ -6,9 +6,9 @@
   import type {Readable} from "svelte/store"
   import {debounce} from "throttle-debounce"
   import cx from "classnames"
-  import {now, ifLet, ago, spec, MINUTE} from "@welshman/lib"
+  import {now, ago, spec, MINUTE} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
-  import type {TrustedEvent, EventContent} from "@welshman/util"
+  import type {TrustedEvent} from "@welshman/util"
   import {stamp, MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
   import {Message} from "@welshman/domain"
   import {MembershipStatus} from "@welshman/app"
@@ -24,9 +24,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import VirtualList from "@lib/components/VirtualList.svelte"
   import type {VirtualListController} from "@lib/components/VirtualList.svelte"
-  import RoomCompose from "@app/components/RoomCompose.svelte"
-  import ComposeEdit from "@app/components/ComposeEdit.svelte"
-  import ComposeParent from "@app/components/ComposeParent.svelte"
+  import ComposeArea, {type ComposeValues} from "@app/components/ComposeArea.svelte"
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@app/components/RoomItemAddMember.svelte"
   import RoomPinnedMessages from "@app/components/RoomPinnedMessages.svelte"
@@ -49,7 +47,6 @@
   import {pageLoading} from "@app/loading"
   import {checked, deferredRoomPath, setChecked} from "@app/notifications"
   import {getPermalinkTarget, highlightedEvent, makeRoomPath} from "@app/routes"
-  import {pendingShare, type Share} from "@app/share"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -153,38 +150,14 @@
     }
   }
 
-  const replyTo = (event: TrustedEvent) => {
-    parent = event
-    compose?.focus()
-  }
+  const replyTo = (event: TrustedEvent) => composeArea?.reply(event)
 
-  const clearParent = () => {
-    parent = undefined
-  }
-
-  const clearShare = () => {
-    share = undefined
-  }
-
-  const clearEventToEdit = () => {
-    eventToEdit = undefined
-  }
-
-  const onSubmit = async ({content, tags}: EventContent) => {
-    if (!content && !sharedEvent) {
-      return
-    }
-
-    if (eventToEdit) {
-      // Don't do anything if message hasn't changed
-      if (eventToEdit.content === content) {
-        return clearEventToEdit()
-      }
-
+  const onSubmit = async ({content, tags, parent, share, edit}: ComposeValues) => {
+    if (edit) {
       const protect = await shouldProtect
 
       // Delete the previous message, to be republished below with the same timestamp
-      const command = await $deletes.deleteEvent($state.snapshot(eventToEdit), w =>
+      const command = await $deletes.deleteEvent($state.snapshot(edit), w =>
         w.setProtected(protect),
       )
 
@@ -192,8 +165,8 @@
     }
 
     // A share is a quote rather than a reply, so setParent prepends the reply's own reference ahead of it.
-    if (sharedEvent) {
-      ;({content, tags} = await prependParent(sharedEvent, {content, tags}, url))
+    if (share) {
+      ;({content, tags} = await prependParent(share, {content, tags}, url))
     }
 
     const eventWriter = await toSpace(
@@ -212,7 +185,7 @@
 
     const thunk = $thunks.publish({
       relays: [url],
-      event: stamp(await eventWriter.renderTemplate(), eventToEdit?.created_at),
+      event: stamp(await eventWriter.renderTemplate(), edit?.created_at),
       delay,
     })
 
@@ -225,11 +198,6 @@
         },
       })
     }
-
-    // Only once it's sent, so a failure leaves the reply or edit in place to try again.
-    clearParent()
-    clearShare()
-    clearEventToEdit()
   }
 
   const getElementKey = (element: {id: string}) => element.id
@@ -382,8 +350,6 @@
   let virtualList: Maybe<VirtualListController> = $state()
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
   let newer: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-  let share: Maybe<Share> = $state()
-  let parent: TrustedEvent | undefined = $state()
   let element: HTMLElement | undefined = $state()
   let lastVisibleAt = now()
   let newMessagesAfter = $state($checked[$page.url.pathname])
@@ -393,8 +359,7 @@
   let scrolledUp = $state(false)
   let cleanup: () => void
   let events: Readable<TrustedEvent[]> = $state(readable([]))
-  let compose: RoomCompose | undefined = $state()
-  let eventToEdit: TrustedEvent | undefined = $state()
+  let composeArea: ComposeArea | undefined = $state()
 
   // A link into history renders the newest messages first and only then scrolls.
   const awaitingJump = $derived(!isNaN(at) && !jumpSettled)
@@ -406,26 +371,6 @@
     pageLoading.set(isFeedLoading($older) || isFeedLoading($newer))
 
     return () => pageLoading.set(false)
-  })
-
-  // Sharing into the room already on screen doesn't re-create this component.
-  $effect(() => {
-    if ($pendingShare) {
-      share = $pendingShare
-      pendingShare.set(undefined)
-    }
-  })
-
-  const sharedEvent = $derived(share?.type === "event" ? share.value : undefined)
-
-  const initialValues = $derived.by((): Share | undefined => {
-    if (eventToEdit) {
-      return {type: "text", value: eventToEdit.content}
-    }
-
-    if (share) {
-      return share
-    }
   })
 
   const clearIsUserScrolling = debounce(150, () => {
@@ -519,22 +464,10 @@
     }
   }
 
-  const onEscape = () => {
-    clearParent()
-    clearShare()
-    eventToEdit = undefined
-  }
-
   const canEditEvent = (event: TrustedEvent) =>
     event.pubkey === $user.pubkey && event.created_at >= ago(5, MINUTE)
 
-  const onEditEvent = (event: TrustedEvent) => {
-    clearParent()
-    clearShare()
-    eventToEdit = event
-  }
-
-  const onEditPrevious = () => ifLet($events.toReversed().find(canEditEvent), onEditEvent)
+  const onEditEvent = (event: TrustedEvent) => composeArea?.edit(event)
 
   onMount(() => {
     // Defer rendering until navigation finishes
@@ -711,27 +644,14 @@
             {@render membershipButton("Ask to Join")}
           </div>
         {:else}
-          <div class="flex flex-col gap-px">
-            {#if parent}
-              <ComposeParent {url} event={parent} clear={clearParent} verb="Replying to" />
-            {/if}
-            {#if sharedEvent}
-              <ComposeParent {url} event={sharedEvent} clear={clearShare} verb="Sharing" />
-            {/if}
-            {#if eventToEdit}
-              <ComposeEdit clear={clearEventToEdit} />
-            {/if}
-          </div>
-          {#key initialValues}
-            <RoomCompose
-              {url}
-              {h}
-              {onSubmit}
-              {onEscape}
-              {onEditPrevious}
-              {initialValues}
-              bind:this={compose} />
-          {/key}
+          <ComposeArea
+            {url}
+            {h}
+            {onSubmit}
+            draftKey="room:{url}:{h ?? ''}"
+            messages={$events.toReversed()}
+            canEdit={canEditEvent}
+            bind:this={composeArea} />
         {/if}
       </div>
       {#if h && isVoiceRoom && !voiceConnectedHere}

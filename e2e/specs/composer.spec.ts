@@ -24,7 +24,7 @@ import {
 
 const suggestions = (page: Page) => page.locator(".tiptap-suggestions__item")
 
-// RoomCompose leads with a two button group: upload, then the create menu.
+// A room composer leads with a two button group: upload, then the create menu.
 const roomUploadButton = (page: Page) => page.locator(".room__compose-inner .join-item").first()
 
 const chatUploadButton = (page: Page) => page.locator("button[data-tip='Add an image']")
