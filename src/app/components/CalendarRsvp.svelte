@@ -13,9 +13,11 @@
     RsvpStatus,
     getRsvpStatus,
     getRsvpsByStatus,
+    isAttending,
     publishRsvp,
     retractRsvp,
   } from "@app/calendar"
+  import {setEventReminders} from "@app/reminders"
 
   type Props = {
     url: string
@@ -33,12 +35,16 @@
 
     loading = true
 
+    const retracting = ownRsvp && getRsvpStatus(ownRsvp) === status
+
     try {
-      if (ownRsvp && getRsvpStatus(ownRsvp) === status) {
+      if (retracting) {
         await retractRsvp(url, ownRsvp)
       } else {
         await publishRsvp(url, event, status)
       }
+
+      await setEventReminders(url, event, !retracting && isAttending(status))
     } finally {
       loading = false
     }

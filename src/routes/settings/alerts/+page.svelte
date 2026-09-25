@@ -1,9 +1,11 @@
 <script lang="ts">
   import cx from "classnames"
-  import {sleep} from "@welshman/lib"
+  import {removeAt, replaceAt, sleep} from "@welshman/lib"
   import {Capacitor} from "@capacitor/core"
   import {Badge} from "@capawesome/capacitor-badge"
   import Bell from "@assets/icons/bell.svg?dataurl"
+  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
+  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import {preventDefault} from "@lib/html"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
@@ -14,16 +16,39 @@
   import {pushToast} from "@app/toast"
   import {clearBadges} from "@app/notifications"
   import {Push} from "@app/push"
+  import {syncEventReminders} from "@app/reminders"
   import {notificationSettings} from "@app/settings"
 
   const reset = () => {
     settings = {...notificationSettings.get()}
   }
 
+  const addReminder = () => {
+    settings.reminder_minutes = [...settings.reminder_minutes, 60]
+  }
+
+  const removeReminder = (index: number) => {
+    settings.reminder_minutes = removeAt(index, settings.reminder_minutes)
+  }
+
+  const onReminderInput = (e: Event) => {
+    const target = e.currentTarget as HTMLInputElement
+    const index = Number(target.dataset.index)
+
+    settings.reminder_minutes = replaceAt(index, Number(target.value), settings.reminder_minutes)
+  }
+
   const onsubmit = preventDefault(async () => {
     loading = true
 
     try {
+      if (settings.events && settings.reminder_minutes.some(minutes => minutes < 1)) {
+        return pushToast({
+          theme: "error",
+          message: "A reminder must come at least a minute before the event starts.",
+        })
+      }
+
       if (!settings.badge) {
         clearBadges()
       }
@@ -46,6 +71,8 @@
       }
 
       notificationSettings.set(settings)
+
+      syncEventReminders()
 
       pushToast({message: "Your settings have been saved!"})
     } finally {
@@ -126,6 +153,42 @@
           <ToggleInput bind:checked={settings.messages} />
         {/snippet}
       </FieldInline>
+      <FieldInline>
+        {#snippet label()}
+          <p>Remind me about events I'm going to</p>
+        {/snippet}
+        {#snippet input()}
+          <ToggleInput bind:checked={settings.events} />
+        {/snippet}
+      </FieldInline>
+      {#if settings.events}
+        <div class="flex flex-col gap-2">
+          <!-- eslint-disable-next-line svelte/require-each-key -->
+          {#each settings.reminder_minutes as minutes, index}
+            <div class="flex items-center gap-2">
+              <Button
+                class="button button-ghost button-sm"
+                type="button"
+                onclick={() => removeReminder(index)}>
+                <Icon icon={TrashBin2} />
+              </Button>
+              <label class="input flex grow items-center gap-2">
+                <input
+                  type="number"
+                  class="w-16"
+                  data-index={index}
+                  value={minutes}
+                  oninput={onReminderInput} />
+                <span class="text-sm opacity-75">minutes before it starts</span>
+              </label>
+            </div>
+          {/each}
+          <Button class="button button-link w-fit px-0" type="button" onclick={addReminder}>
+            <Icon icon={AddCircle} size={5} />
+            Add reminder
+          </Button>
+        </div>
+      {/if}
     </div>
     <div class="card sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}

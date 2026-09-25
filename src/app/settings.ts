@@ -167,6 +167,8 @@ export const notificationSettings = withGetter(
     spaces: true,
     mentions: true,
     messages: true,
+    events: true,
+    reminder_minutes: [5],
   }),
 )
 

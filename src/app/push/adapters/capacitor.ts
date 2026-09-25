@@ -11,6 +11,7 @@ import {PUSH_BRIDGE, PUSH_SERVER} from "@app/env"
 import {pushState} from "@app/push/adapters/common"
 import type {IPushAdapter} from "@app/push/adapters/common"
 import {onPushNotificationAction, syncRelaySubscriptions} from "@app/push/adapters/common"
+import {syncEventReminders} from "@app/reminders"
 
 const requestPermissions = async () => {
   let status = await PushNotifications.checkPermissions()
@@ -188,6 +189,8 @@ export class CapacitorNotifications implements IPushAdapter {
             this._unsyncRelay(url, key)
           }
         })
+
+        await syncEventReminders()
       } catch (e) {
         console.error(e)
       }

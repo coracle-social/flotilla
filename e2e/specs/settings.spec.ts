@@ -98,6 +98,26 @@ test("US-086 configure alerts", async ({seed, as}) => {
 
   await waitForToastToClear(page)
 
+  const reminders = alertTypes.locator("div.items-center.gap-2:has(input[type=number])")
+
+  await expect(reminders).toHaveCount(1)
+  await expect(reminders.first().locator("input")).toHaveValue("5")
+
+  // A reminder has to come before the event, so saving a zero is refused with an error.
+  await page.getByRole("button", {name: "Add reminder"}).click()
+  await reminders.nth(1).locator("input").fill("0")
+  await page.getByRole("button", {name: "Save Changes"}).click()
+
+  await expect(page.getByRole("alert")).toContainText("at least a minute")
+
+  await waitForToastToClear(page)
+
+  await reminders.nth(1).locator("input").fill("1440")
+  await page.getByRole("button", {name: "Add reminder"}).click()
+  await reminders.nth(2).getByRole("button").click()
+
+  await expect(reminders).toHaveCount(2)
+
   await sound.uncheck()
   await page.getByRole("button", {name: "Save Changes"}).click()
 
@@ -107,6 +127,8 @@ test("US-086 configure alerts", async ({seed, as}) => {
   await page.reload()
 
   await expect(settingToggle(page, "Play sound for new activity")).not.toBeChecked()
+  await expect(reminders).toHaveCount(2)
+  await expect(reminders.nth(1).locator("input")).toHaveValue("1440")
 })
 
 test("US-087 configure content display", async ({seed, as}) => {

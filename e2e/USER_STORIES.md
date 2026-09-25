@@ -1346,6 +1346,10 @@ Acceptance:
   permission is refused, an error toast reports it and the push toggle settles
   off, leaving badge and sound settings untouched.
 - "Discard Changes" reverts unsaved edits to the last saved values.
+- Events alice is going to are set to remind her once, five minutes ahead. Lead
+  times are measured in minutes, and she can add and remove them.
+- Saving a reminder less than a minute before the event shows an error and does
+  not save.
 
 ### US-087 — Configure content display
 

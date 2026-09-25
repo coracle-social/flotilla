@@ -245,6 +245,9 @@ export const deriveRsvps = (event: TrustedEvent) => deriveEvents([makeRsvpFilter
 
 export const getRsvpStatus = (rsvp: TrustedEvent) => tagValue(tagSpec("status"), rsvp.tags)
 
+export const isAttending = (status?: string) =>
+  status === RsvpStatus.Accepted || status === RsvpStatus.Tentative
+
 // A relay can still hold a replaced RSVP, so the newest per person is the one that counts.
 export const getRsvpsByStatus = (rsvps: TrustedEvent[]) => {
   const latest = uniqBy(
