@@ -125,9 +125,12 @@
         type="text"
         placeholder="Search people or roles..." />
     </label>
-    <Button class="button button-neutral shrink-0" onclick={toggleMap}>
-      <Icon size={4} icon={showMap ? UsersGroup : MapIcon} />
-      {showMap ? "List" : "Map"}
+    <Button
+      class="button button-input shrink-0 {showMap ? 'button-primary' : 'button-neutral'}"
+      aria-pressed={showMap}
+      onclick={toggleMap}>
+      <Icon size={4} icon={MapIcon} />
+      Map
     </Button>
   </div>
   {#if showMap && visiblePins.length > 0}

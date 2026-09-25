@@ -729,7 +729,7 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
 
   await expect(pins).toHaveCount(1)
 
-  await page.getByRole("button", {name: "List"}).click()
+  await showMap.click()
 
   await expect(pins).toHaveCount(0)
 
