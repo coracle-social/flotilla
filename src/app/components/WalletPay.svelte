@@ -1,5 +1,6 @@
 <script lang="ts">
   import {gt} from "@welshman/lib"
+  import {toMsats} from "@welshman/util"
   import {Invoice} from "@getalby/lightning-tools/bolt11"
   import {debounce} from "throttle-debounce"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
@@ -34,7 +35,7 @@
       if (gt(invoice!.satoshi, 0)) {
         await payInvoice(invoice!.paymentRequest)
       } else {
-        await payInvoice(invoice!.paymentRequest, sats * 1000)
+        await payInvoice(invoice!.paymentRequest, toMsats(sats))
       }
 
       pushToast({message: `Payment sent!`})

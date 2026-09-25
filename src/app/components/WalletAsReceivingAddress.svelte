@@ -22,7 +22,7 @@
     loading = true
 
     try {
-      const command = await $profiles.update(writer => writer.update({lud16}))
+      const command = await $profiles.update(writer => writer.update({lud06: undefined, lud16}))
       const error = await command.publish().waitForError()
 
       if (error) {
@@ -47,7 +47,7 @@
     <ModalHeader>
       <ModalTitle>Set as Receiving Address?</ModalTitle>
     </ModalHeader>
-    {#if $userProfile?.values.lud16}
+    {#if $userProfile?.lnurl()}
       <p>
         Your current receiving address is different from the one provided by your connected wallet.
       </p>

@@ -2,7 +2,7 @@ import {writable} from "svelte/store"
 import {nwc} from "@getalby/sdk"
 import {bech32ToHex, displayUrl, tryCatch} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {isNWCWallet, isWebLNWallet} from "@welshman/util"
+import {isNWCWallet, isWebLNWallet, toMsats} from "@welshman/util"
 import type {Wallet} from "@welshman/util"
 import {withGetter} from "@welshman/store"
 
@@ -86,7 +86,7 @@ export const createInvoice = async ({
 
   if (isNWCWallet($wallet)) {
     const createdInvoice = await getNwcClient().makeInvoice({
-      amount: satAmount * 1000,
+      amount: toMsats(satAmount),
       description,
     })
 

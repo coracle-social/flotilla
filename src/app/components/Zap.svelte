@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {first, removeUndefined} from "@welshman/lib"
-  import {relay} from "@welshman/util"
+  import {relay, toMsats} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {ZapRequest} from "@welshman/domain"
   import {Zappers} from "@welshman/app"
@@ -45,7 +45,7 @@
     const writer = $domain
       .writer(ZapRequest)
       .setContent(content)
-      .setAmount(amount * 1000)
+      .setAmount(toMsats(amount))
       .setLnurl(currentZapper.lnurl)
       .setRecipient(pubkey)
 

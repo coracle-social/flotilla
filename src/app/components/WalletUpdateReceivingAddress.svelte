@@ -45,6 +45,7 @@
         back()
       }
     } catch (error) {
+      console.error(error)
       pushToast({theme: "error", message: "Failed to update profile"})
     } finally {
       loading = false
