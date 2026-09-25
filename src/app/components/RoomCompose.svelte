@@ -1,6 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
-  import type {Maybe} from "@welshman/lib"
+  import type {Maybe, MaybeAsync} from "@welshman/lib"
   import {MESSAGE} from "@welshman/util"
   import type {EventContent} from "@welshman/util"
   import {escapeHtml, isMobile, preventDefault} from "@lib/html"
@@ -20,6 +20,7 @@
   import {makeEditor} from "@app/editor"
   import {app} from "@app/core"
   import {getDictation} from "@app/dictation"
+  import {pushToast} from "@app/toast"
   import {DraftKey, type Draft} from "@app/drafts"
   import type {Share} from "@app/share"
   import {onDestroy, onMount} from "svelte"
@@ -29,7 +30,7 @@
     h?: string
     onEscape?: () => void
     onEditPrevious?: () => void
-    onSubmit: (event: EventContent) => void
+    onSubmit: (event: EventContent) => MaybeAsync<void>
     initialValues?: Share
   }
 
@@ -100,7 +101,7 @@
   const hidePopover = () => tippy?.hide()
 
   const submit = async () => {
-    if ($uploading) {
+    if ($uploading || sending) {
       return
     }
 
@@ -108,12 +109,23 @@
     const content = ed.getText({blockSeparator: "\n"}).trim()
     const tags = ed.storage.nostr.getEditorTags()
 
-    onSubmit({content, tags})
+    sending = true
+
+    try {
+      await onSubmit({content, tags})
+    } catch (error) {
+      console.error("Failed to send message", error)
+
+      return pushToast({theme: "error", message: "Failed to send your message."})
+    } finally {
+      sending = false
+    }
 
     draftKey?.clear()
     ed.chain().clearContent(true).run()
   }
 
+  let sending = false
   let tippy: Maybe<TippyController> = $state()
   let content = $state(
     initialValues?.type === "text" ? initialValues.value : (draftKey?.get()?.content ?? ""),

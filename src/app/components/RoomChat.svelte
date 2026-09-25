@@ -174,65 +174,64 @@
       return
     }
 
-    try {
-      const protect = await shouldProtect
+    const protect = await shouldProtect
 
-      if (eventToEdit) {
-        // Don't do anything if message hasn't changed
-        if (eventToEdit.content === content) {
-          return
-        }
-
-        // Delete the previous message, to be republished below with the same timestamp
-        const command = await $deletes.deleteEvent($state.snapshot(eventToEdit), w =>
-          w.setProtected(protect),
-        )
-
-        command.publishToRelays([url])
+    if (eventToEdit) {
+      // Don't do anything if message hasn't changed
+      if (eventToEdit.content === content) {
+        return clearEventToEdit()
       }
 
-      // A share is a quote rather than a reply, so setParent prepends the reply's own reference ahead of it.
-      if (sharedEvent) {
-        ;({content, tags} = await prependParent(sharedEvent, {content, tags}, url))
-      }
+      // Delete the previous message, to be republished below with the same timestamp
+      const command = await $deletes.deleteEvent($state.snapshot(eventToEdit), w =>
+        w.setProtected(protect),
+      )
 
-      const eventWriter = writer(Message)
-        .setContent(content)
-        .addTags(...tags)
-        .setProtected(protect)
-
-      if (h) {
-        eventWriter.setRoom(url, h)
-      } else {
-        eventWriter.forceRoutes(relay(url))
-      }
-
-      if (parent) {
-        eventWriter.setParent(parent)
-      }
-
-      const delay = await loadSendDelay()
-
-      const thunk = $thunks.publish({
-        relays: [url],
-        event: stamp(await eventWriter.renderTemplate(), eventToEdit?.created_at),
-        delay,
-      })
-
-      if (delay) {
-        pushToast({
-          timeout: 30_000,
-          children: {
-            component: ThunkToast,
-            props: {thunk},
-          },
-        })
-      }
-    } finally {
-      clearParent()
-      clearShare()
-      clearEventToEdit()
+      command.publishToRelays([url])
     }
+
+    // A share is a quote rather than a reply, so setParent prepends the reply's own reference ahead of it.
+    if (sharedEvent) {
+      ;({content, tags} = await prependParent(sharedEvent, {content, tags}, url))
+    }
+
+    const eventWriter = writer(Message)
+      .setContent(content)
+      .addTags(...tags)
+      .setProtected(protect)
+
+    if (h) {
+      eventWriter.setRoom(url, h)
+    } else {
+      eventWriter.forceRoutes(relay(url))
+    }
+
+    if (parent) {
+      eventWriter.setParent(parent)
+    }
+
+    const delay = await loadSendDelay()
+
+    const thunk = $thunks.publish({
+      relays: [url],
+      event: stamp(await eventWriter.renderTemplate(), eventToEdit?.created_at),
+      delay,
+    })
+
+    if (delay) {
+      pushToast({
+        timeout: 30_000,
+        children: {
+          component: ThunkToast,
+          props: {thunk},
+        },
+      })
+    }
+
+    // Only once it's sent, so a failure leaves the reply or edit in place to try again.
+    clearParent()
+    clearShare()
+    clearEventToEdit()
   }
 
   const getElementKey = (element: {id: string}) => element.id
