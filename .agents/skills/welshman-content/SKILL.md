@@ -75,6 +75,8 @@ isText     isTopic
 | `makeTextRenderer(options?)` | Creates a `Renderer` pre-configured for text output. |
 | `makeHtmlRenderer(options?)` | Creates a `Renderer` pre-configured for HTML output. |
 | `Renderer` | Class with `addText`, `addLink`, `addEntityLink`, `addNewlines`, `toString`. |
+| `summarize(parsed, getName?)` | Replaces every element that is not prose (entities, links, invoices) with `Text` naming it — "another message", "a link to example.com", "an image". Returns `Parsed[]`, so it composes with `truncate`, `reduceLinks` and either renderer. |
+| `defaultSummaryName(parsed)` | The name `summarize` uses for an element its `getName` returned `undefined` for, or `undefined` itself for prose. |
 
 `RenderOptions` fields (all optional when using the convenience functions):
 
@@ -121,6 +123,22 @@ const parsed = parse({ content: event.content, tags: event.tags })
 const withGrids = reduceLinks(parsed)
 const preview = truncate(withGrids, { minLength: 300, maxLength: 500 })
 const html = renderAsHtml(preview).toString()
+```
+
+### Read a message as one line of prose
+
+```typescript
+import { parse, ParsedType, renderAsText, summarize } from '@welshman/content'
+
+// A notification body or a speech synthesizer wants each entity named as it reads
+const summary = renderAsText(
+  summarize(parse({ content, tags }), p => {
+    if (p.type === ParsedType.Profile) {
+      return profilesByPubkey.get(p.value.pubkey)?.name
+    }
+  }),
+).toString()
+// → 'hodlbod said another message look at an image'
 ```
 
 ### Extract all mentioned pubkeys
@@ -210,7 +228,7 @@ const emojiElements = parsed.filter(isEmoji)
 - **`reduceLinks` requires block-level links**: a link is only pulled into a grid if it appears at the start of a block (i.e. preceded by a newline or at the very beginning). Inline links in the middle of a sentence are left as `ParsedLink`.
 - **`isImage` is stricter than `urlIsMedia`**: `isImage` only matches `.jpg/.jpeg/.png/.gif/.webp` — it will not match `.mp4` or `.webm`. Use `urlIsMedia` directly if you need to detect video; note that `urlIsMedia` takes a URL string, not a `Parsed` element — usage would be: `urlIsMedia(parsed.value.url.toString())`.
 - **`Renderer.toString()`** is how you get the final string out. `renderAsHtml` and `renderAsText` both return a `Renderer` instance, not a string.
-- **`LinkGrid` is not rendered by default renderers**: `renderOne` has no case for `ParsedType.LinkGrid`. You must handle it yourself when building a custom UI (e.g. render each `value.links` entry as an image or card grid).
+- **`LinkGrid` is not rendered by default renderers**: `renderOne` has no case for `ParsedType.LinkGrid`. You must handle it yourself when building a custom UI (e.g. render each `value.links` entry as an image or card grid). `summarize` does name it ("some images"), so a summary is not affected.
 - **Legacy mentions** (`#[0]`, `#[1]`) are parsed automatically from the `tags` array and emitted as `ParsedProfile` or `ParsedEvent` elements.
 - **Numeric hashtags are skipped**: `#42` will not produce a `Topic` element.
 - **A `Command` is syntax, not a promise that anyone answers to it**: the parser has no idea which NIP-CD definitions exist, so `/nonsense` parses as a `Command` too. Match `value.command` (and `value.pubkey`, when the invocation names an executor) against the definitions you have, and render the element's `raw` as text when nothing matches.

@@ -54,12 +54,13 @@ Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `makeLoader
 | `requestOne(options)` | Subscribe to a single relay; returns `Promise<TrustedEvent[]>` |
 | `request(options)` | Subscribe to multiple relays in parallel; returns `Promise<TrustedEvent[]>` |
 | `makeLoader(options)` | Creates a batching `load` function with configurable delay/timeout/threshold |
-| `load(options)` | Pre-built loader with a 30 ms batch delay, 3 s timeout and 0.5 threshold. It auto-closes after EOSE, timeout, or disconnect, and resolves when half the relays' subscriptions have closed. It carries no context, so it only works where no pool or repository is needed. |
+| `loadComplete(options)` | Pre-built loader with a 30 ms batch delay and a 3 s timeout. It auto-closes after EOSE, timeout, or disconnect, and resolves once every relay's subscription has closed, so an empty result means every relay answered nothing. It carries no context, so it only works where no pool or repository is needed. |
+| `loadLenient(options)` | The same loader with a 0.5 threshold, resolving once half the relays have closed. The rest stay open and their events still arrive, so use it where nothing routes on the returned array. |
 
 `request` / `requestOne` options (`BaseRequestOptions`):
 - `relay` / `relays` — relay url(s)
 - `filters` — array of nostr `Filter` objects
-- `autoClose?: boolean` — close the subscription after EOSE or on socket disconnect
+- `autoClose?: boolean` — close the subscription after EOSE, on socket disconnect, or 30 seconds in, whichever comes first, so a relay that answers nothing can't hold the request open
 - `signal?: AbortSignal` — cancellation
 - `tracker?: Tracker` — cross-relay deduplication (shared automatically by `request`)
 - `context?: AdapterContext`
@@ -72,6 +73,17 @@ Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `makeLoader
 `makeLoader` options: `{delay, timeout?, threshold?, context?, isEventValid?}`. The returned `Loader` takes `{relays, filters, signal?, onEvent?, onDisconnect?, onEose?, onClose?}`.
 
 Without `autoClose` or a `signal`, `requestOne` streams indefinitely. The returned promise only resolves if the relay sends CLOSED for all active subscription ids.
+
+### Count
+
+| Export | Description |
+|--------|-------------|
+| `countOne(options)` | Asks one relay how many events match some filters (NIP-45); returns `Promise<number \| undefined>` |
+| `count(options)` | Asks several relays and takes the highest answer; returns `Promise<number \| undefined>` |
+| `supportsCount(relay)` | Whether that relay has answered a COUNT this session — `true`, `false`, or `undefined` if it has not been asked |
+| `COUNT_TIMEOUT` | 3000 ms, how long a relay has to answer before it counts as refusing |
+
+Options are `{relay | relays, filters, context?, signal?}`. `undefined` means no relay supports COUNT, which is a different answer from `0`. NIP-45 is optional and a NIP-11 document is not always honest about it, so support is read off the wire: a relay that answers with CLOSED, or says nothing at all, is remembered and not asked again. Relays hold overlapping subsets of the network, so what `count` returns is a lower bound on the total rather than the total.
 
 ### Publish
 
@@ -169,8 +181,8 @@ Emits `"update"` with a `RepositoryUpdate` on every change.
 | Export | Description |
 |--------|-------------|
 | `RelayMessageType` / `ClientMessageType` | Enums of relay→client and client→relay message types |
-| `isRelayEvent()`, `isRelayEose()`, `isRelayOk()`, `isRelayAuth()`, `isRelayClosed()`, … | Type guards for relay messages |
-| `isClientReq()`, `isClientEvent()`, `isClientClose()`, `isClientAuth()`, … | Type guards for client messages |
+| `isRelayEvent()`, `isRelayEose()`, `isRelayOk()`, `isRelayAuth()`, `isRelayClosed()`, `isRelayCount()`, … | Type guards for relay messages |
+| `isClientReq()`, `isClientEvent()`, `isClientClose()`, `isClientAuth()`, `isClientCount()`, … | Type guards for client messages |
 | `matchReason(prefix, reason)` / `RelayReasonPrefix` | Match a relay's machine-readable `OK`/`CLOSED` reason prefix (`auth-required:`, `restricted:`, …) |
 
 ### WrapManager
@@ -221,8 +233,10 @@ socket.send(['REQ', 'my-sub', {kinds: [1], limit: 10}])
 import {makeLoader} from '@welshman/net'
 
 // Bind a loader to the context once; concurrent calls within `delay` collapse
-// into a single REQ per relay.
-const load = makeLoader({delay: 30, timeout: 3000, threshold: 0.5, context})
+// into a single REQ per relay. Without a `threshold` it resolves when every relay has closed
+// or timed out, which is the exported `loadComplete`; `threshold: 0.5` resolves at half, which is
+// `loadLenient`.
+const load = makeLoader({delay: 30, timeout: 3000, context})
 
 const events = await load({
   relays: ['wss://relay.example.com', 'wss://relay2.example.com'],

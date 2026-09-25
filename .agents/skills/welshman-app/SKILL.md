@@ -122,7 +122,7 @@ Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) i
 | `Zappers` | LNURL zapper info (HTTP) | `forPubkey(pk)`, `validateZapReceipt(...)`, `validateZapReceipts(...)`, `validZapReceipts(...)` |
 | `Topics` | hashtags w/ counts | `all`, `byName` (`Projection`s); `topicSearch` |
 | `Reactions` / `Deletes` | kind-7 reactions and kind-5 deletes over the repository | reactive lookups |
-| `Rooms` | NIP-29 rooms, keyed `${url}'${h}` | `forRoom(url, h)`, `forUrl(url)`, `members(url, h)`, `membershipStatus(...)`, `pendingJoins(url, h?)`, `createRoom`/`editRoom`/`deleteRoom`/`joinRoom`/`leaveRoom`/`addMember`/`removeMember(url, room, …)` → `Command` |
+| `Rooms` | NIP-29 rooms, keyed `${url}'${h}` | `forRoom(url, h)`, `forUrl(url)`, `members(url, h)`, `membershipStatus(...)`, `pendingJoins(url, h?)`, `createRoom`/`editRoom`/`deleteRoom`/`joinRoom`/`leaveRoom`/`addMember`/`removeMember`/`deleteEvent(url, room, …)` → `Command` |
 | `Plaintext` | decrypted-content cache, keyed by ciphertext | `ensure(ciphertext, decrypt)`, `get(ciphertext)` |
 
 ```typescript
@@ -186,7 +186,7 @@ const merged = await app.use(Wraps).publish({event: rumor, recipients: [a, b]})
 app.use(Thunks).publish({event, relays, pow: 20})
 ```
 
-`ThunkOptions`: `{event, relays?, recipient?, delay?, pow?, ...PublishOptions}` (`app` is injected). Incoming wraps addressed to the user are auto-unwrapped by the default `appPolicyWraps`.
+`ThunkOptions`: `{event, relays?, recipient?, delay?, pow?, ...PublishOptions}` (`app` is injected). Incoming wraps addressed to the user are auto-unwrapped by the default `appPolicyWraps`. An unwrap that throws is tried again up to `MAX_UNWRAP_ATTEMPTS` times, so a signer that was busy or disconnected doesn't cost the message.
 
 ## Commands (deferred publishing)
 
@@ -223,7 +223,10 @@ await app.use(Rooms).join(relayUrl, roomMeta).then(publishToRelays([relayUrl]))
 import {Network, Sync} from "@welshman/app"
 const net = app.use(Network)
 
-const events = await net.load({filters: [{kinds: [1], authors: [pk]}], relays})
+// loadComplete waits for every relay, so an empty result means every relay answered
+// nothing. loadLenient resolves once half of them have closed, for the cases where
+// nothing routes on the returned array.
+const events = await net.loadComplete({filters: [{kinds: [1], authors: [pk]}], relays})
 await net.request({filters, relays, autoClose: true})
 
 // Outbox-model author load (resolves the author's write relays automatically).
@@ -232,7 +235,7 @@ const profileEvent = await net.loadUsingOutbox(pk, {kinds: [0]})
 const allFeeds     = await net.loadAllUsingOutbox(pk, {kinds: [31890]})
 
 // A loader with different batching, still bound to this app's net context:
-const slowLoad = net.makeLoader({delay: 500, timeout: 5000, threshold: 0.5})
+const slowLoad = net.makeLoader({delay: 500, timeout: 5000})
 
 // Negentropy-aware reconciliation (falls back to request/publish when unsupported):
 await app.use(Sync).pull({relays, filters: [{authors: [pk]}]})
@@ -439,7 +442,7 @@ const app = new App({user, policies: [appPolicyIngest, appPolicyAuthNever]})
 | `deriveProfileDisplay(pk)` | `app.use(Profiles).display(pk).$` |
 | `publishThunk({...})` | `app.use(Thunks).publish({...})` (resolve outbox relays via `await app.use(Router).resolver.relays([userOutbox()])`) |
 | `follow(tag)` / `mute(tag)` | `app.use(FollowLists).follow(tag).then(publish)` / `app.use(MuteLists).mutePublicly(tag).then(publish)`, which return a [`Command`](#commands-deferred-publishing) |
-| `load({...})` / `request({...})` | `app.use(Network).load({...})` / `request({...})` |
+| `load({...})` / `request({...})` | `app.use(Network).loadComplete({...})` / `request({...})` |
 | `Router.get().FromUser()` / `router.Event(e)` | `app.use(Router).resolver` + the `RelaySelection` DSL (`resolver.relays([userOutbox()])`, `resolver.relay([seen(e)])`) |
 | `app.use(Tags).tagEventForReply(e)` | domain writer tagging (`NoteWriter.setParent(e)`, `writer.tagPubkey/addQuote/addZapSplit`) |
 | `relays` / `handles` / `zappers` stores | `app.use(Relays)` / `Handles` / `Zappers` |
