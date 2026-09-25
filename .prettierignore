@@ -2,3 +2,6 @@
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+# Formatted by fdroidserver's rewritemeta, which fdroiddata checks
+fdroid/metadata/

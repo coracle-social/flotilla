@@ -12,7 +12,8 @@ AutoName: Flotilla
 
 RepoType: git
 Repo: https://gitea.coracle.social/coracle/flotilla.git
-Binaries: https://gitea.coracle.social/api/packages/coracle/generic/flotilla-fdroid/%v/flotilla-fdroid-%v.apk
+Binaries: 
+  https://gitea.coracle.social/api/packages/coracle/generic/flotilla-fdroid/%v/flotilla-fdroid-%v.apk
 
 Builds:
   - versionName: 1.11.2
@@ -51,6 +52,7 @@ MaintainerNotes: |-
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$
-UpdateCheckData: android/app/build.gradle|(?m)^\s*versionCode\s+(\d+)\s*$|.|(?m)^\s*versionName\s+"([^"]+)"\s*$
+UpdateCheckData: 
+  android/app/build.gradle|(?m)^\s*versionCode\s+(\d+)\s*$|.|(?m)^\s*versionName\s+"([^"]+)"\s*$
 CurrentVersion: 1.11.2
 CurrentVersionCode: 55
