@@ -231,8 +231,8 @@ store shows the same text. The APK and zapstore share one artifact, whose path l
 
 F-Droid builds from the tag on its own servers and ships our apk instead of its own when the two
 match, so it keeps our signature ([reproducible builds](fdroid/README.md)). The `fdroid` step makes
-that apk the way F-Droid will, and if the build breaks, the workflow stops before attaching the
-Linux and Windows packages, which keeps the release a draft. Preparation patches source with
+that apk the way F-Droid will. It runs last in CI, so a broken F-Droid build holds back only
+F-Droid and `fdroid-sign`, not the desktop packages or the release. Preparation patches source with
 exact-match replacements, so it breaks quietly when the files it rewrites change. The step is slow
 because it installs and builds from scratch.
 

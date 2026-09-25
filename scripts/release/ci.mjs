@@ -5,4 +5,4 @@ import desktop from "./steps/desktop.mjs"
 import fdroid from "./steps/fdroid.mjs"
 import gitea from "./steps/gitea.mjs"
 
-await release("pnpm release:ci", [fdroid, desktop, gitea])
+await release("pnpm release:ci", [desktop, gitea, fdroid])
