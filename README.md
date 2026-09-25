@@ -206,7 +206,9 @@ pnpm release:local
 
 `pnpm release:local --check` runs those checks and reports the plan without building anything.
 Naming steps runs a subset, such as `pnpm release:local ios` or `pnpm release:local apk gitea`. A
-step that fails stops the run and prints the command to pick up from there.
+step that fails stops the run and prints the command to pick up from there. To rerun CI steps, run
+the Release workflow by hand from a branch with the fix, naming the steps; it releases
+`package.json`'s version without moving its tag, and skips the container image.
 
 | step | run by | what it does |
 | --- | --- | --- |

@@ -46,13 +46,25 @@ with open(os.path.join(os.environ["home_vagrant"], "metadata/social.flotilla.fdr
 EOF
 chown -R vagrant "$home_vagrant"
 
+fdroid() {
+  sudo --preserve-env --user vagrant \
+    env PATH="$fdroidserver:$PATH" \
+    env PYTHONPATH="$fdroidserver:$fdroidserver/examples" \
+    env PYTHONUNBUFFERED=true \
+    env HOME="$home_vagrant" \
+    fdroid "$@"
+}
+
 cd "$home_vagrant"
-sudo --preserve-env --user vagrant \
-  env PATH="$fdroidserver:$PATH" \
-  env PYTHONPATH="$fdroidserver:$fdroidserver/examples" \
-  env PYTHONUNBUFFERED=true \
-  env HOME="$home_vagrant" \
-  fdroid build --verbose --test --refresh-scanner --on-server --no-tarball \
+
+# --on-server builds whatever is already checked out in build/, which the host fetches in production
+curl --silent https://gitlab.com/fdroid/fdroid-bootstrap-buildserver/-/raw/master/roles/production_hardening/files/gitconfig \
+  >"$home_vagrant/.gitconfig"
+chown vagrant "$home_vagrant/.gitconfig"
+fdroid fetchsrclibs "social.flotilla.fdroid:$VERSION_CODE" --verbose
+rm "$home_vagrant/.gitconfig"
+
+fdroid build --verbose --test --refresh-scanner --on-server --no-tarball \
   "social.flotilla.fdroid:$VERSION_CODE"
 
 cp "$home_vagrant/tmp/social.flotilla.fdroid_$VERSION_CODE.apk" /work/unsigned.apk

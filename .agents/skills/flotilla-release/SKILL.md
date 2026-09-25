@@ -68,7 +68,7 @@ CI uses the job's own token for the release, and the `PACKAGE_TOKEN` and `GH_MIR
 
 - [ ] Start `pnpm release:local` once the tag is pushed. `fdroid-sign` waits for CI's F-Droid build, up to two hours.
 - [ ] Watch the Release workflow run for the tag in gitea's Actions tab. Its `image` and `release` jobs must both pass.
-- [ ] When a step fails, fix the cause and rerun the command the run prints, which resumes from that step.
+- [ ] When a step fails, fix the cause and rerun the command the run prints, which resumes from that step. For a CI step, push the fix to dev and run the Release workflow by hand from dev with the steps to rerun, e.g. `fdroid`; it builds the tag's commit with dev's scripts, so the tag never has to move.
 
 ### After both runs
 

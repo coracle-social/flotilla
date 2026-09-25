@@ -3,6 +3,13 @@ name: Release
 on:
   push:
     tags: ["*.*.*"]
+  # Reruns steps of the release for package.json's version, from the branch it's run on
+  workflow_dispatch:
+    inputs:
+      steps:
+        description: Steps to run, such as "fdroid" (all when empty)
+        required: false
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,6 +22,7 @@ env:
 jobs:
   image:
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     permissions:
       contents: read
       packages: write
@@ -61,6 +69,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -77,4 +87,5 @@ jobs:
         env:
           GITEA_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITEA_PACKAGE_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
-        run: pnpm release:ci --yes
+          STEPS: ${{ github.event.inputs.steps }}
+        run: pnpm release:ci --yes $STEPS
