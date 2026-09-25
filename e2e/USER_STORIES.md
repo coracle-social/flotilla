@@ -1841,6 +1841,16 @@ Acceptance:
 - Opening the list says there are no polls, and afterwards the space stops
   offering the section.
 
+### US-132 — See a room whose newest message is old
+
+As bob, I want a room nobody has spoken in for weeks to still tell me it has
+something I have not read, so that a quiet room is not a room I forget.
+
+Acceptance:
+
+- A message two months old in a room bob has never opened raises a dot on the
+  space, and the room carries the same dot once the space is open.
+
 ## Out of scope
 
 Features the e2e suite cannot exercise, and what stops it.

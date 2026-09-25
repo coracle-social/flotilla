@@ -1003,7 +1003,6 @@ test("US-124 reach a badge raised by content the space doesn't have", async ({se
   const space = scenario.space("space")
   const other = scenario.space("other")
 
-  // A space hides its own dot while you are in it, so the badge is only readable from elsewhere
   const bob = await as(users.bob, roomPath(other.url, "general"))
   const spaceButton = spaceNavItem(bob, space.name)
 
@@ -1024,6 +1023,33 @@ test("US-124 reach a badge raised by content the space doesn't have", async ({se
   await roomLink(bob, "General").click()
 
   await expect(pollsNav).toHaveCount(0)
+})
+
+test("US-132 see a room whose newest message is old", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+    const other = relay("other")
+
+    space.room("general", {name: "General"})
+    other.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    other.join(user.bob, "general")
+
+    space.message(user.alice, "general", "still nobody bought a sextant", at(60, DAY))
+  })
+
+  const space = scenario.space("space")
+  const other = scenario.space("other")
+
+  const bob = await as(users.bob, roomPath(other.url, "general"))
+  const spaceButton = spaceNavItem(bob, space.name)
+
+  await expect(unreadDot(spaceButton)).toBeVisible()
+
+  await spaceButton.click()
+
+  await expect(unreadDot(roomLink(bob, "General"))).toBeVisible()
 })
 
 test("US-120 read what a notification says", async ({seed, as}) => {

@@ -4,16 +4,17 @@ import {ago, assoc, call, noop, MONTH, WEEK} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   APP_DATA,
+  DELETE,
   FOLLOWS,
   MESSAGE,
   MUTES,
-  PIN,
   PINBOARD,
   POLL_RESPONSE,
   RELAY_ADD_MEMBER,
   RELAY_MEMBERS,
   RELAY_REMOVE_MEMBER,
   RELAY_ROLE,
+  REPORT,
   ROOM_ADD_MEMBER,
   ROOM_ADMINS,
   ROOM_CREATE_PERMISSION,
@@ -30,7 +31,7 @@ import {
 } from "@welshman/util"
 import type {Filter} from "@welshman/util"
 import type {FollowListReader, RoomListReader} from "@welshman/domain"
-import {merged, synced, withGetter} from "@welshman/store"
+import {merged, synced, throttled, withGetter} from "@welshman/store"
 import {
   FollowLists,
   MessagingRelayLists,
@@ -38,7 +39,6 @@ import {
   RoomLists,
   SearchRelayLists,
   Sync,
-  makeRoomKey,
 } from "@welshman/app"
 import {
   app,
@@ -53,11 +53,12 @@ import {
   relayLists,
   relays,
   roomLists,
+  rooms,
   router,
   searchRelayLists,
 } from "@app/core"
 import {LIVEKIT_PARTICIPANTS} from "@app/call"
-import {REACTION_KINDS, CONTENT_KINDS, makeCommentFilter} from "@app/content"
+import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
 import {INDEXER_RELAYS, PLATFORM_RELAYS} from "@app/env"
 import {FEATURED_CONTENT_D} from "@app/featured"
 import {decodeRelay} from "@app/relays"
@@ -156,24 +157,7 @@ const syncUserSpaceMembership = (url: string) => {
         {kinds: [RELAY_ADD_MEMBER], "#p": [$pubkey], limit: 1},
         {kinds: [RELAY_REMOVE_MEMBER], "#p": [$pubkey], limit: 1},
         {kinds: [ROOM_CREATE_PERMISSION], "#p": [$pubkey], limit: 1},
-      ],
-    })
-  }
-
-  return () => controller.abort()
-}
-
-const syncUserRoomMembership = (url: string, h: string) => {
-  const $pubkey = app.get().user?.pubkey
-  const controller = new AbortController()
-
-  if ($pubkey) {
-    pullAndListen({
-      url,
-      signal: controller.signal,
-      filters: [
-        {kinds: [ROOM_ADD_MEMBER], "#p": [$pubkey], "#h": [h], limit: 1},
-        {kinds: [ROOM_REMOVE_MEMBER], "#p": [$pubkey], "#h": [h], limit: 1},
+        {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#p": [$pubkey]},
       ],
     })
   }
@@ -182,34 +166,22 @@ const syncUserRoomMembership = (url: string, h: string) => {
 }
 
 const syncUserData = () => {
-  const unsubscribersByKey = new Map<string, Unsubscriber>()
+  const unsubscribersByUrl = new Map<string, Unsubscriber>()
   const $pubkey = app.get().user?.pubkey
 
   const syncRoomList = ($roomList: Maybe<RoomListReader>) => {
     if ($roomList) {
-      const keys = new Set<string>()
+      const urls = new Set(getSpaceUrls($roomList))
 
-      for (const url of getSpaceUrls($roomList)) {
-        if (!unsubscribersByKey.has(url)) {
-          unsubscribersByKey.set(url, syncUserSpaceMembership(url))
-        }
-
-        keys.add(url)
-
-        for (const h of $roomList.roomsForUrl(url)) {
-          const key = makeRoomKey(url, h)
-
-          if (!unsubscribersByKey.has(key)) {
-            unsubscribersByKey.set(key, syncUserRoomMembership(url, h))
-          }
-
-          keys.add(key)
+      for (const url of urls) {
+        if (!unsubscribersByUrl.has(url)) {
+          unsubscribersByUrl.set(url, syncUserSpaceMembership(url))
         }
       }
 
-      for (const [key, unsubscribe] of unsubscribersByKey.entries()) {
-        if (!keys.has(key)) {
-          unsubscribersByKey.delete(key)
+      for (const [url, unsubscribe] of unsubscribersByUrl.entries()) {
+        if (!urls.has(url)) {
+          unsubscribersByUrl.delete(url)
           unsubscribe()
         }
       }
@@ -251,7 +223,7 @@ const syncUserData = () => {
   const unsubscribeFollowList = userFollowList.subscribe(syncFollowNetwork)
 
   return () => {
-    unsubscribersByKey.forEach(call)
+    unsubscribersByUrl.forEach(call)
     unsubscribeRoomList()
     unsubscribeRelayList()
     unsubscribeFollowList()
@@ -260,46 +232,58 @@ const syncUserData = () => {
 
 // Spaces
 
-const syncSpace = (url: string) => {
+const syncSpaceActivity = (url: string) => {
+  const controller = new AbortController()
+  const {signal} = controller
+  const asked = new Set<string>()
+
+  network.get().request({
+    relays: [url],
+    signal,
+    filters: [
+      {kinds: [MESSAGE], limit: 1},
+      {kinds: CONTENT_KINDS, since: ago(WEEK)},
+      makeCommentFilter(CONTENT_KINDS, {since: ago(WEEK)}),
+      {kinds: [DELETE, REPORT, POLL_RESPONSE], since: ago(WEEK)},
+    ],
+  })
+
+  pullAndListen({url, signal, filters: [{kinds: [ROOM_META, ROOM_DELETE, RELAY_MEMBERS]}]})
+
+  const unsubscribeRooms = throttled(300, rooms.get().forUrl(url).$).subscribe($rooms => {
+    const hs = $rooms.map(room => room.h).filter(h => !asked.has(h))
+
+    if (hs.length > 0) {
+      for (const h of hs) {
+        asked.add(h)
+      }
+
+      network.get().request({
+        relays: [url],
+        signal,
+        autoClose: true,
+        filters: hs.map(h => ({kinds: [MESSAGE], "#h": [h], limit: 1})),
+      })
+    }
+  })
+
+  return () => {
+    unsubscribeRooms()
+    controller.abort()
+  }
+}
+
+const syncSpaceDetail = (url: string) => {
   const controller = new AbortController()
 
-  // Low cardinality we want everything for
   pullAndListen({
     url,
     signal: controller.signal,
     filters: [
-      {kinds: [RELAY_MEMBERS, RELAY_ROLE]},
+      {kinds: [RELAY_ROLE]},
       {kinds: [APP_DATA], "#d": [FEATURED_CONTENT_D]},
-    ],
-  })
-
-  // Higher cardinality stuff we want as much as we can get
-  pullAndListen({
-    url,
-    signal: controller.signal,
-    filters: [
-      {
-        kinds: [
-          ROOM_META,
-          ROOM_ADMINS,
-          ROOM_MEMBERS,
-          ROOM_DELETE,
-          LIVEKIT_PARTICIPANTS,
-          PINBOARD,
-          ROOM_PINS,
-        ],
-      },
-    ],
-  })
-
-  // Recent stuff, best effort
-  pullAndListen({
-    url,
-    signal: controller.signal,
-    filters: [
-      {kinds: [...CONTENT_KINDS, MESSAGE, PIN, ROOM_JOIN, ROOM_LEAVE], since: ago(MONTH)},
-      {kinds: [...REACTION_KINDS, POLL_RESPONSE], since: ago(WEEK)},
-      makeCommentFilter(CONTENT_KINDS, {since: ago(WEEK)}),
+      {kinds: [ROOM_ADMINS, ROOM_MEMBERS, LIVEKIT_PARTICIPANTS, PINBOARD, ROOM_PINS]},
+      {kinds: [ROOM_JOIN, ROOM_LEAVE], since: ago(MONTH)},
     ],
   })
 
@@ -315,6 +299,9 @@ const syncSpace = (url: string) => {
 
 const syncSpaces = () => {
   const unsubscribersByUrl = new Map<string, Unsubscriber>()
+
+  let detailUrl: Maybe<string>
+  let unsubscribeDetail: Unsubscriber = noop
 
   const unsubscribe = merged([userRoomList, page]).subscribe(([$roomList, $page]) => {
     const urls = new Set(getSpaceUrls($roomList))
@@ -335,8 +322,14 @@ const syncSpaces = () => {
     // Start syncing for new spaces
     for (const url of urls) {
       if (!unsubscribersByUrl.has(url)) {
-        unsubscribersByUrl.set(url, syncSpace(url))
+        unsubscribersByUrl.set(url, syncSpaceActivity(url))
       }
+    }
+
+    if (detailUrl !== currentUrl) {
+      detailUrl = currentUrl
+      unsubscribeDetail()
+      unsubscribeDetail = currentUrl ? syncSpaceDetail(currentUrl) : noop
     }
   })
 
@@ -345,6 +338,7 @@ const syncSpaces = () => {
       unsubscriber()
     }
 
+    unsubscribeDetail()
     unsubscribe()
   }
 }
