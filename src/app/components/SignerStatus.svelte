@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {avg, spec} from "@welshman/lib"
+  import {spec} from "@welshman/lib"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
@@ -9,21 +9,13 @@
   import LogOut from "@app/components/LogOut.svelte"
   import {pushModal} from "@app/modal"
   import {session} from "@app/core"
-  import {signerRequests} from "@app/signer"
+  import {signerHealth, signerRequests} from "@app/signer"
   import PomadeSessions from "@app/components/PomadeSessions.svelte"
 
   const finished = $derived($signerRequests.filter(request => request.finishedAt))
   const pending = $derived($signerRequests.filter(request => !request.finishedAt))
   const success = $derived(finished.filter(spec({ok: true})))
   const failure = $derived(finished.filter(spec({ok: false})))
-  const cutoff = $derived(Date.now() - 10_000)
-  const recentCompleted = $derived(finished.filter(request => request.finishedAt! > cutoff))
-  const recentAvg = $derived(avg(recentCompleted.map(r => r.finishedAt! - r.startedAt)))
-  const recentFailure = $derived(recentCompleted.filter(request => !request.ok))
-  const recentSuccess = $derived(recentCompleted.filter(request => request.ok))
-  const isDisconnected = $derived(
-    recentCompleted.length > 0 && recentFailure.length === recentCompleted.length,
-  )
 
   const logout = () => pushModal(LogOut)
 </script>
@@ -34,14 +26,12 @@
       <div class="flex items-center justify-between">
         <span class="text-xl font-bold">Signer Status</span>
         <span class="flex items-center gap-2">
-          {#if isDisconnected}
+          {#if $signerHealth.disconnected}
             <Icon icon={CloseCircle} class="text-error" size={4} /> Disconnected
-          {:else if recentFailure.length > 3}
+          {:else if $signerHealth.failing}
             <Icon icon={Danger} class="text-warning" size={4} /> Partial Failure
-          {:else if recentAvg > 1000 || pending.length > 10}
+          {:else if $signerHealth.slow}
             <Icon icon={ClockCircle} class="text-warning" size={4} /> Slow connection
-          {:else if recentSuccess.length === 0 && recentFailure.length > 0}
-            <Icon icon={Danger} class="text-warning" size={4} /> Partial Failure
           {:else}
             <Icon icon={CheckCircle} class="text-success" size={4} /> Ok
           {/if}
@@ -67,7 +57,7 @@
         </p>
       </div>
     </div>
-    {#if isDisconnected}
+    {#if $signerHealth.disconnected}
       <Button class="button button-error" onclick={logout}>Logout to Reconnect</Button>
     {:else}
       <PomadeSessions />

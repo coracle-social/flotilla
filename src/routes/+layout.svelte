@@ -1,18 +1,16 @@
 <script lang="ts">
   import "@lib/components/theme.css"
   import "@welshman/editor/index.css"
-  import {debounce} from "throttle-debounce"
   import * as nip19 from "nostr-tools/nip19"
   import type {Unsubscriber} from "svelte/store"
   import {get} from "svelte/store"
-  import {App, type URLOpenListenerEvent} from "@capacitor/app"
+  import {App} from "@capacitor/app"
   import {Capacitor} from "@capacitor/core"
   import {NostrSignerPlugin} from "nostr-signer-capacitor-plugin"
   import {dev} from "$app/environment"
-  import {goto} from "$app/navigation"
   import {page} from "$app/stores"
   import {context as pomadeContext} from "@pomade/core"
-  import {sync, throttled} from "@welshman/store"
+  import {sync} from "@welshman/store"
   import {setNip55Plugin} from "@welshman/signer"
   import * as util from "@welshman/util"
   import * as lib from "@welshman/lib"
@@ -22,45 +20,34 @@
   import Startup from "@app/components/Startup.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
   import * as core from "@app/core"
-  import {goToChat, goToHome, setupHistory} from "@app/routes"
-  import Search from "@app/components/Search.svelte"
-  import {clearModals, getModal, navigate, pushModal} from "@app/modal"
+  import {app} from "@app/core"
+  import {setupHistory} from "@app/routes"
   import {setupAnalytics} from "@app/analytics"
   import {setupLogging} from "@app/logger"
   import "@app/policies"
   import {restoreSession} from "@app/session"
-  import {signerRequests} from "@app/signer"
+  import {syncSignerAlerts} from "@app/signer"
   import {wallet} from "@app/lightning"
   import {kv, ss, storage} from "@app/storage"
   import {device} from "@app/device"
-  import {userSettingsValues, notificationSettings} from "@app/settings"
+  import {notificationSettings} from "@app/settings"
   import {needsKeyBackup} from "@app/healthChecks"
-  import {setupShareIntents, shareFromNative} from "@app/share"
+  import {setupShareIntents} from "@app/share"
   import {shouldUnwrap, syncApplicationData} from "@app/sync"
   import * as env from "@app/env"
-  import {activeTheme, flTheme, theme} from "@app/theme"
-  import {toast, pushToast} from "@app/toast"
+  import {applySavedTheme, flTheme, syncTheme, theme} from "@app/theme"
   import * as notifications from "@app/notifications"
   import {notificationCount, backgroundNotificationCount} from "@app/notifications"
   import {Push} from "@app/push"
-  import {onPushNotificationAction, pushState} from "@app/push/adapters/common"
+  import {pushState} from "@app/push/adapters/common"
+  import {setupDeepLinks} from "@app/deepLinks"
   import {syncKeyboard} from "@app/keyboard"
   import {getPageTitle} from "@app/title"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
 
   const {children} = $props()
 
-  // The stores these mirror are in indexeddb, which loads well after first paint.
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-  const savedTheme = localStorage.getItem("theme")
-  const initialTheme =
-    savedTheme === "light" || savedTheme === "dark" ? savedTheme : prefersDark ? "dark" : "light"
-
-  // @ts-ignore
-  document.documentElement.style["font-size"] = `${localStorage.getItem("font-size") || 1.1}rem`
-  document.documentElement.style.colorScheme = initialTheme
-  document.body.setAttribute("data-fl-theme", localStorage.getItem("fl-theme") || env.FL_THEME)
-  document.body.setAttribute("data-theme", initialTheme)
+  applySavedTheme()
 
   // Add stuff to window for convenience
   Object.assign(window, {get, nip19, theme, ...plugins, ...lib, ...util, ...core})
@@ -72,72 +59,6 @@
   if (Capacitor.getPlatform() === "android") {
     setNip55Plugin(NostrSignerPlugin)
   }
-
-  // Handles warm-start links from appUrlOpen and cold-start links from getLaunchUrl.
-  const handleDeepLink = (rawUrl: string) => {
-    const url = new URL(rawUrl)
-    const relay = url.searchParams.get("relay")
-    const id = url.searchParams.get("id")
-
-    if (relay && id) {
-      onPushNotificationAction({notification: {data: {relay, id}}})
-      return
-    }
-
-    if (url.protocol === "flotilla:" && url.host === "shortcut") {
-      if (core.app.get().user) {
-        switch (url.pathname) {
-          case "/messages":
-            goToChat()
-            break
-          case "/search": {
-            const modal = getModal()
-
-            if (modal?.component !== Search) {
-              pushModal(Search, {}, {replaceState: Boolean(modal)})
-            }
-            break
-          }
-          case "/spaces":
-            navigate("/spaces")
-            break
-          case "/inbox":
-            clearModals()
-            goToHome()
-            break
-        }
-      }
-
-      return
-    }
-
-    // The iOS share extension has no channel to the app, so it posts a flotilla://share url.
-    if (url.host === "share") {
-      shareFromNative(Object.fromEntries(url.searchParams))
-      return
-    }
-
-    if (url.host === "x-callback-url") {
-      if (url.pathname === "/authError") {
-        const errorMessage = url.searchParams.get("errorMessage")
-
-        pushToast({
-          theme: "error",
-          message: errorMessage || "Signer authorization failed.",
-        })
-      }
-
-      if (["/authSuccess", "/authError"].includes(url.pathname)) {
-        return
-      }
-    }
-
-    const target = `${url.pathname}${url.search}${url.hash}`
-    goto(target, {replaceState: false, noScroll: false})
-  }
-
-  // Capacitor emits this from onNewIntent only, so it covers a warm start and not a cold one.
-  App.addListener("appUrlOpen", (event: URLOpenListenerEvent) => handleDeepLink(event.url))
 
   // Handle back button on mobile
   App.addListener("backButton", () => {
@@ -207,12 +128,8 @@
     // Wait for critical storage data only
     await storage.get()?.ready
 
-    // A link launching the app from a killed state arrives via onCreate, which emits no appUrlOpen.
-    const launch = await App.getLaunchUrl()
-
-    if (launch?.url) {
-      handleDeepLink(launch.url)
-    }
+    // Handle warm and cold start deep links
+    unsubscribers.push(await setupDeepLinks())
 
     // Close the database connection on reload
     unsubscribers.push(closeStorage)
@@ -239,7 +156,7 @@
     unsubscribers.push(Push.sync())
 
     // Wait for the new app's storage the way startup does, so sync reconciles against cached events.
-    let currentApp = core.app.get()
+    let currentApp = app.get()
 
     const resync = async () => {
       await storage.get()?.ready
@@ -248,62 +165,19 @@
     }
 
     unsubscribers.push(
-      core.app.subscribe($app => {
-        if ($app !== currentApp) {
-          currentApp = $app
+      app.subscribe(nextApp => {
+        if (nextApp !== currentApp) {
+          currentApp = nextApp
           resync()
         }
       }),
     )
 
     // Listen for signer errors, report to user via toast
-    unsubscribers.push(
-      throttled(10_000, signerRequests).subscribe($requests => {
-        if ($toast) {
-          return
-        }
-
-        const longCutoff = Date.now() - 30_000
-        const shortCutoff = Date.now() - 10_000
-        const pending = $requests.filter(r => !r.finishedAt && r.startedAt < longCutoff)
-        const completed = $requests.filter(r => r.finishedAt && r.finishedAt > shortCutoff)
-        const showPendingError = pending.length > 10
-        const showCompletedError = completed.length > 5 && completed.filter(r => r.ok).length === 0
-
-        if (showPendingError || showCompletedError) {
-          pushToast({
-            theme: "error",
-            timeout: 60_000,
-            message: "Your signer isn't responding.",
-            action: {
-              message: "Details",
-              onclick: () => goto("/settings/profile"),
-            },
-          })
-        }
-      }),
-    )
+    unsubscribers.push(syncSignerAlerts())
 
     // Sync theme and font size
-    unsubscribers.push(
-      activeTheme.subscribe($activeTheme => {
-        localStorage.setItem("theme", $activeTheme)
-        document.body.setAttribute("data-theme", $activeTheme)
-        document.documentElement.style.colorScheme = $activeTheme
-      }),
-      flTheme.subscribe($flTheme => {
-        localStorage.setItem("fl-theme", $flTheme)
-        document.body.setAttribute("data-fl-theme", $flTheme)
-      }),
-      userSettingsValues.subscribe(
-        debounce(100, $settings => {
-          localStorage.setItem("font-size", String($settings.font_size))
-
-          // @ts-ignore
-          document.documentElement.style["font-size"] = `${$settings.font_size}rem`
-        }),
-      ),
-    )
+    unsubscribers.push(syncTheme())
 
     return () => unsubscribers.forEach(lib.call)
   })
@@ -315,8 +189,7 @@
   })
 
   $effect(() => {
-    const {user} = core.app.get()
-    const title = getPageTitle({page: $page, pubkey: user?.pubkey})
+    const title = getPageTitle({page: $page, pubkey: $app.user?.pubkey})
     const count = $documentActive ? $notificationCount : $backgroundNotificationCount
 
     document.title = count > 0 ? `(${count}) ${title}` : title

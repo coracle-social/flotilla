@@ -110,9 +110,9 @@ mobile. Pages outside a space use `Page`, `PageBar` and `PageContent` themselves
 and a new event detail route needs an `eventRoutes` entry and a branch in `getPageTitle`.
 Without one the tab shows only `PLATFORM_NAME`.
 
-Deep links arrive in `handleDeepLink` in the root layout: push-notification links (`?relay=&id=`),
-the iOS share extension (the `share` host), signer returns (`x-callback-url`), and otherwise a
-plain path. Nostr entities go through `/[bech32]`, which sends profiles to `makeProfilePath`, and
+Deep links arrive in `handleDeepLink` in `src/app/deepLinks.ts`: push-notification links
+(`?relay=&id=`), the iOS share extension (the `share` host), signer returns (`x-callback-url`), and
+otherwise a plain path. Nostr entities go through `/[bech32]`, which sends profiles to `makeProfilePath`, and
 loads events before calling `goToEvent`.
 
 ### Adding a space content page

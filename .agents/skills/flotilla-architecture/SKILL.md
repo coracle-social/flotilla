@@ -48,9 +48,9 @@ only gate.
   and `IconPickerButton.svelte` open app modals. Don't copy them. A lib component that needs app
   behavior takes it as a prop, or moves to `src/app/components`.
 - **app → components.** `routes.ts` (`goToChat` opens `ChatEnable`), `share.ts` (`Share`,
-  `ShareEvent`) and `speech.ts` (`OpenRouterEnable`) import a component so they can open a modal
-  mid-flow. `editor/` holds `.svelte` files of its own (suggestion popovers), which `makeEditor`
-  mounts.
+  `ShareEvent`), `deepLinks.ts` (`Search`) and `speech.ts` (`OpenRouterEnable`) import a component
+  so they can open a modal mid-flow. `editor/` holds `.svelte` files of its own (suggestion
+  popovers), which `makeEditor` mounts.
 - Nothing under `src/app` or `src/lib` imports from `src/routes`.
 
 ## Top-level layout
@@ -82,7 +82,7 @@ only gate.
 - `sync.ts`: `syncApplicationData`, the background sync of user data, spaces and DMs
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
 - `repository.ts`: the `LatestEvents` plugin, each watched author's most recent event
-- `thunks.ts` (publish status by event id), `signer.ts` (signer request tracking)
+- `thunks.ts` (publish status by event id), `signer.ts` (signer request tracking and `signerHealth`)
 - `env.ts`: every `VITE_` value, parsed
 - `logger.ts` (log capture and sending), `analytics.ts` (Plausible pageviews), `device.ts` (a
   device id)
@@ -121,7 +121,7 @@ only gate.
   (prompts for missing inbox/outbox relays)
 
 **Platform and voice**
-- `push/` (notification adapters), `share.ts`, `keyboard.ts`
+- `push/` (notification adapters), `share.ts`, `deepLinks.ts`, `keyboard.ts`
 - `dictation.ts` (speech-to-text) and `speech.ts` (read aloud), both through OpenRouter
 
 A feature gets a `src/app/<feature>.ts` only when it has non-UI logic to hold. Polls, goals,
@@ -148,14 +148,17 @@ client.
 
 `src/routes/+layout.svelte` runs the boot sequence. It imports `@app/policies` for its side effect,
 and `@app/storage`, which registers `storagePolicy` the same way, so every `AppPolicy` is on
-`appPolicies` before anything calls `app.get()`. Then, in order:
+`appPolicies` before anything calls `app.get()`. `applySavedTheme()` stamps the last theme and font
+size from `localStorage` before first paint. Then, in order:
 
 1. `restoreSession()` restores the saved session, if there is one, which builds a user-scoped
    `App` through `login`.
 2. The device, wallet and notification stores sync to `kv`/`ss`.
-3. It waits for storage, then handles a cold-start deep link.
+3. It waits for storage, then `setupDeepLinks()` listens for warm-start links and handles a
+   cold-start one.
 4. Each long-running subscription goes onto one `unsubscribers` list: `setupHistory`,
-   `syncApplicationData`, `setupShareIntents`, `syncKeyboard`, badges, `Push.sync()`.
+   `syncApplicationData`, `setupShareIntents`, `syncKeyboard`, badges, `Push.sync()`,
+   `syncSignerAlerts`, and `syncTheme`, which mirrors the theme stores back to `localStorage`.
 
 When login swaps in a new `App`, the layout runs `syncApplicationData` again. Routes render inside
 `AppContainer`, behind the login gate, and `ModalContainer` renders outside it. `flotilla-state`
@@ -195,7 +198,8 @@ Flotilla's own native code:
   without FCM), and `ShareIntentPlugin`. `MainActivity.java` registers them, and JS binds them with
   `registerPlugin` (`push/adapters/android.ts`, `share.ts`).
 - `ios/App/ShareExtension/`: the extension can't call into the app, so it opens a
-  `flotilla://share` URL. `handleDeepLink` in the root layout passes that to `shareFromNative`.
+  `flotilla://share` URL. `handleDeepLink` in `src/app/deepLinks.ts` passes that to
+  `shareFromNative`.
 
 `Push` in `src/app/push/index.ts` chooses an adapter at runtime: the Android fallback, Capacitor
 `PushNotifications` (FCM/APNs through `PUSH_SERVER`), or web notifications.
