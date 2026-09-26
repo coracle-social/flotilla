@@ -13,9 +13,9 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
+  import ChatTitle from "@app/components/ChatTitle.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import ProfileName from "@app/components/ProfileName.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import {chatSearch} from "@app/chats"
@@ -95,19 +95,12 @@
               onclick={() => toggle(path)}>
               {#if others.length > 1}
                 <ProfileCircles pubkeys={others} size={5} />
-                <span class="min-w-0 truncate">
-                  <ProfileName pubkey={others[0]} />
-                  +{others.length - 1}
-                </span>
-              {:else if others.length === 1}
-                <ProfileCircle pubkey={others[0]} size={5} />
-                <span class="min-w-0 truncate">
-                  <ProfileName pubkey={others[0]} />
-                </span>
               {:else}
-                <ProfileCircle pubkey={$user.pubkey} size={5} />
-                Note to self
+                <ProfileCircle pubkey={others[0] || $user.pubkey} size={5} />
               {/if}
+              <span class="min-w-0 truncate">
+                <ChatTitle pubkeys={chat.pubkeys} />
+              </span>
             </Button>
           {/each}
         </div>

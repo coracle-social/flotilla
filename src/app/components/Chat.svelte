@@ -27,12 +27,12 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import Button from "@lib/components/Button.svelte"
-  import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ChatMembers from "@app/components/ChatMembers.svelte"
+  import ChatTitle from "@app/components/ChatTitle.svelte"
   import ChatMessage from "@app/components/ChatMessage.svelte"
   import ComposeArea, {type ComposeValues} from "@app/components/ComposeArea.svelte"
   import ThunkToast from "@app/components/ThunkToast.svelte"
@@ -200,31 +200,16 @@
     <div class="flex items-center justify-between gap-4">
       <div class="truncate min-w-0 flex items-center gap-4 whitespace-nowrap">
         <Button class="flex flex-col gap-1 sm:flex-row sm:gap-2" onclick={showMembers}>
-          {#if others.length === 0}
-            <div class="flex gap-2">
-              <ProfileCircle pubkey={$user.pubkey} size={5} />
-              <ProfileName pubkey={$user.pubkey} />
-            </div>
-          {:else if others.length === 1}
-            <div class="flex gap-2">
-              <ProfileCircle pubkey={others[0]} size={5} />
-              <ProfileName pubkey={others[0]} />
-            </div>
-          {:else}
-            <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2">
+            {#if others.length > 1}
               <ProfileCircles pubkeys={others} size={5} />
-              <p class="overflow-hidden text-ellipsis whitespace-nowrap">
-                <ProfileName pubkey={others[0]} />
-                and
-                {#if others.length === 2}
-                  <ProfileName pubkey={others[1]} />
-                {:else}
-                  {others.length - 1}
-                  {others.length > 2 ? "others" : "other"}
-                {/if}
-              </p>
-            </div>
-          {/if}
+            {:else}
+              <ProfileCircle pubkey={others[0] || $user.pubkey} size={5} />
+            {/if}
+            <p class="overflow-hidden text-ellipsis whitespace-nowrap">
+              <ChatTitle {pubkeys} />
+            </p>
+          </div>
         </Button>
       </div>
     </div>

@@ -26,50 +26,6 @@ export const documentActive = readable(
   },
 )
 
-// Fixed positioning so an @svelte-plugins/datepicker popup escapes scroll-container clipping.
-export const anchorDatepicker = (wrapper: HTMLElement) => {
-  const reposition = () => {
-    const anchor = wrapper.querySelector("label")
-    const container = wrapper.querySelector(".calendars-container") as HTMLElement | null
-
-    if (!anchor || !container) {
-      return
-    }
-
-    const margin = 8
-    const rect = anchor.getBoundingClientRect()
-    const height = container.offsetHeight
-    const width = container.offsetWidth
-
-    let top = rect.bottom + 4
-
-    // flip above the input when there's not enough room below, else pin to the bottom edge
-    if (height && top + height > innerHeight - margin) {
-      top =
-        rect.top - height - 4 >= margin
-          ? rect.top - height - 4
-          : Math.max(margin, innerHeight - height - margin)
-    }
-
-    const left = width
-      ? Math.max(margin, Math.min(rect.left, innerWidth - width - margin))
-      : rect.left
-
-    wrapper.style.setProperty("--datepicker-container-position", "fixed")
-    wrapper.style.setProperty("--datepicker-container-top", `${top}px`)
-    wrapper.style.setProperty("--datepicker-container-left", `${left}px`)
-  }
-
-  reposition()
-  addEventListener("scroll", reposition, true)
-  addEventListener("resize", reposition)
-
-  return () => {
-    removeEventListener("scroll", reposition, true)
-    removeEventListener("resize", reposition)
-  }
-}
-
 export const copyToClipboard = (text: string) => {
   const {activeElement} = document
   const input = document.createElement("textarea")

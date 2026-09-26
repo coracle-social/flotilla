@@ -10,9 +10,9 @@ PascalCase. This is what the qualifiers mean, drawn from the ~320 components the
 | `Item` | one row or card in a list | `ClassifiedItem`, `NoteItem`, `PeopleItem`, `ReportItem`, `RoomItem` (a message in a room), `SpaceMenuRoomItem` |
 | `Actions` | the footer row under an event: reactions, status, overflow menu | `ContentActions`, `CommentActions`, `EventActions` |
 | `Menu` | the contents of a popover, taking an `onClick` that closes it | `EventMenu`, `ChatMenu`, `RoomItemMenu`, `SpaceMemberMenu` |
-| `MenuList` | the popover contents when `*Menu` is the trigger instead | `ProfileMenu` → `ProfileMenuList`, `ReportMenu` → `ReportMenuList` |
 | `Mobile` | the same actions as a modal, pushed on tap instead of hovered | `RoomItemMenuMobile`, `ChatMessageMenuMobile`, `SpaceMenuMobile` |
-| `Create` / `Edit` | a modal that publishes a new or edited event | `ClassifiedCreate`, `RoomEdit`, `PinEdit` |
+| `Create` / `Edit` | a modal that publishes a new or edited event | `ClassifiedCreate`, `RoomEdit`, `GoalCreate` |
+| `Save` | one modal that creates or edits, depending on whether it's given the event | `PinSave` |
 | `Form` | the fields shared by a Create/Edit pair | `ClassifiedForm`, `RoomForm`, `RoleForm` |
 | `Detail` | a modal with everything known about an entity | `ProfileDetail`, `RoomDetail`, `ContentLinkDetail` |
 | `Info` | a modal with an event's underlying data | `EventInfo`, `ProfileInfo` |
@@ -22,7 +22,7 @@ PascalCase. This is what the qualifiers mean, drawn from the ~320 components the
 | `Bar` | a horizontal strip across the top or bottom of something | `SpaceBar`, `ComposeBar`, `EventActionBar` |
 | `Compose` | a message composer | `ChatCompose`, `RoomCompose`, `CommentCompose` |
 | `Confirm` | the step that confirms an action or a code | `EventDeleteConfirm`, `LogInOTPConfirm`, `SignUpEmailConfirm` |
-| `Add` | a modal that adds something to a collection | `SpaceAdd`, `PinAdd`, `RoomMembersAdd` |
+| `Add` | a modal that adds something to a collection | `SpaceAdd`, `RoomMembersAdd` |
 | `Select` | a picker, as a modal or a bindable input | `PinboardSelect`, `TopicMultiSelect` |
 | `Button` | a self-contained trigger | `ZapButton`, `DictationButton`, `RoomItemEmojiButton` |
 | `Name`, `Image`, `Icon`, `Link`, `Circle` | one identifier rendered | `RoomName`, `RelayIcon`, `ProfileLink`, `ProfileCircle` |

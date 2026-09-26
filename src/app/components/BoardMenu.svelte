@@ -11,7 +11,7 @@
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
-  import PinAdd from "@app/components/PinAdd.svelte"
+  import PinSave from "@app/components/PinSave.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
   import {deletes, relays, user} from "@app/core"
   import {shareEvent} from "@app/share"
@@ -30,7 +30,7 @@
 
   const share = () => shareEvent(url, "Shelf", board.event)
 
-  const addLink = () => pushModal(PinAdd, {url, address: board.address()})
+  const addLink = () => pushModal(PinSave, {url, address: board.address()})
 
   const edit = () => pushModal(PinboardEdit, {url, board})
 

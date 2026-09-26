@@ -14,7 +14,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import PinAdd from "@app/components/PinAdd.svelte"
+  import PinSave from "@app/components/PinSave.svelte"
   import {events, reader} from "@app/core"
   import {eventToReference} from "@app/pinboards"
   import {makeSpacePath} from "@app/routes"
@@ -34,7 +34,7 @@
   const reference = eventToReference(event)
 
   const selectBoard = (board: PinboardReader) =>
-    pushModal(PinAdd, {url, address: board.address(), reference})
+    pushModal(PinSave, {url, address: board.address(), reference})
 </script>
 
 <Modal class="flex flex-col gap-2">

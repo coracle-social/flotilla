@@ -6,6 +6,7 @@
   import Card from "@lib/components/Card.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import Button from "@lib/components/Button.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
@@ -48,7 +49,7 @@
         {/if}
       </span>
     </div>
-    <ReportMenu {url} {event} {onResolved} />
+    <MenuButton component={ReportMenu} componentProps={{url, event, onResolved}} />
   </div>
   {#if event.content}
     <div class="border-l-2 pl-3" style="border-color: var(--primary)">

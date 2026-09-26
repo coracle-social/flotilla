@@ -11,6 +11,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import Button from "@lib/components/Button.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
@@ -100,45 +101,44 @@
     <div class="flex flex-col gap-4">
       <div class="flex justify-between">
         <Profile showPubkey avatarSize={14} {pubkey} {url} />
-        <ProfileMenu {pubkey} {url}>
-          {#snippet customActions()}
-            {#if !isSelf}
+        {#snippet customActions()}
+          {#if !isSelf}
+            <li>
+              <Button onclick={sendMessage}>
+                <Icon size={4} icon={Letter} />
+                Send Message
+              </Button>
+            </li>
+          {/if}
+          {#if isBanned}
+            {#if $permissions.addMembers}
               <li>
-                <Button onclick={sendMessage}>
-                  <Icon size={4} icon={Letter} />
-                  Send Message
+                <Button onclick={restoreMember}>
+                  <Icon size={4} icon={Restart} />
+                  Restore Membership
                 </Button>
               </li>
             {/if}
-            {#if isBanned}
-              {#if $permissions.addMembers}
-                <li>
-                  <Button onclick={restoreMember}>
-                    <Icon size={4} icon={Restart} />
-                    Restore Membership
-                  </Button>
-                </li>
-              {/if}
-            {:else}
-              {#if $permissions.removeMembers}
-                <li>
-                  <Button onclick={removeMember}>
-                    <Icon size={4} icon={UserMinus} />
-                    Remove Member
-                  </Button>
-                </li>
-              {/if}
-              {#if $permissions.ban}
-                <li>
-                  <Button class="text-error" onclick={banMember}>
-                    <Icon size={4} icon={MinusCircle} />
-                    Ban User
-                  </Button>
-                </li>
-              {/if}
+          {:else}
+            {#if $permissions.removeMembers}
+              <li>
+                <Button onclick={removeMember}>
+                  <Icon size={4} icon={UserMinus} />
+                  Remove Member
+                </Button>
+              </li>
             {/if}
-          {/snippet}
-        </ProfileMenu>
+            {#if $permissions.ban}
+              <li>
+                <Button class="text-error" onclick={banMember}>
+                  <Icon size={4} icon={MinusCircle} />
+                  Ban User
+                </Button>
+              </li>
+            {/if}
+          {/if}
+        {/snippet}
+        <MenuButton component={ProfileMenu} componentProps={{pubkey, url, customActions}} />
       </div>
       <ProfileStatus {pubkey} {url} />
       <ProfileAbout {pubkey} {url} />

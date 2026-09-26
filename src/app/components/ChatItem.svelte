@@ -6,7 +6,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import {fade} from "@lib/transition"
   import Button from "@lib/components/Button.svelte"
-  import ProfileName from "@app/components/ProfileName.svelte"
+  import ChatTitle from "@app/components/ChatTitle.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {makeChatPath, goToChat} from "@app/routes"
@@ -45,20 +45,14 @@
     <div class="flex flex-col justify-start gap-1">
       <div class="flex items-center justify-between gap-2">
         <div class="flex min-w-0 items-center gap-2">
-          {#if others.length === 0}
-            <ProfileCircle pubkey={$user.pubkey} size={5} />
-            Note to self
-          {:else if others.length === 1}
-            <ProfileCircle pubkey={others[0]} size={5} />
-            <ProfileName pubkey={others[0]} />
-          {:else}
+          {#if others.length > 1}
             <ProfileCircles pubkeys={others} size={5} />
-            <p class="overflow-hidden text-ellipsis whitespace-nowrap">
-              <ProfileName pubkey={others[0]} />
-              and {others.length - 1}
-              {others.length > 2 ? "others" : "other"}
-            </p>
+          {:else}
+            <ProfileCircle pubkey={others[0] || $user.pubkey} size={5} />
           {/if}
+          <p class="overflow-hidden text-ellipsis whitespace-nowrap">
+            <ChatTitle pubkeys={props.pubkeys} />
+          </p>
         </div>
         {#if !active && $notifications.has(path)}
           <div class="h-2 w-2 rounded-full bg-primary text-primary-content" transition:fade></div>

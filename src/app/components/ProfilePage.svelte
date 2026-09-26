@@ -11,6 +11,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
@@ -170,7 +171,7 @@
                     {/if}
 
                     <div class="shrink-0">
-                      <ProfileMenu pubkey={target} />
+                      <MenuButton component={ProfileMenu} componentProps={{pubkey: target}} />
                     </div>
                   </div>
                 {/if}

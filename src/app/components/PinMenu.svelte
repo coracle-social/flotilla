@@ -10,7 +10,7 @@
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
-  import PinEdit from "@app/components/PinEdit.svelte"
+  import PinSave from "@app/components/PinSave.svelte"
   import {deletes, relays, user} from "@app/core"
   import {shareEvent} from "@app/share"
   import {pushModal} from "@app/modal"
@@ -28,7 +28,7 @@
 
   const share = () => shareEvent(url, "Link", pin.event)
 
-  const edit = () => pushModal(PinEdit, {url, pin})
+  const edit = () => pushModal(PinSave, {url, pin})
 
   const deletePin = async () => {
     try {

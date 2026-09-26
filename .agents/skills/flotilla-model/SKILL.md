@@ -168,8 +168,8 @@ relay's URL, each call signed with a fresh NIP-98 event. Every method resolves t
 | Methods | Called from |
 |---|---|
 | `supportedMethods`, `listMethodAssignees`, `listBannedPubkeys` (cached) | `SpaceManagement` (`src/app/management.ts`) |
-| `banPubkey`, `unbanPubkey`, `allowPubkey`, `unallowPubkey`, `listBannedPubkeys` | `ProfileDetail`, `SpaceMemberMenu`, `SpaceMemberBannedMenu`, `ReportMenuList`, `allowPubkeys` (`SpaceMembersAdd`, `RoleAddMembers`, `addRoomMembers`) |
-| `banEvent` | `RoomItemMenu`, `EventMenu`, `ReportMenuList`, `RoomJoinItem` (dismissing a join request) |
+| `banPubkey`, `unbanPubkey`, `allowPubkey`, `unallowPubkey`, `listBannedPubkeys` | `ProfileDetail`, `SpaceMemberMenu`, `SpaceMemberBannedMenu`, `ReportMenu`, `allowPubkeys` (`SpaceMembersAdd`, `RoleAddMembers`, `addRoomMembers`) |
+| `banEvent` | `RoomItemMenu`, `EventMenu`, `ReportMenu`, `RoomJoinItem` (dismissing a join request) |
 | `createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole` | `RoleCreate`, `RoleEdit`, `SpaceRoleMenu`, `SpaceMemberRoles` (via `syncAssignments`), `RoleAddMembers` |
 | `listClaims`, `createClaim` | `Access.prepareInvite` |
 | `changeRelayName`, `changeRelayDescription`, `changeRelayIcon` | `SpaceEdit` |

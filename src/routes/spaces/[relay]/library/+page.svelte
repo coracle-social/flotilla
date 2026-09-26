@@ -18,7 +18,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import PinItem from "@app/components/PinItem.svelte"
-  import PinAdd from "@app/components/PinAdd.svelte"
+  import PinSave from "@app/components/PinSave.svelte"
   import PinboardItem from "@app/components/PinboardItem.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
   import {app, events, network, reader} from "@app/core"
@@ -61,7 +61,7 @@
 
   const createBoard = () => pushModal(PinboardEdit, {url})
 
-  const addLink = () => pushModal(PinAdd, {url, address})
+  const addLink = () => pushModal(PinSave, {url, address})
 
   const selectBoard = (board: PinboardReader) =>
     goto(makeLibraryPath(url, board.address()), {replaceState: true, noScroll: true})

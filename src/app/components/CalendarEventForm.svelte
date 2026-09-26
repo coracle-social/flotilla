@@ -14,7 +14,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import DateTimeRangeInput from "@lib/components/DateTimeRangeInput.svelte"
+  import DateTimeInput from "@lib/components/DateTimeInput.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {publishToSpace} from "@app/rooms"
   import {makeEditor} from "@app/editor"
@@ -182,7 +182,7 @@
         <p>Date and time*</p>
       {/snippet}
       {#snippet input()}
-        <DateTimeRangeInput bind:start bind:end />
+        <DateTimeInput isRange bind:value={start} bind:end />
       {/snippet}
     </Field>
     <Field>

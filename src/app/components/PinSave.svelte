@@ -1,14 +1,8 @@
-<script module lang="ts">
-  export type PinFormValues = {
-    title: string
-    topics: string[]
-    value: string
-    content: string
-  }
-</script>
-
 <script lang="ts">
   import {writable} from "svelte/store"
+  import {Pin} from "@welshman/domain"
+  import {publish} from "@welshman/app"
+  import type {PinReader} from "@welshman/domain"
   import {slide} from "@lib/transition"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
@@ -26,42 +20,63 @@
   import RelayName from "@app/components/RelayName.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {makeEditor} from "@app/editor"
+  import {command, writer} from "@app/core"
+  import {pinToReference, setPinReference} from "@app/pinboards"
+  import {toSpace} from "@app/rooms"
   import {pushToast} from "@app/toast"
   import {clearModals} from "@app/modal"
 
   type Props = {
     url: string
-    heading: string
-    action: string
-    successMessage: string
-    values?: Partial<PinFormValues>
-    submit: (values: PinFormValues) => Promise<string | undefined>
+    address?: string
+    reference?: string
+    pin?: PinReader
   }
 
-  const {url, heading, action, successMessage, values = {}, submit}: Props = $props()
+  const {url, address, reference = "", pin}: Props = $props()
 
-  let title = $state(values.title ?? "")
-  let topics = $state<string[]>(values.topics ?? [])
-  let value = $state(values.value ?? "")
-  let content = $state<string | object>(values.content ?? "")
+  let title = $state(pin?.title() ?? "")
+  let topics = $state<string[]>(pin?.topics() ?? [])
+  let value = $state(pin ? pinToReference(pin) : reference)
+  let content = $state<string | object>(pin?.content() ?? "")
   let loading = $state(false)
 
   const uploading = writable(false)
 
   const back = () => history.back()
 
+  const submit = async () => {
+    const eventWriter = await toSpace(
+      address ? writer(Pin).setIdentifier().addBoard(address) : writer(Pin, pin),
+      url,
+    )
+
+    if (!setPinReference(eventWriter, value)) {
+      return "Please enter a valid URL or nostr link."
+    }
+
+    const ed = await editor
+
+    eventWriter
+      .setTitle(title)
+      .setTopics(topics)
+      .setContent(ed.getText({blockSeparator: "\n"}).trim())
+
+    const thunk = await command(eventWriter).then(publish)
+
+    return thunk.waitForError()
+  }
+
   const onSubmit = async () => {
     loading = true
 
     try {
-      const ed = await editor
-      const description = ed.getText({blockSeparator: "\n"}).trim()
-      const error = await submit({title, topics, value, content: description})
+      const error = await submit()
 
       if (error) {
         pushToast({theme: "error", message: error})
       } else {
-        pushToast({message: successMessage})
+        pushToast({message: pin ? "Link updated!" : "Link added!"})
         clearModals()
       }
     } finally {
@@ -81,7 +96,13 @@
 <Modal>
   <ModalBody>
     <ModalHeader>
-      <ModalTitle>{heading}</ModalTitle>
+      <ModalTitle>
+        {#if pin}
+          Edit Link
+        {:else}
+          Add Link
+        {/if}
+      </ModalTitle>
       <ModalSubtitle>on <RelayName {url} class="text-primary" /></ModalSubtitle>
     </ModalHeader>
     <Field>
@@ -148,7 +169,13 @@
       class="button button-primary"
       onclick={onSubmit}
       disabled={loading || $uploading || !value.trim()}>
-      <Spinner {loading}>{action}</Spinner>
+      <Spinner {loading}>
+        {#if pin}
+          Save changes
+        {:else}
+          Add link
+        {/if}
+      </Spinner>
     </Button>
   </ModalFooter>
 </Modal>

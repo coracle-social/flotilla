@@ -1,7 +1,9 @@
 <script lang="ts">
+  import HomeInboxItemCard from "@app/components/HomeInboxItemCard.svelte"
   import HomeInboxItemChat from "@app/components/HomeInboxItemChat.svelte"
-  import HomeInboxItemRoom from "@app/components/HomeInboxItemRoom.svelte"
-  import HomeInboxItemSpaceChat from "@app/components/HomeInboxItemSpaceChat.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
+  import RelayName from "@app/components/RelayName.svelte"
+  import RoomName from "@app/components/RoomName.svelte"
   import type {Activity} from "@app/notifications"
 
   type Props = {
@@ -9,22 +11,26 @@
   }
 
   const {conversation}: Props = $props()
+
+  const {path, url, h, pubkeys = [], event} = $derived(conversation)
 </script>
 
-{#if conversation.url && conversation.h}
-  <HomeInboxItemRoom
-    path={conversation.path}
-    url={conversation.url}
-    h={conversation.h}
-    event={conversation.event} />
-{:else if conversation.url}
-  <HomeInboxItemSpaceChat
-    path={conversation.path}
-    url={conversation.url}
-    event={conversation.event} />
+{#if url}
+  <HomeInboxItemCard {path} {url} {event}>
+    {#snippet icon()}
+      <RelayIcon {url} size={9} class="shrink-0" />
+    {/snippet}
+    {#snippet title()}
+      {#if h}
+        <RoomName {url} {h} />
+      {:else}
+        Chat
+      {/if}
+    {/snippet}
+    {#snippet subtitle()}
+      <RelayName {url} />
+    {/snippet}
+  </HomeInboxItemCard>
 {:else}
-  <HomeInboxItemChat
-    path={conversation.path}
-    pubkeys={conversation.pubkeys ?? []}
-    event={conversation.event} />
+  <HomeInboxItemChat {path} {pubkeys} {event} />
 {/if}
