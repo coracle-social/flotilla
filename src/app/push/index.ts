@@ -1,5 +1,5 @@
 import {Capacitor} from "@capacitor/core"
-import {notificationSettings} from "@app/settings"
+import {notificationSettings, setSpaceNotifications} from "@app/settings"
 import {pushState} from "@app/push/adapters/common"
 import {ElectronNotifications} from "@app/push/adapters/electron"
 import {WebNotifications} from "@app/push/adapters/web"
@@ -62,5 +62,17 @@ export class Push {
         Push.disable()
       }
     })
+  }
+}
+
+export const optInSpaceNotifications = async (url: string, notify: boolean) => {
+  if (notify && notificationSettings.get().push) {
+    const permission = await Push.request()
+
+    if (permission.startsWith("granted")) {
+      await setSpaceNotifications(url, true)
+    }
+  } else {
+    await setSpaceNotifications(url, notify)
   }
 }

@@ -24,7 +24,7 @@
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
   import {pushToast} from "@app/toast"
   import {goToSpace, makeRoomPath} from "@app/routes"
-  import {Access, parseInviteLink} from "@app/access"
+  import {acceptInvite, parseInviteLink} from "@app/access"
 
   type Props = {
     invite: string
@@ -45,9 +45,7 @@
 
   const joinRelay = async () => {
     const data = inviteData!
-    const access = new Access(data.url)
-
-    error = await access.acceptInvite(data, notifications)
+    error = await acceptInvite(data, notifications)
 
     if (error) {
       return

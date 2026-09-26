@@ -14,7 +14,7 @@
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import SpaceJoinNotifications from "@app/components/SpaceJoinNotifications.svelte"
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
-  import {Access} from "@app/access"
+  import {attemptRelayAccess, completeSpaceJoin} from "@app/access"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {goToSpace} from "@app/routes"
@@ -24,8 +24,6 @@
   }
 
   const {url}: Props = $props()
-
-  const access = new Access(url)
 
   const back = () => history.back()
 
@@ -37,7 +35,7 @@
     loading = true
 
     try {
-      await access.completeJoin(notifications)
+      await completeSpaceJoin(url, notifications)
 
       pushToast({message: "Welcome to the space!"})
       await goToSpace(url, {replaceState: true})
@@ -54,7 +52,7 @@
   let notifications = $state(true)
 
   onMount(async () => {
-    error = await access.attempt()
+    error = await attemptRelayAccess(url)
     loading = false
   })
 </script>

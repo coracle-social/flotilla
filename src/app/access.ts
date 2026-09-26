@@ -1,6 +1,6 @@
-import {derived, writable, type Readable} from "svelte/store"
-import {dissoc, fromPairs, last, poll, randomId, sleep, tryCatch} from "@welshman/lib"
-import {AuthStatus, SocketStatus} from "@welshman/net"
+import {derived} from "svelte/store"
+import {dissoc, fromPairs, last, poll, randomId, tryCatch} from "@welshman/lib"
+import {AuthStatus, RelayReasonPrefix, SocketStatus, matchReason} from "@welshman/net"
 import type {Socket} from "@welshman/net"
 import {
   displayRelayUrl,
@@ -16,13 +16,12 @@ import {
 import {RelayJoin, RelayLeave, RoomJoin, RoomLeave} from "@welshman/domain"
 import {Sync, User, publish} from "@welshman/app"
 import {stripPrefix} from "@lib/util"
-import {app, command, relayManagement, roomLists, thunks, writer} from "@app/core"
+import {app, command, roomLists, thunks, writer} from "@app/core"
 import {PLATFORM_URL} from "@app/env"
-import {spaceManagement} from "@app/management"
 import {relaysMostlyRestricted} from "@app/policies"
-import {Push} from "@app/push"
+import {optInSpaceNotifications} from "@app/push"
 import {deriveSocket} from "@app/relays"
-import {notificationSettings, removeTrustedRelay, setSpaceNotifications} from "@app/settings"
+import {removeTrustedRelay} from "@app/settings"
 import {syncApplicationData} from "@app/sync"
 
 export const ROOM_CREATE_INVITE = 9009
@@ -32,12 +31,6 @@ export type InviteData = {
   claim: string
   h?: string
   code?: string
-}
-
-export const isNetworkAuthError = (error: string) => {
-  const lower = error.toLowerCase()
-
-  return lower.includes("failed") || lower.includes("timeout") || lower.includes("network")
 }
 
 export const parseInviteLink = (invite: string): InviteData | undefined => {
@@ -83,7 +76,7 @@ export const makeInviteLink = (data: InviteData) => {
 }
 
 export const shouldIgnoreError = (error: string) => {
-  const isIgnored = error.startsWith("mute: ")
+  const isIgnored = matchReason(RelayReasonPrefix.Mute, error)
   const isAborted = error.includes("Signing was aborted")
   const isStrictNip29Relay = error.includes("missing group (`h`) tag")
 
@@ -249,177 +242,39 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
   return stripPrefix(error)
 }
 
-export class Access {
-  url: string
-  authError: Readable<string | undefined>
-  loading = writable(true)
-  claim = writable("")
-  claimFailed = writable(false)
-  roomCode = writable<string | undefined>()
-  roomInviteError = writable<string | undefined>()
-  isExplicitAuthError: Readable<boolean>
-  isGenericError: Readable<boolean>
-
-  constructor(url: string) {
-    this.url = url
-    this.authError = deriveRelayAuthError(url)
-    this.isExplicitAuthError = derived([this.authError], ([$authError]) =>
-      Boolean($authError && !isNetworkAuthError($authError)),
-    )
-    this.isGenericError = derived([this.authError], ([$authError]) =>
-      Boolean($authError && isNetworkAuthError($authError)),
-    )
-  }
-
-  createInviteStatus(requireCode: boolean) {
-    return derived(
-      [
-        this.loading,
-        this.isGenericError,
-        this.isExplicitAuthError,
-        this.roomInviteError,
-        this.roomCode,
-        this.claimFailed,
+export const completeSpaceJoin = async (url: string, notifications: boolean) => {
+  await optInSpaceNotifications(url, notifications)
+  await roomLists.get().addRelay(url).then(publish)
+  relaysMostlyRestricted.update(dissoc(url))
+  syncApplicationData()
+  app
+    .get()
+    .use(Sync)
+    .push({
+      relays: [url],
+      filters: [
+        {
+          kinds: [RELAYS, MESSAGING_RELAYS, FOLLOWS, PROFILE],
+          authors: [User.require(app.get()).pubkey],
+        },
       ],
-      ([$loading, $isGeneric, $isExplicit, $roomInviteError, $roomCode, $claimFailed]) => {
-        if ($loading) {
-          return "loading" as const
-        }
-        if ($isGeneric) {
-          return "network" as const
-        }
-        if ($isExplicit || $roomInviteError) {
-          return "auth" as const
-        }
-        if (requireCode && !$roomCode) {
-          return "failed" as const
-        }
-        if ($claimFailed) {
-          return "noclaim" as const
-        }
-
-        return "ready" as const
-      },
-    )
-  }
-
-  clearRestricted() {
-    relaysMostlyRestricted.update(dissoc(this.url))
-  }
-
-  async attempt(claim = "") {
-    return attemptRelayAccess(this.url, claim)
-  }
-
-  async configureNotifications(enabled: boolean) {
-    if (enabled) {
-      if (!notificationSettings.get().push) {
-        await setSpaceNotifications(this.url, true)
-      } else {
-        const permissions = await Push.request()
-
-        if (permissions.startsWith("granted")) {
-          await setSpaceNotifications(this.url, true)
-        }
-      }
-    } else {
-      await setSpaceNotifications(this.url, false)
-    }
-  }
-
-  async completeJoin(notifications: boolean) {
-    await this.configureNotifications(notifications)
-    await roomLists.get().addRelay(this.url).then(publish)
-    this.clearRestricted()
-    syncApplicationData()
-    app
-      .get()
-      .use(Sync)
-      .push({
-        relays: [this.url],
-        filters: [
-          {
-            kinds: [RELAYS, MESSAGING_RELAYS, FOLLOWS, PROFILE],
-            authors: [User.require(app.get()).pubkey],
-          },
-        ],
-      })
-  }
-
-  async joinSpace({
-    claim = "",
-    notifications,
-    alreadyJoined = false,
-  }: {
-    claim?: string
-    notifications: boolean
-    alreadyJoined?: boolean
-  }) {
-    if (!alreadyJoined) {
-      const error = await this.attempt(claim)
-
-      if (error) {
-        return error
-      }
-
-      await this.completeJoin(notifications)
-    }
-  }
-
-  async acceptInvite(data: InviteData, notifications: boolean) {
-    const spaceUrls = roomLists.get().urls(User.require(app.get()).pubkey).get()
-    const error = await this.joinSpace({
-      claim: data.claim,
-      notifications,
-      alreadyJoined: spaceUrls.includes(data.url),
     })
+}
+
+export const acceptInvite = async (data: InviteData, notifications: boolean) => {
+  const spaceUrls = roomLists.get().urls(User.require(app.get()).pubkey).get()
+
+  if (!spaceUrls.includes(data.url)) {
+    const error = await attemptRelayAccess(data.url, data.claim)
 
     if (error) {
       return error
     }
 
-    if (data.h && data.code) {
-      return joinRoom(this.url, data.h, data.code)
-    }
+    await completeSpaceJoin(data.url, notifications)
   }
 
-  async prepareInvite(h?: string) {
-    this.loading.set(true)
-
-    try {
-      const management = relayManagement.get().forUrl(this.url)
-
-      const [methods, roomInviteResult] = await Promise.all([
-        spaceManagement.get().loadSupportedMethods(this.url),
-        h ? publishRoomInvite(this.url, h) : Promise.resolve({code: undefined, error: undefined}),
-        // Keep the spinner up long enough that a fast relay doesn't make it flash
-        sleep(300),
-      ])
-
-      // A relay reporting methods relay-wide can still come back "blocked" for this user.
-      if (methods.includes("createclaim")) {
-        const {result: claims} = await management.listClaims()
-
-        if (claims?.[0]) {
-          this.claim.set(claims[0])
-        } else {
-          const claim = randomId()
-          const {error} = await management.createClaim(claim)
-
-          if (error) {
-            this.claimFailed.set(true)
-          } else {
-            this.claim.set(claim)
-          }
-        }
-      }
-
-      if (h) {
-        this.roomCode.set(roomInviteResult.code)
-        this.roomInviteError.set(roomInviteResult.error)
-      }
-    } finally {
-      this.loading.set(false)
-    }
+  if (data.h && data.code) {
+    return joinRoom(data.url, data.h, data.code)
   }
 }

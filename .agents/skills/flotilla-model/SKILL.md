@@ -144,19 +144,23 @@ has no getter for them yet. Roles are only ever changed over
 NIP-86 (`createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole`), never by publishing
 33534.
 
-Joining a space (`attemptRelayAccess` and `Access` in `src/app/access.ts`):
+Joining a space (`attemptRelayAccess` and `completeSpaceJoin` in `src/app/access.ts`):
 
 1. Open the socket and drive NIP-42 auth, retrying up to three times.
 2. Publish `RelayJoin` with the claim. The writer protects the event and requires a forced relay.
-3. Translate refusals: "invite code" means rejected, "claim" means the space needs an invite.
-4. `completeJoin`: `roomLists.addRelay(url)`, restart sync, and `Sync.push` the user's `RELAYS`,
+3. Translate refusals: a `mute:` reply (`matchReason`) is ignored, and the free-text "invite code"
+   means rejected and "claim" means the space needs an invite.
+4. `completeSpaceJoin`: opt into the space's notifications (`optInSpaceNotifications` in
+   `src/app/push`, which asks for push permission first when push is on), `roomLists.addRelay(url)`,
+   clear the relay from `relaysMostlyRestricted`, restart sync, and `Sync.push` the user's `RELAYS`,
    `MESSAGING_RELAYS`, `FOLLOWS` and `PROFILE` to the space so other members can see them.
 
 Invite links are `${PLATFORM_URL}/join?r=<relay>&c=<claim>`, plus `h` and `code` for a room
 (`makeInviteLink`; `parseInviteLink` also accepts a bare relay URL). `src/routes/join` renders
-`SpaceInviteAccept`, which calls `Access.acceptInvite` to join the space and then the room.
-`Access.prepareInvite` gets a claim over NIP-86 (`supportedmethods`, then `listclaims`, then
-`createclaim`), and `InviteLink` renders the result for both `SpaceInvite` and `RoomInvite`; this replaced reading `RELAY_INVITE` events. Leaving (`SpaceExit`,
+`SpaceInviteAccept`, which calls `acceptInvite` to join the space (skipped if already joined) and
+then the room. `InviteLink`, rendered by both `SpaceInvite` and `RoomInvite`, gets a claim over
+NIP-86 (`supportedmethods`, then `listclaims`, then `createclaim`), publishes a room invite code
+for a room, and holds that state itself; this replaced reading `RELAY_INVITE` events. Leaving (`SpaceExit`,
 `SpaceAuthError`) is `roomLists.removeRelay(url)` plus `publishLeaveRequest(url)`.
 
 ## NIP-86 relay management
@@ -171,7 +175,7 @@ relay's URL, each call signed with a fresh NIP-98 event. Every method resolves t
 | `banPubkey`, `unbanPubkey`, `allowPubkey`, `unallowPubkey`, `listBannedPubkeys` | `ProfileDetail`, `SpaceMemberMenu`, `SpaceMemberBannedMenu`, `ReportMenu`, `allowPubkeys` (`SpaceMembersAdd`, `RoleAddMembers`, `addRoomMembers`) |
 | `banEvent` | `RoomItemMenu`, `EventMenu`, `ReportMenu`, `RoomJoinItem` (dismissing a join request) |
 | `createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole` | `RoleCreate`, `RoleEdit`, `SpaceRoleMenu`, `SpaceMemberRoles` (via `syncAssignments`), `RoleAddMembers` |
-| `listClaims`, `createClaim` | `Access.prepareInvite` |
+| `listClaims`, `createClaim` | `InviteLink` |
 | `changeRelayName`, `changeRelayDescription`, `changeRelayIcon` | `SpaceEdit` |
 
 A relay answers `supportedmethods` with what the authenticated pubkey may call, so every control
@@ -179,7 +183,7 @@ is gated on the method behind it through `deriveSpacePermissions(url)`, a store 
 (`$permissions.ban`, `$permissions.editRoles`). The composite gates a parent uses to decide whether
 to render a menu (`memberMenu`, `roleMenu`, `bannedMenu`, `directoryMenu`) are defined there too,
 so parent and menu can't disagree. The `SpaceManagement` plugin (`spaceManagement`) caches the
-methods per app, re-checked at most every five minutes per URL, and `Access.prepareInvite` reads
+methods per app, re-checked at most every five minutes per URL, and `InviteLink` reads
 them through `loadSupportedMethods`. It also holds the admin and ban lists, which
 `loadMethodAssignees`/`loadBannedPubkeys` refresh after a change. Still handle an error from the
 call, since a listed method can be refused for a particular event or target.

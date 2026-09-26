@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {Share} from "@capacitor/share"
+  import {randomId, sleep} from "@welshman/lib"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Upload from "@assets/icons/upload.svg?dataurl"
   import Copy from "@assets/icons/copy.svg?dataurl"
@@ -9,8 +10,10 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import QRCode from "@app/components/QRCode.svelte"
-  import {Access, makeInviteLink} from "@app/access"
+  import {deriveRelayAuthError, makeInviteLink, publishRoomInvite} from "@app/access"
+  import {relayManagement} from "@app/core"
   import {PLATFORM_NAME} from "@app/env"
+  import {spaceManagement} from "@app/management"
   import {clip} from "@app/toast"
 
   type Props = {
@@ -20,10 +23,7 @@
 
   const {url, h}: Props = $props()
 
-  const access = new Access(url)
-  const {claim, loading, roomCode} = access
-  const inviteStatus = access.createInviteStatus(Boolean(h))
-  const invite = $derived(makeInviteLink({url, claim: $claim, h, code: $roomCode}))
+  const authError = deriveRelayAuthError(url)
 
   const copyInvite = () => clip(invite)
 
@@ -35,7 +35,50 @@
     }
   }
 
+  const prepareInvite = async () => {
+    try {
+      const management = relayManagement.get().forUrl(url)
+
+      const [methods, roomInvite] = await Promise.all([
+        spaceManagement.get().loadSupportedMethods(url),
+        h ? publishRoomInvite(url, h) : Promise.resolve({code: undefined, error: undefined}),
+        // Keep the spinner up long enough that a fast relay doesn't make it flash
+        sleep(300),
+      ])
+
+      // A relay reporting methods relay-wide can still come back "blocked" for this user.
+      if (methods.includes("createclaim")) {
+        const {result: claims} = await management.listClaims()
+
+        if (claims?.[0]) {
+          claim = claims[0]
+        } else {
+          const newClaim = randomId()
+          const {error} = await management.createClaim(newClaim)
+
+          if (error) {
+            claimFailed = true
+          } else {
+            claim = newClaim
+          }
+        }
+      }
+
+      roomCode = roomInvite.code
+      roomInviteError = roomInvite.error
+    } finally {
+      loading = false
+    }
+  }
+
+  let loading = $state(true)
+  let claim = $state("")
+  let claimFailed = $state(false)
+  let roomCode = $state<string>()
+  let roomInviteError = $state<string>()
   let canShare = $state(false)
+
+  const invite = $derived(makeInviteLink({url, claim, h, code: roomCode}))
 
   onMount(async () => {
     try {
@@ -45,20 +88,20 @@
       canShare = false
     }
 
-    await access.prepareInvite(h)
+    await prepareInvite()
   })
 </script>
 
 <div>
-  {#if $inviteStatus === "loading"}
+  {#if loading}
     <p class="flex justify-center items-center">
-      <Spinner loading={$loading}>Requesting an invite link...</Spinner>
+      <Spinner {loading}>Requesting an invite link...</Spinner>
     </p>
-  {:else if $inviteStatus === "network"}
+  {:else if $authError && /failed|timeout|network/i.test($authError)}
     <p class="flex justify-center items-center">
       Unable to reach the space. Please check your connection and try again.
     </p>
-  {:else if $inviteStatus === "auth"}
+  {:else if $authError || roomInviteError}
     <p class="flex justify-center items-center">
       {#if h}
         Oops! It looks like you're not allowed to create invites for this room.
@@ -66,7 +109,7 @@
         Oops! It looks like you're not a member of this space.
       {/if}
     </p>
-  {:else if $inviteStatus === "failed"}
+  {:else if h && !roomCode}
     <p class="flex justify-center items-center">Unable to create a room invite code.</p>
   {:else}
     <div class="flex flex-col items-center gap-6">
@@ -101,10 +144,10 @@
             {:else}
               This invite link can be used by clicking "Add Space" and pasting it there.
             {/if}
-            {#if $inviteStatus === "noclaim"}
+            {#if claimFailed}
               We weren't able to get an invite code from this space, so additional steps might be
               required.
-            {:else if !$claim}
+            {:else if !claim}
               This space did not issue a claim for this link, so additional steps might be required.
             {/if}
           </p>

@@ -322,7 +322,7 @@ its composer has gone.
 ## Background sync (`src/app/sync.ts`)
 
 The root layout calls `syncApplicationData()` once the session is restored and storage is ready,
-and again after every app swap. `Access.completeJoin` calls it after a space is joined. Each
+and again after every app swap. `completeSpaceJoin` in `access.ts` calls it after a space is joined. Each
 call tears down the previous run.
 
 - `syncRelays` loads NIP-11 for the indexer relays, the current route's relay and the user's
@@ -410,9 +410,8 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) are not thunks. They return
 - **Singleton session state.** `call.ts` keeps call state in plain writables (`callState`,
   `currentCallSession`, …).
 - **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `policies.ts`.
-- **A controller per flow.** `Access` (`access.ts`) and `Nip46Controller` (`nip46.ts`) are
-  classes a component instantiates (`new Access(url)`). They hold the writables and actions for
-  a multi-step flow.
+- **A controller per flow.** `Nip46Controller` (`nip46.ts`) is a class a component instantiates.
+  It holds the writables and actions for a multi-step flow.
 - **Module-owned values.** `wallet` in `lightning.ts` is a `withGetter(writable(...))` that the
   root layout persists.
 
