@@ -3,7 +3,6 @@ import {call, on, simpleCache} from "@welshman/lib"
 import {normalizeRelayUrl} from "@welshman/util"
 import {AuthStateEvent, AuthStatus, SocketEvent, SocketStatus} from "@welshman/net"
 import {throttled} from "@welshman/store"
-import {checkRelayHasLivekit} from "$lib/livekit"
 import {app} from "@app/core"
 import {relaysMostlyRestricted} from "@app/policies"
 import {colorFor} from "@app/theme"
@@ -96,8 +95,16 @@ export const deriveSocketStatus = (url: string) =>
     }),
   )
 
+const livekitUrl = (url: string) =>
+  url.replace(/^ws/, "http").replace(/\/$/, "") + "/.well-known/nip29/livekit"
+
+export const getLivekitEndpoint = (url: string, roomId: string) => `${livekitUrl(url)}/${roomId}`
+
 export const deriveHasLivekit = simpleCache(([url]: [string]) =>
   readable<boolean | undefined>(undefined, set => {
-    checkRelayHasLivekit(url).then(has => set(has))
+    fetch(livekitUrl(url)).then(
+      response => set(response.status === 204),
+      () => set(false),
+    )
   }),
 )

@@ -8,7 +8,6 @@
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
-  import IconInput from "@lib/components/IconInput.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {rooms} from "@app/core"
@@ -17,6 +16,7 @@
   import {resolveImageInput} from "@app/uploads"
   import {deriveHasLivekit} from "@app/relays"
   import {RoomType} from "@app/rooms"
+  import IconInput from "@app/components/IconInput.svelte"
 
   type Props = {
     url: string

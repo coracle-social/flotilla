@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "@lib/components/theme.css"
+  import "@app/app.css"
   import "@welshman/editor/index.css"
   import * as nip19 from "nostr-tools/nip19"
   import type {Unsubscriber} from "svelte/store"

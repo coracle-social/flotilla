@@ -83,6 +83,10 @@
     @apply flex items-center gap-1 text-sm;
   }
 
+  body.keyboard-open .room {
+    @apply mb-0;
+  }
+
   [data-fl-theme="clay"] .room {
     @apply bg-surface;
 

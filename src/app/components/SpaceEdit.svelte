@@ -14,11 +14,11 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
-  import IconInput from "@lib/components/IconInput.svelte"
   import {pushToast} from "@app/toast"
   import {clearModals} from "@app/modal"
   import {resolveImageInput} from "@app/uploads"
   import {relayManagement, relays} from "@app/core"
+  import IconInput from "@app/components/IconInput.svelte"
 
   type Props = {
     url: string

@@ -15,7 +15,6 @@
   import Field from "@lib/components/Field.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Input from "@lib/components/Input.svelte"
-  import IconInput from "@lib/components/IconInput.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Modal from "@lib/components/Modal.svelte"
@@ -29,6 +28,7 @@
   import {HOSTING_RELAY_DOMAIN} from "@app/env"
   import {pushToast} from "@app/toast"
   import {resolveImageInput} from "@app/uploads"
+  import IconInput from "@app/components/IconInput.svelte"
 
   type Props = {
     mode: "create" | "edit"

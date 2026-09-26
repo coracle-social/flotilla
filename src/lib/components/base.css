@@ -201,9 +201,6 @@ body.keyboard-open {
 body.keyboard-open .hide-on-keyboard {
   @apply hidden;
 }
-body.keyboard-open .room {
-  @apply mb-0;
-}
 
 /* ----------------------------------------------------------------------------
    Fonts shared/default across all themes

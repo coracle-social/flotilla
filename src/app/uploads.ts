@@ -1,8 +1,7 @@
 import type {Maybe} from "@welshman/lib"
-import {first, normalizeUrl, parseJson, sha256, simpleCache} from "@welshman/lib"
+import {first, normalizeUrl, parseJson, randomId, sha256, simpleCache} from "@welshman/lib"
 import {canUploadBlob, encryptFile, makeBlossomAuthEvent, uploadBlob} from "@welshman/util"
 import {Nip01Signer} from "@welshman/signer"
-import {compressFile} from "@lib/html"
 import {app, blossomServerLists, relays} from "@app/core"
 import {DEFAULT_BLOSSOM_SERVERS} from "@app/env"
 
@@ -66,6 +65,39 @@ export type CompressFileOptions = {
   maxHeight?: number
   quality?: number
   mimeType?: string
+}
+
+const compressFile = async (file: File, options: CompressFileOptions) => {
+  const {default: Compressor} = await import("compressorjs-next")
+
+  return new Promise<File>((resolve, reject) => {
+    new Compressor(file, {
+      maxWidth: 2048,
+      maxHeight: 2048,
+      convertTypes: ["image/png"],
+      ...options,
+      success: result => {
+        // Capacitor's fetch interceptor checks instanceof File, and canvas.toBlob returns a Blob.
+        if (result instanceof File) {
+          resolve(result)
+        } else {
+          resolve(new File([result], file.name || "upload", {type: result.type}))
+        }
+      },
+      error: e => {
+        // Non-images break compressor, return the original file
+        if (e.toString().includes("File or Blob")) {
+          resolve(
+            new File([file], `${randomId()}.${file.type.split("/")[1] || "bin"}`, {
+              type: file.type,
+            }),
+          )
+        } else {
+          reject(e)
+        }
+      },
+    })
+  })
 }
 
 // Webp/gif/svg either break the compressor or lose animation, pass them through untouched

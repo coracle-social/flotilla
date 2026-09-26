@@ -1,5 +1,5 @@
 /* ============================================================================
-   Design-system entry point (imported once, in src/routes/+layout.svelte).
+   Design-system entry point (imported once, by src/app/app.css).
 
      tailwindcss  — framework + our @theme token registration (via base.css)
      base.css     — theme-independent structure (base, utilities, integrations)
@@ -24,7 +24,6 @@
 @import "./button.css";
 @import "./card.css";
 @import "./card-button.css";
-@import "./chat.css";
 @import "./content-markdown.css";
 @import "./content-search.css";
 @import "./controls.css";
@@ -36,14 +35,6 @@
 @import "./menu.css";
 @import "./page.css";
 @import "./primary-nav.css";
-@import "./room.css";
 @import "./spinner.css";
 @import "./secondary-nav.css";
-@import "./space-menu.css";
 @import "./tooltip.css";
-
-/* SocketStatusIndicator builds its class as bg-{status.theme}, which the source
-   scanner can't see. Must stay below every @import to keep those valid. */
-@source inline("bg-success bg-warning bg-error bg-gray-500");
-
-@config "../../../tailwind.config.js";

@@ -228,15 +228,15 @@ lives there:
 - modal chrome: `Dialog`, `Drawer`, `Modal`, `ModalBody`, `ModalHeader`, `ModalTitle`,
   `ModalSubtitle`, `ModalFooter`, `Confirm`
 - controls: `Button`, `Link`, `Field`, `FieldInline`, `Input`, `InputList`, `ToggleInput`,
-  `DateTimeInput`, `ImagesInput`, `IconInput`, `EmojiPicker`, `MenuButton`, `SegmentedButtons`
+  `DateTimeInput`, `ImagesInput`, `EmojiPicker`, `MenuButton`, `SegmentedButtons`
 - display and lists: `Icon`, `Badge`, `Card`, `Divider`, `Spinner`, `LoadingFallback`, `Tooltip`,
   `Tippy`, `Cv`, `VirtualList`, `Masonry`, `DragList`, `ScrollToTop`
 - the CSS component families (`button.css`, `card.css`, …) and the theme tokens
 
 Anything that takes an identifier and reads a store, publishes, or knows a kind is an app
 component. A lib component that needs app behavior takes it as a prop, such as `MenuButton`'s
-`component`. Three lib components import `@app` anyway; flotilla-architecture lists them under
-its layer exceptions.
+`component`. `Link` imports `@app` anyway; flotilla-architecture lists it under its layer
+exceptions.
 
 `src/app/components` is flat, and `hosting/` is the only subdirectory it has ever had, brought in
 whole by the caravel port (cf938c63) with names that would blur into the flat `Relay*` family.
@@ -435,7 +435,7 @@ wrap their contents in `ThunkStatusOrDeleted`, and chat pushes a `ThunkToast`.
 `Field` puts a label above its control, with optional `secondary` and `info` snippets.
 `FieldInline` puts the label left and the control right, as settings and detail rows do. Controls
 are plain elements styled by class (`<label class="input …">`, `<select class="select input">`),
-or bindable inputs from lib (`ImagesInput`, `IconInput`) and app (`TopicMultiSelect`).
+or bindable inputs from lib (`ImagesInput`) and app (`IconInput`, `TopicMultiSelect`).
 
 Create/edit pairs come in three shapes:
 
@@ -457,9 +457,11 @@ Rich text uses `makeEditor` from `src/app/editor` with `EditorContent`.
 ## Styling
 
 - Classes come from the component families in `src/lib/components/*.css`, which `theme.css`
-  imports: `button` with `button-primary|neutral|link|ghost|error` and
-  `button-sm|xs|circle|square`, `card`, `badge`, `input`, `select`, `textarea`, `menu`. These are
-  flotilla's own; daisyUI is not installed.
+  imports, and the app-concept families in `src/app/components/*.css`, which `src/app/app.css`
+  imports after `theme.css`. A class goes in `@layer components` either way. The lib families
+  include `button` with `button-primary|neutral|link|ghost|error` and `button-sm|xs|circle|square`,
+  `card`, `badge`, `input`, `select`, `textarea` and `menu`. These are flotilla's own; daisyUI is
+  not installed.
 - Colors are the semantic tokens registered in `base.css`: `bg-surface`, `bg-surface-more`,
   `text-content`, `text-content-muted`, `border-line`, `text-primary`, `text-error`. The clay,
   flat, navy and nature themes supply the values through `data-fl-theme`.

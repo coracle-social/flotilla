@@ -12,12 +12,11 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
-  import {AbortError, TimeoutError} from "$lib/util"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {displayRoom} from "@app/rooms"
   import {deriveCallParticipants, loadCallParticipants} from "@app/call"
-  import {joinVoiceRoom} from "@app/callEngine"
+  import {AbortError, TimeoutError, joinVoiceRoom} from "@app/callEngine"
   import {popModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 

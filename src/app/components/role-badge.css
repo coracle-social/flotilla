@@ -1,0 +1,44 @@
+@layer components {
+  .role-badge {
+    @apply inline-flex min-w-0 items-center gap-1.5 rounded-full border-2 border-solid px-2 py-1 text-xs font-normal;
+    background: color-mix(in srgb, var(--role-color) 12%, transparent);
+    color: var(--role-color);
+    border-color: color-mix(in srgb, var(--role-color) 22%, transparent);
+  }
+
+  .role-badge__dot {
+    @apply size-1.5 shrink-0 rounded-full;
+    background-color: var(--role-color);
+  }
+
+  .role-badge--md {
+    @apply text-sm;
+  }
+
+  .role-badge--md .role-badge__dot {
+    @apply size-2;
+  }
+
+  [data-fl-theme="clay"] .role-badge {
+    @apply bg-surface border-line rounded-xl;
+    border-width: var(--border-thin, 2px);
+    border-color: color-mix(in srgb, var(--role-color) 22%, var(--line));
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+    box-shadow:
+      4px 4px 0 color-mix(in srgb, var(--role-color) 28%, transparent),
+      var(--shadow-inset);
+  }
+
+  [data-fl-theme="clay"] .role-badge__dot {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--role-color) 18%, transparent);
+  }
+
+  [data-fl-theme="clay"] .role-badge--md {
+    @apply px-2.5 py-1.5;
+    box-shadow:
+      5px 5px 0 color-mix(in srgb, var(--role-color) 28%, transparent),
+      var(--shadow-inset);
+  }
+}

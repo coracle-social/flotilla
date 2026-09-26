@@ -1,5 +1,5 @@
 import {readable} from "svelte/store"
-import {sleep, randomId} from "@welshman/lib"
+import {sleep} from "@welshman/lib"
 import {Capacitor} from "@capacitor/core"
 export {preventDefault, stopPropagation} from "svelte/legacy"
 
@@ -159,44 +159,6 @@ export const isIntersecting = async (element: Element) =>
 
     observer.observe(element)
   })
-
-export const compressFile = async (
-  file: File | Blob,
-  options: Record<string, any> = {},
-): Promise<File> => {
-  const {default: Compressor} = await import("compressorjs-next")
-
-  return new Promise<File>((resolve, _reject) => {
-    new Compressor(file, {
-      maxWidth: 2048,
-      maxHeight: 2048,
-      convertTypes: ["image/png"],
-      ...options,
-      success: result => {
-        // Capacitor's fetch interceptor checks instanceof File, and canvas.toBlob returns a Blob.
-        const f =
-          result instanceof File
-            ? result
-            : new File([result], (result as any).name || (file as any).name || "upload", {
-                type: result.type,
-              })
-        resolve(f)
-      },
-      error: e => {
-        // Non-images break compressor, return the original file
-        if (e.toString().includes("File or Blob")) {
-          if (file instanceof Blob) {
-            file = new File([file], `${randomId()}.${file.type}`, {type: file.type})
-          }
-
-          return resolve(file as File)
-        }
-
-        _reject(e)
-      },
-    })
-  })
-}
 
 export const escapeHtml = (html: string) => {
   const element = document.createElement("div")

@@ -108,27 +108,4 @@
   .chat-editor .tiptap {
     border-color: var(--line);
   }
-
-  .role-badge {
-    @apply bg-surface border-line rounded-xl;
-    border-width: var(--border-thin, 2px);
-    border-color: color-mix(in srgb, var(--role-color) 22%, var(--line));
-    transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
-    box-shadow:
-      4px 4px 0 color-mix(in srgb, var(--role-color) 28%, transparent),
-      var(--shadow-inset);
-  }
-
-  .role-badge__dot {
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--role-color) 18%, transparent);
-  }
-
-  .role-badge--md {
-    @apply px-2.5 py-1.5;
-    box-shadow:
-      5px 5px 0 color-mix(in srgb, var(--role-color) 28%, transparent),
-      var(--shadow-inset);
-  }
 }

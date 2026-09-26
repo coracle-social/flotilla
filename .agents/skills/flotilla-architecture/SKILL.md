@@ -20,9 +20,8 @@ and UI.
 | App modules | `src/app/*.ts`, `editor/`, `push/` | `@app/x` | `@lib`, each other |
 | Lib | `src/lib` | `@lib/x` | external packages only |
 
-`svelte.config.js` defines the aliases `@src`, `@app`, `@lib` and `@assets`. Use `@lib`.
-SvelteKit's built-in `$lib` also resolves, but only four stray imports use it (in `relays.ts`,
-`callEngine.ts` and `VoiceRoomJoinDialog.svelte`). There is no barrel file, so import each
+`svelte.config.js` defines the aliases `@src`, `@app`, `@lib` and `@assets`. Use `@lib`, not
+SvelteKit's built-in `$lib`, which also resolves. There is no barrel file, so import each
 component by its path (`@lib/components/Button.svelte`), not from `$lib/components` as the
 AGENTS.md example has it. Icons come from `@assets/icons/<name>.svg?dataurl`.
 
@@ -44,12 +43,14 @@ and `sync.ts`.
 No lint rule enforces the layers (`eslint.config.js` has no import restrictions), so review is the
 only gate.
 
-- **lib → app.** `Link.svelte` imports `navigate` from `@app/modal`, and `ImageInputButton.svelte`
-  and `IconPickerButton.svelte` open app modals. Don't copy them. A lib component that needs app
-  behavior takes it as a prop, or moves to `src/app/components`.
-- **app → components.** `routes.ts` (`goToChat` opens `ChatEnable`), `share.ts` (`Share`,
-  `ShareEvent`), `deepLinks.ts` (`Search`) and `speech.ts` (`OpenRouterEnable`) import a component
-  so they can open a modal mid-flow. `editor/` holds `.svelte` files of its own (suggestion
+- **lib → app.** `Link.svelte` imports `navigate` from `@app/modal`. Don't copy it. A lib
+  component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
+  `IconInput` and its picker buttons did.
+- **app → components.** `routes.ts` (`goToChat` opens `ChatEnable`, `goToEvent` opens
+  `NoteDetail`), `share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`) and `speech.ts`
+  (`OpenRouterEnable`) import a component so they can open a modal mid-flow. Push adapters and
+  deep links reach those flows from outside any component, and the rest have several component
+  callers, so each stays in one module. `editor/` holds `.svelte` files of its own (suggestion
   popovers), which `makeEditor` mounts.
 - Nothing under `src/app` or `src/lib` imports from `src/routes`.
 
@@ -71,7 +72,9 @@ only gate.
 
 ## `src/app` by concern
 
-`src/app/components` is flat except for `hosting/`. `flotilla-views` covers component conventions.
+`src/app/components` is flat except for `hosting/`. It also holds the CSS families for app
+concepts (`chat.css`, `room.css`, `role-badge.css`, `space-menu.css`), which `src/app/app.css`
+imports. `flotilla-views` covers component conventions.
 
 **Core and session**
 - `core.ts`: the `App` store, plugin stores, `login`, and the `reader`/`writer`/`command` shortcuts
@@ -95,7 +98,7 @@ only gate.
   node views
 
 **Spaces, rooms and administration**
-- `relays.ts`: relay URL encoding for routes, socket status, LiveKit detection
+- `relays.ts`: relay URL encoding for routes, socket status, the LiveKit endpoint and detection
 - `rooms.ts`: helpers over `rooms.get()`, and the user's rooms and spaces
 - `access.ts`: joining, invites, relay auth errors
 - `management.ts` (NIP-86 admin checks, bans), `roles.ts` (member roles)
@@ -110,11 +113,12 @@ only gate.
 - `feeds.ts`: `makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`
 - `classifieds.ts`, `articles.ts`, `pins.ts` (a person's pinned notes), `pinboards.ts`
 - `reactions.ts`, `social.ts` (display names, comment trees, muting), `render.ts` (events as
-  text), `statuses.ts` (NIP-38), `uploads.ts` (Blossom)
+  text), `statuses.ts` (NIP-38), `uploads.ts` (Blossom, image compression)
 - `notifications.ts` (unread state, badges), `inbox.ts` (the home inbox)
 
 **Messaging and calls**
-- `chats.ts`, `call.ts` (call state), `callEngine.ts` (LiveKit join, leave, devices)
+- `chats.ts`, `call.ts` (call state), `callEngine.ts` (LiveKit join, leave, devices, and the
+  `AbortError`/`TimeoutError` a join rejects with)
 
 **Identity and payments**
 - `nip46.ts`, `pomade.ts` (email login), `lightning.ts` (wallet, invoices), `healthChecks.ts`
@@ -133,16 +137,15 @@ Lib code is app-agnostic. It may use svelte, SvelteKit, Capacitor and welshman, 
 env, or the `App` instance. A good test is whether it would work unchanged in another nostr
 client.
 
-- `util.ts`: small helpers (`errorMessage`, `AbortError`/`TimeoutError`, `buildUrl`,
-  `normalizeTopic`)
-- `html.ts`: DOM helpers such as `isMobile`, `createScroller`, `copyToClipboard`, `compressFile`
+- `util.ts`: small helpers (`errorMessage`, `buildUrl`, `normalizeTopic`)
+- `html.ts`: DOM helpers such as `isMobile`, `createScroller`, `copyToClipboard`
 - `indexeddb.ts`: the `IDB` wrapper that `storage.ts` builds on
 - `feeds.ts`: saved feed definitions (kind `FEED`) over `@welshman/feeds`. It is unrelated to
   `@app/feeds`, which loads events.
-- `livekit.ts`: finds a relay's LiveKit endpoint
 - `currency.ts`, `transition.ts`, `implicit.ts` (hands state from one page to the next)
 - `test/`: the DEV-only hooks the e2e harness injects through
-- `components/`: the design system, entered through `theme.css` (see `flotilla-views`)
+- `components/`: the design system, entered through `theme.css` (see `flotilla-views`), which
+  `src/app/app.css` imports ahead of the app's own CSS families
 
 ## Boot sequence
 

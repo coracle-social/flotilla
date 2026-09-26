@@ -3,8 +3,8 @@
   import UploadMinimalistic from "@assets/icons/upload-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
-  import IconPickerButton from "@lib/components/IconPickerButton.svelte"
-  import ImageInputButton from "@lib/components/ImageInputButton.svelte"
+  import IconPickerButton from "@app/components/IconPickerButton.svelte"
+  import ImageInputButton from "@app/components/ImageInputButton.svelte"
 
   type Props = {
     // The parent uploads this on submit — never `preview`, which may be a data: URL.

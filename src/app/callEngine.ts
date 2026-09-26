@@ -16,9 +16,8 @@ import {get} from "svelte/store"
 import {not, nthEq, reject} from "@welshman/lib"
 import {makeHttpAuth, makeHttpAuthHeader} from "@welshman/util"
 import {makeRoomKey} from "@welshman/app"
-import {getLivekitEndpoint} from "$lib/livekit"
-import {AbortError, TimeoutError, whenAborted, whenTimeout} from "$lib/util"
 import {user} from "@app/core"
+import {getLivekitEndpoint} from "@app/relays"
 import {pushToast} from "@app/toast"
 import {
   CallState,
@@ -38,6 +37,42 @@ import {
 
 const LIVEKIT_DEFAULT_DEVICE_ID = "default"
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]
+
+export class AbortError extends Error {
+  constructor() {
+    super("Aborted")
+    this.name = "AbortError"
+  }
+}
+
+export class TimeoutError extends Error {
+  constructor(message = "Timed out") {
+    super(message)
+    this.name = "TimeoutError"
+  }
+}
+
+const whenAborted = (signal?: AbortSignal) => {
+  if (!signal) {
+    return new Promise<never>(() => {})
+  }
+
+  return new Promise<never>((_, reject) => {
+    const onAborted = () => reject(new AbortError())
+    if (signal.aborted) {
+      onAborted()
+    } else {
+      signal.addEventListener("abort", onAborted, {once: true})
+    }
+  })
+}
+
+const whenTimeout = (ms: number, opts: {message?: string; signal?: AbortSignal} = {}) => {
+  return new Promise<never>((_, reject) => {
+    const timeout = setTimeout(() => reject(new TimeoutError(opts.message)), ms)
+    opts.signal?.addEventListener("abort", () => clearTimeout(timeout), {once: true})
+  })
+}
 
 export const joinVoiceRoom = async (
   url: string,

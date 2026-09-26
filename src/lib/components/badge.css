@@ -35,24 +35,4 @@
       border-color: color-mix(in srgb, var(--warning) 25%, transparent);
     }
   }
-
-  .role-badge {
-    @apply inline-flex min-w-0 items-center gap-1.5 rounded-full border-2 border-solid px-2 py-1 text-xs font-normal;
-    background: color-mix(in srgb, var(--role-color) 12%, transparent);
-    color: var(--role-color);
-    border-color: color-mix(in srgb, var(--role-color) 22%, transparent);
-  }
-
-  .role-badge__dot {
-    @apply size-1.5 shrink-0 rounded-full;
-    background-color: var(--role-color);
-  }
-
-  .role-badge--md {
-    @apply text-sm;
-  }
-
-  .role-badge--md .role-badge__dot {
-    @apply size-2;
-  }
 }
