@@ -573,14 +573,17 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
   await expect(heroCard.getByRole("button", {name: PARTY})).toBeVisible()
 
   await bob.getByRole("button", {name: /^Discussion/}).click()
-  await bob.getByRole("button", {name: "Leave comment"}).click()
+  await bob.getByRole("button", {name: "Add a comment"}).click()
 
   const reply = bob.locator("form").filter({has: bob.locator(".note-editor")})
 
   await noteEditor(reply).pressSequentially("Is there parking at The Green?")
-  await reply.getByRole("button", {name: "Post Reply"}).click()
+  await reply.getByRole("button", {name: "Comment"}).click()
 
-  await expect(bob.getByText("Is there parking at The Green?")).toBeVisible()
+  // The composer holds what was typed until the relay confirms it, so match the comment itself.
+  await expect(
+    bob.locator('[data-component="Comment"]').filter({hasText: "Is there parking at The Green?"}),
+  ).toBeVisible()
 
   const alice = await as(users.alice, calendarPath)
 
@@ -594,14 +597,18 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
 
   await expect(alice.getByText("Is there parking at The Green?")).toBeVisible()
 
-  await alice.getByRole("button", {name: "Leave comment"}).click()
+  await alice.getByRole("button", {name: "Add a comment"}).click()
 
   const alicesReply = alice.locator("form").filter({has: alice.locator(".note-editor")})
 
   await noteEditor(alicesReply).pressSequentially("Yes, in the field behind the pub.")
-  await alicesReply.getByRole("button", {name: "Post Reply"}).click()
+  await alicesReply.getByRole("button", {name: "Comment"}).click()
 
-  await expect(alice.getByText("Yes, in the field behind the pub.")).toBeVisible()
+  await expect(
+    alice
+      .locator('[data-component="Comment"]')
+      .filter({hasText: "Yes, in the field behind the pub."}),
+  ).toBeVisible()
 })
 
 test("US-053 browse and search the library", async ({seed, as}) => {

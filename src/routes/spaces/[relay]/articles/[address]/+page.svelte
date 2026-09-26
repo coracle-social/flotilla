@@ -128,7 +128,7 @@
           </div>
         </div>
         <div class="border-t" style="border-color: var(--line)">
-          <EventComments event={$event} {url} {context} />
+          <EventComments event={$event} {url} {context} columnClass="mx-auto max-w-[68ch]" />
         </div>
       </div>
       <ArticleAuthorSidebar {url} event={$event} />

@@ -1,8 +1,7 @@
 <script lang="ts">
   import {writable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
-  import {tagSpec, tagValue} from "@welshman/util"
-  import {Comment, Note} from "@welshman/domain"
+  import {Note} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -12,7 +11,7 @@
   import {thunks, writer} from "@app/core"
   import {DraftKey} from "@app/drafts"
   import {makeEditor} from "@app/editor"
-  import {toSpace} from "@app/rooms"
+  import {publishComment} from "@app/rooms"
   import {loadSendDelay} from "@app/settings"
   import {pushToast} from "@app/toast"
 
@@ -31,8 +30,6 @@
 
   const {event, onCancel, onSubmit, parent, url, noun = "Comment"}: Props = $props()
 
-  const h = $derived(tagValue(tagSpec("h"), event.tags))
-
   const draftKey = new DraftKey<Values>(`comment:${event.id}:${parent?.id ?? ""}`)
   const initialValues = draftKey.get()
   const uploading = writable(false)
@@ -40,26 +37,19 @@
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
   // A reply to a room event is a NIP-22 comment, and a reply to a kind 1 note is a NIP-10 note.
-  const renderReply = async (content: string, tags: string[][]) => {
+  const publishReply = async (content: string, tags: string[][]) => {
     if (url) {
-      const eventWriter = await toSpace(
-        writer(Comment)
-          .setContent(content)
-          .addTags(...tags)
-          .setRootFromEvent(event)
-          .setParentFromEvent(parent ?? event),
-        url,
-        h,
-      )
-
-      return {relays: [url], event: await eventWriter.renderTemplate()}
+      return publishComment({url, event, parent, content, tags})
     }
 
-    return writer(Note)
-      .setContent(content)
-      .addTags(...tags)
-      .setParent(parent ?? event)
-      .render()
+    return $thunks.publish({
+      ...(await writer(Note)
+        .setContent(content)
+        .addTags(...tags)
+        .setParent(parent ?? event)
+        .render()),
+      delay: await loadSendDelay(),
+    })
   }
 
   const submit = async () => {
@@ -77,8 +67,7 @@
     loading = true
 
     try {
-      const reply = await renderReply(content, ed.storage.nostr.getEditorTags())
-      const thunk = $thunks.publish({...reply, delay: await loadSendDelay()})
+      const thunk = await publishReply(content, ed.storage.nostr.getEditorTags())
       const error = await thunk.waitForError()
 
       if (error) {

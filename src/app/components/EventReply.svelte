@@ -2,8 +2,6 @@
   import {onMount} from "svelte"
   import {writable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
-  import {tagSpec, tagValue} from "@welshman/util"
-  import {Comment} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import {fly} from "@lib/transition"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
@@ -12,12 +10,10 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import ComposeParent from "@app/components/ComposeParent.svelte"
-  import {prependParent, toSpace} from "@app/rooms"
+  import {prependParent, publishComment} from "@app/rooms"
   import {makeEditor} from "@app/editor"
   import {DraftKey} from "@app/drafts"
   import {pushToast} from "@app/toast"
-  import {thunks, writer} from "@app/core"
-  import {loadSendDelay} from "@app/settings"
 
   type Values = {
     content?: string | object
@@ -33,7 +29,6 @@
   }
 
   const {url, event, parent, onClose, onClearParent, onSubmit}: Props = $props()
-  const h = $derived(tagValue(tagSpec("h"), event.tags))
   const draftKey = new DraftKey<Values>(`reply:${event.id}:${parent?.id || ""}`)
   const initialValues = draftKey.get()
   const uploading = writable(false)
@@ -47,8 +42,7 @@
     }
 
     const ed = await editor
-    let content = ed.getText({blockSeparator: "\n"}).trim()
-    let tags = ed.storage.nostr.getEditorTags()
+    const content = ed.getText({blockSeparator: "\n"}).trim()
 
     if (!content) {
       return pushToast({
@@ -57,24 +51,11 @@
       })
     }
 
-    if (parent) {
-      ;({content, tags} = await prependParent(parent, {content, tags}, url))
-    }
-
-    const eventWriter = await toSpace(
-      writer(Comment)
-        .setContent(content)
-        .addTags(...tags)
-        .setRootFromEvent(event)
-        .setParentFromEvent(event),
+    const tags = ed.storage.nostr.getEditorTags()
+    const thunk = await publishComment({
       url,
-      h,
-    )
-
-    const thunk = $thunks.publish({
-      relays: [url],
-      event: await eventWriter.renderTemplate(),
-      delay: await loadSendDelay(),
+      event,
+      ...(await prependParent(parent, {content, tags}, url)),
     })
 
     draftKey.clear()

@@ -14,7 +14,7 @@ import {
   toNostrURI,
 } from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
-import {Message} from "@welshman/domain"
+import {Comment, Message} from "@welshman/domain"
 import type {BaseEventReader, EventWriter} from "@welshman/domain"
 import {MembershipStatus, RoomLists, makeRoomKey, createSearch, publish} from "@welshman/app"
 import type {Room, RoomMeta} from "@welshman/app"
@@ -33,6 +33,7 @@ import {
 } from "@app/core"
 import {deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/management"
 import {makeRoomPath} from "@app/routes"
+import {loadSendDelay} from "@app/settings"
 
 export const PROTECTED = ["-"]
 
@@ -136,6 +137,34 @@ export const publishRoomQuote = async ({
     relays: [url],
     event: await eventWriter.renderTemplate(),
     delay,
+  })
+}
+
+export const publishComment = async ({
+  url,
+  event,
+  parent = event,
+  content,
+  tags,
+}: EventContent & {
+  url: string
+  event: TrustedEvent
+  parent?: TrustedEvent
+}) => {
+  const eventWriter = await toSpace(
+    writer(Comment)
+      .setContent(content)
+      .addTags(...tags)
+      .setRootFromEvent(event)
+      .setParentFromEvent(parent),
+    url,
+    tagValue(tagSpec("h"), event.tags),
+  )
+
+  return thunks.get().publish({
+    relays: [url],
+    event: await eventWriter.renderTemplate(),
+    delay: await loadSendDelay(),
   })
 }
 

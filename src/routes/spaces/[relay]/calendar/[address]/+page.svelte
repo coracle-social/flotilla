@@ -20,7 +20,7 @@
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import CalendarEventMeta from "@app/components/CalendarEventMeta.svelte"
   import CalendarEventDate from "@app/components/CalendarEventDate.svelte"
-  import CalendarEventDiscussion from "@app/components/CalendarEventDiscussion.svelte"
+  import EventComments from "@app/components/EventComments.svelte"
   import CalendarEventPeople from "@app/components/CalendarEventPeople.svelte"
   import CalendarRsvp from "@app/components/CalendarRsvp.svelte"
   import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/calendar"
@@ -37,7 +37,7 @@
   const event = $events.one(address, [url]).$
   const timeEvent = derived(event, $event => ($event ? reader(TimeEvent)($event) : undefined))
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
-  const replies = $derived($events.desc(filters).$)
+  const comments = $derived($events.asc(filters).$)
   const rsvps = $derived($event ? deriveRsvps($event) : readable<TrustedEvent[]>([]))
   const people = $derived(getRsvpsByStatus($rsvps))
 
@@ -113,8 +113,8 @@
         aria-pressed={tab === "discussion"}
         onclick={showTab("discussion")}>
         Discussion
-        {#if $replies.length > 0}
-          <span class="opacity-75">{$replies.length}</span>
+        {#if $comments.length > 0}
+          <span class="opacity-75">{$comments.length}</span>
         {/if}
       </Button>
       <Button
@@ -138,7 +138,7 @@
         {/if}
       </div>
     {:else if tab === "discussion"}
-      <CalendarEventDiscussion {url} event={$event} replies={$replies} {context} />
+      <EventComments {url} event={$event} {context} />
     {:else}
       <CalendarEventPeople {url} event={$event} rsvps={$rsvps} />
     {/if}

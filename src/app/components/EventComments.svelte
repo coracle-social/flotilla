@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import cx from "classnames"
   import {removeUndefined} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {getCommentFiltersForRoot} from "@welshman/util"
@@ -16,9 +17,10 @@
     event: TrustedEvent
     url?: string
     context: FeedContext
+    columnClass?: string
   }
 
-  const {event, url, context}: Props = $props()
+  const {event, url, context, columnClass}: Props = $props()
 
   const relays = removeUndefined([url])
   const filters = getCommentFiltersForRoot([event])
@@ -48,10 +50,8 @@
 </script>
 
 <section class="flex flex-col">
-  <!-- The heading rule is a page-level divider, so it runs full width; the comments below it
-       stay in the article's reading column. -->
   <div class="border-b px-5 sm:px-8" style="border-color: var(--line)">
-    <div class="mx-auto flex w-full max-w-[68ch] flex-wrap items-center justify-between gap-2 py-3">
+    <div class={cx("flex w-full flex-wrap items-center justify-between gap-2 py-3", columnClass)}>
       <h2 class="text-lg font-bold">
         {nodes.length === 0
           ? "Discussion about this post"
@@ -66,7 +66,7 @@
     </div>
   </div>
   <div class="px-5 sm:px-8">
-    <div class="mx-auto flex w-full max-w-[68ch] flex-col pb-10">
+    <div class={cx("flex w-full flex-col pb-10", columnClass)}>
       {#if url && replyTo?.id === event.id}
         <div class="py-4">
           <CommentCompose {url} {event} onCancel={clearReplyTo} onSubmit={clearReplyTo} />

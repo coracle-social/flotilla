@@ -379,8 +379,8 @@ Plugin mutators already return a `Command`: `roomLists.get().addRelay(url).then(
 
 Some call sites call `thunks.get().publish({event, relays, delay})` directly. Anything that
 honours the `send_delay` window does, because `Command` cannot carry it: room chat
-(`RoomChat.svelte`), the comment composers (`CommentCompose.svelte` and `EventReply.svelte`) and
-`publishRoomQuote` in `rooms.ts`. So do the push adapters and `ProfileDelete.svelte`. DMs go through
+(`RoomChat.svelte`), and `publishComment` (behind both comment composers) and `publishRoomQuote` in
+`rooms.ts`. So do the push adapters and `ProfileDelete.svelte`. DMs go through
 `wraps.get().publish({event, recipients})`, which returns a merged thunk (see `reactions.ts`).
 NIP-86 calls (`relayManagement.get().forUrl(url)`) are not thunks. They return
 `{result, error}`, and the caller handles `error`.
