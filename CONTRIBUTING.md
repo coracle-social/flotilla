@@ -49,6 +49,7 @@ To contribute, do the following:
 - If the issue is a design task, attach or link out to any mockups/wireframes/flowcharts
 - Once a design task is completed, a maintainer will remove the `design` label and add the `dev` label
 - If the issue is a development task, fork the repository and create a branch prefixed by the issue number, e.g. `105-deep-links`
+- Line endings are pinned to LF by `.gitattributes`. A Windows clone made before that was added keeps CRLF and fails `pnpm run lint`. Commit or stash your work first, then run `git rm --cached -r . && git reset --hard` once to re-checkout every file.
 - Before requesting a review, be sure to review any agent-generated code, run the pre-commit hooks, and test the changes.
 - Open a PR and request a review. A maintainer will get back to you with requested changes, or will merge the PR.
 - Keep your PR up-to-date by rebasing frequently on `dev`. Avoid force-pushing to `dev`.
