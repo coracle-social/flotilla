@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import type {PinboardReader} from "@welshman/domain"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -59,15 +58,9 @@
       message: `Delete "${board.title() || "this shelf"}"?`,
       confirm: deleteBoard,
     })
-
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   <li>
     <Button onclick={showInfo}>
       <Icon icon={Code2} />

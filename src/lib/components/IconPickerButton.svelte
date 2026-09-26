@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {between, throttle} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import {isMobile} from "@lib/html"
   import Button from "@lib/components/Button.svelte"
@@ -32,22 +31,13 @@
     close()
   }
 
-  const onMouseMove = throttle(300, ({clientX}: MouseEvent) => {
-    const rect = tippy?.rect()
-
-    if (rect && !between([rect.x - 50, rect.x + rect.width + 50], clientX)) {
-      tippy!.hide()
-    }
-  })
-
   let tippy: Maybe<TippyController> = $state()
 </script>
-
-<svelte:document onmousemove={onMouseMove} />
 
 <Tippy
   bind:controller={tippy}
   component={IconPickerPopover}
+  strayMargin={50}
   props={{onSelect: onClick}}
   params={{trigger: "manual", interactive: true, placement: "top-end"}}>
   <Button onclick={open} class={props.class}>

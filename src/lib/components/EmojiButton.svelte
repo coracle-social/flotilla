@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {between, throttle} from "@welshman/lib"
+  import type {Props as TippyProps} from "tippy.js"
   import type {Maybe} from "@welshman/lib"
   import Button from "@lib/components/Button.svelte"
   import Tippy from "@lib/components/Tippy.svelte"
@@ -8,7 +8,7 @@
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
 
   type Props = {
-    tippyParams?: Record<string, unknown>
+    tippyParams?: Partial<TippyProps>
     onEmoji: (emoji: string) => void
     allowKaomoji?: boolean
     class?: string
@@ -32,28 +32,15 @@
     tippy?.hide()
   }
 
-  const onMouseMove = throttle(300, ({clientX, clientY}: MouseEvent) => {
-    const rect = tippy?.rect()
-
-    if (rect) {
-      const {x, y, width, height} = rect
-
-      if (!between([x, x + width], clientX) || !between([y - 100, y + height + 100], clientY)) {
-        tippy!.hide()
-      }
-    }
-  })
-
   let tippy: Maybe<TippyController> = $state()
 </script>
-
-<svelte:document onmousemove={tippy?.visible && !allowKaomoji ? onMouseMove : undefined} />
 
 <Button onclick={open} class={className} {...restProps}>
   <Tippy
     bind:controller={tippy}
     class="flex"
     component={EmojiPicker}
+    strayMargin={allowKaomoji ? undefined : 100}
     props={{onClick, allowKaomoji}}
     params={{trigger: "manual", interactive: true, ...tippyParams}}>
     {@render children?.()}

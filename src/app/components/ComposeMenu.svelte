@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
@@ -35,15 +34,9 @@
   const createPoll = () => pushModal(PollCreate, {url, h, shareToChat: true})
 
   const createArticle = () => navigate(makeArticleCreatePath(url, {h, shareToChat: true}))
-
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   <li>
     <Button onclick={createGoal}>
       <Icon size={4} icon={StarFallMinimalistic} />

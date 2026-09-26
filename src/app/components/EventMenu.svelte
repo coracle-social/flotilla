@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import type {Snippet} from "svelte"
   import type {TrustedEvent} from "@welshman/util"
   import {COMMENT} from "@welshman/util"
@@ -44,15 +43,9 @@
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 
   const showAdminDelete = () => pushModal(EventAdminDeleteConfirm, {url, noun, event})
-
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   <li>
     <Button onclick={showInfo}>
       <Icon size={4} icon={Code2} />

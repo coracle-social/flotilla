@@ -2,7 +2,7 @@
   import {onDestroy, onMount} from "svelte"
   import {writable} from "svelte/store"
   import cx from "classnames"
-  import type {Maybe, MaybeAsync} from "@welshman/lib"
+  import type {MaybeAsync} from "@welshman/lib"
   import {MESSAGE} from "@welshman/util"
   import type {EventContent} from "@welshman/util"
   import {escapeHtml, isMobile, preventDefault} from "@lib/html"
@@ -11,8 +11,7 @@
   import Plane from "@assets/icons/plane-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Tippy from "@lib/components/Tippy.svelte"
-  import type {TippyController} from "@lib/components/Tippy.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ComposeMenu from "@app/components/ComposeMenu.svelte"
   import EditorEmojiButton from "@app/components/EditorEmojiButton.svelte"
@@ -115,10 +114,6 @@
       .run()
   }
 
-  const showMenu = () => tippy?.show()
-
-  const hideMenu = () => tippy?.hide()
-
   const submit = async () => {
     if ($uploading || disabled || sending) {
       return
@@ -145,7 +140,6 @@
   }
 
   let sending = false
-  let tippy: Maybe<TippyController> = $state()
   let content = $state(
     initialValues?.type === "text" ? initialValues.value : (draft?.get()?.content ?? ""),
   )
@@ -212,15 +206,14 @@
       {/if}
     </Button>
     {#if url}
-      <Button disabled={$uploading} onclick={showMenu} class={buttonClass}>
-        <Tippy
-          bind:controller={tippy}
-          component={ComposeMenu}
-          props={{url, h, onClick: hideMenu}}
-          params={{trigger: "manual", interactive: true}}>
-          <Icon icon={WidgetAdd} />
-        </Tippy>
-      </Button>
+      <MenuButton
+        component={ComposeMenu}
+        componentProps={{url, h}}
+        placement="top"
+        disabled={$uploading}
+        class={buttonClass}>
+        <Icon icon={WidgetAdd} />
+      </MenuButton>
     {/if}
     <EditorEmojiButton {editor} disabled={$uploading || disabled} class={buttonClass} />
   </div>

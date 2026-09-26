@@ -1,36 +1,25 @@
 <script lang="ts">
   import cx from "classnames"
   import {spec} from "@welshman/lib"
-  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
-  import Pen from "@assets/icons/pen.svg?dataurl"
-  import Power from "@assets/icons/power.svg?dataurl"
-  import Play from "@assets/icons/play.svg?dataurl"
   import Danger from "@assets/icons/danger.svg?dataurl"
   import VerifiedCheck from "@assets/icons/verified-check.svg?dataurl"
   import ShieldWarning from "@assets/icons/shield-warning.svg?dataurl"
   import Copy from "@assets/icons/copy.svg?dataurl"
   import Refresh from "@assets/icons/refresh.svg?dataurl"
-  import BillList from "@assets/icons/bill-list.svg?dataurl"
-  import Database from "@assets/icons/database.svg?dataurl"
-  import {fly} from "@lib/transition"
   import {ucFirst} from "@lib/util"
   import Icon from "@lib/components/Icon.svelte"
   import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
   import Link from "@lib/components/Link.svelte"
-  import Popover from "@lib/components/Popover.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
-  import Confirm from "@lib/components/Confirm.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
+  import RelayDetailMenu from "@app/components/hosting/RelayDetailMenu.svelte"
   import CustomDomainModal from "@app/components/hosting/CustomDomainModal.svelte"
-  import DataTransferModal from "@app/components/hosting/DataTransferModal.svelte"
-  import PlanModal from "@app/components/hosting/PlanModal.svelte"
-  import RelayForm from "@app/components/hosting/RelayForm.svelte"
-  import type {RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
-  import {pushModal, clearModals} from "@app/modal"
+  import {pushModal} from "@app/modal"
   import {clip, pushToast} from "@app/toast"
   import {
     RELAY_FLAG_DEFAULTS,
@@ -45,8 +34,6 @@
     isPaidPlan,
     updateRelay,
     getRelay,
-    deactivateRelay,
-    reactivateRelay,
     deriveRelayMembers,
     type HostedRelay,
     type RelayFlag,
@@ -63,7 +50,6 @@
   const members = deriveRelayMembers(relay.id)
 
   const host = $derived(relayHost(relay))
-  const relayLabel = $derived(relay.info_name || relay.subdomain)
   const domainVerified = $derived(flagToBool(relay.custom_domain_verified, false))
   const recordTarget = $derived(canonicalRelayHost(relay))
   // DNS forbids a CNAME at a zone apex, so those use the provider's ALIAS or ANAME record.
@@ -85,46 +71,8 @@
     }
   }
 
-  const openPlan = () => pushModal(PlanModal, {relay}, {size: "large"})
-
-  const openEdit = () => {
-    const previous = relay
-    const initialValues: RelayFormValues = {
-      info_name: relay.info_name,
-      subdomain: relay.subdomain,
-      info_icon: relay.info_icon,
-      info_description: relay.info_description,
-      plan_id: relay.plan_id,
-    }
-
-    pushModal(RelayForm, {
-      mode: "edit",
-      initialValues,
-      zooidDomain: relay.zooid_domain,
-      onSubmit: async (values: RelayFormValues) => {
-        const updated = await updateRelay(previous.id, values)
-
-        clearModals()
-
-        await followHostedRelay(previous, updated)
-      },
-    })
-  }
-
-  const openDataTransfer = () => {
-    pushModal(DataTransferModal, {relay})
-  }
-
   const openCustomDomain = () => {
     pushModal(CustomDomainModal, {relay})
-  }
-
-  const openMenu = () => {
-    showMenu = true
-  }
-
-  const closeMenu = () => {
-    showMenu = false
   }
 
   const copyTarget = () => clip(recordTarget)
@@ -150,48 +98,6 @@
     }
   }
 
-  const requestDeactivate = () => {
-    pushModal(Confirm, {
-      title: "Deactivate relay?",
-      subtitle: `${relayLabel} will be taken offline immediately.`,
-      message:
-        "All client connections are dropped and members can't read or write, but all data and settings are preserved. You can reactivate at any time.",
-      confirm: async () => {
-        try {
-          await deactivateRelay(relay.id)
-          $hosting.setRelay(await getRelay(relay.id))
-          clearModals()
-        } catch (e) {
-          pushToast({
-            theme: "error",
-            message: hostingErrorMessage(e, "Failed to deactivate relay."),
-          })
-        }
-      },
-    })
-  }
-
-  const requestReactivate = () => {
-    pushModal(Confirm, {
-      title: "Reactivate relay?",
-      subtitle: `${relayLabel} will come back online.`,
-      message: "The relay will start accepting connections again.",
-      confirm: async () => {
-        try {
-          await reactivateRelay(relay.id)
-          $hosting.setRelay(await getRelay(relay.id))
-          clearModals()
-        } catch (e) {
-          pushToast({
-            theme: "error",
-            message: hostingErrorMessage(e, "Failed to reactivate relay."),
-          })
-        }
-      },
-    })
-  }
-
-  let showMenu = $state(false)
   let loading = $state(false)
 </script>
 
@@ -216,7 +122,7 @@
       <RelayIcon url={getHostedRelayUrl(relay)} icon={relay.info_icon} size={12} />
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
-          <h2 class="text-xl font-bold">{relayLabel}</h2>
+          <h2 class="text-xl font-bold">{relay.info_name || relay.subdomain}</h2>
           <Badge variant={relay.status === "active" ? "primary" : "neutral"}>
             {ucFirst(relay.status.replace(/_/g, " "))}
           </Badge>
@@ -233,53 +139,11 @@
       </div>
     </div>
 
-    <div class="relative shrink-0">
-      <Button
-        class="button button-neutral button-circle"
-        aria-label="Relay actions"
-        onclick={openMenu}>
-        <Icon icon={MenuDots} />
-      </Button>
-      {#if showMenu}
-        <Popover hideOnClick onClose={closeMenu}>
-          <ul
-            transition:fly
-            class="menu absolute right-0 z-popover mt-2 w-52 gap-1 rounded-2xl border border-line bg-surface p-2 shadow-xl">
-            <li>
-              <Button onclick={openEdit}>
-                <Icon icon={Pen} />
-                Edit details
-              </Button>
-            </li>
-            <li>
-              <Button onclick={openPlan}>
-                <Icon icon={BillList} />
-                Change plan
-              </Button>
-            </li>
-            <li>
-              <Button onclick={openDataTransfer}>
-                <Icon icon={Database} />
-                Import / export data
-              </Button>
-            </li>
-            <li>
-              {#if relay.status === "active"}
-                <Button class="text-error" onclick={requestDeactivate}>
-                  <Icon icon={Power} />
-                  Deactivate
-                </Button>
-              {:else}
-                <Button class="text-primary" onclick={requestReactivate}>
-                  <Icon icon={Play} />
-                  Reactivate
-                </Button>
-              {/if}
-            </li>
-          </ul>
-        </Popover>
-      {/if}
-    </div>
+    <MenuButton
+      class="button button-neutral button-circle"
+      aria-label="Relay actions"
+      component={RelayDetailMenu}
+      componentProps={{relay}} />
   </div>
 
   {#if relay.sync_error}

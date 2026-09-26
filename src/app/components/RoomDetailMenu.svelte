@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import type {Maybe} from "@welshman/lib"
   import {MembershipStatus, publish} from "@welshman/app"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -70,14 +69,9 @@
     })
 
   let loading = $state(false)
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   {#if $userIsAdmin}
     <li>
       <Button onclick={startEdit}>

@@ -6,7 +6,6 @@
   import BellOff from "@assets/icons/bell-off.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Popover from "@lib/components/Popover.svelte"
   import SpaceMenuMobile from "@app/components/SpaceMenuMobile.svelte"
   import SpaceMenuActions from "@app/components/SpaceMenuActions.svelte"
   import RelayName from "@app/components/RelayName.svelte"
@@ -32,12 +31,25 @@
     }
   }
 
-  const toggleMenu = () => {
-    showMenu = !showMenu
+  const closeMenu = () => {
+    showMenu = false
+  }
+
+  // Deferred so the click that follows the mouseup still reaches the item before the menu goes.
+  const onMouseUp = () => setTimeout(closeMenu)
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      setTimeout(closeMenu)
+    }
   }
 
   let showMenu = $state(false)
 </script>
+
+<svelte:window
+  onmouseup={showMenu ? onMouseUp : undefined}
+  onkeydown={showMenu ? onKeyDown : undefined} />
 
 <Button
   class={cx(
@@ -64,9 +76,9 @@
   <span class="text-xs text-primary">{displayRelayUrl(url)}</span>
 </Button>
 {#if showMenu && !mobile}
-  <Popover hideOnClick onClose={toggleMenu}>
+  <div class="relative w-full">
     <ul transition:fly class="menu absolute z-popover mt-2 w-full gap-1 rounded-2xl bg-surface p-2">
       <SpaceMenuActions {url} />
     </ul>
-  </Popover>
+  </div>
 {/if}

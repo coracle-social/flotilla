@@ -14,6 +14,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import ThunkFailure from "@app/components/ThunkFailure.svelte"
   import {publishReaction, retractReaction} from "@app/reactions"
   import {deriveDisplaysByPubkey} from "@app/social"
@@ -22,7 +23,7 @@
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import RoomItemZapButton from "@app/components/RoomItemZapButton.svelte"
   import RoomItemEmojiButton from "@app/components/RoomItemEmojiButton.svelte"
-  import RoomItemMenuButton from "@app/components/RoomItemMenuButton.svelte"
+  import RoomItemMenu from "@app/components/RoomItemMenu.svelte"
   import RoomItemMenuMobile from "@app/components/RoomItemMenuMobile.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import {events, profiles, reader, thunks, user} from "@app/core"
@@ -189,7 +190,14 @@
           <Icon icon={Pen} size={4} />
         </Button>
       {/if}
-      <RoomItemMenuButton {url} {event} />
+      <MenuButton
+        component={RoomItemMenu}
+        componentProps={{url, event}}
+        placement="top"
+        strayMargin={50}
+        iconSize={4}
+        aria-label="More options"
+        class="button button-xs button-neutral join-item" />
     </div>
   {/if}
 </TapTarget>

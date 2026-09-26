@@ -187,15 +187,22 @@ behind its own loading state. Reusable confirmations get a `*Confirm` wrapper
 ### Popover menus
 
 `MenuButton` renders a `Tippy` popover around the component you pass, adding an `onClick` prop
-that hides it:
+that hides it. It shows the menu-dots icon unless given children, opens `bottom-end` unless given a
+`placement`, and takes `strayMargin` to hide once the pointer strays that many pixels from the
+popover, as the hover actions on a chat row do:
 
 ```svelte
 <MenuButton component={ChatMenu} aria-label="Chat options" />
 ```
 
-`EventMenu` attaches `onClick` to its `<ul>`, so any item closes the popover, and each item
-usually pushes a modal. On mobile, rows push a `*MenuMobile` modal instead: `RoomItem` pushes
-`RoomItemMenuMobile` on tap.
+`EventMenu` puts `onClick` on its `<ul>` as `onclickcapture`, so any item closes the popover, and
+each item usually pushes a modal. It has to be the capture phase: `Button` stops propagation, and
+Svelte's delegated `onclick` on the `<ul>` would never see the click. On mobile, rows push a
+`*MenuMobile` modal instead: `RoomItem` pushes `RoomItemMenuMobile` on tap.
+
+`Tooltip` is `Tippy` with a string `content` and the `tooltip` theme, whose CSS lives in
+`tooltip.css`. `Tippy` appends popovers to the page's `.tippy-target`, or to the open dialog's
+`.dialog-tippy-target` so they stack above it.
 
 ### Toasts
 
@@ -222,8 +229,8 @@ lives there:
   `ModalSubtitle`, `ModalFooter`, `Confirm`
 - controls: `Button`, `Link`, `Field`, `FieldInline`, `Input`, `InputList`, `ToggleInput`,
   `DateTimeInput`, `ImagesInput`, `IconInput`, `EmojiPicker`, `MenuButton`, `SegmentedButtons`
-- display and lists: `Icon`, `Badge`, `Card`, `Divider`, `Spinner`, `Tooltip`, `Tippy`,
-  `Popover`, `Cv`, `VirtualList`, `Masonry`, `DragList`, `ScrollToTop`
+- display and lists: `Icon`, `Badge`, `Card`, `Divider`, `Spinner`, `Tooltip`, `Tippy`, `Cv`,
+  `VirtualList`, `Masonry`, `DragList`, `ScrollToTop`
 - the CSS component families (`button.css`, `card.css`, …) and the theme tokens
 
 Anything that takes an identifier and reads a store, publishes, or knows a kind is an app

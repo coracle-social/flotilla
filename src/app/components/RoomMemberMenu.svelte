@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -33,15 +32,9 @@
         }
       },
     })
-
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   <li>
     <Button class="text-error" onclick={removeMember}>
       <Icon icon={MinusCircle} />

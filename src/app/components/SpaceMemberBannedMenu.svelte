@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import Restart from "@assets/icons/restart.svg?dataurl"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -39,15 +38,9 @@
       $spaceManagement.loadBannedPubkeys(url)
     }
   }
-
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   {#if $permissions.unban}
     <li>
       <Button onclick={unbanMember}>

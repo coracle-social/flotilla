@@ -42,12 +42,42 @@
     display: none !important;
   }
 
-  /* the host tippy renders its popovers into; see getTippyTarget in lib/html.ts */
+  /* the host tippy renders its popovers into; see getTippyTarget in Tippy.svelte */
   .tippy-target {
     @apply z-tooltip pointer-events-none fixed inset-0;
   }
 
   .tippy-target > * {
     @apply pointer-events-auto;
+  }
+
+  .tippy-box {
+    @apply rounded-3xl;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .tippy-box[data-theme~="tooltip"] {
+    background-color: var(--content);
+    color: var(--surface);
+    border-radius: var(--radius-xl);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    box-shadow: var(--shadow);
+  }
+
+  .tippy-box[data-theme~="tooltip"][data-placement^="top"] > .tippy-arrow::before {
+    border-top-color: var(--content);
+  }
+
+  .tippy-box[data-theme~="tooltip"][data-placement^="bottom"] > .tippy-arrow::before {
+    border-bottom-color: var(--content);
+  }
+
+  .tippy-box[data-theme~="tooltip"][data-placement^="left"] > .tippy-arrow::before {
+    border-left-color: var(--content);
+  }
+
+  .tippy-box[data-theme~="tooltip"][data-placement^="right"] > .tippy-arrow::before {
+    border-right-color: var(--content);
   }
 }

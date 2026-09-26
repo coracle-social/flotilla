@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import type {RelayRoleReader} from "@welshman/domain"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -47,15 +46,9 @@
       message: `Delete the "${role.label()}" role? Members will keep their space membership.`,
       confirm: deleteRole,
     })
-
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   {#if $permissions.assignRoles}
     <li>
       <Button onclick={addMembers}>

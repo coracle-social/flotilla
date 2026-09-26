@@ -6,8 +6,24 @@
     hide: () => void
     toggle: () => void
     visible: boolean
-    rect: () => Maybe<DOMRect>
     content: Maybe<Content>
+  }
+
+  // Cached because a couple of popovers per chat row runs this thousands of times.
+  let tippyTarget: Maybe<Element>
+
+  const getTippyTarget = (trigger: Element) => {
+    const dialogTarget = trigger.closest(".dialog-overlay")?.querySelector(".dialog-tippy-target")
+
+    if (dialogTarget) {
+      return dialogTarget
+    }
+
+    if (!tippyTarget?.isConnected) {
+      tippyTarget = document.querySelector(".tippy-target")!
+    }
+
+    return tippyTarget
   }
 </script>
 
@@ -15,18 +31,31 @@
   import "tippy.js/animations/shift-away.css"
 
   import tippy from "tippy.js"
-  import type {Instance} from "tippy.js"
+  import type {Instance, Props as TippyProps} from "tippy.js"
   import {onMount, mount, unmount} from "svelte"
-  import {getTippyTarget, isMobile} from "@lib/html"
+  import type {Component, Snippet} from "svelte"
+  import {between, throttle} from "@welshman/lib"
+  import {isMobile} from "@lib/html"
+
+  type Props = {
+    component?: Component<any>
+    children?: Snippet
+    props?: Record<string, any>
+    params?: Partial<TippyProps>
+    strayMargin?: number
+    controller?: TippyController
+    class?: string
+  }
 
   let {
     component,
-    children = undefined,
+    children,
     props = {},
     params = {},
+    strayMargin,
     controller = $bindable(),
-    ...restProps
-  } = $props()
+    class: className,
+  }: Props = $props()
 
   const target = document.createElement("div")
 
@@ -56,15 +85,24 @@
             : element.closest<HTMLElement>("button, [href], input, [tabindex]") ||
               element.querySelector<HTMLElement>("button, [href], input, [tabindex]") ||
               undefined
-        content ??= mount(component, {target, props: mountedProps})
+
+        if (component) {
+          content ??= mount(component, {target, props: mountedProps})
+        }
+
         visible = true
         document.addEventListener("keydown", onKeyDown)
+
+        if (strayMargin) {
+          document.addEventListener("mousemove", onMouseMove)
+        }
 
         return params.onShow?.(instance)
       },
       onHidden: (instance: Instance) => {
         visible = false
         document.removeEventListener("keydown", onKeyDown)
+        document.removeEventListener("mousemove", onMouseMove)
 
         return params.onHidden?.(instance)
       },
@@ -85,6 +123,20 @@
     }
   }
 
+  const onMouseMove = throttle(300, ({clientX, clientY}: MouseEvent) => {
+    const rect = popover?.popper.getBoundingClientRect()
+
+    if (rect && strayMargin) {
+      const {x, y, width, height} = rect
+      const inX = between([x - strayMargin, x + width + strayMargin], clientX)
+      const inY = between([y - strayMargin, y + height + strayMargin], clientY)
+
+      if (!inX || !inY) {
+        popover?.hide()
+      }
+    }
+  })
+
   controller = {
     show: () => create().show(),
     hide: () => popover?.hide(),
@@ -95,7 +147,6 @@
         create().show()
       }
     },
-    rect: () => popover?.popper.getBoundingClientRect(),
     get visible() {
       return visible
     },
@@ -115,6 +166,7 @@
 
     return () => {
       document.removeEventListener("keydown", onKeyDown)
+      document.removeEventListener("mousemove", onMouseMove)
       popover?.destroy()
 
       if (content) {
@@ -124,6 +176,6 @@
   })
 </script>
 
-<div bind:this={element} class={restProps.class}>
+<div bind:this={element} class={className}>
   {@render children?.()}
 </div>

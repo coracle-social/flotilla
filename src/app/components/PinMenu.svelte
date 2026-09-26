@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import type {PinReader} from "@welshman/domain"
   import Pen from "@assets/icons/pen.svg?dataurl"
   import TrashBin from "@assets/icons/trash-bin-2.svg?dataurl"
@@ -53,15 +52,9 @@
       message: "Delete this link?",
       confirm: deletePin,
     })
-
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   <li>
     <Button onclick={showInfo}>
       <Icon icon={Code2} />

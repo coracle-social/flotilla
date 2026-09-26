@@ -1,6 +1,5 @@
 import {readable} from "svelte/store"
 import {sleep, randomId} from "@welshman/lib"
-import type {Maybe} from "@welshman/lib"
 import {Capacitor} from "@capacitor/core"
 export {preventDefault, stopPropagation} from "svelte/legacy"
 
@@ -120,23 +119,6 @@ export const createScroller = ({
 }
 
 export const isMobile = "ontouchstart" in document.documentElement
-
-// Cached because a couple of popovers per chat row runs this thousands of times.
-let tippyTarget: Maybe<Element>
-
-export const getTippyTarget = (trigger?: Element) => {
-  const dialogTarget = trigger?.closest(".dialog-overlay")?.querySelector(".dialog-tippy-target")
-
-  if (dialogTarget) {
-    return dialogTarget
-  }
-
-  if (!tippyTarget?.isConnected) {
-    tippyTarget = document.querySelector(".tippy-target")!
-  }
-
-  return tippyTarget
-}
 
 export const downloadText = async (filename: string, text: string) => {
   // The <a download> blob trick is a no-op in native WebViews, so write the file and share it.

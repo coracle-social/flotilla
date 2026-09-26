@@ -3,21 +3,15 @@
   import {removeUndefined, sortBy} from "@welshman/lib"
   import UsersGroup from "@assets/icons/users-group-rounded.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
-  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
-  import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
-  import ShieldUser from "@assets/icons/shield-user.svg?dataurl"
-  import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Popover from "@lib/components/Popover.svelte"
+  import MenuButton from "@lib/components/MenuButton.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import SpaceMember from "@app/components/SpaceMember.svelte"
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
-  import SpaceAdmins from "@app/components/SpaceAdmins.svelte"
-  import SpaceRoles from "@app/components/SpaceRoles.svelte"
-  import SpaceMembersBanned from "@app/components/SpaceMembersBanned.svelte"
+  import SpaceDirectoryMenu from "@app/components/SpaceDirectoryMenu.svelte"
   import {deriveSpacePermissions} from "@app/management"
   import {deriveSpaceMemberRoles} from "@app/roles"
   import {relayMemberLists, relayRoles} from "@app/core"
@@ -47,27 +41,7 @@
     }))
   })
 
-  let menuOpen = $state(false)
-
-  const inviteMembers = () => {
-    menuOpen = false
-    pushModal(SpaceInvite, {url})
-  }
-
-  const manageRoles = () => {
-    menuOpen = false
-    pushModal(SpaceRoles, {url})
-  }
-
-  const spaceAdmins = () => {
-    menuOpen = false
-    pushModal(SpaceAdmins, {url})
-  }
-
-  const bannedMembers = () => {
-    menuOpen = false
-    pushModal(SpaceMembersBanned, {url})
-  }
+  const inviteMembers = () => pushModal(SpaceInvite, {url})
 
   // A role section matches on its own name, so it survives a term its members don't match.
   let term = $state("")
@@ -112,46 +86,12 @@
       Invite people
     </Button>
     {#if $permissions.directoryMenu}
-      <div class="relative">
-        <Button
-          class="button button-neutral button-sm button-square"
-          aria-label="More options"
-          onclick={() => (menuOpen = !menuOpen)}>
-          <Icon size={4} icon={MenuDots} />
-        </Button>
-        {#if menuOpen}
-          <Popover hideOnClick onClose={() => (menuOpen = false)}>
-            <ul
-              transition:fly
-              class="menu bg-surface absolute right-0 z-popover mt-2 w-48 gap-1 rounded-2xl p-2">
-              {#if $permissions.manageRoles}
-                <li>
-                  <Button onclick={manageRoles}>
-                    <Icon icon={UsersGroup} />
-                    Manage Roles
-                  </Button>
-                </li>
-              {/if}
-              {#if $permissions.listAdmins}
-                <li>
-                  <Button onclick={spaceAdmins}>
-                    <Icon icon={ShieldUser} />
-                    Admins
-                  </Button>
-                </li>
-              {/if}
-              {#if $permissions.listBans}
-                <li>
-                  <Button onclick={bannedMembers}>
-                    <Icon icon={MinusCircle} />
-                    Banned Members
-                  </Button>
-                </li>
-              {/if}
-            </ul>
-          </Popover>
-        {/if}
-      </div>
+      <MenuButton
+        class="button button-neutral button-sm button-square"
+        aria-label="More options"
+        iconSize={4}
+        component={SpaceDirectoryMenu}
+        componentProps={{url}} />
     {/if}
   {/snippet}
 </SpaceBar>

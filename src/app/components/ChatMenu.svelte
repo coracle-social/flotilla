@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import {assoc} from "@welshman/lib"
   import {publish} from "@welshman/app"
   import Check from "@assets/icons/check.svg?dataurl"
@@ -34,15 +33,9 @@
       addRelay: (url: string) => $messagingRelayLists.addUrl(url).then(publish),
       removeRelay: (url: string) => $messagingRelayLists.removeUrl(url).then(publish),
     })
-
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   <li>
     <Button onclick={markAsRead}>
       <Icon size={4} icon={Check} />

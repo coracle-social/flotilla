@@ -419,12 +419,6 @@ body.keyboard-open .room {
   padding: 0.7rem 1rem !important;
 }
 
-/* tippy popover */
-.tippy-box {
-  @apply rounded-3xl;
-  box-shadow: var(--shadow-lg);
-}
-
 /* emoji picker — the .emoji-picker frame around it supplies the border */
 emoji-picker {
   --background: var(--surface);

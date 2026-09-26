@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import type {TrustedEvent} from "@welshman/util"
   import {Report} from "@welshman/domain"
   import InboxOut from "@assets/icons/inbox-out.svg?dataurl"
@@ -87,15 +86,9 @@
       },
     })
   }
-
-  let ul: Element
-
-  onMount(() => {
-    ul.addEventListener("click", onClick)
-  })
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" bind:this={ul}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
   {#if event.pubkey === $user.pubkey}
     <li>
       <Button onclick={deleteReport}>
