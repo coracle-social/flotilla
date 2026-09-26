@@ -31,7 +31,8 @@ carries `["h", h]`; content with no `h` belongs to the whole space. `/spaces/[re
 `deriveUserRooms(url)` in `src/app/rooms.ts` read it. "Joined" in the UI means "in this list",
 which is separate from NIP-43 membership on the relay: `src/routes/spaces/[relay]/+layout.svelte`
 prompts `SpaceJoin` for any URL not in `userSpaceUrls`. A deployment with `VITE_PLATFORM_RELAYS`
-uses `PLATFORM_RELAYS` in place of the list for sync and navigation.
+uses `PLATFORM_RELAYS` in place of the list for sync and navigation: `activeSpaceUrls` in
+`src/app/rooms.ts` is that choice, read by background sync, notifications and editor suggestions.
 
 ### NIP-11 relay info
 
@@ -40,7 +41,7 @@ domain `Relay`. These fields drive protocol decisions:
 
 | Read | Decides |
 |---|---|
-| `hasNip(29)` | whether the space has rooms. Without it everything lives in the space chat: `makeSpaceEntryPath` (`src/app/routes.ts`), `shareEvent` (`src/app/share.ts`), room search, notification grouping, `SpaceMenuRooms` |
+| `hasNip(29)` | whether the space has rooms, read through `isGroupSpace(url)` / `deriveIsGroupSpace(url)` in `src/app/relays.ts`. Without it everything lives in the space chat (`makeSpaceChatPath`): `shareEvent` (`src/app/share.ts`), room search, notification grouping, `SpaceMenuNavItems`, `SpaceMenuRooms` |
 | `hasNip(70)` | whether space content is marked protected (below) |
 | `self` | the relay's own pubkey, the trust anchor for relay-signed state |
 | `pubkey` | the space's owner, who writes space-wide content that has no other author (`deriveUserIsSpaceOwner`) |
@@ -104,9 +105,9 @@ user holds a method for — reports under `banevent`, join requests under `allow
 - `deriveUserRoomMembershipStatus`: an admin is always `Granted`.
 - `addRoomMembers`: allows each non-member at the relay (NIP-86 `allowPubkey`) before publishing
   9000, because a room member the relay won't serve can't read the room.
-- `deriveUserRooms`, `deriveOtherRooms`, `deriveOtherVoiceRooms`: rooms from the user's 10009
-  list and the rest of the space, limited to rooms the relay still advertises. `meta.hasLivekit()`
-  marks a voice room.
+- `deriveUserRooms`, `deriveOtherRooms(url, type)`: rooms from the user's 10009 list and the rest
+  of the space by `RoomType`, limited to rooms the relay still advertises. `meta.hasLivekit()`
+  marks a voice room (`getRoomType`).
 
 ### Room flows
 

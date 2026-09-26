@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {Capacitor} from "@capacitor/core"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import ServerPath from "@assets/icons/server-path.svg?dataurl"
   import GalleryMinimalistic from "@assets/icons/gallery-minimalistic.svg?dataurl"
@@ -14,6 +13,8 @@
   import Profile from "@app/components/Profile.svelte"
   import LogOut from "@app/components/LogOut.svelte"
   import {user} from "@app/core"
+  import {ENABLE_ZAPS} from "@app/env"
+  import {HOSTING_ENABLED} from "@app/hosting"
   import {pushModal} from "@app/modal"
   import {makeProfilePath} from "@app/routes"
 
@@ -39,7 +40,7 @@
           <Icon icon={Bell} size={5} />
           Alerts
         </Link>
-        {#if Capacitor.getPlatform() !== "ios"}
+        {#if ENABLE_ZAPS}
           <Link
             href="/settings/wallet"
             class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
@@ -47,12 +48,14 @@
             Wallet
           </Link>
         {/if}
-        <Link
-          href="/settings/hosting"
-          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
-          <Icon icon={ServerPath} size={5} />
-          Hosting
-        </Link>
+        {#if HOSTING_ENABLED}
+          <Link
+            href="/settings/hosting"
+            class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+            <Icon icon={ServerPath} size={5} />
+            Hosting
+          </Link>
+        {/if}
         <Link
           href="/settings/content"
           class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">

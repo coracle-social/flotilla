@@ -99,7 +99,9 @@ mobile. Pages outside a space use `Page`, `PageBar` and `PageContent` themselves
   `makeCalendarPath`, `makeGoalPath`, `makePollPath`, `makeLibraryPath`, `makeArticleCreatePath`).
 - `makeContentPath(url, kind, idOrAddress)` maps a kind to its page. `makeEventPath` builds on it
   for any event, covering DMs, room messages (`?at=`) and comments (through the parent's `K`,
-  `A` and `E` tags), and falls back to `entityLink` from `src/app/env.ts`, an external link.
+  `A` and `E` tags), and returns `undefined` for an event with no page in the app. A caller that
+  wants an external link then calls `entityLink` from `src/app/env.ts` itself, as
+  `makeEventPermalink` does.
 - `goToEvent(event)` scrolls to the event if it is already rendered with a `data-event` attribute
   and navigates otherwise; `makeEventPermalink` is the shareable form.
 - `goToSpace(url)` goes to `makeSpaceEntryPath(url)`: the last page visited in that space, which

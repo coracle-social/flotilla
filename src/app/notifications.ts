@@ -15,13 +15,15 @@ import {
 } from "@welshman/util"
 import {Comment} from "@welshman/domain"
 import {synced, throttled, withGetter} from "@welshman/store"
-import {Events, Relays, RoomLists} from "@welshman/app"
+import {Events, Relays} from "@welshman/app"
 import {app, fromApp, reader} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
 import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
 import {getIsMuted, notificationSettings, userSettingsValues} from "@app/settings"
 import {Chats} from "@app/chats"
-import {dufflepud, DUFFLEPUD_URL, PLATFORM_RELAYS} from "@app/env"
+import {dufflepud, DUFFLEPUD_URL} from "@app/env"
+import {isGroupSpace} from "@app/relays"
+import {activeSpaceUrls} from "@app/rooms"
 import {kv} from "@app/storage"
 
 // Checked state
@@ -231,10 +233,10 @@ export const latestActivityByPath = derived(
     1000,
     derived(
       [
-        app,
+        activeSpaceUrls,
         fromApp($app => $app.use(Chats).index.$),
+        // Only here to recompute once a relay's NIP-11 says whether it's a group space
         fromApp($app => $app.use(Relays).index.$),
-        fromApp($app => $app.use(RoomLists).index.$),
         fromApp(
           $app =>
             $app
@@ -247,7 +249,7 @@ export const latestActivityByPath = derived(
       identity,
     ),
   ),
-  ([$app, $chatsById, $relays, $roomLists, eventsByIdByUrl, $settings]) => {
+  ([$activeSpaceUrls, $chatsById, , eventsByIdByUrl, $settings]) => {
     const activity = new Map<string, Activity>()
 
     for (const {pubkeys, messages} of $chatsById.values()) {
@@ -256,13 +258,10 @@ export const latestActivityByPath = derived(
       activity.set(path, {path, pubkeys, event: messages[0]})
     }
 
-    const roomList = $app.user?.pubkey ? $roomLists.get($app.user.pubkey) : undefined
-    const urls = PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : (roomList?.urls() ?? [])
-
-    for (const url of urls) {
+    for (const url of $activeSpaceUrls) {
       const events = sortEventsDesc((eventsByIdByUrl.get(url) || new Map()).values())
 
-      if ($relays.get(url)?.hasNip(29)) {
+      if (isGroupSpace(url)) {
         for (const [h, [event]] of groupBy(e => tagValue(tagSpec("h"), e.tags), events)) {
           // A muted room is left out entirely, so it can't light up its own badge or the space's
           if (h && !getIsMuted($settings, url, h)) {

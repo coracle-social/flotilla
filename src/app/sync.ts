@@ -30,16 +30,9 @@ import {
   unionFilters,
 } from "@welshman/util"
 import type {Filter} from "@welshman/util"
-import type {FollowListReader, RoomListReader} from "@welshman/domain"
+import type {FollowListReader} from "@welshman/domain"
 import {merged, synced, throttled, withGetter} from "@welshman/store"
-import {
-  FollowLists,
-  MessagingRelayLists,
-  RelayLists,
-  RoomLists,
-  SearchRelayLists,
-  Sync,
-} from "@welshman/app"
+import {FollowLists, MessagingRelayLists, RelayLists, SearchRelayLists, Sync} from "@welshman/app"
 import {
   app,
   blockedRelayLists,
@@ -59,9 +52,10 @@ import {
 } from "@app/core"
 import {LIVEKIT_PARTICIPANTS} from "@app/call"
 import {CONTENT_KINDS, REACTION_KINDS, makeCommentFilter} from "@app/content"
-import {INDEXER_RELAYS, PLATFORM_RELAYS} from "@app/env"
+import {INDEXER_RELAYS} from "@app/env"
 import {FEATURED_CONTENT_D} from "@app/featured"
 import {decodeRelay} from "@app/relays"
+import {activeSpaceUrls, userSpaceUrls} from "@app/rooms"
 import {Settings} from "@app/settings"
 import {kv} from "@app/storage"
 import {hasBlossomSupport} from "@app/uploads"
@@ -95,8 +89,6 @@ const pullAndListen = ({url, signal, filters}: SyncOpts) => {
   })
 }
 
-const userRoomList = deriveUserItem(RoomLists)
-
 const userRelayList = deriveUserItem(RelayLists)
 
 const userFollowList = deriveUserItem(FollowLists)
@@ -104,9 +96,6 @@ const userFollowList = deriveUserItem(FollowLists)
 const userMessagingRelayList = deriveUserItem(MessagingRelayLists)
 
 const userSearchRelayList = deriveUserItem(SearchRelayLists)
-
-const getSpaceUrls = ($roomList: Maybe<RoomListReader>) =>
-  PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : ($roomList?.urls() ?? [])
 
 // Relays
 
@@ -124,8 +113,8 @@ const syncRelays = () => {
     }
   })
 
-  const unsubscribeSpaceUrls = userRoomList.subscribe($roomList => {
-    for (const url of $roomList?.urls() ?? []) {
+  const unsubscribeSpaceUrls = userSpaceUrls.subscribe($userSpaceUrls => {
+    for (const url of $userSpaceUrls) {
       relays.get().load(url)
     }
   })
@@ -169,21 +158,19 @@ const syncUserData = () => {
   const unsubscribersByUrl = new Map<string, Unsubscriber>()
   const $pubkey = app.get().user?.pubkey
 
-  const syncRoomList = ($roomList: Maybe<RoomListReader>) => {
-    if ($roomList) {
-      const urls = new Set(getSpaceUrls($roomList))
+  const syncSpaceMembership = ($activeSpaceUrls: string[]) => {
+    const urls = new Set($activeSpaceUrls)
 
-      for (const url of urls) {
-        if (!unsubscribersByUrl.has(url)) {
-          unsubscribersByUrl.set(url, syncUserSpaceMembership(url))
-        }
+    for (const url of urls) {
+      if (!unsubscribersByUrl.has(url)) {
+        unsubscribersByUrl.set(url, syncUserSpaceMembership(url))
       }
+    }
 
-      for (const [url, unsubscribe] of unsubscribersByUrl.entries()) {
-        if (!urls.has(url)) {
-          unsubscribersByUrl.delete(url)
-          unsubscribe()
-        }
+    for (const [url, unsubscribe] of unsubscribersByUrl.entries()) {
+      if (!urls.has(url)) {
+        unsubscribersByUrl.delete(url)
+        unsubscribe()
       }
     }
   }
@@ -218,13 +205,13 @@ const syncUserData = () => {
     relayLists.get().load($pubkey)
   }
 
-  const unsubscribeRoomList = userRoomList.subscribe(syncRoomList)
+  const unsubscribeSpaceMembership = activeSpaceUrls.subscribe(syncSpaceMembership)
   const unsubscribeRelayList = userRelayList.subscribe(syncUserLists)
   const unsubscribeFollowList = userFollowList.subscribe(syncFollowNetwork)
 
   return () => {
     unsubscribersByUrl.forEach(call)
-    unsubscribeRoomList()
+    unsubscribeSpaceMembership()
     unsubscribeRelayList()
     unsubscribeFollowList()
   }
@@ -304,8 +291,8 @@ const syncSpaces = () => {
   let detailUrl: Maybe<string>
   let unsubscribeDetail: Unsubscriber = noop
 
-  const unsubscribe = merged([userRoomList, page]).subscribe(([$roomList, $page]) => {
-    const urls = new Set(getSpaceUrls($roomList))
+  const unsubscribe = merged([activeSpaceUrls, page]).subscribe(([$activeSpaceUrls, $page]) => {
+    const urls = new Set($activeSpaceUrls)
     const currentUrl = $page.params.relay ? decodeRelay($page.params.relay) : undefined
 
     if (currentUrl) {

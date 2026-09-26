@@ -14,7 +14,7 @@ export const PUSH_SERVER = env("VITE_PUSH_SERVER")
 
 export const PUSH_BRIDGE = normalizeRelayUrl(env("VITE_PUSH_BRIDGE"))
 
-export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios"
+export const ENABLE_ZAPS = Capacitor.getPlatform() !== "ios"
 
 export const SIGNER_RELAYS = fromCsv(env("VITE_SIGNER_RELAYS")).map(normalizeRelayUrl)
 

@@ -30,8 +30,10 @@ import {
   user,
   writer,
 } from "@app/core"
+import {PLATFORM_RELAYS} from "@app/env"
 import {allowPubkeys, deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/management"
-import {makeRoomPath} from "@app/routes"
+import {isGroupSpace} from "@app/relays"
+import {makeRoomPath, makeSpaceChatPath} from "@app/routes"
 import {loadSendDelay} from "@app/settings"
 
 export const PROTECTED = ["-"]
@@ -180,6 +182,11 @@ export const userRoomList = deriveUserItem(RoomLists)
 
 export const userSpaceUrls = derived(userRoomList, $userRoomList => $userRoomList?.urls() ?? [])
 
+// Platform relays, where configured, stand in for the spaces the user has joined.
+export const activeSpaceUrls = derived(userSpaceUrls, $userSpaceUrls =>
+  PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : $userSpaceUrls,
+)
+
 // Spaces get reordered from lists showing only some of them, so urls go back in the slots they replace.
 export const reorderSpaceUrls = (urls: string[]) => {
   let index = 0
@@ -200,19 +207,10 @@ export const deriveUserRooms = (url: string) =>
     },
   )
 
-export const deriveOtherRooms = (url: string) =>
+export const deriveOtherRooms = (url: string, type: RoomType) =>
   derived([deriveUserRooms(url), rooms.get().forUrl(url).$], ([$userRooms, $spaceRooms]) => {
     const result = $spaceRooms
-      .filter(room => !room.meta?.hasLivekit() && !$userRooms.includes(room.h))
-      .map(room => room.h)
-
-    return sortBy(roomComparator(url), uniq(result))
-  })
-
-export const deriveOtherVoiceRooms = (url: string) =>
-  derived([deriveUserRooms(url), rooms.get().forUrl(url).$], ([$userRooms, $spaceRooms]) => {
-    const result = $spaceRooms
-      .filter(room => room.meta?.hasLivekit() && !$userRooms.includes(room.h))
+      .filter(room => getRoomType(room) === type && !$userRooms.includes(room.h))
       .map(room => room.h)
 
     return sortBy(roomComparator(url), uniq(result))
@@ -310,23 +308,26 @@ export const deriveUserRoomSearch = () =>
   derived(
     [userSpaceUrls, userRoomList, rooms.get().byUrl.$],
     ([$userSpaceUrls, $userRoomList, $roomsByUrl]) => {
-      const options = $userSpaceUrls.flatMap(url => {
-        const favorites = new Set($userRoomList?.roomsForUrl(url) ?? [])
-        // Spaces that aren't NIP-29 relays keep all their messages in the space-wide chat
-        const roomIds = relays.get().get(url)?.hasNip(29)
-          ? ($roomsByUrl.get(url) ?? []).map(room => room.h)
-          : ["chat"]
+      type Option = {url: string; h?: string; path: string; name: string; isFavorite: boolean}
 
-        return roomIds.map(h => ({
-          url,
-          h,
-          name: displayRoom(url, h),
-          isFavorite: favorites.has(h),
-        }))
+      const options = $userSpaceUrls.flatMap((url): Option[] => {
+        if (isGroupSpace(url)) {
+          const favorites = new Set($userRoomList?.roomsForUrl(url) ?? [])
+
+          return ($roomsByUrl.get(url) ?? []).map(({h}) => ({
+            url,
+            h,
+            path: makeRoomPath(url, h),
+            name: displayRoom(url, h),
+            isFavorite: favorites.has(h),
+          }))
+        } else {
+          return [{url, path: makeSpaceChatPath(url), name: "chat", isFavorite: false}]
+        }
       })
 
       return createSearch(options, {
-        getValue: option => makeRoomPath(option.url, option.h),
+        getValue: option => option.path,
         fuseOptions: {keys: ["name", "url"]},
         sortFn: ({item}) => (item.isFavorite ? 0 : 1),
       })

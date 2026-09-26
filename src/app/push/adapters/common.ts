@@ -137,8 +137,7 @@ export const onPushNotificationAction = async (action: {
   const target = event?.kind === WRAP ? await loadNotificationRumor(event) : event
   const path = target && makeEventPath(target, [relay])
 
-  // Kinds we have no route for get a coracle.social permalink, which navigate refuses
-  if (path && !path.includes("://")) {
+  if (path) {
     navigate(path)
   } else if (event?.kind === WRAP) {
     goToChat()

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {Capacitor} from "@capacitor/core"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import ServerPath from "@assets/icons/server-path.svg?dataurl"
@@ -15,6 +14,7 @@
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import SecondaryNavSection from "@lib/components/SecondaryNavSection.svelte"
   import LogOut from "@app/components/LogOut.svelte"
+  import {ENABLE_ZAPS} from "@app/env"
   import {HOSTING_ENABLED} from "@app/hosting"
   import {pushModal} from "@app/modal"
 
@@ -38,7 +38,7 @@
     <SecondaryNavItem href="/settings/alerts">
       <Icon icon={Bell} /> Alerts
     </SecondaryNavItem>
-    {#if Capacitor.getPlatform() !== "ios"}
+    {#if ENABLE_ZAPS}
       <SecondaryNavItem href="/settings/wallet">
         <Icon icon={Wallet} /> Wallet
       </SecondaryNavItem>

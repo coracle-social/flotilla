@@ -32,8 +32,7 @@ import {RoomReferenceExtension} from "@app/editor/RoomReferenceExtension"
 import RoomSuggestion from "@app/editor/RoomSuggestion.svelte"
 import {NativeClipboardPasteExtension} from "@app/editor/clipboard"
 import {compressFileForUpload, makeImetaTag, uploadFile} from "@app/uploads"
-import {userSpaceUrls} from "@app/rooms"
-import {PLATFORM_RELAYS} from "@app/env"
+import {activeSpaceUrls} from "@app/rooms"
 import {pushToast} from "@app/toast"
 
 const isEmpty = (editor: Editor) => editor.getText({blockSeparator: "\n"}).trim() === ""
@@ -79,13 +78,9 @@ export const makeEditor = async ({
   )
 
   const roomReferenceSearch = derived(
-    [throttled(800, userSpaceUrls), throttled(800, rooms.get().byUrl.$)],
-    ([$userSpaceUrls, $roomsByUrl]) => {
-      // Platform relays, where configured, are the only spaces suggestions come from.
-      const spaceUrls =
-        PLATFORM_RELAYS.length > 0
-          ? PLATFORM_RELAYS
-          : uniq(url ? [url, ...$userSpaceUrls] : $userSpaceUrls)
+    [throttled(800, activeSpaceUrls), throttled(800, rooms.get().byUrl.$)],
+    ([$activeSpaceUrls, $roomsByUrl]) => {
+      const spaceUrls = uniq(url ? [url, ...$activeSpaceUrls] : $activeSpaceUrls)
 
       const options = spaceUrls.flatMap(spaceUrl =>
         ($roomsByUrl.get(spaceUrl) ?? []).map((room: Room) => ({

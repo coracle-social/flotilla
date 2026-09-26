@@ -185,7 +185,7 @@ One web build runs in several shells:
 Platform checks call Capacitor directly. There is no wrapper module:
 
 ```ts
-export const ENABLE_ZAPS = Capacitor.getPlatform() != "ios" // src/app/env.ts
+export const ENABLE_ZAPS = Capacitor.getPlatform() !== "ios" // src/app/env.ts
 export const HOSTING_ENABLED = Capacitor.getPlatform() !== "ios" // src/app/hosting.ts
 
 if (!Capacitor.isPluginAvailable("Keyboard")) return noop // src/app/keyboard.ts

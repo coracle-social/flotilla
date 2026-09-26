@@ -3,6 +3,7 @@
   import {remove} from "@welshman/lib"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
+  import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import {preventDefault} from "@lib/html"
   import Button from "@lib/components/Button.svelte"
@@ -21,7 +22,7 @@
   import {chatSearch} from "@app/chats"
   import {user} from "@app/core"
   import {deriveUserRoomSearch} from "@app/rooms"
-  import {makeChatPath, makeRoomPath} from "@app/routes"
+  import {makeChatPath} from "@app/routes"
   import {shareTo, type Share} from "@app/share"
 
   type Props = {
@@ -65,8 +66,7 @@
       {#if roomResults.length > 0}
         <p class="text-xs uppercase tracking-wide opacity-60">Rooms</p>
         <div class="flex flex-col gap-2">
-          {#each roomResults as { url, h } (makeRoomPath(url, h))}
-            {@const path = makeRoomPath(url, h)}
+          {#each roomResults as { url, h, path } (path)}
             <Button
               type="button"
               class={cx(
@@ -74,7 +74,14 @@
                 selection === path ? "button-primary" : "button-neutral",
               )}
               onclick={() => toggle(path)}>
-              <RoomNameWithImage {url} {h} />
+              {#if h}
+                <RoomNameWithImage {url} {h} />
+              {:else}
+                <div class="inline-flex min-w-0 items-center gap-2">
+                  <Icon icon={Hashtag} size={5} />
+                  <span class="truncate min-w-0">chat</span>
+                </div>
+              {/if}
               <RelayName {url} class="min-w-0 truncate text-xs opacity-60" />
             </Button>
           {/each}

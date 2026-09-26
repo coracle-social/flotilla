@@ -17,10 +17,11 @@
   import Icon from "@lib/components/Icon.svelte"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
-  import {events, relays} from "@app/core"
+  import {events} from "@app/core"
   import {ENABLE_ZAPS} from "@app/env"
   import {CONTENT_KINDS} from "@app/content"
-  import {makeSpacePath} from "@app/routes"
+  import {deriveIsGroupSpace} from "@app/relays"
+  import {makeSpaceChatPath, makeSpacePath} from "@app/routes"
   import {allNotifications, notifications} from "@app/notifications"
   import {pushModal} from "@app/modal"
 
@@ -30,8 +31,8 @@
 
   const {url}: Props = $props()
 
-  const relay = $relays.one(url)
-  const chatPath = makeSpacePath(url, "chat")
+  const isGroupSpace = deriveIsGroupSpace(url)
+  const chatPath = makeSpaceChatPath(url)
   const goalsPath = makeSpacePath(url, "goals")
   const threadsPath = makeSpacePath(url, "threads")
   const classifiedsPath = makeSpacePath(url, "classifieds")
@@ -53,8 +54,6 @@
   const showSection = (kind: number, path: string) =>
     $spaceKinds.has(kind) || $allNotifications.has(path) || $page.url.pathname.startsWith(path)
 
-  const hasNip29 = $derived($relay?.hasNip(29) ?? false)
-
   const openSearch = () => pushModal(SpaceSearch, {url})
 
   $effect(() => setJson(spaceKindsKey, [...$spaceKinds]))
@@ -63,7 +62,7 @@
 <SecondaryNavItem href={makeSpacePath(url, "about")}>
   <Icon icon={Home} /> Space Details
 </SecondaryNavItem>
-{#if !hasNip29}
+{#if !$isGroupSpace}
   <SecondaryNavItem href={chatPath} notification={$notifications.has(chatPath)}>
     <Icon icon={ChatRound} /> Chat
   </SecondaryNavItem>
@@ -106,7 +105,7 @@
     <Icon icon={Revote} /> Polls
   </SecondaryNavItem>
 {/if}
-{#if hasNip29}
+{#if $isGroupSpace}
   <SecondaryNavItem onclick={openSearch}>
     <Icon icon={Magnifier} /> Search
   </SecondaryNavItem>

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {Capacitor} from "@capacitor/core"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
@@ -10,7 +9,7 @@
   import HeadphonesRound from "@assets/icons/headphones-round.svg?dataurl"
   import Zap from "@app/components/Zap.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {PLATFORM_NAME, PLATFORM_ABOUT} from "@app/env"
+  import {ENABLE_ZAPS, PLATFORM_NAME, PLATFORM_ABOUT} from "@app/env"
   import {pushModal} from "@app/modal"
   import {makeSpacePath} from "@app/routes"
 
@@ -27,7 +26,7 @@
   <p class="text-center text-2xl">Thanks for using</p>
   <h1 class="mb-4 text-center text-5xl font-bold uppercase">{PLATFORM_NAME}</h1>
   <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-    {#if Capacitor.getPlatform() !== "ios"}
+    {#if ENABLE_ZAPS}
       <Card class="flex flex-col gap-2 text-center">
         <h3 class="text-2xl sm:h-12">Donate</h3>
         <p class="sm:h-16">Funds will be used to support development.</p>

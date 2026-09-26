@@ -2,6 +2,7 @@ import {get, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {page} from "$app/stores"
 import {identity, tryCatch} from "@welshman/lib"
+import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {
   CLASSIFIED,
@@ -203,7 +204,7 @@ export const makeContentPath = (url: string, kind: number, idOrAddress?: string)
   }
 }
 
-export const makeEventPath = (event: TrustedEvent, urls: string[]) => {
+export const makeEventPath = (event: TrustedEvent, urls: string[]): Maybe<string> => {
   if (DM_KINDS.includes(event.kind)) {
     return makeChatPath([event.pubkey, ...tagValues(hexTags("p"), event.tags)])
   }
@@ -245,21 +246,18 @@ export const makeEventPath = (event: TrustedEvent, urls: string[]) => {
 
     return `/notes/${nip19.neventEncode({id, author, kind, relays: urls.slice(0, 3)})}`
   }
-
-  return entityLink(nip19.neventEncode({id: event.id, relays: urls}))
 }
 
 export const makeEventPermalink = (event: TrustedEvent, url?: string) => {
   const urls = url ? [url] : Array.from(app.get().tracker.getRelays(event.id))
   const path = makeEventPath(event, urls)
-
-  if (path.includes("://")) {
-    return path
-  }
-
   const pointer = nip19.neventEncode({id: event.id, relays: urls})
 
-  return `${PLATFORM_URL}${path}${path.includes("?") ? "&" : "?"}event=${pointer}`
+  if (path) {
+    return `${PLATFORM_URL}${path}${path.includes("?") ? "&" : "?"}event=${pointer}`
+  } else {
+    return entityLink(pointer)
+  }
 }
 
 export const getPermalinkTarget = (url: URL) => {
@@ -299,11 +297,13 @@ export const goToEvent = (event: TrustedEvent, options: Record<string, any> = {}
 
   const path = makeEventPath(event, urls)
 
-  if (path.includes("://")) {
-    window.open(path)
-  } else if (!scrollToEvent(event.id)) {
-    const replaceState = path.replace(/\?.*$/, "") === get(page).url.pathname
+  if (path) {
+    if (!scrollToEvent(event.id)) {
+      const replaceState = path.replace(/\?.*$/, "") === get(page).url.pathname
 
-    navigate(path, {replaceState, ...options})
+      navigate(path, {replaceState, ...options})
+    }
+  } else {
+    window.open(entityLink(nip19.neventEncode({id: event.id, relays: urls})))
   }
 }

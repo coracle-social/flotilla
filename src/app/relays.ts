@@ -3,7 +3,7 @@ import {call, on, simpleCache} from "@welshman/lib"
 import {normalizeRelayUrl} from "@welshman/util"
 import {AuthStateEvent, AuthStatus, SocketEvent, SocketStatus} from "@welshman/net"
 import {throttled} from "@welshman/store"
-import {app} from "@app/core"
+import {app, relays} from "@app/core"
 import {relaysMostlyRestricted} from "@app/policies"
 import {colorFor} from "@app/theme"
 
@@ -94,6 +94,12 @@ export const deriveSocketStatus = (url: string) =>
       return {theme: "success", title: "Connected"}
     }),
   )
+
+// A space that isn't a NIP-29 relay has no rooms, only one space-wide chat.
+export const isGroupSpace = (url: string) => Boolean(relays.get().get(url)?.hasNip(29))
+
+export const deriveIsGroupSpace = (url: string) =>
+  derived(relays.get().one(url), $relay => Boolean($relay?.hasNip(29)))
 
 const livekitUrl = (url: string) =>
   url.replace(/^ws/, "http").replace(/\/$/, "") + "/.well-known/nip29/livekit"

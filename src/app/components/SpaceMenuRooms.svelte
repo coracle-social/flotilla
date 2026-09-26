@@ -8,9 +8,9 @@
   import SecondaryNavHeader from "@lib/components/SecondaryNavHeader.svelte"
   import SpaceMenuRoomItem from "@app/components/SpaceMenuRoomItem.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
-  import {relays} from "@app/core"
   import {deriveUserCanCreateRoom} from "@app/management"
-  import {deriveUserRooms, deriveOtherRooms, deriveOtherVoiceRooms, displayRoom} from "@app/rooms"
+  import {deriveIsGroupSpace} from "@app/relays"
+  import {RoomType, deriveUserRooms, deriveOtherRooms, displayRoom} from "@app/rooms"
   import {pushModal} from "@app/modal"
 
   type Props = {
@@ -20,10 +20,10 @@
 
   const {url, mobile = false}: Props = $props()
 
-  const relay = $relays.one(url)
+  const isGroupSpace = deriveIsGroupSpace(url)
   const userRooms = deriveUserRooms(url)
-  const otherRooms = deriveOtherRooms(url)
-  const otherVoiceRooms = deriveOtherVoiceRooms(url)
+  const otherRooms = deriveOtherRooms(url, RoomType.Text)
+  const otherVoiceRooms = deriveOtherRooms(url, RoomType.Voice)
   const canCreateRoom = deriveUserCanCreateRoom(url)
 
   const roomSearch = derived(otherRooms, $otherRooms =>
@@ -95,7 +95,7 @@
   {/if}
 {/snippet}
 
-{#if ($relay?.hasNip(29) ?? false) && ($userRooms.length > 0 || $otherRooms.length > 0 || $otherVoiceRooms.length > 0 || $canCreateRoom)}
+{#if $isGroupSpace && ($userRooms.length > 0 || $otherRooms.length > 0 || $otherVoiceRooms.length > 0 || $canCreateRoom)}
   {#if mobile}
     <div class="card space-menu__card flex flex-col gap-1">
       {@render content()}
