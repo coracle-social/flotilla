@@ -1,9 +1,10 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
-  import {tagSpec, tagValue} from "@welshman/util"
+  import {Thread} from "@welshman/domain"
   import Button from "@lib/components/Button.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
+  import {reader} from "@app/core"
 
   type Props = {
     url: string
@@ -13,7 +14,7 @@
 
   const {url, event, onClick}: Props = $props()
 
-  const title = tagValue(tagSpec("title"), event.tags)
+  const title = reader(Thread)(event).title()
 </script>
 
 <Button

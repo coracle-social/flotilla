@@ -1,12 +1,12 @@
 <script lang="ts">
-  import {tagSpec, tagValue} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
+  import {RoomJoin} from "@welshman/domain"
   import Card from "@lib/components/Card.svelte"
   import Button from "@lib/components/Button.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {app, relayManagement} from "@app/core"
+  import {app, reader, relayManagement} from "@app/core"
   import {deriveSpacePermissions} from "@app/management"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
@@ -20,7 +20,7 @@
 
   const {url, event, onResolved}: Props = $props()
 
-  const h = tagValue(tagSpec("h"), event.tags) || ""
+  const h = reader(RoomJoin)(event).room() || ""
 
   const permissions = deriveSpacePermissions(url)
 

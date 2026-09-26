@@ -3,15 +3,8 @@
   import {readable} from "svelte/store"
   import {now, uniq, displayList, formatTimestampAsTime, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {
-    MESSAGE,
-    THREAD,
-    getCommentFiltersForParent,
-    getIdOrAddress,
-    tagSpec,
-    tagValue,
-  } from "@welshman/util"
-  import {getContentQuote} from "@welshman/domain"
+  import {MESSAGE, THREAD, getCommentFiltersForParent, getIdOrAddress} from "@welshman/util"
+  import {Thread, getContentQuote} from "@welshman/domain"
   import {isMobile} from "@lib/html"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -32,7 +25,7 @@
   import RoomItemMenuButton from "@app/components/RoomItemMenuButton.svelte"
   import RoomItemMenuMobile from "@app/components/RoomItemMenuMobile.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
-  import {events, profiles, thunks, user} from "@app/core"
+  import {events, profiles, reader, thunks, user} from "@app/core"
   import {noThunks, thunksByEventId} from "@app/thunks"
   import {colorFor} from "@app/theme"
   import {ENABLE_ZAPS} from "@app/env"
@@ -154,7 +147,7 @@
         class="button button-xs button-neutral gap-1 rounded-full">
         <Icon icon={NotesMinimalistic} />
         <span class="max-w-48 truncate">
-          {tagValue(tagSpec("title"), thread.tags) || "Thread"}
+          {reader(Thread)(thread).title() || "Thread"}
         </span>
       </Link>
     {/each}

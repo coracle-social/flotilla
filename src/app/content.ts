@@ -37,9 +37,9 @@ export const AUDIO_CONTENT_TYPES = [
 ]
 
 export const getUrlTags = (url: string, event: TrustedEvent) => {
-  // An imeta tag packs its own tags into space-separated values, so unpack them.
+  // An imeta entry is "key value" and the value may contain spaces, so split at the first one only.
   const imetas = matchTags(tagSpec("imeta"), event.tags).map(([, ...values]: string[]) =>
-    values.map(value => value.split(" ")),
+    values.map(value => value.split(/ (.*)/s, 2)),
   )
   const imeta = imetas.find(meta => tagValue(tagSpec("url"), meta) === url)
 

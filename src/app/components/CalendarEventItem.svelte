@@ -1,10 +1,12 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
-  import {getAddress, tagValue, tagSpec} from "@welshman/util"
+  import {getAddress} from "@welshman/util"
+  import {TimeEvent} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
+  import {reader} from "@app/core"
   import type {FeedContext} from "@app/feeds"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
@@ -21,7 +23,7 @@
   const {url, event, context}: Props = $props()
 
   const path = $derived(makeCalendarPath(url, getAddress(event)))
-  const h = $derived(tagValue(tagSpec("h"), event.tags))
+  const h = $derived(reader(TimeEvent)(event).room())
 </script>
 
 <Cv tag={Link} class="relative flex flex-col gap-3 card card-interactive w-full" href={path}>

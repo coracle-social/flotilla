@@ -1,10 +1,9 @@
 import {identity, uniq} from "@welshman/lib"
-import {tagSpec, tagValue} from "@welshman/util"
-import {displayPubkey} from "@welshman/domain"
+import {Article, Classified, Thread, ZapGoal, displayPubkey} from "@welshman/domain"
 import {makeRoomKey} from "@welshman/app"
 import {decodePubkey} from "@lib/util"
 import {getEventTitle} from "@app/calendar"
-import {app, profiles, rooms} from "@app/core"
+import {app, profiles, reader, rooms} from "@app/core"
 import {PLATFORM_NAME} from "@app/env"
 import {decodeRelay} from "@app/relays"
 
@@ -134,7 +133,7 @@ export const getPageTitle = ({page, pubkey}: PageTitleContext) => {
   const event = getEventForTitle(routeId, page.params)
 
   if (routeId === "/spaces/[relay]/threads/[id]") {
-    return makeTitle(tagValue(tagSpec("title"), event?.tags || []) || "Thread")
+    return makeTitle((event && reader(Thread)(event).title()) || "Thread")
   }
 
   if (routeId === "/spaces/[relay]/calendar/[address]") {
@@ -142,15 +141,15 @@ export const getPageTitle = ({page, pubkey}: PageTitleContext) => {
   }
 
   if (routeId === "/spaces/[relay]/classifieds/[address]") {
-    return makeTitle(tagValue(tagSpec("title"), event?.tags || []) || "Listing")
+    return makeTitle((event && reader(Classified)(event).title()) || "Listing")
   }
 
   if (routeId === "/spaces/[relay]/articles/[address]") {
-    return makeTitle(tagValue(tagSpec("title"), event?.tags || []) || "Article")
+    return makeTitle((event && reader(Article)(event).title()) || "Article")
   }
 
   if (routeId === "/spaces/[relay]/goals/[id]") {
-    return makeTitle(event?.content || tagValue(tagSpec("summary"), event?.tags || []) || "Goal")
+    return makeTitle(event?.content || (event && reader(ZapGoal)(event).summary()) || "Goal")
   }
 
   return makeTitle()

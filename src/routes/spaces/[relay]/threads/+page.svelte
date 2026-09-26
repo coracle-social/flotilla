@@ -6,12 +6,14 @@
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {THREAD, tagValue, tagSpec} from "@welshman/util"
+  import {Thread} from "@welshman/domain"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
+  import {reader} from "@app/core"
   import {decodeRelay} from "@app/relays"
   import {displayRoom} from "@app/rooms"
   import {makeCommentFilter} from "@app/content"
@@ -46,7 +48,7 @@
 
     const items = sortBy(e => -max([...(scores.get(e.id) || []), e.created_at]), threads)
 
-    const grouped = groupBy(e => tagValue(tagSpec("h"), e.tags) || "", items)
+    const grouped = groupBy(e => reader(Thread)(e).room() || "", items)
     const byRoom = new Map<string, TrustedEvent[]>([["", []], ...grouped])
     const roomName = (h: string) => (h ? displayRoom(url, h) : "general").toLowerCase()
     const boards = sortBy(([h]) => roomName(h), Array.from(byRoom.entries()))

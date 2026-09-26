@@ -1,10 +1,11 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
-  import {tagSpec, tagValue} from "@welshman/util"
+  import {Poll} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
+  import {reader} from "@app/core"
   import type {FeedContext} from "@app/feeds"
   import RoomLink from "@app/components/RoomLink.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
@@ -20,7 +21,7 @@
   const {url, event, context}: Props = $props()
 
   const path = makePollPath(url, event.id)
-  const h = tagValue(tagSpec("h"), event.tags)
+  const h = reader(Poll)(event).room()
 </script>
 
 <Cv tag={Link} class="relative flex flex-col gap-2 card card-interactive w-full" href={path}>

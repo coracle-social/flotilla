@@ -3,12 +3,14 @@
   import {derived} from "svelte/store"
   import {filter, formatTimestamp, max, spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {COMMENT, tagSpec, tagValue} from "@welshman/util"
+  import {COMMENT} from "@welshman/util"
+  import {Thread} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
+  import {reader} from "@app/core"
   import type {FeedContext} from "@app/feeds"
   import {makeThreadPath} from "@app/routes"
 
@@ -25,7 +27,7 @@
   const replies = derived(related, $related => filter(spec({kind: COMMENT}), $related))
   const replyCount = $derived($replies.length)
   const lastActive = $derived(max([...$replies, event].map(e => e.created_at)))
-  const title = tagValue(tagSpec("title"), event.tags)
+  const title = reader(Thread)(event).title()
   const path = makeThreadPath(url, event.id)
   const onClick = () => navigate(path)
 </script>
