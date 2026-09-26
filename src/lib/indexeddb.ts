@@ -106,15 +106,13 @@ export class IDB {
     const tx = connection.transaction(table, "readwrite")
     const store = tx.objectStore(table)
 
-    await Promise.all(
-      Array.from(data).map(item => {
-        try {
-          store.put(item)
-        } catch (e) {
-          console.error(e, item)
-        }
-      }),
-    )
+    for (const item of data) {
+      try {
+        store.put(item)
+      } catch (e) {
+        console.error(e, item)
+      }
+    }
 
     await tx.done
   }

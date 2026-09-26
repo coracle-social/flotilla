@@ -12,6 +12,7 @@
     value: string[]
     addLabel?: Snippet
     placeholder?: string
+    allowAdd?: boolean
   }
 
   type Entry = {id: string; value: string}
@@ -21,7 +22,7 @@
     addLabel,
     placeholder = "Enter text...",
     allowAdd = true,
-  }: Props & {allowAdd?: boolean} = $props()
+  }: Props = $props()
 
   const toEntry = (value: string) => ({id: randomId(), value})
 

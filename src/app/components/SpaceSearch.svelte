@@ -1,6 +1,5 @@
 <script lang="ts">
   import {MESSAGE, displayRelayUrl, tagSpec, tagValue} from "@welshman/util"
-  import Badge from "@lib/components/Badge.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
@@ -37,9 +36,9 @@
     {#snippet badges(event)}
       {@const h = tagValue(tagSpec("h"), event.tags)}
       {#if h}
-        <Badge variant="neutral">
+        <span class="badge badge-neutral">
           <RoomName {url} {h} />
-        </Badge>
+        </span>
       {/if}
     {/snippet}
   </SearchBody>

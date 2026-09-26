@@ -4,7 +4,6 @@
   import ArrowRight from "@assets/icons/arrow-right.svg?dataurl"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
   import PageHeader from "@lib/components/PageHeader.svelte"
@@ -35,7 +34,7 @@
           <div class="flex flex-col gap-3">
             <div class="flex items-start justify-between">
               <img alt="{PLATFORM_NAME} Logo" src={PLATFORM_LOGO} class="h-10 w-10" />
-              <Badge variant="primary">Recommended</Badge>
+              <span class="badge badge-primary">Recommended</span>
             </div>
             <div class="flex flex-col gap-1">
               <h3 class="text-lg font-bold">

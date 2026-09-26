@@ -1,9 +1,14 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import QrScanner from "qr-scanner"
+  import cx from "classnames"
   import Spinner from "@lib/components/Spinner.svelte"
 
-  const {onscan} = $props()
+  type Props = {
+    onscan: (data: string) => void
+  }
+
+  const {onscan}: Props = $props()
 
   const changeCamera = async () => {
     if (camera && scanner) {
@@ -56,7 +61,7 @@
       <Spinner loading>Loading your camera...</Spinner>
     </p>
   {/if}
-  <video class="m-auto rounded" class:h-0={loading} bind:this={video}></video>
+  <video class={cx("m-auto rounded", {"h-0": loading})} bind:this={video}></video>
   {#if cameras.length > 1}
     <select
       class="select input input-sm absolute bottom-1 right-1 w-auto"

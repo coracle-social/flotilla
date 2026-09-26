@@ -3,7 +3,6 @@
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import Stethoscope from "@assets/icons/stethoscope.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HealthCheckItem from "@app/components/HealthCheckItem.svelte"
@@ -48,7 +47,7 @@
 <HomeSection title="Health checks" icon={Stethoscope}>
   {#snippet action()}
     {#if count > 0}
-      <Badge variant="warning">{count} open</Badge>
+      <span class="badge badge-warning">{count} open</span>
     {/if}
   {/snippet}
   {#if count === 0}

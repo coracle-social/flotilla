@@ -1,4 +1,18 @@
 @layer components {
+  .secondary-nav__nav-item {
+    @apply cursor-pointer rounded-2xl;
+    padding: 12px 16px;
+
+    &:active:hover,
+    &:active:focus {
+      transform: scale(0.97);
+    }
+  }
+
+  .secondary-nav__dot {
+    @apply bg-primary absolute top-5 right-[1.15rem] h-2 w-2 rounded-full;
+  }
+
   .secondary-nav {
     @apply border-line mt-sai mb-sai bg-surface-more z-nav max-h-screen min-h-0 w-60 shrink-0 flex-col gap-1 border-r border-solid;
 

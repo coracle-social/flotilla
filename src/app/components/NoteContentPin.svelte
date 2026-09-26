@@ -1,7 +1,6 @@
 <script lang="ts">
   import type {ComponentProps} from "svelte"
   import {Pin} from "@welshman/domain"
-  import Badge from "@lib/components/Badge.svelte"
   import Content from "@app/components/Content.svelte"
   import PinContentEvent from "@app/components/PinContentEvent.svelte"
   import {reader} from "@app/core"
@@ -34,7 +33,7 @@
     {#if pin.topics().length > 0}
       <div class="mt-auto flex flex-wrap gap-1">
         {#each pin.topics() as topic (topic)}
-          <Badge>#{topic}</Badge>
+          <span class="badge badge-neutral">#{topic}</span>
         {/each}
       </div>
     {/if}

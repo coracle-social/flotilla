@@ -3,7 +3,6 @@
   import {getIdFilters, matchTag, tagSpec} from "@welshman/util"
   import {LOCAL_RELAY_URL} from "@welshman/net"
   import type {TrustedEvent} from "@welshman/util"
-  import Card from "@lib/components/Card.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
@@ -38,7 +37,7 @@
   }
 </script>
 
-<Cv tag={Card} sm class="flex flex-col gap-4">
+<Cv class="card card-sm flex flex-col gap-4">
   <div class="flex justify-between">
     <div>
       <ProfileName pubkey={event.pubkey} {url} />

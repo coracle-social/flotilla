@@ -3,7 +3,6 @@
   import {removeUndefined} from "@welshman/lib"
   import {Address} from "@welshman/util"
   import type {PinReader} from "@welshman/domain"
-  import Badge from "@lib/components/Badge.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import Content from "@app/components/Content.svelte"
   import PinContentEvent from "@app/components/PinContentEvent.svelte"
@@ -65,7 +64,7 @@
   {#if !minimal && pin.topics().length > 0}
     <div class="mt-auto flex flex-wrap gap-1">
       {#each pin.topics() as topic (topic)}
-        <Badge>#{topic}</Badge>
+        <span class="badge badge-neutral">#{topic}</span>
       {/each}
     </div>
   {/if}

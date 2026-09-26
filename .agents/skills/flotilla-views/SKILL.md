@@ -229,11 +229,14 @@ lives there:
 - page chrome: `Page`, `PageBar`, `PageContent`, `SecondaryNav*`, `PrimaryNavItem`, `FAB`
 - modal chrome: `Dialog`, `Drawer`, `Modal`, `ModalBody`, `ModalHeader`, `ModalTitle`,
   `ModalSubtitle`, `ModalFooter`, `Confirm`
-- controls: `Button`, `Link`, `Field`, `FieldInline`, `Input`, `InputList`, `ToggleInput`,
+- controls: `Button`, `Link`, `Field`, `FieldInline`, `InputList`, `ToggleInput`,
   `DateTimeInput`, `ImagesInput`, `EmojiPicker`, `MenuButton`, `SegmentedButtons`
-- display and lists: `Icon`, `Badge`, `Card`, `Divider`, `Spinner`, `LoadingFallback`, `Tooltip`,
+- display and lists: `Icon`, `ImageIcon`, `Divider`, `Spinner`, `LoadingFallback`, `Tooltip`,
   `Tippy`, `Cv`, `VirtualList`, `Masonry`, `DragList`, `ScrollToTop`
-- the CSS component families (`button.css`, `card.css`, …) and the theme tokens
+- the CSS component families (`button.css`, `card.css`, `badge.css`, `input.css`, …) and the
+  theme tokens. Cards, badges and inputs are plain markup with these classes
+  (`<div class="card card-sm">`, `<span class="badge badge-primary">`,
+  `<div class="input input-group"><input /></div>`) rather than components.
 
 Anything that takes an identifier and reads a store, publishes, or knows a kind is an app
 component. A lib component that needs app behavior takes it as a prop, such as `MenuButton`'s
@@ -467,7 +470,7 @@ Rich text uses `makeEditor` from `src/app/editor` with `EditorContent`.
 - Colors are the semantic tokens registered in `base.css`: `bg-surface`, `bg-surface-more`,
   `text-content`, `text-content-muted`, `border-line`, `text-primary`, `text-error`. The clay,
   flat, navy and nature themes supply the values through `data-fl-theme`.
-- Seven `class:` directives remain as leftovers; everything else builds classes with `cx`.
+- A few `class:` directives remain in `src/app` as leftovers; everything else builds classes with `cx`.
 - Container queries go on the `PageContent`, as in `@2xl:grid-cols-2` for the classifieds grid.
 - Icons are `import X from "@assets/icons/<name>.svg?dataurl"` with `<Icon icon={X} size={4} />`,
   where `size` counts 4px steps. List entries animate with `in:fly` from `@lib/transition`.

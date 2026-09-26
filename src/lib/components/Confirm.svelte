@@ -12,7 +12,7 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
 
-  interface Props {
+  type Props = {
     title?: string
     subtitle?: string
     message: any

@@ -1,7 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import PomadeSessionMenu from "@app/components/PomadeSessionMenu.svelte"
   import {pushToast} from "@app/toast"
   import {deletePomadeSession, loadOtherPomadeSessions} from "@app/pomade"
@@ -60,12 +59,12 @@
             componentProps={{onDelete: () => deleteSession(sessionItem)}} />
         </div>
         <div class="flex gap-1">
-          <Badge variant="neutral">
+          <span class="badge badge-neutral">
             Created {formatDate(sessionItem.created_at)}
-          </Badge>
-          <Badge variant="neutral">
+          </span>
+          <span class="badge badge-neutral">
             Active {formatDate(sessionItem.last_activity)}
-          </Badge>
+          </span>
         </div>
       </div>
     {/each}

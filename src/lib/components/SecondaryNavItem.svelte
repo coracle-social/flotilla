@@ -1,31 +1,18 @@
-<style>
-  a,
-  button {
-    padding: 12px 16px;
-    display: flex;
-    border-radius: var(--radius-2xl);
-    cursor: pointer;
-    animation: nav-button-pop 200ms ease-out;
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-  }
-
-  a:active:hover,
-  a:active:focus,
-  button:active:hover,
-  button:active:focus {
-    animation: button-pop 0s ease-out;
-    transform: scale(0.97);
-  }
-</style>
-
 <script lang="ts">
+  import type {Snippet} from "svelte"
+  import type {HTMLAttributes} from "svelte/elements"
   import cx from "classnames"
   import {fade} from "@lib/transition"
   import {page} from "$app/stores"
 
-  const {children, href = "", title = "", notification = false, ...restProps} = $props()
+  type Props = HTMLAttributes<HTMLElement> & {
+    children?: Snippet
+    href?: string
+    title?: string
+    notification?: boolean
+  }
+
+  const {children, href = "", title = "", notification = false, ...restProps}: Props = $props()
 
   const active = $derived($page.url.pathname === href)
   const wrapperClass = $derived(
@@ -44,19 +31,13 @@
   <a {href} {...restProps} data-tip={title} class={wrapperClass}>
     {@render children?.()}
     {#if notification}
-      <div
-        class="absolute right-[1.15rem] top-5 h-2 w-2 rounded-full bg-primary text-primary-content"
-        transition:fade>
-      </div>
+      <div class="secondary-nav__dot" transition:fade></div>
     {/if}
   </a>
 {:else}
   <button {...restProps} data-tip={title} class={wrapperClass}>
     {#if notification}
-      <div
-        class="absolute right-[1.15rem] top-5 h-2 w-2 rounded-full bg-primary text-primary-content"
-        transition:fade>
-      </div>
+      <div class="secondary-nav__dot" transition:fade></div>
     {/if}
     {@render children?.()}
   </button>

@@ -1,18 +1,30 @@
 <script lang="ts">
+  import type {Snippet} from "svelte"
   import cx from "classnames"
   import {page} from "$app/stores"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
 
+  type Props = {
+    children?: Snippet
+    onclick?: (event: Event) => unknown
+    title?: string
+    href?: string
+    prefix?: string
+    notification?: boolean
+    class?: string
+    "aria-label"?: string
+  }
+
   const {
     children,
-    onclick = undefined,
+    onclick,
     title = "",
     href = "",
     prefix = "",
     notification = false,
     ...restProps
-  } = $props()
+  }: Props = $props()
 
   const active = $derived($page.url?.pathname?.startsWith(prefix || href || "bogus"))
 

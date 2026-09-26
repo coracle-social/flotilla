@@ -2,14 +2,9 @@
   import type {Snippet} from "svelte"
 
   // Behavior only, so the same `button*` classes apply to <a> and <span> without a prop API.
-  const {
-    children,
-    onclick,
-    type = "button",
-    ...restProps
-  }: {
+  type Props = {
     children: Snippet
-    onclick?: (event: Event) => any
+    onclick?: (event: Event) => unknown
     type?: "button" | "submit"
     class?: string
     style?: string
@@ -17,7 +12,9 @@
     "data-tip"?: string
     "aria-label"?: string
     "aria-pressed"?: boolean
-  } = $props()
+  }
+
+  const {children, onclick, type = "button", ...restProps}: Props = $props()
 
   const onClick = (e: Event) => {
     e.preventDefault()

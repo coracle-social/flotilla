@@ -7,9 +7,11 @@ import {
   ms,
   now,
   on,
+  range,
   removeUndefined,
   sleep,
   uniqBy,
+  DAY,
   MONTH,
   YEAR,
 } from "@welshman/lib"
@@ -37,7 +39,6 @@ import {mergeRepositoryUpdates} from "@welshman/net"
 import type {RepositoryUpdate} from "@welshman/net"
 import {createScroller} from "@lib/html"
 import type {ScrollerOpts} from "@lib/html"
-import {daysBetween} from "@lib/util"
 import {EVENT_CONTEXT_KINDS, REACTION_KINDS} from "@app/content"
 import {app, network, reader} from "@app/core"
 
@@ -768,7 +769,12 @@ export const makeCalendarFeed = ({
       priority: 1,
       signal: spanSignal(controller.signal),
       threshold: SPAN_THRESHOLD,
-      filters: [{kinds: [EVENT_TIME], "#D": daysBetween(since, until).map(String)}],
+      filters: [
+        {
+          kinds: [EVENT_TIME],
+          "#D": [...range(since, until, DAY)].map(t => String(Math.floor(t / DAY))),
+        },
+      ],
       onEose: () => {
         complete = true
       },

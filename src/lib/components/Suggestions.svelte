@@ -1,22 +1,41 @@
 <script lang="ts">
+  import type {Component as SvelteComponent} from "svelte"
+  import type {Readable} from "svelte/store"
   import {fly} from "svelte/transition"
+  import cx from "classnames"
   import {throttle, clamp} from "@welshman/lib"
   import {preventDefault, stopPropagation} from "@lib/html"
 
-  const {term, search, select, component: Component, style = "", allowCreate = false} = $props()
+  type Props = {
+    term: Readable<string>
+    search: (term: string) => string[]
+    select: (value: string) => void
+    component: SvelteComponent<{value: string}>
+    style?: string
+    allowCreate?: boolean
+  }
+
+  const {
+    term,
+    search,
+    select,
+    component: Component,
+    style = "",
+    allowCreate = false,
+  }: Props = $props()
 
   let index = $state(0)
   let items: string[] = $state([])
 
-  const populateItems = throttle(300, term => {
+  const populateItems = throttle(300, (term: string) => {
     items = term ? search(term).slice(0, 5) : []
   })
 
-  const setIndex = (newIndex: number, block: any) => {
+  const setIndex = (newIndex: number) => {
     index = clamp([0, items.length - 1], newIndex)
   }
 
-  export const onKeyDown = (e: any) => {
+  export const onKeyDown = (e: KeyboardEvent) => {
     if (["Enter", "Tab"].includes(e.code)) {
       const value = items[index]
 
@@ -35,13 +54,13 @@
     }
 
     if (e.code === "ArrowUp") {
-      setIndex(index - 1, "start")
+      setIndex(index - 1)
 
       return true
     }
 
     if (e.code === "ArrowDown") {
-      setIndex(index + 1, "start")
+      setIndex(index + 1)
 
       return true
     }
@@ -70,8 +89,7 @@
     {#each items as value, i (value)}
       <button
         aria-label={value}
-        class="tiptap-suggestions__item"
-        class:tiptap-suggestions__selected={index === i}
+        class={cx("tiptap-suggestions__item", {"tiptap-suggestions__selected": index === i})}
         {onmousedown}
         onclick={stopPropagation(preventDefault(() => select(value)))}>
         <Component {value}></Component>

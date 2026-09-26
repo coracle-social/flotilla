@@ -26,7 +26,6 @@
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Card from "@lib/components/Card.svelte"
   import ContentToken from "@app/components/ContentToken.svelte"
   import ContentEmoji from "@app/components/ContentEmoji.svelte"
   import ContentEmail from "@app/components/ContentEmail.svelte"
@@ -167,13 +166,13 @@
 
 <div class="relative">
   {#if warning}
-    <Card sm class="shadow-none flex gap-2">
+    <div class="card card-sm shadow-none flex gap-2">
       <Icon icon={Danger} />
       <p>
         This note has been flagged by the author as "{warning}".<br />
         <Button onclick={ignoreWarning} class="button button-link">Show anyway</Button>
       </p>
-    </Card>
+    </div>
   {:else}
     <div
       class="overflow-hidden text-ellipsis wrap-anywhere"

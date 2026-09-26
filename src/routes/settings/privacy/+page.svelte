@@ -8,7 +8,6 @@
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import Card from "@lib/components/Card.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -87,7 +86,7 @@
 
 <form {onsubmit}>
   <PageContent>
-    <Card class="flex flex-col gap-4">
+    <div class="card flex flex-col gap-4">
       <strong class="flex items-center gap-3 text-lg">
         <Icon icon={ShieldMinimalistic} />
         Privacy Settings
@@ -147,8 +146,8 @@
           </p>
         {/snippet}
       </FieldInline>
-    </Card>
-    <Card class="flex flex-col gap-4">
+    </div>
+    <div class="card flex flex-col gap-4">
       <strong class="flex items-center gap-3 text-lg">
         <Icon icon={LetterUnread} />
         Message Requests
@@ -201,13 +200,13 @@
           <p>A sender counts as known when this many of the people you follow also follow them.</p>
         {/snippet}
       </Field>
-    </Card>
-    <Card class="sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
+    </div>
+    <div class="card sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}
         >Discard Changes</Button>
       <Button class="button button-primary" type="submit" disabled={loading}>
         <Spinner {loading}>Save Changes</Spinner>
       </Button>
-    </Card>
+    </div>
   </PageContent>
 </form>

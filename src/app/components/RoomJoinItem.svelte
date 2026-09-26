@@ -1,7 +1,6 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import {RoomJoin} from "@welshman/domain"
-  import Card from "@lib/components/Card.svelte"
   import Button from "@lib/components/Button.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
@@ -72,7 +71,7 @@
   let loading = $state(false)
 </script>
 
-<Card sm class="flex flex-col gap-4">
+<div class="card card-sm flex flex-col gap-4">
   <div class="flex justify-between gap-2">
     <div>
       <Button class="link text-primary" onclick={showProfile}>
@@ -91,4 +90,4 @@
         >Accept</Button>
     </div>
   </div>
-</Card>
+</div>

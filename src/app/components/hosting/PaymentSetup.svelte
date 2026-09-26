@@ -9,7 +9,6 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Field from "@lib/components/Field.svelte"
-  import Input from "@lib/components/Input.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -161,10 +160,12 @@
               Nostr Wallet Connect URL
             {/snippet}
             {#snippet input()}
-              <Input
-                bind:value={nwcUrl}
-                autocomplete="off"
-                placeholder="nostr+walletconnect://..." />
+              <div class="input input-group">
+                <input
+                  bind:value={nwcUrl}
+                  autocomplete="off"
+                  placeholder="nostr+walletconnect://..." />
+              </div>
             {/snippet}
           </Field>
           {#if nwcConnected}

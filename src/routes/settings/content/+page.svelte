@@ -17,7 +17,6 @@
   import InputList from "@lib/components/InputList.svelte"
   import Link from "@lib/components/Link.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import Card from "@lib/components/Card.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -107,7 +106,7 @@
 
 <form {onsubmit}>
   <PageContent>
-    <Card class="flex flex-col gap-4">
+    <div class="card flex flex-col gap-4">
       <strong class="flex items-center gap-3 text-lg">
         <Icon icon={NotesMinimalistic} />
         Content Settings
@@ -146,8 +145,8 @@
           </div>
         {/snippet}
       </Field>
-    </Card>
-    <Card class="flex flex-col gap-4">
+    </div>
+    <div class="card flex flex-col gap-4">
       <strong class="flex items-center gap-3 text-lg">
         <Icon icon={Palette} />
         Theme Settings
@@ -182,8 +181,8 @@
           <p>Changes the shape and texture of everything, not just its colors.</p>
         {/snippet}
       </FieldInline>
-    </Card>
-    <Card class="flex flex-col gap-4">
+    </div>
+    <div class="card flex flex-col gap-4">
       <strong class="flex items-center gap-3 text-lg">
         <Icon icon={Accessibility} />
         Accessibility
@@ -206,8 +205,8 @@
             bind:value={$settings.font_size} />
         {/snippet}
       </Field>
-    </Card>
-    <Card class="flex flex-col gap-4 shadow-md">
+    </div>
+    <div class="card flex flex-col gap-4 shadow-md">
       <strong class="text-lg">Editor Settings</strong>
       <Field>
         {#snippet label()}
@@ -271,13 +270,13 @@
           <p>Choose a media server type and url for files you upload to {PLATFORM_NAME}.</p>
         {/snippet}
       </Field>
-    </Card>
-    <Card class="sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
+    </div>
+    <div class="card sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}
         >Discard Changes</Button>
       <Button class="button button-primary" type="submit" disabled={loading}>
         <Spinner {loading}>Save Changes</Spinner>
       </Button>
-    </Card>
+    </div>
   </PageContent>
 </form>

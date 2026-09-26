@@ -1,5 +1,5 @@
 <script lang="ts">
-  interface Props {
+  type Props = {
     title?: import("svelte").Snippet
     info?: import("svelte").Snippet
   }

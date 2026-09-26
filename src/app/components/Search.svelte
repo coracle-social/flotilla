@@ -4,7 +4,6 @@
   import {publish} from "@welshman/app"
   import Server from "@assets/icons/server.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -58,9 +57,9 @@
     {#snippet badges(event)}
       {@const url = getSpaceUrl(event)}
       {#if url}
-        <Badge variant="neutral">
+        <span class="badge badge-neutral">
           <RelayName {url} />
-        </Badge>
+        </span>
       {/if}
     {/snippet}
   </SearchBody>

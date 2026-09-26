@@ -3,7 +3,6 @@
   import Pen from "@assets/icons/pen.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Card from "@lib/components/Card.svelte"
   import Content from "@app/components/Content.svelte"
   import EditFeaturedContent from "@app/components/EditFeaturedContent.svelte"
   import {deriveFeaturedContent} from "@app/featured"
@@ -23,7 +22,7 @@
 </script>
 
 {#if $content.length > 0 || $canEdit}
-  <Card class="bg-surface flex flex-col gap-3 @container">
+  <div class="card bg-surface flex flex-col gap-3 @container">
     <div class="flex items-center justify-between gap-2">
       <h3 class="flex items-center gap-2 text-lg font-bold">
         <Icon icon={Bookmark} />
@@ -44,5 +43,5 @@
         {/each}
       </div>
     {/if}
-  </Card>
+  </div>
 {/if}

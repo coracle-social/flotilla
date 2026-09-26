@@ -7,7 +7,6 @@
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
@@ -62,7 +61,7 @@
           <span class="truncate min-w-0 text-xs opacity-75">{displayHandle($handle)}</span>
         {/if}
         {#if isOp}
-          <Badge variant="primary" class="w-fit self-start @2xl:self-center">OP</Badge>
+          <span class="badge badge-primary w-fit self-start @2xl:self-center">OP</span>
         {/if}
       </div>
     </aside>

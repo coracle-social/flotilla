@@ -3,7 +3,6 @@
   import {Relays} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
-  import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -61,7 +60,7 @@
           <div class="min-w-0 flex-1">
             <Profile pubkey={$relay.pubkey} {url} />
           </div>
-          <Badge>Owner</Badge>
+          <span class="badge badge-neutral">Owner</span>
         </div>
       {/if}
       {#if loading}
@@ -88,7 +87,8 @@
             </div>
             <div class="flex flex-wrap gap-1">
               {#each methods as method (method)}
-                <Badge class="badge-sm font-normal">{displayManagementMethod(method)}</Badge>
+                <span class="badge badge-neutral badge-sm font-normal"
+                  >{displayManagementMethod(method)}</span>
               {/each}
             </div>
           </div>

@@ -150,16 +150,6 @@ export const downloadText = async (filename: string, text: string) => {
   URL.revokeObjectURL(url)
 }
 
-export const isIntersecting = async (element: Element) =>
-  new Promise(resolve => {
-    const observer = new IntersectionObserver(xs => {
-      resolve(xs.some(x => x.isIntersecting))
-      observer.unobserve(element)
-    })
-
-    observer.observe(element)
-  })
-
 export const escapeHtml = (html: string) => {
   const element = document.createElement("div")
 

@@ -5,9 +5,7 @@
   import VerifiedCheck from "@assets/icons/verified-check.svg?dataurl"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Input from "@lib/components/Input.svelte"
   import Field from "@lib/components/Field.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Modal from "@lib/components/Modal.svelte"
@@ -81,31 +79,30 @@
       {/snippet}
       {#snippet secondary()}
         {#if relay.custom_domain && flagToBool(relay.custom_domain_verified, false)}
-          <Badge variant="primary">
+          <span class="badge badge-primary">
             <Icon icon={VerifiedCheck} size={3} />
             Verified
-          </Badge>
+          </span>
         {/if}
       {/snippet}
       {#snippet input()}
-        <Input
-          bind:value={domain}
-          type="text"
-          placeholder="relay.example.com"
-          autocomplete="off"
-          autocapitalize="none"
-          spellcheck="false">
-          {#snippet after()}
-            {#if domain}
-              <Button
-                onclick={clearDomain}
-                aria-label="Clear domain"
-                class="shrink-0 text-content-subtle hover:text-content">
-                <Icon icon={CloseCircle} size={4} />
-              </Button>
-            {/if}
-          {/snippet}
-        </Input>
+        <div class="input input-group">
+          <input
+            bind:value={domain}
+            type="text"
+            placeholder="relay.example.com"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false" />
+          {#if domain}
+            <Button
+              onclick={clearDomain}
+              aria-label="Clear domain"
+              class="shrink-0 text-content-subtle hover:text-content">
+              <Icon icon={CloseCircle} size={4} />
+            </Button>
+          {/if}
+        </div>
       {/snippet}
       {#snippet info()}
         <p>Must be a domain you control, e.g. relay.example.com.</p>

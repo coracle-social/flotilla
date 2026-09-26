@@ -12,7 +12,6 @@
   import Tippy from "@lib/components/Tippy.svelte"
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import ProfileSuggestion from "@app/editor/ProfileSuggestion.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
@@ -74,14 +73,14 @@
   <div>
     {#each value as pubkey (pubkey)}
       {@const onClick = () => pushModal(ProfileDetail, {pubkey})}
-      <Badge variant="neutral" class="mr-1 mb-1 gap-1">
+      <span class="badge badge-neutral mr-1 mb-1 gap-1">
         <Button class="flex items-center" onclick={() => removePubkey(pubkey)}>
           <Icon icon={CloseCircle} size={4} />
         </Button>
         <Button onclick={onClick}>
           <ProfileName {pubkey} />
         </Button>
-      </Badge>
+      </span>
     {/each}
   </div>
   <label class="input flex w-full items-center gap-2" bind:this={label}>

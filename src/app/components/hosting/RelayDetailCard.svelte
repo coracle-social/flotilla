@@ -8,7 +8,6 @@
   import Refresh from "@assets/icons/refresh.svg?dataurl"
   import {ucFirst} from "@lib/util"
   import Icon from "@lib/components/Icon.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
   import Link from "@lib/components/Link.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
@@ -16,6 +15,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
+  import Tooltip from "@lib/components/Tooltip.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayDetailMenu from "@app/components/hosting/RelayDetailMenu.svelte"
   import CustomDomainModal from "@app/components/hosting/CustomDomainModal.svelte"
@@ -102,16 +102,25 @@
 </script>
 
 {#snippet flagToggle(title: string, flag: RelayFlag, gated = false)}
+  {#snippet toggle()}
+    <ToggleInput
+      checked={flagToBool(relay[flag], Boolean(RELAY_FLAG_DEFAULTS[flag]))}
+      disabled={gated}
+      onchange={setFlag(flag)} />
+  {/snippet}
   <FieldInline class={cx({"opacity-50": gated})}>
     {#snippet label()}
       <span>{title}</span>
     {/snippet}
     {#snippet input()}
-      <ToggleInput
-        checked={flagToBool(relay[flag], Boolean(RELAY_FLAG_DEFAULTS[flag]))}
-        disabled={gated}
-        tooltip={gated ? "Not available on your current plan" : undefined}
-        onchange={setFlag(flag)} />
+      {#if gated}
+        <!-- On a wrapper rather than the input, so it still shows while the toggle is disabled -->
+        <Tooltip content="Not available on your current plan">
+          {@render toggle()}
+        </Tooltip>
+      {:else}
+        {@render toggle()}
+      {/if}
     {/snippet}
   </FieldInline>
 {/snippet}
@@ -123,12 +132,20 @@
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
           <h2 class="text-xl font-bold">{relay.info_name || relay.subdomain}</h2>
-          <Badge variant={relay.status === "active" ? "primary" : "neutral"}>
+          <span
+            class={cx("badge", {
+              "badge-primary": relay.status === "active",
+              "badge-neutral": relay.status !== "active",
+            })}>
             {ucFirst(relay.status.replace(/_/g, " "))}
-          </Badge>
-          <Badge variant={relay.plan_id === "free" ? "neutral" : "primary"}>
+          </span>
+          <span
+            class={cx("badge", {
+              "badge-neutral": relay.plan_id === "free",
+              "badge-primary": relay.plan_id !== "free",
+            })}>
             {ucFirst(relay.plan_id)}
-          </Badge>
+          </span>
         </div>
         <Link external href={`https://${host}`} class="break-all text-sm text-primary">
           wss://{host}
@@ -165,15 +182,15 @@
         <div class="flex min-w-0 items-center gap-2">
           <span class="truncate font-medium">{relay.custom_domain}</span>
           {#if domainVerified}
-            <Badge variant="primary">
+            <span class="badge badge-primary">
               <Icon icon={VerifiedCheck} size={3} />
               Verified
-            </Badge>
+            </span>
           {:else}
-            <Badge variant="warning">
+            <span class="badge badge-warning">
               <Icon icon={ShieldWarning} size={3} />
               Pending
-            </Badge>
+            </span>
           {/if}
         </div>
         <Button class="button button-neutral button-sm shrink-0" onclick={openCustomDomain}>

@@ -1,8 +1,8 @@
 <script lang="ts">
+  import cx from "classnames"
   import type {TrustedEvent} from "@welshman/util"
   import {Classified} from "@welshman/domain"
   import {ucFirst} from "@lib/util"
-  import Badge from "@lib/components/Badge.svelte"
   import {reader} from "@app/core"
 
   type Props = {
@@ -15,7 +15,11 @@
 </script>
 
 {#if status}
-  <Badge variant={status !== "active" ? "primary" : "neutral"} class="badge-sm rounded-full">
+  <span
+    class={cx("badge badge-sm rounded-full", {
+      "badge-primary": status !== "active",
+      "badge-neutral": status === "active",
+    })}>
     {ucFirst(status)}
-  </Badge>
+  </span>
 {/if}

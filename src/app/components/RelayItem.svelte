@@ -4,7 +4,6 @@
   import {RelayStats} from "@welshman/app"
   import Server from "@assets/icons/server.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Card from "@lib/components/Card.svelte"
   import Link from "@lib/components/Link.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import {app, relays} from "@app/core"
@@ -16,7 +15,7 @@
   const connections = $derived($relayStats?.open_count || 0)
 </script>
 
-<Card sm class="flex flex-col gap-2">
+<div class="card card-sm flex flex-col gap-2">
   <div class="flex items-center justify-between gap-4">
     <div class="truncate min-w-0 flex items-center gap-2">
       <Icon icon={Server} />
@@ -44,4 +43,4 @@
     Connected {connections}
     {connections === 1 ? "time" : "times"}
   </span>
-</Card>
+</div>

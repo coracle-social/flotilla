@@ -2,7 +2,7 @@
   import cx from "classnames"
   import type {Snippet} from "svelte"
 
-  interface Props {
+  type Props = {
     class?: string
     children?: Snippet
   }

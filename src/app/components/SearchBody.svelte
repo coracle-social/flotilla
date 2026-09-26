@@ -9,7 +9,6 @@
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import PeopleItem from "@app/components/PeopleItem.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
@@ -164,9 +163,9 @@
               <NoteContentMinimal {event} />
             </NoteCard>
             <div class="flex gap-2">
-              <Badge variant="neutral">
+              <span class="badge badge-neutral">
                 {formatTimestampRelative(event.created_at)}
-              </Badge>
+              </span>
               {@render badges?.(event)}
             </div>
           </Button>

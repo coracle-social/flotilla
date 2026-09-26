@@ -10,7 +10,6 @@
   import Icon from "@lib/components/Icon.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
@@ -105,9 +104,9 @@
         {#snippet input()}
           <div class="flex flex-wrap gap-2">
             {#each seenOn as seenUrl (seenUrl)}
-              <Badge class="bg-surface flex gap-1">
+              <span class="badge badge-neutral bg-surface flex gap-1">
                 <span>{displayRelayUrl(seenUrl)}</span>
-              </Badge>
+              </span>
             {/each}
           </div>
         {/snippet}

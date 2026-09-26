@@ -10,7 +10,6 @@
   import Bill from "@assets/icons/bill.svg?dataurl"
   import DangerCircle from "@assets/icons/danger-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -235,9 +234,9 @@
           Payment Methods
         </strong>
         {#if tenant}
-          <Badge variant={statusVariant} class="badge-sm capitalize">
+          <span class="badge badge-{statusVariant} badge-sm capitalize">
             {status}
-          </Badge>
+          </span>
         {/if}
       </div>
       <ul class="flex flex-col gap-3">

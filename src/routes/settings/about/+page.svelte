@@ -2,7 +2,6 @@
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import Card from "@lib/components/Card.svelte"
   import Code from "@assets/icons/code-2.svg?dataurl"
   import Planet from "@assets/icons/planet.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -27,19 +26,19 @@
   <h1 class="mb-4 text-center text-5xl font-bold uppercase">{PLATFORM_NAME}</h1>
   <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
     {#if ENABLE_ZAPS}
-      <Card class="flex flex-col gap-2 text-center">
+      <div class="card flex flex-col gap-2 text-center">
         <h3 class="text-2xl sm:h-12">Donate</h3>
         <p class="sm:h-16">Funds will be used to support development.</p>
         <Button onclick={zap} class="button button-primary">Zap the Developer</Button>
-      </Card>
+      </div>
     {/if}
-    <Card class="flex flex-col gap-2 text-center">
+    <div class="card flex flex-col gap-2 text-center">
       <h3 class="text-2xl sm:h-12">Get in touch</h3>
       <p class="sm:h-16">Having problems? Let us know.</p>
       <Link class="button button-primary" href={makeSpacePath("support.flotilla.social")}>
         Get Support
       </Link>
-    </Card>
+    </div>
   </div>
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-2 items-center text-center">

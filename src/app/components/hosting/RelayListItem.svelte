@@ -2,7 +2,6 @@
   import cx from "classnames"
   import Server from "@assets/icons/server.svg?dataurl"
   import {ucFirst} from "@lib/util"
-  import Badge from "@lib/components/Badge.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Link from "@lib/components/Link.svelte"
   import {canonicalRelayHost, getHostedRelayUrl, type HostedRelay} from "@app/hosting"
@@ -31,16 +30,24 @@
   </div>
   <div class="flex flex-wrap items-center gap-2">
     {#if relay.sync_error}
-      <Badge variant="warning" title={relay.sync_error}>Failed to sync</Badge>
+      <span class="badge badge-warning" title={relay.sync_error}>Failed to sync</span>
     {:else}
-      <Badge variant={relay.status === "active" ? "primary" : "neutral"}>
+      <span
+        class={cx("badge", {
+          "badge-primary": relay.status === "active",
+          "badge-neutral": relay.status !== "active",
+        })}>
         {ucFirst(relay.status.replace(/_/g, " "))}
-      </Badge>
+      </span>
     {/if}
     {#if !compact}
-      <Badge variant={relay.plan_id === "free" ? "neutral" : "primary"}>
+      <span
+        class={cx("badge", {
+          "badge-neutral": relay.plan_id === "free",
+          "badge-primary": relay.plan_id !== "free",
+        })}>
         {ucFirst(relay.plan_id)}
-      </Badge>
+      </span>
       <Link class="button button-neutral button-sm ml-auto" {href}>Manage</Link>
     {/if}
   </div>

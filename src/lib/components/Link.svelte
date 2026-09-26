@@ -4,13 +4,7 @@
   import {stopPropagation} from "@lib/html"
   import {navigate} from "@app/modal"
 
-  const {
-    children,
-    href,
-    external = false,
-    replaceState = false,
-    ...restProps
-  }: {
+  type Props = {
     children?: Snippet
     href: string
     external?: boolean
@@ -20,7 +14,9 @@
     style?: string
     "data-tip"?: string
     "aria-label"?: string
-  } = $props()
+  }
+
+  const {children, href, external = false, replaceState = false, ...restProps}: Props = $props()
 
   const go = (e: Event) => {
     if (!external) {

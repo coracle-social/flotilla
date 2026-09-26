@@ -3,15 +3,13 @@
   import cx from "classnames"
   import Button from "@lib/components/Button.svelte"
 
-  const {
-    onclick = () => {},
-    className = "",
-    children,
-  }: {
+  type Props = {
     onclick?: () => void
     className?: string
     children?: Snippet
-  } = $props()
+  }
+
+  const {onclick = () => {}, className = "", children}: Props = $props()
 </script>
 
 <div class={cx("fixed bottom-20 mb-sai right-4 z-nav hide-on-keyboard md:hidden", className)}>

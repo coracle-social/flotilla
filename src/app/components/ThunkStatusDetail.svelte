@@ -7,7 +7,6 @@
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import {addPeriod} from "@lib/util"
 
   interface Props {
     thunk: BaseThunk
@@ -27,14 +26,14 @@
 
   const relayMessage = (status: PublishStatus | undefined, detail: string | undefined) => {
     if (status === PublishStatus.Timeout) {
-      return "request timed out"
+      return "request timed out."
     }
 
     if (detail) {
-      return detail
+      return `${detail}.`.replace(/\.+$/, ".")
     }
 
-    return "no details received"
+    return "no details received."
   }
 </script>
 
@@ -57,7 +56,7 @@
         <Icon icon={Danger} class="mt-0.5 text-error" size={4} />
         <div class="min-w-0">
           <p class="break-all">{displayRelayUrl(url)}</p>
-          <p class="text-xs opacity-60">{addPeriod(relayMessage(status, detail))}</p>
+          <p class="text-xs opacity-60">{relayMessage(status, detail)}</p>
         </div>
         <Button
           class="button button-link shrink-0 px-1"

@@ -14,7 +14,6 @@
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Field from "@lib/components/Field.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import Input from "@lib/components/Input.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Modal from "@lib/components/Modal.svelte"
@@ -168,7 +167,9 @@
           <p>Name</p>
         {/snippet}
         {#snippet input()}
-          <Input bind:value={name} type="text" placeholder="My Space" required />
+          <div class="input input-group">
+            <input bind:value={name} type="text" placeholder="My Space" required />
+          </div>
         {/snippet}
       </Field>
       <Field>
@@ -176,11 +177,10 @@
           <p>Subdomain</p>
         {/snippet}
         {#snippet input()}
-          <Input bind:value={subdomain} type="text" placeholder="my-space" required>
-            {#snippet after()}
-              <span class="whitespace-nowrap text-sm opacity-50">.{zooidDomain}</span>
-            {/snippet}
-          </Input>
+          <div class="input input-group">
+            <input bind:value={subdomain} type="text" placeholder="my-space" required />
+            <span class="whitespace-nowrap text-sm opacity-50">.{zooidDomain}</span>
+          </div>
           {#if subdomain && subdomainError}
             <p class="text-sm text-error">{subdomainError}</p>
           {/if}

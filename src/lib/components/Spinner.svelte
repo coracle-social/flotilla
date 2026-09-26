@@ -2,20 +2,22 @@
   import type {Snippet} from "svelte"
   import cx from "classnames"
 
-  const {
-    children,
-    size = "md",
-    loading = true,
-    reserveSpace = false,
-    ...restProps
-  }: {
+  type Props = {
     children?: Snippet
     size?: "md" | "sm" | "xs"
     loading?: boolean
     // Reserves the spinner's slot while idle, so toggling `loading` doesn't reflow the button.
     reserveSpace?: boolean
     class?: string
-  } = $props()
+  }
+
+  const {
+    children,
+    size = "md",
+    loading = true,
+    reserveSpace = false,
+    ...restProps
+  }: Props = $props()
 
   const spinnerClass = $derived(
     cx("spinner", {

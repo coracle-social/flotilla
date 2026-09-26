@@ -1,6 +1,5 @@
 <script lang="ts">
   import cx from "classnames"
-  import Badge from "@lib/components/Badge.svelte"
   import Button from "@lib/components/Button.svelte"
   import {formatUsd, formatPeriod, type Invoice} from "@app/hosting"
 
@@ -36,7 +35,7 @@
   <div class="min-w-0">
     <div class="flex items-center gap-2">
       <span class="font-medium">{formatUsd(invoice.amount)}</span>
-      <Badge {variant} class="badge-sm capitalize">{status}</Badge>
+      <span class="badge badge-{variant} badge-sm capitalize">{status}</span>
       {#if invoice.method}
         <span class="text-xs text-content-muted"
           >· paid via {invoice.method === "stripe" ? "Card" : "Lightning"}</span>
