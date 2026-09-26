@@ -91,6 +91,9 @@
   const membershipStatus = h
     ? deriveUserRoomMembershipStatus(url, h)
     : readable(MembershipStatus.Granted)
+  const locked = $derived(
+    $room?.meta?.isPrivate() && $membershipStatus !== MembershipStatus.Granted,
+  )
 
   // Restart the feed now that we're a member
   const onJoin = () => transcript?.restart()
@@ -193,6 +196,7 @@
     <RoomTranscript
       {url}
       {h}
+      {locked}
       {replyTo}
       canEdit={canEditEvent}
       onEdit={onEditEvent}
@@ -201,7 +205,7 @@
 
     <div class="room__compose flex items-center gap-1 px-2">
       <div class="room__compose-inner min-w-0 flex-1">
-        {#if $room?.meta?.isPrivate() && $membershipStatus !== MembershipStatus.Granted}
+        {#if locked}
           <!-- pass -->
         {:else if h && $room?.meta?.isRestricted() && $membershipStatus !== MembershipStatus.Granted}
           <div class="card m-4 flex flex-row items-center justify-between px-4 py-3">

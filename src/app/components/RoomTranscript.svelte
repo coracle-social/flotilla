@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onDestroy, onMount, untrack} from "svelte"
+  import {onDestroy, onMount} from "svelte"
   import type {ComponentProps} from "svelte"
   import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
@@ -10,7 +10,6 @@
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
-  import {MembershipStatus} from "@welshman/app"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import {fade, fly} from "@lib/transition"
   import {documentActive} from "@lib/html"
@@ -24,8 +23,8 @@
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@app/components/RoomItemAddMember.svelte"
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
-  import {rooms, user} from "@app/core"
-  import {deriveUserRoomMembershipStatus, groupRoomMessages} from "@app/rooms"
+  import {user} from "@app/core"
+  import {groupRoomMessages} from "@app/rooms"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {pageLoading} from "@app/loading"
   import {checked} from "@app/notifications"
@@ -33,24 +32,21 @@
 
   type Props = Pick<ComponentProps<typeof RoomItem>, "url" | "replyTo" | "canEdit" | "onEdit"> & {
     h?: string
+    locked?: boolean
     events?: Readable<TrustedEvent[]>
   }
 
-  let {url, h, replyTo, canEdit, onEdit, events = $bindable(readable([]))}: Props = $props()
+  let {url, h, locked, replyTo, canEdit, onEdit, events = $bindable(readable([]))}: Props = $props()
 
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)
 
-  const room = h ? $rooms.forRoom(url, h) : readable(undefined)
   const addMemberKind = h ? ROOM_ADD_MEMBER : RELAY_ADD_MEMBER
-  const membershipStatus = h
-    ? deriveUserRoomMembershipStatus(url, h)
-    : readable(MembershipStatus.Granted)
-  const at = $derived(parseInt($page.url.searchParams.get("at")!))
+  const at = $derived(parseInt($page.url.searchParams.get("at") ?? "") || undefined)
   const target = $derived(getPermalinkTarget($page.url))
 
-  export const restart = () => start(at || now())
+  export const restart = () => start(at ?? now())
 
   const getElementKey = (element: {id: string}) => element.id
 
@@ -141,7 +137,7 @@
       }
     }
 
-    if (!released && !pinned && !isNaN(at)) {
+    if (at && !released && !pinned) {
       // The pointer only helps once that message has arrived, so the anchor still carries the jump.
       const pointedAt = target ? $events.find(spec({id: target})) : undefined
       const targetEvent = pointedAt ?? $events.find(event => event.created_at >= at)
@@ -167,17 +163,13 @@
 
   const scrollToNewMessages = () => scrollToRow("new-messages", {behavior: "smooth"})
 
-  // Anchoring a fresh feed on the present is what puts the reader at the live end.
-  const scrollToBottom = async () => {
-    const anchored = !isNaN(at)
-
-    if (anchored) {
-      release()
-      await navigate($page.url.pathname, {replaceState: true})
-      start(now())
+  // Dropping the anchor remounts the transcript on the present, which puts the reader at the live end.
+  const scrollToBottom = () => {
+    if (at) {
+      navigate($page.url.pathname, {replaceState: true})
+    } else {
+      element?.scrollTo({top: 0, behavior: "smooth"})
     }
-
-    element?.scrollTo({top: 0, behavior: anchored ? "auto" : "smooth"})
   }
 
   // A tab can be `visible` but unfocused, so `document.hidden` alone doesn't say the room is watched.
@@ -194,7 +186,6 @@
   let jumpSettled = $state(false)
   let released = false
   let pinned: Maybe<{id: string; top: number; clamped: boolean}>
-  let feedAnchor: Maybe<number>
   let isProgrammaticScroll = $state(false)
   let isUserScrolling = $state(false)
   let virtualList: Maybe<VirtualListController> = $state()
@@ -210,7 +201,7 @@
   let cleanup: () => void
 
   // A link into history renders the newest messages first and only then scrolls.
-  const awaitingJump = $derived(!isNaN(at) && !jumpSettled)
+  const awaitingJump = $derived(Boolean(at) && !jumpSettled)
 
   const reachedStartOfHistory = $derived($older?.status === "exhausted")
 
@@ -236,21 +227,10 @@
   )
 
   // The window only stops short of the present after jumping into history.
-  const windowStopsShort = $derived(!isNaN(at) && $newer?.status !== "exhausted")
+  const windowStopsShort = $derived(Boolean(at) && $newer?.status !== "exhausted")
 
   // While the window stops short, the bottom of the container isn't the bottom of the conversation.
   const showScrollButton = $derived(scrolledUp || windowStopsShort)
-
-  // `at` is NaN when there is no anchor, and NaN never equals itself.
-  $effect(() => {
-    if (!isNaN(at) && feedAnchor && at !== feedAnchor) {
-      released = false
-      pinned = undefined
-      jumpSettled = false
-
-      untrack(() => start(at))
-    }
-  })
 
   $effect(() => {
     if (elements.length > 0 && !isUserScrolling) {
@@ -289,8 +269,6 @@
   const start = (anchor: number) => {
     cleanup?.()
 
-    feedAnchor = anchor
-
     const feed = makeFeed({
       relays: [url],
       at: anchor,
@@ -315,7 +293,7 @@
   onMount(() => {
     // Defer rendering until navigation finishes
     let frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(() => start(at || now()))
+      frame = requestAnimationFrame(restart)
     })
 
     const unsubscribeActive = documentActive.subscribe(onActiveChange)
@@ -335,7 +313,7 @@
     class={cx("room__content scroll-container transition-opacity", {
       "opacity-0": awaitingJump,
     })}>
-    {#if h && $room?.meta?.isPrivate() && $membershipStatus !== MembershipStatus.Granted}
+    {#if h && locked}
       <div class="py-20">
         <div class="card flex flex-col gap-8 m-auto max-w-md items-center text-center">
           <p class="opacity-75">You aren't currently a member of this room.</p>

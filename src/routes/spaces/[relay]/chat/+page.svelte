@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {page} from "$app/stores"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
@@ -34,4 +35,6 @@
   {/snippet}
 </SpaceBar>
 
-<RoomChat {url} />
+{#key [$page.url.searchParams.get("at"), $page.url.searchParams.get("event")].join()}
+  <RoomChat {url} />
+{/key}

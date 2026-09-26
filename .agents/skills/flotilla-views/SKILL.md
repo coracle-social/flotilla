@@ -56,7 +56,8 @@ const url = decodeRelay(relay)
 
 That is safe because the layouts remount their children when a param changes.
 `spaces/+layout.svelte` keys on `relay`, `spaces/[relay]/+layout.svelte` and
-`chat/+layout.svelte` key on the pathname, `[h]/+layout.svelte` keys on `?at=`, and
+`chat/+layout.svelte` key on the pathname, `[h]/+layout.svelte` and the space chat page key on
+`?at=` and `?event=` (which is how a room transcript re-anchors on a permalink), and
 `people/[npub]/+layout.svelte` keys on `npub`. A new param-bearing route needs the same `{#key}`,
 or its page has to derive from `$page` instead. Routes read `$page` from the deprecated
 `$app/stores`; only the two modal modules use `page` from `$app/state`.
