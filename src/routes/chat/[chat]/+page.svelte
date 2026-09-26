@@ -14,9 +14,8 @@
   import {append, uniq} from "@welshman/lib"
   import Chat from "@app/components/Chat.svelte"
   import {splitChatId} from "@app/chats"
-  import {notificationSettings} from "@app/settings"
   import {pushToast} from "@app/toast"
-  import {Push} from "@app/push"
+  import {Push, notificationSettings} from "@app/push"
   import {user} from "@app/core"
   import type {PageProps} from "./$types"
 

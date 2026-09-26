@@ -22,7 +22,8 @@
   import {deriveSpacePermissions} from "@app/management"
   import {userSpaceUrls} from "@app/rooms"
   import {deriveSpaceActionItems} from "@app/actionItems"
-  import {notificationSettings, deriveShouldNotify, setSpaceNotifications} from "@app/settings"
+  import {deriveShouldNotify, setSpaceNotifications} from "@app/settings"
+  import {notificationSettings} from "@app/push"
   import {pushModal, popModal} from "@app/modal"
   import {makeSpacePath, goToChat} from "@app/routes"
 

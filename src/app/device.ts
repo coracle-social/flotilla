@@ -1,5 +1,4 @@
-import {withGetter} from "@welshman/store"
-import {writable} from "svelte/store"
 import {randomId} from "@welshman/lib"
+import {kv, syncedWithGetter} from "@app/storage"
 
-export const device = withGetter(writable(randomId()))
+export const device = syncedWithGetter({key: "device", storage: kv, defaultValue: randomId()})

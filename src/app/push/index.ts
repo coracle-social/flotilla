@@ -1,15 +1,15 @@
 import {Capacitor} from "@capacitor/core"
-import {notificationSettings, setSpaceNotifications} from "@app/settings"
+import {setSpaceNotifications} from "@app/settings"
 import {clearBadges} from "@app/notifications"
 import {syncEventReminders} from "@app/reminders"
-import {pushState} from "@app/push/adapters/common"
+import {notificationSettings, pushState} from "@app/push/adapters/common"
 import {ElectronNotifications} from "@app/push/adapters/electron"
 import {WebNotifications} from "@app/push/adapters/web"
 import {CapacitorNotifications} from "@app/push/adapters/capacitor"
 import {AndroidFallbackNotifications} from "@app/push/adapters/android"
 import type {IPushAdapter} from "@app/push/adapters/common"
 
-export {onNotification} from "@app/push/adapters/common"
+export {notificationSettings, onNotification} from "@app/push/adapters/common"
 
 export class Push {
   static _adapter: IPushAdapter | undefined

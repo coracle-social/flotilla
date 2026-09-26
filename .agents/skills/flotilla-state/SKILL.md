@@ -275,18 +275,27 @@ To persist another kind, add it to `kinds` in `storage.ts`. To persist a new map
 add a `TABLES` entry and an `init*` method shaped like `initHandles`: load the rows, subscribe
 to `onItem`, and batch the writes.
 
-### kv, ss and the two ways to bind them
+### kv, ss and synced stores
 
 `kv` wraps Capacitor `Preferences` and `ss` wraps `SecureStorage`. Both are exported from
 `storage.ts`, queue their writes, and JSON-encode values. Neither is namespaced per user, so
 anything in them outlives a login and is cleared only by logout. Secrets go in `ss`.
 
-- `synced({key, storage, defaultValue})` creates a store that persists itself. It emits the
-  default first, and the stored value arrives later (`.ready`). `theme` and `flTheme`
-  (`theme.ts`), `checked` (`notifications.ts`) and `shouldUnwrap` (`sync.ts`) use it.
-- `sync({key, store, storage})` binds a store that already exists. The root layout awaits it
-  for `device`, `wallet`, `notificationSettings`, `pushState` and `needsKeyBackup` before first
-  render, so boot code sees the restored values. It also binds `shouldUnwrap`, which `synced` already persists.
+Each persisted store is declared in its owner module with `synced({key, storage, defaultValue})`,
+or `syncedWithGetter` from `storage.ts` when callers need `.get()` (`withGetter`'s type drops
+`.ready`). The store emits the default first and loads the stored value in the background, so
+`.ready` resolves once it has arrived:
+
+- `theme`, `flTheme` (`theme.ts`), `checked` (`notifications.ts`), `shouldUnwrap` (`sync.ts`),
+  `device` (`device.ts`), `needsKeyBackup` (`healthChecks.ts`) in `kv`
+- `pushState` (key `notificationState`) and `notificationSettings` in `kv`, both in
+  `push/adapters/common.ts` and re-exported from `@app/push`
+- `wallet` (`lightning.ts`) in `ss`
+
+The root layout awaits `.ready` for the stores boot code reads (`device`, `shouldUnwrap`,
+`wallet`, `notificationSettings`, `pushState`, `needsKeyBackup`) before `Push.sync()` and
+background sync start. A new store that boot reads joins that list. Never change a key, since
+it is where existing installs keep their value.
 
 Raw `localStorage` holds only `theme`, `fl-theme` and `font-size`. The root layout mirrors them
 there to apply them synchronously before `kv` loads, which avoids a flash of the wrong theme.
@@ -305,7 +314,7 @@ Settings are an encrypted app-data event with d-tag `flotilla/settings`, read th
 
 A preference that should follow the user across devices goes in `SettingsValues` and
 `defaultSettings`. One that belongs to a device goes in a `kv` store, as push, sound and badge do
-in `notificationSettings`. Per-space alert preferences are published (`alerts`); the device's
+in `notificationSettings` (`@app/push`). Per-space alert preferences are published (`alerts`); the device's
 push permission is not.
 
 `checked`, the read markers behind badges, lives in `kv`, and `syncCheckedRemote` mirrors it to
@@ -413,8 +422,8 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) are not thunks. They return
 - **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `policies.ts`.
 - **A controller per flow.** `Nip46Controller` (`nip46.ts`) is a class a component instantiates.
   It holds the writables and actions for a multi-step flow.
-- **Module-owned values.** `wallet` in `lightning.ts` is a `withGetter(writable(...))` that the
-  root layout persists.
+- **Module-owned values.** `wallet` in `lightning.ts` persists itself to `ss` with
+  `syncedWithGetter`.
 
 ## Runes and stores
 

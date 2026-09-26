@@ -10,7 +10,6 @@
   import {dev} from "$app/environment"
   import {page} from "$app/stores"
   import {context as pomadeContext} from "@pomade/core"
-  import {sync} from "@welshman/store"
   import {setNip55Plugin} from "@welshman/signer"
   import * as util from "@welshman/util"
   import * as lib from "@welshman/lib"
@@ -28,9 +27,8 @@
   import {restoreSession} from "@app/session"
   import {syncSignerAlerts} from "@app/signer"
   import {wallet} from "@app/lightning"
-  import {kv, ss, storage} from "@app/storage"
+  import {kv, storage} from "@app/storage"
   import {device} from "@app/device"
-  import {notificationSettings} from "@app/settings"
   import {needsKeyBackup} from "@app/healthChecks"
   import {setupShareIntents} from "@app/share"
   import {shouldUnwrap, syncApplicationData} from "@app/sync"
@@ -38,7 +36,7 @@
   import {applySavedTheme, flTheme, syncTheme, theme} from "@app/theme"
   import * as notifications from "@app/notifications"
   import {notificationCount, backgroundNotificationCount} from "@app/notifications"
-  import {Push} from "@app/push"
+  import {Push, notificationSettings} from "@app/push"
   import {pushState} from "@app/push/adapters/common"
   import {setupDeepLinks} from "@app/deepLinks"
   import {syncKeyboard} from "@app/keyboard"
@@ -83,38 +81,14 @@
     // Set up logging
     unsubscribers.push(setupLogging())
 
-    // Sync stuff to storage
+    // Boot code reads these, e.g. Push picks its adapter from pushState, so wait for stored values
     await Promise.all([
-      sync({
-        key: "device",
-        store: device,
-        storage: kv,
-      }),
-      sync({
-        key: "shouldUnwrap",
-        store: shouldUnwrap,
-        storage: kv,
-      }),
-      sync({
-        key: "wallet",
-        store: wallet,
-        storage: ss,
-      }),
-      sync({
-        key: "notificationSettings",
-        store: notificationSettings,
-        storage: kv,
-      }),
-      sync({
-        key: "notificationState",
-        store: pushState,
-        storage: kv,
-      }),
-      sync({
-        key: "needsKeyBackup",
-        store: needsKeyBackup,
-        storage: kv,
-      }),
+      device.ready,
+      shouldUnwrap.ready,
+      wallet.ready,
+      notificationSettings.ready,
+      pushState.ready,
+      needsKeyBackup.ready,
     ])
 
     // The key backup reminder used to live in a forceHealthChecks record

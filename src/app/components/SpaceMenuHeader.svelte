@@ -10,7 +10,8 @@
   import SpaceMenuActions from "@app/components/SpaceMenuActions.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {deriveSpaceActionItems} from "@app/actionItems"
-  import {notificationSettings, deriveShouldNotify} from "@app/settings"
+  import {deriveShouldNotify} from "@app/settings"
+  import {notificationSettings} from "@app/push"
   import {pushModal} from "@app/modal"
 
   type Props = {

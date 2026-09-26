@@ -1,4 +1,3 @@
-import {writable} from "svelte/store"
 import type {Subscriber, Unsubscriber} from "svelte/store"
 import {Capacitor} from "@capacitor/core"
 import {call, ms, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
@@ -15,13 +14,14 @@ import {
   type Filter,
   type TrustedEvent,
 } from "@welshman/util"
-import {merged, withGetter} from "@welshman/store"
+import {merged} from "@welshman/store"
 import {User} from "@welshman/app"
 import {navigate} from "@app/modal"
 import {app, messagingRelayLists, network, roomLists} from "@app/core"
 import {DM_KINDS} from "@app/content"
-import {getMutedRooms, notificationSettings, shouldNotify, userSettingsValues} from "@app/settings"
+import {getMutedRooms, shouldNotify, userSettingsValues} from "@app/settings"
 import {makeEventPath, goToChat, goToSpace} from "@app/routes"
+import {kv, syncedWithGetter} from "@app/storage"
 
 export type PushSubscription = {
   key: string
@@ -38,7 +38,26 @@ export type PushState = {
 export const requiresFallback =
   Capacitor.getPlatform() === "android" && !Capacitor.isPluginAvailable("PushNotifications")
 
-export const pushState = withGetter(writable<PushState>({useFallback: requiresFallback}))
+export const pushState = syncedWithGetter<PushState>({
+  key: "notificationState",
+  storage: kv,
+  defaultValue: {useFallback: requiresFallback},
+})
+
+export const notificationSettings = syncedWithGetter({
+  key: "notificationSettings",
+  storage: kv,
+  defaultValue: {
+    push: false,
+    sound: true,
+    badge: false,
+    spaces: true,
+    mentions: true,
+    messages: true,
+    events: true,
+    reminder_minutes: [5],
+  },
+})
 
 export interface IPushAdapter {
   request: (prompt?: boolean) => Promise<string>

@@ -156,7 +156,8 @@ size from `localStorage` before first paint. Then, in order:
 
 1. `restoreSession()` restores the saved session, if there is one, which builds a user-scoped
    `App` through `login`.
-2. The device, wallet and notification stores sync to `kv`/`ss`.
+2. It awaits `.ready` on the `synced` stores boot reads (device, wallet, push and notification
+   settings, `shouldUnwrap`, `needsKeyBackup`).
 3. It waits for storage, then `setupDeepLinks()` listens for warm-start links and handles a
    cold-start one.
 4. Each long-running subscription goes onto one `unsubscribers` list: `setupHistory`,

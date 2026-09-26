@@ -1,10 +1,9 @@
-import {writable} from "svelte/store"
 import {nwc} from "@getalby/sdk"
 import {bech32ToHex, displayUrl, tryCatch} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {isNWCWallet, isWebLNWallet, toMsats} from "@welshman/util"
 import type {Wallet} from "@welshman/util"
-import {withGetter} from "@welshman/store"
+import {ss, syncedWithGetter} from "@app/storage"
 
 /** Both lud06 and lud16 normalize into the bech32 lnurl zapping needs, so decode it before display. */
 export const displayLnurl = (lnurl: string) => {
@@ -20,7 +19,11 @@ export const displayLnurl = (lnurl: string) => {
   return url ? displayUrl(url) : lnurl
 }
 
-export const wallet = withGetter(writable<Maybe<Wallet>>(undefined))
+export const wallet = syncedWithGetter<Maybe<Wallet>>({
+  key: "wallet",
+  storage: ss,
+  defaultValue: undefined,
+})
 
 export const getWebLn = () => (window as any).webln
 

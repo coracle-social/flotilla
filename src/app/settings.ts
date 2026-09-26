@@ -159,19 +159,6 @@ export const shouldNotify = (url: string, h?: string) =>
 export const deriveShouldNotify = (url: string, h?: string) =>
   derived(userSettingsValues, $settings => getShouldNotify($settings, url, h))
 
-export const notificationSettings = withGetter(
-  writable({
-    push: false,
-    sound: true,
-    badge: false,
-    spaces: true,
-    mentions: true,
-    messages: true,
-    events: true,
-    reminder_minutes: [5],
-  }),
-)
-
 export const publishSettings = async (params: Partial<SettingsValues>) => {
   const $app = app.get()
   const reader = await settings.get().forceLoad(User.require($app).pubkey)

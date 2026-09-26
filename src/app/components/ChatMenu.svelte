@@ -11,7 +11,7 @@
   import {messagingRelayLists, user} from "@app/core"
   import {pushModal} from "@app/modal"
   import {setChecked} from "@app/notifications"
-  import {notificationSettings} from "@app/settings"
+  import {notificationSettings} from "@app/push"
 
   type Props = {
     onClick: () => void

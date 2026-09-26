@@ -42,7 +42,8 @@ import {
   verifiedSymbol,
 } from "@welshman/util"
 import type {Handle, TrustedEvent} from "@welshman/util"
-import {withGetter} from "@welshman/store"
+import {synced, withGetter} from "@welshman/store"
+import type {SyncedConfig} from "@welshman/store"
 import type {RepositoryUpdate, WrapItem} from "@welshman/net"
 import {Relay, Zapper} from "@welshman/domain"
 import type {RelayInfo, ZapperValues} from "@welshman/domain"
@@ -51,6 +52,13 @@ import type {AppPolicy, IApp, RelayStatsItem} from "@welshman/app"
 import {IDB} from "@lib/indexeddb"
 import {appPolicies} from "@app/core"
 import {DM_KINDS} from "@app/content"
+
+// withGetter's type drops the ready promise synced adds
+export const syncedWithGetter = <T>(config: SyncedConfig<T>) => {
+  const store = synced(config)
+
+  return {...withGetter(store), ready: store.ready}
+}
 
 export const kv = call(() => {
   const enqueue = makeQueue()

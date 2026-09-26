@@ -6,8 +6,7 @@ import {buildUrl} from "@lib/util"
 import {getEventStart, getEventTitle, isAttending} from "@app/calendar"
 import {app, network, reader, roomLists} from "@app/core"
 import {PUSH_SERVER} from "@app/env"
-import {pushState} from "@app/push/adapters/common"
-import {notificationSettings} from "@app/settings"
+import {notificationSettings, pushState} from "@app/push/adapters/common"
 
 type Reminder = {
   at: number

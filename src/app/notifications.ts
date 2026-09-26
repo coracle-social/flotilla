@@ -14,27 +14,26 @@ import {
   makeHttpAuthHeader,
 } from "@welshman/util"
 import {Comment} from "@welshman/domain"
-import {synced, throttled, withGetter} from "@welshman/store"
+import {throttled} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
 import {app, fromApp, reader} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
 import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
-import {getIsMuted, notificationSettings, userSettingsValues} from "@app/settings"
+import {getIsMuted, userSettingsValues} from "@app/settings"
 import {Chats} from "@app/chats"
 import {dufflepud, DUFFLEPUD_URL} from "@app/env"
 import {isGroupSpace} from "@app/relays"
 import {activeSpaceUrls} from "@app/rooms"
-import {kv} from "@app/storage"
+import {kv, syncedWithGetter} from "@app/storage"
+import {notificationSettings} from "@app/push/adapters/common"
 
 // Checked state
 
-export const checked = withGetter(
-  synced<Record<string, number>>({
-    key: "checked",
-    defaultValue: {},
-    storage: kv,
-  }),
-)
+export const checked = syncedWithGetter<Record<string, number>>({
+  key: "checked",
+  defaultValue: {},
+  storage: kv,
+})
 
 export const getChecked = (key: string) => checked.get()[key]
 

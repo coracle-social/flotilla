@@ -1,10 +1,12 @@
-import {derived, writable} from "svelte/store"
+import {derived} from "svelte/store"
 import {sample} from "@welshman/lib"
 import {normalizeRelayUrl} from "@welshman/util"
+import {synced} from "@welshman/store"
 import {MessagingRelayLists, RelayLists, Relays, SearchRelayLists, projection} from "@welshman/app"
 import type {Command, IApp, Projection} from "@welshman/app"
 import {usePlugin} from "@app/core"
 import {DEFAULT_RELAYS} from "@app/env"
+import {kv} from "@app/storage"
 
 export type HealthCheckContext = {
   readRelays: string[]
@@ -93,7 +95,7 @@ const tooManyRelaysCheck = (spec: RelayListSpec): HealthCheck => ({
 })
 
 // Set when a key is generated in-app, and cleared once the user has saved a backup of it
-export const needsKeyBackup = writable(false)
+export const needsKeyBackup = synced({key: "needsKeyBackup", storage: kv, defaultValue: false})
 
 export class HealthChecks {
   context: Projection<HealthCheckContext>

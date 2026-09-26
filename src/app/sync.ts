@@ -31,7 +31,7 @@ import {
 } from "@welshman/util"
 import type {Filter} from "@welshman/util"
 import type {FollowListReader} from "@welshman/domain"
-import {merged, synced, throttled, withGetter} from "@welshman/store"
+import {merged, throttled} from "@welshman/store"
 import {FollowLists, MessagingRelayLists, RelayLists, SearchRelayLists, Sync} from "@welshman/app"
 import {
   app,
@@ -57,13 +57,15 @@ import {FEATURED_CONTENT_D} from "@app/featured"
 import {decodeRelay} from "@app/relays"
 import {activeSpaceUrls, userSpaceUrls} from "@app/rooms"
 import {Settings} from "@app/settings"
-import {kv} from "@app/storage"
+import {kv, syncedWithGetter} from "@app/storage"
 import {hasBlossomSupport} from "@app/uploads"
 
 // Unwrapping is unconditional, so this is what keeps a signer from decrypting the whole DM history.
-export const shouldUnwrap = withGetter(
-  synced({key: "shouldUnwrap", storage: kv, defaultValue: false}),
-)
+export const shouldUnwrap = syncedWithGetter({
+  key: "shouldUnwrap",
+  storage: kv,
+  defaultValue: false,
+})
 
 // Utils
 
