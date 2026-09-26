@@ -115,6 +115,9 @@
       draftKey?.clear()
       history.back()
       pushToast({message: "Your event has been saved!"})
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to save your event."})
     } finally {
       loading = false
     }

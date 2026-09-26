@@ -79,6 +79,9 @@
         pushToast({message: pin ? "Link updated!" : "Link added!"})
         clearModals()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to save the link."})
     } finally {
       loading = false
     }

@@ -12,6 +12,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {leaveSpace} from "@app/access"
+  import {pushToast} from "@app/toast"
 
   const {url} = $props()
 
@@ -23,6 +24,9 @@
     try {
       await leaveSpace(url)
       await navigate("/home")
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to leave the space."})
     } finally {
       loading = false
     }

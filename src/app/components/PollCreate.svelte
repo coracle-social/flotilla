@@ -139,6 +139,9 @@
 
       draftKey.clear()
       history.back()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to create your poll."})
     } finally {
       loading = false
     }

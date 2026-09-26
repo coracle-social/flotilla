@@ -42,6 +42,9 @@
       } else {
         pushToast({message: "Your logs have been sent. Thank you!"})
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to send your logs."})
     } finally {
       sendingLogs = false
     }
@@ -67,6 +70,9 @@
       await publishSettings($settings)
 
       pushToast({message: "Your settings have been saved!"})
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to save your settings."})
     } finally {
       loading = false
     }

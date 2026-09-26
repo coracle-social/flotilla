@@ -393,7 +393,9 @@ ahead. All ten `*Item` components that appear in a list use it.
 ## Mutations from a component
 
 flotilla-state covers the writer → command → thunk path. The component around it owns a
-`loading` flag, awaits the first error, toasts it, and closes:
+`loading` flag, awaits the first error, toasts it, and closes. Anything thrown on the way (a signer
+refusing, a relay unreachable) is logged and toasted in a `catch`, so a bare `try`/`finally` never
+lets it escape the handler:
 
 ```typescript
 const submit = async () => {
@@ -408,6 +410,9 @@ const submit = async () => {
     }
 
     history.back()
+  } catch (e) {
+    console.error(e)
+    pushToast({theme: "error", message: "Failed to save your changes."})
   } finally {
     loading = false
   }

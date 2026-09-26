@@ -64,6 +64,9 @@
       await $blossomServerLists.setUrls($state.snapshot(blossomServers)).then(publish)
 
       pushToast({message: "Your settings have been saved!"})
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to save your settings."})
     } finally {
       loading = false
     }

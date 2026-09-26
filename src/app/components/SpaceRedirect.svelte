@@ -14,6 +14,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {roomLists} from "@app/core"
   import {goToMovedSpace} from "@app/routes"
+  import {pushToast} from "@app/toast"
 
   type Props = {
     url: string
@@ -30,6 +31,9 @@
     try {
       await $roomLists.migrateRelay(url, newUrl).then(command => command?.publish())
       await goToMovedSpace(url, newUrl)
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to move to the new space."})
     } finally {
       loading = false
     }

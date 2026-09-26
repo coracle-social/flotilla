@@ -16,6 +16,7 @@
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import {leaveSpace} from "@app/access"
   import {clearModals, navigate, pushModal} from "@app/modal"
+  import {pushToast} from "@app/toast"
 
   type Props = {
     url: string
@@ -34,6 +35,9 @@
     try {
       await leaveSpace(url)
       await navigate("/home")
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to leave the space."})
     } finally {
       loading = false
     }

@@ -37,6 +37,9 @@
       const message = await action()
 
       pushToast(message ? {theme: "error", message} : {message: successMessage})
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update your room membership."})
     } finally {
       loading = false
     }

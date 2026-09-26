@@ -90,7 +90,12 @@
         await command.publish().waitForCompletion()
 
         pushToast({message: "Banner updated."})
+      } else {
+        pushToast({theme: "error", message: "Failed to upload your banner."})
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update your banner."})
     } finally {
       bannerLoading = false
     }

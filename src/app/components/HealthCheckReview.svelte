@@ -44,12 +44,15 @@
 
     try {
       await Promise.all(plans.map(save))
+
+      clearModals()
+      next?.()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Your relays couldn't be saved."})
     } finally {
       loading = false
     }
-
-    clearModals()
-    next?.()
   }
 </script>
 

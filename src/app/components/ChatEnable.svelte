@@ -53,6 +53,9 @@
       }
 
       await next()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to enable messaging."})
     } finally {
       loading = false
     }

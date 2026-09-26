@@ -52,14 +52,20 @@
     }
 
     const tags = ed.storage.nostr.getEditorTags()
-    const thunk = await publishComment({
-      url,
-      event,
-      ...(await prependParent(parent, {content, tags}, url)),
-    })
 
-    draftKey.clear()
-    onSubmit(thunk)
+    try {
+      const thunk = await publishComment({
+        url,
+        event,
+        ...(await prependParent(parent, {content, tags}, url)),
+      })
+
+      draftKey.clear()
+      onSubmit(thunk)
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to send your reply."})
+    }
   }
 
   let form: HTMLElement

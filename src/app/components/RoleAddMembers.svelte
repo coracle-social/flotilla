@@ -46,6 +46,9 @@
         pushToast({message: "Members assigned!"})
         back()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to assign members."})
     } finally {
       loading = false
     }

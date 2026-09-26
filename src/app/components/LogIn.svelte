@@ -57,6 +57,9 @@
           message: "Something went wrong! Please try again.",
         })
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Something went wrong! Please try again."})
     } finally {
       loading = undefined
     }
@@ -77,6 +80,9 @@
           message: "Something went wrong! Please try again.",
         })
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Something went wrong! Please try again."})
     } finally {
       loading = undefined
     }

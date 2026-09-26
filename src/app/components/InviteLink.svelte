@@ -66,6 +66,9 @@
 
       roomCode = roomInvite.code
       roomInviteError = roomInvite.error
+    } catch (e) {
+      console.error(e)
+      claimFailed = true
     } finally {
       loading = false
     }

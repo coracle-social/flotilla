@@ -11,6 +11,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProgressBar from "@app/components/ProgressBar.svelte"
+  import {pushToast} from "@app/toast"
 
   type Props = {
     next: () => void
@@ -27,6 +28,9 @@
 
     try {
       await next()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to complete sign up."})
     } finally {
       loading = false
     }

@@ -68,6 +68,9 @@
 
     try {
       await confirmRecovery()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to validate email ownership."})
     } finally {
       loading = false
     }

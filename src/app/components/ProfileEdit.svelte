@@ -30,6 +30,9 @@
         pushToast({message: "Your profile has been updated!"})
         clearModals()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update your profile."})
     } finally {
       loading = false
     }

@@ -83,6 +83,9 @@
 
       draftKey.clear()
       history.back()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to create your thread."})
     } finally {
       loading = false
     }

@@ -117,6 +117,9 @@
 
       draftKey?.clear()
       history.back()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to publish your listing."})
     } finally {
       loading = false
     }

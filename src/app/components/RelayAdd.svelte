@@ -45,6 +45,9 @@
           message: `Failed to add relay: ${errorMessage(error)}`,
         })
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to add relay."})
     } finally {
       loading.delete(url)
     }

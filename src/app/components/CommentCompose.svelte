@@ -76,6 +76,9 @@
 
       draftKey.clear()
       onSubmit()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to send your reply."})
     } finally {
       loading = false
     }

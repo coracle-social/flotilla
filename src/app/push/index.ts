@@ -1,5 +1,7 @@
 import {Capacitor} from "@capacitor/core"
 import {notificationSettings, setSpaceNotifications} from "@app/settings"
+import {clearBadges} from "@app/notifications"
+import {syncEventReminders} from "@app/reminders"
 import {pushState} from "@app/push/adapters/common"
 import {ElectronNotifications} from "@app/push/adapters/electron"
 import {WebNotifications} from "@app/push/adapters/web"
@@ -75,4 +77,21 @@ export const optInSpaceNotifications = async (url: string, notify: boolean) => {
   } else {
     await setSpaceNotifications(url, notify)
   }
+}
+
+export const saveNotificationSettings = async (
+  values: ReturnType<typeof notificationSettings.get>,
+) => {
+  if (!values.badge) {
+    clearBadges()
+  }
+
+  const permission = values.push ? await Push.request() : "granted"
+
+  if (permission.startsWith("granted")) {
+    notificationSettings.set(values)
+    syncEventReminders()
+  }
+
+  return permission
 }

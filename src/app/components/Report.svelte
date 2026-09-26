@@ -30,24 +30,29 @@
 
     loading = true
 
-    const eventWriter = writer(Report)
-      .setPubkey(event.pubkey)
-      .setEventId(event.id)
-      .setReason(reason.toLowerCase())
-      .setContent(content)
+    try {
+      const eventWriter = writer(Report)
+        .setPubkey(event.pubkey)
+        .setEventId(event.id)
+        .setReason(reason.toLowerCase())
+        .setContent(content)
 
-    const reportCommand = await command(eventWriter)
-    const error = await reportCommand.publishToRelays([url]).waitForError()
+      const reportCommand = await command(eventWriter)
+      const error = await reportCommand.publishToRelays([url]).waitForError()
 
-    loading = false
+      if (error) {
+        return pushToast({theme: "error", message: error})
+      }
 
-    if (error) {
-      return pushToast({theme: "error", message: error})
+      history.back()
+
+      pushToast({message: "Your report has been sent!"})
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to send your report."})
+    } finally {
+      loading = false
     }
-
-    history.back()
-
-    return pushToast({message: "Your report has been sent!"})
   }
 
   let reason = $state("")

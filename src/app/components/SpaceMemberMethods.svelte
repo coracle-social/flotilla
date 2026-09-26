@@ -68,6 +68,9 @@
         pushToast({message: "Permissions updated!"})
         back()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update permissions."})
     } finally {
       saving = false
     }

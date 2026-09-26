@@ -38,6 +38,9 @@
       }
 
       callback()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to request access."})
     } finally {
       loading = false
     }

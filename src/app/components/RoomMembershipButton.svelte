@@ -33,6 +33,9 @@
       } else {
         onJoin()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to join the room."})
     } finally {
       joining = false
     }
@@ -49,6 +52,9 @@
       } else {
         pushToast({message: "You have left the room."})
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to leave the room."})
     } finally {
       leaving = false
     }

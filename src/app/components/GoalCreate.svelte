@@ -123,6 +123,9 @@
 
       draftKey.clear()
       history.back()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to create your funding goal."})
     } finally {
       loading = false
     }

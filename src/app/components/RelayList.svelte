@@ -47,6 +47,9 @@
           message: `Failed to remove relay: ${errorMessage(error)}`,
         })
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to remove relay."})
     } finally {
       loading.delete(url)
     }

@@ -128,6 +128,9 @@
       await publishSettings({zap_amounts: $settings.zap_amounts})
 
       pushToast({message: "Your zap amounts have been saved!"})
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to save your zap amounts."})
     } finally {
       zapAmountsLoading = false
     }

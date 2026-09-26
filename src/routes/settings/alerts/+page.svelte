@@ -14,9 +14,7 @@
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import {pushToast} from "@app/toast"
-  import {clearBadges} from "@app/notifications"
-  import {Push} from "@app/push"
-  import {syncEventReminders} from "@app/reminders"
+  import {saveNotificationSettings} from "@app/push"
   import {notificationSettings} from "@app/settings"
 
   const reset = () => {
@@ -49,32 +47,23 @@
         })
       }
 
-      if (!settings.badge) {
-        clearBadges()
+      const permission = await saveNotificationSettings($state.snapshot(settings))
+
+      if (permission.startsWith("granted")) {
+        pushToast({message: "Your settings have been saved!"})
+      } else {
+        await sleep(300)
+
+        settings.push = false
+
+        pushToast({
+          theme: "error",
+          message: `Failed to request notification permissions (${permission}).`,
+        })
       }
-
-      let permission = "granted"
-
-      if (settings.push) {
-        permission = await Push.request()
-
-        if (!permission.startsWith("granted")) {
-          await sleep(300)
-
-          settings.push = false
-
-          return pushToast({
-            theme: "error",
-            message: `Failed to request notification permissions (${permission}).`,
-          })
-        }
-      }
-
-      notificationSettings.set(settings)
-
-      syncEventReminders()
-
-      pushToast({message: "Your settings have been saved!"})
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to save your alert settings."})
     } finally {
       loading = false
     }

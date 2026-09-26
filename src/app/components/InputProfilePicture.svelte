@@ -7,6 +7,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {compressFileForUpload, uploadFileOrFallback} from "@app/uploads"
+  import {pushToast} from "@app/toast"
 
   interface Props {
     file?: File | undefined
@@ -53,6 +54,9 @@
     try {
       file = await compressFileForUpload(newFile, compressOptions)
       url = (await uploadFileOrFallback(file)).url
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to process your profile picture."})
     } finally {
       loading = false
     }

@@ -34,6 +34,9 @@
         pushToast({message: "Role created!"})
         back()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to create role."})
     } finally {
       loading = false
     }

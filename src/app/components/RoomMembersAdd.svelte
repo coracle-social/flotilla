@@ -47,6 +47,9 @@
         pushToast({message: "Members have successfully been added!"})
         back()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to add members."})
     } finally {
       loading = false
     }

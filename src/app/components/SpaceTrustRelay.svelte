@@ -19,6 +19,7 @@
   import {addTrustedRelay, removeTrustedRelay} from "@app/settings"
   import {navigate, popModal, pushModal} from "@app/modal"
   import {roomLists} from "@app/core"
+  import {pushToast} from "@app/toast"
 
   type Props = {
     url: string
@@ -35,6 +36,9 @@
       await $roomLists.removeRelay(url).then(publish)
       await removeTrustedRelay(url)
       navigate("/home")
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to leave the space."})
     } finally {
       loading = false
     }
@@ -48,6 +52,9 @@
 
       relaysPendingTrust.update($r => remove(url, $r))
       popModal()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to trust this space."})
     } finally {
       loading = false
     }

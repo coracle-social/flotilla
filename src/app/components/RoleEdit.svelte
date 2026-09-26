@@ -45,6 +45,9 @@
         pushToast({message: "Role updated!"})
         back()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update role."})
     } finally {
       loading = false
     }

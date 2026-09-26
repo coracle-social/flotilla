@@ -139,6 +139,9 @@
 
       draftKey.clear()
       goto(makeArticlePath(url, getAddress(thunk.options.event)))
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to publish your article."})
     } finally {
       loading = false
     }

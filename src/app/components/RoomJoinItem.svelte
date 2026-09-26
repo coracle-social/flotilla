@@ -41,6 +41,9 @@
         $app.repository.removeEvent(event.id)
         onResolved?.()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to dismiss join request."})
     } finally {
       loading = false
     }
@@ -58,6 +61,9 @@
         pushToast({message: "Member has been added to the room!"})
         onResolved?.()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to add member to the room."})
     } finally {
       loading = false
     }

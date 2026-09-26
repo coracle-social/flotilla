@@ -62,6 +62,9 @@
 
     try {
       await confirmRecovery()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to recover your key."})
     } finally {
       loading = false
     }

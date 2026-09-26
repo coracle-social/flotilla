@@ -30,6 +30,9 @@
       } else {
         clearModals()
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update profile."})
     } finally {
       loading = false
     }

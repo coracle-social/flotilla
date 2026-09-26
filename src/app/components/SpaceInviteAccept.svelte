@@ -69,6 +69,9 @@
 
     try {
       await joinRelay()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to accept the invite."})
     } finally {
       loading = false
     }

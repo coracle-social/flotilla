@@ -8,6 +8,7 @@
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
   import {pushModal} from "@app/modal"
   import {app} from "@app/core"
+  import {pushToast} from "@app/toast"
 
   type Props = {
     url?: string
@@ -34,6 +35,9 @@
       } else {
         pushModal(InfoZapperError, {url, pubkey: event.pubkey}, {replaceState})
       }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to load zap details."})
     } finally {
       loading = false
     }

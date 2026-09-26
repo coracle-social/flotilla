@@ -13,6 +13,7 @@
   import {reader, user} from "@app/core"
   import {getRsvpsByStatus, isAttending, publishRsvp, retractRsvp} from "@app/calendar"
   import {setEventReminders} from "@app/reminders"
+  import {pushToast} from "@app/toast"
 
   type Props = {
     url: string
@@ -40,6 +41,9 @@
       }
 
       await setEventReminders(url, event, !retracting && isAttending(status))
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update your RSVP."})
     } finally {
       loading = false
     }

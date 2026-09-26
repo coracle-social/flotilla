@@ -16,6 +16,7 @@
   import {session} from "@app/core"
   import {requirePomadeSession} from "@app/pomade"
   import KeyRecoveryConfirm from "@app/components/KeyRecoveryConfirm.svelte"
+  import {pushToast} from "@app/toast"
 
   const {
     email,
@@ -33,6 +34,9 @@
 
     try {
       await requestRecovery()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to request key recovery."})
     } finally {
       loading = false
     }

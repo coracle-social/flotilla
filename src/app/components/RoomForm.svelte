@@ -75,6 +75,9 @@
 
     try {
       await submit()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to save the room."})
     } finally {
       loading = false
     }
