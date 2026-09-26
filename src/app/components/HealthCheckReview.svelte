@@ -1,6 +1,8 @@
 <script lang="ts">
   import {displayRelayUrl} from "@welshman/util"
+  import {publish} from "@welshman/app"
   import {preventDefault} from "@lib/html"
+  import {errorMessage} from "@lib/util"
   import Stars from "@assets/icons/stars.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
@@ -16,34 +18,38 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import type {HealthCheckPlan} from "@app/healthChecks"
   import {clearModals} from "@app/modal"
+  import {pushToast} from "@app/toast"
 
   type Props = {
     plans: HealthCheckPlan[]
+    next?: () => void
   }
 
-  const {plans}: Props = $props()
-
-  const publishing = plans.filter(plan => plan.changes.length > 0)
-  const interactive = plans.filter(plan => plan.changes.length === 0)
+  const {plans, next}: Props = $props()
 
   let loading = $state(false)
 
   const back = () => history.back()
 
+  const save = async (plan: HealthCheckPlan) => {
+    const error = await publish(await plan.apply()).waitForError()
+
+    if (error) {
+      pushToast({theme: "error", message: `Your relays couldn't be saved: ${errorMessage(error)}`})
+    }
+  }
+
   const confirm = async () => {
     loading = true
 
     try {
-      await Promise.all(publishing.map(plan => plan.apply()))
+      await Promise.all(plans.map(save))
     } finally {
       loading = false
     }
 
     clearModals()
-
-    for (const plan of interactive) {
-      plan.apply()
-    }
+    next?.()
   }
 </script>
 
@@ -53,7 +59,7 @@
       <ModalTitle>Review changes</ModalTitle>
       <ModalSubtitle>Nothing changes until you confirm.</ModalSubtitle>
     </ModalHeader>
-    {#each publishing as plan (plan.summary)}
+    {#each plans as plan (plan.summary)}
       <div class="flex flex-col gap-2">
         <p>{plan.summary}</p>
         {#each plan.changes as change (change.label)}

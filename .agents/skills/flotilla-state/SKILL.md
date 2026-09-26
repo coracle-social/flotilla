@@ -245,7 +245,7 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 | repository, tracker, relays, relay stats, handles, zappers, plaintext, wraps | IndexedDB | yes | deleted |
 | settings (`SettingsValues`) | an encrypted app-data event, cached in IndexedDB | yes | local copy deleted |
 | `session`, `wallet` | `ss` | no | cleared |
-| `theme`, `flTheme`, `checked`, `shouldUnwrap`, `device`, `notificationSettings`, push state | `kv` | no | cleared |
+| `theme`, `flTheme`, `checked`, `shouldUnwrap`, `device`, `notificationSettings`, push state, `needsKeyBackup` | `kv` | no | cleared |
 | drafts, dictations | a module `Map`, lost on reload | no | page reloads |
 
 ### IndexedDB (`src/app/storage.ts`, `src/lib/indexeddb.ts`)
@@ -284,8 +284,8 @@ anything in them outlives a login and is cleared only by logout. Secrets go in `
   default first, and the stored value arrives later (`.ready`). `theme` and `flTheme`
   (`theme.ts`), `checked` (`notifications.ts`) and `shouldUnwrap` (`sync.ts`) use it.
 - `sync({key, store, storage})` binds a store that already exists. The root layout awaits it
-  for `device`, `wallet`, `notificationSettings` and `pushState` before first render, so boot
-  code sees the restored values. It also binds `shouldUnwrap`, which `synced` already persists.
+  for `device`, `wallet`, `notificationSettings`, `pushState` and `needsKeyBackup` before first
+  render, so boot code sees the restored values. It also binds `shouldUnwrap`, which `synced` already persists.
 
 Raw `localStorage` holds only `theme`, `fl-theme` and `font-size`. The root layout mirrors them
 there to apply them synchronously before `kv` loads, which avoids a flash of the wrong theme.

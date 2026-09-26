@@ -1,7 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
   import type {ClientOptions} from "@pomade/core"
-  import {assoc} from "@welshman/lib"
   import {makeSecret, RELAYS, MESSAGING_RELAYS, makeEvent} from "@welshman/util"
   import {Profile} from "@welshman/domain"
   import {Thunks, nip01, publish, toSession} from "@welshman/app"
@@ -26,7 +25,7 @@
     DEFAULT_MESSAGING_RELAYS,
     DEFAULT_SPACES,
   } from "@app/env"
-  import {forceHealthChecks} from "@app/healthChecks"
+  import {needsKeyBackup} from "@app/healthChecks"
   import {loginWithPomade} from "@app/pomade"
   import {pushModal, clearModals} from "@app/modal"
   import {app, domain, login, roomLists} from "@app/core"
@@ -93,7 +92,7 @@
         const secret = getKey<string>("signup.secret")!
 
         await login(toSession(nip01, {secret}))
-        forceHealthChecks.update(assoc("backup-key", true))
+        needsKeyBackup.set(true)
         await completeSignup()
       },
     },

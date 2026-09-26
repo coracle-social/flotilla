@@ -71,11 +71,15 @@ export const kv = call(() => {
     await enqueue(() => Preferences.set({key, value: JSON.stringify(value)}))
   }
 
+  const remove = async (key: string) => {
+    await enqueue(() => Preferences.remove({key}))
+  }
+
   const clear = async () => {
     await enqueue(() => Preferences.clear())
   }
 
-  return {get, set, clear}
+  return {get, set, remove, clear}
 })
 
 const secretStorage =

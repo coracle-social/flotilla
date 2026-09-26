@@ -34,7 +34,7 @@
   import {kv, ss, storage} from "@app/storage"
   import {device} from "@app/device"
   import {userSettingsValues, notificationSettings} from "@app/settings"
-  import {forceHealthChecks} from "@app/healthChecks"
+  import {needsKeyBackup} from "@app/healthChecks"
   import {setupShareIntents, shareFromNative} from "@app/share"
   import {shouldUnwrap, syncApplicationData} from "@app/sync"
   import * as env from "@app/env"
@@ -190,11 +190,19 @@
         storage: kv,
       }),
       sync({
-        key: "forceHealthChecks",
-        store: forceHealthChecks,
+        key: "needsKeyBackup",
+        store: needsKeyBackup,
         storage: kv,
       }),
     ])
+
+    // The key backup reminder used to live in a forceHealthChecks record
+    const legacyHealthChecks = await kv.get<Record<string, boolean>>("forceHealthChecks")
+
+    if (legacyHealthChecks) {
+      needsKeyBackup.set(Boolean(legacyHealthChecks["backup-key"]))
+      await kv.remove("forceHealthChecks")
+    }
 
     // Wait for critical storage data only
     await storage.get()?.ready

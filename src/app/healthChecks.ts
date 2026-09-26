@@ -1,22 +1,10 @@
-import {derived, get, writable} from "svelte/store"
-import {assoc, sample} from "@welshman/lib"
+import {derived, writable} from "svelte/store"
+import {sample} from "@welshman/lib"
 import {normalizeRelayUrl} from "@welshman/util"
-import {
-  MessagingRelayLists,
-  RelayLists,
-  Relays,
-  SearchRelayLists,
-  projection,
-  publish,
-} from "@welshman/app"
+import {MessagingRelayLists, RelayLists, Relays, SearchRelayLists, projection} from "@welshman/app"
 import type {Command, IApp, Projection} from "@welshman/app"
-import {errorMessage} from "@lib/util"
-import KeyDownload from "@app/components/KeyDownload.svelte"
-import HealthCheckReview from "@app/components/HealthCheckReview.svelte"
-import {session, usePlugin} from "@app/core"
+import {usePlugin} from "@app/core"
 import {DEFAULT_RELAYS} from "@app/env"
-import {pushModal} from "@app/modal"
-import {pushToast} from "@app/toast"
 
 export type HealthCheckContext = {
   readRelays: string[]
@@ -34,7 +22,7 @@ export type HealthCheckChange = {
 export type HealthCheckPlan = {
   summary: string
   changes: HealthCheckChange[]
-  apply: () => unknown
+  apply: () => Promise<Command>
 }
 
 export type HealthCheck = {
@@ -45,12 +33,14 @@ export type HealthCheck = {
   plan: (context: HealthCheckContext) => HealthCheckPlan
 }
 
-const publishRelayList = async (command: Command) => {
-  const error = await publish(command).waitForError()
-
-  if (error) {
-    pushToast({theme: "error", message: `Your relays couldn't be saved: ${errorMessage(error)}`})
-  }
+type RelayListSpec = {
+  id: string
+  name: string
+  noun: string
+  // Only lists this app can fill from its own recommendations get a missing-relays check.
+  missing?: {description: string; recommended: string[]}
+  urls: (context: HealthCheckContext) => string[]
+  save: (urls: string[]) => Promise<Command>
 }
 
 const relayPlan = (
@@ -58,7 +48,7 @@ const relayPlan = (
   label: string,
   current: string[],
   next: string[],
-  apply: (urls: string[]) => unknown,
+  save: (urls: string[]) => Promise<Command>,
 ): HealthCheckPlan => {
   const currentUrls = current.map(normalizeRelayUrl)
   const nextUrls = next.map(normalizeRelayUrl)
@@ -66,20 +56,44 @@ const relayPlan = (
   const removed = currentUrls.filter(url => !nextUrls.includes(url))
   const changes = added.length + removed.length > 0 ? [{label, added, removed}] : []
 
-  return {summary, changes, apply: () => apply(nextUrls)}
+  return {summary, changes, apply: () => save(nextUrls)}
 }
 
-export const reviewPlans = (plans: HealthCheckPlan[]) => {
-  if (plans.some(plan => plan.changes.length > 0)) {
-    pushModal(HealthCheckReview, {plans})
-  } else {
-    for (const plan of plans) {
-      plan.apply()
-    }
-  }
-}
+const missingRelaysCheck = (
+  spec: RelayListSpec,
+  {description, recommended}: NonNullable<RelayListSpec["missing"]>,
+): HealthCheck => ({
+  id: `missing-${spec.id}-relays`,
+  title: `Missing ${spec.name} Relays`,
+  description,
+  isPending: context => spec.urls(context).length <= 1,
+  plan: context =>
+    relayPlan(
+      `Sets your ${spec.noun} relays to the ones this app recommends.`,
+      `${spec.name} relays`,
+      spec.urls(context),
+      recommended,
+      spec.save,
+    ),
+})
 
-export const forceHealthChecks = writable<Record<string, boolean>>({})
+const tooManyRelaysCheck = (spec: RelayListSpec): HealthCheck => ({
+  id: `too-many-${spec.id}-relays`,
+  title: `Too Many ${spec.name} Relays`,
+  description: `You have more ${spec.noun} relays than is really necessary, which can affect resource usage.`,
+  isPending: context => spec.urls(context).length > 8,
+  plan: context =>
+    relayPlan(
+      `Keeps five of your ${spec.noun} relays and drops the rest.`,
+      `${spec.name} relays`,
+      spec.urls(context),
+      sample(5, spec.urls(context)),
+      spec.save,
+    ),
+})
+
+// Set when a key is generated in-app, and cleared once the user has saved a backup of it
+export const needsKeyBackup = writable(false)
 
 export class HealthChecks {
   context: Projection<HealthCheckContext>
@@ -109,90 +123,51 @@ export class HealthChecks {
     )
 
     this.pending = projection(
-      derived(
-        [this.context.$, forceHealthChecks, app.use(Relays).index.$],
-        ([$context, $forceHealthChecks]) =>
-          this.checks.filter(check => $forceHealthChecks[check.id] ?? check.isPending($context)),
+      derived([this.context.$, app.use(Relays).index.$], ([$context]) =>
+        this.checks.filter(check => check.isPending($context)),
       ),
     )
   }
 
   private supportsSearch = (url: string) => this.app.use(Relays).get(url)?.hasNip(50) ?? true
 
+  private relayLists: RelayListSpec[] = [
+    {
+      id: "inbox",
+      name: "Inbox",
+      noun: "inbox",
+      missing: {
+        description: "Other people aren't currently able to reliably tag you in public notes.",
+        recommended: DEFAULT_RELAYS,
+      },
+      urls: context => context.readRelays,
+      save: urls => this.app.use(RelayLists).setReadUrls(urls),
+    },
+    {
+      id: "outbox",
+      name: "Outbox",
+      noun: "outbox",
+      missing: {
+        description: "Other people aren't currently able to reliably find your public notes.",
+        recommended: DEFAULT_RELAYS,
+      },
+      urls: context => context.writeRelays,
+      save: urls => this.app.use(RelayLists).setWriteUrls(urls),
+    },
+    {
+      id: "dm",
+      name: "DM",
+      noun: "DM",
+      urls: context => context.messagingRelays,
+      save: urls => this.app.use(MessagingRelayLists).setUrls(urls),
+    },
+  ]
+
   private checks: HealthCheck[] = [
-    {
-      id: "missing-inbox-relays",
-      title: "Missing Inbox Relays",
-      description: "Other people aren't currently able to reliably tag you in public notes.",
-      isPending: context => context.readRelays.length <= 1,
-      plan: context =>
-        relayPlan(
-          "Sets your inbox relays to the ones this app recommends.",
-          "Inbox relays",
-          context.readRelays,
-          DEFAULT_RELAYS,
-          urls => this.app.use(RelayLists).setReadUrls(urls).then(publishRelayList),
-        ),
-    },
-    {
-      id: "missing-outbox-relays",
-      title: "Missing Outbox Relays",
-      description: "Other people aren't currently able to reliably find your public notes.",
-      isPending: context => context.writeRelays.length <= 1,
-      plan: context =>
-        relayPlan(
-          "Sets your outbox relays to the ones this app recommends.",
-          "Outbox relays",
-          context.writeRelays,
-          DEFAULT_RELAYS,
-          urls => this.app.use(RelayLists).setWriteUrls(urls).then(publishRelayList),
-        ),
-    },
-    {
-      id: "too-many-inbox-relays",
-      title: "Too Many Inbox Relays",
-      description:
-        "You have more inbox relays than is really necessary, which can affect resource usage.",
-      isPending: context => context.readRelays.length > 8,
-      plan: context =>
-        relayPlan(
-          "Keeps five of your inbox relays and drops the rest.",
-          "Inbox relays",
-          context.readRelays,
-          sample(5, context.readRelays),
-          urls => this.app.use(RelayLists).setReadUrls(urls).then(publishRelayList),
-        ),
-    },
-    {
-      id: "too-many-outbox-relays",
-      title: "Too Many Outbox Relays",
-      description:
-        "You have more outbox relays than is really necessary, which can affect resource usage.",
-      isPending: context => context.writeRelays.length > 8,
-      plan: context =>
-        relayPlan(
-          "Keeps five of your outbox relays and drops the rest.",
-          "Outbox relays",
-          context.writeRelays,
-          sample(5, context.writeRelays),
-          urls => this.app.use(RelayLists).setWriteUrls(urls).then(publishRelayList),
-        ),
-    },
-    {
-      id: "too-many-dm-relays",
-      title: "Too Many DM Relays",
-      description:
-        "You have more DM relays than is really necessary, which can affect resource usage.",
-      isPending: context => context.messagingRelays.length > 8,
-      plan: context =>
-        relayPlan(
-          "Keeps five of your DM relays and drops the rest.",
-          "DM relays",
-          context.messagingRelays,
-          sample(5, context.messagingRelays),
-          urls => this.app.use(MessagingRelayLists).setUrls(urls).then(publishRelayList),
-        ),
-    },
+    ...this.relayLists.flatMap(spec =>
+      spec.missing ? [missingRelaysCheck(spec, spec.missing)] : [],
+    ),
+    ...this.relayLists.map(tooManyRelaysCheck),
     {
       id: "invalid-search-relays",
       title: "Invalid Search Relays",
@@ -204,35 +179,10 @@ export class HealthChecks {
           "Search relays",
           context.searchRelays,
           context.searchRelays.filter(this.supportsSearch),
-          urls => this.app.use(SearchRelayLists).setUrls(urls).then(publishRelayList),
+          urls => this.app.use(SearchRelayLists).setUrls(urls),
         ),
     },
-    {
-      id: "backup-key",
-      title: "Back Up Your Key",
-      description: "Save a backup of your private key in a secure place.",
-      isPending: () => false,
-      plan: () => ({
-        summary: "Opens the key backup dialog, where you choose how to save your key.",
-        changes: [],
-        apply: () => {
-          const {secret} = session.get()!.data as {secret: string}
-
-          pushModal(KeyDownload, {
-            secret,
-            next: () => {
-              forceHealthChecks.update(assoc("backup-key", false))
-              history.back()
-            },
-            submitText: "Done",
-          })
-        },
-      }),
-    },
   ]
-
-  isPending = (healthCheck: HealthCheck) =>
-    get(forceHealthChecks)[healthCheck.id] ?? healthCheck.isPending(this.context.get())
 
   plan = (healthCheck: HealthCheck) => healthCheck.plan(this.context.get())
 }
