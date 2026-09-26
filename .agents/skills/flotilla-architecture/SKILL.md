@@ -331,7 +331,8 @@ with `makeFeed` and filters them with the `classifieds.ts` helpers. `[address]/+
 one listing with `$events.one(address, [url]).$`.
 
 Articles are composed on a full page (`spaces/[relay]/articles/create`, built by
-`makeArticleCreatePath`) instead of in a modal.
+`makeArticleCreatePath`) instead of in a modal. The page reads `?h=` and `?shareToChat` and
+renders `ArticleForm`.
 
 ## Related skills
 

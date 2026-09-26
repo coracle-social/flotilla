@@ -5,12 +5,11 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {derived, readable} from "svelte/store"
-  import {sleep} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {getCommentFiltersForRoot} from "@welshman/util"
   import {TimeEvent} from "@welshman/domain"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
+  import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
@@ -127,12 +126,6 @@
       <CalendarEventPeople {url} event={$event} rsvps={$rsvps} />
     {/if}
   {:else}
-    <div class="flex justify-center py-20">
-      {#await sleep(5000)}
-        <Spinner loading>Loading event...</Spinner>
-      {:then}
-        <p>Failed to load event.</p>
-      {/await}
-    </div>
+    <LoadingFallback loadingMessage="Loading event..." failureMessage="Failed to load event." />
   {/if}
 </PageContent>

@@ -1,11 +1,11 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {derived} from "svelte/store"
-  import {formatTimestamp, sleep, uniq} from "@welshman/lib"
+  import {formatTimestamp, uniq} from "@welshman/lib"
   import {Article} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
+  import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ContentMarkdown from "@app/components/ContentMarkdown.svelte"
@@ -134,12 +134,9 @@
       <ArticleAuthorSidebar {url} event={$event} />
     </div>
   {:else}
-    <div class="flex grow justify-center py-20">
-      {#await sleep(5000)}
-        <Spinner loading>Loading article...</Spinner>
-      {:then}
-        <p>Failed to load article.</p>
-      {/await}
-    </div>
+    <LoadingFallback
+      class="grow"
+      loadingMessage="Loading article..."
+      failureMessage="Failed to load article." />
   {/if}
 </PageContent>

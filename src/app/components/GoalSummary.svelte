@@ -1,6 +1,5 @@
 <script lang="ts">
   import cx from "classnames"
-  import type {Readable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -10,19 +9,16 @@
   import GoalStatus from "@app/components/GoalStatus.svelte"
   import {ENABLE_ZAPS} from "@app/env"
   import {deriveGoalProgress} from "@app/goals"
-  import type {GoalProgress} from "@app/goals"
 
   type Props = {
     url?: string
     event: TrustedEvent
-    progress?: Readable<GoalProgress>
     class?: string
   }
 
-  const {url, event, progress: providedProgress, ...props}: Props = $props()
+  const {url, event, ...props}: Props = $props()
 
-  // The list page already has a store per goal; reuse it instead of resubscribing.
-  const progress = providedProgress ?? deriveGoalProgress(event, url)
+  const progress = deriveGoalProgress(event, url)
 
   const backers = $derived($progress.backers.length)
 </script>

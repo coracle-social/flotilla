@@ -229,8 +229,8 @@ lives there:
   `ModalSubtitle`, `ModalFooter`, `Confirm`
 - controls: `Button`, `Link`, `Field`, `FieldInline`, `Input`, `InputList`, `ToggleInput`,
   `DateTimeInput`, `ImagesInput`, `IconInput`, `EmojiPicker`, `MenuButton`, `SegmentedButtons`
-- display and lists: `Icon`, `Badge`, `Card`, `Divider`, `Spinner`, `Tooltip`, `Tippy`, `Cv`,
-  `VirtualList`, `Masonry`, `DragList`, `ScrollToTop`
+- display and lists: `Icon`, `Badge`, `Card`, `Divider`, `Spinner`, `LoadingFallback`, `Tooltip`,
+  `Tippy`, `Cv`, `VirtualList`, `Masonry`, `DragList`, `ScrollToTop`
 - the CSS component families (`button.css`, `card.css`, …) and the theme tokens
 
 Anything that takes an identifier and reads a store, publishes, or knows a kind is an app
@@ -324,14 +324,13 @@ data every page needs lives in `src/app/sync.ts`.
 lists before loading the author's outbox with `$network.loadLenient`.
 
 **A detail page:** `$events.one(address, [url]).$` loads when nothing local matches. While it is
-empty, seven pages show a spinner that turns into a failure message:
+empty, seven pages show `LoadingFallback`, a spinner that turns into a failure message after
+five seconds:
 
 ```svelte
-{#await sleep(5000)}
-  <Spinner loading>Loading listing...</Spinner>
-{:then}
-  <p>Failed to load classified listing.</p>
-{/await}
+<LoadingFallback
+  loadingMessage="Loading listing..."
+  failureMessage="Failed to load classified listing." />
 ```
 
 **Related events:** request them, abort on teardown, and read them back from the repository with
@@ -444,7 +443,9 @@ Create/edit pairs come in three shapes:
 - **The form owns the mutation and a draft.** `ClassifiedForm` persists fields with `DraftKey`
   and republishes the same `d` on edit. `ClassifiedCreate` passes a header, and `ClassifiedEdit`
   turns a reader into `initialValues`. Its `Values` type stays local, so `ClassifiedEdit`
-  restates the shape; export it instead.
+  restates the shape; export it instead, as `ArticleForm` does. `ArticleForm` is the same shape
+  on a full page: it renders the `SpaceBar` with its Publish button, takes the title as `header`,
+  and lands on the published article.
 
 Rich text uses `makeEditor` from `src/app/editor` with `EditorContent`.
 

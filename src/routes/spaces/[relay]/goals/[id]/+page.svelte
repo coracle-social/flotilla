@@ -1,12 +1,12 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {derived} from "svelte/store"
-  import {DAY, formatTimestampRelative, now, sleep} from "@welshman/lib"
+  import {DAY, formatTimestampRelative, now} from "@welshman/lib"
   import {ZapGoal} from "@welshman/domain"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
+  import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import Content from "@app/components/Content.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
@@ -116,12 +116,8 @@
     <GoalSupporters {url} event={$event} progress={$progress} />
     <EventComments event={$event} {url} {context} />
   {:else}
-    <div class="flex justify-center py-20">
-      {#await sleep(5000)}
-        <Spinner loading>Loading funding goal...</Spinner>
-      {:then}
-        <p>Failed to load funding goal.</p>
-      {/await}
-    </div>
+    <LoadingFallback
+      loadingMessage="Loading funding goal..."
+      failureMessage="Failed to load funding goal." />
   {/if}
 </PageContent>

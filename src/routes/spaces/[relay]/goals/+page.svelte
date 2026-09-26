@@ -1,8 +1,8 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {derived, readable} from "svelte/store"
+  import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
-  import {equals, now, pluck, sortBy, spec} from "@welshman/lib"
+  import {equals, pluck, spec} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {ZAP_GOAL} from "@welshman/util"
@@ -15,6 +15,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
+  import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
@@ -23,8 +24,8 @@
   import {decodeRelay} from "@app/relays"
   import {makeCommentFilter, partitionByActivity} from "@app/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {deriveGoalProgress} from "@app/goals"
-  import type {GoalProgress} from "@app/goals"
+  import {deriveGoalProgressById, filterGoals, getGoalTotals, sortGoals} from "@app/goals"
+  import type {GoalFilter, GoalSort} from "@app/goals"
   import {pushModal} from "@app/modal"
   import type {PageProps} from "./$types"
 
@@ -35,7 +36,7 @@
 
   onDestroy(context.cleanup)
 
-  const tabs = [
+  const tabs: SegmentedOption<GoalFilter>[] = [
     {value: "all", label: "All"},
     {value: "live", label: "Live"},
     {value: "funded", label: "Funded"},
@@ -51,93 +52,26 @@
 
   const createGoal = () => pushModal(GoalCreate, {url})
 
-  let tab = $state("all")
-  let sort = $state("active")
+  let tab: GoalFilter = $state("all")
+  let sort: GoalSort = $state("active")
 
-  // progressById resubscribes every goal's zap receipts, so these change only with the goal set.
+  // progressById resubscribes every goal's zap receipts, so goals change only with the goal set.
   let goals: TrustedEvent[] = $state([])
-  let progressStoresById: Map<string, Readable<GoalProgress>> = $state(new Map())
 
   $effect(() => {
     const next = $events.filter(spec({kind: ZAP_GOAL}))
 
     if (!equals(pluck("id", next), pluck("id", goals))) {
       goals = next
-      progressStoresById = new Map(
-        next.map(event => [
-          event.id,
-          progressStoresById.get(event.id) ?? deriveGoalProgress(event, url),
-        ]),
-      )
     }
   })
 
-  // `derived` over no stores never fires, so an empty board needs a store of its own.
-  const progressById = $derived.by(() => {
-    const ids = Array.from(progressStoresById.keys())
-    const stores = Array.from(progressStoresById.values())
-
-    return stores.length > 0
-      ? derived(stores, progresses => new Map(progresses.map((progress, i) => [ids[i]!, progress])))
-      : readable(new Map<string, GoalProgress>())
-  })
-
+  const progressById = $derived(deriveGoalProgressById(goals, url))
   const {activeAt} = $derived(partitionByActivity(ZAP_GOAL, $events))
-
-  const totals = $derived.by(() => {
-    const backers = new Set<string>()
-    let raised = 0
-    let funded = 0
-
-    for (const progress of $progressById.values()) {
-      raised += progress.raised
-      funded += progress.isFunded ? 1 : 0
-
-      for (const backer of progress.backers) {
-        backers.add(backer)
-      }
-    }
-
-    return {raised, funded, backers: backers.size}
-  })
-
-  const items = $derived.by(() => {
-    const matches = goals.filter(event => {
-      const progress = $progressById.get(event.id)
-
-      if (tab === "live") {
-        return Boolean(progress && !progress.isEnded && !progress.isFunded)
-      }
-
-      if (tab === "funded") {
-        return Boolean(progress?.isFunded)
-      }
-
-      if (tab === "ended") {
-        return Boolean(progress?.isEnded)
-      }
-
-      return true
-    })
-
-    if (sort === "new") {
-      return sortBy(event => -event.created_at, matches)
-    }
-
-    if (sort === "progress") {
-      return sortBy(event => -($progressById.get(event.id)?.percent ?? 0), matches)
-    }
-
-    if (sort === "ending") {
-      return sortBy(event => {
-        const closedAt = $progressById.get(event.id)?.closedAt
-
-        return closedAt && closedAt > now() ? closedAt : Infinity
-      }, matches)
-    }
-
-    return sortBy(event => -(activeAt.get(event.id) ?? event.created_at), matches)
-  })
+  const totals = $derived(getGoalTotals($progressById))
+  const items = $derived(
+    sortGoals(sort, filterGoals(tab, goals, $progressById), $progressById, activeAt),
+  )
 
   onMount(() => {
     const feed = makeFeed({
@@ -207,11 +141,7 @@
   <div class="columns-1 gap-2 sm:gap-4 lg:columns-2 2xl:columns-3">
     {#each items as event (event.id)}
       <div in:fly class="mb-2 min-w-0 break-inside-avoid sm:mb-4">
-        <GoalItem
-          {url}
-          {context}
-          event={$state.snapshot(event)}
-          progress={progressStoresById.get(event.id)} />
+        <GoalItem {url} {context} event={$state.snapshot(event)} />
       </div>
     {/each}
   </div>

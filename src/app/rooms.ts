@@ -1,6 +1,6 @@
 import * as nip19 from "nostr-tools/nip19"
 import {derived, get} from "svelte/store"
-import {formatTimestampAsDate, int, sortBy, uniq, MINUTE} from "@welshman/lib"
+import {addToMapKey, dec, formatTimestampAsDate, int, sortBy, uniq, MINUTE} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   ROOM_DELETE_EVENT,
@@ -15,7 +15,8 @@ import {
 } from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
 import {Comment, Message} from "@welshman/domain"
-import type {BaseEventReader, EventWriter} from "@welshman/domain"
+import type {BaseEventReader, EventWriter, Relay} from "@welshman/domain"
+import {throttled} from "@welshman/store"
 import {MembershipStatus, RoomLists, makeRoomKey, createSearch, publish} from "@welshman/app"
 import type {Room, RoomMeta} from "@welshman/app"
 import {
@@ -265,6 +266,45 @@ export const deriveUserRoomMembershipStatus = (url: string, h: string) =>
     [rooms.get().membershipStatus(url, h).$, deriveUserIsRoomAdmin(url, h)],
     ([$status, $isAdmin]) => ($isAdmin ? MembershipStatus.Granted : $status),
   )
+
+// How many people list each space both scopes and ranks the search.
+export const deriveSpaceSearch = () => {
+  const spacePubkeysByUrl = derived(roomLists.get().all.$, $roomLists => {
+    const result = new Map<string, Set<string>>()
+
+    for (const roomList of $roomLists) {
+      for (const url of roomList.urls()) {
+        addToMapKey(result, url, roomList.author())
+      }
+    }
+
+    return result
+  })
+
+  return derived(
+    [throttled(1000, relays.get().all.$), spacePubkeysByUrl],
+    ([$relays, $spacePubkeysByUrl]) =>
+      createSearch(
+        $relays.filter(r => $spacePubkeysByUrl.has(r.url)),
+        {
+          getValue: (relay: Relay) => relay.url,
+          sortFn: ({score, item}) => {
+            if (score && score > 0.1) {
+              return -score
+            }
+
+            const wotScore = $spacePubkeysByUrl.get(item.url)?.size || 0
+
+            return score ? dec(score) * wotScore : -wotScore
+          },
+          fuseOptions: {
+            keys: ["url", "name", {name: "description", weight: 0.3}],
+            shouldSort: false,
+          },
+        },
+      ),
+  )
+}
 
 export const deriveUserRoomSearch = () =>
   derived(

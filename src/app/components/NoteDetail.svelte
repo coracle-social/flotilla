@@ -1,14 +1,13 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {readable} from "svelte/store"
-  import {sleep} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
+  import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import CommentCompose from "@app/components/CommentCompose.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
@@ -69,13 +68,7 @@
         {/if}
       </div>
     {:else}
-      <div class="flex justify-center py-20">
-        {#await sleep(5000)}
-          <Spinner loading>Loading note...</Spinner>
-        {:then}
-          <p>Failed to load note.</p>
-        {/await}
-      </div>
+      <LoadingFallback loadingMessage="Loading note..." failureMessage="Failed to load note." />
     {/if}
   </ModalBody>
 </Modal>

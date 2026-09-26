@@ -1,9 +1,8 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {sleep} from "@welshman/lib"
   import {POLL, POLL_RESPONSE} from "@welshman/util"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
+  import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
@@ -59,12 +58,6 @@
     </NoteCard>
     <EventComments event={$event} {url} {context} />
   {:else}
-    <div class="flex justify-center py-20">
-      {#await sleep(5000)}
-        <Spinner loading>Loading poll...</Spinner>
-      {:then}
-        <p>Failed to load poll.</p>
-      {/await}
-    </div>
+    <LoadingFallback loadingMessage="Loading poll..." failureMessage="Failed to load poll." />
   {/if}
 </PageContent>

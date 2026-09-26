@@ -1,11 +1,8 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {derived as _derived} from "svelte/store"
-  import {addToMapKey, dec, sleep} from "@welshman/lib"
+  import {sleep} from "@welshman/lib"
   import {ROOMS} from "@welshman/util"
-  import type {Relay} from "@welshman/domain"
-  import {throttled} from "@welshman/store"
-  import {Sync, createSearch} from "@welshman/app"
+  import {Sync} from "@welshman/app"
   import {createScroller, isMobile} from "@lib/html"
   import {fly} from "@lib/transition"
   import Compass from "@assets/icons/compass.svg?dataurl"
@@ -19,75 +16,26 @@
   import Divider from "@lib/components/Divider.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ContentSearch from "@lib/components/ContentSearch.svelte"
-  import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceAdd from "@app/components/SpaceAdd.svelte"
-  import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
-  import SpaceJoin from "@app/components/SpaceJoin.svelte"
-  import {app, relays, roomLists, user} from "@app/core"
-  import {userSpaceUrls} from "@app/rooms"
+  import SpaceResult from "@app/components/SpaceResult.svelte"
+  import {app, roomLists, user} from "@app/core"
+  import {deriveSpaceSearch, userSpaceUrls} from "@app/rooms"
   import {PLATFORM_RELAYS, DEFAULT_RELAYS} from "@app/env"
   import {bootstrapPubkeys} from "@app/social"
   import {parseInviteLink} from "@app/access"
   import {pushModal} from "@app/modal"
-  import {goToSpace} from "@app/routes"
 
   const addSpace = () => pushModal(SpaceAdd)
 
   const userSpacesLoaded = $roomLists.load($user.pubkey)
-
-  // How many people list each space, which both scopes and ranks search.
-  const spacePubkeysByUrl = _derived($roomLists.all.$, $roomLists => {
-    const result = new Map<string, Set<string>>()
-
-    for (const roomList of $roomLists) {
-      for (const url of roomList.urls()) {
-        addToMapKey(result, url, roomList.author())
-      }
-    }
-
-    return result
-  })
-
-  const relaySearch = _derived(
-    [throttled(1000, $relays.all.$), spacePubkeysByUrl],
-    ([$relays, $spacePubkeysByUrl]) => {
-      const options = $relays.filter(r => $spacePubkeysByUrl.has(r.url))
-
-      return createSearch(options, {
-        getValue: (relay: Relay) => relay.url,
-        sortFn: ({score, item}) => {
-          if (score && score > 0.1) {
-            return -score!
-          }
-
-          const wotScore = $spacePubkeysByUrl.get(item.url)?.size || 0
-
-          return score ? dec(score) * wotScore : -wotScore
-        },
-        fuseOptions: {
-          keys: ["url", "name", {name: "description", weight: 0.3}],
-          shouldSort: false,
-        },
-      })
-    },
-  )
-
-  const openSpace = (url: string, claim = "") => {
-    if ($userSpaceUrls.includes(url)) {
-      goToSpace(url)
-    } else if (claim) {
-      pushModal(SpaceInviteAccept, {invite: term})
-    } else {
-      pushModal(SpaceJoin, {url})
-    }
-  }
+  const spaceSearch = deriveSpaceSearch()
 
   let term = $state("")
   let limit = $state(20)
   let element: Element
 
   const inviteData = $derived(parseInviteLink(term))
-  const searchResults = $derived($relaySearch.searchOptions(term))
+  const searchResults = $derived($spaceSearch.searchOptions(term))
   const userSpaceSet = $derived(new Set($userSpaceUrls))
   const otherSpaces = $derived(
     searchResults.filter(r => !userSpaceSet.has(r.url) && r.url !== inviteData?.url),
@@ -146,9 +94,7 @@
       {#snippet content()}
         <div class="flex flex-col gap-2" bind:this={element}>
           {#each PLATFORM_RELAYS as url (url)}
-            <Button class="card card-interactive" onclick={() => openSpace(url)}>
-              <RelaySummary {url} />
-            </Button>
+            <SpaceResult {url} />
           {:else}
             {#await userSpacesLoaded}
               <div class="flex items-center justify-center py-20">
@@ -159,20 +105,14 @@
               {#if inviteData}
                 <Divider>Search results</Divider>
                 {#key inviteData.url}
-                  <Button
-                    class="card card-interactive"
-                    onclick={() => openSpace(inviteData.url, inviteData.claim)}>
-                    <RelaySummary url={inviteData.url} />
-                  </Button>
+                  <SpaceResult url={inviteData.url} invite={inviteData.claim ? term : undefined} />
                 {/key}
               {/if}
               {#if otherSpaces.length > 0}
                 <Divider>Browse Spaces</Divider>
               {/if}
               {#each otherSpaces.slice(0, limit) as relay (relay.url)}
-                <Button class="card card-interactive" onclick={() => openSpace(relay.url)}>
-                  <RelaySummary url={relay.url} />
-                </Button>
+                <SpaceResult url={relay.url} />
               {/each}
               <div class="flex justify-center py-20">
                 {#await sleep(5000)}

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type {Readable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
   import {ZapGoal} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
@@ -9,7 +8,6 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import type {FeedContext} from "@app/feeds"
-  import type {GoalProgress} from "@app/goals"
   import GoalSummary from "@app/components/GoalSummary.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
@@ -19,10 +17,9 @@
     url: string
     event: TrustedEvent
     context: FeedContext
-    progress?: Readable<GoalProgress>
   }
 
-  const {url, event, context, progress}: Props = $props()
+  const {url, event, context}: Props = $props()
 
   const goal = reader(ZapGoal)(event)
 
@@ -49,7 +46,7 @@
         maxLength={180} />
     </div>
   {/if}
-  <GoalSummary {url} {event} {progress} />
+  <GoalSummary {url} {event} />
   <div class="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
     <span class="min-w-0 py-1 text-sm text-content-muted">
       by <ProfileLink pubkey={event.pubkey} {url} />

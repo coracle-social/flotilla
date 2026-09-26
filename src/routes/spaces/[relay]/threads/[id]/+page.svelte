@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {page} from "$app/state"
-  import {sleep, spec} from "@welshman/lib"
+  import {spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {getCommentFiltersForRoot} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
@@ -9,7 +9,7 @@
   import {fade, fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
+  import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import Button from "@lib/components/Button.svelte"
   import ThreadPost from "@app/components/ThreadPost.svelte"
   import ThreadSummaryBar from "@app/components/ThreadSummaryBar.svelte"
@@ -216,13 +216,7 @@
         </div>
       {/if}
     {:else}
-      <div class="flex justify-center py-20">
-        {#await sleep(5000)}
-          <Spinner loading>Loading thread...</Spinner>
-        {:then}
-          <p>Failed to load thread.</p>
-        {/await}
-      </div>
+      <LoadingFallback loadingMessage="Loading thread..." failureMessage="Failed to load thread." />
     {/if}
   </PageContent>
   {#if $event && scrolledPastRoot}

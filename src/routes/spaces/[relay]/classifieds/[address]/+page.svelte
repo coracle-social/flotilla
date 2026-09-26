@@ -1,12 +1,12 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {derived} from "svelte/store"
-  import {sleep, uniq} from "@welshman/lib"
+  import {uniq} from "@welshman/lib"
   import {Classified} from "@welshman/domain"
   import {normalizeTopic} from "@lib/util"
   import Link from "@lib/components/Link.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
+  import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
@@ -72,12 +72,8 @@
     </NoteCard>
     <EventComments event={$event} {url} {context} />
   {:else}
-    <div class="flex justify-center py-20">
-      {#await sleep(5000)}
-        <Spinner loading>Loading listing...</Spinner>
-      {:then}
-        <p>Failed to load classified listing.</p>
-      {/await}
-    </div>
+    <LoadingFallback
+      loadingMessage="Loading listing..."
+      failureMessage="Failed to load classified listing." />
   {/if}
 </PageContent>
