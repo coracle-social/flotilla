@@ -9,6 +9,8 @@ import {
   expect,
   message,
   messageActions,
+  modalForm,
+  noteEditor,
   openRoomDetail,
   pageBar,
   pathPattern,
@@ -866,4 +868,60 @@ test("US-120 read what a notification says", async ({seed, as}) => {
       title: "Someone mentioned you",
       body: "sunday, the notice is at a link to harbor.example",
     })
+})
+
+test("US-136 hear about a new message and not about a new thread", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anchor"})
+    space.profile(user.bob, {name: "Bob Barnacle"})
+  })
+
+  const space = scenario.space("space")
+
+  // The tab has to be in the background before a notification is raised at all.
+  const alice = await as(users.alice, "/settings/alerts", {
+    context: {permissions: ["notifications"]},
+  })
+
+  await settingRow(alice, "Enable push notifications").getByRole("checkbox").check()
+  await alice.getByRole("button", {name: "Save Changes"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("Your settings have been saved!")
+
+  await spaceNavItem(alice, space.name).click()
+  await roomLink(alice, "General").click()
+
+  await expect(alice).toHaveURL(pathPattern(roomPath(space.url, "general")))
+
+  const notifications = await captureNotifications(alice)
+
+  const bob = await as(users.bob, `${spacePath(space.url)}/threads`)
+  const board = bob
+    .locator("section")
+    .filter({has: bob.getByRole("heading", {name: "General", exact: true})})
+
+  await board.getByRole("button", {name: "Create", exact: true}).click()
+
+  const threadForm = modalForm(bob, "Create a Thread")
+
+  await threadForm.getByPlaceholder("What is this thread about?").fill("the dock is closing")
+  await noteEditor(threadForm).pressSequentially("sunday, apparently")
+  await threadForm.getByRole("button", {name: "Create Thread"}).click()
+
+  await expect(board.getByRole("row").filter({hasText: "the dock is closing"})).toBeVisible()
+
+  // Alice holds the thread before bob says anything, so a notification for it would be here by now.
+  await contentNavItem(alice, "Threads").click()
+  await expect(alice.getByRole("row").filter({hasText: "the dock is closing"})).toBeVisible()
+
+  await postTo(bob, "General", "when does the dock close?")
+
+  await expect
+    .poll(() => notifications)
+    .toEqual([{title: "New message", body: "when does the dock close?"}])
 })

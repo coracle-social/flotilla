@@ -1,7 +1,7 @@
 import {writable} from "svelte/store"
 import type {Subscriber, Unsubscriber} from "svelte/store"
 import {Capacitor} from "@capacitor/core"
-import {assoc, call, ms, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
+import {call, ms, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
 import {LOCAL_RELAY_URL} from "@welshman/net"
 import type {RepositoryUpdate} from "@welshman/net"
 import {
@@ -19,7 +19,7 @@ import {merged, withGetter} from "@welshman/store"
 import {User} from "@welshman/app"
 import {navigate} from "@app/modal"
 import {app, messagingRelayLists, network, roomLists} from "@app/core"
-import {DM_KINDS, CONTENT_KINDS, makeCommentFilter} from "@app/content"
+import {DM_KINDS} from "@app/content"
 import {getMutedRooms, notificationSettings, shouldNotify, userSettingsValues} from "@app/settings"
 import {makeEventPath, goToChat, goToSpace} from "@app/routes"
 
@@ -47,10 +47,6 @@ export interface IPushAdapter {
 }
 
 export const onNotification = call(() => {
-  const allFilters = [
-    {kinds: [MESSAGE, ...CONTENT_KINDS, ...DM_KINDS]},
-    makeCommentFilter(CONTENT_KINDS),
-  ]
   const subscribers: Subscriber<TrustedEvent>[] = []
 
   let unsubscribe: Unsubscriber | undefined
@@ -62,7 +58,7 @@ export const onNotification = call(() => {
       let unsubscribeRepository: Unsubscriber | undefined
       const unsubscribeApp = app.subscribe($app => {
         unsubscribeRepository?.()
-        const filters = allFilters.map(assoc("since", now()))
+        const filters = [{kinds: [MESSAGE, ...DM_KINDS], since: now()}]
         unsubscribeRepository = on($app.repository, "update", ({added}: RepositoryUpdate) => {
           const $pubkey = $app.user?.pubkey
 
@@ -163,7 +159,7 @@ export const syncRelaySubscriptions = (
     userSettingsValues,
   ]).subscribe(
     throttle(3000, ([$spaceUrls, {spaces, mentions}, $settings]) => {
-      const baseFilters = [{kinds: [MESSAGE, ...CONTENT_KINDS]}, makeCommentFilter(CONTENT_KINDS)]
+      const baseFilter = {kinds: [MESSAGE]}
 
       for (const url of $spaceUrls) {
         const {notify = true, exceptions = []} = $settings.alerts.find(spec({url})) || {}
@@ -178,18 +174,18 @@ export const syncRelaySubscriptions = (
             if (skipped.length > 0) {
               ignore.push({"#h": skipped})
             }
-            filters.push(...baseFilters)
+            filters.push(baseFilter)
           } else {
             const included = exceptions.filter(h => !muted.includes(h))
 
             if (included.length > 0) {
-              filters.push(...baseFilters.map(f => ({...f, "#h": included})))
+              filters.push({...baseFilter, "#h": included})
             }
           }
         }
 
         if (mentions) {
-          filters.push(...baseFilters.map(f => ({...f, "#p": [$pubkey]})))
+          filters.push({...baseFilter, "#p": [$pubkey]})
         }
 
         sync(url, "spaces", filters, ignore)

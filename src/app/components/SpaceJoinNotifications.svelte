@@ -11,7 +11,7 @@
     <div class="flex flex-col gap-1">
       <strong>Enable notifications for this space</strong>
       <p class="text-xs opacity-75">
-        Get notified about new activity in this space. You can change this later in settings.
+        Get notified about new messages in this space. You can change this later in settings.
       </p>
     </div>
     <input type="checkbox" class="toggle" bind:checked={notifications} />

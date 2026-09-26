@@ -68,7 +68,7 @@ export class WebNotifications implements IPushAdapter {
               preview || "Someone tagged you in a message.",
             )
           } else if (spaces) {
-            this._notify(event, "New activity", preview || "Someone posted a new message.")
+            this._notify(event, "New message", preview || "Someone posted a new message.")
           }
         }
       })

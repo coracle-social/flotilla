@@ -108,7 +108,7 @@
       {#if !Capacitor.isNativePlatform()}
         <FieldInline>
           {#snippet label()}
-            <p>Play sound for new activity</p>
+            <p>Play sound for new messages</p>
           {/snippet}
           {#snippet input()}
             <ToggleInput bind:checked={settings.sound} />
@@ -131,7 +131,7 @@
       <strong class="text-lg">Alert Types</strong>
       <FieldInline>
         {#snippet label()}
-          <p>Notify me about new activity</p>
+          <p>Notify me about new messages in my spaces</p>
         {/snippet}
         {#snippet input()}
           <ToggleInput bind:checked={settings.spaces} />
@@ -147,7 +147,7 @@
       </FieldInline>
       <FieldInline>
         {#snippet label()}
-          <p>Notify me about new messages</p>
+          <p>Notify me about new direct messages</p>
         {/snippet}
         {#snippet input()}
           <ToggleInput bind:checked={settings.messages} />

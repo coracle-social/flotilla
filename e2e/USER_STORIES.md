@@ -1675,6 +1675,18 @@ Acceptance:
 - Its body is the words bob wrote rather than the quote his reply is prepended
   with, and a url in it is named by its host instead of spelled out.
 
+### US-136 — Be notified about messages and nothing else
+
+As alice, I want notifications to be about what people say to me, so that a
+space with busy boards does not buzz my phone all day.
+
+Acceptance:
+
+- With push notifications on and the tab in the background, a message from bob
+  in a room alice is in raises one.
+- A thread bob starts in the same room raises none, however much of it reaches
+  her client.
+
 ### US-105 — Land on the home page
 
 As a new user, I want the home page to route me somewhere useful, so that I'm

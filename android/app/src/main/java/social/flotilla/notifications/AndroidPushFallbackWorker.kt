@@ -200,12 +200,10 @@ class AndroidPushFallbackWorker(context: Context, params: WorkerParameters) : Wo
       PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
 
-    val body = "New activity"
-
     val notification = NotificationCompat.Builder(context, CHANNEL_ID)
       .setSmallIcon(android.R.drawable.stat_notify_chat)
       .setContentTitle("Flotilla")
-      .setContentText(body)
+      .setContentText("New message")
       .setAutoCancel(true)
       .setPriority(NotificationCompat.PRIORITY_DEFAULT)
       .setContentIntent(pendingIntent)
