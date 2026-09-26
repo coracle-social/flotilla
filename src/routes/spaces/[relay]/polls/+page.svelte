@@ -2,10 +2,9 @@
   import {onDestroy, onMount} from "svelte"
   import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
-  import {sortBy, partition, spec, pushToMapKey, max} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {POLL, tagValue, tagSpec} from "@welshman/util"
+  import {POLL} from "@welshman/util"
   import {fly} from "@lib/transition"
   import PollIcon from "@assets/icons/revote.svg?dataurl"
   import Add from "@assets/icons/add.svg?dataurl"
@@ -17,7 +16,7 @@
   import PollItem from "@app/components/PollItem.svelte"
   import PollCreate from "@app/components/PollCreate.svelte"
   import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter} from "@app/content"
+  import {makeCommentFilter, partitionByActivity} from "@app/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {pushModal} from "@app/modal"
   import type {PageProps} from "./$types"
@@ -38,20 +37,7 @@
 
   const createPoll = () => pushModal(PollCreate, {url})
 
-  const items = $derived.by(() => {
-    const scores = new Map<string, number[]>()
-    const [polls, comments] = partition(spec({kind: POLL}), $events)
-
-    for (const comment of comments) {
-      const id = tagValue(tagSpec("E"), comment.tags)
-
-      if (id) {
-        pushToMapKey(scores, id, comment.created_at)
-      }
-    }
-
-    return sortBy(e => -max([...(scores.get(e.id) || []), e.created_at]), polls)
-  })
+  const {items} = $derived(partitionByActivity(POLL, $events))
 
   onMount(() => {
     const feed = makeFeed({

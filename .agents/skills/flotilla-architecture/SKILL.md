@@ -105,8 +105,8 @@ only gate.
 - `hosting.ts`: client for the hosting backend's HTTP API
 
 **Content**
-- `content.ts`: kind lists (`CONTENT_KINDS`, `REACTION_KINDS`, `DM_KINDS`) and comment/delete
-  filters
+- `content.ts`: kind lists (`CONTENT_KINDS`, `REACTION_KINDS`, `DM_KINDS`), comment/delete
+  filters, and `partitionByActivity`, which the list pages use to sort a kind by latest comment
 - `feeds.ts`: `makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`
 - `classifieds.ts`, `articles.ts`, `pins.ts` (a person's pinned notes), `pinboards.ts`
 - `reactions.ts`, `social.ts` (display names, comment trees, muting), `render.ts` (events as
@@ -309,7 +309,7 @@ search and the space nav entry. The kind also appears in `CONTENT_NOUNS`, the ki
 `NIP46_PERMS` leaves out polls, articles and goals, so listing a new kind there is optional.
 
 **App module.** `src/app/classifieds.ts` holds the listing logic the page would otherwise inline
-(`partitionListings`, `deriveTopicCounts`, `getStatus`, `matchesTopic`, `matchesQuery`). Each is a
+(`deriveTopicCounts`, `getStatus`, `matchesTopic`, `matchesQuery`). Each is a
 small function over a domain reader:
 
 ```ts

@@ -3,10 +3,10 @@
   import {derived, readable} from "svelte/store"
   import type {Readable} from "svelte/store"
   import cx from "classnames"
-  import {equals, max, now, pluck, sortBy, spec} from "@welshman/lib"
+  import {equals, now, pluck, sortBy, spec} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {ZAP_GOAL, tagSpec, tagValue} from "@welshman/util"
+  import {ZAP_GOAL} from "@welshman/util"
   import {fly} from "@lib/transition"
   import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic.svg?dataurl"
   import Add from "@assets/icons/add.svg?dataurl"
@@ -21,7 +21,7 @@
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
   import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter} from "@app/content"
+  import {makeCommentFilter, partitionByActivity} from "@app/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {deriveGoalProgress} from "@app/goals"
   import type {GoalProgress} from "@app/goals"
@@ -82,20 +82,7 @@
       : readable(new Map<string, GoalProgress>())
   })
 
-  // A goal is "active" as of its own creation or the newest comment on it.
-  const activeAt = $derived.by(() => {
-    const result = new Map<string, number>()
-
-    for (const event of $events) {
-      const id = event.kind === ZAP_GOAL ? event.id : tagValue(tagSpec("E"), event.tags)
-
-      if (id) {
-        result.set(id, max([result.get(id), event.created_at]))
-      }
-    }
-
-    return result
-  })
+  const {activeAt} = $derived(partitionByActivity(ZAP_GOAL, $events))
 
   const totals = $derived.by(() => {
     const backers = new Set<string>()

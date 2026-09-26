@@ -22,12 +22,11 @@
   import ClassifiedItem from "@app/components/ClassifiedItem.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
   import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter} from "@app/content"
+  import {makeCommentFilter, partitionByActivity} from "@app/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {makeClassifiedPath} from "@app/routes"
   import {
     CLASSIFIED_STATUS_TABS,
-    partitionListings,
     deriveTopicCounts,
     getStatus,
     matchesTopic,
@@ -69,7 +68,7 @@
 
   const topic = $derived($page.url.searchParams.get("topic") ?? "")
 
-  const {listings, activeAt} = $derived(partitionListings($events))
+  const {items: listings, activeAt} = $derived(partitionByActivity(CLASSIFIED, $events))
   const topicCounts = $derived(deriveTopicCounts(listings))
 
   // Narrowed by everything except the status tab, so its counts match what it shows.

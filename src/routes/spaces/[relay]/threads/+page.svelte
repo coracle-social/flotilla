@@ -2,10 +2,10 @@
   import {onDestroy, onMount} from "svelte"
   import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
-  import {sortBy, partition, spec, max, pushToMapKey, groupBy} from "@welshman/lib"
+  import {sortBy, groupBy} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {THREAD, tagValue, tagSpec} from "@welshman/util"
+  import {THREAD} from "@welshman/util"
   import {Thread} from "@welshman/domain"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -16,7 +16,7 @@
   import {reader} from "@app/core"
   import {decodeRelay} from "@app/relays"
   import {displayRoom} from "@app/rooms"
-  import {makeCommentFilter} from "@app/content"
+  import {makeCommentFilter, partitionByActivity} from "@app/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import type {PageProps} from "./$types"
 
@@ -35,19 +35,7 @@
   let events: Readable<TrustedEvent[]> = $state(readable([]))
 
   const threadFeed = $derived.by(() => {
-    const scores = new Map<string, number[]>()
-    const [threads, comments] = partition(spec({kind: THREAD}), $events)
-
-    for (const comment of comments) {
-      const id = tagValue(tagSpec("E"), comment.tags)
-
-      if (id) {
-        pushToMapKey(scores, id, comment.created_at)
-      }
-    }
-
-    const items = sortBy(e => -max([...(scores.get(e.id) || []), e.created_at]), threads)
-
+    const {items} = partitionByActivity(THREAD, $events)
     const grouped = groupBy(e => reader(Thread)(e).room() || "", items)
     const byRoom = new Map<string, TrustedEvent[]>([["", []], ...grouped])
     const roomName = (h: string) => (h ? displayRoom(url, h) : "general").toLowerCase()

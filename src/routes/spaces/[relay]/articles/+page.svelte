@@ -3,10 +3,9 @@
   import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
   import {goto} from "$app/navigation"
-  import {sortBy, partition, spec, max, pushToMapKey} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {LONG_FORM, getAddress, tagSpec, tagValue} from "@welshman/util"
+  import {LONG_FORM, getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
   import {fly} from "@lib/transition"
   import DocumentText from "@assets/icons/document-text.svg?dataurl"
@@ -20,7 +19,7 @@
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
   import {reader} from "@app/core"
   import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter} from "@app/content"
+  import {makeCommentFilter, partitionByActivity} from "@app/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {makeArticleCreatePath} from "@app/routes"
   import type {PageProps} from "./$types"
@@ -43,20 +42,7 @@
 
   const createArticle = () => goto(makeArticleCreatePath(url))
 
-  const articles = $derived.by(() => {
-    const scores = new Map<string, number[]>()
-    const [items, comments] = partition(spec({kind: LONG_FORM}), $events)
-
-    for (const comment of comments) {
-      const address = tagValue(tagSpec("A"), comment.tags)
-
-      if (address) {
-        pushToMapKey(scores, address, comment.created_at)
-      }
-    }
-
-    return sortBy(e => -max([...(scores.get(getAddress(e)) || []), e.created_at]), items)
-  })
+  const {items: articles} = $derived(partitionByActivity(LONG_FORM, $events))
 
   const filtered = $derived(
     articles.filter(

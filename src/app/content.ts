@@ -1,3 +1,4 @@
+import {max, partition, sortBy, spec} from "@welshman/lib"
 import {
   CLASSIFIED,
   COMMENT,
@@ -17,11 +18,16 @@ import {
   ZAP_RECEIPT,
   matchTags,
   decryptFile,
+  getIdOrAddress,
+  isReplaceableKind,
   tagSpec,
   tagValue,
 } from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
+import {Comment} from "@welshman/domain"
+import {reader} from "@app/core"
 import {ENABLE_ZAPS} from "@app/env"
+
 export const IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 
 export const VIDEO_CONTENT_TYPES = ["video/quicktime", "video/webm", "video/mp4"]
@@ -90,6 +96,27 @@ export const makeDeleteFilter = (kinds: number[], extra: Filter = {}) => ({
   "#k": kinds.map(String),
   ...extra,
 })
+
+// An event is active as of its own creation or the newest comment on it, keyed by address when addressable.
+export const partitionByActivity = (kind: number, events: TrustedEvent[]) => {
+  const [items, comments] = partition(spec({kind}), events)
+  const commentedAt = new Map<string, number>()
+
+  for (const comment of comments) {
+    const {id, address} = reader(Comment)(comment).root()
+    const key = isReplaceableKind(kind) ? address : id
+
+    if (key) {
+      commentedAt.set(key, max([commentedAt.get(key), comment.created_at]))
+    }
+  }
+
+  const activeAt = new Map(
+    items.map(event => [event.id, max([commentedAt.get(getIdOrAddress(event)), event.created_at])]),
+  )
+
+  return {items: sortBy(event => -(activeAt.get(event.id) ?? 0), items), activeAt}
+}
 
 export const REPOST_KINDS = [REPOST, GENERIC_REPOST]
 
