@@ -449,7 +449,7 @@ Rich text uses `makeEditor` from `src/app/editor` with `EditorContent`.
   flotilla's own; daisyUI is not installed.
 - Colors are the semantic tokens registered in `base.css`: `bg-surface`, `bg-surface-more`,
   `text-content`, `text-content-muted`, `border-line`, `text-primary`, `text-error`. The clay,
-  flat and navy themes supply the values through `data-fl-theme`.
+  flat, navy and nature themes supply the values through `data-fl-theme`.
 - Seven `class:` directives remain as leftovers; everything else builds classes with `cx`.
 - Container queries go on the `PageContent`, as in `@2xl:grid-cols-2` for the classifieds grid.
 - Icons are `import X from "@assets/icons/<name>.svg?dataurl"` with `<Icon icon={X} size={4} />`,

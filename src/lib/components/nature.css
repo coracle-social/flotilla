@@ -1,0 +1,81 @@
+[data-fl-theme="nature"] {
+  &[data-theme="light"] {
+    --primary: #397725;
+    --primary-soft: #53963f;
+    --primary-bold: #286015;
+    --primary-content: #fbf8ef;
+
+    --secondary: #dfa220;
+    --secondary-soft: #ebb958;
+    --secondary-bold: #be8207;
+    --secondary-content: #33291c;
+
+    --success: #3f8a4d;
+    --success-content: #fbf8ef;
+    --warning: #d98324;
+    --warning-content: #33291c;
+    --error: #c0503f;
+    --error-content: #fffdf7;
+
+    --backdrop: #f4ecda;
+    --surface: #fffdf7;
+    --surface-more: #ebdbc0;
+    --surface-less: #faf3e3;
+
+    --content: #33291c;
+    --content-muted: color-mix(in oklab, var(--content) 68%, var(--surface));
+    --content-subtle: color-mix(in oklab, var(--content) 42%, var(--surface));
+
+    --line: color-mix(in oklab, var(--content) 20%, transparent);
+    --line-more: color-mix(in oklab, var(--content) 35%, transparent);
+    --line-less: color-mix(in oklab, var(--content) 10%, transparent);
+
+    /* blurred and warm, replacing the hard offset shadow base.css defaults to */
+    --shadow-color: 61, 45, 26;
+    --shadow-sm: 0 1px 3px rgba(var(--shadow-color), 0.1);
+    --shadow: 0 4px 12px rgba(var(--shadow-color), 0.12);
+    --shadow-lg: 0 10px 30px rgba(var(--shadow-color), 0.14);
+    --shadow-inset: inset 0 -4px 0 rgba(0, 0, 0, 0.05);
+    --shadow-inset-strong: inset 0 -3px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  &[data-theme="dark"],
+  & .primary-nav {
+    --primary: #8ac265;
+    --primary-soft: #74ac4c;
+    --primary-bold: #a1d481;
+    --primary-content: #18140d;
+
+    --secondary: #e8b753;
+    --secondary-soft: #cd9d35;
+    --secondary-bold: #f5cc72;
+    --secondary-content: #18140d;
+
+    --success: #7cc48a;
+    --success-content: #18140d;
+    --warning: #e2a03f;
+    --warning-content: #18140d;
+    --error: #e07a63;
+    --error-content: #18140d;
+
+    --backdrop: #14110b;
+    --surface: #221d14;
+    --surface-more: #14110b;
+    --surface-less: #1b1710;
+
+    --content: #e8dfcb;
+    --content-muted: color-mix(in oklab, var(--content) 70%, var(--surface));
+    --content-subtle: color-mix(in oklab, var(--content) 45%, var(--surface));
+
+    --line: color-mix(in oklab, var(--content) 16%, transparent);
+    --line-more: color-mix(in oklab, var(--content) 30%, transparent);
+    --line-less: color-mix(in oklab, var(--content) 8%, transparent);
+
+    --shadow-color: 0, 0, 0;
+    --shadow-sm: 0 1px 3px rgba(var(--shadow-color), 0.35);
+    --shadow: 0 4px 12px rgba(var(--shadow-color), 0.4);
+    --shadow-lg: 0 10px 30px rgba(var(--shadow-color), 0.5);
+    --shadow-inset: inset 0 -4px 0 rgba(0, 0, 0, 0.25);
+    --shadow-inset-strong: inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+  }
+}

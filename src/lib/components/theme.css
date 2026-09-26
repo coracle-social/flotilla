@@ -3,20 +3,21 @@
 
      tailwindcss  — framework + our @theme token registration (via base.css)
      base.css     — theme-independent structure (base, utilities, integrations)
-     clay.css     — clay theme token values ([data-fl-theme="clay"] + dark)
-     flat.css     — flat theme token values ([data-fl-theme="flat"] + dark)
-     navy.css     — navy theme token values ([data-fl-theme="navy"] + dark)
+     <theme>.css  — one file per theme, its token values under its own
+                    [data-fl-theme] value, light and dark
 
    Every theme is selected the same way, by its own data-fl-theme value — there
    is no default, so VITE_THEME (→ FL_THEME, stamped on <body> + the app root)
    must be set. Themes are mutually exclusive, so import order doesn't matter.
-   Add a theme = add a token file + an @import. ============================== */
+   Add a theme = a token file, an @import, and its name in app/theme.ts's
+   flThemes, which is what offers it in settings. ============================== */
 
 @import "tailwindcss";
 @import "./base.css";
 @import "./clay.css";
 @import "./flat.css";
 @import "./navy.css";
+@import "./nature.css";
 
 /* per-component styles (one file per component class family) */
 @import "./badge.css";

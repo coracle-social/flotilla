@@ -30,7 +30,7 @@ const colors = [
 export const colorFor = (value: string) => colors[hash(value) % colors.length]
 
 // Every theme with token values in lib/components/theme.css
-export const flThemes = ["clay", "flat", "navy"]
+export const flThemes = ["clay", "flat", "navy", "nature"]
 
 export const flTheme = synced({
   key: "flTheme",
