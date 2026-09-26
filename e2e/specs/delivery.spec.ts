@@ -77,7 +77,7 @@ const writeComment = async (page: Page, body: string) => {
 
 // The slider is initialised from the settings store on mount, so a fresh page says the client took it.
 const setSendDelay = async (page: Page, seconds: number) => {
-  const slider = page.locator("input[type=range]")
+  const slider = page.getByRole("slider", {name: "Send delay"})
 
   await page.goto("/settings/content")
   await slider.fill(String(seconds * 1000))
