@@ -14,7 +14,7 @@ import {errorMessage} from "@lib/util"
 import KeyDownload from "@app/components/KeyDownload.svelte"
 import HealthCheckReview from "@app/components/HealthCheckReview.svelte"
 import {session, usePlugin} from "@app/core"
-import {DEFAULT_RELAYS, DEFAULT_MESSAGING_RELAYS} from "@app/env"
+import {DEFAULT_RELAYS} from "@app/env"
 import {pushModal} from "@app/modal"
 import {pushToast} from "@app/toast"
 
@@ -146,20 +146,6 @@ export class HealthChecks {
           context.writeRelays,
           DEFAULT_RELAYS,
           urls => this.app.use(RelayLists).setWriteUrls(urls).then(publishRelayList),
-        ),
-    },
-    {
-      id: "missing-dm-relays",
-      title: "Missing DM Relays",
-      description: "You aren't currently able to reliably send or receive direct messages.",
-      isPending: context => context.messagingRelays.length <= 1,
-      plan: context =>
-        relayPlan(
-          "Sets your DM relays to the ones this app recommends.",
-          "DM relays",
-          context.messagingRelays,
-          DEFAULT_MESSAGING_RELAYS,
-          urls => this.app.use(MessagingRelayLists).setUrls(urls).then(publishRelayList),
         ),
     },
     {
