@@ -10,15 +10,13 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {roomPinLists} from "@app/core"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {deriveUserIsRoomAdmin} from "@app/rooms"
-  import {deriveRoomPinnedEvents} from "@app/roomPins"
+  import {deriveRoomPinnedEvents, toggleRoomPin} from "@app/roomPins"
   import {goToEvent} from "@app/routes"
-  import {pushToast} from "@app/toast"
 
   type Props = {
     url: string
@@ -27,7 +25,6 @@
 
   const {url, h}: Props = $props()
 
-  const pinIds = $roomPinLists.pins(url, h).$
   const pinnedEvents = deriveRoomPinnedEvents(url, h)
   const userIsAdmin = deriveUserIsRoomAdmin(url, h)
 
@@ -36,21 +33,6 @@
   const jumpToMessage = (event: TrustedEvent) => {
     back()
     goToEvent(event)
-  }
-
-  const unpin = async (event: TrustedEvent) => {
-    const command = await $roomPinLists.setPins(
-      url,
-      h,
-      $pinIds.filter(pin => pin !== event.id),
-    )
-    const error = await command.publishToRelays([url]).waitForError()
-
-    if (error) {
-      pushToast({theme: "error", message: error})
-    } else {
-      pushToast({message: "Message unpinned"})
-    }
   }
 </script>
 
@@ -64,7 +46,7 @@
     </ModalHeader>
     <div class="flex flex-col gap-2">
       {#each $pinnedEvents as event (event.id)}
-        {@const onUnpin = () => unpin(event)}
+        {@const onUnpin = () => toggleRoomPin(url, h, event.id)}
         {@const onJump = () => jumpToMessage(event)}
         <div class="card card-sm flex flex-col gap-3 p-4">
           <div class="flex items-start gap-3">

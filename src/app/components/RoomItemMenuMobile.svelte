@@ -31,14 +31,15 @@
   import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import {reactions, relays, roomPinLists, user} from "@app/core"
+  import {roomPinLists, user} from "@app/core"
   import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/rooms"
+  import {toggleRoomPin} from "@app/roomPins"
+  import {publishReaction} from "@app/reactions"
   import {ENABLE_ZAPS} from "@app/env"
   import {makeContentPath} from "@app/routes"
   import {shareEvent} from "@app/share"
   import {readAloud} from "@app/speech"
   import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
 
   type Props = {
     url: string
@@ -57,13 +58,9 @@
   const isPinned = $derived($pinIds.includes(event.id))
   const tile = "button h-auto flex-col gap-1.5 py-4 text-xs"
 
-  const onEmoji = async (emoji: string) => {
+  const onEmoji = (emoji: string) => {
     history.back()
-
-    const protect = await $relays.hasNip(url, 70)
-    const command = await $reactions.react(event, emoji, w => w.setProtected(protect))
-
-    command.publishToRelays([url])
+    publishReaction(event, {content: emoji, tags: []}, {url})
   }
 
   const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})
@@ -113,24 +110,9 @@
     showMore = !showMore
   }
 
-  const togglePin = async () => {
-    if (!h) {
-      return
-    }
-
+  const togglePin = () => {
     history.back()
-
-    // The optimistic write flips isPinned while the publish is in flight, so read it before it goes out.
-    const wasPinned = isPinned
-    const pins = wasPinned ? $pinIds.filter(pin => pin !== event.id) : [...$pinIds, event.id]
-    const command = await $roomPinLists.setPins(url, h, pins)
-    const error = await command.publishToRelays([url]).waitForError()
-
-    if (error) {
-      pushToast({theme: "error", message: error})
-    } else {
-      pushToast({message: wasPinned ? "Message unpinned" : "Message pinned"})
-    }
+    toggleRoomPin(url, h, event.id)
   }
 
   let showMore = $state(false)

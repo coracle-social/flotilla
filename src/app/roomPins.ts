@@ -3,6 +3,7 @@ import type {Readable} from "svelte/store"
 import {getIdFilters, getIdOrAddress} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {events, network, roomPinLists} from "@app/core"
+import {pushToast} from "@app/toast"
 
 export const deriveRoomPinnedEvents = (url: string, h: string): Readable<TrustedEvent[]> =>
   readable<TrustedEvent[]>([], set => {
@@ -50,3 +51,19 @@ export const deriveRoomPinnedEvents = (url: string, h: string): Readable<Trusted
       unsubscribe()
     }
   })
+
+export const toggleRoomPin = async (url: string, h: string, id: string) => {
+  const pins = roomPinLists.get().pins(url, h).get()
+  // The optimistic write flips the pin while the publish is in flight, so read it before it goes out.
+  const wasPinned = pins.includes(id)
+  const command = await roomPinLists
+    .get()
+    .setPins(url, h, wasPinned ? pins.filter(pin => pin !== id) : [...pins, id])
+  const error = await command.publishToRelays([url]).waitForError()
+
+  if (error) {
+    pushToast({theme: "error", message: error})
+  } else {
+    pushToast({message: wasPinned ? "Message unpinned" : "Message pinned"})
+  }
+}

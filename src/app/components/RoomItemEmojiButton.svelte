@@ -1,10 +1,9 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
-  import {tagSpec, tagValue} from "@welshman/util"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {reactions, relays} from "@app/core"
+  import {publishReaction} from "@app/reactions"
 
   type Props = {
     url: string
@@ -13,22 +12,7 @@
 
   const {url, event}: Props = $props()
 
-  const shouldProtect = $relays.hasNip(url, 70)
-
-  const onEmoji = async (emoji: string) => {
-    const protect = await shouldProtect
-    const room = tagValue(tagSpec("h"), event.tags)
-
-    const command = await $reactions.react(event, emoji, writer => {
-      writer.setProtected(protect)
-
-      if (room) {
-        writer.setRoom(url, room)
-      }
-    })
-
-    return command.publishToRelays([url])
-  }
+  const onEmoji = (emoji: string) => publishReaction(event, {content: emoji, tags: []}, {url})
 </script>
 
 <EmojiButton

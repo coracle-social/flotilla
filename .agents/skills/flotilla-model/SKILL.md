@@ -119,7 +119,8 @@ user holds a method for — reports under `banevent`, join requests under `allow
 - **Invite** (`publishRoomInvite`): a 9009 with a random `code` tag. The link carries `h` and
   `code`, and `joinRoom(url, h, code)` sends the code as the join's `claim`.
 - **Pins**: `roomPinLists.setPins(url, h, pins)` sends 9010 and the relay republishes 39005.
-  `deriveRoomPinnedEvents` (`src/app/roomPins.ts`) loads the pinned events from the room's relay.
+  `toggleRoomPin(url, h, id)` (`src/app/roomPins.ts`) wraps it for the message menus and toasts
+  the result. `deriveRoomPinnedEvents` loads the pinned events from the room's relay.
 
 The relay enforces the `RoomMetaReader` flags (`isClosed`, `isHidden`, `isPrivate`,
 `isRestricted`); the UI only reflects them. Until membership is `Granted`, `RoomChat` hides a

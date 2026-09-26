@@ -22,8 +22,8 @@
   import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/rooms"
   import {shareEvent} from "@app/share"
   import {readAloud} from "@app/speech"
+  import {toggleRoomPin} from "@app/roomPins"
   import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
 
   type Props = {
     url: string
@@ -83,24 +83,9 @@
     pushModal(EventAdminDeleteConfirm, {url, noun: "Message", event})
   }
 
-  const togglePin = async () => {
+  const togglePin = () => {
     onClick()
-
-    if (!h) {
-      return
-    }
-
-    // The optimistic write flips isPinned while the publish is in flight, so read it before it goes out.
-    const wasPinned = isPinned
-    const pins = wasPinned ? $pinIds.filter(pin => pin !== event.id) : [...$pinIds, event.id]
-    const command = await $roomPinLists.setPins(url, h, pins)
-    const error = await command.publishToRelays([url]).waitForError()
-
-    if (error) {
-      pushToast({theme: "error", message: error})
-    } else {
-      pushToast({message: wasPinned ? "Message unpinned" : "Message pinned"})
-    }
+    toggleRoomPin(url, h, event.id)
   }
 </script>
 

@@ -14,7 +14,7 @@
   import Button from "@lib/components/Button.svelte"
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
-  import {reactions, wraps} from "@app/core"
+  import {publishWrappedReaction} from "@app/reactions"
   import {pushModal} from "@app/modal"
   import {clip} from "@app/toast"
 
@@ -29,12 +29,9 @@
 
   const tile = "button h-auto flex-col gap-1.5 py-4 text-xs"
 
-  const onEmoji = async (emoji: string) => {
+  const onEmoji = (emoji: string) => {
     history.back()
-
-    const reaction = await $reactions.react(event, emoji)
-
-    return $wraps.publish({event: reaction.event, recipients: pubkeys, pow: 16})
+    publishWrappedReaction(event, {content: emoji, tags: []}, pubkeys)
   }
 
   const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})
