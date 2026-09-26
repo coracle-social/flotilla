@@ -48,7 +48,7 @@ import type {RepositoryUpdate, WrapItem} from "@welshman/net"
 import {Relay, Zapper} from "@welshman/domain"
 import type {RelayInfo, ZapperValues} from "@welshman/domain"
 import {Handles, Plaintext, Relays, RelayStats, User, Zappers} from "@welshman/app"
-import type {AppPolicy, IApp, RelayStatsItem} from "@welshman/app"
+import type {AppPolicy, IApp, MapPlugin, RelayStatsItem} from "@welshman/app"
 import {IDB} from "@lib/indexeddb"
 import {appPolicies} from "@app/core"
 import {DM_KINDS} from "@app/content"
@@ -60,37 +60,51 @@ export const syncedWithGetter = <T>(config: SyncedConfig<T>) => {
   return {...withGetter(store), ready: store.ready}
 }
 
-export const kv = call(() => {
+type StringStorage = {
+  get: (key: string) => Promise<Maybe<string>>
+  set: (key: string, value: string) => Promise<void>
+  remove: (key: string) => Promise<void>
+  clear: () => Promise<void>
+}
+
+const makeJsonStore = (storage: StringStorage) => {
   const enqueue = makeQueue()
 
   const get = async <T>(key: string): Promise<T | undefined> => {
-    const result = await Preferences.get({key})
-    if (!result.value) {
-      return undefined
-    }
-    try {
-      return JSON.parse(result.value)
-    } catch (e) {
-      return undefined
+    const value = await storage.get(key)
+
+    if (value) {
+      try {
+        return JSON.parse(value)
+      } catch (e) {
+        return undefined
+      }
     }
   }
 
   const set = async <T>(key: string, value: T): Promise<void> => {
-    await enqueue(() => Preferences.set({key, value: JSON.stringify(value)}))
+    await enqueue(() => storage.set(key, JSON.stringify(value)))
   }
 
   const remove = async (key: string) => {
-    await enqueue(() => Preferences.remove({key}))
+    await enqueue(() => storage.remove(key))
   }
 
   const clear = async () => {
-    await enqueue(() => Preferences.clear())
+    await enqueue(() => storage.clear())
   }
 
   return {get, set, remove, clear}
+}
+
+export const kv = makeJsonStore({
+  get: async key => (await Preferences.get({key})).value ?? undefined,
+  set: (key, value) => Preferences.set({key, value}),
+  remove: key => Preferences.remove({key}),
+  clear: () => Preferences.clear(),
 })
 
-const secretStorage =
+const secretStorage: StringStorage =
   Capacitor.getPlatform() === "electron"
     ? call(() => {
         const plugin = registerPlugin<{
@@ -101,14 +115,15 @@ const secretStorage =
         }>("DesktopSecureStorage")
 
         return {
-          get: async (key: string) => (await plugin.get({key})).value,
-          set: (key: string, value: string | undefined) =>
+          get: async key => (await plugin.get({key})).value,
+          set: (key, value) =>
             value === undefined ? plugin.remove({key}) : plugin.set({key, value}),
+          remove: key => plugin.remove({key}),
           clear: () => plugin.clear(),
         }
       })
     : {
-        get: async (key: string) => {
+        get: async key => {
           let value = await SecureStorage.getItem(key)
 
           if (!value) {
@@ -121,40 +136,16 @@ const secretStorage =
             }
           }
 
-          return value
+          return value ?? undefined
         },
         // Android's SecureStorage rejects undefined
-        set: (key: string, value: string | undefined) =>
+        set: (key, value) =>
           value === undefined ? SecureStorage.removeItem(key) : SecureStorage.setItem(key, value),
+        remove: key => SecureStorage.removeItem(key),
         clear: () => SecureStorage.clear(),
       }
 
-export const ss = call(() => {
-  const enqueue = makeQueue()
-
-  const get = async <T>(key: string): Promise<T | undefined> => {
-    const value = await secretStorage.get(key)
-    if (!value) {
-      return undefined
-    }
-
-    try {
-      return JSON.parse(value)
-    } catch (e) {
-      return undefined
-    }
-  }
-
-  const set = async <T>(key: string, value: T): Promise<void> => {
-    await enqueue(() => secretStorage.set(key, JSON.stringify(value)))
-  }
-
-  const clear = async () => {
-    await enqueue(() => secretStorage.clear())
-  }
-
-  return {get, set, clear}
-})
+export const ss = makeJsonStore(secretStorage)
 
 const TABLES = [
   {name: "events", keyPath: "id"},
@@ -422,94 +413,72 @@ class Storage {
     }
   }
 
-  private initRelays = async () => {
-    const table = this.db.table<RelayInfo & {url: string}>("relays")
+  private persistMapPlugin = async <T, Row>(
+    name: string,
+    plugin: MapPlugin<T>,
+    fromRow: (row: Row) => Maybe<[string, T]>,
+    toRow: (key: string, item: T) => Row,
+  ) => {
+    const table = this.db.table<Row>(name)
 
     for (const row of await table.getAll()) {
-      this.app.use(Relays).set(row.url, new Relay(row.url, row))
+      const entry = fromRow(row)
+
+      if (entry) {
+        plugin.set(...entry)
+      }
     }
 
-    const enqueue = batch(
-      FLUSH_INTERVAL,
-      idleWrite((relays: Relay[]) => table.bulkPut(relays.map(relay => ({...relay})))),
+    const enqueue = batch(FLUSH_INTERVAL, idleWrite(table.bulkPut))
+
+    return plugin.onItem((key, item) => {
+      if (item) {
+        enqueue(toRow(key, item))
+      }
+    })
+  }
+
+  private initRelays = () =>
+    this.persistMapPlugin(
+      "relays",
+      this.app.use(Relays),
+      (row: RelayInfo & {url: string}) => [row.url, new Relay(row.url, row)],
+      (_url, relay) => ({...relay}),
     )
 
-    return this.app.use(Relays).onItem((_url, relay) => {
-      if (relay) {
-        enqueue(relay)
-      }
-    })
-  }
-
-  private initRelayStats = async () => {
-    const table = this.db.table<RelayStatsItem>("relayStats")
-
-    for (const row of await table.getAll()) {
-      this.app.use(RelayStats).set(row.url, row)
-    }
-
-    const enqueue = batch(FLUSH_INTERVAL, idleWrite(table.bulkPut))
-
-    return this.app.use(RelayStats).onItem((_url, stats) => {
-      if (stats) {
-        enqueue(stats)
-      }
-    })
-  }
-
-  private initHandles = async () => {
-    const table = this.db.table<Handle>("handles")
-
-    for (const row of await table.getAll()) {
-      this.app.use(Handles).set(row.nip05, row)
-    }
-
-    const enqueue = batch(FLUSH_INTERVAL, idleWrite(table.bulkPut))
-
-    return this.app.use(Handles).onItem((_nip05, handle) => {
-      if (handle) {
-        enqueue(handle)
-      }
-    })
-  }
-
-  private initZappers = async () => {
-    const table = this.db.table<ZapperValues>("zappers")
-
-    for (const row of await table.getAll()) {
-      // Validation is meaningless without these, and rows cached before they were required lack them.
-      if (row.pubkey && row.nostrPubkey) {
-        this.app.use(Zappers).set(row.lnurl, new Zapper(row))
-      }
-    }
-
-    const enqueue = batch(
-      FLUSH_INTERVAL,
-      idleWrite((zappers: Zapper[]) => table.bulkPut(zappers.map(zapper => ({...zapper})))),
+  private initRelayStats = () =>
+    this.persistMapPlugin(
+      "relayStats",
+      this.app.use(RelayStats),
+      (row: RelayStatsItem) => [row.url, row],
+      (_url, stats) => stats,
     )
 
-    return this.app.use(Zappers).onItem((_lnurl, zapper) => {
-      if (zapper) {
-        enqueue(zapper)
-      }
-    })
-  }
+  private initHandles = () =>
+    this.persistMapPlugin(
+      "handles",
+      this.app.use(Handles),
+      (row: Handle) => [row.nip05, row],
+      (_nip05, handle) => handle,
+    )
 
-  private initPlaintext = async () => {
-    const table = this.db.table<PlaintextItem>("plaintext")
+  // Validation is meaningless without pubkey and nostrPubkey, and rows cached before they were required lack them.
+  private initZappers = () =>
+    this.persistMapPlugin(
+      "zappers",
+      this.app.use(Zappers),
+      (row: ZapperValues) =>
+        row.pubkey && row.nostrPubkey ? [row.lnurl, new Zapper(row)] : undefined,
+      (_lnurl, zapper) => ({...zapper}),
+    )
 
-    for (const {key, value} of await table.getAll()) {
-      this.app.use(Plaintext).set(key, value)
-    }
-
-    const enqueue = batch(FLUSH_INTERVAL, idleWrite(table.bulkPut))
-
-    return this.app.use(Plaintext).onItem((key, value) => {
-      if (value) {
-        enqueue({key, value})
-      }
-    })
-  }
+  private initPlaintext = () =>
+    this.persistMapPlugin(
+      "plaintext",
+      this.app.use(Plaintext),
+      (row: PlaintextItem) => [row.key, row.value],
+      (key, value) => ({key, value}),
+    )
 
   private initWrapManager = async () => {
     const table = this.db.table<WrapItem>("wrapManager")

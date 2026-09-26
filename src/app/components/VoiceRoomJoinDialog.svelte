@@ -12,6 +12,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
+  import {listMediaDevices} from "@lib/audio"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {displayRoom} from "@app/rooms"
@@ -37,15 +38,7 @@
   let micError = $state(false)
 
   const loadDevices = async () => {
-    if (!navigator.mediaDevices?.enumerateDevices) {
-      return
-    }
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices()
-      audioInputs = devices.filter(spec({kind: "audioinput"}))
-    } catch {
-      audioInputs = []
-    }
+    audioInputs = (await listMediaDevices()).filter(spec({kind: "audioinput"}))
   }
 
   $effect(() => {

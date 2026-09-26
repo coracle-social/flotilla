@@ -9,6 +9,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
+  import {listMediaDevices} from "@lib/audio"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import {currentCallSession, DeviceKind, type CallSession} from "@app/call"
   import {switchCallActiveDevice} from "@app/callEngine"
@@ -35,19 +36,11 @@
       ?.mediaStreamTrack
 
   const loadDevices = async () => {
-    if (!navigator.mediaDevices?.enumerateDevices) {
-      return
-    }
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices()
-      audioInputs = devices.filter(spec({kind: "audioinput"}))
-      audioOutputs = devices.filter(spec({kind: "audiooutput"}))
-      videoInputs = devices.filter(spec({kind: "videoinput"}))
-    } catch {
-      audioInputs = []
-      audioOutputs = []
-      videoInputs = []
-    }
+    const devices = await listMediaDevices()
+
+    audioInputs = devices.filter(spec({kind: "audioinput"}))
+    audioOutputs = devices.filter(spec({kind: "audiooutput"}))
+    videoInputs = devices.filter(spec({kind: "videoinput"}))
   }
 
   $effect(() => {

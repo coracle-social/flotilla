@@ -1,8 +1,9 @@
 import {derived, get, readable} from "svelte/store"
 import {ago, avg, ms, now, spec} from "@welshman/lib"
+import {makeHttpAuth, makeHttpAuthHeader} from "@welshman/util"
 import {Logger} from "@welshman/app"
 import type {LogMessage} from "@welshman/app"
-import {fromApp} from "@app/core"
+import {fromApp, user} from "@app/core"
 import {navigate} from "@app/modal"
 import {pushToast, toast} from "@app/toast"
 
@@ -83,3 +84,33 @@ export const syncSignerAlerts = () =>
       })
     }
   })
+
+const httpAuthByUrl = new Map<
+  string,
+  {pubkey: string; expiresAt: number; header: Promise<string>}
+>()
+
+// A NIP-98 GET token for url, reused for maxAge seconds by the same pubkey where the server allows it.
+export const getHttpAuthHeader = (url: string, maxAge = 0) => {
+  const {pubkey, signer} = user.get()
+  const cached = httpAuthByUrl.get(url)
+
+  if (cached?.pubkey === pubkey && cached.expiresAt > now()) {
+    return cached.header
+  }
+
+  const header = makeHttpAuth(url, "GET")
+    .then(template => signer.sign(template))
+    .then(makeHttpAuthHeader)
+
+  // A declined signature shouldn't be cached, or the user can't retry.
+  header.catch(() => {
+    if (httpAuthByUrl.get(url)?.header === header) {
+      httpAuthByUrl.delete(url)
+    }
+  })
+
+  httpAuthByUrl.set(url, {pubkey, expiresAt: now() + maxAge, header})
+
+  return header
+}

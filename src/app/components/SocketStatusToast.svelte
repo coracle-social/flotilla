@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
-  import {deriveSocketStatus} from "@app/relays"
+  import {RelayConnection, deriveSocketStatus} from "@app/relays"
   import {pushToast, popToast} from "@app/toast"
 
   type Props = {
@@ -26,7 +26,7 @@
   }
 
   $effect(() => {
-    if ($status.theme !== "warning") {
+    if ($status !== RelayConnection.Connecting && $status !== RelayConnection.Authenticating) {
       hide()
       return
     }

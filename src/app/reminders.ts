@@ -2,23 +2,11 @@ import {MINUTE, first, formatTimestampRelative, int, ms, now, uniq} from "@welsh
 import {EVENT_RSVP, getIdFilters, isSignedEvent} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp} from "@welshman/domain"
-import {buildUrl} from "@lib/util"
 import {getEventStart, getEventTitle, isAttending} from "@app/calendar"
 import {app, network, reader, roomLists} from "@app/core"
-import {PUSH_SERVER} from "@app/env"
 import {notificationSettings, pushState} from "@app/push/adapters/common"
-
-type Reminder = {
-  at: number
-  title: string
-  body: string
-}
-
-const getScheduleUrl = () => {
-  const {subscription} = pushState.get()
-
-  return subscription && buildUrl(PUSH_SERVER, "subscription", subscription.key, "schedule")
-}
+import {deleteReminderSchedule, putReminderSchedule} from "@app/push/server"
+import type {Reminder} from "@app/push/server"
 
 const getLeadTimes = () => {
   const {events, reminder_minutes} = notificationSettings.get()
@@ -36,18 +24,14 @@ const makeReminders = (event: TrustedEvent, start: number): Reminder[] =>
     .filter(({at}) => at > now())
 
 const putSchedule = async (relay: string, event: TrustedEvent, reminders: Reminder[]) => {
-  const url = getScheduleUrl()
+  const {subscription} = pushState.get()
 
-  if (url) {
-    const res = await fetch(url, {
-      method: "PUT",
-      headers: {Accept: "application/json", "Content-Type": "application/json"},
-      body: JSON.stringify({
-        id: event.id,
-        relay,
-        event: isSignedEvent(event) ? event : undefined,
-        notifications: reminders,
-      }),
+  if (subscription) {
+    const res = await putReminderSchedule(subscription.key, {
+      id: event.id,
+      relay,
+      event: isSignedEvent(event) ? event : undefined,
+      notifications: reminders,
     })
 
     if (!res.ok) {
@@ -97,11 +81,11 @@ const loadAttendedEvents = async (pubkey: string) => {
 
 // Every schedule the push server holds was built from these settings, so redo the lot.
 export const syncEventReminders = async () => {
-  const url = getScheduleUrl()
+  const {subscription} = pushState.get()
   const pubkey = app.get().user?.pubkey
 
-  if (url && pubkey) {
-    const res = await fetch(url, {method: "DELETE"})
+  if (subscription && pubkey) {
+    const res = await deleteReminderSchedule(subscription.key)
 
     if (!res.ok) {
       console.warn(`Failed to clear event reminders (status ${res.status})`)

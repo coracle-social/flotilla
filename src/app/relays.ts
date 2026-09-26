@@ -47,51 +47,49 @@ export const deriveSocket = (url: string) => {
   })
 }
 
+export enum RelayConnection {
+  Connecting = "connecting",
+  Disconnected = "disconnected",
+  ConnectFailed = "connect-failed",
+  Authenticating = "authenticating",
+  AuthFailed = "auth-failed",
+  AccessDenied = "access-denied",
+  Connected = "connected",
+}
+
 export const deriveSocketStatus = (url: string) =>
   throttled(
     800,
     derived([deriveSocket(url), relaysMostlyRestricted], ([$socket, $relaysMostlyRestricted]) => {
       if ($socket.status === SocketStatus.Opening) {
-        return {theme: "warning", title: "Connecting"}
+        return RelayConnection.Connecting
       }
 
-      if ($socket.status === SocketStatus.Closing) {
-        return {theme: "gray-500", title: "Not Connected"}
-      }
-
-      if ($socket.status === SocketStatus.Closed) {
-        return {theme: "gray-500", title: "Not Connected"}
+      if ($socket.status === SocketStatus.Closing || $socket.status === SocketStatus.Closed) {
+        return RelayConnection.Disconnected
       }
 
       if ($socket.status === SocketStatus.Error) {
-        return {theme: "error", title: "Failed to Connect"}
+        return RelayConnection.ConnectFailed
       }
 
-      if ($socket.auth.status === AuthStatus.Requested) {
-        return {theme: "warning", title: "Authenticating"}
-      }
-
-      if ($socket.auth.status === AuthStatus.PendingSignature) {
-        return {theme: "warning", title: "Authenticating"}
+      if (
+        $socket.auth.status === AuthStatus.Requested ||
+        $socket.auth.status === AuthStatus.PendingSignature ||
+        $socket.auth.status === AuthStatus.PendingResponse
+      ) {
+        return RelayConnection.Authenticating
       }
 
       if ($socket.auth.status === AuthStatus.DeniedSignature) {
-        return {theme: "error", title: "Failed to Authenticate"}
+        return RelayConnection.AuthFailed
       }
 
-      if ($socket.auth.status === AuthStatus.PendingResponse) {
-        return {theme: "warning", title: "Authenticating"}
+      if ($socket.auth.status === AuthStatus.Forbidden || $relaysMostlyRestricted[url]) {
+        return RelayConnection.AccessDenied
       }
 
-      if ($socket.auth.status === AuthStatus.Forbidden) {
-        return {theme: "error", title: "Access Denied"}
-      }
-
-      if ($relaysMostlyRestricted[url]) {
-        return {theme: "error", title: "Access Denied"}
-      }
-
-      return {theme: "success", title: "Connected"}
+      return RelayConnection.Connected
     }),
   )
 

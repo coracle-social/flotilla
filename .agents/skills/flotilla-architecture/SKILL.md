@@ -114,19 +114,22 @@ imports. `flotilla-views` covers component conventions.
 - `classifieds.ts`, `articles.ts`, `pins.ts` (a person's pinned notes), `pinboards.ts`
 - `reactions.ts`, `social.ts` (display names, comment trees, muting), `render.ts` (events as
   text), `statuses.ts` (NIP-38), `uploads.ts` (Blossom, image compression)
-- `notifications.ts` (unread state, badges), `inbox.ts` (the home inbox)
+- `notifications.ts` (unread state, badges, the home inbox)
 
 **Messaging and calls**
-- `chats.ts`, `call.ts` (call state), `callEngine.ts` (LiveKit join, leave, devices, and the
-  `AbortError`/`TimeoutError` a join rejects with)
+- `chats.ts`, `call.ts` (call state), `callEngine.ts` (LiveKit join, leave, devices, the video
+  tiles a call shows, and the `AbortError`/`TimeoutError` a join rejects with). `call.ts` stays
+  free of livekit values, since the root layout loads it and `callEngine.ts` is imported lazily.
 
 **Identity and payments**
 - `nip46.ts`, `pomade.ts` (email login), `lightning.ts` (wallet, invoices), `healthChecks.ts`
   (prompts for missing inbox/outbox relays)
 
 **Platform and voice**
-- `push/` (notification adapters), `share.ts`, `deepLinks.ts`, `keyboard.ts`
-- `dictation.ts` (speech-to-text) and `speech.ts` (read aloud), both through OpenRouter
+- `push/` (notification adapters, and `server.ts` for the push server's HTTP API), `share.ts`,
+  `deepLinks.ts`, `keyboard.ts`
+- `dictation.ts` (speech-to-text) and `speech.ts` (read aloud), both through `postOpenRouter` in
+  `openrouter.ts`
 
 A feature gets a `src/app/<feature>.ts` only when it has non-UI logic to hold. Polls, goals,
 threads and calendar events have no module; their components use domain readers directly.
@@ -142,6 +145,8 @@ client.
 - `indexeddb.ts`: the `IDB` wrapper that `storage.ts` builds on
 - `feeds.ts`: saved feed definitions (kind `FEED`) over `@welshman/feeds`. It is unrelated to
   `@app/feeds`, which loads events.
+- `audio.ts` (device lists, a live input level, WAV encoding), `tileGrid.ts` (the call grid's
+  geometry)
 - `currency.ts`, `transition.ts`, `implicit.ts` (hands state from one page to the next)
 - `test/`: the DEV-only hooks the e2e harness injects through
 - `components/`: the design system, entered through `theme.css` (see `flotilla-views`), which

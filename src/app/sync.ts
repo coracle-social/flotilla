@@ -91,6 +91,32 @@ const pullAndListen = ({url, signal, filters}: SyncOpts) => {
   })
 }
 
+// Runs one sync per key, starting it when the key appears and stopping it when the key goes away.
+const makeKeyedSyncs = (start: (key: string) => Unsubscriber) => {
+  const stopsByKey = new Map<string, Unsubscriber>()
+
+  const reconcile = (keys: Iterable<string>) => {
+    const keep = new Set(keys)
+
+    for (const [key, stop] of stopsByKey) {
+      if (!keep.has(key)) {
+        stopsByKey.delete(key)
+        stop()
+      }
+    }
+
+    for (const key of keep) {
+      if (!stopsByKey.has(key)) {
+        stopsByKey.set(key, start(key))
+      }
+    }
+  }
+
+  const stop = () => reconcile([])
+
+  return {reconcile, stop}
+}
+
 const userRelayList = deriveUserItem(RelayLists)
 
 const userFollowList = deriveUserItem(FollowLists)
@@ -157,25 +183,8 @@ const syncUserSpaceMembership = (url: string) => {
 }
 
 const syncUserData = () => {
-  const unsubscribersByUrl = new Map<string, Unsubscriber>()
   const $pubkey = app.get().user?.pubkey
-
-  const syncSpaceMembership = ($activeSpaceUrls: string[]) => {
-    const urls = new Set($activeSpaceUrls)
-
-    for (const url of urls) {
-      if (!unsubscribersByUrl.has(url)) {
-        unsubscribersByUrl.set(url, syncUserSpaceMembership(url))
-      }
-    }
-
-    for (const [url, unsubscribe] of unsubscribersByUrl.entries()) {
-      if (!urls.has(url)) {
-        unsubscribersByUrl.delete(url)
-        unsubscribe()
-      }
-    }
-  }
+  const membershipSyncs = makeKeyedSyncs(syncUserSpaceMembership)
 
   const syncUserLists = () => {
     if ($pubkey) {
@@ -207,12 +216,12 @@ const syncUserData = () => {
     relayLists.get().load($pubkey)
   }
 
-  const unsubscribeSpaceMembership = activeSpaceUrls.subscribe(syncSpaceMembership)
+  const unsubscribeSpaceMembership = activeSpaceUrls.subscribe(membershipSyncs.reconcile)
   const unsubscribeRelayList = userRelayList.subscribe(syncUserLists)
   const unsubscribeFollowList = userFollowList.subscribe(syncFollowNetwork)
 
   return () => {
-    unsubscribersByUrl.forEach(call)
+    membershipSyncs.stop()
     unsubscribeSpaceMembership()
     unsubscribeRelayList()
     unsubscribeFollowList()
@@ -288,33 +297,15 @@ const syncSpaceDetail = (url: string) => {
 }
 
 const syncSpaces = () => {
-  const unsubscribersByUrl = new Map<string, Unsubscriber>()
+  const activitySyncs = makeKeyedSyncs(syncSpaceActivity)
 
   let detailUrl: Maybe<string>
   let unsubscribeDetail: Unsubscriber = noop
 
   const unsubscribe = merged([activeSpaceUrls, page]).subscribe(([$activeSpaceUrls, $page]) => {
-    const urls = new Set($activeSpaceUrls)
     const currentUrl = $page.params.relay ? decodeRelay($page.params.relay) : undefined
 
-    if (currentUrl) {
-      urls.add(currentUrl)
-    }
-
-    // Stop syncing removed spaces
-    for (const [url, unsubscribe] of unsubscribersByUrl.entries()) {
-      if (!urls.has(url)) {
-        unsubscribersByUrl.delete(url)
-        unsubscribe()
-      }
-    }
-
-    // Start syncing for new spaces
-    for (const url of urls) {
-      if (!unsubscribersByUrl.has(url)) {
-        unsubscribersByUrl.set(url, syncSpaceActivity(url))
-      }
-    }
+    activitySyncs.reconcile(currentUrl ? [...$activeSpaceUrls, currentUrl] : $activeSpaceUrls)
 
     if (detailUrl !== currentUrl) {
       detailUrl = currentUrl
@@ -324,10 +315,7 @@ const syncSpaces = () => {
   })
 
   return () => {
-    for (const unsubscriber of unsubscribersByUrl.values()) {
-      unsubscriber()
-    }
-
+    activitySyncs.stop()
     unsubscribeDetail()
     unsubscribe()
   }
@@ -348,72 +336,37 @@ const syncDMRelay = (url: string, pubkey: string) => {
 }
 
 const syncDMs = () => {
-  const unsubscribersByUrl = new Map<string, Unsubscriber>()
+  const $pubkey = app.get().user?.pubkey
 
-  let currentPubkey: string | undefined
-  let currentShouldUnwrap = false
+  if ($pubkey) {
+    const relaySyncs = makeKeyedSyncs(url => syncDMRelay(url, $pubkey))
 
-  const unsubscribeAll = () => {
-    for (const [url, unsubscribe] of unsubscribersByUrl.entries()) {
-      unsubscribersByUrl.delete(url)
-      unsubscribe()
-    }
-  }
-
-  const subscribeAll = (pubkey: string, urls: string[]) => {
-    // Start syncing newly added relays
-    for (const url of urls) {
-      if (!unsubscribersByUrl.has(url)) {
-        unsubscribersByUrl.set(url, syncDMRelay(url, pubkey))
+    const syncList = () => {
+      if (shouldUnwrap.get()) {
+        relaySyncs.reconcile(messagingRelayLists.get().urls($pubkey).get())
       }
     }
 
-    // Stop syncing removed spaces
-    for (const [url, unsubscribe] of unsubscribersByUrl.entries()) {
-      if (!urls.includes(url)) {
-        unsubscribersByUrl.delete(url)
-        unsubscribe()
+    const loadList = async ($shouldUnwrap: boolean) => {
+      if ($shouldUnwrap) {
+        await relayLists.get().load($pubkey).catch(noop)
+        await messagingRelayLists.get().load($pubkey).catch(noop)
+
+        syncList()
       }
     }
-  }
 
-  const syncPubkey = async ($pubkey: Maybe<string>, $shouldUnwrap: boolean) => {
-    if ($pubkey !== currentPubkey) {
-      unsubscribeAll()
-    }
+    const unsubscribeUnwrap = shouldUnwrap.subscribe(loadList)
+    const unsubscribeList = userMessagingRelayList.subscribe(syncList)
 
-    currentPubkey = $pubkey
-    currentShouldUnwrap = $shouldUnwrap
-
-    if ($pubkey && $shouldUnwrap) {
-      await relayLists.get().load($pubkey).catch(noop)
-      await messagingRelayLists.get().load($pubkey).catch(noop)
-
-      if (currentPubkey === $pubkey && currentShouldUnwrap === $shouldUnwrap) {
-        subscribeAll($pubkey, messagingRelayLists.get().urls($pubkey).get())
-      }
+    return () => {
+      relaySyncs.stop()
+      unsubscribeUnwrap()
+      unsubscribeList()
     }
   }
 
-  const syncList = () => {
-    const $pubkey = app.get().user?.pubkey
-
-    if ($pubkey && shouldUnwrap.get()) {
-      subscribeAll($pubkey, messagingRelayLists.get().urls($pubkey).get())
-    }
-  }
-
-  const unsubscribeUser = merged([app, shouldUnwrap]).subscribe(([$app, $shouldUnwrap]) => {
-    syncPubkey($app.user?.pubkey, $shouldUnwrap)
-  })
-
-  const unsubscribeList = userMessagingRelayList.subscribe(syncList)
-
-  return () => {
-    unsubscribeAll()
-    unsubscribeUser()
-    unsubscribeList()
-  }
+  return noop
 }
 
 // Merge all synchronization functions

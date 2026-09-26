@@ -19,7 +19,13 @@
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
   import {deletes, relays, rooms, thunks, user, writer} from "@app/core"
-  import {CallState, callTargetRoom, callState, VideoCallLayout, videoCallLayout} from "@app/call"
+  import {
+    CallState,
+    callState,
+    deriveRoomCallState,
+    VideoCallLayout,
+    videoCallLayout,
+  } from "@app/call"
   import {
     RoomType,
     deriveUserRoomMembershipStatus,
@@ -42,11 +48,9 @@
   const room = h ? $rooms.forRoom(url, h) : readable(undefined)
   const isVoiceRoom = $derived($room && getRoomType($room) === RoomType.Voice)
 
-  const isCallTargetingThisRoom = $derived($callTargetRoom?.url === url && $callTargetRoom?.h === h)
+  const roomCallState = deriveRoomCallState(url, h)
 
-  const voiceConnectedHere = $derived(
-    isVoiceRoom && $callState === CallState.Connected && isCallTargetingThisRoom,
-  )
+  const voiceConnectedHere = $derived(isVoiceRoom && $roomCallState === CallState.Connected)
 
   // voiceConnectedHere can't stay true for a voice room the call isn't targeting.
   const callChatOpen = $derived(voiceConnectedHere && $videoCallLayout === VideoCallLayout.Split)

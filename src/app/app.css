@@ -7,8 +7,4 @@
 @import "./components/room.css";
 @import "./components/space-menu.css";
 
-/* SocketStatusIndicator builds its class as bg-{status.theme}, which the source
-   scanner can't see. Must stay below every @import to keep those valid. */
-@source inline("bg-success bg-warning bg-error bg-gray-500");
-
 @config "../../tailwind.config.js";

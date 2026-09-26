@@ -1,5 +1,6 @@
 import {derived} from "svelte/store"
 import type {Readable} from "svelte/store"
+import {simpleCache} from "@welshman/lib"
 import {
   Address,
   COMMAND,
@@ -76,16 +77,8 @@ export const getCommandsForTarget = (target: CommandScopeTarget) =>
     .filter(command => command.matches(target))
 
 // One store per url, and subscribing to it is what pulls the definitions.
-const commandsByUrl = new Map<string, Readable<CommandReader[]>>()
-
-const deriveCommandsForUrl = (url: string): Readable<CommandReader[]> => {
-  const cached = commandsByUrl.get(url)
-
-  if (cached) {
-    return cached
-  }
-
-  const store = fromApp($app => {
+const deriveCommandsForUrl = simpleCache(([url]: [string]) =>
+  fromApp($app => {
     const plugin = $app.use(Commands)
 
     if (url) {
@@ -93,12 +86,8 @@ const deriveCommandsForUrl = (url: string): Readable<CommandReader[]> => {
     }
 
     return plugin.forUrl(url).$
-  })
-
-  commandsByUrl.set(url, store)
-
-  return store
-}
+  }),
+)
 
 // Content outside a space has no url, and so no commands.
 export const deriveValidCommands = (target: CommandScopeTarget): Readable<CommandReader[]> =>

@@ -3,12 +3,13 @@ import type {Readable} from "svelte/store"
 import {Capacitor} from "@capacitor/core"
 import type {Maybe} from "@welshman/lib"
 import {sortBy, spec, int, MINUTE, ms} from "@welshman/lib"
-import {makeHttpAuth, makeHttpAuthHeader, normalizeRelayUrl} from "@welshman/util"
+import {normalizeRelayUrl} from "@welshman/util"
 import {User} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {roomLists, usePlugin, user} from "@app/core"
 import {HOSTING_BACKEND_URL, HOSTING_RELAY_DOMAIN, PLATFORM_URL} from "@app/env"
 import {goToMovedSpace} from "@app/routes"
+import {getHttpAuthHeader} from "@app/signer"
 
 // Apple doesn't allow selling hosting outside their payment system.
 export const HOSTING_ENABLED = Capacitor.getPlatform() !== "ios"
@@ -180,32 +181,6 @@ export const hostingErrorMessage = (e: unknown, fallback: string) => {
 
 // Requests
 
-const AUTH_TTL = ms(int(10, MINUTE))
-
-// The backend checks the signature and `u` tag but not freshness, so one token per pubkey is reusable.
-let cachedAuth: Maybe<{pubkey: string; expiresAt: number; header: Promise<string>}>
-
-const getAuthHeader = (): Promise<string> => {
-  const {pubkey, signer} = user.get()
-
-  if (cachedAuth?.pubkey !== pubkey || cachedAuth.expiresAt < Date.now()) {
-    const header = makeHttpAuth(HOSTING_BACKEND_URL, "GET")
-      .then(template => signer.sign(template))
-      .then(makeHttpAuthHeader)
-
-    // A declined signature shouldn't be cached, or the user can't retry.
-    header.catch(() => {
-      if (cachedAuth?.header === header) {
-        cachedAuth = undefined
-      }
-    })
-
-    cachedAuth = {pubkey, expiresAt: Date.now() + AUTH_TTL, header}
-  }
-
-  return cachedAuth.header
-}
-
 type HostingResponse<T> = {data: T; error?: string}
 
 const hostingRequest = async (method: string, path: string, init: RequestInit = {}) =>
@@ -214,7 +189,8 @@ const hostingRequest = async (method: string, path: string, init: RequestInit = 
     method,
     headers: {
       Accept: "application/json",
-      Authorization: await getAuthHeader(),
+      // The backend checks the signature and `u` tag but not freshness, so a token is reusable.
+      Authorization: await getHttpAuthHeader(HOSTING_BACKEND_URL, int(10, MINUTE)),
       ...init.headers,
     },
   })

@@ -52,4 +52,4 @@ Gift wraps are only synced once the user opts in (`shouldUnwrap` in `src/app/syn
 | Follows and mutes | `FOLLOWS` (3), `MUTES` (10000) | `FollowList`, `MuteList` | `src/app/social.ts` | people pages, muting |
 | Relay lists | `RELAYS` (10002), `MESSAGING_RELAYS` (10050), `SEARCH_RELAYS` (10007), `BLOCKED_RELAYS` (10006), `BLOSSOM_SERVERS` (10063) | `RelayList`, `MessagingRelayList`, `SearchRelayList`, `BlockedRelayList`, `BlossomServerList` | plugins in `src/app/core.ts` | `settings/*` |
 | Account deletion | `VANISH` (62, written as a literal), `DELETE` (5) | none; `Delete` bypassed | none | `ProfileDelete` |
-| Push subscriptions | 30390 (a literal, no constant) | none | `src/app/push/adapters/capacitor.ts` | background |
+| Push subscriptions | 30390 (`PUSH_SUBSCRIPTION`, local) | none | `src/app/push/adapters/capacitor.ts` | background |

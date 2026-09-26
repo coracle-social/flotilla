@@ -7,9 +7,8 @@
   import Button from "@lib/components/Button.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HomeInboxItem from "@app/components/HomeInboxItem.svelte"
-  import {inboxConversations} from "@app/inbox"
   import {navigate} from "@app/modal"
-  import {allNotifications, setChecked} from "@app/notifications"
+  import {allNotifications, inboxConversations, setChecked} from "@app/notifications"
 
   const conversations = $derived($inboxConversations.slice(0, 8))
 

@@ -300,7 +300,7 @@ These predate the rule or are waiting on welshman. Don't copy them; fix one when
 - **No factory yet:** `MESSAGE` (9) in `RoomChat` and `publishRoomQuote`; 9009 room invites in
   `src/app/access.ts`; `LIVEKIT_PARTICIPANTS` (39004, a local constant in `src/app/call.ts`);
   `STATUS` (30315) in `src/app/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
-  subscriptions (a literal 30390) in `src/app/push/adapters/capacitor.ts`; `DIRECT_MESSAGE_FILE`
+  subscriptions (`PUSH_SUBSCRIPTION`, 30390, local to `src/app/push/adapters/capacitor.ts`); `DIRECT_MESSAGE_FILE`
   (15) in `Chat.svelte`.
 - **Factory exists but bypassed:** DMs built with `makeEvent` in `Chat.svelte` (`DirectMessage`);
   relay lists in `SignUp.svelte` (`RelayList`, `MessagingRelayList`); deletes in

@@ -1,4 +1,5 @@
-import {getSetting} from "@app/settings"
+import {watchAudioLevel} from "@lib/audio"
+import {postOpenRouter} from "@app/openrouter"
 
 const TRANSCRIPTION_MODEL = "openai/whisper-large-v3-turbo"
 
@@ -17,17 +18,8 @@ const transcribe = async (audio: File) => {
   body.append("model", TRANSCRIPTION_MODEL)
   body.append("file", audio, audio.name)
 
-  const response = await fetch("https://openrouter.ai/api/v1/audio/transcriptions", {
-    method: "POST",
-    headers: {Authorization: `Bearer ${getSetting("openrouter_key")}`},
-    body,
-  })
-
-  const {text, error}: {text?: string; error?: {message?: string}} = await response.json()
-
-  if (!response.ok) {
-    throw new Error(error?.message || `OpenRouter returned a ${response.status}.`)
-  }
+  const response = await postOpenRouter("audio/transcriptions", body)
+  const {text}: {text?: string} = await response.json()
 
   return text?.trim() ?? ""
 }
@@ -70,39 +62,17 @@ export const startDictation = async (key: string, onLevel: (level: number) => vo
   recorder.addEventListener("dataavailable", event => chunks.push(event.data))
   recorder.start()
 
-  const context = new AudioContext()
-  const analyser = context.createAnalyser()
-
-  analyser.fftSize = 512
-
-  context.createMediaStreamSource(stream).connect(analyser)
-
-  const samples = new Uint8Array(analyser.frequencyBinCount)
-
   let level = 0
 
-  const measure = () => {
-    analyser.getByteTimeDomainData(samples)
-
-    let sumSquares = 0
-
-    for (const sample of samples) {
-      sumSquares += ((sample - 128) / 128) ** 2
-    }
-
-    level = Math.max(Math.sqrt(sumSquares / samples.length), level * 0.92)
+  const stopMeter = watchAudioLevel(stream, rms => {
+    level = Math.max(rms, level * 0.92)
 
     onLevel(level)
-
-    frame = requestAnimationFrame(measure)
-  }
-
-  let frame = requestAnimationFrame(measure)
+  })
 
   const audio = new Promise<File>(resolve => {
     recorder.addEventListener("stop", () => {
-      cancelAnimationFrame(frame)
-      context.close()
+      stopMeter()
 
       for (const track of stream.getTracks()) {
         track.stop()

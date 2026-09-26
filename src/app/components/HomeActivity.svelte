@@ -6,7 +6,7 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {displayContentCount} from "@app/content"
-  import {inboxSpaceContent} from "@app/inbox"
+  import {inboxSpaceContent} from "@app/notifications"
   import {makeSpacePath} from "@app/routes"
 </script>
 

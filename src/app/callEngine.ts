@@ -13,11 +13,10 @@ import {
 import {App} from "@capacitor/app"
 import type {PluginListenerHandle} from "@capacitor/core"
 import {get} from "svelte/store"
-import {not, nthEq, reject} from "@welshman/lib"
-import {makeHttpAuth, makeHttpAuthHeader} from "@welshman/util"
+import {not, nthEq, reject, spec} from "@welshman/lib"
 import {makeRoomKey} from "@welshman/app"
-import {user} from "@app/core"
 import {getLivekitEndpoint} from "@app/relays"
+import {getHttpAuthHeader} from "@app/signer"
 import {pushToast} from "@app/toast"
 import {
   CallState,
@@ -32,6 +31,7 @@ import {
   speakingParticipants,
   triggerVideoTrackRevision,
   videoPrimaryTileKey,
+  type CallSession,
   type ParticipantMediaState,
 } from "@app/call"
 
@@ -443,12 +443,8 @@ const fetchLivekitToken = async (
     throw new DOMException("Aborted", "AbortError")
   }
 
-  const template = await makeHttpAuth(endpoint, "GET")
-  const signedEvent = await user.get().signer.sign(template)
-  const authHeader = makeHttpAuthHeader(signedEvent)
-
   const response = await fetch(endpoint, {
-    headers: {Authorization: authHeader},
+    headers: {Authorization: await getHttpAuthHeader(endpoint)},
     signal,
   })
 
@@ -666,4 +662,87 @@ const onLocalTrackUnpublished = (
 
 const abortJoinVoiceRoom = () => {
   joinAbortController?.abort()
+}
+
+export type VideoTile = {
+  liveKitIdentity: string
+  isLocal: boolean
+  trackSid: string
+  track: Track | undefined
+  source: Track.Source.Camera | Track.Source.ScreenShare
+}
+
+// LiveKit can change trackSid after publish, so a tile is keyed by identity and source.
+export const getVideoTileKey = (tile: VideoTile) => `${tile.liveKitIdentity}\x1f${tile.source}`
+
+export const getVideoTiles = ({livekit, cameraOn, screenShareOn}: CallSession) => {
+  const videoTiles: VideoTile[] = []
+  const user = livekit.localParticipant
+
+  if (cameraOn) {
+    const localPub = user.getTrackPublication(Track.Source.Camera)
+    videoTiles.push({
+      liveKitIdentity: user.identity,
+      isLocal: true,
+      trackSid: localPub?.trackSid ?? "local-camera",
+      track: localPub?.track,
+      source: Track.Source.Camera,
+    })
+  }
+
+  if (screenShareOn) {
+    const localPub = user.getTrackPublication(Track.Source.ScreenShare)
+    videoTiles.push({
+      liveKitIdentity: user.identity,
+      isLocal: true,
+      trackSid: localPub?.trackSid ?? "local-screen",
+      track: localPub?.track,
+      source: Track.Source.ScreenShare,
+    })
+  }
+
+  for (const rp of livekit.remoteParticipants.values()) {
+    const camPub = rp.getTrackPublication(Track.Source.Camera)
+    // Camera off mutes the publication rather than unsubscribing; still render avatar.
+    if (camPub?.isSubscribed && camPub.track && !camPub.isMuted) {
+      videoTiles.push({
+        liveKitIdentity: rp.identity,
+        isLocal: false,
+        trackSid: camPub.trackSid,
+        track: camPub.track,
+        source: Track.Source.Camera,
+      })
+    }
+    const screenPub = rp.getTrackPublication(Track.Source.ScreenShare)
+    if (screenPub?.isSubscribed && screenPub.track && !screenPub.isMuted) {
+      videoTiles.push({
+        liveKitIdentity: rp.identity,
+        isLocal: false,
+        trackSid: screenPub.trackSid,
+        track: screenPub.track,
+        source: Track.Source.ScreenShare,
+      })
+    }
+    if (!videoTiles.some(spec({liveKitIdentity: rp.identity}))) {
+      videoTiles.push({
+        liveKitIdentity: rp.identity,
+        isLocal: false,
+        trackSid: `avatar-${rp.identity}`,
+        track: undefined,
+        source: Track.Source.Camera,
+      })
+    }
+  }
+
+  if (!videoTiles.some(spec({liveKitIdentity: user.identity}))) {
+    videoTiles.push({
+      liveKitIdentity: user.identity,
+      isLocal: true,
+      trackSid: "local-avatar",
+      track: undefined,
+      source: Track.Source.Camera,
+    })
+  }
+
+  return videoTiles
 }

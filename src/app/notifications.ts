@@ -1,18 +1,22 @@
 import {derived, get, writable} from "svelte/store"
 import {Badge} from "@capawesome/capacitor-badge"
 import {page} from "$app/stores"
-import {assoc, first, identity, groupBy, now, remove, throttle, parseJson, gt} from "@welshman/lib"
-import type {SignedEvent, TrustedEvent} from "@welshman/util"
 import {
-  getIdOrAddress,
-  sortEventsDesc,
-  tagSpec,
-  tagValue,
-  COMMENT,
-  MESSAGE,
-  makeHttpAuth,
-  makeHttpAuthHeader,
-} from "@welshman/util"
+  assoc,
+  first,
+  identity,
+  groupBy,
+  now,
+  remove,
+  sortBy,
+  throttle,
+  parseJson,
+  gt,
+  int,
+  HOUR,
+} from "@welshman/lib"
+import type {TrustedEvent} from "@welshman/util"
+import {getIdOrAddress, sortEventsDesc, tagSpec, tagValue, COMMENT, MESSAGE} from "@welshman/util"
 import {Comment} from "@welshman/domain"
 import {throttled} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
@@ -24,6 +28,7 @@ import {Chats} from "@app/chats"
 import {dufflepud, DUFFLEPUD_URL} from "@app/env"
 import {isGroupSpace} from "@app/relays"
 import {activeSpaceUrls} from "@app/rooms"
+import {getHttpAuthHeader} from "@app/signer"
 import {kv, syncedWithGetter} from "@app/storage"
 import {notificationSettings} from "@app/push/adapters/common"
 
@@ -65,14 +70,13 @@ export const syncChecked = () => {
 
     // Set checked when we visit a given page - but delay it a tad
     setTimeout(() => {
-      const defer = get(deferredRoomPath)
+      const $deferredRoomPath = get(deferredRoomPath)
 
       checked.update($checked => {
         for (const path of paths) {
-          if (defer && path === defer) {
-            continue
+          if (path !== $deferredRoomPath) {
+            $checked[path] = now()
           }
-          $checked[path] = now()
         }
 
         return $checked
@@ -84,31 +88,10 @@ export const syncChecked = () => {
 }
 
 const CHECKED_KV_KEY = "checked"
-const NIP98_MAX_AGE = 23 * 60 * 60
-
-let nip98Auth: SignedEvent | undefined
-
-const nip98Header = async () => {
-  const $signer = app.get().user?.signer
-
-  if (!$signer) {
-    return undefined
-  }
-
-  if (!nip98Auth || now() - nip98Auth.created_at > NIP98_MAX_AGE) {
-    nip98Auth = await $signer.sign(await makeHttpAuth(DUFFLEPUD_URL, "GET"))
-  }
-
-  return makeHttpAuthHeader(nip98Auth)
-}
+const getAuthHeader = () => getHttpAuthHeader(DUFFLEPUD_URL, int(23, HOUR))
 
 const pullCheckedRemote = async () => {
-  const authorization = await nip98Header()
-
-  if (!authorization) {
-    return
-  }
-
+  const authorization = await getAuthHeader()
   const res = await fetch(dufflepud(`kv/${CHECKED_KV_KEY}`), {headers: {authorization}})
 
   if (!res.ok) {
@@ -133,11 +116,7 @@ const pullCheckedRemote = async () => {
 }
 
 const pushCheckedRemote = throttle(3000, async () => {
-  const authorization = await nip98Header()
-
-  if (!authorization) {
-    return
-  }
+  const authorization = await getAuthHeader()
 
   try {
     await fetch(dufflepud(`kv/${CHECKED_KV_KEY}`), {
@@ -155,7 +134,6 @@ export const syncCheckedRemote = () => {
 
   const unsubscribeUser = app.subscribe($app => {
     ready = false
-    nip98Auth = undefined
 
     if ($app.user) {
       pullCheckedRemote().then(() => {
@@ -331,15 +309,9 @@ export const notifications = derived(
   [page, allNotifications, deferredRoomPath],
   ([$page, $allNotifications, $deferredRoomPath]) =>
     new Set(
-      [...$allNotifications].filter(p => {
-        if (!$page.url.pathname.startsWith(p)) {
-          return true
-        }
-        if ($deferredRoomPath && p === $deferredRoomPath) {
-          return true
-        }
-        return false
-      }),
+      [...$allNotifications].filter(
+        p => !$page.url.pathname.startsWith(p) || p === $deferredRoomPath,
+      ),
     ),
 )
 
@@ -381,3 +353,43 @@ export const clearBadges = async () => {
     // pass - firefox doesn't support this
   }
 }
+
+// Inbox
+
+// The inbox shows what the badges show, so reading a conversation takes it out of the list.
+export const inboxConversations = derived(
+  [latestActivityByPath, allNotifications],
+  ([$latestActivityByPath, $allNotifications]) =>
+    sortBy(
+      activity => -activity.event.created_at,
+      [...$latestActivityByPath.values()].filter(
+        activity => !activity.contentKind && $allNotifications.has(activity.path),
+      ),
+    ),
+)
+
+export type SpaceContent = {
+  url: string
+  timestamp: number
+  countsByKind: Map<number, number>
+}
+
+// Counted only where unread, since a total would be the same number every day.
+export const inboxSpaceContent = derived(
+  [latestActivityByPath, allNotifications],
+  ([$latestActivityByPath, $allNotifications]) => {
+    const byUrl = new Map<string, SpaceContent>()
+
+    for (const {path, url, contentKind, event} of $latestActivityByPath.values()) {
+      if (url && contentKind && $allNotifications.has(path)) {
+        const content = byUrl.get(url) ?? {url, timestamp: 0, countsByKind: new Map()}
+
+        content.timestamp = Math.max(content.timestamp, event.created_at)
+        content.countsByKind.set(contentKind, (content.countsByKind.get(contentKind) ?? 0) + 1)
+        byUrl.set(url, content)
+      }
+    }
+
+    return sortBy(content => -content.timestamp, [...byUrl.values()])
+  },
+)

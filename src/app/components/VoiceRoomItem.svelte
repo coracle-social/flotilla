@@ -1,6 +1,5 @@
 <script lang="ts">
   import cx from "classnames"
-  import {makeRoomKey} from "@welshman/app"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
@@ -14,12 +13,11 @@
   import VoiceParticipantMediaBadges from "@app/components/VoiceParticipantMediaBadges.svelte"
   import {
     CallState,
-    callTargetRoom,
     isParticipantSpeaking,
     mediaStateByIdentity,
     participantKey,
-    callState,
     deriveCallParticipants,
+    deriveRoomCallState,
     loadCallParticipants,
     type CallParticipant,
   } from "@app/call"
@@ -39,12 +37,9 @@
 
   const participants = deriveCallParticipants(url, h)
   const participantPubkeys = $derived($participants.flatMap(p => (p.pubkey ? [p.pubkey] : [])))
-  const isActive = $derived(
-    $callState === CallState.Connected && $callTargetRoom?.id === makeRoomKey(url, h),
-  )
-  const isJoining = $derived(
-    $callState === CallState.Joining && $callTargetRoom?.id === makeRoomKey(url, h),
-  )
+  const roomCallState = deriveRoomCallState(url, h)
+  const isActive = $derived($roomCallState === CallState.Connected)
+  const isJoining = $derived($roomCallState === CallState.Joining)
 
   const handleClick = async (e: MouseEvent) => {
     if (isActive) {

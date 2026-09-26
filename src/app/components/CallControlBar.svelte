@@ -26,9 +26,8 @@
     videoCallLayout,
     CallState,
     currentCallSession,
-    callTargetRoom,
     callMicMuted,
-    callState,
+    deriveRoomCallState,
   } from "@app/call"
   import {
     cancelJoinVoiceRoom,
@@ -49,12 +48,9 @@
   const room = $derived($roomStore)
   const isVoiceRoom = $derived(room !== undefined && getRoomType(room) === RoomType.Voice)
 
-  const isTargetingThisRoom = $derived(
-    $callTargetRoom !== undefined && $callTargetRoom.url === url && $callTargetRoom.h === h,
-  )
-
-  const joiningHere = $derived($callState === CallState.Joining && isTargetingThisRoom)
-  const connectedHere = $derived($callState === CallState.Connected && isTargetingThisRoom)
+  const roomCallState = $derived(deriveRoomCallState(url, h))
+  const joiningHere = $derived($roomCallState === CallState.Joining)
+  const connectedHere = $derived($roomCallState === CallState.Connected)
   // callTargetRoom isn't cleared on cancel or leave, so it can still point at this room.
   const showJoin = $derived(isVoiceRoom && !joiningHere && !connectedHere)
 

@@ -1,4 +1,6 @@
 import {identity, uniq} from "@welshman/lib"
+import {CLASSIFIED, EVENT_TIME, LONG_FORM, THREAD, ZAP_GOAL} from "@welshman/util"
+import type {TrustedEvent} from "@welshman/util"
 import {Article, Classified, Thread, ZapGoal, displayPubkey} from "@welshman/domain"
 import {makeRoomKey} from "@welshman/app"
 import {decodePubkey} from "@lib/util"
@@ -33,13 +35,12 @@ const staticTitles = new Map<string, string>([
   ["/[bech32]", "Opening Link"],
 ])
 
-const eventRoutes = new Set([
-  "/spaces/[relay]/threads/[id]",
-  "/spaces/[relay]/goals/[id]",
-  "/spaces/[relay]/calendar/[address]",
-  "/spaces/[relay]/classifieds/[address]",
-  "/spaces/[relay]/articles/[address]",
-  "/spaces/[relay]/polls/[id]",
+const contentFallbackTitles = new Map<string, string>([
+  ["/spaces/[relay]/threads/[id]", "Thread"],
+  ["/spaces/[relay]/goals/[id]", "Goal"],
+  ["/spaces/[relay]/calendar/[address]", "Event"],
+  ["/spaces/[relay]/classifieds/[address]", "Listing"],
+  ["/spaces/[relay]/articles/[address]", "Article"],
 ])
 
 type RouteParams = Record<string, string | undefined>
@@ -67,18 +68,19 @@ const getRoomTitle = (params: RouteParams) => {
   return room?.meta?.name() || "Room"
 }
 
-const getEventForTitle = (routeId: string, params: RouteParams) => {
-  if (!eventRoutes.has(routeId)) {
-    return
+const getContentTitle = (event: TrustedEvent) => {
+  switch (event.kind) {
+    case THREAD:
+      return reader(Thread)(event).title()
+    case EVENT_TIME:
+      return getEventTitle(event)
+    case CLASSIFIED:
+      return reader(Classified)(event).title()
+    case LONG_FORM:
+      return reader(Article)(event).title()
+    case ZAP_GOAL:
+      return event.content || reader(ZapGoal)(event).summary()
   }
-
-  const eventId = params.id || params.address
-
-  if (!eventId) {
-    return
-  }
-
-  return app.get().repository.getEvent(eventId)
 }
 
 const getChatTitle = (chatId: string | undefined, pubkey: string | undefined) => {
@@ -130,26 +132,12 @@ export const getPageTitle = ({page, pubkey}: PageTitleContext) => {
     return makeTitle(getRoomTitle(page.params))
   }
 
-  const event = getEventForTitle(routeId, page.params)
+  const contentFallbackTitle = contentFallbackTitles.get(routeId)
 
-  if (routeId === "/spaces/[relay]/threads/[id]") {
-    return makeTitle((event && reader(Thread)(event).title()) || "Thread")
-  }
+  if (contentFallbackTitle) {
+    const event = app.get().repository.getEvent(page.params.id || page.params.address || "")
 
-  if (routeId === "/spaces/[relay]/calendar/[address]") {
-    return makeTitle((event && getEventTitle(event)) || "Event")
-  }
-
-  if (routeId === "/spaces/[relay]/classifieds/[address]") {
-    return makeTitle((event && reader(Classified)(event).title()) || "Listing")
-  }
-
-  if (routeId === "/spaces/[relay]/articles/[address]") {
-    return makeTitle((event && reader(Article)(event).title()) || "Article")
-  }
-
-  if (routeId === "/spaces/[relay]/goals/[id]") {
-    return makeTitle(event?.content || (event && reader(ZapGoal)(event).summary()) || "Goal")
+    return makeTitle((event && getContentTitle(event)) || contentFallbackTitle)
   }
 
   return makeTitle()

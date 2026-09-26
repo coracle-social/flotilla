@@ -1,6 +1,6 @@
 import type {Writable} from "svelte/store"
 import {derived, writable} from "svelte/store"
-import {append, equals, remove, spec} from "@welshman/lib"
+import {append, equals, remove, spec, toggle} from "@welshman/lib"
 import {APP_DATA} from "@welshman/util"
 import {withGetter} from "@welshman/store"
 import {AppData} from "@welshman/domain"
@@ -180,44 +180,24 @@ export const addTrustedRelay = (url: string) =>
 export const removeTrustedRelay = (url: string) =>
   publishSettings({trusted_relays: remove(url, getSetting("trusted_relays"))})
 
-export const setSpaceNotifications = (url: string, notify: boolean) => {
+const updateSpaceAlert = (
+  url: string,
+  update: (alert: SpaceNotificationSettings) => SpaceNotificationSettings,
+) => {
   const alerts = getSetting("alerts")
-  const existing = alerts.find(spec({url}))
 
-  if (existing) {
-    return publishSettings({
-      alerts: alerts.map(s => (s.url === url ? {...s, notify, exceptions: []} : s)),
-    })
+  if (alerts.some(spec({url}))) {
+    return publishSettings({alerts: alerts.map(s => (s.url === url ? update(s) : s))})
   }
 
-  return publishSettings({alerts: [...alerts, {url, notify, exceptions: []}]})
+  return publishSettings({alerts: [...alerts, update({url, notify: true, exceptions: []})]})
 }
 
-export const toggleRoomNotifications = (url: string, h: string) => {
-  const alerts = getSetting("alerts")
-  const existing = alerts.find(spec({url}))
+export const setSpaceNotifications = (url: string, notify: boolean) =>
+  updateSpaceAlert(url, alert => ({...alert, notify, exceptions: []}))
 
-  if (existing) {
-    const exceptions = existing.exceptions.includes(h)
-      ? remove(h, existing.exceptions)
-      : append(h, existing.exceptions)
+export const toggleRoomNotifications = (url: string, h: string) =>
+  updateSpaceAlert(url, alert => ({...alert, exceptions: toggle(h, alert.exceptions)}))
 
-    return publishSettings({alerts: alerts.map(s => (s.url === url ? {...s, exceptions} : s))})
-  }
-
-  return publishSettings({alerts: [...alerts, {url, notify: true, exceptions: [h]}]})
-}
-
-export const toggleRoomMuted = (url: string, h: string) => {
-  const alerts = getSetting("alerts")
-  const existing = alerts.find(spec({url}))
-
-  if (existing) {
-    const current = existing.muted ?? []
-    const muted = current.includes(h) ? remove(h, current) : append(h, current)
-
-    return publishSettings({alerts: alerts.map(s => (s.url === url ? {...s, muted} : s))})
-  }
-
-  return publishSettings({alerts: [...alerts, {url, notify: true, exceptions: [], muted: [h]}]})
-}
+export const toggleRoomMuted = (url: string, h: string) =>
+  updateSpaceAlert(url, alert => ({...alert, muted: toggle(h, alert.muted ?? [])}))

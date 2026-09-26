@@ -62,8 +62,8 @@ The following run outside that gate:
 - every app policy
 
 This code reads `app.get().user?.pubkey` and bails when it is missing, as
-`syncUserSpaceMembership` in `src/app/sync.ts` and `nip98Header` in `src/app/notifications.ts`
-do.
+`syncUserSpaceMembership` in `src/app/sync.ts` and `syncCheckedRemote` in
+`src/app/notifications.ts` do.
 
 Stores derived from `user` throw as soon as they are subscribed signed out. That includes
 `isEventMuted` (`social.ts`), `deriveUserIsRoomAdmin` (`rooms.ts`) and `deriveUserCanCreateRoom`
@@ -106,7 +106,8 @@ Bookkeeping for one identity lives on a plugin instance, so it is discarded with
 `Commands` in `src/app/commands.ts` keeps its `pulled` set on the plugin for this reason.
 
 Module-level caches are fine when their contents do not depend on who is signed in, or when what
-they cache is itself a rebinding store. `commandsByUrl` holds `fromApp` stores.
+they cache is itself a rebinding store. `deriveCommandsForUrl` (`commands.ts`) caches `fromApp`
+stores with `simpleCache`.
 `hasBlossomSupport` (`uploads.ts`) and `deriveHasLivekit` (`relays.ts`) use `simpleCache` from
 `@welshman/lib` to share one store per url across every component that asks.
 
@@ -272,8 +273,9 @@ Room messages, threads and other content are not kept, and background sync pulls
   next tick.
 
 To persist another kind, add it to `kinds` in `storage.ts`. To persist a new map-backed plugin,
-add a `TABLES` entry and an `init*` method shaped like `initHandles`: load the rows, subscribe
-to `onItem`, and batch the writes.
+add a `TABLES` entry and an `init*` method that calls `persistMapPlugin` with the table, the
+plugin, and how to turn a row into a key and item and back. It loads the rows, subscribes to
+`onItem`, and batches the writes.
 
 ### kv, ss and synced stores
 
@@ -346,8 +348,9 @@ call tears down the previous run.
 - `syncDMs` pulls gift wraps from the user's messaging relays, only when `shouldUnwrap` is on.
 
 `pullAndListen` is a negentropy `Sync.pull` plus a live `limit: 0` request, both stopped through
-an `AbortController`. `syncSpaces` and `syncUserData` diff their `unsubscribersBy*` maps against
-the room list, so a new filter goes into the right `pullAndListen` call.
+an `AbortController`. `syncUserData`, `syncSpaces` and `syncDMs` each keep one sync per url with
+`makeKeyedSyncs`, whose `reconcile(urls)` starts the new ones and stops the dropped ones. A run
+reads the pubkey once when it starts, since login triggers a fresh `syncApplicationData`.
 
 Background sync keeps badges, navigation, the inbox and notifications correct on any page. Data
 that must be current app-wide belongs here. Data only one page shows is loaded by that page's
@@ -415,8 +418,9 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) are not thunks. They return
 ## Other app-level stores
 
 - **A join over many sources.** `notifications.ts` derives `latestActivityByPath`, then
-  `allNotifications`, then `notifications` and the counts. `inbox.ts` derives from the same two
-  stores, so the inbox matches the badges.
+  `allNotifications`, then `notifications` and the counts. The inbox stores
+  (`inboxConversations`, `inboxSpaceContent`) derive from the same two, so the inbox matches the
+  badges.
 - **Singleton session state.** `call.ts` keeps call state in plain writables (`callState`,
   `currentCallSession`, …).
 - **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `policies.ts`.

@@ -4,14 +4,17 @@ import {assoc, hash, maybe, ms, poll} from "@welshman/lib"
 import type {Filter} from "@welshman/util"
 import {Address, DELETE, makeEvent} from "@welshman/util"
 import {Relays, User} from "@welshman/app"
-import {buildUrl} from "@lib/util"
 import {app, messagingRelayLists, roomLists, thunks} from "@app/core"
 import {device} from "@app/device"
-import {PUSH_BRIDGE, PUSH_SERVER} from "@app/env"
+import {PUSH_BRIDGE} from "@app/env"
 import {pushState} from "@app/push/adapters/common"
 import type {IPushAdapter} from "@app/push/adapters/common"
 import {onPushNotificationAction, syncRelaySubscriptions} from "@app/push/adapters/common"
+import {createPushSubscription, deletePushSubscription} from "@app/push/server"
 import {syncEventReminders} from "@app/reminders"
+
+// NIP-9a: asks a relay to post matching events to the push server's callback
+const PUSH_SUBSCRIPTION = 30390
 
 const requestPermissions = async () => {
   let status = await PushNotifications.checkPermissions()
@@ -71,16 +74,7 @@ export class CapacitorNotifications implements IPushAdapter {
     if (!subscription) {
       try {
         const channel = Capacitor.getPlatform() === "ios" ? "apns" : "fcm"
-        const url = buildUrl(PUSH_SERVER, "subscription", channel)
-        const res = await fetch(url, {
-          signal,
-          method: "POST",
-          body: JSON.stringify({token}),
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-        })
+        const res = await createPushSubscription(channel, token, signal)
 
         if (!res.ok) {
           console.warn(`Failed to register with push server (status ${res.status})`)
@@ -131,7 +125,7 @@ export class CapacitorNotifications implements IPushAdapter {
 
     const thunk = thunks.get().publish({
       relays: [url],
-      event: makeEvent(30390, {
+      event: makeEvent(PUSH_SUBSCRIPTION, {
         tags: [
           ["d", identifier],
           ["relay", relay],
@@ -160,7 +154,11 @@ export class CapacitorNotifications implements IPushAdapter {
 
     const relays = [url]
     const identifier = this._getSubscriptionIdentifier(relay, key)
-    const address = new Address(30390, User.require(app.get()).pubkey, identifier).toString()
+    const address = new Address(
+      PUSH_SUBSCRIPTION,
+      User.require(app.get()).pubkey,
+      identifier,
+    ).toString()
     const event = makeEvent(DELETE, {tags: [["a", address]]})
     const error = await thunks.get().publish({relays, event}).waitForError()
 
@@ -204,9 +202,7 @@ export class CapacitorNotifications implements IPushAdapter {
     const {subscription} = pushState.get()
 
     if (subscription) {
-      const res = await fetch(buildUrl(PUSH_SERVER, "subscription", subscription.key), {
-        method: "delete",
-      })
+      const res = await deletePushSubscription(subscription.key)
 
       if (!res.ok) {
         console.warn("Failed to delete push subscription")
