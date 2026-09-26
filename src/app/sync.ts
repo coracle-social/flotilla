@@ -58,7 +58,7 @@ import {
   searchRelayLists,
 } from "@app/core"
 import {LIVEKIT_PARTICIPANTS} from "@app/call"
-import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
+import {CONTENT_KINDS, REACTION_KINDS, makeCommentFilter} from "@app/content"
 import {INDEXER_RELAYS, PLATFORM_RELAYS} from "@app/env"
 import {FEATURED_CONTENT_D} from "@app/featured"
 import {decodeRelay} from "@app/relays"
@@ -284,6 +284,7 @@ const syncSpaceDetail = (url: string) => {
       {kinds: [APP_DATA], "#d": [FEATURED_CONTENT_D]},
       {kinds: [ROOM_ADMINS, ROOM_MEMBERS, LIVEKIT_PARTICIPANTS, PINBOARD, ROOM_PINS]},
       {kinds: [ROOM_JOIN, ROOM_LEAVE], since: ago(MONTH)},
+      {kinds: REACTION_KINDS, since: ago(WEEK)},
     ],
   })
 
