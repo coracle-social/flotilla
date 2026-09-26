@@ -28,9 +28,10 @@
 
   type Props = {
     url: string
+    sheet?: boolean
   }
 
-  const {url}: Props = $props()
+  const {url, sheet = false}: Props = $props()
 
   const relay = $relays.one(url)
   const permissions = deriveSpacePermissions(url)
@@ -38,17 +39,17 @@
   const actionItems = deriveSpaceActionItems(url)
   const shouldNotify = deriveShouldNotify(url)
 
-  const createInvite = () => pushModal(SpaceInvite, {url})
+  const createInvite = () => pushModal(SpaceInvite, {url}, {replaceState: sheet})
 
-  const startEdit = () => pushModal(SpaceEdit, {url, initialValues: $relay || {url}})
+  const startEdit = () => pushModal(SpaceEdit, {url}, {replaceState: sheet})
 
-  const leaveSpace = () => pushModal(SpaceExit, {url})
+  const leaveSpace = () => pushModal(SpaceExit, {url}, {replaceState: sheet})
 
-  const joinSpace = () => pushModal(SpaceJoin, {url})
+  const joinSpace = () => pushModal(SpaceJoin, {url}, {replaceState: sheet})
 
-  const showActionItems = () => pushModal(SpaceActionItems, {url})
+  const showActionItems = () => pushModal(SpaceActionItems, {url}, {replaceState: sheet})
 
-  const contactOwner = () => goToChat([$relay!.pubkey!])
+  const contactOwner = () => goToChat([$relay!.pubkey!], {replaceState: sheet})
 
   const toggleSpaceNotifications = () => {
     popModal()
@@ -61,32 +62,66 @@
   icon: string,
   label: string,
   variant?: "error" | "primary",
+  dot?: boolean,
 )}
-  <li>
+  {#if sheet}
     <Button
-      {onclick}
-      class={cx({
-        "text-error": variant === "error",
-        "bg-primary text-primary-content": variant === "primary",
+      class={cx("button w-full justify-start", {
+        "button-neutral": !variant,
+        "button-error": variant === "error",
+        "button-primary": variant === "primary",
       })}
-      style={variant === "primary" ? "color: var(--primary-content)" : undefined}>
-      <Icon {icon} />
+      {onclick}>
+      <Icon size={4} {icon} />
       {label}
+      {#if dot}
+        <div class="h-2 w-2 rounded-full bg-primary text-primary-content"></div>
+      {/if}
     </Button>
-  </li>
+  {:else}
+    <li>
+      <Button
+        {onclick}
+        class={cx({
+          "text-error": variant === "error",
+          "bg-primary text-primary-content": variant === "primary",
+        })}
+        style={variant === "primary" ? "color: var(--primary-content)" : undefined}>
+        <Icon {icon} />
+        {label}
+        {#if dot}
+          <div class="h-2 w-2 rounded-full bg-primary text-primary-content"></div>
+        {/if}
+      </Button>
+    </li>
+  {/if}
+{/snippet}
+
+{#snippet actionLink(href: string, icon: string, label: string)}
+  {#if sheet}
+    <Link {href} class="button button-neutral w-full justify-start">
+      <Icon size={4} {icon} />
+      {label}
+    </Link>
+  {:else}
+    <li>
+      <Link {href}>
+        <Icon {icon} />
+        {label}
+      </Link>
+    </li>
+  {/if}
 {/snippet}
 
 {@render actionButton(createInvite, LinkRound, "Create Invite")}
 {#if $permissions.review}
-  <li>
-    <Button onclick={showActionItems}>
-      <Icon icon={Danger} />
-      Action Items ({$actionItems.length})
-      {#if $actionItems.length > 0}
-        <div class="h-2 w-2 rounded-full bg-primary text-primary-content"></div>
-      {/if}
-    </Button>
-  </li>
+  {@render actionButton(
+    showActionItems,
+    Danger,
+    `Action Items (${$actionItems.length})`,
+    undefined,
+    $actionItems.length > 0,
+  )}
 {/if}
 {#if $relay?.pubkey && $relay.pubkey !== $user.pubkey}
   {@render actionButton(contactOwner, Letter, "Contact Owner")}
@@ -98,20 +133,10 @@
     `${$shouldNotify ? "Turn off" : "Turn on"} notifications`,
   )}
 {:else}
-  <li>
-    <Link href="/settings/alerts">
-      <Icon icon={Bell} />
-      Enable notifications
-    </Link>
-  </li>
+  {@render actionLink("/settings/alerts", Bell, "Enable notifications")}
 {/if}
 {#if HOSTING_ENABLED && $hostedRelay.relay}
-  <li>
-    <Link href={makeSpacePath(url, "admin")}>
-      <Icon icon={ServerPath} />
-      Hosting settings
-    </Link>
-  </li>
+  {@render actionLink(makeSpacePath(url, "admin"), ServerPath, "Hosting settings")}
 {:else if $permissions.editSpace}
   {@render actionButton(startEdit, Pen, "Edit Space")}
 {/if}

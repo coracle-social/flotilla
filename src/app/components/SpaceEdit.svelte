@@ -1,6 +1,5 @@
 <script lang="ts">
   import {displayRelayUrl} from "@welshman/util"
-  import type {RelayInfo} from "@welshman/domain"
   import Widget from "@assets/icons/widget-4.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import {preventDefault} from "@lib/html"
@@ -23,19 +22,20 @@
 
   type Props = {
     url: string
-    initialValues: Partial<RelayInfo>
   }
 
-  const {url, initialValues = {}}: Props = $props()
+  const {url}: Props = $props()
 
-  const values = $state({...initialValues})
+  const relay = $relays.get(url)
+
+  const values = $state({name: relay?.name, description: relay?.description})
 
   const compressOptions = {maxWidth: 128, maxHeight: 128}
 
   const back = () => history.back()
 
   const submit = async () => {
-    if (values.name != initialValues.name) {
+    if (values.name != relay?.name) {
       const res = await $relayManagement.forUrl(url).changeRelayName(values.name || "")
 
       if (res.error) {
@@ -43,7 +43,7 @@
       }
     }
 
-    if (values.description != initialValues.description) {
+    if (values.description != relay?.description) {
       const res = await $relayManagement
         .forUrl(url)
         .changeRelayDescription(values.description || "")
@@ -55,7 +55,7 @@
 
     const icon = await resolveImageInput(imageFile, imagePreview, compressOptions)
 
-    if (icon && icon !== initialValues.icon) {
+    if (icon && icon !== relay?.icon) {
       const res = await $relayManagement.forUrl(url).changeRelayIcon(icon)
 
       if (res.error) {
@@ -80,7 +80,7 @@
 
   let loading = $state(false)
   let imageFile = $state<File | undefined>()
-  let imagePreview = $state(initialValues.icon)
+  let imagePreview = $state(relay?.icon)
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(trySubmit)}>

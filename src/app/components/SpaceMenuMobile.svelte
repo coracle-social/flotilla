@@ -1,7 +1,7 @@
 <script lang="ts">
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import SpaceMenuActionsMobile from "@app/components/SpaceMenuActionsMobile.svelte"
+  import SpaceMenuActions from "@app/components/SpaceMenuActions.svelte"
 
   type Props = {
     url: string
@@ -13,7 +13,7 @@
 <Modal label="Space menu">
   <ModalBody>
     <div class="flex flex-col gap-2">
-      <SpaceMenuActionsMobile {url} />
+      <SpaceMenuActions sheet {url} />
     </div>
   </ModalBody>
 </Modal>
