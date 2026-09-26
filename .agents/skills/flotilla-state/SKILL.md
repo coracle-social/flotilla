@@ -121,6 +121,7 @@ they cache is itself a rebinding store. `commandsByUrl` holds `fromApp` stores.
 | `SpaceManagement` (`management.ts`) | none | NIP-86 supported methods (5-minute TTL), admins and bans per URL |
 | `Chats` (`chats.ts`) | none | DM conversations by chat id (`index`, `one`), and a fuzzy `search` |
 | `LatestEvents` (`repository.ts`) | none | the most recent event held from an author (`forPubkey`) |
+| `Hosting` (`hosting.ts`) | none | the hosting backend's plans, the tenant's relays and billing, shared by every hosting view |
 
 Each is exposed with `usePlugin`. `Statuses` is the minimal shape:
 

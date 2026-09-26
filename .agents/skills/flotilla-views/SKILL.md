@@ -414,8 +414,8 @@ return a `Command` as well: `$deletes.deleteEvent(event, w => w.setProtected(pro
 `.publish()` in `RoomForm`. NIP-86 calls resolve to `{error}` instead of a thunk:
 `$relayManagement.forUrl(url).createRole(...)` in `RoleCreate`.
 
-The hosting backend isn't nostr. Toast a readable message, and `console.error` anything that
-isn't a `HostingError`, as `HomeHosting` and `hosting/CustomDomainModal` do. Publishes are
+The hosting backend isn't nostr. Toast `hostingErrorMessage(e, fallback)` from `hosting.ts`,
+which returns a `HostingError`'s own message and logs anything else before falling back. Publishes are
 optimistic, so rows show progress in place: `ContentActions`, `CommentActions` and `ArticleActionBar`
 wrap their contents in `ThunkStatusOrDeleted`, and chat pushes a `ThunkToast`.
 

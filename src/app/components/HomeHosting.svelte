@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import Add from "@assets/icons/add.svg?dataurl"
   import Server from "@assets/icons/server.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -9,30 +8,17 @@
   import HomeSection from "@app/components/HomeSection.svelte"
   import RelayListItem from "@app/components/hosting/RelayListItem.svelte"
   import RelayCreate from "@app/components/hosting/RelayCreate.svelte"
-  import {user} from "@app/core"
   import {pushModal} from "@app/modal"
-  import {HostingError, listTenantRelays, type HostedRelay} from "@app/hosting"
+  import {hosting} from "@app/hosting"
   import {PLATFORM_NAME} from "@app/env"
 
   const {class: className = ""}: {class?: string} = $props()
 
-  let relays = $state<HostedRelay[]>([])
-  let loading = $state(true)
+  const tenantRelays = $hosting.relays
+
+  const relays = $derived($tenantRelays.relays)
 
   const openCreate = () => pushModal(RelayCreate)
-
-  // A pubkey with no tenant answers with a HostingError.
-  onMount(async () => {
-    try {
-      relays = await listTenantRelays($user.pubkey)
-    } catch (e) {
-      if (!(e instanceof HostingError)) {
-        console.error(e)
-      }
-    } finally {
-      loading = false
-    }
-  })
 </script>
 
 <HomeSection title="Hosting" icon={Server} class={className}>
@@ -41,7 +27,7 @@
       <Link href="/settings/hosting" class="button button-neutral button-xs">Manage</Link>
     {/if}
   {/snippet}
-  {#if loading}
+  {#if $tenantRelays.loading}
     <div class="flex justify-center px-4 pb-8">
       <Spinner>Checking your hosted spaces…</Spinner>
     </div>

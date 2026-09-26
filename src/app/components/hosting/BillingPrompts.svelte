@@ -8,40 +8,31 @@
   import Close from "@assets/icons/close.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import {errorMessage} from "@lib/util"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
-  import {autopayConfigured, getInvoice, type Invoice, type Tenant} from "@app/hosting"
+  import {
+    autopayConfigured,
+    getInvoice,
+    hostingErrorMessage,
+    type Invoice,
+    type Tenant,
+  } from "@app/hosting"
 
   type Props = {
     tenant: Tenant | undefined
     openInvoice: Invoice | undefined
     hasPaidSubscription: boolean
-    suppressInline?: boolean
-    onRefresh?: () => void
   }
 
-  const {
-    tenant,
-    openInvoice,
-    hasPaidSubscription,
-    suppressInline = false,
-    onRefresh,
-  }: Props = $props()
+  const {tenant, openInvoice, hasPaidSubscription}: Props = $props()
 
   let dismissedAutopay = $state(false)
 
-  const openPayInvoice = (invoice: Invoice) =>
-    pushModal(PaymentDialog, {invoice, onPaid: () => onRefresh?.()})
+  const openPayInvoice = (invoice: Invoice) => pushModal(PaymentDialog, {invoice})
 
-  const openSetup = (initialTab: "nwc" | "card") =>
-    pushModal(PaymentSetup, {
-      initialTab,
-      nwcConnected: Boolean(tenant?.nwc_is_set),
-      onSaved: () => onRefresh?.(),
-    })
+  const openSetup = (initialTab: "nwc" | "card") => pushModal(PaymentSetup, {initialTab})
 
   const setUpNwc = () => openSetup("nwc")
 
@@ -69,7 +60,9 @@
 
     getInvoice(id)
       .then(openPayInvoice)
-      .catch(e => pushToast({theme: "error", message: errorMessage(e) || "Failed to load invoice"}))
+      .catch(e =>
+        pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to load invoice")}),
+      )
   })
 </script>
 
@@ -136,7 +129,7 @@
       "Your account is past due and some relays are paused. Pay your balance or update your payment method to restore service.",
       churnedActions,
     )}
-  {:else if openInvoice && !suppressInline}
+  {:else if openInvoice}
     {@render card(
       "card-secondary",
       DangerCircle,
@@ -157,7 +150,7 @@
       "Your card couldn't be charged. Update your payment method.",
       updateMethodActions,
     )}
-  {:else if hasPaidSubscription && !autopayConfigured(tenant) && !suppressInline && !dismissedAutopay}
+  {:else if hasPaidSubscription && !autopayConfigured(tenant) && !dismissedAutopay}
     {@render card(
       "card-primary",
       InfoCircle,

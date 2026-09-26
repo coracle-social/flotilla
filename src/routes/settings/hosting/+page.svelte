@@ -1,8 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {App} from "@capacitor/app"
-  import type {Maybe} from "@welshman/lib"
-  import {indexBy, sortBy, spec} from "@welshman/lib"
+  import {indexBy} from "@welshman/lib"
   import Add from "@assets/icons/add.svg?dataurl"
   import Server from "@assets/icons/server.svg?dataurl"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
@@ -15,7 +14,6 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import {errorMessage} from "@lib/util"
   import RelayListItem from "@app/components/hosting/RelayListItem.svelte"
   import RelayCreate from "@app/components/hosting/RelayCreate.svelte"
   import BillingPrompts from "@app/components/hosting/BillingPrompts.svelte"
@@ -28,32 +26,29 @@
   import {
     autopayConfigured,
     ensureSessionTenant,
-    getDraftInvoice,
-    getTenant,
-    listTenantInvoices,
-    listTenantRelays,
-    derivePlans,
+    hosting,
+    hostingErrorMessage,
     reconcileTenant,
     selectPayableInvoice,
-    type HostedRelay,
     type Invoice,
-    type Tenant,
   } from "@app/hosting"
 
   type PaymentMethodState = {kind: "not_set_up"} | {kind: "ok"} | {kind: "error"; message: string}
 
   const INVOICE_PAGE_SIZE = 10
 
-  const plans = derivePlans()
+  const plans = $hosting.plans
+  const tenantRelays = $hosting.relays
+  const billing = $hosting.billing
 
-  let tenant = $state<Maybe<Tenant>>()
-  let invoices = $state<Invoice[]>([])
-  let relays = $state<HostedRelay[]>([])
-  let draftInvoice = $state<Maybe<Invoice>>()
   let loading = $state(true)
   let error = $state("")
   let showAllInvoices = $state(false)
 
+  const tenant = $derived($billing.tenant)
+  const invoices = $derived($billing.invoices)
+  const draftInvoice = $derived($billing.draftInvoice)
+  const relays = $derived($tenantRelays.relays)
   const openInvoice = $derived(selectPayableInvoice(invoices))
 
   // Whether any active relay is on a paid plan.
@@ -107,39 +102,6 @@
     showAllInvoices ? invoices : invoices.slice(0, INVOICE_PAGE_SIZE),
   )
 
-  const refetch = async () => {
-    const pk = user.get().pubkey
-    if (!pk) {
-      return
-    }
-
-    const results = await Promise.allSettled([
-      getTenant(pk),
-      listTenantInvoices(pk),
-      listTenantRelays(pk),
-      getDraftInvoice(pk),
-    ])
-
-    const [t, inv, rel, draft] = results
-
-    if (t.status === "fulfilled") {
-      tenant = t.value
-    }
-    if (inv.status === "fulfilled") {
-      invoices = sortBy(invoice => -invoice.created_at, inv.value)
-    }
-    if (rel.status === "fulfilled") {
-      relays = rel.value
-    }
-    if (draft.status === "fulfilled") {
-      draftInvoice = draft.value
-    }
-
-    if (results.some(spec({status: "rejected"}))) {
-      pushToast({theme: "error", message: "Failed to refresh billing data"})
-    }
-  }
-
   // Guard so the mount effect and the foreground listener don't race two reconciles.
   let reconciling = false
 
@@ -160,7 +122,7 @@
       await ensureSessionTenant()
       await reconcileTenant(pk)
     } catch (e) {
-      const message = errorMessage(e) || "Failed to update billing"
+      const message = hostingErrorMessage(e, "Failed to update billing")
 
       if (initialized) {
         pushToast({theme: "error", message})
@@ -168,29 +130,24 @@
         error = message
       }
     } finally {
-      await refetch()
+      if (!(await $hosting.refresh())) {
+        pushToast({theme: "error", message: "Failed to refresh billing data"})
+      }
+
       reconciling = false
       initialized = true
     }
   }
 
-  const openPayInvoice = (invoice: Invoice) =>
-    pushModal(PaymentDialog, {invoice, onPaid: () => void refetch()})
+  const openPayInvoice = (invoice: Invoice) => pushModal(PaymentDialog, {invoice})
 
-  const openSetup = (initialTab: "nwc" | "card") =>
-    pushModal(PaymentSetup, {
-      initialTab,
-      nwcConnected: Boolean(tenant?.nwc_is_set),
-      onSaved: () => void refetch(),
-    })
+  const openSetup = (initialTab: "nwc" | "card") => pushModal(PaymentSetup, {initialTab})
 
   const openNwcSetup = () => openSetup("nwc")
 
   const openCardSetup = () => openSetup("card")
 
   const openCreateRelay = () => pushModal(RelayCreate)
-
-  const refresh = () => void refetch()
 
   const toggleAllInvoices = () => {
     showAllInvoices = !showAllInvoices
@@ -255,7 +212,7 @@
     </div>
   {:else}
     {#if tenant}
-      <BillingPrompts {tenant} {openInvoice} {hasPaidSubscription} onRefresh={refresh} />
+      <BillingPrompts {tenant} {openInvoice} {hasPaidSubscription} />
     {/if}
 
     {#if relays.length === 0}

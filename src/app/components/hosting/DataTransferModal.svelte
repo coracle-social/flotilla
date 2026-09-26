@@ -19,7 +19,7 @@
   import {
     exportRelayData,
     importRelayData,
-    HostingError,
+    hostingErrorMessage,
     type HostedRelay,
     type ImportResult,
   } from "@app/hosting"
@@ -47,10 +47,7 @@
     try {
       await downloadText(`${relay.subdomain}.jsonl`, await exportRelayData(relay.id))
     } catch (e) {
-      pushToast({
-        theme: "error",
-        message: e instanceof HostingError ? e.message : "Failed to export relay data.",
-      })
+      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to export relay data.")})
     } finally {
       exporting = false
     }
@@ -63,10 +60,7 @@
       try {
         result = await importRelayData(relay.id, file)
       } catch (e) {
-        pushToast({
-          theme: "error",
-          message: e instanceof HostingError ? e.message : "Failed to import relay data.",
-        })
+        pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to import relay data.")})
       } finally {
         importing = false
       }

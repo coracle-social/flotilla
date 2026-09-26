@@ -28,24 +28,25 @@
   import CustomDomainModal from "@app/components/hosting/CustomDomainModal.svelte"
   import DataTransferModal from "@app/components/hosting/DataTransferModal.svelte"
   import PlanModal from "@app/components/hosting/PlanModal.svelte"
-  import {roomLists} from "@app/core"
   import RelayForm from "@app/components/hosting/RelayForm.svelte"
   import type {RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
   import {pushModal, clearModals} from "@app/modal"
   import {clip, pushToast} from "@app/toast"
-  import {goToMovedSpace} from "@app/routes"
   import {
-    HostingError,
+    RELAY_FLAG_DEFAULTS,
     flagToBool,
     boolToFlag,
     canonicalRelayHost,
     relayHost,
+    followHostedRelay,
     getHostedRelayUrl,
+    hosting,
+    hostingErrorMessage,
+    isPaidPlan,
     updateRelay,
     getRelay,
     deactivateRelay,
     reactivateRelay,
-    derivePlans,
     deriveRelayMembers,
     type HostedRelay,
     type RelayFlag,
@@ -58,96 +59,64 @@
 
   const {relay}: Props = $props()
 
-  const PLAN_GATED_TOOLTIP = "Not available on your current plan"
-
-  const plans = derivePlans()
+  const plans = $hosting.plans
   const members = deriveRelayMembers(relay.id)
 
-  let current = $state(relay)
-  let showMenu = $state(false)
-  let loading = $state(false)
-
-  const host = $derived(relayHost(current))
-  const relayLabel = $derived(current.info_name || current.subdomain)
-  const domainVerified = $derived(flagToBool(current.custom_domain_verified, false))
-  const recordTarget = $derived(canonicalRelayHost(current))
+  const host = $derived(relayHost(relay))
+  const relayLabel = $derived(relay.info_name || relay.subdomain)
+  const domainVerified = $derived(flagToBool(relay.custom_domain_verified, false))
+  const recordTarget = $derived(canonicalRelayHost(relay))
   // DNS forbids a CNAME at a zone apex, so those use the provider's ALIAS or ANAME record.
-  const isApex = $derived(current.custom_domain.split(".").length === 2)
+  const isApex = $derived(relay.custom_domain.split(".").length === 2)
   const recordType = $derived(isApex ? "ALIAS" : "CNAME")
-  const isPaidPlan = $derived(current.plan_id !== "free")
+  const paidPlan = $derived(isPaidPlan(relay.plan_id))
 
-  // A custom domain moves the relay's host, so migrate the groups list and follow the space.
-  const setCurrentAndFollowHost = async (next: HostedRelay) => {
-    const previousUrl = getHostedRelayUrl(current)
-    const nextUrl = getHostedRelayUrl(next)
+  const setFlag = (flag: RelayFlag) => async (checked: boolean) => {
+    const previous = relay
+    const input: UpdateRelayInput = {[flag]: boolToFlag(checked)}
 
-    current = next
-
-    if (previousUrl !== nextUrl) {
-      await $roomLists.migrateRelay(previousUrl, nextUrl).then(command => command?.publish())
-      await goToMovedSpace(previousUrl, nextUrl)
-    }
-  }
-
-  const persist = async (next: HostedRelay, input: UpdateRelayInput) => {
-    const previous = current
-
-    current = next
+    $hosting.setRelay({...previous, ...input})
 
     try {
-      current = await updateRelay(previous.id, input)
+      $hosting.setRelay(await updateRelay(previous.id, input))
     } catch (e) {
-      current = previous
-      pushToast({
-        theme: "error",
-        message: e instanceof HostingError ? e.message : "Failed to save changes.",
-      })
+      $hosting.setRelay(previous)
+      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to save changes.")})
     }
   }
 
-  const setFlag = (field: RelayFlag) => (checked: boolean) => {
-    const input: UpdateRelayInput = {[field]: boolToFlag(checked)}
-
-    persist({...current, ...input}, input)
-  }
-
-  const setCurrent = (next: HostedRelay) => {
-    current = next
-  }
-
-  const openPlan = () =>
-    pushModal(PlanModal, {relay: current, onUpdate: setCurrent}, {size: "large"})
+  const openPlan = () => pushModal(PlanModal, {relay}, {size: "large"})
 
   const openEdit = () => {
+    const previous = relay
     const initialValues: RelayFormValues = {
-      info_name: current.info_name,
-      subdomain: current.subdomain,
-      info_icon: current.info_icon,
-      info_description: current.info_description,
-      plan_id: current.plan_id,
+      info_name: relay.info_name,
+      subdomain: relay.subdomain,
+      info_icon: relay.info_icon,
+      info_description: relay.info_description,
+      plan_id: relay.plan_id,
     }
 
     pushModal(RelayForm, {
       mode: "edit",
       initialValues,
-      zooidDomain: current.zooid_domain,
+      zooidDomain: relay.zooid_domain,
       onSubmit: async (values: RelayFormValues) => {
-        const updated = await updateRelay(current.id, values)
+        const updated = await updateRelay(previous.id, values)
 
         clearModals()
 
-        // The subdomain is editable here, so the host may have moved.
-        await setCurrentAndFollowHost(updated)
+        await followHostedRelay(previous, updated)
       },
     })
   }
 
   const openDataTransfer = () => {
-    pushModal(DataTransferModal, {relay: current})
+    pushModal(DataTransferModal, {relay})
   }
 
   const openCustomDomain = () => {
-    pushModal(CustomDomainModal, {relay: current, onUpdate: setCurrentAndFollowHost})
+    pushModal(CustomDomainModal, {relay})
   }
 
   const openMenu = () => {
@@ -165,7 +134,7 @@
     loading = true
 
     try {
-      const updated = await getRelay(current.id)
+      const updated = await getRelay(relay.id)
 
       pushToast({
         message: flagToBool(updated.custom_domain_verified, false)
@@ -173,12 +142,9 @@
           : "Not verified yet. DNS changes can take a while to propagate.",
       })
 
-      await setCurrentAndFollowHost(updated)
+      await followHostedRelay(relay, updated)
     } catch (e) {
-      pushToast({
-        theme: "error",
-        message: e instanceof HostingError ? e.message : "Verification failed.",
-      })
+      pushToast({theme: "error", message: hostingErrorMessage(e, "Verification failed.")})
     } finally {
       loading = false
     }
@@ -192,13 +158,13 @@
         "All client connections are dropped and members can't read or write, but all data and settings are preserved. You can reactivate at any time.",
       confirm: async () => {
         try {
-          await deactivateRelay(current.id)
-          current = await getRelay(current.id)
+          await deactivateRelay(relay.id)
+          $hosting.setRelay(await getRelay(relay.id))
           clearModals()
         } catch (e) {
           pushToast({
             theme: "error",
-            message: e instanceof HostingError ? e.message : "Failed to deactivate relay.",
+            message: hostingErrorMessage(e, "Failed to deactivate relay."),
           })
         }
       },
@@ -212,39 +178,57 @@
       message: "The relay will start accepting connections again.",
       confirm: async () => {
         try {
-          await reactivateRelay(current.id)
-          current = await getRelay(current.id)
+          await reactivateRelay(relay.id)
+          $hosting.setRelay(await getRelay(relay.id))
           clearModals()
         } catch (e) {
           pushToast({
             theme: "error",
-            message: e instanceof HostingError ? e.message : "Failed to reactivate relay.",
+            message: hostingErrorMessage(e, "Failed to reactivate relay."),
           })
         }
       },
     })
   }
+
+  let showMenu = $state(false)
+  let loading = $state(false)
 </script>
+
+{#snippet flagToggle(title: string, flag: RelayFlag, gated = false)}
+  <FieldInline class={cx({"opacity-50": gated})}>
+    {#snippet label()}
+      <span>{title}</span>
+    {/snippet}
+    {#snippet input()}
+      <ToggleInput
+        checked={flagToBool(relay[flag], Boolean(RELAY_FLAG_DEFAULTS[flag]))}
+        disabled={gated}
+        tooltip={gated ? "Not available on your current plan" : undefined}
+        onchange={setFlag(flag)} />
+    {/snippet}
+  </FieldInline>
+{/snippet}
 
 <div class="card flex flex-col gap-6">
   <div class="flex items-start justify-between gap-4">
     <div class="flex min-w-0 items-start gap-4">
-      <RelayIcon url={getHostedRelayUrl(current)} icon={current.info_icon} size={12} />
+      <RelayIcon url={getHostedRelayUrl(relay)} icon={relay.info_icon} size={12} />
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
           <h2 class="text-xl font-bold">{relayLabel}</h2>
-          <Badge variant={current.status === "active" ? "primary" : "neutral"}>
-            {ucFirst(current.status.replace(/_/g, " "))}
+          <Badge variant={relay.status === "active" ? "primary" : "neutral"}>
+            {ucFirst(relay.status.replace(/_/g, " "))}
           </Badge>
-          <Badge variant={current.plan_id === "free" ? "neutral" : "primary"}>
-            {ucFirst(current.plan_id)}
+          <Badge variant={relay.plan_id === "free" ? "neutral" : "primary"}>
+            {ucFirst(relay.plan_id)}
           </Badge>
         </div>
         <Link external href={`https://${host}`} class="break-all text-sm text-primary">
           wss://{host}
         </Link>
-        {#if current.info_description.trim()}
-          <p class="mt-2 text-sm text-content-muted">{current.info_description}</p>
+        {#if relay.info_description.trim()}
+          <p class="mt-2 text-sm text-content-muted">{relay.info_description}</p>
         {/if}
       </div>
     </div>
@@ -280,7 +264,7 @@
               </Button>
             </li>
             <li>
-              {#if current.status === "active"}
+              {#if relay.status === "active"}
                 <Button class="text-error" onclick={requestDeactivate}>
                   <Icon icon={Power} />
                   Deactivate
@@ -298,13 +282,13 @@
     </div>
   </div>
 
-  {#if current.sync_error}
+  {#if relay.sync_error}
     <div class="flex flex-col gap-1 rounded-2xl border border-error bg-surface-less p-4">
       <p class="flex items-center gap-2 text-sm font-semibold text-error">
         <Icon icon={Danger} size={4} />
         Provisioning error
       </p>
-      <p class="break-all font-mono text-sm text-error">{current.sync_error}</p>
+      <p class="break-all font-mono text-sm text-error">{relay.sync_error}</p>
     </div>
   {/if}
 
@@ -313,9 +297,9 @@
   <div class="flex flex-col gap-3">
     <h3 class="text-sm font-semibold uppercase tracking-wider text-content-muted">Custom Domain</h3>
     <div class="flex items-center justify-between gap-2">
-      {#if current.custom_domain}
+      {#if relay.custom_domain}
         <div class="flex min-w-0 items-center gap-2">
-          <span class="truncate font-medium">{current.custom_domain}</span>
+          <span class="truncate font-medium">{relay.custom_domain}</span>
           {#if domainVerified}
             <Badge variant="primary">
               <Icon icon={VerifiedCheck} size={3} />
@@ -338,7 +322,7 @@
         </Button>
       {/if}
     </div>
-    {#if current.custom_domain && !domainVerified}
+    {#if relay.custom_domain && !domainVerified}
       <div class="flex flex-col gap-3 rounded-2xl border border-warning bg-surface-less p-4">
         <div class="flex items-start gap-2">
           <Icon icon={ShieldWarning} size={4} class="mt-0.5 shrink-0 text-warning" />
@@ -348,7 +332,7 @@
         </div>
         <div class="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2">
           <code class="min-w-0 flex-1 break-all font-mono text-xs text-content">
-            {current.custom_domain}
+            {relay.custom_domain}
             {recordType}
             {recordTarget}
           </code>
@@ -383,56 +367,11 @@
   <div class="flex flex-col gap-4">
     <h3 class="text-sm font-semibold uppercase tracking-wider text-content-muted">Policy</h3>
     <div class="grid gap-x-8 gap-y-4 sm:grid-cols-2">
-      <FieldInline>
-        {#snippet label()}
-          <span>Public read</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.policy_public_read, false)}
-            onchange={setFlag("policy_public_read")} />
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}
-          <span>Public write</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.policy_public_write, false)}
-            onchange={setFlag("policy_public_write")} />
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}
-          <span>Public join</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.policy_public_join, false)}
-            onchange={setFlag("policy_public_join")} />
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}
-          <span>Members can invite others</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.members_can_invite, true)}
-            onchange={setFlag("members_can_invite")} />
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}
-          <span>Strip signatures</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.policy_strip_signatures, false)}
-            onchange={setFlag("policy_strip_signatures")} />
-        {/snippet}
-      </FieldInline>
+      {@render flagToggle("Public read", "policy_public_read")}
+      {@render flagToggle("Public write", "policy_public_write")}
+      {@render flagToggle("Public join", "policy_public_join")}
+      {@render flagToggle("Members can invite others", "members_can_invite")}
+      {@render flagToggle("Strip signatures", "policy_strip_signatures")}
     </div>
   </div>
 
@@ -441,60 +380,11 @@
   <div class="flex flex-col gap-4">
     <h3 class="text-sm font-semibold uppercase tracking-wider text-content-muted">Features</h3>
     <div class="grid gap-x-8 gap-y-4 sm:grid-cols-2">
-      <FieldInline>
-        {#snippet label()}
-          <span>Rooms</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.groups_enabled, true)}
-            onchange={setFlag("groups_enabled")} />
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}
-          <span>Management API</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.management_enabled, true)}
-            onchange={setFlag("management_enabled")} />
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}
-          <span>Push notifications</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.push_enabled, true)}
-            onchange={setFlag("push_enabled")} />
-        {/snippet}
-      </FieldInline>
-      <FieldInline class={cx({"opacity-50": !isPaidPlan})}>
-        {#snippet label()}
-          <span>Media storage</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.blossom_enabled, false)}
-            disabled={!isPaidPlan}
-            tooltip={isPaidPlan ? undefined : PLAN_GATED_TOOLTIP}
-            onchange={setFlag("blossom_enabled")} />
-        {/snippet}
-      </FieldInline>
-      <FieldInline class={cx({"opacity-50": !isPaidPlan})}>
-        {#snippet label()}
-          <span>LiveKit support</span>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={flagToBool(current.livekit_enabled, false)}
-            disabled={!isPaidPlan}
-            tooltip={isPaidPlan ? undefined : PLAN_GATED_TOOLTIP}
-            onchange={setFlag("livekit_enabled")} />
-        {/snippet}
-      </FieldInline>
+      {@render flagToggle("Rooms", "groups_enabled")}
+      {@render flagToggle("Management API", "management_enabled")}
+      {@render flagToggle("Push notifications", "push_enabled")}
+      {@render flagToggle("Media storage", "blossom_enabled", !paidPlan)}
+      {@render flagToggle("LiveKit support", "livekit_enabled", !paidPlan)}
     </div>
   </div>
 
@@ -516,7 +406,7 @@
           <span>Member limit</span>
         {/snippet}
         {#snippet input()}
-          {@const plan = $plans.find(spec({id: current.plan_id}))}
+          {@const plan = $plans.find(spec({id: relay.plan_id}))}
           <span class="font-medium">
             {typeof plan?.members === "number" ? plan.members : "∞"}
           </span>
@@ -534,7 +424,7 @@
         <span>Current plan</span>
       {/snippet}
       {#snippet input()}
-        <span class="font-medium">{ucFirst(current.plan_id)}</span>
+        <span class="font-medium">{ucFirst(relay.plan_id)}</span>
       {/snippet}
     </FieldInline>
   </div>

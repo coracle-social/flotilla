@@ -16,13 +16,15 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {errorMessage} from "@lib/util"
   import QRCode from "@app/components/QRCode.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import InvoiceItemsList from "@app/components/hosting/InvoiceItemsList.svelte"
   import {clip, pushToast} from "@app/toast"
   import {pushModal} from "@app/modal"
   import {
+    hosting,
+    hostingErrorMessage,
+    logUnexpectedError,
     ensureInvoiceBolt11,
     reconcileInvoice,
     createInvoiceCheckout,
@@ -35,10 +37,9 @@
 
   type Props = {
     invoice: Invoice
-    onPaid?: () => void
   }
 
-  const {invoice, onPaid}: Props = $props()
+  const {invoice}: Props = $props()
 
   type Bolt11Status = "idle" | "loading" | "ready" | "error"
 
@@ -83,7 +84,7 @@
 
     paid = true
     stopPolling()
-    onPaid?.()
+    void $hosting.refresh()
   }
 
   const loadBolt11 = async () => {
@@ -98,15 +99,16 @@
       bolt11Status = "ready"
     } catch (e) {
       bolt11Status = "error"
-      bolt11Error = errorMessage(e) || "Failed to generate Lightning invoice"
+      bolt11Error = hostingErrorMessage(e, "Failed to generate Lightning invoice")
     }
   }
 
   const loadItems = async () => {
     try {
       items = await listInvoiceItems(invoice.id)
-    } catch {
-      // line items are cosmetic; don't block payment
+    } catch (e) {
+      // Line items are cosmetic, so a failure doesn't block payment.
+      logUnexpectedError(e)
     }
   }
 
@@ -152,19 +154,15 @@
         pushToast({message: "Payment not yet confirmed. Please try again after sending."})
       }
     } catch (e) {
-      pushToast({theme: "error", message: errorMessage(e) || "Failed to check payment status"})
+      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to check payment status")})
     } finally {
       checking = false
     }
   }
 
-  // Nested so this dialog stays mounted, with onSaved collecting and the poll as the backstop.
+  // Nested so this dialog stays mounted, and its poll collects once the wallet is saved.
   const connectWallet = () => {
-    pushModal(
-      PaymentSetup,
-      {initialTab: "nwc", onSaved: () => void reconcile().catch(() => {})},
-      {nested: true},
-    )
+    pushModal(PaymentSetup, {initialTab: "nwc"}, {nested: true})
   }
 
   const payWithCard = async () => {
@@ -179,7 +177,7 @@
 
       window.location.href = url
     } catch (e) {
-      pushToast({theme: "error", message: errorMessage(e) || "Failed to open checkout"})
+      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to open checkout")})
     } finally {
       redirecting = false
     }

@@ -13,29 +13,23 @@
   import PricingTable from "@app/components/hosting/PricingTable.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
-  import {user} from "@app/core"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
   import {
-    autopayConfigured,
-    derivePlans,
-    getTenant,
-    HostingError,
-    listTenantInvoices,
-    reconcileTenant,
-    selectPayableInvoice,
+    hosting,
+    hostingErrorMessage,
+    isPaidPlan,
     updateRelay,
     type HostedRelay,
   } from "@app/hosting"
 
   type Props = {
     relay: HostedRelay
-    onUpdate?: (relay: HostedRelay) => void
   }
 
-  const {relay, onUpdate}: Props = $props()
+  const {relay}: Props = $props()
 
-  const plans = derivePlans()
+  const plans = $hosting.plans
 
   let selected = $state(relay.plan_id)
   let saving = $state(false)
@@ -49,51 +43,35 @@
   }
 
   const save = async () => {
-    if (!canSave) {
-      return
-    }
+    if (canSave) {
+      saving = true
 
-    saving = true
+      try {
+        // Leaving the paid plans turns off the features only they include.
+        const updated = await updateRelay(
+          relay.id,
+          isPaidPlan(selected)
+            ? {plan_id: selected}
+            : {plan_id: selected, blossom_enabled: 0, livekit_enabled: 0},
+        )
 
-    try {
-      // Downgrading to free turns off the features that plan doesn't include.
-      const updated = await updateRelay(
-        relay.id,
-        selected === "free"
-          ? {plan_id: selected, blossom_enabled: 0, livekit_enabled: 0}
-          : {plan_id: selected},
-      )
+        $hosting.setRelay(updated)
+        pushToast({message: "Plan updated."})
 
-      onUpdate?.(updated)
-      pushToast({message: "Plan updated."})
+        const due = isPaidPlan(selected) ? await $hosting.findPaymentDue() : undefined
 
-      if (selected === "free") {
-        back()
-        return
-      }
-
-      await reconcileTenant($user.pubkey)
-
-      const tenant = await getTenant($user.pubkey)
-
-      if (autopayConfigured(tenant)) {
-        back()
-      } else {
-        const invoice = selectPayableInvoice(await listTenantInvoices($user.pubkey))
-
-        if (invoice) {
-          pushModal(PaymentDialog, {invoice}, {replaceState: true})
-        } else {
+        if (due?.invoice) {
+          pushModal(PaymentDialog, {invoice: due.invoice}, {replaceState: true})
+        } else if (due) {
           pushModal(PaymentSetup, {}, {replaceState: true})
+        } else {
+          back()
         }
+      } catch (e) {
+        pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to update plan.")})
+      } finally {
+        saving = false
       }
-    } catch (e) {
-      pushToast({
-        theme: "error",
-        message: e instanceof HostingError ? e.message : "Failed to update plan.",
-      })
-    } finally {
-      saving = false
     }
   }
 </script>

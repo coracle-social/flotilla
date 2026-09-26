@@ -3,70 +3,30 @@
   import RelayForm, {type RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
-  import {roomLists, user} from "@app/core"
+  import {roomLists} from "@app/core"
   import {navigate, pushModal} from "@app/modal"
   import {makeSpacePath} from "@app/routes"
-  import {HOSTING_RELAY_DOMAIN} from "@app/env"
-  import {
-    autopayConfigured,
-    createRelay,
-    ensureSessionTenant,
-    getHostedRelayUrl,
-    getTenant,
-    listTenantInvoices,
-    reconcileTenant,
-    selectPayableInvoice,
-  } from "@app/hosting"
+  import {createHostedRelay, getHostedRelayUrl, hosting, isPaidPlan} from "@app/hosting"
 
-  const createRelayForActiveTenant = (values: RelayFormValues) => {
-    const defaults = {
-      info_name: "",
-      info_icon: "",
-      info_description: "",
-      policy_public_read: 0,
-      policy_public_write: 0,
-      policy_public_join: 0,
-      policy_strip_signatures: 0,
-      groups_enabled: 1,
-      management_enabled: 1,
-      members_can_invite: 1,
-      push_enabled: 1,
-    }
-
-    const overrides = {
-      tenant_pubkey: $user.pubkey,
-      zooid_domain: HOSTING_RELAY_DOMAIN,
-      blossom_enabled: values.plan_id === "free" ? 0 : 1,
-      livekit_enabled: values.plan_id === "free" ? 0 : 1,
-    }
-
-    return createRelay({...defaults, ...values, ...overrides})
-  }
-
-  const handleSubmit = async (values: RelayFormValues) => {
-    await ensureSessionTenant()
-
-    const relay = await createRelayForActiveTenant(values)
+  const submit = async (values: RelayFormValues) => {
+    const relay = await createHostedRelay(values)
     const url = getHostedRelayUrl(relay)
+
+    $hosting.setRelay(relay)
 
     // Join the space now, or the space layout prompts for it and displaces the payment modals.
     await $roomLists.addRelay(url).then(publish)
-    await reconcileTenant($user.pubkey)
 
-    const tenant = await getTenant($user.pubkey)
+    const due = isPaidPlan(values.plan_id) ? await $hosting.findPaymentDue() : undefined
 
     await navigate(makeSpacePath(url, "admin"), {replaceState: true})
 
-    if (values.plan_id !== "free" && !autopayConfigured(tenant)) {
-      const invoice = selectPayableInvoice(await listTenantInvoices($user.pubkey))
-
-      if (invoice) {
-        pushModal(PaymentDialog, {invoice})
-      } else {
-        pushModal(PaymentSetup, {})
-      }
+    if (due?.invoice) {
+      pushModal(PaymentDialog, {invoice: due.invoice})
+    } else if (due) {
+      pushModal(PaymentSetup)
     }
   }
 </script>
 
-<RelayForm mode="create" submitLabel="Create Space" onSubmit={handleSubmit} />
+<RelayForm mode="create" submitLabel="Create Space" onSubmit={submit} />

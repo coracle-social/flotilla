@@ -25,7 +25,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import PricingTable from "@app/components/hosting/PricingTable.svelte"
-  import {derivePlans} from "@app/hosting"
+  import {hosting, hostingErrorMessage} from "@app/hosting"
   import {HOSTING_RELAY_DOMAIN} from "@app/env"
   import {pushToast} from "@app/toast"
   import {resolveImageInput} from "@app/uploads"
@@ -59,7 +59,7 @@
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
 
-  const plans = derivePlans()
+  const plans = $hosting.plans
 
   let loading = $state(false)
   let name = $state(initialValues.info_name ?? "")
@@ -139,10 +139,7 @@
         info_description: description,
       })
     } catch (e) {
-      pushToast({
-        theme: "error",
-        message: e instanceof Error ? e.message : "Failed to save space",
-      })
+      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to save space")})
     } finally {
       loading = false
     }

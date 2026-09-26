@@ -1,11 +1,14 @@
-import {derived, readable} from "svelte/store"
+import {derived, readable, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {Capacitor} from "@capacitor/core"
 import type {Maybe} from "@welshman/lib"
-import {sortBy, int, MINUTE, ms} from "@welshman/lib"
+import {sortBy, spec, int, MINUTE, ms} from "@welshman/lib"
 import {makeHttpAuth, makeHttpAuthHeader, normalizeRelayUrl} from "@welshman/util"
-import {user} from "@app/core"
-import {HOSTING_BACKEND_URL, PLATFORM_URL} from "@app/env"
+import {User} from "@welshman/app"
+import type {IApp} from "@welshman/app"
+import {roomLists, usePlugin, user} from "@app/core"
+import {HOSTING_BACKEND_URL, HOSTING_RELAY_DOMAIN, PLATFORM_URL} from "@app/env"
+import {goToMovedSpace} from "@app/routes"
 
 // Apple doesn't allow selling hosting outside their payment system.
 export const HOSTING_ENABLED = Capacitor.getPlatform() !== "ios"
@@ -59,46 +62,22 @@ export type RelayFlag =
   | "livekit_enabled"
   | "push_enabled"
 
-export type CreateRelayInput = {
-  tenant_pubkey?: string
-  subdomain: string
-  zooid_domain: string
-  plan_id: string
-  info_name?: string
-  info_icon?: string
-  info_description?: string
-  policy_public_read?: number
-  policy_public_write?: number
-  policy_public_join?: number
-  policy_strip_signatures?: number
-  groups_enabled?: number
-  management_enabled?: number
-  members_can_invite?: number
-  blossom_enabled?: number
-  livekit_enabled?: number
-  push_enabled?: number
-  custom_domain?: string
-}
+export type UpdateRelayInput = Partial<
+  Pick<
+    HostedRelay,
+    | "subdomain"
+    | "zooid_domain"
+    | "plan_id"
+    | "info_name"
+    | "info_icon"
+    | "info_description"
+    | "custom_domain"
+    | RelayFlag
+  >
+>
 
-export type UpdateRelayInput = {
-  subdomain?: string
-  zooid_domain?: string
-  plan_id?: string
-  info_name?: string
-  info_icon?: string
-  info_description?: string
-  policy_public_read?: number
-  policy_public_write?: number
-  policy_public_join?: number
-  policy_strip_signatures?: number
-  groups_enabled?: number
-  management_enabled?: number
-  members_can_invite?: number
-  blossom_enabled?: number
-  livekit_enabled?: number
-  push_enabled?: number
-  custom_domain?: string
-}
+export type CreateRelayInput = UpdateRelayInput &
+  Pick<HostedRelay, "tenant_pubkey" | "subdomain" | "zooid_domain" | "plan_id">
 
 export type Tenant = {
   pubkey: string
@@ -184,6 +163,19 @@ export class HostingError extends Error {
     this.name = "HostingError"
     this.status = status
   }
+}
+
+export const logUnexpectedError = (e: unknown) => {
+  if (!(e instanceof HostingError)) {
+    console.error(e)
+  }
+}
+
+// A HostingError carries the backend's own explanation; anything else is a bug worth logging.
+export const hostingErrorMessage = (e: unknown, fallback: string) => {
+  logUnexpectedError(e)
+
+  return e instanceof HostingError ? e.message : fallback
 }
 
 // Requests
@@ -347,6 +339,23 @@ export const flagToBool = (value: number | undefined, fallback: boolean): boolea
 
 export const boolToFlag = (value: boolean): 0 | 1 => (value ? 1 : 0)
 
+// What a new relay starts with, and what a toggle shows when the backend leaves a flag unset.
+export const RELAY_FLAG_DEFAULTS: Pick<HostedRelay, RelayFlag> = {
+  policy_public_read: 0,
+  policy_public_write: 0,
+  policy_public_join: 0,
+  policy_strip_signatures: 0,
+  groups_enabled: 1,
+  management_enabled: 1,
+  members_can_invite: 1,
+  blossom_enabled: 0,
+  livekit_enabled: 0,
+  push_enabled: 1,
+}
+
+// Paid plans are the ones that bill, and the only ones with media storage and livekit.
+export const isPaidPlan = (planId: string) => planId !== "free"
+
 export const autopayConfigured = (
   t: Pick<Tenant, "nwc_is_set" | "stripe_payment_method_id">,
 ): boolean => t.nwc_is_set || Boolean(t.stripe_payment_method_id)
@@ -402,12 +411,150 @@ export const ensureSessionTenant = async () => {
   await tenantPromise.promise
 }
 
+export const createHostedRelay = async (
+  values: Omit<CreateRelayInput, "tenant_pubkey" | "zooid_domain">,
+) => {
+  await ensureSessionTenant()
+
+  const features = boolToFlag(isPaidPlan(values.plan_id))
+
+  return createRelay({
+    ...RELAY_FLAG_DEFAULTS,
+    ...values,
+    tenant_pubkey: user.get().pubkey,
+    zooid_domain: HOSTING_RELAY_DOMAIN,
+    blossom_enabled: features,
+    livekit_enabled: features,
+  })
+}
+
 // Stores
 
-export const derivePlans = () =>
-  readable<Plan[]>([], set => {
-    listPlans().then(set, () => set([]))
+export type TenantRelays = {loading: boolean; relays: HostedRelay[]}
+
+export type TenantBilling = {
+  tenant: Maybe<Tenant>
+  invoices: Invoice[]
+  draftInvoice: Maybe<Invoice>
+}
+
+// The tenant is the signed-in pubkey, so what's loaded for it lives on the app and goes with a login.
+export class Hosting {
+  private plansRequest: Maybe<Promise<Plan[]>>
+
+  private relayState = writable<TenantRelays>({loading: true, relays: []})
+
+  billing = writable<TenantBilling>({tenant: undefined, invoices: [], draftInvoice: undefined})
+
+  constructor(private readonly app: IApp) {}
+
+  loadPlans = () => {
+    this.plansRequest ??= listPlans().catch((e): Plan[] => {
+      this.plansRequest = undefined
+      logUnexpectedError(e)
+      return []
+    })
+
+    return this.plansRequest
+  }
+
+  plans = readable<Plan[]>([], set => {
+    this.loadPlans().then(set)
   })
+
+  loadRelays = async () => {
+    this.relayState.update($state => ({...$state, loading: true}))
+
+    try {
+      const relays = await listTenantRelays(User.require(this.app).pubkey)
+
+      this.relayState.set({loading: false, relays})
+    } catch (e) {
+      this.relayState.update($state => ({...$state, loading: false}))
+
+      throw e
+    }
+  }
+
+  // A pubkey with no tenant answers with a HostingError, which leaves the list empty.
+  relays = readable<TenantRelays>({loading: true, relays: []}, set => {
+    this.loadRelays().catch(logUnexpectedError)
+
+    return this.relayState.subscribe(set)
+  })
+
+  setRelay = (relay: HostedRelay) =>
+    this.relayState.update($state => ({
+      ...$state,
+      relays: $state.relays.some(spec({id: relay.id}))
+        ? $state.relays.map(r => (r.id === relay.id ? relay : r))
+        : [...$state.relays, relay],
+    }))
+
+  // Each request lands on its own, so one failure doesn't blank what the others loaded.
+  refresh = async () => {
+    const {pubkey} = User.require(this.app)
+    const results = await Promise.allSettled([
+      getTenant(pubkey),
+      listTenantInvoices(pubkey),
+      getDraftInvoice(pubkey),
+      this.loadRelays(),
+    ])
+
+    const [tenant, invoices, draftInvoice] = results
+
+    this.billing.update($billing => ({
+      tenant: tenant.status === "fulfilled" ? tenant.value : $billing.tenant,
+      invoices:
+        invoices.status === "fulfilled"
+          ? sortBy(invoice => -invoice.created_at, invoices.value)
+          : $billing.invoices,
+      draftInvoice:
+        draftInvoice.status === "fulfilled" ? draftInvoice.value : $billing.draftInvoice,
+    }))
+
+    for (const result of results) {
+      if (result.status === "rejected") {
+        logUnexpectedError(result.reason)
+      }
+    }
+
+    return results.every(spec({status: "fulfilled"}))
+  }
+
+  // Settles the balance, then says what a tenant without autopay still owes: an open invoice, or a method.
+  findPaymentDue = async (): Promise<Maybe<{invoice: Maybe<Invoice>}>> => {
+    const {pubkey} = User.require(this.app)
+
+    await reconcileTenant(pubkey)
+
+    const tenant = await getTenant(pubkey)
+
+    this.billing.update($billing => ({...$billing, tenant}))
+
+    if (!autopayConfigured(tenant)) {
+      return {invoice: selectPayableInvoice(await listTenantInvoices(pubkey))}
+    }
+  }
+}
+
+export const hosting = usePlugin(Hosting)
+
+// A new subdomain or a verified custom domain moves the relay, so the room list and the page follow it.
+export const followHostedRelay = async (previous: HostedRelay, next: HostedRelay) => {
+  const previousUrl = getHostedRelayUrl(previous)
+  const nextUrl = getHostedRelayUrl(next)
+
+  if (previousUrl !== nextUrl) {
+    await roomLists
+      .get()
+      .migrateRelay(previousUrl, nextUrl)
+      .then(command => command?.publish())
+    await goToMovedSpace(previousUrl, nextUrl)
+  }
+
+  hosting.get().setRelay(next)
+}
 
 export const deriveRelayMembers = (id: string) =>
   readable<string[]>([], set => {
@@ -442,15 +589,7 @@ export const deriveRelayActivity = (id: Readable<Maybe<string>>) =>
 export type HostedRelayState = {loading: boolean; relay: Maybe<HostedRelay>}
 
 export const deriveHostedRelay = (url: string) =>
-  derived<typeof user, HostedRelayState>(
-    user,
-    ($user, set) => {
-      set({loading: true, relay: undefined})
-
-      listTenantRelays($user.pubkey).then(
-        relays => set({loading: false, relay: relays.find(r => getHostedRelayUrl(r) === url)}),
-        () => set({loading: false, relay: undefined}),
-      )
-    },
-    {loading: true, relay: undefined},
-  )
+  derived<Readable<TenantRelays>, HostedRelayState>(hosting.get().relays, ({loading, relays}) => ({
+    loading,
+    relay: relays.find(r => getHostedRelayUrl(r) === url),
+  }))

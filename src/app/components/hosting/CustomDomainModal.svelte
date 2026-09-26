@@ -20,17 +20,17 @@
   import {
     canonicalRelayHost,
     flagToBool,
+    followHostedRelay,
+    hostingErrorMessage,
     updateRelay,
-    HostingError,
     type HostedRelay,
   } from "@app/hosting"
 
   type Props = {
     relay: HostedRelay
-    onUpdate?: (relay: HostedRelay) => void
   }
 
-  const {relay, onUpdate}: Props = $props()
+  const {relay}: Props = $props()
 
   const back = () => history.back()
 
@@ -43,21 +43,15 @@
       loading = true
 
       try {
-        const updated = await updateRelay(current.id, {custom_domain: value})
+        const updated = await updateRelay(relay.id, {custom_domain: value})
 
-        current = updated
-        domain = updated.custom_domain ?? ""
-        onUpdate?.(updated)
         pushToast({message: value ? "Custom domain saved." : "Custom domain removed."})
         back()
+
+        // Removing a verified domain moves the relay back to its subdomain.
+        await followHostedRelay(relay, updated)
       } catch (e) {
-        const isHostingError = e instanceof HostingError
-
-        pushToast({theme: "error", message: isHostingError ? e.message : "Failed to save domain."})
-
-        if (!isHostingError) {
-          console.error(e)
-        }
+        pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to save domain.")})
       } finally {
         loading = false
       }
@@ -66,8 +60,6 @@
 
   const onSubmit = () => submit(domain.trim())
 
-  // Local copy so the verified state updates in place after save/verify.
-  let current = $state(relay)
   let domain = $state(relay.custom_domain ?? "")
   let loading = $state(false)
 </script>
@@ -78,7 +70,7 @@
       <ModalTitle>Custom domain</ModalTitle>
       <ModalSubtitle>
         Point a domain you control at this relay instead of the default
-        <span class="text-primary">{canonicalRelayHost(current)}</span> address.
+        <span class="text-primary">{canonicalRelayHost(relay)}</span> address.
       </ModalSubtitle>
     </ModalHeader>
 
@@ -88,7 +80,7 @@
         <p>Domain</p>
       {/snippet}
       {#snippet secondary()}
-        {#if current.custom_domain && flagToBool(current.custom_domain_verified, false)}
+        {#if relay.custom_domain && flagToBool(relay.custom_domain_verified, false)}
           <Badge variant="primary">
             <Icon icon={VerifiedCheck} size={3} />
             Verified

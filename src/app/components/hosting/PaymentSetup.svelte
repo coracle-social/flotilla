@@ -19,17 +19,19 @@
   import {user} from "@app/core"
   import {pushToast} from "@app/toast"
   import {getNwcClient, wallet} from "@app/lightning"
-  import {updateTenant, createPortalSession} from "@app/hosting"
+  import {hosting, hostingErrorMessage, updateTenant, createPortalSession} from "@app/hosting"
 
   type Tab = "nwc" | "card"
 
   type Props = {
-    onSaved?: () => void
     initialTab?: Tab
-    nwcConnected?: boolean
   }
 
-  const {onSaved, initialTab, nwcConnected = false}: Props = $props()
+  const {initialTab}: Props = $props()
+
+  const billing = $hosting.billing
+
+  const nwcConnected = $derived(Boolean($billing.tenant?.nwc_is_set))
 
   const back = () => history.back()
 
@@ -63,11 +65,11 @@
     try {
       await updateTenant($user.pubkey, {nwc_url: url})
       saved = true
-      onSaved?.()
+      void $hosting.refresh()
     } catch (e) {
       pushToast({
         theme: "error",
-        message: e instanceof Error ? e.message : "Failed to save wallet connection",
+        message: hostingErrorMessage(e, "Failed to save wallet connection"),
       })
     } finally {
       saving = false
@@ -87,14 +89,11 @@
 
     try {
       await updateTenant($user.pubkey, {nwc_url: ""})
-      onSaved?.()
+      void $hosting.refresh()
       pushToast({message: "Lightning wallet disconnected."})
       back()
     } catch (e) {
-      pushToast({
-        theme: "error",
-        message: e instanceof Error ? e.message : "Failed to disconnect wallet",
-      })
+      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to disconnect wallet")})
     } finally {
       saving = false
     }
@@ -108,10 +107,7 @@
 
       window.location.href = url
     } catch (e) {
-      pushToast({
-        theme: "error",
-        message: e instanceof Error ? e.message : "Failed to open billing portal",
-      })
+      pushToast({theme: "error", message: hostingErrorMessage(e, "Failed to open billing portal")})
     } finally {
       redirecting = false
     }
