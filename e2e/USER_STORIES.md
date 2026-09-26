@@ -1469,8 +1469,8 @@ Acceptance:
 
 - "Create Invite" shows a QR code and a copyable link, and copying puts it on
   the clipboard.
-- Where the relay supports it, the invite dialog's member search adds someone
-  straight into the member list.
+- Where the relay supports it, "Add members" in the invite dialog opens a member
+  search that adds someone straight into the member list.
 - A room-scoped invite link carries both the space and that room's join code.
 
 ### US-095 — Remove, ban, and restore members

@@ -12,7 +12,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {relayManagement, relayMemberLists} from "@app/core"
+  import {relayManagement} from "@app/core"
+  import {allowPubkeys} from "@app/management"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -24,41 +25,34 @@
 
   const back = () => history.back()
 
-  let loading = $state(false)
-  let pubkeys: string[] = $state([])
-
   const submit = async () => {
     loading = true
 
     try {
-      const members = $relayMemberLists.get(url)
       const management = $relayManagement.forUrl(url)
 
+      // Members have to be allowed at the relay before a role there means anything
+      let error = await allowPubkeys(url, pubkeys)
+
       for (const pubkey of pubkeys) {
-        // Ensure they're space members first, then assign the role
-        if (!members?.isMember(pubkey)) {
-          const {error} = await management.allowPubkey(pubkey)
-
-          if (error) {
-            pushToast({theme: "error", message: error})
-            return
-          }
-        }
-
-        const {error} = await management.assignRole(pubkey, role.identifier()!)
-
-        if (error) {
-          pushToast({theme: "error", message: error})
-          return
+        if (!error) {
+          error = (await management.assignRole(pubkey, role.identifier()!)).error
         }
       }
 
-      pushToast({message: "Members assigned!"})
-      back()
+      if (error) {
+        pushToast({theme: "error", message: error})
+      } else {
+        pushToast({message: "Members assigned!"})
+        back()
+      }
     } finally {
       loading = false
     }
   }
+
+  let loading = $state(false)
+  let pubkeys: string[] = $state([])
 </script>
 
 <Modal>

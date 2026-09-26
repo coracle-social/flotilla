@@ -1,9 +1,9 @@
 import {derived, readable, writable} from "svelte/store"
-import {ago, MINUTE, now, simpleCache} from "@welshman/lib"
+import {ago, difference, MINUTE, now, simpleCache} from "@welshman/lib"
 import {ROOM_CREATE_PERMISSION, hexTags, tagValues} from "@welshman/util"
 import {RelayManagement, Relays} from "@welshman/app"
 import type {IApp} from "@welshman/app"
-import {events, fromApp, usePlugin, user} from "@app/core"
+import {events, fromApp, relayManagement, relayMemberLists, usePlugin, user} from "@app/core"
 
 // `supportedmethods` answers for the pubkey that signed the request, so this catalog is the client's.
 export const MANAGEMENT_METHOD_GROUPS = [
@@ -196,6 +196,44 @@ const getSpacePermissions = (methods: string[]) => {
     roleMenu: editRoles || deleteRoles || assignRoles,
     bannedMenu: unban || addMembers,
     directoryMenu: manageRoles || listBans || listAdmins,
+  }
+}
+
+// Mutations
+
+export const allowPubkeys = async (url: string, pubkeys: string[]) => {
+  const members = relayMemberLists.get().get(url)
+  const management = relayManagement.get().forUrl(url)
+  const responses = await Promise.all(
+    pubkeys.filter(pk => !members?.isMember(pk)).map(pk => management.allowPubkey(pk)),
+  )
+
+  return responses.map(response => response.error).find(Boolean)
+}
+
+type Assign = (id: string) => Promise<{error?: string}>
+
+// Stops at the first refusal, leaving whatever was already applied in place.
+export const syncAssignments = async (
+  current: string[],
+  next: string[],
+  assign: Assign,
+  unassign: Assign,
+) => {
+  for (const id of difference(next, current)) {
+    const {error} = await assign(id)
+
+    if (error) {
+      return error
+    }
+  }
+
+  for (const id of difference(current, next)) {
+    const {error} = await unassign(id)
+
+    if (error) {
+      return error
+    }
   }
 }
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {get} from "svelte/store"
-  import {spec} from "@welshman/lib"
+  import {difference, spec} from "@welshman/lib"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -13,7 +13,12 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {profiles, relayManagement} from "@app/core"
-  import {MANAGEMENT_METHOD_GROUPS, deriveSpacePermissions, spaceManagement} from "@app/management"
+  import {
+    MANAGEMENT_METHOD_GROUPS,
+    deriveSpacePermissions,
+    spaceManagement,
+    syncAssignments,
+  } from "@app/management"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -29,7 +34,7 @@
   // A relay can grant methods this client doesn't know, and leaving them out would revoke them.
   const groups = $derived.by(() => {
     const known = MANAGEMENT_METHOD_GROUPS.flatMap(group => group.methods.map(({method}) => method))
-    const extra = [...assigned].filter(method => !known.includes(method))
+    const extra = difference(assigned, known)
 
     if (extra.length > 0) {
       return [
@@ -43,57 +48,33 @@
 
   const back = () => history.back()
 
-  const toggle = (method: string) => {
-    const next = new Set(selected)
-
-    if (next.has(method)) {
-      next.delete(method)
-    } else {
-      next.add(method)
-    }
-
-    selected = next
-  }
-
   const submit = async () => {
     saving = true
 
     try {
       const management = $relayManagement.forUrl(url)
+      const error = await syncAssignments(
+        assigned,
+        selected,
+        method => management.assignMethod(pubkey, method),
+        method => management.unassignMethod(pubkey, method),
+      )
 
-      for (const method of selected) {
-        if (!assigned.has(method)) {
-          const {error} = await management.assignMethod(pubkey, method)
+      if (error) {
+        pushToast({theme: "error", message: error})
+      } else {
+        await $spaceManagement.loadMethodAssignees(url)
 
-          if (error) {
-            pushToast({theme: "error", message: error})
-            return
-          }
-        }
+        pushToast({message: "Permissions updated!"})
+        back()
       }
-
-      for (const method of assigned) {
-        if (!selected.has(method)) {
-          const {error} = await management.unassignMethod(pubkey, method)
-
-          if (error) {
-            pushToast({theme: "error", message: error})
-            return
-          }
-        }
-      }
-
-      await $spaceManagement.loadMethodAssignees(url)
-
-      pushToast({message: "Permissions updated!"})
-      back()
     } finally {
       saving = false
     }
   }
 
-  let assigned = $state(new Set<string>())
-  let selected = $state(new Set<string>())
+  let assigned: string[] = $state([])
+  let selected: string[] = $state([])
   let loading = $state(true)
   let saving = $state(false)
 
@@ -104,10 +85,8 @@
       pushToast({theme: "error", message: error})
     }
 
-    assigned = new Set(
-      get($spaceManagement.methodAssignees(url)).find(spec({pubkey}))?.methods ?? [],
-    )
-    selected = new Set(assigned)
+    assigned = get($spaceManagement.methodAssignees(url)).find(spec({pubkey}))?.methods ?? []
+    selected = [...assigned]
     loading = false
   })
 </script>
@@ -133,11 +112,11 @@
                 <input
                   type="checkbox"
                   class="checkbox"
-                  checked={selected.has(method)}
-                  disabled={selected.has(method)
+                  value={method}
+                  bind:group={selected}
+                  disabled={selected.includes(method)
                     ? !$permissions.unassignMethods
-                    : !$permissions.assignMethods}
-                  onchange={() => toggle(method)} />
+                    : !$permissions.assignMethods} />
               </label>
             {/each}
           </div>

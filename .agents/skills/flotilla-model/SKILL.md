@@ -156,7 +156,7 @@ Invite links are `${PLATFORM_URL}/join?r=<relay>&c=<claim>`, plus `h` and `code`
 (`makeInviteLink`; `parseInviteLink` also accepts a bare relay URL). `src/routes/join` renders
 `SpaceInviteAccept`, which calls `Access.acceptInvite` to join the space and then the room.
 `Access.prepareInvite` gets a claim over NIP-86 (`supportedmethods`, then `listclaims`, then
-`createclaim`); this replaced reading `RELAY_INVITE` events. Leaving (`SpaceExit`,
+`createclaim`), and `InviteLink` renders the result for both `SpaceInvite` and `RoomInvite`; this replaced reading `RELAY_INVITE` events. Leaving (`SpaceExit`,
 `SpaceAuthError`) is `roomLists.removeRelay(url)` plus `publishLeaveRequest(url)`.
 
 ## NIP-86 relay management
@@ -168,9 +168,9 @@ relay's URL, each call signed with a fresh NIP-98 event. Every method resolves t
 | Methods | Called from |
 |---|---|
 | `supportedMethods`, `listMethodAssignees`, `listBannedPubkeys` (cached) | `SpaceManagement` (`src/app/management.ts`) |
-| `banPubkey`, `unbanPubkey`, `allowPubkey`, `unallowPubkey`, `listBannedPubkeys` | `ProfileDetail`, `SpaceMemberMenu`, `SpaceMemberBannedMenu`, `SpaceInvite`, `ReportMenuList`, `addRoomMembers` |
+| `banPubkey`, `unbanPubkey`, `allowPubkey`, `unallowPubkey`, `listBannedPubkeys` | `ProfileDetail`, `SpaceMemberMenu`, `SpaceMemberBannedMenu`, `ReportMenuList`, `allowPubkeys` (`SpaceMembersAdd`, `RoleAddMembers`, `addRoomMembers`) |
 | `banEvent` | `RoomItemMenu`, `EventMenu`, `ReportMenuList`, `RoomJoinItem` (dismissing a join request) |
-| `createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole` | `RoleCreate`, `RoleEdit`, `SpaceRoleMenu`, `SpaceMemberRoles`, `RoleAddMembers` |
+| `createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole` | `RoleCreate`, `RoleEdit`, `SpaceRoleMenu`, `SpaceMemberRoles` (via `syncAssignments`), `RoleAddMembers` |
 | `listClaims`, `createClaim` | `Access.prepareInvite` |
 | `changeRelayName`, `changeRelayDescription`, `changeRelayIcon` | `SpaceEdit` |
 

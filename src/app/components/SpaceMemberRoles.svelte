@@ -16,7 +16,7 @@
   import RoleItem from "@app/components/RoleItem.svelte"
   import SpaceRoles from "@app/components/SpaceRoles.svelte"
   import {app, profiles, relayManagement} from "@app/core"
-  import {deriveSpacePermissions} from "@app/management"
+  import {deriveSpacePermissions, syncAssignments} from "@app/management"
   import {deriveSpaceMemberRoles} from "@app/roles"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
@@ -33,61 +33,37 @@
 
   const profileDisplay = $profiles.display(pubkey, [url]).$
   const memberRoles = deriveSpaceMemberRoles(url)
-  const initial = new Set(get(memberRoles).get(pubkey) ?? [])
+  const initial = get(memberRoles).get(pubkey) ?? []
   const permissions = deriveSpacePermissions(url)
 
   const back = () => history.back()
 
   const manageRoles = () => pushModal(SpaceRoles, {url})
 
-  const toggle = (id: string) => {
-    const next = new Set(selected)
-
-    if (next.has(id)) {
-      next.delete(id)
-    } else {
-      next.add(id)
-    }
-
-    selected = next
-  }
-
   const submit = async () => {
     loading = true
 
     try {
       const management = $relayManagement.forUrl(url)
+      const error = await syncAssignments(
+        initial,
+        selected,
+        id => management.assignRole(pubkey, id),
+        id => management.unassignRole(pubkey, id),
+      )
 
-      for (const id of selected) {
-        if (!initial.has(id)) {
-          const {error} = await management.assignRole(pubkey, id)
-
-          if (error) {
-            pushToast({theme: "error", message: error})
-            return
-          }
-        }
+      if (error) {
+        pushToast({theme: "error", message: error})
+      } else {
+        pushToast({message: "Roles updated!"})
+        back()
       }
-
-      for (const id of initial) {
-        if (!selected.has(id)) {
-          const {error} = await management.unassignRole(pubkey, id)
-
-          if (error) {
-            pushToast({theme: "error", message: error})
-            return
-          }
-        }
-      }
-
-      pushToast({message: "Roles updated!"})
-      back()
     } finally {
       loading = false
     }
   }
 
-  let selected = $state(new Set(initial))
+  let selected = $state([...initial])
   let loading = $state(false)
 </script>
 
@@ -109,8 +85,8 @@
             <input
               type="checkbox"
               class="checkbox"
-              checked={selected.has(role.identifier() ?? "")}
-              onchange={() => toggle(role.identifier() ?? "")} />
+              value={role.identifier() ?? ""}
+              bind:group={selected} />
           </label>
         {/each}
       </div>

@@ -21,8 +21,6 @@ import type {Room, RoomMeta} from "@welshman/app"
 import {
   deriveUserItem,
   command,
-  relayManagement,
-  relayMemberLists,
   roomLists,
   rooms,
   router,
@@ -31,7 +29,7 @@ import {
   user,
   writer,
 } from "@app/core"
-import {deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/management"
+import {allowPubkeys, deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/management"
 import {makeRoomPath} from "@app/routes"
 import {loadSendDelay} from "@app/settings"
 
@@ -57,17 +55,10 @@ export const deriveRoomMembers = (url: string, h: string) =>
 
 // A room member also has to be allowed at the relay level to read the room at all.
 export const addRoomMembers = async (url: string, room: RoomMeta, pubkeys: string[]) => {
-  const members = relayMemberLists.get().get(url)
-  const management = relayManagement.get().forUrl(url)
+  const allowError = await allowPubkeys(url, pubkeys)
 
-  const responses = await Promise.all(
-    pubkeys.filter(pk => !members?.isMember(pk)).map(pk => management.allowPubkey(pk)),
-  )
-
-  for (const {error} of responses) {
-    if (error) {
-      return error
-    }
+  if (allowError) {
+    return allowError
   }
 
   const errors = await Promise.all(
