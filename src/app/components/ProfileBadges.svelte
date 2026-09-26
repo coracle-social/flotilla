@@ -5,7 +5,7 @@
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
   import {network, roomLists} from "@app/core"
-  import {deriveLatestEvent} from "@app/repository"
+  import {latestEvents} from "@app/repository"
   import {goToEvent} from "@app/routes"
   import {pushModal} from "@app/modal"
 
@@ -16,7 +16,7 @@
 
   const {pubkey, url}: Props = $props()
 
-  const latest = deriveLatestEvent(pubkey)
+  const latest = $latestEvents.forPubkey(pubkey)
 
   const spaceUrls = $roomLists.urls(pubkey).$
 

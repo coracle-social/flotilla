@@ -38,7 +38,7 @@
   import ThunkToast from "@app/components/ThunkToast.svelte"
   import {app, deletes, router, user, wraps} from "@app/core"
   import {loadSendDelay} from "@app/settings"
-  import {deriveChat, makeChatId} from "@app/chats"
+  import {chats, makeChatId} from "@app/chats"
   import {makeFeedContext} from "@app/feeds"
   import {navigate, pushModal} from "@app/modal"
   import {prependParent} from "@app/rooms"
@@ -55,7 +55,7 @@
   const context = makeFeedContext({relays: $router.resolver.relays([userInbox()])})
 
   onDestroy(context.cleanup)
-  const chat = deriveChat(chatId)
+  const chat = $chats.one(chatId)
   const others = remove($user.pubkey, pubkeys)
   const messagingRelayLists = $app.use(MessagingRelayLists).index.$
   const missingRelayLists = $derived(others.filter(pk => !$messagingRelayLists.has(pk)))

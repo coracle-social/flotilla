@@ -81,7 +81,7 @@ only gate.
   cache
 - `sync.ts`: `syncApplicationData`, the background sync of user data, spaces and DMs
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
-- `repository.ts`: `derive*` helpers over the current app's repository
+- `repository.ts`: the `LatestEvents` plugin, each watched author's most recent event
 - `thunks.ts` (publish status by event id), `signer.ts` (signer request tracking)
 - `env.ts`: every `VITE_` value, parsed
 - `logger.ts` (log capture and sending), `analytics.ts` (Plausible pageviews), `device.ts` (a

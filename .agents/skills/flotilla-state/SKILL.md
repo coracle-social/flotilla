@@ -88,8 +88,9 @@ The rule is about when a binding is made:
 
 - **Module scope, and anything outside the gate**, goes through `app`, `usePlugin`, `fromApp`
   or `deriveUserItem`. A module-level `app.get()` builds the first app before the policies
-  register, and a binding made that way keeps reading the discarded app after login. Long-lived
-  listeners re-bind on `app.subscribe`, as `chatsById` in `src/app/chats.ts`,
+  register, and a binding made that way keeps reading the discarded app after login. A
+  long-lived listener over the repository belongs on a plugin, as in `Chats` (`chats.ts`), so
+  it is dropped with the app. Other listeners re-bind on `app.subscribe`, as
   `syncCheckedRemote` in `notifications.ts` and the resync in the root layout do.
 - **Code under the gate** can bind at call time. `rooms.get().forUrl(url).$` inside
   `deriveUserRooms`, or `$app.use(X)` in a component's script, is fine there, because the app
@@ -118,6 +119,8 @@ they cache is itself a rebinding store. `commandsByUrl` holds `fromApp` stores.
 | `Commands` (`commands.ts`) | `RelayScopedDerivedPlugin` | slash-command definitions, keyed per relay |
 | `HealthChecks` (`healthChecks.ts`) | none | a plain class over `IApp` exposing `Projection`s |
 | `SpaceManagement` (`management.ts`) | none | NIP-86 supported methods (5-minute TTL), admins and bans per URL |
+| `Chats` (`chats.ts`) | none | DM conversations by chat id (`index`, `one`), and a fuzzy `search` |
+| `LatestEvents` (`repository.ts`) | none | the most recent event held from an author (`forPubkey`) |
 
 Each is exposed with `usePlugin`. `Statuses` is the minimal shape:
 
@@ -186,7 +189,7 @@ Every method returns a projection over the current app's repository:
 Components bind `$events.forUrl(url, filters).$`. A `derive*` function called from gated code
 binds `events.get().forUrl(...).$` at call time, and a module-scope store wraps it in
 `fromApp($app => $app.use(Events).byIdByUrl(filters).$)`, as `latestActivityByPath` does.
-`src/app/repository.ts` holds only `deriveLatestEvent`. Plugin reads (`get`, `one`, `load`,
+`src/app/repository.ts` holds only the `LatestEvents` plugin. Plugin reads (`get`, `one`, `load`,
 `index`) are documented in welshman-app.
 
 ### Free functions in an app module
@@ -224,14 +227,15 @@ Rules that involve more than one plugin belong in these functions rather than in
 
 A derivation that every row subscribes to, or that joins large sets, is built by hand:
 
-- `chatsById` (`chats.ts`) updates incrementally from repository `update` events rather than
-  re-querying.
+- `Chats` (`chats.ts`) updates its `index` incrementally from repository `update` events rather
+  than re-querying. Its `search` reads profile names when it is rebuilt, so it also follows the
+  profiles index.
 - `thunksByEventId` (`thunks.ts`) indexes thunk history once, and hands back the previous array
   wherever an event's thunks are unchanged so rows don't churn.
 - `latestActivityByPath` (`notifications.ts`) joins chats, room lists, relay info, events and
   settings behind `throttled(1000, …)`.
-- `deriveLatestEvent` (`repository.ts`) shares one repository listener across every watched
-  author.
+- `LatestEvents.forPubkey` (`repository.ts`) shares one repository listener across every
+  watched author.
 
 ## Local and persisted state
 

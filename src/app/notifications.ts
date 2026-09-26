@@ -20,7 +20,7 @@ import {app, fromApp, reader} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
 import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
 import {getIsMuted, notificationSettings, userSettingsValues} from "@app/settings"
-import {chatsById} from "@app/chats"
+import {Chats} from "@app/chats"
 import {dufflepud, DUFFLEPUD_URL, PLATFORM_RELAYS} from "@app/env"
 import {kv} from "@app/storage"
 
@@ -232,7 +232,7 @@ export const latestActivityByPath = derived(
     derived(
       [
         app,
-        chatsById,
+        fromApp($app => $app.use(Chats).index.$),
         fromApp($app => $app.use(Relays).index.$),
         fromApp($app => $app.use(RoomLists).index.$),
         fromApp(
