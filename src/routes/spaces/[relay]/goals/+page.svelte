@@ -2,7 +2,6 @@
   import {onDestroy, onMount} from "svelte"
   import {derived, readable} from "svelte/store"
   import type {Readable} from "svelte/store"
-  import cx from "classnames"
   import {equals, now, pluck, sortBy, spec} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
@@ -15,6 +14,7 @@
   import UsersGroupRounded from "@assets/icons/users-group-rounded.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
@@ -195,20 +195,7 @@
       </div>
     </div>
     <div class="flex flex-wrap items-center justify-between gap-2">
-      <div class="flex flex-wrap gap-2">
-        {#each tabs as { value, label } (value)}
-          {@const onClick = () => (tab = value)}
-          <Button
-            aria-pressed={tab === value}
-            class={cx(
-              "button button-sm rounded-full",
-              tab === value ? "button-primary" : "button-neutral",
-            )}
-            onclick={onClick}>
-            {label}
-          </Button>
-        {/each}
-      </div>
+      <SegmentedButtons options={tabs} bind:value={tab} class="flex-wrap" />
       <select class="select input input-sm w-auto" bind:value={sort}>
         <option value="active">Recently active</option>
         <option value="new">Newest</option>

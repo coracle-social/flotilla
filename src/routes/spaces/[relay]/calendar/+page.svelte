@@ -1,6 +1,5 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import cx from "classnames"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
   import type {Maybe} from "@welshman/lib"
@@ -13,6 +12,8 @@
   import {fade} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
+  import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import CalendarAgenda from "@app/components/CalendarAgenda.svelte"
@@ -44,8 +45,6 @@
   const context = makeFeedContext({relays: [url]})
 
   const makeEvent = () => pushModal(CalendarEventCreate, {url})
-
-  const showView = (target: CalendarView) => () => calendarView.set(target)
 
   const showToday = () => {
     cursor = new Date()
@@ -85,13 +84,6 @@
     }
   }
 
-  const viewClass = (target: CalendarView) =>
-    cx(
-      "button join-item",
-      isNarrow ? "button-xs" : "button-sm",
-      view === target ? "button-primary" : "button-neutral",
-    )
-
   let element: HTMLElement | undefined = $state()
   onDestroy(context.cleanup)
 
@@ -110,6 +102,19 @@
   // Month renders poorly in a narrow column, so that gets week — without touching the preference
   const isNarrow = $derived(width > 0 && width < 768)
   const view = $derived(isNarrow && $calendarView === "month" ? "week" : $calendarView)
+
+  const viewOptions: SegmentedOption<CalendarView>[] = $derived(
+    isNarrow
+      ? [
+          {value: "agenda", label: "Agenda"},
+          {value: "week", label: "Week"},
+        ]
+      : [
+          {value: "agenda", label: "Agenda"},
+          {value: "week", label: "Week"},
+          {value: "month", label: "Month"},
+        ],
+  )
 
   const isCurrentRange = $derived(view === "month" ? isCurrentMonth(cursor) : isCurrentWeek(cursor))
 
@@ -170,25 +175,11 @@
     <strong>Calendar</strong>
   {/snippet}
   {#snippet action()}
-    <div class="join">
-      <Button
-        class={viewClass("agenda")}
-        aria-pressed={view === "agenda"}
-        onclick={showView("agenda")}>
-        Agenda
-      </Button>
-      <Button class={viewClass("week")} aria-pressed={view === "week"} onclick={showView("week")}>
-        Week
-      </Button>
-      {#if !isNarrow}
-        <Button
-          class={viewClass("month")}
-          aria-pressed={view === "month"}
-          onclick={showView("month")}>
-          Month
-        </Button>
-      {/if}
-    </div>
+    <SegmentedButtons
+      joined
+      size={isNarrow ? "xs" : "sm"}
+      options={viewOptions}
+      bind:value={() => view, calendarView.set} />
     <Button class="button button-primary button-sm" onclick={makeEvent}>
       <Icon icon={Add} />
       Create

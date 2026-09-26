@@ -16,6 +16,7 @@
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
@@ -51,10 +52,6 @@
     goto(path, {replaceState: true, noScroll: true})
   }
 
-  const setTab = (value: string) => () => {
-    tab = value
-  }
-
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
 
   const loading = $derived(isFeedLoading($older))
@@ -76,17 +73,13 @@
     listings.filter(event => matchesQuery(event, query) && matchesTopic(event, topic)),
   )
 
-  const counts = $derived.by(() => {
-    const result: Record<string, number> = {all: scoped.length, active: 0, sold: 0}
-
-    for (const event of scoped) {
-      const status = getStatus(event)
-
-      result[status] = (result[status] ?? 0) + 1
-    }
-
-    return result
-  })
+  const tabs = $derived(
+    CLASSIFIED_STATUS_TABS.map(({value, label}) => ({
+      value,
+      label,
+      count: scoped.filter(event => value === "all" || getStatus(event) === value).length,
+    })),
+  )
 
   const items = $derived.by(() => {
     const matches = scoped.filter(event => tab === "all" || getStatus(event) === tab)
@@ -157,18 +150,7 @@
     <!-- Scrolls on a phone, where wrapping this many chips would bury the listings. -->
     <div
       class="flex shrink-0 flex-nowrap items-center gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-x-visible sm:pb-0">
-      {#each CLASSIFIED_STATUS_TABS as { value, label } (value)}
-        <Button
-          aria-pressed={tab === value}
-          class={cx(
-            "button button-sm shrink-0 rounded-full",
-            tab === value ? "button-primary" : "button-neutral",
-          )}
-          onclick={setTab(value)}>
-          {label}
-          <span class="opacity-75">{counts[value] ?? 0}</span>
-        </Button>
-      {/each}
+      <SegmentedButtons options={tabs} bind:value={tab} class="shrink-0" />
       {#if topicCounts.length > 0}
         <span class="mx-1 h-6 w-px shrink-0 bg-line"></span>
         {#each topicCounts as [value, count] (value)}

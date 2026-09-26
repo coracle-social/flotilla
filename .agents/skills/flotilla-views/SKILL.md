@@ -221,7 +221,7 @@ lives there:
 - modal chrome: `Dialog`, `Drawer`, `Modal`, `ModalBody`, `ModalHeader`, `ModalTitle`,
   `ModalSubtitle`, `ModalFooter`, `Confirm`
 - controls: `Button`, `Link`, `Field`, `FieldInline`, `Input`, `InputList`, `ToggleInput`,
-  `DateTimeInput`, `ImagesInput`, `IconInput`, `EmojiPicker`, `MenuButton`
+  `DateTimeInput`, `ImagesInput`, `IconInput`, `EmojiPicker`, `MenuButton`, `SegmentedButtons`
 - display and lists: `Icon`, `Badge`, `Card`, `Divider`, `Spinner`, `Tooltip`, `Tippy`,
   `Popover`, `Cv`, `VirtualList`, `Masonry`, `DragList`, `ScrollToTop`
 - the CSS component families (`button.css`, `card.css`, …) and the theme tokens

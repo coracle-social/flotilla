@@ -4,7 +4,6 @@
 
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import cx from "classnames"
   import {derived, readable} from "svelte/store"
   import {sleep} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
@@ -12,7 +11,8 @@
   import {TimeEvent} from "@welshman/domain"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import Button from "@lib/components/Button.svelte"
+  import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
+  import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import Content from "@app/components/Content.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
@@ -40,15 +40,17 @@
   const comments = $derived($events.asc(filters).$)
   const rsvps = $derived($event ? deriveRsvps($event) : readable<TrustedEvent[]>([]))
   const people = $derived(getRsvpsByStatus($rsvps))
+  const tabs: SegmentedOption<EventTab>[] = $derived([
+    {value: "about", label: "About"},
+    {value: "discussion", label: "Discussion", count: $comments.length || undefined},
+    {value: "people", label: "People", count: people.latest.length || undefined},
+  ])
 
   const back = () => history.back()
 
-  const showTab = (target: EventTab) => () => {
-    tab = target
+  const showPeople = () => {
+    tab = "people"
   }
-
-  const tabClass = (target: EventTab) =>
-    cx("button button-sm join-item grow", tab === target ? "button-primary" : "button-neutral")
 
   onDestroy(context.cleanup)
 
@@ -92,7 +94,7 @@
       <div class="flex min-w-0 grow flex-col gap-2">
         <CalendarEventHeader event={$event} />
         <CalendarEventMeta event={$event} {url} />
-        <CalendarRsvp {url} event={$event} rsvps={$rsvps} onShowPeople={showTab("people")} />
+        <CalendarRsvp {url} event={$event} rsvps={$rsvps} onShowPeople={showPeople} />
         <ContentActions
           showRoom
           noun="Event"
@@ -104,29 +106,11 @@
     </div>
     <!-- One event carries three unrelated conversations, so give each its own tab instead of
          stacking them all down the page -->
-    <div class="join w-full sm:w-auto sm:self-start">
-      <Button class={tabClass("about")} aria-pressed={tab === "about"} onclick={showTab("about")}>
-        About
-      </Button>
-      <Button
-        class={tabClass("discussion")}
-        aria-pressed={tab === "discussion"}
-        onclick={showTab("discussion")}>
-        Discussion
-        {#if $comments.length > 0}
-          <span class="opacity-75">{$comments.length}</span>
-        {/if}
-      </Button>
-      <Button
-        class={tabClass("people")}
-        aria-pressed={tab === "people"}
-        onclick={showTab("people")}>
-        People
-        {#if people.latest.length > 0}
-          <span class="opacity-75">{people.latest.length}</span>
-        {/if}
-      </Button>
-    </div>
+    <SegmentedButtons
+      joined
+      options={tabs}
+      bind:value={tab}
+      class="w-full sm:w-auto sm:self-start" />
     {#if tab === "about"}
       <div class="card z-feature flex flex-col gap-3">
         {#if $event.content.trim()}
