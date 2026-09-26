@@ -10,7 +10,7 @@
   import {pushModal} from "@app/modal"
   import {profiles} from "@app/core"
 
-  interface Props {
+  type Props = {
     url: string
     pubkey: string
     roles?: RelayRoleReader[]

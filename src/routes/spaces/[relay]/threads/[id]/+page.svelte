@@ -164,7 +164,7 @@
 <div class="relative flex min-h-0 flex-1 flex-col">
   <PageContent bind:element noPad class="flex flex-col">
     {#if $event}
-      <div bind:this={panel} class="bg-surface border-y" style="border-color: var(--line)">
+      <div bind:this={panel} class="bg-surface border-y border-line">
         <div bind:this={root}>
           <ThreadPost
             {url}

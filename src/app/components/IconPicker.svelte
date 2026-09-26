@@ -11,6 +11,8 @@
 
   const {onSelect}: Props = $props()
 
+  const select = (iconUrl: string) => () => onSelect(iconUrl)
+
   let icons: IconOption[] = $state([])
   let searchTerm = $state("")
 
@@ -45,7 +47,7 @@
           type="button"
           title={icon.name}
           class="flex aspect-square items-center justify-center rounded-2xl transition-colors hover:bg-primary hover:text-primary-content"
-          onclick={() => onSelect(icon.url)}>
+          onclick={select(icon.url)}>
           <Icon icon={icon.url} class="h-6 w-6" />
         </button>
       {/each}

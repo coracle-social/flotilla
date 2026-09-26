@@ -17,7 +17,7 @@
 </script>
 
 <Page>
-  <PageContent class="flex flex-col items-center gap-2 p-2 sm:gap-4 sm:p-4">
+  <PageContent class="@container flex flex-col items-center gap-2 p-2 sm:gap-4 sm:p-4">
     <PageHeader>
       {#snippet title()}
         <div>Choose your Hosting Plan</div>
@@ -28,8 +28,8 @@
         </p>
       {/snippet}
     </PageHeader>
-    <div class="flex w-full max-w-lg flex-col gap-4 lg:max-w-4xl">
-      <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
+    <div class="flex w-full max-w-lg flex-col gap-4 @2xl:max-w-4xl">
+      <div class="grid grid-cols-1 gap-2 @2xl:grid-cols-2">
         <div class="card flex flex-col gap-5 border" style="border-color: var(--primary)">
           <div class="flex flex-col gap-3">
             <div class="flex items-start justify-between">

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type {Snippet} from "svelte"
   import type {Maybe} from "@welshman/lib"
   import {isMobile} from "@lib/html"
   import Button from "@lib/components/Button.svelte"
@@ -8,7 +9,13 @@
   import IconPickerPopover from "@app/components/IconPickerPopover.svelte"
   import {pushModal, popModal} from "@app/modal"
 
-  const {...props} = $props()
+  type Props = {
+    onSelect: (iconUrl: string) => void
+    class?: string
+    children?: Snippet
+  }
+
+  const {onSelect, children, ...props}: Props = $props()
 
   const open = () => {
     if (isMobile) {
@@ -27,7 +34,7 @@
   }
 
   const onClick = (iconUrl: string) => {
-    props.onSelect(iconUrl)
+    onSelect(iconUrl)
     close()
   }
 
@@ -41,6 +48,6 @@
   props={{onSelect: onClick}}
   params={{trigger: "manual", interactive: true, placement: "top-end"}}>
   <Button onclick={open} class={props.class}>
-    {@render props.children?.()}
+    {@render children?.()}
   </Button>
 </Tippy>

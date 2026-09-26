@@ -149,7 +149,7 @@
       <ModalTitle>Log In with a Signer</ModalTitle>
       <ModalSubtitle>Using a remote signer app helps you keep your keys safe.</ModalSubtitle>
     </ModalHeader>
-    <div class:hidden={mode !== "bunker"}></div>
+    <div class={cx({hidden: mode !== "bunker"})}></div>
     {#if mode === "connect"}
       <BunkerConnect {controller} />
     {:else}

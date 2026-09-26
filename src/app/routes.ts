@@ -28,6 +28,7 @@ import {entityLink, PLATFORM_URL, PLATFORM_RELAYS} from "@app/env"
 import {decodeRelay, encodeRelay} from "@app/relays"
 import {DM_KINDS} from "@app/content"
 import {navigate, pushModal} from "@app/modal"
+import type {NavigateOptions} from "@app/modal"
 import type {NotePointer} from "@app/social"
 import ChatEnable from "@app/components/ChatEnable.svelte"
 import NoteDetail from "@app/components/NoteDetail.svelte"
@@ -288,7 +289,7 @@ export const goToNote = (pointer: NotePointer) => {
   return goToHome()
 }
 
-export const goToEvent = (event: TrustedEvent, options: Record<string, any> = {}) => {
+export const goToEvent = (event: TrustedEvent, options: NavigateOptions = {}) => {
   const urls = Array.from(app.get().tracker.getRelays(event.id))
 
   if (event.kind === NOTE) {

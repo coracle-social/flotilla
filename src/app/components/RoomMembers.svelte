@@ -17,7 +17,7 @@
   import {deriveRoomMembers, deriveUserIsRoomAdmin} from "@app/rooms"
   import {pushModal} from "@app/modal"
 
-  interface Props {
+  type Props = {
     url: string
     h: string
   }

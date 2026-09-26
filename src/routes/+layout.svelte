@@ -42,8 +42,9 @@
   import {syncKeyboard} from "@app/keyboard"
   import {getPageTitle} from "@app/title"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
+  import type {LayoutProps} from "./$types"
 
-  const {children} = $props()
+  const {children}: LayoutProps = $props()
 
   applySavedTheme()
 

@@ -8,6 +8,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import RelayDetailCard from "@app/components/hosting/RelayDetailCard.svelte"
   import ActivityFeed from "@app/components/hosting/ActivityFeed.svelte"
+  import {PLATFORM_NAME} from "@app/env"
   import {deriveHostedRelay, deriveRelayActivity} from "@app/hosting"
   import {decodeRelay} from "@app/relays"
   import type {PageProps} from "./$types"
@@ -40,9 +41,9 @@
     <div class="card flex flex-col items-center gap-4 p-8 text-center">
       <Icon icon={Server} size={10} class="text-content-muted" />
       <div class="flex flex-col gap-1">
-        <h2 class="text-lg font-bold">Not a Coracle-hosted space</h2>
+        <h2 class="text-lg font-bold">Not a {PLATFORM_NAME}-hosted space</h2>
         <p class="text-sm text-content-muted">
-          This space isn't hosted by Coracle Hosting, or you don't administer it. Only the owner of
+          This space isn't hosted by {PLATFORM_NAME}, or you don't administer it. Only the owner of
           a hosted relay can manage its plan, policies, and billing here.
         </p>
       </div>

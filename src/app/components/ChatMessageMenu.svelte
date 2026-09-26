@@ -1,6 +1,9 @@
 <script lang="ts">
+  import type {Maybe} from "@welshman/lib"
+  import type {TrustedEvent} from "@welshman/util"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import type {TippyController} from "@lib/components/Tippy.svelte"
   import ChatMessageEmojiButton from "@app/components/ChatMessageEmojiButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import {pushModal} from "@app/modal"
@@ -8,13 +11,20 @@
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
 
-  const {event, pubkeys, tippy, replyTo, edit} = $props()
+  type Props = {
+    event: TrustedEvent
+    pubkeys: string[]
+    tippy: Maybe<TippyController>
+    replyTo?: (event: TrustedEvent) => void
+    edit?: () => void
+  }
 
-  const reply = () => replyTo(event)
-  const onEdit = () => edit?.()
+  const {event, pubkeys, tippy, replyTo, edit}: Props = $props()
+
+  const reply = () => replyTo?.(event)
 
   const showInfo = () => {
-    tippy.hide()
+    tippy?.hide()
     pushModal(EventInfo, {event})
   }
 </script>
@@ -27,7 +37,7 @@
     </Button>
   {/if}
   {#if edit}
-    <Button aria-label="Edit" class="button button-neutral button-xs join-item" onclick={onEdit}>
+    <Button aria-label="Edit" class="button button-neutral button-xs join-item" onclick={edit}>
       <Icon size={4} icon={Pen} />
     </Button>
   {/if}

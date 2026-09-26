@@ -15,29 +15,17 @@
 
   const {bech32} = params
 
-  const attemptToNavigate = async () => {
-    const profilePubkey = decodePubkey(bech32)
-
-    if (profilePubkey) {
-      return goto(makeProfilePath(profilePubkey), {replaceState: true})
-    }
-
-    const {type, data} = nip19.decode(bech32) as any
-
-    if (!["nevent", "naddr"].includes(type) && data.relays.length > 0) {
-      return goto("/", {replaceState: true})
-    }
-
+  const findEvent = (idOrAddress: string, relays: string[] = []) => {
     let found = false
 
     $network.loadComplete({
-      relays: [LOCAL_RELAY_URL, ...data.relays],
-      filters: getIdFilters([type === "nevent" ? data.id : Address.fromNaddr(bech32).toString()]),
+      relays: [LOCAL_RELAY_URL, ...relays],
+      filters: getIdFilters([idOrAddress]),
       onEvent: (event: TrustedEvent) => {
         found = true
 
         if (event.kind === NOTE) {
-          goToNote({id: event.id, pubkey: event.pubkey, relays: data.relays})
+          goToNote({id: event.id, pubkey: event.pubkey, relays})
         } else {
           goToEvent(event, {replaceState: true})
         }
@@ -48,6 +36,24 @@
         }
       },
     })
+  }
+
+  const attemptToNavigate = async () => {
+    const profilePubkey = decodePubkey(bech32)
+
+    if (profilePubkey) {
+      await goto(makeProfilePath(profilePubkey), {replaceState: true})
+    } else {
+      const decoded = nip19.decode(bech32)
+
+      if (decoded.type === "nevent") {
+        findEvent(decoded.data.id, decoded.data.relays)
+      } else if (decoded.type === "naddr") {
+        findEvent(Address.fromNaddr(bech32).toString(), decoded.data.relays)
+      } else {
+        await goto("/", {replaceState: true})
+      }
+    }
   }
 
   onMount(async () => {

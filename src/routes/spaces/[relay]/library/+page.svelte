@@ -63,7 +63,7 @@
 
   const addLink = () => pushModal(PinSave, {url, address})
 
-  const selectBoard = (board: PinboardReader) =>
+  const selectBoard = (board: PinboardReader) => () =>
     goto(makeLibraryPath(url, board.address()), {replaceState: true, noScroll: true})
 
   onMount(() => {
@@ -111,7 +111,7 @@
             {url}
             {board}
             selected={board.address() === address}
-            onclick={() => selectBoard(board)} />
+            onclick={selectBoard(board)} />
         {/each}
       </div>
     {:else}

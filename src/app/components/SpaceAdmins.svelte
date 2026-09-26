@@ -33,7 +33,7 @@
 
   const back = () => history.back()
 
-  const editMethods = (pubkey: string) => pushModal(SpaceMemberMethods, {url, pubkey})
+  const editMethods = (pubkey: string) => () => pushModal(SpaceMemberMethods, {url, pubkey})
 
   let loading = $state(true)
 
@@ -80,7 +80,7 @@
                 <Button
                   class="button button-ghost button-sm button-square"
                   aria-label="Edit permissions"
-                  onclick={() => editMethods(pubkey)}>
+                  onclick={editMethods(pubkey)}>
                   <Icon size={4} icon={Pen} />
                 </Button>
               {/if}

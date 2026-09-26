@@ -18,7 +18,7 @@
   import {WotScope} from "@welshman/app"
   import {followLists, user, wot} from "@app/core"
 
-  interface Props {
+  type Props = {
     pubkey: string
   }
 

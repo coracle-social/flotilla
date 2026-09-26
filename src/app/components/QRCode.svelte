@@ -2,7 +2,12 @@
   import Button from "@lib/components/Button.svelte"
   import {clip} from "@app/toast"
 
-  const {code, ...props} = $props()
+  type Props = {
+    code: string
+    class?: string
+  }
+
+  const {code, ...props}: Props = $props()
 
   let canvas: HTMLCanvasElement | undefined = $state()
   let wrapper: Element | undefined = $state()

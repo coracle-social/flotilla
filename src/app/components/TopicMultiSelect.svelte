@@ -46,7 +46,7 @@
     tippy?.hide()
   }
 
-  const removeTopic = (topic: string) => {
+  const removeTopic = (topic: string) => () => {
     value = remove(topic, value)
   }
 
@@ -83,7 +83,7 @@
   <div>
     {#each value as topic (topic)}
       <div class="flex-inline badge badge-neutral mr-1 gap-1">
-        <Button class="flex items-center" onclick={() => removeTopic(topic)}>
+        <Button class="flex items-center" onclick={removeTopic(topic)}>
           <Icon icon={CloseCircle} size={4} class="mt-px" />
         </Button>
         <span>#{topic}</span>

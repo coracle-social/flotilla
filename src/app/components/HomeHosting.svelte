@@ -12,7 +12,11 @@
   import {hosting} from "@app/hosting"
   import {PLATFORM_NAME} from "@app/env"
 
-  const {class: className = ""}: {class?: string} = $props()
+  type Props = {
+    class?: string
+  }
+
+  const {class: className = ""}: Props = $props()
 
   const tenantRelays = $hosting.relays
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type {TrustedEvent} from "@welshman/util"
   import {Report} from "@welshman/domain"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -16,7 +17,12 @@
   import {command, writer} from "@app/core"
   import {pushToast} from "@app/toast"
 
-  const {url, event} = $props()
+  type Props = {
+    url: string
+    event: TrustedEvent
+  }
+
+  const {url, event}: Props = $props()
 
   const back = () => history.back()
 

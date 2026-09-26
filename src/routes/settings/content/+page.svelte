@@ -36,6 +36,8 @@
     blossomServers = $userBlossomServerList?.urls() ?? []
   }
 
+  const setTheme = (value: string) => () => theme.set(value)
+
   const addServer = () => {
     blossomServers = [...blossomServers, ""]
   }
@@ -98,7 +100,7 @@
   <Button
     type="button"
     class={cx("join-item button button-xs", $theme === value ? "button-primary" : "button-neutral")}
-    onclick={() => theme.set(value)}>
+    onclick={setTheme(value)}>
     <Icon {icon} size={4} />
     {label}
   </Button>

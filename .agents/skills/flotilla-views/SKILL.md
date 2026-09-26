@@ -287,7 +287,7 @@ param change and lists key by id. A prop that does change while mounted needs `$
 - `$bindable` is for input-like components: `value` on `TopicMultiSelect` and
   `ProfileMultiSelect`, `element` on `PageContent`, `notifications` on `SpaceJoinNotifications`.
 - Display flags are fine (`showRoom`, `showActivity`, `hideZap`, `class`); derived data is not.
-- 24 app components and 20 lib components declare `interface Props`, against 232 using `type`.
+- Props are declared as `type Props`, never an `interface` or an inline object type.
 
 ## Reading state in a component
 
@@ -470,8 +470,10 @@ Rich text uses `makeEditor` from `src/app/editor` with `EditorContent`.
 - Colors are the semantic tokens registered in `base.css`: `bg-surface`, `bg-surface-more`,
   `text-content`, `text-content-muted`, `border-line`, `text-primary`, `text-error`. The clay,
   flat, navy and nature themes supply the values through `data-fl-theme`.
-- A few `class:` directives remain in `src/app` as leftovers; everything else builds classes with `cx`.
+- Classes are built with `cx`; no `class:` directives remain.
 - Container queries go on the `PageContent`, as in `@2xl:grid-cols-2` for the classifieds grid.
+  Beside the navs a page is about 326px narrower than the screen, so a screen `lg:` layout switch
+  becomes `@2xl:` inside a page, as on the home, about, goals, article and settings pages.
 - Icons are `import X from "@assets/icons/<name>.svg?dataurl"` with `<Icon icon={X} size={4} />`,
   where `size` counts 4px steps. List entries animate with `in:fly` from `@lib/transition`.
 

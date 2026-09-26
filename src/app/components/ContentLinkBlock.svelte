@@ -17,6 +17,7 @@
 <script lang="ts">
   import {call, ellipsize, displayUrl} from "@welshman/lib"
   import {isRelayUrl} from "@welshman/util"
+  import type {TrustedEvent} from "@welshman/util"
   import {Capacitor} from "@capacitor/core"
   import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
@@ -35,11 +36,15 @@
   } from "@app/content"
   import {isRoomId} from "@app/rooms"
 
-  const {value, event} = $props()
+  type Props = {
+    url: string
+    event: TrustedEvent
+  }
+
+  const {url, event}: Props = $props()
 
   let hideImage = $state(false)
 
-  const url = value.url.toString()
   const isRoomOrRelay = isRoomId(url) || isRelayUrl(url)
   const [href, external] = call(() => {
     if (url.startsWith(PLATFORM_URL)) {
@@ -73,7 +78,7 @@
   }
 
   const expand = () =>
-    pushModal(ContentLinkDetail, {value, event}, {fullscreen: true, label: "Content preview"})
+    pushModal(ContentLinkDetail, {url, event}, {fullscreen: true, label: "Content preview"})
 </script>
 
 {#if isRoomOrRelay}
@@ -94,15 +99,14 @@
 {:else if isImage}
   <Link {external} {href} class="my-2 block">
     <button type="button" onclick={stopPropagation(preventDefault(expand))}>
-      <ContentLinkBlockImage {value} {event} class="m-auto max-h-96 rounded-2xl" />
+      <ContentLinkBlockImage {url} {event} class="m-auto max-h-96 rounded-2xl" />
     </button>
   </Link>
 {:else}
   {#await loadPreview(url)}
     <Link {external} {href} class="my-2 block">
       <div
-        class="border border-solid flex max-w-xl flex-col overflow-hidden leading-normal rounded-2xl"
-        style="border-color: var(--line)">
+        class="border border-solid flex max-w-xl flex-col overflow-hidden leading-normal rounded-2xl border-line">
         <div class="flex flex-col gap-2 p-4">
           <Spinner>
             <span class="overflow-hidden text-ellipsis whitespace-nowrap">{displayUrl(url)}</span>
@@ -113,8 +117,7 @@
   {:then preview}
     <Link {external} {href} class="my-2 block">
       <div
-        class="border border-solid flex max-w-xl flex-col overflow-hidden leading-normal rounded-2xl"
-        style="border-color: var(--line)">
+        class="border border-solid flex max-w-xl flex-col overflow-hidden leading-normal rounded-2xl border-line">
         {#if preview.image && !hideImage}
           <img
             alt=""

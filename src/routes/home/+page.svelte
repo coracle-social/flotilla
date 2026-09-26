@@ -27,7 +27,7 @@
 </script>
 
 <Page>
-  <PageContent bind:element class="p-0 md:p-4">
+  <PageContent bind:element class="@container p-0 md:p-4">
     <div class="mx-auto flex w-full max-w-[1200px] min-w-0 flex-col gap-3">
       <div class="flex items-center justify-between gap-4 px-4 py-3 md:px-2 md:pt-0">
         <h1 class="flex items-center gap-2 text-xl font-bold">
@@ -39,18 +39,18 @@
           Browse spaces
         </Link>
       </div>
-      <div class="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-start">
-        <!-- Both columns are `contents` below lg, which puts every section in one flow and lets
+      <div class="flex min-w-0 flex-col gap-3 @2xl:flex-row @2xl:items-start">
+        <!-- Both columns are `contents` on a narrow page, which puts every section in one flow and lets
              the rail sit between the day's activity and the feed that would otherwise bury it. -->
-        <div class="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-3">
+        <div class="contents @2xl:flex @2xl:min-w-0 @2xl:flex-1 @2xl:flex-col @2xl:gap-3">
           <HomeInbox />
           <HomeActivity />
-          <HomeNetwork class="order-last lg:order-none" />
+          <HomeNetwork class="order-last @2xl:order-none" />
         </div>
-        <div class="contents lg:flex lg:w-80 lg:shrink-0 lg:flex-col lg:gap-3">
+        <div class="contents @2xl:flex @2xl:w-80 @2xl:shrink-0 @2xl:flex-col @2xl:gap-3">
           <HomeHealthChecks />
           {#if HOSTING_ENABLED}
-            <HomeHosting class="max-lg:hidden" />
+            <HomeHosting class="@max-2xl:hidden" />
           {/if}
         </div>
       </div>

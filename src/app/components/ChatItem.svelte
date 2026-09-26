@@ -13,11 +13,11 @@
   import {notifications} from "@app/notifications"
   import {messagingRelayLists, user} from "@app/core"
 
-  interface Props {
+  type Props = {
     id: string
     pubkeys: string[]
     messages: TrustedEvent[]
-    [key: string]: any
+    class?: string
   }
 
   const {...props}: Props = $props()
@@ -37,11 +37,10 @@
 <Button class="flex flex-col justify-start gap-1 w-full" onclick={openChat}>
   <div
     class={cx(
-      "cursor-pointer border-t border-solid px-3 py-2 transition-colors hover:bg-surface",
+      "cursor-pointer border-t border-solid border-line px-3 py-2 transition-colors hover:bg-surface",
       props.class,
       {"bg-surface": active},
-    )}
-    style="border-color: var(--line)">
+    )}>
     <div class="flex flex-col justify-start gap-1">
       <div class="flex items-center justify-between gap-2">
         <div class="flex min-w-0 items-center gap-2">

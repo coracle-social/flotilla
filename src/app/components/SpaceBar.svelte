@@ -11,12 +11,12 @@
   import {pageLoading} from "@app/loading"
   import {decodeRelay} from "@app/relays"
 
-  interface Props {
+  type Props = {
     back?: () => unknown
     leading?: Snippet
     title?: Snippet
     action?: Snippet
-    [key: string]: any
+    class?: string
   }
 
   const {back, leading, title, action, ...props}: Props = $props()

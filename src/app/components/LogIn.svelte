@@ -3,6 +3,7 @@
   import {onMount} from "svelte"
   import {Capacitor} from "@capacitor/core"
   import {getNip07, getNip55, Nip55Signer} from "@welshman/signer"
+  import type {Nip55AppInfo} from "@welshman/signer"
   import {nip07, nip55, toSession} from "@welshman/app"
   import type {Session} from "@welshman/app"
   import Widget from "@assets/icons/widget-4.svg?dataurl"
@@ -28,7 +29,7 @@
   import {setChecked} from "@app/notifications"
   import {login} from "@app/core"
 
-  let signers: any[] = $state([])
+  let signers: Nip55AppInfo[] = $state([])
   let loading: string | undefined = $state()
 
   const hasPomade = POMADE_SIGNERS.length >= 3
@@ -36,6 +37,8 @@
   const disabled = $derived(loading ? true : undefined)
 
   const signUp = () => pushModal(SignUp)
+
+  const showInfoNostr = () => pushModal(InfoNostr)
 
   const onSuccess = async (session: Session) => {
     await login(session)
@@ -65,7 +68,7 @@
     }
   }
 
-  const loginWithNip55 = async (signerApp: any) => {
+  const loginWithNip55 = (signerApp: Nip55AppInfo) => async () => {
     loading = "nip55"
 
     try {
@@ -108,8 +111,8 @@
     <ModalTitle>Log in with Nostr</ModalTitle>
     <p class="m-auto max-w-sm text-center">
       {PLATFORM_NAME} is built using the
-      <Button class="link" onclick={() => pushModal(InfoNostr)}>nostr protocol</Button>, which
-      allows you to own your social identity.
+      <Button class="link" onclick={showInfoNostr}>nostr protocol</Button>, which allows you to own
+      your social identity.
     </p>
     {#if getNip07()}
       <Button {disabled} onclick={loginWithNip07} class="button button-primary">
@@ -122,7 +125,7 @@
       </Button>
     {/if}
     {#each signers as signerApp (signerApp.name)}
-      <Button {disabled} class="button button-primary" onclick={() => loginWithNip55(signerApp)}>
+      <Button {disabled} class="button button-primary" onclick={loginWithNip55(signerApp)}>
         {#if loading === "nip55"}
           <Spinner size="sm" class="mr-3" />
         {:else}

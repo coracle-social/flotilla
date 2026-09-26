@@ -2,6 +2,7 @@
   import {onDestroy, onMount} from "svelte"
   import type {Readable} from "svelte/store"
   import {readable} from "svelte/store"
+  import {dateToSeconds} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {EVENT_TIME} from "@welshman/util"
@@ -134,7 +135,7 @@
       rangeLoading = true
 
       feed
-        .load(days[0].getTime() / 1000, addDays(days[days.length - 1], 1).getTime() / 1000)
+        .load(dateToSeconds(days[0]), dateToSeconds(addDays(days[days.length - 1], 1)))
         .finally(() => {
           // Paging faster than the relay answers would otherwise clear a newer range's spinner
           if (range === latestRange) {

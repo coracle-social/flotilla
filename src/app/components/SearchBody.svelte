@@ -99,7 +99,7 @@
     return "older"
   }
 
-  const onResultClick = (event: TrustedEvent) => {
+  const onResultClick = (event: TrustedEvent) => () => {
     popModal()
     goToEvent(event, {keepFocus: true})
   }
@@ -158,7 +158,7 @@
         {#each events as event (event.id)}
           <Button
             class="card card-sm card-interactive flex flex-col gap-2"
-            onclick={() => onResultClick(event)}>
+            onclick={onResultClick(event)}>
             <NoteCard minimal {event} {url}>
               <NoteContentMinimal {event} />
             </NoteCard>

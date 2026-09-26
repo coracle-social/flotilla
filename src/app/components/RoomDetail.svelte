@@ -1,4 +1,5 @@
 <script lang="ts">
+  import cx from "classnames"
   import {displayRelayUrl} from "@welshman/util"
   import {publish} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -174,7 +175,7 @@
         </div>
         <input type="checkbox" class="toggle" checked={$isMuted} onchange={toggleMuted} />
       </div>
-      <div class="flex items-center justify-between" class:opacity-50={$isMuted}>
+      <div class={cx("flex items-center justify-between", {"opacity-50": $isMuted})}>
         <div class="flex items-center gap-2">
           <Icon icon={Bell} />
           <span>Notifications</span>

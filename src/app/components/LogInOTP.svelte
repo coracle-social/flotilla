@@ -19,7 +19,7 @@
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
-  interface Props {
+  type Props = {
     email?: string
   }
 

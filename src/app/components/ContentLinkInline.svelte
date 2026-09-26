@@ -1,5 +1,6 @@
 <script lang="ts">
   import {displayUrl} from "@welshman/lib"
+  import type {TrustedEvent} from "@welshman/util"
   import {preventDefault, stopPropagation} from "@lib/html"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -8,13 +9,17 @@
   import {pushModal} from "@app/modal"
   import {getUrlContentType, IMAGE_CONTENT_TYPES} from "@app/content"
 
-  const {value, event} = $props()
+  type Props = {
+    url: string
+    event: TrustedEvent
+  }
 
-  const url = value.url.toString()
+  const {url, event}: Props = $props()
+
   const fileType = getUrlContentType(url, event)
 
   const expand = () =>
-    pushModal(ContentLinkDetail, {value, event}, {fullscreen: true, label: "Content preview"})
+    pushModal(ContentLinkDetail, {url, event}, {fullscreen: true, label: "Content preview"})
 </script>
 
 {#if url.match(/\.(jpe?g|png|gif|webp)$/) || IMAGE_CONTENT_TYPES.includes(fileType)}

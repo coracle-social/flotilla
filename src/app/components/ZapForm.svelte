@@ -25,7 +25,7 @@
     content = emoji
   }
 
-  const selectAmount = (preset: number) => {
+  const selectAmount = (preset: number) => () => {
     amount = preset
   }
 </script>
@@ -55,7 +55,7 @@
           "button-primary": preset === amount,
           "button-neutral": preset !== amount,
         })}
-        onclick={() => selectAmount(preset)}>
+        onclick={selectAmount(preset)}>
         {preset}
       </Button>
     {/each}

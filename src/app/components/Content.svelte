@@ -201,9 +201,9 @@
           <ContentToken value={parsed.value} />
         {:else if isLink(parsed)}
           {#if isBlock(i)}
-            <ContentLinkBlock value={parsed.value} {event} />
+            <ContentLinkBlock url={parsed.value.url.toString()} {event} />
           {:else}
-            <ContentLinkInline value={parsed.value} {event} />
+            <ContentLinkInline url={parsed.value.url.toString()} {event} />
           {/if}
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />

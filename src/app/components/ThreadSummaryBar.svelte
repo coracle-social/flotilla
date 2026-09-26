@@ -20,8 +20,7 @@
 <Button
   onclick={onClick}
   aria-label="Back to the top of the thread"
-  class="bg-surface flex w-full items-center gap-3 border-b px-4 py-2 shadow-md"
-  style="border-color: var(--line)">
+  class="bg-surface flex w-full items-center gap-3 border-b px-4 py-2 shadow-md border-line">
   <ProfileCircle pubkey={event.pubkey} {url} size={8} class="shrink-0" />
   <div class="flex min-w-0 flex-col">
     <span class="truncate text-sm font-bold">{title || "Untitled thread"}</span>

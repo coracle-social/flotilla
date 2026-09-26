@@ -34,7 +34,7 @@
   import {entityLink} from "@app/env"
   import {userSettingsValues} from "@app/settings"
 
-  interface Props {
+  type Props = {
     event: any
     trimParent?: boolean
     singleLine?: boolean
@@ -139,7 +139,7 @@
         {:else if isCashu(parsed) || isInvoice(parsed)}
           <ContentToken value={parsed.value} />
         {:else if isLink(parsed)}
-          <ContentLinkInline value={parsed.value} {event} />
+          <ContentLinkInline url={parsed.value.url.toString()} {event} />
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />
         {:else if isQuote(parsed)}

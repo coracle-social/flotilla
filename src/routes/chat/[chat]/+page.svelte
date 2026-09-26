@@ -11,18 +11,15 @@
 
 <script lang="ts">
   import {onMount} from "svelte"
-  import {append, uniq} from "@welshman/lib"
   import Chat from "@app/components/Chat.svelte"
   import {splitChatId} from "@app/chats"
   import {pushToast} from "@app/toast"
   import {Push, notificationSettings} from "@app/push"
-  import {user} from "@app/core"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {chat} = params
-  const pubkeys = uniq(append($user.pubkey, splitChatId(chat)))
+  const pubkeys = splitChatId(params.chat)
 
   onMount(async () => {
     if (!$dmNotificationsPrompted) {

@@ -3,7 +3,7 @@
   import ThunkFailure from "@app/components/ThunkFailure.svelte"
   import ThunkPending from "@app/components/ThunkPending.svelte"
 
-  interface Props {
+  type Props = {
     thunk: BaseThunk
     showToastOnRetry?: boolean
     inline?: boolean

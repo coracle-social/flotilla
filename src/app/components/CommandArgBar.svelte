@@ -42,7 +42,9 @@
 
   const displayArg = (arg: CommandArg) => (arg.required ? `<${arg.name}>` : `[${arg.name}]`)
 
-  const qualify = (pubkey: string) => insert(`@${new Pubkey(pubkey).toNpub()}`)
+  const qualify = (pubkey: string) => () => insert(`@${new Pubkey(pubkey).toNpub()}`)
+
+  const insertChoice = (choice: string) => () => insert(choice)
 </script>
 
 {#if draft}
@@ -71,7 +73,7 @@
       <div class="flex flex-wrap items-center gap-2">
         <span class="opacity-75">Several bots answer this — pick one:</span>
         {#each draft.matches as match (match.address())}
-          <Button class="button button-xs button-neutral" onclick={() => qualify(match.author())}>
+          <Button class="button button-xs button-neutral" onclick={qualify(match.author())}>
             @<ProfileName pubkey={match.author()} url={target.url} />
           </Button>
         {/each}
@@ -79,7 +81,7 @@
     {:else if choices.length > 0}
       <div class="flex flex-wrap items-center gap-2">
         {#each choices as choice (choice)}
-          <Button class="button button-xs button-neutral" onclick={() => insert(choice)}>
+          <Button class="button button-xs button-neutral" onclick={insertChoice(choice)}>
             {choice}
           </Button>
         {/each}

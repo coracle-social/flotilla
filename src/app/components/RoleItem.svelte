@@ -2,7 +2,7 @@
   import type {RelayRoleReader} from "@welshman/domain"
   import RoleBadge from "@app/components/RoleBadge.svelte"
 
-  interface Props {
+  type Props = {
     role: RelayRoleReader
   }
 

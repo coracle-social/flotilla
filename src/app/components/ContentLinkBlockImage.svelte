@@ -2,14 +2,20 @@
   import {onMount, onDestroy} from "svelte"
   import {displayUrl, once} from "@welshman/lib"
   import {getBlob, makeBlossomAuthEvent, tagSpec, tagValue} from "@welshman/util"
+  import type {TrustedEvent} from "@welshman/util"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import {user} from "@app/core"
   import {decryptUrl, getUrlTags} from "@app/content"
 
-  const {value, event, ...props} = $props()
+  type Props = {
+    url: string
+    event: TrustedEvent
+    class?: string
+  }
 
-  const url = value.url.toString()
+  const {url, event, ...props}: Props = $props()
+
   const meta = getUrlTags(url, event)
 
   // Fallback to filename if hash was omitted from the message for interoperability

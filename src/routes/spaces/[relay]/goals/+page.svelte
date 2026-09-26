@@ -107,7 +107,7 @@
   {/snippet}
 </SpaceBar>
 
-<PageContent bind:element class="flex flex-col gap-3 p-2 sm:gap-4 sm:p-4">
+<PageContent bind:element class="@container flex flex-col gap-3 p-2 sm:gap-4 sm:p-4">
   {#if goals.length > 0}
     <div class="grid grid-cols-3 gap-2 card card-primary card-sm bg-surface w-full text-center">
       <div class="flex flex-col items-center gap-1">
@@ -138,7 +138,7 @@
       </select>
     </div>
   {/if}
-  <div class="columns-1 gap-2 sm:gap-4 lg:columns-2 2xl:columns-3">
+  <div class="columns-1 gap-2 sm:gap-4 @2xl:columns-2 @6xl:columns-3">
     {#each items as event (event.id)}
       <div in:fly class="mb-2 min-w-0 break-inside-avoid sm:mb-4">
         <GoalItem {url} {context} event={$state.snapshot(event)} />

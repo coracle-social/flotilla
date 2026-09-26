@@ -94,17 +94,14 @@
     $settings.zap_amounts = [...$settings.zap_amounts, $settings.zap_amounts.at(-1) || 21]
   }
 
-  const removeZapAmount = (index: number) => {
+  const removeZapAmount = (index: number) => () => {
     if ($settings.zap_amounts.length > 1) {
       $settings.zap_amounts = removeAt(index, $settings.zap_amounts)
     }
   }
 
-  const onZapAmountInput = (e: Event) => {
-    const target = e.currentTarget as HTMLInputElement
-    const index = Number(target.dataset.index)
-
-    $settings.zap_amounts = replaceAt(index, Number(target.value), $settings.zap_amounts)
+  const onZapAmountInput = (index: number) => (e: Event & {currentTarget: HTMLInputElement}) => {
+    $settings.zap_amounts = replaceAt(index, Number(e.currentTarget.value), $settings.zap_amounts)
   }
 
   const onZapAmountsSubmit = preventDefault(async () => {
@@ -140,7 +137,7 @@
   let zapAmountsLoading = $state(false)
 </script>
 
-<PageContent>
+<PageContent class="@container">
   <div class="card flex flex-col gap-6">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3 text-lg">
@@ -171,7 +168,7 @@
       {#if $wallet}
         {#if $wallet.type === "webln"}
           {@const {node, version} = $wallet.info}
-          <div class="flex flex-col justify-between gap-2 lg:flex-row">
+          <div class="flex flex-col justify-between gap-2 @2xl:flex-row">
             <p>
               {connectionVerb} <strong>{node?.alias || version || "unknown wallet"}</strong>
               via <strong>{$wallet.type}</strong>
@@ -199,7 +196,7 @@
           </div>
         {:else if $wallet.type === "nwc"}
           {@const {lud16, relayUrl} = $wallet.info}
-          <div class="flex flex-col justify-between gap-2 lg:flex-row">
+          <div class="flex flex-col justify-between gap-2 @2xl:flex-row">
             <p>
               {connectionVerb} <strong>{lud16}</strong> via
               <strong>{displayRelayUrl(relayUrl)}</strong>
@@ -224,21 +221,21 @@
             </p>
           </div>
         {/if}
-        <div class="flex flex-col gap-4 lg:flex-row lg:justify-between">
+        <div class="flex flex-col gap-4 @2xl:flex-row @2xl:justify-between">
           <Button class="button button-neutral button-sm" onclick={disconnect}>
             <Icon icon={CloseCircle} />
             Disconnect Wallet
           </Button>
-          <div class="flex w-full gap-4 lg:w-auto">
+          <div class="flex w-full gap-4 @2xl:w-auto">
             <Button
-              class="button button-primary button-sm flex-1 justify-center lg:flex-none"
+              class="button button-primary button-sm flex-1 justify-center @2xl:flex-none"
               onclick={pay}
               disabled={!isWalletAvailable}>
               <Icon icon={UploadMinimalistic} />
               Send
             </Button>
             <Button
-              class="button button-secondary button-sm flex-1 justify-center lg:flex-none"
+              class="button button-secondary button-sm flex-1 justify-center @2xl:flex-none"
               onclick={receive}
               disabled={!isWalletAvailable}>
               <Icon icon={DownloadMinimalistic} />
@@ -280,18 +277,13 @@
           <Button
             class="button button-ghost button-sm"
             type="button"
-            onclick={() => removeZapAmount(index)}
+            onclick={removeZapAmount(index)}
             disabled={$settings.zap_amounts.length === 1}>
             <Icon icon={TrashBin2} />
           </Button>
           <label class="input flex grow items-center gap-2">
             <Icon icon={Bolt} />
-            <input
-              type="number"
-              class="grow"
-              data-index={index}
-              value={amount}
-              oninput={onZapAmountInput} />
+            <input type="number" class="grow" value={amount} oninput={onZapAmountInput(index)} />
           </label>
         </div>
       {/each}

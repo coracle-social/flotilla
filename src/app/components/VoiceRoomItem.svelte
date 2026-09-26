@@ -24,7 +24,7 @@
   import {cancelJoinVoiceRoom} from "@app/callEngine"
   import {profiles} from "@app/core"
 
-  interface Props {
+  type Props = {
     url: string
     h: string
     notification?: boolean

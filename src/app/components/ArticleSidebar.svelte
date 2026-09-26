@@ -31,11 +31,11 @@
     ),
   )
 
-  const selectAuthor = (pubkey: string) => {
+  const selectAuthor = (pubkey: string) => () => {
     author = author === pubkey ? undefined : pubkey
   }
 
-  const selectTopic = (name: string) => {
+  const selectTopic = (name: string) => () => {
     topic = topic === name ? undefined : name
   }
 </script>
@@ -46,7 +46,7 @@
     <h2 class="text-lg">Authors</h2>
     {#each authors as [pubkey, count] (pubkey)}
       <Button
-        onclick={() => selectAuthor(pubkey)}
+        onclick={selectAuthor(pubkey)}
         class={cx("button button-xs w-full rounded-full font-normal", {
           "button-primary": pubkey === author,
         })}>
@@ -66,7 +66,7 @@
       <div class="flex flex-wrap gap-2">
         {#each topics as [name, count] (name)}
           <Button
-            onclick={() => selectTopic(name)}
+            onclick={selectTopic(name)}
             class={cx("button button-xs rounded-full font-normal", {
               "button-primary": name === topic,
             })}>

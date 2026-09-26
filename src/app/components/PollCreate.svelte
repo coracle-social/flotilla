@@ -52,11 +52,13 @@
     options = [...options, {id: randomId(), value: ""}]
   }
 
-  const removeOption = (id: string) => {
+  const removeOption = (id: string) => () => {
     options = options.filter(option => option.id !== id)
   }
 
-  const updateOption = (id: string, value: string) => {
+  const updateOption = (id: string) => (e: Event & {currentTarget: HTMLInputElement}) => {
+    const {value} = e.currentTarget
+
     options = options.map(option => (option.id === id ? {...option, value} : option))
   }
 
@@ -75,7 +77,7 @@
     options = insertAt(targetIndex, options[sourceIndex], removeAt(sourceIndex, options))
   }
 
-  const onDragStart = (e: DragEvent, id: string) => {
+  const onDragStart = (id: string) => (e: DragEvent) => {
     draggedOptionId = id
 
     if (e.dataTransfer) {
@@ -84,7 +86,7 @@
     }
   }
 
-  const onDragOver = (e: DragEvent, targetId: string) => {
+  const onDragOver = (targetId: string) => (e: DragEvent) => {
     e.preventDefault()
     reorderOptions(targetId)
   }
@@ -200,8 +202,8 @@
                 class="flex items-center gap-2"
                 draggable="true"
                 role="listitem"
-                ondragstart={e => onDragStart(e, option.id)}
-                ondragover={e => onDragOver(e, option.id)}
+                ondragstart={onDragStart(option.id)}
+                ondragover={onDragOver(option.id)}
                 ondrop={onDrop}
                 ondragend={onDragEnd}>
                 <div class="cursor-move opacity-70" aria-label="Drag handle">
@@ -213,11 +215,9 @@
                     class="grow"
                     type="text"
                     placeholder={`Option ${index + 1}`}
-                    oninput={e => updateOption(option.id, e.currentTarget.value)} />
+                    oninput={updateOption(option.id)} />
                 </label>
-                <Button
-                  class="button button-ghost button-sm"
-                  onclick={() => removeOption(option.id)}>
+                <Button class="button button-ghost button-sm" onclick={removeOption(option.id)}>
                   <Icon icon={MinusCircle} size={4} />
                 </Button>
               </div>

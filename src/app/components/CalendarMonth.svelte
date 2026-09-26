@@ -29,7 +29,7 @@
   const {url, events, eventsByDay, date, context}: Props = $props()
 
   // A modal's props are frozen at push time, so pass the feed's store rather than a filtered list.
-  const showDay = (day: Date) =>
+  const showDay = (day: Date) => () =>
     pushModal(CalendarDay, {
       url,
       date: day,
@@ -76,7 +76,7 @@
           )}
           style="grid-column: {col + 1}; grid-row: 1;"
           aria-label={formatDay(day)}
-          onclick={() => showDay(day)}>
+          onclick={showDay(day)}>
           {Intl.DateTimeFormat(LOCALE, {day: "numeric"}).format(day)}
         </Button>
       {/each}
@@ -110,7 +110,7 @@
           {#if dayEvents.length > 3}
             <Button
               class="px-1.5 text-left text-xs opacity-75 hover:opacity-100"
-              onclick={() => showDay(day)}>
+              onclick={showDay(day)}>
               +{dayEvents.length - 3} more
             </Button>
           {/if}

@@ -14,7 +14,11 @@
   import {leaveSpace} from "@app/access"
   import {pushToast} from "@app/toast"
 
-  const {url} = $props()
+  type Props = {
+    url: string
+  }
+
+  const {url}: Props = $props()
 
   const back = () => history.back()
 

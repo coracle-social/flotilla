@@ -11,10 +11,9 @@
 
   type Props = {
     url: string
-    hideFavorites?: boolean
   }
 
-  const {url, hideFavorites}: Props = $props()
+  const {url}: Props = $props()
   const favorited = $roomLists.pubkeysForUrl(url).$
   const favoritedPubkeys = $derived(remove($user.pubkey, $favorited))
 </script>
@@ -29,7 +28,7 @@
             <RelayIcon {url} size={10} />
           </div>
         </div>
-        {#if !hideFavorites && $userSpaceUrls.includes(url)}
+        {#if $userSpaceUrls.includes(url)}
           <div
             class="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-primary text-primary-content flex justify-center items-center">
             <Icon icon={CheckCircle} class="scale-120" />
@@ -45,7 +44,7 @@
       <RelayDescription {url} />
     </div>
   </div>
-  {#if !hideFavorites && favoritedPubkeys.length > 0}
+  {#if favoritedPubkeys.length > 0}
     <div class="flex gap-2 card card-sm">
       Favorited By:
       <ProfileCircles pubkeys={favoritedPubkeys} />

@@ -33,7 +33,7 @@
 
   const reference = eventToReference(event)
 
-  const selectBoard = (board: PinboardReader) =>
+  const selectBoard = (board: PinboardReader) => () =>
     pushModal(PinSave, {url, address: board.address(), reference})
 </script>
 
@@ -54,7 +54,7 @@
       {#each $boards as board (board.address())}
         <Button
           class="card card-sm card-interactive flex flex-row items-center justify-between gap-3"
-          onclick={() => selectBoard(board)}>
+          onclick={selectBoard(board)}>
           <span class="flex min-w-0 flex-col">
             <strong class="truncate min-w-0">{board.title() || "Untitled shelf"}</strong>
             {#if board.description()}

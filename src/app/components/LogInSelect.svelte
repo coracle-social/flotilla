@@ -19,7 +19,7 @@
   import {clearModals} from "@app/modal"
   import {pushToast} from "@app/toast"
 
-  interface Props {
+  type Props = {
     email: string
     options: AccountOption[]
     clientSecret: string
@@ -31,36 +31,38 @@
 
   const back = () => history.back()
 
-  const selectAccount = async ({client, peers}: AccountOption) => {
-    loading = true
+  const selectAccount =
+    ({client, peers}: AccountOption) =>
+    async () => {
+      loading = true
 
-    try {
-      const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
+      try {
+        const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
 
-      if (res.ok && clientOptions) {
-        await loginWithPomade(clientOptions, email)
-        deleteDeactivatedPomadeSessions()
-        setChecked("*")
-        clearModals()
-      } else {
-        console.error(res.messages)
+        if (res.ok && clientOptions) {
+          await loginWithPomade(clientOptions, email)
+          deleteDeactivatedPomadeSessions()
+          setChecked("*")
+          clearModals()
+        } else {
+          console.error(res.messages)
+
+          pushToast({
+            theme: "error",
+            message: getPomadeLoginFailureMessage(res.messages),
+          })
+        }
+      } catch (error) {
+        console.error("Login error:", error)
 
         pushToast({
           theme: "error",
-          message: getPomadeLoginFailureMessage(res.messages),
+          message: POMADE_NETWORK_ERROR_MESSAGE,
         })
+      } finally {
+        loading = false
       }
-    } catch (error) {
-      console.error("Login error:", error)
-
-      pushToast({
-        theme: "error",
-        message: POMADE_NETWORK_ERROR_MESSAGE,
-      })
-    } finally {
-      loading = false
     }
-  }
 </script>
 
 <Modal>
@@ -73,7 +75,7 @@
     <div class="flex flex-col gap-2">
       {#each uniqBy(o => o.pubkey, options) as option (option.pubkey)}
         <Button
-          onclick={() => selectAccount(option)}
+          onclick={selectAccount(option)}
           disabled={loading}
           class="card flex w-full items-center p-3 text-left">
           <Profile inert pubkey={option.pubkey} />

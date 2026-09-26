@@ -14,7 +14,7 @@
   import {REPORT} from "@welshman/util"
   import {deriveSpaceActionItems} from "@app/actionItems"
 
-  interface Props {
+  type Props = {
     url: string
   }
 

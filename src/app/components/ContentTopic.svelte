@@ -1,5 +1,9 @@
 <script lang="ts">
-  const {value} = $props()
+  type Props = {
+    value: string
+  }
+
+  const {value}: Props = $props()
 </script>
 
 <span class="link-content">

@@ -100,11 +100,7 @@
   <div class="flex w-full gap-3 overflow-auto">
     {#if showPubkey}
       <Button onclick={openProfile} class="flex items-start pt-1.5 justify-center w-8 shrink-0">
-        <ProfileCircle
-          pubkey={event.pubkey}
-          class="border border-solid"
-          style="border-color: var(--line)"
-          size={8} />
+        <ProfileCircle pubkey={event.pubkey} class="border border-solid border-line" size={8} />
       </Button>
     {:else}
       <div class="w-8 shrink-0"></div>
@@ -125,7 +121,7 @@
           </span>
         </div>
       {/if}
-      <div class:mt-2={showPubkey && event.kind !== MESSAGE}>
+      <div class={cx({"mt-2": showPubkey && event.kind !== MESSAGE})}>
         <RoomItemContent {url} event={$innerEvent ?? event} />
         {#if thunk}
           <ThunkFailure showToastOnRetry {thunk} class="mt-1 flex justify-end" />

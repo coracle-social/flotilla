@@ -24,10 +24,10 @@
     <span class="opacity-50">Sending...</span>
     <button
       type="button"
-      class="underline transition-all"
-      class:link={isSending}
-      class:opacity-25={!isSending}
-      class:pointer-events-none={!isSending}
+      class={cx("underline transition-all", {
+        link: isSending,
+        "pointer-events-none opacity-25": !isSending,
+      })}
       onclick={stopPropagation(abort)}>
       Cancel
     </button>

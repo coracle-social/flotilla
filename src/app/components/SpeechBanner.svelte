@@ -19,6 +19,14 @@
 
   const toggle = () => (playing ? audio?.pause() : audio?.play())
 
+  const onPlay = () => {
+    playing = true
+  }
+
+  const onStop = () => {
+    playing = false
+  }
+
   const display = (seconds: number) => {
     const whole = Math.floor(seconds)
 
@@ -35,9 +43,9 @@
         bind:duration
         src={$speech.src}
         autoplay
-        onplay={() => (playing = true)}
-        onpause={() => (playing = false)}
-        onended={() => (playing = false)}></audio>
+        onplay={onPlay}
+        onpause={onStop}
+        onended={onStop}></audio>
       <Button
         aria-label={playing ? "Pause message" : "Play message"}
         class="button button-circle button-sm button-primary shrink-0"

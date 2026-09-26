@@ -88,11 +88,7 @@
         <NoteContentMinimal trimParent {url} event={$quote} />
       </div>
     {:else}
-      <NoteCard
-        event={$quote}
-        {url}
-        class="border border-solid rounded-2xl p-4"
-        style="border-color: var(--line)">
+      <NoteCard event={$quote} {url} class="border border-solid rounded-2xl p-4 border-line">
         <NoteContentMinimal {url} event={$quote} />
       </NoteCard>
     {/if}

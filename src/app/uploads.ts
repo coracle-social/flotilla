@@ -210,10 +210,10 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
     const result = {...task, tags, url}
 
     return {result}
-  } catch (e: any) {
+  } catch (e) {
     console.error("Error caught when uploading file:", e)
 
-    return {error: e.toString()}
+    return {error: String(e)}
   }
 }
 

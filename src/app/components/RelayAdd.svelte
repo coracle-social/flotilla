@@ -20,7 +20,7 @@
   import {pushToast} from "@app/toast"
   import {app, blockedRelayLists, relayLists, user} from "@app/core"
 
-  interface Props {
+  type Props = {
     relays: Readable<string[]>
     addRelay: (url: string) => Promise<Thunk>
     matchRelay?: (url: string) => boolean
@@ -32,7 +32,7 @@
 
   const customUrl = $derived(tryCatch(() => normalizeRelayUrl(term)))
 
-  const add = async (url: string) => {
+  const add = (url: string) => async () => {
     loading.add(url)
 
     try {
@@ -117,7 +117,7 @@
           <Button
             class="button button-outline button-sm flex items-center"
             disabled={loading.has(customUrl)}
-            onclick={() => add(customUrl)}>
+            onclick={add(customUrl)}>
             {#if loading.has(customUrl)}
               <Spinner size="sm" />
             {:else}
@@ -132,7 +132,7 @@
           <Button
             class="button button-outline button-sm flex items-center"
             disabled={loading.has(url)}
-            onclick={() => add(url)}>
+            onclick={add(url)}>
             {#if loading.has(url)}
               <Spinner size="sm" />
             {:else}

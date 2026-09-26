@@ -8,7 +8,8 @@
     onSelect: (image: File | string) => void
     initialValue?: string
     children?: Snippet
-    [key: string]: any
+    class?: string
+    "aria-label"?: string
   }
 
   const {onSelect, initialValue, children, ...props}: Props = $props()

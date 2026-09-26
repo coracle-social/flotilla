@@ -45,10 +45,9 @@
 </script>
 
 <aside
-  class="bg-surface flex w-full shrink-0 flex-col border-t lg:w-80 lg:border-t-0"
-  style="border-color: var(--line)">
-  <div class="flex flex-col lg:sticky lg:top-0">
-    <section class="flex flex-col gap-3 border-b px-4 py-4" style="border-color: var(--line)">
+  class="bg-surface flex w-full shrink-0 flex-col border-t @2xl:w-80 @2xl:border-t-0 border-line">
+  <div class="flex flex-col @2xl:sticky @2xl:top-0">
+    <section class="flex flex-col gap-3 border-b px-4 py-4 border-line">
       <Profile pubkey={event.pubkey} {url} />
       <div class="text-content-muted line-clamp-3 text-sm leading-snug">
         <ProfileAbout pubkey={event.pubkey} {url} />

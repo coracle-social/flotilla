@@ -36,8 +36,8 @@
 
   const back = () => history.back()
 
-  const onFileChange = (event: Event) => {
-    file = (event.target as HTMLInputElement).files?.[0]
+  const onFileChange = (event: Event & {currentTarget: HTMLInputElement}) => {
+    file = event.currentTarget.files?.[0]
     result = undefined
   }
 

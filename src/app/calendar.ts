@@ -1,4 +1,5 @@
 import {
+  DAY,
   HOUR,
   LOCALE,
   dateToSeconds,
@@ -174,8 +175,7 @@ export type CalendarBar = {
   continuesAfter: boolean
 }
 
-const daysApart = (a: Date, b: Date) =>
-  Math.round((a.getTime() - b.getTime()) / (24 * 60 * 60 * 1000))
+const daysApart = (a: Date, b: Date) => Math.round((dateToSeconds(a) - dateToSeconds(b)) / DAY)
 
 // Multi-day events spanning `days` are laid out as bars, packed into as few lanes as possible.
 export const layoutMultiDayBars = (

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as nip19 from "nostr-tools/nip19"
+  import cx from "classnames"
   import type {TrustedEvent} from "@welshman/util"
   import Pin from "@assets/icons/pin.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -8,6 +8,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import ProfileName from "@app/components/ProfileName.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import RoomPinnedMessagesAll from "@app/components/RoomPinnedMessagesAll.svelte"
   import {deriveRoomPinnedEvents} from "@app/roomPins"
@@ -24,25 +25,12 @@
   const pinnedEvents = deriveRoomPinnedEvents(url, h)
 
   let currentIndex = $state(0)
-  let expanded = $state(false)
-  let root: HTMLElement | undefined = $state()
 
   const total = $derived($pinnedEvents.length)
   const currentEvent = $derived($pinnedEvents[currentIndex])
-  const counter = $derived(total > 0 ? `${currentIndex + 1}/${total}` : "")
+  const counter = $derived(`${currentIndex + 1}/${total}`)
 
   const preview = (event: TrustedEvent) => event.content.replace(/\s+/g, " ").trim()
-
-  const formatNpub = (pubkey: string) => {
-    const npub = nip19.npubEncode(pubkey)
-
-    return `${npub.slice(0, 10)}...${npub.slice(-5)}`
-  }
-
-  const reset = (_url: string, _h: string) => {
-    currentIndex = 0
-    expanded = false
-  }
 
   const expand = () => {
     expanded = true
@@ -52,90 +40,67 @@
     expanded = false
   }
 
-  const showAll = () => {
-    pushModal(RoomPinnedMessagesAll, {url, h})
-  }
-
-  const openCounter = () => {
-    showAll()
-  }
+  const showAll = () => pushModal(RoomPinnedMessagesAll, {url, h})
 
   const prev = () => {
-    if (total === 0) {
-      return
-    }
-
     currentIndex = (currentIndex - 1 + total) % total
   }
 
   const next = () => {
-    if (total === 0) {
-      return
-    }
-
     currentIndex = (currentIndex + 1) % total
   }
 
   const jumpToMessage = () => {
-    if (!currentEvent) {
-      return
-    }
-
     collapse()
     goToEvent(currentEvent)
   }
 
   const onDocumentPointerDown = (event: PointerEvent) => {
-    if (!expanded || !root) {
-      return
-    }
-
-    if (!root.contains(event.target as Node)) {
+    if (event.target instanceof Node && !root?.contains(event.target)) {
       collapse()
     }
   }
 
-  $effect(() => {
-    reset(url, h)
-  })
+  let expanded = $state(false)
+  let root: HTMLElement | undefined = $state()
 
   $effect(() => {
-    if (currentIndex >= $pinnedEvents.length) {
+    if (currentIndex >= total) {
       currentIndex = 0
     }
   })
 
   $effect(() => {
-    if (!expanded) {
-      return
+    if (expanded) {
+      document.addEventListener("pointerdown", onDocumentPointerDown)
+
+      return () => document.removeEventListener("pointerdown", onDocumentPointerDown)
     }
-
-    document.addEventListener("pointerdown", onDocumentPointerDown)
-
-    return () => document.removeEventListener("pointerdown", onDocumentPointerDown)
   })
 </script>
 
-{#if total > 0 && currentEvent}
+{#if currentEvent}
   <div class="room-pins-anchor" bind:this={root} in:fly={{y: -16, duration: 250}}>
-    <div class="room-pins" class:room-pins--expanded={expanded}>
+    <div class={cx("room-pins", {"room-pins--expanded": expanded})}>
       <div class="room-pins__header">
-        {#if expanded}
-          <div class="flex min-w-0 flex-1 items-start gap-3">
-            <ProfileCircle pubkey={currentEvent.pubkey} {url} size={6} />
-            <div class="min-w-0">
-              <p class="room-pins__label">Pinned message</p>
-              <p class="text-primary-content/70 truncate text-xs">
-                {formatNpub(currentEvent.pubkey)}
-              </p>
+        {#key currentEvent.pubkey}
+          {#if expanded}
+            <div class="flex min-w-0 flex-1 items-start gap-3">
+              <ProfileCircle pubkey={currentEvent.pubkey} {url} size={6} />
+              <div class="min-w-0">
+                <p class="room-pins__label">Pinned message</p>
+                <p class="text-primary-content/70 truncate text-xs">
+                  <ProfileName pubkey={currentEvent.pubkey} {url} />
+                </p>
+              </div>
             </div>
-          </div>
-        {:else}
-          <button type="button" class="room-pins__expand" onclick={expand}>
-            <ProfileCircle pubkey={currentEvent.pubkey} {url} size={5} />
-            <p class="room-pins__preview">{preview(currentEvent) || "Pinned message"}</p>
-          </button>
-        {/if}
+          {:else}
+            <button type="button" class="room-pins__expand" onclick={expand}>
+              <ProfileCircle pubkey={currentEvent.pubkey} {url} size={5} />
+              <p class="room-pins__preview">{preview(currentEvent) || "Pinned message"}</p>
+            </button>
+          {/if}
+        {/key}
         <div class="room-pins__counter">
           <Button
             class="button button-ghost button-sm gap-1 text-primary-content"
@@ -163,7 +128,7 @@
                   <Icon icon={AltArrowLeft} size={4} />
                 </Button>
               {/if}
-              <button type="button" class="px-1 text-sm" onclick={openCounter}>{counter}</button>
+              <button type="button" class="px-1 text-sm" onclick={showAll}>{counter}</button>
               {#if total > 1}
                 <Button
                   class="button button-ghost button-sm button-square text-primary-content"

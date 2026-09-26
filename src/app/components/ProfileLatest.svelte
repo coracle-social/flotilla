@@ -7,7 +7,7 @@
   import {network} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
 
-  interface Props {
+  type Props = {
     url: string
     pubkey: string
     limit?: number

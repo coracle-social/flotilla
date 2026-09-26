@@ -32,7 +32,7 @@
   import {pushModal} from "@app/modal"
   import {deriveDisplaysByPubkey} from "@app/social"
 
-  interface Props {
+  type Props = {
     event: TrustedEvent
     deleteReaction: (event: TrustedEvent) => void
     createReaction: (event: EventContent) => void

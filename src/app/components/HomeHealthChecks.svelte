@@ -41,6 +41,8 @@
     }
   }
 
+  const fix = (healthCheck: HealthCheck) => () => review([healthCheck])
+
   const reviewAll = () => review($pending, $needsKeyBackup ? backUpKey : undefined)
 </script>
 
@@ -61,7 +63,7 @@
         <HealthCheckItem
           title={healthCheck.title}
           description={healthCheck.description}
-          onfix={() => review([healthCheck])} />
+          onfix={fix(healthCheck)} />
       {/each}
       {#if $needsKeyBackup}
         <HealthCheckItem

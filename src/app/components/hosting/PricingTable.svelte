@@ -22,6 +22,10 @@
   const memberLabel = (members: Plan["members"]) =>
     members ? `Up to ${members} members` : "Unlimited members"
 
+  const select = (planId: string) => () => onSelect?.(planId)
+
+  const start = (planId: string) => () => onCta?.(planId)
+
   const visiblePlans = $derived(plans.filter(plan => !plan.hidden))
 
   const gridCols: Record<number, string> = {
@@ -70,7 +74,7 @@
         "button-primary": isPopular,
         "button-neutral": !isPopular,
       })}
-      onclick={() => onCta?.(plan.id)}>
+      onclick={start(plan.id)}>
       Get started
     </Button>
   {/if}
@@ -85,7 +89,7 @@
           class={cx("card card-interactive relative flex flex-col text-left", {
             "border-primary": value === plan.id,
           })}
-          onclick={() => onSelect?.(plan.id)}>
+          onclick={select(plan.id)}>
           {@render cardBody(plan, isPopular)}
         </Button>
       {:else}

@@ -69,11 +69,10 @@
 
   const openBannerPicker = () => bannerInput?.click()
 
-  const onBannerChange = async (e: Event) => {
-    const input = e.target as HTMLInputElement
-    const file = input.files?.[0]
+  const onBannerChange = async (e: Event & {currentTarget: HTMLInputElement}) => {
+    const file = e.currentTarget.files?.[0]
 
-    input.value = ""
+    e.currentTarget.value = ""
 
     if (!file || !$profile) {
       return

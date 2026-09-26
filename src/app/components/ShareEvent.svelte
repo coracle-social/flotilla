@@ -36,7 +36,7 @@
     shareTo(makeRoomPath(url, selection), {type: "event", value: event})
   }
 
-  const toggleRoom = (h: string) => {
+  const toggleRoom = (h: string) => () => {
     selection = h === selection ? "" : h
   }
 
@@ -60,7 +60,7 @@
           class="flex justify-center button {selection === room.h
             ? 'button-primary'
             : 'button-neutral'}"
-          onclick={() => toggleRoom(room.h)}>
+          onclick={toggleRoom(room.h)}>
           <RoomNameWithImage {url} h={room.h} />
         </Button>
       {/each}

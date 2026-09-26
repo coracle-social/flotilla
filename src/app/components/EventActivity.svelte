@@ -7,18 +7,14 @@
   import Icon from "@lib/components/Icon.svelte"
   import type {FeedContext} from "@app/feeds"
 
-  // hideLastActive: redundant next to a detail page's own comments below.
-  const {
-    event,
-    context,
-    size = "xs",
-    hideLastActive,
-  }: {
+  type Props = {
     event: TrustedEvent
     context: FeedContext
     size?: "xs" | "sm"
     hideLastActive?: boolean
-  } = $props()
+  }
+
+  const {event, context, size = "xs", hideLastActive}: Props = $props()
 
   const buttonClass = `button button-neutral button-${size} rounded-full`
 

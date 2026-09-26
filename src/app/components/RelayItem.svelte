@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type {Snippet} from "svelte"
   import {displayUrl} from "@welshman/lib"
   import {displayRelayUrl} from "@welshman/util"
   import {RelayStats} from "@welshman/app"
@@ -8,7 +9,12 @@
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import {app, relays} from "@app/core"
 
-  const {url, children} = $props()
+  type Props = {
+    url: string
+    children?: Snippet
+  }
+
+  const {url, children}: Props = $props()
 
   const relay = $relays.one(url)
   const relayStats = $app.use(RelayStats).one(url)

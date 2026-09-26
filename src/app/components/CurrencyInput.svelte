@@ -15,7 +15,7 @@
   import Tippy from "@lib/components/Tippy.svelte"
   import type {TippyController} from "@lib/components/Tippy.svelte"
 
-  interface Props {
+  type Props = {
     value: string
     autofocus?: boolean
     term?: Writable<string>

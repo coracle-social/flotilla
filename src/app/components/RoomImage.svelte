@@ -5,7 +5,7 @@
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import {rooms} from "@app/core"
 
-  interface Props {
+  type Props = {
     h: string
     url: string
     size?: number

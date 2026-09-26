@@ -59,8 +59,8 @@
     {#snippet input()}
       <div class="flex items-center gap-3">
         <div
-          class="h-8 w-8 shrink-0 rounded-full border-2"
-          style="background-color: {roleColor(hue)}; border-color: var(--line)">
+          class="h-8 w-8 shrink-0 rounded-full border-2 border-line"
+          style="background-color: {roleColor(hue)}">
         </div>
         <input
           type="range"

@@ -34,7 +34,7 @@
 
   const add = () => pushModal(RelayAdd, {relays, addRelay, matchRelay})
 
-  const remove = async (url: string) => {
+  const remove = (url: string) => async () => {
     loading.add(url)
 
     try {
@@ -67,7 +67,7 @@
         <Button
           class="button button-neutral button-sm"
           disabled={loading.has(url)}
-          onclick={() => remove(url)}>
+          onclick={remove(url)}>
           {#if loading.has(url)}
             <Spinner size="sm" />
           {:else}

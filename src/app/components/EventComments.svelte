@@ -50,7 +50,7 @@
 </script>
 
 <section class="flex flex-col">
-  <div class="border-b px-5 sm:px-8" style="border-color: var(--line)">
+  <div class="border-b px-5 sm:px-8 border-line">
     <div class={cx("flex w-full flex-wrap items-center justify-between gap-2 py-3", columnClass)}>
       <h2 class="text-lg font-bold">
         {nodes.length === 0

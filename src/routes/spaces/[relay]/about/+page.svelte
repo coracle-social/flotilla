@@ -32,7 +32,7 @@
   {/snippet}
 </SpaceBar>
 
-<PageContent class="flex flex-col gap-4 p-4">
+<PageContent class="@container flex flex-col gap-4 p-4">
   <div class="card flex flex-col gap-4">
     <div class="relative flex gap-4">
       <div class="relative">
@@ -103,8 +103,8 @@
       </div>
     {/if}
   </div>
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-    <div class="lg:col-span-2 flex flex-col gap-4">
+  <div class="grid grid-cols-1 gap-4 @2xl:grid-cols-3">
+    <div class="@2xl:col-span-2 flex flex-col gap-4">
       <SpaceFeaturedContent {url} />
     </div>
     <div class="flex flex-col gap-4">

@@ -63,13 +63,13 @@
 
 <ReadingProgress element={contentElement} />
 
-<PageContent noPad bind:element={contentElement} class="bg-surface flex flex-col !gap-0">
+<PageContent noPad bind:element={contentElement} class="@container bg-surface flex flex-col !gap-0">
   {#if $event && $article}
     <!-- PageContent is the scroll container and has a definite height, so a flex row placed
          directly in it would size its columns to one viewport. This wrapper is sized by its
          content instead, which lets the column/sidebar divider run the whole way down. -->
-    <div class="flex min-h-full shrink-0 flex-col lg:flex-row">
-      <div class="flex min-w-0 grow flex-col lg:border-r" style="border-color: var(--line)">
+    <div class="flex min-h-full shrink-0 flex-col @2xl:flex-row">
+      <div class="flex min-w-0 grow flex-col @2xl:border-r border-line">
         <article class="flex flex-col">
           <div class="flex flex-col px-5 sm:px-8">
             <header class="mx-auto flex w-full max-w-[68ch] flex-col gap-4 pt-8 sm:pt-12">
@@ -104,7 +104,7 @@
             </div>
           </div>
           {#if topics.length > 0}
-            <div class="border-t px-5 py-6 sm:px-8" style="border-color: var(--line)">
+            <div class="border-t px-5 py-6 sm:px-8 border-line">
               <div class="mx-auto flex w-full max-w-[68ch] flex-wrap gap-2">
                 {#each topics as topic (topic)}
                   <span class="button button-neutral button-xs rounded-full font-normal">
@@ -115,19 +115,19 @@
             </div>
           {/if}
         </article>
-        <div class="border-t px-5 py-4 sm:px-8" style="border-color: var(--line)">
+        <div class="border-t px-5 py-4 sm:px-8 border-line">
           <div class="mx-auto flex w-full max-w-[68ch]">
             <ArticleActionBar event={$event} {url} {context} />
           </div>
         </div>
-        <!-- lg carries this in the sidebar instead, which sits below the comments here. -->
-        <div class="border-t px-5 py-6 sm:px-8 lg:hidden" style="border-color: var(--line)">
+        <!-- A wide page carries this in the sidebar instead, which sits below the comments here. -->
+        <div class="border-t px-5 py-6 sm:px-8 @2xl:hidden border-line">
           <div class="mx-auto flex w-full max-w-[68ch] flex-col gap-2">
             <p class="text-content-subtle text-xs font-bold tracking-wide uppercase">Written by</p>
             <Profile pubkey={$event.pubkey} {url} />
           </div>
         </div>
-        <div class="border-t" style="border-color: var(--line)">
+        <div class="border-t border-line">
           <EventComments event={$event} {url} {context} columnClass="mx-auto max-w-[68ch]" />
         </div>
       </div>

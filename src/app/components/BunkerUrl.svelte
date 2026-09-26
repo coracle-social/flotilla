@@ -17,6 +17,8 @@
   const {controller}: Props = $props()
   const {loading, bunker} = controller
 
+  const showInfoBunker = () => pushModal(InfoBunker)
+
   const toggleScanner = () => {
     showScanner = !showScanner
   }
@@ -45,8 +47,7 @@
   {#snippet info()}
     <p>
       A login link provided by a nostr signing app.
-      <Button class="button button-link" onclick={() => pushModal(InfoBunker)}
-        >What is a bunker link?</Button>
+      <Button class="button button-link" onclick={showInfoBunker}>What is a bunker link?</Button>
     </p>
   {/snippet}
 </Field>

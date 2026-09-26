@@ -4,7 +4,11 @@
   import Button from "@lib/components/Button.svelte"
   import {clip} from "@app/toast"
 
-  const {value} = $props()
+  type Props = {
+    value: string
+  }
+
+  const {value}: Props = $props()
 
   const copy = () => clip(value)
 </script>

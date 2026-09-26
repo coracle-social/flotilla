@@ -24,15 +24,14 @@
     settings.reminder_minutes = [...settings.reminder_minutes, 60]
   }
 
-  const removeReminder = (index: number) => {
+  const removeReminder = (index: number) => () => {
     settings.reminder_minutes = removeAt(index, settings.reminder_minutes)
   }
 
-  const onReminderInput = (e: Event) => {
-    const target = e.currentTarget as HTMLInputElement
-    const index = Number(target.dataset.index)
+  const onReminderInput = (index: number) => (e: Event & {currentTarget: HTMLInputElement}) => {
+    const minutes = Number(e.currentTarget.value)
 
-    settings.reminder_minutes = replaceAt(index, Number(target.value), settings.reminder_minutes)
+    settings.reminder_minutes = replaceAt(index, minutes, settings.reminder_minutes)
   }
 
   const onsubmit = preventDefault(async () => {
@@ -157,16 +156,15 @@
               <Button
                 class="button button-ghost button-sm"
                 type="button"
-                onclick={() => removeReminder(index)}>
+                onclick={removeReminder(index)}>
                 <Icon icon={TrashBin2} />
               </Button>
               <label class="input flex grow items-center gap-2">
                 <input
                   type="number"
                   class="w-16"
-                  data-index={index}
                   value={minutes}
-                  oninput={onReminderInput} />
+                  oninput={onReminderInput(index)} />
                 <span class="text-sm opacity-75">minutes before it starts</span>
               </label>
             </div>

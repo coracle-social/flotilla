@@ -16,7 +16,11 @@
   import {followLists, relayLists, router, user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
 
-  const {class: className = ""}: {class?: string} = $props()
+  type Props = {
+    class?: string
+  }
+
+  const {class: className = ""}: Props = $props()
 
   // The same set and limit `syncFollowNetwork` reads the follows' relay lists from.
   const RELAY_LIMIT = 8

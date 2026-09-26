@@ -27,9 +27,8 @@
   const ptag = matchTag(tagSpec("p"), event.tags)
   const reason = etag?.[2] || ptag?.[2]
 
-  const onClick = (e: Event, event: TrustedEvent) => {
-    // @ts-ignore
-    if (e.target?.classList.contains("profile-name")) {
+  const onClick = (event: TrustedEvent) => (e: Event) => {
+    if (e.target instanceof Element && e.target.classList.contains("profile-name")) {
       pushModal(ProfileDetail, {pubkey: event.pubkey, url})
     } else {
       goToEvent(event)
@@ -64,7 +63,7 @@
           <p>Unable to find reported note.</p>
         {:else}
           {@const event = reportedEvents[0]}
-          <Button class="flex flex-col gap-2 w-full" onclick={(e: Event) => onClick(e, event)}>
+          <Button class="flex flex-col gap-2 w-full" onclick={onClick(event)}>
             <div class="flex items-center justify-between gap-2">
               <span class="profile-name">
                 @<ProfileName pubkey={event.pubkey} {url} />

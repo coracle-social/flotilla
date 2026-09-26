@@ -125,7 +125,7 @@
             <RelaySummary url={inviteData.url} />
             <SpaceJoinNotifications bind:notifications />
             {#if error}
-              <SpaceJoinStatus url={inviteData.url} {error} />
+              <SpaceJoinStatus {error} />
             {/if}
           </div>
         </div>

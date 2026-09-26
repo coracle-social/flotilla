@@ -15,7 +15,7 @@
   import SpaceMemberBannedMenu from "@app/components/SpaceMemberBannedMenu.svelte"
   import {deriveSpacePermissions, spaceManagement} from "@app/management"
 
-  interface Props {
+  type Props = {
     url: string
   }
 

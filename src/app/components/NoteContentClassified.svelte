@@ -26,7 +26,7 @@
   {/if}
   <div class="grid grid-cols-3 gap-2 @md:grid-cols-5 @2xl:grid-cols-9">
     {#each images as image, i (i + image)}
-      <ContentLinkBlock event={props.event} value={{url: image}} />
+      <ContentLinkBlock event={props.event} url={image} />
     {/each}
   </div>
 </div>

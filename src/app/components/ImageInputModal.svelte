@@ -34,8 +34,8 @@
     popModal()
   }
 
-  const onFileChange = (event: Event) => {
-    const selected = (event.target as HTMLInputElement).files?.[0]
+  const onFileChange = (event: Event & {currentTarget: HTMLInputElement}) => {
+    const selected = event.currentTarget.files?.[0]
 
     if (selected?.type.startsWith("image/")) {
       select(selected)
@@ -49,9 +49,15 @@
   const url = $derived(value.trim())
   const isValid = $derived(isValidUrl(url))
   const failed = $derived(Boolean(url) && failedUrl === url)
+
+  const submit = () => select(url)
+
+  const onError = () => {
+    failedUrl = url
+  }
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(() => select(url))}>
+<Modal tag="form" onsubmit={preventDefault(submit)}>
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Add an image</ModalTitle>
@@ -93,7 +99,7 @@
           src={url}
           alt="Preview"
           class="max-h-48 rounded-2xl object-contain"
-          onerror={() => (failedUrl = url)} />
+          onerror={onError} />
       </div>
     {/if}
   </ModalBody>

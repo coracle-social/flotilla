@@ -8,7 +8,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
 
-  interface Props {
+  type Props = {
     thunk: BaseThunk
     retry: (url: string) => void
   }
@@ -23,6 +23,8 @@
   const title = $derived(
     isPartial ? `Partial delivery ${successUrls.length}/${total} relays` : "Failed to send!",
   )
+
+  const retryUrl = (url: string) => () => retry(url)
 
   const relayMessage = (status: PublishStatus | undefined, detail: string | undefined) => {
     if (status === PublishStatus.Timeout) {
@@ -58,9 +60,7 @@
           <p class="break-all">{displayRelayUrl(url)}</p>
           <p class="text-xs opacity-60">{relayMessage(status, detail)}</p>
         </div>
-        <Button
-          class="button button-link shrink-0 px-1"
-          onclick={stopPropagation(() => retry(url))}>
+        <Button class="button button-link shrink-0 px-1" onclick={stopPropagation(retryUrl(url))}>
           Retry
         </Button>
       </div>

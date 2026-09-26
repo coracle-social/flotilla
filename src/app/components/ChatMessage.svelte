@@ -25,7 +25,7 @@
   import {colorFor} from "@app/theme"
   import {pushModal} from "@app/modal"
 
-  interface Props {
+  type Props = {
     event: TrustedEvent
     replyTo: (event: TrustedEvent) => void
     canEdit?: (event: TrustedEvent) => boolean
@@ -74,14 +74,13 @@
       <button
         type="button"
         aria-label="Message actions"
-        class="opacity-0 transition-all focus:opacity-100"
-        class:group-hover:opacity-100={!isMobile}
+        class="opacity-0 transition-all group-hover:opacity-100 focus:opacity-100"
         onclick={togglePopover}>
         <Icon icon={MenuDots} size={4} />
       </button>
     </Tippy>
   {/if}
-  <div class="flex min-w-0 flex-col" class:items-end={isOwn}>
+  <div class={cx("flex min-w-0 flex-col", {"items-end": isOwn})}>
     <TapTarget class={cx("chat-bubble", {"chat-bubble--user": isOwn})} onTap={showMobileMenu}>
       {#if showPubkey}
         <div class="flex items-center gap-2">
@@ -89,8 +88,7 @@
             <Button onclick={openProfile} class="flex items-center gap-1">
               <ProfileCircle
                 pubkey={event.pubkey}
-                class="border border-solid"
-                style="border-color: var(--line)"
+                class="border border-solid border-line"
                 size={4} />
               <div class="flex items-center gap-2">
                 <Button onclick={openProfile} class="text-sm font-bold" style="color: {colorValue}">

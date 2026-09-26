@@ -62,7 +62,7 @@
     <RelaySummary {url} />
     <SpaceJoinNotifications bind:notifications />
     {#if error}
-      <SpaceJoinStatus {url} {error} />
+      <SpaceJoinStatus {error} />
     {/if}
   </ModalBody>
   <ModalFooter>

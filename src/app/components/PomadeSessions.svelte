@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
+  import {secondsToDate} from "@welshman/lib"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import PomadeSessionMenu from "@app/components/PomadeSessionMenu.svelte"
   import {pushToast} from "@app/toast"
@@ -24,14 +25,12 @@
     }
   }
 
-  const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp * 1000)
-    return date.toLocaleDateString(undefined, {
+  const formatDate = (timestamp: number) =>
+    secondsToDate(timestamp).toLocaleDateString(undefined, {
       year: "numeric",
       month: "short",
       day: "numeric",
     })
-  }
 
   onMount(() => {
     loadOtherPomadeSessions().then(_sessions => {
@@ -41,7 +40,7 @@
 </script>
 
 {#if sessions.length > 0}
-  <div class="flex flex-col gap-4 border-t border-solid pt-4" style="border-color: var(--line)">
+  <div class="flex flex-col gap-4 border-t border-solid pt-4 border-line">
     <strong>Other Sessions</strong>
     {#each sessions as sessionItem (sessionItem.client)}
       <div class="flex flex-col gap-2">

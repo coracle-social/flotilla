@@ -229,7 +229,7 @@ export const makeEditor = async ({
               addProseMirrorPlugins() {
                 return [
                   MentionSuggestion({
-                    editor: (this as any).editor,
+                    editor: this.editor,
                     search: (term: string) => get(searchProfiles)(term),
                     getRelays: (pubkey: string) => relayLists.get().writeUrls(pubkey).get(),
                     updateSignal: searchProfiles,
@@ -244,7 +244,7 @@ export const makeEditor = async ({
                   TippySuggestion({
                     char: "~",
                     name: "roomref",
-                    editor: (this as any).editor,
+                    editor: this.editor,
                     search: (term: string) => get(roomReferenceSearch).searchValues(term),
                     updateSignal: roomReferenceSearch,
                     select: (id: string, props) => {
@@ -265,7 +265,7 @@ export const makeEditor = async ({
                   ...(commandTarget
                     ? [
                         CommandSuggestion({
-                          editor: (this as any).editor,
+                          editor: this.editor,
                           search: (term: string) => get(commandSearch)?.searchValues(term) ?? [],
                           updateSignal: commandSearch,
                           getAttributes: getCommandAttributes,

@@ -85,11 +85,15 @@
 
   const startRecovery = () => pushModal(InfoKeys)
 
+  const toggleAdvanced = () => {
+    showAdvanced = !showAdvanced
+  }
+
   let loading = $state(false)
   let showAdvanced = $state(false)
 </script>
 
-<PageContent>
+<PageContent class="@container">
   <div class="card shadow-md flex flex-col gap-2">
     <div class="flex justify-between gap-2">
       <Link href={makeProfilePath($user.pubkey)} class="flex max-w-full gap-3">
@@ -179,7 +183,7 @@
     {/if}
     <SignerStatus />
     {#if pomadeEmail}
-      <div class="flex flex-col lg:flex-row gap-4 lg:gap-2 justify-end">
+      <div class="flex flex-col @2xl:flex-row gap-4 @2xl:gap-2 justify-end">
         <Button class="button button-neutral" onclick={startPasswordReset} disabled={loading}>
           <Spinner {loading}>Update your password</Spinner>
         </Button>
@@ -194,7 +198,7 @@
         <Icon icon={Settings} />
         Advanced
       </strong>
-      <Button onclick={() => (showAdvanced = !showAdvanced)}>
+      <Button onclick={toggleAdvanced}>
         {#if showAdvanced}
           <Icon icon={AltArrowUp} />
         {:else}

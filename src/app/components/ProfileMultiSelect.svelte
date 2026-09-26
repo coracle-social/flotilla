@@ -36,12 +36,14 @@
     value = uniq(append(pubkey, value))
   }
 
-  const removePubkey = (pubkey: string) => {
+  const openProfile = (pubkey: string) => () => pushModal(ProfileDetail, {pubkey})
+
+  const removePubkey = (pubkey: string) => () => {
     value = remove(pubkey, value)
   }
 
-  const onInput = (e: any) => {
-    const pubkey = decodePubkey(e.target.value)
+  const onInput = (e: Event & {currentTarget: HTMLInputElement}) => {
+    const pubkey = decodePubkey(e.currentTarget.value)
 
     if (pubkey) {
       selectPubkey(pubkey)
@@ -72,12 +74,11 @@
 <div class="flex flex-col gap-1">
   <div>
     {#each value as pubkey (pubkey)}
-      {@const onClick = () => pushModal(ProfileDetail, {pubkey})}
       <span class="badge badge-neutral mr-1 mb-1 gap-1">
-        <Button class="flex items-center" onclick={() => removePubkey(pubkey)}>
+        <Button class="flex items-center" onclick={removePubkey(pubkey)}>
           <Icon icon={CloseCircle} size={4} />
         </Button>
-        <Button onclick={onClick}>
+        <Button onclick={openProfile(pubkey)}>
           <ProfileName {pubkey} />
         </Button>
       </span>

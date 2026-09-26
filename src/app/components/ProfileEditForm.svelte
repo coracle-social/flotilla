@@ -45,6 +45,8 @@
 
   const submit = () => onsubmit($state.snapshot(values))
 
+  const showInfoHandle = () => pushModal(InfoHandle)
+
   let file: File | undefined = $state()
 </script>
 
@@ -129,7 +131,7 @@
         {/snippet}
         {#snippet info()}
           <p>
-            <Button class="button button-link" onclick={() => pushModal(InfoHandle)}
+            <Button class="button button-link" onclick={showInfoHandle}
               >What is a nostr address?</Button>
           </p>
         {/snippet}

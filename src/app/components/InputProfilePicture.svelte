@@ -9,7 +9,7 @@
   import {compressFileForUpload, uploadFileOrFallback} from "@app/uploads"
   import {pushToast} from "@app/toast"
 
-  interface Props {
+  type Props = {
     file?: File | undefined
     url?: string | undefined
   }
@@ -33,32 +33,31 @@
     active = false
   }
 
-  const onDrop = async (e: any) => {
+  const onDrop = (e: DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     active = false
-
-    submit(e.dataTransfer.files[0])
+    submit(e.dataTransfer?.files[0])
   }
 
-  const onChange = async (e: any) => {
-    submit(e.target.files[0])
-  }
+  const onChange = (e: Event & {currentTarget: HTMLInputElement}) =>
+    submit(e.currentTarget.files?.[0])
 
-  const submit = async (newFile: File) => {
-    if (!newFile) {
+  const submit = async (newFile?: File) => {
+    if (newFile) {
+      loading = true
+
+      try {
+        file = await compressFileForUpload(newFile, compressOptions)
+        url = (await uploadFileOrFallback(file)).url
+      } catch (e) {
+        console.error(e)
+        pushToast({theme: "error", message: "Failed to process your profile picture."})
+      } finally {
+        loading = false
+      }
+    } else {
       url = initialUrl
-      return
-    }
-
-    loading = true
-
-    try {
-      file = await compressFileForUpload(newFile, compressOptions)
-      url = (await uploadFileOrFallback(file)).url
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to process your profile picture."})
-    } finally {
-      loading = false
     }
   }
 
@@ -85,11 +84,10 @@
     aria-label="Drag and drop files here."
     style="background-image: url({url}); border-color: {active ? 'var(--primary)' : 'var(--line)'};"
     class="bg-surface-more relative flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-solid bg-cover bg-center transition-all"
-    class:transparent={!url}
     ondragenter={stopPropagation(preventDefault(onDragEnter))}
     ondragover={stopPropagation(preventDefault(onDragOver))}
     ondragleave={stopPropagation(preventDefault(onDragLeave))}
-    ondrop={stopPropagation(preventDefault(onDrop))}>
+    ondrop={onDrop}>
     <button
       onclick={url ? stopPropagation(onClear) : undefined}
       class="absolute right-0 top-0 h-5 w-5 overflow-hidden rounded-full flex items-center justify-center"

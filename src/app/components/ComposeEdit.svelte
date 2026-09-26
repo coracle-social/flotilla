@@ -4,11 +4,11 @@
   import Button from "@lib/components/Button.svelte"
   import ComposeBar from "@app/components/ComposeBar.svelte"
 
-  const {
-    clear,
-  }: {
+  type Props = {
     clear: () => void
-  } = $props()
+  }
+
+  const {clear}: Props = $props()
 </script>
 
 <ComposeBar class="flex h-8 items-center justify-between pr-7 text-xs">

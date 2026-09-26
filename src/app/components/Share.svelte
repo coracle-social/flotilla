@@ -33,7 +33,7 @@
 
   const roomSearch = deriveUserRoomSearch()
 
-  const toggle = (path: string) => {
+  const toggle = (path: string) => () => {
     selection = path === selection ? "" : path
   }
 
@@ -73,7 +73,7 @@
                 "flex w-full min-w-0 items-center justify-between gap-2 button",
                 selection === path ? "button-primary" : "button-neutral",
               )}
-              onclick={() => toggle(path)}>
+              onclick={toggle(path)}>
               {#if h}
                 <RoomNameWithImage {url} {h} />
               {:else}
@@ -99,7 +99,7 @@
                 "flex w-full min-w-0 items-center justify-start gap-2 button",
                 selection === path ? "button-primary" : "button-neutral",
               )}
-              onclick={() => toggle(path)}>
+              onclick={toggle(path)}>
               {#if others.length > 1}
                 <ProfileCircles pubkeys={others} size={5} />
               {:else}

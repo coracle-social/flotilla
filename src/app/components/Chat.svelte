@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type {Snippet} from "svelte"
   import {onDestroy, onMount} from "svelte"
   import {
     ago,
@@ -42,14 +41,14 @@
   import {makeFeedContext} from "@app/feeds"
   import {navigate, pushModal} from "@app/modal"
   import {prependParent} from "@app/rooms"
+  import type {RoomRow} from "@app/rooms"
   import {pushToast} from "@app/toast"
 
   type Props = {
     pubkeys: string[]
-    info?: Snippet
   }
 
-  const {pubkeys, info}: Props = $props()
+  const {pubkeys}: Props = $props()
 
   const chatId = makeChatId(pubkeys)
   const context = makeFeedContext({relays: $router.resolver.relays([userInbox()])})
@@ -152,7 +151,7 @@
   let composeArea: ComposeArea | undefined = $state()
 
   const elements = $derived.by(() => {
-    const elements = []
+    const elements: RoomRow[] = []
 
     let previousDate
     let previousPubkey
@@ -163,7 +162,7 @@
       const date = formatTimestampAsDate(created_at)
 
       if (date !== previousDate) {
-        elements.push({type: "date", value: date, id: date, showPubkey: false})
+        elements.push({type: "date", value: date, id: date})
       }
 
       elements.push({
@@ -235,14 +234,14 @@
         </div>
       </div>
     {/if}
-    {#each elements as { type, id, value, showPubkey } (id)}
-      {#if type === "date"}
-        <Divider>{value}</Divider>
-      {:else}
+    {#each elements as row (row.id)}
+      {#if row.type === "date"}
+        <Divider>{row.value}</Divider>
+      {:else if row.type === "note"}
         <ChatMessage
-          event={$state.snapshot(value as TrustedEvent)}
+          event={$state.snapshot(row.value)}
           {pubkeys}
-          {showPubkey}
+          showPubkey={row.showPubkey}
           {context}
           {replyTo}
           canEdit={canEditEvent}
@@ -258,7 +257,6 @@
           End of message history
         {/if}
       </Spinner>
-      {@render info?.()}
     </p>
   </PageContent>
 
