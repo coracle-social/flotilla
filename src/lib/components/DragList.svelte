@@ -1,14 +1,15 @@
-<script lang="ts">
+<script lang="ts" generics="T">
   import cx from "classnames"
   import type {Snippet} from "svelte"
   import {flip} from "svelte/animate"
   import {cubicOut} from "svelte/easing"
-  import {insertAt, removeAt} from "@welshman/lib"
+  import {equals, insertAt, removeAt} from "@welshman/lib"
 
   type Props = {
-    items: string[]
-    onReorder: (items: string[]) => void
-    item: Snippet<[string]>
+    items: T[]
+    getKey: (item: T) => string
+    onReorder: (items: T[]) => void
+    item: Snippet<[T]>
     class?: string
     itemClass?: string
     role?: string
@@ -17,6 +18,7 @@
 
   const {
     items,
+    getKey,
     onReorder,
     item,
     class: className = "",
@@ -25,20 +27,18 @@
     itemRole = undefined,
   }: Props = $props()
 
-  const isSameOrder = (a: string[], b: string[]) =>
-    a.length === b.length && a.every((item, index) => item === b[index])
-
   const moveTo = (source: string, target: string) => {
-    const from = order.indexOf(source)
-    const to = order.indexOf(target)
+    const keys = order.map(getKey)
+    const from = keys.indexOf(source)
+    const to = keys.indexOf(target)
 
     if (from >= 0 && to >= 0 && from !== to) {
       preview = insertAt(to, order[from], removeAt(from, order))
     }
   }
 
-  const onDragStart = (e: DragEvent, value: string) => {
-    dragged = value
+  const onDragStart = (e: DragEvent, key: string) => {
+    dragged = key
     dropped = false
 
     if (e.dataTransfer) {
@@ -50,19 +50,19 @@
     e.preventDefault()
   }
 
-  const onDragEnter = (e: DragEvent, value: string) => {
+  const onDragEnter = (e: DragEvent, key: string) => {
     e.preventDefault()
 
     if (dragged) {
-      moveTo(dragged, value)
+      moveTo(dragged, key)
     }
   }
 
-  const onDrop = (e: DragEvent, value: string) => {
+  const onDrop = (e: DragEvent, key: string) => {
     e.preventDefault()
 
     if (dragged) {
-      moveTo(dragged, value)
+      moveTo(dragged, key)
     }
 
     dragged = undefined
@@ -81,8 +81,8 @@
     dragged = undefined
   }
 
-  let preview = $state<string[] | undefined>()
-  let lastItems = $state<string[]>([])
+  let preview = $state.raw<T[] | undefined>()
+  let lastItems = $state.raw<T[]>([])
   let dragged = $state<string | undefined>()
   let dropped = $state(false)
 
@@ -91,7 +91,7 @@
 
   // The preview outlives the drop, since the caller takes a moment to publish the new order.
   $effect(() => {
-    if (!isSameOrder(items, lastItems)) {
+    if (!equals(items, lastItems)) {
       lastItems = items
       preview = undefined
     }
@@ -99,16 +99,17 @@
 </script>
 
 <div class={className} {role}>
-  {#each order as value (value)}
+  {#each order as value (getKey(value))}
+    {@const key = getKey(value)}
     <div
       animate:flip={{duration: 300, easing: cubicOut}}
-      class={cx("transition-opacity duration-200", itemClass, {"opacity-50": dragged === value})}
+      class={cx("transition-opacity duration-200", itemClass, {"opacity-50": dragged === key})}
       draggable="true"
       role={itemRole}
-      ondragstart={e => onDragStart(e, value)}
+      ondragstart={e => onDragStart(e, key)}
       ondragover={onDragOver}
-      ondragenter={e => onDragEnter(e, value)}
-      ondrop={e => onDrop(e, value)}
+      ondragenter={e => onDragEnter(e, key)}
+      ondrop={e => onDrop(e, key)}
       ondragend={onDragEnd}>
       {@render item(value)}
     </div>

@@ -1,22 +1,27 @@
 <script lang="ts">
   import cx from "classnames"
-  import type {Maybe} from "@welshman/lib"
-  import {randomId} from "@welshman/lib"
-  import {removeAt, insertAt} from "@welshman/lib"
+  import {equals, randomId} from "@welshman/lib"
   import {preventDefault, stopPropagation} from "@lib/html"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import DragList from "@lib/components/DragList.svelte"
 
-  interface Props {
+  type Props = {
     value: (string | File)[]
     multiple?: boolean
   }
 
+  type Entry = {id: string; value: string | File}
+
   let {value = $bindable(), multiple = true}: Props = $props()
 
   const id = randomId()
+
+  const toEntry = (value: string | File) => ({id: randomId(), value})
+
+  const getKey = (entry: Entry) => entry.id
 
   const getImageUrl = (item: string | File): string => {
     if (typeof item === "string") {
@@ -25,15 +30,20 @@
     return URL.createObjectURL(item)
   }
 
+  const setEntries = (newEntries: Entry[]) => {
+    entries = newEntries
+    value = newEntries.map(entry => entry.value)
+  }
+
   const addFiles = (files: FileList | File[]) => {
-    const newFiles = Array.from(files).filter(file => file.type.startsWith("image/"))
+    const newEntries = Array.from(files)
+      .filter(file => file.type.startsWith("image/"))
+      .map(toEntry)
 
-    value = multiple ? [...value, ...newFiles] : newFiles.slice(0, 1)
+    setEntries(multiple ? [...entries, ...newEntries] : newEntries.slice(0, 1))
   }
 
-  const removeItem = (index: number) => {
-    value = removeAt(index, value)
-  }
+  const removeItem = (id: string) => setEntries(entries.filter(entry => entry.id !== id))
 
   const onFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement
@@ -63,55 +73,47 @@
     dropActive = false
   }
 
-  let draggedIndex: Maybe<number> = $state()
+  // Urls can repeat, so each image carries an id to key it by.
+  let entries = $state.raw(value.map(toEntry))
   let dropActive = $state(false)
 
-  const handleDragStart = (e: DragEvent, index: number) => {
-    draggedIndex = index
-
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = "move"
+  $effect(() => {
+    if (
+      !equals(
+        value,
+        entries.map(entry => entry.value),
+      )
+    ) {
+      entries = value.map(toEntry)
     }
-  }
-
-  const handleDragOver = (e: DragEvent, index: number) => {
-    e.preventDefault()
-
-    if (draggedIndex !== undefined && draggedIndex !== index) {
-      value = insertAt(index, value[draggedIndex], removeAt(draggedIndex, value))
-      draggedIndex = index
-    }
-  }
-
-  const handleDragEnd = () => {
-    draggedIndex = undefined
-  }
+  })
 </script>
 
 <div class="flex flex-col gap-2">
   <div class={cx("grid gap-3", multiple ? "grid-cols-3" : "grid-cols-1")} role="list">
-    {#each value as item, index (index)}
-      <div
-        class={cx(
-          "border-line bg-surface-more relative overflow-hidden rounded-2xl border border-solid",
-          multiple ? "aspect-square cursor-move" : "aspect-video",
-        )}
-        style:border-color={draggedIndex === index ? "var(--primary)" : undefined}
-        draggable={multiple}
-        role="listitem"
-        aria-label={multiple ? "Draggable image" : "Image"}
-        ondragstart={e => handleDragStart(e, index)}
-        ondragover={e => handleDragOver(e, index)}
-        ondragend={handleDragEnd}>
-        <img src={getImageUrl(item)} alt="Upload preview" class="h-full w-full object-cover" />
+    <DragList
+      class="contents"
+      itemClass={cx(
+        "border-line bg-surface-more relative overflow-hidden rounded-2xl border border-solid",
+        multiple ? "aspect-square cursor-move" : "aspect-video",
+      )}
+      itemRole="listitem"
+      items={entries}
+      {getKey}
+      onReorder={setEntries}>
+      {#snippet item(entry)}
+        <img
+          src={getImageUrl(entry.value)}
+          alt="Upload preview"
+          class="h-full w-full object-cover" />
         <Button
           aria-label="Remove image"
           class="button button-neutral button-xs button-circle bg-surface absolute right-1 top-1"
-          onclick={() => removeItem(index)}>
+          onclick={() => removeItem(entry.id)}>
           <Icon icon={CloseCircle} size={4} />
         </Button>
-      </div>
-    {/each}
+      {/snippet}
+    </DragList>
     {#if multiple || value.length === 0}
       <label
         for={id}

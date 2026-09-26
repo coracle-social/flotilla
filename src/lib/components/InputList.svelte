@@ -1,8 +1,8 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import type {Maybe} from "@welshman/lib"
-  import {append, removeAt, replaceAt, insertAt} from "@welshman/lib"
+  import {append, equals, randomId} from "@welshman/lib"
   import Button from "@lib/components/Button.svelte"
+  import DragList from "@lib/components/DragList.svelte"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import HamburgerMenu from "@assets/icons/hamburger-menu.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
@@ -14,71 +14,69 @@
     placeholder?: string
   }
 
+  type Entry = {id: string; value: string}
+
   let {
     value = $bindable(),
     addLabel,
     placeholder = "Enter text...",
     allowAdd = true,
   }: Props & {allowAdd?: boolean} = $props()
-  let draggedIndex: Maybe<number> = $state()
 
-  const onChange = (newValue: string[]) => {
-    value = newValue
+  const toEntry = (value: string) => ({id: randomId(), value})
+
+  const getKey = (entry: Entry) => entry.id
+
+  const setEntries = (newEntries: Entry[]) => {
+    entries = newEntries
+    value = newEntries.map(entry => entry.value)
   }
 
-  const addItem = () => onChange(append("", value))
+  const addItem = () => setEntries(append(toEntry(""), entries))
 
-  const removeItem = (index: number) => onChange(removeAt(index, value))
+  const removeItem = (id: string) => setEntries(entries.filter(entry => entry.id !== id))
 
-  const updateItem = (index: number, item: string) => onChange(replaceAt(index, item, value))
+  const updateItem = (id: string, text: string) =>
+    setEntries(entries.map(entry => (entry.id === id ? {id, value: text} : entry)))
 
-  const handleDragStart = (e: DragEvent, index: number) => {
-    draggedIndex = index
+  // Strings can be empty or repeated, so each one carries an id to key it by.
+  let entries = $state.raw(value.map(toEntry))
 
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = "move"
+  $effect(() => {
+    if (
+      !equals(
+        value,
+        entries.map(entry => entry.value),
+      )
+    ) {
+      entries = value.map(toEntry)
     }
-  }
-
-  const handleDragOver = (e: DragEvent, index: number) => {
-    e.preventDefault()
-
-    if (draggedIndex !== undefined && draggedIndex !== index) {
-      onChange(insertAt(index, value[draggedIndex], removeAt(draggedIndex, value)))
-      draggedIndex = index
-    }
-  }
-
-  const handleDragEnd = () => {
-    draggedIndex = undefined
-  }
+  })
 </script>
 
 <div class="flex flex-col gap-2" role="list">
-  <!-- eslint-disable-next-line svelte/require-each-key -->
-  {#each value as item, index}
-    <div
-      class="flex items-center gap-2"
-      draggable="true"
-      role="listitem"
-      aria-label="Draggable item"
-      ondragstart={e => handleDragStart(e, index)}
-      ondragover={e => handleDragOver(e, index)}
-      ondragend={handleDragEnd}>
-      <Button onclick={() => removeItem(index)}>
+  <DragList
+    class="contents"
+    itemClass="flex items-center gap-2"
+    itemRole="listitem"
+    items={entries}
+    {getKey}
+    onReorder={setEntries}>
+    {#snippet item(entry)}
+      <Button onclick={() => removeItem(entry.id)}>
         <Icon icon={TrashBin2} />
       </Button>
       <input
         type="text"
         class="input w-full"
-        value={item}
+        value={entry.value}
         {placeholder}
-        oninput={e => updateItem(index, e.currentTarget.value)} />
+        oninput={e => updateItem(entry.id, e.currentTarget.value)} />
       <div class="cursor-move" role="button" aria-label="Drag handle">
         <Icon icon={HamburgerMenu} />
       </div>
-    </div>
-  {/each}
+    {/snippet}
+  </DragList>
   {#if allowAdd}
     <Button class="button button-link w-fit px-0" onclick={addItem}>
       <Icon icon={AddCircle} size={5} />

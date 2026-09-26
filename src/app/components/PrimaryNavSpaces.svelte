@@ -1,5 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
+  import {identity} from "@welshman/lib"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
@@ -54,6 +55,7 @@
       <DragList
         class="flex flex-col items-center"
         items={$userSpaceUrls}
+        getKey={identity}
         onReorder={reorderSpaceUrls}>
         {#snippet item(url)}
           <PrimaryNavItemSpace {url} />
