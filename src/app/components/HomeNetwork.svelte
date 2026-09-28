@@ -8,13 +8,18 @@
   import type {TrustedEvent} from "@welshman/util"
   import {getReplyTags} from "@welshman/domain"
   import Planet from "@assets/icons/planet.svg?dataurl"
+  import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
+  import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HomeNetworkItem from "@app/components/HomeNetworkItem.svelte"
+  import NoteCreate from "@app/components/NoteCreate.svelte"
   import {CONTENT_KINDS} from "@app/content"
   import {followLists, relayLists, router, user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import {pushModal} from "@app/modal"
 
   type Props = {
     class?: string
@@ -38,6 +43,8 @@
   let events: Writable<TrustedEvent[]> = $state(writable([]))
   let started = false
   let stop: Maybe<() => void>
+
+  const createPost = () => pushModal(NoteCreate)
 
   // Kind 1 replies read as half a conversation without their parent.
   const isRoot = (event: TrustedEvent) =>
@@ -85,6 +92,12 @@
 </script>
 
 <HomeSection title="Network" icon={Planet} class={className}>
+  {#snippet action()}
+    <Button class="button button-primary button-xs" onclick={createPost}>
+      <Icon icon={PenNewSquare} size={4} />
+      Create post
+    </Button>
+  {/snippet}
   <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4" bind:this={element}>
     {#if isEmpty}
       <div class="flex flex-col items-center gap-3 pb-4 text-center">

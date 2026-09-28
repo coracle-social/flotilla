@@ -6,6 +6,7 @@
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import UserPlus from "@assets/icons/user-plus.svg?dataurl"
+  import Pen2 from "@assets/icons/pen-2.svg?dataurl"
   import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -21,6 +22,7 @@
   import ProfilePageNotes from "@app/components/ProfilePageNotes.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
+  import NoteCreate from "@app/components/NoteCreate.svelte"
   import WotScore from "@app/components/WotScore.svelte"
   import {compressFileForUpload, uploadFile} from "@app/uploads"
   import {pushModal} from "@app/modal"
@@ -52,6 +54,8 @@
   const copyNpub = () => clip(nip19.npubEncode(target))
 
   const startEdit = () => pushModal(ProfileEdit)
+
+  const createPost = () => pushModal(NoteCreate)
 
   const openChat = () => goToChat([target])
 
@@ -154,10 +158,16 @@
                   <div class="flex items-center gap-2">
                     {#if isSelf}
                       <Button
-                        class="button button-primary flex-1 sm:button-sm sm:flex-none"
+                        class="button button-neutral flex-1 sm:button-sm sm:flex-none"
                         onclick={startEdit}>
-                        <Icon icon={PenNewSquare} size={4} />
+                        <Icon icon={Pen2} size={4} />
                         Edit profile
+                      </Button>
+                      <Button
+                        class="button button-primary flex-1 sm:button-sm sm:flex-none"
+                        onclick={createPost}>
+                        <Icon icon={PenNewSquare} size={4} />
+                        Create post
                       </Button>
                     {:else}
                       <Button

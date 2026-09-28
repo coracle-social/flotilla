@@ -1281,6 +1281,18 @@ Acceptance:
 - A note alice publishes from her own session appears at the top of bob's open
   view without a reload.
 
+### US-134 — Write a public post
+
+As alice, I want to write a post from my own profile or from my network feed, so
+that the people who follow me and the spaces I favorited both see it.
+
+Acceptance:
+
+- "Create post" on her profile and at the top of home's Network section both
+  open the same composer.
+- Submitting it publishes the post to her own relays and to every space she
+  favorited, and it appears at the top of her profile's notes.
+
 ### US-080 — Preview a profile from anywhere
 
 As alice, I want to click a name or avatar wherever it appears, so that I can

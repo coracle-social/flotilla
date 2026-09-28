@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
 import {npubEncode} from "nostr-tools/nip19"
-import {HOUR, MINUTE, MONTH} from "@welshman/lib"
+import {HOUR, MINUTE, MONTH, uniq} from "@welshman/lib"
 import {NOTE, STATUS, makeEvent} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {FollowList, Note, PinList, Profile} from "@welshman/domain"
@@ -10,7 +10,9 @@ import {
   GIF,
   WEBP,
   expect,
+  getPublished,
   mockBlossom,
+  noteEditor,
   profilePath,
   spacePath,
   test,
@@ -395,6 +397,59 @@ test("US-079 read a person's notes", async ({seed, as}) => {
   // Nothing is scrolled here: the feed keeps widening its window until the page is full.
   await expect(list.filter({hasText: "OLDEST"})).toBeVisible()
   await expect(list.filter({hasText: "REPLY"})).toHaveCount(0)
+})
+
+test("US-134 write a public post", async ({seed, as}) => {
+  const post = "the wind has finally turned"
+
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+    const other = relay("other")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.profile(user.alice, {name: "Alice Anderson"})
+    space.relayList(user.alice)
+
+    // Her second space is in no relay list of hers, so a post reaching it was routed there as a space.
+    other.room("general", {name: "General"})
+    other.join(user.alice, "general")
+  })
+
+  const page = await as(users.alice, profilePath(users.alice.pubkey), {context: DESKTOP})
+
+  await page.getByRole("button", {name: "Create post"}).click()
+
+  const composer = topDialog(page)
+
+  await expect(composer.getByText("Create a Public Post")).toBeVisible()
+
+  await noteEditor(composer).click()
+  await noteEditor(composer).pressSequentially(post)
+  await composer.getByRole("button", {name: "Post"}).click()
+
+  await expect(notes(page).filter({hasText: post})).toBeVisible()
+
+  await expect
+    .poll(() =>
+      uniq(
+        getPublished(page.context())
+          .filter(({event}) => event.content === post)
+          .map(({url}) => url),
+      ).sort(),
+    )
+    .toEqual([scenario.space("other").url, scenario.space("space").url].sort())
+
+  // The same composer is how a post starts from home, out of the feed it posts into.
+  await page.goto("/home")
+
+  const network = page
+    .locator("section")
+    .filter({has: page.getByRole("heading", {name: "Network"})})
+
+  await network.getByRole("button", {name: "Create post"}).click()
+
+  await expect(topDialog(page).getByText("Create a Public Post")).toBeVisible()
 })
 
 test("US-080 preview a profile from anywhere", async ({seed, as}) => {
