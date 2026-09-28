@@ -22,7 +22,7 @@
   import {makeEditor} from "@app/editor"
   import {command, writer} from "@app/core"
   import {pinToReference, setPinReference} from "@app/pinboards"
-  import {toSpace} from "@app/rooms"
+  import {addressWriterToSpace} from "@app/rooms"
   import {pushToast} from "@app/toast"
   import {clearModals} from "@app/modal"
 
@@ -46,7 +46,7 @@
   const back = () => history.back()
 
   const submit = async () => {
-    const eventWriter = await toSpace(
+    const eventWriter = await addressWriterToSpace(
       address ? writer(Pin).setIdentifier().addBoard(address) : writer(Pin, pin),
       url,
     )

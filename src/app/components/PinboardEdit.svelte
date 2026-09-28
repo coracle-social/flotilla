@@ -17,7 +17,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {command, writer} from "@app/core"
-  import {toSpace} from "@app/rooms"
+  import {addressWriterToSpace} from "@app/rooms"
   import {makeLibraryPath} from "@app/routes"
   import {pushToast} from "@app/toast"
 
@@ -34,7 +34,7 @@
     loading = true
 
     try {
-      const eventWriter = await toSpace(
+      const eventWriter = await addressWriterToSpace(
         writer(Pinboard, board).setTitle(title).setDescription(description),
         url,
       )

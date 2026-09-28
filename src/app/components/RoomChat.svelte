@@ -31,7 +31,7 @@
     deriveUserRoomMembershipStatus,
     getRoomType,
     prependParent,
-    toSpace,
+    addressWriterToSpace,
   } from "@app/rooms"
   import {loadSendDelay} from "@app/settings"
   import {deferredRoomPath, setChecked} from "@app/notifications"
@@ -117,7 +117,7 @@
       ;({content, tags} = await prependParent(share, {content, tags}, url))
     }
 
-    const eventWriter = await toSpace(
+    const eventWriter = await addressWriterToSpace(
       writer(Message)
         .setContent(content)
         .addTags(...tags),

@@ -88,7 +88,7 @@ export const prependParent = async (
   return {content, tags}
 }
 
-export const toSpace = async <W extends EventWriter<BaseEventReader>>(
+export const addressWriterToSpace = async <W extends EventWriter<BaseEventReader>>(
   eventWriter: W,
   url: string,
   h?: string,
@@ -115,7 +115,7 @@ export const publishRoomQuote = async ({
   parent: TrustedEvent
   delay?: number
 }) => {
-  const eventWriter = await toSpace(writer(Message).setParent(parent), url, h)
+  const eventWriter = await addressWriterToSpace(writer(Message).setParent(parent), url, h)
 
   return thunks.get().publish({
     relays: [url],
@@ -135,7 +135,7 @@ export const publishComment = async ({
   event: TrustedEvent
   parent?: TrustedEvent
 }) => {
-  const eventWriter = await toSpace(
+  const eventWriter = await addressWriterToSpace(
     writer(Comment)
       .setContent(content)
       .addTags(...tags)
@@ -156,7 +156,7 @@ export const publishToSpace = async (
   eventWriter: EventWriter<BaseEventReader>,
   {url, h, shareToChat}: {url: string; h?: string; shareToChat?: boolean},
 ) => {
-  const thunk = await command(await toSpace(eventWriter, url, h)).then(publish)
+  const thunk = await command(await addressWriterToSpace(eventWriter, url, h)).then(publish)
   const error = await thunk.waitForError()
 
   if (shareToChat && !error) {

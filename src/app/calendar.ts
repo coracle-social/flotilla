@@ -15,7 +15,7 @@ import {CalendarRsvp, TimeEvent} from "@welshman/domain"
 import type {RsvpStatus} from "@welshman/domain"
 import {synced} from "@welshman/store"
 import {deletes, events, reader, relays, thunks, writer} from "@app/core"
-import {toSpace} from "@app/rooms"
+import {addressWriterToSpace} from "@app/rooms"
 import {kv} from "@app/storage"
 
 // Views
@@ -259,7 +259,7 @@ export const getRsvpsByStatus = (rsvps: TrustedEvent[]) => {
 
 // An RSVP is addressable, so identifying it by its target makes a new one supersede the old.
 export const publishRsvp = async (url: string, event: TrustedEvent, status: RsvpStatus) => {
-  const eventWriter = await toSpace(
+  const eventWriter = await addressWriterToSpace(
     writer(CalendarRsvp)
       .setIdentifier(getAddress(event))
       .setCalendarEventFromEvent(event, url)
