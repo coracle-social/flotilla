@@ -62,6 +62,7 @@ Create an `.env.local` file to override any of the values in `.env`:
 - `VITE_POMADE_SIGNERS` - A comma-separated list of Pomade signer server URLs (3+ required to enable email signup)
 - `VITE_THUMBNAIL_URL` - URL of the image thumbnail service
 - `VITE_CARTO_BASEMAP_KEY` - A CARTO Basemaps key for the member map's tiles, free from https://carto.com/basemaps/apikey/. Without one the tiles carry an "API key required" watermark.
+- `VITE_CARTO_BASEMAP_KEY_LOCALHOST` - The CARTO key for the native apps and the dev server, which both serve from `localhost`. CARTO authorizes a key against a list of domains and refuses `localhost` on one that also names a real domain, so this is a second key.
 
 These values **won't** be used for a built version. Instead, env variables should be provided to `scripts/build/app.sh` directly or to the built container.
 

@@ -19,6 +19,12 @@
 
   const basemap = $derived($activeTheme === "dark" ? "dark_all" : "light_all")
 
+  // CARTO authorizes a key per referer, and the native apps and the dev server both serve from localhost.
+  const basemapKey =
+    location.hostname === "localhost"
+      ? import.meta.env.VITE_CARTO_BASEMAP_KEY_LOCALHOST
+      : import.meta.env.VITE_CARTO_BASEMAP_KEY
+
   const openProfile = (pubkey: string) => pushModal(ProfileDetail, {pubkey, url})
 
   let element: HTMLElement
@@ -44,7 +50,7 @@
     if (leaflet && map) {
       tile = leaflet
         .tileLayer(
-          `https://basemaps.cartocdn.com/rastertiles/${basemap}/{z}/{x}/{y}.png?key=${import.meta.env.VITE_CARTO_BASEMAP_KEY}`,
+          `https://basemaps.cartocdn.com/rastertiles/${basemap}/{z}/{x}/{y}.png?key=${basemapKey}`,
           {
             maxZoom: 12,
             attribution:
