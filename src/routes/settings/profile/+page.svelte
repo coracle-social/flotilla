@@ -103,7 +103,7 @@
         <div class="flex min-w-0 flex-col">
           <div class="flex items-center gap-2">
             <div class="text-bold overflow-hidden text-ellipsis">
-              {$profile?.display(pubkeyDisplay) ?? pubkeyDisplay}
+              {$profile?.display() ?? pubkeyDisplay}
             </div>
           </div>
           <div class="overflow-hidden text-ellipsis text-sm opacity-75">
