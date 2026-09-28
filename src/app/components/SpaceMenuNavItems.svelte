@@ -20,7 +20,7 @@
   import {events} from "@app/core"
   import {ENABLE_ZAPS} from "@app/env"
   import {CONTENT_KINDS} from "@app/content"
-  import {deriveIsGroupSpace} from "@app/relays"
+  import {deriveSpaceSupportsRooms} from "@app/relays"
   import {makeSpaceChatPath, makeSpacePath} from "@app/routes"
   import {allNotifications, notifications} from "@app/notifications"
   import {pushModal} from "@app/modal"
@@ -31,7 +31,7 @@
 
   const {url}: Props = $props()
 
-  const isGroupSpace = deriveIsGroupSpace(url)
+  const supportsRooms = deriveSpaceSupportsRooms(url)
   const chatPath = makeSpaceChatPath(url)
   const goalsPath = makeSpacePath(url, "goals")
   const threadsPath = makeSpacePath(url, "threads")
@@ -62,7 +62,7 @@
 <SecondaryNavItem href={makeSpacePath(url, "about")}>
   <Icon icon={Home} /> Space Details
 </SecondaryNavItem>
-{#if !$isGroupSpace}
+{#if !$supportsRooms}
   <SecondaryNavItem href={chatPath} notification={$notifications.has(chatPath)}>
     <Icon icon={ChatRound} /> Chat
   </SecondaryNavItem>
@@ -105,7 +105,7 @@
     <Icon icon={Revote} /> Polls
   </SecondaryNavItem>
 {/if}
-{#if $isGroupSpace}
+{#if $supportsRooms}
   <SecondaryNavItem onclick={openSearch}>
     <Icon icon={Magnifier} /> Search
   </SecondaryNavItem>

@@ -9,7 +9,7 @@
   import SpaceMenuRoomItem from "@app/components/SpaceMenuRoomItem.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import {deriveUserCanCreateRoom} from "@app/management"
-  import {deriveIsGroupSpace} from "@app/relays"
+  import {deriveSpaceSupportsRooms} from "@app/relays"
   import {RoomType, deriveUserRooms, deriveOtherRooms, displayRoom} from "@app/rooms"
   import {pushModal} from "@app/modal"
 
@@ -20,7 +20,7 @@
 
   const {url, mobile = false}: Props = $props()
 
-  const isGroupSpace = deriveIsGroupSpace(url)
+  const supportsRooms = deriveSpaceSupportsRooms(url)
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url, RoomType.Text)
   const otherVoiceRooms = deriveOtherRooms(url, RoomType.Voice)
@@ -95,7 +95,7 @@
   {/if}
 {/snippet}
 
-{#if $isGroupSpace && ($userRooms.length > 0 || $otherRooms.length > 0 || $otherVoiceRooms.length > 0 || $canCreateRoom)}
+{#if $supportsRooms && ($userRooms.length > 0 || $otherRooms.length > 0 || $otherVoiceRooms.length > 0 || $canCreateRoom)}
   {#if mobile}
     <div class="card space-menu__card flex flex-col gap-1">
       {@render content()}

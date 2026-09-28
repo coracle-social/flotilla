@@ -94,9 +94,9 @@ export const deriveSocketStatus = (url: string) =>
   )
 
 // A space that isn't a NIP-29 relay has no rooms, only one space-wide chat.
-export const isGroupSpace = (url: string) => Boolean(relays.get().get(url)?.hasNip(29))
+export const spaceSupportsRooms = (url: string) => Boolean(relays.get().get(url)?.hasNip(29))
 
-export const deriveIsGroupSpace = (url: string) =>
+export const deriveSpaceSupportsRooms = (url: string) =>
   derived(relays.get().one(url), $relay => Boolean($relay?.hasNip(29)))
 
 const livekitUrl = (url: string) =>

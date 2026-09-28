@@ -26,7 +26,7 @@ import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
 import {getIsMuted, userSettingsValues} from "@app/settings"
 import {Chats} from "@app/chats"
 import {dufflepud, DUFFLEPUD_URL} from "@app/env"
-import {isGroupSpace} from "@app/relays"
+import {spaceSupportsRooms} from "@app/relays"
 import {activeSpaceUrls} from "@app/rooms"
 import {getHttpAuthHeader} from "@app/signer"
 import {kv} from "@app/storage"
@@ -214,7 +214,7 @@ export const latestActivityByPath = derived(
       [
         activeSpaceUrls,
         fromApp($app => $app.use(Chats).index.$),
-        // Only here to recompute once a relay's NIP-11 says whether it's a group space
+        // Only here to recompute once a relay's NIP-11 says whether the space supports rooms
         fromApp($app => $app.use(Relays).index.$),
         fromApp(
           $app =>
@@ -240,7 +240,7 @@ export const latestActivityByPath = derived(
     for (const url of $activeSpaceUrls) {
       const events = sortEventsDesc((eventsByIdByUrl.get(url) || new Map()).values())
 
-      if (isGroupSpace(url)) {
+      if (spaceSupportsRooms(url)) {
         for (const [h, [event]] of groupBy(e => tagValue(tagSpec("h"), e.tags), events)) {
           // A muted room is left out entirely, so it can't light up its own badge or the space's
           if (h && !getIsMuted($settings, url, h)) {

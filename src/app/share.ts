@@ -6,7 +6,7 @@ import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {app} from "@app/core"
 import {navigate, pushModal} from "@app/modal"
-import {isGroupSpace} from "@app/relays"
+import {spaceSupportsRooms} from "@app/relays"
 import {makeSpaceChatPath} from "@app/routes"
 import {pushToast} from "@app/toast"
 import ShareDialog from "@app/components/Share.svelte"
@@ -31,7 +31,7 @@ export const shareTo = async (
 }
 
 export const shareEvent = (url: string, noun: string, event: TrustedEvent) => {
-  if (isGroupSpace(url)) {
+  if (spaceSupportsRooms(url)) {
     pushModal(ShareEvent, {url, noun, event})
   } else {
     shareTo(makeSpaceChatPath(url), {type: "event", value: event})

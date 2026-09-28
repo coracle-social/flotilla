@@ -22,7 +22,7 @@ import {
 } from "@app/core"
 import {PLATFORM_RELAYS} from "@app/env"
 import {allowPubkeys, deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/management"
-import {isGroupSpace} from "@app/relays"
+import {spaceSupportsRooms} from "@app/relays"
 import {makeRoomPath, makeSpaceChatPath} from "@app/routes"
 import {loadSendDelay} from "@app/settings"
 
@@ -300,7 +300,7 @@ export const deriveUserRoomSearch = () =>
       type Option = {url: string; h?: string; path: string; name: string; isFavorite: boolean}
 
       const options = $userSpaceUrls.flatMap((url): Option[] => {
-        if (isGroupSpace(url)) {
+        if (spaceSupportsRooms(url)) {
           const favorites = new Set($userRoomList?.roomsForUrl(url) ?? [])
 
           return ($roomsByUrl.get(url) ?? []).map(({h}) => ({
