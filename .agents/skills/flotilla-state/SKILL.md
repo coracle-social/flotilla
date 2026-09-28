@@ -247,7 +247,7 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 | repository, tracker, relays, relay stats, handles, zappers, plaintext, wraps | IndexedDB | yes | deleted |
 | settings (`SettingsValues`) | an encrypted app-data event, cached in IndexedDB | yes | local copy deleted |
 | `session`, `wallet` | `ss` | no | cleared |
-| `theme`, `flTheme`, `checked`, `shouldUnwrap`, `device`, `notificationSettings`, push state, `needsKeyBackup` | `kv` | no | cleared |
+| `theme`, `flTheme`, `checked`, `shouldUnwrap`, `device`, `notificationSettings`, push state, `forceHealthChecks` | `kv` | no | cleared |
 | drafts, dictations | a module `Map`, lost on reload | no | page reloads |
 
 ### IndexedDB (`src/app/storage.ts`, `src/lib/indexeddb.ts`)
@@ -288,13 +288,13 @@ or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. T
 `.ready` resolves once it has arrived:
 
 - `theme`, `flTheme` (`theme.ts`), `checked` (`notifications.ts`), `shouldUnwrap` (`sync.ts`),
-  `device` (`device.ts`), `needsKeyBackup` (`healthChecks.ts`) in `kv`
+  `device` (`device.ts`), `forceHealthChecks` (`healthChecks.ts`) in `kv`
 - `pushState` (key `notificationState`) and `notificationSettings` in `kv`, both in
   `push/adapters/common.ts` and re-exported from `@app/push`
 - `wallet` (`lightning.ts`) in `ss`
 
 The root layout awaits `.ready` for the stores boot code reads (`device`, `shouldUnwrap`,
-`wallet`, `notificationSettings`, `pushState`, `needsKeyBackup`) before `Push.sync()` and
+`wallet`, `notificationSettings`, `pushState`, `forceHealthChecks`) before `Push.sync()` and
 background sync start. A new store that boot reads joins that list. Never change a key, since
 it is where existing installs keep their value.
 

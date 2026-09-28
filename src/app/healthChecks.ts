@@ -1,12 +1,14 @@
 import {derived} from "svelte/store"
-import {sample} from "@welshman/lib"
+import {assoc, sample} from "@welshman/lib"
 import {normalizeRelayUrl} from "@welshman/util"
 import {synced} from "@welshman/store"
 import {MessagingRelayLists, RelayLists, Relays, SearchRelayLists, projection} from "@welshman/app"
 import type {Command, IApp, Projection} from "@welshman/app"
-import {usePlugin} from "@app/core"
+import {session, usePlugin} from "@app/core"
 import {DEFAULT_RELAYS} from "@app/env"
 import {kv} from "@app/storage"
+import {pushModal} from "@app/modal"
+import KeyDownload from "@app/components/KeyDownload.svelte"
 
 export type HealthCheckContext = {
   readRelays: string[]
@@ -21,10 +23,11 @@ export type HealthCheckChange = {
   removed: string[]
 }
 
+// A plan with changes is reviewed and returns the Command to publish; one without does the fix itself.
 export type HealthCheckPlan = {
   summary: string
   changes: HealthCheckChange[]
-  apply: () => Promise<Command>
+  apply: () => Promise<Command | void>
 }
 
 export type HealthCheck = {
@@ -94,8 +97,12 @@ const tooManyRelaysCheck = (spec: RelayListSpec): HealthCheck => ({
     ),
 })
 
-// Set when a key is generated in-app, and cleared once the user has saved a backup of it
-export const needsKeyBackup = synced({key: "needsKeyBackup", storage: kv, defaultValue: false})
+// Raises or clears a check by id regardless of what its own isPending says.
+export const forceHealthChecks = synced<Record<string, boolean>>({
+  key: "forceHealthChecks",
+  storage: kv,
+  defaultValue: {},
+})
 
 export class HealthChecks {
   context: Projection<HealthCheckContext>
@@ -125,8 +132,10 @@ export class HealthChecks {
     )
 
     this.pending = projection(
-      derived([this.context.$, app.use(Relays).index.$], ([$context]) =>
-        this.checks.filter(check => check.isPending($context)),
+      derived(
+        [this.context.$, forceHealthChecks, app.use(Relays).index.$],
+        ([$context, $forceHealthChecks]) =>
+          this.checks.filter(check => $forceHealthChecks[check.id] ?? check.isPending($context)),
       ),
     )
   }
@@ -184,7 +193,30 @@ export class HealthChecks {
           urls => this.app.use(SearchRelayLists).setUrls(urls),
         ),
     },
+    {
+      id: "backup-key",
+      title: "Back Up Your Key",
+      description: "Save a backup of your private key in a secure place.",
+      // Only a key generated in-app is ours to back up, so signup raises this through forceHealthChecks.
+      isPending: () => false,
+      plan: () => ({
+        summary: "Opens the key backup dialog, where you choose how to save your key.",
+        changes: [],
+        apply: async () => {
+          pushModal(KeyDownload, {
+            secret: (session.get()!.data as {secret: string}).secret,
+            next: this.finishKeyBackup,
+            submitText: "Done",
+          })
+        },
+      }),
+    },
   ]
+
+  private finishKeyBackup = () => {
+    forceHealthChecks.update(assoc("backup-key", false))
+    history.back()
+  }
 
   plan = (healthCheck: HealthCheck) => healthCheck.plan(this.context.get())
 }

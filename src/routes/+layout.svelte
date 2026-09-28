@@ -27,9 +27,9 @@
   import {restoreSession} from "@app/session"
   import {syncSignerAlerts} from "@app/signer"
   import {wallet} from "@app/lightning"
-  import {kv, storage} from "@app/storage"
+  import {storage} from "@app/storage"
   import {device} from "@app/device"
-  import {needsKeyBackup} from "@app/healthChecks"
+  import {forceHealthChecks} from "@app/healthChecks"
   import {setupShareIntents} from "@app/share"
   import {shouldUnwrap, syncApplicationData} from "@app/sync"
   import * as env from "@app/env"
@@ -89,16 +89,8 @@
       wallet.ready,
       notificationSettings.ready,
       pushState.ready,
-      needsKeyBackup.ready,
+      forceHealthChecks.ready,
     ])
-
-    // The key backup reminder used to live in a forceHealthChecks record
-    const legacyHealthChecks = await kv.get<Record<string, boolean>>("forceHealthChecks")
-
-    if (legacyHealthChecks) {
-      needsKeyBackup.set(Boolean(legacyHealthChecks["backup-key"]))
-      await kv.remove("forceHealthChecks")
-    }
 
     // Wait for critical storage data only
     await storage.get()?.ready

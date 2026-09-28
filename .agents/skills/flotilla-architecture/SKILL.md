@@ -47,8 +47,9 @@ only gate.
   component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
   `IconInput` and its picker buttons did.
 - **app → components.** `routes.ts` (`goToChat` opens `ChatEnable`, `goToEvent` opens
-  `NoteDetail`), `share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`) and `speech.ts`
-  (`OpenRouterEnable`) import a component so they can open a modal mid-flow. Push adapters and
+  `NoteDetail`), `share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`), `speech.ts`
+  (`OpenRouterEnable`) and `healthChecks.ts` (`KeyDownload`, the fix for the key backup check)
+  import a component so they can open a modal mid-flow. Push adapters and
   deep links reach those flows from outside any component, and the rest have several component
   callers, so each stays in one module. `editor/` holds `.svelte` files of its own (suggestion
   popovers), which `makeEditor` mounts.
@@ -162,7 +163,7 @@ size from `localStorage` before first paint. Then, in order:
 1. `restoreSession()` restores the saved session, if there is one, which builds a user-scoped
    `App` through `login`.
 2. It awaits `.ready` on the `synced` stores boot reads (device, wallet, push and notification
-   settings, `shouldUnwrap`, `needsKeyBackup`).
+   settings, `shouldUnwrap`, `forceHealthChecks`).
 3. It waits for storage, then `setupDeepLinks()` listens for warm-start links and handles a
    cold-start one.
 4. Each long-running subscription goes onto one `unsubscribers` list: `setupHistory`,
