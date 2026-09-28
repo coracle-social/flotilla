@@ -24,26 +24,16 @@
   const showFailure = $derived($thunk.isComplete() && $thunk.getFailedUrls().length > 0)
 
   const retry = (url: string) => {
-    for (const child of $thunks.flatten([thunk])) {
-      if (child.options.relays.includes(url)) {
-        const retried = $thunks.publish({
-          ...child.options,
-          event: child.options.event,
-          relays: [url],
-        })
+    const retried = $thunks.retry(thunk, [url])
 
-        if (showToastOnRetry) {
-          pushToast({
-            timeout: 30_000,
-            children: {
-              component: ThunkToast,
-              props: {thunk: retried},
-            },
-          })
-        }
-
-        return
-      }
+    if (showToastOnRetry) {
+      pushToast({
+        timeout: 30_000,
+        children: {
+          component: ThunkToast,
+          props: {thunk: retried},
+        },
+      })
     }
   }
 </script>

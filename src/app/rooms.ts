@@ -2,17 +2,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {derived, get} from "svelte/store"
 import {addToMapKey, dec, formatTimestampAsDate, int, sortBy, uniq, MINUTE} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {
-  ROOM_DELETE_EVENT,
-  hexTags,
-  outbox,
-  relay,
-  seen,
-  tagSpec,
-  tagValue,
-  tagValueMatcher,
-  toNostrURI,
-} from "@welshman/util"
+import {ROOM_DELETE_EVENT, outbox, relay, seen, tagSpec, tagValue, toNostrURI} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
 import {Comment, Message} from "@welshman/domain"
 import type {BaseEventReader, EventWriter, Relay} from "@welshman/domain"
@@ -226,11 +216,10 @@ export const deriveUserIsRoomAdmin = (url: string, h: string) =>
 
 // The room's admin list names the management kinds each admin may publish.
 export const deriveUserRoomPermissions = (url: string, h: string) =>
-  derived([user, rooms.get().forRoom(url, h)], ([$user, $room]) => {
-    const tag = $room?.admins?.tags().find(tagValueMatcher(hexTags("p"), $user.pubkey))
-
-    return tag?.slice(2).map(Number) ?? []
-  })
+  derived(
+    [user, rooms.get().forRoom(url, h)],
+    ([$user, $room]) => $room?.admins?.rolesFor($user.pubkey).map(Number) ?? [],
+  )
 
 // Deleting someone else's content goes one of two ways, and a space answers for either one.
 export enum AdminDelete {

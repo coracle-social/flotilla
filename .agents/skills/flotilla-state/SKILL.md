@@ -284,8 +284,7 @@ plugin, and how to turn a row into a key and item and back. It loads the rows, s
 anything in them outlives a login and is cleared only by logout. Secrets go in `ss`.
 
 Each persisted store is declared in its owner module with `synced({key, storage, defaultValue})`,
-or `syncedWithGetter` from `storage.ts` when callers need `.get()` (`withGetter`'s type drops
-`.ready`). The store emits the default first and loads the stored value in the background, so
+or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. The store emits the default first and loads the stored value in the background, so
 `.ready` resolves once it has arrived:
 
 - `theme`, `flTheme` (`theme.ts`), `checked` (`notifications.ts`), `shouldUnwrap` (`sync.ts`),
@@ -427,7 +426,7 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) are not thunks. They return
 - **A controller per flow.** `Nip46Controller` (`nip46.ts`) is a class a component instantiates.
   It holds the writables and actions for a multi-step flow.
 - **Module-owned values.** `wallet` in `lightning.ts` persists itself to `ss` with
-  `syncedWithGetter`.
+  `withGetter(synced(...))`.
 
 ## Runes and stores
 

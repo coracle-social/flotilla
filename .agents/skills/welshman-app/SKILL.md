@@ -177,6 +177,7 @@ await thunk.waitForCompletion()
 thunk.getError()                              // string | undefined
 app.use(Thunks).history                       // writable<Thunk[]> — optimistic log
 app.use(Thunks).retry(thunk)
+app.use(Thunks).retry(thunk, [url])           // only to these relays; a merged thunk retries only children that targeted them
 
 // Gift-wrapped (NIP-59): single recipient via `recipient`, or many via Wraps:
 app.use(Thunks).publish({event, relays, recipient: theirPubkey})

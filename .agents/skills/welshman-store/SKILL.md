@@ -138,7 +138,7 @@ interface StorageProvider {
 | Export | Description |
 |---|---|
 | `getter<T>(store, options?)` | Returns `() => T`; auto-switches from `get()` to a subscription when call frequency exceeds `threshold` (default 10/s) |
-| `withGetter<T>(store)` | Adds a `.get()` method to a `Readable` or `Writable` store (`WritableWithGetter` / `ReadableWithGetter`) |
+| `withGetter(store)` | Adds a `.get()` method to any store, returning `S & {get(): T}` so the store's own members survive in the type (e.g. `withGetter(synced(...)).ready`) |
 
 ### Derivation helpers
 

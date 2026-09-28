@@ -7,7 +7,6 @@ import {
   pushToMapKey,
   secondsToDate,
   sortBy,
-  spec,
   uniqBy,
 } from "@welshman/lib"
 import {EVENT_RSVP, getAddress, tagSpec, tagValue} from "@welshman/util"
@@ -263,12 +262,8 @@ export const publishRsvp = async (url: string, event: TrustedEvent, status: Rsvp
   const eventWriter = await toSpace(
     writer(CalendarRsvp)
       .setIdentifier(getAddress(event))
-      .setCalendarEventFromEvent(event)
-      .setStatus(status)
-      // The writer hints the organizer's outbox, but a space's event lives on the space relay.
-      .dropTags(spec(["a"]))
-      .dropTags(spec(["e"]))
-      .addTags(["a", getAddress(event), url], ["e", event.id, url]),
+      .setCalendarEventFromEvent(event, url)
+      .setStatus(status),
     url,
     reader(TimeEvent)(event).room(),
   )

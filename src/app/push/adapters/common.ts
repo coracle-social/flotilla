@@ -14,14 +14,14 @@ import {
   type Filter,
   type TrustedEvent,
 } from "@welshman/util"
-import {merged} from "@welshman/store"
+import {merged, synced, withGetter} from "@welshman/store"
 import {User} from "@welshman/app"
 import {navigate} from "@app/modal"
 import {app, messagingRelayLists, network, roomLists} from "@app/core"
 import {DM_KINDS} from "@app/content"
 import {getMutedRooms, shouldNotify, userSettingsValues} from "@app/settings"
 import {makeEventPath, goToChat, goToSpace} from "@app/routes"
-import {kv, syncedWithGetter} from "@app/storage"
+import {kv} from "@app/storage"
 
 export type PushSubscription = {
   key: string
@@ -38,26 +38,30 @@ export type PushState = {
 export const requiresFallback =
   Capacitor.getPlatform() === "android" && !Capacitor.isPluginAvailable("PushNotifications")
 
-export const pushState = syncedWithGetter<PushState>({
-  key: "notificationState",
-  storage: kv,
-  defaultValue: {useFallback: requiresFallback},
-})
+export const pushState = withGetter(
+  synced<PushState>({
+    key: "notificationState",
+    storage: kv,
+    defaultValue: {useFallback: requiresFallback},
+  }),
+)
 
-export const notificationSettings = syncedWithGetter({
-  key: "notificationSettings",
-  storage: kv,
-  defaultValue: {
-    push: false,
-    sound: true,
-    badge: false,
-    spaces: true,
-    mentions: true,
-    messages: true,
-    events: true,
-    reminder_minutes: [5],
-  },
-})
+export const notificationSettings = withGetter(
+  synced({
+    key: "notificationSettings",
+    storage: kv,
+    defaultValue: {
+      push: false,
+      sound: true,
+      badge: false,
+      spaces: true,
+      mentions: true,
+      messages: true,
+      events: true,
+      reminder_minutes: [5],
+    },
+  }),
+)
 
 export interface IPushAdapter {
   request: (prompt?: boolean) => Promise<string>

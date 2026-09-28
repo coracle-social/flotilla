@@ -1,4 +1,5 @@
 import {randomId} from "@welshman/lib"
-import {kv, syncedWithGetter} from "@app/storage"
+import {synced, withGetter} from "@welshman/store"
+import {kv} from "@app/storage"
 
-export const device = syncedWithGetter({key: "device", storage: kv, defaultValue: randomId()})
+export const device = withGetter(synced({key: "device", storage: kv, defaultValue: randomId()}))

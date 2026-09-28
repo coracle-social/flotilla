@@ -15,7 +15,6 @@ import type {Maybe} from "@welshman/lib"
 import {
   COMMENT,
   NOTE,
-  addressTags,
   eventOutbox,
   fromNostrURI,
   getAddress,
@@ -25,7 +24,6 @@ import {
   hexTags,
   relays as relaySelections,
   seen,
-  tagSpec,
   tagValues,
   topicTags,
 } from "@welshman/util"
@@ -176,13 +174,12 @@ export const buildCommentTree = (root: TrustedEvent, comments: TrustedEvent[]) =
 
 export const isEventMuted = withGetter(
   derived([user, deriveUserItem(MuteLists)], ([$user, $muteList]) => {
-    const tags = $muteList?.tags() ?? []
-    const mutedEvents = new Set(tagValues(hexTags("e"), tags))
-    const mutedPubkeys = new Set(tagValues(hexTags("p"), tags))
-    const mutedAddresses = new Set(tagValues(addressTags("a"), tags))
-    const mutedTopics = new Set(tagValues(topicTags("t"), tags))
+    const mutedEvents = new Set($muteList?.ids())
+    const mutedPubkeys = new Set($muteList?.pubkeys())
+    const mutedAddresses = new Set($muteList?.addresses())
+    const mutedTopics = new Set($muteList?.topics())
     // Words come from any client, so a blank or a regex character must not mute everyone or throw.
-    const mutedWords = tagValues(tagSpec("word"), tags)
+    const mutedWords = ($muteList?.words() ?? [])
       .map(word => word.toLowerCase().trim())
       .filter(Boolean)
       .map(word => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
