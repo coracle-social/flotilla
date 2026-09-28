@@ -56,11 +56,11 @@
         "This room will no longer be accessible to space members, and all messages posted to it will be deleted.",
       confirm: async () => {
         const command = await $rooms.deleteRoom(url, {h})
-        const thunk = command.publish()
-        const message = await thunk.waitForError()
+        const publication = command.publish()
+        const message = (await publication.settled()).getError()
 
         if (message) {
-          $app.repository.removeEvent(thunk.options.event.id)
+          $app.repository.removeEvent(publication.event.id)
           pushToast({theme: "error", message})
         } else {
           await $roomLists.removeRoom(h, url).then(publish)

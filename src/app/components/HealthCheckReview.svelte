@@ -33,7 +33,7 @@
 
   const save = async (plan: HealthCheckPlan) => {
     const command = await plan.apply()
-    const error = command && (await publish(command).waitForError())
+    const error = command && (await publish(command).settled()).getError()
 
     if (error) {
       pushToast({theme: "error", message: `Your relays couldn't be saved: ${errorMessage(error)}`})

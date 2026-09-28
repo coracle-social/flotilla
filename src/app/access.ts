@@ -16,7 +16,7 @@ import {
 import {RelayJoin, RelayLeave, RoomJoin, RoomLeave} from "@welshman/domain"
 import {Sync, User, publish} from "@welshman/app"
 import {stripPrefix} from "@lib/util"
-import {app, command, roomLists, thunks, writer} from "@app/core"
+import {app, command, publisher, roomLists, writer} from "@app/core"
 import {PLATFORM_URL} from "@app/env"
 import {relaysMostlyRestricted} from "@app/policies"
 import {optInSpaceNotifications} from "@app/push"
@@ -109,7 +109,7 @@ export const publishLeaveRequest = (url: string) =>
 
 // "duplicate:" and "already a member" both leave us where we wanted to be.
 const isMembershipRefusal = (error: string) =>
-  Boolean(error) && !error.startsWith("duplicate:") && !error.includes("already")
+  !error.startsWith("duplicate:") && !error.includes("already")
 
 // Joining takes two publishes: the NIP-29 request the relay can refuse, and the user's room list.
 export const joinRoom = async (url: string, h: string, code?: string) => {
@@ -119,10 +119,10 @@ export const joinRoom = async (url: string, h: string, code?: string) => {
     eventWriter.setClaim(code)
   }
 
-  const thunk = await command(eventWriter).then(publish)
-  const error = await thunk.waitForError()
+  const publication = await command(eventWriter).then(publish)
+  const error = (await publication.settled()).getError()
 
-  if (isMembershipRefusal(error)) {
+  if (error && isMembershipRefusal(error)) {
     return error
   }
 
@@ -130,10 +130,10 @@ export const joinRoom = async (url: string, h: string, code?: string) => {
 }
 
 export const leaveRoom = async (url: string, h: string) => {
-  const thunk = await command(writer(RoomLeave).setRoom(url, h)).then(publish)
-  const error = await thunk.waitForError()
+  const publication = await command(writer(RoomLeave).setRoom(url, h)).then(publish)
+  const error = (await publication.settled()).getError()
 
-  if (isMembershipRefusal(error)) {
+  if (error && isMembershipRefusal(error)) {
     return error
   }
 
@@ -155,10 +155,8 @@ export const publishRoomInvite = async (url: string, h: string) => {
     ],
   })
 
-  const error = await thunks
-    .get()
-    .publish({event, relays: [url]})
-    .waitForError()
+  const publication = publisher.get().publish({event, relays: [url]})
+  const error = (await publication.settled()).getError()
 
   if (error) {
     return {error, code: undefined}
@@ -223,23 +221,21 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
     return formatAuthError(socket.auth.status, socket.auth.details)
   }
 
-  const thunk = await publishJoinRequest(url, claim)
-  const error = await thunk.waitForError()
+  const publication = await publishJoinRequest(url, claim)
+  const error = (await publication.settled()).getError()
 
-  if (shouldIgnoreError(error)) {
-    return
+  if (error && !shouldIgnoreError(error)) {
+    if (error.includes("invite code")) {
+      return "join request rejected"
+    }
+
+    // A space that isn't open to the public refuses a join carrying no claim at all
+    if (error.includes("claim")) {
+      return "This space requires an invite code"
+    }
+
+    return stripPrefix(error)
   }
-
-  if (error.includes("invite code")) {
-    return "join request rejected"
-  }
-
-  // A space that isn't open to the public refuses a join carrying no claim at all
-  if (error.includes("claim")) {
-    return "This space requires an invite code"
-  }
-
-  return stripPrefix(error)
 }
 
 export const completeSpaceJoin = async (url: string, notifications: boolean) => {

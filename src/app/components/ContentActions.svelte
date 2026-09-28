@@ -8,7 +8,7 @@
   import Link from "@lib/components/Link.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
+  import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
   import {user} from "@app/core"
@@ -66,7 +66,7 @@
     </div>
     <span class="h-6 w-px shrink-0 bg-line"></span>
   {/if}
-  <ThunkStatusOrDeleted {event} {context} {status}>
+  <PublicationStatusOrDeleted {event} {context} {status}>
     <ReactionSummary
       {url}
       {event}
@@ -90,5 +90,5 @@
         {/if}
       {/snippet}
     </EventActions>
-  </ThunkStatusOrDeleted>
+  </PublicationStatusOrDeleted>
 </div>

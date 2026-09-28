@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {Readable} from "svelte/store"
   import {SvelteSet} from "svelte/reactivity"
-  import type {Thunk} from "@welshman/app"
+  import type {Publication} from "@welshman/app"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
@@ -23,8 +23,8 @@
     title: string
     subtitle: string
     relays: Readable<string[]>
-    addRelay: (url: string) => Promise<Thunk>
-    removeRelay: (url: string) => Promise<Thunk>
+    addRelay: (url: string) => Promise<Publication>
+    removeRelay: (url: string) => Promise<Publication>
     matchRelay?: (url: string) => boolean
   }
 
@@ -38,8 +38,8 @@
     loading.add(url)
 
     try {
-      const thunk = await removeRelay(url)
-      const error = await thunk.waitForError()
+      const publication = await removeRelay(url)
+      const error = (await publication.settled()).getError()
 
       if (error) {
         pushToast({

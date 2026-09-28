@@ -86,7 +86,7 @@
       if (result?.url) {
         const command = await $profiles.update(w => w.setBanner(result.url))
 
-        await command.publish().waitForCompletion()
+        await command.publish().settled()
 
         pushToast({message: "Banner updated."})
       } else {

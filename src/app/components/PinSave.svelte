@@ -62,9 +62,9 @@
       .setTopics(topics)
       .setContent(ed.getText({blockSeparator: "\n"}).trim())
 
-    const thunk = await command(eventWriter).then(publish)
+    const publication = await command(eventWriter).then(publish)
 
-    return thunk.waitForError()
+    return (await publication.settled()).getError()
   }
 
   const onSubmit = async () => {

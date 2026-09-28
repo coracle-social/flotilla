@@ -18,7 +18,7 @@
   import {userSpaceUrls} from "@app/rooms"
   import {pushToast} from "@app/toast"
   import {logout} from "@app/session"
-  import {app, relayLists, thunks, user, writer} from "@app/core"
+  import {app, publisher, relayLists, user, writer} from "@app/core"
 
   let progress: number | undefined = $state(undefined)
   let confirmText = $state("")
@@ -51,12 +51,12 @@
     }
 
     // First, blank out their profile in case relays don't support deletion by address
-    await $thunks.publish({relays, event: profileEvent})
+    await $publisher.publish({relays, event: profileEvent})
 
     await incrementProgress()
 
     // Next, send a "right to vanish" event to all relays
-    await $thunks.publish({relays, event: vanishEvent})
+    await $publisher.publish({relays, event: vanishEvent})
 
     await incrementProgress()
 
@@ -72,7 +72,7 @@
         }
       }
 
-      await $thunks.publish({relays, event: makeEvent(DELETE, {tags})})
+      await $publisher.publish({relays, event: makeEvent(DELETE, {tags})})
 
       await incrementProgress()
     }

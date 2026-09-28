@@ -48,14 +48,14 @@
     room.picture = await resolveImageInput(imageFile, imagePreview, compressOptions)
 
     const createCommand = await $rooms.createRoom(url, room)
-    const createMessage = await createCommand.publish().waitForError()
+    const createMessage = (await createCommand.publish().settled()).getError()
 
     if (createMessage && !createMessage.includes("already")) {
       return pushToast({theme: "error", message: createMessage})
     }
 
     const editCommand = await $rooms.editRoom(url, room)
-    const editMessage = await editCommand.publish().waitForError()
+    const editMessage = (await editCommand.publish().settled()).getError()
 
     if (editMessage) {
       return pushToast({theme: "error", message: editMessage})

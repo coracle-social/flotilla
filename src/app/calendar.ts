@@ -14,7 +14,7 @@ import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp, TimeEvent} from "@welshman/domain"
 import type {RsvpStatus} from "@welshman/domain"
 import {synced} from "@welshman/store"
-import {deletes, events, reader, relays, thunks, writer} from "@app/core"
+import {deletes, events, publisher, reader, relays, writer} from "@app/core"
 import {addressWriterToSpace} from "@app/rooms"
 import {kv} from "@app/storage"
 
@@ -268,7 +268,7 @@ export const publishRsvp = async (url: string, event: TrustedEvent, status: Rsvp
     reader(TimeEvent)(event).room(),
   )
 
-  return thunks.get().publish({relays: [url], event: await eventWriter.renderTemplate()})
+  return publisher.get().publish({relays: [url], event: await eventWriter.renderTemplate()})
 }
 
 export const retractRsvp = async (url: string, rsvp: TrustedEvent) => {

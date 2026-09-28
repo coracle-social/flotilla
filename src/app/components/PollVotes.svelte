@@ -4,9 +4,9 @@
   import type {TrustedEvent} from "@welshman/util"
   import {POLL_RESPONSE, tagSpec, tagValues, relay} from "@welshman/util"
   import {Poll, PollResponse} from "@welshman/domain"
-  import type {Thunk} from "@welshman/app"
+  import type {Publication} from "@welshman/app"
   import PollOption from "@app/components/PollOption.svelte"
-  import {command, events, reader, thunks, user, writer} from "@app/core"
+  import {command, events, publisher, reader, user, writer} from "@app/core"
 
   type Props = {
     url: string
@@ -33,8 +33,8 @@
   }
 
   const publishSelection = async (selection: string[]) => {
-    activeThunk?.abort()
-    activeThunk = undefined
+    activePublication?.abort()
+    activePublication = undefined
 
     if (selection.length > 0) {
       const eventWriter = writer(PollResponse).forceRoutes(relay(url)).setPollId(event.id)
@@ -46,7 +46,7 @@
       const responseCommand = await command(eventWriter)
 
       // Give the user time to check more boxes before the vote actually goes out.
-      activeThunk = $thunks.publish({
+      activePublication = $publisher.publish({
         event: responseCommand.event,
         relays: responseCommand.relays,
         delay: pollType === "multiplechoice" ? 1000 : undefined,
@@ -72,7 +72,7 @@
 
   const poll = reader(Poll)(event)
   let selectedIds = $state<string[]>([])
-  let activeThunk: Thunk | undefined
+  let activePublication: Publication | undefined
 
   const pollType = poll.pollType()
   const results = $derived(poll.results($responses))
@@ -87,7 +87,7 @@
   })
 
   onDestroy(() => {
-    activeThunk?.abort()
+    activePublication?.abort()
   })
 </script>
 

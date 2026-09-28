@@ -1,22 +1,22 @@
 <script lang="ts">
-  import type {BaseThunk} from "@welshman/app"
+  import type {Publishable} from "@welshman/app"
   import {PublishStatus} from "@welshman/net"
-  import ThunkPending from "@app/components/ThunkPending.svelte"
+  import PublicationPending from "@app/components/PublicationPending.svelte"
   import type {Toast} from "@app/toast"
   import {popToast} from "@app/toast"
 
   type Props = {
     toast: Toast
-    thunk: BaseThunk
+    publication: Publishable
   }
 
   const {toast, ...props}: Props = $props()
 
   const id = toast.id
-  const thunk = props.thunk
+  const publication = props.publication
   const {Aborted, Timeout, Failure} = PublishStatus
-  const isFailure = $derived($thunk.hasStatus([Aborted, Timeout, Failure]))
-  const isComplete = $derived($thunk.isComplete())
+  const isFailure = $derived($publication.hasStatus([Aborted, Timeout, Failure]))
+  const isComplete = $derived($publication.isComplete())
 
   $effect(() => {
     if (isFailure) {
@@ -32,7 +32,7 @@
 </script>
 
 {#if !isComplete}
-  <ThunkPending {thunk} />
+  <PublicationPending {publication} />
 {:else if !isFailure}
   <p class="text-xs opacity-75">Message sent!</p>
 {/if}

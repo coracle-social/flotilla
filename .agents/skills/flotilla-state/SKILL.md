@@ -1,6 +1,6 @@
 ---
 name: flotilla-state
-description: "Use this skill when deciding where a piece of state belongs in Flotilla, or when touching state: reading or adding stores in src/app, reaching the App instance and welshman plugins (usePlugin, fromApp, deriveUserItem), writing code that must survive login swapping the app or run signed out, adding an app policy or a flotilla plugin, persisting data (IndexedDB storage, kv/ss, synced stores, published settings, drafts), changing what src/app/sync.ts pulls in the background, and publishing (domain writer → Command → thunk, optimistic updates, undo, showing publish status)."
+description: "Use this skill when deciding where a piece of state belongs in Flotilla, or when touching state: reading or adding stores in src/app, reaching the App instance and welshman plugins (usePlugin, fromApp, deriveUserItem), writing code that must survive login swapping the app or run signed out, adding an app policy or a flotilla plugin, persisting data (IndexedDB storage, kv/ss, synced stores, published settings, drafts), changing what src/app/sync.ts pulls in the background, and publishing (domain writer → Command → publication, optimistic updates, undo, showing publish status)."
 ---
 
 # Flotilla state
@@ -8,7 +8,7 @@ description: "Use this skill when deciding where a piece of state belongs in Flo
 State in Flotilla flows one way. Events arrive from relays, pass the ingest policy, and land in
 the current app's repository. Plugin indexes and derived stores read the repository, and
 components subscribe to those. Writes go the other way: a domain writer becomes a `Command`, the
-command becomes a thunk, and the thunk writes its event into the repository before any relay has
+command becomes a publication, and the `Publisher` writes its event into the repository before any relay has
 seen it.
 
 Almost everything per-identity hangs off one welshman `App`, and signing in replaces that app.
@@ -36,7 +36,7 @@ The app is therefore stable for as long as anything under the login gate is moun
 | `session` | the persisted `Session` | `undefined` |
 | `user` | `User.require($app)`, derived | subscribing or `.get()` throws |
 | `usePlugin(Plugin)` | a store holding `$app.use(Plugin)` for the current app | safe |
-| `profiles`, `rooms`, `relays`, `events`, `thunks`, … | `usePlugin` for 28 welshman plugins | safe |
+| `profiles`, `rooms`, `relays`, `events`, `publisher`, … | `usePlugin` for 28 welshman plugins | safe |
 | `fromApp(read)` | a store that re-reads `read($app)` when the app changes | safe |
 | `deriveUserItem(Plugin)` | the signed-in user's entry in a keyed plugin | `undefined` |
 | `userSearchRelayUrls` | the user's search relays, or `DEFAULT_SEARCH_RELAYS` | the defaults |
@@ -177,8 +177,8 @@ app, and `app.get()` recurses into building another one.
 ## The repository and derived state
 
 Events enter `app.repository` from `ingestPolicy` (which calls `tracker.track`, then
-`repository.publish`), from `Storage` loading the cache at startup, and from thunks publishing
-optimistically. The tracker records which relays each event was seen on, which is what lets
+`repository.publish`), from `Storage` loading the cache at startup, and from the `Publisher`
+publishing optimistically. The tracker records which relays each event was seen on, which is what lets
 space content be keyed by relay.
 
 Raw event queries go through welshman's `Events` plugin, exported from `core.ts` as `events`.
@@ -233,8 +233,8 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 - `Chats` (`chats.ts`) updates its `index` incrementally from repository `update` events rather
   than re-querying. Its `search` reads profile names when it is rebuilt, so it also follows the
   profiles index.
-- `thunksByEventId` (`thunks.ts`) indexes thunk history once, and hands back the previous array
-  wherever an event's thunks are unchanged so rows don't churn.
+- `publicationsByEventId` (`publications.ts`) indexes publish history once, and hands back the
+  previous array wherever an event's publications are unchanged so rows don't churn.
 - `latestActivityByPath` (`notifications.ts`) joins chats, room lists, relay info, events and
   settings behind `throttled(1000, …)`.
 - `LatestEvents.forPubkey` (`repository.ts`) shares one repository listener across every
@@ -357,7 +357,7 @@ components; see flotilla-views.
 
 ## Mutations
 
-The prevailing path runs from a domain writer to a command to a thunk, adapted from
+The prevailing path runs from a domain writer to a command to a publication, adapted from
 `ThreadCreate.svelte`:
 
 ```typescript
@@ -371,8 +371,8 @@ if (room) {
   eventWriter.setRoom(url, room)
 }
 
-const thunk = await command(eventWriter).then(publish)
-const error = await thunk.waitForError()
+const publication = await command(eventWriter).then(publish)
+const error = (await publication.settled()).getError()
 
 if (error) {
   return pushToast({theme: "error", message: error})
@@ -389,29 +389,30 @@ Plugin mutators already return a `Command`: `roomLists.get().addRelay(url).then(
 `forceLoad` before writing. A replaceable event you build yourself needs the same, as in
 `publishSettings`.
 
-Some call sites call `thunks.get().publish({event, relays, delay})` directly. Anything that
+Some call sites call `publisher.get().publish({event, relays, delay})` directly. Anything that
 honours the `send_delay` window does, because `Command` cannot carry it: room chat
 (`RoomChat.svelte`), and `publishComment` (behind both comment composers) and `publishRoomQuote` in
 `rooms.ts`. So do the push adapters and `ProfileDelete.svelte`. DMs go through
-`wraps.get().publish({event, recipients})`, which returns a merged thunk (see `reactions.ts`).
-NIP-86 calls (`relayManagement.get().forUrl(url)`) are not thunks. They return
+`wraps.get().publish({event, recipients})`, which returns a `PublicationGroup` (see `reactions.ts`).
+NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publisher`. They return
 `{result, error}`, and the caller handles `error`.
 
 ### Optimistic updates, undo and status
 
-- **Optimistic writes.** `Thunks` writes the event into the repository and tracks it against its
+- **Optimistic writes.** `Publisher` writes the event into the repository and tracks it against its
   relays when it is enqueued, so every derived store sees it immediately. Signing then swaps the
-  unsigned event for the signed one.
-- **Undo.** `thunk.abort()` during the `delay` removes the event from the repository and from
-  `history`. When `send_delay` is set, room chat shows a `ThunkToast` whose Cancel button aborts,
-  and a comment carries the same Cancel in the `ThunkPending` row under it.
+  unsigned event for the signed one, and `publication.event` follows it.
+- **Undo.** `publication.abort()` while `canAbort()` holds (nothing has reached a relay yet) removes
+  the event from the repository and from `history`. When `send_delay` is set, room chat shows a
+  `PublicationToast` whose Cancel button aborts, and a comment carries the same Cancel in the
+  `PublicationPending` row under it.
 - **Editing.** Editing a message deletes it and republishes with the same `created_at` (see
   `RoomChat.svelte`).
-- **Status in rows.** Rows look up `$thunksByEventId.get(event.id) ?? noThunks` and pass
-  `$thunks.merge(...)` to `ThunkStatus`, or to `ThunkFailure`, which retries per relay.
-  `ThunkStatusOrDeleted` combines publish status with deletion. `ChatMessage.svelte` filters the
-  whole `history` per row instead.
-- **Status in forms.** Forms await `waitForError()` and toast the message, as in the excerpt
+- **Status in rows.** Rows look up `$publicationsByEventId.get(event.id) ?? noPublications` and
+  pass `$publisher.merge(...)` to `PublicationStatus`, or to `PublicationFailure`, which retries per
+  relay. A retry drops the publications it replaces from `history`, so the row shows the retry's
+  outcome. `PublicationStatusOrDeleted` combines publish status with deletion.
+- **Status in forms.** Forms await `settled()`, read `getError()` and toast the message, as in the excerpt
   above.
 
 ## Other app-level stores
@@ -466,7 +467,7 @@ Take the first answer that fits:
 - `flotilla-architecture`: the layer rules, what each `src/app` module is for, boot at a glance
 - `flotilla-views`: routes, components, and how components load data and show state
 - `flotilla-model`: spaces, rooms, NIP-43/29/86, which relays events go to, domain kinds
-- `welshman-app`: `App`, plugins, `Command`, thunks, `Network`/`Sync`, `Events`
+- `welshman-app`: `App`, plugins, `Command`, `Publisher`, `Network`/`Sync`, `Events`
 - `welshman-store`: `deriveEventsById`, `deriveItemsByKey`, `synced`, `throttled`, `withGetter`
 - `welshman-domain`: the readers and writers behind `reader`, `writer` and `command`
 - `welshman-net`: the repository, tracker and socket policies under the app

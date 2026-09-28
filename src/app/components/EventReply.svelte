@@ -25,7 +25,7 @@
     parent?: TrustedEvent
     onClose: () => void
     onClearParent?: () => void
-    onSubmit: (thunk: unknown) => void
+    onSubmit: (publication: unknown) => void
   }
 
   const {url, event, parent, onClose, onClearParent, onSubmit}: Props = $props()
@@ -54,14 +54,14 @@
     const tags = ed.storage.nostr.getEditorTags()
 
     try {
-      const thunk = await publishComment({
+      const publication = await publishComment({
         url,
         event,
         ...(await prependParent(parent, {content, tags}, url)),
       })
 
       draftKey.clear()
-      onSubmit(thunk)
+      onSubmit(publication)
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to send your reply."})

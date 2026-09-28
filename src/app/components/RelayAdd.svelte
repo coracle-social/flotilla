@@ -4,7 +4,7 @@
   import type {Readable} from "svelte/store"
   import {tryCatch, uniq} from "@welshman/lib"
   import {isShareableRelayUrl, isIPAddress, normalizeRelayUrl} from "@welshman/util"
-  import type {Thunk} from "@welshman/app"
+  import type {Publication} from "@welshman/app"
   import {Relays} from "@welshman/app"
   import {createScroller} from "@lib/html"
   import {errorMessage} from "@lib/util"
@@ -22,7 +22,7 @@
 
   type Props = {
     relays: Readable<string[]>
-    addRelay: (url: string) => Promise<Thunk>
+    addRelay: (url: string) => Promise<Publication>
     matchRelay?: (url: string) => boolean
   }
 
@@ -36,8 +36,8 @@
     loading.add(url)
 
     try {
-      const thunk = await addRelay(url)
-      const error = await thunk.waitForError()
+      const publication = await addRelay(url)
+      const error = (await publication.settled()).getError()
 
       if (error) {
         pushToast({

@@ -15,12 +15,12 @@
   import Content from "@app/components/Content.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import type {FeedContext} from "@app/feeds"
-  import ThunkFailure from "@app/components/ThunkFailure.svelte"
+  import PublicationFailure from "@app/components/PublicationFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ChatMessageMenu from "@app/components/ChatMessageMenu.svelte"
   import ChatMessageMenuMobile from "@app/components/ChatMessageMenuMobile.svelte"
-  import {profiles, thunks, user} from "@app/core"
-  import {noThunks, thunksByEventId} from "@app/thunks"
+  import {profiles, publisher, user} from "@app/core"
+  import {noPublications, publicationsByEventId} from "@app/publications"
   import {highlightedEvent} from "@app/routes"
   import {colorFor} from "@app/theme"
   import {pushModal} from "@app/modal"
@@ -39,7 +39,9 @@
 
   const isOwn = event.pubkey === $user.pubkey
   const profileDisplay = $profiles.display(event.pubkey).$
-  const thunk = $derived($thunks.merge($thunksByEventId.get(event.id) ?? noThunks))
+  const publication = $derived(
+    $publisher.merge($publicationsByEventId.get(event.id) ?? noPublications),
+  )
   const colorValue = colorFor(event.pubkey)
 
   const reply = () => replyTo(event)
@@ -58,7 +60,7 @@
   let tippy: Maybe<TippyController> = $state()
 </script>
 
-<ThunkFailure showToastOnRetry {thunk} class="mt-1" />
+<PublicationFailure showToastOnRetry {publication} class="mt-1" />
 <div
   data-event={event.id}
   class={cx("group flex items-center justify-end gap-1 px-2", {

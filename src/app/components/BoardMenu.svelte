@@ -39,7 +39,7 @@
       const command = await $deletes.deleteEvent(board.event, writer =>
         writer.setProtected(protect),
       )
-      const error = await command.publishToRelays([url]).waitForError()
+      const error = (await command.publishToRelays([url]).settled()).getError()
 
       if (error) {
         pushToast({theme: "error", message: error})

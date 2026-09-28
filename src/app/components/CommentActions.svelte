@@ -3,7 +3,7 @@
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import type {FeedContext} from "@app/feeds"
   import {publishReaction, retractReaction} from "@app/reactions"
-  import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
+  import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
 
@@ -23,7 +23,7 @@
 
 <div class="flex flex-wrap items-center justify-between gap-2">
   <div class="flex grow flex-wrap justify-end gap-2">
-    <ThunkStatusOrDeleted {event} {context}>
+    <PublicationStatusOrDeleted {event} {context}>
       <ReactionSummary
         {url}
         {event}
@@ -35,6 +35,6 @@
         <EventActivity {event} {context} />
       {/if}
       <EventActions {url} {event} noun="Comment" />
-    </ThunkStatusOrDeleted>
+    </PublicationStatusOrDeleted>
   </div>
 </div>

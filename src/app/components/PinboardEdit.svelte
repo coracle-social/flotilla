@@ -43,8 +43,8 @@
         eventWriter.setIdentifier().setCollaborative(true)
       }
 
-      const thunk = await command(eventWriter).then(publish)
-      const error = await thunk.waitForError()
+      const publication = await command(eventWriter).then(publish)
+      const error = (await publication.settled()).getError()
 
       if (error) {
         pushToast({theme: "error", message: error})
@@ -53,7 +53,7 @@
         back()
       } else {
         pushToast({message: "Shelf created!"})
-        navigate(makeLibraryPath(url, getAddress(thunk.options.event)))
+        navigate(makeLibraryPath(url, getAddress(publication.event)))
       }
     } catch (e) {
       console.error(e)

@@ -8,7 +8,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
-  import {thunks, writer} from "@app/core"
+  import {publisher, writer} from "@app/core"
   import {DraftKey} from "@app/drafts"
   import {makeEditor} from "@app/editor"
   import {publishComment} from "@app/rooms"
@@ -42,7 +42,7 @@
       return publishComment({url, event, parent, content, tags})
     }
 
-    return $thunks.publish({
+    return $publisher.publish({
       ...(await writer(Note)
         .setContent(content)
         .addTags(...tags)
@@ -67,8 +67,8 @@
     loading = true
 
     try {
-      const thunk = await publishReply(content, ed.storage.nostr.getEditorTags())
-      const error = await thunk.waitForError()
+      const publication = await publishReply(content, ed.storage.nostr.getEditorTags())
+      const error = (await publication.settled()).getError()
 
       if (error) {
         return pushToast({theme: "error", message: error})

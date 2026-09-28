@@ -1,6 +1,6 @@
 ---
 name: welshman-app
-description: "Use this skill when working with @welshman/app: the instance-based client for building nostr applications — creating an App instance, the use() plugin registry, User & sessions, reactive data stores (profiles, follows, mutes, relay lists, handles, zappers), optimistic publishing with thunks, outbox-model requests, routing, web of trust, feeds, and search."
+description: "Use this skill when working with @welshman/app: the instance-based client for building nostr applications — creating an App instance, the use() plugin registry, User & sessions, reactive data stores (profiles, follows, mutes, relay lists, handles, zappers), optimistic publishing through a staged pipeline, outbox-model requests, routing, web of trust, feeds, and search."
 ---
 
 # welshman/app — Instance-Based Nostr App
@@ -26,7 +26,7 @@ Peer deps: `svelte` (4 or 5), all `@welshman/*` workspace packages, and `@pomade
 2. **Features are plugins**, resolved lazily and memoized via `app.use(SomeClass)`. Each plugin is constructed with the app and cached per app.
 3. **`Projection<T>` is the universal accessor.** It has `.get()` (sync snapshot) and `.$` (Svelte `Readable`). Bind `.$` in components; call `.get()` in callbacks/hot paths.
 4. **Reads are reactive and lazy-loading.** `app.use(Profiles).one(pubkey)` returns a store that fetches over the network (outbox model) and updates as events arrive.
-5. **Writes are optimistic.** Publishing goes through *thunks*: the event hits the local repository immediately, signs lazily, and reports per-relay progress, with an abortable delay for soft-undo.
+5. **Writes are optimistic.** Publishing goes through the `Publisher` pipeline: the event hits the local repository immediately, signs lazily, and reports per-relay progress, with an abortable delay for soft-undo.
 
 ## Creating an app
 
@@ -96,7 +96,7 @@ setNip55Plugin(NostrSignerPlugin)
 
 All follow the same shape — `get(key)` (sync), `one(key)` (reactive, lazy-loads), `load(key)`/`forceLoad(key)` (promises), plus convenience accessors returning `Projection`. Resolve with `app.use(...)`.
 
-Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) is `async` and returns a **`Command`**, not a `Thunk` — it builds the event but does not publish it. Call `.publish()` on the result to actually send it. See [Commands](#commands-deferred-publishing) below.
+Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) is `async` and returns a **`Command`**, not a `Publication` — it builds the event but does not publish it. Call `.publish()` on the result to actually send it. See [Commands](#commands-deferred-publishing) below.
 
 | Plugin | Data | Notable accessors |
 |---|---|---|
@@ -144,7 +144,7 @@ const writeRelays = app.use(RelayLists).writeUrls(pubkey).get()  // string[]
 
 // Mutations return a Command — build it, then decide how to publish it
 const command = await app.use(RelayLists).addWriteUrl("wss://relay.example")
-command.publish()                              // normal outbox/relays flow via Thunks
+command.publish()                              // normal outbox/relays flow via Publisher
 // or: command.publishToRelays(["wss://relay.example"])  // send straight to one relay
 
 // Since these methods are async, `publish`/`publishToRelays` free functions avoid a double-await:
@@ -152,42 +152,46 @@ import {publish} from "@welshman/app"
 await app.use(RelayLists).addWriteUrl("wss://relay.example").then(publish)
 ```
 
-## Publishing (optimistic thunks)
+## Publishing (optimistic pipeline)
 
 ```typescript
-import {Thunks, Router} from "@welshman/app"
+import {Publisher, Router} from "@welshman/app"
 import {makeEvent, NOTE, userOutbox} from "@welshman/util"
 
-// There's no dedicated outbox helper on Thunks — resolve write relays yourself via the
-// Router's Resolver + the RelaySelection DSL (this is what Command.publish() does under the
-// hood for every data-plugin mutation, whose `relays` come from the writer's own routes):
-const thunk = app.use(Thunks).publish({
+// Publisher has no outbox helper. Resolve write relays with the Router's Resolver and the
+// RelaySelection DSL, as Command.publish() does for every data-plugin mutation:
+const publication = app.use(Publisher).publish({
   event: makeEvent(NOTE, {content: "hi"}),
   relays: await app.use(Router).resolver.relays([userOutbox()]),   // Promise<string[]>
-  delay: 3000,                  // abortable soft-undo window (ms)
+  delay: 3000,                  // abortable soft-undo window (ms), before signing
 })
 
 // To specific relays:
-app.use(Thunks).publish({event, relays: ["wss://relay.example"]})
+app.use(Publisher).publish({event, relays: ["wss://relay.example"]})
 
-// A thunk is a Svelte store with per-relay status:
-thunk.subscribe(t => console.log(t.results))
-thunk.abort()                                 // effective only before `delay` elapses
-await thunk.waitForCompletion()
-thunk.getError()                              // string | undefined
-app.use(Thunks).history                       // writable<Thunk[]> — optimistic log
-app.use(Thunks).retry(thunk)
-app.use(Thunks).retry(thunk, [url])           // only to these relays; a merged thunk retries only children that targeted them
+// A Publication is a Svelte store. `state` is a union keyed by `stage`:
+// queued → delayed → wrapping → pow → signing → sending → sent | failed | aborted
+publication.subscribe(p => console.log(p.state.stage, p.results))
+publication.abort()                           // unwinds the optimistic write; does nothing once settled
+publication.canAbort()                        // true until any relay has been sent to
+await publication.settled()                   // resolves on a terminal stage
+publication.getError()                        // string | undefined
+publication.event                             // current event (mined/signed as it goes); the rumor for a wrap
+app.use(Publisher).history                    // writable<Publication[]> — optimistic log
+app.use(Publisher).retry(publication)         // re-sends publication.event, same id
+app.use(Publisher).retry(publication, [url])  // only to these relays; a group retries only members that targeted them
+// retry drops the publications it replaces from `history`
+app.use(Publisher).merge([a, b])              // PublicationGroup; a relay's status is the worst among members
 
 // Gift-wrapped (NIP-59): single recipient via `recipient`, or many via Wraps:
-app.use(Thunks).publish({event, relays, recipient: theirPubkey})
-const merged = await app.use(Wraps).publish({event: rumor, recipients: [a, b]})
+app.use(Publisher).publish({event, relays, recipient: theirPubkey})
+const group = await app.use(Wraps).publish({event: rumor, recipients: [a, b]})
 
 // Proof of work (NIP-13):
-app.use(Thunks).publish({event, relays, pow: 20})
+app.use(Publisher).publish({event, relays, pow: 20})
 ```
 
-`ThunkOptions`: `{event, relays?, recipient?, delay?, pow?, ...PublishOptions}` (`app` is injected). Incoming wraps addressed to the user are auto-unwrapped by the default `appPolicyWraps`. An unwrap that throws is tried again up to `MAX_UNWRAP_ATTEMPTS` times, so a signer that was busy or disconnected doesn't cost the message.
+`PublishRequest`: `{event, relays, recipient?, delay?, pow?, priority?, timeout?}`. The stages (`STAGES` in `plugins/publisher.ts`) only transform the event. The publisher keeps the repository, tracker and `WrapManager` in step by reacting to state changes. Incoming wraps addressed to the user are auto-unwrapped by the default `appPolicyWraps`. An unwrap that throws is tried again up to `MAX_UNWRAP_ATTEMPTS` times, so a signer that was busy or disconnected doesn't cost the message.
 
 ## Commands (deferred publishing)
 
@@ -202,11 +206,11 @@ command.app      // the IApp it was built for
 command.event    // EventTemplate — unsigned, inspectable before publishing
 command.relays   // string[] — where publish() will send it
 
-command.publish()               // normal path: app.use(Thunks).publish({event, relays: command.relays})
+command.publish()               // normal path: app.use(Publisher).publish({event, relays: command.relays})
 command.publishToRelays(urls)   // publish to a specific relay set instead of command.relays
 ```
 
-This lets a caller preview/log a command, choose a different transport, or drop it entirely, instead of every plugin method publishing unconditionally. `Wraps.publish` is the one exception — it fans a single rumor out to a `MergedThunk` of per-recipient wraps (each with its own relays), which doesn't fit the one-event/one-relay-set `Command` shape, so it still publishes directly.
+This lets a caller preview/log a command, choose a different transport, or drop it entirely, instead of every plugin method publishing unconditionally. `Wraps.publish` is the one exception — it fans a single rumor out to a `PublicationGroup` of per-recipient wraps (each with its own relays), which doesn't fit the one-event/one-relay-set `Command` shape, so it still publishes directly.
 
 `publish`/`publishToRelays` are also exported as free functions (e.g. `(command) => command.publish()`, `(urls) => (command) => command.publishToRelays(urls)`) so you can chain straight off the mutation method's promise instead of double-awaiting:
 
@@ -441,7 +445,7 @@ const app = new App({user, policies: [appPolicyIngest, appPolicyAuthNever]})
 | `addSession(...)` / `pubkey.get()` | `User.fromSession(...)` + `createApp({user})`; `app.user?.pubkey` |
 | `deriveProfile(pk)` | `app.use(Profiles).one(pk)` |
 | `deriveProfileDisplay(pk)` | `app.use(Profiles).display(pk).$` |
-| `publishThunk({...})` | `app.use(Thunks).publish({...})` (resolve outbox relays via `await app.use(Router).resolver.relays([userOutbox()])`) |
+| `publishThunk({...})` | `app.use(Publisher).publish({...})` (resolve outbox relays via `await app.use(Router).resolver.relays([userOutbox()])`) |
 | `follow(tag)` / `mute(tag)` | `app.use(FollowLists).follow(tag).then(publish)` / `app.use(MuteLists).mutePublicly(tag).then(publish)`, which return a [`Command`](#commands-deferred-publishing) |
 | `load({...})` / `request({...})` | `app.use(Network).loadComplete({...})` / `request({...})` |
 | `Router.get().FromUser()` / `router.Event(e)` | `app.use(Router).resolver` + the `RelaySelection` DSL (`resolver.relays([userOutbox()])`, `resolver.relay([seen(e)])`) |

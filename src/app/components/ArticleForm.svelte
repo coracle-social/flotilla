@@ -131,14 +131,14 @@
         eventWriter.setImage(image)
       }
 
-      const {thunk, error} = await publishToSpace(eventWriter, {url, h, shareToChat})
+      const {publication, error} = await publishToSpace(eventWriter, {url, h, shareToChat})
 
       if (error) {
         return pushToast({theme: "error", message: error})
       }
 
       draftKey.clear()
-      goto(makeArticlePath(url, getAddress(thunk.options.event)))
+      goto(makeArticlePath(url, getAddress(publication.event)))
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to publish your article."})

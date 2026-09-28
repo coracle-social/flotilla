@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import ThunkStatusOrDeleted from "@app/components/ThunkStatusOrDeleted.svelte"
+  import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActionBar from "@app/components/EventActionBar.svelte"
   import {events} from "@app/core"
@@ -24,7 +24,7 @@
 </script>
 
 <div data-component="ArticleActionBar" class="flex w-full min-w-0 flex-col gap-3">
-  <ThunkStatusOrDeleted {event} {context}>
+  <PublicationStatusOrDeleted {event} {context}>
     <ReactionSummary
       {url}
       {event}
@@ -32,7 +32,7 @@
       {deleteReaction}
       {createReaction}
       reactionClass="tip-top" />
-  </ThunkStatusOrDeleted>
+  </PublicationStatusOrDeleted>
   {#if !$deleted}
     <EventActionBar {url} {event} noun="Article">
       {#snippet leading()}

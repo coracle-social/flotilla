@@ -17,7 +17,7 @@
   import type {TrustedEvent, EventTemplate} from "@welshman/util"
   import {makeEvent, userInbox, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE} from "@welshman/util"
   import {parse, isLink} from "@welshman/content"
-  import {MessagingRelayLists, Thunks} from "@welshman/app"
+  import {MessagingRelayLists, Publisher} from "@welshman/app"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import ArrowLeft from "@assets/icons/arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -34,7 +34,7 @@
   import ChatTitle from "@app/components/ChatTitle.svelte"
   import ChatMessage from "@app/components/ChatMessage.svelte"
   import ComposeArea, {type ComposeValues} from "@app/components/ComposeArea.svelte"
-  import ThunkToast from "@app/components/ThunkToast.svelte"
+  import PublicationToast from "@app/components/PublicationToast.svelte"
   import {app, deletes, router, user, wraps} from "@app/core"
   import {loadSendDelay} from "@app/settings"
   import {chats, makeChatId} from "@app/chats"
@@ -120,7 +120,7 @@
     const delay = await loadSendDelay()
 
     // Kind 15 carries one image each per nip 17, and a second's sleep keeps the timestamps distinct.
-    const thunks = await Promise.all(
+    const groups = await Promise.all(
       Array.from(enumerate(templates)).map(([i, event]) =>
         $wraps.publish({
           event,
@@ -134,8 +134,8 @@
     pushToast({
       timeout: 30_000,
       children: {
-        component: ThunkToast,
-        props: {thunk: $app.use(Thunks).merge(thunks)},
+        component: PublicationToast,
+        props: {publication: $app.use(Publisher).merge(groups)},
       },
     })
   }

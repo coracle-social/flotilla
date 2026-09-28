@@ -19,6 +19,7 @@ import {
   Network,
   PinLists,
   Profiles,
+  Publisher,
   Reactions,
   RelayLists,
   RelayManagement,
@@ -31,7 +32,6 @@ import {
   Rooms,
   Router,
   SearchRelayLists,
-  Thunks,
   User,
   Wot,
   Wraps,
@@ -140,6 +140,7 @@ export const muteLists = usePlugin(MuteLists)
 export const network = usePlugin(Network)
 export const pinLists = usePlugin(PinLists)
 export const profiles = usePlugin(Profiles)
+export const publisher = usePlugin(Publisher)
 export const reactions = usePlugin(Reactions)
 export const relayLists = usePlugin(RelayLists)
 export const relayManagement = usePlugin(RelayManagement)
@@ -152,7 +153,6 @@ export const roomPinLists = usePlugin(RoomPinLists)
 export const rooms = usePlugin(Rooms)
 export const router = usePlugin(Router)
 export const searchRelayLists = usePlugin(SearchRelayLists)
-export const thunks = usePlugin(Thunks)
 export const wot = usePlugin(Wot)
 export const wraps = usePlugin(Wraps)
 

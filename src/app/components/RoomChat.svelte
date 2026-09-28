@@ -16,9 +16,9 @@
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
   import RoomPinnedMessages from "@app/components/RoomPinnedMessages.svelte"
   import RoomTranscript from "@app/components/RoomTranscript.svelte"
-  import ThunkToast from "@app/components/ThunkToast.svelte"
+  import PublicationToast from "@app/components/PublicationToast.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
-  import {deletes, relays, rooms, thunks, user, writer} from "@app/core"
+  import {deletes, publisher, relays, rooms, user, writer} from "@app/core"
   import {
     CallState,
     callState,
@@ -131,7 +131,7 @@
 
     const delay = await loadSendDelay()
 
-    const thunk = $thunks.publish({
+    const publication = $publisher.publish({
       relays: [url],
       event: stamp(await eventWriter.renderTemplate(), edit?.created_at),
       delay,
@@ -141,8 +141,8 @@
       pushToast({
         timeout: 30_000,
         children: {
-          component: ThunkToast,
-          props: {thunk},
+          component: PublicationToast,
+          props: {publication},
         },
       })
     }

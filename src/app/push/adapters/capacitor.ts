@@ -4,7 +4,7 @@ import {assoc, hash, maybe, ms, poll} from "@welshman/lib"
 import type {Filter} from "@welshman/util"
 import {Address, DELETE, makeEvent} from "@welshman/util"
 import {Relays, User} from "@welshman/app"
-import {app, messagingRelayLists, roomLists, thunks} from "@app/core"
+import {app, messagingRelayLists, publisher, roomLists} from "@app/core"
 import {device} from "@app/device"
 import {PUSH_BRIDGE} from "@app/env"
 import {pushState} from "@app/push/adapters/common"
@@ -123,7 +123,7 @@ export class CapacitorNotifications implements IPushAdapter {
 
     const identifier = this._getSubscriptionIdentifier(relay, key)
 
-    const thunk = thunks.get().publish({
+    const publication = publisher.get().publish({
       relays: [url],
       event: makeEvent(PUSH_SUBSCRIPTION, {
         tags: [
@@ -137,7 +137,7 @@ export class CapacitorNotifications implements IPushAdapter {
       }),
     })
 
-    const error = await thunk.waitForError()
+    const error = (await publication.settled()).getError()
 
     if (error) {
       console.warn(`Failed to subscribe ${relay} to ${key} notifications:`, error)
@@ -160,7 +160,8 @@ export class CapacitorNotifications implements IPushAdapter {
       identifier,
     ).toString()
     const event = makeEvent(DELETE, {tags: [["a", address]]})
-    const error = await thunks.get().publish({relays, event}).waitForError()
+    const publication = publisher.get().publish({relays, event})
+    const error = (await publication.settled()).getError()
 
     if (error) {
       console.warn(`Failed to unsubscribe ${relay} from notifications:`, error)

@@ -19,7 +19,7 @@
 
     try {
       const command = await $profiles.update(writer => writer.update(profile))
-      const error = await command.publish().waitForError()
+      const error = (await command.publish().settled()).getError()
 
       if (error) {
         pushToast({

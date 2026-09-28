@@ -17,7 +17,7 @@ PascalCase. This is what the qualifiers mean, drawn from the ~320 components the
 | `Detail` | a modal with everything known about an entity | `ProfileDetail`, `RoomDetail`, `ContentLinkDetail` |
 | `Info` | a modal with an event's underlying data | `EventInfo`, `ProfileInfo` |
 | `Summary` | a compact read-only digest, inline | `RelaySummary`, `GoalSummary`, `ReactionSummary` |
-| `Status` | a small badge or indicator | `ClassifiedStatus`, `SignerStatus`, `ThunkStatus` |
+| `Status` | a small badge or indicator | `ClassifiedStatus`, `SignerStatus`, `PublicationStatus` |
 | `Card` | a framed presentation of an event | `NoteCard`, `HomeInboxItemCard` |
 | `Bar` | a horizontal strip across the top or bottom of something | `SpaceBar`, `ComposeBar`, `EventActionBar` |
 | `Compose` | a message composer | `ChatCompose`, `RoomCompose`, `CommentCompose` |
@@ -41,7 +41,7 @@ per content kind). Four are families instead:
 - `Note*` renders an event as a note: `NoteItem`, `NoteCard`, `NoteContent`, one
   `NoteContent<Kind>` per kind, and a compact `NoteContentMinimal<Kind>`.
 - `Content*` renders parsed content tokens: `ContentMention`, `ContentQuote`, `ContentTopic`.
-- `Home*` are the dashboard's sections; `LogIn*` and `SignUp*` are auth steps; `Thunk*` show
+- `Home*` are the dashboard's sections; `LogIn*` and `SignUp*` are auth steps; `Publication*` show
   publish status; `Info*` are explainer dialogs (`InfoNostr`, `InfoKeys`, `InfoRelay`).
 
 Eleven components are a bare entity, being the root of their feature: `Chat`, `Content`,

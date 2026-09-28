@@ -82,7 +82,7 @@ Conventions below.
 A `Projection<T>` is `{get(): T, $: Readable<T>}` — bind `.$` in markup, call `.get()` in
 callbacks and hot paths.
 
-**Thunks:**
+**Publications** (`app.use(Publisher).publish`):
 
 - Reduce UI latency by handling signatures and sending in background
 - Return status that should be displayed to user
@@ -93,7 +93,7 @@ callbacks and hot paths.
 
 **Welshman Library Suite:**
 
-- `@welshman/app` - The `App` instance and its plugins (Profiles, Rooms, Thunks, Router, …)
+- `@welshman/app` - The `App` instance and its plugins (Profiles, Rooms, Publisher, Router, …)
 - `@welshman/domain` - A typed Reader/Writer pair per event kind, plus `Relay` and `Zapper`
 - `@welshman/net` - Network layer (Pool, Socket, adapters, request/publish/pull)
 - `@welshman/store` - Svelte integration (deriveEventsById, deriveItemsByKey, etc.)
@@ -188,7 +188,7 @@ callbacks and hot paths.
 1. Build a writer: `app.use(Domain).writer(Kind, reader?)`, then chain its setters
 2. Wrap it: `const command = await app.use(Domain).command(writer)`
 3. Publish it: `command.publish()` or `.publishToRelays(urls)`
-4. Display thunk status to user (for cancel/error handling)
+4. Display publication status to user (for cancel/error handling)
 
 Plugin mutators (`app.use(FollowLists).follow(...)`, `app.use(Rooms).joinRoom(...)`, …) already
 return a `Command`, so `.then(publish)` is usually all you need.

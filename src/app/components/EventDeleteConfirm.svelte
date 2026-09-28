@@ -17,7 +17,7 @@
   const confirm = async () => {
     const protect = await shouldProtect
     const command = await $deletes.deleteEvent(event, writer => writer.setProtected(protect))
-    const error = await command.publishToRelays([url]).waitForError()
+    const error = (await command.publishToRelays([url]).settled()).getError()
 
     if (error) {
       return pushToast({theme: "error", message: error})

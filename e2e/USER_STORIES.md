@@ -1897,7 +1897,7 @@ does not serve is answered by an empty relay rather than refused, so no spec can
 that fails. That leaves one invariant untested: a send whose reads fail before the message exists
 must keep the text in the composer and say so, rather than clearing as though it went. It is the
 shape of the bug that motivated US-108 — `@welshman/store`'s `load` rejects rather than resolving
-empty, so a failure there aborts a publish before its thunk is made and nothing reaches the
+empty, so a failure there aborts a publish before its publication is made and nothing reaches the
 timeline to carry a status. Testing it needs a seam for making a relay unusable.
 
 **Internals with no user-visible surface.** The legacy session-storage format

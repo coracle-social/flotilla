@@ -2,21 +2,21 @@
   import {stopPropagation} from "svelte/legacy"
   import {PublishStatus} from "@welshman/net"
   import {displayRelayUrl} from "@welshman/util"
-  import {BaseThunk} from "@welshman/app"
+  import type {Publishable} from "@welshman/app"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
 
   type Props = {
-    thunk: BaseThunk
+    publication: Publishable
     retry: (url: string) => void
   }
 
-  const {thunk, retry}: Props = $props()
+  const {publication, retry}: Props = $props()
 
-  const successUrls = $derived($thunk.getUrlsWithStatus(PublishStatus.Success))
-  const failedUrls = $derived($thunk.getFailedUrls())
+  const successUrls = $derived($publication.getUrlsWithStatus(PublishStatus.Success))
+  const failedUrls = $derived($publication.getFailedUrls())
   const total = $derived(successUrls.length + failedUrls.length)
   const isPartial = $derived(successUrls.length > 0 && failedUrls.length > 0)
 
@@ -53,7 +53,7 @@
       </div>
     {/each}
     {#each failedUrls as url (url)}
-      {@const {detail, status} = $thunk.results[url] || {}}
+      {@const {detail, status} = $publication.results[url] || {}}
       <div class="grid grid-cols-[1rem_1fr_auto] items-start gap-x-3 gap-y-1 text-sm">
         <Icon icon={Danger} class="mt-0.5 text-error" size={4} />
         <div class="min-w-0">

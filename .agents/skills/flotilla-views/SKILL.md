@@ -214,7 +214,7 @@ Svelte's delegated `onclick` on the `<ul>` would never see the click. On mobile,
 ```typescript
 pushToast({message: "Role created!"})
 pushToast({theme: "error", message, action: {message: "Details", onclick}})
-pushToast({timeout: 30_000, children: {component: ThunkToast, props: {thunk}}})
+pushToast({timeout: 30_000, children: {component: PublicationToast, props: {publication}}})
 ```
 
 A `children` component receives the `toast` as a prop, so it can pop itself. `clip(value)` copies
@@ -293,7 +293,7 @@ param change and lists key by id. A prop that does change while mounted needs `$
 ## Reading state in a component
 
 Components read plugins through the `usePlugin` stores exported from `src/app/core.ts`
-(`$profiles`, `$relays`, `$rooms`, `$roomLists`, `$events`, `$network`, `$thunks`, `$deletes`,
+(`$profiles`, `$relays`, `$rooms`, `$roomLists`, `$events`, `$network`, `$publisher`, `$deletes`,
 `$relayManagement`, …). `$app.use(X)` covers plugins with no export, such as `Zappers`,
 `Pinboards` and `Feeds`; flotilla-state has the rules about which to use where.
 
@@ -398,7 +398,7 @@ ahead. All ten `*Item` components that appear in a list use it.
 
 ## Mutations from a component
 
-flotilla-state covers the writer → command → thunk path. The component around it owns a
+flotilla-state covers the writer → command → publication path. The component around it owns a
 `loading` flag, awaits the first error, toasts it, and closes. Anything thrown on the way (a signer
 refusing, a relay unreachable) is logged and toasted in a `catch`, so a bare `try`/`finally` never
 lets it escape the handler:
@@ -408,8 +408,8 @@ const submit = async () => {
   loading = true
 
   try {
-    const thunk = await command(eventWriter).then(publish)
-    const error = await thunk.waitForError()
+    const publication = await command(eventWriter).then(publish)
+    const error = (await publication.settled()).getError()
 
     if (error) {
       return pushToast({theme: "error", message: error})
@@ -428,13 +428,13 @@ const submit = async () => {
 Bind the flag to the button with `disabled={loading}` and `<Spinner {loading}>`. Plugin mutators
 return a `Command` as well: `$deletes.deleteEvent(event, w => w.setProtected(protect))` then
 `.publishToRelays([url])` in `EventDeleteConfirm`, or `$rooms.createRoom(url, room)` then
-`.publish()` in `RoomForm`. NIP-86 calls resolve to `{error}` instead of a thunk:
+`.publish()` in `RoomForm`. NIP-86 calls resolve to `{error}` instead of a publication:
 `$relayManagement.forUrl(url).createRole(...)` in `RoleCreate`.
 
 The hosting backend isn't nostr. Toast `hostingErrorMessage(e, fallback)` from `hosting.ts`,
 which returns a `HostingError`'s own message and logs anything else before falling back. Publishes are
 optimistic, so rows show progress in place: `ContentActions`, `CommentActions` and `ArticleActionBar`
-wrap their contents in `ThunkStatusOrDeleted`, and chat pushes a `ThunkToast`.
+wrap their contents in `PublicationStatusOrDeleted`, and chat pushes a `PublicationToast`.
 
 ## Forms
 
@@ -481,9 +481,9 @@ Rich text uses `makeEditor` from `src/app/editor` with `EditorContent`.
 ## Related skills
 
 - `flotilla-architecture`: layer rules and exceptions, the `src/app` modules, boot, placement
-- `flotilla-state`: plugin stores, `derive*` stores, drafts, settings, thunks and commands
+- `flotilla-state`: plugin stores, `derive*` stores, drafts, settings, publications and commands
 - `flotilla-model`: spaces, rooms, NIP-43/29/86, content kinds, and where events are published
-- `welshman-app`: plugins, projections, `Command`, thunks, `Events`, `Feeds`
+- `welshman-app`: plugins, projections, `Command`, `Publisher`, `Events`, `Feeds`
 - `welshman-store`: `deriveEventsById`, `deriveEventsAsc`, the repository stores under `Events`
 - `welshman-domain`: the readers and writers behind `reader` and `writer`
 - `welshman-feeds`: `FeedController`, still used by `ProfileFeed`

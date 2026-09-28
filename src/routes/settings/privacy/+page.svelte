@@ -33,8 +33,8 @@
     sendingLogs = true
 
     try {
-      const thunk = await sendLogs()
-      const error = await thunk.waitForError()
+      const publication = await sendLogs()
+      const error = (await publication.settled()).getError()
 
       if (error) {
         pushToast({theme: "error", message: error})

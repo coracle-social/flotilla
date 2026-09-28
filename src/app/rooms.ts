@@ -15,7 +15,7 @@ import {
   roomLists,
   rooms,
   router,
-  thunks,
+  publisher,
   relays,
   user,
   writer,
@@ -59,7 +59,8 @@ export const addRoomMembers = async (url: string, room: RoomMeta, pubkeys: strin
       rooms
         .get()
         .addMember(url, room, pk)
-        .then(command => command.publish().waitForError()),
+        .then(command => command.publish().settled())
+        .then(publication => publication.getError()),
     ),
   )
 
@@ -117,7 +118,7 @@ export const publishRoomQuote = async ({
 }) => {
   const eventWriter = await addressWriterToSpace(writer(Message).setParent(parent), url, h)
 
-  return thunks.get().publish({
+  return publisher.get().publish({
     relays: [url],
     event: await eventWriter.renderTemplate(),
     delay,
@@ -145,7 +146,7 @@ export const publishComment = async ({
     tagValue(tagSpec("h"), event.tags),
   )
 
-  return thunks.get().publish({
+  return publisher.get().publish({
     relays: [url],
     event: await eventWriter.renderTemplate(),
     delay: await loadSendDelay(),
@@ -156,14 +157,14 @@ export const publishToSpace = async (
   eventWriter: EventWriter<BaseEventReader>,
   {url, h, shareToChat}: {url: string; h?: string; shareToChat?: boolean},
 ) => {
-  const thunk = await command(await addressWriterToSpace(eventWriter, url, h)).then(publish)
-  const error = await thunk.waitForError()
+  const publication = await command(await addressWriterToSpace(eventWriter, url, h)).then(publish)
+  const error = (await publication.settled()).getError()
 
   if (shareToChat && !error) {
-    publishRoomQuote({url, h, parent: thunk.options.event})
+    publishRoomQuote({url, h, parent: publication.event})
   }
 
-  return {thunk, error}
+  return {publication, error}
 }
 
 // User

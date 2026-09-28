@@ -15,7 +15,7 @@
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
-  import ThunkFailure from "@app/components/ThunkFailure.svelte"
+  import PublicationFailure from "@app/components/PublicationFailure.svelte"
   import {publishReaction, retractReaction} from "@app/reactions"
   import {deriveDisplaysByPubkey} from "@app/social"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
@@ -26,8 +26,8 @@
   import RoomItemMenu from "@app/components/RoomItemMenu.svelte"
   import RoomItemMenuMobile from "@app/components/RoomItemMenuMobile.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
-  import {events, profiles, reader, thunks, user} from "@app/core"
-  import {noThunks, thunksByEventId} from "@app/thunks"
+  import {events, profiles, publisher, reader, user} from "@app/core"
+  import {noPublications, publicationsByEventId} from "@app/publications"
   import {colorFor} from "@app/theme"
   import {ENABLE_ZAPS} from "@app/env"
   import type {FeedContext} from "@app/feeds"
@@ -56,7 +56,9 @@
 
   const today = formatTimestampAsDate(now())
   const profileDisplay = $profiles.display(event.pubkey, [url]).$
-  const thunk = $derived($thunks.merge($thunksByEventId.get(event.id) ?? noThunks))
+  const publication = $derived(
+    $publisher.merge($publicationsByEventId.get(event.id) ?? noPublications),
+  )
   const colorValue = colorFor(event.pubkey)
 
   // A message that is nothing but a reference renders as the event it quotes.
@@ -123,8 +125,8 @@
       {/if}
       <div class={cx({"mt-2": showPubkey && event.kind !== MESSAGE})}>
         <RoomItemContent {url} event={$innerEvent ?? event} />
-        {#if thunk}
-          <ThunkFailure showToastOnRetry {thunk} class="mt-1 flex justify-end" />
+        {#if publication}
+          <PublicationFailure showToastOnRetry {publication} class="mt-1 flex justify-end" />
         {/if}
       </div>
     </div>

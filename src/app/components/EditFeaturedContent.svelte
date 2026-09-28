@@ -31,8 +31,8 @@
     loading = true
 
     try {
-      const thunk = await setFeaturedContent(url, content)
-      const error = await thunk.waitForError()
+      const publication = await setFeaturedContent(url, content)
+      const error = (await publication.settled()).getError()
 
       if (error) {
         pushToast({theme: "error", message: error})

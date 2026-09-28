@@ -238,7 +238,7 @@ adds `setRoom` only when it is posting into a room, as `ThreadCreate`, `Classifi
 Some routing is built into welshman. `Reactions.react` and `Deletes.deleteEvent` find the target's
 relay in the tracker and copy its `h`. The 10009 writer publishes to the user's outbox and to every
 space it lists or used to list, so each relay hears about joins and leaves. Kind 9 has no factory,
-so `RoomChat` and `publishRoomQuote` publish raw templates through `Thunks`.
+so `RoomChat` and `publishRoomQuote` publish raw templates through `Publisher`.
 
 Reads are scoped the same way. Request from the space relay (`relays: [url]`, plus `"#h": [h]` for
 a room) and read results with `$events.forUrl(url, filters)`, which uses the tracker to keep

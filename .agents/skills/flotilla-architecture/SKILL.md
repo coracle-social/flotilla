@@ -86,7 +86,7 @@ imports. `flotilla-views` covers component conventions.
 - `sync.ts`: `syncApplicationData`, the background sync of user data, spaces and DMs
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
 - `repository.ts`: the `LatestEvents` plugin, each watched author's most recent event
-- `thunks.ts` (publish status by event id), `signer.ts` (signer request tracking and `signerHealth`)
+- `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and `signerHealth`)
 - `env.ts`: every `VITE_` value, parsed
 - `logger.ts` (log capture and sending), `analytics.ts` (Plausible pageviews), `device.ts` (a
   device id)
@@ -350,7 +350,7 @@ renders `ArticleForm`.
 - `flotilla-views`: routes and layouts, components, modals, loading data from components
 - `flotilla-model`: spaces as relays, NIP-29 rooms, NIP-86 management, content kinds, routing
 - `welshman`: overview of the packages
-- `welshman-app`: `App`, `use()`, `AppPolicy`, `DerivedPlugin`, commands and thunks
+- `welshman-app`: `App`, `use()`, `AppPolicy`, `DerivedPlugin`, commands and the `Publisher`
 - `welshman-domain`: readers, writers, and adding a kind
 - `welshman-net`: the pool, sockets and socket policies
 - `welshman-util`: kind constants, tag specs, `RelaySelection`

@@ -4,7 +4,7 @@
   import type {ClientOptions} from "@pomade/core"
   import {makeSecret, RELAYS, MESSAGING_RELAYS, makeEvent} from "@welshman/util"
   import {Profile} from "@welshman/domain"
-  import {Thunks, nip01, publish, toSession} from "@welshman/app"
+  import {Publisher, nip01, publish, toSession} from "@welshman/app"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import {getKey, setKey} from "@lib/implicit"
@@ -45,16 +45,16 @@
     await Promise.all(DEFAULT_SPACES.map(url => attemptRelayAccess(url)))
 
     // Add default outbox/inbox/messaging relays, profile, spaces
-    const thunks = await Promise.all([
-      $app.use(Thunks).publish({
+    const publications = await Promise.all([
+      $app.use(Publisher).publish({
         event: makeEvent(RELAYS, {tags: DEFAULT_RELAYS.map(url => ["r", url])}),
         relays: [...INDEXER_RELAYS, ...DEFAULT_RELAYS, ...DEFAULT_SPACES],
       }),
-      $app.use(Thunks).publish({
+      $app.use(Publisher).publish({
         event: makeEvent(MESSAGING_RELAYS, {tags: DEFAULT_MESSAGING_RELAYS.map(url => ["r", url])}),
         relays: [...DEFAULT_RELAYS, ...DEFAULT_SPACES],
       }),
-      $app.use(Thunks).publish({
+      $app.use(Publisher).publish({
         event: await $domain
           .writer(Profile)
           .update(getKey<ProfileValues>("signup.profile")!)
@@ -64,8 +64,8 @@
       $roomLists.setRelays(DEFAULT_SPACES).then(publish),
     ])
 
-    // Wait for all the thunks to complete
-    await Promise.all(thunks.map(thunk => thunk.waitForCompletion()))
+    // Wait for all the publications to settle
+    await Promise.all(publications.map(publication => publication.settled()))
 
     // Go to the dashboard
     clearModals()

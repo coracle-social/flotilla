@@ -18,7 +18,13 @@ import {
   matchReason,
   RelayReasonPrefix,
 } from "@welshman/net"
-import {BlockedRelayLists, MessagingRelayLists, RelayLists, RoomLists, Thunks} from "@welshman/app"
+import {
+  BlockedRelayLists,
+  MessagingRelayLists,
+  RelayLists,
+  Publisher,
+  RoomLists,
+} from "@welshman/app"
 import type {AppPolicy, IApp} from "@welshman/app"
 import {merged} from "@welshman/store"
 import {logger, appPolicies} from "@app/core"
@@ -75,7 +81,7 @@ const shouldAuth = (socket: Socket, $app: IApp) => {
   if ($app.use(RelayLists).urls($pubkey).get().includes(socket.url)) {
     return true
   }
-  if (get($app.use(Thunks).history).some(t => t.options.relays.includes(socket.url))) {
+  if (get($app.use(Publisher).history).some(p => p.relays.includes(socket.url))) {
     return true
   }
   if ($app.use(MessagingRelayLists).urls($pubkey).get().includes(socket.url)) {
@@ -92,7 +98,7 @@ const makeAuthInputs = ($app: IApp, pubkey: string) =>
     $app.use(MessagingRelayLists).urls(pubkey).$,
     $app.use(RelayLists).urls(pubkey).$,
     $app.use(RoomLists).urls(pubkey).$,
-    $app.use(Thunks).history,
+    $app.use(Publisher).history,
     userSettingsValues,
   ])
 

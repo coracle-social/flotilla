@@ -2,10 +2,10 @@
   import type {Snippet} from "svelte"
   import type {TrustedEvent} from "@welshman/util"
   import {PublishStatus} from "@welshman/net"
-  import ThunkStatus from "@app/components/ThunkStatus.svelte"
-  import {thunks} from "@app/core"
+  import PublicationStatus from "@app/components/PublicationStatus.svelte"
+  import {publisher} from "@app/core"
   import type {FeedContext} from "@app/feeds"
-  import {noThunks, thunksByEventId} from "@app/thunks"
+  import {noPublications, publicationsByEventId} from "@app/publications"
 
   type Props = {
     event: TrustedEvent
@@ -16,15 +16,15 @@
 
   const {event, context, status, children}: Props = $props()
   const deleted = $derived(context.deleted(event))
-  const pending = $derived($thunksByEventId.get(event.id) ?? noThunks)
-  const thunk = $derived($thunks.merge(pending))
+  const pending = $derived($publicationsByEventId.get(event.id) ?? noPublications)
+  const group = $derived($publisher.merge(pending))
 </script>
 
 {#if $deleted}
   <div class="button button-error button-xs rounded-full">Deleted</div>
 {:else}
-  {#if $thunk.thunks.length > 0 && !$thunk.hasStatus(PublishStatus.Success)}
-    <ThunkStatus {thunk} inline />
+  {#if $group.publications.length > 0 && !$group.hasStatus(PublishStatus.Success)}
+    <PublicationStatus publication={group} inline />
   {:else}
     {@render status?.()}
   {/if}

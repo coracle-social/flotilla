@@ -1,21 +1,20 @@
 <script lang="ts">
   import cx from "classnames"
   import {stopPropagation} from "svelte/legacy"
-  import {PublishStatus} from "@welshman/net"
-  import type {BaseThunk} from "@welshman/app"
+  import type {Publishable} from "@welshman/app"
 
   type Props = {
-    thunk: BaseThunk
+    publication: Publishable
     // A standalone usage fills its own row, and forcing that inside a flex row costs that row a line.
     inline?: boolean
     class?: string
   }
 
-  const {thunk, inline = false, ...restProps}: Props = $props()
+  const {publication, inline = false, ...restProps}: Props = $props()
 
-  const abort = () => thunk.abort()
+  const abort = () => publication.abort()
 
-  const isSending = $derived($thunk.hasStatus(PublishStatus.Sending))
+  const canAbort = $derived($publication.canAbort())
 </script>
 
 <div class={cx("flex px-1 text-xs", {"w-full justify-end": !inline}, restProps.class)}>
@@ -25,8 +24,8 @@
     <button
       type="button"
       class={cx("underline transition-all", {
-        link: isSending,
-        "pointer-events-none opacity-25": !isSending,
+        link: canAbort,
+        "pointer-events-none opacity-25": !canAbort,
       })}
       onclick={stopPropagation(abort)}>
       Cancel
