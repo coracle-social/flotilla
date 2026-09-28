@@ -17,14 +17,7 @@
 
   const {url, pins}: Props = $props()
 
-  const canvas = $derived($activeTheme === "dark" ? "Dark" : "Light")
-
-  const tileUrls = $derived(
-    ["Base", "Reference"].map(
-      layer =>
-        `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${canvas}_Gray_${layer}/MapServer/tile/{z}/{y}/{x}`,
-    ),
-  )
+  const basemap = $derived($activeTheme === "dark" ? "dark_all" : "light_all")
 
   const openProfile = (pubkey: string) => pushModal(ProfileDetail, {pubkey, url})
 
@@ -46,23 +39,22 @@
   })
 
   $effect(() => {
-    const tiles: TileLayer[] = []
+    let tile: Maybe<TileLayer>
 
     if (leaflet && map) {
-      for (const tileUrl of tileUrls) {
-        tiles.push(
-          leaflet
-            .tileLayer(tileUrl, {
-              maxZoom: 12,
-              attribution:
-                'Esri, HERE, Garmin, <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            })
-            .addTo(map),
+      tile = leaflet
+        .tileLayer(
+          `https://basemaps.cartocdn.com/rastertiles/${basemap}/{z}/{x}/{y}.png?key=${import.meta.env.VITE_CARTO_BASEMAP_KEY}`,
+          {
+            maxZoom: 12,
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions/">CARTO</a>',
+          },
         )
-      }
+        .addTo(map)
     }
 
-    return () => tiles.forEach(tile => tile.remove())
+    return () => tile?.remove()
   })
 
   $effect(() => {
