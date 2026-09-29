@@ -1177,6 +1177,8 @@ Acceptance:
   thread it was posted into.
 - A failed post shows "Failed to send!" in the same row, opening the same
   per-relay detail popover.
+- The comment composer closes as soon as the comment appears, rather than
+  waiting for the relay to confirm it.
 
 ### US-072 — A deleted post is marked deleted
 

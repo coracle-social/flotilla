@@ -64,10 +64,14 @@ const writeArticle = async (page: Page, title: string, body: string) => {
   await pageBar(page).getByRole("button", {name: "Publish"}).click()
 }
 
+// The comment composer, which is the only form on a content page carrying an editor.
+const commentComposer = (page: Page) =>
+  page.locator("form").filter({has: page.locator(".note-editor")})
+
 const writeComment = async (page: Page, body: string) => {
   await page.getByRole("button", {name: "Add a comment"}).click()
 
-  const form = page.locator("form").filter({has: page.locator(".note-editor")})
+  const form = commentComposer(page)
 
   // The editor takes focus itself once it has mounted, and typing before that puts the caret back.
   await expect(noteEditor(form)).toBeFocused()
@@ -359,6 +363,10 @@ test("US-071 content posts show delivery status in place", async ({seed, as}) =>
   const footnote = commentCard(alice, "A footnote nobody asked for.")
 
   await expect(footnote.getByText("Sending...")).toBeVisible()
+
+  // The comment is still in flight to a relay that says nothing, and the composer has already gone.
+  await expect(commentComposer(alice)).toHaveCount(0, {timeout: 2000})
+
   await expect(footnote.getByRole("button", {name: "Cancel"})).toBeVisible()
 
   await footnote.getByRole("button", {name: "Cancel"}).click()

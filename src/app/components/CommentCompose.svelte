@@ -67,12 +67,7 @@
     loading = true
 
     try {
-      const publication = await publishReply(content, ed.storage.nostr.getEditorTags())
-      const error = (await publication.settled()).getError()
-
-      if (error) {
-        return pushToast({theme: "error", message: error})
-      }
+      await publishReply(content, ed.storage.nostr.getEditorTags())
 
       draftKey.clear()
       onSubmit()

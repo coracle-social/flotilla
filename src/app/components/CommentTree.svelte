@@ -12,6 +12,7 @@
   import Content from "@app/components/Content.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
+  import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import type {FeedContext} from "@app/feeds"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import {pushModal} from "@app/modal"
@@ -80,7 +81,9 @@
           {#if url}
             <CommentActions event={node.comment} {url} {context} />
           {:else}
-            <EventReactions event={node.comment} {context} reactionClass="tip-left" />
+            <PublicationStatusOrDeleted event={node.comment} {context}>
+              <EventReactions event={node.comment} {context} reactionClass="tip-left" />
+            </PublicationStatusOrDeleted>
           {/if}
         </div>
       </div>
