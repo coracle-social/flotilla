@@ -1583,6 +1583,8 @@ Acceptance:
   avatar, and opens a pin's profile when it is clicked. A map with nobody on it
   says so.
 - The directory's search narrows the map as it narrows the list.
+- A member's card in the directory shows their location, so a state or a country
+  is visible where the map cannot pin it.
 
 ### US-098 — Browse and create hosted spaces
 

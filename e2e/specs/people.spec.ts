@@ -752,9 +752,13 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
   expect(JSON.parse(republished[1].content).location).toBe("Oregon, United States")
   expect(republished[1].tags.map(tag => tag[0])).not.toContain("g")
 
-  // The map is offered whether or not anyone is on it, so an empty one says so.
   await page.goto(`${spacePath(url)}/directory`)
   await page.getByPlaceholder("Search people or roles...").fill("Anders")
+
+  // A state is the member card's to show, since the map cannot.
+  await expect(pageContent(page).getByText("Oregon, United States")).toBeVisible()
+
+  // The map is offered whether or not anyone is on it, so an empty one says so.
   await page.getByRole("button", {name: "Map"}).click()
 
   await expect(pageContent(page).getByText("No locations found.")).toBeVisible()
