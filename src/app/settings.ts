@@ -1,6 +1,6 @@
 import type {Writable} from "svelte/store"
 import {derived, writable} from "svelte/store"
-import {append, equals, remove, spec, toggle} from "@welshman/lib"
+import {append, equals, poll, remove, spec, toggle} from "@welshman/lib"
 import {APP_DATA} from "@welshman/util"
 import {withGetter} from "@welshman/store"
 import {AppData} from "@welshman/domain"
@@ -10,6 +10,8 @@ import type {IApp, Projection} from "@welshman/app"
 import {app, fromApp, usePlugin} from "@app/core"
 
 export const SETTINGS = "flotilla/settings"
+
+const settingsFilter = {kinds: [APP_DATA], "#d": [SETTINGS]}
 
 export enum RelayAuthMode {
   Aggressive = "aggressive",
@@ -59,7 +61,7 @@ export class Settings extends DerivedPlugin<AppDataReader> {
 
   constructor(app: IApp) {
     super(app, {
-      filters: [{kinds: [APP_DATA], "#d": [SETTINGS]}],
+      filters: [settingsFilter],
       eventToItem: app.use(Domain).reader(AppData),
       getKey: settings => settings.author(),
     })
@@ -71,7 +73,7 @@ export class Settings extends DerivedPlugin<AppDataReader> {
   }
 
   fetch(pubkey: string) {
-    return this.app.use(Network).loadUsingOutbox(pubkey, {kinds: [APP_DATA], "#d": [SETTINGS]})
+    return this.app.use(Network).loadUsingOutbox(pubkey, settingsFilter)
   }
 }
 
@@ -110,13 +112,18 @@ export const createSettingsForm = (): Writable<SettingsValues> => {
   }
 }
 
-// A send reads the delay when it is clicked, and a room can paint before the user's own settings arrive.
+// A send reads the delay when it is clicked, and the settings event is readable only once it decrypts.
 export const loadSendDelay = async () => {
   const $app = app.get()
   const {pubkey} = User.require($app)
+  const decrypted = () => Boolean($app.use(Settings).get(pubkey))
 
-  if (!$app.use(Settings).get(pubkey)) {
+  if (!decrypted()) {
     await $app.use(Settings).load(pubkey)
+
+    if ($app.repository.query([{...settingsFilter, authors: [pubkey]}]).length > 0) {
+      await poll({interval: 30, condition: decrypted, signal: AbortSignal.timeout(3000)})
+    }
   }
 
   return userSettingsValues.get().send_delay
