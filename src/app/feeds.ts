@@ -10,6 +10,7 @@ import {
   range,
   removeUndefined,
   sleep,
+  spec,
   uniqBy,
   DAY,
   MONTH,
@@ -704,17 +705,24 @@ export const makeCalendarFeed = ({
   const compareByStart = (a: TrustedEvent, b: TrustedEvent) =>
     getStart(a) - getStart(b) || compareEventsAsc(a, b)
 
+  // The filters take in comments too, for the feed context, and a TimeEvent reader throws on them.
   const isValid = (event: TrustedEvent) => {
-    const timeEvent = reader(TimeEvent)(event)
+    if (event.kind === EVENT_TIME) {
+      const timeEvent = reader(TimeEvent)(event)
 
-    return timeEvent.start() && timeEvent.end() && !seen.has(event.id)
+      return timeEvent.start() && timeEvent.end() && !seen.has(event.id)
+    }
+
+    return false
   }
 
   const events = writable(
     uniqBy(
       e => e.id,
       relays.flatMap(url => app.get().use(Events).forUrl(url, filters).get()),
-    ).sort(compareByStart),
+    )
+      .filter(spec({kind: EVENT_TIME}))
+      .sort(compareByStart),
   )
 
   const insertEvents = (newEvents: TrustedEvent[]) => {

@@ -687,6 +687,10 @@ test("US-053 browse and search the library", async ({seed, as}) => {
 
   await expect(alice.getByText("The Handbook")).toBeVisible()
 
+  await alice.getByRole("button", {name: /Recipes/}).click()
+
+  await expect(alice.getByText("This shelf doesn't have any links yet.")).toBeVisible()
+
   // The library is the whole space's, so an ordinary member is offered the same controls.
   await expect(alice.getByRole("button", {name: "Create Shelf"})).toBeVisible()
   await expect(alice.getByRole("button", {name: "Add a link"})).toBeVisible()

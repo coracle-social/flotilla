@@ -24,8 +24,9 @@ import {
 } from "../harness"
 import type {SeededEvent, SeededSpace, TestUser} from "../harness"
 
-// A small primary-colored dot in the corner. RelaySummary's member check is the same shape at h-5 w-5.
-const unreadDot = (scope: Locator) => scope.locator("div.h-2.w-2.rounded-full.bg-primary")
+// The primary nav draws its dot in utilities and the space menu's rooms carry secondary-nav__dot.
+const unreadDot = (scope: Locator) =>
+  scope.locator("div.h-2.w-2.rounded-full.bg-primary, div.secondary-nav__dot")
 
 // An icon is a css mask built from a data url, so a room only renders this one when it is muted.
 const mutedRoomBell = (room: Locator) => room.locator("div.ml-auto.opacity-50")

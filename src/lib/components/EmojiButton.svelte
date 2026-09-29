@@ -42,7 +42,15 @@
     component={EmojiPicker}
     strayMargin={allowKaomoji ? undefined : 100}
     props={{onClick, allowKaomoji}}
-    params={{trigger: "manual", interactive: true, ...tippyParams}}>
+    params={{
+      trigger: "manual",
+      interactive: true,
+      // Popper only flips to a side the picker fits on whole, and it's taller than half a laptop screen.
+      popperOptions: {
+        modifiers: [{name: "flip", options: {fallbackPlacements: ["bottom", "left", "right"]}}],
+      },
+      ...tippyParams,
+    }}>
     {@render children?.()}
   </Tippy>
 </Button>
