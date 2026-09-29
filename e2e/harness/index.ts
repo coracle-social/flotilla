@@ -139,6 +139,8 @@ export type PageOptions = {
   relayInfo?: RelayInfoOverrides
   // What the hosting backend already knows about this user; getHosting changes it mid-test.
   hosting?: HostingFixtures
+  // Which paths this user has already read, for a spec that needs unread messages at first paint.
+  checked?: Record<string, number>
   // Relay urls that take the socket and answer nothing; silenceRelay does the same mid-test.
   silent?: string[]
   // Relay urls that serve events and never eose, so every request runs out its own deadline.
@@ -276,6 +278,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         user,
         path,
         env: options.env,
+        checked: options.checked,
         relays: urls,
         indexers: indexerUrls,
         spaces: urls,

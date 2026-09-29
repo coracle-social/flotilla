@@ -24,3 +24,15 @@ export const injectEvents = (context: BrowserContext, events: TrustedEvent[]) =>
     },
     [TEST_EVENTS_KEY, events] as const,
   )
+
+// Read state as an earlier visit left it, so a room can open with unread messages already in it.
+export const injectChecked = (context: BrowserContext, checked: Record<string, number>) =>
+  context.addInitScript(
+    ([key, value]) => {
+      // An init script also runs on about:blank, where reading localStorage is a SecurityError.
+      if (location.protocol.startsWith("http")) {
+        localStorage.setItem(key, value)
+      }
+    },
+    ["CapacitorStorage.checked", JSON.stringify(checked)] as const,
+  )

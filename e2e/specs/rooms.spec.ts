@@ -1,5 +1,5 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
-import {DAY, HOUR, MINUTE, WEEK, bech32ToHex, now} from "@welshman/lib"
+import {DAY, HOUR, MINUTE, WEEK, bech32ToHex, int, now} from "@welshman/lib"
 import {getLnUrl} from "@welshman/util"
 import {Profile} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
@@ -669,6 +669,46 @@ test("US-027a a permalink near the newest end lands at the bottom", async ({seed
   // The newest message in the room is on screen with it, so this is the live end
   await expect(message(page, "and the tide is with us")).toBeInViewport()
   await expect(jumpToNewest(page)).toHaveCount(0)
+})
+
+// A permalink pins the message it lands on, and the reader asking for the unread divider takes over.
+test("US-027b jump to the unread divider from a permalink", async ({seed, as}) => {
+  let newest!: SeededEvent
+
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    // Deep enough that the jump centres what it lands on rather than clamping at the bottom.
+    for (let i = 0; i < 120; i++) {
+      space.message(user.bob, "general", `harbor watch note ${i}`, at(400 - i * 3, MINUTE))
+    }
+
+    newest = space.message(user.bob, "general", "and the tide is with us", at(2, MINUTE))
+  })
+
+  const {url} = scenario.space("space")
+  const path = roomPath(url, "general")
+
+  // Alice has read none of this, so the divider is screens above the message she lands on.
+  const page = await as(users.alice, `${path}?at=${newest.event.created_at}`, {
+    checked: {[path]: now() - int(12, HOUR)},
+  })
+
+  await expect(page.locator(`[data-event="${newest.id}"]`)).toBeInViewport()
+
+  const divider = page.locator("#new-messages")
+
+  await page.getByRole("button", {name: "New Messages"}).click()
+
+  await expect(divider).toBeInViewport()
+
+  // The pin is what would pull her back down, a frame or two after the scroll starts.
+  await page.waitForTimeout(1000)
+  await expect(page.locator(`[data-event="${newest.id}"]`)).not.toBeInViewport()
 })
 
 test("US-028 share a message somewhere else", async ({seed, as}) => {

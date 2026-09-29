@@ -2,7 +2,7 @@ import type {BrowserContext} from "@playwright/test"
 import {ms} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import type {TestUser} from "../keys"
-import {injectEvents, injectSession} from "./session"
+import {injectChecked, injectEvents, injectSession} from "./session"
 
 // Must match TEST_ENV_KEY in src/lib/test/env.ts.
 const TEST_ENV_KEY = "__TEST_ENV__"
@@ -19,6 +19,8 @@ export type BootOptions = {
   user?: TestUser
   // What this user's client already has in local storage, e.g. their room list.
   events?: TrustedEvent[]
+  // Which paths this user has already read, keyed the way src/app/notifications.ts keys them.
+  checked?: Record<string, number>
   path?: string
   // VITE_ values the scenario sets for itself. Anything named here has to be something the test owns.
   env?: Record<string, string>
@@ -26,7 +28,16 @@ export type BootOptions = {
 
 export const boot = async (
   context: BrowserContext,
-  {relays, indexers = relays, spaces = [], user, events = [], path = "/", env = {}}: BootOptions,
+  {
+    relays,
+    indexers = relays,
+    spaces = [],
+    user,
+    events = [],
+    checked,
+    path = "/",
+    env = {},
+  }: BootOptions,
 ) => {
   const urls = relays.join(",")
 
@@ -64,6 +75,10 @@ export const boot = async (
   if (user) {
     await injectSession(context, user)
     await injectEvents(context, events)
+  }
+
+  if (checked) {
+    await injectChecked(context, checked)
   }
 
   const page = await context.newPage()

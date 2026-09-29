@@ -161,7 +161,11 @@
     isProgrammaticScroll = false
   }
 
-  const scrollToNewMessages = () => scrollToRow("new-messages", {behavior: "smooth"})
+  // Asking for the divider takes the scroll position over, so a permalink's pin lets go of it.
+  const scrollToNewMessages = () => {
+    release()
+    scrollToRow("new-messages", {behavior: "smooth"})
+  }
 
   // Dropping the anchor remounts the transcript on the present, which puts the reader at the live end.
   const scrollToBottom = () => {

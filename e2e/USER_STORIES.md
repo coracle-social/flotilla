@@ -442,6 +442,16 @@ Acceptance:
   message on screen and no "jump to newest" control, even when other events were
   published after the one linked to.
 
+### US-027b — Jump to the unread divider from a permalink
+
+As someone opening a push notification, I want the "New Messages" control to
+take me to where my unread messages start, so that I can read what I missed.
+
+Acceptance:
+
+- Landing on a permalink and then asking for new messages scrolls to the unread
+  divider, and does not return to the message the permalink landed on.
+
 ### US-028 — Share a message somewhere else
 
 As alice, I want to forward a message into another room in the same space, so
