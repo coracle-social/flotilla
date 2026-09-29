@@ -61,9 +61,7 @@
     ? {url, kind: MESSAGE, pubkey: $app.user?.pubkey, tags: h ? [["h", h]] : []}
     : undefined
 
-  const buttonClass = url
-    ? "join-item h-10 w-10 min-w-10 button button-neutral"
-    : "button button-neutral button-square tip tip-right h-10 w-10 min-w-10 rounded-2xl transition-colors"
+  const buttonClass = "join-item h-10 w-10 min-w-10 button button-neutral"
 
   const editorClass = $derived(
     cx("chat-editor grow overflow-hidden", {
@@ -193,7 +191,7 @@
   <CommandArgBar target={commandTarget} content={$text} insert={insertCommandToken} />
 {/if}
 <form class="relative flex gap-2 py-2" onsubmit={preventDefault(submit)}>
-  <div class={cx({join: url, "flex gap-2": !url})}>
+  <div class="join">
     <Button
       data-tip="Add an image"
       class={buttonClass}
