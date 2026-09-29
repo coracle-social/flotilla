@@ -3,6 +3,7 @@
   import MenuButton from "@lib/components/MenuButton.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
+  import ProfileLocation from "@app/components/ProfileLocation.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import SpaceMemberMenu from "@app/components/SpaceMemberMenu.svelte"
   import RoleBadge from "@app/components/RoleBadge.svelte"
@@ -44,6 +45,7 @@
       <div class="line-clamp-1 text-sm opacity-70">
         <ProfileAbout {pubkey} {url} singleLine />
       </div>
+      <ProfileLocation {pubkey} {url} />
     </div>
     {#if $permissions.memberMenu}
       <div class="pointer-events-auto shrink-0">

@@ -6,6 +6,7 @@
   import type {Maybe} from "@welshman/lib"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
+  import {dufflepud} from "@app/env"
   import {pushModal} from "@app/modal"
   import {activeTheme} from "@app/theme"
   import type {MemberPin} from "@app/social"
@@ -18,12 +19,6 @@
   const {url, pins}: Props = $props()
 
   const basemap = $derived($activeTheme === "dark" ? "dark_all" : "light_all")
-
-  // CARTO authorizes a key per referer, and the native apps and the dev server both serve from localhost.
-  const basemapKey =
-    location.hostname === "localhost"
-      ? import.meta.env.VITE_CARTO_BASEMAP_KEY_LOCALHOST
-      : import.meta.env.VITE_CARTO_BASEMAP_KEY
 
   const openProfile = (pubkey: string) => pushModal(ProfileDetail, {pubkey, url})
 
@@ -49,14 +44,11 @@
 
     if (leaflet && map) {
       tile = leaflet
-        .tileLayer(
-          `https://basemaps.cartocdn.com/rastertiles/${basemap}/{z}/{x}/{y}.png?key=${basemapKey}`,
-          {
-            maxZoom: 12,
-            attribution:
-              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attribution/">CARTO</a>',
-          },
-        )
+        .tileLayer(dufflepud(`basemap/${basemap}/{z}/{x}/{y}.png`), {
+          maxZoom: 12,
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attribution/">CARTO</a>',
+        })
         .addTo(map)
     }
 
@@ -71,15 +63,13 @@
       for (const pin of pins) {
         const target = document.createElement("div")
 
+        target.className =
+          "flex size-11 items-center justify-center rounded-full border border-line bg-surface shadow-lg"
+
         avatars.push(
           mount(ProfileCircle, {
             target,
-            props: {
-              pubkey: pin.pubkey,
-              url,
-              size: 10,
-              class: "bg-surface ring-2 ring-surface shadow-lg",
-            },
+            props: {pubkey: pin.pubkey, url, size: 9},
           }),
         )
 
@@ -88,7 +78,7 @@
             .marker([pin.latitude, pin.longitude], {
               title: pin.display,
               // An empty className replaces the white box leaflet gives a div icon.
-              icon: leaflet.divIcon({html: target, className: "", iconSize: [40, 40]}),
+              icon: leaflet.divIcon({html: target, className: "", iconSize: [48, 48]}),
             })
             .on("click", () => openProfile(pin.pubkey))
             .addTo(map),
