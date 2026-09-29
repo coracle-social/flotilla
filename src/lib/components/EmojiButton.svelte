@@ -45,9 +45,22 @@
     params={{
       trigger: "manual",
       interactive: true,
-      // Popper only flips to a side the picker fits on whole, and it's taller than half a laptop screen.
       popperOptions: {
-        modifiers: [{name: "flip", options: {fallbackPlacements: ["bottom", "left", "right"]}}],
+        modifiers: [
+          // The picker is taller than half a laptop screen, so it flips to whichever
+          // side fits whole — a react button low on a long page needs it above — and
+          // preventOverflow shifts it back on screen along the other axis when even
+          // that side is short. Without altAxis popper only acts on the placement
+          // axis, so a picker taller than the space beside its trigger stays off it.
+          {
+            name: "flip",
+            options: {fallbackPlacements: ["top", "bottom", "left", "right"], padding: 8},
+          },
+          {
+            name: "preventOverflow",
+            options: {boundary: "viewport", altAxis: true, padding: 8},
+          },
+        ],
       },
       ...tippyParams,
     }}>
