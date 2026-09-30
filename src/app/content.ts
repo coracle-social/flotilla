@@ -63,6 +63,10 @@ export const getUrlContentType = (url: string, event: TrustedEvent) => {
   return tagValue(tagSpec("m"), tags) || tagValue(tagSpec("file-type"), tags) || ""
 }
 
+export const isImageUrl = (url: string, event: TrustedEvent) =>
+  Boolean(url.match(/\.(jpe?g|png|gif|webp)$/)) ||
+  IMAGE_CONTENT_TYPES.includes(getUrlContentType(url, event))
+
 export const decryptUrl = async (url: string, event: TrustedEvent, signal?: AbortSignal) => {
   const tags = getUrlTags(url, event)
   const algorithm = tagValue(tagSpec("encryption-algorithm"), tags)

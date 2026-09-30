@@ -885,12 +885,15 @@ resources members have collected.
 
 Acceptance:
 
-- Typing a term filters the shelf list to shelves whose title, description, or
-  topics match.
-- Selecting a shelf shows its pins as a gallery; an empty shelf shows a message
-  instead.
-- Alice is offered "Create Shelf" and "Add a link", and "Add link" on someone
-  else's shelf, but not that shelf's "Edit shelf" or "Delete shelf".
+- A shelf card carries its title, its description, how many links are on it and
+  who has contributed.
+- Typing a term filters the shelves to those whose title, description or topics
+  match, and lists the links that match from any shelf.
+- Opening a shelf shows its links; one that already holds a link still offers
+  "Add a link".
+- Alice is offered "Create Shelf" and "Add a link" on someone else's shelf, and
+  not its "Edit shelf". Its "Delete shelf" opens a dialog saying only the author
+  or an admin can delete a shelf.
 
 ### US-054 — Curate the library
 
@@ -899,13 +902,56 @@ good material first.
 
 Acceptance:
 
-- Creating a shelf with a title and description adds it to the list and
-  navigates into it; editing and deleting it from its menu update the list.
-- Adding a pin with an external url shows it as a content card, and adding one
-  with a nostr note link renders that note as a rich embed.
+- Creating a shelf with a title, description and topics opens it; editing it
+  from its menu updates its page, and deleting it returns to the library.
+- Several links pasted at once each become a link of its own and are offered no
+  title or description between them: an external url renders as the link, a
+  nostr note link as the note it points at.
 - "Add to Library" on a post (for example a poll) with a shelf selected adds it
-  as a pin visible in that shelf; with no shelves yet, the dialog prompts to
-  create one.
+  as a link on that shelf; with no shelves yet, the dialog prompts to create
+  one.
+- Renaming a link from its menu republishes it under the new title.
+- bob signs through a browser extension, so everything he publishes here is
+  signed by something outside the page.
+
+### US-137 — Discuss a shelf and a link on it
+
+As alice, I want to comment on a shelf and on one link on it, so that a question
+about what was collected sits with what it is about.
+
+Acceptance:
+
+- Opening a link raises its own discussion, and a comment posted there appears
+  under it.
+- A link's card counts the comments on it.
+- The shelf has a discussion of its own, for anything about the collection
+  rather than about one link.
+
+### US-138 — Manage a shelf as a list
+
+As bob, I want to work through a shelf as a list, so that tidying up many links
+costs one action rather than one each.
+
+Acceptance:
+
+- A shelf renders as cards or as a list, and the list gives every link a
+  checkbox with a select-all above them.
+- Moving the selected links to another shelf files them there and takes them off
+  this one.
+- Deleting the selected links for everyone asks for confirmation first.
+
+### US-139 — See who built a shelf and where its links point
+
+As alice, I want to see who contributed to a shelf and what each link points at,
+so that a collection reads as somebody's work rather than a list of identifiers.
+
+Acceptance:
+
+- A shelf header counts its contributors, opens the roster of them, and each name
+  in it opens that person's profile.
+- A link to a post reads as a short entity label in the list view, the same way
+  rendered content names one.
+- Following that label lands on the post.
 
 ### US-055 — Create community content from a room
 

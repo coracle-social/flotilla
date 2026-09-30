@@ -1,6 +1,6 @@
 <script lang="ts">
+  import {page} from "$app/state"
   import type {PinboardReader} from "@welshman/domain"
-  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
   import TrashBin from "@assets/icons/trash-bin-2.svg?dataurl"
   import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
@@ -9,12 +9,15 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
+  import Notice from "@lib/components/Notice.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
-  import PinSave from "@app/components/PinSave.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
-  import {deletes, relays, user} from "@app/core"
+  import {user} from "@app/core"
+  import {deriveSpacePermissions} from "@app/management"
+  import {deleteLibraryEvent} from "@app/pinboards"
   import {shareEvent} from "@app/share"
-  import {pushModal} from "@app/modal"
+  import {navigate, pushModal} from "@app/modal"
+  import {makeLibraryPath} from "@app/routes"
   import {pushToast} from "@app/toast"
 
   type Props = {
@@ -25,26 +28,28 @@
 
   const {url, board, onClick}: Props = $props()
 
+  const permissions = deriveSpacePermissions(url)
+  const isAuthor = $derived(board.event.pubkey === $user.pubkey)
+  const canDelete = $derived(isAuthor || $permissions.deleteContent)
+
   const showInfo = () => pushModal(EventInfo, {url, event: board.event})
 
   const share = () => shareEvent(url, "Shelf", board.event)
-
-  const addLink = () => pushModal(PinSave, {url, address: board.address()})
 
   const edit = () => pushModal(PinboardEdit, {url, board})
 
   const deleteBoard = async () => {
     try {
-      const protect = await $relays.hasNip(url, 70)
-      const command = await $deletes.deleteEvent(board.event, writer =>
-        writer.setProtected(protect),
-      )
-      const error = (await command.publishToRelays([url]).settled()).getError()
+      const error = await deleteLibraryEvent(url, board.event)
 
       if (error) {
         pushToast({theme: "error", message: error})
       } else {
         pushToast({message: "Shelf deleted!"})
+
+        if (page.url.pathname === makeLibraryPath(url, board.address())) {
+          navigate(makeLibraryPath(url))
+        }
       }
     } catch (e) {
       console.error(e)
@@ -57,6 +62,12 @@
       title: "Delete Shelf",
       message: `Delete "${board.title() || "this shelf"}"?`,
       confirm: deleteBoard,
+    })
+
+  const explainDelete = () =>
+    pushModal(Notice, {
+      title: "You can't delete this shelf",
+      message: "Only the person who made a shelf, or an admin of this space, can delete it.",
     })
 </script>
 
@@ -73,24 +84,18 @@
       Share to chat
     </Button>
   </li>
-  <li>
-    <Button onclick={addLink}>
-      <Icon icon={AddCircle} />
-      Add link
-    </Button>
-  </li>
-  {#if board.event.pubkey === $user.pubkey}
+  {#if isAuthor}
     <li>
       <Button onclick={edit}>
         <Icon icon={Pen} />
         Edit shelf
       </Button>
     </li>
-    <li>
-      <Button class="text-error" onclick={confirmDelete}>
-        <Icon icon={TrashBin} />
-        Delete shelf
-      </Button>
-    </li>
   {/if}
+  <li>
+    <Button class="text-error" onclick={canDelete ? confirmDelete : explainDelete}>
+      <Icon icon={TrashBin} />
+      Delete shelf
+    </Button>
+  </li>
 </ul>

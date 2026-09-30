@@ -17,6 +17,8 @@ export type BootOptions = {
   indexers?: string[]
   spaces?: string[]
   user?: TestUser
+  // Whether this user signs through the window.nostr injectNip07 installed, rather than with a key.
+  nip07?: boolean
   // What this user's client already has in local storage, e.g. their room list.
   events?: TrustedEvent[]
   // Which paths this user has already read, keyed the way src/app/notifications.ts keys them.
@@ -33,6 +35,7 @@ export const boot = async (
     indexers = relays,
     spaces = [],
     user,
+    nip07 = false,
     events = [],
     checked,
     path = "/",
@@ -73,7 +76,7 @@ export const boot = async (
   )
 
   if (user) {
-    await injectSession(context, user)
+    await injectSession(context, user, nip07)
     await injectEvents(context, events)
   }
 

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import {navigate} from "@app/modal"
   import {getAddress} from "@welshman/util"
   import {publish} from "@welshman/app"
   import {Pinboard} from "@welshman/domain"
   import type {PinboardReader} from "@welshman/domain"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
+  import UploadMinimalistic from "@assets/icons/upload-minimalistic.svg?dataurl"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
   import Field from "@lib/components/Field.svelte"
@@ -15,11 +15,15 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import StringMultiInput from "@lib/components/StringMultiInput.svelte"
+  import ImageInputButton from "@app/components/ImageInputButton.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {command, writer} from "@app/core"
+  import {navigate} from "@app/modal"
   import {addressWriterToSpace} from "@app/rooms"
   import {makeLibraryPath} from "@app/routes"
   import {pushToast} from "@app/toast"
+  import {resolveImageInput} from "@app/uploads"
 
   type Props = {
     url: string
@@ -30,12 +34,31 @@
 
   const back = () => history.back()
 
+  const onImageSelect = (selected: File | string) => {
+    if (typeof selected === "string") {
+      imageFile = undefined
+      image = selected
+    } else {
+      imageFile = selected
+      image = URL.createObjectURL(selected)
+    }
+  }
+
+  const clearImage = () => {
+    imageFile = undefined
+    image = ""
+  }
+
   const submit = async () => {
     loading = true
 
     try {
       const eventWriter = await addressWriterToSpace(
-        writer(Pinboard, board).setTitle(title).setDescription(description),
+        writer(Pinboard, board)
+          .setTitle(title)
+          .setDescription(description)
+          .setImage((await resolveImageInput(imageFile, image)) ?? "")
+          .setTopics(topics),
         url,
       )
 
@@ -65,6 +88,9 @@
 
   let title = $state(board?.title() ?? "")
   let description = $state(board?.description() ?? "")
+  let topics = $state<string[]>(board?.topics() ?? [])
+  let image = $state(board?.image() ?? "")
+  let imageFile = $state<File>()
   let loading = $state(false)
 </script>
 
@@ -91,6 +117,37 @@
           bind:value={description}
           class="input w-full"
           placeholder="What's this shelf about?" />
+      {/snippet}
+    </Field>
+    <Field>
+      {#snippet label()}
+        Cover image
+      {/snippet}
+      {#snippet input()}
+        <div class="flex items-center gap-3">
+          {#if image}
+            <img src={image} alt="" class="h-16 w-24 rounded-2xl object-cover" />
+          {/if}
+          <ImageInputButton
+            onSelect={onImageSelect}
+            initialValue={imageFile ? undefined : image}
+            aria-label="Add a cover image"
+            class="button button-neutral button-sm">
+            <Icon icon={UploadMinimalistic} size={4} />
+            {image ? "Replace" : "Add an image"}
+          </ImageInputButton>
+          {#if image}
+            <Button class="button button-link button-sm" onclick={clearImage}>Remove</Button>
+          {/if}
+        </div>
+      {/snippet}
+    </Field>
+    <Field>
+      {#snippet label()}
+        Topics
+      {/snippet}
+      {#snippet input()}
+        <StringMultiInput bind:value={topics} placeholder="Add a topic..." />
       {/snippet}
     </Field>
   </ModalBody>

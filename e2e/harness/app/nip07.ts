@@ -29,7 +29,8 @@ export const injectNip07 = async (context: BrowserContext, user: TestUser) => {
   })
 
   await context.addInitScript(key => {
-    const call = (request: Nip07Call) => Reflect.get(window, key)(request)
+    // An extension answers over postMessage, which structured-clones every argument it is given.
+    const call = (request: Nip07Call) => Reflect.get(window, key)(structuredClone(request))
 
     Object.assign(window, {
       nostr: {

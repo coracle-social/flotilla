@@ -4,6 +4,7 @@
   import {Note} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
+  import Plane from "@assets/icons/plane-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -129,7 +130,10 @@
   <div class="flex justify-end gap-2">
     <Button class="button button-link" onclick={onCancel} disabled={loading}>Cancel</Button>
     <Button type="submit" class="button button-primary button-sm" disabled={$uploading || loading}>
-      <Spinner {loading} reserveSpace>
+      <Spinner size="sm" {loading}>
+        {#if !loading}
+          <Icon icon={Plane} size={4} />
+        {/if}
         {#if parent}
           Reply
         {:else}

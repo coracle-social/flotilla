@@ -1,71 +1,84 @@
 <script lang="ts">
-  import * as nip19 from "nostr-tools/nip19"
-  import {removeUndefined} from "@welshman/lib"
-  import {Address} from "@welshman/util"
+  import {derived} from "svelte/store"
+  import {filter, formatTimestampRelative, spec, uniq} from "@welshman/lib"
+  import {COMMENT} from "@welshman/util"
   import type {PinReader} from "@welshman/domain"
-  import MenuButton from "@lib/components/MenuButton.svelte"
-  import Content from "@app/components/Content.svelte"
-  import PinContentEvent from "@app/components/PinContentEvent.svelte"
-  import PinMenu from "@app/components/PinMenu.svelte"
-  import {pinToReference} from "@app/pinboards"
+  import {normalizeTopic} from "@lib/util"
+  import ChatRoundDots from "@assets/icons/chat-round-dots.svg?dataurl"
+  import Button from "@lib/components/Button.svelte"
+  import Cv from "@lib/components/Cv.svelte"
+  import Icon from "@lib/components/Icon.svelte"
+  import ContentActions from "@app/components/ContentActions.svelte"
+  import PinContent from "@app/components/PinContent.svelte"
+  import PinDetail from "@app/components/PinDetail.svelte"
+  import PinSave from "@app/components/PinSave.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import ProfileLink from "@app/components/ProfileLink.svelte"
+  import type {FeedContext} from "@app/feeds"
+  import {pushModal} from "@app/modal"
 
   type Props = {
     url: string
     pin: PinReader
-    minimal?: boolean
-    class?: string
+    context: FeedContext
+    card?: boolean
   }
 
-  const {url, pin, minimal, ...props}: Props = $props()
+  const {url, pin, context, card = true}: Props = $props()
 
-  // Encoded as nostr: entities (i tags are already urls) so Content parses them into embeds.
-  const reference = $derived(pin.reference())
+  const topics = $derived(uniq(pin.topics().map(normalizeTopic)))
+  const related = context.related(pin.event)
+  const comments = derived(related, $related => filter(spec({kind: COMMENT}), $related))
 
-  const content = $derived.by(() => {
-    if (reference?.type === "event") {
-      return "nostr:" + nip19.neventEncode({id: reference.id, relays: [url]})
-    }
-
-    if (reference?.type === "address") {
-      const {kind, pubkey, identifier} = Address.from(reference.address)
-
-      return "nostr:" + nip19.naddrEncode({kind, pubkey, identifier, relays: [url]})
-    }
-
-    return pinToReference(pin)
-  })
+  const discuss = () => pushModal(PinDetail, {url, pin, context}, {size: "large"})
 </script>
 
-<div class="{props.class} flex h-full flex-col gap-2 {minimal ? '' : 'card relative'}">
-  {#if !minimal}
-    <div class="absolute right-2 top-2 z-feature">
-      <MenuButton
-        class="button button-neutral button-sm button-square"
-        aria-label="More options"
-        iconSize={4}
-        component={PinMenu}
-        componentProps={{url, pin}} />
-    </div>
-  {/if}
+{#snippet topicLabels()}
+  {#each topics as topic (topic)}
+    <span class="badge badge-neutral badge-sm font-normal">#{topic}</span>
+  {/each}
+{/snippet}
+
+{#snippet body()}
+  <div class="flex min-w-0 items-center gap-2 text-xs text-content-muted">
+    <ProfileCircle pubkey={pin.event.pubkey} {url} size={4} />
+    <span class="min-w-0 truncate">
+      <ProfileLink unstyled pubkey={pin.event.pubkey} {url} />
+    </span>
+    <span class="whitespace-nowrap">{formatTimestampRelative(pin.event.created_at)}</span>
+  </div>
   {#if pin.title()}
-    <strong class="truncate min-w-0 pr-8">{pin.title()}</strong>
+    <strong class="min-w-0">{pin.title()}</strong>
   {/if}
-  {#if pin.content()}
-    <Content event={{content: pin.content(), tags: []}} {url} />
-  {/if}
-  {#if reference?.type === "event" || reference?.type === "address"}
-    <PinContentEvent
+  <PinContent {url} {pin} />
+  <div class="mt-auto flex flex-wrap items-center justify-end gap-2 pt-1">
+    <Button class="button button-neutral button-xs" onclick={discuss}>
+      <Icon size={4} icon={ChatRoundDots} />
+      {#if $comments.length > 0}
+        {$comments.length}
+        {$comments.length === 1 ? "comment" : "comments"}
+      {:else}
+        Discuss
+      {/if}
+    </Button>
+    <ContentActions
+      noun="Link"
+      editForm={PinSave}
+      labels={topics.length > 0 ? topicLabels : undefined}
       {url}
-      value={reference.type === "event" ? reference.id : reference.address}
-      relays={removeUndefined([reference.relay, url])} />
-  {:else}
-    <Content event={{content, tags: []}} {url} />
-  {/if}
-  {#if !minimal && pin.topics().length > 0}
-    <div class="mt-auto flex flex-wrap gap-1">
-      {#each pin.topics() as topic (topic)}
-        <span class="badge badge-neutral">#{topic}</span>
-      {/each}
-    </div>
-  {/if}
-</div>
+      event={pin.event}
+      {context} />
+  </div>
+{/snippet}
+
+{#if card}
+  <Cv data-component="PinItem" class="card flex h-full flex-col gap-2">
+    {@render body()}
+  </Cv>
+{:else}
+  <Cv
+    data-component="PinItem"
+    class="flex flex-col gap-2 border-b border-solid border-line px-4 py-4">
+    {@render body()}
+  </Cv>
+{/if}

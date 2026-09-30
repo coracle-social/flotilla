@@ -129,7 +129,7 @@ export type PageOptions = {
   context?: BrowserContextOptions
   // VITE_ values applied over the ones derived from the scenario's relays. See BootOptions in app/boot.ts.
   env?: Record<string, string>
-  // A NIP-07 provider signing as this user, for a login that goes through an extension.
+  // A NIP-07 provider signing as this user, so that `as` signs the way an extension does.
   nip07?: TestUser
   // A WebLN provider on window, for a wallet that gets connected through an extension.
   webln?: WebLnInfo
@@ -276,6 +276,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
       return boot(context, {
         user,
+        nip07: Boolean(options.nip07),
         path,
         env: options.env,
         checked: options.checked,

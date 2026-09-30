@@ -1,43 +1,103 @@
 <script lang="ts">
-  import cx from "classnames"
-  import type {PinboardReader} from "@welshman/domain"
-  import Button from "@lib/components/Button.svelte"
-  import MenuButton from "@lib/components/MenuButton.svelte"
-  import BoardMenu from "@app/components/BoardMenu.svelte"
+  import {derived} from "svelte/store"
+  import {filter, formatTimestampRelative, max, spec, uniq} from "@welshman/lib"
+  import {COMMENT} from "@welshman/util"
+  import type {PinReader, PinboardReader} from "@welshman/domain"
+  import {normalizeTopic} from "@lib/util"
+  import ChatRoundDots from "@assets/icons/chat-round-dots.svg?dataurl"
+  import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
+  import Cv from "@lib/components/Cv.svelte"
+  import Icon from "@lib/components/Icon.svelte"
+  import Link from "@lib/components/Link.svelte"
+  import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
+  import type {FeedContext} from "@app/feeds"
+  import {shelfCoverImages} from "@app/pinboards"
   import {makeLibraryPath} from "@app/routes"
 
   type Props = {
     url: string
     board: PinboardReader
-    selected: boolean
-    onclick: () => void
+    pins: PinReader[]
+    context: FeedContext
   }
 
-  const {url, board, selected, onclick}: Props = $props()
+  const {url, board, pins, context}: Props = $props()
 
-  const path = $derived(makeLibraryPath(url, board.address()))
+  const path = makeLibraryPath(url, board.address())
+  const related = context.related(board.event)
+  const comments = derived(related, $related => filter(spec({kind: COMMENT}), $related))
+
+  const title = $derived(board.title() || "Untitled shelf")
+  const topics = $derived(uniq(board.topics().map(normalizeTopic)))
+  const contributors = $derived(uniq([board.event.pubkey, ...pins.map(pin => pin.event.pubkey)]))
+
+  const cover = $derived.by(() => {
+    const image = board.image()
+
+    return image ? [image] : shelfCoverImages(pins)
+  })
+
+  const lastActive = $derived(
+    max([
+      board.event.created_at,
+      ...pins.map(pin => pin.event.created_at),
+      ...$comments.map(comment => comment.created_at),
+    ]),
+  )
 </script>
 
-<div class="relative w-56 shrink-0">
-  <Button
-    {onclick}
-    aria-pressed={selected}
-    class={cx("card card-sm card-interactive flex h-full w-full flex-col items-start gap-1 pr-10", {
-      "card-primary": selected,
-    })}>
-    <strong class="truncate w-full text-left"
-      ><UnreadDot {path} class="mr-1" />{board.title() || "Untitled shelf"}</strong>
-    {#if board.description()}
-      <span class="line-clamp-2 text-left text-sm opacity-70">{board.description()}</span>
+<Cv
+  tag={Link}
+  data-component="PinboardItem"
+  href={path}
+  aria-label={title}
+  class="group card card-interactive card-media flex h-full w-full flex-col">
+  <div class="relative h-32 w-full shrink-0 overflow-hidden bg-surface-more">
+    {#if cover.length > 0}
+      <div
+        class="grid h-full auto-cols-fr grid-flow-col gap-px transition-transform duration-300 group-hover:scale-105">
+        {#each cover as image (image)}
+          <img src={image} alt="" class="h-full w-full object-cover" />
+        {/each}
+      </div>
+    {:else}
+      <div class="flex h-full w-full items-center justify-center">
+        <Icon icon={GalleryWide} size={10} class="opacity-20" />
+      </div>
     {/if}
-  </Button>
-  <div class="absolute right-2 top-2 z-feature">
-    <MenuButton
-      class="button button-neutral button-sm button-square"
-      aria-label="More options"
-      iconSize={4}
-      component={BoardMenu}
-      componentProps={{url, board}} />
+    <UnreadDot {path} class="absolute right-3 top-3 z-feature" />
   </div>
-</div>
+  <div class="flex min-w-0 grow flex-col gap-2 p-4">
+    <p class="wrap-break-word text-xl leading-snug">{title}</p>
+    {#if board.description()}
+      <p class="line-clamp-2 wrap-break-word text-sm text-content-muted">{board.description()}</p>
+    {/if}
+    {#if topics.length > 0}
+      <div class="flex min-w-0 flex-wrap gap-1">
+        {#each topics.slice(0, 2) as topic (topic)}
+          <span class="badge badge-sm rounded-full font-normal">#{topic}</span>
+        {/each}
+        {#if topics.length > 2}
+          <span class="badge badge-sm rounded-full font-normal">+{topics.length - 2}</span>
+        {/if}
+      </div>
+    {/if}
+  </div>
+  <div
+    class="flex min-w-0 items-center justify-between gap-2 border-t border-solid border-line px-4 py-3 text-xs text-content-muted">
+    <span class="flex items-center gap-3">
+      <span>{pins.length} {pins.length === 1 ? "link" : "links"}</span>
+      {#if $comments.length > 0}
+        <span class="flex items-center gap-1">
+          <Icon size={3} icon={ChatRoundDots} />
+          {$comments.length}
+        </span>
+      {/if}
+    </span>
+    <span class="flex items-center gap-2">
+      <ProfileCircles pubkeys={contributors} size={5} limit={4} />
+      <span class="whitespace-nowrap">{formatTimestampRelative(lastActive)}</span>
+    </span>
+  </div>
+</Cv>

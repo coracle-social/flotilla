@@ -46,7 +46,7 @@
       back to the login screen.
     </p>
     <Button class="button button-primary" onclick={logout} disabled={loading}>
-      <Spinner {loading} reserveSpace>Log out</Spinner>
+      <Spinner {loading}>Log out</Spinner>
     </Button>
   </div>
 {/if}

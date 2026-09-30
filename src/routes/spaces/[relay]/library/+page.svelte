@@ -1,70 +1,71 @@
 <script lang="ts">
-  import {onMount} from "svelte"
-  import {goto} from "$app/navigation"
-  import {page} from "$app/stores"
-  import {derived} from "svelte/store"
+  import {onDestroy, onMount} from "svelte"
+  import {max, pushToMapKey, sortBy} from "@welshman/lib"
   import {PIN, PINBOARD} from "@welshman/util"
-  import {Pins} from "@welshman/app"
-  import {Pinboard} from "@welshman/domain"
-  import type {PinboardReader} from "@welshman/domain"
+  import type {PinReader} from "@welshman/domain"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
   import Add from "@assets/icons/add.svg?dataurl"
-  import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Masonry from "@lib/components/Masonry.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import PinItem from "@app/components/PinItem.svelte"
-  import PinSave from "@app/components/PinSave.svelte"
   import PinboardItem from "@app/components/PinboardItem.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
-  import {app, events, network, reader} from "@app/core"
+  import {network} from "@app/core"
+  import {makeFeedContext} from "@app/feeds"
+  import {derivePins, deriveShelves, pinMatchesTerm, shelfMatchesTerm} from "@app/pinboards"
   import {decodeRelay} from "@app/relays"
-  import {makeLibraryPath} from "@app/routes"
   import {pushModal} from "@app/modal"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const url = decodeRelay(params.relay)
+  const context = makeFeedContext({relays: [url]})
+  const shelves = deriveShelves(url)
+  const pins = derivePins(url)
 
-  let term = $state("")
-  let loading = $state(true)
+  const pinsByShelf = $derived.by(() => {
+    const result = new Map<string, PinReader[]>()
 
-  // A shelf belongs to the space it was published to rather than to the pubkey that signed it.
-  const boards = derived($events.forUrl(url, [{kinds: [PINBOARD]}]).$, $pinboards =>
-    $pinboards.map(reader(Pinboard)),
-  )
-
-  const address = $derived($page.url.searchParams.get("board") ?? "")
-
-  const selected = $derived($boards.find(board => board.address() === address))
-
-  const pins = $derived($app.use(Pins).forBoard(address).$)
-
-  const filtered = $derived.by(() => {
-    const value = term.trim().toLowerCase()
-
-    if (value) {
-      return $boards.filter(board =>
-        [board.title(), board.description(), ...board.topics()].some(field =>
-          field?.toLowerCase().includes(value),
-        ),
-      )
+    for (const pin of $pins) {
+      for (const address of pin.boards()) {
+        pushToMapKey(result, address, pin)
+      }
     }
 
-    return $boards
+    return result
   })
 
-  const createBoard = () => pushModal(PinboardEdit, {url})
+  // A shelf is as recent as the newest thing on it, so curating one brings it back to the front.
+  const sorted = $derived(
+    sortBy(
+      shelf =>
+        -max([
+          shelf.event.created_at,
+          ...(pinsByShelf.get(shelf.address()) ?? []).map(pin => pin.event.created_at),
+        ]),
+      $shelves,
+    ),
+  )
 
-  const addLink = () => pushModal(PinSave, {url, address})
+  let search = $state("")
+  let loading = $state(true)
 
-  const selectBoard = (board: PinboardReader) => () =>
-    goto(makeLibraryPath(url, board.address()), {replaceState: true, noScroll: true})
+  const term = $derived(search.trim().toLowerCase())
+
+  const matchingShelves = $derived(
+    term ? sorted.filter(shelf => shelfMatchesTerm(shelf, term)) : sorted,
+  )
+
+  const matchingPins = $derived(
+    term ? $pins.filter(pin => pin.boards().length > 0 && pinMatchesTerm(pin, term)) : [],
+  )
+
+  const createShelf = () => pushModal(PinboardEdit, {url})
 
   onMount(() => {
     const controller = new AbortController()
@@ -77,6 +78,8 @@
 
     return () => controller.abort()
   })
+
+  onDestroy(context.cleanup)
 </script>
 
 <SpaceBar>
@@ -87,53 +90,54 @@
     <strong>Library</strong>
   {/snippet}
   {#snippet action()}
-    <Button class="button button-primary button-sm" onclick={createBoard}>
+    <Button class="button button-primary button-sm" onclick={createShelf}>
       <Icon icon={Add} />
       Create Shelf
     </Button>
   {/snippet}
 </SpaceBar>
 
-<PageContent class="flex flex-col gap-4 p-4">
+<PageContent class="@container flex flex-col gap-4 p-4">
   <label class="card input input-group flex w-full items-center gap-2">
     <Icon size={4} icon={Magnifier} />
-    <input bind:value={term} class="min-w-0 grow" type="text" placeholder="Search library..." />
+    <input bind:value={search} class="min-w-0 grow" type="text" placeholder="Search library..." />
   </label>
   {#if loading}
     <p class="flex items-center justify-center py-20">
       <Spinner loading>Loading library...</Spinner>
     </p>
+  {:else if $shelves.length === 0}
+    <div class="card flex flex-col items-center gap-4 py-16 text-center">
+      <p class="text-xl">This space has no shelves yet.</p>
+      <p class="opacity-75">
+        A shelf collects links, notes and files worth keeping where everyone can find them.
+      </p>
+      <Button class="button button-primary" onclick={createShelf}>
+        <Icon icon={Add} />
+        Create the first shelf
+      </Button>
+    </div>
   {:else}
-    {#if filtered.length > 0}
-      <div class="scroll-container flex shrink-0 gap-3 overflow-x-auto pb-2">
-        {#each filtered as board (board.address())}
-          <PinboardItem
-            {url}
-            {board}
-            selected={board.address() === address}
-            onclick={selectBoard(board)} />
+    {#if matchingShelves.length > 0}
+      <div class="grid gap-4 @2xl:grid-cols-2 @4xl:grid-cols-3">
+        {#each matchingShelves as board (board.address())}
+          <PinboardItem {url} {board} {context} pins={pinsByShelf.get(board.address()) ?? []} />
         {/each}
       </div>
     {:else}
-      <p class="py-8 text-center opacity-70">No shelves found.</p>
+      <p class="py-8 text-center opacity-70">No shelves match that.</p>
     {/if}
-    <div class="divider shrink-0"></div>
-    {#if selected && $pins.length > 0}
-      <Masonry items={$pins} getKey={pin => pin.id()} columnWidth={80} gap={3}>
-        {#snippet child(pin)}
-          <PinItem {url} {pin} />
-        {/snippet}
-      </Masonry>
-    {:else if selected}
-      <div class="flex flex-col items-center gap-4 py-20 text-center">
-        <p class="opacity-70">This shelf doesn't have any links yet.</p>
-        <Button class="button button-primary" onclick={addLink}>
-          <Icon icon={AddCircle} />
-          Add a link
-        </Button>
+    {#if term}
+      <h2 class="text-lg">
+        {matchingPins.length === 1
+          ? "1 link matches that"
+          : `${matchingPins.length} links match that`}
+      </h2>
+      <div class="grid gap-4 @2xl:grid-cols-2 @4xl:grid-cols-3">
+        {#each matchingPins as pin (pin.event.id)}
+          <PinItem {url} {pin} {context} />
+        {/each}
       </div>
-    {:else}
-      <p class="py-20 text-center opacity-70">Select a shelf to see what's on it.</p>
     {/if}
   {/if}
 </PageContent>

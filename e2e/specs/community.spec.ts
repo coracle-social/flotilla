@@ -46,9 +46,9 @@ import type {TestUser} from "../harness"
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string; readonly event: SignedEvent}
 
-// A shelf is a card and its menu button side by side, so the menu is reached through their wrapper.
+// A shelf card carries its cover, its counts and its menu, so the menu is reached through it.
 const shelfCard = (page: Page, title: string) =>
-  page.getByRole("button", {name: new RegExp(title)}).locator("xpath=..")
+  page.locator('[data-component="PinboardItem"]').filter({hasText: title})
 
 // Button swallows both the default and the propagation of a click, and the middle of a card is one.
 const openCard = (card: Locator, title: string) => card.getByText(title).click()
@@ -672,35 +672,58 @@ test("US-053 browse and search the library", async ({seed, as}) => {
   const alice = await as(users.alice, libraryPath)
   const term = alice.getByPlaceholder("Search library...")
 
-  await expect(alice.getByRole("button", {name: /Getting Started/})).toBeVisible()
-  await expect(alice.getByRole("button", {name: /Recipes/})).toBeVisible()
+  await expect(shelfCard(alice, "Getting Started")).toBeVisible()
+  await expect(shelfCard(alice, "Recipes")).toBeVisible()
+
+  // A card says how much is on a shelf before anyone opens it.
+  await expect(shelfCard(alice, "Getting Started")).toContainText("1 link")
+  await expect(shelfCard(alice, "Recipes")).toContainText("0 links")
 
   // A term matches a shelf on its description as well as its title.
   await term.fill("new members")
 
-  await expect(alice.getByRole("button", {name: /Getting Started/})).toBeVisible()
-  await expect(alice.getByRole("button", {name: /Recipes/})).toHaveCount(0)
+  await expect(shelfCard(alice, "Getting Started")).toBeVisible()
+  await expect(shelfCard(alice, "Recipes")).toHaveCount(0)
+
+  // A term also reaches past the shelves into the links on them.
+  await term.fill("handbook")
+
+  await expect(alice.getByRole("heading", {name: "1 link matches that"})).toBeVisible()
 
   await term.fill("")
 
-  await alice.getByRole("button", {name: /Getting Started/}).click()
+  await alice.getByRole("link", {name: "Getting Started", exact: true}).click()
 
+  await expect(alice.getByRole("heading", {name: "Getting Started"})).toBeVisible()
   await expect(alice.getByText("The Handbook")).toBeVisible()
 
-  await alice.getByRole("button", {name: /Recipes/}).click()
+  // A shelf that already holds a link still offers a way to add another.
+  await expect(alice.getByRole("button", {name: "Add a link"})).toBeVisible()
+
+  await alice.goto(libraryPath)
+
+  // An empty shelf says so rather than drawing a blank page.
+  await alice.getByRole("link", {name: "Recipes", exact: true}).click()
 
   await expect(alice.getByText("This shelf doesn't have any links yet.")).toBeVisible()
 
   // The library is the whole space's, so an ordinary member is offered the same controls.
+  await alice.goto(libraryPath)
+
   await expect(alice.getByRole("button", {name: "Create Shelf"})).toBeVisible()
-  await expect(alice.getByRole("button", {name: "Add a link"})).toBeVisible()
 
-  // Someone else's shelf is hers to add to and not to rewrite.
-  await shelfCard(alice, "Recipes").getByRole("button", {name: "More options"}).click()
+  // A shelf is edited from its own page, and someone else's is hers to add to and not to rewrite.
+  await alice.getByRole("link", {name: "Recipes", exact: true}).click()
+  await alice.getByRole("button", {name: "Shelf options"}).click()
 
-  await expect(alice.getByRole("button", {name: "Add link", exact: true})).toBeVisible()
   await expect(alice.getByRole("button", {name: "Edit shelf"})).toHaveCount(0)
-  await expect(alice.getByRole("button", {name: "Delete shelf"})).toHaveCount(0)
+
+  // Deleting is offered and says why it is refused, rather than going missing.
+  await alice.getByRole("button", {name: "Delete shelf"}).click()
+
+  await expect(dialog(alice, "You can't delete this shelf")).toContainText(
+    "or an admin of this space, can delete it",
+  )
 })
 
 test("US-054 curate the library", async ({seed, as}) => {
@@ -738,8 +761,8 @@ test("US-054 curate the library", async ({seed, as}) => {
   const libraryPath = `${spacePath(url)}/library`
   const pollPath = `${spacePath(url)}/polls/${poll.id}`
 
-  // Curating is nobody's privilege here, so this is an ordinary member doing all of it.
-  const page = await as(users.bob, libraryPath)
+  // An ordinary member curates, signing through an extension, which clones what it is handed.
+  const page = await as(users.bob, libraryPath, {nip07: users.bob})
 
   const pollCard = page
     .locator(".card.z-feature")
@@ -751,41 +774,50 @@ test("US-054 curate the library", async ({seed, as}) => {
 
   await shelfForm.getByPlaceholder("Shelf title").fill("Reading List")
   await shelfForm.getByPlaceholder("What's this shelf about?").fill("Things worth reading")
+  await shelfForm.getByPlaceholder("Add a topic...").fill("reading")
+  await shelfForm.getByPlaceholder("Add a topic...").press("Enter")
   await shelfForm.getByRole("button", {name: "Save changes"}).click()
 
-  // Creating a shelf drops its author straight into it.
-  await expect(page.getByRole("button", {name: /Reading List/})).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  )
+  // Creating a shelf drops its author straight onto it.
+  await expect(page.getByRole("heading", {name: "Reading List"})).toBeVisible()
+  await expect(page.getByText("#reading")).toBeVisible()
 
-  // An external url becomes a card of its own...
-  await page.getByRole("button", {name: "Add a link"}).click()
-
-  const externalLink = dialog(page, "Add Link")
-
-  await externalLink.getByPlaceholder("URL or nevent...").fill("https://handbook.test/style-guide")
-  await externalLink.getByPlaceholder("Optional title").fill("The Style Guide")
-  await externalLink.getByRole("button", {name: "Add link"}).click()
-
-  await expect(page.locator('a[href="https://handbook.test/style-guide"]')).toBeVisible()
-
-  // ...and a nostr link becomes the note it points at.
+  // Several links go in at once, each as a card of its own.
   const nevent = nip19.neventEncode({id: message.id, kind: MESSAGE, relays: [url]})
 
-  await shelfCard(page, "Reading List").getByRole("button", {name: "More options"}).click()
-  await page.getByRole("button", {name: "Add link", exact: true}).click()
+  await page.getByRole("button", {name: "Add a link"}).click()
 
-  const nostrLink = dialog(page, "Add Link")
+  const links = dialog(page, "Add a Link")
 
-  await nostrLink.getByPlaceholder("URL or nevent...").fill(`nostr:${nevent}`)
-  await nostrLink.getByPlaceholder("Optional title").fill("Yesterday's incident")
-  await nostrLink.getByRole("button", {name: "Add link"}).click()
+  await links
+    .getByPlaceholder("URL or nevent...")
+    .fill(`https://handbook.test/style-guide\nnostr:${nevent}`)
+  // A title and a description are about one link, so a batch is offered neither.
+  await expect(links.getByPlaceholder("Optional title")).toHaveCount(0)
 
+  await links.getByRole("button", {name: "Add 2 links"}).click()
+
+  await expect(page.locator('a[href="https://handbook.test/style-guide"]')).toBeVisible()
   await expect(page.getByText("the deploy broke again")).toBeVisible()
 
-  // Editing the shelf from its menu updates the list.
-  await shelfCard(page, "Reading List").getByRole("button", {name: "More options"}).click()
+  // Renaming a link republishes the pin the menu was opened from.
+  const styleGuide = page
+    .locator('[data-component="PinItem"]')
+    .filter({hasText: "handbook.test/style-guide"})
+
+  await menuButton(styleGuide).click()
+  await page.getByRole("button", {name: "Edit Link"}).click()
+
+  const linkEdit = dialog(page, "Edit Link")
+
+  await linkEdit.getByPlaceholder("Optional title").fill("House style guide")
+  await linkEdit.getByRole("button", {name: "Save changes"}).click()
+
+  await expect(page.getByRole("alert")).toContainText("Link updated!")
+  await expect(page.getByText("House style guide")).toBeVisible()
+
+  // Editing the shelf from its menu updates the page it was edited from.
+  await page.getByRole("button", {name: "Shelf options"}).click()
   await page.getByRole("button", {name: "Edit shelf"}).click()
 
   const shelfEdit = dialog(page, "Edit Shelf")
@@ -793,9 +825,7 @@ test("US-054 curate the library", async ({seed, as}) => {
   await shelfEdit.getByPlaceholder("What's this shelf about?").fill("Things worth reading twice")
   await shelfEdit.getByRole("button", {name: "Save changes"}).click()
 
-  await expect(page.getByRole("button", {name: /Reading List/})).toContainText(
-    "Things worth reading twice",
-  )
+  await expect(page.getByText("Things worth reading twice")).toBeVisible()
 
   // A post filed from its own menu lands on the shelf that was picked for it.
   await page.goto(pollPath)
@@ -803,7 +833,7 @@ test("US-054 curate the library", async ({seed, as}) => {
   await page.getByRole("button", {name: "Add to Library"}).click()
   await page.getByRole("button", {name: /Reading List/}).click()
 
-  const fromPoll = dialog(page, "Add Link")
+  const fromPoll = dialog(page, "Add a Link")
 
   await fromPoll.getByPlaceholder("Optional title").fill("Standup poll")
   await fromPoll.getByRole("button", {name: "Add link"}).click()
@@ -811,17 +841,297 @@ test("US-054 curate the library", async ({seed, as}) => {
   await expect(page.getByRole("alert")).toContainText("Link added!")
 
   await page.goto(libraryPath)
-  await page.getByRole("button", {name: /Reading List/}).click()
+
+  await expect(shelfCard(page, "Reading List")).toContainText("3 links")
+
+  await page.getByRole("link", {name: "Reading List", exact: true}).click()
 
   await expect(page.getByText("Standup poll")).toBeVisible()
   await expect(page.getByText("Should we move standup to 10?")).toBeVisible()
 
-  // Deleting the shelf from its menu takes it off the list.
-  await shelfCard(page, "Reading List").getByRole("button", {name: "More options"}).click()
+  // Deleting a shelf from its own page takes it off the library and puts its curator back there.
+  await page.getByRole("button", {name: "Shelf options"}).click()
   await page.getByRole("button", {name: "Delete shelf"}).click()
   await page.getByRole("button", {name: "Confirm"}).click()
 
-  await expect(page.getByRole("button", {name: /Reading List/})).toHaveCount(0)
+  await expect(page).toHaveURL(libraryPath)
+  await expect(shelfCard(page, "Reading List")).toHaveCount(0)
+})
+
+test("US-137 discuss a shelf and a link on it", async ({seed, as}) => {
+  let shelf!: Seeded
+
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.admin, "general")
+    space.join(user.alice, "general")
+    space.profile(user.admin, {name: "Ada Admin"})
+    space.profile(user.alice, {name: "Alice Anderson"})
+
+    shelf = space.event(
+      user.admin,
+      () =>
+        space
+          .kind(Pinboard)
+          .writer()
+          .setIdentifier()
+          .setTitle("Getting Started")
+          .setDescription("Reading for new members")
+          .setCollaborative(true)
+          .renderTemplate(),
+      at(2, HOUR),
+    )
+
+    space.event(
+      user.admin,
+      () =>
+        space
+          .kind(Pin)
+          .writer()
+          .setIdentifier()
+          .addBoard(getAddress(shelf.event))
+          .setTitle("The Handbook")
+          .setExternal("https://handbook.test/start-here")
+          .renderTemplate(),
+      at(1, HOUR),
+    )
+  })
+
+  const {url} = scenario.space("space")
+  const alice = await as(users.alice, `${spacePath(url)}/library`)
+
+  await alice.getByRole("link", {name: "Getting Started", exact: true}).click()
+
+  // A link carries a discussion of its own, so asking about one happens where it sits.
+  await alice.getByRole("button", {name: "Discuss"}).click()
+
+  const detail = dialog(alice, "Link")
+
+  // The link's own title stands where the heading was, so nothing says "Link" twice.
+  await expect(detail.getByText("The Handbook")).toBeVisible()
+
+  await detail.getByRole("button", {name: "Comment"}).click()
+
+  const linkComment = detail.locator("form")
+
+  await noteEditor(linkComment).pressSequentially("Is this still the current version?")
+  await linkComment.getByRole("button", {name: "Comment"}).click()
+
+  await expect(
+    detail
+      .locator('[data-component="Comment"]')
+      .filter({hasText: "Is this still the current version?"}),
+  ).toBeVisible()
+
+  await detail.getByRole("button", {name: "Close dialog"}).click()
+
+  // The card counts it, so the next person can see there is something to read.
+  await expect(alice.getByRole("button", {name: "1 comment"})).toBeVisible()
+
+  // The shelf has one too, for anything about the collection rather than about one link.
+  await alice.getByRole("button", {name: "Add a comment"}).click()
+
+  const shelfComment = alice.locator("form").filter({has: alice.locator(".note-editor")})
+
+  await noteEditor(shelfComment).pressSequentially("Should we split this in two?")
+  await shelfComment.getByRole("button", {name: "Comment"}).click()
+
+  await expect(
+    alice.locator('[data-component="Comment"]').filter({hasText: "Should we split this in two?"}),
+  ).toBeVisible()
+})
+
+test("US-138 manage a shelf as a list", async ({seed, as}) => {
+  let readingList!: Seeded
+
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.bob, "general")
+    space.profile(user.bob, {name: "Bob Barker"})
+
+    readingList = space.event(
+      user.bob,
+      () =>
+        space
+          .kind(Pinboard)
+          .writer()
+          .setIdentifier()
+          .setTitle("Reading List")
+          .setCollaborative(true)
+          .renderTemplate(),
+      at(3, HOUR),
+    )
+
+    space.event(
+      user.bob,
+      () =>
+        space
+          .kind(Pinboard)
+          .writer()
+          .setIdentifier()
+          .setTitle("Archive")
+          .setCollaborative(true)
+          .renderTemplate(),
+      at(3, HOUR),
+    )
+
+    for (const [title, href] of [
+      ["The Handbook", "https://handbook.test/start-here"],
+      ["The Style Guide", "https://handbook.test/style-guide"],
+    ]) {
+      space.event(
+        user.bob,
+        () =>
+          space
+            .kind(Pin)
+            .writer()
+            .setIdentifier()
+            .addBoard(getAddress(readingList.event))
+            .setTitle(title)
+            .setExternal(href)
+            .renderTemplate(),
+        at(1, HOUR),
+      )
+    }
+  })
+
+  const {url} = scenario.space("space")
+  const libraryPath = `${spacePath(url)}/library`
+  const page = await as(users.bob, libraryPath)
+
+  await page.getByRole("link", {name: "Reading List", exact: true}).click()
+  await page.getByRole("button", {name: "List"}).click()
+
+  await page.getByRole("checkbox", {name: "Select The Handbook"}).check()
+  await page.getByRole("checkbox", {name: "Select The Style Guide"}).check()
+
+  await expect(page.getByText("2 selected")).toBeVisible()
+
+  // Moving files them on the destination and takes them off here, in one action.
+  await page.getByRole("button", {name: "Bulk actions"}).click()
+  await page.getByRole("button", {name: "Move to Archive"}).click()
+
+  await expect(page.getByRole("alert")).toContainText("2 moved.")
+  await expect(page.getByRole("button", {name: "The Handbook"})).toHaveCount(0)
+
+  await page.goto(libraryPath)
+
+  await expect(shelfCard(page, "Reading List")).toContainText("0 links")
+  await expect(shelfCard(page, "Archive")).toContainText("2 links")
+
+  // Select all reaches everything on the shelf, and deleting for everyone asks first.
+  await page.getByRole("link", {name: "Archive", exact: true}).click()
+  await page.getByRole("button", {name: "List"}).click()
+  await page.getByRole("checkbox", {name: "Select all"}).check()
+
+  await expect(page.getByText("2 selected")).toBeVisible()
+
+  await page.getByRole("button", {name: "Bulk actions"}).click()
+  await page.getByRole("button", {name: "Delete links"}).click()
+  await page.getByRole("button", {name: "Confirm"}).click()
+
+  await expect(page.getByRole("alert")).toContainText("2 deleted.")
+})
+
+test("US-139 see who built a shelf and where its links point", async ({seed, as}) => {
+  let shelf!: Seeded
+  let message!: Seeded
+
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.admin, "general")
+    space.join(user.alice, "general")
+    space.profile(user.admin, {name: "Ada Admin"})
+    space.profile(user.alice, {name: "Alice Anderson"})
+
+    message = space.message(user.alice, "general", "the anchor came loose again", at(30, MINUTE))
+
+    shelf = space.event(
+      user.admin,
+      () =>
+        space
+          .kind(Pinboard)
+          .writer()
+          .setIdentifier()
+          .setTitle("Field Notes")
+          .setCollaborative(true)
+          .renderTemplate(),
+      at(3, HOUR),
+    )
+
+    space.event(
+      user.admin,
+      () =>
+        space
+          .kind(Pin)
+          .writer()
+          .setIdentifier()
+          .addBoard(getAddress(shelf.event))
+          .setTitle("The Handbook")
+          .setExternal("https://handbook.test/start-here")
+          .renderTemplate(),
+      at(2, HOUR),
+    )
+
+    // A link to a post carries no words of its own, so the post is all the row has to show.
+    space.event(
+      user.alice,
+      () =>
+        space
+          .kind(Pin)
+          .writer()
+          .setIdentifier()
+          .addBoard(getAddress(shelf.event))
+          .setEvent(message.id, space.url)
+          .renderTemplate(),
+      at(1, HOUR),
+    )
+  })
+
+  const {url} = scenario.space("space")
+  const libraryPath = `${spacePath(url)}/library`
+  const alice = await as(users.alice, libraryPath)
+
+  await alice.getByRole("link", {name: "Field Notes", exact: true}).click()
+
+  // A card embeds the post it points at, which is also proof the post has loaded.
+  await expect(alice.getByText("the anchor came loose again")).toBeVisible()
+
+  await alice.getByRole("button", {name: "List"}).click()
+
+  const untitled = alice
+    .locator('[data-component="PinList"] > div')
+    .filter({hasText: "Untitled link"})
+  const pointer = untitled.getByRole("button", {name: /^nevent1/})
+
+  // A row names a post the way the rest of the app does, rather than printing its bech32.
+  await expect(pointer).toHaveText(/^nevent1[a-z0-9]{9}…$/)
+
+  await pointer.click()
+
+  await expect(alice).toHaveURL(new RegExp(`${roomPath(url, "general")}\\?`))
+  await expect(alice.getByText("the anchor came loose again")).toBeVisible()
+
+  await alice.goBack()
+
+  // Whoever made the shelf or added to it is a contributor, and the header opens the roster.
+  await alice.getByRole("button", {name: /2 contributors/}).click()
+
+  const contributors = dialog(alice, "Contributors")
+
+  await expect(contributors.getByText("Ada Admin")).toBeVisible()
+  await expect(contributors.getByText("Alice Anderson")).toBeVisible()
+
+  // A name in the roster is a way through to that person.
+  await contributors.getByRole("button", {name: "Ada Admin", exact: true}).click()
+
+  await expect(dialog(alice, "Profile details")).toBeVisible()
 })
 
 test("US-055 create community content from a room", async ({seed, as}) => {

@@ -18,9 +18,10 @@
     url?: string
     context: FeedContext
     columnClass?: string
+    noun?: string
   }
 
-  const {event, url, context, columnClass}: Props = $props()
+  const {event, url, context, columnClass, noun = "post"}: Props = $props()
 
   const relays = removeUndefined([url])
   const filters = getCommentFiltersForRoot([event])
@@ -54,7 +55,7 @@
     <div class={cx("flex w-full flex-wrap items-center justify-between gap-2 py-3", columnClass)}>
       <h2 class="text-lg font-bold">
         {nodes.length === 0
-          ? "Discussion about this post"
+          ? `Discussion about this ${noun}`
           : `${$comments.length} ${$comments.length === 1 ? "comment" : "comments"}`}
       </h2>
       {#if url && replyTo?.id !== event.id}

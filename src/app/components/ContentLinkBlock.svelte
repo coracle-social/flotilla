@@ -30,8 +30,8 @@
   import {PLATFORM_URL, THUMBNAIL_URL} from "@app/env"
   import {
     getUrlContentType,
+    isImageUrl,
     AUDIO_CONTENT_TYPES,
-    IMAGE_CONTENT_TYPES,
     VIDEO_CONTENT_TYPES,
   } from "@app/content"
   import {isRoomId} from "@app/rooms"
@@ -62,8 +62,7 @@
 
   const isVideo = Boolean(url.match(/\.(mov|webm|mp4)$/)) || VIDEO_CONTENT_TYPES.includes(fileType)
 
-  const isImage =
-    Boolean(url.match(/\.(jpe?g|png|gif|webp)$/)) || IMAGE_CONTENT_TYPES.includes(fileType)
+  const isImage = isImageUrl(url, event)
 
   const getVideoPoster = (videoUrl: string): string | undefined => {
     if (Capacitor.getPlatform() === "android" && THUMBNAIL_URL) {

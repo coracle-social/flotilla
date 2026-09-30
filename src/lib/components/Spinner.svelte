@@ -6,18 +6,10 @@
     children?: Snippet
     size?: "md" | "sm" | "xs"
     loading?: boolean
-    // Reserves the spinner's slot while idle, so toggling `loading` doesn't reflow the button.
-    reserveSpace?: boolean
     class?: string
   }
 
-  const {
-    children,
-    size = "md",
-    loading = true,
-    reserveSpace = false,
-    ...restProps
-  }: Props = $props()
+  const {children, size = "md", loading = true, ...restProps}: Props = $props()
 
   const spinnerClass = $derived(
     cx("spinner", {
@@ -30,8 +22,6 @@
 <div class={cx("flex items-center gap-2", restProps.class)}>
   {#if loading}
     <span class={spinnerClass}></span>
-  {:else if reserveSpace}
-    <span class={cx(spinnerClass, "invisible")}></span>
   {/if}
   {@render children?.()}
 </div>

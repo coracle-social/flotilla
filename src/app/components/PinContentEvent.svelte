@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
+  import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {events} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
@@ -22,7 +22,8 @@
 {#if $event}
   <NoteItem {url} {context} event={$event} />
 {:else}
-  <p class="flex justify-center py-8">
-    <Spinner loading>Loading event...</Spinner>
-  </p>
+  <LoadingFallback
+    class="py-8"
+    loadingMessage="Loading post..."
+    failureMessage="Failed to load this post." />
 {/if}
