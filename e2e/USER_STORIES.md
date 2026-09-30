@@ -1729,6 +1729,18 @@ Acceptance:
 - A thread bob starts in the same room raises none, however much of it reaches
   her client.
 
+### US-137 — Reach a thread from the inbox
+
+As alice, I want an unread reply to a thread to lead me to the thread, so that
+the inbox never drops me in a room chat to go looking for it.
+
+Acceptance:
+
+- A comment bob writes on a thread in a room alice belongs to leaves the room's
+  inbox row showing the room's own last message.
+- The same comment counts toward the space's unread thread activity, and the
+  thread it answers carries the unread dot on the threads board.
+
 ### US-105 — Land on the home page
 
 As a new user, I want the home page to route me somewhere useful, so that I'm

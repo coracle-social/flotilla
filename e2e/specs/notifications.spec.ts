@@ -702,6 +702,66 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
   await expect(unreadDot(threadsNav)).toHaveCount(0)
 })
 
+test("US-137 reach a thread from the inbox activity its comment raised", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.message(user.bob, "general", "the server is on fire", at(3, HOUR))
+
+    const topic = seedThread(space, user.bob, "where is the sextant", at(2, HOUR))
+
+    space.event(
+      user.bob,
+      () =>
+        space
+          .kind(Comment)
+          .writer()
+          // publishComment carries the root's room forward, so a comment on a thread is tagged h too.
+          .setRoom(space.url, "general")
+          .setRootFromEvent(topic.event)
+          .setParentFromEvent(topic.event)
+          .setContent("starboard locker, under the charts")
+          .renderTemplate(),
+      at(1, HOUR),
+    )
+  })
+
+  const space = scenario.space("space")
+  const alice = await as(users.alice, "/home")
+
+  // The room's row is its own chat, whatever the newest thing tagged for the room happens to be
+  const conversation = alice.getByRole("link").filter({hasText: "the server is on fire"})
+
+  await expect(conversation).toBeVisible()
+  await expect(conversation).toContainText("General")
+  await expect(alice.getByRole("link").filter({hasText: "starboard locker"})).toHaveCount(0)
+
+  // The comment is activity on the thread, so the space's thread count is what it raises
+  await expect(alice.getByRole("link").filter({hasText: "1 thread"})).toBeVisible()
+
+  await conversation.click()
+
+  await expect(alice).toHaveURL(pathPattern(roomPath(space.url, "general")))
+
+  await contentNavItem(alice, "Threads").click()
+
+  const topic = alice.getByRole("row").filter({hasText: "where is the sextant"})
+
+  await expect(topic).toBeVisible()
+
+  // syncChecked marks the page read 300ms later and latestActivityByPath is throttled to a second.
+  await alice.waitForTimeout(1500)
+
+  await expect(unreadDot(topic)).toBeVisible()
+
+  await topic.click()
+
+  await expect(alice.getByText("starboard locker, under the charts")).toBeVisible()
+})
+
 const seedPoll = (space: SeededSpace, user: TestUser, title: string, createdAt: number) =>
   space.event(
     user,

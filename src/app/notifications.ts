@@ -11,18 +11,18 @@ import {
   sortBy,
   throttle,
   parseJson,
+  spec,
   gt,
   int,
   HOUR,
 } from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
-import {getIdOrAddress, sortEventsDesc, tagSpec, tagValue, COMMENT, MESSAGE} from "@welshman/util"
-import {Comment} from "@welshman/domain"
+import {sortEventsDesc, tagSpec, tagValue, MESSAGE} from "@welshman/util"
 import {synced, throttled, withGetter} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
-import {app, fromApp, reader} from "@app/core"
+import {app, fromApp} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
-import {CONTENT_KINDS, makeCommentFilter} from "@app/content"
+import {CONTENT_KINDS, getActivityTarget, makeCommentFilter} from "@app/content"
 import {getIsMuted, userSettingsValues} from "@app/settings"
 import {Chats} from "@app/chats"
 import {dufflepud, DUFFLEPUD_URL} from "@app/env"
@@ -159,20 +159,12 @@ export const syncCheckedRemote = () => {
 
 // Derived notifications state
 
-// The content item an event belongs to - either the content event itself, or the root of a comment
+// The content item an event belongs to, when it belongs to one at all.
 const getContentTarget = (event: TrustedEvent) => {
-  if (CONTENT_KINDS.includes(event.kind)) {
-    return {kind: event.kind, idOrAddress: getIdOrAddress(event)}
-  }
+  const target = getActivityTarget(event)
 
-  if (event.kind === COMMENT) {
-    const root = reader(Comment)(event).root()
-    const kind = parseInt(root.kind || "")
-    const idOrAddress = root.address || root.id
-
-    if (CONTENT_KINDS.includes(kind) && idOrAddress) {
-      return {kind, idOrAddress}
-    }
+  if (CONTENT_KINDS.includes(target.kind)) {
+    return target
   }
 }
 
@@ -239,9 +231,11 @@ export const latestActivityByPath = derived(
 
     for (const url of $activeSpaceUrls) {
       const events = sortEventsDesc((eventsByIdByUrl.get(url) || new Map()).values())
+      // A chat is its own messages; content and its comments carry the room h but belong to the item.
+      const messages = events.filter(spec({kind: MESSAGE}))
 
       if (spaceSupportsRooms(url)) {
-        for (const [h, [event]] of groupBy(e => tagValue(tagSpec("h"), e.tags), events)) {
+        for (const [h, [event]] of groupBy(e => tagValue(tagSpec("h"), e.tags), messages)) {
           // A muted room is left out entirely, so it can't light up its own badge or the space's
           if (h && !getIsMuted($settings, url, h)) {
             const path = makeRoomPath(url, h)
@@ -250,7 +244,7 @@ export const latestActivityByPath = derived(
           }
         }
       } else {
-        const event = first(events)
+        const event = first(messages)
 
         if (event) {
           const path = makeSpaceChatPath(url)

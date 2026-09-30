@@ -97,6 +97,21 @@ export const makeDeleteFilter = (kinds: number[], extra: Filter = {}) => ({
   ...extra,
 })
 
+// What an event is activity on: the root a comment sits under, or the event itself.
+export const getActivityTarget = (event: TrustedEvent) => {
+  if (event.kind === COMMENT) {
+    const {kind, id, address} = reader(Comment)(event).root()
+    const rootKind = parseInt(kind || "")
+    const idOrAddress = address || id
+
+    if (rootKind && idOrAddress) {
+      return {kind: rootKind, idOrAddress}
+    }
+  }
+
+  return {kind: event.kind, idOrAddress: getIdOrAddress(event)}
+}
+
 // An event is active as of its own creation or the newest comment on it, keyed by address when addressable.
 export const partitionByActivity = (kind: number, events: TrustedEvent[]) => {
   const [items, comments] = partition(spec({kind}), events)

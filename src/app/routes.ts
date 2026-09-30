@@ -6,7 +6,6 @@ import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {
   CLASSIFIED,
-  COMMENT,
   EVENT_TIME,
   LONG_FORM,
   MESSAGE,
@@ -15,18 +14,16 @@ import {
   POLL,
   THREAD,
   ZAP_GOAL,
-  getIdOrAddress,
   hexTags,
   tagSpec,
   tagValue,
   tagValues,
 } from "@welshman/util"
-import {Comment} from "@welshman/domain"
-import {app, messagingRelayLists, reader, user} from "@app/core"
+import {app, messagingRelayLists, user} from "@app/core"
 import {makeChatId} from "@app/chats"
 import {entityLink, PLATFORM_URL, PLATFORM_RELAYS} from "@app/env"
 import {decodeRelay, encodeRelay} from "@app/relays"
-import {DM_KINDS} from "@app/content"
+import {DM_KINDS, getActivityTarget} from "@app/content"
 import {navigate, pushModal} from "@app/modal"
 import type {NavigateOptions} from "@app/modal"
 import type {NotePointer} from "@app/social"
@@ -212,32 +209,17 @@ export const makeEventPath = (event: TrustedEvent, urls: string[]): Maybe<string
 
   if (urls.length > 0) {
     const url = urls[0]
+    const {kind, idOrAddress} = getActivityTarget(event)
 
-    if (event.kind === MESSAGE) {
+    // A comment inherits the h of the message it answers, so both anchor the same transcript.
+    if (kind === MESSAGE) {
       return makeMessagePath(url, event)
     }
 
-    const path = makeContentPath(url, event.kind, getIdOrAddress(event))
+    const path = makeContentPath(url, kind, idOrAddress)
 
     if (path) {
       return path
-    }
-
-    if (event.kind === COMMENT) {
-      const root = reader(Comment)(event).root()
-      const rootIdOrAddress = root.address ?? root.id
-
-      if (root.kind && rootIdOrAddress) {
-        if (parseInt(root.kind) === MESSAGE) {
-          return makeMessagePath(url, event)
-        }
-
-        const rootPath = makeContentPath(url, parseInt(root.kind), rootIdOrAddress)
-
-        if (rootPath) {
-          return rootPath
-        }
-      }
     }
   }
 
