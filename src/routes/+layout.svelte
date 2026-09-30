@@ -49,7 +49,7 @@
   applySavedTheme()
 
   // Add stuff to window for convenience
-  Object.assign(window, {get, nip19, theme, ...plugins, ...lib, ...util, ...core})
+  Object.assign(window, {get, nip19, theme, notifications, ...plugins, ...lib, ...util, ...core})
 
   // Set up context for various modules
   pomadeContext.setSignerUrls(env.POMADE_SIGNERS)
