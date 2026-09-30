@@ -90,7 +90,7 @@ export const saveNotificationSettings = async (
 
   if (permission.startsWith("granted")) {
     notificationSettings.set(values)
-    syncEventReminders()
+    syncEventReminders().catch(console.error)
   }
 
   return permission

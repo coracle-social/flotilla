@@ -54,7 +54,7 @@
 
   const back = () => history.back()
 
-  const addLinks = () => pushModal(PinSave, {url, address})
+  const addLink = () => pushModal(PinSave, {url, address})
 
   const showContributors = () =>
     pushModal(ProfileList, {
@@ -91,7 +91,7 @@
     <h1 class="text-xl">{$board?.title() || "Shelf"}</h1>
   {/snippet}
   {#snippet action()}
-    <Button class="button button-primary button-sm" onclick={addLinks}>
+    <Button class="button button-primary button-sm" onclick={addLink}>
       <Icon icon={AddCircle} />
       Add a link
     </Button>
@@ -160,7 +160,7 @@
           <p class="opacity-70">Nothing on this shelf matches that.</p>
         {:else}
           <p class="opacity-70">This shelf doesn't have any links yet.</p>
-          <Button class="button button-primary" onclick={addLinks}>
+          <Button class="button button-primary" onclick={addLink}>
             <Icon icon={AddCircle} />
             Add the first link
           </Button>

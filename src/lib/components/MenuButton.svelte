@@ -32,14 +32,33 @@
     "aria-label": ariaLabel,
   }: Props = $props()
 
-  const showPopover = () => tippy?.show()
-
   const hidePopover = () => tippy?.hide()
 
+  // Tippy hides an open menu on the press, before the click lands, so note whether it was open then.
+  const onPointerDown = () => {
+    wasOpen = Boolean(tippy?.visible)
+  }
+
+  const toggle = () => {
+    if (wasOpen) {
+      hidePopover()
+    } else {
+      tippy?.show()
+    }
+
+    wasOpen = false
+  }
+
   let tippy: Maybe<TippyController> = $state()
+  let wasOpen = false
 </script>
 
-<Button class={className} aria-label={ariaLabel} {disabled} onclick={showPopover}>
+<Button
+  class={className}
+  aria-label={ariaLabel}
+  {disabled}
+  onpointerdown={onPointerDown}
+  onclick={toggle}>
   <Tippy
     bind:controller={tippy}
     {component}

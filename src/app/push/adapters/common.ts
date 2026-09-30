@@ -46,21 +46,28 @@ export const pushState = withGetter(
   }),
 )
 
+const defaultNotificationSettings = {
+  push: false,
+  sound: true,
+  badge: false,
+  spaces: true,
+  mentions: true,
+  messages: true,
+  events: true,
+  reminder_minutes: [5],
+}
+
 export const notificationSettings = withGetter(
   synced({
     key: "notificationSettings",
     storage: kv,
-    defaultValue: {
-      push: false,
-      sound: true,
-      badge: false,
-      spaces: true,
-      mentions: true,
-      messages: true,
-      events: true,
-      reminder_minutes: [5],
-    },
+    defaultValue: defaultNotificationSettings,
   }),
+)
+
+// synced restores the saved object whole, so fill in fields added since it was saved.
+notificationSettings.ready.then(() =>
+  notificationSettings.update(settings => ({...defaultNotificationSettings, ...settings})),
 )
 
 export interface IPushAdapter {

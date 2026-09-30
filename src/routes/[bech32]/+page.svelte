@@ -7,8 +7,8 @@
   import {goto} from "$app/navigation"
   import {decodePubkey} from "@lib/util"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {network} from "@app/core"
-  import {goToEvent, goToNote, makeProfilePath} from "@app/routes"
+  import {app, network} from "@app/core"
+  import {goToEvent, goToNote, makeEventPath, makeProfilePath} from "@app/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
@@ -24,10 +24,13 @@
       onEvent: (event: TrustedEvent) => {
         found = true
 
-        if (event.kind === NOTE) {
-          goToNote({id: event.id, author: event.pubkey, relays})
-        } else {
+        const path = makeEventPath(event, Array.from(app.get().tracker.getRelays(event.id)))
+
+        // An event with no page of its own opens over home, not over this spinner.
+        if (path && event.kind !== NOTE) {
           goToEvent(event, {replaceState: true})
+        } else {
+          goToNote({id: event.id, author: event.pubkey, relays})
         }
       },
       onClose: () => {

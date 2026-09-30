@@ -291,6 +291,8 @@ test("US-094 invite people to a space", async ({seed, as}) => {
 
   await expect(page.getByRole("alert")).toContainText("Members have successfully been added!")
 
+  // Adding members opened over the invite, so saving goes back to it.
+  await invite.getByRole("button", {name: "Done"}).click()
   await page.locator(".secondary-nav").getByRole("link", {name: "Directory"}).click()
 
   await expect(memberCard(page, "Nadia Newcomer")).toBeVisible()

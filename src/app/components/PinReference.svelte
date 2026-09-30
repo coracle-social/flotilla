@@ -15,10 +15,14 @@
   const reference = $derived(pin.reference())
 
   const quote = $derived.by(() => {
-    if (reference?.type === "event" || reference?.type === "address") {
-      const raw = pinToReference(pin)
+    const raw = pinToReference(pin)
 
-      return {raw, value: nip19.decode(raw).data}
+    if (raw && reference?.type !== "external") {
+      const decoded = nip19.decode(raw)
+
+      if (decoded.type === "nevent" || decoded.type === "naddr") {
+        return {raw, value: decoded.data}
+      }
     }
 
     return undefined

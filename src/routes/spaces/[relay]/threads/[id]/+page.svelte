@@ -228,7 +228,7 @@
     <div transition:fade class="absolute right-4 bottom-20 z-nav mb-sai md:bottom-4 md:mb-0">
       <Button
         aria-label="Scroll to newest"
-        class="button button-neutral button-circle shadow-xl"
+        class="button button-neutral button-circle"
         onclick={scrollToBottom}>
         <Icon icon={AltArrowDown} />
       </Button>

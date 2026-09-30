@@ -52,13 +52,13 @@ export const deriveRoomPinnedEvents = (url: string, h: string): Readable<Trusted
     }
   })
 
-export const toggleRoomPin = async (url: string, h: string, id: string) => {
+export const toggleRoomPin = async (url: string, h: string, event: TrustedEvent) => {
   const pins = roomPinLists.get().pins(url, h).get()
-  // The optimistic write flips the pin while the publish is in flight, so read it before it goes out.
-  const wasPinned = pins.includes(id)
+  const keys = [event.id, getIdOrAddress(event)]
+  const wasPinned = pins.some(pin => keys.includes(pin))
   const command = await roomPinLists
     .get()
-    .setPins(url, h, wasPinned ? pins.filter(pin => pin !== id) : [...pins, id])
+    .setPins(url, h, wasPinned ? pins.filter(pin => !keys.includes(pin)) : [...pins, event.id])
   const error = (await command.publishToRelays([url]).settled()).getError()
 
   if (error) {

@@ -73,7 +73,7 @@
 
 <form {onsubmit}>
   <PageContent>
-    <div class="card flex flex-col gap-4 shadow-md">
+    <div class="card flex flex-col gap-4">
       <strong class="flex items-center gap-3 text-lg">
         <Icon icon={Bell} />
         Alert Settings
@@ -112,7 +112,7 @@
       </FieldInline>
     </div>
     <div
-      class={cx("card bg-surface flex flex-col gap-4 shadow-md", {
+      class={cx("card bg-surface flex flex-col gap-4", {
         "pointer-events-none opacity-50": !settings.badge && !settings.sound && !settings.push,
       })}>
       <strong class="text-lg">Alert Types</strong>
@@ -176,7 +176,7 @@
         </div>
       {/if}
     </div>
-    <div class="card sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
+    <div class="card sticky -bottom-3 flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}
         >Discard Changes</Button>
       <Button type="submit" class="button button-primary" disabled={loading}>

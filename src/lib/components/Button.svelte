@@ -5,6 +5,7 @@
   type Props = {
     children: Snippet
     onclick?: (event: Event) => unknown
+    onpointerdown?: (event: PointerEvent) => unknown
     type?: "button" | "submit"
     class?: string
     style?: string

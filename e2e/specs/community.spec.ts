@@ -782,20 +782,18 @@ test("US-054 curate the library", async ({seed, as}) => {
   await expect(page.getByRole("heading", {name: "Reading List"})).toBeVisible()
   await expect(page.getByText("#reading")).toBeVisible()
 
-  // Several links go in at once, each as a card of its own.
+  // Each link goes in on its own and becomes a card of its own.
   const nevent = nip19.neventEncode({id: message.id, kind: MESSAGE, relays: [url]})
 
-  await page.getByRole("button", {name: "Add a link"}).click()
+  for (const link of ["https://handbook.test/style-guide", `nostr:${nevent}`]) {
+    await page.getByRole("button", {name: "Add a link"}).click()
 
-  const links = dialog(page, "Add a Link")
+    const links = dialog(page, "Add a Link")
 
-  await links
-    .getByPlaceholder("URL or nevent...")
-    .fill(`https://handbook.test/style-guide\nnostr:${nevent}`)
-  // A title and a description are about one link, so a batch is offered neither.
-  await expect(links.getByPlaceholder("Optional title")).toHaveCount(0)
-
-  await links.getByRole("button", {name: "Add 2 links"}).click()
+    await links.getByLabel("Link", {exact: true}).fill(link)
+    await links.getByRole("button", {name: "Add link"}).click()
+    await expect(links).toHaveCount(0)
+  }
 
   await expect(page.locator('a[href="https://handbook.test/style-guide"]')).toBeVisible()
   await expect(page.getByText("the deploy broke again")).toBeVisible()
@@ -810,7 +808,7 @@ test("US-054 curate the library", async ({seed, as}) => {
 
   const linkEdit = dialog(page, "Edit Link")
 
-  await linkEdit.getByPlaceholder("Optional title").fill("House style guide")
+  await linkEdit.getByLabel("Title", {exact: true}).fill("House style guide")
   await linkEdit.getByRole("button", {name: "Save changes"}).click()
 
   await expect(page.getByRole("alert")).toContainText("Link updated!")
@@ -835,7 +833,7 @@ test("US-054 curate the library", async ({seed, as}) => {
 
   const fromPoll = dialog(page, "Add a Link")
 
-  await fromPoll.getByPlaceholder("Optional title").fill("Standup poll")
+  await fromPoll.getByLabel("Title", {exact: true}).fill("Standup poll")
   await fromPoll.getByRole("button", {name: "Add link"}).click()
 
   await expect(page.getByRole("alert")).toContainText("Link added!")

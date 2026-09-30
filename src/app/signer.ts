@@ -1,6 +1,7 @@
 import {derived, get, readable} from "svelte/store"
 import {ago, avg, ms, now, spec} from "@welshman/lib"
 import {makeHttpAuth, makeHttpAuthHeader} from "@welshman/util"
+import {throttled} from "@welshman/store"
 import {Logger} from "@welshman/app"
 import type {LogMessage} from "@welshman/app"
 import {fromApp, user} from "@app/core"
@@ -70,8 +71,9 @@ export const signerHealth = derived([signerRequests, clock], ([$requests]) => {
   }
 })
 
+// Checked on a timer rather than on change, so an alert held back by another toast still goes out.
 export const syncSignerAlerts = () =>
-  derived(signerHealth, $signerHealth => $signerHealth.unresponsive).subscribe(unresponsive => {
+  throttled(ms(10), signerHealth).subscribe(({unresponsive}) => {
     if (unresponsive && !get(toast)) {
       pushToast({
         theme: "error",

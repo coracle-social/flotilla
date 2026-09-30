@@ -85,7 +85,7 @@
 
   const togglePin = () => {
     onClick()
-    toggleRoomPin(url, h, event.id)
+    toggleRoomPin(url, h, event)
   }
 </script>
 

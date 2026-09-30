@@ -1,7 +1,7 @@
 <script lang="ts">
   import {writable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
-  import {Note} from "@welshman/domain"
+  import {Comment} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import Plane from "@assets/icons/plane-2.svg?dataurl"
@@ -37,17 +37,18 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  // A reply to a room event is a NIP-22 comment, and a reply to a kind 1 note is a NIP-10 note.
+  // A reply to a space event goes to that space, and any other goes out as a public comment.
   const publishReply = async (content: string, tags: string[][]) => {
     if (url) {
       return publishComment({url, event, parent, content, tags})
     }
 
     return $publisher.publish({
-      ...(await writer(Note)
+      ...(await writer(Comment)
         .setContent(content)
         .addTags(...tags)
-        .setParent(parent ?? event)
+        .setRootFromEvent(event)
+        .setParentFromEvent(parent ?? event)
         .render()),
       delay: await loadSendDelay(),
     })

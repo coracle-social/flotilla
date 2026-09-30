@@ -1,7 +1,7 @@
 import * as nip19 from "nostr-tools/nip19"
 import {derived} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {removeUndefined, sortBy} from "@welshman/lib"
+import {isHex32, removeUndefined, sortBy} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {Address, PIN, PINBOARD, fromNostrURI, getAddress, isReplaceable} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
@@ -22,7 +22,19 @@ import {
 } from "@app/core"
 import {addressWriterToSpace} from "@app/rooms"
 import {isImageUrl} from "@app/content"
-import {compressFileForUpload, uploadFile} from "@app/uploads"
+
+// Tags from another client may be malformed, and nip19 throws on anything that isn't hex.
+const isEncodable = (reference: PinReference) => {
+  if (reference.type === "event") {
+    return isHex32(reference.id)
+  }
+
+  if (reference.type === "address") {
+    return Address.isAddress(reference.address) && isHex32(Address.from(reference.address).pubkey)
+  }
+
+  return true
+}
 
 const encodeReference = (reference: PinReference) => {
   if (reference.type === "event") {
@@ -46,7 +58,7 @@ const encodeReference = (reference: PinReference) => {
 export const pinToReference = (pin: PinReader) => {
   const reference = pin.reference()
 
-  return reference ? encodeReference(reference) : ""
+  return reference && isEncodable(reference) ? encodeReference(reference) : ""
 }
 
 export const eventToReference = (event: TrustedEvent) =>
@@ -56,37 +68,37 @@ export const eventToReference = (event: TrustedEvent) =>
       : {type: "event", id: event.id},
   )
 
-// Point a pin at a user-entered nostr link or external url, false if it's neither.
-export const setPinReference = (writer: PinWriter, reference: string) => {
-  const trimmed = reference.trim()
+// Read a user-entered nostr link or external url as a pin reference.
+export const parsePinReference = (input: string): Maybe<PinReference> => {
+  const trimmed = input.trim()
 
   try {
     const decoded = nip19.decode(fromNostrURI(trimmed))
 
     if (decoded.type === "note") {
-      writer.setEvent(decoded.data)
-      return true
+      return {type: "event", id: decoded.data}
     }
 
     if (decoded.type === "nevent") {
-      writer.setEvent(decoded.data.id, decoded.data.relays?.[0])
-      return true
+      return {type: "event", id: decoded.data.id, relay: decoded.data.relays?.[0]}
     }
 
     // Pins have no pubkey reference type, so a person is stored as the external id the user gave.
     if (decoded.type === "npub" || decoded.type === "nprofile") {
-      writer.setExternal(fromNostrURI(trimmed))
-      return true
+      return {type: "external", id: fromNostrURI(trimmed)}
     }
 
     if (decoded.type === "naddr") {
       const {kind, pubkey, identifier, relays} = decoded.data
 
-      writer.setAddress(new Address(kind, pubkey, identifier).toString(), relays?.[0])
-      return true
+      return {
+        type: "address",
+        address: new Address(kind, pubkey, identifier).toString(),
+        relay: relays?.[0],
+      }
     }
 
-    return false
+    return undefined
   } catch {
     // Not a nostr entity; fall through to external url handling.
   }
@@ -94,11 +106,10 @@ export const setPinReference = (writer: PinWriter, reference: string) => {
   const parsed = parse({content: trimmed})
 
   if (parsed.length === 1 && isLink(parsed[0])) {
-    writer.setExternal(trimmed)
-    return true
+    return {type: "external", id: trimmed}
   }
 
-  return false
+  return undefined
 }
 
 export const deriveShelves = (url: string): Readable<PinboardReader[]> =>
@@ -178,20 +189,3 @@ export const deleteLibraryEvent = async (url: string, event: TrustedEvent) => {
 
 export const deletePins = (url: string, pins: PinReader[]) =>
   Promise.all(pins.map(pin => deleteLibraryEvent(url, pin.event)))
-
-export const uploadFilesAsReferences = async (url: string, files: File[]) => {
-  const references: string[] = []
-  const errors: string[] = []
-
-  for (const file of files) {
-    const {result, error} = await uploadFile(await compressFileForUpload(file), {url})
-
-    if (result) {
-      references.push(result.url)
-    } else {
-      errors.push(error ?? `${file.name} could not be uploaded.`)
-    }
-  }
-
-  return {references, errors}
-}

@@ -2,6 +2,7 @@
   import {writable} from "svelte/store"
   import {uniq} from "@welshman/lib"
   import {Note} from "@welshman/domain"
+  import {PublishStatus} from "@welshman/net"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -59,14 +60,17 @@
         relays: uniq([...relays, ...$userSpaceUrls]),
       })
 
-      const error = (await publication.settled()).getError()
+      await publication.settled()
 
-      if (error) {
-        return pushToast({theme: "error", message: error})
+      if (publication.getUrlsWithStatus(PublishStatus.Success).length > 0) {
+        draftKey.clear()
+        history.back()
+      } else {
+        pushToast({theme: "error", message: publication.getError() ?? "Failed to post."})
       }
-
-      draftKey.clear()
-      history.back()
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to post."})
     } finally {
       loading = false
     }
@@ -96,7 +100,7 @@
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Create a Public Post</ModalTitle>
-      <ModalSubtitle>Published to your outbox and all favorited spaces.</ModalSubtitle>
+      <ModalSubtitle>Broadcast to the wider network.</ModalSubtitle>
     </ModalHeader>
     <div class="relative">
       <div class="note-editor grow overflow-hidden">

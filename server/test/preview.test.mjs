@@ -68,6 +68,12 @@ describe("preview metadata", () => {
     assert.equal(image, "https://app.flotilla.social/maskable-icon-512x512.png")
   })
 
+  test("won't reach a relay on a private or local host", async () => {
+    for (const path of ["/join?r=localhost:8080", "/spaces/127.0.0.1", "/spaces/printer.local"]) {
+      assert.equal((await request(path)).title, "Flotilla")
+    }
+  })
+
   test("leaves the platform's own pages alone", async () => {
     for (const path of ["/", "/settings/profile", "/spaces/create", "/people/not-an-npub"]) {
       assert.equal((await request(path)).title, "Flotilla")

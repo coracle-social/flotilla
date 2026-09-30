@@ -24,7 +24,7 @@
 
   const back = () => history.back()
 
-  const addMembers = () => pushModal(SpaceMembersAdd, {url}, {replaceState: true})
+  const addMembers = () => pushModal(SpaceMembersAdd, {url})
 </script>
 
 <Modal>

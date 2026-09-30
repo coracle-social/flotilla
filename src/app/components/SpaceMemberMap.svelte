@@ -1,7 +1,7 @@
 <script lang="ts">
   import "leaflet/dist/leaflet.css"
 
-  import {mount, onMount, unmount} from "svelte"
+  import {mount, onMount, unmount, untrack} from "svelte"
   import type {Map as LeafletMap, Marker, TileLayer} from "leaflet"
   import type {Maybe} from "@welshman/lib"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
@@ -19,6 +19,11 @@
   const {url, pins}: Props = $props()
 
   const basemap = $derived($activeTheme === "dark" ? "dark_all" : "light_all")
+
+  // Any profile loading re-emits the pins, so markers are redrawn only when a pin actually changes.
+  const pinsKey = $derived(
+    pins.map(pin => [pin.pubkey, pin.latitude, pin.longitude].join()).join(";"),
+  )
 
   const openProfile = (pubkey: string) => pushModal(ProfileDetail, {pubkey, url})
 
@@ -59,8 +64,8 @@
     const markers: Marker[] = []
     const avatars: Record<string, unknown>[] = []
 
-    if (leaflet && map) {
-      for (const pin of pins) {
+    if (leaflet && map && pinsKey) {
+      for (const pin of untrack(() => pins)) {
         const target = document.createElement("div")
 
         target.className =

@@ -94,7 +94,7 @@
 </script>
 
 <PageContent class="@container">
-  <div class="card shadow-md flex flex-col gap-2">
+  <div class="card flex flex-col gap-2">
     <div class="flex justify-between gap-2">
       <Link href={makeProfilePath($user.pubkey)} class="flex max-w-full gap-3">
         <div class="py-1">
@@ -119,7 +119,7 @@
     </div>
     <ProfileAbout pubkey={$user.pubkey} />
   </div>
-  <div class="card flex flex-col gap-4 shadow-md">
+  <div class="card flex flex-col gap-4">
     {#if pomadeEmail}
       <FieldInline>
         {#snippet label()}
@@ -192,7 +192,7 @@
       </div>
     {/if}
   </div>
-  <div class="card shadow-md">
+  <div class="card">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3">
         <Icon icon={Settings} />

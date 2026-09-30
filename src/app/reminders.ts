@@ -1,5 +1,5 @@
 import {MINUTE, first, formatTimestampRelative, int, ms, now, uniq} from "@welshman/lib"
-import {EVENT_RSVP, getIdFilters, isSignedEvent} from "@welshman/util"
+import {EVENT_RSVP, getAddress, getIdFilters, isSignedEvent} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp} from "@welshman/domain"
 import {getEventStart, getEventTitle, isAttending} from "@app/calendar"
@@ -7,6 +7,7 @@ import {app, network, reader, roomLists} from "@app/core"
 import {notificationSettings, pushState} from "@app/push/adapters/common"
 import {deleteReminderSchedule, putReminderSchedule} from "@app/push/server"
 import type {Reminder} from "@app/push/server"
+import {pushToast} from "@app/toast"
 
 const getLeadTimes = () => {
   const {events, reminder_minutes} = notificationSettings.get()
@@ -28,7 +29,7 @@ const putSchedule = async (relay: string, event: TrustedEvent, reminders: Remind
 
   if (subscription) {
     const res = await putReminderSchedule(subscription.key, {
-      id: event.id,
+      id: getAddress(event),
       relay,
       event: isSignedEvent(event) ? event : undefined,
       notifications: reminders,
@@ -40,10 +41,15 @@ const putSchedule = async (relay: string, event: TrustedEvent, reminders: Remind
   }
 }
 
-export const setEventReminders = (relay: string, event: TrustedEvent, attending: boolean) => {
+export const setEventReminders = async (relay: string, event: TrustedEvent, attending: boolean) => {
   const start = getEventStart(event)
 
-  return putSchedule(relay, event, attending && start ? makeReminders(event, start) : [])
+  try {
+    await putSchedule(relay, event, attending && start ? makeReminders(event, start) : [])
+  } catch (e) {
+    console.error(e)
+    pushToast({theme: "error", message: "Your event reminders couldn't be set."})
+  }
 }
 
 const loadAttendedEvents = async (pubkey: string) => {

@@ -6,7 +6,27 @@
   import {roomLists} from "@app/core"
   import {navigate, pushModal} from "@app/modal"
   import {makeSpacePath} from "@app/routes"
-  import {createHostedRelay, getHostedRelayUrl, hosting, isPaidPlan} from "@app/hosting"
+  import {pushToast} from "@app/toast"
+  import {
+    createHostedRelay,
+    getHostedRelayUrl,
+    hosting,
+    hostingErrorMessage,
+    isPaidPlan,
+  } from "@app/hosting"
+
+  // The space exists by now, so a failed billing check mustn't keep the user on the create form.
+  const onPaymentLookupError = (e: unknown) => {
+    pushToast({
+      theme: "error",
+      message: hostingErrorMessage(
+        e,
+        "Your space was created, but its billing couldn't be checked.",
+      ),
+    })
+
+    return undefined
+  }
 
   const submit = async (values: RelayFormValues) => {
     const relay = await createHostedRelay(values)
@@ -17,7 +37,9 @@
     // Join the space now, or the space layout prompts for it and displaces the payment modals.
     await $roomLists.addRelay(url).then(publish)
 
-    const due = isPaidPlan(values.plan_id) ? await $hosting.findPaymentDue() : undefined
+    const due = isPaidPlan(values.plan_id)
+      ? await $hosting.findPaymentDue().catch(onPaymentLookupError)
+      : undefined
 
     await navigate(makeSpacePath(url, "admin"), {replaceState: true})
 

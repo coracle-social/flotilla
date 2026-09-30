@@ -112,7 +112,7 @@
 
   const togglePin = () => {
     history.back()
-    toggleRoomPin(url, h, event.id)
+    toggleRoomPin(url, h, event)
   }
 
   let showMore = $state(false)

@@ -38,6 +38,8 @@
 
   const setTheme = (value: string) => () => theme.set(value)
 
+  const saveFontSize = () => publishSettings({font_size: $settings.font_size})
+
   const addServer = () => {
     blossomServers = [...blossomServers, ""]
   }
@@ -204,11 +206,12 @@
             max="1.3"
             step="0.05"
             aria-label="Font size"
-            bind:value={$settings.font_size} />
+            bind:value={$settings.font_size}
+            onchange={saveFontSize} />
         {/snippet}
       </Field>
     </div>
-    <div class="card flex flex-col gap-4 shadow-md">
+    <div class="card flex flex-col gap-4">
       <strong class="text-lg">Editor Settings</strong>
       <Field>
         {#snippet label()}
@@ -273,7 +276,7 @@
         {/snippet}
       </Field>
     </div>
-    <div class="card sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
+    <div class="card sticky -bottom-3 flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}
         >Discard Changes</Button>
       <Button class="button button-primary" type="submit" disabled={loading}>

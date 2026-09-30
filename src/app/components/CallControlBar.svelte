@@ -175,7 +175,7 @@
         <Button
           data-tip="Join call"
           aria-label="Join voice room"
-          class="button button-primary button-circle shadow-xl"
+          class="button button-primary button-circle"
           onclick={openJoinDialog}>
           <Icon icon={PhoneCallingRounded} size={4.5} />
         </Button>

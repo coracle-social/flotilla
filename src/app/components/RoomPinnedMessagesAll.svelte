@@ -46,7 +46,7 @@
     </ModalHeader>
     <div class="flex flex-col gap-2">
       {#each $pinnedEvents as event (event.id)}
-        {@const onUnpin = () => toggleRoomPin(url, h, event.id)}
+        {@const onUnpin = () => toggleRoomPin(url, h, event)}
         {@const onJump = () => jumpToMessage(event)}
         <div class="card card-sm flex flex-col gap-3 p-4">
           <div class="flex items-start gap-3">
