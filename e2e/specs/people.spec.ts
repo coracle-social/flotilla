@@ -283,7 +283,7 @@ test("US-078 edit your own profile", async ({seed, as}) => {
   await edit.click()
 
   const form = page.locator("form").first()
-  const nickname = form.locator('input[type="text"]').first()
+  const nickname = form.getByRole("textbox", {name: "Nickname"})
   const about = form.locator("textarea")
   const picker = page.locator('label[aria-label="Drag and drop files here."]')
 

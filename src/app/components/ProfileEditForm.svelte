@@ -84,7 +84,7 @@
       {#snippet input()}
         <label class="input flex w-full items-center gap-2">
           <Icon icon={UserCircle} />
-          <input bind:value={values.profile.name} class="grow" type="text" />
+          <input bind:value={values.profile.name} class="grow" type="text" aria-label="Nickname" />
         </label>
       {/snippet}
       {#snippet info()}
@@ -96,8 +96,11 @@
         <p>About You</p>
       {/snippet}
       {#snippet input()}
-        <textarea class="textarea input leading-4 w-full" rows="5" bind:value={values.profile.about}
-        ></textarea>
+        <textarea
+          class="textarea input leading-4 w-full"
+          rows="5"
+          bind:value={values.profile.about}
+          aria-label="About You"></textarea>
       {/snippet}
       {#snippet info()}
         Give a brief introduction to why you're here.
@@ -140,7 +143,11 @@
         {#snippet input()}
           <label class="input flex w-full items-center gap-2">
             <Icon icon={MapPoint} />
-            <input bind:value={values.profile.nip05} class="grow" type="text" />
+            <input
+              bind:value={values.profile.nip05}
+              class="grow"
+              type="text"
+              aria-label="Nostr Address" />
           </label>
         {/snippet}
         {#snippet info()}

@@ -66,7 +66,7 @@ test("US-002 sign up by generating a new key", async ({seed, visit}) => {
   await page.getByRole("button", {name: "Create an account"}).click()
   await page.getByRole("button", {name: "Generate a key"}).click()
 
-  await page.locator('input[type="text"]').fill("Nova Tester")
+  await page.getByRole("textbox", {name: "Nickname"}).fill("Nova Tester")
   await page.getByRole("button", {name: "Create Account"}).click()
 
   await expect(page.getByRole("heading", {name: "Backup your Key"})).toHaveCount(0)
