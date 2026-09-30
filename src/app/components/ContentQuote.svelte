@@ -1,28 +1,18 @@
 <script lang="ts">
-  import * as nip19 from "nostr-tools/nip19"
-  import {derived, writable} from "svelte/store"
   import {removeUndefined} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {
-    Address,
-    MESSAGE,
-    eventOutbox,
-    fromNostrURI,
-    getIdFilters,
-    relays as relaySelections,
-    seen,
-  } from "@welshman/util"
+  import {MESSAGE, fromNostrURI, getIdFilters} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
-  import {events, network, router} from "@app/core"
-  import {entityLink} from "@app/env"
-  import {goToEvent} from "@app/routes"
+  import {events, network} from "@app/core"
+  import {getQuoteIdOrAddress, getQuoteRelays, goToQuote} from "@app/quotes"
+  import type {QuotePointer} from "@app/quotes"
 
   type Props = {
-    value: any
+    value: QuotePointer
     raw: string
     event: TrustedEvent
     inline?: boolean
@@ -31,51 +21,22 @@
 
   const {value, raw, event, inline = false, url}: Props = $props()
 
-  const {id, identifier, kind, pubkey = value.author, relays = []} = value
-  const idOrAddress = id || new Address(kind, pubkey, identifier).toString()
-  const ref = {id, pubkey, kind, identifier, relays}
-  const hints = removeUndefined([...relays, url])
-
-  const mergedRelays = writable(hints)
-
+  const idOrAddress = getQuoteIdOrAddress(value)
+  const hints = removeUndefined([...(value.relays ?? []), url])
   const quote = $events.one(idOrAddress, hints).$
 
-  // Whoever quoted the event must have seen it, so the quoting event's relays are asked too.
-  $router.resolver
-    .relays([
-      ...relaySelections(removeUndefined([url])),
-      seen(ref),
-      eventOutbox(ref),
-      seen(event, 0.5),
-    ])
-    .then(urls => {
-      mergedRelays.set(urls)
-
-      if (!$quote) {
-        $network.loadLenient({filters: getIdFilters([idOrAddress]), relays: urls})
-      }
-    })
-
-  const entity = derived(mergedRelays, $mergedRelays =>
-    id
-      ? nip19.neventEncode({id, relays: $mergedRelays})
-      : new Address(kind, pubkey, identifier, $mergedRelays).toNaddr(),
-  )
-
-  const onclick = () => {
-    if ($quote) {
-      goToEvent($quote)
-    } else {
-      window.open(entityLink($entity))
+  getQuoteRelays(value, event, url).then(relays => {
+    if (!$quote) {
+      $network.loadLenient({filters: getIdFilters([idOrAddress]), relays})
     }
-  }
+  })
 </script>
 
 <Button
   class={inline
     ? "max-w-full cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap underline"
     : "my-2 block w-full max-w-full text-left"}
-  {onclick}>
+  onclick={() => goToQuote(value, event, url)}>
   {#if inline}
     {fromNostrURI(raw).slice(0, 16) + "…"}
   {:else if $quote}

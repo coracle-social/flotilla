@@ -25,7 +25,7 @@
         found = true
 
         if (event.kind === NOTE) {
-          goToNote({id: event.id, pubkey: event.pubkey, relays})
+          goToNote({id: event.id, author: event.pubkey, relays})
         } else {
           goToEvent(event, {replaceState: true})
         }

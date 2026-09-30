@@ -1084,6 +1084,19 @@ Acceptance:
 - Clicking that card opens the quoted post.
 - A quote whose event has not arrived shows a loading placeholder in its place.
 
+### US-140 — Open a quote before it has loaded
+
+As alice, I want a quote to open in the app whether or not its event has
+arrived, so that tapping one never hands me to another client.
+
+Acceptance:
+
+- A quote surrounded by prose renders as a truncated label, and clicking one
+  whose event has not arrived opens a modal saying it is loading, with no new
+  tab opened.
+- A quote whose event has to be fetched opens that event once it arrives.
+- Clicking the label of a quoted thread opens that thread's page.
+
 ### US-066 — See distinctive inline tokens
 
 As alice, I want hashtags, mentions, emoji, code, and addresses to look
@@ -1938,9 +1951,9 @@ hosted checkout and is confirmed by a backend webhook. The Lightning path for
 the same invoice is covered by US-102.
 
 **External link-outs.** Self-hosted and third-party options on the
-space-creation page, the About page's source, blog, podcast and support links,
-and a note's timestamp permalink to another nostr client. The harness blocks
-navigation off the app's origin, so nothing about the destination is observable.
+space-creation page, and the About page's source, blog, podcast and support
+links. The harness blocks navigation off the app's origin, so nothing about the
+destination is observable.
 
 **Diagnostic log sending.** The privacy page's button that bundles client-side
 logs into a DM to the platform's support contact. It targets a hardcoded pubkey

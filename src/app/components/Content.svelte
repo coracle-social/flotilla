@@ -15,12 +15,9 @@
     isLink,
     isProfile,
     isRoom,
-    isEvent,
     isEllipsis,
-    isAddress,
     isNewline,
   } from "@welshman/content"
-  import type {Parsed} from "@welshman/content"
   import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
@@ -39,6 +36,7 @@
   import ContentMention from "@app/components/ContentMention.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {makeRoomPath} from "@app/routes"
+  import {isQuote} from "@app/quotes"
   import {deriveValidCommands, getCommandsForInvocation} from "@app/commands"
   import {userSettingsValues} from "@app/settings"
 
@@ -112,8 +110,6 @@
   const isEnd = (i: number) => isBoundary(i + 1)
 
   const isStartAndEnd = (i: number) => isStart(i) && isEnd(i)
-
-  const isQuote = (p: Parsed) => isEvent(p) || isAddress(p)
 
   let warningDismissed = $state(false)
 

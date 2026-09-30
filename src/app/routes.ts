@@ -1,5 +1,6 @@
 import {get, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
+import type {EventPointer} from "nostr-tools/nip19"
 import {page} from "$app/stores"
 import {identity, tryCatch} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
@@ -21,12 +22,11 @@ import {
 } from "@welshman/util"
 import {app, messagingRelayLists, user} from "@app/core"
 import {makeChatId} from "@app/chats"
-import {entityLink, PLATFORM_URL, PLATFORM_RELAYS} from "@app/env"
+import {PLATFORM_URL, PLATFORM_RELAYS} from "@app/env"
 import {decodeRelay, encodeRelay} from "@app/relays"
 import {DM_KINDS, getActivityTarget} from "@app/content"
 import {navigate, pushModal} from "@app/modal"
-import type {NavigateOptions} from "@app/modal"
-import type {NotePointer} from "@app/social"
+import type {ModalOptions, NavigateOptions} from "@app/modal"
 import ChatEnable from "@app/components/ChatEnable.svelte"
 import NoteDetail from "@app/components/NoteDetail.svelte"
 
@@ -239,7 +239,7 @@ export const makeEventPermalink = (event: TrustedEvent, url?: string) => {
   if (path) {
     return `${PLATFORM_URL}${path}${path.includes("?") ? "&" : "?"}event=${pointer}`
   } else {
-    return entityLink(pointer)
+    return `${PLATFORM_URL}/${pointer}`
   }
 }
 
@@ -262,10 +262,11 @@ export const scrollToEvent = (id: string) => {
 }
 
 // A note opens over whatever is on screen rather than on a page of its own.
-export const pushNote = (pointer: NotePointer) => pushModal(NoteDetail, {pointer}, {size: "large"})
+export const pushNote = (pointer: EventPointer, options: ModalOptions = {}) =>
+  pushModal(NoteDetail, {pointer}, {size: "large", ...options})
 
 // A url resolving to a note has nothing on screen to open it over, so the app goes behind it.
-export const goToNote = (pointer: NotePointer) => {
+export const goToNote = (pointer: EventPointer) => {
   pushNote(pointer)
 
   return goToHome()
@@ -273,12 +274,8 @@ export const goToNote = (pointer: NotePointer) => {
 
 export const goToEvent = (event: TrustedEvent, options: NavigateOptions = {}) => {
   const urls = Array.from(app.get().tracker.getRelays(event.id))
-
-  if (event.kind === NOTE) {
-    return pushNote({id: event.id, pubkey: event.pubkey, relays: urls})
-  }
-
-  const path = makeEventPath(event, urls)
+  // A note has a page of its own and still opens in a modal, over whatever is on screen.
+  const path = event.kind === NOTE ? undefined : makeEventPath(event, urls)
 
   if (path) {
     if (!scrollToEvent(event.id)) {
@@ -287,6 +284,10 @@ export const goToEvent = (event: TrustedEvent, options: NavigateOptions = {}) =>
       navigate(path, {replaceState, ...options})
     }
   } else {
-    window.open(entityLink(nip19.neventEncode({id: event.id, relays: urls})))
+    // A kind with no page of its own opens there too, rather than in another client.
+    pushNote(
+      {id: event.id, author: event.pubkey, relays: urls},
+      {replaceState: options.replaceState},
+    )
   }
 }

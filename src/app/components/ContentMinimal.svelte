@@ -14,12 +14,8 @@
     isInvoice,
     isLink,
     isProfile,
-    isEvent,
-    isAddress,
     isNewline,
   } from "@welshman/content"
-  import type {Parsed} from "@welshman/content"
-  import Link from "@lib/components/Link.svelte"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -31,7 +27,7 @@
   import ContentNewline from "@app/components/ContentNewline.svelte"
   import ContentTopic from "@app/components/ContentTopic.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
-  import {entityLink} from "@app/env"
+  import {goToQuote, isQuote} from "@app/quotes"
   import {userSettingsValues} from "@app/settings"
 
   type Props = {
@@ -63,8 +59,6 @@
   const isEnd = (i: number) => isBoundary(i + 1)
 
   const isStartAndEnd = (i: number) => isStart(i) && isEnd(i)
-
-  const isQuote = (p: Parsed) => isEvent(p) || isAddress(p)
 
   let warningDismissed = $state(false)
 
@@ -144,12 +138,11 @@
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />
         {:else if isQuote(parsed)}
-          <Link
-            external
-            class="overflow-hidden text-ellipsis whitespace-nowrap underline"
-            href={entityLink(parsed.raw)}>
+          <Button
+            class="max-w-full cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap underline"
+            onclick={() => goToQuote(parsed.value, event, url)}>
             {fromNostrURI(parsed.raw).slice(0, 16) + "…"}
-          </Link>
+          </Button>
         {:else}
           {@html renderAsHtml(parsed)}
         {/if}

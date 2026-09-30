@@ -28,6 +28,7 @@ import {
   topicTags,
 } from "@welshman/util"
 import type {EventRef, TrustedEvent} from "@welshman/util"
+import type {EventPointer} from "nostr-tools/nip19"
 import {withGetter} from "@welshman/store"
 import {displayPubkey, getCommentTagValues, getReplyTagValues, getReplyTags} from "@welshman/domain"
 import {Events, FollowLists, MuteLists, Network, Profiles, Router} from "@welshman/app"
@@ -35,6 +36,7 @@ import type {IApp} from "@welshman/app"
 import {decodeGeohash} from "@lib/geohash"
 import {deriveUserItem, fromApp, profiles, user, usePlugin} from "@app/core"
 import {getProfileGeohash} from "@app/location"
+import type {QuotePointer} from "@app/quotes"
 import {DEFAULT_PUBKEYS} from "@app/env"
 
 // People
@@ -99,21 +101,25 @@ export const bootstrapPubkeys = derived(deriveUserItem(FollowLists), $userFollow
   return userPubkeys.length > 5 ? userPubkeys : [...userPubkeys, ...appPubkeys]
 })
 
-// Pointers: how a note is named before it has been loaded.
+// Pointers: how an event is named before it has been loaded.
 
-export type NotePointer = EventRef & {id: string}
-
-export const decodeNotePointer = (entity: string): Maybe<NotePointer> => {
+export const decodeNotePointer = (entity: string): Maybe<EventPointer> => {
   const decoded = tryCatch(() => nip19.decode(fromNostrURI(entity)))
 
   if (decoded?.type === "nevent") {
-    return {id: decoded.data.id, relays: decoded.data.relays, pubkey: decoded.data.author}
+    return decoded.data
   }
 
   if (decoded?.type === "note") {
     return {id: decoded.data}
   }
 }
+
+// A relay selection names an event author `pubkey`, where an event pointer names it `author`.
+export const getQuoteRef = (pointer: QuotePointer): EventRef =>
+  "id" in pointer
+    ? {id: pointer.id, pubkey: pointer.author, kind: pointer.kind, relays: pointer.relays}
+    : pointer
 
 // Structure: the shape of a conversation, read off tags alone.
 
@@ -265,16 +271,17 @@ export class Notes {
       .use(Router)
       .resolver.relays([...relaySelections(ref.relays ?? []), seen(ref), eventOutbox(ref)])
 
-  load = async (pointer: NotePointer) =>
+  load = async (pointer: EventPointer) =>
     this.app.repository.getEvent(pointer.id) ??
     first(
-      await this.app
-        .use(Network)
-        .loadComplete({relays: await this.relays(pointer), filters: getIdFilters([pointer.id])}),
+      await this.app.use(Network).loadComplete({
+        relays: await this.relays(getQuoteRef(pointer)),
+        filters: getIdFilters([pointer.id]),
+      }),
     )
 
   // A pointer carrying no hints would never resolve, so the load beside it asks the author's relays.
-  deriveEvent = (pointer: NotePointer) => {
+  deriveEvent = (pointer: EventPointer) => {
     this.load(pointer)
 
     return this.app.use(Events).one(pointer.id, pointer.relays ?? []).$
