@@ -135,11 +135,12 @@
         {:else if isCode(parsed)}
           <ContentCode
             value={parsed.value}
-            isBlock={isStartAndEnd(i) || parsed.value.includes("\n")} />
+            {singleLine}
+            isBlock={!singleLine && (isStartAndEnd(i) || parsed.value.includes("\n"))} />
         {:else if isCashu(parsed) || isInvoice(parsed)}
           <ContentToken value={parsed.value} />
         {:else if isLink(parsed)}
-          <ContentLinkInline url={parsed.value.url.toString()} {event} />
+          <ContentLinkInline url={parsed.value.url.toString()} {event} {singleLine} />
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />
         {:else if isQuote(parsed)}

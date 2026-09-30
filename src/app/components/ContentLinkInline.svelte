@@ -1,4 +1,5 @@
 <script lang="ts">
+  import cx from "classnames"
   import {displayUrl} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {preventDefault, stopPropagation} from "@lib/html"
@@ -12,9 +13,12 @@
   type Props = {
     url: string
     event: TrustedEvent
+    singleLine?: boolean
   }
 
-  const {url, event}: Props = $props()
+  const {url, event, singleLine = false}: Props = $props()
+
+  const className = cx("link-content", {"whitespace-normal wrap-anywhere": !singleLine})
 
   const fileType = getUrlContentType(url, event)
 
@@ -24,13 +28,10 @@
 
 {#if url.match(/\.(jpe?g|png|gif|webp)$/) || IMAGE_CONTENT_TYPES.includes(fileType)}
   <!-- Use a real link so people can copy the href -->
-  <a
-    href={url}
-    class="link-content whitespace-normal wrap-anywhere"
-    onclick={stopPropagation(preventDefault(expand))}>
+  <a href={url} class={className} onclick={stopPropagation(preventDefault(expand))}>
     <Icon icon={LinkRound} size={3} class="inline-block" />
     {displayUrl(url)}
   </a>
 {:else}
-  <ContentLinkUrl {url} class="link-content whitespace-normal wrap-anywhere" />
+  <ContentLinkUrl {url} class={className} />
 {/if}
