@@ -991,6 +991,7 @@ Acceptance:
 
 - Choosing an image from the upload button shows a spinner and disables sending
   until the upload finishes.
+- Deleting an attachment whose upload has not finished re-enables the composer.
 - After sending, the image renders inline in the timeline for bob as well; a DM
   behaves the same for its recipient.
 - Dropping an image onto the composer, or pasting one from the clipboard,

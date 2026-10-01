@@ -292,6 +292,7 @@ export const makeEditor = async ({
       wordCount?.set(editor.storage.wordCount.words)
       charCount?.set(editor.storage.wordCount.chars)
       empty?.set(isEmpty(editor))
+      setUploading()
       onChange?.(editor.getJSON())
     },
   })

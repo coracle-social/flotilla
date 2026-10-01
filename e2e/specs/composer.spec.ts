@@ -160,6 +160,18 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   await chooseFile(alice, roomUploadButton(alice), gifFile("photo.gif"))
 
   await expect(sendButton(alice)).toBeDisabled()
+  await expect(roomUploadButton(alice)).toBeDisabled()
+
+  // Deleting a stalled upload has to give the composer back.
+  await composer(alice).press("ControlOrMeta+a")
+  await composer(alice).press("Backspace")
+
+  await expect(composer(alice)).not.toContainText("photo.gif")
+  await expect(roomUploadButton(alice)).toBeEnabled()
+
+  await chooseFile(alice, roomUploadButton(alice), gifFile("photo.gif"))
+
+  await expect(sendButton(alice)).toBeDisabled()
 
   blossom.release()
 
