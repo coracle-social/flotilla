@@ -6,6 +6,8 @@ import {makeRoomKey} from "@welshman/app"
 import type {Room} from "@welshman/app"
 import type {Room as LiveKitRoom} from "livekit-client"
 import {events, network} from "@app/core"
+import {getLivekitEndpoint} from "@app/relays"
+import {getHttpAuthHeader} from "@app/signer"
 
 export const LIVEKIT_PARTICIPANTS = 39004
 
@@ -160,3 +162,27 @@ export const participantFromLiveKitIdentity = (liveKitIdentity: string): CallPar
 }
 
 export const participantKey = (p: CallParticipant) => p.pubkey ?? p.liveKitIdentity
+
+export const fetchLivekitToken = async (
+  url: string,
+  roomId: string,
+  signal?: AbortSignal,
+): Promise<{server_url: string; participant_token: string}> => {
+  const endpoint = getLivekitEndpoint(url, roomId)
+
+  if (signal?.aborted) {
+    throw new DOMException("Aborted", "AbortError")
+  }
+
+  const response = await fetch(endpoint, {
+    headers: {Authorization: await getHttpAuthHeader(endpoint)},
+    signal,
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Token request failed (${response.status}): ${text}`)
+  }
+
+  return response.json()
+}

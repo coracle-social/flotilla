@@ -1,7 +1,6 @@
 <script lang="ts">
   import {fade} from "svelte/transition"
   import cx from "classnames"
-  import {Capacitor} from "@capacitor/core"
   import Microphone from "@assets/icons/microphone.svg?dataurl"
   import MicrophoneOff from "@assets/icons/microphone-off.svg?dataurl"
   import VideocameraOff from "@assets/icons/videocamera-off.svg?dataurl"
@@ -17,6 +16,7 @@
   import VoiceCallAudioSettingsDialog from "@app/components/VoiceCallAudioSettingsDialog.svelte"
   import VoiceRoomJoinDialog from "@app/components/VoiceRoomJoinDialog.svelte"
   import {rooms} from "@app/core"
+  import {ScreenShare} from "@app/screenShare"
   import {RoomType, getRoomType} from "@app/rooms"
   import {pushModal} from "@app/modal"
   import {notifications} from "@app/notifications"
@@ -60,6 +60,8 @@
   const roomPath = $derived(makeRoomPath(url, h))
   const chatUnread = $derived($notifications.has(roomPath))
   const isChatPanelActive = $derived($videoCallLayout === VideoCallLayout.Split)
+
+  const canShareScreen = ScreenShare.isSupported()
 
   const buttonClass = "button button-circle max-md:h-9 max-md:w-9"
 
@@ -120,7 +122,7 @@
               icon={$currentCallSession.cameraOn ? VideocameraRecord : VideocameraOff}
               size={4.5} />
           </Button>
-          {#if !Capacitor.isNativePlatform()}
+          {#if canShareScreen}
             <Button
               data-tip={$currentCallSession.screenShareOn ? "Stop sharing" : "Share screen"}
               aria-label={$currentCallSession.screenShareOn

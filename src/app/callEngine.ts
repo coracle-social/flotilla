@@ -15,13 +15,13 @@ import type {PluginListenerHandle} from "@capacitor/core"
 import {get} from "svelte/store"
 import {not, nthEq, reject, spec} from "@welshman/lib"
 import {makeRoomKey} from "@welshman/app"
-import {getLivekitEndpoint} from "@app/relays"
-import {getHttpAuthHeader} from "@app/signer"
+import {ScreenShare, ScreenShareDenied} from "@app/screenShare"
 import {pushToast} from "@app/toast"
 import {
   CallState,
   DeviceKind,
   callMicMuted,
+  fetchLivekitToken,
   callState,
   callTargetRoom,
   currentCallSession,
@@ -73,6 +73,12 @@ const whenTimeout = (ms: number, opts: {message?: string; signal?: AbortSignal} 
     opts.signal?.addEventListener("abort", () => clearTimeout(timeout), {once: true})
   })
 }
+
+const screenShareContext = (session: CallSession) => ({
+  url: session.url,
+  h: session.h,
+  participant: session.livekit.localParticipant,
+})
 
 export const joinVoiceRoom = async (
   url: string,
@@ -227,7 +233,7 @@ export const leaveVoiceRoom = async () => {
 
   if (session.screenShareOn) {
     try {
-      await session.livekit.localParticipant.setScreenShareEnabled(false)
+      await ScreenShare.stop(screenShareContext(session))
     } catch {
       pushToast({theme: "error", message: "Error turning off screen sharing."})
     }
@@ -289,21 +295,38 @@ export const toggleCamera = async () => {
   }
 }
 
+const stopScreenShare = async (session: CallSession) => {
+  try {
+    await ScreenShare.stop(screenShareContext(session))
+    currentCallSession.update(s => s && {...s, screenShareOn: false})
+  } catch (error) {
+    console.error(error)
+    pushToast({theme: "error", message: "Could not stop screen sharing"})
+  }
+}
+
 export const toggleScreenShare = async () => {
   const session = get(currentCallSession)
   if (!session) {
     return
   }
 
-  const screenShareOn = !session.screenShareOn
+  if (session.screenShareOn) {
+    await stopScreenShare(session)
+    return
+  }
+
   try {
-    await session.livekit.localParticipant.setScreenShareEnabled(screenShareOn)
-    currentCallSession.update(s => s && {...s, screenShareOn})
-  } catch {
-    pushToast({
-      theme: "error",
-      message: screenShareOn ? "Could not start screen sharing" : "Could not stop screen sharing",
-    })
+    if (await ScreenShare.start(screenShareContext(session))) {
+      currentCallSession.update(s => s && {...s, screenShareOn: true})
+    }
+  } catch (error) {
+    if (error instanceof ScreenShareDenied) {
+      pushToast({theme: "error", message: error.message})
+    } else {
+      console.error(error)
+      pushToast({theme: "error", message: "Could not start screen sharing"})
+    }
   }
 }
 
@@ -430,30 +453,6 @@ const resyncAfterReconnect = (livekit: LiveKitRoom) => {
     screenShareOn: localParticipant.isScreenShareEnabled,
   })
   triggerVideoTrackRevision()
-}
-
-const fetchLivekitToken = async (
-  url: string,
-  roomId: string,
-  signal?: AbortSignal,
-): Promise<{server_url: string; participant_token: string}> => {
-  const endpoint = getLivekitEndpoint(url, roomId)
-
-  if (signal?.aborted) {
-    throw new DOMException("Aborted", "AbortError")
-  }
-
-  const response = await fetch(endpoint, {
-    headers: {Authorization: await getHttpAuthHeader(endpoint)},
-    signal,
-  })
-
-  if (!response.ok) {
-    const text = await response.text()
-    throw new Error(`Token request failed (${response.status}): ${text}`)
-  }
-
-  return response.json()
 }
 
 const setUpMicrophone = async (
@@ -643,6 +642,8 @@ const onParticipantDisconnected = (participant: {identity: string}) => {
   deleteParticipant(participant.identity)
 }
 
+ScreenShare.onStopped(() => currentCallSession.update(s => s && {...s, screenShareOn: false}))
+
 const onLocalTrackUnpublished = (
   publication: LocalTrackPublication,
   participant: LocalParticipant,
@@ -690,13 +691,14 @@ export const getVideoTiles = ({livekit, cameraOn, screenShareOn}: CallSession) =
     })
   }
 
-  if (screenShareOn) {
-    const localPub = user.getTrackPublication(Track.Source.ScreenShare)
+  // A native share is published from a second connection, so it arrives as a remote tile.
+  const localScreenPub = user.getTrackPublication(Track.Source.ScreenShare)
+  if (screenShareOn && localScreenPub) {
     videoTiles.push({
       liveKitIdentity: user.identity,
       isLocal: true,
-      trackSid: localPub?.trackSid ?? "local-screen",
-      track: localPub?.track,
+      trackSid: localScreenPub.trackSid,
+      track: localScreenPub.track,
       source: Track.Source.ScreenShare,
     })
   }

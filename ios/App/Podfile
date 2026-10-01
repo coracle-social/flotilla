@@ -1,5 +1,8 @@
 require_relative '../../node_modules/.pnpm/@capacitor+ios@8.5.2_@capacitor+core@8.5.2/node_modules/@capacitor/ios/scripts/pods_helpers'
 
+source 'https://cdn.cocoapods.org/'
+source 'https://github.com/livekit/podspecs.git'
+
 platform :ios, '15.0'
 use_frameworks!
 
@@ -26,6 +29,11 @@ end
 target 'Flotilla Chat' do
   capacitor_pods
   # Add your Pods here
+  pod 'LiveKitClient', '~> 2.17'
+end
+
+target 'BroadcastExtension' do
+  pod 'LiveKitClient', '~> 2.17'
 end
 
 post_install do |installer|
