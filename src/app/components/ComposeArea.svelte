@@ -20,7 +20,7 @@
 
   type Props = Pick<
     ComponentProps<typeof Compose>,
-    "url" | "h" | "draftKey" | "encryptFiles" | "disabled"
+    "url" | "h" | "draftKey" | "encryptFiles" | "disabled" | "emptyAction"
   > & {
     messages: TrustedEvent[]
     canEdit: (event: TrustedEvent) => boolean

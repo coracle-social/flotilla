@@ -158,6 +158,12 @@
   let composeArea: ComposeArea | undefined = $state()
 </script>
 
+{#snippet callButton()}
+  {#if h}
+    <CallControlBar {url} {h} />
+  {/if}
+{/snippet}
+
 <div
   class={cx(
     "room flex min-h-0 min-w-0 flex-1 flex-col",
@@ -220,14 +226,10 @@
             draftKey="room:{url}:{h ?? ''}"
             messages={$events.toReversed()}
             canEdit={canEditEvent}
+            emptyAction={isVoiceRoom && !voiceConnectedHere ? callButton : undefined}
             bind:this={composeArea} />
         {/if}
       </div>
-      {#if h && isVoiceRoom && !voiceConnectedHere}
-        <div class="hide-on-keyboard flex shrink-0 items-center justify-center py-2">
-          <CallControlBar {url} {h} />
-        </div>
-      {/if}
     </div>
   </div>
 </div>

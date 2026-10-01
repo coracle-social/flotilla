@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
+  import type {Snippet} from "svelte"
   import {writable} from "svelte/store"
   import cx from "classnames"
   import type {MaybeAsync} from "@welshman/lib"
@@ -35,6 +36,7 @@
     onEscape?: () => void
     onEditPrevious?: () => void
     onSubmit: (event: EventContent) => MaybeAsync<void>
+    emptyAction?: Snippet
   }
 
   const {
@@ -47,6 +49,7 @@
     onEscape,
     onEditPrevious,
     onSubmit,
+    emptyAction,
   }: Props = $props()
 
   const draft = initialValues ? undefined : new DraftKey<Draft>(draftKey)
@@ -218,7 +221,9 @@
   <div class={editorClass} aria-disabled={disabled}>
     <EditorContent {autofocus} {editor} />
   </div>
-  {#if dictating || ($empty && !disabled)}
+  {#if emptyAction && $empty && !dictating}
+    {@render emptyAction()}
+  {:else if dictating || ($empty && !disabled)}
     <DictationButton
       key={draftKey}
       bind:dictating
