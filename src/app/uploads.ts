@@ -1,11 +1,20 @@
 import type {Maybe} from "@welshman/lib"
-import {first, normalizeUrl, parseJson, randomId, sha256, simpleCache} from "@welshman/lib"
+import {first, ms, normalizeUrl, parseJson, randomId, sha256, simpleCache} from "@welshman/lib"
 import {canUploadBlob, encryptFile, makeBlossomAuthEvent, uploadBlob} from "@welshman/util"
 import {Nip01Signer} from "@welshman/signer"
 import {app, blossomServerLists, relays} from "@app/core"
 import {DEFAULT_BLOSSOM_SERVERS} from "@app/env"
 
 export const normalizeBlossomUrl = (url: string) => normalizeUrl(url.replace(/^ws/, "http"))
+
+// welshman's blossom probes take no signal, so racing is the only way to put a deadline on one.
+const rejectWhenAborted = (signal: AbortSignal) =>
+  new Promise<never>((_, reject) => {
+    signal.addEventListener("abort", () => reject(signal.reason), {once: true})
+  })
+
+// 20 seconds plus the file's own time at 50 KB/s, a rate slower than any connection that could finish it.
+const uploadDeadline = (file: File) => ms(20) + ms(file.size / 50_000)
 
 export const fetchHasBlossomSupport = async (url: string) => {
   if (relays.get().get(url)?.hasNip("BUD-02")) {
@@ -14,6 +23,7 @@ export const fetchHasBlossomSupport = async (url: string) => {
 
   const server = normalizeBlossomUrl(url)
   const $signer = app.get().user?.signer || Nip01Signer.ephemeral()
+  const signal = AbortSignal.timeout(ms(10))
   const headers: Record<string, string> = {
     "X-Content-Type": "text/plain",
     "X-Content-Length": "1",
@@ -22,11 +32,14 @@ export const fetchHasBlossomSupport = async (url: string) => {
 
   try {
     const authEvent = await $signer.sign(makeBlossomAuthEvent({action: "upload", server}))
-    const res = await canUploadBlob(server, {authEvent, headers})
+    const res = await Promise.race([
+      canUploadBlob(server, {authEvent, headers}),
+      rejectWhenAborted(signal),
+    ])
 
     return res.status === 200
   } catch (e) {
-    if (!String(e).match(/Failed to fetch|NetworkError/)) {
+    if (!signal.aborted && !String(e).match(/Failed to fetch|NetworkError/)) {
       console.error(e)
     }
   }
@@ -142,7 +155,11 @@ export const makeImetaTag = (file: File, result: UploadResult) => {
   ]
 }
 
-export const uploadFile = async (file: File, options: UploadFileOptions = {}) => {
+const attemptUpload = async (
+  file: File,
+  options: UploadFileOptions,
+  signal: AbortSignal,
+): Promise<UploadFileResult> => {
   try {
     const {name, type} = file
 
@@ -172,20 +189,23 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
     const authEvent = await $signer.sign(authTemplate)
 
     // A 404 or a 405 is a server that doesn't implement BUD-06 rather than one saying no.
-    const check = await canUploadBlob(server, {
-      authEvent,
-      headers: {
-        "X-Content-Type": file.type,
-        "X-Content-Length": String(file.size),
-        "X-SHA-256": hashes[0],
-      },
-    })
+    const check = await Promise.race([
+      canUploadBlob(server, {
+        authEvent,
+        headers: {
+          "X-Content-Type": file.type,
+          "X-Content-Length": String(file.size),
+          "X-SHA-256": hashes[0],
+        },
+      }),
+      rejectWhenAborted(signal),
+    ])
 
     if (![200, 404, 405].includes(check.status)) {
       return {error: check.headers.get("X-Reason") || `${name} was refused (HTTP ${check.status})`}
     }
 
-    const res = await uploadBlob(server, file, {authEvent})
+    const res = await uploadBlob(server, file, {authEvent, signal})
     const text = await res.text()
 
     let task
@@ -211,11 +231,18 @@ export const uploadFile = async (file: File, options: UploadFileOptions = {}) =>
 
     return {result}
   } catch (e) {
+    if (signal.aborted) {
+      return {error: `${file.name} took too long to upload`}
+    }
+
     console.error("Error caught when uploading file:", e)
 
     return {error: String(e)}
   }
 }
+
+export const uploadFile = (file: File, options: UploadFileOptions = {}) =>
+  attemptUpload(file, options, AbortSignal.timeout(uploadDeadline(file)))
 
 const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {

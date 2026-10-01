@@ -999,6 +999,18 @@ Acceptance:
 - A file the editor has no node for attaches as a link instead. What the server
   refuses attaches nothing and shows its reason in an error toast.
 
+### US-142 — An upload that never answers gives up
+
+As alice, I want a stalled upload to fail on its own, so that a server that stops
+answering doesn't leave the composer unusable.
+
+Acceptance:
+
+- A file the editor has no node for holds the composer open while it uploads, and
+  nothing is there to delete.
+- A blossom server that never answers the upload gives the composer back when the
+  deadline passes, with an error toast naming the file.
+
 ### US-058 — Drafts survive navigating away
 
 As alice, I want an unsent message to still be there when I come back, so that I

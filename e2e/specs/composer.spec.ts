@@ -1,5 +1,5 @@
 import type {Locator, Page} from "@playwright/test"
-import {HOUR} from "@welshman/lib"
+import {HOUR, ms} from "@welshman/lib"
 import {
   DEFAULT_BLOSSOM_ORIGIN,
   GIF_BASE64,
@@ -221,6 +221,38 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   })
 
   await expect(alice.getByRole("alert")).toContainText("text files are not allowed here")
+})
+
+test("US-142 an upload that never answers gives up", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.profile(user.alice, {name: user.alice.name})
+    space.relayList(user.alice)
+  })
+
+  const path = roomPath(scenario.space("space").url, "general")
+  const alice = await as(users.alice, path)
+  const blossom = await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
+
+  blossom.hold()
+
+  // A text file attaches as a link rather than a node, so there is nothing to delete while it uploads.
+  await chooseFile(alice, roomUploadButton(alice), {
+    name: "notes.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("not an image"),
+  })
+
+  await expect(roomUploadButton(alice)).toBeDisabled()
+
+  await expect(alice.getByRole("alert")).toContainText("notes.txt took too long to upload", {
+    timeout: ms(45),
+  })
+
+  await expect(roomUploadButton(alice)).toBeEnabled()
 })
 
 test("US-058 drafts survive navigating away", async ({seed, as}) => {
