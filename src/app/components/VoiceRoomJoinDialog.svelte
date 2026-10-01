@@ -4,7 +4,7 @@
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Volume from "@assets/icons/volume.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
-  import FieldInline from "@lib/components/FieldInline.svelte"
+  import Field from "@lib/components/Field.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
@@ -34,8 +34,9 @@
 
   let audioInputs = $state<MediaDeviceInfo[]>([])
   let selectedDeviceId = $state("")
-  let startWithoutMic = $state(false)
   let micError = $state(false)
+
+  const withoutMic = $derived(selectedDeviceId === "none")
 
   const loadDevices = async () => {
     audioInputs = (await listMediaDevices()).filter(spec({kind: "audioinput"}))
@@ -57,19 +58,16 @@
   }
 
   $effect(() => {
-    // Re-runs when selectedDeviceId or startWithoutMic changes.
-    void selectedDeviceId
-    const withoutMic = startWithoutMic
+    const deviceId = selectedDeviceId
 
     stopMicPreview()
     micError = false
 
-    if (withoutMic || !navigator.mediaDevices?.getUserMedia) {
+    if (deviceId === "none" || !navigator.mediaDevices?.getUserMedia) {
       return
     }
 
     let cancelled = false
-    const deviceId = selectedDeviceId
 
     void (async () => {
       try {
@@ -120,8 +118,8 @@
     await joinVoiceRoom(
       url,
       h,
-      startWithoutMic,
-      startWithoutMic ? undefined : selectedDeviceId || undefined,
+      withoutMic,
+      withoutMic ? undefined : selectedDeviceId || undefined,
     ).catch(handleJoinError)
   }
 </script>
@@ -144,51 +142,35 @@
         <ProfileCircles pubkeys={participantPubkeys} size={5} limit={3} />
       </div>
     {/if}
-    <p class="text-sm opacity-80">Select a microphone to join the call:</p>
-    <div class="flex flex-col gap-4 pt-2">
-      <div class="flex items-center gap-2">
-        <input
-          id="voice-start-without-mic"
-          type="checkbox"
-          class="checkbox"
-          bind:checked={startWithoutMic} />
-        <label for="voice-start-without-mic" class="text-sm cursor-pointer">
-          Join without microphone (you can unmute later)
-        </label>
-      </div>
-      <FieldInline>
-        {#snippet label()}
-          <p>Microphone</p>
-        {/snippet}
-        {#snippet input()}
-          <select
-            class="select input w-full"
-            bind:value={selectedDeviceId}
-            disabled={startWithoutMic}
-            aria-label="Microphone">
-            <option value="">Default microphone</option>
-            {#each audioInputs as d (d.deviceId)}
-              <option value={d.deviceId}>
-                {d.label || `Microphone ${d.deviceId.slice(0, 8)}…`}
-              </option>
-            {/each}
-          </select>
-        {/snippet}
-      </FieldInline>
-      {#if !startWithoutMic}
-        <MicLevelMeter
-          track={previewTrack}
-          error={micError
-            ? "Could not access this microphone. Check your browser permissions, or join without one."
-            : undefined} />
-      {/if}
-    </div>
+    <Field>
+      {#snippet label()}
+        <p>Microphone</p>
+      {/snippet}
+      {#snippet input()}
+        <select class="select input w-full" bind:value={selectedDeviceId} aria-label="Microphone">
+          <option value="">Default microphone</option>
+          {#each audioInputs as d (d.deviceId)}
+            <option value={d.deviceId}>
+              {d.label || `Microphone ${d.deviceId.slice(0, 8)}…`}
+            </option>
+          {/each}
+          <option value="none">No microphone</option>
+        </select>
+      {/snippet}
+    </Field>
+    {#if withoutMic}
+      <p class="text-sm opacity-50">You can turn your microphone on after joining.</p>
+    {:else}
+      <MicLevelMeter
+        track={previewTrack}
+        error={micError ? "Could not access this microphone." : undefined} />
+    {/if}
   </ModalBody>
   <ModalFooter>
     <Button class="button button-link" onclick={goBack}>
       <Icon icon={AltArrowLeft} />
-      Don't join
+      Cancel
     </Button>
-    <Button class="button button-primary" onclick={joinVoice}>Join voice</Button>
+    <Button class="button button-primary" onclick={joinVoice}>Join call</Button>
   </ModalFooter>
 </Modal>
