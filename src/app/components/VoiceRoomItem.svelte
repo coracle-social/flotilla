@@ -8,8 +8,6 @@
   import RoomImage from "@app/components/RoomImage.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {makeRoomPath} from "@app/routes"
-  import {navigate, pushModal} from "@app/modal"
-  import VoiceRoomJoinDialog from "@app/components/VoiceRoomJoinDialog.svelte"
   import VoiceParticipantMediaBadges from "@app/components/VoiceParticipantMediaBadges.svelte"
   import {
     CallState,
@@ -41,20 +39,11 @@
   const isActive = $derived($roomCallState === CallState.Connected)
   const isJoining = $derived($roomCallState === CallState.Joining)
 
-  const handleClick = async (e: MouseEvent) => {
-    if (isActive) {
-      return
-    }
-
+  const onClick = (e: MouseEvent) => {
     if (isJoining) {
       e.preventDefault()
       cancelJoinVoiceRoom()
-      return
     }
-
-    e.preventDefault()
-    await navigate(makeRoomPath(url, h))
-    pushModal(VoiceRoomJoinDialog, {url, h})
   }
 
   $effect(() => {
@@ -73,7 +62,7 @@
 <SecondaryNavItem
   href={makeRoomPath(url, h)}
   {notification}
-  onclick={handleClick}
+  onclick={onClick}
   class={cx("items-start!", isActive && "bg-surface! text-content!")}>
   <div class="flex w-full min-w-0 flex-col gap-2">
     <div class="flex gap-2 items-center">
