@@ -85,6 +85,7 @@
     "@getalby/lightning-tools": "^6.1.0",
     "@getalby/sdk": "^5.1.2",
     "@hono/node-server": "^2.0.0",
+    "@huggingface/transformers": "3.8.1",
     "@noble/curves": "~2.0.1",
     "@noble/hashes": "~2.0.1",
     "@pomade/core": "^0.3.3",

@@ -32,3 +32,9 @@ export const buildUrl = (base: string | URL, ...pathname: string[]) => {
 export const normalizeTopic = (topic: string) => topic.trim().replace(/^#+/, "").toLowerCase()
 
 export const stripPrefix = (m: string) => m.replace(/^\w+: /, "")
+
+export const formatDuration = (seconds: number) => {
+  const whole = Math.floor(seconds)
+
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`
+}

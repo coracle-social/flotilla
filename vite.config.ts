@@ -1,3 +1,5 @@
+import {createRequire} from "node:module"
+import {dirname} from "node:path"
 import {config} from "dotenv"
 import {defineConfig} from "vite"
 import {SvelteKitPWA} from "@vite-pwa/sveltekit"
@@ -17,6 +19,11 @@ export default defineConfig({
   // and nowhere else, so every name listed here has to be a direct dependency — under pnpm a
   // transitive one isn't reachable from the root and the build fails to resolve it.
   resolve: {
+    alias: {
+      "@speech-runtime": dirname(
+        createRequire(import.meta.url).resolve("@huggingface/transformers"),
+      ),
+    },
     dedupe: [
       "@tiptap/core",
       "@tiptap/pm",
@@ -26,6 +33,10 @@ export default defineConfig({
       "prosemirror-transform",
       "prosemirror-view",
     ],
+  },
+  optimizeDeps: {
+    // Vite pre-bundles the worker's ?url runtime imports through this alias and emits no file.
+    exclude: ["@speech-runtime"],
   },
   server: {
     port: 1847,
@@ -42,6 +53,7 @@ export default defineConfig({
   build: {
     sourcemap: false,
   },
+  worker: {format: "es"},
   plugins: [
     sveltekit(),
     process.env.FLOTILLA_DESKTOP !== "1" &&
@@ -56,12 +68,23 @@ export default defineConfig({
           adapterFallback: "/",
         },
         workbox: {
-          maximumFileSizeToCacheInBytes: 5 * 1024 ** 2, // 5 MB or set to something else
+          maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
           // The service worker is generated before SvelteKit prerenders anything, so the
           // "prerendered/**" glob @vite-pwa/sveltekit forces in never matches. It only forces it
           // when modifyURLPrefix is unset, and an empty one is a no-op.
           modifyURLPrefix: {},
           globPatterns: ["client/**/*.{js,css,ico,png,svg,webp,webmanifest}"],
+          runtimeCaching: [
+            {
+              urlPattern: /\/_app\/immutable\/workers\/assets\/ort-wasm-.*\.(wasm|mjs)$/,
+              handler: "CacheFirst",
+              options: {
+                cacheName: "speech-runtime",
+                expiration: {maxEntries: 4},
+                cacheableResponse: {statuses: [200]},
+              },
+            },
+          ],
         },
         manifest: {
           name: process.env.VITE_PLATFORM_NAME,

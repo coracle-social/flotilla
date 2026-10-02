@@ -16,9 +16,6 @@ const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
 // Hard-coded in src/app.html, so every navigation asks for it whatever the scenario is doing.
 const PLAUSIBLE_ORIGIN = "https://plausible.coracle.social"
 
-// Transcription and speech both go here, against whichever key the user has saved.
-const OPENROUTER_ORIGIN = "https://openrouter.ai"
-
 // .test resolves nowhere and the block-all aborts the navigation, so a spec sees the redirect.
 const CHECKOUT_ORIGIN = "https://checkout.test"
 
@@ -179,12 +176,11 @@ export const mockDufflepud = (context: BrowserContext, fixtures: DufflepudFixtur
     return route.fallback()
   })
 
-// The app decodes what it is answered and writes its own header from the result.
-const SPEECH_RATE = 24000
-
 // Built rather than inlined, so a spec can ask for a length and assert the duration read off it.
 const silence = (seconds: number) => {
-  const bytes = seconds * SPEECH_RATE * 2
+  // The app decodes what it is answered and writes its own header from the result.
+  const rate = 24000
+  const bytes = seconds * rate * 2
   const wav = Buffer.alloc(44 + bytes)
 
   wav.write("RIFF", 0)
@@ -193,8 +189,8 @@ const silence = (seconds: number) => {
   wav.writeUInt32LE(16, 16)
   wav.writeUInt16LE(1, 20)
   wav.writeUInt16LE(1, 22)
-  wav.writeUInt32LE(SPEECH_RATE, 24)
-  wav.writeUInt32LE(SPEECH_RATE * 2, 28)
+  wav.writeUInt32LE(rate, 24)
+  wav.writeUInt32LE(rate * 2, 28)
   wav.writeUInt16LE(2, 32)
   wav.writeUInt16LE(16, 34)
   wav.write("data", 36)
@@ -203,34 +199,63 @@ const silence = (seconds: number) => {
   return wav
 }
 
-// The harness has no mp3 encoder, so it answers a wav, which the app decodes either way.
-const SPEECH_FORMAT = "mp3"
+export type Speech = {
+  // What the app asked to have read, after its own entity and url naming.
+  spoken: string[]
+  // Stops answering. A request that arrives while this is on is held open until `release`.
+  hold(): void
+  release(): void
+}
 
 /** OpenRouter's text to speech, answering every request with the same silence. Raw pcm is refused. */
-export const mockOpenRouterSpeech = async (context: BrowserContext, seconds = 3) => {
+export const mockOpenRouterSpeech = async (
+  context: BrowserContext,
+  seconds = 3,
+): Promise<Speech> => {
   const spoken: string[] = []
 
-  await context.route(`${OPENROUTER_ORIGIN}/api/v1/audio/speech`, route => {
+  let held: Maybe<Promise<void>>
+  let release: Maybe<() => void>
+
+  await context.route("https://openrouter.ai/api/v1/audio/speech", async route => {
     const {input, response_format} = JSON.parse(route.request().postData() ?? "{}")
 
-    if (response_format === SPEECH_FORMAT) {
-      spoken.push(input)
-
-      return route.fulfill({contentType: "audio/wav", body: silence(seconds)})
+    // The harness has no mp3 encoder, so it answers a wav, which the app decodes either way.
+    if (response_format !== "mp3") {
+      return route.fulfill({
+        status: 400,
+        json: {error: {message: "Invalid option: expected mp3"}},
+      })
     }
 
-    return route.fulfill({
-      status: 400,
-      json: {error: {message: `Invalid option: expected ${SPEECH_FORMAT}`}},
-    })
+    spoken.push(input)
+
+    await held
+
+    return route.fulfill({contentType: "audio/wav", body: silence(seconds)})
   })
 
-  return spoken
+  return {
+    spoken,
+    hold: () => {
+      held = new Promise<void>(resolve => {
+        release = resolve
+      })
+    },
+    release: () => {
+      release?.()
+      held = undefined
+    },
+  }
 }
 
 export type Transcription = {
   // OpenRouter picks a decoder off the extension, so this is how a spec reads what the recorder made.
   uploads: string[]
+  // Answers with this from here on, so a spec can exercise an empty transcript.
+  setTranscript(value: string): void
+  // Fails the next request only, with a message the app has to show.
+  failNext(message: string): void
   // Stops answering. A request that arrives while this is on is held open until `release`.
   hold(): void
   release(): void
@@ -245,11 +270,20 @@ export const mockOpenRouterTranscription = async (
 
   let held: Maybe<Promise<void>>
   let release: Maybe<() => void>
+  let failure: Maybe<string>
 
-  await context.route(`${OPENROUTER_ORIGIN}/api/v1/audio/transcriptions`, async route => {
+  await context.route("https://openrouter.ai/api/v1/audio/transcriptions", async route => {
     const body = route.request().postData() ?? ""
 
     uploads.push(body.match(/filename="([^"]+)"/)?.[1] ?? "")
+
+    if (failure) {
+      const message = failure
+
+      failure = undefined
+
+      return route.fulfill({status: 500, json: {error: {message}}})
+    }
 
     await held
 
@@ -258,6 +292,12 @@ export const mockOpenRouterTranscription = async (
 
   return {
     uploads,
+    setTranscript: (value: string) => {
+      text = value
+    },
+    failNext: (message: string) => {
+      failure = message
+    },
     hold: () => {
       held = new Promise<void>(resolve => {
         release = resolve

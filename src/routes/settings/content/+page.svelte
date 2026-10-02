@@ -5,7 +5,7 @@
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Accessibility from "@assets/icons/accessibility.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
-  import Microphone from "@assets/icons/microphone.svg?dataurl"
+  import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
   import Monitor from "@assets/icons/monitor.svg?dataurl"
   import Moon from "@assets/icons/moon.svg?dataurl"
   import Palette from "@assets/icons/palette.svg?dataurl"
@@ -15,11 +15,12 @@
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
   import InputList from "@lib/components/InputList.svelte"
-  import Link from "@lib/components/Link.svelte"
   import Icon from "@lib/components/Icon.svelte"
+  import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import SpeechModelSettings from "@app/components/SpeechModelSettings.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {blossomServerLists, deriveUserItem, muteLists} from "@app/core"
   import {pushToast} from "@app/toast"
@@ -236,30 +237,6 @@
       </Field>
       <Field>
         {#snippet label()}
-          <p>OpenRouter</p>
-        {/snippet}
-        {#snippet input()}
-          <label class="input flex w-full items-center gap-2">
-            <Icon icon={Microphone} />
-            <input
-              bind:value={$settings.openrouter_key}
-              autocomplete="off"
-              name="flotilla-openrouter-key"
-              placeholder="OpenRouter API key"
-              class="grow"
-              type="password" />
-          </label>
-        {/snippet}
-        {#snippet info()}
-          <p>
-            Add an <Link external href="https://openrouter.ai/settings/keys" class="text-primary"
-              >OpenRouter API key</Link> to transcribe what you record with the microphone button in your
-            composer, and to have messages read out loud to you.
-          </p>
-        {/snippet}
-      </Field>
-      <Field>
-        {#snippet label()}
           <p>Media Server</p>
         {/snippet}
         {#snippet secondary()}
@@ -275,6 +252,35 @@
           <p>Choose a media server type and url for files you upload to {PLATFORM_NAME}.</p>
         {/snippet}
       </Field>
+    </div>
+    <div class="card flex flex-col gap-4">
+      <strong class="text-lg">Model Settings</strong>
+      <Field>
+        {#snippet label()}
+          <p>OpenRouter API Key</p>
+        {/snippet}
+        {#snippet input()}
+          <label class="input flex w-full items-center gap-2">
+            <Icon icon={Lock} />
+            <input
+              bind:value={$settings.openrouter_key}
+              autocomplete="off"
+              name="flotilla-openrouter-key"
+              class="grow"
+              type="password" />
+          </label>
+        {/snippet}
+        {#snippet info()}
+          <p>
+            Read out loud and dictation go through <Link
+              external
+              href="https://openrouter.ai"
+              class="text-primary">OpenRouter</Link
+            >, which charges a fraction of a cent for each use.
+          </p>
+        {/snippet}
+      </Field>
+      <SpeechModelSettings />
     </div>
     <div class="card sticky -bottom-3 flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}

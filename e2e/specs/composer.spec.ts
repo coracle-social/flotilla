@@ -13,6 +13,7 @@ import {
   makeTestUser,
   messageActions,
   mockBlossom,
+  mockLocalSpeech,
   mockOpenRouterTranscription,
   roomLink,
   roomPath,
@@ -388,18 +389,29 @@ test("US-059 cancel a reply or an edit in progress", async ({seed, as}) => {
   await expect(editor).toHaveText("half-written thought")
 })
 
-// Dictation's two buttons are one button in two states, so the label is what says which.
 const dictateButton = (page: Page) => page.getByRole("button", {name: "Start dictation"})
 
-const stopButton = (page: Page) => page.getByRole("button", {name: "Stop recording"})
-
-// Every recording ends at the same question, so each spec starts from the answer it is about.
+// The fake microphone beeps twice a second, so a shorter take records only silence.
 const record = async (page: Page) => {
-  await dictateButton(page).click()
-  await expect(stopButton(page)).toBeVisible()
-  await stopButton(page).click()
+  const recorder = dialog(page, "Record a message")
 
-  return dialog(page, "Transcribe or send?")
+  await dictateButton(page).click()
+  // The dialog this one replaces is still animating out, so wait for it to be the only one.
+  await expect(recorder).toHaveCount(1)
+  await expect(recorder.getByText("0:01")).toBeVisible()
+
+  return recorder
+}
+
+// A transcription that came back with nothing hands the recording back to the recorder.
+const retryTranscribe = async (page: Page) => {
+  const recorder = dialog(page, "Record a message")
+
+  await expect(recorder).toHaveCount(1)
+  await expect(recorder.locator("audio")).toBeVisible()
+  await recorder.getByRole("button", {name: "Transcribe"}).click()
+  await expect(composer(page)).toContainText("the tide turns at six")
+  await composer(page).fill("")
 }
 
 test("US-125 dictate a message", async ({seed, as}) => {
@@ -417,21 +429,30 @@ test("US-125 dictate a message", async ({seed, as}) => {
   const alice = await as(users.alice, roomPath(url, "general"))
   const transcription = await mockOpenRouterTranscription(alice.context(), "the tide turns at six")
 
-  // Recording asks for nothing. Asking for a transcript with no key saved asks for one.
-  const action = await record(alice)
+  // Recording asks for nothing. Asking for a transcript with no provider set up asks for one.
+  const recorder = await record(alice)
 
-  await action.getByRole("button", {name: "Transcribe it"}).click()
+  await recorder.getByRole("button", {name: "Transcribe"}).click()
 
   const enable = dialog(alice, "Enable voice input?")
+
+  // The prompt sits over the recorder rather than taking its place.
+  await expect(enable).toHaveCount(1)
+  await expect(recorder).toHaveCount(1)
+
+  // Leaving the prompt hands the recording back to the recorder, still playable.
+  await enable.getByRole("button", {name: "Go back"}).click()
+
+  await expect(enable).toHaveCount(0)
+  await expect(recorder.locator("audio")).toBeVisible()
+  await recorder.getByRole("button", {name: "Transcribe"}).click()
 
   await enable.locator('input[name="flotilla-openrouter-key"]').fill("sk-or-test")
   await enable.getByRole("button", {name: "Enable voice input"}).click()
 
   await expect(alice.getByRole("alert")).toContainText("Voice input is ready to use!")
 
-  // The recording is still waiting behind that prompt for the answer it asked for.
-  await action.getByRole("button", {name: "Transcribe it"}).click()
-
+  // The recording is still waiting behind that prompt, so saving the key spends it.
   await expect(composer(alice)).toContainText("the tide turns at six")
 
   // OpenRouter picks its decoder off the extension, so the upload has to name the format.
@@ -441,21 +462,94 @@ test("US-125 dictate a message", async ({seed, as}) => {
 
   await expect(timeline(alice)).toContainText("the tide turns at six")
 
-  // A transcription outlives the composer that asked for it, and waits for whichever comes next.
+  // A transcription that fails says so and hands the recording back to the recorder.
+  transcription.failNext("The model is overloaded")
+
+  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("The model is overloaded")
+  await retryTranscribe(alice)
+
+  // An empty transcript is silence rather than a failure, and the recording survives it too.
+  transcription.setTranscript(" ")
+
+  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("No speech was detected")
+
+  transcription.setTranscript("the tide turns at six")
+
+  await retryTranscribe(alice)
+
+  // A transcription that is still out holds the recorder open, with its own button busy.
   transcription.hold()
 
-  await (await record(alice)).getByRole("button", {name: "Transcribe it"}).click()
+  const transcribing = await record(alice)
+  const transcribeButton = transcribing.getByRole("button", {name: "Transcribe"})
 
-  // A dictation is held by the app rather than by the composer, so reloading the page is losing it.
+  await transcribeButton.click()
+
+  await expect(transcribeButton.locator(".spinner")).toBeVisible()
+  await expect(transcribeButton).toBeDisabled()
+  await expect(dictateButton(alice).locator(".spinner")).toHaveCount(0)
+
+  // Leaving the recorder keeps the transcription, so the recording is not thrown away with it.
+  await transcribing.getByRole("button", {name: "Close dialog"}).click()
+
+  await expect(transcribing).toHaveCount(0)
+
+  // A transcription outlives the composer that asked for it, and waits for whichever comes next.
   await roomLink(alice, "Lounge").click()
 
   await expect(composer(alice)).toBeVisible()
 
   await roomLink(alice, "General").click()
 
+  // The composer it comes back to shows the wait the recorder was showing.
+  await expect(dictateButton(alice).locator(".spinner")).toBeVisible()
+
   transcription.release()
 
   await expect(composer(alice)).toContainText("the tide turns at six")
+})
+
+test("US-142 transcribe a recording on this device", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+  })
+
+  const {url} = scenario.space("space")
+  const alice = await as(users.alice, "/settings/content")
+  const localSpeech = await mockLocalSpeech(alice.context(), {text: "the tide turns at six"})
+
+  // Downloading the model is the whole of the choice, so no OpenRouter key is ever saved here.
+  await alice.getByRole("button", {name: "Download model"}).click()
+
+  const download = dialog(alice, "Download a speech model?")
+
+  localSpeech.hold()
+
+  await download.getByRole("button", {name: "Download model"}).click()
+
+  // How far the download has got is a bar rather than a number in the status line.
+  await expect(download.locator("progress")).toHaveJSProperty("value", 40)
+
+  localSpeech.release()
+
+  await expect(alice.getByRole("button", {name: "Remove model"})).toBeVisible()
+
+  await alice.goto(roomPath(url, "general"))
+
+  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(composer(alice)).toContainText("the tide turns at six")
+
+  // The model reads the samples the recorder made rather than uploading a file anywhere.
+  expect(localSpeech.recordings).toHaveLength(1)
+  expect(localSpeech.recordings[0]).toBeGreaterThan(0)
 })
 
 test("US-126 send a voice note", async ({seed, as}) => {
@@ -471,14 +565,14 @@ test("US-126 send a voice note", async ({seed, as}) => {
 
   await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
 
-  // Leaving the question unanswered throws the recording away.
+  // Discarding the recording throws it away rather than attaching it.
   await (await record(alice)).getByRole("button", {name: "Discard"}).click()
 
-  await expect(dialog(alice, "Transcribe or send?")).toHaveCount(0)
+  await expect(dialog(alice, "Record a message")).toHaveCount(0)
   await expect(composer(alice)).toHaveText("")
 
-  // Sending the recording as it is needs no OpenRouter key, only somewhere to upload it.
-  await (await record(alice)).getByRole("button", {name: "Send a voice note"}).click()
+  // Sending the recording as it is needs no speech model, only somewhere to upload it.
+  await (await record(alice)).getByRole("button", {name: "Send voice note"}).click()
 
   await expect(composer(alice)).toContainText(DEFAULT_BLOSSOM_ORIGIN)
 

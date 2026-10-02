@@ -1,15 +1,17 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import cx from "classnames"
   import type {MaybeAsync} from "@welshman/lib"
   import Microphone from "@assets/icons/microphone.svg?dataurl"
-  import Stop from "@assets/icons/record.svg?dataurl"
+  import {localSpeechStatus} from "@lib/speech"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {errorMessage} from "@lib/util"
-  import DictationAction from "@app/components/DictationAction.svelte"
-  import {clearDictation, getDictation, startDictation, transcribeDictation} from "@app/dictation"
+  import VoiceRecorder from "@app/components/VoiceRecorder.svelte"
+  import type {Dictation} from "@app/dictation"
+  import {clearDictation, getDictation, transcribeDictation} from "@app/dictation"
+  import type {InferenceProviderFor} from "@app/inference"
+  import {resolveInference} from "@app/inference"
   import {pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
 
@@ -22,117 +24,111 @@
 
   let {key, dictating = $bindable(false), onTranscript, onVoiceNote}: Props = $props()
 
-  // Room noise idles just below this, so the pulse follows quiet speech too.
-  const onLevel = (level: number) => {
-    loud = level > 0.03
-  }
+  const record = () => {
+    inFlight = true
 
-  const start = async () => {
-    // A permission prompt can sit for a while, and a second click would open a stream nobody holds.
-    loading = true
-
-    try {
-      await startDictation(key, onLevel)
-      recording = true
-    } catch (error) {
-      console.error(error)
-      pushToast({theme: "error", message: "Failed to access your microphone."})
-    } finally {
-      loading = false
-    }
-  }
-
-  const stop = () => {
-    getDictation(key)?.stop()
-
-    recording = false
-    loud = false
-    // Hold the button until the recording has been spent.
-    loading = true
-
-    choose()
-  }
-
-  const choose = () =>
-    pushModal(DictationAction, {
+    pushModal(VoiceRecorder, {
+      key,
       onTranscribe: transcribe,
       onVoiceNote: attach,
       onDiscard: discard,
     })
+  }
 
-  const transcribe = () => {
+  // The recorder waits on this, so it settles once the transcript lands or comes back empty.
+  const transcribe = async () => {
     const dictation = getDictation(key)
 
     if (dictation) {
-      transcribeDictation(dictation)
-      deliver()
+      try {
+        const {provider, ready} = await resolveInference("transcribe")
+
+        if (ready) {
+          transcribeDictation(dictation, provider.transcribe)
+
+          return await deliver(dictation)
+        }
+
+        return await enable(provider)
+      } catch (error) {
+        console.error(error)
+        pushToast({theme: "error", message: `Failed to prepare dictation: ${errorMessage(error)}`})
+      }
+    }
+
+    return false
+  }
+
+  // The setup prompt sits over the recorder rather than replacing it, so the wait is one wait.
+  const enable = (provider: InferenceProviderFor<"transcribe">) =>
+    new Promise<boolean>(resolve => {
+      provider.enable("transcribe", {
+        nested: true,
+        onReady: () => resolve(transcribe()),
+        onCancel: () => resolve(false),
+      })
+    })
+
+  const deliver = async (dictation: Dictation) => {
+    await dictation.finished
+
+    // A composer that has gone away has nowhere to put the transcript, so leave the dictation there.
+    if (destroyed || getDictation(key) !== dictation) {
+      return false
+    }
+
+    if (dictation.error) {
+      console.error(dictation.error)
+      pushToast({theme: "error", message: `Failed to transcribe: ${errorMessage(dictation.error)}`})
+    } else if (!dictation.transcript?.trim()) {
+      pushToast({message: "No speech was detected. You can retry or send the recording."})
+    } else {
+      clearDictation(key)
+      inFlight = false
+
+      await onTranscript(dictation.transcript)
+
+      return true
+    }
+
+    dictation.finished = undefined
+
+    return false
+  }
+
+  // A transcription that outlived its recorder lands here instead, so this button shows the wait.
+  const resume = async (dictation: Dictation) => {
+    inFlight = true
+    loading = true
+
+    const delivered = await deliver(dictation)
+
+    loading = false
+
+    if (!delivered) {
+      record()
     }
   }
 
-  const attach = async () => {
-    const dictation = getDictation(key)
+  const attach = async (audio: File) => {
+    await onVoiceNote(audio)
 
-    if (dictation) {
-      const audio = await dictation.audio
-
-      clearDictation(key)
-      loading = false
-
-      await onVoiceNote(audio)
-    }
+    inFlight = false
   }
 
   const discard = () => {
     clearDictation(key)
 
-    loading = false
+    inFlight = false
   }
-
-  const deliver = async () => {
-    const dictation = getDictation(key)
-
-    if (dictation?.finished) {
-      loading = true
-
-      await dictation.finished
-
-      // A composer that has gone away has nowhere to put the transcript, so leave the dictation where it is.
-      if (!destroyed) {
-        if (dictation.error) {
-          console.error(dictation.error)
-          pushToast({
-            theme: "error",
-            message: `Failed to transcribe: ${errorMessage(dictation.error)}`,
-          })
-        } else {
-          await onTranscript(dictation.transcript ?? "")
-        }
-
-        clearDictation(key)
-      }
-
-      loading = false
-    }
-  }
-
-  const toggle = () => (recording ? stop() : start())
 
   let destroyed = false
-  let recording = $state(false)
-  // In flight from the start when a dictation is already waiting to be picked up.
-  let loading = $state(Boolean(getDictation(key)))
-  let loud = $state(false)
-
-  const buttonClass = $derived(
-    cx(
-      "button button-circle tip tip-left h-10 w-10 min-w-10",
-      recording ? "button-error" : "button-primary",
-      {"pulse-scale": loud},
-    ),
-  )
+  // A recording or transcription in flight, which keeps the button the recorder reports back to.
+  let inFlight = $state(false)
+  let loading = $state(false)
 
   $effect(() => {
-    dictating = recording || loading
+    dictating = inFlight
   })
 
   // Pick up a dictation an earlier composer left running.
@@ -140,33 +136,25 @@
     const dictation = getDictation(key)
 
     if (dictation?.finished) {
-      deliver()
+      resume(dictation)
     } else if (dictation) {
-      choose()
+      record()
     }
   })
 
   onDestroy(() => {
     destroyed = true
-
-    const dictation = getDictation(key)
-
-    if (dictation?.recording) {
-      dictation.stop()
-    }
   })
 </script>
 
 <Button
-  class={buttonClass}
-  data-tip={recording ? "Stop recording" : "Record a message"}
-  aria-label={recording ? "Stop recording" : "Start dictation"}
+  class="button button-primary button-circle tip tip-left h-10 w-10 min-w-10"
+  data-tip={loading ? $localSpeechStatus.message || "Preparing dictation…" : "Record a message"}
+  aria-label="Start dictation"
   disabled={loading}
-  onclick={toggle}>
+  onclick={record}>
   {#if loading}
     <Spinner size="xs" />
-  {:else if recording}
-    <Icon icon={Stop} />
   {:else}
     <Icon icon={Microphone} />
   {/if}

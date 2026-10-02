@@ -474,10 +474,10 @@ without looking at the screen.
 
 Acceptance:
 
-- "Read Out Loud" on a message with no OpenRouter key saved asks for one, the
-  same prompt dictation uses.
-- Once a key is saved, the same menu item puts a player at the bottom of the
-  app naming whose message is being read.
+- "Read Out Loud" with no OpenRouter key saved asks for one, the same prompt
+  dictation uses, and saving it reads the message that was asked for.
+- A player sits at the bottom of the app naming whose message is being read,
+  and closing it stops a read whose audio is still in flight.
 - A quote, a mention or a url in the message is named rather than spelled out.
 - The player starts on its own, pauses, scrubs, and closes, and closing it takes
   it away.
@@ -1044,13 +1044,35 @@ one without my hands.
 
 Acceptance:
 
-- The dictation button with no OpenRouter key saved asks for one, the same
-  prompt reading a message out loud uses.
-- Stopping a recording asks whether to transcribe it or send it as a voice
-  note.
+- The dictation button opens a recording dialog, which records from the moment
+  it opens and shows the microphone level while it runs.
+- Asking for a transcript with no provider set up asks for one, the same prompt
+  reading a message out loud uses. Recording and sending a voice note asks for
+  nothing.
+- The prompt sits over the dialog. Leaving it returns to the dialog, with the
+  recording still waiting.
+- The dialog stays open while a transcription is out, with the button that asked
+  for it busy, rather than handing the wait to the composer.
+- A transcription that fails or comes back empty hands the recording back to
+  that dialog, so it can be played, retried, sent or discarded.
 - Choosing to transcribe puts the transcript in the composer, ready to send.
+- Dismissing the dialog while a transcription is out keeps the transcription,
+  and the composer's own button shows the wait instead.
 - Leaving the room while a transcription is still out does not lose it: the
   transcript lands in the composer that is there when it comes back.
+
+### US-142 — Transcribe a recording on this device
+
+As alice, I want my recordings transcribed on my own device, so that dictation
+costs nothing and my voice goes nowhere.
+
+Acceptance:
+
+- Content Settings offers a dictation model to download, and shows how far the
+  download has got.
+- With the model downloaded, dictation transcribes on the device and asks for no
+  OpenRouter key.
+- Removing the model hands dictation back to OpenRouter.
 
 ### US-126 — Send a voice note
 
@@ -1059,9 +1081,9 @@ voice rather than a transcript of it.
 
 Acceptance:
 
-- Choosing to send a voice note uploads the recording and attaches it to the
-  composer.
-- Sending it publishes the message with the audio, which renders as a player in
+- Sending it as a voice note uploads the recording and attaches it to the
+  composer, and the dialog stays open with its button busy until it does.
+- Sending the message publishes it with the audio, which renders as a player in
   the timeline.
 - Discarding the recording instead leaves the composer empty and uploads
   nothing.

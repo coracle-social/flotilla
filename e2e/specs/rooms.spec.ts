@@ -795,7 +795,7 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
   const {url} = scenario.space("space")
   const alice = await as(users.alice, roomPath(url, "general"))
   // Long enough that playback is still going when it is stopped.
-  const spoken = await mockOpenRouterSpeech(alice.context(), 10)
+  const speech = await mockOpenRouterSpeech(alice.context(), 10)
 
   // The mention has to have resolved on screen before it can be expected in what was spoken.
   await expect(message(alice, "heads up")).toContainText("@Alice Anchor")
@@ -811,17 +811,29 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
 
   await expect(alice.getByRole("alert")).toContainText("Read out loud is ready to use!")
 
+  // Saving the key reads the message that was asked for rather than asking for the menu again.
+  await expect(alice.getByText("a message from Bob Barnacle")).toBeVisible()
+
+  // The quote, the mention and the url are named rather than spelled out a character at a time.
+  expect(speech.spoken).toEqual([
+    "another message\n\nheads up Alice Anchor, the notice is at a link to harbor.example",
+  ])
+
+  await alice.getByRole("button", {name: "Stop reading"}).click()
+
+  await expect(alice.getByText("a message from Bob Barnacle")).toHaveCount(0)
+
+  // Stopping a read whose audio is still in flight has to end that request too.
+  speech.hold()
+
   await openMessageMenu(alice, "heads up")
   await alice.getByRole("button", {name: "Read Out Loud"}).click()
 
   await expect(alice.getByText("a message from Bob Barnacle")).toBeVisible()
 
-  // The quote, the mention and the url are named rather than spelled out a character at a time.
-  expect(spoken).toEqual([
-    "another message\n\nheads up Alice Anchor, the notice is at a link to harbor.example",
-  ])
-
   await alice.getByRole("button", {name: "Stop reading"}).click()
+
+  speech.release()
 
   await expect(alice.getByText("a message from Bob Barnacle")).toHaveCount(0)
 })

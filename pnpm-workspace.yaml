@@ -2,6 +2,8 @@
 verifyDepsBeforeRun: warn
 
 allowBuilds:
+  onnxruntime-node: false
+  protobufjs: false
   nostr-signer-capacitor-plugin: true
   cbor-extract: false
   esbuild: false

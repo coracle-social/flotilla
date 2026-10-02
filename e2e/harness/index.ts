@@ -51,6 +51,7 @@ export {
   withholdEose,
 } from "./net/websocket"
 export {readCachedEvents} from "./app/cache"
+export {mockLocalSpeech} from "./app/speech"
 export {
   bubble,
   chatItems,
@@ -99,6 +100,7 @@ export type {
   HostingFixtures,
   HostingHandle,
   HostingRecord,
+  Speech,
   Transcription,
 } from "./net/http"
 export type {WebLnInfo} from "./app/webln"

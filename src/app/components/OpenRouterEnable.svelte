@@ -1,4 +1,6 @@
 <script lang="ts">
+  import {onDestroy} from "svelte"
+  import {poll} from "@welshman/lib"
   import {preventDefault} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
@@ -16,19 +18,20 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {PLATFORM_NAME} from "@app/env"
-  import {publishSettings} from "@app/settings"
+  import {popModal} from "@app/modal"
+  import {getSetting, publishSettings} from "@app/settings"
   import {pushToast} from "@app/toast"
 
   type Props = {
     feature: string
     subtitle: string
+    onReady?: () => void
+    onCancel?: () => void
   }
 
-  const {feature, subtitle}: Props = $props()
+  const {feature, subtitle, onReady, onCancel}: Props = $props()
 
   const action = `Enable ${feature.toLowerCase()}`
-
-  const back = () => history.back()
 
   const save = async () => {
     loading = true
@@ -36,9 +39,18 @@
     try {
       await publishSettings({openrouter_key: openrouterKey.trim()})
 
+      // The settings projection lands after the publish, so the key reads back only once it has.
+      await poll({
+        interval: 30,
+        condition: () => Boolean(getSetting("openrouter_key")),
+        signal: AbortSignal.timeout(3000),
+      })
+
       pushToast({message: `${feature} is ready to use!`})
 
-      back()
+      pending = false
+      popModal()
+      onReady?.()
     } catch (error) {
       console.error(error)
       pushToast({theme: "error", message: `Failed to save your key: ${errorMessage(error)}`})
@@ -47,8 +59,16 @@
     }
   }
 
+  let pending = true
   let openrouterKey = $state("")
   let loading = $state(false)
+
+  // Leaving without a key hands the decision back to whoever asked for it.
+  onDestroy(() => {
+    if (pending) {
+      onCancel?.()
+    }
+  })
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(save)}>
@@ -86,7 +106,7 @@
     </Field>
   </ModalBody>
   <ModalFooter>
-    <Button class="button button-link" onclick={back}>
+    <Button class="button button-link" onclick={popModal}>
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
