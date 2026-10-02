@@ -709,7 +709,9 @@ test("US-137 reach a thread from the inbox activity its comment raised", async (
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
     space.join(user.bob, "general")
-    space.message(user.bob, "general", "the server is on fire", at(3, HOUR))
+    const alarm = space.message(user.bob, "general", "the server is on fire", at(3, HOUR))
+
+    space.reply(user.bob, alarm, "put it out, we are fine", at(150, MINUTE))
 
     const topic = seedThread(space, user.bob, "where is the sextant", at(2, HOUR))
 
@@ -733,10 +735,13 @@ test("US-137 reach a thread from the inbox activity its comment raised", async (
   const alice = await as(users.alice, "/home")
 
   // The room's row is its own chat, whatever the newest thing tagged for the room happens to be
-  const conversation = alice.getByRole("link").filter({hasText: "the server is on fire"})
+  const conversation = alice.getByRole("link").filter({hasText: "put it out, we are fine"})
 
   await expect(conversation).toBeVisible()
   await expect(conversation).toContainText("General")
+
+  // A reply opens with a reference to its parent, which a one-line row has no use for.
+  await expect(conversation).not.toContainText("nevent1")
   await expect(alice.getByRole("link").filter({hasText: "starboard locker"})).toHaveCount(0)
 
   // The comment is activity on the thread, so the space's thread count is what it raises

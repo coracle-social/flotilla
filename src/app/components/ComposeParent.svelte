@@ -23,7 +23,7 @@
 <ComposeBar class="relative pr-8">
   <p class="text-primary text-xs">{verb} @{$display}</p>
   {#key event.id}
-    <NoteContentMinimal trimParent {event} />
+    <NoteContentMinimal {event} />
   {/key}
   <Button class="absolute right-2 top-2 cursor-pointer" onclick={clear}>
     <Icon icon={CloseCircle} />

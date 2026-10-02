@@ -16,6 +16,7 @@
     isProfile,
     isNewline,
   } from "@welshman/content"
+  import type {Parsed} from "@welshman/content"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -32,12 +33,11 @@
 
   type Props = {
     event: any
-    trimParent?: boolean
     singleLine?: boolean
     url?: string
   }
 
-  const {event, trimParent = false, singleLine = false, url}: Props = $props()
+  const {event, singleLine = false, url}: Props = $props()
 
   const fullContent = $derived(parse(event))
 
@@ -86,15 +86,19 @@
     return result
   }
 
-  const shortContent = $derived.by(() => {
-    let result = fullContent
+  // A reply leads with a reference to its parent, which says nothing a preview can use.
+  const withoutParent = (content: Parsed[]) => {
+    const rest =
+      content.length > 0 && isQuote(content[0])
+        ? dropWhile(p => isQuote(p) || isNewline(p), content)
+        : content
 
-    if (trimParent && result.length > 0 && isQuote(result[0])) {
-      result = dropWhile(p => isQuote(p) || isNewline(p), result)
-    }
+    return rest.length > 0 ? rest : content
+  }
 
-    return truncate(result, {minLength: 200, maxLength: 300, mediaLength: 20})
-  })
+  const shortContent = $derived(
+    truncate(withoutParent(fullContent), {minLength: 200, maxLength: 300, mediaLength: 20}),
+  )
 </script>
 
 <div class="relative">

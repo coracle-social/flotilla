@@ -46,7 +46,7 @@
       <div
         class="border-l-2 border-solid py-1 pl-2 opacity-90"
         style="border-left-color: var(--primary); background-color: color-mix(in srgb, var(--primary) 10%, var(--surface-more) 90%);">
-        <NoteContentMinimal trimParent {url} event={$quote} />
+        <NoteContentMinimal {url} event={$quote} />
       </div>
     {:else}
       <NoteCard event={$quote} {url} class="border border-solid rounded-2xl p-4 border-line">

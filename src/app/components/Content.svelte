@@ -46,7 +46,6 @@
     maxLength?: number
     showEntire?: boolean
     expandMode?: string
-    trimParent?: boolean
     url?: string
   }
 
@@ -56,7 +55,6 @@
     maxLength = 700,
     showEntire = $bindable(false),
     expandMode = "block",
-    trimParent = false,
     url,
   }: Props = $props()
 
@@ -123,37 +121,15 @@
       : $userSettingsValues.hide_sensitive && tagValue(tagSpec("content-warning"), event.tags),
   )
 
-  const dropWhile = <T,>(f: (x: T) => boolean, xs: Iterable<T>) => {
-    const result: T[] = []
-
-    for (const x of xs) {
-      if (result.length === 0 && f(x)) {
-        continue
-      }
-
-      result.push(x)
-    }
-
-    return result
-  }
-
-  const shortContent = $derived.by(() => {
-    let result = fullContent
-
-    if (trimParent && result.length > 0 && isQuote(result[0])) {
-      result = dropWhile(p => isQuote(p) || isNewline(p), result)
-    }
-
-    if (!showEntire) {
-      result = truncate(result, {
-        minLength,
-        maxLength,
-        mediaLength: 200,
-      })
-    }
-
-    return result
-  })
+  const shortContent = $derived(
+    showEntire
+      ? fullContent
+      : truncate(fullContent, {
+          minLength,
+          maxLength,
+          mediaLength: 200,
+        }),
+  )
 
   const hasEllipsis = $derived(shortContent.some(isEllipsis))
   const expandInline = $derived(hasEllipsis && expandMode === "inline")

@@ -1832,6 +1832,8 @@ Acceptance:
 
 - A comment bob writes on a thread in a room alice belongs to leaves the room's
   inbox row showing the room's own last message.
+- The row reads as that message's own words, so a reply shows what it says rather
+  than the reference it opens with.
 - The same comment counts toward the space's unread thread activity, and the
   thread it answers carries the unread dot on the threads board.
 
