@@ -31,6 +31,8 @@
 			<key>RPBroadcastProcessMode</key>
 			<string>RPBroadcastProcessModeSampleBuffer</string>
 		</dict>
+		<key>RPBroadcastProcessMode</key>
+		<string>RPBroadcastProcessModeSampleBuffer</string>
 	</dict>
 </dict>
 </plist>
