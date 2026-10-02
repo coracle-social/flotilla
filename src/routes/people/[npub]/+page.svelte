@@ -35,7 +35,7 @@
     }
 
     try {
-      await $profiles.load(pubkey)
+      await $profiles.forceLoad(pubkey)
       await $relayLists.load(pubkey)
 
       const viewer = user.get().pubkey

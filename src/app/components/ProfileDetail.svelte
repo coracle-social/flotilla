@@ -93,6 +93,7 @@
   $effect(loadBans)
 
   onMount(() => {
+    $profiles.forceLoad(pubkey)
     $messagingRelayLists.load(pubkey)
   })
 </script>
