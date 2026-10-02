@@ -1,5 +1,22 @@
 # Changelog
 
+# 1.12.0
+
+* Share your screen in calls on all platforms
+* Redesign the content library
+* Add a location to profiles and a member map to the directory
+* Add a notifications tab to the home network section
+* Add a create post button to the home page and profiles
+* Remind people about calendar events they're going to
+* Record voice notes in a dialog, and go straight to the call in voice rooms
+* Add a nature theme, more emoji and kaomoji
+* Show rich link previews for links to spaces, rooms and profiles
+* Keep a message in the composer when it fails to send, instead of dropping it
+* Only raise notifications for new messages
+* Keep private mutes when saving content settings, and handle muted words from other clients
+* Keep edited listings and calendar events in their room
+* Fix stalled uploads, quotes that hadn't loaded, misplaced comments and the emoji picker overflowing
+
 # 1.11.2
 
 * Offer a way out when startup gets stuck waiting on a remote signer

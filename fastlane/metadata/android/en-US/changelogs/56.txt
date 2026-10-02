@@ -1,0 +1,9 @@
+* Share your screen in calls on all platforms
+* Redesign the content library
+* Add a location to profiles and a member map to the directory
+* Add a notifications tab to the home network section
+* Add a create post button to the home page and profiles
+* Remind people about calendar events they're going to
+* Record voice notes in a dialog, and go straight to the call in voice rooms
+* Add a nature theme, more emoji and kaomoji
+* Show rich link previews for links to spaces, rooms and profiles
