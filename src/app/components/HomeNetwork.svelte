@@ -1,25 +1,21 @@
 <script lang="ts">
-  import {onDestroy} from "svelte"
-  import {writable} from "svelte/store"
-  import type {Writable} from "svelte/store"
-  import {sortBy, uniqBy} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
-  import {NOTE, getIdOrAddress, outbox} from "@welshman/util"
-  import type {TrustedEvent} from "@welshman/util"
-  import {getReplyTags} from "@welshman/domain"
+  import {onMount} from "svelte"
   import Planet from "@assets/icons/planet.svg?dataurl"
+  import Bell from "@assets/icons/bell.svg?dataurl"
   import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
+  import UnderlineTabs from "@lib/components/UnderlineTabs.svelte"
+  import type {UnderlineTab} from "@lib/components/UnderlineTabs.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
-  import HomeNetworkItem from "@app/components/HomeNetworkItem.svelte"
+  import HomeNetworkNotifications from "@app/components/HomeNetworkNotifications.svelte"
+  import HomeNetworkRecent from "@app/components/HomeNetworkRecent.svelte"
   import NoteCreate from "@app/components/NoteCreate.svelte"
-  import {CONTENT_KINDS} from "@app/content"
-  import {followLists, relayLists, router, user} from "@app/core"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import {user} from "@app/core"
   import {pushModal} from "@app/modal"
+  import {homeNotificationsUnread, loadHomeNotifications} from "@app/notifications"
+
+  type NetworkTab = "recent" | "notifications"
 
   type Props = {
     class?: string
@@ -27,99 +23,38 @@
 
   const {class: className = ""}: Props = $props()
 
-  // The same set and limit `syncFollowNetwork` reads the follows' relay lists from.
-  const RELAY_LIMIT = 8
+  const tabs: UnderlineTab<NetworkTab>[] = $derived([
+    {value: "recent", label: "Network", icon: Planet},
+    {
+      value: "notifications",
+      label: "Notifications",
+      icon: Bell,
+      notification: $homeNotificationsUnread,
+    },
+  ])
 
-  const context = makeFeedContext({
-    relays: $relayLists.readUrls($user.pubkey).get(),
-    withReplies: true,
-  })
-
-  const followList = $derived($followLists.one($user.pubkey))
-  const follows = $derived($followList?.pubkeys())
-
-  let element: HTMLElement | undefined = $state()
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-  let events: Writable<TrustedEvent[]> = $state(writable([]))
-  let started = false
-  let stop: Maybe<() => void>
+  let tab = $state<NetworkTab>("recent")
 
   const createPost = () => pushModal(NoteCreate)
 
-  // Kind 1 replies read as half a conversation without their parent.
-  const isRoot = (event: TrustedEvent) =>
-    event.kind !== NOTE || getReplyTags(event.tags).replies.length === 0
-
-  const items = $derived(
-    uniqBy(
-      getIdOrAddress,
-      sortBy(e => -e.created_at, $events.filter(isRoot)),
-    ),
-  )
-
-  const loading = $derived(isFeedLoading($older))
-  const exhausted = $derived($older?.status === "exhausted")
-  const isEmpty = $derived(follows?.length === 0 || (exhausted && items.length === 0))
-
-  const start = async (pubkeys: string[]) => {
-    const scenario = await $router.resolve(pubkeys.map(pubkey => outbox(pubkey)))
-    const feed = makeFeed({
-      relays: scenario.limit(RELAY_LIMIT).getUrls(),
-      filters: [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
-      onEvent: context.add,
-    })
-
-    events = feed.events
-    older = makeScrollLoader(element!, feed.loadOlder)
-    stop = () => {
-      older?.stop()
-      feed.cleanup()
-    }
-  }
-
-  // The follow list is what the feed is made of, and follows added later don't rebuild it.
-  $effect(() => {
-    if (!started && follows && follows.length > 0) {
-      started = true
-      start(follows)
-    }
-  })
-
-  onDestroy(() => {
-    stop?.()
-    context.cleanup()
+  onMount(() => {
+    loadHomeNotifications($user.pubkey)
   })
 </script>
 
-<HomeSection title="Network" icon={Planet} class={className}>
+<HomeSection title="Network" class={className}>
+  {#snippet nav()}
+    <UnderlineTabs options={tabs} bind:value={tab} class="-mb-3 self-stretch" />
+  {/snippet}
   {#snippet action()}
-    <Button class="button button-primary button-xs" onclick={createPost}>
+    <Button aria-label="Create post" class="button button-primary button-xs" onclick={createPost}>
       <Icon icon={PenNewSquare} size={4} />
-      Create post
+      <span class="hidden sm:inline">Create post</span>
     </Button>
   {/snippet}
-  <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4" bind:this={element}>
-    {#if isEmpty}
-      <div class="flex flex-col items-center gap-3 pb-4 text-center">
-        <p class="font-medium">Follow a few people to fill this out</p>
-        <p class="max-w-md text-sm opacity-75">
-          Posts from the people you follow collect here. Spaces are a good place to find some.
-        </p>
-        <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
-      </div>
-    {:else if items.length === 0}
-      <div class="flex justify-center py-8">
-        <Spinner loading>Loading recent posts...</Spinner>
-      </div>
-    {:else}
-      {#each items as event (event.id)}
-        <HomeNetworkItem {event} {context} />
-      {/each}
-      {#if loading}
-        <div class="flex justify-center py-8">
-          <Spinner loading />
-        </div>
-      {/if}
-    {/if}
-  </div>
+  {#if tab === "recent"}
+    <HomeNetworkRecent />
+  {:else}
+    <HomeNetworkNotifications />
+  {/if}
 </HomeSection>

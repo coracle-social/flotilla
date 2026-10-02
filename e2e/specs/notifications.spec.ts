@@ -1,7 +1,7 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
 import {POLL, displayRelayUrl} from "@welshman/util"
-import {Comment, FollowList, Note, Poll, SearchRelayList, Thread} from "@welshman/domain"
+import {Comment, FollowList, Note, Poll, Reaction, SearchRelayList, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
   composer,
@@ -336,14 +336,12 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
 
   const page = await as(users.alice, "/home")
 
-  const network = page
-    .locator("section")
-    .filter({has: page.getByRole("heading", {name: "Network"})})
+  const network = page.getByRole("region", {name: "Network"})
 
-  await expect(page.getByRole("heading", {name: "Network"})).toBeVisible()
+  await expect(network.getByRole("button", {name: "Network"})).toBeVisible()
   await expect(page.getByText(note)).toBeVisible()
 
-  // The feed is notes only: a reply is counted on the note it answers and gets no card of its own.
+  // The Network tab is notes only: a reply is counted on the note it answers and gets no card of its own.
   await expect(page.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
   await expect(page.getByText(reply)).toHaveCount(0)
 
@@ -385,9 +383,7 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
 
   const page = await as(users.alice, "/home")
 
-  const network = page
-    .locator("section")
-    .filter({has: page.getByRole("heading", {name: "Network"})})
+  const network = page.getByRole("region", {name: "Network"})
 
   await expect(network.getByText(note)).toBeVisible()
   await expect(network.getByText("Bob Barker")).toBeVisible()
@@ -424,13 +420,99 @@ test("US-117 read the network feed when one relay never answers", async ({seed, 
 
   const page = await as(users.alice, "/home", {silent: [stalled]})
 
-  const network = page
-    .locator("section")
-    .filter({has: page.getByRole("heading", {name: "Network"})})
+  const network = page.getByRole("region", {name: "Network"})
 
   // A span releases what it found once it is done waiting, so one silent relay holds it empty.
   await expect(network.getByText(note)).toBeVisible({timeout: 20_000})
   await expect(network.getByText("Bob Barker")).toBeVisible()
+})
+
+test("US-141 read notifications on home", async ({seed, as}) => {
+  const root = "the ferry timetable changed on monday"
+  const asked = "which ferry"
+  const note = "the 7:40, and it is now the 8:10"
+  const reply = "nobody told the harbourmaster"
+  const second = "it is on the noticeboard by the slip"
+
+  await seed(({relay, open, user, at}) => {
+    const space = relay("space")
+    const indexer = open("indexer")
+    const outbox = open("outbox")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    // Answering alice delivers to a relay she reads from, and her own notes live where she writes.
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url, outbox.url],
+      write: [space.url, indexer.url, outbox.url],
+    })
+
+    indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url]})
+    indexer.relayList(user.carol, {read: [outbox.url], write: [outbox.url]})
+    outbox.profile(user.bob, {name: "Bob Barker"})
+    outbox.profile(user.carol, {name: "Carol Carlson"})
+
+    const answer = (author: TestUser, parent: SeededEvent, content: string, createdAt: number) =>
+      outbox.event(
+        author,
+        () =>
+          outbox.kind(Note).writer().setParent(parent.event).setContent(content).renderTemplate(),
+        createdAt,
+      )
+
+    // Alice answers a reply rather than a root, so her own note has both a parent and a thread.
+    const posted = outbox.note(user.carol, root, at(60, MINUTE))
+    const question = answer(user.bob, posted, asked, at(50, MINUTE))
+    const mine = answer(user.alice, question, note, at(40, MINUTE))
+
+    answer(user.bob, mine, reply, at(20, MINUTE))
+    answer(user.carol, mine, second, at(15, MINUTE))
+
+    outbox.event(
+      user.bob,
+      () =>
+        outbox
+          .kind(Reaction)
+          .writer()
+          .setEvent(mine.event)
+          .setContent("\u{1f389}")
+          .renderTemplate(),
+      at(10, MINUTE),
+    )
+  })
+
+  const page = await as(users.alice, "/home")
+
+  const network = page.getByRole("region", {name: "Network"})
+
+  // Something unread is waiting before the tab has ever been opened.
+  const notifications = network.getByRole("button", {name: "Notifications"})
+
+  await expect(notifications.getByRole("img", {name: "Unread"})).toBeVisible({timeout: 20_000})
+
+  await notifications.click()
+
+  // Everything done to one note is one entry, so the note it is about is drawn once.
+  await expect(network.getByText(note)).toHaveCount(1, {timeout: 20_000})
+  await expect(network.getByText("replied to your note")).toHaveCount(1)
+  await expect(network.getByText(reply)).toBeVisible()
+  await expect(network.getByText(second)).toBeVisible()
+  await expect(network.getByText("reacted with")).toBeVisible()
+
+  // The note is itself a reply, so what it answers and the root of its thread are both reachable.
+  await expect(network.getByRole("button", {name: "View parent"})).toBeVisible()
+  await expect(network.getByRole("button", {name: "View thread"})).toBeVisible()
+
+  // Reading the tab takes the badge down.
+  await expect(notifications.getByRole("img", {name: "Unread"})).toHaveCount(0)
+
+  // A reply under the entry is a note of its own, so it opens its own modal.
+  await network.getByText(reply).click()
+
+  const dialog = page.getByRole("dialog")
+
+  await expect(dialog.getByText(reply)).toBeVisible()
 })
 
 // A url the container does not serve, so its nip-11 document never arrives and nothing knows what it supports.

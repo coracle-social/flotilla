@@ -445,9 +445,7 @@ test("US-134 write a public post", async ({seed, as}) => {
   // The same composer is how a post starts from home, out of the feed it posts into.
   await page.goto("/home")
 
-  const network = page
-    .locator("section")
-    .filter({has: page.getByRole("heading", {name: "Network"})})
+  const network = page.getByRole("region", {name: "Network"})
 
   await network.getByRole("button", {name: "Create post"}).click()
 

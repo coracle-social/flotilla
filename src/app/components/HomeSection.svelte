@@ -4,22 +4,30 @@
 
   type Props = {
     title: string
-    icon: string
+    icon?: string
+    nav?: Snippet
     action?: Snippet
     children: Snippet
     class?: string
   }
 
-  const {title, icon, action, children, class: className = ""}: Props = $props()
+  const {title, icon, nav, action, children, class: className = ""}: Props = $props()
 </script>
 
 <section
+  aria-label={title}
   class="flex min-w-0 flex-col overflow-hidden border-line bg-surface md:rounded-3xl md:border {className}">
-  <div class="flex items-center justify-between gap-3 px-4 py-3">
-    <h2 class="flex items-center gap-2 text-base font-bold">
-      <Icon {icon} size={5} />
-      {title}
-    </h2>
+  <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+    {#if nav}
+      {@render nav()}
+    {:else}
+      <h2 class="flex shrink-0 items-center gap-2 text-base font-bold">
+        {#if icon}
+          <Icon {icon} size={5} />
+        {/if}
+        {title}
+      </h2>
+    {/if}
     {@render action?.()}
   </div>
   {@render children()}

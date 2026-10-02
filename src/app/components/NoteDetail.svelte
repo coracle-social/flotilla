@@ -18,9 +18,10 @@
 
   type Props = {
     pointer: EventPointer
+    reply?: boolean
   }
 
-  const {pointer}: Props = $props()
+  const {pointer, reply = false}: Props = $props()
 
   const relays = $notes.relays(getQuoteRef(pointer))
   const context = makeFeedContext({relays})
@@ -34,6 +35,15 @@
   const clearReplyTo = () => setReplyTo(undefined)
 
   let replyTo: TrustedEvent | undefined = $state()
+  let composerRaised = false
+
+  // A reply button opens this modal composing, and cancelling it must not raise the composer again.
+  $effect(() => {
+    if (reply && $event && !composerRaised) {
+      composerRaised = true
+      setReplyTo($event)
+    }
+  })
 
   onDestroy(context.cleanup)
 </script>
@@ -44,7 +54,7 @@
       {@const note = $event}
       {@const replyToNote = () => setReplyTo(note)}
       <div class="border-line flex flex-col gap-4 border-b pb-4">
-        <NoteItem event={note} {context} card={false} showEntire>
+        <NoteItem event={note} {context} card={false} showEntire showThreadLinks>
           {#if replyTo?.id !== note.id}
             <Button class="button button-neutral button-xs" onclick={replyToNote}>
               <Icon icon={Reply} size={4} />

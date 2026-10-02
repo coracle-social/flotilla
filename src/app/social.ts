@@ -1,7 +1,11 @@
 import * as nip19 from "nostr-tools/nip19"
 import {derived, readable} from "svelte/store"
 import {
+  ago,
   first,
+  HOUR,
+  int,
+  max,
   noop,
   pushToMapKey,
   removeUndefined,
@@ -22,19 +26,30 @@ import {
   getIdAndAddress,
   getIdFilters,
   hexTags,
+  isRelayUrl,
+  matchTag,
   relays as relaySelections,
   seen,
+  tagSpec,
+  tagValue,
   tagValues,
   topicTags,
 } from "@welshman/util"
 import type {EventRef, TrustedEvent} from "@welshman/util"
 import type {EventPointer} from "nostr-tools/nip19"
 import {withGetter} from "@welshman/store"
-import {displayPubkey, getCommentTagValues, getReplyTagValues, getReplyTags} from "@welshman/domain"
+import {
+  Comment,
+  displayPubkey,
+  getCommentTagValues,
+  getReplyTagValues,
+  getReplyTags,
+} from "@welshman/domain"
+import type {CommentRef} from "@welshman/domain"
 import {Events, FollowLists, MuteLists, Network, Profiles, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {decodeGeohash} from "@lib/geohash"
-import {deriveUserItem, fromApp, profiles, user, usePlugin} from "@app/core"
+import {deriveUserItem, fromApp, profiles, reader, user, usePlugin} from "@app/core"
 import {getProfileGeohash} from "@app/location"
 import type {QuotePointer} from "@app/quotes"
 import {DEFAULT_PUBKEYS} from "@app/env"
@@ -204,6 +219,97 @@ export const buildCommentTree = (root: TrustedEvent, comments: TrustedEvent[]) =
   }
 
   return sortBy(node => node.comment.created_at, nodes)
+}
+
+// What a reply answers and the root of its thread, each named with the author its tag carries.
+export type ReplyRef = {id: string; author?: string; relays: string[]}
+
+const fromCommentRef = ({id, pubkey}: CommentRef): Maybe<ReplyRef> =>
+  id ? {id, author: pubkey, relays: []} : undefined
+
+// A tag naming an event carries a relay hint in third position, which is optional and often junk.
+const relayHint = (url: Maybe<string>) => (url && isRelayUrl(url) ? [url] : [])
+
+// NIP-10 names the author of the event answered in the fifth position of the tag naming it.
+const fromReplyTag = (tag: Maybe<string[]>): Maybe<ReplyRef> =>
+  tag && {id: tag[1], author: tag[4] || undefined, relays: relayHint(tag[2])}
+
+// A direct reply names only the thread root, so the event answered and the root can be the same one.
+export const getReplyRefs = (event: TrustedEvent) => {
+  if (event.kind === COMMENT) {
+    const comment = reader(Comment)(event)
+
+    return {parent: fromCommentRef(comment.parent()), root: fromCommentRef(comment.root())}
+  }
+
+  const {roots, replies} = getReplyTags(event.tags)
+
+  return {parent: fromReplyTag(replies[0]), root: fromReplyTag(roots[0])}
+}
+
+// One entry in the home notifications feed: a note, who answered it, and who reacted to it.
+export type HomeNotification = {
+  key: string
+  ref: ReplyRef
+  replies: TrustedEvent[]
+  reactions: TrustedEvent[]
+  timestamp: number
+}
+
+const isReplyKind = (event: TrustedEvent) => event.kind === NOTE || event.kind === COMMENT
+
+// What a notification is about: the note it answers or reacts to, or itself when it is a mention.
+const getNotificationRef = (event: TrustedEvent): Maybe<ReplyRef> => {
+  if (isReplyKind(event)) {
+    const {parent, root} = getReplyRefs(event)
+
+    return parent ?? root ?? {id: event.id, author: event.pubkey, relays: []}
+  }
+
+  // NIP-25 asks a reaction to carry the tags of the event it is about, author included.
+  const tag = matchTag(tagSpec("e"), event.tags)
+
+  return tag && {id: tag[1], author: tagValue(tagSpec("p"), event.tags), relays: relayHint(tag[2])}
+}
+
+// Everything done to one note within a few hours of each other collapses into a single entry.
+export const groupNotifications = (events: TrustedEvent[]) => {
+  const interval = int(HOUR, 3)
+  const notifications = new Map<string, HomeNotification>()
+
+  for (const event of events) {
+    const ref = getNotificationRef(event)
+
+    if (ref) {
+      // The window is measured back from now, so two answers minutes apart never straddle an edge.
+      const key = `${ref.id}:${Math.round(ago(event.created_at) / interval)}`
+      const notification = notifications.get(key) ?? {
+        key,
+        ref,
+        replies: [],
+        reactions: [],
+        timestamp: 0,
+      }
+
+      if (ref.id !== event.id) {
+        const answers = isReplyKind(event) ? notification.replies : notification.reactions
+
+        answers.push(event)
+      }
+
+      notifications.set(key, {
+        ...notification,
+        ref: {
+          id: ref.id,
+          author: notification.ref.author ?? ref.author,
+          relays: uniq([...notification.ref.relays, ...ref.relays]),
+        },
+        timestamp: max([notification.timestamp, event.created_at]),
+      })
+    }
+  }
+
+  return sortBy(notification => -notification.timestamp, Array.from(notifications.values()))
 }
 
 // Muting

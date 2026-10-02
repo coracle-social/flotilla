@@ -1886,6 +1886,28 @@ Acceptance:
 - The section fills from the relays that answer. One that takes the connection
   and then says nothing does not hold it empty.
 
+### US-141 — See replies and reactions to my own notes
+
+As alice, I want replies, mentions and reactions from outside my spaces
+gathered on the home page, so that answering somebody does not mean opening
+another client.
+
+Acceptance:
+
+- The network section has two tabs, Network for posts from the people she
+  follows and Notifications for what other people do to her own notes.
+- Notifications carries a badge while it holds something she has not read, and
+  the badge goes down once she has looked at the tab.
+- An entry is the note that was answered or reacted to, fetched whether or not
+  it had already been loaded, with the replies to it shown underneath.
+- Everything done to one note within a few hours of each other is one entry, so
+  two people answering the same note do not fill the section.
+- Every entry says why it is there: who replied, mentioned, reacted, reposted
+  or zapped.
+- An entry whose note is itself a reply links to the note it answers and to the
+  root of its thread.
+- A reply shown under an entry opens its own note when she clicks it.
+
 ### US-133 — Keep the search relays that work
 
 As alice, I want the search health check to leave alone the relays that do

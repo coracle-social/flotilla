@@ -16,16 +16,28 @@ import {
   int,
   HOUR,
 } from "@welshman/lib"
+import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
-import {sortEventsDesc, tagSpec, tagValue, MESSAGE} from "@welshman/util"
+import {
+  COMMENT,
+  MESSAGE,
+  NOTE,
+  REACTION,
+  ZAP_RECEIPT,
+  addMinimalFallbacks,
+  sortEventsDesc,
+  tagSpec,
+  tagValue,
+  userInbox,
+} from "@welshman/util"
 import {synced, throttled, withGetter} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
-import {app, fromApp} from "@app/core"
+import {app, fromApp, network, router} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
-import {CONTENT_KINDS, getActivityTarget, makeCommentFilter} from "@app/content"
+import {CONTENT_KINDS, REPOST_KINDS, getActivityTarget, makeCommentFilter} from "@app/content"
 import {getIsMuted, userSettingsValues} from "@app/settings"
 import {Chats} from "@app/chats"
-import {dufflepud, DUFFLEPUD_URL} from "@app/env"
+import {dufflepud, DUFFLEPUD_URL, ENABLE_ZAPS} from "@app/env"
 import {spaceSupportsRooms} from "@app/relays"
 import {activeSpaceUrls} from "@app/rooms"
 import {getHttpAuthHeader} from "@app/signer"
@@ -388,4 +400,58 @@ export const inboxSpaceContent = derived(
 
     return sortBy(content => -content.timestamp, [...byUrl.values()])
   },
+)
+
+// Home notifications
+
+// A report and a delete travel the same way and are nobody's good news, so this is not `REACTION_KINDS`.
+const homeNotificationKinds = [
+  NOTE,
+  COMMENT,
+  REACTION,
+  ...REPOST_KINDS,
+  ...(ENABLE_ZAPS ? [ZAP_RECEIPT] : []),
+]
+
+export const homeNotificationFilters = (pubkey: string) => [
+  {kinds: homeNotificationKinds, "#p": [pubkey]},
+]
+
+// Answering or reacting to the user delivers the event to the relays the user reads from.
+export const getHomeNotificationRelays = () =>
+  router
+    .get()
+    .resolve([userInbox()])
+    .then(scenario => scenario.policy(addMinimalFallbacks).getUrls())
+
+// The tab's own feed runs only while it is showing, so nothing else would ever ask for one.
+export const loadHomeNotifications = async (pubkey: string) =>
+  network.get().loadLenient({
+    relays: await getHomeNotificationRelays(),
+    filters: homeNotificationFilters(pubkey).map(filter => ({...filter, limit: 1})),
+  })
+
+// The notifications tab is no route of its own, so what has been read sits under a path nothing navigates to.
+const homeNotificationsPath = "/home/notifications"
+
+export const readHomeNotifications = () => setChecked(homeNotificationsPath)
+
+// A reply of the user's own tags them along with everyone else in the thread.
+const latestHomeNotification = derived(app, ($app, set: (event: Maybe<TrustedEvent>) => void) => {
+  const pubkey = $app.user?.pubkey
+
+  if (pubkey) {
+    return $app
+      .use(Events)
+      .desc(homeNotificationFilters(pubkey))
+      .$.subscribe(events => set(events.find(event => event.pubkey !== pubkey)))
+  }
+
+  set(undefined)
+})
+
+export const homeNotificationsUnread = derived(
+  [latestHomeNotification, checked],
+  ([$latest, $checked]) =>
+    Boolean($latest && $latest.created_at > ($checked[homeNotificationsPath] ?? 0)),
 )

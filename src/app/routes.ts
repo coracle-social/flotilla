@@ -257,6 +257,21 @@ export const scrollToEvent = (id: string) => {
 export const pushNote = (pointer: EventPointer, options: ModalOptions = {}) =>
   pushModal(NoteDetail, {pointer}, {size: "large", ...options})
 
+// An event already on screen opens as a note, pointed at the relays it was seen on.
+export const pushEventNote = (event: TrustedEvent, {reply = false} = {}) =>
+  pushModal(
+    NoteDetail,
+    {
+      pointer: {
+        id: event.id,
+        author: event.pubkey,
+        relays: Array.from(app.get().tracker.getRelays(event.id)),
+      },
+      reply,
+    },
+    {size: "large"},
+  )
+
 // A url resolving to a note has nothing on screen to open it over, so the app goes behind it.
 export const goToNote = (pointer: EventPointer) => {
   pushNote(pointer)
