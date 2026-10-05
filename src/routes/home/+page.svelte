@@ -8,7 +8,6 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import ScrollToTop from "@lib/components/ScrollToTop.svelte"
   import HomeInbox from "@app/components/HomeInbox.svelte"
-  import HomeActivity from "@app/components/HomeActivity.svelte"
   import HomeNetwork from "@app/components/HomeNetwork.svelte"
   import HomeHealthChecks from "@app/components/HomeHealthChecks.svelte"
   import HomeHosting from "@app/components/HomeHosting.svelte"
@@ -44,7 +43,6 @@
              the rail sit between the day's activity and the feed that would otherwise bury it. -->
         <div class="contents @2xl:flex @2xl:min-w-0 @2xl:flex-1 @2xl:flex-col @2xl:gap-3">
           <HomeInbox />
-          <HomeActivity />
           <HomeNetwork class="order-last @2xl:order-none" />
         </div>
         <div class="contents @2xl:flex @2xl:w-80 @2xl:shrink-0 @2xl:flex-col @2xl:gap-3">

@@ -6,9 +6,15 @@
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
+  import HomeActivity from "@app/components/HomeActivity.svelte"
   import HomeInboxItem from "@app/components/HomeInboxItem.svelte"
   import {navigate} from "@app/modal"
-  import {allNotifications, inboxConversations, setChecked} from "@app/notifications"
+  import {
+    allNotifications,
+    inboxConversations,
+    inboxSpaceContent,
+    setChecked,
+  } from "@app/notifications"
 
   const conversations = $derived($inboxConversations.slice(0, 8))
 
@@ -29,9 +35,13 @@
         <HomeInboxItem {conversation} />
       {/each}
     </div>
-  {:else}
+  {/if}
+  {#if $inboxSpaceContent.length > 0}
+    <HomeActivity spaces={$inboxSpaceContent} />
+  {/if}
+  {#if conversations.length === 0 && $inboxSpaceContent.length === 0}
     <div
-      class="flex flex-col items-center gap-3 border-t border-line bg-surface-less px-4 py-8 text-center">
+      class="flex flex-col items-center gap-3 border-t border-line bg-surface-less px-4 py-12 text-center">
       <p class="font-medium">You're all caught up</p>
       <p class="max-w-md text-sm opacity-75">
         The rooms, space chats and direct messages you belong to show what's unread here.
