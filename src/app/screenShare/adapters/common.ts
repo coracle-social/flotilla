@@ -28,5 +28,4 @@ export interface IScreenShareAdapter {
   onStopped: (handler: () => void) => () => void
 }
 
-export const errorCode = (error: unknown) =>
-  error instanceof Error && "code" in error ? String(error.code) : ""
+export const errorCode = (error: unknown) => String(Object(error).code ?? "")

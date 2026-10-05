@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {readable} from "svelte/store"
+  import {derived, readable} from "svelte/store"
   import {now, uniq, displayList, formatTimestampAsTime, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {MESSAGE, THREAD, getCommentFiltersForParent, getIdOrAddress} from "@welshman/util"
@@ -28,6 +28,7 @@
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import {events, profiles, publisher, reader, user} from "@app/core"
   import {noPublications, publicationsByEventId} from "@app/publications"
+  import {CONTENT_KINDS} from "@app/content"
   import {colorFor} from "@app/theme"
   import {ENABLE_ZAPS} from "@app/env"
   import type {FeedContext} from "@app/feeds"
@@ -61,10 +62,14 @@
   )
   const colorValue = colorFor(event.pubkey)
 
-  // A message that is nothing but a reference renders as the event it quotes.
+  // A message that is nothing but a reference to content renders as the content it quotes.
   const isQuoteOnly = event.content.trim().split(/\s/).length === 1
   const quote = isQuoteOnly ? getContentQuote(event.content) : undefined
-  const innerEvent = quote ? $events.one(quote.value, [url]).$ : readable(undefined)
+  const innerEvent = quote
+    ? derived($events.one(quote.value, [url]).$, e =>
+        e && CONTENT_KINDS.includes(e.kind) ? e : undefined,
+      )
+    : readable(undefined)
   const innerComments = $derived(
     $innerEvent ? $events.forUrl(url, getCommentFiltersForParent([$innerEvent])).$ : readable([]),
   )

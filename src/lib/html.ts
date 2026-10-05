@@ -118,7 +118,7 @@ export const createScroller = ({
   }
 }
 
-export const isMobile = "ontouchstart" in document.documentElement
+export const isMobile = document.documentElement.ontouchstart !== undefined
 
 export const downloadText = async (filename: string, text: string) => {
   // The <a download> blob trick is a no-op in native WebViews, so write the file and share it.

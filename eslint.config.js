@@ -56,6 +56,10 @@ export default [
             "Literal[raw='null']:not(CallExpression[callee.property.name='stringify'] > Literal)",
           message: "Use undefined instead of null.",
         },
+        {
+          selector: "BinaryExpression[operator='in']",
+          message: "Don't use the in operator.",
+        },
       ],
       "svelte/valid-compile": "off",
       "svelte/no-at-html-tags": "off",

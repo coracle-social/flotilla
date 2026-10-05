@@ -132,7 +132,7 @@ export const decodeNotePointer = (entity: string): Maybe<EventPointer> => {
 
 // A relay selection names an event author `pubkey`, where an event pointer names it `author`.
 export const getQuoteRef = (pointer: QuotePointer): EventRef =>
-  "id" in pointer
+  pointer.id
     ? {id: pointer.id, pubkey: pointer.author, kind: pointer.kind, relays: pointer.relays}
     : pointer
 

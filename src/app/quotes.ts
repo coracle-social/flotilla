@@ -17,13 +17,15 @@ import {goToEvent} from "@app/routes"
 import {getQuoteRef} from "@app/social"
 import QuoteLoading from "@app/components/QuoteLoading.svelte"
 
-export type QuotePointer = EventPointer | AddressPointer
+export type QuotePointer =
+  | (EventPointer & {identifier?: undefined})
+  | (AddressPointer & {id?: undefined})
 
 export const isQuote = (parsed: Parsed): parsed is ParsedEvent | ParsedAddress =>
   isEvent(parsed) || isAddress(parsed)
 
 export const getQuoteIdOrAddress = (pointer: QuotePointer) =>
-  "id" in pointer
+  pointer.id !== undefined
     ? pointer.id
     : new Address(pointer.kind, pointer.pubkey, pointer.identifier).toString()
 
@@ -46,7 +48,7 @@ export const loadQuote = async (pointer: QuotePointer, event: TrustedEvent, url?
   const filters = getIdFilters([getQuoteIdOrAddress(pointer)])
 
   // An id names one event, so the relays that answer first have it; an address names the newest.
-  const load = "id" in pointer ? network.get().loadLenient : network.get().loadComplete
+  const load = pointer.id ? network.get().loadLenient : network.get().loadComplete
 
   return first(sortEventsDesc(await load({filters, relays})))
 }
