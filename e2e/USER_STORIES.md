@@ -1911,6 +1911,7 @@ Acceptance:
 - A reply shown under an entry opens its own note when she clicks it.
 - The tab holds notes and what was done to them, so a reaction to one of her
   room messages lights neither the tab nor its badge.
+- Nothing a muted person does lights the tab or its badge.
 
 ### US-133 — Keep the search relays that work
 

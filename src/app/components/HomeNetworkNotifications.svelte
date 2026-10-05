@@ -3,7 +3,6 @@
   import {writable} from "svelte/store"
   import type {Writable} from "svelte/store"
   import type {Maybe} from "@welshman/lib"
-  import {ZAP_RECEIPT} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeNetworkNotificationItem from "@app/components/HomeNetworkNotificationItem.svelte"
@@ -16,7 +15,7 @@
     isHomeNotification,
     readHomeNotifications,
   } from "@app/notifications"
-  import {groupNotifications, isEventMuted} from "@app/social"
+  import {groupNotifications} from "@app/social"
 
   const relays = getHomeNotificationRelays()
 
@@ -27,15 +26,7 @@
   let events: Writable<TrustedEvent[]> = $state(writable([]))
   let stop: Maybe<() => void>
 
-  // A zap receipt is signed by an lnurl server rather than by the zapper, so neither test reads it.
-  const isFromSomeoneElse = (event: TrustedEvent) =>
-    event.kind === ZAP_RECEIPT || (event.pubkey !== $user.pubkey && !$isEventMuted(event))
-
-  const items = $derived(
-    groupNotifications(
-      $events.filter(event => isFromSomeoneElse(event) && $isHomeNotification(event)),
-    ),
-  )
+  const items = $derived(groupNotifications($events.filter($isHomeNotification)))
 
   const loading = $derived(isFeedLoading($older))
   const exhausted = $derived($older?.status === "exhausted")

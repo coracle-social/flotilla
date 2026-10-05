@@ -44,7 +44,7 @@ import {Chats} from "@app/chats"
 import {dufflepud, DUFFLEPUD_URL, ENABLE_ZAPS} from "@app/env"
 import {spaceSupportsRooms} from "@app/relays"
 import {activeSpaceUrls} from "@app/rooms"
-import {getNotificationRef, isNotificationTarget, Notes} from "@app/social"
+import {getNotificationRef, isEventMuted, isNotificationTarget, Notes} from "@app/social"
 import {getHttpAuthHeader} from "@app/signer"
 import {kv} from "@app/storage"
 import {notificationSettings} from "@app/push/adapters/common"
@@ -478,22 +478,26 @@ const homeNotificationTargets = derived(
   new Map() as EventsById,
 )
 
-// A notification nobody could draw an entry for counts for nothing, badge and tab alike.
+// The badge and the tab count the same thing: somebody else's doing to a note an entry can be drawn around.
 export const isHomeNotification = derived(
-  homeNotificationTargets,
-  $targets => (event: TrustedEvent) => {
-    const ref = getNotificationRef(event)
-    const target = ref && $targets.get(ref.id)
+  [app, homeNotificationTargets, isEventMuted],
+  ([$app, $targets, $isEventMuted]) => {
+    // A zap receipt is signed by an lnurl server rather than by the zapper, so neither test reads it.
+    const isFromSomeoneElse = (event: TrustedEvent) =>
+      event.kind === ZAP_RECEIPT || (event.pubkey !== $app.user?.pubkey && !$isEventMuted(event))
 
-    return Boolean(target && isNotificationTarget(target))
+    return (event: TrustedEvent) => {
+      const ref = getNotificationRef(event)
+      const target = ref && $targets.get(ref.id)
+
+      return Boolean(target && isNotificationTarget(target) && isFromSomeoneElse(event))
+    }
   },
 )
 
-// A reply of the user's own tags them along with everyone else in the thread.
 const latestHomeNotification = derived(
-  [app, homeNotificationCandidates, isHomeNotification],
-  ([$app, $candidates, $isHomeNotification]) =>
-    $candidates.find(event => event.pubkey !== $app.user?.pubkey && $isHomeNotification(event)),
+  [homeNotificationCandidates, isHomeNotification],
+  ([$candidates, $isHomeNotification]) => $candidates.find($isHomeNotification),
 )
 
 export const homeNotificationsUnread = derived(

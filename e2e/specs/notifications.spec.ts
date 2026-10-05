@@ -1,7 +1,16 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
 import {POLL, displayRelayUrl} from "@welshman/util"
-import {Comment, FollowList, Note, Poll, Reaction, SearchRelayList, Thread} from "@welshman/domain"
+import {
+  Comment,
+  FollowList,
+  MuteList,
+  Note,
+  Poll,
+  Reaction,
+  SearchRelayList,
+  Thread,
+} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
   composer,
@@ -521,6 +530,7 @@ test("US-141 read notifications on home", async ({seed, as}) => {
 
 test("US-141 leave what the tab cannot draw out of its badge", async ({seed, as}) => {
   const asked = "where is the sextant"
+  const mine = "the chart table drawer, under the almanac"
 
   await seed(({relay, open, user, at}) => {
     const space = relay("space")
@@ -538,7 +548,19 @@ test("US-141 leave what the tab cannot draw out of its badge", async ({seed, as}
     indexer.relayList(user.bob, {read: [space.url, indexer.url], write: [space.url, indexer.url]})
     indexer.profile(user.bob, {name: "Bob Barker"})
 
+    indexer.relayList(user.carol, {
+      read: [space.url, indexer.url],
+      write: [space.url, indexer.url],
+    })
+
+    indexer.profile(user.carol, {name: "Carol Carlson"})
+
+    indexer.event(user.alice, () =>
+      indexer.kind(MuteList).writer().mutePublicly(user.carol.pubkey).renderTemplate(),
+    )
+
     const message = space.message(user.alice, "general", asked, at(2, HOUR))
+    const note = indexer.note(user.alice, mine, at(2, HOUR))
 
     // On a relay she reads from, so where it was seen is no reason to leave it out.
     indexer.event(
@@ -552,6 +574,19 @@ test("US-141 leave what the tab cannot draw out of its badge", async ({seed, as}
           .renderTemplate(),
       at(1, HOUR),
     )
+
+    // A note of hers an entry could be drawn around, reacted to by somebody she has muted.
+    indexer.event(
+      user.carol,
+      () =>
+        indexer
+          .kind(Reaction)
+          .writer()
+          .setEvent(note.event)
+          .setContent("\u{1f44d}")
+          .renderTemplate(),
+      at(30, MINUTE),
+    )
   })
 
   const page = await as(users.alice, "/home")
@@ -561,7 +596,7 @@ test("US-141 leave what the tab cannot draw out of its badge", async ({seed, as}
 
   await notifications.click()
 
-  // The tab is a note and what was done to it, and a chat message is neither.
+  // Neither a reaction to a chat message nor anything a muted person does can be an entry here.
   await expect(network.getByText("Nothing here yet")).toBeVisible({timeout: 20_000})
 
   // Nothing marked the tab read, since an empty tab holds nothing to read.
