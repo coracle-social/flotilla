@@ -315,6 +315,13 @@ gets.
 An open relay's url reads before seeding has run, unlike a space's, because a relay list has to name
 the relay a note is seeded on.
 
+### A list is seeded on every relay its author writes to
+
+A read resolves three of the author's write relays and no more, so a list seeded on one of four is
+missed one read in four and the spec reds at random. Seed a follow list on each relay the scenario
+serves, the way a client publishing one does. A user with three write relays or fewer never meets
+this, which is why most specs get away with naming the indexer alone.
+
 ### Why a reader has to name the relays it reads from
 
 zooid answers no REQ without NIP-42, whatever `public_read` says, and `authPolicy` is conservative:

@@ -12,7 +12,14 @@ import {
 } from "@welshman/util"
 import type {HashedEvent} from "@welshman/util"
 import {Nip59} from "@welshman/signer"
-import {DirectMessage, EventWriter, MessagingRelayList, Profile, RelayList} from "@welshman/domain"
+import {
+  DirectMessage,
+  EventWriter,
+  FollowList,
+  MessagingRelayList,
+  Profile,
+  RelayList,
+} from "@welshman/domain"
 import type {BaseEventReader, ConfiguredKind, EventQuery, KindFactory} from "@welshman/domain"
 import type {RoomOptions, TestRelay} from "../zooid/types"
 import type {Zooid} from "../zooid/relay"
@@ -49,6 +56,8 @@ export type SeededSpace = {
   message(user: TestUser, h: string, content: string, createdAt?: number): SeededEvent
   reply(user: TestUser, parent: SeededEvent, content: string, createdAt?: number): SeededEvent
   profile(user: TestUser, values: ProfileValues, createdAt?: number): SeededEvent
+  // A follow list belongs on every relay its author writes to, so a space takes one too.
+  follows(user: TestUser, follows: TestUser[], createdAt?: number): SeededEvent
   // Outbox routing resolves everything about a person through their relay list.
   relayList(user: TestUser, urls?: RelayListUrls, createdAt?: number): SeededEvent
   // Having one is what makes a person reachable, so messaging being off is a person without one.
@@ -159,6 +168,21 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
     factory: KindFactory<R, W, Q>,
   ) => factory.configure(context)
 
+  const follows = (user: TestUser, followed: TestUser[], createdAt = startedAt) =>
+    event(
+      user,
+      () => {
+        const writer = kind(FollowList).writer()
+
+        for (const {pubkey} of followed) {
+          writer.follow(pubkey)
+        }
+
+        return writer.renderTemplate()
+      },
+      createdAt,
+    )
+
   const relayList = (
     user: TestUser,
     {read = [url], write = [url]}: RelayListUrls = {},
@@ -213,6 +237,7 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
     message,
     reply,
     profile,
+    follows,
     relayList,
     messagingRelayList,
     event,

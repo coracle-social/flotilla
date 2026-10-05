@@ -410,7 +410,11 @@ test("US-117 read the network feed when one relay never answers", async ({seed, 
       read: [space.url, indexer.url],
       write: [space.url, indexer.url, outbox.url, stalled],
     })
+
+    // A read resolves three of her four write relays, so her follow list is on all of them.
+    space.follows(user.alice, [user.bob])
     indexer.follows(user.alice, [user.bob])
+    outbox.follows(user.alice, [user.bob])
 
     // Bob writes to both, so the feed asks both, and one of them is never going to answer.
     indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url, stalled]})
