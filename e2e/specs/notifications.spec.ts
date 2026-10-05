@@ -519,6 +519,55 @@ test("US-141 read notifications on home", async ({seed, as}) => {
   await expect(dialog.getByText(reply)).toBeVisible()
 })
 
+test("US-141 leave what the tab cannot draw out of its badge", async ({seed, as}) => {
+  const asked = "where is the sextant"
+
+  await seed(({relay, open, user, at}) => {
+    const space = relay("space")
+    const indexer = open("indexer")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url],
+      write: [space.url, indexer.url],
+    })
+
+    indexer.relayList(user.bob, {read: [space.url, indexer.url], write: [space.url, indexer.url]})
+    indexer.profile(user.bob, {name: "Bob Barker"})
+
+    const message = space.message(user.alice, "general", asked, at(2, HOUR))
+
+    // On a relay she reads from, so where it was seen is no reason to leave it out.
+    indexer.event(
+      user.bob,
+      () =>
+        indexer
+          .kind(Reaction)
+          .writer()
+          .setEvent(message.event)
+          .setContent("\u{1f389}")
+          .renderTemplate(),
+      at(1, HOUR),
+    )
+  })
+
+  const page = await as(users.alice, "/home")
+
+  const network = page.getByRole("region", {name: "Network"})
+  const notifications = network.getByRole("button", {name: "Notifications"})
+
+  await notifications.click()
+
+  // The tab is a note and what was done to it, and a chat message is neither.
+  await expect(network.getByText("Nothing here yet")).toBeVisible({timeout: 20_000})
+
+  // Nothing marked the tab read, since an empty tab holds nothing to read.
+  await expect(notifications.getByRole("img", {name: "Unread"})).toHaveCount(0)
+})
+
 // A url the container does not serve, so its nip-11 document never arrives and nothing knows what it supports.
 const unreachableRelayUrl = "wss://unreachable.test/"
 

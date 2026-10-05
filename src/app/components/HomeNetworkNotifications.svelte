@@ -13,6 +13,7 @@
     getHomeNotificationRelays,
     homeNotificationFilters,
     homeNotificationsUnread,
+    isHomeNotification,
     readHomeNotifications,
   } from "@app/notifications"
   import {groupNotifications, isEventMuted} from "@app/social"
@@ -30,7 +31,11 @@
   const isFromSomeoneElse = (event: TrustedEvent) =>
     event.kind === ZAP_RECEIPT || (event.pubkey !== $user.pubkey && !$isEventMuted(event))
 
-  const items = $derived(groupNotifications($events.filter(isFromSomeoneElse)))
+  const items = $derived(
+    groupNotifications(
+      $events.filter(event => isFromSomeoneElse(event) && $isHomeNotification(event)),
+    ),
+  )
 
   const loading = $derived(isFeedLoading($older))
   const exhausted = $derived($older?.status === "exhausted")

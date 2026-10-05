@@ -1909,6 +1909,8 @@ Acceptance:
 - An entry whose note is itself a reply links to the note it answers and to the
   root of its thread.
 - A reply shown under an entry opens its own note when she clicks it.
+- The tab holds notes and what was done to them, so a reaction to one of her
+  room messages lights neither the tab nor its badge.
 
 ### US-133 — Keep the search relays that work
 

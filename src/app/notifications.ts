@@ -6,17 +6,19 @@ import {
   first,
   identity,
   groupBy,
+  noop,
   now,
   remove,
+  removeUndefined,
   sortBy,
   throttle,
   parseJson,
   spec,
   gt,
   int,
+  uniqBy,
   HOUR,
 } from "@welshman/lib"
-import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {
   COMMENT,
@@ -25,12 +27,14 @@ import {
   REACTION,
   ZAP_RECEIPT,
   addMinimalFallbacks,
+  getIdFilters,
   sortEventsDesc,
   tagSpec,
   tagValue,
   userInbox,
 } from "@welshman/util"
 import {synced, throttled, withGetter} from "@welshman/store"
+import type {EventsById} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
 import {app, fromApp, network, router} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
@@ -40,6 +44,7 @@ import {Chats} from "@app/chats"
 import {dufflepud, DUFFLEPUD_URL, ENABLE_ZAPS} from "@app/env"
 import {spaceSupportsRooms} from "@app/relays"
 import {activeSpaceUrls} from "@app/rooms"
+import {getNotificationRef, isNotificationTarget, Notes} from "@app/social"
 import {getHttpAuthHeader} from "@app/signer"
 import {kv} from "@app/storage"
 import {notificationSettings} from "@app/push/adapters/common"
@@ -424,11 +429,11 @@ export const getHomeNotificationRelays = () =>
     .resolve([userInbox()])
     .then(scenario => scenario.policy(addMinimalFallbacks).getUrls())
 
-// The tab's own feed runs only while it is showing, so nothing else would ever ask for one.
+// Nothing else asks for these, and the newest of them may be about something the tab cannot draw.
 export const loadHomeNotifications = async (pubkey: string) =>
   network.get().loadLenient({
     relays: await getHomeNotificationRelays(),
-    filters: homeNotificationFilters(pubkey).map(filter => ({...filter, limit: 1})),
+    filters: homeNotificationFilters(pubkey).map(filter => ({...filter, limit: 20})),
   })
 
 // The notifications tab is no route of its own, so what has been read sits under a path nothing navigates to.
@@ -436,19 +441,60 @@ const homeNotificationsPath = "/home/notifications"
 
 export const readHomeNotifications = () => setChecked(homeNotificationsPath)
 
+// Everything that could be an entry in the tab, newest first, whether or not one could be drawn.
+const homeNotificationCandidates = derived(
+  app,
+  ($app, set: (events: TrustedEvent[]) => void) => {
+    const pubkey = $app.user?.pubkey
+
+    if (pubkey) {
+      return $app.use(Events).desc(homeNotificationFilters(pubkey)).$.subscribe(set)
+    }
+
+    set([])
+  },
+  [] as TrustedEvent[],
+)
+
+// The note each entry is about, loaded here rather than per entry so the tab opens on what it has.
+const homeNotificationTargets = derived(
+  [app, throttled(1000, homeNotificationCandidates)],
+  ([$app, $candidates], set: (targets: EventsById) => void) => {
+    const refs = uniqBy(ref => ref.id, removeUndefined($candidates.map(getNotificationRef)))
+
+    if (refs.length > 0) {
+      for (const {id, author, relays} of refs) {
+        $app.use(Notes).load({id, author, relays}).catch(noop)
+      }
+
+      return $app
+        .use(Events)
+        .byId(getIdFilters(refs.map(ref => ref.id)))
+        .$.subscribe(set)
+    }
+
+    set(new Map())
+  },
+  new Map() as EventsById,
+)
+
+// A notification nobody could draw an entry for counts for nothing, badge and tab alike.
+export const isHomeNotification = derived(
+  homeNotificationTargets,
+  $targets => (event: TrustedEvent) => {
+    const ref = getNotificationRef(event)
+    const target = ref && $targets.get(ref.id)
+
+    return Boolean(target && isNotificationTarget(target))
+  },
+)
+
 // A reply of the user's own tags them along with everyone else in the thread.
-const latestHomeNotification = derived(app, ($app, set: (event: Maybe<TrustedEvent>) => void) => {
-  const pubkey = $app.user?.pubkey
-
-  if (pubkey) {
-    return $app
-      .use(Events)
-      .desc(homeNotificationFilters(pubkey))
-      .$.subscribe(events => set(events.find(event => event.pubkey !== pubkey)))
-  }
-
-  set(undefined)
-})
+const latestHomeNotification = derived(
+  [app, homeNotificationCandidates, isHomeNotification],
+  ([$app, $candidates, $isHomeNotification]) =>
+    $candidates.find(event => event.pubkey !== $app.user?.pubkey && $isHomeNotification(event)),
+)
 
 export const homeNotificationsUnread = derived(
   [latestHomeNotification, checked],

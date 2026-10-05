@@ -259,7 +259,7 @@ export type HomeNotification = {
 const isReplyKind = (event: TrustedEvent) => event.kind === NOTE || event.kind === COMMENT
 
 // What a notification is about: the note it answers or reacts to, or itself when it is a mention.
-const getNotificationRef = (event: TrustedEvent): Maybe<ReplyRef> => {
+export const getNotificationRef = (event: TrustedEvent): Maybe<ReplyRef> => {
   if (isReplyKind(event)) {
     const {parent, root} = getReplyRefs(event)
 
@@ -271,6 +271,11 @@ const getNotificationRef = (event: TrustedEvent): Maybe<ReplyRef> => {
 
   return tag && {id: tag[1], author: tagValue(tagSpec("p"), event.tags), relays: relayHint(tag[2])}
 }
+
+// An entry is a note and what was done to it, so nothing else can be the note one is drawn around.
+export const isNotificationTarget = (event: TrustedEvent) =>
+  event.kind === NOTE ||
+  (event.kind === COMMENT && reader(Comment)(event).root().kind === String(NOTE))
 
 // Everything done to one note within a few hours of each other collapses into a single entry.
 export const groupNotifications = (events: TrustedEvent[]) => {
