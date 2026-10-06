@@ -38,10 +38,10 @@
           Browse spaces
         </Link>
       </div>
-      <div class="flex min-w-0 flex-col gap-3 @3xl:flex-row @3xl:items-start">
+      <div class="flex min-w-0 flex-col gap-0 @3xl:flex-row @3xl:items-start md:gap-3">
         <div class="contents @3xl:flex @3xl:min-w-0 @3xl:flex-1 @3xl:flex-col @3xl:gap-3">
           <HomeInbox />
-          <HomeNetwork />
+          <HomeNetwork class="max-md:border-t" />
         </div>
         <div class="contents @3xl:flex @3xl:w-80 @3xl:shrink-0 @3xl:flex-col @3xl:gap-3">
           <HomeHealthChecks class="@max-3xl:hidden" />

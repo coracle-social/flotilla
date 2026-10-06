@@ -101,17 +101,17 @@
           <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
         </PrimaryNavItem>
       {/if}
-      {#if PLATFORM_RELAYS.length === 0}
-        <PrimaryNavItem href="/spaces">
-          <ImageIcon alt="All Spaces" src={Compass} size={8} />
-        </PrimaryNavItem>
-      {/if}
       <PrimaryNavItem onclick={showSearch}>
         <ImageIcon alt="Search" src={Magnifier} size={8} />
       </PrimaryNavItem>
       <PrimaryNavItem href="/chat" onclick={chatHandler} notification={$notifications.has("/chat")}>
         <ImageIcon alt="Messages" src={Letter} size={8} />
       </PrimaryNavItem>
+      {#if PLATFORM_RELAYS.length === 0}
+        <PrimaryNavItem href="/spaces">
+          <ImageIcon alt="All Spaces" src={Compass} size={8} />
+        </PrimaryNavItem>
+      {/if}
     </div>
     <PrimaryNavItem onclick={showSettingsMenu} aria-label="Settings">
       {#if $userProfile?.picture()}
