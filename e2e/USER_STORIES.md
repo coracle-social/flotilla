@@ -162,8 +162,8 @@ Acceptance:
 - Typing a term filters the list live, matching name, url, or description.
 - Clicking a space she hasn't joined opens a join prompt; a space in the rail
   opens.
-- Dragging a space above another in the rail reorders the list immediately, and
-  the order survives a reload.
+- Dragging a space above another in the rail, with a mouse or a finger, reorders
+  the list immediately, and the order survives a reload.
 
 ### US-010 — Join a space from an invite link
 

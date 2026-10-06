@@ -13,7 +13,18 @@ const cachedFirstSpace = async (page: Page, pubkey: string) => {
 }
 
 // The rail shows icons and no text, so a row is read by the tooltip naming its relay.
-const railSpaces = (page: Page) => page.locator(".primary-nav [draggable=true]")
+const railSpaces = (page: Page) => page.locator(".primary-nav [data-drag-key]")
+
+// A pointer drag is driven by coordinates, so a row is measured rather than located.
+const railCenter = async (page: Page, index: number) => {
+  const box = await railSpaces(page).nth(index).boundingBox()
+
+  if (!box) {
+    throw new Error(`The rail has no space at index ${index}`)
+  }
+
+  return {x: box.x + box.width / 2, y: box.y + box.height / 2}
+}
 
 const expectRailFirst = (page: Page, name: string) =>
   expect(railSpaces(page).first().locator("[data-tip]")).toHaveAttribute(
@@ -73,12 +84,17 @@ test("US-009 browse and search spaces, and reorder your own", async ({seed, as})
 
   await expectRailFirst(page, space.name)
 
-  // Chromium's synthetic drag starts and moves it but never delivers the drop the reorder needs.
-  const dataTransfer = await page.evaluateHandle(() => new DataTransfer())
-  const rail = railSpaces(page)
+  const start = await railCenter(page, 0)
+  const end = await railCenter(page, 1)
 
-  await rail.nth(0).dispatchEvent("dragstart", {dataTransfer})
-  await rail.nth(1).dispatchEvent("drop", {dataTransfer})
+  await page.mouse.move(start.x, start.y)
+  await page.mouse.down()
+  await page.mouse.move(end.x, end.y, {steps: 5})
+
+  // The rows flip into their new slots over 300ms, and one more move reads the settled list.
+  await page.waitForTimeout(400)
+  await page.mouse.move(end.x, end.y + 1)
+  await page.mouse.up()
 
   await expectReordered(page, users.alice.pubkey, other)
 
