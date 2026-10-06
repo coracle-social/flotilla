@@ -66,9 +66,14 @@
     loading = true
 
     try {
-      await publishSettings($settings)
+      const publication = await publishSettings($settings)
+      const error = (await publication.settled()).getError()
 
-      pushToast({message: "Your settings have been saved!"})
+      if (error) {
+        pushToast({theme: "error", message: error})
+      } else {
+        pushToast({message: "Your settings have been saved!"})
+      }
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to save your settings."})

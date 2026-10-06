@@ -49,7 +49,7 @@
     loading = true
 
     try {
-      await publishSettings($settings)
+      const publications = [await publishSettings($settings)]
 
       const previous = $userMuteList?.pubkeys() ?? []
       const added = difference(mutedPubkeys, previous)
@@ -57,17 +57,30 @@
 
       // Private and non-pubkey mutes aren't shown here, so only the pubkeys the user changed are touched.
       if (added.length > 0 || removed.length > 0) {
-        await $muteLists
-          .update(writer => {
-            added.forEach(pubkey => writer.mutePublicly(pubkey))
-            removed.forEach(pubkey => writer.unmute(pubkey))
-          })
-          .then(publish)
+        publications.push(
+          await $muteLists
+            .update(writer => {
+              added.forEach(pubkey => writer.mutePublicly(pubkey))
+              removed.forEach(pubkey => writer.unmute(pubkey))
+            })
+            .then(publish),
+        )
       }
 
-      await $blossomServerLists.setUrls($state.snapshot(blossomServers)).then(publish)
+      publications.push(
+        await $blossomServerLists.setUrls($state.snapshot(blossomServers)).then(publish),
+      )
 
-      pushToast({message: "Your settings have been saved!"})
+      const errors = await Promise.all(
+        publications.map(async publication => (await publication.settled()).getError()),
+      )
+      const error = errors.find(Boolean)
+
+      if (error) {
+        pushToast({theme: "error", message: error})
+      } else {
+        pushToast({message: "Your settings have been saved!"})
+      }
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to save your settings."})

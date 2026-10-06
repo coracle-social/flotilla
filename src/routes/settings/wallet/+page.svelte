@@ -122,7 +122,12 @@
         })
       }
 
-      await publishSettings({zap_amounts: $settings.zap_amounts})
+      const publication = await publishSettings({zap_amounts: $settings.zap_amounts})
+      const error = (await publication.settled()).getError()
+
+      if (error) {
+        return pushToast({theme: "error", message: error})
+      }
 
       pushToast({message: "Your zap amounts have been saved!"})
     } catch (e) {
