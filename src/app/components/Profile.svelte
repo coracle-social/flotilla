@@ -33,7 +33,7 @@
   const copyPubkey = () => clip(nip19.npubEncode(pubkey))
 </script>
 
-<div class="flex max-w-full items-start gap-2">
+<div class="flex max-w-full min-w-0 items-start gap-2">
   {#if inert}
     <span class="py-1">
       <ProfileCircle {pubkey} {url} size={avatarSize} />
@@ -44,13 +44,15 @@
     </Button>
   {/if}
   <div class="flex min-w-0 flex-col">
-    <div class="flex items-center gap-2">
+    <div class="flex min-w-0 items-center gap-2">
       {#if inert}
-        <span class="text-bold overflow-hidden text-ellipsis whitespace-nowrap">
+        <span class="text-bold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
           {$profileDisplay}
         </span>
       {:else}
-        <Button onclick={openProfile} class="text-bold overflow-hidden text-ellipsis">
+        <Button
+          onclick={openProfile}
+          class="text-bold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
           {$profileDisplay}
         </Button>
       {/if}
