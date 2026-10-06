@@ -49,7 +49,7 @@
   {#snippet action()}
     <Button aria-label="Create post" class="button button-primary button-xs" onclick={createPost}>
       <Icon icon={PenNewSquare} size={4} />
-      <span class="hidden sm:inline">Create post</span>
+      <span class="hidden @sm:inline">Create post</span>
     </Button>
   {/snippet}
   {#if tab === "recent"}

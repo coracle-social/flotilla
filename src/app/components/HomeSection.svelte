@@ -17,7 +17,7 @@
 <section
   aria-label={title}
   class="flex min-w-0 flex-col overflow-hidden border-line bg-surface md:rounded-3xl md:border {className}">
-  <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+  <div class="@container flex flex-wrap items-center justify-between gap-3 px-4 py-3">
     {#if nav}
       {@render nav()}
     {:else}
