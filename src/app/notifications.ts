@@ -17,6 +17,9 @@ import {
   gt,
   int,
   uniqBy,
+  secondsToDate,
+  formatTimestampAsTime,
+  LOCALE,
   HOUR,
 } from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
@@ -380,6 +383,12 @@ export const inboxConversations = derived(
       ),
     ),
 )
+
+const shortDate = (ts: number) =>
+  Intl.DateTimeFormat(LOCALE, {dateStyle: "short"}).format(secondsToDate(ts))
+
+export const displayInboxTimestamp = (ts: number) =>
+  shortDate(ts) === shortDate(now()) ? formatTimestampAsTime(ts) : shortDate(ts)
 
 export type SpaceContent = {
   url: string

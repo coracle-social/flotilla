@@ -32,7 +32,7 @@
   {/snippet}
   <HealthCheckList class="bg-surface-less @2xl:hidden" />
   {#if conversations.length > 0}
-    <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4">
+    <div class="flex flex-col divide-y divide-line border-t border-line bg-surface-less">
       {#each conversations as conversation (conversation.path)}
         <HomeInboxItem {conversation} />
       {/each}

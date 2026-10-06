@@ -1856,12 +1856,12 @@ that I don't have to walk every space to find out.
 
 Acceptance:
 
-- The inbox lists each room and conversation with unread activity as a card,
+- The inbox lists each room and conversation with unread activity as a row,
   naming the room and space and showing the latest message, newest first. It
   holds messages only, and only while they are unread.
-- Activity is a row of one card per space, below the conversations in the same
-  section, counting what that space has waiting that isn't a message - threads,
-  events, classifieds and the rest. A card disappears once its space is read.
+- Activity is one row per space under the conversations in the same section,
+  counting what that space has waiting that isn't a message - threads, events,
+  classifieds and the rest. A row disappears once its space is read.
 - "You're all caught up" shows only when there is neither a conversation nor a
   space with activity.
 - A conversation carries an unread dot, and "Mark all read" empties the inbox.

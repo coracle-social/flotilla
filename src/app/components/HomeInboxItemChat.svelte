@@ -1,7 +1,7 @@
 <script lang="ts">
   import {remove, uniq} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import HomeInboxItemCard from "@app/components/HomeInboxItemCard.svelte"
+  import HomeInboxItemRow from "@app/components/HomeInboxItemRow.svelte"
   import ChatTitle from "@app/components/ChatTitle.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import {user} from "@app/core"
@@ -17,7 +17,7 @@
   const others = $derived(uniq(remove($user.pubkey, pubkeys)))
 </script>
 
-<HomeInboxItemCard {path} {event}>
+<HomeInboxItemRow {path} {event}>
   {#snippet icon()}
     <ProfileCircle pubkey={others[0] || $user.pubkey} size={9} class="shrink-0" />
   {/snippet}
@@ -27,4 +27,4 @@
   {#snippet subtitle()}
     direct message
   {/snippet}
-</HomeInboxItemCard>
+</HomeInboxItemRow>

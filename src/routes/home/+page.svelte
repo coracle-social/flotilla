@@ -28,7 +28,7 @@
 <Page>
   <PageContent bind:element class="@container p-0 md:p-4">
     <div class="mx-auto flex w-full max-w-[1200px] min-w-0 flex-col gap-3">
-      <div class="flex items-center justify-between gap-4 px-4 py-3 md:px-2 md:pt-0">
+      <div class="hidden items-center justify-between gap-4 md:flex md:px-2 md:pt-0">
         <h1 class="flex items-center gap-2 text-xl font-bold">
           <Icon icon={Home} size={6} />
           Home

@@ -101,6 +101,11 @@
           <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
         </PrimaryNavItem>
       {/if}
+      {#if PLATFORM_RELAYS.length === 0}
+        <PrimaryNavItem href="/spaces">
+          <ImageIcon alt="All Spaces" src={Compass} size={8} />
+        </PrimaryNavItem>
+      {/if}
       <PrimaryNavItem onclick={showSearch}>
         <ImageIcon alt="Search" src={Magnifier} size={8} />
       </PrimaryNavItem>

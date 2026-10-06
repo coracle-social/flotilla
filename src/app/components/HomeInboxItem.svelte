@@ -1,5 +1,5 @@
 <script lang="ts">
-  import HomeInboxItemCard from "@app/components/HomeInboxItemCard.svelte"
+  import HomeInboxItemRow from "@app/components/HomeInboxItemRow.svelte"
   import HomeInboxItemChat from "@app/components/HomeInboxItemChat.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
@@ -16,7 +16,7 @@
 </script>
 
 {#if url}
-  <HomeInboxItemCard {path} {url} {event}>
+  <HomeInboxItemRow {path} {url} {event}>
     {#snippet icon()}
       <RelayIcon {url} size={9} class="shrink-0" />
     {/snippet}
@@ -30,7 +30,7 @@
     {#snippet subtitle()}
       <RelayName {url} />
     {/snippet}
-  </HomeInboxItemCard>
+  </HomeInboxItemRow>
 {:else}
   <HomeInboxItemChat {path} {pubkeys} {event} />
 {/if}
