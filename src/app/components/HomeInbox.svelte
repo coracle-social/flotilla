@@ -30,7 +30,7 @@
       <Button class="button button-neutral button-xs" onclick={markAllRead}>Mark all read</Button>
     {/if}
   {/snippet}
-  <HealthCheckList class="bg-surface-less @2xl:hidden" />
+  <HealthCheckList class="bg-surface-less @3xl:hidden" />
   {#if conversations.length > 0}
     <div class="flex flex-col divide-y divide-line border-t border-line bg-surface-less">
       {#each conversations as conversation (conversation.path)}

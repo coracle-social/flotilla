@@ -38,15 +38,15 @@
           Browse spaces
         </Link>
       </div>
-      <div class="flex min-w-0 flex-col gap-3 @2xl:flex-row @2xl:items-start">
-        <div class="contents @2xl:flex @2xl:min-w-0 @2xl:flex-1 @2xl:flex-col @2xl:gap-3">
+      <div class="flex min-w-0 flex-col gap-3 @3xl:flex-row @3xl:items-start">
+        <div class="contents @3xl:flex @3xl:min-w-0 @3xl:flex-1 @3xl:flex-col @3xl:gap-3">
           <HomeInbox />
           <HomeNetwork />
         </div>
-        <div class="contents @2xl:flex @2xl:w-80 @2xl:shrink-0 @2xl:flex-col @2xl:gap-3">
-          <HomeHealthChecks class="@max-2xl:hidden" />
+        <div class="contents @3xl:flex @3xl:w-80 @3xl:shrink-0 @3xl:flex-col @3xl:gap-3">
+          <HomeHealthChecks class="@max-3xl:hidden" />
           {#if HOSTING_ENABLED}
-            <HomeHosting class="@max-2xl:hidden" />
+            <HomeHosting class="@max-3xl:hidden" />
           {/if}
         </div>
       </div>
