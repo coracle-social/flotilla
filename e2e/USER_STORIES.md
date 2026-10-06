@@ -1866,9 +1866,10 @@ Acceptance:
   space with activity.
 - A conversation carries an unread dot, and "Mark all read" empties the inbox.
 - Selecting a conversation opens it.
-- Relay health checks are listed alongside the inbox, each naming what is wrong.
-  Applying one opens a review naming the relays it adds and removes, and
-  publishes nothing until it is confirmed.
+- Relay health checks name what is wrong and sit in their own panel beside the
+  inbox, or at the top of the inbox itself when the page is too narrow for two
+  columns. Applying one opens a review naming the relays it adds and removes,
+  and publishes nothing until it is confirmed.
 - Hosting is offered whether or not she hosts a space: a shortcut to the hosting
   panel when she has one, an invitation to start one when she doesn't.
 

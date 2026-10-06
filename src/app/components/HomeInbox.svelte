@@ -7,6 +7,7 @@
   import Button from "@lib/components/Button.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HomeActivity from "@app/components/HomeActivity.svelte"
+  import HealthCheckList from "@app/components/HealthCheckList.svelte"
   import HomeInboxItem from "@app/components/HomeInboxItem.svelte"
   import {navigate} from "@app/modal"
   import {
@@ -29,6 +30,7 @@
       <Button class="button button-neutral button-xs" onclick={markAllRead}>Mark all read</Button>
     {/if}
   {/snippet}
+  <HealthCheckList class="bg-surface-less @2xl:hidden" />
   {#if conversations.length > 0}
     <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4">
       {#each conversations as conversation (conversation.path)}

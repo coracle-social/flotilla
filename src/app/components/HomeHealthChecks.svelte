@@ -1,38 +1,21 @@
 <script lang="ts">
-  import Stars from "@assets/icons/stars.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import Stethoscope from "@assets/icons/stethoscope.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Button from "@lib/components/Button.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
-  import HealthCheckItem from "@app/components/HealthCheckItem.svelte"
-  import HealthCheckReview from "@app/components/HealthCheckReview.svelte"
-  import type {HealthCheck} from "@app/healthChecks"
+  import HealthCheckList from "@app/components/HealthCheckList.svelte"
   import {healthChecks} from "@app/healthChecks"
-  import {pushModal} from "@app/modal"
 
-  const pending = $healthChecks.pending.$
-
-  // Changes are confirmed first, and fixes that change nothing to review run once they're saved.
-  const review = (checks: HealthCheck[]) => {
-    const plans = checks.map(check => $healthChecks.plan(check))
-    const reviewed = plans.filter(plan => plan.changes.length > 0)
-    const applyRest = () =>
-      plans.filter(plan => plan.changes.length === 0).forEach(plan => plan.apply())
-
-    if (reviewed.length > 0) {
-      pushModal(HealthCheckReview, {plans: reviewed, next: applyRest})
-    } else {
-      applyRest()
-    }
+  type Props = {
+    class?: string
   }
 
-  const fix = (healthCheck: HealthCheck) => () => review([healthCheck])
+  const {class: className = ""}: Props = $props()
 
-  const reviewAll = () => review($pending)
+  const pending = $healthChecks.pending.$
 </script>
 
-<HomeSection title="Health checks" icon={Stethoscope}>
+<HomeSection title="Health checks" icon={Stethoscope} class={className}>
   {#snippet action()}
     {#if $pending.length > 0}
       <span class="badge badge-warning">{$pending.length} open</span>
@@ -43,22 +26,6 @@
       <Icon icon={CheckCircle} size={4} />
       Your connection to the network looks healthy.
     </p>
-  {:else}
-    <div class="flex flex-col divide-y divide-line border-t border-line">
-      {#each $pending as healthCheck (healthCheck.id)}
-        <HealthCheckItem
-          title={healthCheck.title}
-          description={healthCheck.description}
-          onfix={fix(healthCheck)} />
-      {/each}
-      {#if $pending.length > 1}
-        <div class="flex justify-center p-3">
-          <Button class="button button-primary button-sm" onclick={reviewAll}>
-            <Icon icon={Stars} size={4} />
-            Apply all recommendations
-          </Button>
-        </div>
-      {/if}
-    </div>
   {/if}
+  <HealthCheckList />
 </HomeSection>

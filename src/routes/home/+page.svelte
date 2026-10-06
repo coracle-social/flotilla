@@ -39,14 +39,12 @@
         </Link>
       </div>
       <div class="flex min-w-0 flex-col gap-3 @2xl:flex-row @2xl:items-start">
-        <!-- Both columns are `contents` on a narrow page, which puts every section in one flow and lets
-             the rail sit between the day's activity and the feed that would otherwise bury it. -->
         <div class="contents @2xl:flex @2xl:min-w-0 @2xl:flex-1 @2xl:flex-col @2xl:gap-3">
           <HomeInbox />
-          <HomeNetwork class="order-last @2xl:order-none" />
+          <HomeNetwork />
         </div>
         <div class="contents @2xl:flex @2xl:w-80 @2xl:shrink-0 @2xl:flex-col @2xl:gap-3">
-          <HomeHealthChecks />
+          <HomeHealthChecks class="@max-2xl:hidden" />
           {#if HOSTING_ENABLED}
             <HomeHosting class="@max-2xl:hidden" />
           {/if}
