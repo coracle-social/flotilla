@@ -99,8 +99,13 @@
 
         return params.onShow?.(instance)
       },
-      onHidden: (instance: Instance) => {
+      // At hide rather than hidden, so a click mid-fade reopens instead of toggling closed.
+      onHide: (instance: Instance) => {
         visible = false
+
+        return params.onHide?.(instance)
+      },
+      onHidden: (instance: Instance) => {
         document.removeEventListener("keydown", onKeyDown)
         document.removeEventListener("mousemove", onMouseMove)
 

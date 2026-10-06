@@ -3,9 +3,10 @@ import {HOUR, ms} from "@welshman/lib"
 import {
   DEFAULT_BLOSSOM_ORIGIN,
   GIF_BASE64,
+  attachFile,
   chatPath,
-  chooseFile,
   composer,
+  composerAddButton,
   composerEnabled,
   dialog,
   expect,
@@ -24,11 +25,6 @@ import {
 } from "../harness"
 
 const suggestions = (page: Page) => page.locator(".tiptap-suggestions__item")
-
-// A room composer leads with a two button group: upload, then the create menu.
-const roomUploadButton = (page: Page) => page.locator(".room__compose-inner .join-item").first()
-
-const chatUploadButton = (page: Page) => page.locator("button[data-tip='Add an image']")
 
 // The reply preview and the editing indicator are the same bordered strip, each with its own X.
 const banner = (page: Page, text: string) =>
@@ -158,19 +154,19 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
   blossom.hold()
 
-  await chooseFile(alice, roomUploadButton(alice), gifFile("photo.gif"))
+  await attachFile(alice, gifFile("photo.gif"))
 
   await expect(sendButton(alice)).toBeDisabled()
-  await expect(roomUploadButton(alice)).toBeDisabled()
+  await expect(composerAddButton(alice)).toBeDisabled()
 
   // Deleting a stalled upload has to give the composer back.
   await composer(alice).press("ControlOrMeta+a")
   await composer(alice).press("Backspace")
 
   await expect(composer(alice)).not.toContainText("photo.gif")
-  await expect(roomUploadButton(alice)).toBeEnabled()
+  await expect(composerAddButton(alice)).toBeEnabled()
 
-  await chooseFile(alice, roomUploadButton(alice), gifFile("photo.gif"))
+  await attachFile(alice, gifFile("photo.gif"))
 
   await expect(sendButton(alice)).toBeDisabled()
 
@@ -194,7 +190,7 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
   await composerEnabled(alice)
 
-  await chooseFile(alice, chatUploadButton(alice), gifFile("selfie.gif"))
+  await attachFile(alice, gifFile("selfie.gif"))
 
   await expect(composer(alice)).toContainText("selfie.gif")
 
@@ -215,7 +211,7 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   // What the server refuses is what the composer refuses, in the words the server used.
   blossom.refuse("text files are not allowed here")
 
-  await chooseFile(alice, roomUploadButton(alice), {
+  await attachFile(alice, {
     name: "notes.txt",
     mimeType: "text/plain",
     buffer: Buffer.from("not an image"),
@@ -241,19 +237,19 @@ test("US-142 an upload that never answers gives up", async ({seed, as}) => {
   blossom.hold()
 
   // A text file attaches as a link rather than a node, so there is nothing to delete while it uploads.
-  await chooseFile(alice, roomUploadButton(alice), {
+  await attachFile(alice, {
     name: "notes.txt",
     mimeType: "text/plain",
     buffer: Buffer.from("not an image"),
   })
 
-  await expect(roomUploadButton(alice)).toBeDisabled()
+  await expect(composerAddButton(alice)).toBeDisabled()
 
   await expect(alice.getByRole("alert")).toContainText("notes.txt took too long to upload", {
     timeout: ms(45),
   })
 
-  await expect(roomUploadButton(alice)).toBeEnabled()
+  await expect(composerAddButton(alice)).toBeEnabled()
 })
 
 test("US-058 drafts survive navigating away", async ({seed, as}) => {

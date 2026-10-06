@@ -4,10 +4,10 @@ import {Article, Comment} from "@welshman/domain"
 import type {Page} from "@playwright/test"
 import {
   DEFAULT_BLOSSOM_ORIGIN,
+  attachFile,
   bubble,
   chatItems,
   chatPath,
-  chooseFile,
   composer,
   composerEnabled,
   expect,
@@ -487,7 +487,7 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
 
   await composer(alice).click()
   await composer(alice).pressSequentially("here is the harbour")
-  await chooseFile(alice, alice.locator("button[data-tip='Add an image']"), gifFile("harbour.gif"))
+  await attachFile(alice, gifFile("harbour.gif"))
 
   // The editor names the file the moment it is attached, and a submit while it uploads is dropped.
   await expect(composer(alice)).toContainText("harbour.gif")
@@ -514,7 +514,7 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
 
   await composer(alice).click()
   await composer(alice).pressSequentially("and one for you")
-  await chooseFile(alice, alice.locator("button[data-tip='Add an image']"), gifFile("harbour.gif"))
+  await attachFile(alice, gifFile("harbour.gif"))
 
   await expect(composer(alice)).toContainText("harbour.gif")
   await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)

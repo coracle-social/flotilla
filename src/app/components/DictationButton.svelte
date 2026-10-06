@@ -148,7 +148,7 @@
 </script>
 
 <Button
-  class="button button-primary button-circle tip tip-left h-10 w-10 min-w-10"
+  class="button button-ghost button-circle tip tip-left"
   data-tip={loading ? $localSpeechStatus.message || "Preparing dictation…" : "Record a message"}
   aria-label="Start dictation"
   disabled={loading}

@@ -239,9 +239,11 @@ body.keyboard-open .hide-on-keyboard {
 
 /* tiptap editor */
 .input-editor,
-.chat-editor,
 .note-editor {
   @apply -m-1 p-1;
+}
+.chat-editor {
+  @apply -my-1 p-1;
 }
 .tiptap {
   --tiptap-object-bg: var(--surface-more);
@@ -267,8 +269,14 @@ body.keyboard-open .hide-on-keyboard {
   @apply opacity-40;
 }
 .chat-editor .tiptap {
-  /* standard input border, kept at 1px so the :focus border swap doesn't reflow */
-  @apply bg-surface border-line rounded-3xl border border-solid;
+  @apply bg-surface rounded-3xl;
+  border: var(--border-thin) solid var(--line);
+}
+.chat-editor .tiptap:focus-within {
+  border-color: var(--primary);
+}
+.chat-editor .tiptap p.is-editor-empty:first-child::before {
+  @apply text-content-subtle opacity-100;
 }
 .note-editor .tiptap {
   @apply bg-surface block h-auto min-h-32 w-full rounded-2xl;

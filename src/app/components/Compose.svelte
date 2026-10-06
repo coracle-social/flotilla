@@ -7,8 +7,7 @@
   import {MESSAGE} from "@welshman/util"
   import type {EventContent} from "@welshman/util"
   import {escapeHtml, isMobile, preventDefault} from "@lib/html"
-  import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
-  import WidgetAdd from "@assets/icons/widget-add.svg?dataurl"
+  import Add from "@assets/icons/add.svg?dataurl"
   import Plane from "@assets/icons/plane-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -64,7 +63,7 @@
     ? {url, kind: MESSAGE, pubkey: $app.user?.pubkey, tags: h ? [["h", h]] : []}
     : undefined
 
-  const buttonClass = "join-item h-10 w-10 min-w-10 button button-neutral"
+  const buttonClass = "button button-ghost button-circle"
 
   const editorClass = $derived(
     cx("chat-editor grow overflow-hidden", {
@@ -155,6 +154,7 @@
   const editor = makeEditor({
     url,
     content,
+    placeholder: "Message",
     empty,
     submit,
     text,
@@ -193,31 +193,27 @@
 {#if commandTarget}
   <CommandArgBar target={commandTarget} content={$text} insert={insertCommandToken} />
 {/if}
-<form class="relative flex gap-2 py-2" onsubmit={preventDefault(submit)}>
-  <div class="join">
+<form class="relative flex items-end gap-1 py-2" onsubmit={preventDefault(submit)}>
+  {#if url}
+    <MenuButton
+      component={ComposeMenu}
+      componentProps={{url, h, uploadFiles}}
+      placement="top-start"
+      aria-label="Attach or create"
+      disabled={$uploading || disabled}
+      class={buttonClass}>
+      {@render addIcon()}
+    </MenuButton>
+  {:else}
     <Button
-      data-tip="Add an image"
+      aria-label="Attach a photo or file"
       class={buttonClass}
       disabled={$uploading || disabled}
       onclick={uploadFiles}>
-      {#if $uploading}
-        <Spinner size="xs" />
-      {:else}
-        <Icon icon={GallerySend} />
-      {/if}
+      {@render addIcon()}
     </Button>
-    {#if url}
-      <MenuButton
-        component={ComposeMenu}
-        componentProps={{url, h}}
-        placement="top"
-        disabled={$uploading}
-        class={buttonClass}>
-        <Icon icon={WidgetAdd} />
-      </MenuButton>
-    {/if}
-    <EditorEmojiButton {editor} disabled={$uploading || disabled} class={buttonClass} />
-  </div>
+  {/if}
+  <EditorEmojiButton {editor} disabled={$uploading || disabled} class={buttonClass} />
   <div class={editorClass} aria-disabled={disabled}>
     <EditorContent {autofocus} {editor} />
   </div>
@@ -232,10 +228,18 @@
   {:else}
     <Button
       data-tip="{window.navigator.platform.includes('Mac') ? 'cmd' : 'ctrl'}+enter to send"
-      class="button button-primary button-circle flex justify-center items-center tip tip-left h-10 w-10 min-w-10"
+      class="button button-primary button-circle tip tip-left"
       disabled={$uploading || disabled}
       onclick={submit}>
       <Icon icon={Plane} />
     </Button>
   {/if}
 </form>
+
+{#snippet addIcon()}
+  {#if $uploading}
+    <Spinner size="xs" />
+  {:else}
+    <Icon icon={Add} />
+  {/if}
+{/snippet}

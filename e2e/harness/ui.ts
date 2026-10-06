@@ -63,6 +63,10 @@ export const composerEnabled = (page: Page) =>
 export const composerDisabled = (page: Page) =>
   expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "true")
 
+// The + at the start of the composer. A room's opens the create menu; a conversation's is the picker.
+export const composerAddButton = (page: Page) =>
+  page.locator(".room__compose").getByRole("button", {name: /^Attach/})
+
 // The send button carries the shortcut it advertises, which differs by platform.
 export const sendButton = (page: Page) => page.locator("button[data-tip$='enter to send']")
 
