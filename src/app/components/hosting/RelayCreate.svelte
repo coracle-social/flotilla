@@ -1,10 +1,10 @@
 <script lang="ts">
-  import {publish} from "@welshman/app"
   import RelayForm, {type RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import {roomLists} from "@app/core"
   import {navigate, pushModal} from "@app/modal"
+  import {publishRoomList} from "@app/rooms"
   import {makeSpacePath} from "@app/routes"
   import {pushToast} from "@app/toast"
   import {
@@ -35,7 +35,7 @@
     $hosting.setRelay(relay)
 
     // Join the space now, or the space layout prompts for it and displaces the payment modals.
-    await $roomLists.addRelay(url).then(publish)
+    await $roomLists.addRelay(url).then(publishRoomList)
 
     const due = isPaidPlan(values.plan_id)
       ? await $hosting.findPaymentDue().catch(onPaymentLookupError)

@@ -1,7 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
   import {displayRelayUrl} from "@welshman/util"
-  import {publish} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import EyeClosed from "@assets/icons/eye-closed.svg?dataurl"
@@ -26,7 +25,12 @@
   import RoomName from "@app/components/RoomName.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
   import {roomLists, rooms} from "@app/core"
-  import {deriveRoomMembers, deriveUserIsRoomAdmin, deriveUserRooms} from "@app/rooms"
+  import {
+    deriveRoomMembers,
+    deriveUserIsRoomAdmin,
+    deriveUserRooms,
+    publishRoomList,
+  } from "@app/rooms"
   import {
     deriveIsMuted,
     deriveShouldNotify,
@@ -60,9 +64,9 @@
 
   const toggleFavorite = () => {
     if (isFavorite) {
-      $roomLists.removeRoom(h, url).then(publish)
+      $roomLists.removeRoom(h, url).then(publishRoomList)
     } else {
-      $roomLists.addRoom(h, url).then(publish)
+      $roomLists.addRoom(h, url).then(publishRoomList)
     }
   }
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {sleep} from "@welshman/lib"
+  import {sleep, uniq} from "@welshman/lib"
   import {ROOMS} from "@welshman/util"
   import {Sync} from "@welshman/app"
   import {createScroller, isMobile} from "@lib/html"
@@ -20,7 +20,7 @@
   import SpaceResult from "@app/components/SpaceResult.svelte"
   import {app, roomLists, user} from "@app/core"
   import {deriveSpaceSearch, userSpaceUrls} from "@app/rooms"
-  import {PLATFORM_RELAYS, DEFAULT_RELAYS} from "@app/env"
+  import {PLATFORM_RELAYS, DEFAULT_RELAYS, INDEXER_RELAYS} from "@app/env"
   import {bootstrapPubkeys} from "@app/social"
   import {parseInviteLink} from "@app/access"
   import {pushModal} from "@app/modal"
@@ -51,7 +51,7 @@
 
     $app.use(Sync).pull({
       filters: [{kinds: [ROOMS], authors: $bootstrapPubkeys}],
-      relays: DEFAULT_RELAYS,
+      relays: uniq([...DEFAULT_RELAYS, ...INDEXER_RELAYS]),
     })
 
     return () => {

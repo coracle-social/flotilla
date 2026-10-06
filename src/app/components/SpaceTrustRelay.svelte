@@ -1,7 +1,6 @@
 <script lang="ts">
   import {remove} from "@welshman/lib"
   import {displayRelayUrl} from "@welshman/util"
-  import {publish} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
@@ -16,6 +15,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InfoSignatures from "@app/components/InfoSignatures.svelte"
   import {relaysPendingTrust} from "@app/policies"
+  import {publishRoomList} from "@app/rooms"
   import {addTrustedRelay, removeTrustedRelay} from "@app/settings"
   import {navigate, popModal, pushModal} from "@app/modal"
   import {roomLists} from "@app/core"
@@ -33,7 +33,7 @@
     loading = true
 
     try {
-      await $roomLists.removeRelay(url).then(publish)
+      await $roomLists.removeRelay(url).then(publishRoomList)
       await removeTrustedRelay(url)
       navigate("/home")
     } catch (e) {

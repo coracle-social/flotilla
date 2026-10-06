@@ -8,7 +8,7 @@ import {Comment, Message} from "@welshman/domain"
 import type {BaseEventReader, EventWriter, Relay} from "@welshman/domain"
 import {throttled} from "@welshman/store"
 import {MembershipStatus, RoomLists, makeRoomKey, createSearch, publish} from "@welshman/app"
-import type {Room, RoomMeta} from "@welshman/app"
+import type {Command, Room, RoomMeta} from "@welshman/app"
 import {
   deriveUserItem,
   command,
@@ -20,7 +20,7 @@ import {
   user,
   writer,
 } from "@app/core"
-import {PLATFORM_RELAYS} from "@app/env"
+import {INDEXER_RELAYS, PLATFORM_RELAYS} from "@app/env"
 import {allowPubkeys, deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/management"
 import {spaceSupportsRooms} from "@app/relays"
 import {makeRoomPath, makeSpaceChatPath} from "@app/routes"
@@ -173,6 +173,10 @@ export const userRoomList = deriveUserItem(RoomLists)
 
 export const userSpaceUrls = derived(userRoomList, $userRoomList => $userRoomList?.urls() ?? [])
 
+// Room lists also go to the indexers, which is where the space browser looks for them.
+export const publishRoomList = (command: Command) =>
+  command.publishToRelays(uniq([...command.relays, ...INDEXER_RELAYS]))
+
 // Platform relays, where configured, stand in for the spaces the user has joined.
 export const activeSpaceUrls = derived(userSpaceUrls, $userSpaceUrls =>
   PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : $userSpaceUrls,
@@ -184,7 +188,7 @@ export const reorderSpaceUrls = (urls: string[]) => {
 
   const nextUrls = get(userSpaceUrls).map(url => (urls.includes(url) ? urls[index++] : url))
 
-  return roomLists.get().setRelays(nextUrls).then(publish)
+  return roomLists.get().setRelays(nextUrls).then(publishRoomList)
 }
 
 // Rooms in the space the user has joined, limited to those the relay still advertises.

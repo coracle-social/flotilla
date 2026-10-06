@@ -4,7 +4,7 @@
   import type {ClientOptions} from "@pomade/core"
   import {makeSecret, RELAYS, MESSAGING_RELAYS, makeEvent} from "@welshman/util"
   import {Profile} from "@welshman/domain"
-  import {Publisher, nip01, publish, toSession} from "@welshman/app"
+  import {Publisher, nip01, toSession} from "@welshman/app"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import {getKey, setKey} from "@lib/implicit"
@@ -28,6 +28,7 @@
   } from "@app/env"
   import {forceHealthChecks} from "@app/healthChecks"
   import {loginWithPomade} from "@app/pomade"
+  import {publishRoomList} from "@app/rooms"
   import {pushModal, clearModals} from "@app/modal"
   import {app, domain, login, roomLists} from "@app/core"
 
@@ -66,7 +67,7 @@
         event: await profileWriter.renderTemplate(),
         relays: [...DEFAULT_RELAYS, ...DEFAULT_SPACES],
       }),
-      $roomLists.setRelays(DEFAULT_SPACES).then(publish),
+      $roomLists.setRelays(DEFAULT_SPACES).then(publishRoomList),
     ])
 
     // Wait for all the publications to settle

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {Maybe} from "@welshman/lib"
-  import {MembershipStatus, publish} from "@welshman/app"
+  import {MembershipStatus} from "@welshman/app"
   import Pen from "@assets/icons/pen.svg?dataurl"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import Login3 from "@assets/icons/login-3.svg?dataurl"
@@ -12,7 +12,7 @@
   import RoomEdit from "@app/components/RoomEdit.svelte"
   import {app, roomLists, rooms} from "@app/core"
   import {joinRoom, leaveRoom} from "@app/access"
-  import {deriveUserIsRoomAdmin, deriveUserRoomMembershipStatus} from "@app/rooms"
+  import {deriveUserIsRoomAdmin, deriveUserRoomMembershipStatus, publishRoomList} from "@app/rooms"
   import {forgetSpacePage, makeSpacePath} from "@app/routes"
   import {navigate, pushModal} from "@app/modal"
   import {pushToast} from "@app/toast"
@@ -63,7 +63,7 @@
           $app.repository.removeEvent(publication.event.id)
           pushToast({theme: "error", message})
         } else {
-          await $roomLists.removeRoom(h, url).then(publish)
+          await $roomLists.removeRoom(h, url).then(publishRoomList)
 
           forgetSpacePage(url)
           navigate(makeSpacePath(url))

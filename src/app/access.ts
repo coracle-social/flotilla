@@ -21,6 +21,7 @@ import {PLATFORM_URL} from "@app/env"
 import {relaysMostlyRestricted} from "@app/policies"
 import {optInSpaceNotifications} from "@app/push"
 import {deriveSocket} from "@app/relays"
+import {publishRoomList} from "@app/rooms"
 import {removeTrustedRelay} from "@app/settings"
 import {syncApplicationData} from "@app/sync"
 
@@ -126,7 +127,7 @@ export const joinRoom = async (url: string, h: string, code?: string) => {
     return error
   }
 
-  await roomLists.get().addRoom(h, url).then(publish)
+  await roomLists.get().addRoom(h, url).then(publishRoomList)
 }
 
 export const leaveRoom = async (url: string, h: string) => {
@@ -137,11 +138,11 @@ export const leaveRoom = async (url: string, h: string) => {
     return error
   }
 
-  await roomLists.get().removeRoom(h, url).then(publish)
+  await roomLists.get().removeRoom(h, url).then(publishRoomList)
 }
 
 export const leaveSpace = async (url: string) => {
-  await roomLists.get().removeRelay(url).then(publish)
+  await roomLists.get().removeRelay(url).then(publishRoomList)
   await publishLeaveRequest(url)
   await removeTrustedRelay(url)
 }
@@ -240,7 +241,7 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
 
 export const completeSpaceJoin = async (url: string, notifications: boolean) => {
   await optInSpaceNotifications(url, notifications)
-  await roomLists.get().addRelay(url).then(publish)
+  await roomLists.get().addRelay(url).then(publishRoomList)
   relaysMostlyRestricted.update(dissoc(url))
   syncApplicationData()
   app
