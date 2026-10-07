@@ -4,7 +4,7 @@
 
 <script lang="ts" generics="T">
   import cx from "classnames"
-  import Button from "@lib/components/Button.svelte"
+  import SegmentedButton from "@lib/components/SegmentedButton.svelte"
 
   type Props = {
     options: SegmentedOption<T>[]
@@ -23,19 +23,12 @@
 
 <div class={cx(joined ? "join" : "flex items-center gap-2", props.class)}>
   {#each options as option (option.value)}
-    <Button
-      aria-pressed={value === option.value}
-      class={cx(
-        "button",
-        {"button-xs": size === "xs", "button-sm": size === "sm"},
-        joined ? "join-item grow" : "shrink-0 rounded-full",
-        value === option.value ? "button-primary" : "button-neutral",
-      )}
-      onclick={select(option.value)}>
-      {option.label}
-      {#if option.count !== undefined}
-        <span class="opacity-75">{option.count}</span>
-      {/if}
-    </Button>
+    <SegmentedButton
+      label={option.label}
+      count={option.count}
+      pressed={value === option.value}
+      onclick={select(option.value)}
+      {joined}
+      {size} />
   {/each}
 </div>

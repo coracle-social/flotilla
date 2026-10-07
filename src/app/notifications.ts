@@ -22,6 +22,7 @@ import {
   LOCALE,
   HOUR,
 } from "@welshman/lib"
+import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {
   COMMENT,
@@ -431,6 +432,41 @@ export const homeNotificationFilters = (pubkey: string) => [
   {kinds: homeNotificationKinds, "#p": [pubkey]},
 ]
 
+// What the tab can be narrowed to, with every type included until the reader says otherwise.
+export const homeNotificationTypes = [
+  {value: "replies", label: "Replies"},
+  {value: "reactions", label: "Reactions"},
+  {value: "zaps", label: "Zaps"},
+] as const
+
+export type HomeNotificationType = (typeof homeNotificationTypes)[number]["value"]
+
+export const includedHomeNotificationTypes = synced<HomeNotificationType[]>({
+  key: "includedHomeNotificationTypes",
+  defaultValue: homeNotificationTypes.map(({value}) => value),
+  storage: kv,
+})
+
+// A mention is the note itself rather than something done to it, so no toggle hides one.
+const homeNotificationType = (event: TrustedEvent): Maybe<HomeNotificationType> => {
+  if (event.kind === ZAP_RECEIPT) {
+    return "zaps"
+  } else if (event.kind === REACTION || REPOST_KINDS.includes(event.kind)) {
+    return "reactions"
+  } else if (getNotificationRef(event)?.id !== event.id) {
+    return "replies"
+  }
+}
+
+export const isIncludedHomeNotification = derived(
+  includedHomeNotificationTypes,
+  $included => (event: TrustedEvent) => {
+    const type = homeNotificationType(event)
+
+    return !type || $included.includes(type)
+  },
+)
+
 // Answering or reacting to the user delivers the event to the relays the user reads from.
 export const getHomeNotificationRelays = () =>
   router
@@ -503,9 +539,11 @@ export const isHomeNotification = derived(
   },
 )
 
+// The badge reads the filters too, so nothing lights up over an entry the tab leaves out.
 const latestHomeNotification = derived(
-  [homeNotificationCandidates, isHomeNotification],
-  ([$candidates, $isHomeNotification]) => $candidates.find($isHomeNotification),
+  [homeNotificationCandidates, isHomeNotification, isIncludedHomeNotification],
+  ([$candidates, $isHomeNotification, $isIncluded]) =>
+    $candidates.find(event => $isHomeNotification(event) && $isIncluded(event)),
 )
 
 export const homeNotificationsUnread = derived(

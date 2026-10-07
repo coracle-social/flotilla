@@ -5,6 +5,7 @@
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import Spinner from "@lib/components/Spinner.svelte"
+  import HomeNetworkNotificationFilters from "@app/components/HomeNetworkNotificationFilters.svelte"
   import HomeNetworkNotificationItem from "@app/components/HomeNetworkNotificationItem.svelte"
   import {user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
@@ -13,6 +14,7 @@
     homeNotificationFilters,
     homeNotificationsUnread,
     isHomeNotification,
+    isIncludedHomeNotification,
     readHomeNotifications,
   } from "@app/notifications"
   import {groupNotifications} from "@app/social"
@@ -26,7 +28,11 @@
   let events: Writable<TrustedEvent[]> = $state(writable([]))
   let stop: Maybe<() => void>
 
-  const items = $derived(groupNotifications($events.filter($isHomeNotification)))
+  const candidates = $derived($events.filter($isHomeNotification))
+
+  const items = $derived(groupNotifications(candidates.filter($isIncludedHomeNotification)))
+
+  const hidden = $derived(items.length === 0 && candidates.length > 0)
 
   const loading = $derived(isFeedLoading($older))
   const exhausted = $derived($older?.status === "exhausted")
@@ -60,6 +66,7 @@
 </script>
 
 <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4" bind:this={element}>
+  <HomeNetworkNotificationFilters />
   {#if items.length > 0}
     {#each items as notification (notification.key)}
       <HomeNetworkNotificationItem {notification} {context} />
@@ -69,6 +76,8 @@
         <Spinner loading />
       </div>
     {/if}
+  {:else if hidden}
+    <div class="pb-4 text-center font-medium">Nothing matches those filters</div>
   {:else if exhausted}
     <div class="flex flex-col items-center gap-3 pb-4 text-center">
       <p class="font-medium">Nothing here yet</p>

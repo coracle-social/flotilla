@@ -1914,6 +1914,21 @@ Acceptance:
   room messages lights neither the tab nor its badge.
 - Nothing a muted person does lights the tab or its badge.
 
+### US-145 — Choose what the notifications tab includes
+
+As alice, I want to say whether the notifications tab shows replies, reactions
+and zaps, so that the kind of answer I care about is not buried under the kind I
+do not.
+
+Acceptance:
+
+- The tab carries a button per type, all of them on until she turns one off.
+- Turning a type off drops it from the entries and from the badge, and leaves
+  every other type where it was.
+- An entry nothing is left to say about is not drawn, and the tab says so rather
+  than looking empty.
+- Her choice survives a reload.
+
 ### US-144 — Mute somebody from their profile
 
 As alice, I want to mute a person from their profile, so that I can act on a

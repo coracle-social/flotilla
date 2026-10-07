@@ -25,7 +25,12 @@
 
   const {notification, context}: Props = $props()
 
-  const {ref, replies, reactions: interactions} = notification
+  const {ref} = notification
+
+  // An entry keeps its key while it collects answers, so the component has to follow its prop.
+  const replies = $derived(notification.replies)
+
+  const interactions = $derived(notification.reactions)
 
   // The note this entry is about, fetched from the hints the notifications naming it carried.
   const note = $notes.deriveEvent({id: ref.id, author: ref.author, relays: ref.relays})

@@ -604,6 +604,85 @@ test("US-141 leave what the tab cannot draw out of its badge", async ({seed, as}
   await expect(notifications.getByRole("img", {name: "Unread"})).toHaveCount(0)
 })
 
+test("US-145 choose what the notifications tab includes", async ({seed, as}) => {
+  const mine = "the chandlery moved up behind the sail loft"
+  const reply = "they left the old sign on the wall"
+
+  await seed(({relay, open, user, at}) => {
+    const space = relay("space")
+    const indexer = open("indexer")
+    const outbox = open("outbox")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url, outbox.url],
+      write: [space.url, indexer.url, outbox.url],
+    })
+
+    indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url]})
+    outbox.profile(user.bob, {name: "Bob Barker"})
+
+    const posted = outbox.note(user.alice, mine, at(40, MINUTE))
+
+    // One reply and one reaction, so turning a type off leaves the entry with the other one.
+    outbox.event(
+      user.bob,
+      () => outbox.kind(Note).writer().setParent(posted.event).setContent(reply).renderTemplate(),
+      at(20, MINUTE),
+    )
+
+    outbox.event(
+      user.bob,
+      () =>
+        outbox
+          .kind(Reaction)
+          .writer()
+          .setEvent(posted.event)
+          .setContent("\u{1f389}")
+          .renderTemplate(),
+      at(10, MINUTE),
+    )
+  })
+
+  const page = await as(users.alice, "/home")
+
+  const network = page.getByRole("region", {name: "Network"})
+  const notifications = network.getByRole("button", {name: "Notifications"})
+
+  // Replies is a button of its own, so a reply's own Reply button must not answer to it.
+  const filter = (name: string) => network.getByRole("button", {name, exact: true})
+
+  await notifications.click()
+
+  // Every type is included until she turns one off.
+  await expect(network.getByText(reply)).toBeVisible({timeout: 20_000})
+  await expect(network.getByText("reacted with")).toBeVisible()
+
+  await filter("Reactions").click()
+
+  await expect(network.getByText("reacted with")).toHaveCount(0)
+  await expect(network.getByText(reply)).toBeVisible()
+
+  await filter("Replies").click()
+
+  // The entry was a reply and a reaction, so leaving both out leaves nothing to draw it around.
+  await expect(network.getByText("Nothing matches those filters")).toBeVisible()
+
+  await page.reload()
+  await notifications.click()
+
+  await expect(filter("Replies")).toHaveAttribute("aria-pressed", "false")
+  await expect(filter("Reactions")).toHaveAttribute("aria-pressed", "false")
+  await expect(network.getByText("Nothing matches those filters")).toBeVisible({timeout: 20_000})
+
+  await filter("Replies").click()
+
+  await expect(network.getByText(reply)).toBeVisible()
+  await expect(network.getByText("reacted with")).toHaveCount(0)
+})
+
 test("US-144 mute somebody and lose them from the home page", async ({seed, as}) => {
   const mine = "the new buoys are finally lit"
   const theirs = "the channel markers moved again"
