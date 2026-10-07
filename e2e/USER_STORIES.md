@@ -1914,6 +1914,24 @@ Acceptance:
   room messages lights neither the tab nor its badge.
 - Nothing a muted person does lights the tab or its badge.
 
+### US-146 — Choose what the network feed includes
+
+As alice, I want to say whether the network feed shows notes, replies or both,
+so that a conversation I am not part of does not crowd out the posts I follow
+people for.
+
+Acceptance:
+
+- The feed carries a button for notes and a button for replies, both on until
+  she turns one off.
+- A reply in the feed links to the note it answers, so it reads as more than
+  half a conversation.
+- Turning notes off leaves the replies and turning replies off leaves the
+  notes.
+- A feed nothing is left in says so rather than looking like it is still
+  loading.
+- Her choice survives a reload.
+
 ### US-145 — Choose what the notifications tab includes
 
 As alice, I want to say whether the notifications tab shows replies, reactions

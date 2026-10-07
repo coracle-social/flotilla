@@ -683,6 +683,72 @@ test("US-145 choose what the notifications tab includes", async ({seed, as}) => 
   await expect(network.getByText("reacted with")).toHaveCount(0)
 })
 
+test("US-146 choose what the network feed includes", async ({seed, as}) => {
+  const root = "the dredger is working the bar again"
+  const answer = "it has been there since Tuesday"
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    seedRelays(space, user.alice)
+    seedRelays(space, user.bob)
+
+    space.profile(user.bob, {name: "Bob Barker"})
+    space.follows(user.alice, [user.bob])
+
+    const posted = space.event(
+      user.bob,
+      () => space.kind(Note).writer().setContent(root).renderTemplate(),
+      at(2, HOUR),
+    )
+
+    // Bob answers himself, so the feed holds one note and one reply from the same follow.
+    space.event(
+      user.bob,
+      () => space.kind(Note).writer().setParent(posted.event).setContent(answer).renderTemplate(),
+      at(1, HOUR),
+    )
+  })
+
+  const page = await as(users.alice, "/home")
+
+  const network = page.getByRole("region", {name: "Network"})
+
+  // A card's own reply button is named "Reply" or counted, so only the filters are named exactly.
+  const filter = (name: string) => network.getByRole("button", {name, exact: true})
+
+  // Both types are included until she turns one off.
+  await expect(network.getByText(root)).toBeVisible({timeout: 20_000})
+  await expect(network.getByText(answer)).toBeVisible()
+
+  // The reply says what it answers rather than standing on its own.
+  await expect(network.getByRole("button", {name: "View parent"})).toBeVisible()
+
+  await filter("Replies").click()
+
+  await expect(network.getByText(answer)).toHaveCount(0)
+  await expect(network.getByText(root)).toBeVisible()
+
+  await filter("Notes").click()
+
+  await expect(network.getByText("Nothing matches those filters")).toBeVisible()
+
+  await page.reload()
+
+  await expect(filter("Notes")).toHaveAttribute("aria-pressed", "false")
+  await expect(filter("Replies")).toHaveAttribute("aria-pressed", "false")
+  await expect(network.getByText("Nothing matches those filters")).toBeVisible({timeout: 20_000})
+
+  await filter("Replies").click()
+
+  await expect(network.getByText(answer)).toBeVisible()
+  await expect(network.getByText(root)).toHaveCount(0)
+})
+
 test("US-144 mute somebody and lose them from the home page", async ({seed, as}) => {
   const mine = "the new buoys are finally lit"
   const theirs = "the channel markers moved again"

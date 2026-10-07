@@ -3,16 +3,16 @@
   import {chunks, call, shuffle, sortBy, uniqBy} from "@welshman/lib"
   import {NOTE, getIdOrAddress} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import {getReplyTags} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {CONTENT_KINDS} from "@app/content"
   import {followLists, relayLists, user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import type {FeedLoadState} from "@app/feeds"
   import {outboxUrls} from "@app/relays"
-  import {isEventMuted} from "@app/social"
+  import {isEventMuted, isIncludedNetworkFeedEvent} from "@app/social"
 
   const context = makeFeedContext({
     relays: $relayLists.readUrls($user.pubkey).get(),
@@ -29,25 +29,24 @@
   let destroyed = false
   const unsubscribers: (() => void)[] = []
 
-  // Kind 1 replies read as half a conversation without their parent.
-  const isRoot = (event: TrustedEvent) =>
-    event.kind !== NOTE || getReplyTags(event.tags).replies.length === 0
-
-  const items = $derived(
+  const candidates = $derived(
     uniqBy(
       getIdOrAddress,
       sortBy(
         e => -e.created_at,
-        pages.flat().filter(e => isRoot(e) && !$isEventMuted(e)),
+        pages.flat().filter(e => !$isEventMuted(e)),
       ),
     ),
   )
+
+  const items = $derived(candidates.filter($isIncludedNetworkFeedEvent))
 
   const loading = $derived(states.some(isFeedLoading))
   const exhausted = $derived(
     states.length > 0 && states.every(state => state.status === "exhausted"),
   )
-  const isEmpty = $derived(follows?.length === 0 || (exhausted && items.length === 0))
+  const isEmpty = $derived(follows?.length === 0 || (exhausted && candidates.length === 0))
+  const hidden = $derived(items.length === 0 && candidates.length > 0)
 
   // Each group walks its own timeline, so a slow group holds up nobody else's next page.
   const startGroup = async (pubkeys: string[], index: number) => {
@@ -102,6 +101,7 @@
 </script>
 
 <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4" bind:this={element}>
+  <HomeNetworkRecentFilters />
   {#if isEmpty}
     <div class="flex flex-col items-center gap-3 pb-4 text-center">
       <p class="font-medium">Follow a few people to fill this out</p>
@@ -110,18 +110,20 @@
       </p>
       <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
     </div>
-  {:else if items.length === 0}
-    <div class="flex justify-center py-8">
-      <Spinner loading>Loading recent posts...</Spinner>
-    </div>
-  {:else}
+  {:else if items.length > 0}
     {#each items as event (event.id)}
-      <NoteItem {event} {context} showReply />
+      <NoteItem {event} {context} showReply showThreadLinks />
     {/each}
     {#if loading}
       <div class="flex justify-center py-8">
         <Spinner loading />
       </div>
     {/if}
+  {:else if hidden}
+    <div class="pb-4 text-center font-medium">Nothing matches those filters</div>
+  {:else}
+    <div class="flex justify-center py-8">
+      <Spinner loading>Loading recent posts...</Spinner>
+    </div>
   {/if}
 </div>

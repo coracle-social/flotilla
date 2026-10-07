@@ -37,7 +37,7 @@ import {
 } from "@welshman/util"
 import type {EventRef, TrustedEvent} from "@welshman/util"
 import type {EventPointer} from "nostr-tools/nip19"
-import {withGetter} from "@welshman/store"
+import {synced, withGetter} from "@welshman/store"
 import {
   Comment,
   displayPubkey,
@@ -53,6 +53,7 @@ import {deriveUserItem, fromApp, profiles, reader, user, usePlugin} from "@app/c
 import {getProfileGeohash} from "@app/location"
 import type {QuotePointer} from "@app/quotes"
 import {DEFAULT_PUBKEYS} from "@app/env"
+import {kv} from "@app/storage"
 
 // People
 
@@ -316,6 +317,31 @@ export const groupNotifications = (events: TrustedEvent[]) => {
 
   return sortBy(notification => -notification.timestamp, Array.from(notifications.values()))
 }
+
+// The network feed
+
+// What the feed can be narrowed to, with both types included until the reader says otherwise.
+export const networkFeedTypes = [
+  {value: "notes", label: "Notes"},
+  {value: "replies", label: "Replies"},
+] as const
+
+export type NetworkFeedType = (typeof networkFeedTypes)[number]["value"]
+
+export const includedNetworkFeedTypes = synced<NetworkFeedType[]>({
+  key: "includedNetworkFeedTypes",
+  defaultValue: networkFeedTypes.map(({value}) => value),
+  storage: kv,
+})
+
+// Only a kind 1 carries NIP-10 reply tags, so an article or a poll in the feed is a note.
+const networkFeedType = (event: TrustedEvent): NetworkFeedType =>
+  event.kind === NOTE && getReplyTags(event.tags).replies.length > 0 ? "replies" : "notes"
+
+export const isIncludedNetworkFeedEvent = derived(
+  includedNetworkFeedTypes,
+  $included => (event: TrustedEvent) => $included.includes(networkFeedType(event)),
+)
 
 // Muting
 
