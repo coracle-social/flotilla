@@ -6,9 +6,8 @@
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import MenuButton from "@lib/components/MenuButton.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
-  import EventMenu from "@app/components/EventMenu.svelte"
+  import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteThreadLinks from "@app/components/NoteThreadLinks.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
@@ -70,13 +69,7 @@
         </Button>
       {/if}
       {@render children?.()}
-      <MenuButton
-        component={EventMenu}
-        componentProps={{url, noun: "Note", event}}
-        aria-label="Note actions"
-        placement="top"
-        iconSize={4}
-        class="button button-neutral button-xs rounded-full" />
+      <EventMenuButton {url} {event} noun="Note" class="rounded-full" />
     </div>
   </div>
 {/snippet}

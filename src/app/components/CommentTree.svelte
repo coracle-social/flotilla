@@ -11,6 +11,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import Content from "@app/components/Content.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
+  import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import type {FeedContext} from "@app/feeds"
@@ -83,6 +84,7 @@
           {:else}
             <PublicationStatusOrDeleted event={node.comment} {context}>
               <EventReactions event={node.comment} {context} reactionClass="tip-left" />
+              <EventMenuButton event={node.comment} noun="Comment" class="rounded-full" />
             </PublicationStatusOrDeleted>
           {/if}
         </div>
