@@ -237,7 +237,7 @@ const syncHomeNotificationRelay = (url: string, pubkey: string) => {
   network.get().loadLenient({
     relays: [url],
     signal: controller.signal,
-    filters: filters.map(filter => ({...filter, limit: 20})),
+    filters: filters.map(filter => ({...filter, limit: 100})),
   })
 
   network.get().request({
