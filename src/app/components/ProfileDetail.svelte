@@ -140,7 +140,10 @@
             {/if}
           {/if}
         {/snippet}
-        <MenuButton component={ProfileMenu} componentProps={{pubkey, url, customActions}} />
+        <MenuButton
+          aria-label="Profile actions"
+          component={ProfileMenu}
+          componentProps={{pubkey, url, customActions}} />
       </div>
       <ProfileStatus {pubkey} {url} />
       <ProfileLocation {pubkey} {url} />

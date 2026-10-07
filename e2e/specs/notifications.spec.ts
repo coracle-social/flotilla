@@ -29,6 +29,7 @@ import {
   settingRow,
   spacePath,
   test,
+  toast,
   users,
 } from "../harness"
 import type {SeededEvent, SeededSpace, TestUser} from "../harness"
@@ -601,6 +602,88 @@ test("US-141 leave what the tab cannot draw out of its badge", async ({seed, as}
 
   // Nothing marked the tab read, since an empty tab holds nothing to read.
   await expect(notifications.getByRole("img", {name: "Unread"})).toHaveCount(0)
+})
+
+test("US-144 mute somebody and lose them from the home page", async ({seed, as}) => {
+  const mine = "the new buoys are finally lit"
+  const theirs = "the channel markers moved again"
+  const answer = "they moved them last spring too"
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.join(user.carol, "general")
+
+    seedRelays(space, user.alice)
+    seedRelays(space, user.bob)
+    seedRelays(space, user.carol)
+
+    space.profile(user.bob, {name: "Bob Barker"})
+    space.profile(user.carol, {name: "Carol Carlson"})
+    space.follows(user.alice, [user.bob, user.carol])
+
+    space.event(
+      user.bob,
+      () => space.kind(Note).writer().setContent(mine).renderTemplate(),
+      at(2, HOUR),
+    )
+
+    // Carol names alice, so her note is an entry in the notifications tab as well as a post in the feed.
+    const named = space.event(
+      user.carol,
+      () =>
+        space
+          .kind(Note)
+          .writer()
+          .setContent(theirs)
+          .addTags(["p", user.alice.pubkey])
+          .renderTemplate(),
+      at(1, HOUR),
+    )
+
+    // Bob is nobody alice has muted, so what takes his reply out of the tab is the note it answers.
+    space.event(
+      user.bob,
+      () => space.kind(Note).writer().setParent(named.event).setContent(answer).renderTemplate(),
+      at(30, MINUTE),
+    )
+  })
+
+  const page = await as(users.alice, "/home")
+
+  const network = page.getByRole("region", {name: "Network"})
+  const recentTab = network.getByRole("button", {name: "Network"})
+  const notificationsTab = network.getByRole("button", {name: "Notifications"})
+
+  await expect(network.getByText(mine)).toBeVisible()
+  await expect(network.getByText(theirs)).toBeVisible()
+
+  await notificationsTab.click()
+
+  await expect(network.getByText("replied to a thread you are in")).toBeVisible()
+
+  await recentTab.click()
+
+  // Her name on the card is the way to the profile the mute is reached from.
+  await network.getByRole("button", {name: "Carol Carlson"}).first().click()
+
+  await dialog(page, "Profile details").getByRole("button", {name: "Profile actions"}).click()
+  await page.getByRole("button", {name: "Mute User"}).click()
+
+  await expect(toast(page)).toContainText("You have muted this person.")
+
+  await page.keyboard.press("Escape")
+
+  await expect(network.getByText(theirs)).toHaveCount(0)
+  await expect(network.getByText(mine)).toBeVisible()
+
+  await notificationsTab.click()
+
+  // Her note was the only entry, and a reply to it is drawn around a note of hers.
+  await expect(network.getByText("Nothing here yet")).toBeVisible({timeout: 20_000})
 })
 
 // A url the container does not serve, so its nip-11 document never arrives and nothing knows what it supports.

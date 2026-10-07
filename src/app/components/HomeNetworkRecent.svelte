@@ -12,6 +12,7 @@
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import type {FeedLoadState} from "@app/feeds"
   import {outboxUrls} from "@app/relays"
+  import {isEventMuted} from "@app/social"
 
   const context = makeFeedContext({
     relays: $relayLists.readUrls($user.pubkey).get(),
@@ -35,7 +36,10 @@
   const items = $derived(
     uniqBy(
       getIdOrAddress,
-      sortBy(e => -e.created_at, pages.flat().filter(isRoot)),
+      sortBy(
+        e => -e.created_at,
+        pages.flat().filter(e => isRoot(e) && !$isEventMuted(e)),
+      ),
     ),
   )
 

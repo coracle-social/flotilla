@@ -186,7 +186,10 @@
                     {/if}
 
                     <div class="shrink-0">
-                      <MenuButton component={ProfileMenu} componentProps={{pubkey: target}} />
+                      <MenuButton
+                        aria-label="Profile actions"
+                        component={ProfileMenu}
+                        componentProps={{pubkey: target}} />
                     </div>
                   </div>
                 {/if}

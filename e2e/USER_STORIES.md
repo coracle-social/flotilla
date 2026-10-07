@@ -1914,6 +1914,20 @@ Acceptance:
   room messages lights neither the tab nor its badge.
 - Nothing a muted person does lights the tab or its badge.
 
+### US-144 — Mute somebody from their profile
+
+As alice, I want to mute a person from their profile, so that I can act on a
+post the moment it annoys me rather than going to look for a settings page.
+
+Acceptance:
+
+- The profile menu offers Mute User, on the preview modal and on the full
+  profile page alike, and offers Unmute User once she has muted somebody.
+- A muted person's posts are gone from the Network tab on home rather than
+  collapsed into a card, and the people she has not muted are unaffected.
+- The Notifications tab drops an entry drawn around a muted person's note as
+  well as anything the muted person did.
+
 ### US-133 — Keep the search relays that work
 
 As alice, I want the search health check to leave alone the relays that do

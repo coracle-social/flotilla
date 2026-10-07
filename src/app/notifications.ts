@@ -488,11 +488,17 @@ export const isHomeNotification = derived(
     const isFromSomeoneElse = (event: TrustedEvent) =>
       event.kind === ZAP_RECEIPT || (event.pubkey !== $app.user?.pubkey && !$isEventMuted(event))
 
+    // An entry is drawn around its note, so a thread a muted person started is not one either.
     return (event: TrustedEvent) => {
       const ref = getNotificationRef(event)
       const target = ref && $targets.get(ref.id)
 
-      return Boolean(target && isNotificationTarget(target) && isFromSomeoneElse(event))
+      return Boolean(
+        target &&
+        isNotificationTarget(target) &&
+        !$isEventMuted(target) &&
+        isFromSomeoneElse(event),
+      )
     }
   },
 )
