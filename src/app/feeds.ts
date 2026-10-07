@@ -478,11 +478,14 @@ export const makeFeed = ({
   filters,
   onEvent,
   at = now(),
+  threshold = SPAN_THRESHOLD,
 }: {
   relays: string[]
   filters: Filter[]
   onEvent?: (event: TrustedEvent) => void
   at?: number
+  // How much of the relay set has to close before a span is answered.
+  threshold?: number
 }) => {
   const controller = new AbortController()
   const events = writable<TrustedEvent[]>([])
@@ -594,7 +597,7 @@ export const makeFeed = ({
       // The socket sends five per 100ms first come first served, so the feed on screen goes ahead of the space's background pulls.
       priority: 1,
       signal: spanSignal(controller.signal),
-      threshold: SPAN_THRESHOLD,
+      threshold,
       filters: filters.map(filter => ({...filter, ...extension})),
       onEvent: countEvent,
       onDuplicate: countEvent,
@@ -666,8 +669,11 @@ export const makeFeed = ({
     app.get().use(Events).forUrl(url, filters).get().sort(compareEventsAsc).slice(-PAGE_SIZE),
   )
 
-  if (stored.every(page => page.length > 0)) {
-    reach(Math.max(...stored.map(page => page[0].created_at)))
+  // A relay with nothing cached proves nothing either way, and letting it veto the span blanks the feed.
+  const cached = stored.filter(page => page.length > 0)
+
+  if (cached.length > 0) {
+    reach(Math.max(...cached.map(page => page[0].created_at)))
   }
 
   addEvents(stored.flat())

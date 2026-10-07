@@ -1,9 +1,10 @@
 import {derived, readable} from "svelte/store"
 import {call, on, simpleCache} from "@welshman/lib"
-import {normalizeRelayUrl} from "@welshman/util"
+import {RELAYS, normalizeRelayUrl, relays as relaySelections} from "@welshman/util"
 import {AuthStateEvent, AuthStatus, SocketEvent, SocketStatus} from "@welshman/net"
 import {throttled} from "@welshman/store"
-import {app, relays} from "@app/core"
+import {app, network, relayLists, relays, router} from "@app/core"
+import {INDEXER_RELAYS} from "@app/env"
 import {relaysMostlyRestricted} from "@app/policies"
 import {colorFor} from "@app/theme"
 
@@ -112,3 +113,21 @@ export const deriveHasLivekit = simpleCache(([url]: [string]) =>
     )
   }),
 )
+
+// The relays a set of pubkeys write to, scored and capped the way an outbox selection would be.
+export const outboxUrls = async (pubkeys: string[], limit: number) => {
+  const $relayLists = relayLists.get()
+  const isKnown = (pubkey: string) => Boolean($relayLists.get(pubkey))
+
+  // Resolving `outbox(pubkey)` would load one relay list per pubkey, where one request answers for all.
+  if (pubkeys.filter(isKnown).length < pubkeys.length / 2) {
+    await network.get().loadLenient({
+      relays: INDEXER_RELAYS,
+      filters: [{kinds: [RELAYS], authors: pubkeys}],
+    })
+  }
+
+  const selections = pubkeys.flatMap(pubkey => relaySelections($relayLists.writeUrls(pubkey).get()))
+
+  return (await router.get().resolve(selections)).limit(limit).getUrls()
+}

@@ -26,7 +26,6 @@ import {
   ROOM_PINS,
   ROOM_REMOVE_MEMBER,
   WRAP,
-  outbox,
   unionFilters,
 } from "@welshman/util"
 import type {Filter} from "@welshman/util"
@@ -47,14 +46,14 @@ import {
   relays,
   roomLists,
   rooms,
-  router,
   searchRelayLists,
 } from "@app/core"
 import {LIVEKIT_PARTICIPANTS} from "@app/call"
 import {CONTENT_KINDS, REACTION_KINDS, makeCommentFilter} from "@app/content"
 import {INDEXER_RELAYS} from "@app/env"
 import {FEATURED_CONTENT_D} from "@app/featured"
-import {decodeRelay} from "@app/relays"
+import {getHomeNotificationRelays, homeNotificationFilters} from "@app/notifications"
+import {decodeRelay, outboxUrls} from "@app/relays"
 import {activeSpaceUrls, userSpaceUrls} from "@app/rooms"
 import {Settings} from "@app/settings"
 import {kv} from "@app/storage"
@@ -205,11 +204,9 @@ const syncUserData = () => {
     const authors = $followList?.pubkeys() ?? []
 
     if (authors.length > 0) {
-      const scenario = await router.get().resolve(authors.map(author => outbox(author)))
-
       network.get().loadLenient({
         filters: [{kinds: [FOLLOWS, MUTES], authors}],
-        relays: scenario.limit(8).getUrls(),
+        relays: await outboxUrls(authors, 8),
       })
     }
   }
@@ -228,6 +225,56 @@ const syncUserData = () => {
     unsubscribeRelayList()
     unsubscribeFollowList()
   }
+}
+
+// Home notifications
+
+// The home badge reads the repository, so these have to arrive whether or not home is open.
+const syncHomeNotificationRelay = (url: string, pubkey: string) => {
+  const controller = new AbortController()
+  const filters = homeNotificationFilters(pubkey)
+
+  network.get().loadLenient({
+    relays: [url],
+    signal: controller.signal,
+    filters: filters.map(filter => ({...filter, limit: 20})),
+  })
+
+  network.get().request({
+    relays: [url],
+    signal: controller.signal,
+    filters: unionFilters(filters.map(assoc("limit", 0))),
+  })
+
+  return () => controller.abort()
+}
+
+const syncHomeNotifications = () => {
+  const $pubkey = app.get().user?.pubkey
+
+  if ($pubkey) {
+    const relaySyncs = makeKeyedSyncs(url => syncHomeNotificationRelay(url, $pubkey))
+
+    let stopped = false
+
+    const reconcile = async () => {
+      const urls = await getHomeNotificationRelays()
+
+      if (!stopped) {
+        relaySyncs.reconcile(urls)
+      }
+    }
+
+    const unsubscribeRelayList = userRelayList.subscribe(reconcile)
+
+    return () => {
+      stopped = true
+      relaySyncs.stop()
+      unsubscribeRelayList()
+    }
+  }
+
+  return noop
 }
 
 // Spaces
@@ -378,7 +425,13 @@ let unsubscribe: Unsubscriber | undefined
 export const syncApplicationData = () => {
   unsubscribe?.()
 
-  const unsubscribers = [syncRelays(), syncUserData(), syncSpaces(), syncDMs()]
+  const unsubscribers = [
+    syncRelays(),
+    syncUserData(),
+    syncHomeNotifications(),
+    syncSpaces(),
+    syncDMs(),
+  ]
 
   unsubscribe = () => unsubscribers.forEach(call)
 

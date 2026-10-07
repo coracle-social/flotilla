@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import Planet from "@assets/icons/planet.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
   import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
@@ -11,9 +10,8 @@
   import HomeNetworkNotifications from "@app/components/HomeNetworkNotifications.svelte"
   import HomeNetworkRecent from "@app/components/HomeNetworkRecent.svelte"
   import NoteCreate from "@app/components/NoteCreate.svelte"
-  import {user} from "@app/core"
   import {pushModal} from "@app/modal"
-  import {homeNotificationsUnread, loadHomeNotifications} from "@app/notifications"
+  import {homeNotificationsUnread} from "@app/notifications"
 
   type NetworkTab = "recent" | "notifications"
 
@@ -36,10 +34,6 @@
   let tab = $state<NetworkTab>("recent")
 
   const createPost = () => pushModal(NoteCreate)
-
-  onMount(() => {
-    loadHomeNotifications($user.pubkey)
-  })
 </script>
 
 <HomeSection title="Network" class={className}>

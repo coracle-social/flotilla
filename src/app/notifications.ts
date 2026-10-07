@@ -39,7 +39,7 @@ import {
 import {synced, throttled, withGetter} from "@welshman/store"
 import type {EventsById} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
-import {app, fromApp, network, router} from "@app/core"
+import {app, fromApp, router} from "@app/core"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/routes"
 import {CONTENT_KINDS, REPOST_KINDS, getActivityTarget, makeCommentFilter} from "@app/content"
 import {getIsMuted, userSettingsValues} from "@app/settings"
@@ -437,13 +437,6 @@ export const getHomeNotificationRelays = () =>
     .get()
     .resolve([userInbox()])
     .then(scenario => scenario.policy(addMinimalFallbacks).getUrls())
-
-// Nothing else asks for these, and the newest of them may be about something the tab cannot draw.
-export const loadHomeNotifications = async (pubkey: string) =>
-  network.get().loadLenient({
-    relays: await getHomeNotificationRelays(),
-    filters: homeNotificationFilters(pubkey).map(filter => ({...filter, limit: 20})),
-  })
 
 // The notifications tab is no route of its own, so what has been read sits under a path nothing navigates to.
 const homeNotificationsPath = "/home/notifications"

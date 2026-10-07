@@ -1,18 +1,17 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {writable} from "svelte/store"
-  import type {Writable} from "svelte/store"
-  import {sortBy, uniqBy} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
-  import {NOTE, getIdOrAddress, outbox} from "@welshman/util"
+  import {chunks, call, shuffle, sortBy, uniqBy} from "@welshman/lib"
+  import {NOTE, getIdOrAddress} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {getReplyTags} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {CONTENT_KINDS} from "@app/content"
-  import {followLists, relayLists, router, user} from "@app/core"
+  import {followLists, relayLists, user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import type {FeedLoadState} from "@app/feeds"
+  import {outboxUrls} from "@app/relays"
 
   const context = makeFeedContext({
     relays: $relayLists.readUrls($user.pubkey).get(),
@@ -23,10 +22,11 @@
   const follows = $derived($followList?.pubkeys())
 
   let element: HTMLElement | undefined = $state()
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-  let events: Writable<TrustedEvent[]> = $state(writable([]))
+  let pages = $state<TrustedEvent[][]>([])
+  let states = $state<FeedLoadState[]>([])
   let started = false
-  let stop: Maybe<() => void>
+  let destroyed = false
+  const unsubscribers: (() => void)[] = []
 
   // Kind 1 replies read as half a conversation without their parent.
   const isRoot = (event: TrustedEvent) =>
@@ -35,29 +35,51 @@
   const items = $derived(
     uniqBy(
       getIdOrAddress,
-      sortBy(e => -e.created_at, $events.filter(isRoot)),
+      sortBy(e => -e.created_at, pages.flat().filter(isRoot)),
     ),
   )
 
-  const loading = $derived(isFeedLoading($older))
-  const exhausted = $derived($older?.status === "exhausted")
+  const loading = $derived(states.some(isFeedLoading))
+  const exhausted = $derived(
+    states.length > 0 && states.every(state => state.status === "exhausted"),
+  )
   const isEmpty = $derived(follows?.length === 0 || (exhausted && items.length === 0))
 
-  const start = async (pubkeys: string[]) => {
-    const scenario = await $router.resolve(pubkeys.map(pubkey => outbox(pubkey)))
-    const feed = makeFeed({
-      // The same set and limit `syncFollowNetwork` reads the follows' relay lists from.
-      relays: scenario.limit(8).getUrls(),
-      filters: [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
-      onEvent: context.add,
-    })
+  // Each group walks its own timeline, so a slow group holds up nobody else's next page.
+  const startGroup = async (pubkeys: string[], index: number) => {
+    const relays = await outboxUrls(pubkeys, 10)
 
-    events = feed.events
-    older = makeScrollLoader(element!, feed.loadOlder)
-    stop = () => {
-      older?.stop()
-      feed.cleanup()
+    if (!destroyed) {
+      const feed = makeFeed({
+        relays,
+        // Half the group's relays answering is enough to show its page, since the rest get asked again.
+        threshold: 0.5,
+        filters: [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
+        onEvent: context.add,
+      })
+
+      const loader = makeScrollLoader(element!, feed.loadOlder)
+
+      unsubscribers.push(
+        feed.events.subscribe(events => {
+          pages[index] = events
+        }),
+        loader.subscribe(state => {
+          states[index] = state
+        }),
+        loader.stop,
+        feed.cleanup,
+      )
     }
+  }
+
+  // One selection over every follow lands on the few biggest relays, so each group scores its own.
+  const start = (pubkeys: string[]) => {
+    const groups = chunks(3, shuffle(pubkeys)).filter(group => group.length > 0)
+
+    pages = groups.map(() => [])
+    states = groups.map(() => ({status: "idle"}))
+    groups.forEach(startGroup)
   }
 
   // The follow list is what the feed is made of, and follows added later don't rebuild it.
@@ -69,7 +91,8 @@
   })
 
   onDestroy(() => {
-    stop?.()
+    destroyed = true
+    unsubscribers.forEach(call)
     context.cleanup()
   })
 </script>
