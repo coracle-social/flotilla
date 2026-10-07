@@ -25,6 +25,7 @@ import {
 import type {Locator, Page} from "@playwright/test"
 import {
   GIF,
+  composerAddButton,
   dialog,
   emojiButton,
   expect,
@@ -1144,9 +1145,7 @@ test("US-055 create community content from a room", async ({seed, as}) => {
   const {url} = scenario.space("space")
   const page = await as(users.alice, roomPath(url, "lounge"))
 
-  const compose = page.locator("form").filter({has: page.locator(".chat-editor")})
-
-  await compose.locator(".join").getByRole("button").nth(1).click()
+  await composerAddButton(page).click()
   await page.getByRole("button", {name: "Ask a Question", exact: true}).click()
 
   const composer = modalForm(page, "Create a Poll")

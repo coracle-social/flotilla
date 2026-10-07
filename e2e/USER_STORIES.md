@@ -960,8 +960,8 @@ composer, so that the room sees it immediately.
 
 Acceptance:
 
-- The composer's "+" menu lists the content types that can be created and shared
-  into the room.
+- The composer's "Attach or create" menu lists the content types that can be
+  created and shared into the room.
 - Choosing one opens its creation form, and submitting posts a quoted link to
   the new item into the room.
 - Clicking that quote navigates to the item's detail page.

@@ -5,6 +5,7 @@ import type {SignedEvent} from "@welshman/util"
 import {Article, Comment, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
+  composerAddButton,
   emojiButton,
   expect,
   getPublishedEvents,
@@ -24,16 +25,6 @@ type Seeded = {readonly id: string; readonly event: SignedEvent}
 // The comment and thread-reply composers are the only forms on their pages with a rich text editor.
 const composerForm = (page: Page) =>
   page.locator("form").filter({has: page.locator(".note-editor")})
-
-// A room composer's join is the upload button and then the compose menu.
-const openComposeMenu = (page: Page) =>
-  page
-    .locator("form")
-    .filter({has: page.locator(".chat-editor")})
-    .locator(".join")
-    .getByRole("button")
-    .nth(1)
-    .click()
 
 // One reaction, added and taken back off again.
 const expectReactionRoundTrip = async (page: Page, scope: Locator, opener: Locator) => {
@@ -358,7 +349,7 @@ test("US-041 publish an article from a room", async ({seed, as}) => {
   const {url} = scenario.space("space")
   const page = await as(users.alice, roomPath(url, "lounge"))
 
-  await openComposeMenu(page)
+  await composerAddButton(page).click()
   await page.getByRole("button", {name: "Write an Article"}).click()
 
   await page.getByPlaceholder("Title", {exact: true}).fill("Repotting in Winter")
@@ -392,7 +383,7 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
   const {url} = scenario.space("space")
   const page = await as(users.alice, roomPath(url, "lounge"))
 
-  await openComposeMenu(page)
+  await composerAddButton(page).click()
   await page.getByRole("button", {name: "Create Thread"}).click()
 
   const fromRoom = modalForm(page, "Create a Thread")
