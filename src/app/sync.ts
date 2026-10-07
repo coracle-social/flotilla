@@ -48,6 +48,7 @@ import {
   rooms,
   searchRelayLists,
 } from "@app/core"
+import {loadUserBookmarks} from "@app/bookmarks"
 import {LIVEKIT_PARTICIPANTS} from "@app/call"
 import {CONTENT_KINDS, REACTION_KINDS, makeCommentFilter} from "@app/content"
 import {INDEXER_RELAYS} from "@app/env"
@@ -196,6 +197,7 @@ const syncUserData = () => {
       muteLists.get().load($pubkey)
       profiles.get().load($pubkey)
       searchRelayLists.get().load($pubkey)
+      loadUserBookmarks($pubkey)
       app.get().use(Settings).load($pubkey)
     }
   }

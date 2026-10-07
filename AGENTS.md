@@ -113,6 +113,7 @@ callbacks and hot paths.
 - NIP-42: Relay authentication
 - NIP-43: Relay membership
 - NIP-46: Nostr Connect (remote signing)
+- NIP-51: Lists and sets (bookmarks, mutes, pins)
 - NIP-57: Lightning Zaps
 
 ## Development Conventions

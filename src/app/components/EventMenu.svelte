@@ -10,6 +10,7 @@
   import Danger from "@assets/icons/danger.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
+  import BookmarkButton from "@app/components/BookmarkButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import Report from "@app/components/Report.svelte"
   import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
@@ -55,6 +56,9 @@
       <Icon size={4} icon={Code2} />
       {noun} Details
     </Button>
+  </li>
+  <li>
+    <BookmarkButton {url} {event} />
   </li>
   {#if url}
     {#if isRoot}

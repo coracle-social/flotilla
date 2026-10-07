@@ -12,6 +12,7 @@
   import VolumeLoud from "@assets/icons/volume-loud.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
+  import BookmarkButton from "@app/components/BookmarkButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import Report from "@app/components/Report.svelte"
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
@@ -107,6 +108,9 @@
       <Icon size={4} icon={GalleryWide} />
       Add to Library
     </Button>
+  </li>
+  <li>
+    <BookmarkButton {url} {event} {onClick} />
   </li>
   <li>
     <Button onclick={read}>

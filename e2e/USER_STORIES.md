@@ -2015,6 +2015,23 @@ Acceptance:
 - A message two months old in a room bob has never opened raises a dot on the
   space, and the room carries the same dot once the space is open.
 
+### US-143 — Keep a message in a bookmark folder
+
+As alice, I want to file a message under a folder of my own, so that the things
+worth keeping are somewhere I can find them again.
+
+Acceptance:
+
+- A message's menu offers a bookmark, and the bookmark lands under Uncategorized
+  with no further prompt.
+- The bookmarks page lists each folder with its contents, and a bookmark shows
+  who wrote it and what it says.
+- A bookmark moves into a folder of the user's own from its menu, leaving the
+  folder it came from empty.
+- A search above the list keeps the bookmarks whose text matches, and hides every
+  folder left with nothing in it.
+- Removing a bookmark from the page empties the folder it was in.
+
 ## Out of scope
 
 Features the e2e suite cannot exercise, and what stops it.

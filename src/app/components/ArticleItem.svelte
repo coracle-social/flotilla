@@ -11,6 +11,7 @@
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import type {FeedContext} from "@app/feeds"
   import {reader} from "@app/core"
+  import {markdownToText} from "@app/markdown"
   import {makeArticlePath} from "@app/routes"
 
   type Props = {
@@ -27,6 +28,7 @@
   const summary = $derived(article.summary())
   const image = $derived(article.image())
   const topics = $derived(uniq(article.topics()))
+  const excerpt = $derived(summary || markdownToText(event.content))
 </script>
 
 {#snippet topicLabels()}
@@ -51,7 +53,7 @@
       </p>
     </div>
     <Content
-      event={{content: summary || event.content, tags: event.tags}}
+      event={{content: excerpt, tags: event.tags}}
       {url}
       expandMode="inline"
       minLength={100}

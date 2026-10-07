@@ -25,6 +25,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
+  import BookmarkButton from "@app/components/BookmarkButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import Report from "@app/components/Report.svelte"
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
@@ -157,6 +158,7 @@
             <Icon size={4} icon={GalleryWide} />
             Add to Library
           </Button>
+          <BookmarkButton {url} {event} class="button button-neutral w-full" />
           <Button class="button button-neutral w-full" onclick={read}>
             <Icon size={4} icon={VolumeLoud} />
             Read Out Loud

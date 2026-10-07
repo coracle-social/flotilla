@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import ServerPath from "@assets/icons/server-path.svg?dataurl"
   import GalleryMinimalistic from "@assets/icons/gallery-minimalistic.svg?dataurl"
@@ -28,6 +29,12 @@
         <Profile inert pubkey={$user.pubkey} />
       </Link>
       <div class="grid grid-cols-3 gap-3 w-full">
+        <Link
+          href="/bookmarks"
+          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+          <Icon icon={Bookmark} size={5} />
+          Bookmarks
+        </Link>
         <Link
           href="/settings/profile"
           class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">

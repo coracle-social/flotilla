@@ -2,6 +2,7 @@
   import type {Snippet} from "svelte"
   import cx from "classnames"
   import {Profiles} from "@welshman/app"
+  import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import Compass from "@assets/icons/compass.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
@@ -77,6 +78,9 @@
       onclick={chatHandler}
       notification={$notifications.has("/chat")}>
       <ImageIcon alt="Messages" src={Letter} size={8} />
+    </PrimaryNavItem>
+    <PrimaryNavItem title="Bookmarks" href="/bookmarks">
+      <ImageIcon alt="Bookmarks" src={Bookmark} size={8} />
     </PrimaryNavItem>
     <PrimaryNavItem title="Search" onclick={showSearch}>
       <ImageIcon alt="Search" src={Magnifier} size={8} />
