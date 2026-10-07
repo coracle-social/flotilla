@@ -71,13 +71,24 @@
     useMultiGrid ? computeAdaptiveGrid(videoTiles.length, gridWidth, gridHeight) : undefined,
   )
 
+  let lastScreenShareKeys: string[] = []
+
   $effect(() => {
-    const k = $videoPrimaryTileKey
-    if (k === undefined) {
-      return
-    }
-    if (!videoTiles.some(t => getVideoTileKey(t) === k)) {
-      videoPrimaryTileKey.set(undefined)
+    const screenShareKeys = videoTiles
+      .filter(t => t.source === Track.Source.ScreenShare)
+      .map(getVideoTileKey)
+    const started = screenShareKeys.find(k => !lastScreenShareKeys.includes(k))
+    const primaryKey = $videoPrimaryTileKey
+
+    lastScreenShareKeys = screenShareKeys
+
+    if (started !== undefined) {
+      videoPrimaryTileKey.set(started)
+    } else if (
+      primaryKey !== undefined &&
+      !videoTiles.some(t => getVideoTileKey(t) === primaryKey)
+    ) {
+      videoPrimaryTileKey.set(screenShareKeys[0])
     }
   })
 
