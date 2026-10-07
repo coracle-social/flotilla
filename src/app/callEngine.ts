@@ -28,9 +28,9 @@ import {
   participantFromLiveKitIdentity,
   participantMediaState,
   resetVideoCallLayout,
+  resetVideoSpotlight,
   speakingParticipants,
   triggerVideoTrackRevision,
-  videoPrimaryTileKey,
   type CallSession,
   type ParticipantMediaState,
 } from "@app/call"
@@ -386,7 +386,7 @@ currentCallSession.subscribe(session => {
   hadCallSession = false
   void audioResumeListener?.then(l => l.remove())
   audioResumeListener = undefined
-  videoPrimaryTileKey.set(undefined)
+  resetVideoSpotlight()
   resetVideoCallLayout()
 })
 

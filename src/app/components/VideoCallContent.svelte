@@ -11,6 +11,7 @@
   import VideoCallTile from "@app/components/VideoCallTile.svelte"
   import VoiceParticipantMediaBadges from "@app/components/VoiceParticipantMediaBadges.svelte"
   import {
+    syncVideoSpotlight,
     toggleVideoPrimaryTile,
     videoPrimaryTileKey,
     currentCallSession,
@@ -44,52 +45,22 @@
       : []
   })
 
-  const primaryTile = $derived.by(() => {
-    const k = $videoPrimaryTileKey
-    if (k === undefined) {
-      return undefined
-    }
-    return videoTiles.find(t => getVideoTileKey(t) === k)
-  })
+  const primaryTile = $derived(videoTiles.find(t => getVideoTileKey(t) === $videoPrimaryTileKey))
 
-  const secondaryTiles = $derived.by(() => {
-    const p = primaryTile
-    if (p === undefined) {
-      return videoTiles
-    }
-    const pk = getVideoTileKey(p)
-    return videoTiles.filter(t => getVideoTileKey(t) !== pk)
-  })
+  const secondaryTiles = $derived(videoTiles.filter(t => t !== primaryTile))
 
   let gridWidth = $state(0)
   let gridHeight = $state(0)
 
-  const useSpotlightLayout = $derived(primaryTile !== undefined)
-  const useMultiGrid = $derived(!useSpotlightLayout)
-
   const tileGrid = $derived<AdaptiveTileGrid | undefined>(
-    useMultiGrid ? computeAdaptiveGrid(videoTiles.length, gridWidth, gridHeight) : undefined,
+    primaryTile ? undefined : computeAdaptiveGrid(videoTiles.length, gridWidth, gridHeight),
   )
 
-  let lastScreenShareKeys: string[] = []
-
   $effect(() => {
-    const screenShareKeys = videoTiles
-      .filter(t => t.source === Track.Source.ScreenShare)
-      .map(getVideoTileKey)
-    const started = screenShareKeys.find(k => !lastScreenShareKeys.includes(k))
-    const primaryKey = $videoPrimaryTileKey
-
-    lastScreenShareKeys = screenShareKeys
-
-    if (started !== undefined) {
-      videoPrimaryTileKey.set(started)
-    } else if (
-      primaryKey !== undefined &&
-      !videoTiles.some(t => getVideoTileKey(t) === primaryKey)
-    ) {
-      videoPrimaryTileKey.set(screenShareKeys[0])
-    }
+    syncVideoSpotlight(
+      videoTiles.map(getVideoTileKey),
+      videoTiles.filter(t => t.source === Track.Source.ScreenShare).map(getVideoTileKey),
+    )
   })
 
   const displays = $derived(
@@ -169,7 +140,7 @@
 
 {#snippet videoPanelBody()}
   {#if showTileGrid}
-    {#if useSpotlightLayout && primaryTile}
+    {#if primaryTile}
       <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
         {@render videoTile(primaryTile, "spotlight")}
         {#if secondaryTiles.length > 0}
@@ -181,7 +152,7 @@
           </div>
         {/if}
       </div>
-    {:else if useMultiGrid}
+    {:else}
       <div
         bind:clientWidth={gridWidth}
         bind:clientHeight={gridHeight}
