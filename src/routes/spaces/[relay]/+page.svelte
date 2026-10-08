@@ -4,6 +4,7 @@
   import {decodeRelay} from "@app/relays"
   import {goToSpace} from "@app/routes"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
+  import SpaceNotify from "@app/components/SpaceNotify.svelte"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
@@ -23,6 +24,7 @@
 <svelte:window bind:innerWidth={width} />
 
 {#if width <= md}
+  <SpaceNotify {url} />
   <SecondaryNav visible class="secondary-nav--mobile-space w-auto grow">
     <SpaceMenu {url} mobile />
   </SecondaryNav>

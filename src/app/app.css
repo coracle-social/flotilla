@@ -6,5 +6,6 @@
 @import "./components/role-badge.css";
 @import "./components/room.css";
 @import "./components/space-menu.css";
+@import "./components/space-notify.css";
 
 @config "../../tailwind.config.js";

@@ -1,5 +1,6 @@
-import {derived} from "svelte/store"
-import {dissoc, fromPairs, last, poll, randomId, tryCatch} from "@welshman/lib"
+import {Capacitor} from "@capacitor/core"
+import {derived, writable} from "svelte/store"
+import {append, dissoc, fromPairs, last, poll, randomId, remove, tryCatch} from "@welshman/lib"
 import {AuthStatus, RelayReasonPrefix, SocketStatus, matchReason} from "@welshman/net"
 import type {Socket} from "@welshman/net"
 import {
@@ -14,13 +15,24 @@ import {
   RELAYS,
 } from "@welshman/util"
 import {RelayJoin, RelayLeave, RoomJoin, RoomLeave} from "@welshman/domain"
-import {Sync, User, publish} from "@welshman/app"
+import {Relays, Sync, User, publish} from "@welshman/app"
 import {stripPrefix} from "@lib/util"
-import {app, command, publisher, roomLists, writer} from "@app/core"
+import {
+  app,
+  command,
+  fromApp,
+  publisher,
+  relayMemberLists,
+  relays,
+  roomLists,
+  writer,
+} from "@app/core"
 import {PLATFORM_URL} from "@app/env"
+import {getPaymentsUrl, isRelayPaid} from "@app/payments"
 import {relaysMostlyRestricted} from "@app/policies"
 import {optInSpaceNotifications} from "@app/push"
 import {deriveSocket} from "@app/relays"
+import {makeSpacePath} from "@app/routes"
 import {publishRoomList} from "@app/rooms"
 import {removeTrustedRelay} from "@app/settings"
 import {syncApplicationData} from "@app/sync"
@@ -256,6 +268,69 @@ export const completeSpaceJoin = async (url: string, notifications: boolean) => 
         },
       ],
     })
+}
+
+// Paid spaces
+
+// Gated out by price rather than by invitation: it charges, and they have not paid.
+export const derivePaidGated = (url: string) =>
+  derived(
+    [fromApp($app => $app.use(Relays).one(url)), relayMemberLists.get().forUrl(url), app],
+    ([$relay, $members, $app]) => {
+      const pubkey = $app.user?.pubkey
+
+      return Boolean(isRelayPaid($relay) && pubkey && !$members?.isMember(pubkey))
+    },
+  )
+
+// Urls a checkout was opened for this session. A forgotten one is covered by membership sync.
+export const pendingCheckouts = writable<string[]>([])
+
+/**
+ * Open a relay's payment page, naming the pubkey being paid for and where to
+ * come back to. `payments_url` may carry a query of its own, so the parameters
+ * are appended rather than written.
+ */
+export const openCheckout = (url: string) => {
+  const paymentsUrl = getPaymentsUrl(relays.get().get(url))
+
+  if (!paymentsUrl) {
+    return "This space has not said where to pay."
+  }
+
+  // A payment page comes back to the app by universal link on native.
+  const origin = Capacitor.isNativePlatform() ? PLATFORM_URL : location.origin
+  const checkoutUrl = new URL(paymentsUrl)
+
+  checkoutUrl.searchParams.set("pubkey", User.require(app.get()).pubkey)
+  checkoutUrl.searchParams.set("return_url", origin + makeSpacePath(url))
+
+  pendingCheckouts.update($urls => append(url, $urls))
+
+  location.href = checkoutUrl.toString()
+}
+
+/**
+ * Ask the relay again whether the user is a member, and finish the join if they
+ * are. Membership is the source of truth: the return redirect is best effort,
+ * and a payment made in another browser lands here too.
+ */
+export const reconcileSpaceMembership = async (url: string) => {
+  // Auth that ended Forbidden before the payment never retries on its own.
+  app.get().pool.get(url).close()
+  relaysMostlyRestricted.update(dissoc(url))
+
+  const members = await relayMemberLists.get().forceLoad(url)
+
+  if (!members?.isMember(User.require(app.get()).pubkey)) {
+    return false
+  }
+
+  await completeSpaceJoin(url, true)
+
+  pendingCheckouts.update($urls => remove(url, $urls))
+
+  return true
 }
 
 export const acceptInvite = async (data: InviteData, notifications: boolean) => {

@@ -29,6 +29,7 @@ import type {AppPolicy, IApp} from "@welshman/app"
 import {merged} from "@welshman/store"
 import {logger, appPolicies} from "@app/core"
 import {BLOCKED_RELAYS} from "@app/env"
+import {notifyPolicy} from "@app/notify"
 import {userSettingsValues, getSetting, RelayAuthMode} from "@app/settings"
 
 // Relays sending events with empty signatures that the user has to choose to trust
@@ -280,4 +281,4 @@ export const socketPolicy: AppPolicy = $app => {
   }
 }
 
-appPolicies.push(ingestPolicy, authPolicy, socketPolicy)
+appPolicies.push(ingestPolicy, authPolicy, socketPolicy, notifyPolicy)

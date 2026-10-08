@@ -17,8 +17,10 @@
   import SpaceAuthError from "@app/components/SpaceAuthError.svelte"
   import SpaceTrustRelay from "@app/components/SpaceTrustRelay.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
+  import SpaceNotify from "@app/components/SpaceNotify.svelte"
+  import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
-  import {deriveRelayAuthError} from "@app/access"
+  import {derivePaidGated, deriveRelayAuthError} from "@app/access"
   import {relays, roomLists, user} from "@app/core"
   import {userSpaceUrls} from "@app/rooms"
   import {getModal, pushModal} from "@app/modal"
@@ -33,9 +35,13 @@
 
   const authError = deriveRelayAuthError(url)
 
+  const paidGated = derivePaidGated(url)
+
   const showAuthError = once(() =>
     pushModal(SpaceAuthError, {url, error: $authError}, {noEscape: true}),
   )
+
+  const showPaymentGate = once(() => pushModal(SpacePaymentGate, {url}, {noEscape: true}))
 
   const showPendingTrust = once(() => pushModal(SpaceTrustRelay, {url}, {noEscape: true}))
 
@@ -81,6 +87,8 @@
     if (redirectUrl && redirectUrl !== url && !redirectPrompted.has(url)) {
       redirectPrompted.add(url)
       pushModal(SpaceRedirect, {url, newUrl: redirectUrl})
+    } else if ($paidGated) {
+      showPaymentGate()
     } else if (!$userSpaceUrls.includes(url) && !joinPrompted.has(url)) {
       if (spacesLoaded) {
         joinPrompted.add(url)
@@ -108,6 +116,7 @@
     <SpaceMenu {url} />
   </SecondaryNav>
   <Page>
+    <SpaceNotify {url} />
     <!-- SvelteKit builds a new page when the route changes and keeps the one it has when only the
          params change, so this rebuilds it for the second case. The url the page store reports
          arrives a tick after the page is built, so keying on that throws the new page away. -->
