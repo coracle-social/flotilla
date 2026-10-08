@@ -4,7 +4,7 @@ import {deleteDB} from "idb"
 import {SecureStorage} from "@aparajita/capacitor-secure-storage"
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import {Preferences} from "@capacitor/preferences"
-import {WEEK, ago, noop, now, on, batch, call, makeQueue} from "@welshman/lib"
+import {MONTH, WEEK, ago, noop, now, on, batch, call, makeQueue} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   ALERT_ANDROID,
@@ -15,9 +15,12 @@ import {
   APP_DATA,
   BLOSSOM_SERVERS,
   COMMAND,
+  COMMENT,
   FOLLOWS,
+  MESSAGE,
   MESSAGING_RELAYS,
   MUTES,
+  POLL_RESPONSE,
   PROFILE,
   RELAY_ADD_MEMBER,
   RELAY_JOIN,
@@ -36,8 +39,11 @@ import {
   ROOMS,
   DELETE,
   REACTION,
+  REPORT,
   hexTags,
   isSignedEvent,
+  tagSpec,
+  tagValue,
   tagValues,
   verifiedSymbol,
 } from "@welshman/util"
@@ -50,7 +56,7 @@ import {Handles, Plaintext, Relays, RelayStats, User, Zappers} from "@welshman/a
 import type {AppPolicy, IApp, MapPlugin, RelayStatsItem} from "@welshman/app"
 import {IDB} from "@lib/indexeddb"
 import {appPolicies} from "@app/core"
-import {DM_KINDS} from "@app/content"
+import {CONTENT_KINDS, DM_KINDS} from "@app/content"
 
 type StringStorage = {
   get: (key: string) => Promise<Maybe<string>>
@@ -173,10 +179,22 @@ const kinds = {
     ROOM_CREATE_PERMISSION,
     ROOM_PINS,
   ],
+  content: [MESSAGE, COMMENT, DELETE, REPORT, POLL_RESPONSE, ...CONTENT_KINDS],
 }
 
 const isRelayScoped = (event: TrustedEvent) =>
   kinds.space.includes(event.kind) || kinds.room.includes(event.kind)
+
+/** A space is asked for its own content on every load, where the wider network's notes never are. */
+const isSpaceContent = (event: TrustedEvent) =>
+  kinds.content.includes(event.kind) && Boolean(tagValue(tagSpec("h"), event.tags))
+
+/** A month of a space's content is kept, which is what bounds the read at startup. */
+const isRecentSpaceContent = (event: TrustedEvent) =>
+  isSpaceContent(event) && event.created_at > ago(1, MONTH)
+
+/** Anything the app reads through a relay is useless without the provenance keying it to one. */
+const needsProvenance = (event: TrustedEvent) => isRelayScoped(event) || isSpaceContent(event)
 
 const isMembershipChange = (event: TrustedEvent) =>
   event.kind === ROOM_ADD_MEMBER || event.kind === ROOM_REMOVE_MEMBER
@@ -191,12 +209,13 @@ const shouldPersistEvent = (event: TrustedEvent, pubkey: string) =>
     : kinds.meta.includes(event.kind) ||
       kinds.alert.includes(event.kind) ||
       isRelayScoped(event) ||
-      isConversation(event)
+      isConversation(event) ||
+      isRecentSpaceContent(event)
 
 type EventItem = {id: string; event: TrustedEvent; relays: string[]; cachedAt?: number}
 
-// A command definition is advisory, so one not republished in a week is dropped.
-const isExpired = (item: EventItem) =>
+/** A command definition is advisory, so one not republished in a week is dropped. */
+const isStaleCommand = (item: EventItem) =>
   item.event.kind === COMMAND && (item.cachedAt ?? now()) < ago(1, WEEK)
 
 type PlaintextItem = {key: string; value: string}
@@ -275,7 +294,7 @@ class Storage {
     }
   }
 
-  /** A relay-scoped event that lost its provenance can never be keyed to a space again, so drop it. */
+  /** An event that lost its provenance can never be keyed to a space again, so drop it. */
   private loadCriticalData = async () => {
     const table = this.db.table<EventItem>("events")
     const items: EventItem[] = []
@@ -286,8 +305,8 @@ class Storage {
       if (
         item.event &&
         shouldPersistEvent(item.event, this.pubkey) &&
-        (!isRelayScoped(item.event) || item.relays.length > 0) &&
-        !isExpired(item)
+        (!needsProvenance(item.event) || item.relays.length > 0) &&
+        !isStaleCommand(item)
       ) {
         item.event[verifiedSymbol] = true
         this.cachedAt.set(item.id, item.cachedAt ?? now())

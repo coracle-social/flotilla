@@ -531,7 +531,7 @@ test("US-108 read messages from a relay you only use for messages", async ({seed
   await expect(bubble(page, "over on your inbox relay")).toBeVisible()
 })
 
-test("US-109 keep a conversation you have already read", async ({seed, as}) => {
+test("US-109 keep a conversation or room you have already read", async ({seed, as}) => {
   let his!: SeededRumor
   let hers!: SeededRumor
 
@@ -548,7 +548,7 @@ test("US-109 keep a conversation you have already read", async ({seed, as}) => {
     his = space.dm(user.bob, [user.alice], "the tide charts are up", at(2, HOUR))
     hers = space.dm(user.alice, [user.bob], "thakns", at(1, HOUR))
 
-    // A room message comes off the same relay and is read back off the wire every time.
+    // A room message comes off the same relay, so it is kept or lost the same way.
     space.message(user.bob, "general", "boat is in the water", at(2, HOUR))
   })
 
@@ -604,8 +604,8 @@ test("US-109 keep a conversation you have already read", async ({seed, as}) => {
   await expect(alice.locator(".chat-bubble").filter({hasText: "thakns"})).toHaveCount(0)
   await expect(message(alice, his.id)).toContainText("🎉")
 
-  // ...and the room, which she keeps no copy of, is as empty as the relay now is
+  // ...and so is the room she had open, which the relay can no longer answer for
   await alice.goto(roomPath(url, "general"))
 
-  await expect(alice.locator(".room__item")).toHaveCount(0)
+  await expect(alice.locator(".room__item").filter({hasText: "boat is in the water"})).toBeVisible()
 })

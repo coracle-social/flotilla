@@ -33,7 +33,6 @@ import {
   tagValues,
 } from "@welshman/util"
 import {Comment, TimeEvent} from "@welshman/domain"
-import {Events} from "@welshman/app"
 import type {Maybe} from "@welshman/lib"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {mergeRepositoryUpdates} from "@welshman/net"
@@ -669,8 +668,10 @@ export const makeFeed = ({
 
   // What the repository already holds is an answer too, so a page of it renders before any relay replies.
   if (useCache) {
+    const {repository, tracker} = app.get()
+    const storedEvents = repository.query(filters).sort(compareEventsAsc)
     const stored = relays.map(url =>
-      app.get().use(Events).forUrl(url, filters).get().sort(compareEventsAsc).slice(-PAGE_SIZE),
+      storedEvents.filter(event => tracker.hasRelay(event.id, url)).slice(-PAGE_SIZE),
     )
 
     // A relay with nothing cached proves nothing either way, and letting it veto the span blanks the feed.
@@ -727,11 +728,11 @@ export const makeCalendarFeed = ({
     return false
   }
 
+  const {repository, tracker} = app.get()
   const events = writable(
-    uniqBy(
-      e => e.id,
-      relays.flatMap(url => app.get().use(Events).forUrl(url, filters).get()),
-    )
+    repository
+      .query(filters)
+      .filter(event => relays.some(url => tracker.hasRelay(event.id, url)))
       .filter(spec({kind: EVENT_TIME}))
       .sort(compareByStart),
   )

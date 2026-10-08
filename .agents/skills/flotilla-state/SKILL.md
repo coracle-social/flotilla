@@ -195,6 +195,10 @@ binds `events.get().forUrl(...).$` at call time, and a module-scope store wraps 
 `src/app/repository.ts` holds only the `LatestEvents` plugin. Plugin reads (`get`, `one`, `load`,
 `index`) are documented in welshman-app.
 
+A relay-scoped read asks the repository for `{ids: <every id the tracker holds for that url>,
+...filter}`, so what it costs is the url's whole cache rather than what the filter matches.
+`makeFeed` queries the filters once and checks `tracker.hasRelay` per event instead.
+
 ### Free functions in an app module
 
 Most derived state is a plain function in the app module that owns its domain, composing plugin
@@ -263,12 +267,16 @@ stores by bumping the database version, so adding or removing a table needs no m
 - relay- and room-scoped kinds
 - DMs
 - room membership changes, only when they tag the user
+- a space's own content, meaning a message, comment, delete, report, poll response or content kind
+  carrying an `h` tag
 
-Room messages, threads and other content are not kept, and background sync pulls them again.
+A note from the wider network carries no `h` tag and is not kept, since nothing asks for it twice.
 
-- Rows keep each event's relays inline. A relay-scoped event without them can never be keyed to
-  a space again, so it is dropped on load.
-- `COMMAND` definitions expire after a week.
+- Rows keep each event's relays inline. An event the app reads through a relay cannot be keyed to
+  a space without them, so it is dropped on load.
+- `COMMAND` definitions expire after a week, and a space's content after a month, which is what
+  bounds the read at startup. Content older than a month is never written, so scrolling a room
+  further back than that writes nothing.
 - Boot waits only for events and relays (`storage.get()?.ready`). The other tables load on the
   next tick.
 
