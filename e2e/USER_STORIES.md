@@ -1924,8 +1924,12 @@ Acceptance:
 
 - The feed carries a button for notes and a button for replies, both on until
   she turns one off.
-- A reply in the feed links to the note it answers, so it reads as more than
-  half a conversation.
+- A reply in the feed is drawn under the note it answers, which the feed loads
+  before it draws either, so it reads as more than half a conversation.
+- An answer leaves the note it names where it was in the feed, so nothing she is
+  reading moves under her.
+- The feed draws as much as fills the screen and grows as she scrolls, rather
+  than drawing everything it has loaded.
 - Turning notes off leaves the replies and turning replies off leaves the
   notes.
 - A feed nothing is left in says so rather than looking like it is still

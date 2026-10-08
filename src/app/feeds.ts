@@ -479,6 +479,7 @@ export const makeFeed = ({
   onEvent,
   at = now(),
   threshold = SPAN_THRESHOLD,
+  useCache = true,
 }: {
   relays: string[]
   filters: Filter[]
@@ -486,6 +487,8 @@ export const makeFeed = ({
   at?: number
   // How much of the relay set has to close before a span is answered.
   threshold?: number
+  // Whether a page of what the repository already holds renders ahead of the relays.
+  useCache?: boolean
 }) => {
   const controller = new AbortController()
   const events = writable<TrustedEvent[]>([])
@@ -665,18 +668,20 @@ export const makeFeed = ({
   }
 
   // What the repository already holds is an answer too, so a page of it renders before any relay replies.
-  const stored = relays.map(url =>
-    app.get().use(Events).forUrl(url, filters).get().sort(compareEventsAsc).slice(-PAGE_SIZE),
-  )
+  if (useCache) {
+    const stored = relays.map(url =>
+      app.get().use(Events).forUrl(url, filters).get().sort(compareEventsAsc).slice(-PAGE_SIZE),
+    )
 
-  // A relay with nothing cached proves nothing either way, and letting it veto the span blanks the feed.
-  const cached = stored.filter(page => page.length > 0)
+    // A relay with nothing cached proves nothing either way, and letting it veto the span blanks the feed.
+    const cached = stored.filter(page => page.length > 0)
 
-  if (cached.length > 0) {
-    reach(Math.max(...cached.map(page => page[0].created_at)))
+    if (cached.length > 0) {
+      reach(Math.max(...cached.map(page => page[0].created_at)))
+    }
+
+    addEvents(stored.flat())
   }
-
-  addEvents(stored.flat())
 
   return {
     events,

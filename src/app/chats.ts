@@ -5,7 +5,8 @@ import type {Maybe} from "@welshman/lib"
 import {getPow, hexTags, tagValues} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import type {RepositoryUpdate, WrapItem} from "@welshman/net"
-import {makeDeriveItem, throttled} from "@welshman/store"
+import {makeDeriveItem, projection, throttled} from "@welshman/store"
+import type {Projection} from "@welshman/store"
 import {
   FollowLists,
   Profiles,
@@ -14,9 +15,8 @@ import {
   Wot,
   WotScope,
   createSearch,
-  projection,
 } from "@welshman/app"
-import type {IApp, Projection, Search} from "@welshman/app"
+import type {IApp, Search} from "@welshman/app"
 import {app, deriveUserItem, fromApp, usePlugin, user} from "@app/core"
 import {DM_KINDS} from "@app/content"
 import {userSettingsValues} from "@app/settings"

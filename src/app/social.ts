@@ -3,10 +3,13 @@ import {derived, readable} from "svelte/store"
 import {
   ago,
   first,
+  groupBy,
   HOUR,
   int,
   max,
+  min,
   noop,
+  partition,
   pushToMapKey,
   removeUndefined,
   shuffle,
@@ -343,6 +346,49 @@ export const isIncludedNetworkFeedEvent = derived(
   $included => (event: TrustedEvent) => $included.includes(networkFeedType(event)),
 )
 
+// One card in the network feed: the note it is drawn around, and the replies answering it.
+export type NetworkFeedEntry = {
+  ref: ReplyRef
+  note?: TrustedEvent
+  replies: TrustedEvent[]
+}
+
+// What a feed event is drawn under: the note a reply answers, or the event itself.
+const getNetworkFeedRef = (event: TrustedEvent): ReplyRef => {
+  const {parent, root} = getReplyRefs(event)
+  const answered = networkFeedType(event) === "replies" ? (parent ?? root) : undefined
+
+  return answered ?? {id: event.id, author: event.pubkey, relays: []}
+}
+
+// Where an entry sits in the feed: its note, or the oldest reply when the note is not loaded.
+const getNetworkFeedTimestamp = (entry: NetworkFeedEntry) =>
+  entry.note?.created_at ?? min(entry.replies.map(reply => reply.created_at))
+
+// A reply collapses into the entry for the note it answers, so two replies to one note share it.
+export const groupNetworkFeedEvents = (events: TrustedEvent[]): NetworkFeedEntry[] => {
+  const grouped = groupBy(
+    ({ref}) => ref.id,
+    events.map(event => ({ref: getNetworkFeedRef(event), event})),
+  )
+
+  const entries = Array.from(grouped, ([id, group]): NetworkFeedEntry => {
+    const [anchors, replies] = partition(({ref, event}) => ref.id === event.id, group)
+
+    return {
+      ref: {
+        id,
+        author: first(removeUndefined(group.map(({ref}) => ref.author))),
+        relays: uniq(group.flatMap(({ref}) => ref.relays)),
+      },
+      note: first(anchors)?.event,
+      replies: replies.map(({event}) => event),
+    }
+  })
+
+  return sortBy(entry => -getNetworkFeedTimestamp(entry), entries)
+}
+
 // Muting
 
 export const isEventMuted = withGetter(
@@ -408,12 +454,13 @@ export class Notes {
       .use(Router)
       .resolver.relays([...relaySelections(ref.relays ?? []), seen(ref), eventOutbox(ref)])
 
-  load = async (pointer: EventPointer) =>
+  load = async (pointer: EventPointer, signal?: AbortSignal) =>
     this.app.repository.getEvent(pointer.id) ??
     first(
       await this.app.use(Network).loadComplete({
         relays: await this.relays(getQuoteRef(pointer)),
         filters: getIdFilters([pointer.id]),
+        signal,
       }),
     )
 

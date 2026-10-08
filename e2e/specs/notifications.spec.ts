@@ -351,7 +351,7 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
   await expect(network.getByRole("button", {name: "Network"})).toBeVisible()
   await expect(page.getByText(note)).toBeVisible()
 
-  // A reply is counted on the note it answers and draws a card of its own.
+  // A reply is counted on the note it answers and drawn underneath it.
   await expect(page.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
   await expect(network.getByText(reply)).toBeVisible()
 
@@ -395,7 +395,7 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
 
   const network = page.getByRole("region", {name: "Network"})
 
-  // His note and his answer to it each draw a card, so his name is on both.
+  // His answer hangs off his note, so the card the feed draws is around the note.
   const card = network.locator(".card").filter({hasText: note})
 
   await expect(network.getByText(note)).toBeVisible()
@@ -689,6 +689,7 @@ test("US-145 choose what the notifications tab includes", async ({seed, as}) => 
 test("US-146 choose what the network feed includes", async ({seed, as}) => {
   const root = "the dredger is working the bar again"
   const answer = "it has been there since Tuesday"
+  const later = "the new markers came in on the barge"
 
   await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -707,6 +708,13 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
       user.bob,
       () => space.kind(Note).writer().setContent(root).renderTemplate(),
       at(2, HOUR),
+    )
+
+    // A second note lands between the first and its answer, so the two orderings differ.
+    space.event(
+      user.bob,
+      () => space.kind(Note).writer().setContent(later).renderTemplate(),
+      at(90, MINUTE),
     )
 
     // Bob answers himself, so the feed holds one note and one reply from the same follow.
@@ -728,8 +736,15 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
   await expect(network.getByText(root)).toBeVisible({timeout: 20_000})
   await expect(network.getByText(answer)).toBeVisible()
 
-  // The reply says what it answers rather than standing on its own.
-  await expect(network.getByRole("button", {name: "View parent"})).toBeVisible()
+  // The reply is drawn under the note it answers rather than behind a link to it.
+  await expect(network.getByRole("button", {name: "View parent"})).toHaveCount(0)
+
+  // An answer does not hoist the note it names above a newer post.
+  await expect(network.getByText(later)).toBeVisible()
+
+  const feed = await network.innerText()
+
+  expect(feed.indexOf(later)).toBeLessThan(feed.indexOf(root))
 
   await filter("Replies").click()
 
@@ -748,8 +763,9 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
 
   await filter("Replies").click()
 
+  // The note a reply answers is loaded for it, so it is drawn with notes filtered out.
   await expect(network.getByText(answer)).toBeVisible()
-  await expect(network.getByText(root)).toHaveCount(0)
+  await expect(network.getByText(root)).toBeVisible()
 })
 
 test("US-144 mute somebody and lose them from the home page", async ({seed, as}) => {

@@ -1,18 +1,36 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {chunks, call, shuffle, sortBy, uniqBy} from "@welshman/lib"
+  import {SvelteMap} from "svelte/reactivity"
+  import {
+    chunks,
+    call,
+    indexBy,
+    removeUndefined,
+    shuffle,
+    sortBy,
+    take,
+    uniqBy,
+  } from "@welshman/lib"
+  import type {Maybe} from "@welshman/lib"
   import {NOTE, getIdOrAddress} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
+  import {createScroller} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
-  import NoteItem from "@app/components/NoteItem.svelte"
+  import HomeNetworkRecentItem from "@app/components/HomeNetworkRecentItem.svelte"
   import {CONTENT_KINDS} from "@app/content"
   import {followLists, relayLists, user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import type {FeedLoadState} from "@app/feeds"
   import {outboxUrls} from "@app/relays"
-  import {isEventMuted, isIncludedNetworkFeedEvent} from "@app/social"
+  import {
+    groupNetworkFeedEvents,
+    isEventMuted,
+    isIncludedNetworkFeedEvent,
+    notes,
+  } from "@app/social"
+  import type {ReplyRef} from "@app/social"
 
   const context = makeFeedContext({
     relays: $relayLists.readUrls($user.pubkey).get(),
@@ -25,8 +43,11 @@
   let element: HTMLElement | undefined = $state()
   let pages = $state<TrustedEvent[][]>([])
   let states = $state<FeedLoadState[]>([])
+  let drawn = $state<string[]>([])
+  let admitting = false
   let started = false
   let destroyed = false
+  const anchors = new SvelteMap<string, Maybe<TrustedEvent>>()
   const unsubscribers: (() => void)[] = []
 
   const candidates = $derived(
@@ -41,12 +62,54 @@
 
   const items = $derived(candidates.filter($isIncludedNetworkFeedEvent))
 
+  const entries = $derived(groupNetworkFeedEvents(items))
+
+  const entryByRef = $derived(indexBy(entry => entry.ref.id, entries))
+
+  // Drawn entries keep the order they were drawn in, so nothing already on screen moves.
+  const shown = $derived(removeUndefined(drawn.map(ref => entryByRef.get(ref))))
+
+  // What the feed holds and has not drawn, newest first. An entry waits here for its note.
+  const buffer = $derived(entries.filter(entry => !anchors.has(entry.ref.id)))
+
   const loading = $derived(states.some(isFeedLoading))
   const exhausted = $derived(
     states.length > 0 && states.every(state => state.status === "exhausted"),
   )
   const isEmpty = $derived(follows?.length === 0 || (exhausted && candidates.length === 0))
   const hidden = $derived(items.length === 0 && candidates.length > 0)
+
+  // The relay resolution ahead of the request takes no signal, so the deadline resolves the race.
+  const loadAnchor = async (ref: ReplyRef) => {
+    const signal = AbortSignal.timeout(5000)
+    const pointer = {id: ref.id, author: ref.author, relays: ref.relays}
+    const expired = new Promise<undefined>(resolve =>
+      signal.addEventListener("abort", () => resolve(undefined)),
+    )
+
+    return Promise.race([$notes.load(pointer, signal), expired])
+  }
+
+  // Every entry's note is in hand before it is drawn, so no card gains one above it afterwards.
+  const admit = async () => {
+    if (!admitting && buffer.length > 0) {
+      admitting = true
+
+      try {
+        const batch = take(10, buffer)
+
+        await Promise.all(
+          batch.map(async entry =>
+            anchors.set(entry.ref.id, entry.note ?? (await loadAnchor(entry.ref))),
+          ),
+        )
+
+        drawn = [...drawn, ...batch.map(entry => entry.ref.id)]
+      } finally {
+        admitting = false
+      }
+    }
+  }
 
   // Each group walks its own timeline, so a slow group holds up nobody else's next page.
   const startGroup = async (pubkeys: string[], index: number) => {
@@ -57,6 +120,7 @@
         relays,
         // Half the group's relays answering is enough to show its page, since the rest get asked again.
         threshold: 0.5,
+        useCache: false,
         filters: [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
         onEvent: context.add,
       })
@@ -79,10 +143,12 @@
   // One selection over every follow lands on the few biggest relays, so each group scores its own.
   const start = (pubkeys: string[]) => {
     const groups = chunks(3, shuffle(pubkeys)).filter(group => group.length > 0)
+    const scroller = createScroller({element: element!, delay: 300, onScroll: admit})
 
     pages = groups.map(() => [])
     states = groups.map(() => ({status: "idle"}))
     groups.forEach(startGroup)
+    unsubscribers.push(scroller.stop)
   }
 
   // The follow list is what the feed is made of, and follows added later don't rebuild it.
@@ -110,11 +176,12 @@
       </p>
       <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
     </div>
-  {:else if items.length > 0}
-    {#each items as event (event.id)}
-      <NoteItem {event} {context} showReply showThreadLinks />
+  {:else if shown.length > 0}
+    <!-- A note the feed carries itself still belongs on its card when the load missed it. -->
+    {#each shown as entry (entry.ref.id)}
+      <HomeNetworkRecentItem {entry} {context} note={anchors.get(entry.ref.id) ?? entry.note} />
     {/each}
-    {#if loading}
+    {#if loading || buffer.length > 0}
       <div class="flex justify-center py-8">
         <Spinner loading />
       </div>

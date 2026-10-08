@@ -1,21 +1,27 @@
 <script lang="ts" module>
-  import type {Maybe} from "@welshman/lib"
+  const instances = new WeakMap<Element | Document, IntersectionObserver>()
 
-  let instance: Maybe<IntersectionObserver>
+  const paint = (entries: IntersectionObserverEntry[]) => {
+    for (const entry of entries) {
+      const target = entry.target as HTMLElement
 
-  /** Browsers paint a `content-visibility: auto` element within half a viewport, which a fast scroll outruns. */
+      target.style.contentVisibility = entry.isIntersecting ? "visible" : ""
+    }
+  }
+
+  /**
+   * Browsers paint a `content-visibility: auto` element within half a viewport, which a fast
+   * scroll outruns. `rootMargin` grows the root's own box and nothing in between, so an observer
+   * watching the viewport is still clipped by the scroll container the list sits in and paints
+   * nothing ahead of it — the root has to be that container.
+   */
   const renderAhead = (element: HTMLElement) => {
-    const observer = (instance ||= new IntersectionObserver(
-      entries => {
-        for (const entry of entries) {
-          const target = entry.target as HTMLElement
+    const root = element.closest(".scroll-container")
+    const key = root ?? document
+    const observer =
+      instances.get(key) ?? new IntersectionObserver(paint, {root, rootMargin: "200% 0px"})
 
-          target.style.contentVisibility = entry.isIntersecting ? "visible" : ""
-        }
-      },
-      {rootMargin: "200% 0px"},
-    ))
-
+    instances.set(key, observer)
     observer.observe(element)
 
     return () => observer.unobserve(element)
