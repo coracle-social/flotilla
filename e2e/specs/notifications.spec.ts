@@ -1,6 +1,6 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
-import {POLL, displayRelayUrl} from "@welshman/util"
+import {NOTE, POLL, displayRelayUrl} from "@welshman/util"
 import {
   Comment,
   FollowList,
@@ -690,6 +690,8 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
   const root = "the dredger is working the bar again"
   const answer = "it has been there since Tuesday"
   const later = "the new markers came in on the barge"
+  const hearsay = "the tide turns at four today"
+  const bare = "bring the boat round at half past"
 
   await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -697,6 +699,7 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
     space.join(user.bob, "general")
+    space.join(user.carol, "general")
 
     seedRelays(space, user.alice)
     seedRelays(space, user.bob)
@@ -723,6 +726,20 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
       () => space.kind(Note).writer().setParent(posted.event).setContent(answer).renderTemplate(),
       at(1, HOUR),
     )
+
+    // Carol is nobody alice follows, so her note is in the feed only if a reply fetches it.
+    const unfollowed = space.event(
+      user.carol,
+      () => space.kind(Note).writer().setContent(hearsay).renderTemplate(),
+      at(50, MINUTE),
+    )
+
+    // A reply from the wild names its parent and nothing else: no relay, no author.
+    space.event(
+      user.bob,
+      () => ({kind: NOTE, content: bare, tags: [["e", unfollowed.event.id]]}),
+      at(45, MINUTE),
+    )
   })
 
   const page = await as(users.alice, "/home")
@@ -738,6 +755,10 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
 
   // The reply is drawn under the note it answers rather than behind a link to it.
   await expect(network.getByRole("button", {name: "View parent"})).toHaveCount(0)
+
+  // The relay the bare reply came from is the only thing that names where its note lives.
+  await expect(network.getByText(bare)).toBeVisible()
+  await expect(network.getByText(hearsay)).toBeVisible()
 
   // An answer does not hoist the note it names above a newer post.
   await expect(network.getByText(later)).toBeVisible()

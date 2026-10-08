@@ -454,13 +454,29 @@ export class Notes {
       .use(Router)
       .resolver.relays([...relaySelections(ref.relays ?? []), seen(ref), eventOutbox(ref)])
 
-  load = async (pointer: EventPointer, signal?: AbortSignal) =>
+  load = async (pointer: EventPointer) =>
     this.app.repository.getEvent(pointer.id) ??
     first(
       await this.app.use(Network).loadComplete({
         relays: await this.relays(getQuoteRef(pointer)),
         filters: getIdFilters([pointer.id]),
-        signal,
+      }),
+    )
+
+  // A reply tag often names neither a relay nor an author, and the reply's own relays are a route.
+  loadParent = async (ref: ReplyRef, replies: TrustedEvent[]) =>
+    this.app.repository.getEvent(ref.id) ??
+    first(
+      await this.app.use(Network).loadComplete({
+        relays: await this.app
+          .use(Router)
+          .resolver.relays([
+            ...relaySelections(ref.relays),
+            seen(ref),
+            ...replies.map(reply => seen({id: reply.id})),
+          ]),
+        filters: getIdFilters([ref.id]),
+        signal: AbortSignal.timeout(3000),
       }),
     )
 

@@ -30,7 +30,6 @@
     isIncludedNetworkFeedEvent,
     notes,
   } from "@app/social"
-  import type {ReplyRef} from "@app/social"
 
   const context = makeFeedContext({
     relays: $relayLists.readUrls($user.pubkey).get(),
@@ -79,17 +78,6 @@
   const isEmpty = $derived(follows?.length === 0 || (exhausted && candidates.length === 0))
   const hidden = $derived(items.length === 0 && candidates.length > 0)
 
-  // The relay resolution ahead of the request takes no signal, so the deadline resolves the race.
-  const loadAnchor = async (ref: ReplyRef) => {
-    const signal = AbortSignal.timeout(5000)
-    const pointer = {id: ref.id, author: ref.author, relays: ref.relays}
-    const expired = new Promise<undefined>(resolve =>
-      signal.addEventListener("abort", () => resolve(undefined)),
-    )
-
-    return Promise.race([$notes.load(pointer, signal), expired])
-  }
-
   // Every entry's note is in hand before it is drawn, so no card gains one above it afterwards.
   const admit = async () => {
     if (!admitting && buffer.length > 0) {
@@ -100,7 +88,10 @@
 
         await Promise.all(
           batch.map(async entry =>
-            anchors.set(entry.ref.id, entry.note ?? (await loadAnchor(entry.ref))),
+            anchors.set(
+              entry.ref.id,
+              entry.note ?? (await $notes.loadParent(entry.ref, entry.replies)),
+            ),
           ),
         )
 

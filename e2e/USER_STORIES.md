@@ -1884,8 +1884,8 @@ Acceptance:
   those people publish to. A follow who is in none of her spaces reads the same
   way, replies included, since a note's replies are counted from the relay the
   note itself came from.
-- The list is flat: a reply is counted on the note it answers and draws a card
-  of its own rather than being nested underneath it.
+- A reply is counted on the note it answers and drawn underneath it, around a
+  card for the note itself.
 - The section fills from the relays that answer. One that takes the connection
   and then says nothing does not hold it empty.
 
@@ -1925,7 +1925,8 @@ Acceptance:
 - The feed carries a button for notes and a button for replies, both on until
   she turns one off.
 - A reply in the feed is drawn under the note it answers, which the feed loads
-  before it draws either, so it reads as more than half a conversation.
+  before it draws either, so it reads as more than half a conversation. A reply
+  naming no relay and no author for that note is drawn under it too.
 - An answer leaves the note it names where it was in the feed, so nothing she is
   reading moves under her.
 - The feed draws as much as fills the screen and grows as she scrolls, rather
