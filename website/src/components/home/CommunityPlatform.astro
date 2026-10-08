@@ -1,0 +1,73 @@
+---
+import { Icon } from 'astro-icon/components';
+import { OPEN_APP } from '../../lib/analytics';
+
+const APP_URL = 'https://app.flotilla.social';
+const APP_STORE_URL = 'https://apps.apple.com/us/app/flotilla-chat/id6741344107';
+const PLAY_URL =
+  'https://play.google.com/store/apps/details?id=social.flotilla&pcampaignid=web_share';
+
+const cards = [
+  {
+    title: 'Your space is your own',
+    body: "A space is your community's home — its name, its look, its members, its rules, all set by you. Public or private, a handful of people or a whole network.",
+    icon: 'ph:house-line',
+  },
+  {
+    title: 'Your rooms, your way',
+    body: 'Use rooms to organize different types of activity. Switch on only what you need and lay them out however your community works.',
+    icon: 'ph:squares-four',
+  },
+  {
+    title: 'One login, everywhere',
+    body: "One login gets your members into every space they join — no separate accounts, nothing to suspend, and no one who can lock them out.",
+    icon: 'ph:identification-badge',
+  },
+] as const;
+---
+
+<section class="relative border-y border-border-soft bg-surface-2/30 py-20 md:py-28">
+  <div class="mx-auto max-w-6xl px-5 md:px-8">
+    <div class="text-center">
+      <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">
+        So we built Flotilla
+      </p>
+      <h2 class="mt-3 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+        Up and running in minutes
+      </h2>
+      <p class="mx-auto mt-5 max-w-2xl text-base text-text-muted sm:text-lg">
+        Set up your community in a few clicks — and your members join from any device, with no
+        jargon and no accounts to wrangle.
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-6 md:grid-cols-3">
+      {cards.map((card) => (
+        <div class="rounded-2xl border border-border-soft bg-surface/60 p-7 backdrop-blur-sm">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary-soft">
+            <Icon name={card.icon} class="h-6 w-6" aria-hidden="true" />
+          </span>
+          <h3 class="mt-6 text-2xl font-extrabold">{card.title}</h3>
+          <p class="mt-3 text-text-muted">{card.body}</p>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-12 flex flex-col items-center gap-5 text-center">
+      <p class="max-w-xl text-base text-text-muted">
+        Native apps for iPhone and Android, plus the web — your members join from anywhere.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer" aria-label="Download on the App Store">
+          <img src="/images/f4TiV4LJ1AQ4XTQejg0vipwNBw.png" alt="Download on the App Store" class="h-12 w-auto" width="180" height="60" loading="lazy" />
+        </a>
+        <a href={PLAY_URL} target="_blank" rel="noopener noreferrer" aria-label="Get it on Google Play">
+          <img src="/images/4plsOpupRU1vo0R8NzZHM5WvgA.png" alt="Get it on Google Play" class="h-12 w-auto" width="180" height="60" loading="lazy" />
+        </a>
+        <a href={APP_URL} target="_blank" rel="noopener noreferrer" class={OPEN_APP} aria-label="Use in your browser">
+          <img src="/images/Y5RG4WARG22im0gxdN5hBidDRk.png" alt="Use in your browser" class="h-12 w-auto" width="180" height="60" loading="lazy" />
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

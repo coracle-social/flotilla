@@ -1,0 +1,138 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Button from '../components/Button.astro';
+import { Icon } from 'astro-icon/components';
+import { CREATE_SPACE } from '../lib/analytics';
+
+const CREATE_URL = 'https://app.flotilla.social/spaces/create';
+const DEMO_URL = 'https://cal.com/coracle.social';
+const SELF_HOST_URL = '/articles/self-hosting-a-space';
+
+const tiers = [
+  {
+    name: 'Free',
+    priceLabel: '',
+    price: '$0',
+    priceSuffix: '',
+    tagline: 'Everything you need to start and run a community.',
+    features: [
+      'Chat, threads & rooms',
+      'Events & polls',
+      'Moderation, roles & access controls',
+      'Member directory & activity feed',
+    ],
+    cta: { label: 'Start free', href: CREATE_URL, variant: 'secondary', class: `w-full ${CREATE_SPACE}` },
+    learnMore: null,
+    featured: false,
+  },
+  {
+    name: 'Grow',
+    priceLabel: 'from',
+    price: '$5',
+    priceSuffix: '/mo',
+    tagline: "For communities that are taking off.",
+    features: [
+      'Everything in Free',
+      'Voice & video calls',
+      'Media & file storage',
+      'Higher member limits',
+      'Your own custom domain',
+    ],
+    cta: { label: 'Start a community', href: CREATE_URL, variant: 'primary', class: `w-full ${CREATE_SPACE}` },
+    learnMore: null,
+    featured: true,
+  },
+  {
+    name: 'Platform',
+    priceLabel: '',
+    price: "Let's talk",
+    priceSuffix: '',
+    tagline: 'A fully owned, branded platform — built and run with you.',
+    features: [
+      'Everything in Grow',
+      'A white-labeled app we build & maintain',
+      'Hands-on help migrating your community',
+      'Full API access & custom integrations',
+      'Priority support',
+    ],
+    cta: { label: 'Book a demo', href: DEMO_URL, variant: 'secondary', class: 'w-full' },
+    learnMore: '/articles/platform-plan',
+    featured: false,
+  },
+] as const;
+---
+
+<BaseLayout
+  title="Pricing"
+  description="Flotilla pricing — start a community for free, grow with hosted plans from $5/mo, or get a fully white-labeled platform built and maintained for you."
+>
+  <section class="relative py-16 md:py-24">
+    <div class="mx-auto max-w-6xl px-5 md:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">Pricing</p>
+        <h1 class="mt-3 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+          Start free. Grow when you're ready.
+        </h1>
+        <p class="mx-auto mt-5 max-w-xl text-base text-text-muted sm:text-lg">
+          Start a community in minutes, at no cost. Upgrade for hosting as you grow — no ads,
+          no per-seat games, no lock-in.
+        </p>
+      </div>
+
+      <div class="mt-14 grid gap-6 md:grid-cols-3">
+        {tiers.map((tier) => (
+          <div
+            class:list={[
+              'relative flex h-full flex-col rounded-3xl border p-8',
+              tier.featured
+                ? 'border-primary/50 bg-primary/8 shadow-2xl'
+                : 'border-border-soft bg-surface/50',
+            ]}
+          >
+            {tier.featured && (
+              <span class="absolute -top-3 left-8 rounded-pill bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                Most popular
+              </span>
+            )}
+            <h2 class="text-2xl font-extrabold">{tier.name}</h2>
+            <p class="mt-4 flex items-baseline gap-1.5">
+              {tier.priceLabel && <span class="text-sm text-text-dim">{tier.priceLabel}</span>}
+              <span class="text-4xl font-extrabold">{tier.price}</span>
+              {tier.priceSuffix && <span class="text-sm text-text-dim">{tier.priceSuffix}</span>}
+            </p>
+            <p class="mt-3 text-sm text-text-muted">{tier.tagline}</p>
+
+            <ul class="mt-6 space-y-3 text-sm">
+              {tier.features.map((f) => (
+                <li class="flex items-start gap-3">
+                  <Icon name="ph:check-circle" class="mt-0.5 h-5 w-5 flex-none text-primary-soft" aria-hidden="true" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div class="mt-auto pt-8">
+              <Button href={tier.cta.href} variant={tier.cta.variant} class={tier.cta.class}>
+                {tier.cta.label}
+              </Button>
+              {tier.learnMore && (
+                <a
+                  href={tier.learnMore}
+                  class="group mt-3 flex items-center justify-center gap-1 text-sm font-bold text-text-muted hover:text-primary-soft transition-colors"
+                >
+                  Learn more
+                  <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">&rarr;</span>
+                </a>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p class="mx-auto mt-10 max-w-xl text-center text-sm text-text-dim">
+        Prefer to run it yourself? Flotilla is
+        <a href={SELF_HOST_URL} class="text-primary-soft hover:underline">self-hostable</a> at no cost.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

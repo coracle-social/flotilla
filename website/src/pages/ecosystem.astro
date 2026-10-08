@@ -1,0 +1,271 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+
+// Backlink trades live here. The `reason` on each entry is an internal note on
+// why the link is included — kept in source for our own records, not rendered.
+// A partner without a `logo` falls back to an initials monogram.
+type Partner = {
+  name: string;
+  url: string;
+  logo?: string;
+  category: string;
+  blurb: string;
+  reason: string;
+};
+
+const ecosystem: Partner[] = [
+  {
+    name: 'Coracle',
+    url: 'https://coracle.social',
+    logo: '/ecosystem/coracle.png',
+    category: 'Nostr client',
+    blurb:
+      'A flexible, power-user Nostr client built by the same team behind Flotilla.',
+    reason:
+      'Sibling project — Coracle and Flotilla share core infrastructure, so we point people to Coracle when they want a firehose-style Nostr experience.',
+  },
+  {
+    name: 'Flotilla Agent',
+    url: '/agent',
+    logo: '/ecosystem/flotilla-agent.svg',
+    category: 'Agents',
+    blurb:
+      'A nostr-native AI agent for your community. It takes work from your rooms, direct messages, and repositories, and runs on a server you own.',
+    reason:
+      'Our own agent supervisor (the flotilla-agent repo). This card links to the /agent install page.',
+  },
+  {
+    name: 'pi-nostr',
+    url: 'https://gitea.coracle.social/coracle/pi-nostr',
+    logo: '/ecosystem/pi-nostr.svg',
+    category: 'Agents',
+    blurb:
+      'Give an AI agent its own Nostr identity. One command sets up an agent that answers direct messages, rooms, and mentions, and pi users can add Nostr tools to their coding agent.',
+    reason:
+      'Our own packages for the pi agent and pi-durable (the pi-nostr repo) — a lighter-weight companion to Flotilla Agent.',
+  },
+  {
+    name: 'Alby',
+    url: 'https://getalby.com',
+    logo: '/ecosystem/alby.png',
+    category: 'Payments',
+    blurb:
+      'A Lightning wallet and browser extension that makes bitcoin payments a one-click affair.',
+    reason:
+      'Integration partner — Alby powers zaps inside Flotilla, so linking here helps members set up a wallet.',
+  },
+  {
+    name: 'nostr.build',
+    url: 'https://nostr.build',
+    logo: '/ecosystem/nostr-build.png',
+    category: 'Media hosting',
+    blurb:
+      'Reliable image, video, and file hosting purpose-built for the Nostr ecosystem.',
+    reason:
+      "Recommended media host — it's the default we suggest to communities that outgrow their relay's built-in storage.",
+  },
+  {
+    name: 'OpenSats',
+    url: 'https://opensats.org',
+    logo: '/ecosystem/opensats.png',
+    category: 'Funding',
+    blurb:
+      'A nonprofit funding free and open-source software, including much of the Nostr protocol.',
+    reason:
+      'Ecosystem supporter — OpenSats funds work Flotilla depends on, and we amplify their grants program in return.',
+  },
+  {
+    name: 'Nostrord',
+    url: 'https://nostrord.com',
+    logo: '/ecosystem/nostrord.png',
+    category: 'Nostr client',
+    blurb:
+      'An alternative Nostr groups client with a familiar, chat-first interface.',
+    reason:
+      'Complementary groups client — a friendly alternative we cross-link for people exploring Nostr communities.',
+  },
+  {
+    name: 'Vector',
+    url: 'https://vectorapp.io',
+    logo: '/ecosystem/vector.png',
+    category: 'Chat app',
+    blurb:
+      'A lightweight, open-source, encrypted chat app — no KYC, no ads, and no metadata tracking, light enough to run on almost any device.',
+    reason:
+      'An alternative to Flotilla with different trade-offs; we cross-link because a healthy ecosystem has room for more than one messenger.',
+  },
+  {
+    name: 'Nostr Apps',
+    url: 'https://nostrapps.com',
+    logo: '/ecosystem/nostrapps.png',
+    category: 'Directory',
+    blurb:
+      'A directory of Nostr apps for finding clients and tools that work with your account.',
+    reason:
+      'Handy directory for members finding compatible apps; a natural reciprocal link.',
+  },
+  {
+    name: 'Amber',
+    url: 'https://github.com/greenart7c3/Amber',
+    logo: '/ecosystem/amber.png',
+    category: 'Signer',
+    blurb:
+      'An Android signer that keeps your Nostr keys in one secure app and approves logins without exposing them.',
+    reason:
+      'Our recommended signer on Android — linked from onboarding so users can log in securely.',
+  },
+  {
+    name: 'Aegis',
+    url: 'https://github.com/ZharlieW/Aegis',
+    logo: '/ecosystem/aegis.webp',
+    category: 'Signer',
+    blurb:
+      'An iOS signer that stores your Nostr keys and approves logins without handing them to every app.',
+    reason:
+      'Our recommended signer on iOS — linked from onboarding for secure key handling.',
+  },
+  {
+    name: 'Sidecar',
+    url: 'https://sidecar.top',
+    logo: '/ecosystem/sidecar.png',
+    category: 'Signer',
+    blurb:
+      'A classy browser-extension signer for logging into Nostr apps without handing over your keys.',
+    reason:
+      'Recommended signer for desktop and browser — a polished option we point users to for secure logins.',
+  },
+  {
+    name: 'Pyramid',
+    url: 'https://github.com/fiatjaf/pyramid',
+    logo: '/ecosystem/pyramid.png',
+    category: 'Relay',
+    blurb:
+      'A minimal relay with an invite-tree membership model, well suited to a personal or community space.',
+    reason:
+      'Recommended relay software for self-hosters running a personal or community space.',
+  },
+  {
+    name: 'Zooid',
+    url: 'https://gitea.coracle.social/coracle/zooid',
+    logo: '/ecosystem/zooid.svg',
+    category: 'Relay',
+    blurb:
+      'A multi-tenant relay from the Coracle team for hosting many communities on a single deployment.',
+    reason:
+      'Our own multi-tenant relay software that powers hosted communities.',
+  },
+  {
+    name: 'Coracle Hosting',
+    url: 'https://hosting.coracle.social',
+    logo: '/ecosystem/coracle-hosting.png',
+    category: 'Hosting',
+    blurb:
+      'Managed community relays from the Coracle team — the simplest way to get a relay for your space.',
+    reason:
+      "Our managed hosting for community relays; the paid path behind Flotilla's hosted plans.",
+  },
+  {
+    name: 'relay.tools',
+    url: 'https://relay.tools',
+    logo: '/ecosystem/relay-tools.png',
+    category: 'Hosting',
+    blurb:
+      'Managed personal relays, so you can have your own relay without running a server.',
+    reason:
+      'Recommended managed option for members who want a personal relay without self-hosting.',
+  },
+  {
+    name: 'Nscope',
+    url: 'https://nscope.nave.pub',
+    category: 'Data sharing',
+    blurb:
+      'A Nostr primitive for permissioned private data sharing — keep one encrypted record and grant or revoke access to specific people through cryptography, with no central platform in the middle.',
+    reason:
+      'Ecosystem building block — we cross-link novel Nostr primitives that expand what communities can safely do with their own data.',
+  },
+];
+
+const isExternal = (url: string) => /^https?:/.test(url);
+
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+---
+
+<BaseLayout
+  title="Ecosystem"
+  description="The tools, hosts, and projects we work with across the Nostr ecosystem."
+>
+  <section class="relative py-16 md:py-24">
+    <div class="mx-auto max-w-6xl px-5 md:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">Ecosystem</p>
+        <h1 class="mt-3 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+          People &amp; projects we work with
+        </h1>
+        <p class="mx-auto mt-5 max-w-xl text-base text-text-muted sm:text-lg">
+          Flotilla is part of a wider open ecosystem. These are the tools and teams we
+          partner with, recommend, and build on.
+        </p>
+      </div>
+
+      <div class="mt-14 grid gap-6 md:grid-cols-2">
+        {ecosystem.map((partner) => (
+          <div class="flex h-full flex-col rounded-3xl border border-border-soft bg-surface/50 p-8">
+            <div class="flex items-center gap-4">
+              <div class="flex h-14 w-14 flex-none items-center justify-center overflow-hidden rounded-2xl border border-border-soft bg-white/[0.05]">
+                {partner.logo ? (
+                  <img
+                    src={partner.logo}
+                    alt={`${partner.name} logo`}
+                    width="40"
+                    height="40"
+                    loading="lazy"
+                    class="h-10 w-10 rounded-lg object-contain"
+                  />
+                ) : (
+                  <span class="font-display text-lg font-extrabold text-primary-soft" aria-hidden="true">
+                    {initials(partner.name)}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h2 class="text-xl font-extrabold leading-tight">{partner.name}</h2>
+                <span class="mt-1 inline-block rounded-pill bg-surface-2/60 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-text-dim">
+                  {partner.category}
+                </span>
+              </div>
+            </div>
+
+            <p class="mt-5 text-sm text-text-muted">{partner.blurb}</p>
+
+            <div class="mt-auto pt-6">
+              <a
+                href={partner.url}
+                class="group inline-flex items-center gap-1.5 text-sm font-bold text-text hover:text-primary-soft transition-colors"
+                {...isExternal(partner.url)
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {}}
+              >
+                {isExternal(partner.url) ? `Visit ${partner.name}` : `Explore ${partner.name}`}
+                <Icon
+                  name={isExternal(partner.url) ? 'ph:arrow-up-right' : 'ph:arrow-right'}
+                  class:list={[
+                    'h-4 w-4 transition-transform group-hover:translate-x-0.5',
+                    isExternal(partner.url) && 'group-hover:-translate-y-0.5',
+                  ]}
+                  aria-hidden="true"
+                />
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

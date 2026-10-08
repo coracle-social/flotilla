@@ -1,0 +1,43 @@
+---
+import { OPEN_APP } from '../lib/analytics';
+
+const APP_URL = 'https://app.flotilla.social';
+const DEMO_URL = 'https://cal.com/coracle.social';
+---
+
+<header class="sticky top-0 z-40 backdrop-blur-md bg-bg/80 border-b border-border-soft">
+  <div class="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 md:px-8">
+    <a href="/" aria-label="Flotilla home" class="flex items-center">
+      <img src="/logo.png" alt="Flotilla" class="h-7 w-auto" width="135" height="28" />
+    </a>
+
+    <nav class="flex items-center gap-2 md:gap-5 text-sm font-bold">
+      <a href="/pricing" class="hidden md:inline text-text-muted hover:text-text transition-colors">
+        Pricing
+      </a>
+      <a href="/articles" class="hidden md:inline text-text-muted hover:text-text transition-colors">
+        Knowledge Base
+      </a>
+      <a
+        href={DEMO_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hidden md:inline text-text-muted hover:text-text transition-colors"
+      >
+        Book a Demo
+      </a>
+      <a
+        href={APP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        class:list={[
+          'rounded-full bg-primary px-4 py-2 font-bold text-white transition-colors hover:bg-primary/90 md:px-5 md:py-2.5',
+          OPEN_APP,
+        ]}
+      >
+        <span class="md:hidden">Login</span>
+        <span class="hidden md:inline">Try Flotilla</span>
+      </a>
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,53 @@
+---
+import { getCollection, render } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import { clusterOf } from '../../lib/clusters';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+  const titleById = new Map(articles.map((a) => [a.id, a.data.title]));
+
+  return articles.map((article) => {
+    // Prev/next follow the article's cluster, in the cluster's own order, so
+    // navigation matches how the knowledge base is grouped on the index.
+    const cluster = clusterOf(article.id);
+    const ids = cluster?.slugs ?? [];
+    const idx = ids.indexOf(article.id);
+    const prevId = idx > 0 ? ids[idx - 1] : null;
+    const nextId = idx >= 0 && idx < ids.length - 1 ? ids[idx + 1] : null;
+    const toLink = (id: string | null) =>
+      id && titleById.has(id) ? { slug: id, title: titleById.get(id)! } : null;
+
+    return {
+      params: { slug: article.id },
+      props: {
+        article,
+        cluster: cluster?.title ?? null,
+        prev: toLink(prevId),
+        next: toLink(nextId),
+      },
+    };
+  });
+}
+
+const { article, cluster, prev, next } = Astro.props;
+const { Content } = await render(article);
+
+// Estimated read time, rounded up at ~200wpm.
+const wordCount = (article.body ?? '').trim().split(/\s+/).filter(Boolean).length;
+const readTime = Math.max(1, Math.ceil(wordCount / 200));
+---
+
+<ArticleLayout
+  title={article.data.title}
+  description={article.data.description}
+  cluster={cluster}
+  readTime={readTime}
+  author={article.data.author}
+  pubDate={article.data.pubDate}
+  updatedDate={article.data.updatedDate}
+  prev={prev}
+  next={next}
+>
+  <Content />
+</ArticleLayout>

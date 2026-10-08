@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/Container.astro';
+import Button from '../components/Button.astro';
+---
+
+<BaseLayout
+  title="Page Not Found"
+  description="The page you were looking for doesn't exist. Head back home or browse the Flotilla knowledge base."
+>
+  <Container size="narrow" class="py-24 md:py-32">
+    <div class="text-center">
+      <p class="font-black text-text leading-none tracking-tighter text-[10rem] sm:text-[14rem] md:text-[20rem]">
+        404
+      </p>
+      <p class="mt-2 text-xl md:text-2xl text-text-muted">
+        That page doesn't exist.
+      </p>
+      <div class="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
+        <Button href="/" variant="primary">Go Home</Button>
+        <Button href="/articles" variant="secondary">Browse the Knowledge Base</Button>
+      </div>
+    </div>
+  </Container>
+</BaseLayout>

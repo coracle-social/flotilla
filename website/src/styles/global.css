@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #111111;
+  --color-surface: #171717;
+  --color-surface-2: #1d1f33;
+  --color-border: #ffffff1a;
+  --color-border-soft: #ffffff0d;
+  --color-primary: #7161ff;
+  --color-primary-soft: #bfb8ff;
+  --color-accent: #fc560e;
+  --color-text: #ffffff;
+  --color-text-muted: rgba(255, 255, 255, 0.75);
+  --color-text-dim: rgba(255, 255, 255, 0.5);
+
+  --font-sans: "Lato", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Baloo 2 Variable", "Lato", system-ui, sans-serif;
+  --font-mono: "Fragment Mono", ui-monospace, "SF Mono", "Menlo", monospace;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-pill: 9999px;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+/* Must stay in @layer base: unlayered rules outrank every Tailwind utility
+   regardless of specificity, so an unlayered `color: inherit` here silently
+   overrides text-* utilities on links (e.g. Button's `inverted` variant). */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+p {
+  line-height: 1.6;
+}
+
+code, pre {
+  font-family: var(--font-mono);
+}

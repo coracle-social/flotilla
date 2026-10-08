@@ -1,0 +1,81 @@
+---
+import { OPEN_APP } from '../lib/analytics';
+
+const APP_URL = 'https://app.flotilla.social';
+const DEMO_URL = 'https://cal.com/coracle.social';
+const GITHUB_URL = 'https://github.com/coracle-social/flotilla';
+const PODCAST_URL = 'https://fountain.fm/show/vnmoRQQ50siLFRE8k061';
+const BLOG_URL = 'https://hodlbod.npub.pro/';
+const STATUS_URL = 'https://status.flotilla.social/status/flotilla';
+
+const year = new Date().getFullYear();
+
+const externalAttrs = (href: string) =>
+  /^https?:/.test(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+
+type FooterLink = { label: string; href: string; eventClass?: string };
+
+const colA: FooterLink[] = [
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Login', href: APP_URL, eventClass: OPEN_APP },
+  { label: 'Book a Demo', href: DEMO_URL },
+  { label: 'Support', href: '/support' },
+  { label: 'Status', href: STATUS_URL },
+  { label: 'Github', href: GITHUB_URL },
+];
+const colB: FooterLink[] = [
+  { label: 'Ecosystem', href: '/ecosystem' },
+  { label: 'Media', href: '/media' },
+  { label: 'Podcast', href: PODCAST_URL },
+  { label: 'Blog', href: BLOG_URL },
+  { label: 'RSS', href: '/rss.xml' },
+];
+---
+
+<footer class="border-t border-border-soft">
+  <div class="mx-auto max-w-6xl px-5 py-12 md:px-8">
+    <div class="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
+      <a href="/" aria-label="Flotilla home">
+        <img src="/logo.png" alt="Flotilla" class="h-7 w-auto" width="135" height="28" />
+      </a>
+
+      <div class="grid grid-cols-2 gap-x-12 gap-y-3 text-sm font-bold">
+        <ul class="space-y-3">
+          {colA.map((l) => (
+            <li>
+              <a
+                href={l.href}
+                class:list={['text-text-muted hover:text-text transition-colors', l.eventClass]}
+                {...externalAttrs(l.href)}
+              >
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <ul class="space-y-3">
+          {colB.map((l) => (
+            <li>
+              <a
+                href={l.href}
+                class="text-text-muted hover:text-text transition-colors"
+                {...externalAttrs(l.href)}
+              >
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-10 flex flex-col items-start justify-between gap-3 border-t border-border-soft pt-6 text-xs text-text-dim md:flex-row md:items-center">
+      <p>&copy; {year} Coracle Social</p>
+      <div class="flex items-center gap-2">
+        <a href="/terms" class="hover:text-text transition-colors">Terms of Service</a>
+        <span aria-hidden="true">•</span>
+        <a href="/privacy" class="hover:text-text transition-colors">Privacy Policy</a>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,258 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/Container.astro';
+import Button from '../components/Button.astro';
+import { Icon } from 'astro-icon/components';
+
+// The agent's code lives in the `flotilla-agent` repo. The links below are built from these.
+const REPO_URL = 'https://gitea.coracle.social/coracle/flotilla-agent';
+// Gitea asks anonymous visitors to sign in for /raw/ paths, but serves the API's raw endpoint.
+const INSTALL_SCRIPT_URL =
+  'https://gitea.coracle.social/api/v1/repos/coracle/flotilla-agent/raw/install.sh?ref=master';
+
+// nginx.conf redirects /agent.sh to install.sh in the repo.
+const INSTALL_COMMAND = 'curl -fsSL https://flotilla.social/agent.sh | bash';
+
+// Embed url for the walkthrough video. The page shows a placeholder while it's empty.
+const VIDEO_EMBED_URL: string = '';
+const VIDEO_TITLE = 'Setting up a Flotilla agent';
+
+const FEATURES = [
+  {
+    title: 'An agent has its own identity',
+    body:
+      'Every agent has its own nostr key, home directory, and workspace. It appears in your rooms as an ordinary nostr account.',
+    icon: 'ph:identification-badge',
+  },
+  {
+    title: 'Work arrives from your rooms',
+    body:
+      'Point it at a relay and tell it what to watch: an event kind, a room, or your direct messages. Messages from pubkeys you trust become jobs.',
+    icon: 'ph:chats-circle',
+  },
+  {
+    title: 'Slash commands your room can see',
+    body:
+      'Agents publish slash commands to your space, giving you easy autocomplete for common tasks.',
+    icon: 'ph:terminal-window',
+  },
+  {
+    title: 'Add more agents for different types of work',
+    body:
+      'Ask your agents to spawn more, each with a different base prompt.',
+    icon: 'ph:users-three',
+  },
+  {
+    title: 'Bring your own model',
+    body:
+      'Agents run on Claude unless you configure another engine, and you can pin every agent to one model. Give an agent its engine token directly, or send it as a nostr DM.',
+    icon: 'ph:brain',
+  },
+  {
+    title: 'Agents run on your own server',
+    body:
+      'There is no sandbox. Each job gets its own working directory, which is cleaned up when the job ends.',
+    icon: 'ph:lock-key',
+  },
+];
+
+const REQUIREMENTS = ['A Linux server you control', 'git', 'node 20 or newer', 'pnpm'];
+---
+
+<BaseLayout
+  title="Flotilla Agent"
+  description="Run a nostr-native AI agent in your community. It takes work from your rooms, direct messages, and repositories, and runs on a server you own."
+>
+  {/* Hero */}
+  <section class="relative overflow-hidden py-16 md:py-24">
+    <div
+      class="pointer-events-none absolute inset-x-0 top-0 h-80 bg-gradient-to-b from-primary/10 to-transparent"
+      aria-hidden="true"
+    />
+    <Container class="relative">
+      <div class="mx-auto max-w-3xl text-center">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">
+          Flotilla Agent
+        </p>
+        <h1 class="mt-3 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+          An agent that lives in your community
+        </h1>
+        <p class="mx-auto mt-5 max-w-2xl text-base text-text-muted sm:text-lg">
+          Give your space a teammate with its own nostr key. It picks up work from your rooms,
+          direct messages, and repositories, and it runs on a server you own.
+        </p>
+      </div>
+
+      {/* Install */}
+      <div class="mx-auto mt-12 max-w-3xl">
+        <div class="rounded-3xl border border-border bg-surface/60 p-6 sm:p-8">
+          <h2 class="text-sm font-bold uppercase tracking-[0.2em] text-text-dim">Install it</h2>
+
+          <div class="mt-4 flex items-stretch gap-2">
+            <pre
+              class="install-command flex-1 overflow-x-auto rounded-xl border border-border-soft bg-bg/70 px-4 py-3.5 text-left"><code
+                class="font-mono text-sm text-text" id="install-command">{INSTALL_COMMAND}</code></pre>
+            {/* Revealed by the script below, so it's never a dead button without JS. */}
+            <button
+              type="button"
+              class="flex-none cursor-pointer rounded-xl border border-border bg-surface px-4 font-bold text-text-muted transition-colors hover:border-primary/50 hover:text-text"
+              data-copy
+              data-copy-text={INSTALL_COMMAND}
+              hidden
+            >
+              <span class="sr-only">Copy the install command</span>
+              <Icon name="ph:copy" class="h-5 w-5" aria-hidden="true" data-copy-icon />
+            </button>
+          </div>
+          {/* A toast that confirms the copy. It stays in the page so screen readers announce it. */}
+          <p
+            class="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-bold text-text opacity-0 shadow-lg transition-opacity duration-200"
+            role="status"
+            aria-live="polite"
+            data-copy-status
+          ></p>
+
+          <div class="mt-5 flex flex-wrap items-center gap-x-2 gap-y-2 text-xs text-text-dim">
+            <span class="font-bold uppercase tracking-wide">You'll need</span>
+            {REQUIREMENTS.map((req, i) => (
+              <>
+                {i > 0 && <span aria-hidden="true">&bull;</span>}
+                <span class="font-mono text-text-muted">{req}</span>
+              </>
+            ))}
+          </div>
+
+          <p class="mt-5 text-xs text-text-dim">
+            <a
+              href={INSTALL_SCRIPT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-bold text-primary-soft hover:underline">Read the script</a
+            > before you run it.
+          </p>
+        </div>
+      </div>
+    </Container>
+  </section>
+
+  {/* Video */}
+  <section class="pb-16 md:pb-24">
+    <Container>
+      <div class="mx-auto max-w-4xl">
+        <div
+          class="aspect-video w-full overflow-hidden rounded-3xl border border-border-soft bg-surface/40"
+        >
+          {VIDEO_EMBED_URL ? (
+            <iframe
+              src={VIDEO_EMBED_URL}
+              title={VIDEO_TITLE}
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+              allowfullscreen
+              class="h-full w-full border-0"
+            />
+          ) : (
+            <div class="flex h-full w-full flex-col items-center justify-center gap-3 text-center">
+              <Icon name="ph:play-circle" class="h-12 w-12 text-text-dim" aria-hidden="true" />
+              <p class="px-6 text-sm text-text-dim">
+                A walkthrough is on its way.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Container>
+  </section>
+
+  {/* Features */}
+  <section class="border-t border-border-soft py-16 md:py-24">
+    <Container>
+      <div class="mx-auto max-w-2xl text-center">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">
+          What it does
+        </p>
+        <h2 class="mt-3 text-3xl font-extrabold sm:text-4xl md:text-5xl">
+          A supervisor for nostr-native agents
+        </h2>
+      </div>
+
+      <div class="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {FEATURES.map((feature) => (
+          <div class="flex h-full flex-col rounded-3xl border border-border-soft bg-surface/50 p-7">
+            <div
+              class="flex h-11 w-11 flex-none items-center justify-center rounded-2xl border border-border-soft bg-primary/10"
+            >
+              <Icon name={feature.icon} class="h-5 w-5 text-primary-soft" aria-hidden="true" />
+            </div>
+            <h3 class="mt-5 text-lg font-extrabold leading-snug">{feature.title}</h3>
+            <p class="mt-3 text-sm text-text-muted">{feature.body}</p>
+          </div>
+        ))}
+      </div>
+    </Container>
+  </section>
+
+  {/* Source */}
+  <section class="border-t border-border-soft py-16 md:py-24">
+    <Container>
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="mt-3 text-3xl font-extrabold sm:text-4xl">Want to dig in?</h2>
+        <p class="mx-auto mt-5 max-w-xl text-base text-text-muted sm:text-lg">
+          The agent is free and open source. Find it on our code forge.
+        </p>
+      </div>
+
+      <div class="mt-12 flex flex-wrap items-center justify-center gap-3">
+        <Button href={REPO_URL} variant="primary">Browse the repository</Button>
+        <Button href="/support" variant="outline">Get help setting it up</Button>
+      </div>
+    </Container>
+  </section>
+</BaseLayout>
+
+<script>
+  const button = document.querySelector<HTMLButtonElement>('[data-copy]');
+  const status = document.querySelector<HTMLElement>('[data-copy-status]');
+
+  let hide: ReturnType<typeof setTimeout> | undefined;
+
+  const toast = (message: string) => {
+    if (!status) return;
+    status.textContent = message;
+    status.classList.replace('opacity-0', 'opacity-100');
+    clearTimeout(hide);
+    hide = setTimeout(() => status.classList.replace('opacity-100', 'opacity-0'), 2000);
+  };
+
+  // navigator.clipboard is undefined outside secure contexts, so the button stays hidden there.
+  if (button && navigator.clipboard) {
+    button.hidden = false;
+
+    button.addEventListener('click', async () => {
+      const text = button.dataset.copyText ?? '';
+      try {
+        await navigator.clipboard.writeText(text);
+        button.classList.add('text-primary-soft');
+        toast('Copied the install command to the clipboard');
+        setTimeout(() => button.classList.remove('text-primary-soft'), 1500);
+      } catch {
+        toast('Copying failed. Select the command and copy it.');
+      }
+    });
+  }
+</script>
+
+<style>
+  /* The command is one long line; let it scroll rather than wrap mid-flag. */
+  .install-command {
+    scrollbar-width: thin;
+  }
+
+  .install-command code {
+    white-space: pre;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+</style>

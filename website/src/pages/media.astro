@@ -1,0 +1,127 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { Icon } from 'astro-icon/components';
+
+// Press hits and appearances. Like /ecosystem, this doubles as a place to keep
+// backlink trades. The `reason` on each entry is an internal note on why it's
+// featured — kept in source, not rendered. Order newest-first.
+const appearances = [
+  {
+    outlet: 'Nostr Compass',
+    title: 'Nostr Compass #22',
+    url: 'https://nostrcompass.org/en/newsletters/2026-05-13-newsletter/',
+    type: 'Newsletter',
+    date: '2026-05-13',
+    excerpt:
+      'The weekly Nostr roundup covers Flotilla 1.8.0 — the NIP-29 relay-based group chat app from hodlbod — shipping video calls, email rendering, and room mentions.',
+    reason:
+      'Recurring ecosystem newsletter that features Flotilla release notes; ongoing visibility with a Nostr-native audience.',
+  },
+  {
+    outlet: 'Hacker News',
+    title: 'Flotilla: Nostr-based Open Source alternative to Discord',
+    url: 'https://news.ycombinator.com/item?id=43282724',
+    type: 'Discussion',
+    date: '2025-03-06',
+    excerpt:
+      'Flotilla shared on Hacker News as an open-source, Nostr-based alternative to Discord.',
+    reason:
+      'Organic exposure on a high-authority domain with a technical audience discovering the project.',
+  },
+  {
+    outlet: 'No BS Bitcoin',
+    title: 'Flotilla: Discord-like Nostr Client for Relay-based Communities',
+    url: 'https://www.nobsbitcoin.com/flotilla-v0-1/',
+    type: 'Article',
+    date: '2024-11-25',
+    excerpt:
+      'No BS Bitcoin covers the Flotilla v0.1 release — a Discord/Slack-like Nostr client, available on the web and on Android via Zapstore.',
+    reason:
+      'Respected, low-noise Bitcoin and Nostr outlet; a clean canonical writeup of the launch.',
+  },
+  {
+    outlet: 'Stacker News',
+    title: 'Flotilla: Nostr Discord Replacement',
+    url: 'https://stacker.news/items/716459',
+    type: 'Discussion',
+    date: '2024-10-09',
+    excerpt:
+      'Hodlbod introduces Flotilla to Stacker News — a new client built around “the dumbest form of communities that can be created: relays as communities.”',
+    reason:
+      'The original community introduction post; early, authentic interest from the Nostr and Bitcoin crowd.',
+  },
+] as const;
+
+const typeIcons: Record<string, string> = {
+  Article: 'ph:newspaper',
+  Discussion: 'ph:chats-circle',
+  Podcast: 'ph:microphone',
+  Interview: 'ph:chats-circle',
+  Video: 'ph:play-circle',
+  Newsletter: 'ph:envelope-simple',
+};
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+---
+
+<BaseLayout
+  title="Media Appearances"
+  description="Articles and discussions featuring Flotilla from across the Nostr and Bitcoin communities."
+>
+  <section class="relative py-16 md:py-24">
+    <div class="mx-auto max-w-3xl px-5 md:px-8">
+      <div class="max-w-2xl">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">Around the web</p>
+        <h1 class="mt-3 text-4xl font-extrabold sm:text-5xl">Media appearances</h1>
+        <p class="mt-5 text-base text-text-muted sm:text-lg">
+          Articles and discussions where Flotilla has shown up — coverage and conversations from
+          across the Nostr and Bitcoin communities.
+        </p>
+      </div>
+
+      <ul class="mt-12 space-y-5">
+        {appearances.map((item) => (
+          <li>
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group block rounded-3xl border border-border-soft bg-surface/50 p-7 hover:border-primary/40 transition-colors"
+            >
+              <div class="flex flex-wrap items-center gap-3 text-xs">
+                <span class="inline-flex items-center gap-1.5 rounded-pill bg-primary/12 px-3 py-1 font-bold uppercase tracking-wide text-primary-soft">
+                  <Icon name={typeIcons[item.type] ?? 'ph:link'} class="h-3.5 w-3.5" aria-hidden="true" />
+                  {item.type}
+                </span>
+                <span class="font-bold text-text-muted">{item.outlet}</span>
+                <span aria-hidden="true" class="text-text-dim">&bull;</span>
+                <time datetime={item.date} class="text-text-dim">{formatDate(item.date)}</time>
+              </div>
+
+              <h2 class="mt-4 text-xl font-extrabold leading-snug text-text group-hover:text-primary-soft transition-colors">
+                {item.title}
+              </h2>
+
+              <p class="mt-3 text-sm text-text-muted">{item.excerpt}</p>
+
+              <span class="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-text group-hover:text-primary-soft transition-colors">
+                {item.type === 'Discussion' ? 'Read the discussion' : 'Read it'}
+                <Icon
+                  name="ph:arrow-up-right"
+                  class="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  aria-hidden="true"
+                />
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <p class="mt-12 text-center text-sm text-text-dim">
+        Writing about Flotilla or want to have us on?
+        <a href="mailto:hello@coracle.social" class="text-primary-soft hover:underline">Get in touch</a>.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

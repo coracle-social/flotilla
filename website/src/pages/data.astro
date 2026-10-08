@@ -1,0 +1,24 @@
+---
+import TextPageLayout from '../layouts/TextPageLayout.astro';
+---
+
+<TextPageLayout
+  title="Your Data"
+  description="How Flotilla handles your data, our minimization principles, and how to delete it."
+>
+  <p>
+    Flotilla does its best to collect as little information about you as possible. We anonymize analytics and bug reports, and we only ask for your email address in order to provide you with relevant notifications.
+  </p>
+  <p>
+    However, Flotilla is built on the nostr protocol for social media, which allows you to either run your own infrastructure, or select which servers you trust. Data sent on your behalf to these servers (also known as relays) is not under Flotilla's control.
+  </p>
+  <p>
+    To delete your data from third-party servers, please contact the server administrators directly, or use something like <a href="https://delete.nostr.net" target="_blank" rel="noopener noreferrer">delete.nostr.net</a>.
+  </p>
+  <p>
+    To request deletion of all or some of your data from Flotilla's servers, please email us at <a href="mailto:hello@coracle.social">hello@coracle.social</a>.
+  </p>
+  <p>
+    If you have any questions, please feel free to <a href="/support">get in touch</a>.
+  </p>
+</TextPageLayout>

@@ -9,3 +9,4 @@ build
 # Env files (keep .env for build; exclude local overrides)
 .env.local
 .env.*.local
+website
