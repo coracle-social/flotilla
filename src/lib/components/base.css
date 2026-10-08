@@ -78,10 +78,7 @@
     @apply cursor-pointer text-left;
   }
 
-  input:focus,
-  textarea:focus,
-  select:focus,
-  [contenteditable]:focus {
+  :focus {
     @apply outline-none;
   }
 }
