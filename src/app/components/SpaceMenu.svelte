@@ -6,6 +6,7 @@
   import SpaceMenuRooms from "@app/components/SpaceMenuRooms.svelte"
   import Link from "@lib/components/Link.svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
+  import {RelayConnection, deriveSocketStatus} from "@app/relays"
   import {makeSpacePath} from "@app/routes"
 
   type Props = {
@@ -14,6 +15,12 @@
   }
 
   const {url, mobile = false}: Props = $props()
+
+  const status = deriveSocketStatus(url)
+
+  const statusPath = $derived(
+    $status === RelayConnection.SignerFailed ? "/settings/profile" : makeSpacePath(url, "about"),
+  )
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
@@ -30,7 +37,7 @@
         <SpaceMenuRooms {url} mobile />
       </div>
       <div class="card space-menu__card space-menu__status shrink-0 z-nav-item">
-        <Link href={makeSpacePath(url, "about")} class="space-menu__status-link">
+        <Link href={statusPath} class="space-menu__status-link">
           <SocketStatusIndicator {url} />
         </Link>
       </div>
@@ -48,7 +55,7 @@
       </div>
     </SecondaryNavSection>
     <div class="flex shrink-0 flex-col gap-2 p-2 pt-0 -mt-4 pb-1 md:pb-2 z-nav">
-      <Link href={makeSpacePath(url, "about")} class="button button-neutral button-sm h-10">
+      <Link href={statusPath} class="button button-neutral button-sm h-10">
         <SocketStatusIndicator {url} />
       </Link>
     </div>

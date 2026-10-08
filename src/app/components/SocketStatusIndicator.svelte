@@ -18,8 +18,10 @@
   <StatusIndicator class="bg-error">Failed to Connect</StatusIndicator>
 {:else if $status === RelayConnection.Authenticating}
   <StatusIndicator class="bg-warning">Authenticating</StatusIndicator>
-{:else if $status === RelayConnection.AuthFailed}
-  <StatusIndicator class="bg-error">Failed to Authenticate</StatusIndicator>
+{:else if $status === RelayConnection.AwaitingSignature}
+  <StatusIndicator class="bg-warning">Waiting for Signer</StatusIndicator>
+{:else if $status === RelayConnection.SignerFailed}
+  <StatusIndicator class="bg-error">Signer Failed</StatusIndicator>
 {:else if $status === RelayConnection.AccessDenied}
   <StatusIndicator class="bg-error">Access Denied</StatusIndicator>
 {:else}

@@ -26,7 +26,11 @@
   }
 
   $effect(() => {
-    if ($status !== RelayConnection.Connecting && $status !== RelayConnection.Authenticating) {
+    if (
+      $status !== RelayConnection.Connecting &&
+      $status !== RelayConnection.Authenticating &&
+      $status !== RelayConnection.AwaitingSignature
+    ) {
       hide()
       return
     }

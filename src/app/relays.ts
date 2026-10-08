@@ -53,7 +53,8 @@ export enum RelayConnection {
   Disconnected = "disconnected",
   ConnectFailed = "connect-failed",
   Authenticating = "authenticating",
-  AuthFailed = "auth-failed",
+  AwaitingSignature = "awaiting-signature",
+  SignerFailed = "signer-failed",
   AccessDenied = "access-denied",
   Connected = "connected",
 }
@@ -74,16 +75,20 @@ export const deriveSocketStatus = (url: string) =>
         return RelayConnection.ConnectFailed
       }
 
+      if ($socket.auth.status === AuthStatus.PendingSignature) {
+        return RelayConnection.AwaitingSignature
+      }
+
       if (
         $socket.auth.status === AuthStatus.Requested ||
-        $socket.auth.status === AuthStatus.PendingSignature ||
         $socket.auth.status === AuthStatus.PendingResponse
       ) {
         return RelayConnection.Authenticating
       }
 
+      // Welshman denies a signature only when the signer fails; a relay refusal is Forbidden.
       if ($socket.auth.status === AuthStatus.DeniedSignature) {
-        return RelayConnection.AuthFailed
+        return RelayConnection.SignerFailed
       }
 
       if ($socket.auth.status === AuthStatus.Forbidden || $relaysMostlyRestricted[url]) {
