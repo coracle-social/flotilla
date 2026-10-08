@@ -50,6 +50,7 @@
   )
 
   let bannerLoading = $state(false)
+  let followLoading = $state(false)
   let bannerInput: HTMLInputElement | undefined = $state()
 
   const copyNpub = () => clip(nip19.npubEncode(target))
@@ -65,10 +66,19 @@
       return
     }
 
-    if (isFollowing) {
-      await $followLists.unfollow(target).then(publish)
-    } else {
-      await $followLists.follow(["p", target]).then(publish)
+    followLoading = true
+
+    try {
+      if (isFollowing) {
+        await $followLists.unfollow(target).then(publish)
+      } else {
+        await $followLists.follow(["p", target]).then(publish)
+      }
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to update your follows."})
+    } finally {
+      followLoading = false
     }
   }
 
@@ -173,8 +183,13 @@
                     {:else}
                       <Button
                         class="button button-neutral flex-1 sm:button-sm sm:flex-none"
+                        disabled={followLoading}
                         onclick={toggleFollow}>
-                        <Icon icon={UserPlus} size={4} />
+                        {#if followLoading}
+                          <Spinner size="xs" />
+                        {:else}
+                          <Icon icon={UserPlus} size={4} />
+                        {/if}
                         {isFollowing ? "Unfollow" : "Follow"}
                       </Button>
                       <Button
