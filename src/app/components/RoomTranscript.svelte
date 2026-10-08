@@ -209,9 +209,11 @@
 
   const reachedStartOfHistory = $derived($older?.status === "exhausted")
 
-  // The page bar carries one loader for both directions of an anchored walk.
+  // A private room nobody has joined draws a join card rather than a transcript, so it waits on nothing.
+  const awaitingContent = $derived(!(h && locked) && (awaitingJump || $events.length === 0))
+
   $effect(() => {
-    pageLoading.set(isFeedLoading($older) || isFeedLoading($newer))
+    pageLoading.set(awaitingContent && (isFeedLoading($older) || isFeedLoading($newer)))
 
     return () => pageLoading.set(false)
   })
