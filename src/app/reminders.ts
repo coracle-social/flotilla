@@ -1,5 +1,5 @@
 import {MINUTE, first, formatTimestampRelative, int, ms, now, uniq} from "@welshman/lib"
-import {EVENT_RSVP, getAddress, getIdFilters, isSignedEvent} from "@welshman/util"
+import {EVENT_RSVP, EVENT_TIME, getAddress, getIdFilters, isSignedEvent} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp} from "@welshman/domain"
 import {getEventStart, getEventTitle, isAttending} from "@app/calendar"
@@ -52,23 +52,41 @@ export const setEventReminders = async (relay: string, event: TrustedEvent, atte
   }
 }
 
+const isUpcoming = (event: TrustedEvent) => {
+  const start = getEventStart(event)
+
+  return Boolean(start && start > now())
+}
+
 const loadAttendedEvents = async (pubkey: string) => {
   const $network = network.get()
   const signal = AbortSignal.timeout(ms(10))
-  const filters = [{kinds: [EVENT_RSVP], authors: [pubkey]}]
+  const rsvpFilter = {kinds: [EVENT_RSVP], authors: [pubkey]}
+  const hostedFilter = {kinds: [EVENT_TIME], authors: [pubkey]}
   const relays = roomLists.get().urls(pubkey).get()
 
-  await $network.request({signal, filters, relays, autoClose: true})
+  await $network.request({signal, relays, autoClose: true, filters: [rsvpFilter, hostedFilter]})
 
   const {repository, tracker} = app.get()
+  const getRelay = (event: TrustedEvent) => first(Array.from(tracker.getRelays(event.id)))
 
   // An RSVP only goes to the space holding its event, so where it was seen is where the event is.
-  const attended = repository.query(filters).flatMap(rsvp => {
+  const rsvps = repository.query([rsvpFilter]).flatMap(rsvp => {
     const rsvpReader = reader(CalendarRsvp)(rsvp)
     const address = rsvpReader.calendarEvent()
-    const relay = first(Array.from(tracker.getRelays(rsvp.id)))
+    const relay = getRelay(rsvp)
 
-    return address && relay && isAttending(rsvpReader.status()) ? [{address, relay}] : []
+    return address && relay ? [{address, relay, attending: isAttending(rsvpReader.status())}] : []
+  })
+
+  const attended = rsvps.filter(({attending}) => attending)
+  const answered = new Set(rsvps.map(({address}) => address))
+
+  // A host attends their own event, unless they have answered its RSVP otherwise.
+  const hosted = repository.query([hostedFilter]).flatMap(event => {
+    const relay = getRelay(event)
+
+    return relay && !answered.has(getAddress(event)) ? [{event, relay}] : []
   })
 
   await $network.request({
@@ -78,11 +96,13 @@ const loadAttendedEvents = async (pubkey: string) => {
     filters: getIdFilters(attended.map(({address}) => address)),
   })
 
-  return attended.flatMap(({address, relay}) => {
+  const rsvped = attended.flatMap(({address, relay}) => {
     const event = app.get().repository.getEvent(address)
 
     return event ? [{event, relay}] : []
   })
+
+  return [...rsvped, ...hosted].filter(({event}) => isUpcoming(event))
 }
 
 // Every schedule the push server holds was built from these settings, so redo the lot.

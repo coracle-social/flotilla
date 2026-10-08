@@ -17,6 +17,7 @@
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
   import EditorContent from "@app/editor/EditorContent.svelte"
   import {publishToSpace} from "@app/rooms"
+  import {setEventReminders} from "@app/reminders"
   import {makeEditor} from "@app/editor"
   import {DraftKey} from "@app/drafts"
   import {pushToast} from "@app/toast"
@@ -106,7 +107,7 @@
         .setContent(content)
         .addTags(...ed.storage.nostr.getEditorTags())
 
-      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
+      const {publication, error} = await publishToSpace(eventWriter, {url, h, shareToChat})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -115,6 +116,8 @@
       draftKey?.clear()
       history.back()
       pushToast({message: "Your event has been saved!"})
+
+      await setEventReminders(url, publication.event, true)
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to save your event."})
