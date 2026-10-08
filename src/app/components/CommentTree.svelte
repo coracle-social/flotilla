@@ -1,4 +1,5 @@
 <script lang="ts">
+  import cx from "classnames"
   import {formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
@@ -23,13 +24,20 @@
   type Props = {
     node: CommentNode
     root: TrustedEvent
+    parent?: TrustedEvent
+    depth?: number
     replyTo?: TrustedEvent
     setReplyTo?: (comment?: TrustedEvent) => void
     url?: string
     context: FeedContext
   }
 
-  const {node, root, replyTo, setReplyTo, url, context}: Props = $props()
+  const {node, root, parent, depth = 1, replyTo, setReplyTo, url, context}: Props = $props()
+
+  // A level costs the text column about 50px, so indentation stops two levels in on a phone and four on a desktop.
+  const indentClass = $derived(
+    depth < 2 ? "ml-4 border-l pl-7" : depth < 4 ? "sm:ml-4 sm:border-l sm:pl-7" : "",
+  )
 
   const composing = $derived(replyTo?.id === node.comment.id)
 
@@ -70,6 +78,12 @@
           <span class="text-content-subtle text-xs">
             {formatTimestamp(node.comment.created_at)}
           </span>
+          <!-- A reply past the cap sits at its parent's level, so it names who it answers. -->
+          {#if parent && depth > 2}
+            <span class={cx("text-content-subtle text-xs", depth < 5 && "sm:hidden")}>
+              Replying to <ProfileName pubkey={parent.pubkey} {url} />
+            </span>
+          {/if}
         </div>
         <Content showEntire event={node.comment} {url} />
         <div class="mt-1 flex flex-wrap items-center justify-end gap-2">
@@ -106,9 +120,17 @@
          this comment's text column; it brightens while the subtree is hovered. -->
     <div
       data-component="CommentReplies"
-      class="border-line-less hover:border-line ml-4 flex flex-col border-l pl-7 transition-colors">
+      class={cx("border-line-less hover:border-line flex flex-col transition-colors", indentClass)}>
       {#each node.children as child (child.comment.id)}
-        <CommentTree node={child} {root} {replyTo} {setReplyTo} {url} {context} />
+        <CommentTree
+          node={child}
+          parent={node.comment}
+          depth={depth + 1}
+          {root}
+          {replyTo}
+          {setReplyTo}
+          {url}
+          {context} />
       {/each}
     </div>
   {/if}
