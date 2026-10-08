@@ -4,6 +4,12 @@
   import {includedNetworkFeedTypes, networkFeedTypes} from "@app/social"
   import type {NetworkFeedType} from "@app/social"
 
+  type Props = {
+    counts: Map<NetworkFeedType, number>
+  }
+
+  const {counts}: Props = $props()
+
   const toggle = (type: NetworkFeedType) => () =>
     includedNetworkFeedTypes.update($types =>
       $types.includes(type) ? remove(type, $types) : [...$types, type],
@@ -14,6 +20,7 @@
   {#each networkFeedTypes as option (option.value)}
     <SegmentedButton
       label={option.label}
+      count={counts.get(option.value) ?? 0}
       size="xs"
       pressed={$includedNetworkFeedTypes.includes(option.value)}
       onclick={toggle(option.value)} />

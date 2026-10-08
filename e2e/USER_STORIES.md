@@ -1926,6 +1926,8 @@ Acceptance:
 
 - The feed carries a button for notes and a button for replies, both on until
   she turns one off.
+- Each button says how much of its type the feed holds, whether it is on or
+  off.
 - A reply in the feed is drawn under the note it answers, which the feed loads
   before it draws either, so it reads as more than half a conversation. A reply
   naming no relay and no author for that note is drawn under it too.
@@ -1948,6 +1950,8 @@ do not.
 Acceptance:
 
 - The tab carries a button per type, all of them on until she turns one off.
+- Each button says how much of its type the tab holds, whether it is on or
+  off.
 - Turning a type off drops it from the entries and from the badge, and leaves
   every other type where it was.
 - An entry nothing is left to say about is not drawn, and the tab says so rather

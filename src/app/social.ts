@@ -2,6 +2,7 @@ import * as nip19 from "nostr-tools/nip19"
 import {derived, readable} from "svelte/store"
 import {
   ago,
+  countBy,
   first,
   groupBy,
   HOUR,
@@ -345,6 +346,8 @@ export const isIncludedNetworkFeedEvent = derived(
   includedNetworkFeedTypes,
   $included => (event: TrustedEvent) => $included.includes(networkFeedType(event)),
 )
+
+export const countNetworkFeedTypes = (events: TrustedEvent[]) => countBy(networkFeedType, events)
 
 // One card in the network feed: the note it is drawn around, and the replies answering it.
 export type NetworkFeedEntry = {

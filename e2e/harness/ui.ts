@@ -36,6 +36,10 @@ export const pickEmoji = async (page: Page, opener: Locator, annotation: string)
     .click()
 }
 
+// Every home feed filter carries a count, so its name is the label and a number.
+export const homeFeedFilter = (scope: Locator, label: string) =>
+  scope.getByRole("button", {name: new RegExp(`^${label} \\d+$`)})
+
 export const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
 
 export const openRoomDetail = (page: Page) =>

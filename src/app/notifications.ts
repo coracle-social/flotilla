@@ -3,6 +3,7 @@ import {Badge} from "@capawesome/capacitor-badge"
 import {page} from "$app/stores"
 import {
   assoc,
+  countBy,
   first,
   identity,
   groupBy,
@@ -457,6 +458,9 @@ const homeNotificationType = (event: TrustedEvent): Maybe<HomeNotificationType> 
     return "replies"
   }
 }
+
+export const countHomeNotificationTypes = (events: TrustedEvent[]) =>
+  countBy(homeNotificationType, events)
 
 export const isIncludedHomeNotification = derived(
   includedHomeNotificationTypes,

@@ -62,6 +62,7 @@ export {
   composerEnabled,
   dialog,
   emojiButton,
+  homeFeedFilter,
   longDate,
   menuButton,
   message,

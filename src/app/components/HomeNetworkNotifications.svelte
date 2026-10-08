@@ -10,6 +10,7 @@
   import {user} from "@app/core"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
   import {
+    countHomeNotificationTypes,
     getHomeNotificationRelays,
     homeNotificationFilters,
     homeNotificationsUnread,
@@ -66,7 +67,7 @@
 </script>
 
 <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4" bind:this={element}>
-  <HomeNetworkNotificationFilters />
+  <HomeNetworkNotificationFilters counts={countHomeNotificationTypes(candidates)} />
   {#if items.length > 0}
     {#each items as notification (notification.key)}
       <HomeNetworkNotificationItem {notification} {context} />

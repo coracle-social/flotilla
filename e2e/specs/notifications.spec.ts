@@ -16,6 +16,7 @@ import {
   composer,
   dialog,
   expect,
+  homeFeedFilter,
   message,
   messageActions,
   modalForm,
@@ -654,14 +655,18 @@ test("US-145 choose what the notifications tab includes", async ({seed, as}) => 
   const network = page.getByRole("region", {name: "Network"})
   const notifications = network.getByRole("button", {name: "Notifications"})
 
-  // Replies is a button of its own, so a reply's own Reply button must not answer to it.
-  const filter = (name: string) => network.getByRole("button", {name, exact: true})
+  const filter = (name: string) => homeFeedFilter(network, name)
 
   await notifications.click()
 
   // Every type is included until she turns one off.
   await expect(network.getByText(reply)).toBeVisible({timeout: 20_000})
   await expect(network.getByText("reacted with")).toBeVisible()
+
+  // Bob answered once and reacted once, and each button says so.
+  await expect(filter("Replies")).toHaveAccessibleName("Replies 1")
+  await expect(filter("Reactions")).toHaveAccessibleName("Reactions 1")
+  await expect(filter("Zaps")).toHaveAccessibleName("Zaps 0")
 
   await filter("Reactions").click()
 
@@ -746,12 +751,15 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
 
   const network = page.getByRole("region", {name: "Network"})
 
-  // A card's own reply button is named "Reply" or counted, so only the filters are named exactly.
-  const filter = (name: string) => network.getByRole("button", {name, exact: true})
+  const filter = (name: string) => homeFeedFilter(network, name)
 
   // Both types are included until she turns one off.
   await expect(network.getByText(root)).toBeVisible({timeout: 20_000})
   await expect(network.getByText(answer)).toBeVisible()
+
+  // Bob's two notes and two replies are what the feed holds, and each button says so.
+  await expect(filter("Notes")).toHaveAccessibleName("Notes 2")
+  await expect(filter("Replies")).toHaveAccessibleName("Replies 2")
 
   // The reply is drawn under the note it answers rather than behind a link to it.
   await expect(network.getByRole("button", {name: "View parent"})).toHaveCount(0)
