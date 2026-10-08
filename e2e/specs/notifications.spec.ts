@@ -351,9 +351,9 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
   await expect(network.getByRole("button", {name: "Network"})).toBeVisible()
   await expect(page.getByText(note)).toBeVisible()
 
-  // The Network tab is notes only: a reply is counted on the note it answers and gets no card of its own.
+  // A reply is counted on the note it answers and draws a card of its own.
   await expect(page.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
-  await expect(page.getByText(reply)).toHaveCount(0)
+  await expect(network.getByText(reply)).toBeVisible()
 
   // The feed carries every kind of post a follow writes, not only their notes.
   await expect(network.getByText(topic)).toBeVisible()
@@ -395,8 +395,11 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
 
   const network = page.getByRole("region", {name: "Network"})
 
+  // His note and his answer to it each draw a card, so his name is on both.
+  const card = network.locator(".card").filter({hasText: note})
+
   await expect(network.getByText(note)).toBeVisible()
-  await expect(network.getByText("Bob Barker")).toBeVisible()
+  await expect(card.getByText("Bob Barker")).toBeVisible()
 
   // Alice reads from her space rather than bob's relay, so a context asked of hers comes back empty.
   await expect(network.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()

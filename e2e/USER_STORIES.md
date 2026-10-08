@@ -1884,8 +1884,8 @@ Acceptance:
   those people publish to. A follow who is in none of her spaces reads the same
   way, replies included, since a note's replies are counted from the relay the
   note itself came from.
-- It is a list of notes: a reply is counted on the note it answers rather than
-  drawn underneath it, and never appears as an item of its own.
+- The list is flat: a reply is counted on the note it answers and draws a card
+  of its own rather than being nested underneath it.
 - The section fills from the relays that answer. One that takes the connection
   and then says nothing does not hold it empty.
 
