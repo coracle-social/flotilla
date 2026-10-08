@@ -97,14 +97,12 @@
   class="hide-on-keyboard border-top bottom-sai fixed left-0 right-0 z-nav h-(--mobile-nav-height) border border-line bg-surface md:hidden">
   <div class="flex h-full justify-between px-2">
     <div class="flex items-center gap-6">
-      {#if spaceUrl}
-        <PrimaryNavItem
-          onclick={toggleSpaceMenu}
-          aria-label={spaceMenuLabel}
-          notification={otherSpaceNotifications}>
-          <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
-        </PrimaryNavItem>
-      {/if}
+      <PrimaryNavItem
+        onclick={toggleSpaceMenu}
+        aria-label={spaceMenuLabel}
+        notification={otherSpaceNotifications}>
+        <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
+      </PrimaryNavItem>
       <PrimaryNavItem onclick={showSearch}>
         <ImageIcon alt="Search" src={Magnifier} size={8} />
       </PrimaryNavItem>
