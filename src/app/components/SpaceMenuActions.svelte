@@ -136,7 +136,7 @@
 {:else}
   {@render actionLink("/settings/alerts", Bell, "Enable notifications")}
 {/if}
-{#if HOSTING_ENABLED && $hostedRelay.relay}
+{#if HOSTING_ENABLED && $hostedRelay.value}
   {@render actionLink(makeSpacePath(url, "admin"), ServerPath, "Hosting settings")}
 {:else if $permissions.editSpace}
   {@render actionButton(startEdit, Pen, "Edit Space")}

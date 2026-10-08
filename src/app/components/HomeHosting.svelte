@@ -20,7 +20,7 @@
 
   const tenantRelays = $hosting.relays
 
-  const relays = $derived($tenantRelays.relays)
+  const relays = $derived($tenantRelays.value)
 
   const openCreate = () => pushModal(RelayCreate)
 </script>

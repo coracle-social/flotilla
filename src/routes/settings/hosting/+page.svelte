@@ -47,7 +47,7 @@
   const tenant = $derived($billing.tenant)
   const invoices = $derived($billing.invoices)
   const draftInvoice = $derived($billing.draftInvoice)
-  const relays = $derived($tenantRelays.relays)
+  const relays = $derived($tenantRelays.value)
   const openInvoice = $derived(selectPayableInvoice(invoices))
 
   // Whether any active relay is on a paid plan.

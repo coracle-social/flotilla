@@ -406,7 +406,7 @@ export const createHostedRelay = async (
 
 // Stores
 
-export type TenantRelays = {loading: boolean; relays: HostedRelay[]}
+export type Loading<T> = {loading: boolean; value: T}
 
 export type TenantBilling = {
   tenant: Maybe<Tenant>
@@ -418,7 +418,7 @@ export type TenantBilling = {
 export class Hosting {
   private plansRequest: Maybe<Promise<Plan[]>>
 
-  private relayState = writable<TenantRelays>({loading: true, relays: []})
+  private relayState = writable<Loading<HostedRelay[]>>({loading: true, value: []})
 
   billing = writable<TenantBilling>({tenant: undefined, invoices: [], draftInvoice: undefined})
 
@@ -444,7 +444,7 @@ export class Hosting {
     try {
       const relays = await listTenantRelays(User.require(this.app).pubkey)
 
-      this.relayState.set({loading: false, relays})
+      this.relayState.set({loading: false, value: relays})
     } catch (e) {
       this.relayState.update($state => ({...$state, loading: false}))
 
@@ -453,7 +453,7 @@ export class Hosting {
   }
 
   // A pubkey with no tenant answers with a HostingError, which leaves the list empty.
-  relays = readable<TenantRelays>({loading: true, relays: []}, set => {
+  relays = readable<Loading<HostedRelay[]>>({loading: true, value: []}, set => {
     this.loadRelays().catch(logUnexpectedError)
 
     return this.relayState.subscribe(set)
@@ -462,9 +462,9 @@ export class Hosting {
   setRelay = (relay: HostedRelay) =>
     this.relayState.update($state => ({
       ...$state,
-      relays: $state.relays.some(spec({id: relay.id}))
-        ? $state.relays.map(r => (r.id === relay.id ? relay : r))
-        : [...$state.relays, relay],
+      value: $state.value.some(spec({id: relay.id}))
+        ? $state.value.map(r => (r.id === relay.id ? relay : r))
+        : [...$state.value, relay],
     }))
 
   // Each request lands on its own, so one failure doesn't blank what the others loaded.
@@ -540,32 +540,31 @@ export const deriveRelayMembers = (id: string) =>
     )
   })
 
-export type RelayActivityState = {loading: boolean; activity: Activity[]}
-
 // The id comes from the hosted relay lookup, which hasn't resolved when the page mounts.
 export const deriveRelayActivity = (id: Readable<Maybe<string>>) =>
-  derived<Readable<Maybe<string>>, RelayActivityState>(
+  derived<Readable<Maybe<string>>, Loading<Activity[]>>(
     id,
     ($id, set) => {
-      if (!$id) {
-        return set({loading: false, activity: []})
+      if ($id) {
+        set({loading: true, value: []})
+
+        listRelayActivity($id).then(
+          ({activity}) => set({loading: false, value: activity}),
+          () => set({loading: false, value: []}),
+        )
+      } else {
+        set({loading: false, value: []})
       }
-
-      set({loading: true, activity: []})
-
-      listRelayActivity($id).then(
-        ({activity}) => set({loading: false, activity}),
-        () => set({loading: false, activity: []}),
-      )
     },
-    {loading: false, activity: []},
+    {loading: false, value: []},
   )
 
-// Loading and "not hosted here" both leave `relay` undefined, and only one keeps the caller waiting.
-export type HostedRelayState = {loading: boolean; relay: Maybe<HostedRelay>}
-
+// Loading and "not hosted here" both leave the value undefined, and only one keeps the caller waiting.
 export const deriveHostedRelay = (url: string) =>
-  derived<Readable<TenantRelays>, HostedRelayState>(hosting.get().relays, ({loading, relays}) => ({
-    loading,
-    relay: relays.find(r => getHostedRelayUrl(r) === url),
-  }))
+  derived<Readable<Loading<HostedRelay[]>>, Loading<Maybe<HostedRelay>>>(
+    hosting.get().relays,
+    ({loading, value: relays}) => ({
+      loading,
+      value: relays.find(r => getHostedRelayUrl(r) === url),
+    }),
+  )

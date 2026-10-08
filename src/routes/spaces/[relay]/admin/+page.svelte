@@ -17,7 +17,7 @@
 
   const url = decodeRelay(params.relay)
   const hostedRelay = deriveHostedRelay(url)
-  const relayActivity = deriveRelayActivity(derived(hostedRelay, $h => $h.relay?.id))
+  const relayActivity = deriveRelayActivity(derived(hostedRelay, $h => $h.value?.id))
 </script>
 
 <SpaceBar>
@@ -30,9 +30,9 @@
 </SpaceBar>
 
 <PageContent class="flex flex-col gap-4 p-4">
-  {#if $hostedRelay.relay}
-    <RelayDetailCard relay={$hostedRelay.relay} />
-    <ActivityFeed activity={$relayActivity.activity} loading={$relayActivity.loading} />
+  {#if $hostedRelay.value}
+    <RelayDetailCard relay={$hostedRelay.value} />
+    <ActivityFeed activity={$relayActivity.value} loading={$relayActivity.loading} />
   {:else if $hostedRelay.loading}
     <div class="flex justify-center p-12">
       <Spinner>Loading hosting details...</Spinner>
