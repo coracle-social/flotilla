@@ -61,7 +61,7 @@ import {decodeGeohash} from "@lib/geohash"
 import {createScroller} from "@lib/html"
 import {CONTENT_KINDS} from "@app/content"
 import {deriveUserItem, fromApp, profiles, reader, relayLists, user, usePlugin} from "@app/core"
-import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+import {isFeedLoading, makeFeed, makeFeedContext, makeFeedLoader} from "@app/feeds"
 import type {FeedLoadState} from "@app/feeds"
 import {outboxUrls} from "@app/relays"
 import {getProfileGeohash} from "@app/location"
@@ -447,6 +447,7 @@ export const makeNetworkFeed = () => {
   const drawn = writable<string[]>([])
   const anchors = writable(new Map<string, Maybe<TrustedEvent>>())
   const unsubscribers: (() => void)[] = []
+  const loaders: ReturnType<typeof makeFeedLoader>[] = []
 
   let admitting = false
   let stopped = false
@@ -496,6 +497,11 @@ export const makeNetworkFeed = () => {
 
   // Every entry's note is in hand before it is drawn, so no card gains one above it afterwards.
   const admit = async () => {
+    // Drawing waits on each entry's note, so the page grows too slowly to say when to fetch.
+    if (get(buffer).length < 20) {
+      loaders.forEach(loader => loader.run())
+    }
+
     const batch = take(10, get(buffer))
 
     if (!admitting && batch.length > 0) {
@@ -505,10 +511,7 @@ export const makeNetworkFeed = () => {
         const loaded = await Promise.all(
           batch.map(
             async entry =>
-              [
-                entry.ref.id,
-                entry.note ?? (await notes.get().loadParent(entry.ref, entry.replies)),
-              ] as const,
+              [entry.ref.id, entry.note ?? (await notes.get().loadParent(entry.ref))] as const,
           ),
         )
 
@@ -520,8 +523,10 @@ export const makeNetworkFeed = () => {
     }
   }
 
+  const settle = () => loaders.forEach(loader => loader.settle())
+
   // Each group walks its own timeline, so a slow group holds up nobody else's next page.
-  const startGroup = async (element: HTMLElement, pubkeys: string[], index: number) => {
+  const startGroup = async (pubkeys: string[], index: number) => {
     const relays = await outboxUrls(pubkeys, 10)
 
     if (!stopped) {
@@ -534,8 +539,9 @@ export const makeNetworkFeed = () => {
         onEvent: context.add,
       })
 
-      const loader = makeScrollLoader(element, feed.loadOlder)
+      const loader = makeFeedLoader(feed.loadOlder)
 
+      loaders.push(loader)
       unsubscribers.push(
         feed.events.subscribe($events =>
           pages.update($pages => {
@@ -551,7 +557,6 @@ export const makeNetworkFeed = () => {
             return $states
           }),
         ),
-        loader.stop,
         feed.cleanup,
       )
     }
@@ -560,11 +565,11 @@ export const makeNetworkFeed = () => {
   // One selection over every follow lands on the few biggest relays, so each group scores its own.
   const start = (element: HTMLElement, pubkeys: string[]) => {
     const groups = chunks(3, shuffle(pubkeys)).filter(group => group.length > 0)
-    const scroller = createScroller({element, delay: 300, onScroll: admit})
+    const scroller = createScroller({element, delay: 300, onScroll: admit, onSettle: settle})
 
     pages.set(groups.map(() => []))
     states.set(groups.map(() => ({status: "idle"})))
-    groups.forEach((group, index) => startGroup(element, group, index))
+    groups.forEach(startGroup)
     unsubscribers.push(scroller.stop)
   }
 
@@ -651,18 +656,13 @@ export class Notes {
       }),
     )
 
-  // A reply tag often names neither a relay nor an author, and the reply's own relays are a route.
-  loadParent = async (ref: ReplyRef, replies: TrustedEvent[]) =>
+  loadParent = async (ref: ReplyRef) =>
     this.app.repository.getEvent(ref.id) ??
     first(
       await this.app.use(Network).loadComplete({
         relays: await this.app
           .use(Router)
-          .resolver.relays([
-            ...relaySelections(ref.relays),
-            seen(ref),
-            ...replies.map(reply => seen({id: reply.id})),
-          ]),
+          .resolver.relays([eventOutbox({id: ref.id, pubkey: ref.author, relays: ref.relays})]),
         filters: getIdFilters([ref.id]),
         signal: AbortSignal.timeout(3000),
       }),

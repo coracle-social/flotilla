@@ -404,7 +404,7 @@ const nextInterval = (interval: number, found: number) =>
 export const isFeedLoading = (state: Maybe<FeedLoadState>) =>
   state?.status === "loading" || state?.status === "searching"
 
-const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
+export const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
   const state = writable<FeedLoadState>({status: "idle"})
 
   let running = false
