@@ -286,6 +286,9 @@ A note from the wider network carries no `h` tag and is not kept, since nothing 
   who does not is fetched again.
 - Boot waits only for events and relays (`storage.get()?.ready`). The other tables load on the
   next tick.
+- A database that cannot be opened, read or written degrades the cache rather than the app. Every
+  failed open, read and write is logged and swallowed, so the app runs on relay data alone and
+  recovers on the next load that succeeds.
 
 To persist another kind, add it to `kinds` in `storage.ts`. To persist a new map-backed plugin,
 add a `TABLES` entry and an `init*` method that calls `persistMapPlugin` with the table, the
