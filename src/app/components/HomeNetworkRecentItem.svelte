@@ -1,6 +1,5 @@
 <script lang="ts">
   import {take} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
   import {sortEventsDesc} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
@@ -12,15 +11,13 @@
 
   type Props = {
     entry: NetworkFeedEntry
-    // The note the entry is drawn around, which the feed resolves before drawing it.
-    note: Maybe<TrustedEvent>
     context: FeedContext
   }
 
-  const {entry, note, context}: Props = $props()
+  const {entry, context}: Props = $props()
 
   // A muted person's note is not drawn above a reply to it that she has not muted.
-  const anchor = $derived(note && !$isEventMuted(note) ? note : undefined)
+  const anchor = $derived(entry.note && !$isEventMuted(entry.note) ? entry.note : undefined)
 
   const replies = $derived(sortEventsDesc(entry.replies))
 

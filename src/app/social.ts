@@ -1,10 +1,13 @@
 import * as nip19 from "nostr-tools/nip19"
-import {derived, readable} from "svelte/store"
+import {derived, get, readable, writable} from "svelte/store"
 import {
   ago,
+  call,
+  chunks,
   countBy,
   first,
   groupBy,
+  indexBy,
   HOUR,
   int,
   max,
@@ -15,6 +18,7 @@ import {
   removeUndefined,
   shuffle,
   sortBy,
+  take,
   tryCatch,
   uniq,
   uniqBy,
@@ -29,6 +33,7 @@ import {
   getCommentFiltersForRoot,
   getIdAndAddress,
   getIdFilters,
+  getIdOrAddress,
   hexTags,
   isRelayUrl,
   matchTag,
@@ -53,7 +58,12 @@ import type {CommentRef} from "@welshman/domain"
 import {Events, FollowLists, MuteLists, Network, Profiles, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {decodeGeohash} from "@lib/geohash"
-import {deriveUserItem, fromApp, profiles, reader, user, usePlugin} from "@app/core"
+import {createScroller} from "@lib/html"
+import {CONTENT_KINDS} from "@app/content"
+import {deriveUserItem, fromApp, profiles, reader, relayLists, user, usePlugin} from "@app/core"
+import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+import type {FeedLoadState} from "@app/feeds"
+import {outboxUrls} from "@app/relays"
 import {getProfileGeohash} from "@app/location"
 import type {QuotePointer} from "@app/quotes"
 import {DEFAULT_PUBKEYS} from "@app/env"
@@ -418,6 +428,153 @@ export const groupNetworkFeedEvents = (events: TrustedEvent[]): NetworkFeedEntry
   })
 
   return sortBy(entry => -getNetworkFeedTimestamp(entry), entries)
+}
+
+/**
+ * The home network feed: one timeline per follow group, merged newest first,
+ * with every entry held back until the note it is drawn around is in hand, so
+ * nothing already on screen gains a card above it. `start` takes the scroll
+ * container, which the caller owns along with the type filters and the markup.
+ */
+export const makeNetworkFeed = () => {
+  const context = makeFeedContext({
+    relays: relayLists.get().readUrls(user.get().pubkey).get(),
+    withReplies: true,
+  })
+
+  const pages = writable<TrustedEvent[][]>([])
+  const states = writable<FeedLoadState[]>([])
+  const drawn = writable<string[]>([])
+  const anchors = writable(new Map<string, Maybe<TrustedEvent>>())
+  const unsubscribers: (() => void)[] = []
+
+  let admitting = false
+  let stopped = false
+
+  // Everything the feed holds, newest first, less whoever the reader muted.
+  const candidates = derived([pages, isEventMuted], ([$pages, $isEventMuted]) =>
+    uniqBy(
+      getIdOrAddress,
+      sortBy(
+        event => -event.created_at,
+        $pages.flat().filter(event => !$isEventMuted(event)),
+      ),
+    ),
+  )
+
+  const items = derived([candidates, isIncludedNetworkFeedEvent], ([$candidates, $isIncluded]) =>
+    $candidates.filter($isIncluded),
+  )
+
+  const grouped = derived(items, $items => groupNetworkFeedEvents($items))
+
+  // What the feed holds and has not drawn, newest first. An entry waits here for its note.
+  const buffer = derived([grouped, anchors], ([$grouped, $anchors]) =>
+    $grouped.filter(entry => !$anchors.has(entry.ref.id)),
+  )
+
+  // Drawn entries keep the order they were drawn in, so nothing already on screen moves.
+  const entries = derived([grouped, drawn, anchors], ([$grouped, $drawn, $anchors]) => {
+    const byRef = indexBy(entry => entry.ref.id, $grouped)
+
+    return removeUndefined($drawn.map(id => byRef.get(id))).map(entry => ({
+      ...entry,
+      // A note the feed carries itself still belongs on its card when the load missed it.
+      note: $anchors.get(entry.ref.id) ?? entry.note,
+    }))
+  })
+
+  const loading = derived(
+    [states, buffer],
+    ([$states, $buffer]) => $states.some(isFeedLoading) || $buffer.length > 0,
+  )
+
+  const exhausted = derived(
+    states,
+    $states => $states.length > 0 && $states.every(state => state.status === "exhausted"),
+  )
+
+  // Every entry's note is in hand before it is drawn, so no card gains one above it afterwards.
+  const admit = async () => {
+    const batch = take(10, get(buffer))
+
+    if (!admitting && batch.length > 0) {
+      admitting = true
+
+      try {
+        const loaded = await Promise.all(
+          batch.map(
+            async entry =>
+              [
+                entry.ref.id,
+                entry.note ?? (await notes.get().loadParent(entry.ref, entry.replies)),
+              ] as const,
+          ),
+        )
+
+        anchors.update($anchors => new Map([...$anchors, ...loaded]))
+        drawn.update($drawn => [...$drawn, ...batch.map(entry => entry.ref.id)])
+      } finally {
+        admitting = false
+      }
+    }
+  }
+
+  // Each group walks its own timeline, so a slow group holds up nobody else's next page.
+  const startGroup = async (element: HTMLElement, pubkeys: string[], index: number) => {
+    const relays = await outboxUrls(pubkeys, 10)
+
+    if (!stopped) {
+      const feed = makeFeed({
+        relays,
+        // Half the group's relays answering is enough to show its page, since the rest get asked again.
+        quorum: 0.5,
+        useCache: false,
+        filters: [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
+        onEvent: context.add,
+      })
+
+      const loader = makeScrollLoader(element, feed.loadOlder)
+
+      unsubscribers.push(
+        feed.events.subscribe($events =>
+          pages.update($pages => {
+            $pages[index] = $events
+
+            return $pages
+          }),
+        ),
+        loader.subscribe($state =>
+          states.update($states => {
+            $states[index] = $state
+
+            return $states
+          }),
+        ),
+        loader.stop,
+        feed.cleanup,
+      )
+    }
+  }
+
+  // One selection over every follow lands on the few biggest relays, so each group scores its own.
+  const start = (element: HTMLElement, pubkeys: string[]) => {
+    const groups = chunks(3, shuffle(pubkeys)).filter(group => group.length > 0)
+    const scroller = createScroller({element, delay: 300, onScroll: admit})
+
+    pages.set(groups.map(() => []))
+    states.set(groups.map(() => ({status: "idle"})))
+    groups.forEach((group, index) => startGroup(element, group, index))
+    unsubscribers.push(scroller.stop)
+  }
+
+  const stop = () => {
+    stopped = true
+    unsubscribers.forEach(call)
+    context.cleanup()
+  }
+
+  return {context, candidates, items, entries, loading, exhausted, start, stop}
 }
 
 // Muting
