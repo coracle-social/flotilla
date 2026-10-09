@@ -22,7 +22,6 @@
   import {fromApp} from "@app/core"
   import {ENABLE_PAID_SPACES} from "@app/env"
   import {clearModals, pushModal} from "@app/modal"
-  import {getPaymentsUrl} from "@app/payments"
   import {pushToast} from "@app/toast"
   import {goToSpace} from "@app/routes"
 
@@ -88,7 +87,7 @@
   let timer = 0
   let listeners: {remove: () => void}[] = []
 
-  const paymentsUrl = $derived(getPaymentsUrl($relay))
+  const paymentsUrl = $derived($relay?.payments_url)
   const pending = $derived($pendingCheckouts.includes(url))
 
   $effect(() => {

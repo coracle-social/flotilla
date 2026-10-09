@@ -1,34 +1,6 @@
+import {DAY} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import type {Relay} from "@welshman/domain"
-
-/**
- * NIP-11's payment fields, which the published @welshman/domain copies onto a
- * Relay without typing. Delete this and read them off Relay once the release
- * carrying welshman's own RelayFee lands.
- */
-type RelayPayments = {
-  payments_url?: string
-  fees?: {
-    admission?: RelayFee[]
-    subscription?: RelayFee[]
-    publication?: RelayFee[]
-  }
-}
-
-export type RelayFee = {
-  amount: number
-  unit: string
-  period?: number
-  kinds?: number[]
-}
-
-const payments = (relay: Maybe<Relay>) => relay as Maybe<Relay & RelayPayments>
-
-export const getPaymentsUrl = (relay: Maybe<Relay>) => payments(relay)?.payments_url
-
-// A relay is paid when it both charges and says where to pay.
-export const isRelayPaid = (relay: Maybe<Relay>) =>
-  Boolean(relay?.limitation?.payment_required && getPaymentsUrl(relay))
+import type {Relay, RelayFee} from "@welshman/domain"
 
 /**
  * A subscription is what a space charges; an admission fee is the fallback for a
@@ -36,12 +8,10 @@ export const isRelayPaid = (relay: Maybe<Relay>) =>
  * the first one that can be displayed is the one shown.
  */
 export const getRelayFee = (relay: Maybe<Relay>) => {
-  const fees = payments(relay)?.fees
+  const fees = relay?.fees
 
   return (fees?.subscription || []).concat(fees?.admission || []).find(displayFee)
 }
-
-const DAY = 24 * 60 * 60
 
 const periods: [number, string][] = [
   [365 * DAY, "year"],

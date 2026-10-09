@@ -28,7 +28,6 @@ import {
   writer,
 } from "@app/core"
 import {PLATFORM_URL} from "@app/env"
-import {getPaymentsUrl, isRelayPaid} from "@app/payments"
 import {relaysMostlyRestricted} from "@app/policies"
 import {optInSpaceNotifications} from "@app/push"
 import {deriveSocket} from "@app/relays"
@@ -279,7 +278,7 @@ export const derivePaidGated = (url: string) =>
     ([$relay, $members, $app]) => {
       const pubkey = $app.user?.pubkey
 
-      return Boolean(isRelayPaid($relay) && pubkey && !$members?.isMember(pubkey))
+      return Boolean($relay?.isPaid() && pubkey && !$members?.isMember(pubkey))
     },
   )
 
@@ -292,7 +291,7 @@ export const pendingCheckouts = writable<string[]>([])
  * are appended rather than written.
  */
 export const openCheckout = (url: string) => {
-  const paymentsUrl = getPaymentsUrl(relays.get().get(url))
+  const paymentsUrl = relays.get().get(url)?.payments_url
 
   if (!paymentsUrl) {
     return "This space has not said where to pay."

@@ -5,7 +5,6 @@
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import {relays} from "@app/core"
-  import {isRelayPaid} from "@app/payments"
   import {userSpaceUrls} from "@app/rooms"
   import {pushModal} from "@app/modal"
   import {goToSpace} from "@app/routes"
@@ -24,7 +23,7 @@
       goToSpace(url)
     } else if (invite) {
       pushModal(SpaceInviteAccept, {invite})
-    } else if (isRelayPaid($relay)) {
+    } else if ($relay?.isPaid()) {
       pushModal(SpacePaymentGate, {url})
     } else {
       pushModal(SpaceJoin, {url})

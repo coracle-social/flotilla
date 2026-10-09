@@ -23,7 +23,6 @@
   import {relayMemberLists, relays, user} from "@app/core"
   import {ENABLE_PAID_SPACES} from "@app/env"
   import {deriveHostedRelay, HOSTING_ENABLED} from "@app/hosting"
-  import {isRelayPaid} from "@app/payments"
   import {deriveSpacePermissions} from "@app/management"
   import {userSpaceUrls} from "@app/rooms"
   import {deriveSpaceActionItems} from "@app/actionItems"
@@ -52,7 +51,7 @@
   const leaveSpace = () => pushModal(SpaceExit, {url}, {replaceState: sheet})
 
   const joinSpace = () =>
-    pushModal(isRelayPaid($relay) ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet})
+    pushModal($relay?.isPaid() ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet})
 
   const showActionItems = () => pushModal(SpaceActionItems, {url}, {replaceState: sheet})
 
@@ -68,7 +67,7 @@
   // The owner is a member by construction and has nothing to manage.
   const canManageMembership = $derived(
     ENABLE_PAID_SPACES &&
-      isRelayPaid($relay) &&
+      $relay?.isPaid() &&
       $relay?.pubkey !== $user.pubkey &&
       Boolean($members?.isMember($user.pubkey)),
   )
