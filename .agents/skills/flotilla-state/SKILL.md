@@ -258,7 +258,9 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 
 `storagePolicy` builds a `Storage` only for an app with a user, so a signed-out app caches
 nothing. Each identity gets its own database, `flotilla-9gl-<pubkey>`. `IDB` reconciles object
-stores by bumping the database version, so adding or removing a table needs no migration.
+stores by bumping the database version, so adding or removing a table needs no migration. Every
+read walks a cursor, since a `getAll` over a whole table is one structured clone and Chrome refuses
+one past a cap that moves between versions.
 
 `shouldPersistEvent` keeps:
 
@@ -277,6 +279,11 @@ A note from the wider network carries no `h` tag and is not kept, since nothing 
 - `COMMAND` definitions expire after a week, and a space's content after a month, which is what
   bounds the read at startup. Content older than a month is never written, so scrolling a room
   further back than that writes nothing.
+- Another author's metadata expires a month after it was cached, so the table holds a month of
+  profiles and lists rather than every one the app has seen. The user's own never expires. It is
+  the rail and the follow list, and a quiet month would otherwise empty both until a relay answers.
+  `cachedAt` is set when a row is written, so an author who republishes gets a fresh month and one
+  who does not is fetched again.
 - Boot waits only for events and relays (`storage.get()?.ready`). The other tables load on the
   next tick.
 

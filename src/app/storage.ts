@@ -214,9 +214,15 @@ const shouldPersistEvent = (event: TrustedEvent, pubkey: string) =>
 
 type EventItem = {id: string; event: TrustedEvent; relays: string[]; cachedAt?: number}
 
-/** A command definition is advisory, so one not republished in a week is dropped. */
-const isStaleCommand = (item: EventItem) =>
-  item.event.kind === COMMAND && (item.cachedAt ?? now()) < ago(1, WEEK)
+/**
+ * Everyone else's metadata is a cache, so a row not replaced inside its kind's window is dropped.
+ * The user's own metadata is state and never expires. A space's content is bounded by its own age
+ * instead.
+ */
+const isExpired = ({event, cachedAt = now()}: EventItem, pubkey: string) =>
+  event.pubkey !== pubkey &&
+  ((event.kind === COMMAND && cachedAt < ago(1, WEEK)) ||
+    (kinds.meta.includes(event.kind) && cachedAt < ago(1, MONTH)))
 
 type PlaintextItem = {key: string; value: string}
 
@@ -300,13 +306,13 @@ class Storage {
     const items: EventItem[] = []
     const stale: string[] = []
 
-    for (const item of await table.getAll()) {
+    await table.each(item => {
       // Rows written before provenance was stored inline hold a bare event
       if (
         item.event &&
         shouldPersistEvent(item.event, this.pubkey) &&
         (!needsProvenance(item.event) || item.relays.length > 0) &&
-        !isStaleCommand(item)
+        !isExpired(item, this.pubkey)
       ) {
         item.event[verifiedSymbol] = true
         this.cachedAt.set(item.id, item.cachedAt ?? now())
@@ -314,7 +320,7 @@ class Storage {
       } else {
         stale.push(item.id)
       }
-    }
+    })
 
     this.app.repository.load(items.map(item => item.event))
 
@@ -432,13 +438,13 @@ class Storage {
   ) => {
     const table = this.db.table<Row>(name)
 
-    for (const row of await table.getAll()) {
+    await table.each(row => {
       const entry = fromRow(row)
 
       if (entry) {
         plugin.set(...entry)
       }
-    }
+    })
 
     const enqueue = batch(FLUSH_INTERVAL, idleWrite(table.bulkPut))
 

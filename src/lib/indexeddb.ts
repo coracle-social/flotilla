@@ -80,20 +80,33 @@ export class IDB {
 
   table = <T>(name: string) => new IDBTable<T>(this, name)
 
-  getAll = async <T>(table: string): Promise<T[]> => {
+  /**
+   * A getAll serializes the whole table into one structured clone. Chrome refuses a clone past a
+   * cap that moves between versions, so every read walks a cursor instead.
+   */
+  each = async <T>(table: string, visit: (item: T) => void) => {
     const connection = await this.live()
 
-    if (!connection) {
-      return []
+    if (connection) {
+      const tx = connection.transaction(table, "readonly")
+      let cursor = await tx.objectStore(table).openCursor()
+
+      while (cursor) {
+        visit(cursor.value)
+
+        cursor = await cursor.continue()
+      }
+
+      await tx.done
     }
+  }
 
-    const tx = connection.transaction(table, "readonly")
-    const store = tx.objectStore(table)
-    const result = await store.getAll()
+  getAll = async <T>(table: string): Promise<T[]> => {
+    const items: T[] = []
 
-    await tx.done
+    await this.each<T>(table, item => items.push(item))
 
-    return result || []
+    return items
   }
 
   bulkPut = async <T>(table: string, data: Iterable<T>) => {
@@ -154,6 +167,8 @@ export class IDBTable<T> {
     readonly db: IDB,
     readonly name: string,
   ) {}
+
+  each = (visit: (item: T) => void) => this.db.each<T>(this.name, visit)
 
   getAll = () => this.db.getAll<T>(this.name)
 
