@@ -9,6 +9,7 @@ import type {IApp} from "@welshman/app"
 import {roomLists, usePlugin, user} from "@app/core"
 import {HOSTING_BACKEND_URL, HOSTING_RELAY_DOMAIN, PLATFORM_URL} from "@app/env"
 import {goToMovedSpace} from "@app/routes"
+import {publishRoomList} from "@app/rooms"
 import {getHttpAuthHeader} from "@app/signer"
 
 // Apple doesn't allow selling hosting outside their payment system.
@@ -525,7 +526,7 @@ export const followHostedRelay = async (previous: HostedRelay, next: HostedRelay
     await roomLists
       .get()
       .migrateRelay(previousUrl, nextUrl)
-      .then(command => command?.publish())
+      .then(command => command && publishRoomList(command))
     await goToMovedSpace(previousUrl, nextUrl)
   }
 
