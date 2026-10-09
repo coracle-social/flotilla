@@ -12,6 +12,7 @@
   import {moveBookmark, userBookmarkFolders} from "@app/bookmarks"
   import type {BookmarkFolder} from "@app/bookmarks"
   import {popModal} from "@app/modal"
+  import {pushToast} from "@app/toast"
 
   type Props = {
     folder: BookmarkFolder
@@ -20,9 +21,14 @@
 
   const {folder, tag}: Props = $props()
 
-  const move = (to?: string) => () => {
-    moveBookmark(tag, to)
+  const move = (to?: string) => async () => {
     popModal()
+
+    const error = await moveBookmark(tag, to)
+
+    if (error) {
+      pushToast({theme: "error", message: error})
+    }
   }
 </script>
 

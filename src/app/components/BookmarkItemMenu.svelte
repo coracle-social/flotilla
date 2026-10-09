@@ -19,9 +19,14 @@
 
   const move = () => pushModal(BookmarkMove, {folder, tag})
 
-  const remove = () => {
-    removeBookmark(tag[1])
-    pushToast({message: "Bookmark removed"})
+  const remove = async () => {
+    const error = await removeBookmark(tag[1])
+
+    if (error) {
+      pushToast({theme: "error", message: error})
+    } else {
+      pushToast({message: "Bookmark removed"})
+    }
   }
 </script>
 

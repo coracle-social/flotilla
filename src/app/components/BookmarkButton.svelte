@@ -18,15 +18,19 @@
 
   const isBookmarked = deriveIsBookmarked(getIdOrAddress(event))
 
-  const toggle = () => {
+  const toggle = async () => {
     onClick?.()
 
-    if ($isBookmarked) {
-      removeBookmark(getIdOrAddress(event))
-      pushToast({message: "Bookmark removed"})
+    // The repository takes the write at once, so the label flips before the relays answer.
+    const bookmarked = $isBookmarked
+    const error = await (bookmarked
+      ? removeBookmark(getIdOrAddress(event))
+      : addBookmark(eventToBookmark(event, url)))
+
+    if (error) {
+      pushToast({theme: "error", message: error})
     } else {
-      addBookmark(eventToBookmark(event, url))
-      pushToast({message: "Bookmark saved!"})
+      pushToast({message: bookmarked ? "Bookmark removed" : "Bookmark saved!"})
     }
   }
 </script>

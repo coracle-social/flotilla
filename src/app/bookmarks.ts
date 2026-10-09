@@ -220,17 +220,17 @@ export const matchesQuery = (tag: string[], event: Maybe<TrustedEvent>, query: s
 
 // A folder is a named set, or the kind 10003 list when it has no identifier of its own.
 const updateFolder = (identifier: Maybe<string>, fn: (eventWriter: ListWriter) => void) =>
-  (identifier
-    ? app.get().use(BookmarkSets).update(identifier, fn)
-    : app.get().use(BookmarkLists).update(fn)
-  ).then(publish)
+  settle(
+    identifier
+      ? app.get().use(BookmarkSets).update(identifier, fn)
+      : app.get().use(BookmarkLists).update(fn),
+  )
 
 // Filing a bookmark twice in one folder would publish the tag twice, so the value goes first.
-export const addBookmark = (tag: string[], identifier?: string) => {
+export const addBookmark = (tag: string[], identifier?: string) =>
   updateFolder(identifier, eventWriter =>
     eventWriter.dropTags(other => other[1] === tag[1]).addPublic(tag),
   )
-}
 
 export const createBookmarkFolder = (title: string) =>
   settle(command(writer(BookmarkSet).setIdentifier().setTitle(title)))
@@ -246,20 +246,24 @@ export const renameBookmarkFolder = (identifier: string, title: string) =>
 const foldersHolding = (value: string) =>
   userBookmarkFolders.get().filter(folder => folder.bookmarks.some(tag => tag[1] === value))
 
-const removeEach = (folders: BookmarkFolder[], value: string) => {
-  for (const folder of folders) {
-    updateFolder(folder.identifier, eventWriter => eventWriter.dropTags(tag => tag[1] === value))
-  }
+const removeEach = async (folders: BookmarkFolder[], value: string) => {
+  const errors = await Promise.all(
+    folders.map(folder =>
+      updateFolder(folder.identifier, eventWriter => eventWriter.dropTags(tag => tag[1] === value)),
+    ),
+  )
+
+  return errors.find(Boolean)
 }
 
 // Unbookmarking is a toggle, so it clears the value from wherever the user filed it.
 export const removeBookmark = (value: string) => removeEach(foldersHolding(value), value)
 
-export const moveBookmark = (tag: string[], to?: string) => {
+export const moveBookmark = async (tag: string[], to?: string) => {
   const from = foldersHolding(tag[1]).filter(folder => folder.identifier !== to)
+  const errors = await Promise.all([addBookmark(tag, to), removeEach(from, tag[1])])
 
-  addBookmark(tag, to)
-  removeEach(from, tag[1])
+  return errors.find(Boolean)
 }
 
 export const deleteBookmarkFolder = async (identifier: string) => {
