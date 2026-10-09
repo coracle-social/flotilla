@@ -64,13 +64,13 @@
     }
   }
 
-  // A payment made in another browser lands here too, so the poll is unconditional.
+  // Each pass reconnects to the relay, so it is worth it only while a checkout is out.
   const poll = () => {
     timer = window.setTimeout(async () => {
       await reconcile()
 
       // Ten minutes, after which a payment is only noticed on a foreground event.
-      if (++polls < 120) {
+      if (pending && ++polls < 120) {
         poll()
       }
     }, 5000)
@@ -91,10 +91,16 @@
   const paymentsUrl = $derived(getPaymentsUrl($relay))
   const pending = $derived($pendingCheckouts.includes(url))
 
+  $effect(() => {
+    if (pending) {
+      poll()
+
+      return () => clearTimeout(timer)
+    }
+  })
+
   onMount(async () => {
     await reconcile()
-
-    poll()
 
     if (Capacitor.isNativePlatform()) {
       listeners = [await App.addListener("appStateChange", ({isActive}) => isActive && reconcile())]
