@@ -35,9 +35,20 @@
   const {node, root, parent, depth = 1, replyTo, setReplyTo, url, context}: Props = $props()
 
   // A level costs the text column about 50px, so indentation stops two levels in on a phone and four on a desktop.
+  const phoneIndentCap = 2
+  const desktopIndentCap = 4
+
   const indentClass = $derived(
-    depth < 2 ? "ml-4 border-l pl-7" : depth < 4 ? "sm:ml-4 sm:border-l sm:pl-7" : "",
+    depth < phoneIndentCap
+      ? "ml-4 border-l pl-7"
+      : depth < desktopIndentCap
+        ? "sm:ml-4 sm:border-l sm:pl-7"
+        : "",
   )
+
+  const atParentLevel = $derived(depth > phoneIndentCap)
+
+  const atParentLevelOnDesktop = $derived(depth > desktopIndentCap)
 
   const composing = $derived(replyTo?.id === node.comment.id)
 
@@ -79,8 +90,8 @@
             {formatTimestamp(node.comment.created_at)}
           </span>
           <!-- A reply past the cap sits at its parent's level, so it names who it answers. -->
-          {#if parent && depth > 2}
-            <span class={cx("text-content-subtle text-xs", depth < 5 && "sm:hidden")}>
+          {#if parent && atParentLevel}
+            <span class={cx("text-content-subtle text-xs", !atParentLevelOnDesktop && "sm:hidden")}>
               Replying to <ProfileName pubkey={parent.pubkey} {url} />
             </span>
           {/if}
