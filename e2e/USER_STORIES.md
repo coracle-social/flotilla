@@ -1905,8 +1905,9 @@ Acceptance:
   the badge goes down once she has looked at the tab.
 - An entry is the note that was answered or reacted to, fetched whether or not
   it had already been loaded, with the replies to it shown underneath.
-- Everything done to one note within a few hours of each other is one entry, so
-  two people answering the same note do not fill the section.
+- Everything done to one note is one entry, so two people answering the same
+  note do not fill the section, and an answer hours after the last one joins
+  that entry rather than repeating the note under it.
 - Every entry says why it is there: who replied, mentioned, reacted, reposted
   or zapped.
 - An entry whose note is itself a reply links to the note it answers and to the

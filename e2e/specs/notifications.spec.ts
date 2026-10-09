@@ -480,11 +480,12 @@ test("US-141 read notifications on home", async ({seed, as}) => {
       )
 
     // Alice answers a reply rather than a root, so her own note has both a parent and a thread.
-    const posted = outbox.note(user.carol, root, at(60, MINUTE))
-    const question = answer(user.bob, posted, asked, at(50, MINUTE))
-    const mine = answer(user.alice, question, note, at(40, MINUTE))
+    const posted = outbox.note(user.carol, root, at(8, HOUR))
+    const question = answer(user.bob, posted, asked, at(7, HOUR))
+    const mine = answer(user.alice, question, note, at(6, HOUR))
 
-    answer(user.bob, mine, reply, at(20, MINUTE))
+    // Hours apart, so the two answers fall either side of a time bucket.
+    answer(user.bob, mine, reply, at(5, HOUR))
     answer(user.carol, mine, second, at(15, MINUTE))
 
     outbox.event(
@@ -511,7 +512,7 @@ test("US-141 read notifications on home", async ({seed, as}) => {
 
   await notifications.click()
 
-  // Everything done to one note is one entry, so the note it is about is drawn once.
+  // Everything done to one note is one entry, whatever the gap, so the note is drawn once.
   await expect(network.getByText(note)).toHaveCount(1, {timeout: 20_000})
   await expect(network.getByText("replied to your note")).toHaveCount(1)
   await expect(network.getByText(reply)).toBeVisible()

@@ -282,7 +282,33 @@ export const isNotificationTarget = (event: TrustedEvent) =>
   event.kind === NOTE ||
   (event.kind === COMMENT && reader(Comment)(event).root().kind === String(NOTE))
 
-// Everything done to one note within a few hours of each other collapses into a single entry.
+// Two entries in a row about one note read as a duplicate, whatever bucket split them.
+const mergeAdjacent = (notifications: HomeNotification[]) => {
+  const merged: HomeNotification[] = []
+
+  for (const notification of notifications) {
+    const previous = merged[merged.length - 1]
+
+    if (previous?.ref.id === notification.ref.id) {
+      merged[merged.length - 1] = {
+        ...previous,
+        ref: {
+          ...previous.ref,
+          author: previous.ref.author ?? notification.ref.author,
+          relays: uniq([...previous.ref.relays, ...notification.ref.relays]),
+        },
+        replies: [...previous.replies, ...notification.replies],
+        reactions: [...previous.reactions, ...notification.reactions],
+      }
+    } else {
+      merged.push(notification)
+    }
+  }
+
+  return merged
+}
+
+// Everything done to one note collapses into a single entry rather than one per answer.
 export const groupNotifications = (events: TrustedEvent[]) => {
   const interval = int(HOUR, 3)
   const notifications = new Map<string, HomeNotification>()
@@ -319,7 +345,9 @@ export const groupNotifications = (events: TrustedEvent[]) => {
     }
   }
 
-  return sortBy(notification => -notification.timestamp, Array.from(notifications.values()))
+  return mergeAdjacent(
+    sortBy(notification => -notification.timestamp, Array.from(notifications.values())),
+  )
 }
 
 // The network feed
