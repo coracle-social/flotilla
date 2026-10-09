@@ -82,7 +82,7 @@ importers:
         version: 2.0.1
       '@pomade/core':
         specifier: ^0.3.3
-        version: 0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+        version: 0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
       '@poppanator/sveltekit-svg':
         specifier: ^7.0.0
         version: 7.0.0(rollup@4.60.4)(svelte@5.55.9(@typescript-eslint/types@8.67.0))(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0))
@@ -117,35 +117,35 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(@sveltejs/kit@2.61.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@7.2.0)(svelte@5.55.9(@typescript-eslint/types@8.67.0))(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))(typescript@5.9.3)(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)))(@vite-pwa/assets-generator@1.0.2(@types/node@25.9.1))(supports-color@7.2.0)(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0))(workbox-build@7.4.1(supports-color@8.1.1))(workbox-window@7.4.1)
       '@welshman/app':
-        specifier: ^0.12.6
-        version: 0.12.6(63c6ccd0c87dfde7b26df9032feef450)
+        specifier: ^0.13.0
+        version: 0.13.0(ca531ec3d569c2733a5340672b9787d6)
       '@welshman/content':
-        specifier: ^0.12.6
-        version: 0.12.6(nostr-tools@2.25.2(typescript@5.9.3))
+        specifier: ^0.13.0
+        version: 0.13.0(nostr-tools@2.25.2(typescript@5.9.3))
       '@welshman/domain':
-        specifier: ^0.12.6
-        version: 0.12.6(1337139114c6a67243e8d5001f7f1792)
+        specifier: ^0.13.0
+        version: 0.13.0(7d7097841554b20f0520fef579dd18be)
       '@welshman/editor':
-        specifier: ^0.12.6
-        version: 0.12.6(c4145382ce88071dd19290062964d83d)
+        specifier: ^0.13.0
+        version: 0.13.0(fb3be173f7ea30d6651a87a97d916107)
       '@welshman/feeds':
-        specifier: ^0.12.6
-        version: 0.12.6(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))
+        specifier: ^0.13.0
+        version: 0.13.0(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))
       '@welshman/lib':
-        specifier: ^0.12.6
-        version: 0.12.6
+        specifier: ^0.13.0
+        version: 0.13.0
       '@welshman/net':
-        specifier: ^0.12.6
-        version: 0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+        specifier: ^0.13.0
+        version: 0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
       '@welshman/signer':
-        specifier: ^0.12.6
-        version: 0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+        specifier: ^0.13.0
+        version: 0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
       '@welshman/store':
-        specifier: ^0.12.6
-        version: 0.12.6(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))
+        specifier: ^0.13.0
+        version: 0.13.0(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))
       '@welshman/util':
-        specifier: ^0.12.6
-        version: 0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))
+        specifier: ^0.13.0
+        version: 0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))
       cheerio:
         specifier: ^1.2.0
         version: 1.2.0
@@ -2272,36 +2272,36 @@ packages:
       '@vite-pwa/assets-generator':
         optional: true
 
-  '@welshman/app@0.12.6':
-    resolution: {integrity: sha512-k7eg7vKH5ED0eFG7L7RapTmKY9q7ljwHyP5GdasDpkAUKGAW2lv5dgd2pwiYjuNFubGzl857jKFXGoTKPQqv8w==}
+  '@welshman/app@0.13.0':
+    resolution: {integrity: sha512-csY1PlUUI0ZMdlnXkul5ycWHXC4vR96CNEJos2qy2Fy63VWg82AD7mURQFB5qZG7wR+AOu0qD8qNkyAnUJbFiw==}
     peerDependencies:
       '@pomade/core': ^0.3.3
-      '@welshman/domain': 0.12.6
-      '@welshman/feeds': 0.12.6
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6
-      '@welshman/signer': 0.12.6
-      '@welshman/store': 0.12.6
-      '@welshman/util': 0.12.6
+      '@welshman/domain': 0.13.0
+      '@welshman/feeds': 0.13.0
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0
+      '@welshman/signer': 0.13.0
+      '@welshman/store': 0.13.0
+      '@welshman/util': 0.13.0
       svelte: ^4.0.0 || ^5.0.0
 
-  '@welshman/content@0.12.6':
-    resolution: {integrity: sha512-PFMALo85a71Icgz1ZT+z0zCRC46ikxtfZYNx6YM5vfpZscCPOkaLNm1MKxv6YTatgRzimjqd96kr+mwJMtQ2/g==}
+  '@welshman/content@0.13.0':
+    resolution: {integrity: sha512-M/dyNGSchnCqucDDXuRkQHEXLUsCTYflSmjG+FkGlJtNWS7Wk0/uaYGsJs6a9DOMEFzGVIbOfpfHHXtrPH1jCg==}
     peerDependencies:
       nostr-tools: ^2.22.0
 
-  '@welshman/domain@0.12.6':
-    resolution: {integrity: sha512-z9/U9e2eJ+bT6KKx0IcYYeZutxHyT32Ln4hovzGUKKNJXr0yGWzlL/KnkarND8BiDdEGUoLo1nCq09LhaLMN0Q==}
+  '@welshman/domain@0.13.0':
+    resolution: {integrity: sha512-+y3ODmiZR2KuF/sYNDCcKzuveOGDtm9bJcY34+bd0QVcdrmNkL97BVVPDGkz2Fv5oJt5OjZLgk6guSMBsO7NHA==}
     peerDependencies:
-      '@welshman/feeds': 0.12.6
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6
-      '@welshman/signer': 0.12.6
-      '@welshman/util': 0.12.6
+      '@welshman/feeds': 0.13.0
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0
+      '@welshman/signer': 0.13.0
+      '@welshman/util': 0.13.0
       nostr-tools: ^2.22.0
 
-  '@welshman/editor@0.12.6':
-    resolution: {integrity: sha512-rcdyqtWcN2bgJyqeFE1Ivb2DxrYuvYFyslvv9DILPA3LZHx61reQsnHnXLMgUuBcWvx1ZEmjkojiM13E0SSJMA==}
+  '@welshman/editor@0.13.0':
+    resolution: {integrity: sha512-yzXwEc6++vNlSZvC2JFJtPf7zskVSC0pHAXzF9KajvWVGld18WX1YpQYMYaAlLMBgMjVv7fxlCH9Su8LskIyVw==}
     peerDependencies:
       '@tiptap/core': ^2.11.7
       '@tiptap/extension-code': ^2.11.7
@@ -2316,52 +2316,52 @@ packages:
       '@tiptap/extension-text': ^2.11.7
       '@tiptap/pm': ^2.11.7
       '@tiptap/suggestion': ^2.11.7
-      '@welshman/lib': 0.12.6
-      '@welshman/util': 0.12.6
+      '@welshman/lib': 0.13.0
+      '@welshman/util': 0.13.0
       nostr-editor: ^1.1.2
       nostr-tools: ^2.22.0
 
-  '@welshman/feeds@0.12.6':
-    resolution: {integrity: sha512-ddwWdl53iPHSh/erYgPYPJmb7RBeIuxaNST/ZmOgo/VKVSWZGx0ffewwycMuprSjMDd9JZFGFSU+0koR5v8ViA==}
+  '@welshman/feeds@0.13.0':
+    resolution: {integrity: sha512-l+CWPtCaFA9rTh2CIO/ZbGMUXErIiUac3Ff1Z4S/EKMYs8T+p9nZj9NIacTDeTXUL1I+vJI2Uio64CD9IfuKVw==}
     peerDependencies:
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6
-      '@welshman/signer': 0.12.6
-      '@welshman/util': 0.12.6
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0
+      '@welshman/signer': 0.13.0
+      '@welshman/util': 0.13.0
 
-  '@welshman/lib@0.12.6':
-    resolution: {integrity: sha512-45As0vhDBYMJJtUczVHGB2EFdRGAY38ommQMqh4+PQ8IDHxZNrxMPtI9MulP2XgKoLUOTXatL19YfcdzoROfxA==}
+  '@welshman/lib@0.13.0':
+    resolution: {integrity: sha512-l0rmW0qclVO+u5vNtnxHS0j64xt1XxMeCXypGQTzQxINhJ6Jm2TSxLl6l/pMaWUuj98yPE4pglRKtOYZFL/KMA==}
     engines: {node: '>=12.0.0'}
 
-  '@welshman/net@0.12.6':
-    resolution: {integrity: sha512-KWck01NNB5ByzGdOKhnaM2kXiqJJL5wKw6mXgtC1izWXy6Hqrw/oQfniCeO/9SXATKk4jr2G9/O0strIPGoPpA==}
+  '@welshman/net@0.13.0':
+    resolution: {integrity: sha512-kf3cd2+xgL8zxOcdLX1Q1TJ2qz+RrBycbacdVju5MYhcvB/ad2cwdhPNbZG4rr4/sXdzYoVNFT3Bp0XZ9QjVEg==}
     peerDependencies:
-      '@welshman/lib': 0.12.6
-      '@welshman/util': 0.12.6
+      '@welshman/lib': 0.13.0
+      '@welshman/util': 0.13.0
 
-  '@welshman/signer@0.12.6':
-    resolution: {integrity: sha512-vv1GKh1WlLNvhLE9hDd09fHDBjdSnogsI+5jFLSvcA4iVT1y4fGkiZbWfKZ2AD9SF84/TqiHwVdLuRNrNiLL7A==}
+  '@welshman/signer@0.13.0':
+    resolution: {integrity: sha512-pMHiFA0XOffw6LErcLTMA49MnbIGO0AarCw9GdehOfKQ/afTVI7qYR5l/Ph8H2MmCy7Sp18RsRnfbvudk/j4kg==}
     peerDependencies:
       '@noble/hashes': ~2.0.1
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6
-      '@welshman/util': 0.12.6
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0
+      '@welshman/util': 0.13.0
       nostr-tools: ^2.22.0
 
-  '@welshman/store@0.12.6':
-    resolution: {integrity: sha512-shHXYUhqDozGaTVlpQwfma+4zfOjxlIDD1O066FDE+5jdJ5ZpajC52ho3D+kW4WppLOxWJAaNwcn1BArKbVgmQ==}
+  '@welshman/store@0.13.0':
+    resolution: {integrity: sha512-1eqSk5dmMTIwMUTMjm8hs7E9dgu6ZFKtUXdY9dgzJAm8Ys2dX2CBmoLmpnpyBIanTl7FBSpFxolZ2eXjLo5vcg==}
     peerDependencies:
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6
-      '@welshman/util': 0.12.6
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0
+      '@welshman/util': 0.13.0
       svelte: ^4.0.0 || ^5.0.0
 
-  '@welshman/util@0.12.6':
-    resolution: {integrity: sha512-CAdCgvBAPYUe2KTbO4vdLyd3X10bm4YYxGIdN7Ilimz2bkxfDCMgqpY5tUxDfIyarBdqLOAzaeLTd5omr73KNA==}
+  '@welshman/util@0.13.0':
+    resolution: {integrity: sha512-hwzwZ0bo+bVJ7xUEkxHNr71Wbp1n2oyyoPf6EmQNYnxT2Z43BVxBOxZmBdeDCBX0EUZhQPc1VIIBM7hIGjWaXw==}
     peerDependencies:
       '@noble/curves': ~2.0.1
       '@noble/hashes': ~2.0.1
-      '@welshman/lib': 0.12.6
+      '@welshman/lib': 0.13.0
       nostr-tools: ^2.22.0
 
   '@xml-tools/parser@1.0.11':
@@ -7204,15 +7204,15 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@pomade/core@0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))':
+  '@pomade/core@0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))':
     dependencies:
       '@frostr/bifrost': 1.0.7(typescript@5.9.3)
       '@noble/hashes': 2.0.1
       '@peculiar/x509': 1.14.3
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
-      '@welshman/util': 0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/util': 0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))
       cbor-x: 1.6.4
       hash-wasm: 4.12.0
       nostr-tools: 2.25.2(typescript@5.9.3)
@@ -7859,35 +7859,35 @@ snapshots:
       - workbox-build
       - workbox-window
 
-  '@welshman/app@0.12.6(63c6ccd0c87dfde7b26df9032feef450)':
+  '@welshman/app@0.13.0(ca531ec3d569c2733a5340672b9787d6)':
     dependencies:
-      '@pomade/core': 0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
-      '@welshman/domain': 0.12.6(1337139114c6a67243e8d5001f7f1792)
-      '@welshman/feeds': 0.12.6(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
-      '@welshman/store': 0.12.6(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))
-      '@welshman/util': 0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@pomade/core': 0.3.3(@frostr/bifrost@1.0.7(typescript@5.9.3))(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/domain': 0.13.0(7d7097841554b20f0520fef579dd18be)
+      '@welshman/feeds': 0.13.0(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/store': 0.13.0(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))
+      '@welshman/util': 0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))
       fuse.js: 7.3.0
       svelte: 5.55.9(@typescript-eslint/types@8.67.0)
       throttle-debounce: 5.0.2
 
-  '@welshman/content@0.12.6(nostr-tools@2.25.2(typescript@5.9.3))':
+  '@welshman/content@0.13.0(nostr-tools@2.25.2(typescript@5.9.3))':
     dependencies:
       '@braintree/sanitize-url': 7.1.2
       nostr-tools: 2.25.2(typescript@5.9.3)
 
-  '@welshman/domain@0.12.6(1337139114c6a67243e8d5001f7f1792)':
+  '@welshman/domain@0.13.0(7d7097841554b20f0520fef579dd18be)':
     dependencies:
-      '@welshman/feeds': 0.12.6(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
-      '@welshman/util': 0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/feeds': 0.13.0(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/util': 0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))
       nostr-tools: 2.25.2(typescript@5.9.3)
 
-  '@welshman/editor@0.12.6(c4145382ce88071dd19290062964d83d)':
+  '@welshman/editor@0.13.0(fb3be173f7ea30d6651a87a97d916107)':
     dependencies:
       '@tiptap/core': 2.27.3(@tiptap/pm@2.27.3)
       '@tiptap/extension-code': 2.27.2(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))
@@ -7902,56 +7902,56 @@ snapshots:
       '@tiptap/extension-text': 2.27.2(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))
       '@tiptap/pm': 2.27.3
       '@tiptap/suggestion': 2.27.3(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))(@tiptap/pm@2.27.3)
-      '@welshman/lib': 0.12.6
-      '@welshman/util': 0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.13.0
+      '@welshman/util': 0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))
       nostr-editor: 1.2.0(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))(@tiptap/extension-image@2.27.2(@tiptap/core@2.27.3(@tiptap/pm@2.27.3)))(@tiptap/extension-link@2.27.2(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))(@tiptap/pm@2.27.3))(@tiptap/pm@2.27.3)(linkifyjs@4.3.3)(nostr-tools@2.25.2(typescript@5.9.3))(prosemirror-markdown@1.13.4)(prosemirror-model@1.25.11)(prosemirror-state@1.4.4)(prosemirror-view@1.42.3)(tiptap-markdown@0.8.10(@tiptap/core@2.27.3(@tiptap/pm@2.27.3)))
       nostr-tools: 2.25.2(typescript@5.9.3)
       tippy.js: 6.3.7
 
-  '@welshman/feeds@0.12.6(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))':
+  '@welshman/feeds@0.13.0(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/signer@0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3)))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))':
     dependencies:
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
-      '@welshman/util': 0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/util': 0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))
       trava: 1.2.1
 
-  '@welshman/lib@0.12.6':
+  '@welshman/lib@0.13.0':
     dependencies:
       '@scure/base': 1.2.6
       '@types/events': 3.0.3
       events: 3.3.0
 
-  '@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)':
+  '@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)':
     dependencies:
-      '@welshman/lib': 0.12.6
-      '@welshman/util': 0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.13.0
+      '@welshman/util': 0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))
       events: 3.3.0
       isomorphic-ws: 5.0.0(ws@8.21.2)
     transitivePeerDependencies:
       - ws
 
-  '@welshman/signer@0.12.6(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))':
+  '@welshman/signer@0.13.0(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))':
     dependencies:
       '@noble/hashes': 2.0.1
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/util': 0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/util': 0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))
       nostr-tools: 2.25.2(typescript@5.9.3)
 
-  '@welshman/store@0.12.6(@welshman/lib@0.12.6)(@welshman/net@0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))':
+  '@welshman/store@0.13.0(@welshman/lib@0.13.0)(@welshman/net@0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))':
     dependencies:
-      '@welshman/lib': 0.12.6
-      '@welshman/net': 0.12.6(@welshman/lib@0.12.6)(@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/util': 0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.13.0
+      '@welshman/net': 0.13.0(@welshman/lib@0.13.0)(@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/util': 0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))
       svelte: 5.55.9(@typescript-eslint/types@8.67.0)
 
-  '@welshman/util@0.12.6(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.12.6)(nostr-tools@2.25.2(typescript@5.9.3))':
+  '@welshman/util@0.13.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.13.0)(nostr-tools@2.25.2(typescript@5.9.3))':
     dependencies:
       '@noble/curves': 2.0.1
       '@noble/hashes': 2.0.1
       '@types/ws': 8.18.1
-      '@welshman/lib': 0.12.6
+      '@welshman/lib': 0.13.0
       js-base64: 3.9.2
       nostr-tools: 2.25.2(typescript@5.9.3)
       nostr-wasm: 0.1.0
