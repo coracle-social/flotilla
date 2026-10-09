@@ -1985,6 +1985,20 @@ Acceptance:
   arrives.
 - A relay that answers and advertises no search is.
 
+### US-147 — Choose the relays you publish to
+
+As alice, I want to pick my own relays from the home page, so that I decide
+where my notes go and where people can reach me.
+
+Acceptance:
+
+- The Network section carries a relay settings button, and opening it lists the
+  relays her relay list already names.
+- A relay added from the picker appears in the list, and a relay removed from
+  the list leaves it.
+- The list is one list, so a relay she adds is both where she publishes and
+  where other people send notes intended for her.
+
 ### US-106 — Share text into the app
 
 As alice, I want to hand text to Flotilla and choose where it lands, so that I

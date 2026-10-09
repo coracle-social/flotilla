@@ -40,6 +40,10 @@ export const pickEmoji = async (page: Page, opener: Locator, annotation: string)
 export const homeFeedFilter = (scope: Locator, label: string) =>
   scope.getByRole("button", {name: new RegExp(`^${label} \\d+$`)})
 
+// RelayItem draws a card, in a relay list and in the picker pushed over it alike.
+export const relayCard = (scope: Locator, name: string) =>
+  scope.locator(".card").filter({hasText: name})
+
 export const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
 
 export const openRoomDetail = (page: Page) =>

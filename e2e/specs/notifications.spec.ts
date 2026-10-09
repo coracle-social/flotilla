@@ -25,12 +25,14 @@ import {
   pageBar,
   pathPattern,
   roomLink,
+  relayCard,
   roomPath,
   send,
   settingRow,
   spacePath,
   test,
   toast,
+  topDialog,
   users,
 } from "../harness"
 import type {SeededEvent, SeededSpace, TestUser} from "../harness"
@@ -926,6 +928,45 @@ test("US-133 keep the search relays that support search", async ({seed, as}) => 
   await expect(review.getByText(displayRelayUrl(outbox.url))).toBeVisible()
   await expect(review.getByText(displayRelayUrl(indexer.url))).toHaveCount(0)
   await expect(review.getByText(displayRelayUrl(unreachableRelayUrl))).toHaveCount(0)
+})
+
+test("US-147 choose the relays you publish to", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    // A relay is offered as a suggestion once its nip-11 document has been fetched.
+    relay("other")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    space.relayList(user.alice)
+  })
+
+  const space = scenario.space("space")
+  const other = scenario.space("other")
+  const page = await as(users.alice, "/home")
+  const network = page.getByRole("region", {name: "Network"})
+
+  await network.getByRole("button", {name: "Relay settings"}).click()
+
+  const relays = dialog(page, "Your Relays")
+
+  await expect(relayCard(relays, displayRelayUrl(space.url))).toBeVisible()
+
+  await relays.getByRole("button", {name: "Add Relays"}).click()
+  await relayCard(topDialog(page), displayRelayUrl(other.url))
+    .getByRole("button", {name: "Add Relay"})
+    .click()
+  await page.getByRole("button", {name: "Done"}).click()
+
+  await expect(relayCard(relays, displayRelayUrl(other.url))).toBeVisible()
+
+  // One list, so removing a relay takes it out of her inbox and her outbox together.
+  await relayCard(relays, displayRelayUrl(other.url)).getByRole("button", {name: "Remove"}).click()
+
+  await expect(relayCard(relays, displayRelayUrl(other.url))).toHaveCount(0)
+  await expect(relayCard(relays, displayRelayUrl(space.url))).toBeVisible()
 })
 
 test("US-106 share text into the app", async ({seed, as}) => {

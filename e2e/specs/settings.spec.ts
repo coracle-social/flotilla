@@ -1,14 +1,22 @@
 import {MINUTE} from "@welshman/lib"
-import type {Locator, Page} from "@playwright/test"
-import {dialog, expect, roomPath, settingToggle, test, toast, topDialog, users} from "../harness"
+import type {Page} from "@playwright/test"
+import {
+  dialog,
+  expect,
+  relayCard,
+  roomPath,
+  settingToggle,
+  test,
+  toast,
+  topDialog,
+  users,
+} from "../harness"
 
 // A handle to a seeded event, which only reads once seed() has drained its queue.
 type Seeded = {readonly id: string}
 
 // The relay picker is pushed over the list modal, so it is the only dialog in the dom.
 const relayPicker = (page: Page) => topDialog(page)
-
-const relayCard = (scope: Locator, name: string) => scope.locator(".card").filter({hasText: name})
 
 // A toast clears after five seconds, which outlasts the batch a saved setting reaches disk in.
 const waitForToastToClear = (page: Page) => expect(toast(page)).toHaveCount(0)
