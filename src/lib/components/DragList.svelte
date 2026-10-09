@@ -1,5 +1,6 @@
 <script lang="ts" generics="T">
   import cx from "classnames"
+  import {onDestroy} from "svelte"
   import type {Snippet} from "svelte"
   import {flip} from "svelte/animate"
   import {cubicOut} from "svelte/easing"
@@ -75,6 +76,8 @@
     held = undefined
     dragged = undefined
   }
+
+  onDestroy(release)
 
   // A drop lands on whatever is under the pointer, which would otherwise take the click too.
   const swallowClick = () => {
