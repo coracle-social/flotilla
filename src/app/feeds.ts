@@ -459,16 +459,18 @@ export const makeScrollLoader = (
   options: Partial<ScrollerOpts> = {},
 ) => {
   const loader = makeFeedLoader(load)
+  const threshold = options.threshold ?? 5000
   const scroller = createScroller({
     element,
     delay: 300,
-    threshold: 5000,
     ...options,
+    threshold,
     onScroll: loader.run,
     onSettle: loader.settle,
   })
 
-  return {subscribe: loader.subscribe, stop: scroller.stop}
+  // A virtual list this loader feeds has to grow as far as the loader fetches, so it reads it back.
+  return {subscribe: loader.subscribe, stop: scroller.stop, threshold}
 }
 
 // Holds what a view has loaded and knows how to ask for the next span, while the view decides when.

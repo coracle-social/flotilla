@@ -394,7 +394,9 @@ and an `{#if}` chain over loading, empty and exhausted. Calendars use
 `$app.use(Feeds).makeFeedController` and `createScroller`, but 27fa25c3 moved the home feed onto
 the app helpers, which is the direction for new lists. Only `RoomChat` virtualizes; other long
 lists wrap each row's root in `Cv`, which applies `content-visibility` and paints two viewports
-ahead. All ten `*Item` components that appear in a list use it.
+ahead. All ten `*Item` components that appear in a list use it. A virtualized list takes its
+`threshold` from the loader paging it, since a list that stops growing short of the loader's
+runway leaves the loader fetching history the list never draws.
 
 ## Mutations from a component
 
