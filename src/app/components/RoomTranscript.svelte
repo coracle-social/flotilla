@@ -331,7 +331,7 @@
         items={elements}
         getKey={getElementKey}
         container={element}
-        threshold={older?.threshold}
+        threshold={older?.runway}
         bind:controller={virtualList}>
         {#snippet row(item)}
           {#if item.type === "new-messages"}

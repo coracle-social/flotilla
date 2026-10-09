@@ -111,7 +111,7 @@
       const feed = makeFeed({
         relays,
         // Half the group's relays answering is enough to show its page, since the rest get asked again.
-        threshold: 0.5,
+        quorum: 0.5,
         useCache: false,
         filters: [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
         onEvent: context.add,

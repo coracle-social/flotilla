@@ -459,18 +459,18 @@ export const makeScrollLoader = (
   options: Partial<ScrollerOpts> = {},
 ) => {
   const loader = makeFeedLoader(load)
-  const threshold = options.threshold ?? 5000
+  const runway = options.threshold ?? 5000
   const scroller = createScroller({
     element,
     delay: 300,
     ...options,
-    threshold,
+    threshold: runway,
     onScroll: loader.run,
     onSettle: loader.settle,
   })
 
   // A virtual list this loader feeds has to grow as far as the loader fetches, so it reads it back.
-  return {subscribe: loader.subscribe, stop: scroller.stop, threshold}
+  return {subscribe: loader.subscribe, stop: scroller.stop, runway}
 }
 
 // Holds what a view has loaded and knows how to ask for the next span, while the view decides when.
@@ -479,7 +479,7 @@ export const makeFeed = ({
   filters,
   onEvent,
   at = now(),
-  threshold = SPAN_THRESHOLD,
+  quorum = SPAN_THRESHOLD,
   useCache = true,
 }: {
   relays: string[]
@@ -487,7 +487,7 @@ export const makeFeed = ({
   onEvent?: (event: TrustedEvent) => void
   at?: number
   // How much of the relay set has to close before a span is answered.
-  threshold?: number
+  quorum?: number
   // Whether a page of what the repository already holds renders ahead of the relays.
   useCache?: boolean
 }) => {
@@ -601,7 +601,7 @@ export const makeFeed = ({
       // The socket sends five per 100ms first come first served, so the feed on screen goes ahead of the space's background pulls.
       priority: 1,
       signal: spanSignal(controller.signal),
-      threshold,
+      threshold: quorum,
       filters: filters.map(filter => ({...filter, ...extension})),
       onEvent: countEvent,
       onDuplicate: countEvent,
