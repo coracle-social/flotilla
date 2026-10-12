@@ -77,7 +77,7 @@ const startChat = async (page: Page, people: {term: string; user: TestUser}[]) =
 
 // A message's actions are a hover popover on a pointer device and named buttons on a touch one.
 const openMessageMenu = (page: Page, id: string) =>
-  message(page, id).locator(".chat-bubble").click()
+  message(page, id).locator(".chat-bubble > .text-sm").click()
 
 // Events reach indexeddb in three-second batches, so a spec that reloads has to read the cache first.
 const cachedContent = async (page: Page, pubkey: string, kind: number) =>
