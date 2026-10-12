@@ -74,7 +74,7 @@
       {deleteReaction}
       {createReaction}
       hideZaps={hideZap}
-      reactionClass="tip-left" />
+      placement="left" />
     {#if showActivity}
       <EventActivity {event} {context} />
     {/if}

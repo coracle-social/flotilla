@@ -15,6 +15,7 @@
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
+  import Tooltip from "@lib/components/Tooltip.svelte"
   import PublicationFailure from "@app/components/PublicationFailure.svelte"
   import {publishReaction, retractReaction} from "@app/reactions"
   import {deriveDisplaysByPubkey} from "@app/social"
@@ -143,7 +144,7 @@
       {context}
       {deleteReaction}
       {createReaction}
-      reactionClass="tip-right"
+      placement="right"
       innerEvent={$innerEvent} />
     {#each $threads as thread (thread.id)}
       <Link
@@ -160,7 +161,7 @@
       {@const isOwn = pubkeys.includes($user.pubkey)}
       {@const info = displayList(pubkeys.map(pubkey => $commenterDisplays.get(pubkey) ?? ""))}
       {@const tooltip = `${info} commented`}
-      <div data-tip={tooltip} class="tip tip-right flex">
+      <Tooltip content={isMobile ? "" : tooltip} placement="right" class="flex">
         <Link
           href={path}
           class={cx("button button-xs gap-1 rounded-full", {
@@ -170,7 +171,7 @@
           <Icon icon={ReplyAlt} />
           <span>{$innerComments.length} comment{$innerComments.length === 1 ? "" : "s"}</span>
         </Link>
-      </div>
+      </Tooltip>
     {/if}
   </div>
   {#if !isMobile}

@@ -533,6 +533,9 @@ test("US-025 react to a message", async ({seed, as}) => {
   await expect(reactionPill(carol, "we made port")).toContainText("2")
   await expect(reactionPill(bob, "we made port")).toContainText("2")
 
+  await reactionPill(carol, "we made port").hover()
+  await expect(carol.getByRole("tooltip")).toContainText("Bob Barnacle reacted")
+
   await reactionPill(carol, "we made port").click()
 
   await expect(reactionPill(carol, "we made port")).not.toContainText("2")

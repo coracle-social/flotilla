@@ -24,13 +24,7 @@
 <div class="flex flex-wrap items-center justify-between gap-2">
   <div class="flex grow flex-wrap justify-end gap-2">
     <PublicationStatusOrDeleted {event} {context}>
-      <ReactionSummary
-        {url}
-        {event}
-        {context}
-        {deleteReaction}
-        {createReaction}
-        reactionClass="tip-left" />
+      <ReactionSummary {url} {event} {context} {deleteReaction} {createReaction} placement="left" />
       {#if showActivity}
         <EventActivity {event} {context} />
       {/if}

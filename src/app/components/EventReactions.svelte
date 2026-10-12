@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type {Placement} from "tippy.js"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import {seen} from "@welshman/util"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
@@ -13,10 +14,10 @@
     event: TrustedEvent
     context: FeedContext
     url?: string
-    reactionClass?: string
+    placement?: Placement
   }
 
-  const {event, context, url, reactionClass = ""}: Props = $props()
+  const {event, context, url, placement = "top"}: Props = $props()
 
   // A reaction goes where its subject lives: the space's own relay, or wherever the event was seen.
   const getRelays = () => (url ? [url] : $router.resolver.relays([seen(event)]))
@@ -30,7 +31,7 @@
   const onEmoji = (emoji: string) => createReaction({content: emoji, tags: []})
 </script>
 
-<ReactionSummary {url} {event} {context} {deleteReaction} {createReaction} {reactionClass}>
+<ReactionSummary {url} {event} {context} {deleteReaction} {createReaction} {placement}>
   <EmojiButton
     {onEmoji}
     aria-label="Add a reaction"

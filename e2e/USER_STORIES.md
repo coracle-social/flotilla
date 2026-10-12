@@ -399,6 +399,7 @@ Acceptance:
   reaction pill under the message for everyone in the room.
 - When bob and carol react with the same emoji it shows as one pill with a count
   of 2.
+- Hovering that pill names everyone who reacted.
 - Clicking her own reaction again removes it.
 - On a narrow viewport, tapping a pill she hasn't joined shows the list of
   reactors instead of adding her own.

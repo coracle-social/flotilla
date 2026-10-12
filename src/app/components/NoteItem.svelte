@@ -55,7 +55,7 @@
   {/if}
   <NoteContent {event} {showEntire} expandMode="inline" />
   <div class="flex w-full justify-between gap-2">
-    <EventReactions {event} {context} {url} reactionClass="tip-right" />
+    <EventReactions {event} {context} {url} placement="right" />
     <div class="flex shrink-0 items-center gap-2">
       {#if showReply}
         <Button class="button button-neutral button-xs rounded-full" onclick={openReplies}>

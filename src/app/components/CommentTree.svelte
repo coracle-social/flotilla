@@ -108,7 +108,7 @@
             <CommentActions event={node.comment} {url} {context} />
           {:else}
             <PublicationStatusOrDeleted event={node.comment} {context}>
-              <EventReactions event={node.comment} {context} reactionClass="tip-left" />
+              <EventReactions event={node.comment} {context} placement="left" />
               <EventMenuButton event={node.comment} noun="Comment" class="rounded-full" />
             </PublicationStatusOrDeleted>
           {/if}

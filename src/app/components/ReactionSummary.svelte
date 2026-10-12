@@ -2,6 +2,7 @@
   import cx from "classnames"
   import {derived, readable} from "svelte/store"
   import type {Snippet} from "svelte"
+  import type {Placement} from "tippy.js"
   import {
     displayList,
     filter,
@@ -22,6 +23,7 @@
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Tooltip from "@lib/components/Tooltip.svelte"
   import Reaction from "@app/components/Reaction.svelte"
   import ReportDetails from "@app/components/ReportDetails.svelte"
   import ProfileList from "@app/components/ProfileList.svelte"
@@ -37,7 +39,7 @@
     deleteReaction: (event: TrustedEvent) => void
     createReaction: (event: EventContent) => void
     url?: string
-    reactionClass?: string
+    placement?: Placement
     hideZaps?: boolean
     noTooltip?: boolean
     innerEvent?: TrustedEvent
@@ -50,7 +52,7 @@
     deleteReaction,
     createReaction,
     url,
-    reactionClass = "",
+    placement = "top",
     hideZaps = false,
     noTooltip = false,
     innerEvent = undefined,
@@ -151,23 +153,26 @@
   )
 
   const groupedZaps = $derived(groupBy(e => getReactionKey(e.request), $zaps.values()))
+
+  const tooltipContent = (text: string) => (noTooltip || isMobile ? "" : text)
 </script>
 
 {#if $reactions.length > 0 || (!hideZaps && $zaps.length > 0) || $reports.length > 0 || children}
   <div class="flex min-w-0 flex-wrap gap-2">
     {#if url && $reports.length > 0 && $permissions.deleteContent}
-      <Button
-        data-tip={`This content has been reported as "${displayList(reportReasons)}".`}
-        class={cx(
-          "button button-error button-xs tip-right flex items-center gap-1 rounded-full font-normal",
-          {
-            tip: !noTooltip && !isMobile,
-          },
+      <Tooltip
+        content={tooltipContent(
+          `This content has been reported as "${displayList(reportReasons)}".`,
         )}
-        onclick={stopPropagation(onReportClick)}>
-        <Icon icon={Danger} />
-        <span>{$reports.length}</span>
-      </Button>
+        {placement}
+        class="flex">
+        <Button
+          class="button button-error button-xs flex items-center gap-1 rounded-full font-normal"
+          onclick={stopPropagation(onReportClick)}>
+          <Icon icon={Danger} />
+          <span>{$reports.length}</span>
+        </Button>
+      </Tooltip>
     {/if}
     {#if !hideZaps}
       {#each groupedZaps.entries() as [key, zaps] (key)}
@@ -177,21 +182,20 @@
         {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
         {@const tooltip = `${info} zapped`}
         {@const onZapClickHandler = () => onZapClick(pubkeys, tooltip)}
-        <Button
-          data-tip={tooltip}
-          class={cx(
-            reactionClass,
-            "button button-xs flex-inline flex items-center gap-1 rounded-full text-xs font-normal",
-            {
-              tip: !noTooltip && !isMobile,
-              "button-primary": isOwn,
-              "button-neutral": !isOwn,
-            },
-          )}
-          onclick={stopPropagation(onZapClickHandler)}>
-          <Reaction event={zaps[0].request} />
-          <span>{amount}</span>
-        </Button>
+        <Tooltip content={tooltipContent(tooltip)} {placement} class="flex">
+          <Button
+            class={cx(
+              "button button-xs flex-inline flex items-center gap-1 rounded-full text-xs font-normal",
+              {
+                "button-primary": isOwn,
+                "button-neutral": !isOwn,
+              },
+            )}
+            onclick={stopPropagation(onZapClickHandler)}>
+            <Reaction event={zaps[0].request} />
+            <span>{amount}</span>
+          </Button>
+        </Tooltip>
       {/each}
     {/if}
     {#each groupedReactions.entries() as [key, events] (key)}
@@ -200,19 +204,19 @@
       {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
       {@const tooltip = `${info} reacted`}
       {@const onClick = () => onReactionClick(events, pubkeys, info)}
-      <Button
-        data-tip={tooltip}
-        class={cx(reactionClass, "button button-xs flex-inline gap-1 rounded-full font-normal", {
-          tip: !noTooltip && !isMobile,
-          "button-primary": isOwn,
-          "button-neutral": !isOwn,
-        })}
-        onclick={stopPropagation(onClick)}>
-        <Reaction event={events[0]} />
-        {#if events.length > 1}
-          <span>{events.length}</span>
-        {/if}
-      </Button>
+      <Tooltip content={tooltipContent(tooltip)} {placement} class="flex">
+        <Button
+          class={cx("button button-xs flex-inline gap-1 rounded-full font-normal", {
+            "button-primary": isOwn,
+            "button-neutral": !isOwn,
+          })}
+          onclick={stopPropagation(onClick)}>
+          <Reaction event={events[0]} />
+          {#if events.length > 1}
+            <span>{events.length}</span>
+          {/if}
+        </Button>
+      </Tooltip>
     {/each}
     {@render children?.()}
   </div>

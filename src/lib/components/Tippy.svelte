@@ -160,8 +160,16 @@
     },
   }
 
+  const text = $derived(typeof params.content === "string" ? params.content : undefined)
+
   $effect(() => {
     Object.assign(mountedProps, props)
+  })
+
+  $effect(() => {
+    if (text !== undefined) {
+      popover?.setContent(text)
+    }
   })
 
   onMount(() => {

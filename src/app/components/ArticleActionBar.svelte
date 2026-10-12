@@ -25,13 +25,7 @@
 
 <div data-component="ArticleActionBar" class="flex w-full min-w-0 flex-col gap-3">
   <PublicationStatusOrDeleted {event} {context}>
-    <ReactionSummary
-      {url}
-      {event}
-      {context}
-      {deleteReaction}
-      {createReaction}
-      reactionClass="tip-top" />
+    <ReactionSummary {url} {event} {context} {deleteReaction} {createReaction} placement="top" />
   </PublicationStatusOrDeleted>
   {#if !$deleted}
     <EventActionBar {url} {event} noun="Article">
