@@ -1,31 +1,17 @@
-import {derived} from "svelte/store"
+import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {removeUndefined, sortBy, spec, uniq} from "@welshman/lib"
+import {removeUndefined, sortBy, uniq, uniqBy} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {
-  Address,
-  BOOKMARKS,
-  NAMED_BOOKMARKS,
-  getIdFilters,
-  getIdOrAddress,
-  isReplaceable,
-  tagSpec,
-  tagValue,
-} from "@welshman/util"
+import {getIdFilters, getIdOrAddress, isReplaceable, tagSpec, tagValue} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {BookmarkList, EventQuery, KindFactory, ListReader, ListWriter} from "@welshman/domain"
-import type {BookmarkListReader, BookmarkListWriter} from "@welshman/domain"
+import type {BookmarkListWriter, BookmarkSetReader} from "@welshman/domain"
 import {withGetter} from "@welshman/store"
-import {DerivedPlugin, Domain, Network, User, publish} from "@welshman/app"
-import type {Command, IApp} from "@welshman/app"
+import {BookmarkLists, BookmarkSets, createSearch, publish} from "@welshman/app"
+import type {Command} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
-import {deriveUserItem, syncUserList, user} from "@app/core/user"
+import {deriveUserItem, syncUserList} from "@app/core/user"
 import {deletes, events, network} from "@app/core/plugins"
-import {command, writer} from "@app/core/domain"
 import {registerSync} from "@app/core/sync"
-
-// NIP-51's four item tags: a note, an addressable event, a topic and a url.
-const isBookmark = (tag: string[]) => ["e", "a", "t", "r"].includes(tag[0])
 
 const settle = async (pending: Promise<Command>) => {
   const publication = await pending.then(publish)
@@ -33,109 +19,31 @@ const settle = async (pending: Promise<Command>) => {
   return publication.getError()
 }
 
-// Kind 30003, which welshman has no factory for. A named set is one of the user's folders.
-export class BookmarkSetReader extends ListReader {
-  title() {
-    return tagValue(tagSpec("title"), this.event.tags)
-  }
-}
-
-export class BookmarkSetWriter extends ListWriter<BookmarkSetReader> {
-  setTitle(title: string) {
-    return this.dropPublic(spec(["title"])).addPublic(["title", title])
-  }
-}
-
-export class BookmarkSetQuery extends EventQuery {
-  protected renderRoutes() {
-    return this.authorRoutes()
-  }
-}
-
-export const BookmarkSet = new KindFactory({
-  kind: NAMED_BOOKMARKS,
-  reader: BookmarkSetReader,
-  writer: BookmarkSetWriter,
-  query: BookmarkSetQuery,
-})
-
-export class BookmarkLists extends DerivedPlugin<BookmarkListReader> {
-  constructor(app: IApp) {
-    super(app, {
-      filters: [{kinds: [BOOKMARKS]}],
-      eventToItem: app.use(Domain).reader(BookmarkList),
-      getKey: list => list.author(),
-    })
-  }
-
-  fetch(pubkey: string, hints: string[] = []) {
-    return this.app.use(Network).loadUsingOutbox(pubkey, {kinds: [BOOKMARKS]}, hints)
-  }
-
-  update = (fn: (eventWriter: BookmarkListWriter) => void) => {
-    const {pubkey} = User.require(this.app)
-    const eventWriter = this.app.use(Domain).writer(BookmarkList, this.get(pubkey))
-
-    fn(eventWriter)
-
-    return this.app.use(Domain).command(eventWriter)
-  }
-}
-
-export class BookmarkSets extends DerivedPlugin<BookmarkSetReader> {
-  constructor(app: IApp) {
-    super(app, {
-      filters: [{kinds: [NAMED_BOOKMARKS]}],
-      eventToItem: app.use(Domain).reader(BookmarkSet),
-      getKey: set => set.address(),
-    })
-  }
-
-  fetch(address: string) {
-    const {pubkey, identifier} = Address.from(address)
-
-    return this.app
-      .use(Network)
-      .loadUsingOutbox(pubkey, {kinds: [NAMED_BOOKMARKS], "#d": [identifier]})
-  }
-
-  loadAll(pubkey: string) {
-    return this.app.use(Network).loadAllUsingOutbox(pubkey, {kinds: [NAMED_BOOKMARKS]})
-  }
-
-  update = (identifier: string, fn: (eventWriter: BookmarkSetWriter) => void) => {
-    const {pubkey} = User.require(this.app)
-    const address = new Address(NAMED_BOOKMARKS, pubkey, identifier).toString()
-    const eventWriter = this.app.use(Domain).writer(BookmarkSet, this.get(address))
-
-    eventWriter.setIdentifier(identifier)
-    fn(eventWriter)
-
-    return this.app.use(Domain).command(eventWriter)
-  }
-}
-
 // Folders
 
 export type BookmarkFolder = {
-  // The uncategorized folder is the kind 10003 list, which carries no identifier.
-  identifier?: string
+  // The uncategorized folder is the kind 10003 list, which has no address.
+  address?: string
   title: string
   bookmarks: string[][]
 }
 
 export const userBookmarkFolders = withGetter(
   derived(
-    [app, deriveUserItem(BookmarkLists), fromApp($app => $app.use(BookmarkSets).all.$)],
-    ([$app, $list, $sets]): BookmarkFolder[] => [
-      {title: "Uncategorized", bookmarks: ($list?.tags() || []).filter(isBookmark)},
-      ...sortBy(
-        set => set.title()?.toLowerCase() || "",
-        $sets.filter(set => set.author() === $app.user?.pubkey),
-      ).map(set => ({
-        identifier: set.identifier(),
+    [
+      deriveUserItem(BookmarkLists),
+      fromApp($app =>
+        $app.user
+          ? $app.use(BookmarkSets).forAuthor($app.user.pubkey).$
+          : readable<BookmarkSetReader[]>([]),
+      ),
+    ],
+    ([$list, $sets]): BookmarkFolder[] => [
+      {title: "Uncategorized", bookmarks: $list?.bookmarks() ?? []},
+      ...sortBy(set => set.title()?.toLowerCase() || "", $sets).map(set => ({
+        address: set.address(),
         title: set.title() || "Untitled folder",
-        bookmarks: set.tags().filter(isBookmark),
+        bookmarks: set.bookmarks(),
       })),
     ],
   ),
@@ -143,7 +51,7 @@ export const userBookmarkFolders = withGetter(
 
 export const loadUserBookmarks = (pubkey: string) => {
   app.get().use(BookmarkLists).load(pubkey)
-  app.get().use(BookmarkSets).loadAll(pubkey)
+  app.get().use(BookmarkSets).loadForAuthor(pubkey)
 }
 
 // Bookmarks
@@ -197,48 +105,58 @@ export const userBookmarkedEvents = derived(
 )
 
 // A bookmark is searched by what its card shows and by the text of the event behind it.
-export const matchesQuery = (tag: string[], event: Maybe<TrustedEvent>, query: string) => {
-  const q = query.trim().toLowerCase()
+export const userBookmarkSearch = derived(
+  [userBookmarkFolders, userBookmarkedEvents],
+  ([$folders, $eventsByValue]) => {
+    const getSearchText = (tag: string[]) => {
+      const event = $eventsByValue.get(tag[1])
 
-  if (!q) {
-    return true
-  }
+      return removeUndefined([
+        ["t", "r"].includes(tag[0]) ? tag[1] : undefined,
+        event && tagValue(tagSpec("title"), event.tags),
+        event && tagValue(tagSpec("summary"), event.tags),
+        event?.content,
+      ]).join(" ")
+    }
 
-  const haystack = removeUndefined([
-    ["t", "r"].includes(tag[0]) ? tag[1] : undefined,
-    event && tagValue(tagSpec("title"), event.tags),
-    event && tagValue(tagSpec("summary"), event.tags),
-    event?.content,
-  ])
-    .join(" ")
-    .toLowerCase()
+    return createSearch(
+      uniqBy(
+        tag => tag[1],
+        $folders.flatMap(folder => folder.bookmarks),
+      ),
+      {
+        getValue: (tag: string[]) => tag[1],
+        fuseOptions: {
+          // An event's text can be long, and a match anywhere in it counts.
+          ignoreLocation: true,
+          threshold: 0.3,
+          keys: [{name: "search_text", getFn: getSearchText}],
+        },
+      },
+    )
+  },
+)
 
-  return haystack.includes(q)
-}
-
-// A folder is a named set, or the kind 10003 list when it has no identifier of its own.
-const updateFolder = (identifier: Maybe<string>, fn: (eventWriter: ListWriter) => void) =>
+// A folder is a bookmark set, or the kind 10003 list when it has no address of its own.
+const updateFolder = (address: Maybe<string>, fn: (writer: BookmarkListWriter) => void) =>
   settle(
-    identifier
-      ? app.get().use(BookmarkSets).update(identifier, fn)
+    address
+      ? app.get().use(BookmarkSets).update(address, fn)
       : app.get().use(BookmarkLists).update(fn),
   )
 
-// Filing a bookmark twice in one folder would publish the tag twice, so the value goes first.
-export const addBookmark = (tag: string[], identifier?: string) =>
-  updateFolder(identifier, eventWriter =>
-    eventWriter.dropTags(other => other[1] === tag[1]).addPublic(tag),
-  )
+export const addBookmark = (tag: string[], address?: string) =>
+  updateFolder(address, writer => writer.bookmarkPublicly(tag))
 
 export const createBookmarkFolder = (title: string) =>
-  settle(command(writer(BookmarkSet).setIdentifier().setTitle(title)))
+  settle(app.get().use(BookmarkSets).create({title}))
 
-export const renameBookmarkFolder = (identifier: string, title: string) =>
+export const renameBookmarkFolder = (address: string, title: string) =>
   settle(
     app
       .get()
       .use(BookmarkSets)
-      .update(identifier, eventWriter => eventWriter.setTitle(title)),
+      .update(address, writer => writer.setTitle(title)),
   )
 
 const foldersHolding = (value: string) =>
@@ -246,9 +164,7 @@ const foldersHolding = (value: string) =>
 
 const removeEach = async (folders: BookmarkFolder[], value: string) => {
   const errors = await Promise.all(
-    folders.map(folder =>
-      updateFolder(folder.identifier, eventWriter => eventWriter.dropTags(tag => tag[1] === value)),
-    ),
+    folders.map(folder => updateFolder(folder.address, writer => writer.removeBookmark(value))),
   )
 
   return errors.find(Boolean)
@@ -258,14 +174,13 @@ const removeEach = async (folders: BookmarkFolder[], value: string) => {
 export const removeBookmark = (value: string) => removeEach(foldersHolding(value), value)
 
 export const moveBookmark = async (tag: string[], to?: string) => {
-  const from = foldersHolding(tag[1]).filter(folder => folder.identifier !== to)
+  const from = foldersHolding(tag[1]).filter(folder => folder.address !== to)
   const errors = await Promise.all([addBookmark(tag, to), removeEach(from, tag[1])])
 
   return errors.find(Boolean)
 }
 
-export const deleteBookmarkFolder = async (identifier: string) => {
-  const address = new Address(NAMED_BOOKMARKS, user.get().pubkey, identifier).toString()
+export const deleteBookmarkFolder = async (address: string) => {
   const set = app.get().use(BookmarkSets).get(address)
 
   if (set) {

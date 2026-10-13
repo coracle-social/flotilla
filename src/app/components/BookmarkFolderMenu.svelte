@@ -18,7 +18,7 @@
   const rename = () => pushModal(BookmarkFolderEdit, {folder})
 
   const remove = () =>
-    pushModal(BookmarkFolderDeleteConfirm, {identifier: folder.identifier, name: folder.title})
+    pushModal(BookmarkFolderDeleteConfirm, {address: folder.address, name: folder.title})
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>

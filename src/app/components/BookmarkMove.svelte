@@ -38,12 +38,12 @@
     <ModalSubtitle>Pick the folder to keep it in.</ModalSubtitle>
   </ModalHeader>
   <ModalBody class="flex flex-col gap-2">
-    {#each $userBookmarkFolders as option (option.identifier || "")}
-      {@const current = option.identifier === folder.identifier}
+    {#each $userBookmarkFolders as option (option.address || "")}
+      {@const current = option.address === folder.address}
       <Button
         disabled={current}
         class="card card-sm card-interactive flex flex-row items-center justify-between gap-3"
-        onclick={move(option.identifier)}>
+        onclick={move(option.address)}>
         <span class="flex min-w-0 items-center gap-3">
           <Icon size={4} icon={Folder} class="shrink-0" />
           <strong class="truncate min-w-0">{option.title}</strong>

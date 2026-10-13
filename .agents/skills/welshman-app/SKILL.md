@@ -104,6 +104,8 @@ Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) i
 | `FollowLists` | kind-3 follows | `follow(pk, hint?, petname?)`, `unfollow(pk)`, `update(fn)` → `Command` |
 | `MuteLists` | kind-10000 mutes (private = encrypted) | `mutePublicly(tag)`, `mutePrivately(tag)`, `unmute(v)`, `setMutes(...)` → `Command` |
 | `PinLists` | kind-10001 pins | `pin(tag)`, `unpin(value)` → `Command` |
+| `BookmarkLists` | kind-10003 bookmarks (private = encrypted) | `bookmarkPublicly(tag)`, `bookmarkPrivately(tag)`, `removeBookmark(v)`, `update(fn)` → `Command` |
+| `BookmarkSets` | kind-30003 bookmark sets (many per author, keyed by address) | `forAuthor(pk)`, `loadForAuthor(pk)`, `create(fields)`, `update(addr, fn)` → `Command` |
 | `RelayLists` | NIP-65 (kind 10002) | `urls(pk)`, `readUrls(pk)`, `writeUrls(pk)`, `addReadUrl`/`addWriteUrl`, `removeReadUrl`/`removeWriteUrl`, `setReadUrls`/`setWriteUrls` → `Command` |
 | `BlockedRelayLists` | kind-10006 | `urls(pk)`, `addUrl`, `removeUrl`, `setUrls` → `Command` |
 | `MessagingRelayLists` | kind-10050 (NIP-17 DM relays) | `urls(pk)`, `addUrl`, `removeUrl`, `setUrls` → `Command` |

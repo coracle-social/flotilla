@@ -20,20 +20,20 @@
 
   const {folder}: Props = $props()
 
-  const identifier = folder?.identifier
+  const address = folder?.address
 
   const submit = async () => {
     loading = true
 
     try {
-      const error = identifier
-        ? await renameBookmarkFolder(identifier, title.trim())
+      const error = address
+        ? await renameBookmarkFolder(address, title.trim())
         : await createBookmarkFolder(title.trim())
 
       if (error) {
         pushToast({theme: "error", message: error})
       } else {
-        pushToast({message: identifier ? "Folder renamed!" : "Folder created!"})
+        pushToast({message: address ? "Folder renamed!" : "Folder created!"})
         popModal()
       }
     } finally {
@@ -48,7 +48,7 @@
 <Modal>
   <ModalBody>
     <ModalHeader>
-      <ModalTitle>{identifier ? "Rename Folder" : "New Folder"}</ModalTitle>
+      <ModalTitle>{address ? "Rename Folder" : "New Folder"}</ModalTitle>
     </ModalHeader>
     <Field>
       {#snippet label()}

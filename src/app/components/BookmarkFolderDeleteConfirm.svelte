@@ -5,14 +5,14 @@
   import {pushToast} from "@app/ui/toast"
 
   type Props = {
-    identifier: string
+    address: string
     name: string
   }
 
-  const {identifier, name}: Props = $props()
+  const {address, name}: Props = $props()
 
   const confirm = async () => {
-    const error = await deleteBookmarkFolder(identifier)
+    const error = await deleteBookmarkFolder(address)
 
     if (error) {
       pushToast({theme: "error", message: error})

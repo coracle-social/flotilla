@@ -26,7 +26,7 @@
     </strong>
     <div class="flex shrink-0 items-center gap-2">
       <span class="text-sm text-content-muted">{folder.bookmarks.length}</span>
-      {#if folder.identifier}
+      {#if folder.address}
         <MenuButton
           component={BookmarkFolderMenu}
           componentProps={{folder}}

@@ -10,7 +10,11 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import BookmarkFolderEdit from "@app/components/BookmarkFolderEdit.svelte"
   import BookmarkFolderSection from "@app/components/BookmarkFolderSection.svelte"
-  import {matchesQuery, userBookmarkedEvents, userBookmarkFolders} from "@app/features/bookmarks"
+  import {
+    userBookmarkedEvents,
+    userBookmarkFolders,
+    userBookmarkSearch,
+  } from "@app/features/bookmarks"
   import {pushModal} from "@app/ui/modal"
 
   const createFolder = () => pushModal(BookmarkFolderEdit)
@@ -18,6 +22,8 @@
   let query = $state("")
 
   const searching = $derived(Boolean(query.trim()))
+
+  const matches = $derived(new Set($userBookmarkSearch.searchValues(query.trim())))
 
   const isEmpty = $derived(
     $userBookmarkFolders.length === 1 && $userBookmarkFolders[0].bookmarks.length === 0,
@@ -28,9 +34,7 @@
     $userBookmarkFolders
       .map(folder => ({
         ...folder,
-        bookmarks: folder.bookmarks.filter(tag =>
-          matchesQuery(tag, $userBookmarkedEvents.get(tag[1]), query),
-        ),
+        bookmarks: folder.bookmarks.filter(tag => matches.has(tag[1])),
       }))
       .filter(folder => folder.bookmarks.length > 0 || !searching),
   )
@@ -60,7 +64,7 @@
         <Icon icon={Magnifier} class="shrink-0 text-content-muted" />
         <input bind:value={query} class="grow" type="text" placeholder="Search bookmarks..." />
       </label>
-      {#each folders as folder (folder.identifier || "")}
+      {#each folders as folder (folder.address || "")}
         <BookmarkFolderSection {folder} eventsByValue={$userBookmarkedEvents} />
       {/each}
       {#if folders.length === 0}

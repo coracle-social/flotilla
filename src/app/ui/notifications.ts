@@ -484,7 +484,10 @@ export const isIncludedHomeNotification = derived(
 )
 
 export const getHomeNotificationRelays = () =>
-  router.get().resolve([userInbox()]).then(scenario => scenario.limit(10).getUrls())
+  router
+    .get()
+    .resolve([userInbox()])
+    .then(scenario => scenario.limit(10).getUrls())
 
 // The home badge reads the repository, so these have to arrive whether or not home is open.
 const syncHomeNotificationRelay = (url: string, pubkey: string) => {
