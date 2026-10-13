@@ -3,18 +3,14 @@ import {toWav} from "@lib/audio"
 import OpenRouterEnable from "@app/components/OpenRouterEnable.svelte"
 import {pushModal} from "@app/navigation/dialogs"
 import {getSetting} from "@app/core/settings"
-import type {
-  InferenceEnable,
-  InferenceProvider,
-  InferenceTask,
-} from "@app/features/inference/adapters/common"
+import type {VoiceEnable, VoiceProvider, VoiceTask} from "@app/features/voice/providers/common"
 
-const prompts: Record<InferenceTask, {feature: string; subtitle: string}> = {
-  synthesize: {
+const prompts: Record<VoiceTask, {feature: string; subtitle: string}> = {
+  tts: {
     feature: "Read out loud",
     subtitle: "Have a message read to you instead of reading it yourself.",
   },
-  transcribe: {
+  stt: {
     feature: "Voice input",
     subtitle: "Say what you want to write and have it typed for you.",
   },
@@ -44,11 +40,11 @@ const post = async (
   return response
 }
 
-export const openrouter: InferenceProvider = {
+export const openrouter: VoiceProvider = {
   ready: async () => Boolean(getSetting("openrouter_key")),
-  enable: (task: InferenceTask, {onReady, onCancel, nested}: InferenceEnable) =>
+  enable: (task: VoiceTask, {onReady, onCancel, nested}: VoiceEnable) =>
     pushModal(OpenRouterEnable, {...prompts[task], onReady, onCancel}, {nested}),
-  synthesize: async (text: string, signal?: AbortSignal) => {
+  tts: async (text: string, signal?: AbortSignal) => {
     const response = await post(
       "audio/speech",
       JSON.stringify({
@@ -67,7 +63,7 @@ export const openrouter: InferenceProvider = {
 
     return toWav(audio)
   },
-  transcribe: async (audio: File, signal?: AbortSignal) => {
+  stt: async (audio: File, signal?: AbortSignal) => {
     const body = new FormData()
 
     body.append("model", "openai/whisper-large-v3-turbo")

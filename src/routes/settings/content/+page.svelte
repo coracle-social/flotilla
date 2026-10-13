@@ -20,7 +20,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import SpeechModelSettings from "@app/components/SpeechModelSettings.svelte"
+  import LocalSttSettings from "@app/components/LocalSttSettings.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {deriveUserItem, userMuteList} from "@app/core/user"
   import {blossomServerLists, muteLists} from "@app/core/plugins"
@@ -291,7 +291,7 @@
           </p>
         {/snippet}
       </Field>
-      <SpeechModelSettings />
+      <LocalSttSettings />
     </div>
     <div class="card sticky -bottom-3 flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}

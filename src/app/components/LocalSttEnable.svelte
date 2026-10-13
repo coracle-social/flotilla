@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {localSpeechStatus, runLocalSpeech} from "@lib/speech"
-  import {speechModelBytes} from "@lib/speech/models"
+  import {localSttStatus, runLocalStt} from "@lib/stt"
+  import {sttModelBytes} from "@lib/stt/models"
   import {errorMessage} from "@lib/util"
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
@@ -16,12 +16,12 @@
   const {onReady, onCancel}: Props = $props()
   const controller = new AbortController()
 
-  const megabytes = Math.round(speechModelBytes / 1024 / 1024)
+  const megabytes = Math.round(sttModelBytes / 1024 / 1024)
 
   const download = async () => {
     loading = true
     try {
-      await runLocalSpeech({}, controller.signal)
+      await runLocalStt({}, controller.signal)
       if (!controller.signal.aborted) {
         pending = false
         popModal()
@@ -39,7 +39,7 @@
 
   let pending = true
   let loading = $state(false)
-  const status = $derived($localSpeechStatus)
+  const status = $derived($localSttStatus)
 
   // Leaving without the model hands the decision back to whoever asked for it.
   onDestroy(() => {

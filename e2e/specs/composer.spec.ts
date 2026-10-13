@@ -14,8 +14,8 @@ import {
   makeTestUser,
   messageActions,
   mockBlossom,
-  mockLocalSpeech,
-  mockOpenRouterTranscription,
+  mockLocalStt,
+  mockOpenRouterStt,
   roomLink,
   roomPath,
   sendButton,
@@ -423,7 +423,7 @@ test("US-125 dictate a message", async ({seed, as}) => {
 
   const {url} = scenario.space("space")
   const alice = await as(users.alice, roomPath(url, "general"))
-  const transcription = await mockOpenRouterTranscription(alice.context(), "the tide turns at six")
+  const transcription = await mockOpenRouterStt(alice.context(), "the tide turns at six")
 
   // Recording asks for nothing. Asking for a transcript with no provider set up asks for one.
   const recorder = await record(alice)
@@ -519,7 +519,7 @@ test("US-142 transcribe a recording on this device", async ({seed, as}) => {
 
   const {url} = scenario.space("space")
   const alice = await as(users.alice, "/settings/content")
-  const localSpeech = await mockLocalSpeech(alice.context(), {text: "the tide turns at six"})
+  const localSpeech = await mockLocalStt(alice.context(), {text: "the tide turns at six"})
 
   // Downloading the model is the whole of the choice, so no OpenRouter key is ever saved here.
   await alice.getByRole("button", {name: "Download model"}).click()

@@ -20,7 +20,7 @@
   import EditorContent from "@app/features/editor/EditorContent.svelte"
   import {makeEditor} from "@app/features/editor"
   import {app} from "@app/core/app"
-  import {getDictation} from "@app/features/dictation"
+  import {getDictation} from "@app/features/voice"
   import {pushToast} from "@app/ui/toast"
   import {DraftKey, type Draft} from "@app/features/drafts"
   import type {Share} from "@app/ui/share"

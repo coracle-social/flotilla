@@ -2,16 +2,14 @@
   import {onDestroy, onMount} from "svelte"
   import type {MaybeAsync} from "@welshman/lib"
   import Microphone from "@assets/icons/microphone.svg?dataurl"
-  import {localSpeechStatus} from "@lib/speech"
+  import {localSttStatus} from "@lib/stt"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {errorMessage} from "@lib/util"
   import VoiceRecorder from "@app/components/VoiceRecorder.svelte"
-  import type {Dictation} from "@app/features/dictation"
-  import {clearDictation, getDictation, transcribeDictation} from "@app/features/dictation"
-  import type {InferenceProviderFor} from "@app/features/inference"
-  import {resolveInference} from "@app/features/inference"
+  import type {Dictation} from "@app/features/voice"
+  import {clearDictation, getDictation, transcribeDictation} from "@app/features/voice"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
@@ -39,35 +37,12 @@
   const transcribe = async () => {
     const dictation = getDictation(key)
 
-    if (dictation) {
-      try {
-        const {provider, ready} = await resolveInference("transcribe")
-
-        if (ready) {
-          transcribeDictation(dictation, provider.transcribe)
-
-          return await deliver(dictation)
-        }
-
-        return await enable(provider)
-      } catch (error) {
-        console.error(error)
-        pushToast({theme: "error", message: `Failed to prepare dictation: ${errorMessage(error)}`})
-      }
+    if (dictation && (await transcribeDictation(dictation))) {
+      return deliver(dictation)
     }
 
     return false
   }
-
-  // The setup prompt sits over the recorder rather than replacing it, so the wait is one wait.
-  const enable = (provider: InferenceProviderFor<"transcribe">) =>
-    new Promise<boolean>(resolve => {
-      provider.enable("transcribe", {
-        nested: true,
-        onReady: () => resolve(transcribe()),
-        onCancel: () => resolve(false),
-      })
-    })
 
   const deliver = async (dictation: Dictation) => {
     await dictation.finished
@@ -149,7 +124,7 @@
 
 <Button
   class="button button-ghost button-circle tip tip-left"
-  data-tip={loading ? $localSpeechStatus.message || "Preparing dictation…" : "Record a message"}
+  data-tip={loading ? $localSttStatus.message || "Preparing dictation…" : "Record a message"}
   aria-label="Start dictation"
   disabled={loading}
   onclick={record}>

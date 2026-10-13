@@ -12,7 +12,7 @@ import {
   messageActions,
   messages,
   mockDufflepud,
-  mockOpenRouterSpeech,
+  mockOpenRouterTts,
   openMessageMenu,
   openRoomDetail,
   pageBar,
@@ -798,7 +798,7 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
   const {url} = scenario.space("space")
   const alice = await as(users.alice, roomPath(url, "general"))
   // Long enough that playback is still going when it is stopped.
-  const speech = await mockOpenRouterSpeech(alice.context(), 10)
+  const speech = await mockOpenRouterTts(alice.context(), 10)
 
   // The mention has to have resolved on screen before it can be expected in what was spoken.
   await expect(message(alice, "heads up")).toContainText("@Alice Anchor")

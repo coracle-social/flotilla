@@ -4,10 +4,7 @@ type Request = {check?: boolean; samples?: number}
 type Result = {ready?: boolean; text?: string}
 
 /** The local transcription model, answering every recording with the same transcript. */
-export const mockLocalSpeech = async (
-  context: BrowserContext,
-  {text = ""}: {text?: string} = {},
-) => {
+export const mockLocalStt = async (context: BrowserContext, {text = ""}: {text?: string} = {}) => {
   // How many samples each recording decoded to, so a spec can tell one happened at all.
   const recordings: number[] = []
   let downloaded = false
@@ -15,7 +12,7 @@ export const mockLocalSpeech = async (
   let release: (() => void) | undefined
   let failure: string | undefined
 
-  await context.exposeFunction("__localSpeech", async (request: Request): Promise<Result> => {
+  await context.exposeFunction("__localStt", async (request: Request): Promise<Result> => {
     if (request.check) {
       return {ready: downloaded}
     }
@@ -35,11 +32,11 @@ export const mockLocalSpeech = async (
 
   const install = () => {
     const host = globalThis as typeof globalThis & {
-      __localSpeech: (request: Request) => Promise<Result>
+      __localStt: (request: Request) => Promise<Result>
     }
     Object.assign(globalThis, {
-      __TEST_SPEECH__: {
-        hasModel: async () => (await host.__localSpeech({check: true})).ready,
+      __TEST_STT__: {
+        hasModel: async () => (await host.__localStt({check: true})).ready,
         run: async (
           request: {samples?: Float32Array},
           signal: AbortSignal,
@@ -52,7 +49,7 @@ export const mockLocalSpeech = async (
               () => reject(new DOMException("Aborted", "AbortError")),
               {once: true},
             )
-            host.__localSpeech({samples: request.samples?.length}).then(resolve, reject)
+            host.__localStt({samples: request.samples?.length}).then(resolve, reject)
           })
 
           return result.text === undefined

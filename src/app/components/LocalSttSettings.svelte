@@ -1,26 +1,26 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {hasLocalSpeech, removeLocalSpeech} from "@lib/speech"
+  import {hasLocalStt, removeLocalStt} from "@lib/stt"
   import {errorMessage} from "@lib/util"
   import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
-  import LocalSpeechEnable from "@app/components/LocalSpeechEnable.svelte"
+  import LocalSttEnable from "@app/components/LocalSttEnable.svelte"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   const refresh = async () => {
     try {
-      ready = await hasLocalSpeech()
+      ready = await hasLocalStt()
     } catch (error) {
       console.error(error)
       pushToast({theme: "error", message: "Speech model storage is unavailable on this device."})
     }
   }
-  const download = () => pushModal(LocalSpeechEnable, {onReady: refresh})
+  const download = () => pushModal(LocalSttEnable, {onReady: refresh})
   const remove = async () => {
     loading = true
     try {
-      await removeLocalSpeech()
+      await removeLocalStt()
       ready = false
     } catch (error) {
       console.error(error)

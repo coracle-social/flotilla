@@ -4,7 +4,7 @@
   import Landing from "@app/components/Landing.svelte"
   import Toast from "@app/components/Toast.svelte"
   import CallBanner from "@app/components/CallBanner.svelte"
-  import SpeechBanner from "@app/components/SpeechBanner.svelte"
+  import ReadAloudBanner from "@app/components/ReadAloudBanner.svelte"
   import PrimaryNav from "@app/components/PrimaryNav.svelte"
   import {app} from "@app/core/app"
   import {getModal} from "@app/navigation/dialogs"
@@ -33,6 +33,6 @@
     {/if}
   </div>
   <CallBanner />
-  <SpeechBanner />
+  <ReadAloudBanner />
 </div>
 <Toast />

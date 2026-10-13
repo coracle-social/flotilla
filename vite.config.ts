@@ -20,9 +20,7 @@ export default defineConfig({
   // transitive one isn't reachable from the root and the build fails to resolve it.
   resolve: {
     alias: {
-      "@speech-runtime": dirname(
-        createRequire(import.meta.url).resolve("@huggingface/transformers"),
-      ),
+      "@stt-runtime": dirname(createRequire(import.meta.url).resolve("@huggingface/transformers")),
     },
     dedupe: [
       "@tiptap/core",
@@ -36,7 +34,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     // Vite pre-bundles the worker's ?url runtime imports through this alias and emits no file.
-    exclude: ["@speech-runtime"],
+    exclude: ["@stt-runtime"],
   },
   server: {
     port: 1847,
@@ -79,6 +77,7 @@ export default defineConfig({
               urlPattern: /\/_app\/immutable\/workers\/assets\/ort-wasm-.*\.(wasm|mjs)$/,
               handler: "CacheFirst",
               options: {
+                // Browsers already hold the runtime under this name, so it outlived the stt rename.
                 cacheName: "speech-runtime",
                 expiration: {maxEntries: 4},
                 cacheableResponse: {statuses: [200]},

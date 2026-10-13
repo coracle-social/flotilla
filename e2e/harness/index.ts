@@ -51,7 +51,7 @@ export {
   withholdEose,
 } from "./net/websocket"
 export {readCachedEvents} from "./app/cache"
-export {mockLocalSpeech} from "./app/speech"
+export {mockLocalStt} from "./app/stt"
 export {
   bubble,
   chatItems,
@@ -94,8 +94,8 @@ export {
   mockDufflepud,
   mockGeocoding,
   mockLivekit,
-  mockOpenRouterSpeech,
-  mockOpenRouterTranscription,
+  mockOpenRouterStt,
+  mockOpenRouterTts,
 } from "./net/http"
 export type {
   DufflepudFixtures,
@@ -103,8 +103,8 @@ export type {
   HostingFixtures,
   HostingHandle,
   HostingRecord,
-  Speech,
-  Transcription,
+  Stt,
+  Tts,
 } from "./net/http"
 export type {WebLnInfo} from "./app/webln"
 

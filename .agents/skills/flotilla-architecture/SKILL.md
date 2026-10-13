@@ -52,8 +52,8 @@ only gate.
   component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
   `IconInput` and its picker buttons did.
 - **app → components.** `features/messages.ts` (`goToMessages` opens `MessagesEnable`),
-  `share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`), `speech.ts`
-  (`OpenRouterEnable`) and `healthChecks.ts` (`KeyDownload`, the fix for the key backup check)
+  `share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`), the voice providers
+  (`OpenRouterEnable`, `LocalSttEnable`) and `healthChecks.ts` (`KeyDownload`, the fix for the key backup check)
   import a component so they can open a modal mid-flow. Push adapters and
   deep links reach those flows from outside any component, and the rest have several component
   callers, so each stays in one module. `editor/` holds `.svelte` files of its own (suggestion
@@ -164,7 +164,11 @@ Outside `spaces/`:
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)
 - Platform and voice: `push/` (notification adapters, and `server.ts` for the push server's HTTP
-  API), `deepLinks.ts`, `reminders.ts`, `dictation.ts` and `speech.ts` (through `inference/`)
+  API), `deepLinks.ts`, `reminders.ts`
+- `voice/`: speech to text (stt) and text to speech (tts). `index.ts` holds a composer's
+  dictation, kept across navigation and sent as a voice note or transcribed, and reading a
+  message aloud. `providers/` runs each task on the device's stt model or on OpenRouter, and
+  `resolveVoiceProvider` picks one or asks the user to set one up
 - `editor/`: flotilla's `@welshman/editor` setup (`makeEditor`), with its suggestion popovers and
   node views
 - `analytics.ts` (Plausible pageviews), `drafts.ts`, `loading.ts`, `location.ts`
@@ -185,8 +189,11 @@ client.
 - `indexeddb.ts`: the `IDB` wrapper that `storage.ts` builds on
 - `feeds.ts`: saved feed definitions (kind `FEED`) over `@welshman/feeds`. It is unrelated to
   `@app/features/feeds`, which loads events.
-- `audio.ts` (device lists, a live input level, WAV encoding), `tileGrid.ts` (the call grid's
-  geometry)
+- `audio.ts`: recording from the microphone, device lists, a live input level, decoding to mono
+  samples at a model's rate, and WAV encoding
+- `stt/`: the on-device stt model (Whisper, run in a worker), its download and cache, and
+  `transcribeLocally`
+- `tileGrid.ts` (the call grid's geometry)
 - `currency.ts`, `transition.ts`, `implicit.ts` (hands state from one page to the next)
 - `test/`: the DEV-only hooks the e2e harness injects through
 - `components/`: the design system, entered through `theme.css` (see `flotilla-views`), which

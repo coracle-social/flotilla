@@ -7,7 +7,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Banner from "@app/components/Banner.svelte"
-  import {speech, stopSpeech} from "@app/features/speech"
+  import {readingAloud, stopReadingAloud} from "@app/features/voice"
 
   let audio: HTMLAudioElement | undefined = $state()
   let playing = $state(false)
@@ -34,14 +34,14 @@
   }
 </script>
 
-{#if $speech}
+{#if $readingAloud}
   <Banner>
-    {#if $speech.src}
+    {#if $readingAloud.src}
       <audio
         bind:this={audio}
         bind:currentTime
         bind:duration
-        src={$speech.src}
+        src={$readingAloud.src}
         autoplay
         onplay={onPlay}
         onpause={onStop}
@@ -58,10 +58,10 @@
     <div class="flex min-w-0 flex-1 flex-col gap-1">
       <span class="flex min-w-0 items-center gap-2 truncate text-sm">
         <Icon icon={VolumeLoud} size={4} />
-        <span class="font-semibold">{$speech.src ? "Reading" : "Preparing"}</span>
-        <span class="truncate text-content-muted">a message from {$speech.title}</span>
+        <span class="font-semibold">{$readingAloud.src ? "Reading" : "Preparing"}</span>
+        <span class="truncate text-content-muted">a message from {$readingAloud.title}</span>
       </span>
-      {#if $speech.src}
+      {#if $readingAloud.src}
         <span class="flex items-center gap-2 text-xs text-content-muted">
           <input
             aria-label="Seek within the message"
@@ -78,7 +78,7 @@
     <Button
       aria-label="Stop reading"
       class="button button-circle button-sm button-neutral shrink-0"
-      onclick={stopSpeech}>
+      onclick={stopReadingAloud}>
       <Icon icon={Close} size={4} />
     </Button>
   </Banner>

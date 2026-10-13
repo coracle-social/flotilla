@@ -199,7 +199,7 @@ const silence = (seconds: number) => {
   return wav
 }
 
-export type Speech = {
+export type Tts = {
   // What the app asked to have read, after its own entity and url naming.
   spoken: string[]
   // Stops answering. A request that arrives while this is on is held open until `release`.
@@ -208,10 +208,7 @@ export type Speech = {
 }
 
 /** OpenRouter's text to speech, answering every request with the same silence. Raw pcm is refused. */
-export const mockOpenRouterSpeech = async (
-  context: BrowserContext,
-  seconds = 3,
-): Promise<Speech> => {
+export const mockOpenRouterTts = async (context: BrowserContext, seconds = 3): Promise<Tts> => {
   const spoken: string[] = []
 
   let held: Maybe<Promise<void>>
@@ -249,7 +246,7 @@ export const mockOpenRouterSpeech = async (
   }
 }
 
-export type Transcription = {
+export type Stt = {
   // OpenRouter picks a decoder off the extension, so this is how a spec reads what the recorder made.
   uploads: string[]
   // Answers with this from here on, so a spec can exercise an empty transcript.
@@ -262,10 +259,7 @@ export type Transcription = {
 }
 
 /** OpenRouter's speech to text, answering every recording with the same transcript. */
-export const mockOpenRouterTranscription = async (
-  context: BrowserContext,
-  text: string,
-): Promise<Transcription> => {
+export const mockOpenRouterStt = async (context: BrowserContext, text: string): Promise<Stt> => {
   const uploads: string[] = []
 
   let held: Maybe<Promise<void>>

@@ -12,8 +12,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
-  import type {Dictation} from "@app/features/dictation"
-  import {clearDictation, getDictation, startDictation} from "@app/features/dictation"
+  import type {Dictation} from "@app/features/voice"
+  import {clearDictation, getDictation, startDictation} from "@app/features/voice"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 

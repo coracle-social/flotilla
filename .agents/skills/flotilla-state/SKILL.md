@@ -61,7 +61,7 @@ The following run outside that gate:
   `syncApplicationData`, the `notifications.sync*` functions, `Push.sync`, logging
 - `ModalContainer` and every modal, including the `LogIn*`/`SignUp*` flows. Modals stay mounted
   across a login.
-- `Toast`, `CallBanner`, `SpeechBanner`, `NewNotificationSound`
+- `Toast`, `CallBanner`, `ReadAloudBanner`, `NewNotificationSound`
 - every app policy
 
 This code reads `app.get().user?.pubkey` and bails when it is missing, as
@@ -355,7 +355,7 @@ event on every read.
 `DraftKey<T>` is a typed handle over an in-memory `Map`. A draft survives the composer
 unmounting and a navigation, but not a reload. Key it by context: `RoomCompose` uses
 `room:${url ?? ""}:${h ?? ""}` and `EventReply` uses `reply:${event.id}:${parent?.id || ""}`.
-The dictation registry in `dictation.ts` works the same way, so a transcription can finish after
+The dictation registry in `features/voice` works the same way, so a transcription can finish after
 its composer has gone.
 
 ## Background sync (`src/app/core/sync.ts`)

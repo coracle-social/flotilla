@@ -40,7 +40,7 @@
   import {ENABLE_ZAPS} from "@app/core/env"
   import {makeContentPath} from "@app/navigation/pages"
   import {shareEvent} from "@app/ui/share"
-  import {readAloud} from "@app/features/speech"
+  import {readAloud} from "@app/features/voice"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

@@ -1,10 +1,10 @@
 import {env, pipeline, Tensor} from "@huggingface/transformers"
 import type {ProgressInfo} from "@huggingface/transformers"
 import {sum} from "@welshman/lib"
-import wasmUrl from "@speech-runtime/ort-wasm-simd-threaded.jsep.wasm?url"
-import wasmModuleUrl from "@speech-runtime/ort-wasm-simd-threaded.jsep.mjs?url"
-import {speechCacheName, speechModel, missingSpeechBytes} from "./models"
-import type {SpeechRequest, SpeechResponse} from "./types"
+import wasmUrl from "@stt-runtime/ort-wasm-simd-threaded.jsep.wasm?url"
+import wasmModuleUrl from "@stt-runtime/ort-wasm-simd-threaded.jsep.mjs?url"
+import {sttCacheName, sttModel, missingSttBytes} from "./models"
+import type {SttRequest, SttResponse} from "./types"
 
 env.allowLocalModels = false
 env.useBrowserCache = false
@@ -15,7 +15,7 @@ if (env.backends.onnx.wasm) {
   env.backends.onnx.wasm.wasmPaths = {wasm: wasmUrl, mjs: wasmModuleUrl}
 }
 
-const send = (response: SpeechResponse) => postMessage(response)
+const send = (response: SttResponse) => postMessage(response)
 
 // Each file reports its own percent, so the bar reads bytes against the whole download instead.
 const downloadProgress = (remaining: number) => {
@@ -39,7 +39,7 @@ const downloadProgress = (remaining: number) => {
 type Progress = ReturnType<typeof downloadProgress>
 
 const loadTranscriber = (progress: Progress) => {
-  const {id, revision, device, dtype} = speechModel
+  const {id, revision, device, dtype} = sttModel
 
   return pipeline("automatic-speech-recognition", id, {
     revision,
@@ -70,7 +70,7 @@ const transcribe = async (
   > & {
     lang_to_id: Record<string, number>
   }
-  const features = await model.processor(samples.slice(0, 16000 * 30))
+  const features = await model.processor(samples.slice(0, sttModel.sampleRate * 30))
   const {logits}: {logits: Tensor} = await model.model({
     ...features,
     decoder_input_ids: new Tensor("int64", [BigInt(config.decoder_start_token_id)], [1, 1]),
@@ -93,11 +93,11 @@ const transcribe = async (
   })
 }
 
-addEventListener("message", async ({data}: MessageEvent<SpeechRequest>) => {
+addEventListener("message", async ({data}: MessageEvent<SttRequest>) => {
   try {
-    env.customCache = await caches.open(speechCacheName)
+    env.customCache = await caches.open(sttCacheName)
 
-    const progress = downloadProgress(await missingSpeechBytes())
+    const progress = downloadProgress(await missingSttBytes())
 
     send({type: "progress", message: "Loading model…"})
 

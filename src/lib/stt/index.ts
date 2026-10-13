@@ -1,10 +1,9 @@
 import {writable} from "svelte/store"
-import {decodeDictation} from "./audio"
-import {hasSpeechModel, speechCacheName} from "./models"
-import type {SpeechProgress, SpeechRequest, SpeechResponse, SpeechResult} from "./types"
-import {getTestSpeech} from "@lib/test/speech"
+import {hasSttModel, sttCacheName} from "./models"
+import type {SttProgress, SttRequest, SttResponse, SttResult} from "./types"
+import {getTestStt} from "@lib/test/stt"
 
-export const localSpeechStatus = writable<SpeechProgress>({message: ""})
+export const localSttStatus = writable<SttProgress>({message: ""})
 
 // The name every abort in the platform carries, so a caller tests one rather than a class.
 const aborted = () => new DOMException("Aborted", "AbortError")
@@ -34,13 +33,9 @@ const getWorker = () => {
   return worker
 }
 
-export const hasLocalSpeech = () =>
-  (import.meta.env.DEV && getTestSpeech()?.hasModel()) || hasSpeechModel()
+export const hasLocalStt = () => (import.meta.env.DEV && getTestStt()?.hasModel()) || hasSttModel()
 
-export const runLocalSpeech = (
-  request: SpeechRequest,
-  signal?: AbortSignal,
-): Promise<SpeechResult> => {
+export const runLocalStt = (request: SttRequest, signal?: AbortSignal): Promise<SttResult> => {
   const controller = new AbortController()
   const abort = () => controller.abort()
   signal?.addEventListener("abort", abort, {once: true})
@@ -49,7 +44,7 @@ export const runLocalSpeech = (
   }
   controllers.add(controller)
 
-  const progress = (update: SpeechProgress) => localSpeechStatus.set(update)
+  const progress = (update: SttProgress) => localSttStatus.set(update)
 
   const result = queue.then(async () => {
     if (controller.signal.aborted) {
@@ -57,7 +52,7 @@ export const runLocalSpeech = (
     }
     progress({message: "Loading model…"})
 
-    const test = import.meta.env.DEV && getTestSpeech()
+    const test = import.meta.env.DEV && getTestStt()
     if (test) {
       return test.run(request, controller.signal, progress)
     }
@@ -67,7 +62,7 @@ export const runLocalSpeech = (
     const listening = new AbortController()
     const options = {signal: listening.signal}
     try {
-      return await new Promise<SpeechResult>((resolve, reject) => {
+      return await new Promise<SttResult>((resolve, reject) => {
         controller.signal.addEventListener("abort", () => reject(aborted()), {once: true})
         active.addEventListener(
           "error",
@@ -81,7 +76,7 @@ export const runLocalSpeech = (
         )
         active.addEventListener(
           "message",
-          ({data}: MessageEvent<SpeechResponse>) => {
+          ({data}: MessageEvent<SttResponse>) => {
             if (data.type === "progress") {
               progress({message: data.message, percent: data.percent})
             } else if (data.type === "error") {
@@ -119,21 +114,21 @@ export const runLocalSpeech = (
   return finished
 }
 
-export const removeLocalSpeech = async () => {
+export const removeLocalStt = async () => {
   for (const controller of controllers) {
     controller.abort()
   }
   await queue
   releaseWorker()
-  await caches.delete(speechCacheName)
+  await caches.delete(sttCacheName)
 }
 
-export const transcribeLocally = async (audio: Blob, signal?: AbortSignal) => {
-  const samples = await decodeDictation(audio)
+// Takes mono samples at the model's sample rate.
+export const transcribeLocally = async (samples: Float32Array, signal?: AbortSignal) => {
   if (!samples.length || samples.every(sample => Math.abs(sample) < 0.0001)) {
     return ""
   }
-  const result = await runLocalSpeech({samples}, signal)
+  const result = await runLocalStt({samples}, signal)
   if (result.type !== "transcript") {
     throw new Error("The speech model returned no transcript.")
   }

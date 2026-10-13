@@ -5,8 +5,8 @@ test("dictation resamples decoded audio to 16 kHz and mixes stereo to mono", asy
   await page.goto("/speech-audio-test")
 
   const results = await page.evaluate(async () => {
-    const path = "/src/lib/speech/audio.ts"
-    const {decodeDictation}: typeof import("../../src/lib/speech/audio") = await import(path)
+    const path = "/src/lib/audio.ts"
+    const {decodeMono}: typeof import("../../src/lib/audio") = await import(path)
     const decode = OfflineAudioContext.prototype.decodeAudioData
     const results = []
     try {
@@ -16,7 +16,7 @@ test("dictation resamples decoded audio to 16 kHz and mixes stereo to mono", asy
         audio.getChannelData(1).fill(0.75)
         // Exercise a decoder returning its original sample rate, including on mobile WebViews.
         OfflineAudioContext.prototype.decodeAudioData = async () => audio
-        const samples = await decodeDictation(new Blob())
+        const samples = await decodeMono(new Blob(), 16000)
         results.push({rate, length: samples.length, middle: samples[8000]})
       }
     } finally {

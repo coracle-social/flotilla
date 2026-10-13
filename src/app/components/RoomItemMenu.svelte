@@ -23,7 +23,7 @@
   import {roomPinLists} from "@app/core/plugins"
   import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
   import {shareEvent} from "@app/ui/share"
-  import {readAloud} from "@app/features/speech"
+  import {readAloud} from "@app/features/voice"
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
   import {pushModal} from "@app/navigation/dialogs"
 
