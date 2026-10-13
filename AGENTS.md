@@ -26,7 +26,11 @@ routes/                    (top layer - can depend on anything)
   ↓
 app/components/            (can depend on app/* and lib/*)
   ↓
-app/*                      (can only depend on lib/*)
+app/features/              (one feature each, with few callers)
+  ↓
+app/ui/                    (ui chrome: modals, toasts, routes, theme)
+  ↓
+app/core/                  (the App, plugins, session, storage, sync, settings, env)
   ↓
 lib/                       (can only depend on external libraries)
   ↓
@@ -47,7 +51,7 @@ import {derived} from "svelte/store"
 import {throttle} from "throttle-debounce"
 import {Profiles} from "@welshman/app"
 import {Dialog} from "$lib/components"
-import {app} from "@app/core"
+import {app} from "@app/core/app"
 ```
 
 ## Cleanup Pass
@@ -68,10 +72,12 @@ Conventions below.
 **Core Principles:**
 
 - Use Svelte 4 **stores** for all state (NOT runes outside UI components)
-- Everything hangs off the single `App` instance in `app/core.ts`. There are no welshman globals —
+- Everything hangs off the single `App` instance in `app/core/app.ts`. There are no welshman globals —
   reach features with `app.use(Plugin)`, which is memoized per app and cheap to call inline.
-- `app/core.ts` also exports `pubkey`, `signer`, `user` and `session` stores (all with `.get()`),
-  `login`, and `deriveUserItem(plugin)` for the current user's entry in a keyed collection.
+- `app/core/app.ts` also exports the `user` store (with `.get()`), `fromApp`, and
+  `deriveUserItem(plugin)` for the current user's entry in a keyed collection. The plugin stores are
+  in `app/core/plugins.ts`, `reader`/`writer`/`command` in `app/core/domain.ts`, and the `session`
+  store and `login` in `app/core/session.ts`.
 - Most global state flows through the app's `repository` (unidirectional)
 - Query state with a plugin's `one(key)` / `index` / `all`, or `deriveEventsById` /
   `deriveItemsByKey` from `@welshman/store` against `app.repository`
@@ -127,7 +133,7 @@ callbacks and hot paths.
 **CRITICAL Code Style Guidelines:**
 
 - **No `null`** - only use `undefined`
-- Never hard-code the app's name. The brand is a build-time `VITE_PLATFORM_*` variable, so user-facing copy interpolates `PLATFORM_NAME` from `@app/env`, and `PLATFORM_URL`, `PLATFORM_LOGO`, `PLATFORM_ABOUT` for the rest of it. Each is set by the deployment, so don't write a `"Flotilla"` fallback behind one either.
+- Never hard-code the app's name. The brand is a build-time `VITE_PLATFORM_*` variable, so user-facing copy interpolates `PLATFORM_NAME` from `@app/core/env`, and `PLATFORM_URL`, `PLATFORM_LOGO`, `PLATFORM_ABOUT` for the rest of it. Each is set by the deployment, so don't write a `"Flotilla"` fallback behind one either.
 - Svelte 5 runes (`$state`, `$derived`, `$effect`) only in UI components
 - TailwindCSS styling with css components customized by theme. See lib/components for examples.
 - A component class goes in `@layer components`, in its own file under `lib/components`. An unlayered rule beats a layered one whatever the specificity, so a class outside the layer can never be overridden by a utility in markup. The third-party overrides in `base.css` stay unlayered. The library defaults they beat are unlayered too.
@@ -196,10 +202,10 @@ return a `Command`, so `.then(publish)` is usually all you need.
 
 ### Managing Modals/Toasts
 
-- Import from `app/modal.ts` or `app/toast.ts`
+- Import from `app/ui/modal.ts` or `app/ui/toast.ts`
 - Pass component objects with parameters
 - Use `$state.snapshot` if calling component might unmount
-- Navigate with `navigate` from `app/modal.ts` rather than `goto` — an open modal owns a history
+- Navigate with `navigate` from `app/ui/modal.ts` rather than `goto` — an open modal owns a history
   entry, and a navigation that drops the modal gives that entry back before it pushes its own.
   A plain `<a>` inside a modal goes the same way, through `ModalContainer`'s `beforeNavigate`
 - `navigate` is async and gives those entries back before it goes anywhere, so the page store

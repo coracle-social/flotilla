@@ -8,12 +8,12 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
   import ComposeParent from "@app/components/ComposeParent.svelte"
-  import {prependParent, publishComment} from "@app/rooms"
-  import {makeEditor} from "@app/editor"
-  import {DraftKey} from "@app/drafts"
-  import {pushToast} from "@app/toast"
+  import {prependParent, publishComment} from "@app/features/rooms"
+  import {makeEditor} from "@app/features/editor"
+  import {DraftKey} from "@app/features/drafts"
+  import {pushToast} from "@app/ui/toast"
 
   type Values = {
     content?: string | object

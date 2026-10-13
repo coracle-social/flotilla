@@ -14,11 +14,13 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {INDEXER_RELAYS, PLATFORM_NAME} from "@app/env"
-  import {userSpaceUrls} from "@app/rooms"
-  import {pushToast} from "@app/toast"
-  import {logout} from "@app/session"
-  import {app, publisher, relayLists, user, writer} from "@app/core"
+  import {INDEXER_RELAYS, PLATFORM_NAME} from "@app/core/env"
+  import {userSpaceUrls} from "@app/features/rooms"
+  import {pushToast} from "@app/ui/toast"
+  import {logout} from "@app/core/session"
+  import {app, user} from "@app/core/app"
+  import {publisher, relayLists} from "@app/core/plugins"
+  import {writer} from "@app/core/domain"
 
   let progress: number | undefined = $state(undefined)
   let confirmText = $state("")

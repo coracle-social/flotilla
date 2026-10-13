@@ -13,11 +13,11 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
-  import {reader} from "@app/core"
-  import {decodeRelay} from "@app/relays"
-  import {displayRoom} from "@app/rooms"
-  import {makeCommentFilter, partitionByActivity} from "@app/content"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import {reader} from "@app/core/domain"
+  import {decodeRelay} from "@app/core/relays"
+  import {displayRoom} from "@app/features/rooms"
+  import {makeCommentFilter, partitionByActivity} from "@app/features/content"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

@@ -19,11 +19,11 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
-  import {chatSearch} from "@app/chats"
-  import {user} from "@app/core"
-  import {deriveUserRoomSearch} from "@app/rooms"
-  import {makeChatPath} from "@app/routes"
-  import {shareTo, type Share} from "@app/share"
+  import {chatSearch} from "@app/features/chats"
+  import {user} from "@app/core/app"
+  import {deriveUserRoomSearch} from "@app/features/rooms"
+  import {makeChatPath} from "@app/ui/routes"
+  import {shareTo, type Share} from "@app/ui/share"
 
   type Props = {
     share: Share

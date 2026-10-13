@@ -15,10 +15,10 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
-  import {makeEventPermalink, makeRoomPath} from "@app/routes"
-  import {shareTo} from "@app/share"
-  import {clip} from "@app/toast"
-  import {rooms} from "@app/core"
+  import {makeEventPermalink, makeRoomPath} from "@app/ui/routes"
+  import {shareTo} from "@app/ui/share"
+  import {clip} from "@app/ui/toast"
+  import {rooms} from "@app/core/plugins"
 
   type Props = {
     url: string

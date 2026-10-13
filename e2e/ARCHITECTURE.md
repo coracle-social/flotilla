@@ -166,7 +166,7 @@ page asks for is meant to be refused.
 
 Configuration is the other half. `boot()` overrides every `VITE_` value that names a relay — default,
 indexer, search, messaging, signer, platform, blocked, the default space list — with the scenario's
-own urls, through the hook `src/app/env.ts` reads them with, and points `VITE_PUSH_BRIDGE` at `ws://localhost:1/`, which nothing serves, so a push
+own urls, through the hook `src/app/core/env.ts` reads them with, and points `VITE_PUSH_BRIDGE` at `ws://localhost:1/`, which nothing serves, so a push
 bridge connection is reported as a leak rather than blending into a relay's traffic. The `VITE_`
 values it does not override still name real hosts — the blossom server, the pomade signers, the
 thumbnail service, the push server, the hosting api — and none of them is contacted at boot. Blossom
@@ -177,7 +177,7 @@ configuration.
 Grepping the repo for hostnames accounts for all of them, and there are only three kinds. Most are an
 `href` in help text — nostr.com, nostrapps.com, nsec.app, nosta.me, nostr.how, github.com,
 fountain.fm, cal.com, figma.com, coracle.tools, gitea.coracle.social, nwc.getalby.com, and the
-`coracle.social` entity links `src/app/env.ts` builds — reachable only by clicking, and routed if
+`coracle.social` entity links `src/app/core/env.ts` builds — reachable only by clicking, and routed if
 clicked. Two are fetched: dufflepud, whose origin is the one service url hard-coded rather than read
 from `VITE_`, and the plausible tag in `src/app.html`. Both are mocked. The rest are in comments.
 Under `e2e` the only hostnames are the four service origins `net/http.ts` matches on, the virtual
@@ -227,7 +227,7 @@ Test identities are deterministic secp256k1 keypairs derived from fixed secrets 
 `makeTestUser(name)` derives a fifth, sixth or hundredth one from its name and registers it, for the
 directory and search specs that need more people than there are named ones.
 
-A logged-in user is created by injecting a NIP-01 session before the app boots. `src/app/session.ts`
+A logged-in user is created by injecting a NIP-01 session before the app boots. `src/app/core/session.ts`
 carries a DEV-only hook: `restoreSession()` prefers `window.__TEST_SESSION__` when it is present, and
 `window.__TEST_EVENTS__` becomes the repository contents a returning user's client would have found
 on disk. Both branches are stripped from production builds, and injecting through the hook avoids
@@ -389,7 +389,7 @@ what one spec means differently: `dms.spec.ts` names a message by its `data-even
 same words are sent more than once there.
 
 One piece lives outside this directory: `src/lib/test/session.ts` holds the two window keys and the
-getters `src/app/session.ts` reads them through. It is the only file the app ships on the harness's
+getters `src/app/core/session.ts` reads them through. It is the only file the app ships on the harness's
 behalf, and `harness/app/session.ts` duplicates the key names rather than importing them, since
 importing anything under `src` would pull sveltekit into the node process.
 
@@ -463,7 +463,7 @@ engines adds little coverage. `E2E_BROWSER=webkit pnpm test` runs the whole
 suite under another one. The container listens on a fixed port and cannot be sharded, so
 `workers` is 1.
 
-`src/app/env.ts` resolves every `VITE_` value through a DEV-only hook that prefers
+`src/app/core/env.ts` resolves every `VITE_` value through a DEV-only hook that prefers
 `window.__TEST_ENV__`, which `boot()` injects per browser context, so any dev server will do and a
 server already listening on `:1847` is reused. `boot()` still checks that the app read the injected
 values, and fails naming the hook rather than letting a run drift onto the relays in `.env`.

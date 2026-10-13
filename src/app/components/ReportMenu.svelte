@@ -8,10 +8,12 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {app, deletes, profiles, reader, relayManagement, relays, user} from "@app/core"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushToast} from "@app/toast"
-  import {pushModal} from "@app/modal"
+  import {app, user} from "@app/core/app"
+  import {deletes, profiles, relayManagement, relays} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {pushToast} from "@app/ui/toast"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

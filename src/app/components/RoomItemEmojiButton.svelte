@@ -3,7 +3,7 @@
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {publishReaction} from "@app/reactions"
+  import {publishReaction} from "@app/features/reactions"
 
   type Props = {
     url: string

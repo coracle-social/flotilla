@@ -12,9 +12,9 @@
   import CommentCompose from "@app/components/CommentCompose.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {makeFeedContext} from "@app/feeds"
-  import {getQuoteRef, notes} from "@app/social"
-  import type {CommentNode} from "@app/social"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {getQuoteRef, notes} from "@app/features/social"
+  import type {CommentNode} from "@app/features/social"
 
   type Props = {
     pointer: EventPointer

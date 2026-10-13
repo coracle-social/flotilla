@@ -2,7 +2,7 @@
   import type {ComponentProps} from "svelte"
   import {Thread} from "@welshman/domain"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
 
   const props: ComponentProps<typeof ContentMinimal> = $props()
 

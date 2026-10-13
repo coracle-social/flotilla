@@ -12,7 +12,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {popModal} from "@app/modal"
+  import {popModal} from "@app/ui/modal"
 
   type Props = {
     onSelect: (image: File | string) => void

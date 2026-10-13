@@ -11,7 +11,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/ui/modal"
 
   const startJoin = () => pushModal(SpaceInviteAccept)
 </script>

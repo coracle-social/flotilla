@@ -13,10 +13,10 @@
   import PeopleItem from "@app/components/PeopleItem.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
-  import {events, network, profiles} from "@app/core"
-  import {popModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {goToEvent} from "@app/routes"
+  import {events, network, profiles} from "@app/core/plugins"
+  import {popModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
+  import {goToEvent} from "@app/ui/routes"
 
   type Props = {
     placeholder: string

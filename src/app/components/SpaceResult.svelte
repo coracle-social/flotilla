@@ -4,10 +4,10 @@
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
-  import {relays} from "@app/core"
-  import {userSpaceUrls} from "@app/rooms"
-  import {pushModal} from "@app/modal"
-  import {goToSpace} from "@app/routes"
+  import {relays} from "@app/core/plugins"
+  import {userSpaceUrls} from "@app/features/rooms"
+  import {pushModal} from "@app/ui/modal"
+  import {goToSpace} from "@app/ui/routes"
 
   type Props = {
     url: string

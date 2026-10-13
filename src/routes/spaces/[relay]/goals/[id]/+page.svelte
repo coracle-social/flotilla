@@ -18,11 +18,12 @@
   import GoalStatus from "@app/components/GoalStatus.svelte"
   import GoalSupporters from "@app/components/GoalSupporters.svelte"
   import EventComments from "@app/components/EventComments.svelte"
-  import {events, reader} from "@app/core"
-  import {ENABLE_ZAPS} from "@app/env"
-  import {deriveGoalProgress} from "@app/goals"
-  import {makeFeedContext} from "@app/feeds"
-  import {decodeRelay} from "@app/relays"
+  import {events} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import {deriveGoalProgress} from "@app/features/goals"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {decodeRelay} from "@app/core/relays"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

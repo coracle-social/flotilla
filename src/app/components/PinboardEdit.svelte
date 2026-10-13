@@ -18,12 +18,12 @@
   import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import ImageInputButton from "@app/components/ImageInputButton.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {command, writer} from "@app/core"
-  import {navigate} from "@app/modal"
-  import {addressWriterToSpace} from "@app/rooms"
-  import {makeLibraryPath} from "@app/routes"
-  import {pushToast} from "@app/toast"
-  import {resolveImageInput} from "@app/uploads"
+  import {command, writer} from "@app/core/domain"
+  import {navigate} from "@app/ui/modal"
+  import {addressWriterToSpace} from "@app/features/rooms"
+  import {makeLibraryPath} from "@app/ui/routes"
+  import {pushToast} from "@app/ui/toast"
+  import {resolveImageInput} from "@app/core/uploads"
 
   type Props = {
     url: string

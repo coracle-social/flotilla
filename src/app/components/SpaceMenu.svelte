@@ -6,8 +6,8 @@
   import SpaceMenuRooms from "@app/components/SpaceMenuRooms.svelte"
   import Link from "@lib/components/Link.svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
-  import {RelayConnection, deriveSocketStatus} from "@app/relays"
-  import {makeSpacePath} from "@app/routes"
+  import {RelayConnection, deriveSocketStatus} from "@app/core/relays"
+  import {makeSpacePath} from "@app/ui/routes"
 
   type Props = {
     url: string

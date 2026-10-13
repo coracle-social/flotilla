@@ -12,14 +12,14 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {profiles, relayManagement} from "@app/core"
+  import {profiles, relayManagement} from "@app/core/plugins"
   import {
     MANAGEMENT_METHOD_GROUPS,
     deriveSpacePermissions,
     spaceManagement,
     syncAssignments,
-  } from "@app/management"
-  import {pushToast} from "@app/toast"
+  } from "@app/core/management"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

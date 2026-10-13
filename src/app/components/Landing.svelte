@@ -12,15 +12,15 @@
   import CardButton from "@lib/components/CardButton.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import SignUp from "@app/components/SignUp.svelte"
-  import {parseInviteLink} from "@app/access"
+  import {parseInviteLink} from "@app/features/access"
   import {
     PLATFORM_ABOUT,
     PLATFORM_TERMS,
     PLATFORM_PRIVACY,
     PLATFORM_NAME,
     PLATFORM_DESCRIPTION,
-  } from "@app/env"
-  import {pushModal} from "@app/modal"
+  } from "@app/core/env"
+  import {pushModal} from "@app/ui/modal"
 
   const invite = $derived(
     $page.url.pathname === "/join" ? parseInviteLink($page.url.href) : undefined,

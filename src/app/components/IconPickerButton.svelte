@@ -7,7 +7,7 @@
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import IconPickerModal from "@app/components/IconPickerModal.svelte"
   import IconPickerPopover from "@app/components/IconPickerPopover.svelte"
-  import {pushModal, popModal} from "@app/modal"
+  import {pushModal, popModal} from "@app/ui/modal"
 
   type Props = {
     onSelect: (iconUrl: string) => void

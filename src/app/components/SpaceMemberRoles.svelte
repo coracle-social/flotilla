@@ -15,11 +15,12 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RoleItem from "@app/components/RoleItem.svelte"
   import SpaceRoles from "@app/components/SpaceRoles.svelte"
-  import {app, profiles, relayManagement} from "@app/core"
-  import {deriveSpacePermissions, syncAssignments} from "@app/management"
-  import {deriveSpaceMemberRoles} from "@app/roles"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {app} from "@app/core/app"
+  import {profiles, relayManagement} from "@app/core/plugins"
+  import {deriveSpacePermissions, syncAssignments} from "@app/core/management"
+  import {deriveSpaceMemberRoles} from "@app/features/roles"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

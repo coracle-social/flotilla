@@ -12,7 +12,7 @@
   import RoomJoinItem from "@app/components/RoomJoinItem.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {REPORT} from "@welshman/util"
-  import {deriveSpaceActionItems} from "@app/actionItems"
+  import {deriveSpaceActionItems} from "@app/features/actionItems"
 
   type Props = {
     url: string

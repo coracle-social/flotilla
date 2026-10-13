@@ -1,8 +1,8 @@
 <script lang="ts">
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import type {FeedContext} from "@app/feeds"
-  import {publishReaction, retractReaction} from "@app/reactions"
+  import type {FeedContext} from "@app/features/feeds"
+  import {publishReaction, retractReaction} from "@app/features/reactions"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"

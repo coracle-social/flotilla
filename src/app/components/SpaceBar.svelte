@@ -8,8 +8,8 @@
   import Button from "@lib/components/Button.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {pageLoading} from "@app/loading"
-  import {decodeRelay} from "@app/relays"
+  import {pageLoading} from "@app/features/loading"
+  import {decodeRelay} from "@app/core/relays"
 
   type Props = {
     back?: () => unknown

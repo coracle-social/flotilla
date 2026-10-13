@@ -6,7 +6,9 @@
   import {Poll, PollResponse} from "@welshman/domain"
   import type {Publication} from "@welshman/app"
   import PollOption from "@app/components/PollOption.svelte"
-  import {command, events, publisher, reader, user, writer} from "@app/core"
+  import {user} from "@app/core/app"
+  import {events, publisher} from "@app/core/plugins"
+  import {command, reader, writer} from "@app/core/domain"
 
   type Props = {
     url: string

@@ -52,7 +52,7 @@ export const openRoomDetail = (page: Page) =>
 export const roomLink = (page: Page, name: string) =>
   page.locator(".space-menu__scroll").getByRole("link", {name})
 
-// One toast at a time — src/app/toast.ts holds a single writable — so this is the toast.
+// One toast at a time — src/app/ui/toast.ts holds a single writable — so this is the toast.
 export const toast = (page: Page) => page.getByRole("alert")
 
 // FieldInline, RoomDetail and EventInfo all lay a labelled control out as a single row.

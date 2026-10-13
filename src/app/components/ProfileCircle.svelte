@@ -3,7 +3,7 @@
   import {removeUndefined} from "@welshman/lib"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
-  import {profiles} from "@app/core"
+  import {profiles} from "@app/core/plugins"
 
   type Props = {
     pubkey?: string

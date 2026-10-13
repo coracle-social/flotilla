@@ -3,7 +3,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import CalendarEventForm from "@app/components/CalendarEventForm.svelte"
-  import {makeDayRange} from "@app/calendar"
+  import {makeDayRange} from "@app/features/calendar"
 
   type Props = {
     url: string

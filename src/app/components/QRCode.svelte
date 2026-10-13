@@ -1,6 +1,6 @@
 <script lang="ts">
   import Button from "@lib/components/Button.svelte"
-  import {clip} from "@app/toast"
+  import {clip} from "@app/ui/toast"
 
   type Props = {
     code: string

@@ -4,8 +4,8 @@
   import type {TrustedEvent} from "@welshman/util"
   import {getAddress} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
-  import {getEventStart, getEventTitle, startsOnDay} from "@app/calendar"
-  import {makeCalendarPath} from "@app/routes"
+  import {getEventStart, getEventTitle, startsOnDay} from "@app/features/calendar"
+  import {makeCalendarPath} from "@app/ui/routes"
 
   type Props = {
     url: string

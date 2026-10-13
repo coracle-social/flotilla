@@ -34,15 +34,15 @@ is a `+layout.svelte`.
 
 ### Params
 
-- `[relay]`: `encodeRelay(url)` and `decodeRelay(param)` in `src/app/relays.ts`. Encoding strips
+- `[relay]`: `encodeRelay(url)` and `decodeRelay(param)` in `src/app/core/relays.ts`. Encoding strips
   `wss://` and the trailing slash and URI-encodes the rest; decoding normalizes it back. Build
-  paths with the helpers in `src/app/routes.ts` rather than by hand.
+  paths with the helpers in `src/app/ui/routes.ts` rather than by hand.
 - `[h]`: the NIP-29 room id, unencoded (`makeRoomPath(url, h)`). Static segments win over it,
   which `makeSpaceChatPath(url)` relies on: it is `makeRoomPath(url, "chat")` and lands on the
   static `chat` page. A new static segment under `[relay]` shadows any room with that id.
 - `[id]` for regular events, `[address]` for addressable ones. `makeSpacePath(url, ...extra)`
   URI-encodes each extra segment and drops `undefined`, so `makeClassifiedPath(url, address)` is
-  safe. `[chat]` is `makeChatId(pubkeys)` from `src/app/chats.ts`, and `[npub]` comes from
+  safe. `[chat]` is `makeChatId(pubkeys)` from `src/app/features/chats.ts`, and `[npub]` comes from
   `makeProfilePath(pubkey)`.
 - State that shouldn't be a route goes in the query string: `?at=` (jump to a message), `?topic=`,
   `?board=`, `?page=`, and `?h=&shareToChat=1` on article create.
@@ -93,7 +93,7 @@ mobile. Pages outside a space use `Page`, `PageBar` and `PageContent` themselves
 
 ### URL builders, titles, deep links
 
-`src/app/routes.ts` is the only place paths are built:
+`src/app/ui/routes.ts` is the only place paths are built:
 
 - `makeSpacePath`, `makeRoomPath`, `makeSpaceChatPath`, `makeProfilePath`, `makeChatPath`, and
   one builder per content page (`makeThreadPath`, `makeClassifiedPath`, `makeArticlePath`,
@@ -101,7 +101,7 @@ mobile. Pages outside a space use `Page`, `PageBar` and `PageContent` themselves
 - `makeContentPath(url, kind, idOrAddress)` maps a kind to its page. `makeEventPath` builds on it
   for any event, covering DMs, room messages (`?at=`) and comments (through the parent's `K`,
   `A` and `E` tags), and returns `undefined` for an event with no page in the app. A caller that
-  wants an external link then calls `entityLink` from `src/app/env.ts` itself, as
+  wants an external link then calls `entityLink` from `src/app/core/env.ts` itself, as
   `makeEventPermalink` does.
 - `goToEvent(event)` scrolls to the event if it is already rendered with a `data-event` attribute
   and navigates otherwise; `makeEventPermalink` is the shareable form.
@@ -109,11 +109,11 @@ mobile. Pages outside a space use `Page`, `PageBar` and `PageContent` themselves
   `setupHistory` records, else chat or about. `goToChat(pubkeys)` checks for messaging relays
   first, pushing `ChatEnable` if there are none.
 
-`src/app/title.ts` maps route ids to tab titles. A new static route needs a `staticTitles` entry,
+`src/app/ui/title.ts` maps route ids to tab titles. A new static route needs a `staticTitles` entry,
 and a new event detail route needs an `eventRoutes` entry and a branch in `getPageTitle`.
 Without one the tab shows only `PLATFORM_NAME`.
 
-Deep links arrive in `handleDeepLink` in `src/app/deepLinks.ts`: push-notification links
+Deep links arrive in `handleDeepLink` in `src/app/features/deepLinks.ts`: push-notification links
 (`?relay=&id=`), the iOS share extension (the `share` host), signer returns (`x-callback-url`), and
 otherwise a plain path. Nostr entities go through `/[bech32]`, which sends profiles to `makeProfilePath`, and
 loads events before calling `goToEvent`.
@@ -121,11 +121,11 @@ loads events before calling `goToEvent`.
 ### Adding a space content page
 
 1. `src/routes/spaces/[relay]/<name>/+page.svelte`, plus `[id]` or `[address]` for detail.
-2. `make<Name>Path` in `src/app/routes.ts`, and a case in `makeContentPath`, so notifications and
+2. `make<Name>Path` in `src/app/ui/routes.ts`, and a case in `makeContentPath`, so notifications and
    permalinks land there.
-3. Titles in `src/app/title.ts`.
+3. Titles in `src/app/ui/title.ts`.
 4. A `SecondaryNavItem` in `SpaceMenuNavItems.svelte`. Content entries appear only once the space
-   holds that kind, which comes from `CONTENT_KINDS` in `src/app/content.ts`.
+   holds that kind, which comes from `CONTENT_KINDS` in `src/app/features/content.ts`.
 
 The registries outside the view layer, including the link-preview server, are in
 flotilla-architecture and flotilla-model.
@@ -134,7 +134,7 @@ flotilla-architecture and flotilla-model.
 
 ### navigate, not goto
 
-`navigate(path, {replaceState, keepModal})` in `src/app/modal.ts` wraps `goto`. With a modal open
+`navigate(path, {replaceState, keepModal})` in `src/app/ui/modal.ts` wraps `goto`. With a modal open
 it replaces the modal's history entry, so Back doesn't reopen it, and `keepModal` changes the
 page underneath while leaving the stack open (`goToHome` uses it). `Link` calls `navigate` and
 stops propagation, so a link inside a clickable card only follows the link. Plain `goto` survives
@@ -151,7 +151,7 @@ pushModal(SpaceMenuDrawer, {url: spaceUrl}, {drawer: true})    // side drawer in
 ```
 
 Open modal ids live in SvelteKit page state (`App.PageState.modals` in `src/app.d.ts`), the
-components live in a `$state` record in `src/app/modal.svelte.ts`, and `ModalContainer` mounts
+components live in a `$state` record in `src/app/ui/modal.svelte.ts`, and `ModalContainer` mounts
 each one inside `Dialog` or `Drawer`. Each modal owns a history entry, so Back closes it, and a
 push without `nested` replaces the whole stack. `replaceState` suits mobile menus that open a
 follow-up (`RoomItemMenuMobile`) and multi-step flows. `noEscape` removes the close button and
@@ -209,7 +209,7 @@ Svelte's delegated `onclick` on the `<ul>` would never see the click. On mobile,
 
 ### Toasts
 
-`pushToast` in `src/app/toast.ts` shows one toast at a time:
+`pushToast` in `src/app/ui/toast.ts` shows one toast at a time:
 
 ```typescript
 pushToast({message: "Role created!"})
@@ -292,7 +292,7 @@ param change and lists key by id. A prop that does change while mounted needs `$
 
 ## Reading state in a component
 
-Components read plugins through the `usePlugin` stores exported from `src/app/core.ts`
+Components read plugins through the `usePlugin` stores exported from `src/app/core/plugins.ts`
 (`$profiles`, `$relays`, `$rooms`, `$roomLists`, `$events`, `$network`, `$publisher`, `$deletes`,
 `$relayManagement`, …). `$app.use(X)` covers plugins with no export, such as `Zappers`,
 `Pinboards` and `Feeds`; flotilla-state has the rules about which to use where.
@@ -311,19 +311,19 @@ How you bind depends on what the method returns:
 ```
 
 In a handler, call `.get()` on a projection instead of subscribing. The app modules add `derive*`
-factories over the same data: `deriveSpaceActionItems` in `src/app/actionItems.ts`,
-`deriveSpaceSupportedMethods` in `src/app/management.ts`, `deriveRelayAuthError` in
-`src/app/access.ts`. Call them at the top of the script with fixed arguments, and wrap one in
+factories over the same data: `deriveSpaceActionItems` in `src/app/features/actionItems.ts`,
+`deriveSpaceSupportedMethods` in `src/app/core/management.ts`, `deriveRelayAuthError` in
+`src/app/features/access.ts`. Call them at the top of the script with fixed arguments, and wrap one in
 `$derived` only when its arguments change, as the thread page does for filters that wait on the
 root event.
 
 Read an event's tags through a domain reader, `$derived(reader(Classified)(event))`, with
-`reader` from `@app/core`. `$user` throws signed out, so use it only under the login gate.
+`reader` from `@app/core/domain`. `$user` throws signed out, so use it only under the login gate.
 
 ## Loading from the network
 
 A page or component loads what it displays; a layout loads what it gates on. Background sync for
-data every page needs lives in `src/app/sync.ts`.
+data every page needs lives in `src/app/core/sync.ts`.
 
 **One entity, or a handful of lists:** call plugin `load` in `onMount`, and toast on failure, as
 `people/[npub]/+page.svelte` does for the profile, relay list, follow, pin, room and messaging
@@ -355,7 +355,7 @@ onMount(() => {
 That is `EventComments`. The thread detail page does the same in an `$effect`.
 
 **A list that pages as you scroll:** `makeFeed`, `makeScrollLoader` and `makeFeedContext` from
-`src/app/feeds.ts`. Every space list page uses them, as do `HomeNetwork`, `ProfilePageNotes` and
+`src/app/features/feeds.ts`. Every space list page uses them, as do `HomeNetwork`, `ProfilePageNotes` and
 `RoomChat`. The threads and classifieds pages are the reference:
 
 ```typescript
@@ -460,12 +460,12 @@ Create/edit pairs come in three shapes:
   on a full page: it renders the `SpaceBar` with its Publish button, takes the title as `header`,
   and lands on the published article.
 
-Rich text uses `makeEditor` from `src/app/editor` with `EditorContent`.
+Rich text uses `makeEditor` from `src/app/features/editor` with `EditorContent`.
 
 ## Styling
 
 - Classes come from the component families in `src/lib/components/*.css`, which `theme.css`
-  imports, and the app-concept families in `src/app/components/*.css`, which `src/app/app.css`
+  imports, and the app-concept families in `src/app/components/*.css`, which `src/app/ui/app.css`
   imports after `theme.css`. A class goes in `@layer components` either way. The lib families
   include `button` with `button-primary|neutral|link|ghost|error` and `button-sm|xs|circle|square`,
   `card`, `badge`, `input`, `select`, `textarea` and `menu`. These are flotilla's own; daisyUI is

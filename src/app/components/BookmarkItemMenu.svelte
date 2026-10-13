@@ -4,10 +4,10 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import BookmarkMove from "@app/components/BookmarkMove.svelte"
-  import {removeBookmark} from "@app/bookmarks"
-  import type {BookmarkFolder} from "@app/bookmarks"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {removeBookmark} from "@app/features/bookmarks"
+  import type {BookmarkFolder} from "@app/features/bookmarks"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     folder: BookmarkFolder

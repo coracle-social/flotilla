@@ -6,9 +6,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {PLATFORM_URL} from "@app/env"
-  import {isRoomId} from "@app/rooms"
-  import {makeRoomPath, makeSpacePath} from "@app/routes"
+  import {PLATFORM_URL} from "@app/core/env"
+  import {isRoomId} from "@app/features/rooms"
+  import {makeRoomPath, makeSpacePath} from "@app/ui/routes"
 
   type Props = {
     url: string

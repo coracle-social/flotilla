@@ -3,9 +3,9 @@
   import {secondsToDate} from "@welshman/lib"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import PomadeSessionMenu from "@app/components/PomadeSessionMenu.svelte"
-  import {pushToast} from "@app/toast"
-  import {deletePomadeSession, loadOtherPomadeSessions} from "@app/pomade"
-  import type {PomadeSessionWithPeers} from "@app/pomade"
+  import {pushToast} from "@app/ui/toast"
+  import {deletePomadeSession, loadOtherPomadeSessions} from "@app/core/pomade"
+  import type {PomadeSessionWithPeers} from "@app/core/pomade"
 
   let sessions = $state<PomadeSessionWithPeers[]>([])
 

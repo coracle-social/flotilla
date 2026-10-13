@@ -6,7 +6,7 @@
   import Button from "@lib/components/Button.svelte"
   import CalendarDay from "@app/components/CalendarDay.svelte"
   import CalendarEventChip from "@app/components/CalendarEventChip.svelte"
-  import type {FeedContext} from "@app/feeds"
+  import type {FeedContext} from "@app/features/feeds"
   import {
     formatDay,
     formatWeekday,
@@ -15,8 +15,8 @@
     isToday,
     layoutMultiDayBars,
     makeDayKey,
-  } from "@app/calendar"
-  import {pushModal} from "@app/modal"
+  } from "@app/features/calendar"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

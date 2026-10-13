@@ -16,7 +16,7 @@
   import Compose from "@app/components/Compose.svelte"
   import ComposeEdit from "@app/components/ComposeEdit.svelte"
   import ComposeParent from "@app/components/ComposeParent.svelte"
-  import {pendingShare, type Share} from "@app/share"
+  import {pendingShare, type Share} from "@app/ui/share"
 
   type Props = Pick<
     ComponentProps<typeof Compose>,

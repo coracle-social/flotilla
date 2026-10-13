@@ -2,8 +2,8 @@
   import {onDestroy} from "svelte"
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {events} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
+  import {events} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
 
   type Props = {
     url?: string

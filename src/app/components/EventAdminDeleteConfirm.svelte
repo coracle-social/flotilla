@@ -2,9 +2,10 @@
   import type {TrustedEvent} from "@welshman/util"
   import {tagSpec, tagValue} from "@welshman/util"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {app, relayManagement, rooms} from "@app/core"
-  import {AdminDelete, deriveUserAdminDelete} from "@app/rooms"
-  import {pushToast} from "@app/toast"
+  import {app} from "@app/core/app"
+  import {relayManagement, rooms} from "@app/core/plugins"
+  import {AdminDelete, deriveUserAdminDelete} from "@app/features/rooms"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

@@ -5,7 +5,7 @@
   import Button from "@lib/components/Button.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {dismissRelayNotification, relayNotification} from "@app/notify"
+  import {dismissRelayNotification, relayNotification} from "@app/core/notify"
 
   type Props = {
     url: string

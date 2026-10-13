@@ -16,8 +16,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import RelayAdd from "@app/components/RelayAdd.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     title: string

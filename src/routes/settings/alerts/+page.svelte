@@ -13,8 +13,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import {pushToast} from "@app/toast"
-  import {notificationSettings, saveNotificationSettings} from "@app/push"
+  import {pushToast} from "@app/ui/toast"
+  import {notificationSettings, saveNotificationSettings} from "@app/features/push"
 
   const reset = () => {
     settings = {...notificationSettings.get()}

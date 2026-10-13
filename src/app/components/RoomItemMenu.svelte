@@ -19,12 +19,13 @@
   import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import {roomPinLists, user} from "@app/core"
-  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/rooms"
-  import {shareEvent} from "@app/share"
-  import {readAloud} from "@app/speech"
-  import {toggleRoomPin} from "@app/roomPins"
-  import {pushModal} from "@app/modal"
+  import {user} from "@app/core/app"
+  import {roomPinLists} from "@app/core/plugins"
+  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/rooms"
+  import {shareEvent} from "@app/ui/share"
+  import {readAloud} from "@app/features/speech"
+  import {toggleRoomPin} from "@app/features/roomPins"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

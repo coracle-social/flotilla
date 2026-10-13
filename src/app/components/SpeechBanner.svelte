@@ -7,7 +7,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Banner from "@app/components/Banner.svelte"
-  import {speech, stopSpeech} from "@app/speech"
+  import {speech, stopSpeech} from "@app/features/speech"
 
   let audio: HTMLAudioElement | undefined = $state()
   let playing = $state(false)

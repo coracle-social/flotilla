@@ -17,11 +17,11 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ArticleItem from "@app/components/ArticleItem.svelte"
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
-  import {reader} from "@app/core"
-  import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter, partitionByActivity} from "@app/content"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {makeArticleCreatePath} from "@app/routes"
+  import {reader} from "@app/core/domain"
+  import {decodeRelay} from "@app/core/relays"
+  import {makeCommentFilter, partitionByActivity} from "@app/features/content"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeArticleCreatePath} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

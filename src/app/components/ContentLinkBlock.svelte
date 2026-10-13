@@ -1,6 +1,6 @@
 <script module lang="ts">
   import {postJson, simpleCache} from "@welshman/lib"
-  import {dufflepud} from "@app/env"
+  import {dufflepud} from "@app/core/env"
 
   // Cache previews by url so the same link isn't re-fetched across renders/instances.
   const loadPreview = simpleCache(async ([url]: [string]) => {
@@ -26,15 +26,15 @@
   import ContentLinkBlockAudio from "@app/components/ContentLinkBlockAudio.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
-  import {pushModal} from "@app/modal"
-  import {PLATFORM_URL, THUMBNAIL_URL} from "@app/env"
+  import {pushModal} from "@app/ui/modal"
+  import {PLATFORM_URL, THUMBNAIL_URL} from "@app/core/env"
   import {
     getUrlContentType,
     isImageUrl,
     AUDIO_CONTENT_TYPES,
     VIDEO_CONTENT_TYPES,
-  } from "@app/content"
-  import {isRoomId} from "@app/rooms"
+  } from "@app/features/content"
+  import {isRoomId} from "@app/features/rooms"
 
   type Props = {
     url: string

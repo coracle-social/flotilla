@@ -8,10 +8,10 @@
   import SecondaryNavHeader from "@lib/components/SecondaryNavHeader.svelte"
   import SpaceMenuRoomItem from "@app/components/SpaceMenuRoomItem.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
-  import {deriveUserCanCreateRoom} from "@app/management"
-  import {deriveSpaceSupportsRooms} from "@app/relays"
-  import {RoomType, deriveUserRooms, deriveOtherRooms, displayRoom} from "@app/rooms"
-  import {pushModal} from "@app/modal"
+  import {deriveUserCanCreateRoom} from "@app/core/management"
+  import {deriveSpaceSupportsRooms} from "@app/core/relays"
+  import {RoomType, deriveUserRooms, deriveOtherRooms, displayRoom} from "@app/features/rooms"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

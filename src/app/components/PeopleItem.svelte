@@ -6,7 +6,7 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
-  import {makeProfilePath} from "@app/routes"
+  import {makeProfilePath} from "@app/ui/routes"
 
   type Props = {
     pubkey: string

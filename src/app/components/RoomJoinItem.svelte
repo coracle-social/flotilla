@@ -5,11 +5,13 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {app, reader, relayManagement} from "@app/core"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {addRoomMembers} from "@app/rooms"
+  import {app} from "@app/core/app"
+  import {relayManagement} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
+  import {addRoomMembers} from "@app/features/rooms"
 
   type Props = {
     url: string

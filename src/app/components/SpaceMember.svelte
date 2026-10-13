@@ -7,9 +7,9 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import SpaceMemberMenu from "@app/components/SpaceMemberMenu.svelte"
   import RoleBadge from "@app/components/RoleBadge.svelte"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushModal} from "@app/modal"
-  import {profiles} from "@app/core"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {pushModal} from "@app/ui/modal"
+  import {profiles} from "@app/core/plugins"
 
   type Props = {
     url: string

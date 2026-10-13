@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {ComponentProps} from "svelte"
   import {ZapGoal} from "@welshman/domain"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
   import Content from "@app/components/Content.svelte"
   import GoalSummary from "@app/components/GoalSummary.svelte"
 

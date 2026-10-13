@@ -22,11 +22,12 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import SpeechModelSettings from "@app/components/SpeechModelSettings.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {blossomServerLists, deriveUserItem, muteLists} from "@app/core"
-  import {pushToast} from "@app/toast"
-  import {PLATFORM_NAME} from "@app/env"
-  import {flTheme, flThemes, theme} from "@app/theme"
-  import {userSettingsValues, publishSettings, createSettingsForm} from "@app/settings"
+  import {deriveUserItem} from "@app/core/app"
+  import {blossomServerLists, muteLists} from "@app/core/plugins"
+  import {pushToast} from "@app/ui/toast"
+  import {PLATFORM_NAME} from "@app/core/env"
+  import {flTheme, flThemes, theme} from "@app/ui/theme"
+  import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
 
   const userMuteList = deriveUserItem(MuteLists)
   const userBlossomServerList = deriveUserItem(BlossomServerLists)

@@ -13,9 +13,10 @@
   import HomeNetworkRecent from "@app/components/HomeNetworkRecent.svelte"
   import NoteCreate from "@app/components/NoteCreate.svelte"
   import RelayList from "@app/components/RelayList.svelte"
-  import {relayLists, user} from "@app/core"
-  import {pushModal} from "@app/modal"
-  import {homeNotificationsUnread} from "@app/notifications"
+  import {user} from "@app/core/app"
+  import {relayLists} from "@app/core/plugins"
+  import {pushModal} from "@app/ui/modal"
+  import {homeNotificationsUnread} from "@app/ui/notifications"
 
   type NetworkTab = "recent" | "notifications"
 

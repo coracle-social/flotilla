@@ -28,12 +28,14 @@
   import SignerStatus from "@app/components/SignerStatus.svelte"
   import PasswordReset from "@app/components/PasswordReset.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
-  import {pushModal} from "@app/modal"
-  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/pomade"
-  import {makeProfilePath} from "@app/routes"
-  import {clip, pushToast} from "@app/toast"
-  import {profiles, session, user} from "@app/core"
-  import {isPomadeSession, requirePomadeSession} from "@app/pomade"
+  import {pushModal} from "@app/ui/modal"
+  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
+  import {makeProfilePath} from "@app/ui/routes"
+  import {clip, pushToast} from "@app/ui/toast"
+  import {user} from "@app/core/app"
+  import {profiles} from "@app/core/plugins"
+  import {session} from "@app/core/session"
+  import {isPomadeSession, requirePomadeSession} from "@app/core/pomade"
 
   const npub = nip19.npubEncode($user.pubkey)
   const profile = $profiles.one($user.pubkey)

@@ -3,7 +3,7 @@
   import type {PinReader} from "@welshman/domain"
   import ContentLinkInline from "@app/components/ContentLinkInline.svelte"
   import ContentQuote from "@app/components/ContentQuote.svelte"
-  import {pinToReference} from "@app/pinboards"
+  import {pinToReference} from "@app/features/pinboards"
 
   type Props = {
     url: string

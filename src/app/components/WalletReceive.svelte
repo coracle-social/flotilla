@@ -15,8 +15,8 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import {errorMessage} from "@lib/util"
   import QRCode from "@app/components/QRCode.svelte"
-  import {createInvoice} from "@app/lightning"
-  import {pushToast} from "@app/toast"
+  import {createInvoice} from "@app/features/lightning"
+  import {pushToast} from "@app/ui/toast"
 
   const back = () => history.back()
 

@@ -301,7 +301,7 @@ docker run -v ./mount:/app/mount gitea.coracle.social/coracle/flotilla:latest ba
 
 ## Speech
 
-Read Out Loud and dictation go through a provider, and `src/app/inference` holds
+Read Out Loud and dictation go through a provider, and `src/app/features/inference` holds
 one adapter per provider plus the registry that picks between them. A provider
 declares the tasks it can serve, so adding one is a file there and a line in that
 registry.

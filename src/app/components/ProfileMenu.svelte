@@ -10,9 +10,10 @@
   import Button from "@lib/components/Button.svelte"
   import ProfileInfo from "@app/components/ProfileInfo.svelte"
   import ProfileQrCode from "@app/components/ProfileQrCode.svelte"
-  import {deriveUserItem, muteLists, profiles, user} from "@app/core"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {deriveUserItem, user} from "@app/core/app"
+  import {muteLists, profiles} from "@app/core/plugins"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     pubkey: string

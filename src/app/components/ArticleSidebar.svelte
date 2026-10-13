@@ -6,7 +6,7 @@
   import Button from "@lib/components/Button.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
 
   type Props = {
     url: string

@@ -12,8 +12,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {allowPubkeys} from "@app/management"
-  import {pushToast} from "@app/toast"
+  import {allowPubkeys} from "@app/core/management"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

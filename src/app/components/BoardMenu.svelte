@@ -12,13 +12,13 @@
   import Notice from "@lib/components/Notice.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
-  import {user} from "@app/core"
-  import {deriveSpacePermissions} from "@app/management"
-  import {deleteLibraryEvent} from "@app/pinboards"
-  import {shareEvent} from "@app/share"
-  import {navigate, pushModal} from "@app/modal"
-  import {makeLibraryPath} from "@app/routes"
-  import {pushToast} from "@app/toast"
+  import {user} from "@app/core/app"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {deleteLibraryEvent} from "@app/features/pinboards"
+  import {shareEvent} from "@app/ui/share"
+  import {navigate, pushModal} from "@app/ui/modal"
+  import {makeLibraryPath} from "@app/ui/routes"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

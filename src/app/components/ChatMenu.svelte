@@ -8,10 +8,11 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import RelayList from "@app/components/RelayList.svelte"
-  import {messagingRelayLists, user} from "@app/core"
-  import {pushModal} from "@app/modal"
-  import {setChecked} from "@app/notifications"
-  import {notificationSettings} from "@app/push"
+  import {user} from "@app/core/app"
+  import {messagingRelayLists} from "@app/core/plugins"
+  import {pushModal} from "@app/ui/modal"
+  import {setChecked} from "@app/ui/notifications"
+  import {notificationSettings} from "@app/features/push"
 
   type Props = {
     onClick: () => void

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/ui/modal"
   import {derived} from "svelte/store"
   import {filter, formatTimestamp, max, spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
@@ -10,9 +10,9 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {reader} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {makeThreadPath} from "@app/routes"
+  import {reader} from "@app/core/domain"
+  import type {FeedContext} from "@app/features/feeds"
+  import {makeThreadPath} from "@app/ui/routes"
 
   type Props = {
     url: string

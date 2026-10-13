@@ -13,11 +13,11 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import Profile from "@app/components/Profile.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import {user} from "@app/core"
-  import {ENABLE_ZAPS} from "@app/env"
-  import {HOSTING_ENABLED} from "@app/hosting"
-  import {pushModal} from "@app/modal"
-  import {makeProfilePath} from "@app/routes"
+  import {user} from "@app/core/app"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import {HOSTING_ENABLED} from "@app/features/hosting"
+  import {pushModal} from "@app/ui/modal"
+  import {makeProfilePath} from "@app/ui/routes"
 
   const logout = () => pushModal(LogOut)
 </script>

@@ -29,14 +29,14 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import TopicMultiSelect from "@app/components/TopicMultiSelect.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {writer} from "@app/core"
-  import {DraftKey} from "@app/drafts"
-  import {makeEditor} from "@app/editor"
-  import {publishToSpace} from "@app/rooms"
-  import {makeArticlePath} from "@app/routes"
-  import {compressFileForUpload, uploadFile} from "@app/uploads"
-  import {pushToast} from "@app/toast"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {writer} from "@app/core/domain"
+  import {DraftKey} from "@app/features/drafts"
+  import {makeEditor} from "@app/features/editor"
+  import {publishToSpace} from "@app/features/rooms"
+  import {makeArticlePath} from "@app/ui/routes"
+  import {compressFileForUpload, uploadFile} from "@app/core/uploads"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

@@ -6,8 +6,9 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {roomLists, user} from "@app/core"
-  import {userSpaceUrls} from "@app/rooms"
+  import {user} from "@app/core/app"
+  import {roomLists} from "@app/core/plugins"
+  import {userSpaceUrls} from "@app/features/rooms"
 
   type Props = {
     url: string

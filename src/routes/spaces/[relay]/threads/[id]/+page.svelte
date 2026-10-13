@@ -14,11 +14,11 @@
   import ThreadPost from "@app/components/ThreadPost.svelte"
   import ThreadSummaryBar from "@app/components/ThreadSummaryBar.svelte"
   import EventReply from "@app/components/EventReply.svelte"
-  import {events, network} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {getChecked} from "@app/notifications"
-  import {decodeRelay} from "@app/relays"
-  import {getPermalinkTarget, scrollToEvent} from "@app/routes"
+  import {events, network} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {getChecked} from "@app/ui/notifications"
+  import {decodeRelay} from "@app/core/relays"
+  import {getPermalinkTarget, scrollToEvent} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const REPLY_BATCH_SIZE = 20

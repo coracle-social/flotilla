@@ -4,11 +4,11 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {popModal} from "@app/modal"
-  import {goToEvent} from "@app/routes"
-  import {loadQuote} from "@app/quotes"
-  import type {QuotePointer} from "@app/quotes"
-  import {pushToast} from "@app/toast"
+  import {popModal} from "@app/ui/modal"
+  import {goToEvent} from "@app/ui/routes"
+  import {loadQuote} from "@app/features/quotes"
+  import type {QuotePointer} from "@app/features/quotes"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     pointer: QuotePointer

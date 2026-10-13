@@ -6,8 +6,8 @@
   import CallBanner from "@app/components/CallBanner.svelte"
   import SpeechBanner from "@app/components/SpeechBanner.svelte"
   import PrimaryNav from "@app/components/PrimaryNav.svelte"
-  import {app} from "@app/core"
-  import {getModal} from "@app/modal"
+  import {app} from "@app/core/app"
+  import {getModal} from "@app/ui/modal"
 
   type Props = {
     children: Snippet

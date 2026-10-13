@@ -21,7 +21,7 @@
   import CalendarMonth from "@app/components/CalendarMonth.svelte"
   import CalendarWeek from "@app/components/CalendarWeek.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import type {CalendarView} from "@app/calendar"
+  import type {CalendarView} from "@app/features/calendar"
   import {
     addDays,
     addMonths,
@@ -33,11 +33,11 @@
     groupEventsByDay,
     isCurrentMonth,
     isCurrentWeek,
-  } from "@app/calendar"
-  import {getModal, pushModal} from "@app/modal"
-  import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter} from "@app/content"
-  import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  } from "@app/features/calendar"
+  import {getModal, pushModal} from "@app/ui/modal"
+  import {decodeRelay} from "@app/core/relays"
+  import {makeCommentFilter} from "@app/features/content"
+  import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

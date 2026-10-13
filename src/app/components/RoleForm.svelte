@@ -13,7 +13,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {roleColor} from "@app/roles"
+  import {roleColor} from "@app/features/roles"
 
   type Props = {
     initialValues?: Partial<Values>

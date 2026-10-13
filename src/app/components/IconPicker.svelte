@@ -3,7 +3,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
-  import type {IconOption} from "@app/icons"
+  import type {IconOption} from "@app/ui/icons"
 
   type Props = {
     onSelect: (iconUrl: string) => void
@@ -16,7 +16,7 @@
   let icons: IconOption[] = $state([])
   let searchTerm = $state("")
 
-  const loading = import("@app/icons").then(module => {
+  const loading = import("@app/ui/icons").then(module => {
     icons = module.icons
   })
 

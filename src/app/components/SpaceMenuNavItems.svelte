@@ -17,13 +17,13 @@
   import Icon from "@lib/components/Icon.svelte"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
-  import {events} from "@app/core"
-  import {ENABLE_ZAPS} from "@app/env"
-  import {CONTENT_KINDS} from "@app/content"
-  import {deriveSpaceSupportsRooms} from "@app/relays"
-  import {makeSpaceChatPath, makeSpacePath} from "@app/routes"
-  import {allNotifications, notifications} from "@app/notifications"
-  import {pushModal} from "@app/modal"
+  import {events} from "@app/core/plugins"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import {CONTENT_KINDS} from "@app/features/content"
+  import {deriveSpaceSupportsRooms} from "@app/core/relays"
+  import {makeSpaceChatPath, makeSpacePath} from "@app/ui/routes"
+  import {allNotifications, notifications} from "@app/ui/notifications"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

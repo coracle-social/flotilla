@@ -1,7 +1,7 @@
 <script lang="ts">
   import ImageIcon from "@lib/components/ImageIcon.svelte"
-  import {relays} from "@app/core"
-  import {relayIconColor, relayIconInitials} from "@app/relays"
+  import {relays} from "@app/core/plugins"
+  import {relayIconColor, relayIconInitials} from "@app/core/relays"
 
   type Props = {
     url: string

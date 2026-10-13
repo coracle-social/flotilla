@@ -9,9 +9,9 @@
   import Page from "@lib/components/Page.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import ProfilePage from "@app/components/ProfilePage.svelte"
-  import {pushToast} from "@app/toast"
+  import {pushToast} from "@app/ui/toast"
+  import {app, user} from "@app/core/app"
   import {
-    app,
     followLists,
     messagingRelayLists,
     network,
@@ -19,8 +19,7 @@
     relayLists,
     roomLists,
     router,
-    user,
-  } from "@app/core"
+  } from "@app/core/plugins"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

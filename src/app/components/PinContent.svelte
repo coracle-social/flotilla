@@ -3,7 +3,7 @@
   import type {PinReader} from "@welshman/domain"
   import Content from "@app/components/Content.svelte"
   import PinContentEvent from "@app/components/PinContentEvent.svelte"
-  import {pinToReference} from "@app/pinboards"
+  import {pinToReference} from "@app/features/pinboards"
 
   type Props = {
     url: string

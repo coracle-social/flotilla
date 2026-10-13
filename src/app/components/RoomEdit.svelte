@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/ui/modal"
   import {displayRelayUrl} from "@welshman/util"
   import type {RoomMeta} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -11,8 +11,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RoomForm from "@app/components/RoomForm.svelte"
-  import {rooms} from "@app/core"
-  import {makeSpacePath} from "@app/routes"
+  import {rooms} from "@app/core/plugins"
+  import {makeSpacePath} from "@app/ui/routes"
 
   type Props = {
     url: string

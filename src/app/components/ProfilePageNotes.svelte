@@ -10,9 +10,9 @@
   import {fly} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {router} from "@app/core"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {derivePinnedEvents} from "@app/pins"
+  import {router} from "@app/core/plugins"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {derivePinnedEvents} from "@app/features/pins"
 
   type Props = {
     pubkey: string

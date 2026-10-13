@@ -4,9 +4,9 @@
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActionBar from "@app/components/EventActionBar.svelte"
-  import {events} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {publishReaction, retractReaction} from "@app/reactions"
+  import {events} from "@app/core/plugins"
+  import type {FeedContext} from "@app/features/feeds"
+  import {publishReaction, retractReaction} from "@app/features/reactions"
 
   type Props = {
     url: string

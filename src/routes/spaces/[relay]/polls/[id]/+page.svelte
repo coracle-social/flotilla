@@ -8,9 +8,9 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventComments from "@app/components/EventComments.svelte"
-  import {events, network} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {decodeRelay} from "@app/relays"
+  import {events, network} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {decodeRelay} from "@app/core/relays"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

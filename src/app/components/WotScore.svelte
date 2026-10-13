@@ -16,7 +16,8 @@
 <script lang="ts">
   import {clamp} from "@welshman/lib"
   import {WotScope} from "@welshman/app"
-  import {followLists, user, wot} from "@app/core"
+  import {user} from "@app/core/app"
+  import {followLists, wot} from "@app/core/plugins"
 
   type Props = {
     pubkey: string

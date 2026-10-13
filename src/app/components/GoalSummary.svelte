@@ -7,8 +7,8 @@
   import ZapButton from "@app/components/ZapButton.svelte"
   import GoalMeter from "@app/components/GoalMeter.svelte"
   import GoalStatus from "@app/components/GoalStatus.svelte"
-  import {ENABLE_ZAPS} from "@app/env"
-  import {deriveGoalProgress} from "@app/goals"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import {deriveGoalProgress} from "@app/features/goals"
 
   type Props = {
     url?: string

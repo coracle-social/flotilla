@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {Capacitor} from "@capacitor/core"
-  import {notificationSettings, onNotification} from "@app/push"
+  import {notificationSettings, onNotification} from "@app/features/push"
 
   let audioElement: HTMLAudioElement
 

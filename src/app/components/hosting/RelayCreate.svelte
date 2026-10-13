@@ -2,18 +2,18 @@
   import RelayForm, {type RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
-  import {roomLists} from "@app/core"
-  import {navigate, pushModal} from "@app/modal"
-  import {publishRoomList} from "@app/rooms"
-  import {makeSpacePath} from "@app/routes"
-  import {pushToast} from "@app/toast"
+  import {roomLists} from "@app/core/plugins"
+  import {navigate, pushModal} from "@app/ui/modal"
+  import {publishRoomList} from "@app/features/rooms"
+  import {makeSpacePath} from "@app/ui/routes"
+  import {pushToast} from "@app/ui/toast"
   import {
     createHostedRelay,
     getHostedRelayUrl,
     hosting,
     hostingErrorMessage,
     isPaidPlan,
-  } from "@app/hosting"
+  } from "@app/features/hosting"
 
   // The space exists by now, so a failed billing check mustn't keep the user on the create form.
   const onPaymentLookupError = (e: unknown) => {

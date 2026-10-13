@@ -11,9 +11,9 @@
   import Link from "@lib/components/Link.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import type {FeedContext} from "@app/feeds"
-  import {shelfCoverImages} from "@app/pinboards"
-  import {makeLibraryPath} from "@app/routes"
+  import type {FeedContext} from "@app/features/feeds"
+  import {shelfCoverImages} from "@app/features/pinboards"
+  import {makeLibraryPath} from "@app/ui/routes"
 
   type Props = {
     url: string

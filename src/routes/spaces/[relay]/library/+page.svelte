@@ -14,11 +14,16 @@
   import PinItem from "@app/components/PinItem.svelte"
   import PinboardItem from "@app/components/PinboardItem.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
-  import {network} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {derivePins, deriveShelves, pinMatchesTerm, shelfMatchesTerm} from "@app/pinboards"
-  import {decodeRelay} from "@app/relays"
-  import {pushModal} from "@app/modal"
+  import {network} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {
+    derivePins,
+    deriveShelves,
+    pinMatchesTerm,
+    shelfMatchesTerm,
+  } from "@app/features/pinboards"
+  import {decodeRelay} from "@app/core/relays"
+  import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

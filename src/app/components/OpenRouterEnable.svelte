@@ -17,10 +17,10 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {PLATFORM_NAME} from "@app/env"
-  import {popModal} from "@app/modal"
-  import {getSetting, publishSettings} from "@app/settings"
-  import {pushToast} from "@app/toast"
+  import {PLATFORM_NAME} from "@app/core/env"
+  import {popModal} from "@app/ui/modal"
+  import {getSetting, publishSettings} from "@app/core/settings"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     feature: string

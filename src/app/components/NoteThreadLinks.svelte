@@ -4,9 +4,9 @@
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import {pushNote} from "@app/routes"
-  import {getReplyRefs} from "@app/social"
-  import type {ReplyRef} from "@app/social"
+  import {pushNote} from "@app/ui/routes"
+  import {getReplyRefs} from "@app/features/social"
+  import type {ReplyRef} from "@app/features/social"
 
   type Props = {
     event: TrustedEvent

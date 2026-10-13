@@ -11,8 +11,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InviteLink from "@app/components/InviteLink.svelte"
   import SpaceMembersAdd from "@app/components/SpaceMembersAdd.svelte"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushModal} from "@app/modal"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

@@ -14,9 +14,9 @@
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import SecondaryNavSection from "@lib/components/SecondaryNavSection.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import {ENABLE_ZAPS} from "@app/env"
-  import {HOSTING_ENABLED} from "@app/hosting"
-  import {pushModal} from "@app/modal"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import {HOSTING_ENABLED} from "@app/features/hosting"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     children?: Snippet

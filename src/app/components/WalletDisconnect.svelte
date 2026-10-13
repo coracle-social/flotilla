@@ -1,7 +1,7 @@
 <script lang="ts">
   import Confirm from "@lib/components/Confirm.svelte"
-  import {wallet} from "@app/lightning"
-  import {clearModals} from "@app/modal"
+  import {wallet} from "@app/features/lightning"
+  import {clearModals} from "@app/ui/modal"
 
   const confirm = async () => {
     wallet.set(undefined)

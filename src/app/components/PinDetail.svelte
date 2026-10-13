@@ -16,9 +16,9 @@
   import PinContent from "@app/components/PinContent.svelte"
   import PinSave from "@app/components/PinSave.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import {events, network} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {buildCommentTree} from "@app/social"
+  import {events, network} from "@app/core/plugins"
+  import type {FeedContext} from "@app/features/feeds"
+  import {buildCommentTree} from "@app/features/social"
 
   type Props = {
     url: string

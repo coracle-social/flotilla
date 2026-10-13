@@ -10,12 +10,17 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import RoomEdit from "@app/components/RoomEdit.svelte"
-  import {app, roomLists, rooms} from "@app/core"
-  import {joinRoom, leaveRoom} from "@app/access"
-  import {deriveUserIsRoomAdmin, deriveUserRoomMembershipStatus, publishRoomList} from "@app/rooms"
-  import {forgetSpacePage, makeSpacePath} from "@app/routes"
-  import {navigate, pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {app} from "@app/core/app"
+  import {roomLists, rooms} from "@app/core/plugins"
+  import {joinRoom, leaveRoom} from "@app/features/access"
+  import {
+    deriveUserIsRoomAdmin,
+    deriveUserRoomMembershipStatus,
+    publishRoomList,
+  } from "@app/features/rooms"
+  import {forgetSpacePage, makeSpacePath} from "@app/ui/routes"
+  import {navigate, pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

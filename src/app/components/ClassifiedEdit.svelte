@@ -4,7 +4,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
   import ClassifiedForm from "@app/components/ClassifiedForm.svelte"
 
   type Props = {

@@ -11,7 +11,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProgressBar from "@app/components/ProgressBar.svelte"
-  import {pushToast} from "@app/toast"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     next: () => void

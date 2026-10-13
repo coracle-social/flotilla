@@ -9,9 +9,10 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
-  import {events, network, reader} from "@app/core"
-  import {displayReadingTime} from "@app/articles"
-  import {makeArticlePath} from "@app/routes"
+  import {events, network} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {displayReadingTime} from "@app/features/articles"
+  import {makeArticlePath} from "@app/ui/routes"
 
   type Props = {
     url: string

@@ -9,8 +9,8 @@
   import Tippy from "@lib/components/Tippy.svelte"
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import PublicationStatusDetail from "@app/components/PublicationStatusDetail.svelte"
-  import {publisher} from "@app/core"
-  import {pushToast} from "@app/toast"
+  import {publisher} from "@app/core/plugins"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     publication: Publishable

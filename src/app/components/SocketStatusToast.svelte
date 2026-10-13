@@ -1,8 +1,8 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
-  import {RelayConnection, deriveSocketStatus} from "@app/relays"
-  import {pushToast, popToast} from "@app/toast"
+  import {RelayConnection, deriveSocketStatus} from "@app/core/relays"
+  import {pushToast, popToast} from "@app/ui/toast"
 
   type Props = {
     url: string

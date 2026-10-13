@@ -7,8 +7,8 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
   import RoomChat from "@app/components/RoomChat.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {pushModal} from "@app/modal"
+  import {decodeRelay} from "@app/core/relays"
+  import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

@@ -1,6 +1,6 @@
 ---
 name: flotilla-state
-description: "Use this skill when deciding where a piece of state belongs in Flotilla, or when touching state: reading or adding stores in src/app, reaching the App instance and welshman plugins (usePlugin, fromApp, deriveUserItem), writing code that must survive login swapping the app or run signed out, adding an app policy or a flotilla plugin, persisting data (IndexedDB storage, kv/ss, synced stores, published settings, drafts), changing what src/app/sync.ts pulls in the background, and publishing (domain writer → Command → publication, optimistic updates, undo, showing publish status)."
+description: "Use this skill when deciding where a piece of state belongs in Flotilla, or when touching state: reading or adding stores in src/app, reaching the App instance and welshman plugins (usePlugin, fromApp, deriveUserItem), writing code that must survive login swapping the app or run signed out, adding an app policy or a flotilla plugin, persisting data (IndexedDB storage, kv/ss, synced stores, published settings, drafts), changing what src/app/core/sync.ts pulls in the background, and publishing (domain writer → Command → publication, optimistic updates, undo, showing publish status)."
 ---
 
 # Flotilla state
@@ -15,9 +15,9 @@ Almost everything per-identity hangs off one welshman `App`, and signing in repl
 
 ## The app instance
 
-`src/app/core.ts` builds the app lazily. `app` is a hand-written `ReadableWithGetter<App>`
+`src/app/core/app.ts` builds the app lazily. `app` is a hand-written `ReadableWithGetter<App>`
 whose first `get()` or `subscribe` builds an anonymous app. `App` runs its policies in its
-constructor. Flotilla's own policies live in modules that import `core.ts` and push themselves
+constructor. Flotilla's own policies live in modules that import `core/app.ts` and push themselves
 onto `appPolicies` when imported, so the first app has to be built after those imports run (see
 [App policies](#app-policies)).
 
@@ -25,7 +25,7 @@ onto `appPolicies` when imported, so the first app has to be built after those i
   app, builds a new one with that user, then sets `session`. There is no account switching, so
   `login` only runs while signed out: `restoreSession` at boot, the `LogIn*`/`SignUp*` flows,
   and `loginWithPomade`.
-- **Logout reloads the page.** `logout` in `src/app/session.ts` clears `kv`, `ss`, the user's
+- **Logout reloads the page.** `logout` in `src/app/core/session.ts` clears `kv`, `ss`, the user's
   IndexedDB and `localStorage`, cleans up the app, then sets `window.location.href = "/"`.
 
 The app is therefore stable for as long as anything under the login gate is mounted.
@@ -62,8 +62,8 @@ The following run outside that gate:
 - every app policy
 
 This code reads `app.get().user?.pubkey` and bails when it is missing, as
-`syncUserSpaceMembership` in `src/app/sync.ts` and `syncCheckedRemote` in
-`src/app/notifications.ts` do.
+`syncUserSpaceMembership` in `src/app/core/sync.ts` and `syncCheckedRemote` in
+`src/app/ui/notifications.ts` do.
 
 Stores derived from `user` throw as soon as they are subscribed signed out. That includes
 `isEventMuted` (`social.ts`), `deriveUserIsRoomAdmin` (`rooms.ts`) and `deriveUserCanCreateRoom`
@@ -74,10 +74,10 @@ Stores derived from `user` throw as soon as they are subscribed signed out. That
 The code reaches plugins three ways:
 
 ```typescript
-// Components: a store exported from core.ts, when there is one
+// Components: a store exported from core/plugins.ts, when there is one
 const display = $profiles.display(pubkey, [url]).$
 
-// Components: $app.use() for plugins core.ts doesn't export (Zappers, Feeds, Pinboards)
+// Components: $app.use() for plugins core/plugins.ts doesn't export (Zappers, Feeds, Pinboards)
 const zapper = $app.use(Zappers).forPubkey(pubkey, removeUndefined([url])).$
 
 // Module scope: always through a store that rebinds when the app changes
@@ -96,14 +96,14 @@ The rule is about when a binding is made:
   never `x.get().forUrl(url)`, which binds the plugin of whichever app was current when the
   `derive*` helper ran and keeps reading it after login, even with `app` among the inputs.
 
-For a new module-level store over a welshman plugin, use the `usePlugin` export in `core.ts` if
+For a new module-level store over a welshman plugin, use the `usePlugin` export in `core/plugins.ts` if
 there is one. Add an export when several modules need the plugin, and otherwise write
 `fromApp($app => ...)` where the store is defined.
 
 ### Per-identity caches
 
 Bookkeeping for one identity lives on a plugin instance, so it is discarded with the app.
-`Commands` in `src/app/commands.ts` keeps its `pulled` set on the plugin for this reason.
+`Commands` in `src/app/features/commands.ts` keeps its `pulled` set on the plugin for this reason.
 
 Module-level caches are fine when their contents do not depend on who is signed in, or when what
 they cache is itself a rebinding store. `deriveCommandsForUrl` (`commands.ts`) caches `fromApp`
@@ -152,7 +152,7 @@ A generic nostr kind belongs upstream in `@welshman/app`, with its reader in `@w
 ## App policies
 
 An `AppPolicy` is `(app) => Unsubscriber`, and `app.cleanup()` tears policies down in reverse.
-`core.ts` seeds `appPolicies` with welshman's `appPolicyWraps`, `appPolicyRelayStats`,
+`core/app.ts` seeds `appPolicies` with welshman's `appPolicyWraps`, `appPolicyRelayStats`,
 `appPolicyCacheDecrypt` and `appPolicyLogSignerMethods`. It leaves out welshman's
 `appPolicyIngest` and `appPolicyAuthUnlessBlocked`, because flotilla replaces them:
 
@@ -163,7 +163,7 @@ An `AppPolicy` is `(app) => Unsubscriber`, and `app.cleanup()` tears policies do
 | `socketPolicy` | `policies.ts` | blocked relays, `relaysPendingTrust`, `relaysMostlyRestricted` |
 | `storagePolicy` | `storage.ts` | the per-user IndexedDB cache, only when the app has a user |
 
-The root layout imports `@app/policies` and `@app/storage` before anything touches the app. To
+The root layout imports `@app/core/policies` and `@app/core/storage` before anything touches the app. To
 add a policy:
 
 1. Define it in the module that owns the concern.
@@ -181,7 +181,7 @@ Events enter `app.repository` from `ingestPolicy` (which calls `tracker.track`, 
 publishing optimistically. The tracker records which relays each event was seen on, which is what lets
 space content be keyed by relay.
 
-Raw event queries go through welshman's `Events` plugin, exported from `core.ts` as `events`.
+Raw event queries go through welshman's `Events` plugin, exported from `core/plugins.ts` as `events`.
 Every method returns a projection over the current app's repository:
 
 - `one(idOrAddress, relays)` (loads when nothing local matches, keeps deleted events), `byId`,
@@ -192,7 +192,7 @@ Every method returns a projection over the current app's repository:
 Components bind `$events.forUrl(url, filters).$`. A `derive*` function or a module-scope store
 wraps it in `fromApp($app => $app.use(Events).forUrl(url, filters).$)`, as `latestActivityByPath`
 does with `byIdByUrl`.
-`src/app/repository.ts` holds only the `LatestEvents` plugin. Plugin reads (`get`, `one`, `load`,
+`src/app/features/repository.ts` holds only the `LatestEvents` plugin. Plugin reads (`get`, `one`, `load`,
 `index`) are documented in welshman-app.
 
 A relay-scoped read asks the repository for `{ids: <every id the tracker holds for that url>,
@@ -205,7 +205,7 @@ Most derived state is a plain function in the app module that owns its domain, c
 projections and repository derivations:
 
 ```typescript
-// src/app/actionItems.ts
+// src/app/features/actionItems.ts
 export const deriveSpaceActionItems = (url: string) =>
   derived(
     [
@@ -221,7 +221,7 @@ export const deriveSpaceActionItems = (url: string) =>
   )
 ```
 
-`src/app/rooms.ts` is the fullest example. Names follow the return type:
+`src/app/features/rooms.ts` is the fullest example. Names follow the return type:
 
 - `derive*` returns a store: `deriveUserRooms`, `deriveUserRoomMembershipStatus`
 - `get*` and `display*` return a snapshot: `displayRoom`
@@ -254,7 +254,7 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 | `theme`, `flTheme`, `checked`, `shouldUnwrap`, `device`, `notificationSettings`, push state, `forceHealthChecks` | `kv` | no | cleared |
 | drafts, dictations | a module `Map`, lost on reload | no | page reloads |
 
-### IndexedDB (`src/app/storage.ts`, `src/lib/indexeddb.ts`)
+### IndexedDB (`src/app/core/storage.ts`, `src/lib/indexeddb.ts`)
 
 `storagePolicy` builds a `Storage` only for an app with a user, so a signed-out app caches
 nothing. Each identity gets its own database, `flotilla-9gl-<pubkey>`. `IDB` reconciles object
@@ -308,7 +308,7 @@ or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. T
 - `theme`, `flTheme` (`theme.ts`), `checked` (`notifications.ts`), `shouldUnwrap` (`sync.ts`),
   `device` (`device.ts`), `forceHealthChecks` (`healthChecks.ts`) in `kv`
 - `pushState` (key `notificationState`) and `notificationSettings` in `kv`, both in
-  `push/adapters/common.ts` and re-exported from `@app/push`
+  `push/adapters/common.ts` and re-exported from `@app/features/push`
 - `wallet` (`lightning.ts`) in `ss`
 
 The root layout awaits `.ready` for the stores boot code reads (`device`, `shouldUnwrap`,
@@ -319,7 +319,7 @@ it is where existing installs keep their value.
 Raw `localStorage` holds only `theme`, `fl-theme` and `font-size`. The root layout mirrors them
 there to apply them synchronously before `kv` loads, which avoids a flash of the wrong theme.
 
-### Settings (`src/app/settings.ts`)
+### Settings (`src/app/core/settings.ts`)
 
 Settings are an encrypted app-data event with d-tag `flotilla/settings`, read through the
 `Settings` plugin:
@@ -333,14 +333,14 @@ Settings are an encrypted app-data event with d-tag `flotilla/settings`, read th
 
 A preference that should follow the user across devices goes in `SettingsValues` and
 `defaultSettings`. One that belongs to a device goes in a `kv` store, as push, sound and badge do
-in `notificationSettings` (`@app/push`). Per-space alert preferences are published (`alerts`); the device's
+in `notificationSettings` (`@app/features/push`). Per-space alert preferences are published (`alerts`); the device's
 push permission is not.
 
 `checked`, the read markers behind badges, lives in `kv`, and `syncCheckedRemote` mirrors it to
 dufflepud's `kv/checked` with NIP-98 auth. That makes it cross-device without publishing an
 event on every read.
 
-### Drafts (`src/app/drafts.ts`)
+### Drafts (`src/app/features/drafts.ts`)
 
 `DraftKey<T>` is a typed handle over an in-memory `Map`. A draft survives the composer
 unmounting and a navigation, but not a reload. Key it by context: `RoomCompose` uses
@@ -348,7 +348,7 @@ unmounting and a navigation, but not a reload. Key it by context: `RoomCompose` 
 The dictation registry in `dictation.ts` works the same way, so a transcription can finish after
 its composer has gone.
 
-## Background sync (`src/app/sync.ts`)
+## Background sync (`src/app/core/sync.ts`)
 
 The root layout calls `syncApplicationData()` once the session is restored and storage is ready,
 and again after every app swap. `completeSpaceJoin` in `access.ts` calls it after a space is joined. Each
@@ -449,7 +449,7 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
 
 ## Runes and stores
 
-Modules in `src/app` use svelte stores. The one `.svelte.ts` module is `src/app/modal.svelte.ts`:
+Modules in `src/app` use svelte stores. The one `.svelte.ts` module is `src/app/ui/modal.svelte.ts`:
 its modal registry is `$state`, and the open stack is `$derived` from `page.state` in
 `$app/state`, SvelteKit's rune-based replacement for the deprecated `$app/stores`. A rune-only
 source is what justifies the exception. `sync.ts` and `notifications.ts` read `page` from

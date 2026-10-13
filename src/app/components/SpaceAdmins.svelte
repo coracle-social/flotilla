@@ -15,10 +15,14 @@
   import Profile from "@app/components/Profile.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import SpaceMemberMethods from "@app/components/SpaceMemberMethods.svelte"
-  import {fromApp} from "@app/core"
-  import {deriveSpacePermissions, displayManagementMethod, spaceManagement} from "@app/management"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {fromApp} from "@app/core/app"
+  import {
+    deriveSpacePermissions,
+    displayManagementMethod,
+    spaceManagement,
+  } from "@app/core/management"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

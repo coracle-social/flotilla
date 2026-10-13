@@ -18,12 +18,13 @@
   import ContentSearch from "@lib/components/ContentSearch.svelte"
   import SpaceAdd from "@app/components/SpaceAdd.svelte"
   import SpaceResult from "@app/components/SpaceResult.svelte"
-  import {app, roomLists, user} from "@app/core"
-  import {deriveSpaceSearch, userSpaceUrls} from "@app/rooms"
-  import {PLATFORM_RELAYS, DEFAULT_RELAYS, INDEXER_RELAYS} from "@app/env"
-  import {bootstrapPubkeys} from "@app/social"
-  import {parseInviteLink} from "@app/access"
-  import {pushModal} from "@app/modal"
+  import {app, user} from "@app/core/app"
+  import {roomLists} from "@app/core/plugins"
+  import {deriveSpaceSearch, userSpaceUrls} from "@app/features/rooms"
+  import {PLATFORM_RELAYS, DEFAULT_RELAYS, INDEXER_RELAYS} from "@app/core/env"
+  import {bootstrapPubkeys} from "@app/features/social"
+  import {parseInviteLink} from "@app/features/access"
+  import {pushModal} from "@app/ui/modal"
 
   const addSpace = () => pushModal(SpaceAdd)
 

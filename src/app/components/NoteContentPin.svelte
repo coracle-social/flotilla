@@ -3,8 +3,8 @@
   import {Pin} from "@welshman/domain"
   import Content from "@app/components/Content.svelte"
   import PinContentEvent from "@app/components/PinContentEvent.svelte"
-  import {reader} from "@app/core"
-  import {pinToReference} from "@app/pinboards"
+  import {reader} from "@app/core/domain"
+  import {pinToReference} from "@app/features/pinboards"
 
   const props: ComponentProps<typeof Content> = $props()
 

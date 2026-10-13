@@ -4,7 +4,8 @@
   import Shield from "@assets/icons/shield-minimalistic.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {followLists, profiles, user, wot} from "@app/core"
+  import {user} from "@app/core/app"
+  import {followLists, profiles, wot} from "@app/core/plugins"
 
   type Props = {
     pubkey: string

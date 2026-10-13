@@ -16,8 +16,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {goToChat} from "@app/routes"
-  import {messagingRelayLists} from "@app/core"
+  import {goToChat} from "@app/ui/routes"
+  import {messagingRelayLists} from "@app/core/plugins"
 
   const back = () => history.back()
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/ui/modal"
   import {displayRelayUrl} from "@welshman/util"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -11,8 +11,8 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {leaveSpace} from "@app/access"
-  import {pushToast} from "@app/toast"
+  import {leaveSpace} from "@app/features/access"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

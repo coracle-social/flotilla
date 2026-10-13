@@ -18,11 +18,11 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import LogInOTP from "@app/components/LogInOTP.svelte"
   import LogInSelect from "@app/components/LogInSelect.svelte"
-  import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/pomade"
-  import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/pomade"
-  import {pushModal, clearModals} from "@app/modal"
-  import {setChecked} from "@app/notifications"
-  import {pushToast} from "@app/toast"
+  import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/core/pomade"
+  import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
+  import {pushModal, clearModals} from "@app/ui/modal"
+  import {setChecked} from "@app/ui/notifications"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     email?: string

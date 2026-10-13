@@ -4,8 +4,8 @@
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
-  import {reader} from "@app/core"
-  import {deriveGoalProgress} from "@app/goals"
+  import {reader} from "@app/core/domain"
+  import {deriveGoalProgress} from "@app/features/goals"
 
   const props: ComponentProps<typeof ContentMinimal> = $props()
 

@@ -12,11 +12,11 @@
   import Tippy from "@lib/components/Tippy.svelte"
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import Button from "@lib/components/Button.svelte"
-  import ProfileSuggestion from "@app/editor/ProfileSuggestion.svelte"
+  import ProfileSuggestion from "@app/features/editor/ProfileSuggestion.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {profiles} from "@app/core"
-  import {pushModal} from "@app/modal"
+  import {profiles} from "@app/core/plugins"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     value: string[]

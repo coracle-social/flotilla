@@ -9,9 +9,9 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import WotScore from "@app/components/WotScore.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {pushModal} from "@app/modal"
-  import {clip} from "@app/toast"
-  import {handles, profiles} from "@app/core"
+  import {pushModal} from "@app/ui/modal"
+  import {clip} from "@app/ui/toast"
+  import {handles, profiles} from "@app/core/plugins"
 
   type Props = {
     pubkey: string

@@ -28,11 +28,11 @@
   import ReportDetails from "@app/components/ReportDetails.svelte"
   import ProfileList from "@app/components/ProfileList.svelte"
   import ZapModal from "@app/components/Zap.svelte"
-  import {app, user} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushModal} from "@app/modal"
-  import {deriveDisplaysByPubkey} from "@app/social"
+  import {app, user} from "@app/core/app"
+  import type {FeedContext} from "@app/features/feeds"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {pushModal} from "@app/ui/modal"
+  import {deriveDisplaysByPubkey} from "@app/features/social"
 
   type Props = {
     event: TrustedEvent

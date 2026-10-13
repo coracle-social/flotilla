@@ -11,9 +11,10 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {deriveUserItem, messagingRelayLists, relayLists} from "@app/core"
-  import {DEFAULT_RELAYS, DEFAULT_MESSAGING_RELAYS} from "@app/env"
-  import {pushToast} from "@app/toast"
+  import {deriveUserItem} from "@app/core/app"
+  import {messagingRelayLists, relayLists} from "@app/core/plugins"
+  import {DEFAULT_RELAYS, DEFAULT_MESSAGING_RELAYS} from "@app/core/env"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     next: () => void

@@ -8,9 +8,9 @@
   import HeadphonesRound from "@assets/icons/headphones-round.svg?dataurl"
   import Zap from "@app/components/Zap.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {ENABLE_ZAPS, PLATFORM_NAME, PLATFORM_ABOUT} from "@app/env"
-  import {pushModal} from "@app/modal"
-  import {makeSpacePath} from "@app/routes"
+  import {ENABLE_ZAPS, PLATFORM_NAME, PLATFORM_ABOUT} from "@app/core/env"
+  import {pushModal} from "@app/ui/modal"
+  import {makeSpacePath} from "@app/ui/routes"
 
   const hash = import.meta.env.VITE_BUILD_HASH
 

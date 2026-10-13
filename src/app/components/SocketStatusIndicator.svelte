@@ -1,6 +1,6 @@
 <script lang="ts">
   import StatusIndicator from "@lib/components/StatusIndicator.svelte"
-  import {RelayConnection, deriveSocketStatus} from "@app/relays"
+  import {RelayConnection, deriveSocketStatus} from "@app/core/relays"
 
   type Props = {
     url: string

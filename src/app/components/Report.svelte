@@ -14,8 +14,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {command, writer} from "@app/core"
-  import {pushToast} from "@app/toast"
+  import {command, writer} from "@app/core/domain"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

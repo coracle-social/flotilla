@@ -7,8 +7,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
-  import {pushModal} from "@app/modal"
-  import {getUrlContentType, IMAGE_CONTENT_TYPES} from "@app/content"
+  import {pushModal} from "@app/ui/modal"
+  import {getUrlContentType, IMAGE_CONTENT_TYPES} from "@app/features/content"
 
   type Props = {
     url: string

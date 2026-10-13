@@ -35,14 +35,15 @@
   import ChatMessage from "@app/components/ChatMessage.svelte"
   import ComposeArea, {type ComposeValues} from "@app/components/ComposeArea.svelte"
   import PublicationToast from "@app/components/PublicationToast.svelte"
-  import {app, deletes, router, user, wraps} from "@app/core"
-  import {loadSendDelay} from "@app/settings"
-  import {chats, makeChatId} from "@app/chats"
-  import {makeFeedContext} from "@app/feeds"
-  import {navigate, pushModal} from "@app/modal"
-  import {prependParent} from "@app/rooms"
-  import type {RoomRow} from "@app/rooms"
-  import {pushToast} from "@app/toast"
+  import {app, user} from "@app/core/app"
+  import {deletes, router, wraps} from "@app/core/plugins"
+  import {loadSendDelay} from "@app/core/settings"
+  import {chats, makeChatId} from "@app/features/chats"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {navigate, pushModal} from "@app/ui/modal"
+  import {prependParent} from "@app/features/rooms"
+  import type {RoomRow} from "@app/features/rooms"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     pubkeys: string[]

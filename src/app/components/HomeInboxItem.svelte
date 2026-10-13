@@ -4,7 +4,7 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import type {Activity} from "@app/notifications"
+  import type {Activity} from "@app/ui/notifications"
 
   type Props = {
     conversation: Activity

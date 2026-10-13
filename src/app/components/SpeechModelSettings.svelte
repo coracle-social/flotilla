@@ -5,8 +5,8 @@
   import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
   import LocalSpeechEnable from "@app/components/LocalSpeechEnable.svelte"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   const refresh = async () => {
     try {

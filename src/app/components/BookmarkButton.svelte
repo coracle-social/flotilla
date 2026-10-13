@@ -4,8 +4,13 @@
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import {addBookmark, deriveIsBookmarked, eventToBookmark, removeBookmark} from "@app/bookmarks"
-  import {pushToast} from "@app/toast"
+  import {
+    addBookmark,
+    deriveIsBookmarked,
+    eventToBookmark,
+    removeBookmark,
+  } from "@app/features/bookmarks"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url?: string

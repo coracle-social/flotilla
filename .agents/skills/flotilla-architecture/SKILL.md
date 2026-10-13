@@ -1,6 +1,6 @@
 ---
 name: flotilla-architecture
-description: "Use this skill when deciding where new code belongs in flotilla: which layer (routes, app/components, app, lib) or welshman package owns it, which src/app module to extend, or how a kind-based space feature is laid out across the layers. Also use it for the layer and import rules, path aliases, the boot sequence, platform-specific behavior (Capacitor, Android, iOS, Electron, PWA), the link-preview server, env and branding variables, the e2e harness, and the lint/check tooling."
+description: "Use this skill when deciding where new code belongs in flotilla: which layer (routes, app/components, app/features, app/ui, app/core, lib) or welshman package owns it, which src/app module to extend, or how a kind-based space feature is laid out across the layers. Also use it for the layer and import rules, path aliases, the boot sequence, platform-specific behavior (Capacitor, Android, iOS, Electron, PWA), the link-preview server, env and branding variables, the e2e harness, and the lint/check tooling."
 ---
 
 # Flotilla architecture
@@ -17,7 +17,9 @@ and UI.
 |---|---|---|---|
 | Routes | `src/routes` | — | anything |
 | App components | `src/app/components` | `@app/components/X.svelte` | `@app`, `@lib` |
-| App modules | `src/app/*.ts`, `editor/`, `push/` | `@app/x` | `@lib`, each other |
+| Features | `src/app/features` | `@app/features/x` | `@app/ui`, `@app/core`, `@lib` |
+| UI chrome | `src/app/ui` | `@app/ui/x` | `@app/core`, `@lib` |
+| Core | `src/app/core` | `@app/core/x` | `@lib` |
 | Lib | `src/lib` | `@lib/x` | external packages only |
 
 `svelte.config.js` defines the aliases `@src`, `@app`, `@lib` and `@assets`. Use `@lib`, not
@@ -34,8 +36,8 @@ and `sync.ts`.
 - `src/lib` stays reusable by other apps.
 - `src/app` modules can be imported from anywhere (routes, components, other modules, the boot
   sequence) without pulling in UI.
-- `core.ts` can't import the policy modules that depend on it, so they push themselves onto
-  `appPolicies` when imported, and `core.ts` builds the `App` lazily after they have registered.
+- `core/app.ts` can't import the policy modules that depend on it, so they push themselves onto
+  `appPolicies` when imported, and `core/app.ts` builds the `App` lazily after they have registered.
   `flotilla-state` covers this under "App policies".
 
 ### Exceptions
@@ -43,7 +45,7 @@ and `sync.ts`.
 No lint rule enforces the layers (`eslint.config.js` has no import restrictions), so review is the
 only gate.
 
-- **lib → app.** `Link.svelte` imports `navigate` from `@app/modal`. Don't copy it. A lib
+- **lib → app.** `Link.svelte` imports `navigate` from `@app/ui/modal`. Don't copy it. A lib
   component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
   `IconInput` and its picker buttons did.
 - **app → components.** `routes.ts` (`goToChat` opens `ChatEnable`, `goToEvent` opens
@@ -71,68 +73,65 @@ only gate.
 | `scripts/` | Build, desktop, version-bump and welshman-linking scripts |
 | `docs/feature_matrix.html` | Standalone feature matrix page |
 
-## `src/app` by concern
+## `src/app` by directory
 
 `src/app/components` is flat except for `hosting/`. It also holds the CSS families for app
-concepts (`chat.css`, `room.css`, `role-badge.css`, `space-menu.css`), which `src/app/app.css`
+concepts (`chat.css`, `room.css`, `role-badge.css`, `space-menu.css`), which `src/app/ui/app.css`
 imports. `flotilla-views` covers component conventions.
 
-**Core and session**
-- `core.ts`: the `App` store, plugin stores, `login`, and the `reader`/`writer`/`command` shortcuts
-- `session.ts`: restores the saved session at boot; `logout`
+The graph doesn't follow the layer table yet: some core and ui modules still import features
+(`sync`, `storage`, `session`, `notifications`, `routes`, `title`), and `signer`, `nip46` and
+`relays` import ui. Don't add new ones.
+
+**`core/`: the app, session and background machinery**
+- `app.ts`: the `App` store, `appPolicies`, `user`, `fromApp`, `deriveUserItem`,
+  `userSearchRelayUrls`
+- `plugins.ts`: `usePlugin` and the plugin stores (`profiles`, `rooms`, `events`, …)
+- `domain.ts`: the `reader`/`writer`/`command` shortcuts
+- `session.ts`: the `session` store, `login`, restoring the saved session at boot, `logout`
 - `policies.ts`: the ingest, auth and socket policies installed on every app
 - `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage) and the per-user IndexedDB
   cache
 - `sync.ts`: `syncApplicationData`, the background sync of user data, spaces and DMs
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
-- `repository.ts`: the `LatestEvents` plugin, each watched author's most recent event
-- `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and `signerHealth`)
+- `relays.ts`: relay URL encoding for routes, socket status, the LiveKit endpoint and detection
+- `management.ts`: NIP-86 admin checks and bans
+- `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and
+  `signerHealth`), `notify.ts`
 - `env.ts`: every `VITE_` value, parsed
-- `logger.ts` (log capture and sending), `analytics.ts` (Plausible pageviews), `device.ts` (a
-  device id)
+- `nip46.ts`, `pomade.ts` (email login), `uploads.ts` (Blossom, image compression)
+- `logger.ts` (log capture and sending), `device.ts` (a device id)
 
-**Navigation and UI plumbing**
+**`ui/`: chrome**
 - `routes.ts`: path builders (`makeSpacePath`, `makeContentPath`, …), `goTo*`, history tracking
-- `modal.ts`, `modal.svelte.ts`: `pushModal`, `popModal`, `navigate`, and the modal stack
-- `toast.ts`, `title.ts`, `theme.ts`, `icons.ts` (icon picker options), `drafts.ts`
+- `modal.ts`: `pushModal`, `popModal`, `navigate`, and the modal stack
+- `toast.ts`, `title.ts`, `theme.ts`, `icons.ts` (icon picker options), `markdown.ts`
+- `render.ts` (events as text), `share.ts`, `keyboard.ts`
+- `notifications.ts` (unread state, badges, the home inbox)
+- `app.css`: the app stylesheet
+
+**`features/`: one feature each**
+- Spaces and rooms: `rooms.ts` (helpers over `rooms.get()`, the user's rooms and spaces),
+  `access.ts` (joining, invites, relay auth errors), `roles.ts`, `actionItems.ts` (the admin
+  review queue), `featured.ts`, `roomPins.ts`, `commands.ts` (NIP-CD slash commands),
+  `hosting.ts` (client for the hosting backend's HTTP API)
+- Content: `content.ts` (kind lists, comment/delete filters, `partitionByActivity`), `feeds.ts`
+  (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`), `classifieds.ts`,
+  `articles.ts`, `calendar.ts`, `goals.ts`, `pins.ts` (a person's pinned notes), `pinboards.ts`,
+  `bookmarks.ts`, `quotes.ts`, `reactions.ts`, `social.ts` (display names, comment trees,
+  muting), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin)
+- Messaging and calls: `chats.ts`, `call.ts` (call state), `callEngine.ts` (LiveKit join, leave,
+  devices, the video tiles a call shows), `screenShare/`. `call.ts` stays free of livekit values,
+  since the root layout loads it and `callEngine.ts` is imported lazily.
+- Identity and payments: `lightning.ts` (wallet, invoices), `payments.ts`, `healthChecks.ts`
+  (prompts for missing inbox/outbox relays)
+- Platform and voice: `push/` (notification adapters, and `server.ts` for the push server's HTTP
+  API), `deepLinks.ts`, `reminders.ts`, `dictation.ts` and `speech.ts` (through `inference/`)
 - `editor/`: flotilla's `@welshman/editor` setup (`makeEditor`), with its suggestion popovers and
   node views
+- `analytics.ts` (Plausible pageviews), `drafts.ts`, `loading.ts`, `location.ts`
 
-**Spaces, rooms and administration**
-- `relays.ts`: relay URL encoding for routes, socket status, the LiveKit endpoint and detection
-- `rooms.ts`: helpers over `rooms.get()`, and the user's rooms and spaces
-- `access.ts`: joining, invites, relay auth errors
-- `management.ts` (NIP-86 admin checks, bans), `roles.ts` (member roles)
-- `actionItems.ts`: the admin review queue (reports and pending joins)
-- `featured.ts` (the space owner's featured content), `roomPins.ts`, `commands.ts` (NIP-CD slash
-  commands)
-- `hosting.ts`: client for the hosting backend's HTTP API
-
-**Content**
-- `content.ts`: kind lists (`CONTENT_KINDS`, `REACTION_KINDS`, `DM_KINDS`), comment/delete
-  filters, and `partitionByActivity`, which the list pages use to sort a kind by latest comment
-- `feeds.ts`: `makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`
-- `classifieds.ts`, `articles.ts`, `pins.ts` (a person's pinned notes), `pinboards.ts`
-- `reactions.ts`, `social.ts` (display names, comment trees, muting), `render.ts` (events as
-  text), `statuses.ts` (NIP-38), `uploads.ts` (Blossom, image compression)
-- `notifications.ts` (unread state, badges, the home inbox)
-
-**Messaging and calls**
-- `chats.ts`, `call.ts` (call state), `callEngine.ts` (LiveKit join, leave, devices, the video
-  tiles a call shows, and the `AbortError`/`TimeoutError` a join rejects with). `call.ts` stays
-  free of livekit values, since the root layout loads it and `callEngine.ts` is imported lazily.
-
-**Identity and payments**
-- `nip46.ts`, `pomade.ts` (email login), `lightning.ts` (wallet, invoices), `healthChecks.ts`
-  (prompts for missing inbox/outbox relays)
-
-**Platform and voice**
-- `push/` (notification adapters, and `server.ts` for the push server's HTTP API), `share.ts`,
-  `deepLinks.ts`, `keyboard.ts`
-- `dictation.ts` (speech-to-text) and `speech.ts` (read aloud), both through `postOpenRouter` in
-  `openrouter.ts`
-
-A feature gets a `src/app/<feature>.ts` only when it has non-UI logic to hold. Polls, goals,
+A feature gets a `src/app/features/<feature>.ts` only when it has non-UI logic to hold. Polls, goals,
 threads and calendar events have no module; their components use domain readers directly.
 
 ## `src/lib`
@@ -145,18 +144,18 @@ client.
 - `html.ts`: DOM helpers such as `isMobile`, `createScroller`, `copyToClipboard`
 - `indexeddb.ts`: the `IDB` wrapper that `storage.ts` builds on
 - `feeds.ts`: saved feed definitions (kind `FEED`) over `@welshman/feeds`. It is unrelated to
-  `@app/feeds`, which loads events.
+  `@app/features/feeds`, which loads events.
 - `audio.ts` (device lists, a live input level, WAV encoding), `tileGrid.ts` (the call grid's
   geometry)
 - `currency.ts`, `transition.ts`, `implicit.ts` (hands state from one page to the next)
 - `test/`: the DEV-only hooks the e2e harness injects through
 - `components/`: the design system, entered through `theme.css` (see `flotilla-views`), which
-  `src/app/app.css` imports ahead of the app's own CSS families
+  `src/app/ui/app.css` imports ahead of the app's own CSS families
 
 ## Boot sequence
 
-`src/routes/+layout.svelte` runs the boot sequence. It imports `@app/policies` for its side effect,
-and `@app/storage`, which registers `storagePolicy` the same way, so every `AppPolicy` is on
+`src/routes/+layout.svelte` runs the boot sequence. It imports `@app/core/policies` for its side effect,
+and `@app/core/storage`, which registers `storagePolicy` the same way, so every `AppPolicy` is on
 `appPolicies` before anything calls `app.get()`. `applySavedTheme()` stamps the last theme and font
 size from `localStorage` before first paint. Then, in order:
 
@@ -192,10 +191,10 @@ One web build runs in several shells:
 Platform checks call Capacitor directly. There is no wrapper module:
 
 ```ts
-export const ENABLE_ZAPS = Capacitor.getPlatform() !== "ios" // src/app/env.ts
-export const HOSTING_ENABLED = Capacitor.getPlatform() !== "ios" // src/app/hosting.ts
+export const ENABLE_ZAPS = Capacitor.getPlatform() !== "ios" // src/app/core/env.ts
+export const HOSTING_ENABLED = Capacitor.getPlatform() !== "ios" // src/app/features/hosting.ts
 
-if (!Capacitor.isPluginAvailable("Keyboard")) return noop // src/app/keyboard.ts
+if (!Capacitor.isPluginAvailable("Keyboard")) return noop // src/app/ui/keyboard.ts
 ```
 
 The iOS flags exist because of App Store payment policy, so anything that takes money checks
@@ -208,15 +207,15 @@ Flotilla's own native code:
   without FCM), and `ShareIntentPlugin`. `MainActivity.java` registers them, and JS binds them with
   `registerPlugin` (`push/adapters/android.ts`, `share.ts`).
 - `ios/App/ShareExtension/`: the extension can't call into the app, so it opens a
-  `flotilla://share` URL. `handleDeepLink` in `src/app/deepLinks.ts` passes that to
+  `flotilla://share` URL. `handleDeepLink` in `src/app/features/deepLinks.ts` passes that to
   `shareFromNative`.
 
-`Push` in `src/app/push/index.ts` chooses an adapter at runtime: the Android fallback, Capacitor
+`Push` in `src/app/features/push/index.ts` chooses an adapter at runtime: the Android fallback, Capacitor
 `PushNotifications` (FCM/APNs through `PUSH_SERVER`), or web notifications.
 
 ## Env and branding
 
-`src/app/env.ts` reads the `VITE_` values and exports them as typed constants, with relay lists
+`src/app/core/env.ts` reads the `VITE_` values and exports them as typed constants, with relay lists
 parsed by `fromCsv` and `normalizeRelayUrl`. In DEV each lookup checks `window.__TEST_ENV__` first,
 which lets the e2e harness point a browser at its own relays. Elsewhere, only `logger.ts` and the
 about page read a `VITE_` value (`VITE_BUILD_HASH`); other `import.meta.env` reads are `DEV`
@@ -267,7 +266,7 @@ missing primitive goes upstream rather than into an `@app` workaround. The `Comm
 consume them. Expect rejection for app-level retry loops, liveness heuristics, or registries that
 duplicate what `@welshman/net` already tracks.
 
-**Add indirection only when it pays for itself.** `core.ts` exports the `reader`, `writer` and
+**Add indirection only when it pays for itself.** `core/domain.ts` exports the `reader`, `writer` and
 `command` shortcuts because "almost every read or write goes through one of them". Platform checks
 stay inline rather than going through a platform module, and `drafts.ts` is a module-level `Map`
 rather than a persisted store.
@@ -275,13 +274,13 @@ rather than a persisted store.
 ## Placement guide
 
 - **Parsing or building a nostr kind** → upstream in `@welshman/domain`, used through `reader` and
-  `writer` from `@app/core`. See `flotilla-model` ("Adding a kind") and `welshman-domain`.
+  `writer` from `@app/core/domain`. See `flotilla-model` ("Adding a kind") and `welshman-domain`.
 - **A space section for a kind** → a route under `src/routes/spaces/[relay]/`, with the kind in
   `CONTENT_KINDS`. The walkthrough below names every file involved, and `flotilla-model` ("Adding
   a kind") and `flotilla-views` ("Adding a space content page") have the checklists. Add the
   section to the regexes in `server.js`, or its link previews are titled as a room.
 - **Non-UI logic for one feature** (scoring, filtering, stores keyed by URL) →
-  `src/app/<feature>.ts`, with no component imports.
+  `src/app/features/<feature>.ts`, with no component imports.
 - **A keyed collection of one kind** → a plugin. A generic kind's plugin goes upstream in
   `@welshman/app`; a flotilla-specific one is a `DerivedPlugin` in `src/app`, exposed with
   `usePlugin`. See `flotilla-state`.
@@ -298,7 +297,7 @@ rather than a persisted store.
 - **A non-nostr HTTP service** → its own module with typed request functions, a typed error class
   and a base URL from env, as in `hosting.ts` (`hostingFetch`, `HostingError`,
   `HOSTING_BACKEND_URL`).
-- **A native capability** → JS in `src/app/<capability>.ts`, with inline `Capacitor` checks and a
+- **A native capability** → JS in `src/app/features/<capability>.ts`, with inline `Capacitor` checks and a
   web fallback. If no Capacitor plugin fits, write one under
   `android/app/src/main/java/social/flotilla/`, register it in `MainActivity.java`, and bind it
   with `registerPlugin`. An iOS extension reaches the app through a `flotilla://` deep link.
@@ -316,13 +315,13 @@ app module.
 `summary()`, `price()`, `status()`, `images()`, `topics()`) with a `ClassifiedWriter` that has the
 matching setters.
 
-**Kind registries.** `CONTENT_KINDS` in `src/app/content.ts` drives sync, notifications, push,
+**Kind registries.** `CONTENT_KINDS` in `src/app/features/content.ts` drives sync, notifications, push,
 search and the space nav entry. The kind also appears in `CONTENT_NOUNS`, the kind dispatch in
 `NoteContent.svelte` and `NoteContentMinimal.svelte`, `makeClassifiedPath` and `makeContentPath` in
 `routes.ts`, `title.ts`, `NIP46_PERMS` in `nip46.ts`, and the section regexes in `server.js`.
 `NIP46_PERMS` leaves out polls, articles and goals, so listing a new kind there is optional.
 
-**App module.** `src/app/classifieds.ts` holds the listing logic the page would otherwise inline
+**App module.** `src/app/features/classifieds.ts` holds the listing logic the page would otherwise inline
 (`deriveTopicCounts`, `getStatus`, `matchesTopic`, `matchesQuery`). Each is a
 small function over a domain reader:
 

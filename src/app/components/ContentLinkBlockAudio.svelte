@@ -5,7 +5,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {decryptUrl, getUrlTags} from "@app/content"
+  import {decryptUrl, getUrlTags} from "@app/features/content"
 
   type Props = {url: string; event: TrustedEvent}
 

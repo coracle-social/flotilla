@@ -7,8 +7,9 @@
   import {goto} from "$app/navigation"
   import {decodePubkey} from "@lib/util"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {app, network} from "@app/core"
-  import {goToEvent, goToNote, makeEventPath, makeProfilePath} from "@app/routes"
+  import {app} from "@app/core/app"
+  import {network} from "@app/core/plugins"
+  import {goToEvent, goToNote, makeEventPath, makeProfilePath} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

@@ -1,8 +1,8 @@
 <script lang="ts">
   import theme from "tailwindcss/defaultTheme"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {goToSpace} from "@app/routes"
+  import {decodeRelay} from "@app/core/relays"
+  import {goToSpace} from "@app/ui/routes"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
   import SpaceNotify from "@app/components/SpaceNotify.svelte"
   import type {PageProps} from "./$types"

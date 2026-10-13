@@ -1,0 +1,11 @@
+/* App stylesheet (imported once, in src/routes/+layout.svelte): the design
+   system first, then the families for flotilla's own components. */
+
+@import "../../lib/components/theme.css";
+@import "../components/chat.css";
+@import "../components/role-badge.css";
+@import "../components/room.css";
+@import "../components/space-menu.css";
+@import "../components/space-notify.css";
+
+@config "../../tailwind.config.js";

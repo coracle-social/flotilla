@@ -6,7 +6,7 @@
   import Button from "@lib/components/Button.svelte"
   import ComposeBar from "@app/components/ComposeBar.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
-  import {profiles} from "@app/core"
+  import {profiles} from "@app/core/plugins"
 
   type Props = {
     url?: string

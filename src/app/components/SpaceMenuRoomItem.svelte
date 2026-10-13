@@ -4,11 +4,11 @@
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import VoiceRoomItem from "@app/components/VoiceRoomItem.svelte"
-  import {rooms} from "@app/core"
-  import {RoomType, getRoomType} from "@app/rooms"
-  import {deriveIsMuted} from "@app/settings"
-  import {notifications} from "@app/notifications"
-  import {makeRoomPath} from "@app/routes"
+  import {rooms} from "@app/core/plugins"
+  import {RoomType, getRoomType} from "@app/features/rooms"
+  import {deriveIsMuted} from "@app/core/settings"
+  import {notifications} from "@app/ui/notifications"
+  import {makeRoomPath} from "@app/ui/routes"
 
   type Props = {
     url: string

@@ -4,10 +4,10 @@
   import {NOTE, COMMENT, MESSAGE} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
-  import {network, roomLists} from "@app/core"
-  import {latestEvents} from "@app/repository"
-  import {goToEvent} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {network, roomLists} from "@app/core/plugins"
+  import {latestEvents} from "@app/features/repository"
+  import {goToEvent} from "@app/ui/routes"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     pubkey: string

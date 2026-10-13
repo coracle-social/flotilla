@@ -1,7 +1,7 @@
 import type {Page} from "@playwright/test"
 import type {TrustedEvent} from "@welshman/util"
 
-// Must match the database name and the `events` table in src/app/storage.ts.
+// Must match the database name and the `events` table in src/app/core/storage.ts.
 const databaseName = (pubkey: string) => `flotilla-9gl-${pubkey}`
 
 /** What this user's client has written to disk. Events reach indexeddb in three-second batches. */

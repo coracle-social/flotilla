@@ -32,7 +32,7 @@
   import InputLocation from "@app/components/InputLocation.svelte"
   import InputProfilePicture from "@app/components/InputProfilePicture.svelte"
   import InfoHandle from "@app/components/InfoHandle.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     initialValues: Values

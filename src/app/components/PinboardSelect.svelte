@@ -15,10 +15,11 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import PinSave from "@app/components/PinSave.svelte"
-  import {events, reader} from "@app/core"
-  import {eventToReference} from "@app/pinboards"
-  import {makeSpacePath} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {events} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {eventToReference} from "@app/features/pinboards"
+  import {makeSpacePath} from "@app/ui/routes"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

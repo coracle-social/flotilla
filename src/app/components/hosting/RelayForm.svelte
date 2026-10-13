@@ -1,5 +1,5 @@
 <script module lang="ts">
-  import type {HostedRelay} from "@app/hosting"
+  import type {HostedRelay} from "@app/features/hosting"
 
   export type RelayFormValues = Pick<
     HostedRelay,
@@ -23,10 +23,10 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import PricingTable from "@app/components/hosting/PricingTable.svelte"
-  import {hosting, hostingErrorMessage} from "@app/hosting"
-  import {HOSTING_RELAY_DOMAIN} from "@app/env"
-  import {pushToast} from "@app/toast"
-  import {resolveImageInput} from "@app/uploads"
+  import {hosting, hostingErrorMessage} from "@app/features/hosting"
+  import {HOSTING_RELAY_DOMAIN} from "@app/core/env"
+  import {pushToast} from "@app/ui/toast"
+  import {resolveImageInput} from "@app/core/uploads"
   import IconInput from "@app/components/IconInput.svelte"
 
   type Props = {

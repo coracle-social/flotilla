@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/ui/modal"
   import {page} from "$app/stores"
   import cx from "classnames"
   import {displayRelayUrl} from "@welshman/util"
@@ -9,9 +9,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Banner from "@app/components/Banner.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {displayRoom} from "@app/rooms"
-  import {makeRoomPath} from "@app/routes"
+  import {decodeRelay} from "@app/core/relays"
+  import {displayRoom} from "@app/features/rooms"
+  import {makeRoomPath} from "@app/ui/routes"
   import {
     CallState,
     callState,
@@ -19,7 +19,7 @@
     callMicMuted,
     deriveIsCallActiveElsewhere,
     endCall,
-  } from "@app/call"
+  } from "@app/features/call"
 
   const {relay, h} = $derived($page.params)
   const routeUrl = $derived(relay ? decodeRelay(relay) : undefined)
@@ -43,7 +43,7 @@
   }
 
   const toggleMute = async () => {
-    const engine = await import("@app/callEngine")
+    const engine = await import("@app/features/callEngine")
 
     await engine.toggleMute()
   }

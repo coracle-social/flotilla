@@ -15,11 +15,11 @@
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
-  import type {FeedContext} from "@app/feeds"
+  import type {FeedContext} from "@app/features/feeds"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
-  import {pushModal} from "@app/modal"
-  import {isEventMuted} from "@app/social"
-  import type {CommentNode} from "@app/social"
+  import {pushModal} from "@app/ui/modal"
+  import {isEventMuted} from "@app/features/social"
+  import type {CommentNode} from "@app/features/social"
 
   type Props = {
     node: CommentNode

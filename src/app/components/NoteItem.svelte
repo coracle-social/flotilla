@@ -12,8 +12,8 @@
   import NoteThreadLinks from "@app/components/NoteThreadLinks.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
   import Cv from "@lib/components/Cv.svelte"
-  import type {FeedContext} from "@app/feeds"
-  import {pushEventNote} from "@app/routes"
+  import type {FeedContext} from "@app/features/feeds"
+  import {pushEventNote} from "@app/ui/routes"
 
   type Props = {
     event: TrustedEvent

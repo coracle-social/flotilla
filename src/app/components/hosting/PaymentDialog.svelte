@@ -19,8 +19,8 @@
   import QRCode from "@app/components/QRCode.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import InvoiceItemsList from "@app/components/hosting/InvoiceItemsList.svelte"
-  import {clip, pushToast} from "@app/toast"
-  import {pushModal} from "@app/modal"
+  import {clip, pushToast} from "@app/ui/toast"
+  import {pushModal} from "@app/ui/modal"
   import {
     hosting,
     hostingErrorMessage,
@@ -33,7 +33,7 @@
     formatPeriod,
     type Invoice,
     type InvoiceItem,
-  } from "@app/hosting"
+  } from "@app/features/hosting"
 
   type Props = {
     invoice: Invoice

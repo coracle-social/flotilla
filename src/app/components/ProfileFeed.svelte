@@ -10,8 +10,8 @@
   import {fly} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {app} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
+  import {app} from "@app/core/app"
+  import {makeFeedContext} from "@app/features/feeds"
 
   type Props = {
     url: string

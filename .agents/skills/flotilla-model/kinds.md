@@ -8,48 +8,48 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| Chat | `MESSAGE` (9) | none | `src/app/rooms.ts` | `spaces/[relay]/chat`, `spaces/[relay]/[h]` (`RoomChat`) |
+| Chat | `MESSAGE` (9) | none | `src/app/features/rooms.ts` | `spaces/[relay]/chat`, `spaces/[relay]/[h]` (`RoomChat`) |
 | Threads | `THREAD` (11) | `Thread` | none | `spaces/[relay]/threads`, `threads/[id]` (`ThreadCreate`) |
-| Comments | `COMMENT` (1111) | `Comment` | `src/app/content.ts` (`makeCommentFilter`), `src/app/rooms.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
-| Articles | `LONG_FORM` (30023) | `Article` | `src/app/articles.ts` | `spaces/[relay]/articles`, `articles/create`, `articles/[address]` |
-| Calendar | `EVENT_TIME` (31923) | `TimeEvent` | `src/app/feeds.ts` (`makeCalendarFeed`) | `spaces/[relay]/calendar`, `calendar/[address]` (`CalendarEventForm`) |
-| Classifieds | `CLASSIFIED` (30402) | `Classified` | `src/app/classifieds.ts` | `spaces/[relay]/classifieds`, `classifieds/[address]` (`ClassifiedForm`) |
+| Comments | `COMMENT` (1111) | `Comment` | `src/app/features/content.ts` (`makeCommentFilter`), `src/app/features/rooms.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
+| Articles | `LONG_FORM` (30023) | `Article` | `src/app/features/articles.ts` | `spaces/[relay]/articles`, `articles/create`, `articles/[address]` |
+| Calendar | `EVENT_TIME` (31923) | `TimeEvent` | `src/app/features/feeds.ts` (`makeCalendarFeed`) | `spaces/[relay]/calendar`, `calendar/[address]` (`CalendarEventForm`) |
+| Classifieds | `CLASSIFIED` (30402) | `Classified` | `src/app/features/classifieds.ts` | `spaces/[relay]/classifieds`, `classifieds/[address]` (`ClassifiedForm`) |
 | Goals | `ZAP_GOAL` (9041) | `ZapGoal` | none | `spaces/[relay]/goals`, `goals/[id]` (`GoalCreate`) |
 | Polls | `POLL` (1068), `POLL_RESPONSE` (1018) | `Poll`, `PollResponse` | none | `spaces/[relay]/polls`, `polls/[id]` (`PollCreate`, `PollVotes`) |
-| Library | `PINBOARD` (30067), `PIN` (39067) | `Pinboard`, `Pin` | `src/app/pinboards.ts` | `spaces/[relay]/library` (`PinboardEdit`, `PinSave`); published by any member |
-| Room pins | `ROOM_PINS` (39005), `ROOM_UPDATE_PINS` (9010) | `RoomPins`, `RoomUpdatePins` | `src/app/roomPins.ts` | `RoomItemMenu`, `RoomItemMenuMobile`, `RoomPinnedMessagesAll` |
-| Featured content | `APP_DATA` (30078), `d` = `flotilla/featured-content` | `AppData` | `src/app/featured.ts` | `SpaceFeaturedContent`; published as the relay |
-| Bot commands (NIP-CD) | `COMMAND` (31992) | `Command` | `src/app/commands.ts` | `RoomCompose`, `ContentCommand` |
-| Voice room participants | `LIVEKIT_PARTICIPANTS` (39004, defined in `src/app/call.ts`) | none | `src/app/call.ts` | rooms where `meta.hasLivekit()` |
+| Library | `PINBOARD` (30067), `PIN` (39067) | `Pinboard`, `Pin` | `src/app/features/pinboards.ts` | `spaces/[relay]/library` (`PinboardEdit`, `PinSave`); published by any member |
+| Room pins | `ROOM_PINS` (39005), `ROOM_UPDATE_PINS` (9010) | `RoomPins`, `RoomUpdatePins` | `src/app/features/roomPins.ts` | `RoomItemMenu`, `RoomItemMenuMobile`, `RoomPinnedMessagesAll` |
+| Featured content | `APP_DATA` (30078), `d` = `flotilla/featured-content` | `AppData` | `src/app/features/featured.ts` | `SpaceFeaturedContent`; published as the relay |
+| Bot commands (NIP-CD) | `COMMAND` (31992) | `Command` | `src/app/features/commands.ts` | `RoomCompose`, `ContentCommand` |
+| Voice room participants | `LIVEKIT_PARTICIPANTS` (39004, defined in `src/app/features/call.ts`) | none | `src/app/features/call.ts` | rooms where `meta.hasLivekit()` |
 
 ## Interactions
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `src/app/reactions.ts` | `RoomItem`, `EventReactButtons`, `ContentActions`, `CommentActions`, `ArticleActionBar` |
-| Zaps | `ZAP_REQUEST` (9734), `ZAP_RECEIPT` (9735) | `ZapRequest`; receipts checked by `Zappers.validZapReceipts` | `src/app/lightning.ts` (wallets) | `Zap`, `ZapButton`, `GoalSummary`; off on iOS |
-| Reports | `REPORT` (1984) | `Report` | `src/app/actionItems.ts` | `Report`, `ReportMenu` |
+| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `src/app/features/reactions.ts` | `RoomItem`, `EventReactButtons`, `ContentActions`, `CommentActions`, `ArticleActionBar` |
+| Zaps | `ZAP_REQUEST` (9734), `ZAP_RECEIPT` (9735) | `ZapRequest`; receipts checked by `Zappers.validZapReceipts` | `src/app/features/lightning.ts` (wallets) | `Zap`, `ZapButton`, `GoalSummary`; off on iOS |
+| Reports | `REPORT` (1984) | `Report` | `src/app/features/actionItems.ts` | `Report`, `ReportMenu` |
 | Deletes | `DELETE` (5) | `Delete`, through the `Deletes` plugin | none | `EventDeleteConfirm`, `ReportMenu` |
 
 ## Direct messages
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| DMs | `DIRECT_MESSAGE` (14), `DIRECT_MESSAGE_FILE` (15), wrapped as `WRAP` (1059) | `DirectMessage` for 14, bypassed in `Chat.svelte`; none for 15 | `src/app/chats.ts` | `chat`, `chat/[chat]` (`Chat`) |
+| DMs | `DIRECT_MESSAGE` (14), `DIRECT_MESSAGE_FILE` (15), wrapped as `WRAP` (1059) | `DirectMessage` for 14, bypassed in `Chat.svelte`; none for 15 | `src/app/features/chats.ts` | `chat`, `chat/[chat]` (`Chat`) |
 
-Gift wraps are only synced once the user opts in (`shouldUnwrap` in `src/app/sync.ts`), and
-`goToChat` in `src/app/routes.ts` asks for messaging relays (`ChatEnable`) before opening a chat.
+Gift wraps are only synced once the user opts in (`shouldUnwrap` in `src/app/core/sync.ts`), and
+`goToChat` in `src/app/ui/routes.ts` asks for messaging relays (`ChatEnable`) before opening a chat.
 
 ## User data
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
 | Profile | `PROFILE` (0) | `Profile` | none | `settings/profile`, `SignUp`, `ProfileDelete` |
-| Settings | `APP_DATA` (30078), `d` = `flotilla/settings`, encrypted | `AppData` | `src/app/settings.ts` | `settings/*` |
-| Status (NIP-38) | `STATUS` (30315), `d` = `general` | none | `src/app/statuses.ts` | `ProfileStatus` |
-| Profile pins | `PINS` (10001) | `PinList` | `src/app/pins.ts` | profile pages |
-| Spaces and rooms | `ROOMS` (10009) | `RoomList` | `src/app/rooms.ts` | the sidebar, `spaces` |
-| Follows and mutes | `FOLLOWS` (3), `MUTES` (10000) | `FollowList`, `MuteList` | `src/app/social.ts` | people pages, muting |
-| Relay lists | `RELAYS` (10002), `MESSAGING_RELAYS` (10050), `SEARCH_RELAYS` (10007), `BLOCKED_RELAYS` (10006), `BLOSSOM_SERVERS` (10063) | `RelayList`, `MessagingRelayList`, `SearchRelayList`, `BlockedRelayList`, `BlossomServerList` | plugins in `src/app/core.ts` | `settings/*` |
+| Settings | `APP_DATA` (30078), `d` = `flotilla/settings`, encrypted | `AppData` | `src/app/core/settings.ts` | `settings/*` |
+| Status (NIP-38) | `STATUS` (30315), `d` = `general` | none | `src/app/features/statuses.ts` | `ProfileStatus` |
+| Profile pins | `PINS` (10001) | `PinList` | `src/app/features/pins.ts` | profile pages |
+| Spaces and rooms | `ROOMS` (10009) | `RoomList` | `src/app/features/rooms.ts` | the sidebar, `spaces` |
+| Follows and mutes | `FOLLOWS` (3), `MUTES` (10000) | `FollowList`, `MuteList` | `src/app/features/social.ts` | people pages, muting |
+| Relay lists | `RELAYS` (10002), `MESSAGING_RELAYS` (10050), `SEARCH_RELAYS` (10007), `BLOCKED_RELAYS` (10006), `BLOSSOM_SERVERS` (10063) | `RelayList`, `MessagingRelayList`, `SearchRelayList`, `BlockedRelayList`, `BlossomServerList` | plugins in `src/app/core/plugins.ts` | `settings/*` |
 | Account deletion | `VANISH` (62, written as a literal), `DELETE` (5) | none; `Delete` bypassed | none | `ProfileDelete` |
-| Push subscriptions | 30390 (`PUSH_SUBSCRIPTION`, local) | none | `src/app/push/adapters/capacitor.ts` | background |
+| Push subscriptions | 30390 (`PUSH_SUBSCRIPTION`, local) | none | `src/app/features/push/adapters/capacitor.ts` | background |

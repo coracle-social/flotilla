@@ -4,8 +4,8 @@
   import {NOTE} from "@welshman/util"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {network} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
+  import {network} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
 
   type Props = {
     url: string

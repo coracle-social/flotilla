@@ -24,20 +24,20 @@
   import RoomInvite from "@app/components/RoomInvite.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
-  import {roomLists, rooms} from "@app/core"
+  import {roomLists, rooms} from "@app/core/plugins"
   import {
     deriveRoomMembers,
     deriveUserIsRoomAdmin,
     deriveUserRooms,
     publishRoomList,
-  } from "@app/rooms"
+  } from "@app/features/rooms"
   import {
     deriveIsMuted,
     deriveShouldNotify,
     toggleRoomMuted,
     toggleRoomNotifications,
-  } from "@app/settings"
-  import {pushModal} from "@app/modal"
+  } from "@app/core/settings"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

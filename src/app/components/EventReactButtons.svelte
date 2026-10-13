@@ -5,8 +5,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
-  import {publishReaction} from "@app/reactions"
-  import {ENABLE_ZAPS} from "@app/env"
+  import {publishReaction} from "@app/features/reactions"
+  import {ENABLE_ZAPS} from "@app/core/env"
 
   type Props = {
     url: string

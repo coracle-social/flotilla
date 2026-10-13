@@ -11,9 +11,9 @@
   import HomeNetwork from "@app/components/HomeNetwork.svelte"
   import HomeHealthChecks from "@app/components/HomeHealthChecks.svelte"
   import HomeHosting from "@app/components/HomeHosting.svelte"
-  import {goToSpace} from "@app/routes"
-  import {HOSTING_ENABLED} from "@app/hosting"
-  import {PLATFORM_RELAYS} from "@app/env"
+  import {goToSpace} from "@app/ui/routes"
+  import {HOSTING_ENABLED} from "@app/features/hosting"
+  import {PLATFORM_RELAYS} from "@app/core/env"
 
   let element: Element | undefined = $state()
 

@@ -6,10 +6,10 @@
   import type {Maybe} from "@welshman/lib"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {dufflepud} from "@app/env"
-  import {pushModal} from "@app/modal"
-  import {activeTheme} from "@app/theme"
-  import type {MemberPin} from "@app/social"
+  import {dufflepud} from "@app/core/env"
+  import {pushModal} from "@app/ui/modal"
+  import {activeTheme} from "@app/ui/theme"
+  import type {MemberPin} from "@app/features/social"
 
   type Props = {
     url: string

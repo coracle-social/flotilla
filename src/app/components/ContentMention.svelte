@@ -3,8 +3,8 @@
   import type {ProfilePointer} from "@welshman/content"
   import Button from "@lib/components/Button.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {pushModal} from "@app/modal"
-  import {profiles} from "@app/core"
+  import {pushModal} from "@app/ui/modal"
+  import {profiles} from "@app/core/plugins"
 
   type Props = {
     value: ProfilePointer

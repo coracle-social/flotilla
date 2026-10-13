@@ -52,11 +52,11 @@
 <script lang="ts">
   import {marked} from "marked"
   import * as nip19 from "nostr-tools/nip19"
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/ui/modal"
   import {removeUndefined, tryCatch} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {fromNostrURI} from "@welshman/util"
-  import {deriveDisplaysByPubkey} from "@app/social"
+  import {deriveDisplaysByPubkey} from "@app/features/social"
 
   type Props = {
     event: TrustedEvent

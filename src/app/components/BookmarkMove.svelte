@@ -9,10 +9,10 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
-  import {moveBookmark, userBookmarkFolders} from "@app/bookmarks"
-  import type {BookmarkFolder} from "@app/bookmarks"
-  import {popModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {moveBookmark, userBookmarkFolders} from "@app/features/bookmarks"
+  import type {BookmarkFolder} from "@app/features/bookmarks"
+  import {popModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     folder: BookmarkFolder

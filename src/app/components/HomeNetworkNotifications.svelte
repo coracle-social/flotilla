@@ -7,8 +7,8 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeNetworkNotificationFilters from "@app/components/HomeNetworkNotificationFilters.svelte"
   import HomeNetworkNotificationItem from "@app/components/HomeNetworkNotificationItem.svelte"
-  import {user} from "@app/core"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import {user} from "@app/core/app"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import {
     countHomeNotificationTypes,
     getHomeNotificationRelays,
@@ -17,8 +17,8 @@
     isHomeNotification,
     isIncludedHomeNotification,
     readHomeNotifications,
-  } from "@app/notifications"
-  import {groupNotifications} from "@app/social"
+  } from "@app/ui/notifications"
+  import {groupNotifications} from "@app/features/social"
 
   const relays = getHomeNotificationRelays()
 

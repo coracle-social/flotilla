@@ -11,8 +11,8 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import QRCode from "@app/components/QRCode.svelte"
-  import {pubkeyLink} from "@app/env"
-  import {clip} from "@app/toast"
+  import {pubkeyLink} from "@app/core/env"
+  import {clip} from "@app/ui/toast"
 
   type Props = {
     pubkey: string

@@ -17,13 +17,13 @@
   import EditorEmojiButton from "@app/components/EditorEmojiButton.svelte"
   import DictationButton from "@app/components/DictationButton.svelte"
   import CommandArgBar from "@app/components/CommandArgBar.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {makeEditor} from "@app/editor"
-  import {app} from "@app/core"
-  import {getDictation} from "@app/dictation"
-  import {pushToast} from "@app/toast"
-  import {DraftKey, type Draft} from "@app/drafts"
-  import type {Share} from "@app/share"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {makeEditor} from "@app/features/editor"
+  import {app} from "@app/core/app"
+  import {getDictation} from "@app/features/dictation"
+  import {pushToast} from "@app/ui/toast"
+  import {DraftKey, type Draft} from "@app/features/drafts"
+  import type {Share} from "@app/ui/share"
 
   type Props = {
     url?: string

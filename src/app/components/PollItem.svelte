@@ -5,12 +5,12 @@
   import Cv from "@lib/components/Cv.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
-  import {reader} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
+  import {reader} from "@app/core/domain"
+  import type {FeedContext} from "@app/features/feeds"
   import RoomLink from "@app/components/RoomLink.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {makePollPath} from "@app/routes"
+  import {makePollPath} from "@app/ui/routes"
 
   type Props = {
     url: string

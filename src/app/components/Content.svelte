@@ -35,10 +35,10 @@
   import ContentCommand from "@app/components/ContentCommand.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {makeRoomPath} from "@app/routes"
-  import {isQuote} from "@app/quotes"
-  import {deriveValidCommands, getCommandsForInvocation} from "@app/commands"
-  import {userSettingsValues} from "@app/settings"
+  import {makeRoomPath} from "@app/ui/routes"
+  import {isQuote} from "@app/features/quotes"
+  import {deriveValidCommands, getCommandsForInvocation} from "@app/features/commands"
+  import {userSettingsValues} from "@app/core/settings"
 
   type Props = {
     event: any

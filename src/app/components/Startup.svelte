@@ -3,8 +3,8 @@
   import {ms} from "@welshman/lib"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {PLATFORM_NAME} from "@app/env"
-  import {resetSession} from "@app/session"
+  import {PLATFORM_NAME} from "@app/core/env"
+  import {resetSession} from "@app/core/session"
 
   type Props = {
     error?: unknown

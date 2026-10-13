@@ -8,10 +8,10 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
-  import type {FeedContext} from "@app/feeds"
+  import type {FeedContext} from "@app/features/feeds"
   import CommentCompose from "@app/components/CommentCompose.svelte"
-  import {events, network} from "@app/core"
-  import {buildCommentTree} from "@app/social"
+  import {events, network} from "@app/core/plugins"
+  import {buildCommentTree} from "@app/features/social"
 
   type Props = {
     event: TrustedEvent

@@ -5,8 +5,8 @@
   import type {TrustedEvent} from "@welshman/util"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {user} from "@app/core"
-  import {decryptUrl, getUrlTags} from "@app/content"
+  import {user} from "@app/core/app"
+  import {decryptUrl, getUrlTags} from "@app/features/content"
 
   type Props = {
     url: string

@@ -14,12 +14,12 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {writer} from "@app/core"
-  import {DraftKey} from "@app/drafts"
-  import {makeEditor} from "@app/editor"
-  import {displayRoom, publishToSpace} from "@app/rooms"
-  import {pushToast} from "@app/toast"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {writer} from "@app/core/domain"
+  import {DraftKey} from "@app/features/drafts"
+  import {makeEditor} from "@app/features/editor"
+  import {displayRoom, publishToSpace} from "@app/features/rooms"
+  import {pushToast} from "@app/ui/toast"
 
   type Values = {
     content?: string | object

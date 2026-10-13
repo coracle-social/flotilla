@@ -13,7 +13,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Profile from "@app/components/Profile.svelte"
   import SpaceMemberBannedMenu from "@app/components/SpaceMemberBannedMenu.svelte"
-  import {deriveSpacePermissions, spaceManagement} from "@app/management"
+  import {deriveSpacePermissions, spaceManagement} from "@app/core/management"
 
   type Props = {
     url: string

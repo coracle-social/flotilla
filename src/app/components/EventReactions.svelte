@@ -6,9 +6,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import {publishReaction, retractReaction} from "@app/reactions"
-  import type {FeedContext} from "@app/feeds"
-  import {router} from "@app/core"
+  import {publishReaction, retractReaction} from "@app/features/reactions"
+  import type {FeedContext} from "@app/features/feeds"
+  import {router} from "@app/core/plugins"
 
   type Props = {
     event: TrustedEvent

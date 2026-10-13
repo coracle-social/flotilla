@@ -8,13 +8,14 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {publisher, writer} from "@app/core"
-  import {DraftKey} from "@app/drafts"
-  import {makeEditor} from "@app/editor"
-  import {publishComment} from "@app/rooms"
-  import {loadSendDelay} from "@app/settings"
-  import {pushToast} from "@app/toast"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {publisher} from "@app/core/plugins"
+  import {writer} from "@app/core/domain"
+  import {DraftKey} from "@app/features/drafts"
+  import {makeEditor} from "@app/features/editor"
+  import {publishComment} from "@app/features/rooms"
+  import {loadSendDelay} from "@app/core/settings"
+  import {pushToast} from "@app/ui/toast"
 
   type Values = {
     content?: string | object

@@ -11,8 +11,8 @@
   import ChatStart from "@app/components/ChatStart.svelte"
   import ChatMenu from "@app/components/ChatMenu.svelte"
   import ChatTabs from "@app/components/ChatTabs.svelte"
-  import {ChatTab, chatContext, chatSearch, groupChatsByTab} from "@app/chats"
-  import {pushModal} from "@app/modal"
+  import {ChatTab, chatContext, chatSearch, groupChatsByTab} from "@app/features/chats"
+  import {pushModal} from "@app/ui/modal"
 
   let term = $state("")
   let tab = $state(ChatTab.Conversations)

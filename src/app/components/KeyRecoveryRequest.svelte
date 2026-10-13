@@ -12,11 +12,11 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {pushModal} from "@app/modal"
-  import {session} from "@app/core"
-  import {requirePomadeSession} from "@app/pomade"
+  import {pushModal} from "@app/ui/modal"
+  import {session} from "@app/core/session"
+  import {requirePomadeSession} from "@app/core/pomade"
   import KeyRecoveryConfirm from "@app/components/KeyRecoveryConfirm.svelte"
-  import {pushToast} from "@app/toast"
+  import {pushToast} from "@app/ui/toast"
 
   const {
     email,

@@ -14,12 +14,12 @@
   import SpaceMemberMap from "@app/components/SpaceMemberMap.svelte"
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
   import SpaceDirectoryMenu from "@app/components/SpaceDirectoryMenu.svelte"
-  import {deriveSpacePermissions} from "@app/management"
-  import {deriveSpaceMemberRoles} from "@app/roles"
-  import {relayMemberLists, relayRoles} from "@app/core"
-  import {deriveDisplaysByPubkey, deriveMemberPins} from "@app/social"
-  import {decodeRelay} from "@app/relays"
-  import {pushModal} from "@app/modal"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {deriveSpaceMemberRoles} from "@app/features/roles"
+  import {relayMemberLists, relayRoles} from "@app/core/plugins"
+  import {deriveDisplaysByPubkey, deriveMemberPins} from "@app/features/social"
+  import {decodeRelay} from "@app/core/relays"
+  import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

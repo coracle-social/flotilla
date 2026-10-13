@@ -6,9 +6,9 @@
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import DragList from "@lib/components/DragList.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
-  import {homeNotificationsUnread} from "@app/notifications"
-  import {reorderSpaceUrls, userSpaceUrls} from "@app/rooms"
-  import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/env"
+  import {homeNotificationsUnread} from "@app/ui/notifications"
+  import {reorderSpaceUrls, userSpaceUrls} from "@app/features/rooms"
+  import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/env"
 
   const fadeSize = 24
 

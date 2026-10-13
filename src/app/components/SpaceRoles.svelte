@@ -16,9 +16,9 @@
   import RoleCreate from "@app/components/RoleCreate.svelte"
   import RoleItem from "@app/components/RoleItem.svelte"
   import SpaceRoleMenu from "@app/components/SpaceRoleMenu.svelte"
-  import {app} from "@app/core"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushModal} from "@app/modal"
+  import {app} from "@app/core/app"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

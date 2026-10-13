@@ -11,12 +11,12 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
-  import type {FeedContext} from "@app/feeds"
+  import type {FeedContext} from "@app/features/feeds"
   import ContentActions from "@app/components/ContentActions.svelte"
-  import {handles, profiles} from "@app/core"
-  import {highlightedEvent, makeEventPermalink} from "@app/routes"
-  import {pushModal} from "@app/modal"
-  import {clip} from "@app/toast"
+  import {handles, profiles} from "@app/core/plugins"
+  import {highlightedEvent, makeEventPermalink} from "@app/ui/routes"
+  import {pushModal} from "@app/ui/modal"
+  import {clip} from "@app/ui/toast"
 
   type Props = {
     url: string

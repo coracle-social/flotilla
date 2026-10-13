@@ -1,7 +1,7 @@
 <script lang="ts">
   import cx from "classnames"
   import Button from "@lib/components/Button.svelte"
-  import {formatUsd, formatPeriod, type Invoice} from "@app/hosting"
+  import {formatUsd, formatPeriod, type Invoice} from "@app/features/hosting"
 
   type Props = {
     invoice: Invoice

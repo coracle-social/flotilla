@@ -10,7 +10,7 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import {app} from "@app/core"
+  import {app} from "@app/core/app"
 
   type Props = {
     url?: string

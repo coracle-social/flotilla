@@ -1,7 +1,7 @@
 <script lang="ts">
   import {remove, uniq} from "@welshman/lib"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {user} from "@app/core"
+  import {user} from "@app/core/app"
 
   type Props = {
     pubkeys: string[]

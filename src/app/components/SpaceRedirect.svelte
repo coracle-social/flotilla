@@ -12,10 +12,10 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {roomLists} from "@app/core"
-  import {publishRoomList} from "@app/rooms"
-  import {goToMovedSpace} from "@app/routes"
-  import {pushToast} from "@app/toast"
+  import {roomLists} from "@app/core/plugins"
+  import {publishRoomList} from "@app/features/rooms"
+  import {goToMovedSpace} from "@app/ui/routes"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

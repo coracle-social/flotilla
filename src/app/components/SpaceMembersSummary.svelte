@@ -6,8 +6,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Profile from "@app/components/Profile.svelte"
-  import {events, relayMemberLists, relays} from "@app/core"
-  import {makeSpacePath} from "@app/routes"
+  import {events, relayMemberLists, relays} from "@app/core/plugins"
+  import {makeSpacePath} from "@app/ui/routes"
 
   type Props = {
     url: string

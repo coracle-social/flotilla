@@ -2,9 +2,9 @@
   import {seen} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {deletes, relays, router} from "@app/core"
-  import {clearModals} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {deletes, relays, router} from "@app/core/plugins"
+  import {clearModals} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url?: string

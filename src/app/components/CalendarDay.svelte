@@ -12,9 +12,9 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import type {FeedContext} from "@app/feeds"
-  import {formatDay, groupEventsByDay, makeDayKey} from "@app/calendar"
-  import {pushModal} from "@app/modal"
+  import type {FeedContext} from "@app/features/feeds"
+  import {formatDay, groupEventsByDay, makeDayKey} from "@app/features/calendar"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

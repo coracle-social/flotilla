@@ -21,11 +21,12 @@
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
   import WalletUpdateReceivingAddress from "@app/components/WalletUpdateReceivingAddress.svelte"
-  import {pushModal} from "@app/modal"
-  import {displayLnurl, getNwcClient, getWebLn, wallet} from "@app/lightning"
-  import {userSettingsValues, publishSettings, createSettingsForm} from "@app/settings"
-  import {pushToast} from "@app/toast"
-  import {profiles, user} from "@app/core"
+  import {pushModal} from "@app/ui/modal"
+  import {displayLnurl, getNwcClient, getWebLn, wallet} from "@app/features/lightning"
+  import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
+  import {pushToast} from "@app/ui/toast"
+  import {user} from "@app/core/app"
+  import {profiles} from "@app/core/plugins"
 
   const connect = () => pushModal(WalletConnect)
 

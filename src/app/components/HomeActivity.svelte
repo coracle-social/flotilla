@@ -2,10 +2,10 @@
   import Link from "@lib/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {displayContentCount} from "@app/content"
-  import {displayInboxTimestamp} from "@app/notifications"
-  import type {SpaceContent} from "@app/notifications"
-  import {makeSpacePath} from "@app/routes"
+  import {displayContentCount} from "@app/features/content"
+  import {displayInboxTimestamp} from "@app/ui/notifications"
+  import type {SpaceContent} from "@app/ui/notifications"
+  import {makeSpacePath} from "@app/ui/routes"
 
   const {spaces}: {spaces: SpaceContent[]} = $props()
 </script>

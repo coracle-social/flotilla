@@ -6,7 +6,7 @@
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import ChatMessageEmojiButton from "@app/components/ChatMessageEmojiButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
-  import {pushModal} from "@app/modal"
+  import {pushModal} from "@app/ui/modal"
   import Pen from "@assets/icons/pen.svg?dataurl"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"

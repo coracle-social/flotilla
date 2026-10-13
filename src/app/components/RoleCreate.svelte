@@ -7,8 +7,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoleForm, {type Values} from "@app/components/RoleForm.svelte"
-  import {relayManagement} from "@app/core"
-  import {pushToast} from "@app/toast"
+  import {relayManagement} from "@app/core/plugins"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

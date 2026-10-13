@@ -4,9 +4,9 @@
   import Button from "@lib/components/Button.svelte"
   import HealthCheckItem from "@app/components/HealthCheckItem.svelte"
   import HealthCheckReview from "@app/components/HealthCheckReview.svelte"
-  import type {HealthCheck} from "@app/healthChecks"
-  import {healthChecks} from "@app/healthChecks"
-  import {pushModal} from "@app/modal"
+  import type {HealthCheck} from "@app/features/healthChecks"
+  import {healthChecks} from "@app/features/healthChecks"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     class?: string

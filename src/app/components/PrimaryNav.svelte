@@ -16,12 +16,12 @@
   import PrimaryNavSpaces from "@app/components/PrimaryNavSpaces.svelte"
   import Search from "@app/components/Search.svelte"
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
-  import {PLATFORM_RELAYS} from "@app/env"
-  import {getModal, popModal, pushModal} from "@app/modal"
-  import {notifications} from "@app/notifications"
-  import {userSpaceUrls} from "@app/rooms"
-  import {goToChat, lastSpaceUrl, makeSpacePath} from "@app/routes"
-  import {deriveUserItem} from "@app/core"
+  import {PLATFORM_RELAYS} from "@app/core/env"
+  import {getModal, popModal, pushModal} from "@app/ui/modal"
+  import {notifications} from "@app/ui/notifications"
+  import {userSpaceUrls} from "@app/features/rooms"
+  import {goToChat, lastSpaceUrl, makeSpacePath} from "@app/ui/routes"
+  import {deriveUserItem} from "@app/core/app"
 
   type Props = {
     children?: Snippet

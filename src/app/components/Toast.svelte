@@ -5,7 +5,7 @@
   import {fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import {toast, popToast} from "@app/toast"
+  import {toast, popToast} from "@app/ui/toast"
 
   let touchStartY = 0
   let touchStartTime = 0

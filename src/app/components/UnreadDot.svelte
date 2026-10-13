@@ -1,7 +1,7 @@
 <script lang="ts">
   import cx from "classnames"
   import {fade} from "@lib/transition"
-  import {notifications} from "@app/notifications"
+  import {notifications} from "@app/ui/notifications"
 
   type Props = {
     path: string

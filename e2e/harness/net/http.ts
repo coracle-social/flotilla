@@ -8,7 +8,7 @@ import {tenantByUrl} from "../zooid/config"
 import {requestZooid} from "../zooid/transport"
 import {makeContextStore} from "./context"
 
-// Mirrors the service urls in src/app/env.ts, which reads import.meta.env and pulls in Capacitor.
+// Mirrors the service urls in src/app/core/env.ts, which reads import.meta.env and pulls in Capacitor.
 const DUFFLEPUD_ORIGIN = "https://dufflepud.coracle.social"
 const PUSH_SERVER_ORIGIN = "https://nps.flotilla.social"
 const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
@@ -141,7 +141,7 @@ export const mockAnalytics = (context: BrowserContext) =>
   )
 
 export type DufflepudFixtures = {
-  // The remote half of the read-state sync in src/app/notifications.ts, keyed by path.
+  // The remote half of the read-state sync in src/app/ui/notifications.ts, keyed by path.
   checked?: Record<string, number>
   // A link preview is only rendered when it carries a title or an image.
   preview?: {title?: string; description?: string; image?: string}

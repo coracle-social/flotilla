@@ -18,19 +18,21 @@
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import type {ProfileValues} from "@app/components/ProfileEditForm.svelte"
   import SignUpComplete from "@app/components/SignUpComplete.svelte"
-  import {attemptRelayAccess} from "@app/access"
+  import {attemptRelayAccess} from "@app/features/access"
   import {
     POMADE_SIGNERS,
     INDEXER_RELAYS,
     DEFAULT_RELAYS,
     DEFAULT_MESSAGING_RELAYS,
     DEFAULT_SPACES,
-  } from "@app/env"
-  import {forceHealthChecks} from "@app/healthChecks"
-  import {loginWithPomade} from "@app/pomade"
-  import {publishRoomList} from "@app/rooms"
-  import {pushModal, clearModals} from "@app/modal"
-  import {app, domain, login, roomLists} from "@app/core"
+  } from "@app/core/env"
+  import {forceHealthChecks} from "@app/features/healthChecks"
+  import {loginWithPomade} from "@app/core/pomade"
+  import {publishRoomList} from "@app/features/rooms"
+  import {pushModal, clearModals} from "@app/ui/modal"
+  import {app} from "@app/core/app"
+  import {domain, roomLists} from "@app/core/plugins"
+  import {login} from "@app/core/session"
 
   setKey("signup.email", "")
   setKey("signup.secret", makeSecret())

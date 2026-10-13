@@ -25,11 +25,12 @@
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import NoteCreate from "@app/components/NoteCreate.svelte"
   import WotScore from "@app/components/WotScore.svelte"
-  import {compressFileForUpload, uploadFile} from "@app/uploads"
-  import {pushModal} from "@app/modal"
-  import {clip, pushToast} from "@app/toast"
-  import {goToChat} from "@app/routes"
-  import {followLists, profiles, relayLists, user} from "@app/core"
+  import {compressFileForUpload, uploadFile} from "@app/core/uploads"
+  import {pushModal} from "@app/ui/modal"
+  import {clip, pushToast} from "@app/ui/toast"
+  import {goToChat} from "@app/ui/routes"
+  import {user} from "@app/core/app"
+  import {followLists, profiles, relayLists} from "@app/core/plugins"
 
   type Props = {
     pubkey: string

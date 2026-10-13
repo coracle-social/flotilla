@@ -18,12 +18,12 @@
   import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import SpacePrice from "@app/components/SpacePrice.svelte"
-  import {openCheckout, pendingCheckouts, reconcileSpaceMembership} from "@app/access"
-  import {fromApp} from "@app/core"
-  import {ENABLE_PAID_SPACES} from "@app/env"
-  import {clearModals, pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {goToSpace} from "@app/routes"
+  import {openCheckout, pendingCheckouts, reconcileSpaceMembership} from "@app/features/access"
+  import {fromApp} from "@app/core/app"
+  import {ENABLE_PAID_SPACES} from "@app/core/env"
+  import {clearModals, pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
+  import {goToSpace} from "@app/ui/routes"
 
   type Props = {
     url: string

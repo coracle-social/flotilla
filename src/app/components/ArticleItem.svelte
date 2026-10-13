@@ -9,10 +9,10 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import type {FeedContext} from "@app/feeds"
-  import {reader} from "@app/core"
-  import {markdownToText} from "@app/markdown"
-  import {makeArticlePath} from "@app/routes"
+  import type {FeedContext} from "@app/features/feeds"
+  import {reader} from "@app/core/domain"
+  import {markdownToText} from "@app/ui/markdown"
+  import {makeArticlePath} from "@app/ui/routes"
 
   type Props = {
     url: string

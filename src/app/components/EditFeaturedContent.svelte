@@ -12,8 +12,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InputList from "@lib/components/InputList.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {setFeaturedContent} from "@app/featured"
-  import {pushToast} from "@app/toast"
+  import {setFeaturedContent} from "@app/features/featured"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

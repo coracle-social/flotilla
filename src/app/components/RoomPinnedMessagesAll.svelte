@@ -14,9 +14,9 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {deriveUserIsRoomAdmin} from "@app/rooms"
-  import {deriveRoomPinnedEvents, toggleRoomPin} from "@app/roomPins"
-  import {goToEvent} from "@app/routes"
+  import {deriveUserIsRoomAdmin} from "@app/features/rooms"
+  import {deriveRoomPinnedEvents, toggleRoomPin} from "@app/features/roomPins"
+  import {goToEvent} from "@app/ui/routes"
 
   type Props = {
     url: string

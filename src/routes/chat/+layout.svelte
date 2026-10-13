@@ -18,9 +18,9 @@
   import ChatStart from "@app/components/ChatStart.svelte"
   import ChatItem from "@app/components/ChatItem.svelte"
   import ChatTabs from "@app/components/ChatTabs.svelte"
-  import {ChatTab, chatContext, chatSearch, groupChatsByTab} from "@app/chats"
-  import {pushModal} from "@app/modal"
-  import {shouldUnwrap} from "@app/sync"
+  import {ChatTab, chatContext, chatSearch, groupChatsByTab} from "@app/features/chats"
+  import {pushModal} from "@app/ui/modal"
+  import {shouldUnwrap} from "@app/core/sync"
   import type {LayoutProps} from "./$types"
 
   const {children, params}: LayoutProps = $props()

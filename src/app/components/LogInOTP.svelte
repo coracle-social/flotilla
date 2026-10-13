@@ -15,9 +15,9 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import LogInOTPConfirm from "@app/components/LogInOTPConfirm.svelte"
-  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/pomade"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     email?: string

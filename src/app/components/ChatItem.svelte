@@ -9,9 +9,10 @@
   import ChatTitle from "@app/components/ChatTitle.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {makeChatPath, goToChat} from "@app/routes"
-  import {notifications} from "@app/notifications"
-  import {messagingRelayLists, user} from "@app/core"
+  import {makeChatPath, goToChat} from "@app/ui/routes"
+  import {notifications} from "@app/ui/notifications"
+  import {user} from "@app/core/app"
+  import {messagingRelayLists} from "@app/core/plugins"
 
   type Props = {
     id: string

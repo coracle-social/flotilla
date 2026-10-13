@@ -7,7 +7,7 @@
   import SecondaryNavSection from "@lib/components/SecondaryNavSection.svelte"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
   import PrimaryNavSpaces from "@app/components/PrimaryNavSpaces.svelte"
-  import {lastSpaceUrl} from "@app/routes"
+  import {lastSpaceUrl} from "@app/ui/routes"
 
   type Props = {
     url?: string

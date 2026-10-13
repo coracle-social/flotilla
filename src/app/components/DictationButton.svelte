@@ -8,12 +8,12 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import {errorMessage} from "@lib/util"
   import VoiceRecorder from "@app/components/VoiceRecorder.svelte"
-  import type {Dictation} from "@app/dictation"
-  import {clearDictation, getDictation, transcribeDictation} from "@app/dictation"
-  import type {InferenceProviderFor} from "@app/inference"
-  import {resolveInference} from "@app/inference"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import type {Dictation} from "@app/features/dictation"
+  import {clearDictation, getDictation, transcribeDictation} from "@app/features/dictation"
+  import type {InferenceProviderFor} from "@app/features/inference"
+  import {resolveInference} from "@app/features/inference"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     key: string

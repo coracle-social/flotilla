@@ -20,14 +20,14 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {makeEditor} from "@app/editor"
-  import {command, reader, writer} from "@app/core"
-  import {parsePinReference, pinToReference} from "@app/pinboards"
-  import {addressWriterToSpace} from "@app/rooms"
-  import {compressFileForUpload, uploadFile} from "@app/uploads"
-  import {pushToast} from "@app/toast"
-  import {clearModals} from "@app/modal"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {makeEditor} from "@app/features/editor"
+  import {command, reader, writer} from "@app/core/domain"
+  import {parsePinReference, pinToReference} from "@app/features/pinboards"
+  import {addressWriterToSpace} from "@app/features/rooms"
+  import {compressFileForUpload, uploadFile} from "@app/core/uploads"
+  import {pushToast} from "@app/ui/toast"
+  import {clearModals} from "@app/ui/modal"
 
   type Props = {
     url: string

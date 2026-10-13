@@ -14,12 +14,12 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InfoSignatures from "@app/components/InfoSignatures.svelte"
-  import {relaysPendingTrust} from "@app/policies"
-  import {publishRoomList} from "@app/rooms"
-  import {addTrustedRelay, removeTrustedRelay} from "@app/settings"
-  import {navigate, popModal, pushModal} from "@app/modal"
-  import {roomLists} from "@app/core"
-  import {pushToast} from "@app/toast"
+  import {relaysPendingTrust} from "@app/core/policies"
+  import {publishRoomList} from "@app/features/rooms"
+  import {addTrustedRelay, removeTrustedRelay} from "@app/core/settings"
+  import {navigate, popModal, pushModal} from "@app/ui/modal"
+  import {roomLists} from "@app/core/plugins"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

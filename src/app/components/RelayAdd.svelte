@@ -17,8 +17,9 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
-  import {pushToast} from "@app/toast"
-  import {app, blockedRelayLists, relayLists, user} from "@app/core"
+  import {pushToast} from "@app/ui/toast"
+  import {app, user} from "@app/core/app"
+  import {blockedRelayLists, relayLists} from "@app/core/plugins"
 
   type Props = {
     relays: Readable<string[]>

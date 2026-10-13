@@ -14,10 +14,11 @@
   import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
   import ClassifiedStatus from "@app/components/ClassifiedStatus.svelte"
   import EventComments from "@app/components/EventComments.svelte"
-  import {events, reader} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {decodeRelay} from "@app/relays"
-  import {makeClassifiedPath} from "@app/routes"
+  import {events} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {decodeRelay} from "@app/core/relays"
+  import {makeClassifiedPath} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

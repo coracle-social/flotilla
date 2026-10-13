@@ -3,15 +3,15 @@
   import {ZapGoal} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
-  import type {FeedContext} from "@app/feeds"
+  import type {FeedContext} from "@app/features/feeds"
   import GoalSummary from "@app/components/GoalSummary.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {makeGoalPath} from "@app/routes"
+  import {makeGoalPath} from "@app/ui/routes"
 
   type Props = {
     url: string

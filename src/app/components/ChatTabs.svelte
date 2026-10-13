@@ -1,7 +1,7 @@
 <script lang="ts">
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
-  import {CHAT_TABS, ChatTab} from "@app/chats"
-  import type {ChatsByTab} from "@app/chats"
+  import {CHAT_TABS, ChatTab} from "@app/features/chats"
+  import type {ChatsByTab} from "@app/features/chats"
 
   type Props = {
     tab: ChatTab

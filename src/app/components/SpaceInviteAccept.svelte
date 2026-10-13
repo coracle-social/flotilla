@@ -1,7 +1,7 @@
 <script lang="ts">
   import {debounce} from "throttle-debounce"
   import {maybe} from "@welshman/lib"
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/ui/modal"
   import {preventDefault} from "@lib/html"
   import {slideAndFade} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -22,9 +22,9 @@
   import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceJoinNotifications from "@app/components/SpaceJoinNotifications.svelte"
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
-  import {pushToast} from "@app/toast"
-  import {goToSpace, makeRoomPath} from "@app/routes"
-  import {acceptInvite, parseInviteLink} from "@app/access"
+  import {pushToast} from "@app/ui/toast"
+  import {goToSpace, makeRoomPath} from "@app/ui/routes"
+  import {acceptInvite, parseInviteLink} from "@app/features/access"
 
   type Props = {
     invite: string

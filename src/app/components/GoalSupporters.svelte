@@ -9,8 +9,8 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
-  import {ENABLE_ZAPS} from "@app/env"
-  import type {GoalProgress} from "@app/goals"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import type {GoalProgress} from "@app/features/goals"
 
   type Props = {
     url: string

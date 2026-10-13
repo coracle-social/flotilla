@@ -8,8 +8,8 @@
   import Button from "@lib/components/Button.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {goToEvent} from "@app/routes"
-  import {isEventMuted} from "@app/social"
+  import {goToEvent} from "@app/ui/routes"
+  import {isEventMuted} from "@app/features/social"
 
   type Props = {
     event: TrustedEvent

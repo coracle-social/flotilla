@@ -15,10 +15,10 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import PollItem from "@app/components/PollItem.svelte"
   import PollCreate from "@app/components/PollCreate.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter, partitionByActivity} from "@app/content"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {pushModal} from "@app/modal"
+  import {decodeRelay} from "@app/core/relays"
+  import {makeCommentFilter, partitionByActivity} from "@app/features/content"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

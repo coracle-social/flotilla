@@ -19,10 +19,10 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {login} from "@app/core"
-  import {clearModals} from "@app/modal"
-  import {setChecked} from "@app/notifications"
-  import {pushToast} from "@app/toast"
+  import {login} from "@app/core/session"
+  import {clearModals} from "@app/ui/modal"
+  import {setChecked} from "@app/ui/notifications"
+  import {pushToast} from "@app/ui/toast"
 
   let loading = $state(false)
   let keyInput = $state("")

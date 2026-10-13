@@ -20,10 +20,10 @@
     participantMediaState,
     pubkeyFromLiveKitIdentity,
     videoTrackRevision,
-  } from "@app/call"
-  import {getVideoTileKey, getVideoTiles} from "@app/callEngine"
-  import type {VideoTile} from "@app/callEngine"
-  import {deriveDisplaysByPubkey} from "@app/social"
+  } from "@app/features/call"
+  import {getVideoTileKey, getVideoTiles} from "@app/features/callEngine"
+  import type {VideoTile} from "@app/features/callEngine"
+  import {deriveDisplaysByPubkey} from "@app/features/social"
 
   type Props = {
     url: string

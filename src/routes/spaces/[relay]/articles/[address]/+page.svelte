@@ -16,11 +16,12 @@
   import EventComments from "@app/components/EventComments.svelte"
   import EventMenu from "@app/components/EventMenu.svelte"
   import ReadingProgress from "@app/components/ReadingProgress.svelte"
-  import {events, reader} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {decodeRelay} from "@app/relays"
-  import {displayReadingTime} from "@app/articles"
-  import {makeSpacePath} from "@app/routes"
+  import {events} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {decodeRelay} from "@app/core/relays"
+  import {displayReadingTime} from "@app/features/articles"
+  import {makeSpacePath} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

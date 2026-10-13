@@ -7,7 +7,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {makeRoomPath} from "@app/routes"
+  import {makeRoomPath} from "@app/ui/routes"
   import VoiceParticipantMediaBadges from "@app/components/VoiceParticipantMediaBadges.svelte"
   import {
     CallState,
@@ -18,9 +18,9 @@
     deriveRoomCallState,
     loadCallParticipants,
     type CallParticipant,
-  } from "@app/call"
-  import {cancelJoinVoiceRoom} from "@app/callEngine"
-  import {profiles} from "@app/core"
+  } from "@app/features/call"
+  import {cancelJoinVoiceRoom} from "@app/features/callEngine"
+  import {profiles} from "@app/core/plugins"
 
   type Props = {
     url: string

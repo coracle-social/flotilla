@@ -5,8 +5,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import BookmarkFolderDeleteConfirm from "@app/components/BookmarkFolderDeleteConfirm.svelte"
   import BookmarkFolderEdit from "@app/components/BookmarkFolderEdit.svelte"
-  import type {BookmarkFolder} from "@app/bookmarks"
-  import {pushModal} from "@app/modal"
+  import type {BookmarkFolder} from "@app/features/bookmarks"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     folder: BookmarkFolder

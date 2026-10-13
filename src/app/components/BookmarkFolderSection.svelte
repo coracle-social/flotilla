@@ -5,7 +5,7 @@
   import MenuButton from "@lib/components/MenuButton.svelte"
   import BookmarkFolderMenu from "@app/components/BookmarkFolderMenu.svelte"
   import BookmarkItem from "@app/components/BookmarkItem.svelte"
-  import type {BookmarkFolder} from "@app/bookmarks"
+  import type {BookmarkFolder} from "@app/features/bookmarks"
 
   type Props = {
     folder: BookmarkFolder

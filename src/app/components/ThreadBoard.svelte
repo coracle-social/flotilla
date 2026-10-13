@@ -6,8 +6,8 @@
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import ThreadBoardItem from "@app/components/ThreadBoardItem.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import type {FeedContext} from "@app/feeds"
-  import {pushModal} from "@app/modal"
+  import type {FeedContext} from "@app/features/feeds"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

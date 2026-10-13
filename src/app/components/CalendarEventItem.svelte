@@ -6,13 +6,13 @@
   import Cv from "@lib/components/Cv.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
-  import {reader} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
+  import {reader} from "@app/core/domain"
+  import type {FeedContext} from "@app/features/feeds"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {makeCalendarPath} from "@app/routes"
+  import {makeCalendarPath} from "@app/ui/routes"
 
   type Props = {
     url: string

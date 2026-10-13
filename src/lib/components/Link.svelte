@@ -2,7 +2,7 @@
   import type {Snippet} from "svelte"
   import cx from "classnames"
   import {stopPropagation} from "@lib/html"
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/ui/modal"
 
   type Props = {
     children?: Snippet

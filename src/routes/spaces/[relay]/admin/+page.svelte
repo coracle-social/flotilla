@@ -8,9 +8,9 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import RelayDetailCard from "@app/components/hosting/RelayDetailCard.svelte"
   import ActivityFeed from "@app/components/hosting/ActivityFeed.svelte"
-  import {PLATFORM_NAME} from "@app/env"
-  import {deriveHostedRelay, deriveRelayActivity} from "@app/hosting"
-  import {decodeRelay} from "@app/relays"
+  import {PLATFORM_NAME} from "@app/core/env"
+  import {deriveHostedRelay, deriveRelayActivity} from "@app/features/hosting"
+  import {decodeRelay} from "@app/core/relays"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

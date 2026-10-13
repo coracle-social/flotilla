@@ -9,13 +9,13 @@
   import HomeActivity from "@app/components/HomeActivity.svelte"
   import HealthCheckList from "@app/components/HealthCheckList.svelte"
   import HomeInboxItem from "@app/components/HomeInboxItem.svelte"
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/ui/modal"
   import {
     allNotifications,
     inboxConversations,
     inboxSpaceContent,
     setChecked,
-  } from "@app/notifications"
+  } from "@app/ui/notifications"
 
   const conversations = $derived($inboxConversations.slice(0, 8))
 

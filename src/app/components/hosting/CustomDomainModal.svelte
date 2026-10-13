@@ -14,7 +14,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {pushToast} from "@app/toast"
+  import {pushToast} from "@app/ui/toast"
   import {
     canonicalRelayHost,
     flagToBool,
@@ -22,7 +22,7 @@
     hostingErrorMessage,
     updateRelay,
     type HostedRelay,
-  } from "@app/hosting"
+  } from "@app/features/hosting"
 
   type Props = {
     relay: HostedRelay

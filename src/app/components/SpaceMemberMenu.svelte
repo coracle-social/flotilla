@@ -8,10 +8,10 @@
   import Confirm from "@lib/components/Confirm.svelte"
   import SpaceMemberMethods from "@app/components/SpaceMemberMethods.svelte"
   import SpaceMemberRoles from "@app/components/SpaceMemberRoles.svelte"
-  import {profiles, relayManagement} from "@app/core"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {profiles, relayManagement} from "@app/core/plugins"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

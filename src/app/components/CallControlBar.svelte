@@ -15,12 +15,12 @@
   import Button from "@lib/components/Button.svelte"
   import VoiceCallAudioSettingsDialog from "@app/components/VoiceCallAudioSettingsDialog.svelte"
   import VoiceRoomJoinDialog from "@app/components/VoiceRoomJoinDialog.svelte"
-  import {rooms} from "@app/core"
-  import {ScreenShare} from "@app/screenShare"
-  import {RoomType, getRoomType} from "@app/rooms"
-  import {pushModal} from "@app/modal"
-  import {notifications} from "@app/notifications"
-  import {makeRoomPath} from "@app/routes"
+  import {rooms} from "@app/core/plugins"
+  import {ScreenShare} from "@app/features/screenShare"
+  import {RoomType, getRoomType} from "@app/features/rooms"
+  import {pushModal} from "@app/ui/modal"
+  import {notifications} from "@app/ui/notifications"
+  import {makeRoomPath} from "@app/ui/routes"
   import {
     VideoCallLayout,
     videoCallLayout,
@@ -28,14 +28,14 @@
     currentCallSession,
     callMicMuted,
     deriveRoomCallState,
-  } from "@app/call"
+  } from "@app/features/call"
   import {
     cancelJoinVoiceRoom,
     leaveVoiceRoom,
     toggleCamera,
     toggleMute,
     toggleScreenShare,
-  } from "@app/callEngine"
+  } from "@app/features/callEngine"
 
   type Props = {
     url: string

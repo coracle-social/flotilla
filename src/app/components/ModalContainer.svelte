@@ -4,7 +4,7 @@
   import {beforeNavigate} from "$app/navigation"
   import Drawer from "@lib/components/Drawer.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
-  import {getModal, getModalStack, navigate, popModal} from "@app/modal"
+  import {getModal, getModalStack, navigate, popModal} from "@app/ui/modal"
 
   // SvelteKit would stack the page a link opens on top of the modal's own history entry.
   beforeNavigate(navigation => {

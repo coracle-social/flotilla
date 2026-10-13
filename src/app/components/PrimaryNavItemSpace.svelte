@@ -2,10 +2,10 @@
   import {page} from "$app/stores"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
-  import {relays} from "@app/core"
-  import {navigate} from "@app/modal"
-  import {makeSpacePath, makeSpaceEntryPath, hasSpacePage} from "@app/routes"
-  import {notifications} from "@app/notifications"
+  import {relays} from "@app/core/plugins"
+  import {navigate} from "@app/ui/modal"
+  import {makeSpacePath, makeSpaceEntryPath, hasSpacePage} from "@app/ui/routes"
+  import {notifications} from "@app/ui/notifications"
 
   type Props = {
     url: string

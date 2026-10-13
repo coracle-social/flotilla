@@ -4,7 +4,7 @@
   import Microphone from "@assets/icons/microphone.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import {rooms} from "@app/core"
+  import {rooms} from "@app/core/plugins"
 
   type Props = {
     h: string

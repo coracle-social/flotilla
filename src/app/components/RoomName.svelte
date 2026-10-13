@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {rooms} from "@app/core"
+  import {rooms} from "@app/core/plugins"
 
   type Props = {
     url: string

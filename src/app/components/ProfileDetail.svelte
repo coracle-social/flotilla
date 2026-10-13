@@ -22,12 +22,13 @@
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import ProfilePinnedNote from "@app/components/ProfilePinnedNote.svelte"
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
-  import {messagingRelayLists, profiles, relayManagement, user} from "@app/core"
-  import {deriveSpacePermissions, spaceManagement} from "@app/management"
-  import type {BannedPubkeyItem} from "@app/management"
-  import {navigate, popModal, pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {goToChat, makeProfilePath} from "@app/routes"
+  import {user} from "@app/core/app"
+  import {messagingRelayLists, profiles, relayManagement} from "@app/core/plugins"
+  import {deriveSpacePermissions, spaceManagement} from "@app/core/management"
+  import type {BannedPubkeyItem} from "@app/core/management"
+  import {navigate, popModal, pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
+  import {goToChat, makeProfilePath} from "@app/ui/routes"
 
   export type Props = {
     pubkey: string

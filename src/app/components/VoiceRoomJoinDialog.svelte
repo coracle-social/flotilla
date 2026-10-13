@@ -15,11 +15,11 @@
   import {listMediaDevices} from "@lib/audio"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {displayRoom} from "@app/rooms"
-  import {deriveCallParticipants, loadCallParticipants} from "@app/call"
-  import {AbortError, TimeoutError, joinVoiceRoom} from "@app/callEngine"
-  import {popModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {displayRoom} from "@app/features/rooms"
+  import {deriveCallParticipants, loadCallParticipants} from "@app/features/call"
+  import {AbortError, TimeoutError, joinVoiceRoom} from "@app/features/callEngine"
+  import {popModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

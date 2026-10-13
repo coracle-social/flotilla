@@ -2,8 +2,8 @@
   import {removeUndefined} from "@welshman/lib"
   import MapPoint from "@assets/icons/map-point.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {profiles} from "@app/core"
-  import {getProfileLocation} from "@app/location"
+  import {profiles} from "@app/core/plugins"
+  import {getProfileLocation} from "@app/features/location"
 
   type Props = {
     pubkey: string

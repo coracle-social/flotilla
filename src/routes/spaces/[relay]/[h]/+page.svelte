@@ -9,8 +9,8 @@
   import RoomImage from "@app/components/RoomImage.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import RoomSearch from "@app/components/RoomSearch.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {pushModal} from "@app/modal"
+  import {decodeRelay} from "@app/core/relays"
+  import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

@@ -9,10 +9,11 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {deriveUserItem, profiles} from "@app/core"
-  import {wallet} from "@app/lightning"
-  import {clearModals} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {deriveUserItem} from "@app/core/app"
+  import {profiles} from "@app/core/plugins"
+  import {wallet} from "@app/features/lightning"
+  import {clearModals} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   const userProfile = deriveUserItem(Profiles)
 

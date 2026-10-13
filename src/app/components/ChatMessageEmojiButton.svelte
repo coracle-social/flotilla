@@ -3,7 +3,7 @@
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
-  import {publishWrappedReaction} from "@app/reactions"
+  import {publishWrappedReaction} from "@app/features/reactions"
 
   type Props = {
     event: TrustedEvent

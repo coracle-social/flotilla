@@ -1,5 +1,5 @@
 /* ============================================================================
-   Design-system entry point (imported once, by src/app/app.css).
+   Design-system entry point (imported once, by src/app/ui/app.css).
 
      tailwindcss  — framework + our @theme token registration (via base.css)
      base.css     — theme-independent structure (base, utilities, integrations)
@@ -9,7 +9,7 @@
    Every theme is selected the same way, by its own data-fl-theme value — there
    is no default, so VITE_THEME (→ FL_THEME, stamped on <body> + the app root)
    must be set. Themes are mutually exclusive, so import order doesn't matter.
-   Add a theme = a token file, an @import, and its name in app/theme.ts's
+   Add a theme = a token file, an @import, and its name in app/ui/theme.ts's
    flThemes, which is what offers it in settings. ============================== */
 
 @import "tailwindcss";

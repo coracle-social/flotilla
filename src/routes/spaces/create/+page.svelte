@@ -9,9 +9,9 @@
   import PageHeader from "@lib/components/PageHeader.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import RelayCreate from "@app/components/hosting/RelayCreate.svelte"
-  import {PLATFORM_LOGO, PLATFORM_NAME, PLATFORM_URL} from "@app/env"
-  import {HOSTING_ENABLED} from "@app/hosting"
-  import {pushModal} from "@app/modal"
+  import {PLATFORM_LOGO, PLATFORM_NAME, PLATFORM_URL} from "@app/core/env"
+  import {HOSTING_ENABLED} from "@app/features/hosting"
+  import {pushModal} from "@app/ui/modal"
 
   const openCreate = () => pushModal(RelayCreate, {}, {size: "large"})
 </script>

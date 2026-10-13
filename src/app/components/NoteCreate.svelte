@@ -15,12 +15,13 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {publisher, writer} from "@app/core"
-  import {DraftKey} from "@app/drafts"
-  import {makeEditor} from "@app/editor"
-  import {userSpaceUrls} from "@app/rooms"
-  import {pushToast} from "@app/toast"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {publisher} from "@app/core/plugins"
+  import {writer} from "@app/core/domain"
+  import {DraftKey} from "@app/features/drafts"
+  import {makeEditor} from "@app/features/editor"
+  import {userSpaceUrls} from "@app/features/rooms"
+  import {pushToast} from "@app/ui/toast"
 
   type Values = {
     content?: string | object

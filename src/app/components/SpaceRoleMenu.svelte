@@ -8,10 +8,10 @@
   import Confirm from "@lib/components/Confirm.svelte"
   import RoleEdit from "@app/components/RoleEdit.svelte"
   import RoleAddMembers from "@app/components/RoleAddMembers.svelte"
-  import {relayManagement} from "@app/core"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {relayManagement} from "@app/core/plugins"
+  import {deriveSpacePermissions} from "@app/core/management"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

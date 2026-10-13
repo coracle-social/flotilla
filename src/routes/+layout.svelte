@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "@app/app.css"
+  import "@app/ui/app.css"
   import "@welshman/editor/index.css"
   import * as nip19 from "nostr-tools/nip19"
   import type {Unsubscriber} from "svelte/store"
@@ -18,29 +18,32 @@
   import AppContainer from "@app/components/AppContainer.svelte"
   import Startup from "@app/components/Startup.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
-  import * as core from "@app/core"
-  import {app} from "@app/core"
-  import {setupHistory} from "@app/routes"
-  import {setupAnalytics} from "@app/analytics"
-  import {setupLogging} from "@app/logger"
-  import "@app/policies"
-  import {restoreSession} from "@app/session"
-  import {syncSignerAlerts} from "@app/signer"
-  import {wallet} from "@app/lightning"
-  import {storage} from "@app/storage"
-  import {device} from "@app/device"
-  import {forceHealthChecks} from "@app/healthChecks"
-  import {setupShareIntents} from "@app/share"
-  import {shouldUnwrap, syncApplicationData} from "@app/sync"
-  import * as env from "@app/env"
-  import {applySavedTheme, flTheme, syncTheme, theme} from "@app/theme"
-  import * as notifications from "@app/notifications"
-  import {notificationCount, backgroundNotificationCount} from "@app/notifications"
-  import {Push, notificationSettings} from "@app/push"
-  import {pushState} from "@app/push/adapters/common"
-  import {setupDeepLinks} from "@app/deepLinks"
-  import {syncKeyboard} from "@app/keyboard"
-  import {getPageTitle} from "@app/title"
+  import * as coreApp from "@app/core/app"
+  import {app} from "@app/core/app"
+  import * as coreDomain from "@app/core/domain"
+  import * as corePlugins from "@app/core/plugins"
+  import {setupHistory} from "@app/ui/routes"
+  import {setupAnalytics} from "@app/features/analytics"
+  import {setupLogging} from "@app/core/logger"
+  import "@app/core/policies"
+  import * as coreSession from "@app/core/session"
+  import {restoreSession} from "@app/core/session"
+  import {syncSignerAlerts} from "@app/core/signer"
+  import {wallet} from "@app/features/lightning"
+  import {storage} from "@app/core/storage"
+  import {device} from "@app/core/device"
+  import {forceHealthChecks} from "@app/features/healthChecks"
+  import {setupShareIntents} from "@app/ui/share"
+  import {shouldUnwrap, syncApplicationData} from "@app/core/sync"
+  import * as env from "@app/core/env"
+  import {applySavedTheme, flTheme, syncTheme, theme} from "@app/ui/theme"
+  import * as notifications from "@app/ui/notifications"
+  import {notificationCount, backgroundNotificationCount} from "@app/ui/notifications"
+  import {Push, notificationSettings} from "@app/features/push"
+  import {pushState} from "@app/features/push/adapters/common"
+  import {setupDeepLinks} from "@app/features/deepLinks"
+  import {syncKeyboard} from "@app/ui/keyboard"
+  import {getPageTitle} from "@app/ui/title"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
   import type {LayoutProps} from "./$types"
 
@@ -49,7 +52,19 @@
   applySavedTheme()
 
   // Add stuff to window for convenience
-  Object.assign(window, {get, nip19, theme, notifications, ...plugins, ...lib, ...util, ...core})
+  Object.assign(window, {
+    get,
+    nip19,
+    theme,
+    notifications,
+    ...plugins,
+    ...lib,
+    ...util,
+    ...coreApp,
+    ...corePlugins,
+    ...coreDomain,
+    ...coreSession,
+  })
 
   // Set up context for various modules
   pomadeContext.setSignerUrls(env.POMADE_SIGNERS)

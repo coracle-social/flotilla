@@ -1,7 +1,7 @@
 <script lang="ts">
   import {page} from "$app/stores"
   import ArticleForm from "@app/components/ArticleForm.svelte"
-  import {decodeRelay} from "@app/relays"
+  import {decodeRelay} from "@app/core/relays"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

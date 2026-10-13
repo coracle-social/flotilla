@@ -10,13 +10,13 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import Reaction from "@app/components/Reaction.svelte"
-  import {REPOST_KINDS} from "@app/content"
-  import {user} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {pushModal} from "@app/modal"
-  import {pushEventNote} from "@app/routes"
-  import {deriveDisplaysByPubkey, notes} from "@app/social"
-  import type {HomeNotification} from "@app/social"
+  import {REPOST_KINDS} from "@app/features/content"
+  import {user} from "@app/core/app"
+  import type {FeedContext} from "@app/features/feeds"
+  import {pushModal} from "@app/ui/modal"
+  import {pushEventNote} from "@app/ui/routes"
+  import {deriveDisplaysByPubkey, notes} from "@app/features/social"
+  import type {HomeNotification} from "@app/features/social"
 
   type Props = {
     notification: HomeNotification

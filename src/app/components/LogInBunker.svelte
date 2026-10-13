@@ -20,12 +20,12 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import BunkerConnect from "@app/components/BunkerConnect.svelte"
   import BunkerUrl from "@app/components/BunkerUrl.svelte"
-  import {login} from "@app/core"
-  import {Nip46Controller} from "@app/nip46"
-  import {clearModals} from "@app/modal"
-  import {setChecked} from "@app/notifications"
-  import {pushToast} from "@app/toast"
-  import {NIP46_PERMS} from "@app/nip46"
+  import {login} from "@app/core/session"
+  import {Nip46Controller} from "@app/core/nip46"
+  import {clearModals} from "@app/ui/modal"
+  import {setChecked} from "@app/ui/notifications"
+  import {pushToast} from "@app/ui/toast"
+  import {NIP46_PERMS} from "@app/core/nip46"
 
   const back = () => {
     if (mode === "connect") {

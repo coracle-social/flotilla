@@ -1,8 +1,8 @@
 <script lang="ts">
   import Confirm from "@lib/components/Confirm.svelte"
-  import {deleteBookmarkFolder} from "@app/bookmarks"
-  import {clearModals} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {deleteBookmarkFolder} from "@app/features/bookmarks"
+  import {clearModals} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     identifier: string

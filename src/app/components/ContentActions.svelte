@@ -11,11 +11,11 @@
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
-  import {user} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {publishReaction, retractReaction} from "@app/reactions"
-  import {makeSpacePath} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {user} from "@app/core/app"
+  import type {FeedContext} from "@app/features/feeds"
+  import {publishReaction, retractReaction} from "@app/features/reactions"
+  import {makeSpacePath} from "@app/ui/routes"
+  import {pushModal} from "@app/ui/modal"
 
   type EditForm = Component<{url: string; event: TrustedEvent}>
 

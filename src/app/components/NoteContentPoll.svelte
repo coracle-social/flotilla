@@ -4,7 +4,7 @@
   import {POLL_RESPONSE} from "@welshman/util"
   import PollVotes from "@app/components/PollVotes.svelte"
   import Content from "@app/components/Content.svelte"
-  import {network} from "@app/core"
+  import {network} from "@app/core/plugins"
 
   const props: ComponentProps<typeof Content> = $props()
 

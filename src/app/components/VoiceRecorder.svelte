@@ -12,10 +12,10 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
-  import type {Dictation} from "@app/dictation"
-  import {clearDictation, getDictation, startDictation} from "@app/dictation"
-  import {popModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import type {Dictation} from "@app/features/dictation"
+  import {clearDictation, getDictation, startDictation} from "@app/features/dictation"
+  import {popModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     key: string

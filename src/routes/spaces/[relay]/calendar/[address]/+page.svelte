@@ -22,10 +22,11 @@
   import EventComments from "@app/components/EventComments.svelte"
   import CalendarEventPeople from "@app/components/CalendarEventPeople.svelte"
   import CalendarRsvp from "@app/components/CalendarRsvp.svelte"
-  import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/calendar"
-  import {events, network, reader} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {decodeRelay} from "@app/relays"
+  import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/features/calendar"
+  import {events, network} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {decodeRelay} from "@app/core/relays"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

@@ -20,11 +20,11 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import ProfileList from "@app/components/ProfileList.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
-  import {network} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {derivePins, deriveShelf, pinMatchesTerm} from "@app/pinboards"
-  import {decodeRelay} from "@app/relays"
-  import {pushModal} from "@app/modal"
+  import {network} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {derivePins, deriveShelf, pinMatchesTerm} from "@app/features/pinboards"
+  import {decodeRelay} from "@app/core/relays"
+  import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

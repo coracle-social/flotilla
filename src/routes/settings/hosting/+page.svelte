@@ -19,9 +19,9 @@
   import InvoiceListItem from "@app/components/hosting/InvoiceListItem.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
-  import {user} from "@app/core"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {user} from "@app/core/app"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
   import {
     autopayConfigured,
     ensureSessionTenant,
@@ -30,7 +30,7 @@
     reconcileTenant,
     selectPayableInvoice,
     type Invoice,
-  } from "@app/hosting"
+  } from "@app/features/hosting"
 
   type PaymentMethodState = {kind: "not_set_up"} | {kind: "ok"} | {kind: "error"; message: string}
 

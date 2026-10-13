@@ -14,9 +14,9 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
-  import {leaveSpace} from "@app/access"
-  import {clearModals, navigate, pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {leaveSpace} from "@app/features/access"
+  import {clearModals, navigate, pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

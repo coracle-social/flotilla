@@ -24,10 +24,10 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import WalletAsReceivingAddress from "@app/components/WalletAsReceivingAddress.svelte"
-  import {deriveUserItem} from "@app/core"
-  import {getWebLn, wallet} from "@app/lightning"
-  import {pushToast} from "@app/toast"
-  import {pushModal} from "@app/modal"
+  import {deriveUserItem} from "@app/core/app"
+  import {getWebLn, wallet} from "@app/features/lightning"
+  import {pushToast} from "@app/ui/toast"
+  import {pushModal} from "@app/ui/modal"
 
   const userProfile = deriveUserItem(Profiles)
 

@@ -108,7 +108,7 @@ export type {
 } from "./net/http"
 export type {WebLnInfo} from "./app/webln"
 
-// Mirrors encodeRelay in src/app/relays.ts, which cannot be imported without pulling in sveltekit.
+// Mirrors encodeRelay in src/app/core/relays.ts, which cannot be imported without pulling in sveltekit.
 const encodeRelay = (url: string) =>
   encodeURIComponent(
     normalizeRelayUrl(url)
@@ -120,7 +120,7 @@ export const spacePath = (url: string) => `/spaces/${encodeRelay(url)}`
 
 export const roomPath = (url: string, h: string) => `${spacePath(url)}/${h}`
 
-// Mirrors makeChatId in src/app/chats.ts.
+// Mirrors makeChatId in src/app/features/chats.ts.
 export const chatPath = (...pubkeys: string[]) => `/chat/${[...pubkeys].sort().join(",")}`
 
 export const profilePath = (pubkey: string) => `/people/${npubEncode(pubkey)}`
@@ -138,7 +138,7 @@ export type PageOptions = {
   nip07?: TestUser
   // A WebLN provider on window, for a wallet that gets connected through an extension.
   webln?: WebLnInfo
-  // A blossom server installed before boot, for a url src/app/sync.ts probes and caches on load.
+  // A blossom server installed before boot, for a url src/app/core/sync.ts probes and caches on load.
   blossom?: BlossomOptions
   // Fields merged over a relay's own nip-11 document, keyed by relay url.
   relayInfo?: RelayInfoOverrides

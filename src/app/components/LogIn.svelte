@@ -23,11 +23,11 @@
   import LogInBunker from "@app/components/LogInBunker.svelte"
   import LogInEmail from "@app/components/LogInEmail.svelte"
   import LogInKey from "@app/components/LogInKey.svelte"
-  import {pushModal, clearModals} from "@app/modal"
-  import {PLATFORM_NAME, POMADE_SIGNERS} from "@app/env"
-  import {pushToast} from "@app/toast"
-  import {setChecked} from "@app/notifications"
-  import {login} from "@app/core"
+  import {pushModal, clearModals} from "@app/ui/modal"
+  import {PLATFORM_NAME, POMADE_SIGNERS} from "@app/core/env"
+  import {pushToast} from "@app/ui/toast"
+  import {setChecked} from "@app/ui/notifications"
+  import {login} from "@app/core/session"
 
   let signers: Nip55AppInfo[] = $state([])
   let loading: string | undefined = $state()

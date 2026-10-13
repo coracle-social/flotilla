@@ -6,7 +6,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import EventReactButtons from "@app/components/EventReactButtons.svelte"
-  import {shareEvent} from "@app/share"
+  import {shareEvent} from "@app/ui/share"
 
   type Props = {
     url: string

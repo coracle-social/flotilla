@@ -18,8 +18,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProgressBar from "@app/components/ProgressBar.svelte"
-  import {pushToast} from "@app/toast"
-  import {PLATFORM_NAME} from "@app/env"
+  import {pushToast} from "@app/ui/toast"
+  import {PLATFORM_NAME} from "@app/core/env"
 
   type Props = {
     secret: string

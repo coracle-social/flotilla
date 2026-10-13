@@ -5,7 +5,7 @@
   import Button from "@lib/components/Button.svelte"
   import ComposeBar from "@app/components/ComposeBar.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {deriveValidCommands, describeCommandDraft} from "@app/commands"
+  import {deriveValidCommands, describeCommandDraft} from "@app/features/commands"
 
   type Props = {
     target: CommandScopeTarget

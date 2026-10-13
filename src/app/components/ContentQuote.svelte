@@ -8,9 +8,9 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
-  import {events, network} from "@app/core"
-  import {getQuoteIdOrAddress, getQuoteRelays, goToQuote} from "@app/quotes"
-  import type {QuotePointer} from "@app/quotes"
+  import {events, network} from "@app/core/plugins"
+  import {getQuoteIdOrAddress, getQuoteRelays, goToQuote} from "@app/features/quotes"
+  import type {QuotePointer} from "@app/features/quotes"
 
   type Props = {
     value: QuotePointer

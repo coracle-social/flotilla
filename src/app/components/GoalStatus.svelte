@@ -5,7 +5,7 @@
   import Confetti from "@assets/icons/confetti.svg?dataurl"
   import Hourglass from "@assets/icons/hourglass.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import type {GoalProgress} from "@app/goals"
+  import type {GoalProgress} from "@app/features/goals"
 
   type Props = {
     progress: GoalProgress

@@ -4,10 +4,10 @@
   import type {TrustedEvent} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import type {FeedContext} from "@app/feeds"
-  import {pushEventNote} from "@app/routes"
-  import {isEventMuted} from "@app/social"
-  import type {NetworkFeedEntry} from "@app/social"
+  import type {FeedContext} from "@app/features/feeds"
+  import {pushEventNote} from "@app/ui/routes"
+  import {isEventMuted} from "@app/features/social"
+  import type {NetworkFeedEntry} from "@app/features/social"
 
   type Props = {
     entry: NetworkFeedEntry

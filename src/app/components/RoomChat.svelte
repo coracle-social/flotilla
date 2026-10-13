@@ -18,25 +18,27 @@
   import RoomTranscript from "@app/components/RoomTranscript.svelte"
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
-  import {deletes, publisher, relays, rooms, user, writer} from "@app/core"
+  import {user} from "@app/core/app"
+  import {deletes, publisher, relays, rooms} from "@app/core/plugins"
+  import {writer} from "@app/core/domain"
   import {
     CallState,
     callState,
     deriveRoomCallState,
     VideoCallLayout,
     videoCallLayout,
-  } from "@app/call"
+  } from "@app/features/call"
   import {
     RoomType,
     deriveUserRoomMembershipStatus,
     getRoomType,
     prependParent,
     addressWriterToSpace,
-  } from "@app/rooms"
-  import {loadSendDelay} from "@app/settings"
-  import {deferredRoomPath, setChecked} from "@app/notifications"
-  import {makeRoomPath} from "@app/routes"
-  import {pushToast} from "@app/toast"
+  } from "@app/features/rooms"
+  import {loadSendDelay} from "@app/core/settings"
+  import {deferredRoomPath, setChecked} from "@app/ui/notifications"
+  import {makeRoomPath} from "@app/ui/routes"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

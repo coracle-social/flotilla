@@ -7,8 +7,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {roomLists} from "@app/core"
-  import {makeSpacePath} from "@app/routes"
+  import {roomLists} from "@app/core/plugins"
+  import {makeSpacePath} from "@app/ui/routes"
 
   type Props = {
     pubkey: string

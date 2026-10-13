@@ -7,9 +7,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import {pushModal} from "@app/modal"
-  import {session} from "@app/core"
-  import {signerHealth, signerRequests} from "@app/signer"
+  import {pushModal} from "@app/ui/modal"
+  import {session} from "@app/core/session"
+  import {signerHealth, signerRequests} from "@app/core/signer"
   import PomadeSessions from "@app/components/PomadeSessions.svelte"
 
   const finished = $derived($signerRequests.filter(request => request.finishedAt))

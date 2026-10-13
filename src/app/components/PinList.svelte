@@ -14,18 +14,18 @@
   import PinSelectionMenu from "@app/components/PinSelectionMenu.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import {user} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {deriveSpacePermissions} from "@app/management"
+  import {user} from "@app/core/app"
+  import type {FeedContext} from "@app/features/feeds"
+  import {deriveSpacePermissions} from "@app/core/management"
   import {
     deletePins,
     deriveShelves,
     displayPin,
     movePinsToShelf,
     removePinsFromShelf,
-  } from "@app/pinboards"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  } from "@app/features/pinboards"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     url: string

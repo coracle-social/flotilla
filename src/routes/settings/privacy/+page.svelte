@@ -12,18 +12,19 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import RelayList from "@app/components/RelayList.svelte"
-  import {blockedRelayLists, user} from "@app/core"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {PLATFORM_NAME} from "@app/env"
-  import {analyticsAvailable} from "@app/analytics"
-  import {sendLogs} from "@app/logger"
+  import {user} from "@app/core/app"
+  import {blockedRelayLists} from "@app/core/plugins"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
+  import {PLATFORM_NAME} from "@app/core/env"
+  import {analyticsAvailable} from "@app/features/analytics"
+  import {sendLogs} from "@app/core/logger"
   import {
     RelayAuthMode,
     userSettingsValues,
     publishSettings,
     createSettingsForm,
-  } from "@app/settings"
+  } from "@app/core/settings"
 
   const reset = () => {
     settings.set({...$userSettingsValues})

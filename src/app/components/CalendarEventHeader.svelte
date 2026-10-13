@@ -4,8 +4,8 @@
   import {TimeEvent} from "@welshman/domain"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {reader} from "@app/core"
-  import {getEventTitle} from "@app/calendar"
+  import {reader} from "@app/core/domain"
+  import {getEventTitle} from "@app/features/calendar"
 
   type Props = {
     event: TrustedEvent

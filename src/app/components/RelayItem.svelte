@@ -7,7 +7,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
-  import {app, relays} from "@app/core"
+  import {app} from "@app/core/app"
+  import {relays} from "@app/core/plugins"
 
   type Props = {
     url: string

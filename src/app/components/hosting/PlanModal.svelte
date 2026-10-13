@@ -13,15 +13,15 @@
   import PricingTable from "@app/components/hosting/PricingTable.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {pushModal} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
   import {
     hosting,
     hostingErrorMessage,
     isPaidPlan,
     updateRelay,
     type HostedRelay,
-  } from "@app/hosting"
+  } from "@app/features/hosting"
 
   type Props = {
     relay: HostedRelay

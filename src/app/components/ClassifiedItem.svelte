@@ -11,13 +11,13 @@
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import CurrencySymbol from "@lib/components/CurrencySymbol.svelte"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
-  import type {FeedContext} from "@app/feeds"
+  import type {FeedContext} from "@app/features/feeds"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {makeClassifiedPath} from "@app/routes"
+  import {makeClassifiedPath} from "@app/ui/routes"
 
   type Props = {
     url: string

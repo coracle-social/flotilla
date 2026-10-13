@@ -9,10 +9,10 @@
   import SpaceMenuMobile from "@app/components/SpaceMenuMobile.svelte"
   import SpaceMenuActions from "@app/components/SpaceMenuActions.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {deriveSpaceActionItems} from "@app/actionItems"
-  import {deriveShouldNotify} from "@app/settings"
-  import {notificationSettings} from "@app/push"
-  import {pushModal} from "@app/modal"
+  import {deriveSpaceActionItems} from "@app/features/actionItems"
+  import {deriveShouldNotify} from "@app/core/settings"
+  import {notificationSettings} from "@app/features/push"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

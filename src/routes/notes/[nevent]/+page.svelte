@@ -1,8 +1,8 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {goToHome, goToNote} from "@app/routes"
-  import {decodeNotePointer} from "@app/social"
+  import {goToHome, goToNote} from "@app/ui/routes"
+  import {decodeNotePointer} from "@app/features/social"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

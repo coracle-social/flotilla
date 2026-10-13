@@ -16,9 +16,9 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import type {HealthCheckPlan} from "@app/healthChecks"
-  import {clearModals} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import type {HealthCheckPlan} from "@app/features/healthChecks"
+  import {clearModals} from "@app/ui/modal"
+  import {pushToast} from "@app/ui/toast"
 
   type Props = {
     plans: HealthCheckPlan[]

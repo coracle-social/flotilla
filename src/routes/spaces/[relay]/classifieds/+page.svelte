@@ -22,19 +22,19 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ClassifiedItem from "@app/components/ClassifiedItem.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter, partitionByActivity} from "@app/content"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {makeClassifiedPath} from "@app/routes"
+  import {decodeRelay} from "@app/core/relays"
+  import {makeCommentFilter, partitionByActivity} from "@app/features/content"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeClassifiedPath} from "@app/ui/routes"
   import {
     CLASSIFIED_STATUS_TABS,
     deriveTopicCounts,
     getStatus,
     matchesTopic,
     matchesQuery,
-  } from "@app/classifieds"
-  import {reader} from "@app/core"
-  import {pushModal} from "@app/modal"
+  } from "@app/features/classifieds"
+  import {reader} from "@app/core/domain"
+  import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

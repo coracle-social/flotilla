@@ -15,13 +15,13 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {publishToSpace} from "@app/rooms"
-  import {setEventReminders} from "@app/reminders"
-  import {makeEditor} from "@app/editor"
-  import {DraftKey} from "@app/drafts"
-  import {pushToast} from "@app/toast"
-  import {writer} from "@app/core"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {publishToSpace} from "@app/features/rooms"
+  import {setEventReminders} from "@app/features/reminders"
+  import {makeEditor} from "@app/features/editor"
+  import {DraftKey} from "@app/features/drafts"
+  import {pushToast} from "@app/ui/toast"
+  import {writer} from "@app/core/domain"
 
   type Values = {
     d: string

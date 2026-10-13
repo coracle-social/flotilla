@@ -1,8 +1,8 @@
 <script lang="ts">
   import {remove} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
-  import {includedNetworkFeedTypes, networkFeedTypes} from "@app/social"
-  import type {NetworkFeedType} from "@app/social"
+  import {includedNetworkFeedTypes, networkFeedTypes} from "@app/features/social"
+  import type {NetworkFeedType} from "@app/features/social"
 
   type Props = {
     counts: Map<NetworkFeedType, number>

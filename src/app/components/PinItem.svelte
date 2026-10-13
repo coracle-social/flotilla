@@ -14,8 +14,8 @@
   import PinSave from "@app/components/PinSave.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import type {FeedContext} from "@app/feeds"
-  import {pushModal} from "@app/modal"
+  import type {FeedContext} from "@app/features/feeds"
+  import {pushModal} from "@app/ui/modal"
 
   type Props = {
     url: string

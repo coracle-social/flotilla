@@ -6,8 +6,8 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import SearchBody from "@app/components/SearchBody.svelte"
-  import {CONTENT_KINDS} from "@app/content"
-  import {relayMemberLists} from "@app/core"
+  import {CONTENT_KINDS} from "@app/features/content"
+  import {relayMemberLists} from "@app/core/plugins"
 
   type Props = {
     url: string

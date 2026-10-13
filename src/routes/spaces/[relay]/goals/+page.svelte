@@ -21,12 +21,12 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter, partitionByActivity} from "@app/content"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {deriveGoalProgressById, filterGoals, getGoalTotals, sortGoals} from "@app/goals"
-  import type {GoalFilter, GoalSort} from "@app/goals"
-  import {pushModal} from "@app/modal"
+  import {decodeRelay} from "@app/core/relays"
+  import {makeCommentFilter, partitionByActivity} from "@app/features/content"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {deriveGoalProgressById, filterGoals, getGoalTotals, sortGoals} from "@app/features/goals"
+  import type {GoalFilter, GoalSort} from "@app/features/goals"
+  import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

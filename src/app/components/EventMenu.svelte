@@ -16,10 +16,10 @@
   import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
-  import {shareEvent} from "@app/share"
-  import {deriveUserAdminDelete} from "@app/rooms"
-  import {pushModal} from "@app/modal"
-  import {user} from "@app/core"
+  import {shareEvent} from "@app/ui/share"
+  import {deriveUserAdminDelete} from "@app/features/rooms"
+  import {pushModal} from "@app/ui/modal"
+  import {user} from "@app/core/app"
 
   type Props = {
     url?: string

@@ -20,10 +20,10 @@
   import Modal from "@lib/components/Modal.svelte"
   import DragList from "@lib/components/DragList.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {writer} from "@app/core"
-  import {pushToast} from "@app/toast"
-  import {publishToSpace} from "@app/rooms"
-  import {DraftKey} from "@app/drafts"
+  import {writer} from "@app/core/domain"
+  import {pushToast} from "@app/ui/toast"
+  import {publishToSpace} from "@app/features/rooms"
+  import {DraftKey} from "@app/features/drafts"
 
   type Option = {
     id: string
