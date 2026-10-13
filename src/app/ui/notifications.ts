@@ -31,7 +31,6 @@ import {
   NOTE,
   REACTION,
   ZAP_RECEIPT,
-  addMinimalFallbacks,
   getIdFilters,
   sortEventsDesc,
   tagSpec,
@@ -484,12 +483,8 @@ export const isIncludedHomeNotification = derived(
   },
 )
 
-// Answering or reacting to the user delivers the event to the relays the user reads from.
 export const getHomeNotificationRelays = () =>
-  router
-    .get()
-    .resolve([userInbox()])
-    .then(scenario => scenario.policy(addMinimalFallbacks).getUrls())
+  router.get().resolve([userInbox()]).then(scenario => scenario.limit(10).getUrls())
 
 // The home badge reads the repository, so these have to arrive whether or not home is open.
 const syncHomeNotificationRelay = (url: string, pubkey: string) => {

@@ -26,7 +26,7 @@
   import {hosting, hostingErrorMessage} from "@app/features/hosting"
   import {HOSTING_RELAY_DOMAIN} from "@app/core/env"
   import {pushToast} from "@app/ui/toast"
-  import {resolveImageInput} from "@app/core/uploads"
+  import {resolveImageInput} from "@app/features/uploads"
   import IconInput from "@app/components/IconInput.svelte"
 
   type Props = {

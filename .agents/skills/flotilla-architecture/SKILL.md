@@ -104,7 +104,7 @@ add more.
 - `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and
   `signerHealth`), `notify.ts`
 - `env.ts`: every `VITE_` value, parsed
-- `nip46.ts`, `uploads.ts` (Blossom, image compression)
+- `nip46.ts`
 - `logger.ts` (log capture and sending), `device.ts` (a device id)
 
 **`ui/`: chrome**
@@ -142,7 +142,8 @@ Outside `spaces/`:
 - Content: `content.ts` (kind lists, comment/delete filters, `partitionByActivity`), `feeds.ts`
   (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`), `pins.ts` (a person's
   pinned notes), `bookmarks.ts`, `quotes.ts`, `reactions.ts`, `social.ts` (display names,
-  comment trees, muting), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin)
+  comment trees, muting), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin),
+  `uploads.ts` (Blossom, image compression)
 - `messages.ts`: DM conversations, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)

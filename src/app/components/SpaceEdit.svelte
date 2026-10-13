@@ -16,7 +16,7 @@
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import {pushToast} from "@app/ui/toast"
   import {clearModals} from "@app/ui/modal"
-  import {resolveImageInput} from "@app/core/uploads"
+  import {resolveImageInput} from "@app/features/uploads"
   import {relayManagement, relays} from "@app/core/plugins"
   import IconInput from "@app/components/IconInput.svelte"
 

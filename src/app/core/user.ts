@@ -57,6 +57,8 @@ export const userSearchRelayUrls = derived(userSearchRelayList, $searchRelayList
   return urls.length > 0 ? urls : DEFAULT_SEARCH_RELAYS
 })
 
+// Syncing
+
 // The user's lists are read from their outbox, so each is loaded again once the relay list arrives.
 export const syncUserList = (load: (pubkey: string) => unknown) => {
   const $pubkey = app.get().user?.pubkey
@@ -98,6 +100,8 @@ const syncFollowNetwork = async ($followList: Maybe<FollowListReader>) => {
     })
   }
 }
+
+// Registry
 
 export const registerUser = () => {
   registerSync(syncUserLists)

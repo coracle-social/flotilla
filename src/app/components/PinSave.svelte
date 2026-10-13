@@ -25,7 +25,7 @@
   import {command, reader, writer} from "@app/core/domain"
   import {parsePinReference, pinToReference} from "@app/features/spaces/pinboards"
   import {addressWriterToSpace} from "@app/features/spaces/rooms"
-  import {compressFileForUpload, uploadFile} from "@app/core/uploads"
+  import {compressFileForUpload, uploadFile} from "@app/features/uploads"
   import {pushToast} from "@app/ui/toast"
   import {clearModals} from "@app/ui/modal"
 

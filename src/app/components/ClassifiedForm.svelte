@@ -23,7 +23,7 @@
   import {publishToSpace} from "@app/features/spaces/rooms"
   import {makeEditor} from "@app/features/editor"
   import {DraftKey} from "@app/features/drafts"
-  import {compressFileForUpload, uploadFile} from "@app/core/uploads"
+  import {compressFileForUpload, uploadFile} from "@app/features/uploads"
 
   type Values = {
     d: string

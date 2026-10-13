@@ -25,7 +25,7 @@
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import NoteCreate from "@app/components/NoteCreate.svelte"
   import WotScore from "@app/components/WotScore.svelte"
-  import {compressFileForUpload, uploadFile} from "@app/core/uploads"
+  import {compressFileForUpload, uploadFile} from "@app/features/uploads"
   import {pushModal} from "@app/ui/modal"
   import {clip, pushToast} from "@app/ui/toast"
   import {goToMessages} from "@app/ui/routes"

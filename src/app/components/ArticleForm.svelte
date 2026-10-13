@@ -35,7 +35,7 @@
   import {makeEditor} from "@app/features/editor"
   import {publishToSpace} from "@app/features/spaces/rooms"
   import {makeArticlePath} from "@app/ui/routes"
-  import {compressFileForUpload, uploadFile} from "@app/core/uploads"
+  import {compressFileForUpload, uploadFile} from "@app/features/uploads"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

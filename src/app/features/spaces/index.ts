@@ -19,7 +19,7 @@ import {PLATFORM_RELAYS} from "@app/core/env"
 import {decodeRelay} from "@app/core/relays"
 import {registerRetention} from "@app/core/storage"
 import {pullAndListen, registerSync, syncEach} from "@app/core/sync"
-import {hasBlossomSupport} from "@app/core/uploads"
+import {hasBlossomSupport} from "@app/features/uploads"
 import {CONTENT_KINDS, REACTION_KINDS, makeCommentFilter} from "@app/features/content"
 
 export const userRoomList = deriveUserItem(RoomLists)

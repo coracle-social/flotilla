@@ -23,7 +23,7 @@
   import {addressWriterToSpace} from "@app/features/spaces/rooms"
   import {makeLibraryPath} from "@app/ui/routes"
   import {pushToast} from "@app/ui/toast"
-  import {resolveImageInput} from "@app/core/uploads"
+  import {resolveImageInput} from "@app/features/uploads"
 
   type Props = {
     url: string

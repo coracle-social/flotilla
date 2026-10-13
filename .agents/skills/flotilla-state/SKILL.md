@@ -111,7 +111,7 @@ Bookkeeping for one identity lives on a plugin instance, so it is discarded with
 Module-level caches are fine when their contents do not depend on who is signed in, or when what
 they cache is itself a rebinding store. `deriveCommandsForUrl` (`spaces/rooms/commands.ts`) caches `fromApp`
 stores with `simpleCache`.
-`hasBlossomSupport` (`uploads.ts`) and `deriveHasLivekit` (`spaces/calls`) use `simpleCache` from
+`hasBlossomSupport` (`features/uploads.ts`) and `deriveHasLivekit` (`spaces/calls`) use `simpleCache` from
 `@welshman/lib` to share one store per url across every component that asks.
 
 ## Flotilla's own plugins
