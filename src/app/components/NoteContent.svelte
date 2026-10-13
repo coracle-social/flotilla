@@ -5,6 +5,7 @@
     ZAP_GOAL,
     THREAD,
     CLASSIFIED,
+    HIGHLIGHT,
     LONG_FORM,
     POLL,
     PIN,
@@ -13,6 +14,7 @@
   import NoteContentEventTime from "@app/components/NoteContentEventTime.svelte"
   import NoteContentThread from "@app/components/NoteContentThread.svelte"
   import NoteContentClassified from "@app/components/NoteContentClassified.svelte"
+  import NoteContentHighlight from "@app/components/NoteContentHighlight.svelte"
   import NoteContentArticle from "@app/components/NoteContentArticle.svelte"
   import NoteContentGoal from "@app/components/NoteContentGoal.svelte"
   import NoteContentPoll from "@app/components/NoteContentPoll.svelte"
@@ -30,6 +32,8 @@
     <NoteContentThread {...props} />
   {:else if props.event.kind === CLASSIFIED}
     <NoteContentClassified {...props} />
+  {:else if props.event.kind === HIGHLIGHT}
+    <NoteContentHighlight {...props} />
   {:else if props.event.kind === LONG_FORM}
     <NoteContentArticle {...props} />
   {:else if props.event.kind === ZAP_GOAL}

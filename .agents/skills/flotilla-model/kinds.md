@@ -22,6 +22,14 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 | Bot commands (NIP-CD) | `COMMAND` (31992) | `Command` | `src/app/features/commands.ts` | `RoomCompose`, `ContentCommand` |
 | Voice room participants | `LIVEKIT_PARTICIPANTS` (39004, defined in `src/app/features/call.ts`) | none | `src/app/features/call.ts` | rooms where `meta.hasLivekit()` |
 
+## Read-only content
+
+Kinds flotilla renders but never publishes.
+
+| Feature | Constant (kind) | Factory | Module | Where |
+|---|---|---|---|---|
+| Highlights (NIP-84) | `HIGHLIGHT` (9802) | `Highlight` | none | `NoteContentHighlight`, `NoteContentMinimalHighlight` |
+
 ## Interactions
 
 | Feature | Constant (kind) | Factory | Module | Where |

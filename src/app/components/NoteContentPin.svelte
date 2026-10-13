@@ -2,7 +2,7 @@
   import type {ComponentProps} from "svelte"
   import {Pin} from "@welshman/domain"
   import Content from "@app/components/Content.svelte"
-  import PinContentEvent from "@app/components/PinContentEvent.svelte"
+  import ContentEvent from "@app/components/ContentEvent.svelte"
   import {reader} from "@app/core/domain"
   import {pinToReference} from "@app/features/pinboards"
 
@@ -21,11 +21,9 @@
       <Content event={{content: pin.content(), tags: []}} />
     {/if}
     {#if reference?.type === "event"}
-      <PinContentEvent value={reference.id} relays={reference.relay ? [reference.relay] : []} />
+      <ContentEvent value={reference.id} relays={reference.relay ? [reference.relay] : []} />
     {:else if reference?.type === "address"}
-      <PinContentEvent
-        value={reference.address}
-        relays={reference.relay ? [reference.relay] : []} />
+      <ContentEvent value={reference.address} relays={reference.relay ? [reference.relay] : []} />
     {:else}
       <!-- External references are urls or bech32 entities, both of which Content parses. -->
       <Content event={{content: pinToReference(pin), tags: []}} />

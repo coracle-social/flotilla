@@ -2,7 +2,7 @@
   import {removeUndefined} from "@welshman/lib"
   import type {PinReader} from "@welshman/domain"
   import Content from "@app/components/Content.svelte"
-  import PinContentEvent from "@app/components/PinContentEvent.svelte"
+  import ContentEvent from "@app/components/ContentEvent.svelte"
   import {pinToReference} from "@app/features/pinboards"
 
   type Props = {
@@ -21,7 +21,7 @@
     <Content event={{content: pin.content(), tags: []}} {url} />
   {/if}
   {#if reference?.type === "event" || reference?.type === "address"}
-    <PinContentEvent
+    <ContentEvent
       {url}
       value={reference.type === "event" ? reference.id : reference.address}
       relays={removeUndefined([reference.relay, url])} />
