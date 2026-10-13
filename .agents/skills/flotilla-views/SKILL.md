@@ -411,7 +411,7 @@ const submit = async () => {
 
   try {
     const publication = await command(eventWriter).then(publish)
-    const error = (await publication.settled()).getError()
+    const error = await publication.getError()
 
     if (error) {
       return pushToast({theme: "error", message: error})

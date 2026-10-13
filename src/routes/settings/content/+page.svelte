@@ -71,9 +71,7 @@
         await $blossomServerLists.setUrls($state.snapshot(blossomServers)).then(publish),
       )
 
-      const errors = await Promise.all(
-        publications.map(async publication => (await publication.settled()).getError()),
-      )
+      const errors = await Promise.all(publications.map(publication => publication.getError()))
       const error = errors.find(Boolean)
 
       if (error) {

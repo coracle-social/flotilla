@@ -22,7 +22,7 @@
       message: "Are you sure you want to remove this user from the room?",
       confirm: async () => {
         const command = await $rooms.removeMember(url, {h}, pubkey)
-        const error = (await command.publish().settled()).getError()
+        const error = await command.publish().getError()
 
         if (error) {
           pushToast({theme: "error", message: error})

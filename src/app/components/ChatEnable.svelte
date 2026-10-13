@@ -36,7 +36,7 @@
           writer.setReadUrls(DEFAULT_RELAYS).setWriteUrls(DEFAULT_RELAYS),
         )
 
-        const error = (await command.publish().settled()).getError()
+        const error = await command.publish().getError()
 
         if (error) {
           pushToast({theme: "error", message: error})
@@ -45,7 +45,7 @@
       }
 
       const command = await $messagingRelayLists.setUrls(DEFAULT_MESSAGING_RELAYS)
-      const error = (await command.publish().settled()).getError()
+      const error = await command.publish().getError()
 
       if (error) {
         pushToast({theme: "error", message: error})

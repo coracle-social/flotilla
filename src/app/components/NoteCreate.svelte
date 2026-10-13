@@ -66,7 +66,7 @@
         draftKey.clear()
         history.back()
       } else {
-        pushToast({theme: "error", message: publication.getError() ?? "Failed to post."})
+        pushToast({theme: "error", message: (await publication.getError()) ?? "Failed to post."})
       }
     } catch (e) {
       console.error(e)

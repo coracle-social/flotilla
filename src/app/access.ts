@@ -1,12 +1,11 @@
 import {Capacitor} from "@capacitor/core"
-import {derived, writable} from "svelte/store"
+import {derived, readable, writable} from "svelte/store"
 import {append, dissoc, fromPairs, last, poll, randomId, remove, tryCatch} from "@welshman/lib"
 import {AuthStatus, RelayReasonPrefix, SocketStatus, matchReason} from "@welshman/net"
 import type {Socket} from "@welshman/net"
 import {
   displayRelayUrl,
   isRelayUrl,
-  makeEvent,
   normalizeRelayUrl,
   relay,
   FOLLOWS,
@@ -14,19 +13,10 @@ import {
   PROFILE,
   RELAYS,
 } from "@welshman/util"
-import {RelayJoin, RelayLeave, RoomJoin, RoomLeave} from "@welshman/domain"
+import {RelayJoin, RelayLeave, RoomCreateInvite, RoomJoin, RoomLeave} from "@welshman/domain"
 import {RelayMemberLists, Relays, Sync, User, publish} from "@welshman/app"
 import {stripPrefix} from "@lib/util"
-import {
-  app,
-  command,
-  fromApp,
-  publisher,
-  relayMemberLists,
-  relays,
-  roomLists,
-  writer,
-} from "@app/core"
+import {app, command, fromApp, relayMemberLists, relays, roomLists, writer} from "@app/core"
 import {PLATFORM_URL} from "@app/env"
 import {relaysMostlyRestricted} from "@app/policies"
 import {optInSpaceNotifications} from "@app/push"
@@ -36,7 +26,7 @@ import {publishRoomList} from "@app/rooms"
 import {removeTrustedRelay} from "@app/settings"
 import {syncApplicationData} from "@app/sync"
 
-export const ROOM_CREATE_INVITE = 9009
+// Invite links
 
 export type InviteData = {
   url: string
@@ -87,37 +77,28 @@ export const makeInviteLink = (data: InviteData) => {
   return PLATFORM_URL + "/join?" + params.toString()
 }
 
-export const shouldIgnoreError = (error: string) => {
-  const isIgnored = matchReason(RelayReasonPrefix.Mute, error)
-  const isAborted = error.includes("Signing was aborted")
-  const isStrictNip29Relay = error.includes("missing group (`h`) tag")
+export const publishRoomInvite = async (url: string, h: string) => {
+  const code = randomId()
+  const eventWriter = writer(RoomCreateInvite).setRoom(url, h).setCode(code)
+  const publication = await command(eventWriter).then(publish)
+  const error = await publication.getError()
 
-  return isIgnored || isAborted || isStrictNip29Relay
-}
-
-export const deriveRelayAuthError = (url: string) =>
-  derived([relaysMostlyRestricted, deriveSocket(url)], ([$relaysMostlyRestricted, $socket]) => {
-    if ($socket.auth.status === AuthStatus.Forbidden && $socket.auth.details) {
-      return stripPrefix($socket.auth.details)
-    }
-
-    if ($relaysMostlyRestricted[url]) {
-      return stripPrefix($relaysMostlyRestricted[url])
-    }
-  })
-
-export const publishJoinRequest = (url: string, claim?: string) => {
-  const eventWriter = writer(RelayJoin).forceRoutes(relay(url))
-
-  if (claim) {
-    eventWriter.setClaim(claim)
+  if (error) {
+    return {error, code: undefined}
   }
 
-  return command(eventWriter).then(publish)
+  return {error: undefined, code}
 }
 
-export const publishLeaveRequest = (url: string) =>
-  command(writer(RelayLeave).forceRoutes(relay(url))).then(publish)
+// Join/leave space
+
+export const leaveSpace = async (url: string) => {
+  await roomLists.get().removeRelay(url).then(publishRoomList)
+  await command(writer(RelayLeave).forceRoutes(relay(url))).then(publish)
+  await removeTrustedRelay(url)
+}
+
+// Join/leave room
 
 // "duplicate:" and "already a member" both leave us where we wanted to be.
 const isMembershipRefusal = (error: string) =>
@@ -132,7 +113,7 @@ export const joinRoom = async (url: string, h: string, code?: string) => {
   }
 
   const publication = await command(eventWriter).then(publish)
-  const error = (await publication.settled()).getError()
+  const error = await publication.getError()
 
   if (error && isMembershipRefusal(error)) {
     return error
@@ -143,7 +124,7 @@ export const joinRoom = async (url: string, h: string, code?: string) => {
 
 export const leaveRoom = async (url: string, h: string) => {
   const publication = await command(writer(RoomLeave).setRoom(url, h)).then(publish)
-  const error = (await publication.settled()).getError()
+  const error = await publication.getError()
 
   if (error && isMembershipRefusal(error)) {
     return error
@@ -152,30 +133,7 @@ export const leaveRoom = async (url: string, h: string) => {
   await roomLists.get().removeRoom(h, url).then(publishRoomList)
 }
 
-export const leaveSpace = async (url: string) => {
-  await roomLists.get().removeRelay(url).then(publishRoomList)
-  await publishLeaveRequest(url)
-  await removeTrustedRelay(url)
-}
-
-export const publishRoomInvite = async (url: string, h: string) => {
-  const code = randomId()
-  const event = makeEvent(ROOM_CREATE_INVITE, {
-    tags: [
-      ["h", h],
-      ["code", code],
-    ],
-  })
-
-  const publication = publisher.get().publish({event, relays: [url]})
-  const error = (await publication.settled()).getError()
-
-  if (error) {
-    return {error, code: undefined}
-  }
-
-  return {error: undefined, code}
-}
+// Relay authentication
 
 const authTerminalStatuses = [
   AuthStatus.None,
@@ -205,6 +163,17 @@ const formatAuthError = (status: AuthStatus, details?: string) => {
   return `Failed to authenticate (${message})`
 }
 
+export const deriveRelayAuthError = (url: string) =>
+  derived([relaysMostlyRestricted, deriveSocket(url)], ([$relaysMostlyRestricted, $socket]) => {
+    if ($socket.auth.status === AuthStatus.Forbidden && $socket.auth.details) {
+      return stripPrefix($socket.auth.details)
+    }
+
+    if ($relaysMostlyRestricted[url]) {
+      return stripPrefix($relaysMostlyRestricted[url])
+    }
+  })
+
 export const attemptRelayAccess = async (url: string, claim = "") => {
   const socket = app.get().pool.get(url)
 
@@ -233,10 +202,24 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
     return formatAuthError(socket.auth.status, socket.auth.details)
   }
 
-  const publication = await publishJoinRequest(url, claim)
-  const error = (await publication.settled()).getError()
+  const eventWriter = writer(RelayJoin).forceRoutes(relay(url))
 
-  if (error && !shouldIgnoreError(error)) {
+  if (claim) {
+    eventWriter.setClaim(claim)
+  }
+
+  const publication = await command(eventWriter).then(publish)
+  const error = await publication.getError()
+
+  if (error) {
+    const isIgnored = matchReason(RelayReasonPrefix.Mute, error)
+    const isAborted = error.includes("Signing was aborted")
+    const isStrictNip29Relay = error.includes("missing group (`h`) tag")
+
+    if (isIgnored || isAborted || isStrictNip29Relay) {
+      return undefined
+    }
+
     if (error.includes("invite code")) {
       return "join request rejected"
     }
@@ -271,19 +254,20 @@ export const completeSpaceJoin = async (url: string, notifications: boolean) => 
 
 // Paid spaces
 
+export const derivePubkeyIsSpaceMember = (url: string, pubkey: string) =>
+  derived(
+    fromApp($app => $app.use(RelayMemberLists).forUrl(url)),
+    $members => Boolean($members?.isMember(pubkey)),
+  )
+
+export const deriveUserIsSpaceMember = (url: string) =>
+  fromApp($app => ($app.user ? derivePubkeyIsSpaceMember(url, $app.user.pubkey) : readable(false)))
+
 // Gated out by price rather than by invitation: it charges, and they have not paid.
 export const derivePaidGated = (url: string) =>
   derived(
-    [
-      fromApp($app => $app.use(Relays).one(url)),
-      fromApp($app => $app.use(RelayMemberLists).forUrl(url)),
-      app,
-    ],
-    ([$relay, $members, $app]) => {
-      const pubkey = $app.user?.pubkey
-
-      return Boolean($relay?.isPaid() && pubkey && !$members?.isMember(pubkey))
-    },
+    [fromApp($app => $app.use(Relays).one(url)), deriveUserIsSpaceMember(url), app],
+    ([$relay, $isMember, $app]) => Boolean($relay?.isPaid() && $app.user && !$isMember),
   )
 
 // Urls a checkout was opened for this session. A forgotten one is covered by membership sync.

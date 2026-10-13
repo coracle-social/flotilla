@@ -34,7 +34,7 @@
 
     try {
       const publication = await sendLogs()
-      const error = (await publication.settled()).getError()
+      const error = await publication.getError()
 
       if (error) {
         pushToast({theme: "error", message: error})
@@ -67,7 +67,7 @@
 
     try {
       const publication = await publishSettings($settings)
-      const error = (await publication.settled()).getError()
+      const error = await publication.getError()
 
       if (error) {
         pushToast({theme: "error", message: error})

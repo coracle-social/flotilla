@@ -72,8 +72,7 @@ export const addRoomMembers = async (url: string, room: RoomMeta, pubkeys: strin
       rooms
         .get()
         .addMember(url, room, pk)
-        .then(command => command.publish().settled())
-        .then(publication => publication.getError()),
+        .then(command => command.publish().getError()),
     ),
   )
 
@@ -171,7 +170,7 @@ export const publishToSpace = async (
   {url, h, shareToChat}: {url: string; h?: string; shareToChat?: boolean},
 ) => {
   const publication = await command(await addressWriterToSpace(eventWriter, url, h)).then(publish)
-  const error = (await publication.settled()).getError()
+  const error = await publication.getError()
 
   if (shareToChat && !error) {
     publishRoomQuote({url, h, parent: publication.event})

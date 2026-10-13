@@ -36,7 +36,7 @@ const isBookmark = (tag: string[]) => ["e", "a", "t", "r"].includes(tag[0])
 const settle = async (pending: Promise<Command>) => {
   const publication = await pending.then(publish)
 
-  return (await publication.settled()).getError()
+  return publication.getError()
 }
 
 // Kind 30003, which welshman has no factory for. A named set is one of the user's folders.

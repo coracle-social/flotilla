@@ -123,7 +123,7 @@
       }
 
       const publication = await publishSettings({zap_amounts: $settings.zap_amounts})
-      const error = (await publication.settled()).getError()
+      const error = await publication.getError()
 
       if (error) {
         return pushToast({theme: "error", message: error})

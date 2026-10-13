@@ -32,7 +32,7 @@
 
     try {
       const publication = await setFeaturedContent(url, content)
-      const error = (await publication.settled()).getError()
+      const error = await publication.getError()
 
       if (error) {
         pushToast({theme: "error", message: error})

@@ -137,7 +137,7 @@ export class CapacitorNotifications implements IPushAdapter {
       }),
     })
 
-    const error = (await publication.settled()).getError()
+    const error = await publication.getError()
 
     if (error) {
       console.warn(`Failed to subscribe ${relay} to ${key} notifications:`, error)
@@ -161,7 +161,7 @@ export class CapacitorNotifications implements IPushAdapter {
     ).toString()
     const event = makeEvent(DELETE, {tags: [["a", address]]})
     const publication = publisher.get().publish({relays, event})
-    const error = (await publication.settled()).getError()
+    const error = await publication.getError()
 
     if (error) {
       console.warn(`Failed to unsubscribe ${relay} from notifications:`, error)

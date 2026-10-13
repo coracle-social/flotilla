@@ -59,7 +59,7 @@ export const toggleRoomPin = async (url: string, h: string, event: TrustedEvent)
   const command = await roomPinLists
     .get()
     .setPins(url, h, wasPinned ? pins.filter(pin => !keys.includes(pin)) : [...pins, event.id])
-  const error = (await command.publishToRelays([url]).settled()).getError()
+  const error = await command.publishToRelays([url]).getError()
 
   if (error) {
     pushToast({theme: "error", message: error})

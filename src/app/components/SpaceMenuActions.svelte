@@ -19,8 +19,8 @@
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceActionItems from "@app/components/SpaceActionItems.svelte"
-  import {openCheckout} from "@app/access"
-  import {relayMemberLists, relays, user} from "@app/core"
+  import {deriveUserIsSpaceMember, openCheckout} from "@app/access"
+  import {relays, user} from "@app/core"
   import {ENABLE_PAID_SPACES} from "@app/env"
   import {deriveHostedRelay, HOSTING_ENABLED} from "@app/hosting"
   import {deriveSpacePermissions} from "@app/management"
@@ -43,6 +43,7 @@
   const hostedRelay = deriveHostedRelay(url)
   const actionItems = deriveSpaceActionItems(url)
   const shouldNotify = deriveShouldNotify(url)
+  const isMember = deriveUserIsSpaceMember(url)
 
   const createInvite = () => pushModal(SpaceInvite, {url}, {replaceState: sheet})
 
@@ -62,14 +63,9 @@
     openCheckout(url)
   }
 
-  const members = $relayMemberLists.forUrl(url)
-
   // The owner is a member by construction and has nothing to manage.
   const canManageMembership = $derived(
-    ENABLE_PAID_SPACES &&
-      $relay?.isPaid() &&
-      $relay?.pubkey !== $user.pubkey &&
-      Boolean($members?.isMember($user.pubkey)),
+    ENABLE_PAID_SPACES && $relay?.isPaid() && $relay?.pubkey !== $user.pubkey && $isMember,
   )
 
   const toggleSpaceNotifications = () => {

@@ -162,7 +162,7 @@ const publishToSpace = async (url: string, eventWriter: PinWriter) => {
 
   const publication = await command(eventWriter).then(publish)
 
-  return (await publication.settled()).getError()
+  return publication.getError()
 }
 
 // One write per pin: a second update built from the same reader would undo the first.
@@ -180,7 +180,7 @@ export const deleteLibraryEvent = async (url: string, event: TrustedEvent) => {
       .get()
       .deleteEvent(event, deleteWriter => deleteWriter.setProtected(protect))
 
-    return (await request.publishToRelays([url]).settled()).getError()
+    return request.publishToRelays([url]).getError()
   }
 
   const {error} = await relayManagement.get().forUrl(url).banEvent(event.id)

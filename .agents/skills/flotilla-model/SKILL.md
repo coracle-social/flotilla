@@ -79,7 +79,7 @@ delete it, and anyone can pin to it.
 | `ROOM_ADD_MEMBER` / `ROOM_REMOVE_MEMBER` | 9000 / 9001 | `RoomAddMember` / `RoomRemoveMember` | admin | `addRoomMembers`, `RoomMemberMenu` |
 | `ROOM_EDIT_META` | 9002 | `RoomEdit` | admin | `rooms.editRoom` |
 | `ROOM_CREATE` / `ROOM_DELETE` | 9007 / 9008 | `RoomCreate` / `RoomDelete` | admin | `RoomForm`, `RoomDetailMenu` |
-| none (`ROOM_CREATE_INVITE` in `src/app/access.ts`) | 9009 | none | admin | `publishRoomInvite` |
+| `ROOM_CREATE_INVITE` | 9009 | `RoomCreateInvite` | admin | `publishRoomInvite` |
 | `ROOM_UPDATE_PINS` | 9010 | `RoomUpdatePins` | admin | `roomPinLists.setPins` |
 | `ROOM_JOIN` / `ROOM_LEAVE` | 9021 / 9022 | `RoomJoin` / `RoomLeave` | user | `joinRoom` / `leaveRoom` in `src/app/access.ts` |
 | `ROOM_CREATE_PERMISSION` | 19004 | `RoomCreatePermission` | not checked | `deriveUserCanCreateRoom` |
@@ -297,9 +297,8 @@ featured-content app data.
 
 These predate the rule or are waiting on welshman. Don't copy them; fix one when you touch it.
 
-- **No factory yet:** `MESSAGE` (9) in `RoomChat` and `publishRoomQuote`; 9009 room invites in
-  `src/app/access.ts`; `LIVEKIT_PARTICIPANTS` (39004, a local constant in `src/app/call.ts`);
-  `STATUS` (30315) in `src/app/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
+- **No factory yet:** `MESSAGE` (9) in `RoomChat` and `publishRoomQuote`; `LIVEKIT_PARTICIPANTS`
+  (39004, a local constant in `src/app/call.ts`); `STATUS` (30315) in `src/app/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
   subscriptions (`PUSH_SUBSCRIPTION`, 30390, local to `src/app/push/adapters/capacitor.ts`); `DIRECT_MESSAGE_FILE`
   (15) in `Chat.svelte`.
 - **Factory exists but bypassed:** DMs built with `makeEvent` in `Chat.svelte` (`DirectMessage`);
