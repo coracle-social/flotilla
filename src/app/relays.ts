@@ -3,7 +3,8 @@ import {call, on, simpleCache} from "@welshman/lib"
 import {RELAYS, normalizeRelayUrl, relays as relaySelections} from "@welshman/util"
 import {AuthStateEvent, AuthStatus, SocketEvent, SocketStatus} from "@welshman/net"
 import {throttled} from "@welshman/store"
-import {app, network, relayLists, relays, router} from "@app/core"
+import {Relays} from "@welshman/app"
+import {app, fromApp, network, relayLists, relays, router} from "@app/core"
 import {INDEXER_RELAYS} from "@app/env"
 import {relaysMostlyRestricted} from "@app/policies"
 import {colorFor} from "@app/theme"
@@ -103,7 +104,10 @@ export const deriveSocketStatus = (url: string) =>
 export const spaceSupportsRooms = (url: string) => Boolean(relays.get().get(url)?.hasNip(29))
 
 export const deriveSpaceSupportsRooms = (url: string) =>
-  derived(relays.get().one(url), $relay => Boolean($relay?.hasNip(29)))
+  derived(
+    fromApp($app => $app.use(Relays).one(url)),
+    $relay => Boolean($relay?.hasNip(29)),
+  )
 
 const livekitUrl = (url: string) =>
   url.replace(/^ws/, "http").replace(/\/$/, "") + "/.well-known/nip29/livekit"

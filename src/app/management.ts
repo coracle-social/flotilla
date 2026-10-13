@@ -1,9 +1,9 @@
 import {derived, readable, writable} from "svelte/store"
 import {ago, difference, MINUTE, now, simpleCache} from "@welshman/lib"
 import {ROOM_CREATE_PERMISSION, hexTags, tagValues} from "@welshman/util"
-import {RelayManagement, Relays} from "@welshman/app"
+import {Events, RelayManagement, Relays} from "@welshman/app"
 import type {IApp} from "@welshman/app"
-import {events, fromApp, relayManagement, relayMemberLists, usePlugin, user} from "@app/core"
+import {fromApp, relayManagement, relayMemberLists, usePlugin, user} from "@app/core"
 
 // `supportedmethods` answers for the pubkey that signed the request, so this catalog is the client's.
 export const MANAGEMENT_METHOD_GROUPS = [
@@ -258,7 +258,7 @@ export const deriveUserCanCreateRoom = (url: string) =>
   derived(
     [
       user,
-      events.get().forUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}]).$,
+      fromApp($app => $app.use(Events).forUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}]).$),
       deriveUserIsSpaceStaff(url),
     ],
     ([$user, $events, $isStaff]) =>

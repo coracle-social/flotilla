@@ -92,9 +92,9 @@ The rule is about when a binding is made:
   long-lived listener over the repository belongs on a plugin, as in `Chats` (`chats.ts`), so
   it is dropped with the app. Other listeners re-bind on `app.subscribe`, as
   `syncCheckedRemote` in `notifications.ts` and the resync in the root layout do.
-- **Code under the gate** can bind at call time. `rooms.get().forUrl(url).$` inside
-  `deriveUserRooms`, or `$app.use(X)` in a component's script, is fine there, because the app
-  cannot change while that code is mounted.
+- **A store handed to `derived`** goes through `fromApp($app => $app.use(X).forUrl(url).$)`,
+  never `x.get().forUrl(url)`, which binds the plugin of whichever app was current when the
+  `derive*` helper ran and keeps reading it after login, even with `app` among the inputs.
 
 For a new module-level store over a welshman plugin, use the `usePlugin` export in `core.ts` if
 there is one. Add an export when several modules need the plugin, and otherwise write
@@ -189,9 +189,9 @@ Every method returns a projection over the current app's repository:
 - relay-scoped through the tracker: `forUrl`, `byIdForUrl`, `byIdByUrl`, and
   `relaySignedForUrl`, which keeps only events signed by the relay's NIP-11 `self`
 
-Components bind `$events.forUrl(url, filters).$`. A `derive*` function called from gated code
-binds `events.get().forUrl(...).$` at call time, and a module-scope store wraps it in
-`fromApp($app => $app.use(Events).byIdByUrl(filters).$)`, as `latestActivityByPath` does.
+Components bind `$events.forUrl(url, filters).$`. A `derive*` function or a module-scope store
+wraps it in `fromApp($app => $app.use(Events).forUrl(url, filters).$)`, as `latestActivityByPath`
+does with `byIdByUrl`.
 `src/app/repository.ts` holds only the `LatestEvents` plugin. Plugin reads (`get`, `one`, `load`,
 `index`) are documented in welshman-app.
 
@@ -209,8 +209,8 @@ projections and repository derivations:
 export const deriveSpaceActionItems = (url: string) =>
   derived(
     [
-      events.get().forUrl(url, [{kinds: [REPORT]}]).$,
-      rooms.get().pendingJoins(url).$,
+      fromApp($app => $app.use(Events).forUrl(url, [{kinds: [REPORT]}]).$),
+      fromApp($app => $app.use(Rooms).pendingJoins(url).$),
       deriveSpacePermissions(url),
     ],
     ([$reports, $pendingJoins, $permissions]) =>

@@ -15,7 +15,7 @@ import {
   RELAYS,
 } from "@welshman/util"
 import {RelayJoin, RelayLeave, RoomJoin, RoomLeave} from "@welshman/domain"
-import {Relays, Sync, User, publish} from "@welshman/app"
+import {RelayMemberLists, Relays, Sync, User, publish} from "@welshman/app"
 import {stripPrefix} from "@lib/util"
 import {
   app,
@@ -274,7 +274,11 @@ export const completeSpaceJoin = async (url: string, notifications: boolean) => 
 // Gated out by price rather than by invitation: it charges, and they have not paid.
 export const derivePaidGated = (url: string) =>
   derived(
-    [fromApp($app => $app.use(Relays).one(url)), relayMemberLists.get().forUrl(url), app],
+    [
+      fromApp($app => $app.use(Relays).one(url)),
+      fromApp($app => $app.use(RelayMemberLists).forUrl(url)),
+      app,
+    ],
     ([$relay, $members, $app]) => {
       const pubkey = $app.user?.pubkey
 

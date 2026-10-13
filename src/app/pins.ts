@@ -1,12 +1,13 @@
 import {derived} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {getIdFilters, outbox} from "@welshman/util"
+import {PinLists} from "@welshman/app"
 import type {TrustedEvent} from "@welshman/util"
-import {events, network, pinLists, router} from "@app/core"
+import {events, fromApp, network, router} from "@app/core"
 
 export const derivePinnedEvents = (pubkey: string): Readable<TrustedEvent[]> =>
   derived(
-    pinLists.get().one(pubkey),
+    fromApp($app => $app.use(PinLists).one(pubkey)),
     ($pinList, set: (events: TrustedEvent[]) => void) => {
       const ids = $pinList?.ids() || []
 

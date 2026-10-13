@@ -8,12 +8,12 @@ import type {TrustedEvent} from "@welshman/util"
 import {Pin, Pinboard} from "@welshman/domain"
 import type {PinReader, PinReference, PinWriter, PinboardReader} from "@welshman/domain"
 import {isLink, parse} from "@welshman/content"
-import {publish} from "@welshman/app"
+import {Events, publish} from "@welshman/app"
 import {
   app,
   command,
   deletes,
-  events,
+  fromApp,
   reader,
   relayManagement,
   relays,
@@ -113,16 +113,21 @@ export const parsePinReference = (input: string): Maybe<PinReference> => {
 }
 
 export const deriveShelves = (url: string): Readable<PinboardReader[]> =>
-  derived(events.get().forUrl(url, [{kinds: [PINBOARD]}]).$, $events =>
-    $events.map(reader(Pinboard)),
+  derived(
+    fromApp($app => $app.use(Events).forUrl(url, [{kinds: [PINBOARD]}]).$),
+    $events => $events.map(reader(Pinboard)),
   )
 
 export const derivePins = (url: string): Readable<PinReader[]> =>
-  derived(events.get().forUrl(url, [{kinds: [PIN]}]).$, $events => $events.map(reader(Pin)))
+  derived(
+    fromApp($app => $app.use(Events).forUrl(url, [{kinds: [PIN]}]).$),
+    $events => $events.map(reader(Pin)),
+  )
 
 export const deriveShelf = (url: string, address: string): Readable<Maybe<PinboardReader>> =>
-  derived(events.get().one(address, [url]).$, $event =>
-    $event ? reader(Pinboard)($event) : undefined,
+  derived(
+    fromApp($app => $app.use(Events).one(address, [url]).$),
+    $event => ($event ? reader(Pinboard)($event) : undefined),
   )
 
 const matchesTerm = (term: string, fields: Maybe<string>[]) =>

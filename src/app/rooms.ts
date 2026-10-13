@@ -7,10 +7,20 @@ import type {EventContent, TrustedEvent} from "@welshman/util"
 import {Comment, Message} from "@welshman/domain"
 import type {BaseEventReader, EventWriter, Relay} from "@welshman/domain"
 import {throttled} from "@welshman/store"
-import {MembershipStatus, RoomLists, makeRoomKey, createSearch, publish} from "@welshman/app"
+import {
+  MembershipStatus,
+  RoomLists,
+  Rooms,
+  Relays,
+  User,
+  makeRoomKey,
+  createSearch,
+  publish,
+} from "@welshman/app"
 import type {Command, Room, RoomMeta} from "@welshman/app"
 import {
   deriveUserItem,
+  fromApp,
   command,
   roomLists,
   rooms,
@@ -44,7 +54,10 @@ export const displayRoom = (url: string, h: string) =>
 export const roomComparator = (url: string) => (h: string) => displayRoom(url, h).toLowerCase()
 
 export const deriveRoomMembers = (url: string, h: string) =>
-  derived(rooms.get().members(url, h).$, $members => Array.from($members))
+  derived(
+    fromApp($app => $app.use(Rooms).members(url, h).$),
+    $members => Array.from($members),
+  )
 
 // A room member also has to be allowed at the relay level to read the room at all.
 export const addRoomMembers = async (url: string, room: RoomMeta, pubkeys: string[]) => {
@@ -194,7 +207,10 @@ export const reorderSpaceUrls = (urls: string[]) => {
 // Rooms in the space the user has joined, limited to those the relay still advertises.
 export const deriveUserRooms = (url: string) =>
   derived(
-    [roomLists.get().roomsForUrl(user.get().pubkey, url).$, rooms.get().forUrl(url).$],
+    [
+      fromApp($app => $app.use(RoomLists).roomsForUrl(User.require($app).pubkey, url).$),
+      fromApp($app => $app.use(Rooms).forUrl(url).$),
+    ],
     ([$rooms, $spaceRooms]) => {
       const known = new Set($spaceRooms.map(room => room.h))
 
@@ -203,18 +219,21 @@ export const deriveUserRooms = (url: string) =>
   )
 
 export const deriveOtherRooms = (url: string, type: RoomType) =>
-  derived([deriveUserRooms(url), rooms.get().forUrl(url).$], ([$userRooms, $spaceRooms]) => {
-    const result = $spaceRooms
-      .filter(room => getRoomType(room) === type && !$userRooms.includes(room.h))
-      .map(room => room.h)
+  derived(
+    [deriveUserRooms(url), fromApp($app => $app.use(Rooms).forUrl(url).$)],
+    ([$userRooms, $spaceRooms]) => {
+      const result = $spaceRooms
+        .filter(room => getRoomType(room) === type && !$userRooms.includes(room.h))
+        .map(room => room.h)
 
-    return sortBy(roomComparator(url), uniq(result))
-  })
+      return sortBy(roomComparator(url), uniq(result))
+    },
+  )
 
 // A space's staff administer every room in it, so space staff implies room admin.
 export const deriveUserIsRoomAdmin = (url: string, h: string) =>
   derived(
-    [user, rooms.get().forRoom(url, h), deriveUserIsSpaceStaff(url)],
+    [user, fromApp($app => $app.use(Rooms).forRoom(url, h)), deriveUserIsSpaceStaff(url)],
     ([$user, $room, $isStaff]) =>
       $isStaff || Boolean($room?.admins?.pubkeys().includes($user.pubkey)),
   )
@@ -222,7 +241,7 @@ export const deriveUserIsRoomAdmin = (url: string, h: string) =>
 // The room's admin list names the management kinds each admin may publish.
 export const deriveUserRoomPermissions = (url: string, h: string) =>
   derived(
-    [user, rooms.get().forRoom(url, h)],
+    [user, fromApp($app => $app.use(Rooms).forRoom(url, h))],
     ([$user, $room]) => $room?.admins?.rolesFor($user.pubkey).map(Number) ?? [],
   )
 
@@ -255,26 +274,35 @@ export const deriveUserAdminDelete = (url: string, event: TrustedEvent) => {
 // Room membership is the relay's business, but a space admin outranks it.
 export const deriveUserRoomMembershipStatus = (url: string, h: string) =>
   derived(
-    [rooms.get().membershipStatus(url, h).$, deriveUserIsRoomAdmin(url, h)],
+    [fromApp($app => $app.use(Rooms).membershipStatus(url, h).$), deriveUserIsRoomAdmin(url, h)],
     ([$status, $isAdmin]) => ($isAdmin ? MembershipStatus.Granted : $status),
   )
 
 // How many people list each space both scopes and ranks the search.
 export const deriveSpaceSearch = () => {
-  const spacePubkeysByUrl = derived(roomLists.get().all.$, $roomLists => {
-    const result = new Map<string, Set<string>>()
+  const spacePubkeysByUrl = derived(
+    fromApp($app => $app.use(RoomLists).all.$),
+    $roomLists => {
+      const result = new Map<string, Set<string>>()
 
-    for (const roomList of $roomLists) {
-      for (const url of roomList.urls()) {
-        addToMapKey(result, url, roomList.author())
+      for (const roomList of $roomLists) {
+        for (const url of roomList.urls()) {
+          addToMapKey(result, url, roomList.author())
+        }
       }
-    }
 
-    return result
-  })
+      return result
+    },
+  )
 
   return derived(
-    [throttled(1000, relays.get().all.$), spacePubkeysByUrl],
+    [
+      throttled(
+        1000,
+        fromApp($app => $app.use(Relays).all.$),
+      ),
+      spacePubkeysByUrl,
+    ],
     ([$relays, $spacePubkeysByUrl]) =>
       createSearch(
         $relays.filter(r => $spacePubkeysByUrl.has(r.url)),
@@ -300,7 +328,7 @@ export const deriveSpaceSearch = () => {
 
 export const deriveUserRoomSearch = () =>
   derived(
-    [userSpaceUrls, userRoomList, rooms.get().byUrl.$],
+    [userSpaceUrls, userRoomList, fromApp($app => $app.use(Rooms).byUrl.$)],
     ([$userSpaceUrls, $userRoomList, $roomsByUrl]) => {
       type Option = {url: string; h?: string; path: string; name: string; isFavorite: boolean}
 

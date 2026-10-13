@@ -1,8 +1,8 @@
 import {derived} from "svelte/store"
 import {APP_DATA, sortEventsDesc, tagSpec, tagValues} from "@welshman/util"
 import {AppData} from "@welshman/domain"
-import {Relays, publish} from "@welshman/app"
-import {command, events, fromApp, writer} from "@app/core"
+import {Events, Relays, publish} from "@welshman/app"
+import {command, fromApp, writer} from "@app/core"
 import {addressWriterToSpace} from "@app/rooms"
 
 // NIP-78 app data from the pubkey the space's NIP-11 names, one ["content", <value>] tag per entry.
@@ -12,7 +12,9 @@ export const deriveFeaturedContent = (url: string) =>
   derived(
     [
       fromApp($app => $app.use(Relays).one(url)),
-      events.get().forUrl(url, [{kinds: [APP_DATA], "#d": [FEATURED_CONTENT_D]}]).$,
+      fromApp(
+        $app => $app.use(Events).forUrl(url, [{kinds: [APP_DATA], "#d": [FEATURED_CONTENT_D]}]).$,
+      ),
     ],
     ([$relay, $events]) => {
       const [event] = sortEventsDesc($events.filter(e => e.pubkey === $relay?.pubkey))

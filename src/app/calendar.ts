@@ -14,7 +14,8 @@ import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp, TimeEvent} from "@welshman/domain"
 import type {RsvpStatus} from "@welshman/domain"
 import {synced} from "@welshman/store"
-import {deletes, events, publisher, reader, relays, writer} from "@app/core"
+import {Events} from "@welshman/app"
+import {deletes, fromApp, publisher, reader, relays, writer} from "@app/core"
 import {addressWriterToSpace} from "@app/rooms"
 import {kv} from "@app/storage"
 
@@ -235,7 +236,8 @@ export const makeRsvpFilter = (event: TrustedEvent) => ({
   "#a": [getAddress(event)],
 })
 
-export const deriveRsvps = (event: TrustedEvent) => events.get().desc([makeRsvpFilter(event)]).$
+export const deriveRsvps = (event: TrustedEvent) =>
+  fromApp($app => $app.use(Events).desc([makeRsvpFilter(event)]).$)
 
 export const isAttending = (status?: RsvpStatus) => status === "accepted" || status === "tentative"
 

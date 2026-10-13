@@ -2,10 +2,10 @@ import {derived, get, writable} from "svelte/store"
 import {first, uniqBy} from "@welshman/lib"
 import {sortEventsDesc, tagSpec, tagValues} from "@welshman/util"
 import {deriveDeduplicated} from "@welshman/store"
-import {makeRoomKey} from "@welshman/app"
+import {Events, makeRoomKey} from "@welshman/app"
 import type {Room} from "@welshman/app"
 import type {Room as LiveKitRoom} from "livekit-client"
-import {events, network} from "@app/core"
+import {fromApp, network} from "@app/core"
 import {getLivekitEndpoint} from "@app/relays"
 import {getHttpAuthHeader} from "@app/signer"
 
@@ -162,7 +162,9 @@ export const deriveCallParticipants = (url: string, h: string) =>
       participantMediaState,
       callTargetRoom,
       deriveDeduplicated(
-        events.get().forUrl(url, [{kinds: [LIVEKIT_PARTICIPANTS], "#d": [h]}]).$,
+        fromApp(
+          $app => $app.use(Events).forUrl(url, [{kinds: [LIVEKIT_PARTICIPANTS], "#d": [h]}]).$,
+        ),
         events => first(sortEventsDesc(events)),
       ),
     ],

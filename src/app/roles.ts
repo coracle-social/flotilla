@@ -1,5 +1,6 @@
 import {derived} from "svelte/store"
-import {relayMemberLists} from "@app/core"
+import {RelayMemberLists} from "@welshman/app"
+import {fromApp} from "@app/core"
 
 // Roles are rendered at a fixed saturation and lightness, chosen to read on both themes.
 export const roleColor = (hue: number) => `hsl(${hue}, 70%, 50%)`
@@ -9,6 +10,6 @@ export const roleColorSoft = (hue: number) => `hsl(${hue}, 70%, 50%, 0.15)`
 
 export const deriveSpaceMemberRoles = (url: string) =>
   derived(
-    relayMemberLists.get().forUrl(url),
+    fromApp($app => $app.use(RelayMemberLists).forUrl(url)),
     $members => $members?.rolesByPubkey() ?? new Map<string, string[]>(),
   )

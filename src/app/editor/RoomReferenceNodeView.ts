@@ -1,12 +1,13 @@
 import type {NodeViewRendererProps} from "@tiptap/core"
 import {displayRelayUrl} from "@welshman/util"
-import {rooms} from "@app/core"
+import {Rooms} from "@welshman/app"
+import {fromApp} from "@app/core"
 
 export const RoomReferenceNodeView = ({node}: NodeViewRendererProps) => {
   const dom = document.createElement("span")
   const url = typeof node.attrs.url === "string" ? node.attrs.url : ""
   const h = typeof node.attrs.h === "string" ? node.attrs.h : ""
-  const room = rooms.get().forRoom(url, h)
+  const room = fromApp($app => $app.use(Rooms).forRoom(url, h))
 
   dom.classList.add("tiptap-object")
 

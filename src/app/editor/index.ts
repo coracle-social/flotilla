@@ -3,7 +3,7 @@ import type {Writable} from "svelte/store"
 import {get, derived} from "svelte/store"
 import {sortBy, uniq} from "@welshman/lib"
 import {throttled} from "@welshman/store"
-import {createSearch, splitRoomKey} from "@welshman/app"
+import {Profiles, RelayMemberLists, Rooms, createSearch, splitRoomKey} from "@welshman/app"
 import type {Room} from "@welshman/app"
 import type {FileAttributes} from "@welshman/editor"
 import {
@@ -17,7 +17,7 @@ import {
 } from "@welshman/editor"
 import type {CommandScopeTarget} from "@welshman/util"
 import {escapeHtml} from "@lib/html"
-import {profiles, relayLists, relayMemberLists, rooms} from "@app/core"
+import {fromApp, relayLists} from "@app/core"
 import {
   commands,
   createCommandSearch,
@@ -68,7 +68,13 @@ export const makeEditor = async ({
   commandTarget?: CommandScopeTarget
 }) => {
   const searchProfiles = derived(
-    [profiles.get().profileSearch, throttled(800, relayMemberLists.get().forUrl(url ?? ""))],
+    [
+      fromApp($app => $app.use(Profiles).profileSearch),
+      throttled(
+        800,
+        fromApp($app => $app.use(RelayMemberLists).forUrl(url ?? "")),
+      ),
+    ],
     ([$profileSearch, $spaceMembers]) => {
       const memberPubkeys = new Set($spaceMembers?.pubkeys())
 
@@ -78,7 +84,13 @@ export const makeEditor = async ({
   )
 
   const roomReferenceSearch = derived(
-    [throttled(800, activeSpaceUrls), throttled(800, rooms.get().byUrl.$)],
+    [
+      throttled(800, activeSpaceUrls),
+      throttled(
+        800,
+        fromApp($app => $app.use(Rooms).byUrl.$),
+      ),
+    ],
     ([$activeSpaceUrls, $roomsByUrl]) => {
       const spaceUrls = uniq(url ? [url, ...$activeSpaceUrls] : $activeSpaceUrls)
 
