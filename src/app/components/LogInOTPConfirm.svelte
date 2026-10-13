@@ -17,8 +17,8 @@
   import LogInSelect from "@app/components/LogInSelect.svelte"
   import {pushModal, clearModals} from "@app/ui/modal"
   import {setChecked} from "@app/ui/notifications"
-  import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/core/pomade"
-  import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
+  import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/features/pomade"
+  import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

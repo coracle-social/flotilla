@@ -17,7 +17,7 @@
   import {session} from "@app/core/session"
   import {pushToast} from "@app/ui/toast"
   import {pushModal} from "@app/ui/modal"
-  import {getPomadeClient} from "@app/core/pomade"
+  import {getPomadeClient} from "@app/features/pomade"
 
   type Props = {
     peersByPrefix: Map<string, string>

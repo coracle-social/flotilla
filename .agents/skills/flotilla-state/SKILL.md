@@ -25,8 +25,10 @@ runs (see [App policies](#app-policies)).
   app, builds a new one with that user, then sets `session`. There is no account switching, so
   `login` only runs while signed out: `restoreSession` at boot, the `LogIn*`/`SignUp*` flows,
   and `loginWithPomade`.
-- **Logout reloads the page.** `logout` in `src/app/core/session.ts` clears `kv`, `ss`, the user's
-  IndexedDB and `localStorage`, cleans up the app, then sets `window.location.href = "/"`.
+- **Logout reloads the page.** `logout` in `src/app/core/session.ts` runs the handlers features
+  register with `registerLogoutHandler` (pomade deactivates its session, push disables itself),
+  clears `kv`, `ss`, the user's IndexedDB and `localStorage`, cleans up the app, then sets
+  `window.location.href = "/"`.
 
 The app is therefore stable for as long as anything under the login gate is mounted.
 

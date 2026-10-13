@@ -27,7 +27,7 @@
     DEFAULT_SPACES,
   } from "@app/core/env"
   import {forceHealthChecks} from "@app/features/healthChecks"
-  import {loginWithPomade} from "@app/core/pomade"
+  import {loginWithPomade} from "@app/features/pomade"
   import {publishRoomList} from "@app/features/spaces/rooms"
   import {pushModal, clearModals} from "@app/ui/modal"
   import {app} from "@app/core/app"

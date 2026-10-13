@@ -102,7 +102,7 @@ add more.
 - `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and
   `signerHealth`), `notify.ts`
 - `env.ts`: every `VITE_` value, parsed
-- `nip46.ts`, `pomade.ts` (email login), `uploads.ts` (Blossom, image compression)
+- `nip46.ts`, `uploads.ts` (Blossom, image compression)
 - `logger.ts` (log capture and sending), `device.ts` (a device id)
 
 **`ui/`: chrome**
@@ -142,7 +142,8 @@ Outside `spaces/`:
   pinned notes), `bookmarks.ts`, `quotes.ts`, `reactions.ts`, `social.ts` (display names,
   comment trees, muting), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin)
 - `messages.ts`: DM conversations, the gift-wrap sync and `shouldUnwrap`
-- `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays)
+- `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
+  `pomade.ts` (email login, and deactivating the pomade session on logout)
 - Platform and voice: `push/` (notification adapters, and `server.ts` for the push server's HTTP
   API), `deepLinks.ts`, `reminders.ts`, `dictation.ts` and `speech.ts` (through `inference/`)
 - `editor/`: flotilla's `@welshman/editor` setup (`makeEditor`), with its suggestion popovers and

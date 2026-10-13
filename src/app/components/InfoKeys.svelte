@@ -10,7 +10,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import KeyRecoveryRequest from "@app/components/KeyRecoveryRequest.svelte"
-  import {isPomadeSession} from "@app/core/pomade"
+  import {isPomadeSession} from "@app/features/pomade"
   import {PLATFORM_NAME} from "@app/core/env"
   import {pushModal} from "@app/ui/modal"
   import {session} from "@app/core/session"

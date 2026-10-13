@@ -3,7 +3,7 @@ import {ifLet, reject, spec} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {pomade, toSession} from "@welshman/app"
 import type {Session} from "@welshman/app"
-import {login, session} from "@app/core/session"
+import {login, registerLogoutHandler, session} from "@app/core/session"
 
 export type PomadeSession = Session<"pomade", {clientOptions: ClientOptions; email: string}>
 
@@ -106,3 +106,7 @@ export const getPomadeLoginFailureMessage = (messages: PomadeMessage[]) =>
   messages.some(message => message.res !== undefined)
     ? POMADE_INVALID_LOGIN_MESSAGE
     : POMADE_NETWORK_ERROR_MESSAGE
+
+export const registerPomade = () => {
+  registerLogoutHandler(deactivateCurrentPomadeSession)
+}

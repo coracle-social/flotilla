@@ -4,8 +4,8 @@
   import MenuButton from "@lib/components/MenuButton.svelte"
   import PomadeSessionMenu from "@app/components/PomadeSessionMenu.svelte"
   import {pushToast} from "@app/ui/toast"
-  import {deletePomadeSession, loadOtherPomadeSessions} from "@app/core/pomade"
-  import type {PomadeSessionWithPeers} from "@app/core/pomade"
+  import {deletePomadeSession, loadOtherPomadeSessions} from "@app/features/pomade"
+  import type {PomadeSessionWithPeers} from "@app/features/pomade"
 
   let sessions = $state<PomadeSessionWithPeers[]>([])
 

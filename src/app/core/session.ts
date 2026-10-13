@@ -7,7 +7,6 @@ import type {Session} from "@welshman/app"
 import {getTestEvents, maybeGetTestSession} from "@lib/test/session"
 import {app, replaceApp} from "@app/core/app"
 import {hasCachedIdentity, kv, ss, storage} from "@app/core/storage"
-import {deactivateCurrentPomadeSession} from "@app/core/pomade"
 
 export const session = withGetter(writable<Maybe<Session>>(undefined))
 
@@ -79,7 +78,6 @@ export const resetSession = async () => {
 }
 
 export const logout = async () => {
-  await deactivateCurrentPomadeSession()
   await Promise.all(logoutHandlers.map(call))
   await resetSession()
 }
