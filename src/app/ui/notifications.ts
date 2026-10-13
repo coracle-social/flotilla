@@ -63,7 +63,8 @@ import {activeSpaceUrls} from "@app/features/spaces"
 import {getNotificationRef, isEventMuted, isNotificationTarget, Notes} from "@app/features/social"
 import {getHttpAuthHeader} from "@app/core/signer"
 import {kv} from "@app/core/storage"
-import {makeKeyedSyncs, registerSync, userRelayList} from "@app/core/sync"
+import {makeKeyedSyncs, registerSync} from "@app/core/sync"
+import {userRelayList} from "@app/core/user"
 import {notificationSettings} from "@app/features/push/adapters/common"
 
 // Checked state

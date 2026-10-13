@@ -23,7 +23,7 @@
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@app/components/RoomItemAddMember.svelte"
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {groupRoomMessages} from "@app/features/spaces/rooms"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import {pageLoading} from "@app/features/loading"

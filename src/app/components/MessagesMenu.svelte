@@ -8,7 +8,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import RelayList from "@app/components/RelayList.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
   import {pushModal} from "@app/ui/modal"
   import {setChecked} from "@app/ui/notifications"

@@ -11,7 +11,7 @@
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
   import {publishReaction, retractReaction} from "@app/features/reactions"
   import {makeSpacePath} from "@app/ui/routes"

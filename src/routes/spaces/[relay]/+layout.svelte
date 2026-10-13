@@ -21,7 +21,7 @@
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
   import {derivePaidGated, deriveRelayAuthError} from "@app/features/spaces/membership"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {relays, roomLists} from "@app/core/plugins"
   import {userSpaceUrls} from "@app/features/spaces"
   import {getModal, pushModal} from "@app/ui/modal"

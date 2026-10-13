@@ -19,7 +19,7 @@
   import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {roomPinLists} from "@app/core/plugins"
   import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
   import {shareEvent} from "@app/ui/share"

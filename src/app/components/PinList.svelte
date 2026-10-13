@@ -14,7 +14,7 @@
   import PinSelectionMenu from "@app/components/PinSelectionMenu.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {

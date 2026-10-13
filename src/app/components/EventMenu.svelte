@@ -19,7 +19,7 @@
   import {shareEvent} from "@app/ui/share"
   import {deriveUserAdminDelete} from "@app/features/spaces/rooms"
   import {pushModal} from "@app/ui/modal"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
 
   type Props = {
     url?: string

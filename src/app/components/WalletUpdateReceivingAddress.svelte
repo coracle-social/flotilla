@@ -13,7 +13,7 @@
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import {pushToast} from "@app/ui/toast"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {wallet} from "@app/features/wallet"
 

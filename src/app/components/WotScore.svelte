@@ -16,7 +16,7 @@
 <script lang="ts">
   import {clamp} from "@welshman/lib"
   import {WotScope} from "@welshman/app"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {followLists, wot} from "@app/core/plugins"
 
   type Props = {

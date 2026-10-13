@@ -1,7 +1,7 @@
 <script lang="ts">
   import cx from "classnames"
   import {difference} from "@welshman/lib"
-  import {BlossomServerLists, MuteLists, publish} from "@welshman/app"
+  import {BlossomServerLists, publish} from "@welshman/app"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Accessibility from "@assets/icons/accessibility.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
@@ -22,14 +22,13 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import SpeechModelSettings from "@app/components/SpeechModelSettings.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {deriveUserItem} from "@app/core/app"
+  import {deriveUserItem, userMuteList} from "@app/core/user"
   import {blossomServerLists, muteLists} from "@app/core/plugins"
   import {pushToast} from "@app/ui/toast"
   import {PLATFORM_NAME} from "@app/core/env"
   import {flTheme, flThemes, theme} from "@app/ui/theme"
   import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
 
-  const userMuteList = deriveUserItem(MuteLists)
   const userBlossomServerList = deriveUserItem(BlossomServerLists)
 
   const reset = () => {

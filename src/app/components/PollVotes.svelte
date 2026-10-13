@@ -6,7 +6,7 @@
   import {Poll, PollResponse} from "@welshman/domain"
   import type {Publication} from "@welshman/app"
   import PollOption from "@app/components/PollOption.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {events, publisher} from "@app/core/plugins"
   import {command, reader, writer} from "@app/core/domain"
 

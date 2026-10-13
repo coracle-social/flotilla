@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {removeUndefined} from "@welshman/lib"
-  import {MuteLists, publish} from "@welshman/app"
+  import {publish} from "@welshman/app"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
   import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
   import UserBlock from "@assets/icons/user-block.svg?dataurl"
@@ -10,7 +10,7 @@
   import Button from "@lib/components/Button.svelte"
   import ProfileInfo from "@app/components/ProfileInfo.svelte"
   import ProfileQrCode from "@app/components/ProfileQrCode.svelte"
-  import {deriveUserItem, user} from "@app/core/app"
+  import {user, userMuteList} from "@app/core/user"
   import {muteLists, profiles} from "@app/core/plugins"
   import {pushModal} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"
@@ -25,8 +25,6 @@
   const {pubkey, url, onClick, customActions}: Props = $props()
 
   const profile = $profiles.one(pubkey, removeUndefined([url]))
-
-  const userMuteList = deriveUserItem(MuteLists)
 
   const isSelf = $derived($user.pubkey === pubkey)
 

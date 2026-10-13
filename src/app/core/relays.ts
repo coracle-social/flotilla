@@ -22,7 +22,10 @@ import {throttled} from "@welshman/store"
 import {BlockedRelayLists} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {app, appPolicies} from "@app/core/app"
-import {BLOCKED_RELAYS} from "@app/core/env"
+import {relays} from "@app/core/plugins"
+import {BLOCKED_RELAYS, INDEXER_RELAYS} from "@app/core/env"
+import {registerSync} from "@app/core/sync"
+import {userSearchRelayList} from "@app/core/user"
 
 // Relays that mostly send restricted responses to requests and events
 export const relaysMostlyRestricted = writable<Record<string, string>>({})
@@ -205,9 +208,23 @@ const mostlyRestrictedPolicy = (socket: Socket) => {
   }
 }
 
+const syncRelays = () => {
+  for (const url of INDEXER_RELAYS) {
+    relays.get().load(url)
+  }
+
+  return userSearchRelayList.subscribe($searchRelayList => {
+    for (const url of $searchRelayList?.urls() ?? []) {
+      relays.get().load(url)
+    }
+  })
+}
+
 export const registerRelays = () => {
   appPolicies.push(
     $app => $app.pool.addSocketPolicy(makeBlockPolicy($app)),
     $app => $app.pool.addSocketPolicy(mostlyRestrictedPolicy),
   )
+
+  registerSync(syncRelays)
 }

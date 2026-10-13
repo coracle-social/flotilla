@@ -6,7 +6,7 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import {displayInboxTimestamp} from "@app/ui/notifications"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
 
   type Props = {
     path: string

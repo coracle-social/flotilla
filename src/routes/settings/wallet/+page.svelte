@@ -25,7 +25,7 @@
   import {displayLnurl, getNwcClient, getWebLn, wallet} from "@app/features/wallet"
   import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
   import {pushToast} from "@app/ui/toast"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
 
   const connect = () => pushModal(WalletConnect)

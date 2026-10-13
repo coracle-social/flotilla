@@ -22,7 +22,7 @@
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import ProfilePinnedNote from "@app/components/ProfilePinnedNote.svelte"
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {messagingRelayLists, profiles, relayManagement} from "@app/core/plugins"
   import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
   import type {BannedPubkeyItem} from "@app/features/spaces/management"

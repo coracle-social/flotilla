@@ -1,6 +1,5 @@
 <script lang="ts">
   import {preventDefault} from "@lib/html"
-  import {RelayLists} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -11,7 +10,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {deriveUserItem} from "@app/core/app"
+  import {userRelayList} from "@app/core/user"
   import {messagingRelayLists, relayLists} from "@app/core/plugins"
   import {DEFAULT_RELAYS, DEFAULT_MESSAGING_RELAYS} from "@app/core/env"
   import {pushToast} from "@app/ui/toast"
@@ -21,8 +20,6 @@
   }
 
   const {next}: Props = $props()
-
-  const userRelayList = deriveUserItem(RelayLists)
 
   const back = () => history.back()
 

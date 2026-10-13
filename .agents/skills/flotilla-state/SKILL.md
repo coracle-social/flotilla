@@ -36,11 +36,12 @@ The app is therefore stable for as long as anything under the login gate is moun
 |---|---|---|
 | `app` | the current `App` | an anonymous app |
 | `session` | the persisted `Session` | `undefined` |
-| `user` | `User.require($app)`, derived | subscribing or `.get()` throws |
+| `user` | `User.require($app)`, derived, in `core/user.ts` with the rows below it | subscribing or `.get()` throws |
 | `usePlugin(Plugin)` | a store holding `$app.use(Plugin)` for the current app | safe |
 | `profiles`, `rooms`, `relays`, `events`, `publisher`, … | `usePlugin` for 28 welshman plugins | safe |
 | `fromApp(read)` | a store that re-reads `read($app)` when the app changes | safe |
 | `deriveUserItem(Plugin)` | the signed-in user's entry in a keyed plugin | `undefined` |
+| `userProfile`, `userRelayList`, `userFollowList`, `userMuteList`, `userSearchRelayList` | `deriveUserItem` over the matching plugin | `undefined` |
 | `userSearchRelayUrls` | the user's search relays, or `DEFAULT_SEARCH_RELAYS` | the defaults |
 | `reader`, `writer`, `command` | `Domain` entry points on the current app | — |
 | `login`, `appPolicies` | see above and below | — |
@@ -364,10 +365,12 @@ The root layout calls `syncApplicationData()` once the session is restored and s
 and again after every app swap. `completeSpaceJoin` in `spaces/membership` calls it after a space
 is joined. Each call tears down the previous run.
 
-`sync.ts` itself only loads NIP-11 for the indexer and search relays, the user's relay list and
-core lists (profile, follows, mutes, blossom servers, blocked and search relays, `Settings`), and
-their follows' follow and mute lists. Everything else is a sync function its owner hands to
-`registerSync` from its `registerX`, started with the rest and restarted when login swaps the app:
+`sync.ts` itself holds no syncs. Each is a function its owner hands to `registerSync` from its
+`registerX`, started with the rest and restarted when login swaps the app:
+
+- `registerRelays` (`core/relays.ts`): NIP-11 for the indexer and search relays
+- `registerUser` (`core/user.ts`): the user's relay list and core lists (profile, follows, mutes,
+  blossom servers, blocked and search relays, `Settings`), and their follows' follow and mute lists
 
 - `registerSpaces`: NIP-11 for the user's spaces and the one on screen, the user's room list, and
   space content (a week of it, plus reactions and a one-per-kind sample for the space on screen)
@@ -380,7 +383,7 @@ their follows' follow and mute lists. Everything else is a sync function its own
 - `registerMessages`: gift wraps from the user's messaging relays, only when `shouldUnwrap` is on
 - `registerBookmarks`: the user's bookmarks; `registerNotifications`: the home notification feed
 
-The helpers these are built from live in `sync.ts`. `pullAndListen(url, filters)` is a negentropy
+The helpers these are built from live in `sync.ts`, except `syncUserList`, which is in `user.ts`. `pullAndListen(url, filters)` is a negentropy
 `Sync.pull` plus a live `limit: 0` request, and returns the function that stops it.
 `syncEach(store, start)` keeps one sync per key in a store, starting the new ones and stopping the
 dropped ones. `syncUserList(load)` reloads one of the user's lists whenever their relay list

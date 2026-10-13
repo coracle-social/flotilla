@@ -13,7 +13,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import Profile from "@app/components/Profile.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {HOSTING_ENABLED} from "@app/features/hosting"
   import {pushModal} from "@app/ui/modal"

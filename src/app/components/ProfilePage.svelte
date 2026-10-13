@@ -29,7 +29,7 @@
   import {pushModal} from "@app/ui/modal"
   import {clip, pushToast} from "@app/ui/toast"
   import {goToMessages} from "@app/ui/routes"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {followLists, profiles, relayLists} from "@app/core/plugins"
 
   type Props = {

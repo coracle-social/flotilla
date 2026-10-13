@@ -1,29 +1,15 @@
 import type {Readable, Unsubscriber} from "svelte/store"
-import {assoc, call, noop} from "@welshman/lib"
-import type {Maybe} from "@welshman/lib"
-import {FOLLOWS, MUTES, outbox, unionFilters} from "@welshman/util"
+import {assoc, call} from "@welshman/lib"
+import {unionFilters} from "@welshman/util"
 import type {Filter} from "@welshman/util"
-import type {FollowListReader} from "@welshman/domain"
-import {FollowLists, RelayLists, SearchRelayLists, Sync} from "@welshman/app"
-import {app, deriveUserItem} from "@app/core/app"
-import {
-  blockedRelayLists,
-  blossomServerLists,
-  followLists,
-  muteLists,
-  network,
-  profiles,
-  relayLists,
-  relays,
-  router,
-  searchRelayLists,
-} from "@app/core/plugins"
-import {INDEXER_RELAYS} from "@app/core/env"
-import {Settings} from "@app/core/settings"
+import {Sync} from "@welshman/app"
+import {app} from "@app/core/app"
+import {network} from "@app/core/plugins"
+
+// Registry
 
 const syncs: (() => Unsubscriber)[] = []
 
-// Started with the built-in syncs, and restarted with them when login swaps the app.
 export const registerSync = (sync: () => Unsubscriber) => {
   syncs.push(sync)
 }
@@ -37,6 +23,7 @@ export const pullAndListen = (url: string, filters: Filter[]) => {
     .get()
     .use(Sync)
     .pull({relays: [url], filters})
+
   network.get().request({
     relays: [url],
     signal: controller.signal,
@@ -85,77 +72,6 @@ export const syncEach = (
   }
 }
 
-export const userRelayList = deriveUserItem(RelayLists)
-
-// The user's lists are read from their outbox, so each is loaded again once the relay list arrives.
-export const syncUserList = (load: (pubkey: string) => unknown) => {
-  const $pubkey = app.get().user?.pubkey
-
-  if ($pubkey) {
-    return userRelayList.subscribe(() => load($pubkey))
-  }
-
-  return noop
-}
-
-const userFollowList = deriveUserItem(FollowLists)
-
-const userSearchRelayList = deriveUserItem(SearchRelayLists)
-
-// Relays
-
-const syncRelays = () => {
-  for (const url of INDEXER_RELAYS) {
-    relays.get().load(url)
-  }
-
-  return userSearchRelayList.subscribe($searchRelayList => {
-    for (const url of $searchRelayList?.urls() ?? []) {
-      relays.get().load(url)
-    }
-  })
-}
-
-// User data
-
-const syncFollowNetwork = async ($followList: Maybe<FollowListReader>) => {
-  const authors = $followList?.pubkeys() ?? []
-
-  if (authors.length > 0) {
-    const scenario = await router.get().resolve(authors.map(pubkey => outbox(pubkey)))
-
-    network.get().load({
-      filters: [{kinds: [FOLLOWS, MUTES], authors}],
-      relays: scenario.limit(8).getUrls(),
-    })
-  }
-}
-
-const syncUserData = () => {
-  const $pubkey = app.get().user?.pubkey
-
-  if ($pubkey) {
-    relayLists.get().load($pubkey)
-  }
-
-  const unsubscribeLists = syncUserList(pubkey => {
-    blossomServerLists.get().load(pubkey)
-    blockedRelayLists.get().load(pubkey)
-    followLists.get().load(pubkey)
-    muteLists.get().load(pubkey)
-    profiles.get().load(pubkey)
-    searchRelayLists.get().load(pubkey)
-    app.get().use(Settings).load(pubkey)
-  })
-
-  const unsubscribeFollowList = userFollowList.subscribe(syncFollowNetwork)
-
-  return () => {
-    unsubscribeLists()
-    unsubscribeFollowList()
-  }
-}
-
 // Merge all synchronization functions
 
 let unsubscribe: Unsubscriber | undefined
@@ -163,7 +79,7 @@ let unsubscribe: Unsubscriber | undefined
 export const syncApplicationData = () => {
   unsubscribe?.()
 
-  const unsubscribers = [syncRelays(), syncUserData(), ...syncs.map(call)]
+  const unsubscribers = syncs.map(call)
 
   unsubscribe = () => unsubscribers.forEach(call)
 

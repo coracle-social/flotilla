@@ -18,7 +18,8 @@
   import {userSpaceUrls} from "@app/features/spaces"
   import {pushToast} from "@app/ui/toast"
   import {logout} from "@app/core/session"
-  import {app, user} from "@app/core/app"
+  import {app} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {publisher, relayLists} from "@app/core/plugins"
   import {writer} from "@app/core/domain"
 

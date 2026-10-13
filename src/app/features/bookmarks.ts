@@ -18,10 +18,11 @@ import type {BookmarkListReader, BookmarkListWriter} from "@welshman/domain"
 import {withGetter} from "@welshman/store"
 import {DerivedPlugin, Domain, Network, User, publish} from "@welshman/app"
 import type {Command, IApp} from "@welshman/app"
-import {app, deriveUserItem, fromApp, user} from "@app/core/app"
+import {app, fromApp} from "@app/core/app"
+import {deriveUserItem, syncUserList, user} from "@app/core/user"
 import {deletes, events, network} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
-import {registerSync, syncUserList} from "@app/core/sync"
+import {registerSync} from "@app/core/sync"
 
 // NIP-51's four item tags: a note, an addressable event, a topic and a url.
 const isBookmark = (tag: string[]) => ["e", "a", "t", "r"].includes(tag[0])

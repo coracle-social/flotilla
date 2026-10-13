@@ -4,7 +4,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
   import HomeNetworkRecentItem from "@app/components/HomeNetworkRecentItem.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {followLists} from "@app/core/plugins"
   import {countNetworkFeedTypes, makeNetworkFeed} from "@app/features/social"
 

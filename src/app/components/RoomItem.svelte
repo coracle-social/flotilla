@@ -27,7 +27,7 @@
   import RoomItemMenu from "@app/components/RoomItemMenu.svelte"
   import RoomItemMenuMobile from "@app/components/RoomItemMenuMobile.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {events, profiles, publisher} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {noPublications, publicationsByEventId} from "@app/core/publications"

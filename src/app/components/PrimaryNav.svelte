@@ -1,7 +1,6 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import cx from "classnames"
-  import {Profiles} from "@welshman/app"
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import Compass from "@assets/icons/compass.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
@@ -21,15 +20,13 @@
   import {notifications} from "@app/ui/notifications"
   import {userSpaceUrls} from "@app/features/spaces"
   import {goToMessages, lastSpaceUrl, makeSpacePath} from "@app/ui/routes"
-  import {deriveUserItem} from "@app/core/app"
+  import {userProfile} from "@app/core/user"
 
   type Props = {
     children?: Snippet
   }
 
   const {children}: Props = $props()
-
-  const userProfile = deriveUserItem(Profiles)
 
   const chatHandler = () => goToMessages()
 

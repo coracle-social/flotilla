@@ -78,9 +78,9 @@ Conventions below.
 - Use Svelte 4 **stores** for all state (NOT runes outside UI components)
 - Everything hangs off the single `App` instance in `app/core/app.ts`. There are no welshman globals —
   reach features with `app.use(Plugin)`, which is memoized per app and cheap to call inline.
-- `app/core/app.ts` also exports the `user` store (with `.get()`), `fromApp`, and
-  `deriveUserItem(plugin)` for the current user's entry in a keyed collection. The plugin stores are
-  in `app/core/plugins.ts`, `reader`/`writer`/`command` in `app/core/domain.ts`, and the `session`
+- `app/core/app.ts` also exports `fromApp`. The `user` store (with `.get()`), `deriveUserItem(plugin)`
+  for the current user's entry in a keyed collection, and shared entries such as `userProfile` and
+  `userFollowList` are in `app/core/user.ts`. The plugin stores are in `app/core/plugins.ts`, `reader`/`writer`/`command` in `app/core/domain.ts`, and the `session`
   store and `login` in `app/core/session.ts`.
 - Most global state flows through the app's `repository` (unidirectional)
 - Query state with a plugin's `one(key)` / `index` / `all`, or `deriveEventsById` /

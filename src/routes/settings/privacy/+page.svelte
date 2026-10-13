@@ -12,7 +12,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import RelayList from "@app/components/RelayList.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {blockedRelayLists} from "@app/core/plugins"
   import {pushModal} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"

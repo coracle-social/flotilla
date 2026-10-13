@@ -11,7 +11,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import Reaction from "@app/components/Reaction.svelte"
   import {REPOST_KINDS} from "@app/features/content"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
   import {pushModal} from "@app/ui/modal"
   import {pushEventNote} from "@app/ui/routes"

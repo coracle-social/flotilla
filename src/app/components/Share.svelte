@@ -20,7 +20,7 @@
   import RelayName from "@app/components/RelayName.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import {conversationSearch} from "@app/features/messages"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {deriveUserRoomSearch} from "@app/features/spaces/rooms"
   import {makeConversationPath} from "@app/ui/routes"
   import {shareTo, type Share} from "@app/ui/share"

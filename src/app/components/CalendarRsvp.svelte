@@ -10,7 +10,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {reader} from "@app/core/domain"
   import {
     getRsvpsByStatus,

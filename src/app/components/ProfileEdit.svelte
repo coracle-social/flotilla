@@ -9,7 +9,7 @@
   import type {Values} from "@app/components/ProfileEditForm.svelte"
   import {clearModals} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {getProfileGeohash} from "@app/features/location"
 

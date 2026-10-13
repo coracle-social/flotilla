@@ -4,7 +4,7 @@
   import HomeInboxItemRow from "@app/components/HomeInboxItemRow.svelte"
   import ConversationTitle from "@app/components/ConversationTitle.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
 
   type Props = {
     path: string

@@ -3,7 +3,8 @@ import {ago, difference, MINUTE, now, simpleCache} from "@welshman/lib"
 import {ROOM_CREATE_PERMISSION, hexTags, tagValues} from "@welshman/util"
 import {Events, RelayManagement, Relays} from "@welshman/app"
 import type {IApp} from "@welshman/app"
-import {fromApp, user} from "@app/core/app"
+import {fromApp} from "@app/core/app"
+import {user} from "@app/core/user"
 import {relayManagement, relayMemberLists, usePlugin} from "@app/core/plugins"
 
 // `supportedmethods` answers for the pubkey that signed the request, so this catalog is the client's.

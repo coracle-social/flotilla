@@ -20,7 +20,7 @@
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceActionItems from "@app/components/SpaceActionItems.svelte"
   import {deriveUserIsSpaceMember, openCheckout} from "@app/features/spaces/membership"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {relays} from "@app/core/plugins"
   import {ENABLE_PAID_SPACES} from "@app/core/env"
   import {deriveHostedRelay, HOSTING_ENABLED} from "@app/features/hosting"

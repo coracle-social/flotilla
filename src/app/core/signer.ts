@@ -3,7 +3,8 @@ import {ago, avg, ms, now, spec} from "@welshman/lib"
 import {makeHttpAuth, makeHttpAuthHeader} from "@welshman/util"
 import {Logger} from "@welshman/app"
 import type {LogMessage} from "@welshman/app"
-import {fromApp, user} from "@app/core/app"
+import {fromApp} from "@app/core/app"
+import {user} from "@app/core/user"
 
 export type SignerRequest = {
   id: string

@@ -49,7 +49,8 @@ import {
   publish,
 } from "@welshman/app"
 import type {Command, Room, RoomMeta} from "@welshman/app"
-import {app, fromApp, user} from "@app/core/app"
+import {app, fromApp} from "@app/core/app"
+import {user} from "@app/core/user"
 import {network, roomLists, rooms, router, publisher, relays} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
 import {INDEXER_RELAYS} from "@app/core/env"

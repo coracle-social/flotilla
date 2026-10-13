@@ -11,7 +11,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {makeConversationPath, goToMessages} from "@app/ui/routes"
   import {notifications} from "@app/ui/notifications"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
 
   type Props = {

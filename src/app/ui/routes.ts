@@ -20,7 +20,8 @@ import {
   tagValue,
   tagValues,
 } from "@welshman/util"
-import {app, user} from "@app/core/app"
+import {app} from "@app/core/app"
+import {user} from "@app/core/user"
 import {messagingRelayLists} from "@app/core/plugins"
 import {makeConversationId} from "@app/features/messages"
 import {PLATFORM_URL, PLATFORM_RELAYS} from "@app/core/env"

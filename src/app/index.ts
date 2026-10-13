@@ -4,6 +4,7 @@ import {registerNotify} from "@app/core/notify"
 import {registerRelays} from "@app/core/relays"
 import {registerSettings} from "@app/core/settings"
 import {registerStorage} from "@app/core/storage"
+import {registerUser} from "@app/core/user"
 import {registerNotifications} from "@app/ui/notifications"
 import {registerBookmarks} from "@app/features/bookmarks"
 import {registerMessages} from "@app/features/messages"
@@ -32,6 +33,7 @@ export const registerAll = () => {
     registerNotify()
     registerStorage()
     registerSettings()
+    registerUser()
     registerNotifications()
     registerBookmarks()
     registerMessages()

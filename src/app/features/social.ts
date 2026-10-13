@@ -56,12 +56,13 @@ import {
   getReplyTags,
 } from "@welshman/domain"
 import type {CommentRef} from "@welshman/domain"
-import {Events, FollowLists, MuteLists, Network, Profiles, Router} from "@welshman/app"
+import {Events, Network, Profiles, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {decodeGeohash} from "@lib/geohash"
 import {createScroller} from "@lib/html"
 import {CONTENT_KINDS} from "@app/features/content"
-import {deriveUserItem, fromApp, user} from "@app/core/app"
+import {fromApp} from "@app/core/app"
+import {user, userFollowList, userMuteList} from "@app/core/user"
 import {profiles, relayLists, router, usePlugin} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
 import {isFeedLoading, makeFeed, makeFeedContext, makeFeedLoader} from "@app/features/feeds"
@@ -126,7 +127,7 @@ export const deriveMemberPins = (pubkeys: string[], url?: string) => {
   )
 }
 
-export const bootstrapPubkeys = derived(deriveUserItem(FollowLists), $userFollowList => {
+export const bootstrapPubkeys = derived(userFollowList, $userFollowList => {
   const appPubkeys = DEFAULT_PUBKEYS.split(",")
   const userPubkeys = shuffle($userFollowList?.pubkeys() ?? [])
 
@@ -588,7 +589,7 @@ export const makeNetworkFeed = () => {
 // Muting
 
 export const isEventMuted = withGetter(
-  derived([user, deriveUserItem(MuteLists)], ([$user, $muteList]) => {
+  derived([user, userMuteList], ([$user, $muteList]) => {
     const mutedEvents = new Set($muteList?.ids())
     const mutedPubkeys = new Set($muteList?.pubkeys())
     const mutedAddresses = new Set($muteList?.addresses())

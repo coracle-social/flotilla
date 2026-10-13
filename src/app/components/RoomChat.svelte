@@ -18,7 +18,7 @@
   import RoomTranscript from "@app/components/RoomTranscript.svelte"
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {deletes, publisher, relays, rooms} from "@app/core/plugins"
   import {writer} from "@app/core/domain"
   import {

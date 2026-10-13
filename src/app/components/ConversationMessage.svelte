@@ -19,7 +19,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ConversationMessageMenu from "@app/components/ConversationMessageMenu.svelte"
   import ConversationMessageMenuMobile from "@app/components/ConversationMessageMenuMobile.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {profiles, publisher} from "@app/core/plugins"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
   import {highlightedEvent} from "@app/ui/routes"

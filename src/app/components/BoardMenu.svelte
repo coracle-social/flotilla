@@ -12,7 +12,7 @@
   import Notice from "@lib/components/Notice.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {deleteLibraryEvent} from "@app/features/spaces/pinboards"
   import {shareEvent} from "@app/ui/share"

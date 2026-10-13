@@ -18,7 +18,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
   import {pushToast} from "@app/ui/toast"
-  import {app, user} from "@app/core/app"
+  import {app} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {blockedRelayLists, relayLists} from "@app/core/plugins"
 
   type Props = {

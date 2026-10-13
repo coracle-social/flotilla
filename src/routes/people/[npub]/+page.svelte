@@ -10,7 +10,8 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import ProfilePage from "@app/components/ProfilePage.svelte"
   import {pushToast} from "@app/ui/toast"
-  import {app, user} from "@app/core/app"
+  import {app} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {
     followLists,
     messagingRelayLists,

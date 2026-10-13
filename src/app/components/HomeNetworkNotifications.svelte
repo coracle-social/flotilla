@@ -7,7 +7,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeNetworkNotificationFilters from "@app/components/HomeNetworkNotificationFilters.svelte"
   import HomeNetworkNotificationItem from "@app/components/HomeNetworkNotificationItem.svelte"
-  import {user} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import {
     countHomeNotificationTypes,

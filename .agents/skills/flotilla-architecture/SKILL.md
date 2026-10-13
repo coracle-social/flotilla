@@ -85,8 +85,10 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
 add more.
 
 **`core/`: the app, session and background machinery**
-- `app.ts`: the `App` store, `appPolicies`, `user`, `fromApp`, `deriveUserItem`,
-  `userSearchRelayUrls`
+- `app.ts`: the `App` store, `appPolicies`, `fromApp`
+- `user.ts`: `user`, `deriveUserItem`, the user's own entries (`userProfile`, `userRelayList`,
+  `userFollowList`, `userMuteList`, `userSearchRelayList`, `userSearchRelayUrls`), `syncUserList`,
+  and the sync of the user's lists and their follows' lists
 - `plugins.ts`: `usePlugin` and the plugin stores (`profiles`, `rooms`, `events`, …)
 - `domain.ts`: the `reader`/`writer`/`command` shortcuts
 - `session.ts`: the `session` store, `login`, restoring the saved session at boot, `logout`, and
@@ -95,10 +97,10 @@ add more.
 - `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage) and the per-user IndexedDB
   cache, with `registerRetention` for what it keeps
 - `sync.ts`: `syncApplicationData`, `registerSync`, and the helpers registered syncs are built
-  from (`pullAndListen`, `syncEach`, `syncUserList`)
+  from (`pullAndListen`, `syncEach`)
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
-- `relays.ts`: relay URL encoding for routes, socket status, and the policies that block relays
-  and track `relaysMostlyRestricted`
+- `relays.ts`: relay URL encoding for routes, socket status, the policies that block relays and
+  track `relaysMostlyRestricted`, and the NIP-11 sync for indexer and search relays
 - `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and
   `signerHealth`), `notify.ts`
 - `env.ts`: every `VITE_` value, parsed

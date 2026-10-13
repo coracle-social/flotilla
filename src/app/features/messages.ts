@@ -19,7 +19,6 @@ import type {RepositoryUpdate, WrapItem} from "@welshman/net"
 import {makeDeriveItem, projection, synced, throttled, withGetter} from "@welshman/store"
 import type {Projection} from "@welshman/store"
 import {
-  FollowLists,
   MessagingRelayLists,
   Profiles,
   RelayMemberLists,
@@ -28,7 +27,8 @@ import {
   createSearch,
 } from "@welshman/app"
 import type {IApp, Search} from "@welshman/app"
-import {app, deriveUserItem, fromApp, user} from "@app/core/app"
+import {app, fromApp} from "@app/core/app"
+import {deriveUserItem, user, userFollowList} from "@app/core/user"
 import {messagingRelayLists, relayLists, usePlugin} from "@app/core/plugins"
 import {DM_KINDS} from "@app/features/content"
 import {userSettingsValues} from "@app/core/settings"
@@ -222,8 +222,6 @@ export const groupConversationsByTab = (
 
   return {[MessagesTab.Conversations]: accepted, [MessagesTab.Requests]: requests}
 }
-
-const userFollowList = deriveUserItem(FollowLists)
 
 const wotScores = fromApp($app => $app.use(Wot).scores(WotScope.Follows).$)
 
