@@ -1,3 +1,4 @@
+import {existsSync} from "node:fs"
 import {readFile} from "node:fs/promises"
 import {join} from "node:path"
 import {fileURLToPath} from "node:url"
@@ -57,6 +58,18 @@ export const git = (...gitArgs) => {
     return output("git", gitArgs, {cwd: root, stdio: ["ignore", "pipe", "ignore"]})
   } catch {
     return undefined
+  }
+}
+
+// The native build packages whatever cap sync last copied, so check it was built from HEAD
+export const checkBundle = async publicDir => {
+  const stamp = join(root, publicDir, "_app/version.json")
+  const commit = existsSync(stamp) && JSON.parse(await readFile(stamp, "utf-8")).version
+
+  if (!commit || !git("rev-parse", "HEAD").startsWith(commit)) {
+    throw new Error(
+      `${publicDir} has the web bundle from ${commit || "no commit"}, not HEAD; run pnpm release:local web`,
+    )
   }
 }
 
