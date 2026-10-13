@@ -43,7 +43,7 @@ import {synced, throttled, withGetter} from "@welshman/store"
 import type {EventsById} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
-import {network, router} from "@app/core/plugins"
+import {network, relays, router} from "@app/core/plugins"
 import {
   makeRoomPath,
   makeSpaceChatPath,
@@ -59,7 +59,6 @@ import {
 import {getIsMuted, userSettingsValues} from "@app/core/settings"
 import {Messages} from "@app/features/messages"
 import {dufflepud, DUFFLEPUD_URL, ENABLE_ZAPS} from "@app/core/env"
-import {spaceSupportsRooms} from "@app/core/relays"
 import {activeSpaceUrls} from "@app/features/spaces"
 import {getNotificationRef, isEventMuted, isNotificationTarget, Notes} from "@app/features/social"
 import {getHttpAuthHeader} from "@app/core/signer"
@@ -269,7 +268,7 @@ export const latestActivityByPath = derived(
       // A conversation is its own messages; content and its comments carry the room h but belong to the item.
       const messages = events.filter(spec({kind: MESSAGE}))
 
-      if (spaceSupportsRooms(url)) {
+      if (relays.get().get(url)?.hasNip(29)) {
         for (const [h, [event]] of groupBy(e => tagValue(tagSpec("h"), e.tags), messages)) {
           // A muted room is left out entirely, so it can't light up its own badge or the space's
           if (h && !getIsMuted($settings, url, h)) {

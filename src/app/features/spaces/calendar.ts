@@ -276,8 +276,10 @@ export const publishRsvp = async (url: string, event: TrustedEvent, status: Rsvp
 }
 
 export const retractRsvp = async (url: string, rsvp: TrustedEvent) => {
-  const protect = await relays.get().hasNip(url, 70)
-  const command = await deletes.get().deleteEvent(rsvp, writer => writer.setProtected(protect))
+  const relay = await relays.get().load(url)
+  const command = await deletes
+    .get()
+    .deleteEvent(rsvp, writer => writer.setProtected(relay?.hasNip(70)))
 
   return command.publishToRelays([url])
 }

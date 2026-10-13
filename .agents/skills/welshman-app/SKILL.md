@@ -114,7 +114,7 @@ Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) i
 | `Feeds` | kind-31890 saved feeds (keyed by address) | `forAuthor(pk)`, `loadForAuthor(pk)`, `create(fields)`, `update(addr, fn)` → `Command`; `makeFeedController(...)` |
 | `Pinboards` | kind-30067 pinboards (many per author, keyed by address) | `forAuthor(pk)`, `loadForAuthor(pk)`, `create(fields)`, `update(addr, fn)` → `Command` |
 | `Pins` | kind-39067 pins (keyed by address; each pin has its own `d` tag) | `forBoard(addr)`, `forProfile(pk)`, `loadForBoard(addr)`, `loadForProfile(pk)`, `create`, `update`, `addToBoard`, `removeFromBoard` → `Command` |
-| `Relays` | NIP-11 relay info (HTTP) | `display(url)`, `hasNip(url, n)`, `hasNegentropy(url)`; `relaySearch` |
+| `Relays` | NIP-11 relay info (HTTP) | `display(url)`, `hasNegentropy(url)`; check a NIP on the loaded `Relay` with `relay.hasNip(n)`; `relaySearch` |
 | `RelayManagement` | NIP-86 mgmt API | `forUrl(url)` → a `ManagementApi` client that signs auth as the app's user (role/member ops, ban/allow, …) |
 | `RelayStats` | per-relay connection counters | `get(url)`, `getQuality(url)` (0–1, drives router ranking) |
 | `RelayRoles` / `RelayMemberLists` / `RoomPinLists` | relay-signed state, keyed per relay | relay-scoped collections (see `RelaySignedDerivedPlugin`) |

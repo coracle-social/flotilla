@@ -6,7 +6,7 @@ import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {app} from "@app/core/app"
 import {navigate, pushModal} from "@app/ui/modal"
-import {spaceSupportsRooms} from "@app/core/relays"
+import {relays} from "@app/core/plugins"
 import {makeSpaceChatPath} from "@app/ui/routes"
 import {pushToast} from "@app/ui/toast"
 import ShareDialog from "@app/components/Share.svelte"
@@ -31,7 +31,7 @@ export const shareTo = async (
 }
 
 export const shareEvent = (url: string, noun: string, event: TrustedEvent) => {
-  if (spaceSupportsRooms(url)) {
+  if (relays.get().get(url)?.hasNip(29)) {
     pushModal(ShareEvent, {url, noun, event})
   } else {
     shareTo(makeSpaceChatPath(url), {type: "event", value: event})

@@ -8,8 +8,8 @@
   import SecondaryNavHeader from "@lib/components/SecondaryNavHeader.svelte"
   import SpaceMenuRoomItem from "@app/components/SpaceMenuRoomItem.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
+  import {relays} from "@app/core/plugins"
   import {deriveUserCanCreateRoom} from "@app/features/spaces/management"
-  import {deriveSpaceSupportsRooms} from "@app/core/relays"
   import {
     RoomType,
     deriveUserRooms,
@@ -25,7 +25,7 @@
 
   const {url, mobile = false}: Props = $props()
 
-  const supportsRooms = deriveSpaceSupportsRooms(url)
+  const relay = $relays.one(url)
   const userRooms = deriveUserRooms(url)
   const otherRooms = deriveOtherRooms(url, RoomType.Text)
   const otherVoiceRooms = deriveOtherRooms(url, RoomType.Voice)
@@ -100,7 +100,7 @@
   {/if}
 {/snippet}
 
-{#if $supportsRooms && ($userRooms.length > 0 || $otherRooms.length > 0 || $otherVoiceRooms.length > 0 || $canCreateRoom)}
+{#if $relay?.hasNip(29) && ($userRooms.length > 0 || $otherRooms.length > 0 || $otherVoiceRooms.length > 0 || $canCreateRoom)}
   {#if mobile}
     <div class="card space-menu__card flex flex-col gap-1">
       {@render content()}

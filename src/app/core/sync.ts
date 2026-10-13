@@ -1,7 +1,7 @@
 import type {Readable, Unsubscriber} from "svelte/store"
 import {assoc, call, noop} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {FOLLOWS, MUTES, unionFilters} from "@welshman/util"
+import {FOLLOWS, MUTES, outbox, unionFilters} from "@welshman/util"
 import type {Filter} from "@welshman/util"
 import type {FollowListReader} from "@welshman/domain"
 import {FollowLists, RelayLists, SearchRelayLists, Sync} from "@welshman/app"
@@ -15,10 +15,10 @@ import {
   profiles,
   relayLists,
   relays,
+  router,
   searchRelayLists,
 } from "@app/core/plugins"
 import {INDEXER_RELAYS} from "@app/core/env"
-import {outboxUrls} from "@app/core/relays"
 import {Settings} from "@app/core/settings"
 
 const syncs: (() => Unsubscriber)[] = []
@@ -122,9 +122,11 @@ const syncFollowNetwork = async ($followList: Maybe<FollowListReader>) => {
   const authors = $followList?.pubkeys() ?? []
 
   if (authors.length > 0) {
+    const scenario = await router.get().resolve(authors.map(pubkey => outbox(pubkey)))
+
     network.get().load({
       filters: [{kinds: [FOLLOWS, MUTES], authors}],
-      relays: await outboxUrls(authors, 8),
+      relays: scenario.limit(8).getUrls(),
     })
   }
 }

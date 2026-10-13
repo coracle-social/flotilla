@@ -44,7 +44,7 @@ domain `Relay`. These fields drive protocol decisions:
 
 | Read | Decides |
 |---|---|
-| `hasNip(29)` | whether the space has rooms, read through `spaceSupportsRooms(url)` / `deriveSpaceSupportsRooms(url)` in `src/app/core/relays.ts`. Without it everything lives in the space chat (`makeSpaceChatPath`): `shareEvent` (`src/app/ui/share.ts`), room search, notification grouping, `SpaceMenuNavItems`, `SpaceMenuRooms` |
+| `hasNip(29)` | whether the space has rooms, read off `relays.get().get(url)` or `$relays.one(url)`. Without it everything lives in the space chat (`makeSpaceChatPath`): `shareEvent` (`src/app/ui/share.ts`), room search, notification grouping, `SpaceMenuNavItems`, `SpaceMenuRooms` |
 | `hasNip(70)` | whether space content is marked protected (below) |
 | `self` | the relay's own pubkey, the trust anchor for relay-signed state |
 | `pubkey` | the space's owner, who writes space-wide content that has no other author (`deriveUserIsSpaceOwner`) |
@@ -216,7 +216,7 @@ off on iOS (`HOSTING_ENABLED`).
   (`features/spaces/trust.ts`) hold back unsigned events unless the relay is in the
   `trusted_relays` setting, while `SpaceTrustRelay` asks the user.
 - **NIP-70.** Space content is protected exactly when the relay advertises NIP-70, so every space
-  publish passes `setProtected(await relays.hasNip(url, 70))`. Per NIP-70 (a protocol claim not
+  publish passes `setProtected(Boolean((await relays.get().load(url))?.hasNip(70)))`. Per NIP-70 (a protocol claim not
   verified in this repo) a relay then accepts the event only from its author, which keeps space
   content from being copied elsewhere. The `RelayJoin`, `RelayLeave` and `RelayMembers` writers
   protect themselves, and `publishReaction` and `retractReaction` in `src/app/features/reactions.ts` check
@@ -268,7 +268,7 @@ it. Zaps and goals are off on iOS (`ENABLE_ZAPS` in `src/app/core/env.ts`).
 1. Add the constant to `@welshman/util` and a factory to `@welshman/domain` upstream (see
    welshman-domain, "Adding a new kind").
 2. Publish through `writer(Factory)` and `command(...)`, with `setRoom` or `forceRoutes` and
-   `setProtected(await relays.hasNip(url, 70))` for space content.
+   `setProtected(Boolean((await relays.get().load(url))?.hasNip(70)))` for space content.
 3. For a new space section, add the kind to `CONTENT_KINDS` (which feeds sync, notifications, push,
    search and `SpaceMenuNavItems`), `CONTENT_NOUNS` and `makeContentPath`, and add routes under
    `spaces/[relay]/`.

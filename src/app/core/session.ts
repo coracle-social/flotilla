@@ -4,7 +4,7 @@ import type {Maybe} from "@welshman/lib"
 import {withGetter} from "@welshman/store"
 import {User} from "@welshman/app"
 import type {Session} from "@welshman/app"
-import {getTestEvents, maybeGetTestSession} from "@lib/test/session"
+import {getTestSession, publishTestEvents} from "@lib/test/session"
 import {app, replaceApp} from "@app/core/app"
 import {hasCachedIdentity, kv, ss, storage} from "@app/core/storage"
 
@@ -27,35 +27,27 @@ export const registerLogoutHandler = (handler: () => Promise<unknown>) => {
   logoutHandlers.push(handler)
 }
 
-const readStoredSession = async () => {
-  const session = await ss.get<Session>("session")
-
-  // A nip01 secret is the account rather than a credential, and a local signer can't stall startup.
-  if (session && session.method !== "nip01" && !(await hasCachedIdentity())) {
-    await ss.set("session", undefined)
-
-    return undefined
-  }
-
-  return session
-}
-
 // The session derives from the app's user, so read it back at startup and persist it on a change.
 export const restoreSession = async () => {
-  // Test-only: an injected window.__TEST_SESSION__ wins over storage and is stripped from production.
-  const testSession = import.meta.env.DEV ? maybeGetTestSession() : undefined
-  const $session = testSession ?? (await readStoredSession())
+  const testSession = getTestSession()
 
-  if ($session) {
-    await login($session)
-  }
-
-  // Storage loads with Repository.load, which clears the repository, so these wait for it.
   if (testSession) {
+    await login(testSession)
+
+    // Storage loads with Repository.load, which clears the repository, so test events wait for it.
     await storage.get()?.ready
 
-    for (const event of getTestEvents()) {
-      app.get().repository.publish(event)
+    publishTestEvents(app.get().repository)
+  } else {
+    const $session = await ss.get<Session>("session")
+
+    // A nip01 secret is the account rather than a credential, and a local signer can't stall startup.
+    if ($session) {
+      if ($session.method === "nip01" || (await hasCachedIdentity())) {
+        await login($session)
+      } else {
+        await ss.set("session", undefined)
+      }
     }
   }
 

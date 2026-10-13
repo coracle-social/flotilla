@@ -58,7 +58,6 @@ import {
   deriveSpacePermissions,
   deriveUserIsSpaceStaff,
 } from "@app/features/spaces/management"
-import {spaceSupportsRooms} from "@app/core/relays"
 import {registerRetention} from "@app/core/storage"
 import {pullAndListen, registerSync, syncEach} from "@app/core/sync"
 import {currentSpaceUrls, syncedSpaceUrls, userRoomList, userSpaceUrls} from "@app/features/spaces"
@@ -135,7 +134,9 @@ export const addressWriterToSpace = async <W extends EventWriter<BaseEventReader
   url: string,
   h?: string,
 ) => {
-  eventWriter.setProtected(await relays.get().hasNip(url, 70))
+  const space = await relays.get().load(url)
+
+  eventWriter.setProtected(space?.hasNip(70))
 
   if (h) {
     eventWriter.setRoom(url, h)
@@ -352,7 +353,7 @@ export const deriveUserRoomSearch = () =>
       type Option = {url: string; h?: string; path: string; name: string; isFavorite: boolean}
 
       const options = $userSpaceUrls.flatMap((url): Option[] => {
-        if (spaceSupportsRooms(url)) {
+        if (relays.get().get(url)?.hasNip(29)) {
           const favorites = new Set($userRoomList?.roomsForUrl(url) ?? [])
 
           return ($roomsByUrl.get(url) ?? []).map(({h}) => ({

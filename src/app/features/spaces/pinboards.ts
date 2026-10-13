@@ -169,10 +169,10 @@ export const removePinsFromShelf = (url: string, pins: PinReader[], address: str
 // Your own goes as a kind 5; anyone else's is a NIP-86 ban, which the repository never hears about.
 export const deleteLibraryEvent = async (url: string, event: TrustedEvent) => {
   if (event.pubkey === user.get().pubkey) {
-    const protect = await relays.get().hasNip(url, 70)
+    const relay = await relays.get().load(url)
     const request = await deletes
       .get()
-      .deleteEvent(event, deleteWriter => deleteWriter.setProtected(protect))
+      .deleteEvent(event, deleteWriter => deleteWriter.setProtected(relay?.hasNip(70)))
 
     return request.publishToRelays([url]).getError()
   }

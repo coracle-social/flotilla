@@ -1,6 +1,6 @@
 import {derived, readable, writable} from "svelte/store"
-import {assoc, call, dissoc, on, simpleCache} from "@welshman/lib"
-import {RELAYS, normalizeRelayUrl, relays as relaySelections} from "@welshman/util"
+import {assoc, call, dissoc, on} from "@welshman/lib"
+import {normalizeRelayUrl} from "@welshman/util"
 import type {ClientMessage, RelayMessage, Socket} from "@welshman/net"
 import {
   AuthStateEvent,
@@ -19,11 +19,10 @@ import {
   matchReason,
 } from "@welshman/net"
 import {throttled} from "@welshman/store"
-import {BlockedRelayLists, Relays} from "@welshman/app"
+import {BlockedRelayLists} from "@welshman/app"
 import type {IApp} from "@welshman/app"
-import {app, appPolicies, fromApp} from "@app/core/app"
-import {network, relayLists, relays, router} from "@app/core/plugins"
-import {BLOCKED_RELAYS, INDEXER_RELAYS} from "@app/core/env"
+import {app, appPolicies} from "@app/core/app"
+import {BLOCKED_RELAYS} from "@app/core/env"
 
 // Relays that mostly send restricted responses to requests and events
 export const relaysMostlyRestricted = writable<Record<string, string>>({})
@@ -101,48 +100,6 @@ export const deriveSocketStatus = (url: string) =>
       return RelayConnection.Connected
     }),
   )
-
-// A space that isn't a NIP-29 relay has no rooms, only one space-wide chat.
-export const spaceSupportsRooms = (url: string) => Boolean(relays.get().get(url)?.hasNip(29))
-
-export const deriveSpaceSupportsRooms = (url: string) =>
-  derived(
-    fromApp($app => $app.use(Relays).one(url)),
-    $relay => Boolean($relay?.hasNip(29)),
-  )
-
-const livekitUrl = (url: string) =>
-  url.replace(/^ws/, "http").replace(/\/$/, "") + "/.well-known/nip29/livekit"
-
-export const getLivekitEndpoint = (url: string, roomId: string) => `${livekitUrl(url)}/${roomId}`
-
-export const deriveHasLivekit = simpleCache(([url]: [string]) =>
-  readable<boolean | undefined>(undefined, set => {
-    fetch(livekitUrl(url)).then(
-      response => set(response.status === 204),
-      () => set(false),
-    )
-  }),
-)
-
-// The relays a set of pubkeys write to, scored and capped the way an outbox selection would be.
-export const outboxUrls = async (pubkeys: string[], limit: number) => {
-  const $relayLists = relayLists.get()
-  const isKnown = (pubkey: string) => Boolean($relayLists.get(pubkey))
-
-  // Resolving `outbox(pubkey)` would load one relay list per pubkey, where one request answers for all.
-  if (pubkeys.filter(isKnown).length < pubkeys.length / 2) {
-    await network.get().load({
-      relays: INDEXER_RELAYS,
-      filters: [{kinds: [RELAYS], authors: pubkeys}],
-      timeout: 3000,
-    })
-  }
-
-  const selections = pubkeys.flatMap(pubkey => relaySelections($relayLists.writeUrls(pubkey).get()))
-
-  return (await router.get().resolve(selections)).limit(limit).getUrls()
-}
 
 // Policies
 

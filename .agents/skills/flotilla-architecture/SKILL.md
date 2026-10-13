@@ -97,8 +97,8 @@ add more.
 - `sync.ts`: `syncApplicationData`, `registerSync`, and the helpers registered syncs are built
   from (`pullAndListen`, `syncEach`, `syncUserList`)
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
-- `relays.ts`: relay URL encoding for routes, socket status, the LiveKit endpoint and detection,
-  and the policies that block relays and track `relaysMostlyRestricted`
+- `relays.ts`: relay URL encoding for routes, socket status, and the policies that block relays
+  and track `relaysMostlyRestricted`
 - `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and
   `signerHealth`), `notify.ts`
 - `env.ts`: every `VITE_` value, parsed
@@ -128,7 +128,7 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
   fees (`payments.ts`)
 - `spaces/management/`: NIP-86 admin checks and bans (`index.ts`), `roles.ts`, `actionItems.ts`
   (the admin review queue)
-- `spaces/calls/`: call state (`index.ts`), `engine.ts` (LiveKit join, leave, devices, the video
+- `spaces/calls/`: call state and LiveKit endpoint detection (`index.ts`), `engine.ts` (LiveKit join, leave, devices, the video
   tiles a call shows), `screenShare/`. `calls/index.ts` stays free of livekit values, since the
   root layout loads it and `engine.ts` is imported lazily.
 - `spaces/trust.ts`: holding back unsigned events from relays the user hasn't trusted yet

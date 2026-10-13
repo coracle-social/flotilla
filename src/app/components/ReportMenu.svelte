@@ -31,8 +31,8 @@
   const reason = report.reason() ?? ""
 
   const deleteReport = async () => {
-    const protect = await $relays.hasNip(url, 70)
-    const command = await $deletes.deleteEvent(event, w => w.setProtected(protect))
+    const relay = await $relays.load(url)
+    const command = await $deletes.deleteEvent(event, w => w.setProtected(relay?.hasNip(70)))
 
     command.publishToRelays([url])
     onResolved?.()

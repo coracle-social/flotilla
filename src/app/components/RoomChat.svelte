@@ -89,7 +89,6 @@
     }
   })
 
-  const shouldProtect = $relays.hasNip(url, 70)
   const membershipStatus = h
     ? deriveUserRoomMembershipStatus(url, h)
     : readable(MembershipStatus.Granted)
@@ -104,11 +103,11 @@
 
   const onSubmit = async ({content, tags, parent, share, edit}: ComposeValues) => {
     if (edit) {
-      const protect = await shouldProtect
+      const relay = await $relays.load(url)
 
       // Delete the previous message, to be republished below with the same timestamp
       const command = await $deletes.deleteEvent($state.snapshot(edit), w =>
-        w.setProtected(protect),
+        w.setProtected(relay?.hasNip(70)),
       )
 
       command.publishToRelays([url])

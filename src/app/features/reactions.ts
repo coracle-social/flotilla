@@ -15,10 +15,10 @@ export const publishReaction = async (
   {content, tags}: EventContent,
   {url, urls}: ReactionTarget,
 ) => {
-  const protect = url ? await relays.get().hasNip(url, 70) : false
+  const relay = url ? await relays.get().load(url) : undefined
   const h = tagValue(tagSpec("h"), event.tags)
   const command = await reactions.get().react(event, content, writer => {
-    writer.addTags(...tags).setProtected(protect)
+    writer.addTags(...tags).setProtected(relay?.hasNip(70))
 
     // welshman tags the room only once the tracker knows the target's relay, which an unconfirmed message lacks.
     if (url && h) {
@@ -30,8 +30,10 @@ export const publishReaction = async (
 }
 
 export const retractReaction = async (reaction: TrustedEvent, {url, urls}: ReactionTarget) => {
-  const protect = url ? await relays.get().hasNip(url, 70) : false
-  const command = await deletes.get().deleteEvent(reaction, writer => writer.setProtected(protect))
+  const relay = url ? await relays.get().load(url) : undefined
+  const command = await deletes
+    .get()
+    .deleteEvent(reaction, writer => writer.setProtected(relay?.hasNip(70)))
 
   return command.publishToRelays(urls ?? removeUndefined([url]))
 }

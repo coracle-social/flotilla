@@ -304,7 +304,7 @@ How you bind depends on what the method returns:
   const room = $rooms.forRoom(url, h)                                 // Readable: one, forRoom
   const display = $profiles.display(pubkey, removeUndefined([url])).$ // Projection: take .$
   const replies = $events.asc(filters).$                              // raw repository queries
-  const shouldProtect = $relays.hasNip(url, 70)                       // Promise: load, hasNip
+  const relay = $relays.one(url)                                      // Readable: one, then $relay?.hasNip(n)
 </script>
 
 {$room?.meta?.name() || h} · {$display}

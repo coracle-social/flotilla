@@ -1,5 +1,5 @@
-import {derived, get, writable} from "svelte/store"
-import {first, uniqBy} from "@welshman/lib"
+import {derived, get, readable, writable} from "svelte/store"
+import {first, simpleCache, uniqBy} from "@welshman/lib"
 import {sortEventsDesc, tagSpec, tagValues} from "@welshman/util"
 import {deriveDeduplicated} from "@welshman/store"
 import {Events, makeRoomKey} from "@welshman/app"
@@ -7,12 +7,23 @@ import type {Room} from "@welshman/app"
 import type {Room as LiveKitRoom} from "livekit-client"
 import {fromApp} from "@app/core/app"
 import {network} from "@app/core/plugins"
-import {getLivekitEndpoint} from "@app/core/relays"
 import {getHttpAuthHeader} from "@app/core/signer"
 import {registerSync} from "@app/core/sync"
 import {syncCurrentSpace} from "@app/features/spaces"
 
 export const LIVEKIT_PARTICIPANTS = 39004
+
+const livekitUrl = (url: string) =>
+  url.replace(/^ws/, "http").replace(/\/$/, "") + "/.well-known/nip29/livekit"
+
+export const deriveHasLivekit = simpleCache(([url]: [string]) =>
+  readable<boolean | undefined>(undefined, set => {
+    fetch(livekitUrl(url)).then(
+      response => set(response.status === 204),
+      () => set(false),
+    )
+  }),
+)
 
 export type CallSession = {
   url: string
@@ -200,7 +211,7 @@ export const fetchLivekitToken = async (
   roomId: string,
   signal?: AbortSignal,
 ): Promise<{server_url: string; participant_token: string}> => {
-  const endpoint = getLivekitEndpoint(url, roomId)
+  const endpoint = `${livekitUrl(url)}/${roomId}`
 
   if (signal?.aborted) {
     throw new DOMException("Aborted", "AbortError")

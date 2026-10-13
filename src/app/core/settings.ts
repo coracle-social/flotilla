@@ -25,7 +25,6 @@ export type SpaceNotificationSettings = {
   url: string
   notify: boolean
   exceptions: string[]
-  // Absent in settings published before muting existed
   muted?: string[]
 }
 

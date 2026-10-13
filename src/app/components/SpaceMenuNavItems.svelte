@@ -17,10 +17,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
-  import {events} from "@app/core/plugins"
+  import {events, relays} from "@app/core/plugins"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {CONTENT_KINDS} from "@app/features/content"
-  import {deriveSpaceSupportsRooms} from "@app/core/relays"
   import {makeSpaceChatPath, makeSpacePath} from "@app/ui/routes"
   import {allNotifications, notifications} from "@app/ui/notifications"
   import {pushModal} from "@app/ui/modal"
@@ -31,7 +30,7 @@
 
   const {url}: Props = $props()
 
-  const supportsRooms = deriveSpaceSupportsRooms(url)
+  const relay = $relays.one(url)
   const chatPath = makeSpaceChatPath(url)
   const goalsPath = makeSpacePath(url, "goals")
   const threadsPath = makeSpacePath(url, "threads")
@@ -62,7 +61,7 @@
 <SecondaryNavItem href={makeSpacePath(url, "about")}>
   <Icon icon={Home} /> Space Details
 </SecondaryNavItem>
-{#if !$supportsRooms}
+{#if !$relay?.hasNip(29)}
   <SecondaryNavItem href={chatPath} notification={$notifications.has(chatPath)}>
     <Icon icon={ChatRound} /> Chat
   </SecondaryNavItem>
@@ -105,7 +104,7 @@
     <Icon icon={Revote} /> Polls
   </SecondaryNavItem>
 {/if}
-{#if $supportsRooms}
+{#if $relay?.hasNip(29)}
   <SecondaryNavItem onclick={openSearch}>
     <Icon icon={Magnifier} /> Search
   </SecondaryNavItem>

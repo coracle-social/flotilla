@@ -14,7 +14,7 @@
   import {joinRoom} from "@app/features/spaces/membership"
   import {pushToast} from "@app/ui/toast"
   import {resolveImageInput} from "@app/core/uploads"
-  import {deriveHasLivekit} from "@app/core/relays"
+  import {deriveHasLivekit} from "@app/features/spaces/calls"
   import {RoomType} from "@app/features/spaces/rooms"
   import IconInput from "@app/components/IconInput.svelte"
 

@@ -16,12 +16,12 @@
   // A deletion goes where its subject lives: the space's own relay, or wherever the event was seen.
   const getRelays = () => (url ? [url] : $router.resolver.relays([seen(event)]))
 
-  // NIP-70 keeps a deletion on the one relay that accepts it, which is wrong for a note on several.
-  const shouldProtect = () => (url ? $relays.hasNip(url, 70) : false)
-
   const confirm = async () => {
-    const protect = await shouldProtect()
-    const command = await $deletes.deleteEvent(event, writer => writer.setProtected(protect))
+    // NIP-70 keeps a deletion on the one relay that accepts it, which is wrong for a note on several.
+    const relay = url ? await $relays.load(url) : undefined
+    const command = await $deletes.deleteEvent(event, writer =>
+      writer.setProtected(relay?.hasNip(70)),
+    )
     const error = await command.publishToRelays(await getRelays()).getError()
 
     if (error) {

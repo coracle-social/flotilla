@@ -37,6 +37,7 @@ import {
   hexTags,
   isRelayUrl,
   matchTag,
+  outbox,
   relays as relaySelections,
   seen,
   tagSpec,
@@ -61,11 +62,10 @@ import {decodeGeohash} from "@lib/geohash"
 import {createScroller} from "@lib/html"
 import {CONTENT_KINDS} from "@app/features/content"
 import {deriveUserItem, fromApp, user} from "@app/core/app"
-import {profiles, relayLists, usePlugin} from "@app/core/plugins"
+import {profiles, relayLists, router, usePlugin} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
 import {isFeedLoading, makeFeed, makeFeedContext, makeFeedLoader} from "@app/features/feeds"
 import type {FeedLoadState} from "@app/features/feeds"
-import {outboxUrls} from "@app/core/relays"
 import {getProfileGeohash} from "@app/features/location"
 import type {QuotePointer} from "@app/features/quotes"
 import {DEFAULT_PUBKEYS} from "@app/core/env"
@@ -529,7 +529,8 @@ export const makeNetworkFeed = () => {
 
   // Each group walks its own timeline, so a slow group holds up nobody else's next page.
   const startGroup = async (pubkeys: string[], index: number) => {
-    const relays = await outboxUrls(pubkeys, 10)
+    const scenario = await router.get().resolve(pubkeys.map(pubkey => outbox(pubkey)))
+    const relays = scenario.limit(10).getUrls()
 
     if (!stopped) {
       const feed = makeFeed({

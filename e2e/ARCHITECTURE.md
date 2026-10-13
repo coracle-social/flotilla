@@ -388,8 +388,8 @@ it, and the comment saying why it is shaped that way has one copy to keep true. 
 what one spec means differently: `dms.spec.ts` names a message by its `data-event` id, because the
 same words are sent more than once there.
 
-One piece lives outside this directory: `src/lib/test/session.ts` holds the two window keys and the
-getters `src/app/core/session.ts` reads them through. It is the only file the app ships on the harness's
+One piece lives outside this directory: `src/lib/test/session.ts` holds the two window keys, and
+`getTestSession` and `publishTestEvents`, which `restoreSession` in `src/app/core/session.ts` calls. It is the only file the app ships on the harness's
 behalf, and `harness/app/session.ts` duplicates the key names rather than importing them, since
 importing anything under `src` would pull sveltekit into the node process.
 
