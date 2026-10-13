@@ -8,4 +8,4 @@
 @import "../components/space-menu.css";
 @import "../components/space-notify.css";
 
-@config "../../tailwind.config.js";
+@config "../../../tailwind.config.js";

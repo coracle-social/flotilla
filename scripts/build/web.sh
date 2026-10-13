@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 temp_env=$(declare -p -x)
 
