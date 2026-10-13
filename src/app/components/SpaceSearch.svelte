@@ -6,7 +6,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import SearchBody from "@app/components/SearchBody.svelte"
-  import {CONTENT_KINDS} from "@app/features/content"
+  import {CONTENT_KINDS} from "@app/features/spaces"
   import {relayMemberLists} from "@app/core/plugins"
 
   type Props = {

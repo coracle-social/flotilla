@@ -16,6 +16,7 @@
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import CalendarAgenda from "@app/components/CalendarAgenda.svelte"
   import CalendarMonth from "@app/components/CalendarMonth.svelte"
@@ -36,7 +37,6 @@
   } from "@app/features/spaces/calendar"
   import {getModal, pushModal} from "@app/ui/modal"
   import {decodeRelay} from "@app/core/relays"
-  import {makeCommentFilter} from "@app/features/content"
   import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import type {PageProps} from "./$types"
 

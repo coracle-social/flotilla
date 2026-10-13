@@ -123,7 +123,9 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 - `spaces/index.ts`: the user's room list, `userSpaceUrls`, `activeSpaceUrls` (platform relays
   when configured), `currentSpaceUrls` and `syncedSpaceUrls` (what space syncs run over),
-  `syncCurrentSpace`, and the space-wide content sync and retention
+  `syncCurrentSpace`, the space-wide content sync and retention, `CONTENT_KINDS` (the kinds with a
+  section of their own) and `partitionByActivity`, which the list pages use to sort a kind by
+  latest comment
 - `spaces/rooms/`: chat rooms (`index.ts`, helpers over `rooms.get()`), `pins.ts`, `commands.ts`
   (NIP-CD slash commands)
 - `spaces/membership/`: joining, invites, relay auth errors and paid spaces (`index.ts`), relay
@@ -139,12 +141,12 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 Outside `spaces/`:
 
-- Content: `content.ts` (kind lists, comment/delete filters, `partitionByActivity`), `feeds.ts`
-  (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`), `pins.ts` (a person's
-  pinned notes), `bookmarks.ts`, `quotes.ts`, `reactions.ts`, `social.ts` (display names,
-  comment trees, muting), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin),
-  `uploads.ts` (Blossom, image compression)
-- `messages.ts`: DM conversations, the gift-wrap sync and `shouldUnwrap`
+- Content: `feeds.ts` (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`),
+  `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `reactions.ts` (with
+  `REACTION_KINDS`), `social.ts` (display names, comment trees, muting, `getActivityTarget`,
+  `REPOST_KINDS`), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin), `uploads.ts`
+  (Blossom, image compression)
+- `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)
 - Platform and voice: `push/` (notification adapters, and `server.ts` for the push server's HTTP
@@ -162,7 +164,9 @@ Lib code is app-agnostic. It may use svelte, SvelteKit, Capacitor and welshman, 
 env, or the `App` instance. A good test is whether it would work unchanged in another nostr
 client.
 
-- `util.ts`: small helpers (`errorMessage`, `buildUrl`, `normalizeTopic`)
+- `util.ts`: small helpers (`errorMessage`, `buildUrl`, `normalizeTopic`, `makeCommentFilter`)
+- `media.ts`: content types, a url's `imeta` tags, `isImageUrl`, and decrypting an encrypted
+  attachment
 - `html.ts`: DOM helpers such as `isMobile`, `createScroller`, `copyToClipboard`
 - `indexeddb.ts`: the `IDB` wrapper that `storage.ts` builds on
 - `feeds.ts`: saved feed definitions (kind `FEED`) over `@welshman/feeds`. It is unrelated to
@@ -341,8 +345,8 @@ app module.
 `summary()`, `price()`, `status()`, `images()`, `topics()`) with a `ClassifiedWriter` that has the
 matching setters.
 
-**Kind registries.** `CONTENT_KINDS` in `src/app/features/content.ts` drives sync, notifications, push,
-search and the space nav entry. The kind also appears in `CONTENT_NOUNS`, the kind dispatch in
+**Kind registries.** `CONTENT_KINDS` in `src/app/features/spaces/index.ts` drives sync, notifications, push,
+search and the space nav entry. The kind also appears in the noun switch in `HomeActivity`, the kind dispatch in
 `NoteContent.svelte` and `NoteContentMinimal.svelte`, `makeClassifiedPath` and `makeContentPath` in
 `routes.ts`, `title.ts`, `NIP46_PERMS` in `nip46.ts`, and the section regexes in `server.js`.
 `NIP46_PERMS` leaves out polls, articles and goals, so listing a new kind there is optional.

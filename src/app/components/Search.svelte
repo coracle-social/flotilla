@@ -12,7 +12,7 @@
   import RelayList from "@app/components/RelayList.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import SearchBody from "@app/components/SearchBody.svelte"
-  import {CONTENT_KINDS} from "@app/features/content"
+  import {CONTENT_KINDS} from "@app/features/spaces"
   import {app} from "@app/core/app"
   import {user, userSearchRelayUrls} from "@app/core/user"
   import {relays, searchRelayLists} from "@app/core/plugins"

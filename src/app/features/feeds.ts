@@ -21,6 +21,9 @@ import {
   DELETE,
   EVENT_TIME,
   NOTE,
+  REACTION,
+  REPORT,
+  ZAP_RECEIPT,
   addressTags,
   compareEventsAsc,
   getAddress,
@@ -39,10 +42,12 @@ import {mergeRepositoryUpdates} from "@welshman/net"
 import type {RepositoryUpdate} from "@welshman/net"
 import {createScroller} from "@lib/html"
 import type {ScrollerOpts} from "@lib/html"
-import {EVENT_CONTEXT_KINDS, REACTION_KINDS} from "@app/features/content"
 import {app} from "@app/core/app"
 import {network} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
+import {REACTION_KINDS} from "@app/features/reactions"
+
+const EVENT_CONTEXT_KINDS = [REPORT, REACTION, ZAP_RECEIPT, COMMENT]
 
 const noEvents: TrustedEvent[] = []
 

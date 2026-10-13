@@ -19,7 +19,7 @@
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
   import {events, relays} from "@app/core/plugins"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {CONTENT_KINDS} from "@app/features/content"
+  import {CONTENT_KINDS} from "@app/features/spaces"
   import {makeSpaceChatPath, makeSpacePath} from "@app/ui/routes"
   import {allNotifications, notifications} from "@app/ui/notifications"
   import {pushModal} from "@app/ui/modal"

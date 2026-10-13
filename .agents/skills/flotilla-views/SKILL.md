@@ -125,7 +125,7 @@ loads events before calling `goToEvent`.
    permalinks land there.
 3. Titles in `src/app/ui/title.ts`.
 4. A `SecondaryNavItem` in `SpaceMenuNavItems.svelte`. Content entries appear only once the space
-   holds that kind, which comes from `CONTENT_KINDS` in `src/app/features/content.ts`.
+   holds that kind, which comes from `CONTENT_KINDS` in `src/app/features/spaces/index.ts`.
 
 The registries outside the view layer, including the link-preview server, are in
 flotilla-architecture and flotilla-model.

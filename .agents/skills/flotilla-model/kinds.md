@@ -10,7 +10,7 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 |---|---|---|---|---|
 | Chat | `MESSAGE` (9) | none | `src/app/features/spaces/rooms/index.ts` | `spaces/[relay]/chat`, `spaces/[relay]/[h]` (`RoomChat`) |
 | Threads | `THREAD` (11) | `Thread` | none | `spaces/[relay]/threads`, `threads/[id]` (`ThreadCreate`) |
-| Comments | `COMMENT` (1111) | `Comment` | `src/app/features/content.ts` (`makeCommentFilter`), `src/app/features/spaces/rooms/index.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
+| Comments | `COMMENT` (1111) | `Comment` | `src/lib/util.ts` (`makeCommentFilter`), `src/app/features/spaces/rooms/index.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
 | Articles | `LONG_FORM` (30023) | `Article` | `src/app/features/spaces/articles.ts` | `spaces/[relay]/articles`, `articles/create`, `articles/[address]` |
 | Calendar | `EVENT_TIME` (31923) | `TimeEvent` | `src/app/features/feeds.ts` (`makeCalendarFeed`) | `spaces/[relay]/calendar`, `calendar/[address]` (`CalendarEventForm`) |
 | Classifieds | `CLASSIFIED` (30402) | `Classified` | `src/app/features/spaces/classifieds.ts` | `spaces/[relay]/classifieds`, `classifieds/[address]` (`ClassifiedForm`) |

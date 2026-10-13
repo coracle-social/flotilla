@@ -1,18 +1,29 @@
 import {page} from "$app/stores"
 import {derived} from "svelte/store"
-import {ago, int, spec, MONTH, WEEK} from "@welshman/lib"
+import {ago, int, max, partition, sortBy, spec, MONTH, WEEK} from "@welshman/lib"
 import {
+  CLASSIFIED,
   COMMENT,
   DELETE,
+  EVENT_TIME,
+  LONG_FORM,
   MESSAGE,
+  PINBOARD,
+  POLL,
   POLL_RESPONSE,
   REPORT,
   ROOMS,
+  THREAD,
+  ZAP_GOAL,
+  getIdOrAddress,
+  isReplaceableKind,
   tagSpec,
   tagValue,
 } from "@welshman/util"
-import type {Filter} from "@welshman/util"
+import type {Filter, TrustedEvent} from "@welshman/util"
+import {Comment} from "@welshman/domain"
 import {RoomLists} from "@welshman/app"
+import {makeCommentFilter} from "@lib/util"
 import {deriveUserItem, syncUserList} from "@app/core/user"
 import {network, relays, roomLists} from "@app/core/plugins"
 import {PLATFORM_RELAYS} from "@app/core/env"
@@ -20,7 +31,32 @@ import {decodeRelay} from "@app/core/relays"
 import {registerRetention} from "@app/core/storage"
 import {pullAndListen, registerSync, syncEach} from "@app/core/sync"
 import {hasBlossomSupport} from "@app/features/uploads"
-import {CONTENT_KINDS, REACTION_KINDS, makeCommentFilter} from "@app/features/content"
+import {reader} from "@app/core/domain"
+import {REACTION_KINDS} from "@app/features/reactions"
+
+// The kinds that each have a section of their own in a space.
+export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD, CLASSIFIED, POLL, PINBOARD, LONG_FORM]
+
+// An event is active as of its own creation or the newest comment on it, keyed by address when addressable.
+export const partitionByActivity = (kind: number, events: TrustedEvent[]) => {
+  const [items, comments] = partition(spec({kind}), events)
+  const commentedAt = new Map<string, number>()
+
+  for (const comment of comments) {
+    const {id, address} = reader(Comment)(comment).root()
+    const key = isReplaceableKind(kind) ? address : id
+
+    if (key) {
+      commentedAt.set(key, max([commentedAt.get(key), comment.created_at]))
+    }
+  }
+
+  const activeAt = new Map(
+    items.map(event => [event.id, max([commentedAt.get(getIdOrAddress(event)), event.created_at])]),
+  )
+
+  return {items: sortBy(event => -(activeAt.get(event.id) ?? 0), items), activeAt}
+}
 
 export const userRoomList = deriveUserItem(RoomLists)
 

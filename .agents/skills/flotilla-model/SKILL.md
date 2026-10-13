@@ -216,7 +216,8 @@ off on iOS (`HOSTING_ENABLED`).
   (`features/spaces/trust.ts`) hold back unsigned events unless the relay is in the
   `trusted_relays` setting, while `SpaceTrustRelay` asks the user.
 - **NIP-70.** Space content is protected exactly when the relay advertises NIP-70, so every space
-  publish passes `setProtected(Boolean((await relays.get().load(url))?.hasNip(70)))`. Per NIP-70 (a protocol claim not
+  publish loads the relay (`const relay = await relays.get().load(url)`) and passes
+  `setProtected(relay?.hasNip(70))`. Per NIP-70 (a protocol claim not
   verified in this repo) a relay then accepts the event only from its author, which keeps space
   content from being copied elsewhere. The `RelayJoin`, `RelayLeave` and `RelayMembers` writers
   protect themselves, and `publishReaction` and `retractReaction` in `src/app/features/reactions.ts` check
@@ -253,7 +254,7 @@ background; see flotilla-state.
 
 ## Content kinds
 
-The space sections are the kinds in `CONTENT_KINDS` (`src/app/features/content.ts`): `ZAP_GOAL`,
+The space sections are the kinds in `CONTENT_KINDS` (`src/app/features/spaces/index.ts`): `ZAP_GOAL`,
 `EVENT_TIME`, `THREAD`, `CLASSIFIED`, `POLL`, `PINBOARD` and `LONG_FORM`. Each has list and detail
 routes under `spaces/[relay]/`, reached through `makeContentPath` in `src/app/ui/routes.ts`. Chat is
 `MESSAGE` (kind 9). Comments (`COMMENT`, NIP-22) thread under any content kind, and
@@ -268,9 +269,9 @@ it. Zaps and goals are off on iOS (`ENABLE_ZAPS` in `src/app/core/env.ts`).
 1. Add the constant to `@welshman/util` and a factory to `@welshman/domain` upstream (see
    welshman-domain, "Adding a new kind").
 2. Publish through `writer(Factory)` and `command(...)`, with `setRoom` or `forceRoutes` and
-   `setProtected(Boolean((await relays.get().load(url))?.hasNip(70)))` for space content.
+   `setProtected(relay?.hasNip(70))` on the loaded relay for space content.
 3. For a new space section, add the kind to `CONTENT_KINDS` (which feeds sync, notifications, push,
-   search and `SpaceMenuNavItems`), `CONTENT_NOUNS` and `makeContentPath`, and add routes under
+   search and `SpaceMenuNavItems`), the noun switch in `HomeActivity` and `makeContentPath`, and add routes under
    `spaces/[relay]/`.
 4. If users sign it through a remote signer, add it to `NIP46_PERMS` in `src/app/core/nip46.ts`.
 5. If it is relay-scoped state that has to survive a reload, register a retention rule for it
@@ -314,7 +315,7 @@ These predate the rule or are waiting on welshman. Don't copy them; fix one when
   tags in `PollVotes`; `p` tags of `RELAY_ADD_MEMBER`, `ROOM_ADD_MEMBER` and
   `ROOM_CREATE_PERMISSION` (`SpaceMembersSummary`, `RoomItemAddMember`, `src/app/features/spaces/management/index.ts`);
   comment `E`/`A` tags in the list pages and `src/app/features/spaces/classifieds.ts`; `imeta` unpacking in
-  `src/app/features/content.ts` and `Conversation.svelte`.
+  `src/lib/media.ts` and `Conversation.svelte`.
 - **Getter missing upstream:** role ids on `member` tags (`src/app/features/spaces/management/roles.ts`); the legacy `name`
   fallback for calendar titles (`CalendarEventHeader`).
 

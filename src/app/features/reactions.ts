@@ -1,7 +1,14 @@
 import {removeUndefined} from "@welshman/lib"
-import {tagSpec, tagValue} from "@welshman/util"
+import {DELETE, REACTION, REPORT, ZAP_RECEIPT, tagSpec, tagValue} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
 import {deletes, reactions, relays, wraps} from "@app/core/plugins"
+import {ENABLE_ZAPS} from "@app/core/env"
+
+export const REACTION_KINDS = [REPORT, DELETE, REACTION]
+
+if (ENABLE_ZAPS) {
+  REACTION_KINDS.push(ZAP_RECEIPT)
+}
 
 export type ReactionTarget = {
   url?: string

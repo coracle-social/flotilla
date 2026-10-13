@@ -10,7 +10,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import Reaction from "@app/components/Reaction.svelte"
-  import {REPOST_KINDS} from "@app/features/content"
+  import {REPOST_KINDS} from "@app/features/social"
   import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
   import {pushModal} from "@app/ui/modal"

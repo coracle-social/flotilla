@@ -9,6 +9,7 @@ import {Pin, Pinboard} from "@welshman/domain"
 import type {PinReader, PinReference, PinWriter, PinboardReader} from "@welshman/domain"
 import {isLink, parse} from "@welshman/content"
 import {Events, publish} from "@welshman/app"
+import {isImageUrl} from "@lib/media"
 import {app, fromApp} from "@app/core/app"
 import {user} from "@app/core/user"
 import {deletes, relayManagement, relays} from "@app/core/plugins"
@@ -16,7 +17,6 @@ import {command, reader, writer} from "@app/core/domain"
 import {registerSync} from "@app/core/sync"
 import {syncCurrentSpace} from "@app/features/spaces"
 import {addressWriterToSpace} from "@app/features/spaces/rooms"
-import {isImageUrl} from "@app/features/content"
 
 // Tags from another client may be malformed, and nip19 throws on anything that isn't hex.
 const isEncodable = (reference: PinReference) => {

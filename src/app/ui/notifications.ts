@@ -41,6 +41,7 @@ import {
 import {synced, throttled, withGetter} from "@welshman/store"
 import type {EventsById} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
+import {makeCommentFilter} from "@lib/util"
 import {app, fromApp} from "@app/core/app"
 import {network, relays, router} from "@app/core/plugins"
 import {
@@ -49,12 +50,8 @@ import {
   makeConversationPath,
   makeContentPath,
 } from "@app/ui/routes"
-import {
-  CONTENT_KINDS,
-  REPOST_KINDS,
-  getActivityTarget,
-  makeCommentFilter,
-} from "@app/features/content"
+import {CONTENT_KINDS} from "@app/features/spaces"
+import {getActivityTarget, REPOST_KINDS} from "@app/features/social"
 import {getIsMuted, userSettingsValues} from "@app/core/settings"
 import {Messages} from "@app/features/messages"
 import {dufflepud, DUFFLEPUD_URL, ENABLE_ZAPS} from "@app/core/env"

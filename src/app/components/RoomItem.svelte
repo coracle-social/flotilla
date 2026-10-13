@@ -31,7 +31,7 @@
   import {events, profiles, publisher} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
-  import {CONTENT_KINDS} from "@app/features/content"
+  import {CONTENT_KINDS} from "@app/features/spaces"
   import {colorFor} from "@app/ui/theme"
   import {ENABLE_ZAPS} from "@app/core/env"
   import type {FeedContext} from "@app/features/feeds"

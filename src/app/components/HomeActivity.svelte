@@ -1,13 +1,34 @@
 <script lang="ts">
+  import {CLASSIFIED, EVENT_TIME, LONG_FORM, PINBOARD, POLL, THREAD, ZAP_GOAL} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {displayContentCount} from "@app/features/content"
   import {displayInboxTimestamp} from "@app/ui/notifications"
   import type {SpaceContent} from "@app/ui/notifications"
   import {makeSpacePath} from "@app/ui/routes"
 
   const {spaces}: {spaces: SpaceContent[]} = $props()
+
+  const displayCount = ([kind, count]: [number, number]) => {
+    switch (kind) {
+      case ZAP_GOAL:
+        return `${count} ${count === 1 ? "goal" : "goals"}`
+      case EVENT_TIME:
+        return `${count} ${count === 1 ? "event" : "events"}`
+      case THREAD:
+        return `${count} ${count === 1 ? "thread" : "threads"}`
+      case CLASSIFIED:
+        return `${count} ${count === 1 ? "classified" : "classifieds"}`
+      case POLL:
+        return `${count} ${count === 1 ? "poll" : "polls"}`
+      case PINBOARD:
+        return `${count} ${count === 1 ? "pinboard" : "pinboards"}`
+      case LONG_FORM:
+        return `${count} ${count === 1 ? "article" : "articles"}`
+      default:
+        return `${count} ${count === 1 ? "item" : "items"}`
+    }
+  }
 </script>
 
 <div class="flex flex-col divide-y divide-line border-t border-line bg-surface-less">
@@ -22,7 +43,7 @@
           <span class="shrink-0 text-xs opacity-50">{displayInboxTimestamp(timestamp)}</span>
         </div>
         <div class="truncate text-sm opacity-75">
-          {[...countsByKind].map(([kind, count]) => displayContentCount(kind, count)).join(", ")}
+          {[...countsByKind].map(displayCount).join(", ")}
         </div>
       </div>
     </Link>

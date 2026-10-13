@@ -26,7 +26,9 @@ import {
 import type {Maybe} from "@welshman/lib"
 import {
   COMMENT,
+  GENERIC_REPOST,
   NOTE,
+  REPOST,
   eventOutbox,
   fromNostrURI,
   getAddress,
@@ -60,7 +62,7 @@ import {Events, Network, Profiles, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {decodeGeohash} from "@lib/geohash"
 import {createScroller} from "@lib/html"
-import {CONTENT_KINDS} from "@app/features/content"
+import {CONTENT_KINDS} from "@app/features/spaces"
 import {fromApp} from "@app/core/app"
 import {user, userFollowList, userMuteList} from "@app/core/user"
 import {profiles, relayLists, router, usePlugin} from "@app/core/plugins"
@@ -155,6 +157,23 @@ export const getQuoteRef = (pointer: QuotePointer): EventRef =>
     : pointer
 
 // Structure: the shape of a conversation, read off tags alone.
+
+export const REPOST_KINDS = [REPOST, GENERIC_REPOST]
+
+// What an event is activity on: the root a comment sits under, or the event itself.
+export const getActivityTarget = (event: TrustedEvent) => {
+  if (event.kind === COMMENT) {
+    const {kind, id, address} = reader(Comment)(event).root()
+    const rootKind = parseInt(kind || "")
+    const idOrAddress = address || id
+
+    if (rootKind && idOrAddress) {
+      return {kind: rootKind, idOrAddress}
+    }
+  }
+
+  return {kind: event.kind, idOrAddress: getIdOrAddress(event)}
+}
 
 // Ids and addresses of an event's immediate parents, falling back to its thread roots.
 export const getParents = ({kind, tags}: TrustedEvent) => {

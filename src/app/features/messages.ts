@@ -13,7 +13,17 @@ import {
   uniqBy,
 } from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {DELETE, REACTION, WRAP, getPow, hexTags, isSignedEvent, tagValues} from "@welshman/util"
+import {
+  DELETE,
+  DIRECT_MESSAGE,
+  DIRECT_MESSAGE_FILE,
+  REACTION,
+  WRAP,
+  getPow,
+  hexTags,
+  isSignedEvent,
+  tagValues,
+} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import type {RepositoryUpdate, WrapItem} from "@welshman/net"
 import {makeDeriveItem, projection, synced, throttled, withGetter} from "@welshman/store"
@@ -30,11 +40,12 @@ import type {IApp, Search} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
 import {deriveUserItem, user, userFollowList} from "@app/core/user"
 import {messagingRelayLists, relayLists, usePlugin} from "@app/core/plugins"
-import {DM_KINDS} from "@app/features/content"
 import {userSettingsValues} from "@app/core/settings"
 import {kv, registerRetention} from "@app/core/storage"
 import {makeKeyedSyncs, pullAndListen, registerSync} from "@app/core/sync"
 import {userRoomList} from "@app/features/spaces"
+
+export const DM_KINDS = [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]
 
 export type Conversation = {
   id: string

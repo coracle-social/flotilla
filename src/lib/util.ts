@@ -1,5 +1,6 @@
 import {tryCatch, hexToBytes, bytesToHex} from "@welshman/lib"
-import {fromNostrURI, Pubkey} from "@welshman/util"
+import {COMMENT, fromNostrURI, Pubkey} from "@welshman/util"
+import type {Filter} from "@welshman/util"
 import * as nip19 from "nostr-tools/nip19"
 
 export const decodePubkey = (entity: string) =>
@@ -38,3 +39,9 @@ export const formatDuration = (seconds: number) => {
 
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`
 }
+
+export const makeCommentFilter = (kinds: number[], extra: Filter = {}) => ({
+  kinds: [COMMENT],
+  "#K": kinds.map(String),
+  ...extra,
+})

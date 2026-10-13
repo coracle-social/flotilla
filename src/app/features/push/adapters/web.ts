@@ -1,7 +1,7 @@
 import type {Unsubscriber} from "svelte/store"
 import {ellipsize, maybe} from "@welshman/lib"
 import {hexTags, matchFilter, tagValues, type TrustedEvent} from "@welshman/util"
-import {DM_KINDS} from "@app/features/content"
+import {DM_KINDS} from "@app/features/messages"
 import {app} from "@app/core/app"
 import type {IPushAdapter} from "@app/features/push/adapters/common"
 import {notificationSettings, onNotification} from "@app/features/push/adapters/common"
