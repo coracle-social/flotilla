@@ -3,14 +3,24 @@
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
-  import HomeNetworkRecentItem from "@app/components/HomeNetworkRecentItem.svelte"
+  import NoteEntry from "@app/components/NoteEntry.svelte"
   import {user} from "@app/core/user"
-  import {followLists} from "@app/core/plugins"
-  import {countNetworkFeedTypes, makeNetworkFeed} from "@app/features/social"
+  import {followLists, relayLists} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {
+    countNetworkFeedTypes,
+    isIncludedNetworkFeedEvent,
+    makeNetworkFeed,
+  } from "@app/features/social"
 
-  const feed = makeNetworkFeed()
+  const context = makeFeedContext({
+    relays: $relayLists.readUrls($user.pubkey).get(),
+    withReplies: true,
+  })
 
-  const {context, candidates, items, entries, loading, exhausted} = feed
+  const feed = makeNetworkFeed({context, isIncluded: isIncludedNetworkFeedEvent})
+
+  const {candidates, items, entries, loading, exhausted} = feed
 
   const followList = $derived($followLists.one($user.pubkey))
   const follows = $derived($followList?.pubkeys())
@@ -29,7 +39,10 @@
     }
   })
 
-  onDestroy(feed.stop)
+  onDestroy(() => {
+    feed.stop()
+    context.cleanup()
+  })
 </script>
 
 <div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4" bind:this={element}>
@@ -44,7 +57,7 @@
     </div>
   {:else if $entries.length > 0}
     {#each $entries as entry (entry.ref.id)}
-      <HomeNetworkRecentItem {entry} {context} />
+      <NoteEntry {entry} {context} />
     {/each}
     {#if $loading}
       <div class="flex justify-center py-8">

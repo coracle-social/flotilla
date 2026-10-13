@@ -1381,8 +1381,8 @@ what she has posted.
 Acceptance:
 
 - Her profile lists her notes below her header, newest first, each showing her
-  name, avatar, content, and a relative timestamp; replies to other people's
-  notes are excluded.
+  name, avatar, content, and a relative timestamp.
+- A reply of hers is drawn underneath the note it answers, on that note's card.
 - A note she has pinned appears above newer unpinned notes.
 - Scrolling to the bottom loads older notes automatically; a profile with no
   notes shows a loading indicator that resolves to "No notes found for this

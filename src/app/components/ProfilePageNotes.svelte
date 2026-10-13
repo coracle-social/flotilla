@@ -1,18 +1,13 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
-  import {writable} from "svelte/store"
-  import type {Readable} from "svelte/store"
-  import {sortBy, uniqBy, now} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
+  import {onMount} from "svelte"
   import {NOTE, outbox} from "@welshman/util"
-  import type {TrustedEvent} from "@welshman/util"
-  import {getReplyTags} from "@welshman/domain"
   import {fly} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
-  import NoteItem from "@app/components/NoteItem.svelte"
+  import NoteEntry from "@app/components/NoteEntry.svelte"
   import {router} from "@app/core/plugins"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeFeedContext} from "@app/features/feeds"
   import {derivePinnedEvents} from "@app/features/pins"
+  import {makeNetworkFeed} from "@app/features/social"
 
   type Props = {
     pubkey: string
@@ -20,66 +15,41 @@
 
   const {pubkey}: Props = $props()
 
-  const relays = $router.resolver.relays([outbox(pubkey)])
-  const context = makeFeedContext({relays})
+  const context = makeFeedContext({
+    relays: $router.resolver.relays([outbox(pubkey)]),
+    withReplies: true,
+  })
 
-  onDestroy(context.cleanup)
+  const feed = makeNetworkFeed({
+    context,
+    kinds: [NOTE],
+    pinned: derivePinnedEvents(pubkey),
+    sortByTime: true,
+  })
 
-  const pinnedEvents = derivePinnedEvents(pubkey)
-
-  const pinnedIds = $derived($pinnedEvents.map(e => e.id))
+  const {entries, loading, exhausted} = feed
 
   let element: HTMLElement | undefined = $state()
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-
-  const exhausted = $derived($older?.status === "exhausted")
-  const loading = $derived(isFeedLoading($older))
-  let events: Readable<TrustedEvent[]> = $state(writable([]))
-
-  const feedEvents = $derived(
-    sortBy(
-      e => (pinnedIds.includes(e.id) ? -(now() + e.created_at) : -e.created_at),
-      uniqBy(e => e.id, [...$pinnedEvents, ...$events]).filter(
-        e => getReplyTags(e.tags).replies.length === 0,
-      ),
-    ),
-  )
 
   onMount(() => {
-    let cleanup: (() => void) | undefined
+    feed.start(element!, [pubkey])
 
-    relays.then($relays => {
-      const feed = makeFeed({
-        relays: $relays,
-        filters: [{kinds: [NOTE], authors: [pubkey]}],
-        onEvent: context.add,
-      })
-
-      events = feed.events
-
-      older = makeScrollLoader(element!, feed.loadOlder)
-
-      cleanup = () => {
-        older?.stop()
-        feed.cleanup()
-      }
-    })
-
-    return () => cleanup?.()
+    return () => {
+      feed.stop()
+      context.cleanup()
+    }
   })
 </script>
 
 <div class="flex flex-col gap-4" bind:this={element}>
-  {#each feedEvents as event (event.id)}
+  {#each $entries as entry (entry.ref.id)}
     <div in:fly>
-      <NoteItem {event} {context} />
+      <NoteEntry {entry} {context} />
     </div>
-  {:else}
-    {#if exhausted}
-      <p class="py-12 text-center text-sm opacity-75">No notes found for this profile.</p>
-    {/if}
   {/each}
-  {#if loading}
+  {#if $exhausted && $entries.length === 0}
+    <p class="py-12 text-center text-sm opacity-75">No notes found for this profile.</p>
+  {:else if $loading || $entries.length === 0}
     <p class="my-12 flex items-center justify-center gap-2">
       <Spinner loading />
       Loading notes...

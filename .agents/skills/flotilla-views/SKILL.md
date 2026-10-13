@@ -355,8 +355,8 @@ onMount(() => {
 That is `EventComments`. The thread detail page does the same in an `$effect`.
 
 **A list that pages as you scroll:** `makeFeed`, `makeScrollLoader` and `makeFeedContext` from
-`src/app/features/feeds.ts`. Every space list page uses them, as do `HomeNetwork`, `ProfilePageNotes` and
-`RoomChat`. The threads and classifieds pages are the reference:
+`src/app/features/feeds.ts`. Every space list page uses them, as do `HomeNetwork` and `RoomChat`.
+The threads and classifieds pages are the reference:
 
 ```typescript
 const context = makeFeedContext({relays: [url]})
@@ -389,6 +389,9 @@ every event the feed yields, rows get the same `context`, and their action rows 
 `context.related(event)` and `context.deleted(event)`. Close the list with `<Spinner {loading}>`
 and an `{#if}` chain over loading, empty and exhausted. Calendars use
 `makeCalendarFeed`, which pages by date tag rather than `created_at`.
+
+`makeNetworkFeed` in `src/app/features/social.ts` builds on those helpers to draw each reply under
+the note it answers. The home Network section and `ProfilePageNotes` both use it.
 
 `ProfileFeed` still drives welshman's `FeedController` through
 `$app.use(Feeds).makeFeedController` and `createScroller`, but 27fa25c3 moved the home feed onto

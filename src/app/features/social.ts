@@ -1,5 +1,6 @@
 import * as nip19 from "nostr-tools/nip19"
 import {derived, get, readable, writable} from "svelte/store"
+import type {Readable} from "svelte/store"
 import {
   ago,
   call,
@@ -65,10 +66,10 @@ import {createScroller} from "@lib/html"
 import {CONTENT_KINDS} from "@app/features/spaces"
 import {fromApp} from "@app/core/app"
 import {user, userFollowList, userMuteList} from "@app/core/user"
-import {profiles, relayLists, router, usePlugin} from "@app/core/plugins"
+import {profiles, router, usePlugin} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
-import {isFeedLoading, makeFeed, makeFeedContext, makeFeedLoader} from "@app/features/feeds"
-import type {FeedLoadState} from "@app/features/feeds"
+import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
+import type {FeedContext, FeedLoadState} from "@app/features/feeds"
 import {getProfileGeohash} from "@app/features/location"
 import type {QuotePointer} from "@app/features/quotes"
 import {DEFAULT_PUBKEYS} from "@app/core/env"
@@ -452,18 +453,22 @@ export const groupNetworkFeedEvents = (events: TrustedEvent[]): NetworkFeedEntry
   return sortBy(entry => -getNetworkFeedTimestamp(entry), entries)
 }
 
-/**
- * The home network feed: one timeline per follow group, merged newest first,
- * with every entry held back until the note it is drawn around is in hand, so
- * nothing already on screen gains a card above it. `start` takes the scroll
- * container, which the caller owns along with the type filters and the markup.
- */
-export const makeNetworkFeed = () => {
-  const context = makeFeedContext({
-    relays: relayLists.get().readUrls(user.get().pubkey).get(),
-    withReplies: true,
-  })
+export type NetworkFeedOptions = {
+  context: FeedContext
+  kinds?: number[]
+  isIncluded?: Readable<(event: TrustedEvent) => boolean>
+  pinned?: Readable<TrustedEvent[]>
+  sortByTime?: boolean
+}
 
+/** Notes with each reply drawn under the note it answers. The caller owns the context. */
+export const makeNetworkFeed = ({
+  context,
+  kinds = [NOTE, ...CONTENT_KINDS],
+  isIncluded = readable(() => true),
+  pinned = readable<TrustedEvent[]>([]),
+  sortByTime = false,
+}: NetworkFeedOptions) => {
   const pages = writable<TrustedEvent[][]>([])
   const states = writable<FeedLoadState[]>([])
   const drawn = writable<string[]>([])
@@ -474,33 +479,46 @@ export const makeNetworkFeed = () => {
   let admitting = false
   let stopped = false
 
+  const pinnedFirst = derived(pinned, $pinned => {
+    const ids = new Set($pinned.map(event => event.id))
+
+    return (entry: NetworkFeedEntry) => (ids.has(entry.ref.id) ? 0 : 1)
+  })
+
   // Everything the feed holds, newest first, less whoever the reader muted.
-  const candidates = derived([pages, isEventMuted], ([$pages, $isEventMuted]) =>
+  const candidates = derived([pages, pinned, isEventMuted], ([$pages, $pinned, $isEventMuted]) =>
     uniqBy(
       getIdOrAddress,
       sortBy(
         event => -event.created_at,
-        $pages.flat().filter(event => !$isEventMuted(event)),
+        // A pinned note can be older than the feed has paged back to, so it is merged in.
+        [...$pinned, ...$pages.flat()].filter(event => !$isEventMuted(event)),
       ),
     ),
   )
 
-  const items = derived([candidates, isIncludedNetworkFeedEvent], ([$candidates, $isIncluded]) =>
+  const items = derived([candidates, isIncluded], ([$candidates, $isIncluded]) =>
     $candidates.filter($isIncluded),
   )
 
-  const grouped = derived(items, $items => groupNetworkFeedEvents($items))
+  const grouped = derived([items, pinnedFirst], ([$items, $pinnedFirst]) =>
+    sortBy($pinnedFirst, groupNetworkFeedEvents($items)),
+  )
 
   // What the feed holds and has not drawn, newest first. An entry waits here for its note.
   const buffer = derived([grouped, anchors], ([$grouped, $anchors]) =>
     $grouped.filter(entry => !$anchors.has(entry.ref.id)),
   )
 
-  // Drawn entries keep the order they were drawn in, so nothing already on screen moves.
   const entries = derived([grouped, drawn, anchors], ([$grouped, $drawn, $anchors]) => {
+    const drawnIds = new Set($drawn)
     const byRef = indexBy(entry => entry.ref.id, $grouped)
+    // Merged timelines page at their own rates, so time order would move entries already drawn.
+    const ordered = sortByTime
+      ? $grouped.filter(entry => drawnIds.has(entry.ref.id))
+      : removeUndefined($drawn.map(id => byRef.get(id)))
 
-    return removeUndefined($drawn.map(id => byRef.get(id))).map(entry => ({
+    return ordered.map(entry => ({
       ...entry,
       // A note the feed carries itself still belongs on its card when the load missed it.
       note: $anchors.get(entry.ref.id) ?? entry.note,
@@ -558,7 +576,7 @@ export const makeNetworkFeed = () => {
         // Half the group's relays answering is enough to show its page, since the rest get asked again.
         quorum: 0.5,
         useCache: false,
-        filters: [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
+        filters: [{kinds, authors: pubkeys}],
         onEvent: context.add,
       })
 
@@ -599,10 +617,9 @@ export const makeNetworkFeed = () => {
   const stop = () => {
     stopped = true
     unsubscribers.forEach(call)
-    context.cleanup()
   }
 
-  return {context, candidates, items, entries, loading, exhausted, start, stop}
+  return {candidates, items, entries, loading, exhausted, start, stop}
 }
 
 // Muting

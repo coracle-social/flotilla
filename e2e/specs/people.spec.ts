@@ -368,7 +368,7 @@ test("US-079 read a person's notes", async ({seed, as}) => {
       makeEvent(NOTE, {content: "OLDEST from the spring refit", created_at: at(8, MONTH)}),
     )
 
-    // A reply to carol, which a profile's note list leaves out.
+    // A reply to carol, which the list draws under her note.
     space.event(
       user.alice,
       () =>
@@ -398,7 +398,11 @@ test("US-079 read a person's notes", async ({seed, as}) => {
 
   // Nothing is scrolled here: the feed keeps widening its window until the page is full.
   await expect(list.filter({hasText: "OLDEST"})).toBeVisible()
-  await expect(list.filter({hasText: "REPLY"})).toHaveCount(0)
+
+  const answered = list.filter({hasText: "REPLY they are in the chart drawer"})
+
+  await expect(answered).toHaveCount(1)
+  await expect(answered).toContainText("Anyone seen the tide charts?")
 })
 
 test("US-134 write a public post", async ({seed, as}) => {
