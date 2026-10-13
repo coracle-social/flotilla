@@ -6,8 +6,8 @@
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
   import {network, roomLists} from "@app/core/plugins"
   import {latestEvents} from "@app/features/repository"
-  import {goToEvent} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import {goToEvent} from "@app/navigation/locations"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     pubkey: string

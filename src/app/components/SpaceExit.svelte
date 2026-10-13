@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {navigate} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
   import {displayRelayUrl} from "@welshman/util"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"

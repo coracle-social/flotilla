@@ -35,8 +35,9 @@
   import {colorFor} from "@app/ui/theme"
   import {ENABLE_ZAPS} from "@app/core/env"
   import type {FeedContext} from "@app/features/feeds"
-  import {highlightedEvent, makeContentPath, makeThreadPath} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import * as pages from "@app/navigation/pages"
+  import {highlightedEvent} from "@app/navigation/locations"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -78,7 +79,7 @@
   )
 
   const path = $derived(
-    $innerEvent && makeContentPath(url, $innerEvent.kind, getIdOrAddress($innerEvent)),
+    $innerEvent && pages.makeContentPath(url, $innerEvent.kind, getIdOrAddress($innerEvent)),
   )
 
   const threads = $events.forUrl(url, [{kinds: [THREAD], "#q": [event.id]}]).$
@@ -150,7 +151,7 @@
       innerEvent={$innerEvent} />
     {#each $threads as thread (thread.id)}
       <Link
-        href={makeThreadPath(url, thread.id)}
+        href={pages.thread.path({url, id: thread.id})}
         class="button button-xs button-neutral gap-1 rounded-full">
         <Icon icon={NotesMinimalistic} />
         <span class="max-w-48 truncate">

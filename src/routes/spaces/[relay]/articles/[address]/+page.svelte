@@ -20,13 +20,12 @@
   import {reader} from "@app/core/domain"
   import {makeFeedContext} from "@app/features/feeds"
   import {displayReadingTime} from "@app/features/spaces/articles"
-  import {decodeRelay, makeSpacePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {relay, address} = params
-  const url = decodeRelay(relay)
+  const {url, address} = pages.article.decode(params)
   const context = makeFeedContext({relays: [url]})
   const event = $events.one(address, [url]).$
   const article = derived(event, $event => ($event ? reader(Article)($event) : undefined))
@@ -46,7 +45,7 @@
       <h1 class="truncate min-w-0 font-bold sm:text-xl">{$article?.title() ?? ""}</h1>
       {#if $article && h}
         <p class="text-xs opacity-75">
-          <Link href={makeSpacePath(url, h)} class="link">#<RoomName {url} {h} /></Link>
+          <Link href={pages.room.path({url, h})} class="link">#<RoomName {url} {h} /></Link>
         </p>
       {/if}
     </div>

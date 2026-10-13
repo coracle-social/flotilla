@@ -16,7 +16,7 @@
   import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import KeyDownload from "@app/components/KeyDownload.svelte"
   import {pushToast} from "@app/ui/toast"
-  import {pushModal, clearModals} from "@app/ui/modal"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {session} from "@app/core/session"
   import {requirePomadeSession} from "@app/features/pomade"
 

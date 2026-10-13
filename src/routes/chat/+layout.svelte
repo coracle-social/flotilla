@@ -24,7 +24,7 @@
     conversationSearch,
     groupConversationsByTab,
   } from "@app/features/messages"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {shouldUnwrap} from "@app/features/messages"
   import type {LayoutProps} from "./$types"
 

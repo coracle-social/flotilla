@@ -1,13 +1,14 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {goToHome, goToNote} from "@app/ui/routes"
-  import {decodeNotePointer} from "@app/features/social"
+  import {goToHome} from "@app/navigation/history"
+  import {goToNote} from "@app/navigation/overlays"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const pointer = decodeNotePointer(params.nevent)
+  const {pointer} = pages.note.decode(params)
 
   onMount(() => {
     if (pointer) {

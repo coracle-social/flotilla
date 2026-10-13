@@ -7,7 +7,7 @@
   import EditFeaturedContent from "@app/components/EditFeaturedContent.svelte"
   import {deriveFeaturedContent} from "@app/features/spaces/featured"
   import {deriveUserIsSpaceOwner} from "@app/features/spaces/management"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

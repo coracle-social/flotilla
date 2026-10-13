@@ -25,9 +25,9 @@
   } from "@app/features/spaces/membership"
   import {fromApp} from "@app/core/app"
   import {ENABLE_PAID_SPACES} from "@app/core/env"
-  import {clearModals, pushModal} from "@app/ui/modal"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
-  import {goToSpace} from "@app/ui/routes"
+  import {goToSpace} from "@app/navigation/history"
 
   type Props = {
     url: string

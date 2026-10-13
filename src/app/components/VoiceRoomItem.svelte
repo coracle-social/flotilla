@@ -7,7 +7,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {makeRoomPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import VoiceParticipantMediaBadges from "@app/components/VoiceParticipantMediaBadges.svelte"
   import {
     CallState,
@@ -60,7 +60,7 @@
 </script>
 
 <SecondaryNavItem
-  href={makeRoomPath(url, h)}
+  href={pages.room.path({url, h})}
   {notification}
   onclick={onClick}
   class={cx("items-start!", isActive && "bg-surface! text-content!")}>

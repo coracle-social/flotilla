@@ -26,7 +26,7 @@ import {relayMemberLists, relays, roomLists} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
 import {PLATFORM_URL} from "@app/core/env"
 import {optInSpaceNotifications} from "@app/features/push"
-import {makeSpacePath} from "@app/ui/routes"
+import * as pages from "@app/navigation/pages"
 import {publishRoomList} from "@app/features/spaces/rooms"
 import {removeTrustedRelay} from "@app/core/settings"
 import {registerRetention} from "@app/core/storage"
@@ -237,7 +237,7 @@ export const openCheckout = (url: string) => {
   const checkoutUrl = new URL(paymentsUrl)
 
   checkoutUrl.searchParams.set("pubkey", User.require(app.get()).pubkey)
-  checkoutUrl.searchParams.set("return_url", origin + makeSpacePath(url))
+  checkoutUrl.searchParams.set("return_url", origin + pages.space.path({url}))
 
   pendingCheckouts.update($urls => append(url, $urls))
 

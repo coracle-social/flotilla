@@ -12,8 +12,8 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import ReportMenu from "@app/components/ReportMenu.svelte"
   import {network} from "@app/core/plugins"
-  import {pushModal} from "@app/ui/modal"
-  import {goToEvent} from "@app/ui/routes"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {goToEvent} from "@app/navigation/locations"
 
   type Props = {
     url: string

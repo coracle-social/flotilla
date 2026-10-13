@@ -12,14 +12,14 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import Chat from "@app/components/Conversation.svelte"
-  import {splitConversationId} from "@app/features/messages"
+  import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/ui/toast"
   import {Push, notificationSettings} from "@app/features/push"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const pubkeys = splitConversationId(params.chat)
+  const pubkeys = pages.getConversationPubkeys(pages.conversation.decode(params).pubkeys)
 
   onMount(async () => {
     if (!$dmNotificationsPrompted) {

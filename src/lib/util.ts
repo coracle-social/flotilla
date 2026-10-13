@@ -1,5 +1,5 @@
 import {tryCatch, hexToBytes, bytesToHex} from "@welshman/lib"
-import {COMMENT, fromNostrURI, Pubkey} from "@welshman/util"
+import {COMMENT, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE, fromNostrURI, Pubkey} from "@welshman/util"
 import type {Filter} from "@welshman/util"
 import * as nip19 from "nostr-tools/nip19"
 
@@ -45,3 +45,5 @@ export const makeCommentFilter = (kinds: number[], extra: Filter = {}) => ({
   "#K": kinds.map(String),
   ...extra,
 })
+
+export const DM_KINDS = [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]

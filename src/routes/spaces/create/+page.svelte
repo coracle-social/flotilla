@@ -11,7 +11,7 @@
   import RelayCreate from "@app/components/hosting/RelayCreate.svelte"
   import {PLATFORM_LOGO, PLATFORM_NAME, PLATFORM_URL} from "@app/core/env"
   import {HOSTING_ENABLED} from "@app/features/hosting"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   const openCreate = () => pushModal(RelayCreate, {}, {size: "large"})
 </script>

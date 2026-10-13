@@ -10,7 +10,7 @@
   import RelayList from "@app/components/RelayList.svelte"
   import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {setChecked} from "@app/ui/notifications"
   import {notificationSettings} from "@app/features/push"
 

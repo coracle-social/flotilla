@@ -15,7 +15,7 @@
     userBookmarkFolders,
     userBookmarkSearch,
   } from "@app/features/bookmarks"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   const createFolder = () => pushModal(BookmarkFolderEdit)
 

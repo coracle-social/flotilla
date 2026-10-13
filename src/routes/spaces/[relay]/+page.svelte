@@ -1,14 +1,15 @@
 <script lang="ts">
   import theme from "tailwindcss/defaultTheme"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
-  import {decodeRelay, goToSpace} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
+  import {goToSpace} from "@app/navigation/history"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
   import SpaceNotify from "@app/components/SpaceNotify.svelte"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.space.decode(params)
   const md = parseFloat(theme.screens.md) * 16
 
   let width = $state(window.innerWidth)

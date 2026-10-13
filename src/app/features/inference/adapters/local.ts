@@ -1,6 +1,6 @@
 import {hasLocalSpeech, transcribeLocally} from "@lib/speech"
 import LocalSpeechEnable from "@app/components/LocalSpeechEnable.svelte"
-import {pushModal} from "@app/ui/modal"
+import {pushModal} from "@app/navigation/dialogs"
 import type {InferenceEnable, InferenceProvider} from "@app/features/inference/adapters/common"
 
 // Generating speech on a phone is slower than playing it, so only transcription runs here.

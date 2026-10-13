@@ -21,12 +21,12 @@
   import {reader} from "@app/core/domain"
   import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
-  import {decodeRelay, makeArticleCreatePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.articles.decode(params)
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)
@@ -40,7 +40,7 @@
   let element: HTMLElement | undefined = $state()
   let events: Readable<TrustedEvent[]> = $state(readable([]))
 
-  const createArticle = () => goto(makeArticleCreatePath(url))
+  const createArticle = () => goto(pages.articleCreate.path({url}))
 
   const {items: articles} = $derived(partitionByActivity(LONG_FORM, $events))
 

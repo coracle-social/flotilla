@@ -14,7 +14,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {roomLists} from "@app/core/plugins"
   import {publishRoomList} from "@app/features/spaces/rooms"
-  import {goToMovedSpace} from "@app/ui/routes"
+  import {goToMovedSpace} from "@app/navigation/history"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

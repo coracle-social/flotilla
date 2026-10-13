@@ -16,7 +16,7 @@
   import RoomName from "@app/components/RoomName.svelte"
   import {deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
   import {deriveRoomPinnedEvents, toggleRoomPin} from "@app/features/spaces/rooms/pins"
-  import {goToEvent} from "@app/ui/routes"
+  import {goToEvent} from "@app/navigation/locations"
 
   type Props = {
     url: string

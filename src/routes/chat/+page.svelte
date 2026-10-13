@@ -17,7 +17,7 @@
     conversationSearch,
     groupConversationsByTab,
   } from "@app/features/messages"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   let term = $state("")
   let tab = $state(MessagesTab.Conversations)

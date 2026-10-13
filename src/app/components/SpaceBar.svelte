@@ -9,7 +9,7 @@
   import PageBar from "@lib/components/PageBar.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {pageLoading} from "@app/features/loading"
-  import {decodeRelay} from "@app/ui/routes"
+  import {decodeRelay} from "@app/navigation/pages"
 
   type Props = {
     back?: () => unknown

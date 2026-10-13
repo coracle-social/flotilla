@@ -28,9 +28,9 @@
   import SignerStatus from "@app/components/SignerStatus.svelte"
   import PasswordReset from "@app/components/PasswordReset.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
-  import {makeProfilePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {clip, pushToast} from "@app/ui/toast"
   import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
@@ -98,7 +98,7 @@
 <PageContent class="@container">
   <div class="card flex flex-col gap-2">
     <div class="flex justify-between gap-2">
-      <Link href={makeProfilePath($user.pubkey)} class="flex max-w-full gap-3">
+      <Link href={pages.profile.path({pubkey: $user.pubkey})} class="flex max-w-full gap-3">
         <div class="py-1">
           <ProfileCircle pubkey={$user.pubkey} size={10} />
         </div>

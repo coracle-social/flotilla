@@ -23,7 +23,7 @@
   import LogInBunker from "@app/components/LogInBunker.svelte"
   import LogInEmail from "@app/components/LogInEmail.svelte"
   import LogInKey from "@app/components/LogInKey.svelte"
-  import {pushModal, clearModals} from "@app/ui/modal"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {PLATFORM_NAME, POMADE_SIGNERS} from "@app/core/env"
   import {pushToast} from "@app/ui/toast"
   import {setChecked} from "@app/ui/notifications"

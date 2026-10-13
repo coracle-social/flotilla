@@ -19,7 +19,7 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayDetailMenu from "@app/components/hosting/RelayDetailMenu.svelte"
   import CustomDomainModal from "@app/components/hosting/CustomDomainModal.svelte"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {clip, pushToast} from "@app/ui/toast"
   import {
     RELAY_FLAG_DEFAULTS,

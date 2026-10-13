@@ -20,7 +20,7 @@
     PLATFORM_NAME,
     PLATFORM_DESCRIPTION,
   } from "@app/core/env"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   const invite = $derived(
     $page.url.pathname === "/join" ? parseInviteLink($page.url.href) : undefined,

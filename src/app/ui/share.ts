@@ -5,9 +5,10 @@ import {noop} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {app} from "@app/core/app"
-import {navigate, pushModal} from "@app/ui/modal"
+import {navigate} from "@app/navigation/navigate"
+import {pushModal} from "@app/navigation/dialogs"
 import {relays} from "@app/core/plugins"
-import {makeSpaceChatPath} from "@app/ui/routes"
+import * as pages from "@app/navigation/pages"
 import {pushToast} from "@app/ui/toast"
 import ShareDialog from "@app/components/Share.svelte"
 import ShareEvent from "@app/components/ShareEvent.svelte"
@@ -34,7 +35,7 @@ export const shareEvent = (url: string, noun: string, event: TrustedEvent) => {
   if (relays.get().get(url)?.hasNip(29)) {
     pushModal(ShareEvent, {url, noun, event})
   } else {
-    shareTo(makeSpaceChatPath(url), {type: "event", value: event})
+    shareTo(pages.spaceChat.path({url}), {type: "event", value: event})
   }
 }
 

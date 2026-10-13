@@ -11,7 +11,7 @@
   import PlanModal from "@app/components/hosting/PlanModal.svelte"
   import RelayForm from "@app/components/hosting/RelayForm.svelte"
   import type {RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
-  import {pushModal, clearModals} from "@app/ui/modal"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
   import {
     followHostedRelay,

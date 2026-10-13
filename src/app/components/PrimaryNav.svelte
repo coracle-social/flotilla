@@ -16,10 +16,12 @@
   import Search from "@app/components/Search.svelte"
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
   import {PLATFORM_RELAYS} from "@app/core/env"
-  import {getModal, popModal, pushModal} from "@app/ui/modal"
+  import {getModal, popModal, pushModal} from "@app/navigation/dialogs"
   import {notifications} from "@app/ui/notifications"
   import {userSpaceUrls} from "@app/features/spaces"
-  import {goToMessages, lastSpaceUrl, makeSpacePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
+  import {goToMessages} from "@app/features/messages"
+  import {lastSpaceUrl} from "@app/navigation/history"
   import {userProfile} from "@app/core/user"
 
   type Props = {
@@ -45,7 +47,7 @@
     spaceMenuIsOpen ? popModal() : pushModal(SpaceMenuDrawer, {url: spaceUrl}, {drawer: true})
 
   const otherSpaceNotifications = $derived(
-    $userSpaceUrls.some(url => url !== spaceUrl && $notifications.has(makeSpacePath(url))),
+    $userSpaceUrls.some(url => url !== spaceUrl && $notifications.has(pages.space.path({url}))),
   )
 </script>
 

@@ -7,7 +7,7 @@ import {endCall, isCallActive} from "@app/features/spaces/calls"
 import {profiles} from "@app/core/plugins"
 import {resolveInference} from "@app/features/inference"
 import type {Synthesize} from "@app/features/inference"
-import {pushModal} from "@app/ui/modal"
+import {pushModal} from "@app/navigation/dialogs"
 import {renderEventAsText} from "@app/ui/render"
 import {pushToast} from "@app/ui/toast"
 

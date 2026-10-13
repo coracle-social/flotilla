@@ -26,9 +26,9 @@
   import NoteCreate from "@app/components/NoteCreate.svelte"
   import WotScore from "@app/components/WotScore.svelte"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {clip, pushToast} from "@app/ui/toast"
-  import {goToMessages} from "@app/ui/routes"
+  import {goToMessages} from "@app/features/messages"
   import {user} from "@app/core/user"
   import {followLists, profiles, relayLists} from "@app/core/plugins"
 

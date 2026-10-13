@@ -9,7 +9,7 @@ import {usePlugin} from "@app/core/plugins"
 import {session} from "@app/core/session"
 import {DEFAULT_RELAYS} from "@app/core/env"
 import {kv} from "@app/core/storage"
-import {pushModal} from "@app/ui/modal"
+import {pushModal} from "@app/navigation/dialogs"
 import KeyDownload from "@app/components/KeyDownload.svelte"
 
 export type HealthCheckContext = {

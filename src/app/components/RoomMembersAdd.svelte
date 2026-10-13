@@ -18,7 +18,7 @@
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {profiles, relayMemberLists} from "@app/core/plugins"
   import {pushToast} from "@app/ui/toast"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {addRoomMembers} from "@app/features/spaces/rooms"
 
   type Props = {

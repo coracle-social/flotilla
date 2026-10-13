@@ -2,7 +2,7 @@
   import type {Snippet} from "svelte"
   import Button from "@lib/components/Button.svelte"
   import ImageInputModal from "@app/components/ImageInputModal.svelte"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     onSelect: (image: File | string) => void

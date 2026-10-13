@@ -7,7 +7,7 @@
   import Link from "@lib/components/Link.svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
-  import {makeSpacePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -21,7 +21,7 @@
   const statusPath = $derived(
     $access.status === RelayAccessStatus.SignerFailed
       ? "/settings/profile"
-      : makeSpacePath(url, "about"),
+      : pages.spaceAbout.path({url}),
   )
 </script>
 

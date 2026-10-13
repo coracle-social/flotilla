@@ -13,8 +13,8 @@
   import {REPOST_KINDS} from "@app/features/social"
   import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
-  import {pushModal} from "@app/ui/modal"
-  import {pushEventNote} from "@app/ui/routes"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {openEventNote} from "@app/navigation/overlays"
   import {deriveDisplaysByPubkey, notes} from "@app/features/social"
   import type {HomeNotification} from "@app/features/social"
 
@@ -96,7 +96,7 @@
 
   const openProfile = (pubkey: string) => () => pushModal(ProfileDetail, {pubkey})
 
-  const openReply = (reply: TrustedEvent) => () => pushEventNote(reply)
+  const openReply = (reply: TrustedEvent) => () => openEventNote(reply)
 
   const showAll = () => {
     showEvery = true

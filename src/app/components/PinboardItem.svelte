@@ -13,7 +13,7 @@
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import type {FeedContext} from "@app/features/feeds"
   import {shelfCoverImages} from "@app/features/spaces/pinboards"
-  import {makeLibraryPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -24,7 +24,7 @@
 
   const {url, board, pins, context}: Props = $props()
 
-  const path = makeLibraryPath(url, board.address())
+  const path = pages.board.path({url, address: board.address()})
   const related = context.related(board.event)
   const comments = derived(related, $related => filter(spec({kind: COMMENT}), $related))
 

@@ -11,7 +11,7 @@
   import {userProfile} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {wallet} from "@app/features/wallet"
-  import {clearModals} from "@app/ui/modal"
+  import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   const lud16 = getWalletAddress(wallet.get()!)

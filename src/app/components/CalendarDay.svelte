@@ -14,7 +14,7 @@
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
   import type {FeedContext} from "@app/features/feeds"
   import {formatDay, groupEventsByDay, makeDayKey} from "@app/features/spaces/calendar"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

@@ -9,7 +9,7 @@
   import {relayManagement} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
   import {addRoomMembers} from "@app/features/spaces/rooms"
 

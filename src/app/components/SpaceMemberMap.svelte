@@ -7,7 +7,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {dufflepud} from "@app/core/env"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {activeTheme} from "@app/ui/theme"
   import type {MemberPin} from "@app/features/social"
 

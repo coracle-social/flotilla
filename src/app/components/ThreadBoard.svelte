@@ -7,7 +7,7 @@
   import ThreadBoardItem from "@app/components/ThreadBoardItem.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import type {FeedContext} from "@app/features/feeds"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

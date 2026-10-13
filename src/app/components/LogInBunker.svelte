@@ -22,7 +22,7 @@
   import BunkerUrl from "@app/components/BunkerUrl.svelte"
   import {login} from "@app/core/session"
   import {Nip46Controller} from "@app/core/nip46"
-  import {clearModals} from "@app/ui/modal"
+  import {clearModals} from "@app/navigation/dialogs"
   import {setChecked} from "@app/ui/notifications"
   import {pushToast} from "@app/ui/toast"
   import {NIP46_PERMS} from "@app/core/nip46"

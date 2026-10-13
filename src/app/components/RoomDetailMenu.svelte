@@ -18,8 +18,10 @@
     deriveUserRoomMembershipStatus,
     publishRoomList,
   } from "@app/features/spaces/rooms"
-  import {forgetSpacePage, makeSpacePath} from "@app/ui/routes"
-  import {navigate, pushModal} from "@app/ui/modal"
+  import * as pages from "@app/navigation/pages"
+  import {forgetSpacePage} from "@app/navigation/history"
+  import {navigate} from "@app/navigation/navigate"
+  import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {
@@ -71,7 +73,7 @@
           await $roomLists.removeRoom(h, url).then(publishRoomList)
 
           forgetSpacePage(url)
-          navigate(makeSpacePath(url))
+          navigate(pages.space.path({url}))
         }
       },
     })

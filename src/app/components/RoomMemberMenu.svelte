@@ -4,7 +4,7 @@
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import {rooms} from "@app/core/plugins"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

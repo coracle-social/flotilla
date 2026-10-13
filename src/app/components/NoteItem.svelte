@@ -13,7 +13,7 @@
   import EventReactions from "@app/components/EventReactions.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import type {FeedContext} from "@app/features/feeds"
-  import {pushEventNote} from "@app/ui/routes"
+  import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {
     event: TrustedEvent
@@ -46,7 +46,7 @@
   // Kind 1 notes are replied to with notes as well as with NIP-22 comments.
   const replyCount = $derived($related.filter(e => e.kind === COMMENT || e.kind === NOTE).length)
 
-  const openReplies = () => pushEventNote(event, {reply: true})
+  const openReplies = () => openEventNote(event, {reply: true})
 </script>
 
 {#snippet body()}

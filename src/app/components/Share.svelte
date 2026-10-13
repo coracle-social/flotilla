@@ -22,7 +22,7 @@
   import {conversationSearch} from "@app/features/messages"
   import {user} from "@app/core/user"
   import {deriveUserRoomSearch} from "@app/features/spaces/rooms"
-  import {makeConversationPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {shareTo, type Share} from "@app/ui/share"
 
   type Props = {
@@ -91,7 +91,7 @@
         <p class="text-xs uppercase tracking-wide opacity-60">Direct Messages</p>
         <div class="flex flex-col gap-2">
           {#each conversationResults as conversation (conversation.id)}
-            {@const path = makeConversationPath(conversation.pubkeys)}
+            {@const path = pages.conversation.path({pubkeys: conversation.pubkeys})}
             {@const others = remove($user.pubkey, conversation.pubkeys)}
             <Button
               type="button"

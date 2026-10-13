@@ -9,14 +9,13 @@
   import RoomImage from "@app/components/RoomImage.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import RoomSearch from "@app/components/RoomSearch.svelte"
-  import {decodeRelay} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import * as pages from "@app/navigation/pages"
+  import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {h, relay} = params
-  const url = decodeRelay(relay)
+  const {url, h} = pages.room.decode(params)
 
   const showRoomSearch = () => pushModal(RoomSearch, {url, h})
 

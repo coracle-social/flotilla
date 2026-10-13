@@ -35,7 +35,7 @@
   import ContentCommand from "@app/components/ContentCommand.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {makeRoomPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {isQuote} from "@app/features/quotes"
   import {deriveValidCommands, getCommandsForInvocation} from "@app/features/spaces/rooms/commands"
   import {userSettingsValues} from "@app/core/settings"
@@ -180,7 +180,9 @@
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />
         {:else if isRoom(parsed)}
-          <Link href={makeRoomPath(parsed.value.url, parsed.value.room)} class="link-content">
+          <Link
+            href={pages.room.path({url: parsed.value.url, h: parsed.value.room})}
+            class="link-content">
             #<RoomName url={parsed.value.url} h={parsed.value.room} />
           </Link>
         {:else if isQuote(parsed)}

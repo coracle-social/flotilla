@@ -26,7 +26,7 @@
   import {userProfile} from "@app/core/user"
   import {getWebLn, wallet} from "@app/features/wallet"
   import {pushToast} from "@app/ui/toast"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   const back = () => history.back()
 

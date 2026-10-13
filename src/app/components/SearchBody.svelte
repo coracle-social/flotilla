@@ -14,9 +14,9 @@
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import {events, network, profiles} from "@app/core/plugins"
-  import {popModal} from "@app/ui/modal"
+  import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
-  import {goToEvent} from "@app/ui/routes"
+  import {goToEvent} from "@app/navigation/locations"
 
   type Props = {
     placeholder: string

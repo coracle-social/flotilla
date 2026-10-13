@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {navigate} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
   import {derived} from "svelte/store"
   import {filter, formatTimestamp, max, spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
@@ -12,7 +12,7 @@
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import {reader} from "@app/core/domain"
   import type {FeedContext} from "@app/features/feeds"
-  import {makeThreadPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -28,7 +28,7 @@
   const replyCount = $derived($replies.length)
   const lastActive = $derived(max([...$replies, event].map(e => e.created_at)))
   const title = reader(Thread)(event).title()
-  const path = makeThreadPath(url, event.id)
+  const path = pages.thread.path({url, id: event.id})
   const onClick = () => navigate(path)
 </script>
 

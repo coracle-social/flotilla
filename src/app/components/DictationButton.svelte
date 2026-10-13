@@ -12,7 +12,7 @@
   import {clearDictation, getDictation, transcribeDictation} from "@app/features/dictation"
   import type {InferenceProviderFor} from "@app/features/inference"
   import {resolveInference} from "@app/features/inference"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

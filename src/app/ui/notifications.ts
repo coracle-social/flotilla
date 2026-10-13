@@ -44,14 +44,10 @@ import {Events, Relays} from "@welshman/app"
 import {makeCommentFilter} from "@lib/util"
 import {app, fromApp} from "@app/core/app"
 import {network, relays, router} from "@app/core/plugins"
-import {
-  makeRoomPath,
-  makeSpaceChatPath,
-  makeConversationPath,
-  makeContentPath,
-} from "@app/ui/routes"
+import * as pages from "@app/navigation/pages"
 import {CONTENT_KINDS} from "@app/features/spaces"
-import {getActivityTarget, REPOST_KINDS} from "@app/features/social"
+import {getActivityTarget} from "@app/navigation/locations"
+import {REPOST_KINDS} from "@app/features/social"
 import {getIsMuted, userSettingsValues} from "@app/core/settings"
 import {Messages} from "@app/features/messages"
 import {dufflepud, DUFFLEPUD_URL, ENABLE_ZAPS} from "@app/core/env"
@@ -220,7 +216,7 @@ const latestContentActivity = (url: string, events: TrustedEvent[]) => {
       continue
     }
 
-    const path = makeContentPath(url, target.kind, target.idOrAddress)
+    const path = pages.makeContentPath(url, target.kind, target.idOrAddress)
 
     if (path && !byPath.has(path)) {
       byPath.set(path, {path, url, contentKind: target.kind, event})
@@ -255,7 +251,7 @@ export const latestActivityByPath = derived(
     const activity = new Map<string, Activity>()
 
     for (const {pubkeys, messages} of $conversationsById.values()) {
-      const path = makeConversationPath(pubkeys)
+      const path = pages.conversation.path({pubkeys})
 
       activity.set(path, {path, pubkeys, event: messages[0]})
     }
@@ -269,7 +265,7 @@ export const latestActivityByPath = derived(
         for (const [h, [event]] of groupBy(e => tagValue(tagSpec("h"), e.tags), messages)) {
           // A muted room is left out entirely, so it can't light up its own badge or the space's
           if (h && !getIsMuted($settings, url, h)) {
-            const path = makeRoomPath(url, h)
+            const path = pages.room.path({url, h})
 
             activity.set(path, {path, url, h, event})
           }
@@ -278,7 +274,7 @@ export const latestActivityByPath = derived(
         const event = first(messages)
 
         if (event) {
-          const path = makeSpaceChatPath(url)
+          const path = pages.spaceChat.path({url})
 
           activity.set(path, {path, url, event})
         }

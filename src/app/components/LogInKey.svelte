@@ -20,7 +20,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {login} from "@app/core/session"
-  import {clearModals} from "@app/ui/modal"
+  import {clearModals} from "@app/navigation/dialogs"
   import {setChecked} from "@app/ui/notifications"
   import {pushToast} from "@app/ui/toast"
 

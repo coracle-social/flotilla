@@ -18,7 +18,7 @@
   import SpaceRoleMenu from "@app/components/SpaceRoleMenu.svelte"
   import {app} from "@app/core/app"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

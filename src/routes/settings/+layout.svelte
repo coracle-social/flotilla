@@ -16,7 +16,7 @@
   import LogOut from "@app/components/LogOut.svelte"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {HOSTING_ENABLED} from "@app/features/hosting"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     children?: Snippet

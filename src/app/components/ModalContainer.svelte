@@ -4,7 +4,11 @@
   import {beforeNavigate} from "$app/navigation"
   import Drawer from "@lib/components/Drawer.svelte"
   import Dialog from "@lib/components/Dialog.svelte"
-  import {getModal, getModalStack, navigate, popModal} from "@app/ui/modal"
+  import NoteDetail from "@app/components/NoteDetail.svelte"
+  import {getModal, getModalStack, popModal} from "@app/navigation/dialogs"
+  import type {Modal} from "@app/navigation/dialogs"
+  import {navigate} from "@app/navigation/navigate"
+  import {closeNote, getNoteOverlay} from "@app/navigation/overlays"
 
   // SvelteKit would stack the page a link opens on top of the modal's own history entry.
   beforeNavigate(navigation => {
@@ -14,11 +18,33 @@
     }
   })
 
+  // The note in the url sits beneath any dialogs opened over it.
+  const getLayers = (): Pick<Modal, "id" | "component" | "props" | "options">[] => {
+    const note = getNoteOverlay()
+    const dialogs = getModalStack()
+
+    return note
+      ? [
+          {
+            id: `note:${note.pointer.id}`,
+            component: NoteDetail,
+            props: note,
+            options: {size: "large"},
+          },
+          ...dialogs,
+        ]
+      : dialogs
+  }
+
   const closeModal = () => {
     const modal = getModal()
 
-    if (modal && !modal.options.noEscape) {
-      popModal()
+    if (modal) {
+      if (!modal.options.noEscape) {
+        popModal()
+      }
+    } else if (getNoteOverlay()) {
+      closeNote()
     }
   }
 
@@ -43,7 +69,7 @@
   const instances: Record<string, {instance: ReturnType<typeof mount>; state: WrapperState}> = {}
 
   $effect(() => {
-    const stack = getModalStack()
+    const stack = getLayers()
 
     untrack(() => {
       const ids = stack.map(({id}) => id)

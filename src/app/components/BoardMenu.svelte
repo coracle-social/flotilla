@@ -16,8 +16,9 @@
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {deleteLibraryEvent} from "@app/features/spaces/pinboards"
   import {shareEvent} from "@app/ui/share"
-  import {navigate, pushModal} from "@app/ui/modal"
-  import {makeLibraryPath} from "@app/ui/routes"
+  import {navigate} from "@app/navigation/navigate"
+  import {pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {
@@ -47,8 +48,8 @@
       } else {
         pushToast({message: "Shelf deleted!"})
 
-        if (page.url.pathname === makeLibraryPath(url, board.address())) {
-          navigate(makeLibraryPath(url))
+        if (page.url.pathname === pages.board.path({url, address: board.address()})) {
+          navigate(pages.library.path({url}))
         }
       }
     } catch (e) {

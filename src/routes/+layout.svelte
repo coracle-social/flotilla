@@ -23,7 +23,7 @@
   import {app} from "@app/core/app"
   import * as coreDomain from "@app/core/domain"
   import * as corePlugins from "@app/core/plugins"
-  import {setupHistory} from "@app/ui/routes"
+  import {setupHistory} from "@app/navigation/history"
   import {setupAnalytics} from "@app/features/analytics"
   import {setupLogging} from "@app/core/logger"
   import * as coreSession from "@app/core/session"
@@ -44,7 +44,7 @@
   import {pushState} from "@app/features/push/adapters/common"
   import {setupDeepLinks} from "@app/features/deepLinks"
   import {syncKeyboard} from "@app/ui/keyboard"
-  import {getPageTitle} from "@app/ui/title"
+  import {getPageTitle} from "@app/navigation/pages"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
   import type {LayoutProps} from "./$types"
 
@@ -173,7 +173,7 @@
   })
 
   $effect(() => {
-    const title = getPageTitle({page: $page, pubkey: $app.user?.pubkey})
+    const title = getPageTitle($page) || env.PLATFORM_NAME
     const count = $documentActive ? $notificationCount : $backgroundNotificationCount
 
     document.title = count > 0 ? `(${count}) ${title}` : title

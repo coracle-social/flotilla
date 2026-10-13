@@ -23,13 +23,12 @@
   import {ENABLE_ZAPS} from "@app/core/env"
   import {deriveGoalProgress} from "@app/features/spaces/goals"
   import {makeFeedContext} from "@app/features/feeds"
-  import {decodeRelay} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {relay, id} = params
-  const url = decodeRelay(relay)
+  const {url, id} = pages.goal.decode(params)
   const context = makeFeedContext({relays: [url]})
   const event = $events.one(id, [url]).$
   const goal = derived(event, $event => ($event ? reader(ZapGoal)($event) : undefined))

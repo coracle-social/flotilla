@@ -6,7 +6,7 @@
   import Button from "@lib/components/Button.svelte"
   import Zap from "@app/components/Zap.svelte"
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {app} from "@app/core/app"
   import {pushToast} from "@app/ui/toast"
 

@@ -12,7 +12,7 @@
   import {deriveSpaceActionItems} from "@app/features/spaces/management/actionItems"
   import {deriveShouldNotify} from "@app/core/settings"
   import {notificationSettings} from "@app/features/push"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

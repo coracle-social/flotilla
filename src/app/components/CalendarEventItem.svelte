@@ -12,7 +12,7 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {makeCalendarPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -22,7 +22,7 @@
 
   const {url, event, context}: Props = $props()
 
-  const path = $derived(makeCalendarPath(url, getAddress(event)))
+  const path = $derived(pages.calendarEvent.path({url, address: getAddress(event)}))
   const h = $derived(reader(TimeEvent)(event).room())
 </script>
 

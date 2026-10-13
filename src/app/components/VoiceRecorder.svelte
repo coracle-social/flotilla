@@ -14,7 +14,7 @@
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import type {Dictation} from "@app/features/dictation"
   import {clearDictation, getDictation, startDictation} from "@app/features/dictation"
-  import {popModal} from "@app/ui/modal"
+  import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

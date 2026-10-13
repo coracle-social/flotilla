@@ -19,7 +19,7 @@
   import {profiles, relayManagement} from "@app/core/plugins"
   import {deriveSpacePermissions, syncAssignments} from "@app/features/spaces/management"
   import {deriveSpaceMemberRoles} from "@app/features/spaces/management/roles"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

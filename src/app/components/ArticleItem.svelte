@@ -12,7 +12,7 @@
   import type {FeedContext} from "@app/features/feeds"
   import {reader} from "@app/core/domain"
   import {markdownToText} from "@app/ui/markdown"
-  import {makeArticlePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -22,7 +22,7 @@
 
   const {url, event, context}: Props = $props()
 
-  const path = $derived(makeArticlePath(url, getAddress(event)))
+  const path = $derived(pages.article.path({url, address: getAddress(event)}))
   const article = $derived(reader(Article)(event))
   const title = $derived(article.title())
   const summary = $derived(article.summary())

@@ -15,7 +15,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import {leaveSpace} from "@app/features/spaces/membership"
-  import {clearModals, navigate, pushModal} from "@app/ui/modal"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
+  import {navigate} from "@app/navigation/navigate"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

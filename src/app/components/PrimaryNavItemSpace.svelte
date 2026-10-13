@@ -3,8 +3,9 @@
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import {relays} from "@app/core/plugins"
-  import {navigate} from "@app/ui/modal"
-  import {makeSpacePath, makeSpaceEntryPath, hasSpacePage} from "@app/ui/routes"
+  import {navigate} from "@app/navigation/navigate"
+  import * as pages from "@app/navigation/pages"
+  import {hasSpacePage, makeSpaceEntryPath} from "@app/navigation/history"
   import {notifications} from "@app/ui/notifications"
 
   type Props = {
@@ -23,7 +24,7 @@
     })
   }
 
-  const path = makeSpacePath(url)
+  const path = pages.space.path({url})
 
   const display = $relays.display(url).$
 </script>

@@ -6,8 +6,8 @@
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import {relays} from "@app/core/plugins"
   import {userSpaceUrls} from "@app/features/spaces"
-  import {pushModal} from "@app/ui/modal"
-  import {goToSpace} from "@app/ui/routes"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {goToSpace} from "@app/navigation/history"
 
   type Props = {
     url: string

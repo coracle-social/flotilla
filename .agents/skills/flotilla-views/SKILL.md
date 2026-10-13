@@ -34,24 +34,29 @@ is a `+layout.svelte`.
 
 ### Params
 
-- `[relay]`: `encodeRelay(url)` and `decodeRelay(param)` in `src/app/ui/routes.ts`. Encoding strips
-  `wss://` and the trailing slash and URI-encodes the rest; decoding normalizes it back. Build
-  paths with the helpers in `src/app/ui/routes.ts` rather than by hand.
-- `[h]`: the NIP-29 room id, unencoded (`makeRoomPath(url, h)`). Static segments win over it,
-  which `makeSpaceChatPath(url)` relies on: it is `makeRoomPath(url, "chat")` and lands on the
-  static `chat` page. A new static segment under `[relay]` shadows any room with that id.
-- `[id]` for regular events, `[address]` for addressable ones. `makeSpacePath(url, ...extra)`
-  URI-encodes each extra segment and drops `undefined`, so `makeClassifiedPath(url, address)` is
-  safe. `[chat]` is `makeConversationId(pubkeys)` from `src/app/features/messages.ts`, and `[npub]` comes from
-  `makeProfilePath(pubkey)`.
-- State that shouldn't be a route goes in the query string: `?at=` (jump to a message), `?topic=`,
-  `?board=`, `?page=`, and `?h=&shareToChat=1` on article create.
+Every page has a route object in `src/app/navigation/pages.ts`, built with `defineRoute` from
+`src/app/navigation/define.ts` and keyed by SvelteKit's generated `RouteId`. A route turns domain
+values into its path (`pages.room.path({url, h})`) and its params back
+(`pages.room.decode(params)`), and gives the page's title. Callers import the module as
+`import * as pages from "@app/navigation/pages"`. Paths are byte-for-byte what they always were,
+since unread state is keyed by them.
+
+- `[relay]`: `encodeRelay(url)` strips `wss://` and the trailing slash and URI-encodes the rest;
+  `decodeRelay` normalizes it back.
+- `[h]`: the NIP-29 room id, unencoded. Static segments win over it, which `pages.spaceChat`
+  relies on: its path is the room path for `chat`. A new static segment under `[relay]` shadows
+  any room with that id.
+- `[id]` for regular events, `[address]` for addressable ones, both URI-encoded. `[chat]` is
+  `makeConversationId(pubkeys)` and `[npub]` the profile's npub, both owned by their routes.
+- Query parameters a route owns are part of its params: `at` on rooms and the space chat,
+  `topic` on classifieds, `h` and `shareToChat` on article create. `?event=` is the permalink
+  target any page can carry, and `?note=` opens a note over any page.
 
 Pages read params once into constants:
 
 ```typescript
-const {relay, address} = $page.params as MakeNonOptional<typeof $page.params>
-const url = decodeRelay(relay)
+const {params}: PageProps = $props()
+const {url, address} = pages.classified.decode(params)
 ```
 
 That is safe because the layouts remount their children when a param changes.
@@ -60,7 +65,7 @@ That is safe because the layouts remount their children when a param changes.
 `?at=` and `?event=` (which is how a room transcript re-anchors on a permalink), and
 `people/[npub]/+layout.svelte` keys on `npub`. A new param-bearing route needs the same `{#key}`,
 or its page has to derive from `$page` instead. Routes read `$page` from the deprecated
-`$app/stores`; only the two modal modules use `page` from `$app/state`.
+`$app/stores`; the navigation modules use `page` from `$app/state`.
 
 ### Layouts
 
@@ -91,40 +96,37 @@ Since the space layout supplies `Page`, a space page renders a `SpaceBar` and a 
 Detail pages also pass `back`, a handler that calls `history.back()`, which `SpaceBar` shows on
 mobile. Pages outside a space use `Page`, `PageBar` and `PageContent` themselves.
 
-### URL builders, titles, deep links
+### Paths, titles, deep links
 
-`src/app/ui/routes.ts` is the only place paths are built:
+`src/app/navigation/` owns routing:
 
-- `makeSpacePath`, `makeRoomPath`, `makeSpaceChatPath`, `makeProfilePath`, `makeConversationPath`, and
-  one builder per content page (`makeThreadPath`, `makeClassifiedPath`, `makeArticlePath`,
-  `makeCalendarPath`, `makeGoalPath`, `makePollPath`, `makeLibraryPath`, `makeArticleCreatePath`).
-- `makeContentPath(url, kind, idOrAddress)` maps a kind to its page. `makeEventPath` builds on it
-  for any event, covering DMs, room messages (`?at=`) and comments (through the parent's `K`,
-  `A` and `E` tags), and returns `undefined` for an event with no page in the app. A caller that
-  wants an external link then calls `entityLink` from `src/app/core/env.ts` itself, as
-  `makeEventPermalink` does.
-- `goToEvent(event)` scrolls to the event if it is already rendered with a `data-event` attribute
-  and navigates otherwise; `makeEventPermalink` is the shareable form.
-- `goToSpace(url)` goes to `makeSpaceEntryPath(url)`: the last page visited in that space, which
-  `setupHistory` records, else chat or about. `goToMessages(pubkeys)` checks for messaging relays
-  first, pushing `MessagesEnable` if there are none.
+- `pages.ts`: the routes, `makeContentPath(url, kind, idOrAddress)` (a kind's list or item page),
+  and `getPageTitle`, which the root layout puts in the tab. Every page id must be in
+  `pageRoutes`, so a page added without a route and title fails the type check.
+- `locations.ts`: where an event lives. `getEventPath(event, urls)` covers DMs, room messages
+  (`?at=`) and comments (through their root), and returns `undefined` for an event with no page.
+  `goToEvent(event)` scrolls to the event if it is rendered with a `data-event` attribute,
+  navigates otherwise, and opens anything without a page as a note. `makeEventPermalink` is the
+  shareable form.
+- `history.ts`: `setupHistory` records the last page visited in each space and in messages.
+  `goToSpace(url)` goes to that page, else the space's about page, and `goToHome` goes home, or
+  to the first platform space.
+- `overlays.ts`: the note overlay (below).
 
-`src/app/ui/title.ts` maps route ids to tab titles. A new static route needs a `staticTitles` entry,
-and a new event detail route needs an `eventRoutes` entry and a branch in `getPageTitle`.
-Without one the tab shows only `PLATFORM_NAME`.
+`goToMessages(pubkeys)` lives in `src/app/features/messages.ts`, since it first asks for messaging
+relays with `MessagesEnable`.
 
 Deep links arrive in `handleDeepLink` in `src/app/features/deepLinks.ts`: push-notification links
 (`?relay=&id=`), the iOS share extension (the `share` host), signer returns (`x-callback-url`), and
-otherwise a plain path. Nostr entities go through `/[bech32]`, which sends profiles to `makeProfilePath`, and
-loads events before calling `goToEvent`.
+otherwise a plain path. Nostr entities go through `/[bech32]`, which sends profiles to their
+page, and loads events before calling `goToEvent`.
 
 ### Adding a space content page
 
 1. `src/routes/spaces/[relay]/<name>/+page.svelte`, plus `[id]` or `[address]` for detail.
-2. `make<Name>Path` in `src/app/ui/routes.ts`, and a case in `makeContentPath`, so notifications and
-   permalinks land there.
-3. Titles in `src/app/ui/title.ts`.
-4. A `SecondaryNavItem` in `SpaceMenuNavItems.svelte`. Content entries appear only once the space
+2. Its routes in `src/app/navigation/pages.ts`, with titles, entries in `pageRoutes`, and a case
+   in `makeContentPath`, so notifications and permalinks land there.
+3. A `SecondaryNavItem` in `SpaceMenuNavItems.svelte`. Content entries appear only once the space
    holds that kind, which comes from `CONTENT_KINDS` in `src/app/features/spaces/index.ts`.
 
 The registries outside the view layer, including the link-preview server, are in
@@ -134,8 +136,8 @@ flotilla-architecture and flotilla-model.
 
 ### navigate, not goto
 
-`navigate(path, {replaceState, keepModal})` in `src/app/ui/modal.ts` wraps `goto`. With a modal open
-it replaces the modal's history entry, so Back doesn't reopen it, and `keepModal` changes the
+`navigate(path, {replaceState, keepModal})` in `src/app/navigation/navigate.ts` wraps `goto`. With a
+dialog open it gives the dialog's history entry back first, so Back doesn't reopen it, and `keepModal` changes the
 page underneath while leaving the stack open (`goToHome` uses it). `Link` calls `navigate` and
 stops propagation, so a link inside a clickable card only follows the link. Plain `goto` survives
 in pages for query-string updates (`replaceState`, `noScroll`, `keepFocus`) and redirects, where
@@ -150,12 +152,21 @@ pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true}) // swaps out th
 pushModal(SpaceMenuDrawer, {url: spaceUrl}, {drawer: true})    // side drawer instead of a dialog
 ```
 
-Open modal ids live in SvelteKit page state (`App.PageState.modals` in `src/app.d.ts`), the
-components live in a `$state` record in `src/app/ui/modal.svelte.ts`, and `ModalContainer` mounts
-each one inside `Dialog` or `Drawer`. Each modal owns a history entry, so Back closes it, and a
-push without `nested` replaces the whole stack. `replaceState` suits mobile menus that open a
-follow-up (`RoomItemMenuMobile`) and multi-step flows. `noEscape` removes the close button and
-ignores Escape and the backdrop; the space gates use it. `ModalOptions.path` is never read.
+There are two kinds of overlay. A dialog (`src/app/navigation/dialogs.ts`) is transient: its id
+lives in SvelteKit page state (`App.PageState.modals` in `src/app.d.ts`) and its component in a
+record in memory, so a reload drops it. A note is a place: `openNote(pointer)` and
+`openEventNote(event)` in `src/app/navigation/overlays.ts` put it in the url as `?note=`, so it
+survives a reload and can be shared. `ModalContainer` mounts the note beneath any dialogs, each
+inside `Dialog` or `Drawer`.
+
+A dialog pushed on its own takes a history entry, so Back closes it, and `popModal` closes it by
+going back over that entry. One swapped in with `replaceState` takes over the entry of the dialog
+it replaces, and one swapped onto the page's own entry has none, so closing it only edits page
+state. History moves land asynchronously, so `pushModal`, `popModal`, `openNote` and `navigate`
+queue behind each other (`traverse`): `popModal()` then `goToEvent(event)` goes back once, then
+navigates. A push without `nested` replaces the whole stack. `replaceState` suits mobile menus
+that open a follow-up (`RoomItemMenuMobile`) and multi-step flows. `noEscape` removes the close
+button and ignores Escape and the backdrop; the space gates use it.
 
 Modal components take identifiers like any other component. `Dialog` supplies the chrome, and
 `/join` renders `SpaceInviteAccept` in a `Dialog` directly. The usual shape:

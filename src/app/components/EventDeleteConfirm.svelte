@@ -3,7 +3,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import Confirm from "@lib/components/Confirm.svelte"
   import {deletes, relays, router} from "@app/core/plugins"
-  import {clearModals} from "@app/ui/modal"
+  import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

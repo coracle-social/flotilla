@@ -32,7 +32,7 @@
   import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {deriveDisplaysByPubkey} from "@app/features/social"
 
   type Props = {

@@ -12,7 +12,7 @@
   import InviteLink from "@app/components/InviteLink.svelte"
   import SpaceMembersAdd from "@app/components/SpaceMembersAdd.svelte"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

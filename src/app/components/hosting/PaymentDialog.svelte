@@ -20,7 +20,7 @@
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import InvoiceItemsList from "@app/components/hosting/InvoiceItemsList.svelte"
   import {clip, pushToast} from "@app/ui/toast"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {
     hosting,
     hostingErrorMessage,

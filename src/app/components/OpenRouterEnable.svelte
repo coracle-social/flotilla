@@ -18,7 +18,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {PLATFORM_NAME} from "@app/core/env"
-  import {popModal} from "@app/ui/modal"
+  import {popModal} from "@app/navigation/dialogs"
   import {getSetting, publishSettings} from "@app/core/settings"
   import {pushToast} from "@app/ui/toast"
 

@@ -20,7 +20,7 @@
   import SignUpEmailConfirm from "@app/components/SignUpEmailConfirm.svelte"
   import ProgressBar from "@app/components/ProgressBar.svelte"
   import {pushToast, popToast} from "@app/ui/toast"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     next: () => void

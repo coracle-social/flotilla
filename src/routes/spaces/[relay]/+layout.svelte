@@ -26,13 +26,13 @@
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {relays, roomLists} from "@app/core/plugins"
   import {userSpaceUrls} from "@app/features/spaces"
-  import {getModal, pushModal} from "@app/ui/modal"
-  import {decodeRelay, makeSpacePath} from "@app/ui/routes"
+  import {getModal, pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
   import type {LayoutProps} from "./$types"
 
   const {children, params}: LayoutProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.space.decode(params)
 
   const access = deriveRelayAccess(url)
 
@@ -110,7 +110,7 @@
   <SocketStatusToast {url} />
 {/if}
 
-{#if $page.url.pathname === makeSpacePath(url)}
+{#if $page.url.pathname === pages.space.path({url})}
   {@render children?.()}
 {:else}
   <SecondaryNav>

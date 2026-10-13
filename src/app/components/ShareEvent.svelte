@@ -15,7 +15,8 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
-  import {makeEventPermalink, makeRoomPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
+  import {makeEventPermalink} from "@app/navigation/locations"
   import {shareTo} from "@app/ui/share"
   import {clip} from "@app/ui/toast"
   import {rooms} from "@app/core/plugins"
@@ -33,7 +34,7 @@
   const back = () => history.back()
 
   const onSubmit = () => {
-    shareTo(makeRoomPath(url, selection), {type: "event", value: event})
+    shareTo(pages.room.path({url, h: selection}), {type: "event", value: event})
   }
 
   const toggleRoom = (h: string) => () => {

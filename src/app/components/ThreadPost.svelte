@@ -14,8 +14,8 @@
   import type {FeedContext} from "@app/features/feeds"
   import ContentActions from "@app/components/ContentActions.svelte"
   import {handles, profiles} from "@app/core/plugins"
-  import {highlightedEvent, makeEventPermalink} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import {highlightedEvent, makeEventPermalink} from "@app/navigation/locations"
+  import {pushModal} from "@app/navigation/dialogs"
   import {clip} from "@app/ui/toast"
 
   type Props = {

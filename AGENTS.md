@@ -28,7 +28,9 @@ app/components/            (can depend on app/* and lib/*)
   ↓
 app/features/              (one feature each, with few callers)
   ↓
-app/ui/                    (ui chrome: modals, toasts, routes, theme)
+app/ui/                    (ui chrome: toasts, notifications, sharing, theme)
+  ↓
+app/navigation/            (routes, dialogs and overlays, history)
   ↓
 app/core/                  (the App, plugins, session, storage, sync, settings, env)
   ↓
@@ -207,10 +209,10 @@ return a `Command`, so `.then(publish)` is usually all you need.
 
 ### Managing Modals/Toasts
 
-- Import from `app/ui/modal.ts` or `app/ui/toast.ts`
+- Import from `app/navigation/dialogs.ts` or `app/ui/toast.ts`
 - Pass component objects with parameters
 - Use `$state.snapshot` if calling component might unmount
-- Navigate with `navigate` from `app/ui/modal.ts` rather than `goto` — an open modal owns a history
+- Navigate with `navigate` from `app/navigation/navigate.ts` rather than `goto` — an open modal owns a history
   entry, and a navigation that drops the modal gives that entry back before it pushes its own.
   A plain `<a>` inside a modal goes the same way, through `ModalContainer`'s `beforeNavigate`
 - `navigate` is async and gives those entries back before it goes anywhere, so the page store

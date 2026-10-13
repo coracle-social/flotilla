@@ -11,7 +11,7 @@
   import GoalSummary from "@app/components/GoalSummary.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {makeGoalPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -23,7 +23,7 @@
 
   const goal = reader(ZapGoal)(event)
 
-  const path = makeGoalPath(url, event.id)
+  const path = pages.goal.path({url, id: event.id})
   const title = goal.title()
   const summary = goal.summary()
   const image = goal.image()

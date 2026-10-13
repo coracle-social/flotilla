@@ -37,7 +37,7 @@
     toggleRoomMuted,
     toggleRoomNotifications,
   } from "@app/core/settings"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

@@ -18,7 +18,8 @@ and UI.
 | Routes | `src/routes` | — | anything |
 | App components | `src/app/components` | `@app/components/X.svelte` | `@app`, `@lib` |
 | Features | `src/app/features` | `@app/features/x` | `@app/ui`, `@app/core`, `@lib` |
-| UI chrome | `src/app/ui` | `@app/ui/x` | `@app/core`, `@lib` |
+| UI chrome | `src/app/ui` | `@app/ui/x` | `@app/navigation`, `@app/core`, `@lib` |
+| Navigation | `src/app/navigation` | `@app/navigation/x` | `@app/core`, `@lib` |
 | Core | `src/app/core` | `@app/core/x` | `@lib` |
 | Lib | `src/lib` | `@lib/x` | external packages only |
 
@@ -28,8 +29,8 @@ component by its path (`@lib/components/Button.svelte`), not from `$lib/componen
 AGENTS.md example has it. Icons come from `@assets/icons/<name>.svg?dataurl`.
 
 SvelteKit's `$app/*` (`$app/navigation`, `$app/state`, `$app/stores`) is an external dependency,
-unrelated to flotilla's `@app/*`. App modules use it freely, for example `modal.ts`, `routes.ts`
-and `sync.ts`.
+unrelated to flotilla's `@app/*`. App modules use it freely, for example `navigation/dialogs.ts`,
+`navigation/history.ts` and `core/sync.ts`.
 
 ### Why the graph is one-way
 
@@ -47,11 +48,11 @@ and `sync.ts`.
 No lint rule enforces the layers (`eslint.config.js` has no import restrictions), so review is the
 only gate.
 
-- **lib → app.** `Link.svelte` imports `navigate` from `@app/ui/modal`. Don't copy it. A lib
+- **lib → app.** `Link.svelte` imports `navigate` from `@app/navigation/navigate`. Don't copy it. A lib
   component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
   `IconInput` and its picker buttons did.
-- **app → components.** `routes.ts` (`goToMessages` opens `MessagesEnable`, `goToEvent` opens
-  `NoteDetail`), `share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`), `speech.ts`
+- **app → components.** `features/messages.ts` (`goToMessages` opens `MessagesEnable`),
+  `share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`), `speech.ts`
   (`OpenRouterEnable`) and `healthChecks.ts` (`KeyDownload`, the fix for the key backup check)
   import a component so they can open a modal mid-flow. Push adapters and
   deep links reach those flows from outside any component, and the rest have several component
@@ -81,7 +82,7 @@ only gate.
 concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), which
 `src/app/ui/app.css` imports. `flotilla-views` covers component conventions.
 
-`notifications`, `routes` and `title` in ui import features, which the layer table forbids. Don't
+`notifications` in ui imports features, which the layer table forbids. Don't
 add more.
 
 **`core/`: the app, session and background machinery**
@@ -112,10 +113,19 @@ add more.
 - `nip46.ts`
 - `logger.ts` (log capture and sending), `device.ts` (a device id)
 
+**`navigation/`: routing**
+- `define.ts`: `defineRoute`, typed against SvelteKit's generated `RouteId` and `RouteParams`
+- `pages.ts`: a route object per page (its path, params and title), `makeContentPath`,
+  `getPageTitle`, and the relay and conversation codecs
+- `locations.ts`: where an event lives (`getEventPath`, `goToEvent`), permalinks,
+  `getActivityTarget`
+- `dialogs.ts`: `pushModal`, `popModal`, `clearModals` and the dialog stack in page state
+- `overlays.ts`: the note overlay, carried in the url as `?note=`
+- `navigate.ts`: `navigate`, which gives dialog entries back before it moves
+- `history.ts`: the last page per space and in messages, `goToSpace`, `goToHome`
+
 **`ui/`: chrome**
-- `routes.ts`: path builders (`makeSpacePath`, `makeContentPath`, …), `goTo*`, history tracking
-- `modal.ts`: `pushModal`, `popModal`, `navigate`, and the modal stack
-- `toast.ts`, `title.ts`, `theme.ts`, `icons.ts` (icon picker options), `markdown.ts`
+- `toast.ts`, `theme.ts`, `icons.ts` (icon picker options), `markdown.ts`
 - `render.ts` (events as text), `share.ts`, `keyboard.ts`, `signer.ts` (the unresponsive-signer
   toast)
 - `notifications.ts` (unread state, badges, the home inbox)
@@ -147,7 +157,7 @@ Outside `spaces/`:
 
 - Content: `feeds.ts` (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`),
   `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `reactions.ts` (with
-  `REACTION_KINDS`), `social.ts` (display names, comment trees, muting, `getActivityTarget`,
+  `REACTION_KINDS`), `social.ts` (display names, comment trees, muting,
   `REPOST_KINDS`), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin), `uploads.ts`
   (Blossom, image compression)
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
@@ -257,7 +267,7 @@ guards.
   `src/app.html` in `build/index.html`. `server.js` reads `VITE_PLATFORM_NAME` and
   `VITE_PLATFORM_DESCRIPTION` at runtime.
 - A non-empty `VITE_PLATFORM_RELAYS` turns on platform mode, which disables space browsing and
-  makes the first platform relay the home page (`goToHome` in `routes.ts`, `PrimaryNav`,
+  makes the first platform relay the home page (`goToHome` in `navigation/history.ts`, `PrimaryNav`,
   `sync.ts`).
 - `VITE_THEME`, exported as `FL_THEME`, selects the design preset in
   `src/lib/components/theme.css`.
@@ -351,8 +361,8 @@ matching setters.
 
 **Kind registries.** `CONTENT_KINDS` in `src/app/features/spaces/index.ts` drives sync, notifications, push,
 search and the space nav entry. The kind also appears in the noun switch in `HomeActivity`, the kind dispatch in
-`NoteContent.svelte` and `NoteContentMinimal.svelte`, `makeClassifiedPath` and `makeContentPath` in
-`routes.ts`, `title.ts`, `NIP46_PERMS` in `nip46.ts`, and the section regexes in `server.js`.
+`NoteContent.svelte` and `NoteContentMinimal.svelte`, the `classifieds` and `classified` routes
+and `makeContentPath` in `navigation/pages.ts`, `NIP46_PERMS` in `nip46.ts`, and the section regexes in `server.js`.
 `NIP46_PERMS` leaves out polls, articles and goals, so listing a new kind there is optional.
 
 **App module.** `src/app/features/spaces/classifieds.ts` holds the listing logic the page would otherwise inline
@@ -373,9 +383,9 @@ card, and `NoteContentClassified` renders a listing wherever `NoteContent` is us
 with `makeFeed` and filters them with the `classifieds.ts` helpers. `[address]/+page.svelte` reads
 one listing with `$events.one(address, [url]).$`.
 
-Articles are composed on a full page (`spaces/[relay]/articles/create`, built by
-`makeArticleCreatePath`) instead of in a modal. The page reads `?h=` and `?shareToChat` and
-renders `ArticleForm`.
+Articles are composed on a full page (`spaces/[relay]/articles/create`, whose
+`pages.articleCreate` route carries `h` and `shareToChat`) instead of in a modal. The page decodes
+them from its route and renders `ArticleForm`.
 
 ## Related skills
 

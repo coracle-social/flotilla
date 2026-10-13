@@ -3,7 +3,7 @@ import type {Unsubscriber} from "svelte/store"
 import type {TrustedEvent} from "@welshman/util"
 import {app} from "@app/core/app"
 import {WebNotifications} from "@app/features/push/adapters/web"
-import {goToEvent} from "@app/ui/routes"
+import {goToEvent} from "@app/navigation/locations"
 import {pushToast} from "@app/ui/toast"
 
 const DesktopWindow = registerPlugin<{show: () => Promise<void>}>("DesktopWindow")

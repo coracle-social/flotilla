@@ -5,7 +5,7 @@
   import {isMobile} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
-  import {makeContentPath} from "@app/ui/routes"
+  import {makeContentPath} from "@app/navigation/pages"
 
   const props: ComponentProps<typeof NoteContent> = $props()
   const path = makeContentPath(props.url!, props.event.kind, getIdOrAddress(props.event))

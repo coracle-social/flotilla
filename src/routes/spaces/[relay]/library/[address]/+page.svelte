@@ -23,14 +23,13 @@
   import {network} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
   import {derivePins, deriveShelf, pinMatchesTerm} from "@app/features/spaces/pinboards"
-  import {decodeRelay} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import * as pages from "@app/navigation/pages"
+  import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {address} = params
-  const url = decodeRelay(params.relay)
+  const {url, address} = pages.board.decode(params)
   const context = makeFeedContext({relays: [url]})
   const board = deriveShelf(url, address)
   const pins = derivePins(url)

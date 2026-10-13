@@ -15,7 +15,8 @@
   import InfoSignatures from "@app/components/InfoSignatures.svelte"
   import {publishRoomList} from "@app/features/spaces/rooms"
   import {addTrustedRelay, removeTrustedRelay} from "@app/core/settings"
-  import {navigate, popModal, pushModal} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
+  import {popModal, pushModal} from "@app/navigation/dialogs"
   import {roomLists} from "@app/core/plugins"
   import {pushToast} from "@app/ui/toast"
 

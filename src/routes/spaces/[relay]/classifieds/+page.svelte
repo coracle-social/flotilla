@@ -25,7 +25,7 @@
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
   import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
-  import {decodeRelay, makeClassifiedPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {
     CLASSIFIED_STATUS_TABS,
     deriveTopicCounts,
@@ -34,12 +34,12 @@
     matchesQuery,
   } from "@app/features/spaces/classifieds"
   import {reader} from "@app/core/domain"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.classifieds.decode(params)
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)
@@ -47,7 +47,7 @@
   const createClassified = () => pushModal(ClassifiedCreate, {url})
 
   const setTopic = (value?: string) => () => {
-    const path = makeClassifiedPath(url) + (value ? `?topic=${encodeURIComponent(value)}` : "")
+    const path = pages.classifieds.path({url, topic: value || undefined})
 
     goto(path, {replaceState: true, noScroll: true})
   }

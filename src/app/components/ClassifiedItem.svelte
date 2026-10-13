@@ -17,7 +17,7 @@
   import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
   import type {FeedContext} from "@app/features/feeds"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {makeClassifiedPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -27,7 +27,7 @@
 
   const {url, event, context}: Props = $props()
 
-  const path = $derived(makeClassifiedPath(url, getAddress(event)))
+  const path = $derived(pages.classified.path({url, address: getAddress(event)}))
   const classified = $derived(reader(Classified)(event))
   const title = $derived(classified.title())
   const summary = $derived(classified.summary() || event.content)
@@ -44,7 +44,7 @@
 <Cv
   tag={Link}
   class="group card card-interactive card-media flex h-full w-full flex-col"
-  href={makeClassifiedPath(url, getAddress(event))}>
+  href={pages.classified.path({url, address: getAddress(event)})}>
   <div class="relative aspect-[4/3] w-full overflow-hidden bg-surface-more">
     <UnreadDot {path} class="absolute right-3 top-3" />
     {#if cover}

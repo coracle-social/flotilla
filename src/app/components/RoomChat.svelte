@@ -37,7 +37,7 @@
   } from "@app/features/spaces/rooms"
   import {loadSendDelay} from "@app/core/settings"
   import {deferredRoomPath, setChecked} from "@app/ui/notifications"
-  import {makeRoomPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {
@@ -58,7 +58,7 @@
   const callChatOpen = $derived(voiceConnectedHere && $videoCallLayout === VideoCallLayout.Split)
   const callChatHidden = $derived(voiceConnectedHere && !callChatOpen)
 
-  const roomPath = h ? makeRoomPath(url, h) : undefined
+  const roomPath = h ? pages.room.path({url, h}) : undefined
 
   const closeChat = () => videoCallLayout.set(VideoCallLayout.Video)
 

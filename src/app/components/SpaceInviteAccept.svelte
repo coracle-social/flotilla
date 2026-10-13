@@ -1,7 +1,7 @@
 <script lang="ts">
   import {debounce} from "throttle-debounce"
   import {maybe} from "@welshman/lib"
-  import {navigate} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
   import {preventDefault} from "@lib/html"
   import {slideAndFade} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -23,7 +23,8 @@
   import SpaceJoinNotifications from "@app/components/SpaceJoinNotifications.svelte"
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
   import {pushToast} from "@app/ui/toast"
-  import {goToSpace, makeRoomPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
+  import {goToSpace} from "@app/navigation/history"
   import {acceptInvite, parseInviteLink} from "@app/features/spaces/membership"
 
   type Props = {
@@ -52,7 +53,7 @@
     }
 
     if (data.h) {
-      const path = makeRoomPath(data.url, data.h)
+      const path = pages.room.path({url: data.url, h: data.h})
       const qp = data.code ? `?code=${encodeURIComponent(data.code)}` : ""
 
       pushToast({message: "Welcome to the room!"})

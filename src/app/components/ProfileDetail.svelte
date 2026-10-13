@@ -26,9 +26,11 @@
   import {messagingRelayLists, profiles, relayManagement} from "@app/core/plugins"
   import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
   import type {BannedPubkeyItem} from "@app/features/spaces/management"
-  import {navigate, popModal, pushModal} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
+  import {popModal, pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
-  import {goToMessages, makeProfilePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
+  import {goToMessages} from "@app/features/messages"
 
   export type Props = {
     pubkey: string
@@ -45,7 +47,7 @@
 
   const back = () => history.back()
 
-  const viewProfile = () => navigate(makeProfilePath(pubkey))
+  const viewProfile = () => navigate(pages.profile.path({pubkey}))
 
   const sendMessage = () => {
     popModal()

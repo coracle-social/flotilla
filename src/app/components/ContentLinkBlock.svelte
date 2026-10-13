@@ -27,7 +27,7 @@
   import ContentLinkBlockAudio from "@app/components/ContentLinkBlockAudio.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {PLATFORM_URL, THUMBNAIL_URL} from "@app/core/env"
   import {isRoomId} from "@app/features/spaces/rooms"
 

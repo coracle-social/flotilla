@@ -29,7 +29,7 @@
   import {forceHealthChecks} from "@app/features/healthChecks"
   import {loginWithPomade} from "@app/features/pomade"
   import {publishRoomList} from "@app/features/spaces/rooms"
-  import {pushModal, clearModals} from "@app/ui/modal"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {app} from "@app/core/app"
   import {domain, roomLists} from "@app/core/plugins"
   import {login} from "@app/core/session"

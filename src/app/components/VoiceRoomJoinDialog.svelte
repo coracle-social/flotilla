@@ -18,7 +18,7 @@
   import {displayRoom} from "@app/features/spaces/rooms"
   import {deriveCallParticipants, loadCallParticipants} from "@app/features/spaces/calls"
   import {AbortError, TimeoutError, joinVoiceRoom} from "@app/features/spaces/calls/engine"
-  import {popModal} from "@app/ui/modal"
+  import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

@@ -9,7 +9,7 @@
   import HomeActivity from "@app/components/HomeActivity.svelte"
   import HealthCheckList from "@app/components/HealthCheckList.svelte"
   import HomeInboxItem from "@app/components/HomeInboxItem.svelte"
-  import {navigate} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
   import {
     allNotifications,
     inboxConversations,

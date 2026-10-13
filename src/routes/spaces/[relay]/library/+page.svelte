@@ -22,13 +22,13 @@
     pinMatchesTerm,
     shelfMatchesTerm,
   } from "@app/features/spaces/pinboards"
-  import {decodeRelay} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import * as pages from "@app/navigation/pages"
+  import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.library.decode(params)
   const context = makeFeedContext({relays: [url]})
   const shelves = deriveShelves(url)
   const pins = derivePins(url)

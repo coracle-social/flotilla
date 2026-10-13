@@ -17,7 +17,7 @@ The per-feature kind inventory is in [kinds.md](kinds.md).
 ## Spaces and rooms
 
 **A space is a relay URL.** No event defines one; the normalized URL is the identity, and routes
-carry it as `encodeRelay(url)` (`src/app/ui/routes.ts`) under `/spaces/[relay]`. Any relay can be
+carry it as `encodeRelay(url)` (`src/app/navigation/pages.ts`) under `/spaces/[relay]`. Any relay can be
 opened as a space. NIP-29 support only decides whether it has rooms.
 
 **A room is a NIP-29 group `h` on that relay.** The same `h` can exist independently on several
@@ -26,7 +26,7 @@ relays, so anything room-scoped is keyed by both: `makeRoomKey(url, h)` from `@w
 relay-scoped keys use `|` (`${url}|${d}` for relay roles and NIP-CD commands) so the two can't
 collide. Room content
 carries `["h", h]`; content with no `h` belongs to the whole space. `/spaces/[relay]/chat`
-(`makeSpaceChatPath`) is the space-wide chat, which is `RoomChat` with no `h`.
+(`pages.spaceChat`) is the space-wide chat, which is `RoomChat` with no `h`.
 
 **The user's spaces are their kind 10009 `ROOMS` list** (`RoomList` factory, `RoomLists` plugin):
 `r` tags for spaces, `group` tags for rooms with the space URL as the hint. `userSpaceUrls` in
@@ -44,7 +44,7 @@ domain `Relay`. These fields drive protocol decisions:
 
 | Read | Decides |
 |---|---|
-| `hasNip(29)` | whether the space has rooms, read off `relays.get().get(url)` or `$relays.one(url)`. Without it everything lives in the space chat (`makeSpaceChatPath`): `shareEvent` (`src/app/ui/share.ts`), room search, notification grouping, `SpaceMenuNavItems`, `SpaceMenuRooms` |
+| `hasNip(29)` | whether the space has rooms, read off `relays.get().get(url)` or `$relays.one(url)`. Without it everything lives in the space chat (`pages.spaceChat`): `shareEvent` (`src/app/ui/share.ts`), room search, notification grouping, `SpaceMenuNavItems`, `SpaceMenuRooms` |
 | `hasNip(70)` | whether space content is marked protected (below) |
 | `self` | the relay's own pubkey, the trust anchor for relay-signed state |
 | `pubkey` | the space's owner, who writes space-wide content that has no other author (`deriveUserIsSpaceOwner`) |
@@ -258,7 +258,7 @@ background; see flotilla-state.
 
 The space sections are the kinds in `CONTENT_KINDS` (`src/app/features/spaces/index.ts`): `ZAP_GOAL`,
 `EVENT_TIME`, `THREAD`, `CLASSIFIED`, `POLL`, `PINBOARD` and `LONG_FORM`. Each has list and detail
-routes under `spaces/[relay]/`, reached through `makeContentPath` in `src/app/ui/routes.ts`. Chat is
+routes under `spaces/[relay]/`, reached through `makeContentPath` in `src/app/navigation/pages.ts`. Chat is
 `MESSAGE` (kind 9). Comments (`COMMENT`, NIP-22) thread under any content kind, and
 `makeCommentFilter(kinds)` selects them by `#K`. A content form with `shareToChat` set also posts
 a kind 9 quoting the new event (`publishRoomQuote`), so clients that only render chat still see
@@ -273,7 +273,8 @@ it. Zaps and goals are off on iOS (`ENABLE_ZAPS` in `src/app/core/env.ts`).
 2. Publish through `writer(Factory)` and `command(...)`, with `setRoom` or `forceRoutes` and
    `setProtected(relay?.hasNip(70))` on the loaded relay for space content.
 3. For a new space section, add the kind to `CONTENT_KINDS` (which feeds sync, notifications, push,
-   search and `SpaceMenuNavItems`), the noun switch in `HomeActivity` and `makeContentPath`, and add routes under
+   search and `SpaceMenuNavItems`), the noun switch in `HomeActivity` and `makeContentPath`, add their route objects to
+   `src/app/navigation/pages.ts`, and add routes under
    `spaces/[relay]/`.
 4. If users sign it through a remote signer, add it to `NIP46_PERMS` in `src/app/core/nip46.ts`.
 5. If it is relay-scoped state that has to survive a reload, register a retention rule for it
@@ -295,7 +296,7 @@ In order of preference:
    or the standalone helpers when it isn't (`getImeta`, `getExpiration`, `getReplyTags`,
    `getCommentTagValues`, `getEmojis`).
 3. `tagValue(tagSpec("h"), event.tags)` in code that handles many kinds at once (notifications,
-   `makeEventPath`, feed grouping), where no single reader applies.
+   `getEventPath`, feed grouping), where no single reader applies.
 
 When welshman lacks a kind or a getter, add it there rather than working around it in the app. A
 tag spec is the right tool only for a tag nothing else will read, like the `content` tags on

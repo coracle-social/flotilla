@@ -22,9 +22,9 @@
   import {user} from "@app/core/user"
   import {profiles, publisher} from "@app/core/plugins"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
-  import {highlightedEvent} from "@app/ui/routes"
+  import {highlightedEvent} from "@app/navigation/locations"
   import {colorFor} from "@app/ui/theme"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     event: TrustedEvent

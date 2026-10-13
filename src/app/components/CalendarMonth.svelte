@@ -16,7 +16,7 @@
     layoutMultiDayBars,
     makeDayKey,
   } from "@app/features/spaces/calendar"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

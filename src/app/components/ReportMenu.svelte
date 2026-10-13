@@ -14,7 +14,7 @@
   import {reader} from "@app/core/domain"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushToast} from "@app/ui/toast"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

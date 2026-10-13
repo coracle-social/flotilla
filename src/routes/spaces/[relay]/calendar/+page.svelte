@@ -35,14 +35,14 @@
     isCurrentMonth,
     isCurrentWeek,
   } from "@app/features/spaces/calendar"
-  import {getModal, pushModal} from "@app/ui/modal"
-  import {decodeRelay} from "@app/ui/routes"
+  import {getModal, pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
   import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.calendar.decode(params)
   const context = makeFeedContext({relays: [url]})
 
   const makeEvent = () => pushModal(CalendarEventCreate, {url})

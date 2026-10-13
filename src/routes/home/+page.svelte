@@ -11,7 +11,7 @@
   import HomeNetwork from "@app/components/HomeNetwork.svelte"
   import HomeHealthChecks from "@app/components/HomeHealthChecks.svelte"
   import HomeHosting from "@app/components/HomeHosting.svelte"
-  import {goToSpace} from "@app/ui/routes"
+  import {goToSpace} from "@app/navigation/history"
   import {HOSTING_ENABLED} from "@app/features/hosting"
   import {PLATFORM_RELAYS} from "@app/core/env"
 

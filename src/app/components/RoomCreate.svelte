@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {navigate} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
   import {displayRelayUrl} from "@welshman/util"
   import type {RoomMeta} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -12,7 +12,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RoomForm from "@app/components/RoomForm.svelte"
-  import {makeSpacePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -22,7 +22,7 @@
 
   const back = () => history.back()
 
-  const onsubmit = (room: RoomMeta) => navigate(makeSpacePath(url, room.h))
+  const onsubmit = (room: RoomMeta) => navigate(pages.room.path({url, h: room.h}))
 </script>
 
 <RoomForm {url} {onsubmit}>

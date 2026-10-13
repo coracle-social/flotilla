@@ -20,9 +20,9 @@
   import {events, relays} from "@app/core/plugins"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {CONTENT_KINDS} from "@app/features/spaces"
-  import {makeSpaceChatPath, makeSpacePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {allNotifications, notifications} from "@app/ui/notifications"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -31,14 +31,14 @@
   const {url}: Props = $props()
 
   const relay = $relays.one(url)
-  const chatPath = makeSpaceChatPath(url)
-  const goalsPath = makeSpacePath(url, "goals")
-  const threadsPath = makeSpacePath(url, "threads")
-  const classifiedsPath = makeSpacePath(url, "classifieds")
-  const articlesPath = makeSpacePath(url, "articles")
-  const calendarPath = makeSpacePath(url, "calendar")
-  const pollsPath = makeSpacePath(url, "polls")
-  const libraryPath = makeSpacePath(url, "library")
+  const chatPath = pages.spaceChat.path({url})
+  const goalsPath = pages.goals.path({url})
+  const threadsPath = pages.threads.path({url})
+  const classifiedsPath = pages.classifieds.path({url})
+  const articlesPath = pages.articles.path({url})
+  const calendarPath = pages.calendar.path({url})
+  const pollsPath = pages.polls.path({url})
+  const libraryPath = pages.library.path({url})
 
   // Content events aren't retained across page loads, so seed from the kinds seen last time.
   const spaceKindsKey = `space-kinds:${url}`
@@ -58,7 +58,7 @@
   $effect(() => setJson(spaceKindsKey, [...$spaceKinds]))
 </script>
 
-<SecondaryNavItem href={makeSpacePath(url, "about")}>
+<SecondaryNavItem href={pages.spaceAbout.path({url})}>
   <Icon icon={Home} /> Space Details
 </SecondaryNavItem>
 {#if !$relay?.hasNip(29)}
@@ -66,7 +66,7 @@
     <Icon icon={ChatRound} /> Chat
   </SecondaryNavItem>
 {/if}
-<SecondaryNavItem href={makeSpacePath(url, "directory")}>
+<SecondaryNavItem href={pages.spaceDirectory.path({url})}>
   <Icon icon={UsersGroup} /> Directory
 </SecondaryNavItem>
 {#if showSection(PINBOARD, libraryPath)}

@@ -5,7 +5,7 @@
   import Button from "@lib/components/Button.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import type {FeedContext} from "@app/features/feeds"
-  import {pushEventNote} from "@app/ui/routes"
+  import {openEventNote} from "@app/navigation/overlays"
   import {isEventMuted} from "@app/features/social"
   import type {NetworkFeedEntry} from "@app/features/social"
 
@@ -25,7 +25,7 @@
 
   const shown = $derived(showEvery ? replies : take(3, replies))
 
-  const openReply = (reply: TrustedEvent) => () => pushEventNote(reply)
+  const openReply = (reply: TrustedEvent) => () => openEventNote(reply)
 
   const showAll = () => {
     showEvery = true

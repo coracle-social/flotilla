@@ -1,29 +1,8 @@
 import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {
-  append,
-  identity,
-  noop,
-  on,
-  partition,
-  remove,
-  sort,
-  sortBy,
-  uniq,
-  uniqBy,
-} from "@welshman/lib"
+import {append, identity, noop, on, partition, remove, sortBy, uniqBy} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {
-  DELETE,
-  DIRECT_MESSAGE,
-  DIRECT_MESSAGE_FILE,
-  REACTION,
-  WRAP,
-  getPow,
-  hexTags,
-  isSignedEvent,
-  tagValues,
-} from "@welshman/util"
+import {DELETE, REACTION, WRAP, getPow, hexTags, isSignedEvent, tagValues} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import type {RepositoryUpdate, WrapItem} from "@welshman/net"
 import {makeDeriveItem, projection, synced, throttled, withGetter} from "@welshman/store"
@@ -37,6 +16,7 @@ import {
   createSearch,
 } from "@welshman/app"
 import type {IApp, Search} from "@welshman/app"
+import {DM_KINDS} from "@lib/util"
 import {app, fromApp} from "@app/core/app"
 import {deriveUserItem, user, userFollowList} from "@app/core/user"
 import {messagingRelayLists, relayLists, usePlugin} from "@app/core/plugins"
@@ -44,8 +24,11 @@ import {userSettingsValues} from "@app/core/settings"
 import {kv, registerRetention} from "@app/core/storage"
 import {makeKeyedSyncs, pullAndListen, registerSync} from "@app/core/sync"
 import {userRoomList} from "@app/features/spaces"
-
-export const DM_KINDS = [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]
+import {pushModal} from "@app/navigation/dialogs"
+import {lastMessagesUrl} from "@app/navigation/history"
+import {navigate} from "@app/navigation/navigate"
+import {conversation, getConversationPubkeys, makeConversationId} from "@app/navigation/pages"
+import MessagesEnable from "@app/components/MessagesEnable.svelte"
 
 export type Conversation = {
   id: string
@@ -54,21 +37,8 @@ export type Conversation = {
   last_activity: number
 }
 
-export const getConversationPubkeys = (pubkeys: string[]) =>
-  sort(uniq(append(user.get().pubkey, pubkeys)))
-
 export const getConversationPubkeysFromEvent = (event: TrustedEvent) =>
   getConversationPubkeys(tagValues(hexTags("p"), event.tags).concat(event.pubkey))
-
-export const makeConversationId = (pubkeys: string[]) => {
-  const userPubkey = user.get().pubkey
-  const otherPubkeys = remove(userPubkey, uniq(pubkeys))
-  const visiblePubkeys = otherPubkeys.length === 0 ? [userPubkey] : otherPubkeys
-
-  return sort(visiblePubkeys).join(",")
-}
-
-export const splitConversationId = (id: string) => getConversationPubkeys(id.split(","))
 
 // Anything else decrypted out of a wrap addressed to the user is a rumor about other people.
 export const isUserMessage = (event: TrustedEvent) => {
@@ -306,4 +276,15 @@ export const registerMessages = () => {
       DM_KINDS.includes(event.kind) ||
       ([DELETE, REACTION].includes(event.kind) && !isSignedEvent(event)),
   })
+}
+
+// Messages are read from the user's messaging relays, so they're asked to set some up first.
+export const goToMessages = (pubkeys: string[] = [], options: {replaceState?: boolean} = {}) => {
+  if (messagingRelayLists.get().urls(user.get().pubkey).get().length === 0) {
+    pushModal(MessagesEnable, {next: () => goToMessages(pubkeys, options)})
+  } else if (pubkeys.length === 0) {
+    navigate(lastMessagesUrl ?? "/chat", options)
+  } else {
+    navigate(conversation.path({pubkeys}), options)
+  }
 }

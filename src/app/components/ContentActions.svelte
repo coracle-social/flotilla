@@ -14,8 +14,8 @@
   import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
   import {publishReaction, retractReaction} from "@app/features/reactions"
-  import {makeSpacePath} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import * as pages from "@app/navigation/pages"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type EditForm = Component<{url: string; event: TrustedEvent}>
 
@@ -58,7 +58,7 @@
   {#if (h && showRoom) || labels}
     <div class="flex min-w-0 flex-wrap items-center gap-2">
       {#if h && showRoom}
-        <Link href={makeSpacePath(url, h)} class="button button-neutral button-xs rounded-full">
+        <Link href={pages.room.path({url, h})} class="button button-neutral button-xs rounded-full">
           Posted in #<RoomName {h} {url} />
         </Link>
       {/if}

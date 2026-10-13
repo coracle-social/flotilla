@@ -15,7 +15,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import {pushToast} from "@app/ui/toast"
-  import {clearModals} from "@app/ui/modal"
+  import {clearModals} from "@app/navigation/dialogs"
   import {resolveImageInput} from "@app/features/uploads"
   import {relayManagement, relays} from "@app/core/plugins"
   import IconInput from "@app/components/IconInput.svelte"

@@ -7,7 +7,7 @@
   import Link from "@lib/components/Link.svelte"
   import Profile from "@app/components/Profile.svelte"
   import {events, relayMemberLists, relays} from "@app/core/plugins"
-  import {makeSpacePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -21,7 +21,7 @@
 
   const admins = $derived($relay?.pubkey ? [$relay.pubkey] : [])
 
-  const directoryPath = makeSpacePath(url, "directory")
+  const directoryPath = pages.spaceDirectory.path({url})
 
   // Members sorted by their most recent join/add event, excluding admins.
   const newMembers = derived(

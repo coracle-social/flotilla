@@ -26,13 +26,12 @@
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {makeFeedContext} from "@app/features/feeds"
-  import {decodeRelay} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {relay, address} = params
-  const url = decodeRelay(relay)
+  const {url, address} = pages.calendarEvent.decode(params)
   const context = makeFeedContext({relays: [url]})
   const event = $events.one(address, [url]).$
   const timeEvent = derived(event, $event => ($event ? reader(TimeEvent)($event) : undefined))

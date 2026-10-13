@@ -17,13 +17,12 @@
   import {events} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {makeFeedContext} from "@app/features/feeds"
-  import {decodeRelay, makeClassifiedPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {relay, address} = params
-  const url = decodeRelay(relay)
+  const {url, address} = pages.classified.decode(params)
   const context = makeFeedContext({relays: [url]})
   const event = $events.one(address, [url]).$
   const classified = derived(event, $event => ($event ? reader(Classified)($event) : undefined))
@@ -38,7 +37,7 @@
 {#snippet topicLinks()}
   {#each topics as topic (topic)}
     <Link
-      href="{makeClassifiedPath(url)}?topic={encodeURIComponent(topic)}"
+      href={pages.classifieds.path({url, topic})}
       class="badge badge-neutral badge-sm font-normal">
       #{topic}
     </Link>

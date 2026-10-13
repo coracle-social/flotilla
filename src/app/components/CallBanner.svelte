@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {navigate} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
   import {page} from "$app/stores"
   import cx from "classnames"
   import {displayRelayUrl} from "@welshman/util"
@@ -10,7 +10,7 @@
   import Button from "@lib/components/Button.svelte"
   import Banner from "@app/components/Banner.svelte"
   import {displayRoom} from "@app/features/spaces/rooms"
-  import {decodeRelay, makeRoomPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {
     CallState,
     callState,
@@ -21,7 +21,7 @@
   } from "@app/features/spaces/calls"
 
   const {relay, h} = $derived($page.params)
-  const routeUrl = $derived(relay ? decodeRelay(relay) : undefined)
+  const routeUrl = $derived(relay ? pages.decodeRelay(relay) : undefined)
 
   // CallControlBar already shows full controls on the call's own room page.
   const isCallActiveElsewhere = $derived(
@@ -38,7 +38,7 @@
     if (!$callTargetRoom) {
       return
     }
-    void navigate(makeRoomPath($callTargetRoom.url, $callTargetRoom.h))
+    void navigate(pages.room.path({url: $callTargetRoom.url, h: $callTargetRoom.h}))
   }
 
   const toggleMute = async () => {

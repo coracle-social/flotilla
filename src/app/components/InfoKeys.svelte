@@ -12,7 +12,7 @@
   import KeyRecoveryRequest from "@app/components/KeyRecoveryRequest.svelte"
   import {isPomadeSession} from "@app/features/pomade"
   import {PLATFORM_NAME} from "@app/core/env"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {session} from "@app/core/session"
 
   const back = () => history.back()

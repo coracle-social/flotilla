@@ -25,7 +25,7 @@
   import {app} from "@app/core/app"
   import {domain, network} from "@app/core/plugins"
   import {payInvoice, wallet} from "@app/features/wallet"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {zapAmounts} from "@app/core/settings"
   import {clip, pushToast} from "@app/ui/toast"
 

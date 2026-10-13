@@ -26,7 +26,7 @@
   import {PLATFORM_RELAYS, DEFAULT_RELAYS, INDEXER_RELAYS} from "@app/core/env"
   import {bootstrapPubkeys} from "@app/features/social"
   import {parseInviteLink} from "@app/features/spaces/membership"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   const addSpace = () => pushModal(SpaceAdd)
 

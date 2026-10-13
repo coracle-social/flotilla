@@ -1,8 +1,8 @@
 import {MINUTE, first, formatTimestampRelative, int, ms, now, uniq} from "@welshman/lib"
 import {EVENT_RSVP, EVENT_TIME, getAddress, getIdFilters, isSignedEvent} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {CalendarRsvp} from "@welshman/domain"
-import {getEventStart, getEventTitle, isAttending} from "@app/features/spaces/calendar"
+import {CalendarRsvp, TimeEvent} from "@welshman/domain"
+import {getEventStart, isAttending} from "@app/features/spaces/calendar"
 import {app} from "@app/core/app"
 import {network, roomLists} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
@@ -21,7 +21,7 @@ const makeReminders = (event: TrustedEvent, start: number): Reminder[] =>
   getLeadTimes()
     .map(minutes => ({
       at: start - int(minutes, MINUTE),
-      title: getEventTitle(event) || "Upcoming event",
+      title: reader(TimeEvent)(event).title() || "Upcoming event",
       body: `Starts ${formatTimestampRelative(now() + int(minutes, MINUTE))}`,
     }))
     .filter(({at}) => at > now())

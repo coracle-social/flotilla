@@ -12,7 +12,7 @@
   import ProfileQrCode from "@app/components/ProfileQrCode.svelte"
   import {user, userMuteList} from "@app/core/user"
   import {muteLists, profiles} from "@app/core/plugins"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

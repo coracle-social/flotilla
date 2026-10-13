@@ -38,10 +38,10 @@
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
   import {publishReaction} from "@app/features/reactions"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {makeContentPath} from "@app/ui/routes"
+  import {makeContentPath} from "@app/navigation/pages"
   import {shareEvent} from "@app/ui/share"
   import {readAloud} from "@app/features/speech"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

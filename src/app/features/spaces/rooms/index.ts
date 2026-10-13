@@ -62,7 +62,7 @@ import {
 import {registerRetention} from "@app/core/storage"
 import {pullAndListen, registerSync, syncEach} from "@app/core/sync"
 import {currentSpaceUrls, syncedSpaceUrls, userRoomList, userSpaceUrls} from "@app/features/spaces"
-import {makeRoomPath, makeSpaceChatPath} from "@app/ui/routes"
+import * as pages from "@app/navigation/pages"
 import {loadSendDelay} from "@app/core/settings"
 
 export const PROTECTED = ["-"]
@@ -360,12 +360,12 @@ export const deriveUserRoomSearch = () =>
           return ($roomsByUrl.get(url) ?? []).map(({h}) => ({
             url,
             h,
-            path: makeRoomPath(url, h),
+            path: pages.room.path({url, h}),
             name: displayRoom(url, h),
             isFavorite: favorites.has(h),
           }))
         } else {
-          return [{url, path: makeSpaceChatPath(url), name: "chat", isFavorite: false}]
+          return [{url, path: pages.spaceChat.path({url}), name: "chat", isFavorite: false}]
         }
       })
 

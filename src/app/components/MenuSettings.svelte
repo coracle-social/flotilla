@@ -16,8 +16,8 @@
   import {user} from "@app/core/user"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {HOSTING_ENABLED} from "@app/features/hosting"
-  import {pushModal} from "@app/ui/modal"
-  import {makeProfilePath} from "@app/ui/routes"
+  import {pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
 
   const logout = () => pushModal(LogOut)
 </script>
@@ -25,7 +25,7 @@
 <Modal label="Settings">
   <ModalBody>
     <div class="flex flex-col gap-8 items-center py-12 max-w-[16rem] m-auto w-full">
-      <Link href={makeProfilePath($user.pubkey)}>
+      <Link href={pages.profile.path({pubkey: $user.pubkey})}>
         <Profile inert pubkey={$user.pubkey} />
       </Link>
       <div class="grid grid-cols-3 gap-3 w-full">

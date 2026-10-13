@@ -12,8 +12,8 @@
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import RoomPinnedMessagesAll from "@app/components/RoomPinnedMessagesAll.svelte"
   import {deriveRoomPinnedEvents} from "@app/features/spaces/rooms/pins"
-  import {goToEvent} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import {goToEvent} from "@app/navigation/locations"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

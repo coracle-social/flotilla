@@ -15,7 +15,7 @@
   import RelayList from "@app/components/RelayList.svelte"
   import {user} from "@app/core/user"
   import {relayLists} from "@app/core/plugins"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {homeNotificationsUnread} from "@app/ui/notifications"
 
   type NetworkTab = "recent" | "notifications"

@@ -474,11 +474,10 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
 
 ## Runes and stores
 
-Modules in `src/app` use svelte stores. The one `.svelte.ts` module is `src/app/ui/modal.svelte.ts`:
-its modal registry is `$state`, and the open stack is `$derived` from `page.state` in
-`$app/state`, SvelteKit's rune-based replacement for the deprecated `$app/stores`. A rune-only
-source is what justifies the exception. `sync.ts` and `notifications.ts` read `page` from
-`$app/stores` because they subscribe to it outside a component.
+Modules in `src/app` use svelte stores. The navigation modules read the open dialogs from
+`page.state` in `$app/state`, SvelteKit's rune-based replacement for the deprecated `$app/stores`,
+since that state has no store. `sync.ts`, `notifications.ts` and `navigation/history.ts` read
+`page` from `$app/stores` because they subscribe to it outside a component.
 
 Component-local `$state` covers UI state that dies with the component. Everything else is a
 store, consumed in components with `$store`.

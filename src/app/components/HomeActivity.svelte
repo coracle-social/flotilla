@@ -5,7 +5,7 @@
   import RelayName from "@app/components/RelayName.svelte"
   import {displayInboxTimestamp} from "@app/ui/notifications"
   import type {SpaceContent} from "@app/ui/notifications"
-  import {makeSpacePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
 
   const {spaces}: {spaces: SpaceContent[]} = $props()
 
@@ -34,7 +34,7 @@
 <div class="flex flex-col divide-y divide-line border-t border-line bg-surface-less">
   {#each spaces as { url, timestamp, countsByKind } (url)}
     <Link
-      href={makeSpacePath(url)}
+      href={pages.space.path({url})}
       class="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface">
       <RelayIcon {url} size={9} class="shrink-0" />
       <div class="flex min-w-0 flex-1 flex-col gap-0.5">

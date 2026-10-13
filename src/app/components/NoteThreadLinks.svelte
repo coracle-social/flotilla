@@ -4,7 +4,7 @@
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import {pushNote} from "@app/ui/routes"
+  import {openNote} from "@app/navigation/overlays"
   import {getReplyRefs} from "@app/features/social"
   import type {ReplyRef} from "@app/features/social"
 
@@ -21,7 +21,7 @@
   const thread = $derived(refs.root?.id === parent?.id ? undefined : refs.root)
 
   const open = (target: ReplyRef) => () =>
-    pushNote({id: target.id, author: target.author, relays: target.relays})
+    openNote({id: target.id, author: target.author, relays: target.relays})
 </script>
 
 {#if parent || thread}

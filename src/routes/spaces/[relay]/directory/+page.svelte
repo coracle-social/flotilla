@@ -18,13 +18,13 @@
   import {deriveSpaceMemberRoles} from "@app/features/spaces/management/roles"
   import {relayMemberLists, relayRoles} from "@app/core/plugins"
   import {deriveDisplaysByPubkey, deriveMemberPins} from "@app/features/social"
-  import {decodeRelay} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import * as pages from "@app/navigation/pages"
+  import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.spaceDirectory.decode(params)
   const roles = $relayRoles.forUrl(url).$
   const members = $relayMemberLists.forUrl(url)
   const memberRoles = deriveSpaceMemberRoles(url)

@@ -16,7 +16,7 @@
     deriveOtherRooms,
     displayRoom,
   } from "@app/features/spaces/rooms"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

@@ -3,9 +3,10 @@
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import {roomLists} from "@app/core/plugins"
-  import {navigate, pushModal} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
+  import {pushModal} from "@app/navigation/dialogs"
   import {publishRoomList} from "@app/features/spaces/rooms"
-  import {makeSpacePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/ui/toast"
   import {
     createHostedRelay,
@@ -41,7 +42,7 @@
       ? await $hosting.findPaymentDue().catch(onPaymentLookupError)
       : undefined
 
-    await navigate(makeSpacePath(url, "admin"), {replaceState: true})
+    await navigate(pages.spaceAdmin.path({url}), {replaceState: true})
 
     if (due?.invoice) {
       pushModal(PaymentDialog, {invoice: due.invoice})

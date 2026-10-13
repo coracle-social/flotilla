@@ -14,12 +14,12 @@
   import SpaceMembersSummary from "@app/components/SpaceMembersSummary.svelte"
   import SpaceFeaturedContent from "@app/components/SpaceFeaturedContent.svelte"
   import {relays} from "@app/core/plugins"
-  import {decodeRelay} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.spaceAbout.decode(params)
   const relay = $relays.one(url)
 </script>
 

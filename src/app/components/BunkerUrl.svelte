@@ -8,7 +8,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import InfoBunker from "@app/components/InfoBunker.svelte"
   import type {Nip46Controller} from "@app/core/nip46"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     controller: Nip46Controller

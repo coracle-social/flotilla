@@ -9,7 +9,7 @@ import {
   sortBy,
   uniqBy,
 } from "@welshman/lib"
-import {EVENT_RSVP, getAddress, tagSpec, tagValue} from "@welshman/util"
+import {EVENT_RSVP, getAddress} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp, TimeEvent} from "@welshman/domain"
 import type {RsvpStatus} from "@welshman/domain"
@@ -113,9 +113,6 @@ export const makeDayRange = (day: Date) => {
 export const getEventStart = (event: TrustedEvent) => reader(TimeEvent)(event).start()
 
 // NIP-52 settled on `title`, but events from before that still carry `name`.
-export const getEventTitle = (event: TrustedEvent) =>
-  reader(TimeEvent)(event).title() ?? tagValue(tagSpec("name"), event.tags)
-
 // An event covering several days is only introduced on the first of them; the rest continue it.
 export const startsOnDay = (event: TrustedEvent, day: Date) => {
   const start = getEventStart(event)

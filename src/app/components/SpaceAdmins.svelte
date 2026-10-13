@@ -21,7 +21,7 @@
     displayManagementMethod,
     spaceManagement,
   } from "@app/features/spaces/management"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

@@ -25,7 +25,7 @@
   import {shareEvent} from "@app/ui/share"
   import {readAloud} from "@app/features/speech"
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

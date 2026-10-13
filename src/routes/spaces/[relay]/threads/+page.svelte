@@ -15,7 +15,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
   import {reader} from "@app/core/domain"
-  import {decodeRelay} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {displayRoom} from "@app/features/spaces/rooms"
   import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
@@ -23,7 +23,7 @@
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.threads.decode(params)
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)

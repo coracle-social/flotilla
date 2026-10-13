@@ -1,4 +1,3 @@
-import * as nip19 from "nostr-tools/nip19"
 import {derived, get, readable, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {
@@ -20,7 +19,6 @@ import {
   shuffle,
   sortBy,
   take,
-  tryCatch,
   uniq,
   uniqBy,
 } from "@welshman/lib"
@@ -31,7 +29,6 @@ import {
   NOTE,
   REPOST,
   eventOutbox,
-  fromNostrURI,
   getAddress,
   getCommentFiltersForRoot,
   getIdAndAddress,
@@ -139,18 +136,6 @@ export const bootstrapPubkeys = derived(userFollowList, $userFollowList => {
 
 // Pointers: how an event is named before it has been loaded.
 
-export const decodeNotePointer = (entity: string): Maybe<EventPointer> => {
-  const decoded = tryCatch(() => nip19.decode(fromNostrURI(entity)))
-
-  if (decoded?.type === "nevent") {
-    return decoded.data
-  }
-
-  if (decoded?.type === "note") {
-    return {id: decoded.data}
-  }
-}
-
 // A relay selection names an event author `pubkey`, where an event pointer names it `author`.
 export const getQuoteRef = (pointer: QuotePointer): EventRef =>
   pointer.id
@@ -160,21 +145,6 @@ export const getQuoteRef = (pointer: QuotePointer): EventRef =>
 // Structure: the shape of a conversation, read off tags alone.
 
 export const REPOST_KINDS = [REPOST, GENERIC_REPOST]
-
-// What an event is activity on: the root a comment sits under, or the event itself.
-export const getActivityTarget = (event: TrustedEvent) => {
-  if (event.kind === COMMENT) {
-    const {kind, id, address} = reader(Comment)(event).root()
-    const rootKind = parseInt(kind || "")
-    const idOrAddress = address || id
-
-    if (rootKind && idOrAddress) {
-      return {kind: rootKind, idOrAddress}
-    }
-  }
-
-  return {kind: event.kind, idOrAddress: getIdOrAddress(event)}
-}
 
 // Ids and addresses of an event's immediate parents, falling back to its thread roots.
 export const getParents = ({kind, tags}: TrustedEvent) => {

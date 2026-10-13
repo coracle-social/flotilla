@@ -16,12 +16,14 @@ import {
 } from "@welshman/util"
 import {merged, synced, withGetter} from "@welshman/store"
 import {User} from "@welshman/app"
-import {navigate} from "@app/ui/modal"
+import {navigate} from "@app/navigation/navigate"
 import {app} from "@app/core/app"
 import {messagingRelayLists, network, roomLists} from "@app/core/plugins"
-import {DM_KINDS} from "@app/features/messages"
+import {DM_KINDS} from "@lib/util"
+import {goToMessages} from "@app/features/messages"
 import {getMutedRooms, shouldNotify, userSettingsValues} from "@app/core/settings"
-import {makeEventPath, goToMessages, goToSpace} from "@app/ui/routes"
+import {getEventPath} from "@app/navigation/locations"
+import {goToSpace} from "@app/navigation/history"
 import {kv} from "@app/core/storage"
 
 export type PushSubscription = {
@@ -165,7 +167,7 @@ export const onPushNotificationAction = async (action: {
   const {relay, id, event: json} = action.notification.data
   const event = await ingestNotification(relay, id, json)
   const target = event?.kind === WRAP ? await loadNotificationRumor(event) : event
-  const path = target && makeEventPath(target, [relay])
+  const path = target && getEventPath(target, [relay])
 
   if (path) {
     navigate(path)

@@ -1,7 +1,7 @@
 import {registerPlugin} from "@capacitor/core"
 import ScreenSharePicker from "@app/components/ScreenSharePicker.svelte"
 import {PLATFORM_NAME} from "@app/core/env"
-import {pushModal} from "@app/ui/modal"
+import {pushModal} from "@app/navigation/dialogs"
 import {WebScreenShare} from "@app/features/spaces/calls/screenShare/adapters/web"
 import {
   ScreenShareDenied,

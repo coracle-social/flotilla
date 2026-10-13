@@ -9,6 +9,9 @@ declare global {
     // interface PageData {}
     interface PageState {
       modals?: string[]
+      // The entry was pushed to open the note in the url, so closing the note goes back over it.
+      note?: boolean
+      reply?: boolean
     }
     // interface Platform {}
   }

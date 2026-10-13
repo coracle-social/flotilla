@@ -19,9 +19,9 @@
   import ImageInputButton from "@app/components/ImageInputButton.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {command, writer} from "@app/core/domain"
-  import {navigate} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
   import {addressWriterToSpace} from "@app/features/spaces/rooms"
-  import {makeLibraryPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/ui/toast"
   import {resolveImageInput} from "@app/features/uploads"
 
@@ -76,7 +76,7 @@
         back()
       } else {
         pushToast({message: "Shelf created!"})
-        navigate(makeLibraryPath(url, getAddress(publication.event)))
+        navigate(pages.board.path({url, address: getAddress(publication.event)}))
       }
     } catch (e) {
       console.error(e)

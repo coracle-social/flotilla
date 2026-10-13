@@ -18,9 +18,9 @@
   import {rooms} from "@app/core/plugins"
   import {ScreenShare} from "@app/features/spaces/calls/screenShare"
   import {RoomType, getRoomType} from "@app/features/spaces/rooms"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {notifications} from "@app/ui/notifications"
-  import {makeRoomPath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {
     VideoCallLayout,
     videoCallLayout,
@@ -57,7 +57,7 @@
   const openJoinDialog = () => pushModal(VoiceRoomJoinDialog, {url, h})
   const openCallSettings = () => pushModal(VoiceCallAudioSettingsDialog)
 
-  const roomPath = $derived(makeRoomPath(url, h))
+  const roomPath = $derived(pages.room.path({url, h}))
   const chatUnread = $derived($notifications.has(roomPath))
   const isChatPanelActive = $derived($videoCallLayout === VideoCallLayout.Split)
 

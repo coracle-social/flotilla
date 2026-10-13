@@ -20,7 +20,7 @@
   import LogInSelect from "@app/components/LogInSelect.svelte"
   import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/features/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
-  import {pushModal, clearModals} from "@app/ui/modal"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {setChecked} from "@app/ui/notifications"
   import {pushToast} from "@app/ui/toast"
 

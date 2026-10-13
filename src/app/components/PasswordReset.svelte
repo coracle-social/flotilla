@@ -16,7 +16,7 @@
   import PasswordResetConfirm from "@app/components/PasswordResetConfirm.svelte"
   import {session} from "@app/core/session"
   import {pushToast} from "@app/ui/toast"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {getPomadeClient} from "@app/features/pomade"
 
   type Props = {

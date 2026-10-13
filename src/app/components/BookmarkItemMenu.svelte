@@ -6,7 +6,7 @@
   import BookmarkMove from "@app/components/BookmarkMove.svelte"
   import {removeBookmark} from "@app/features/bookmarks"
   import type {BookmarkFolder} from "@app/features/bookmarks"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

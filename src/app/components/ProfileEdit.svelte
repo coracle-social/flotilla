@@ -7,7 +7,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
   import type {Values} from "@app/components/ProfileEditForm.svelte"
-  import {clearModals} from "@app/ui/modal"
+  import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
   import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"

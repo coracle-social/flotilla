@@ -18,7 +18,7 @@
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
   import {shareEvent} from "@app/ui/share"
   import {deriveUserAdminDelete} from "@app/features/spaces/rooms"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
   import {user} from "@app/core/user"
 
   type Props = {

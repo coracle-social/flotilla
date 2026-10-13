@@ -1,7 +1,7 @@
 import type {Maybe} from "@welshman/lib"
 import {toWav} from "@lib/audio"
 import OpenRouterEnable from "@app/components/OpenRouterEnable.svelte"
-import {pushModal} from "@app/ui/modal"
+import {pushModal} from "@app/navigation/dialogs"
 import {getSetting} from "@app/core/settings"
 import type {
   InferenceEnable,

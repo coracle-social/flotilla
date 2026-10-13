@@ -7,13 +7,13 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
   import RoomChat from "@app/components/RoomChat.svelte"
-  import {decodeRelay} from "@app/ui/routes"
-  import {pushModal} from "@app/ui/modal"
+  import * as pages from "@app/navigation/pages"
+  import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.spaceChat.decode(params)
 
   const showSpaceSearch = () => pushModal(SpaceSearch, {url})
 </script>

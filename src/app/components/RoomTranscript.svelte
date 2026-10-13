@@ -19,7 +19,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import VirtualList from "@lib/components/VirtualList.svelte"
   import type {VirtualListController} from "@lib/components/VirtualList.svelte"
-  import {navigate} from "@app/ui/modal"
+  import {navigate} from "@app/navigation/navigate"
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@app/components/RoomItemAddMember.svelte"
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
@@ -28,7 +28,7 @@
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import {pageLoading} from "@app/features/loading"
   import {checked} from "@app/ui/notifications"
-  import {getPermalinkTarget, highlightedEvent} from "@app/ui/routes"
+  import {getPermalinkTarget, highlightedEvent} from "@app/navigation/locations"
 
   type Props = Pick<ComponentProps<typeof RoomItem>, "url" | "replyTo" | "canEdit" | "onEdit"> & {
     h?: string

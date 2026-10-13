@@ -34,7 +34,7 @@
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
   import {publishToSpace} from "@app/features/spaces/rooms"
-  import {makeArticlePath} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
   import {pushToast} from "@app/ui/toast"
 
@@ -54,7 +54,7 @@
 
   const uploading = writable(false)
 
-  const back = () => goto(makeArticlePath(url))
+  const back = () => goto(pages.articles.path({url}))
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
@@ -138,7 +138,7 @@
       }
 
       draftKey.clear()
-      goto(makeArticlePath(url, getAddress(publication.event)))
+      goto(pages.article.path({url, address: getAddress(publication.event)}))
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to publish your article."})

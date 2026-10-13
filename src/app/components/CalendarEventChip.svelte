@@ -3,9 +3,11 @@
   import {formatTimestampAsTime} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {getAddress} from "@welshman/util"
+  import {TimeEvent} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
-  import {getEventStart, getEventTitle, startsOnDay} from "@app/features/spaces/calendar"
-  import {makeCalendarPath} from "@app/ui/routes"
+  import {reader} from "@app/core/domain"
+  import {getEventStart, startsOnDay} from "@app/features/spaces/calendar"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -24,7 +26,7 @@
 </script>
 
 <Link
-  href={makeCalendarPath(url, getAddress(event))}
+  href={pages.calendarEvent.path({url, address: getAddress(event)})}
   class={cx(
     "flex h-6 min-w-0 items-center gap-x-1 bg-primary/10 px-1.5 text-xs text-primary transition-colors hover:bg-primary hover:text-primary-content",
     // Only round the corners that are the event's real start/end, not a clipped row edge
@@ -37,7 +39,7 @@
   {:else if start}
     <span class="shrink-0 opacity-75">{formatTimestampAsTime(start)}</span>
   {/if}
-  <span class="min-w-0 truncate">{getEventTitle(event)}</span>
+  <span class="min-w-0 truncate">{reader(TimeEvent)(event).title()}</span>
   {#if continuesAfter}
     <span class="ml-auto shrink-0 opacity-75" title="Continues to a later day">→</span>
   {/if}

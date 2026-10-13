@@ -27,7 +27,7 @@
   import {addressWriterToSpace} from "@app/features/spaces/rooms"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
   import {pushToast} from "@app/ui/toast"
-  import {clearModals} from "@app/ui/modal"
+  import {clearModals} from "@app/navigation/dialogs"
 
   type Props = {
     url: string

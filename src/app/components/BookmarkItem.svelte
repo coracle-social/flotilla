@@ -7,7 +7,7 @@
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import type {BookmarkFolder} from "@app/features/bookmarks"
-  import {goToEvent} from "@app/ui/routes"
+  import {goToEvent} from "@app/navigation/locations"
 
   type Props = {
     folder: BookmarkFolder

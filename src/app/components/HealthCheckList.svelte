@@ -6,7 +6,7 @@
   import HealthCheckReview from "@app/components/HealthCheckReview.svelte"
   import type {HealthCheck} from "@app/features/healthChecks"
   import {healthChecks} from "@app/features/healthChecks"
-  import {pushModal} from "@app/ui/modal"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     class?: string

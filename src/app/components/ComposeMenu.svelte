@@ -8,8 +8,9 @@
   import Revote from "@assets/icons/revote.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import {navigate, pushModal} from "@app/ui/modal"
-  import {makeArticleCreatePath} from "@app/ui/routes"
+  import {navigate} from "@app/navigation/navigate"
+  import {pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
@@ -35,7 +36,7 @@
 
   const createPoll = () => pushModal(PollCreate, {url, h, shareToChat: true})
 
-  const createArticle = () => navigate(makeArticleCreatePath(url, {h, shareToChat: true}))
+  const createArticle = () => navigate(pages.articleCreate.path({url, h, shareToChat: true}))
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>

@@ -9,8 +9,8 @@
   import Zap from "@app/components/Zap.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {ENABLE_ZAPS, PLATFORM_NAME, PLATFORM_ABOUT} from "@app/core/env"
-  import {pushModal} from "@app/ui/modal"
-  import {makeSpacePath} from "@app/ui/routes"
+  import {pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
 
   const hash = import.meta.env.VITE_BUILD_HASH
 
@@ -35,7 +35,7 @@
     <div class="card flex flex-col gap-2 text-center">
       <h3 class="text-2xl sm:h-12">Get in touch</h3>
       <p class="sm:h-16">Having problems? Let us know.</p>
-      <Link class="button button-primary" href={makeSpacePath("support.flotilla.social")}>
+      <Link class="button button-primary" href={pages.space.path({url: "support.flotilla.social"})}>
         Get Support
       </Link>
     </div>

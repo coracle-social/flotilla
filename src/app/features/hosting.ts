@@ -9,7 +9,7 @@ import type {IApp} from "@welshman/app"
 import {user} from "@app/core/user"
 import {roomLists, usePlugin} from "@app/core/plugins"
 import {HOSTING_BACKEND_URL, HOSTING_RELAY_DOMAIN, PLATFORM_URL} from "@app/core/env"
-import {goToMovedSpace} from "@app/ui/routes"
+import {goToMovedSpace} from "@app/navigation/history"
 import {publishRoomList} from "@app/features/spaces/rooms"
 import {getHttpAuthHeader} from "@app/core/signer"
 

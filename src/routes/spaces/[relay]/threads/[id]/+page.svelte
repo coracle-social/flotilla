@@ -17,15 +17,15 @@
   import {events, network} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
   import {getChecked} from "@app/ui/notifications"
-  import {decodeRelay, getPermalinkTarget, scrollToEvent} from "@app/ui/routes"
+  import * as pages from "@app/navigation/pages"
+  import {getPermalinkTarget, scrollToEvent} from "@app/navigation/locations"
   import type {PageProps} from "./$types"
 
   const REPLY_BATCH_SIZE = 20
 
   const {params}: PageProps = $props()
 
-  const {relay, id} = params
-  const url = decodeRelay(relay)
+  const {url, id} = pages.thread.decode(params)
   const event = $events.one(id, [url]).$
   // Rows register themselves with `related`, so the whole page's reactions load in one batch
   const context = makeFeedContext({relays: [url]})

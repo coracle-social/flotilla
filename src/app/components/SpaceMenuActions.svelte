@@ -29,8 +29,9 @@
   import {deriveSpaceActionItems} from "@app/features/spaces/management/actionItems"
   import {deriveShouldNotify, setSpaceNotifications} from "@app/core/settings"
   import {notificationSettings} from "@app/features/push"
-  import {pushModal, popModal} from "@app/ui/modal"
-  import {makeSpacePath, goToMessages} from "@app/ui/routes"
+  import {popModal, pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
+  import {goToMessages} from "@app/features/messages"
 
   type Props = {
     url: string
@@ -157,7 +158,7 @@
   {@render actionButton(manageMembership, CreditCard, "Manage membership")}
 {/if}
 {#if HOSTING_ENABLED && $hostedRelay.value}
-  {@render actionLink(makeSpacePath(url, "admin"), ServerPath, "Hosting settings")}
+  {@render actionLink(pages.spaceAdmin.path({url}), ServerPath, "Hosting settings")}
 {:else if $permissions.editSpace}
   {@render actionButton(startEdit, Pen, "Edit Space")}
 {/if}
