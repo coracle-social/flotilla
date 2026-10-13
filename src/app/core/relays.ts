@@ -1,13 +1,32 @@
-import {derived, readable} from "svelte/store"
-import {call, on, simpleCache} from "@welshman/lib"
+import {derived, readable, writable} from "svelte/store"
+import {assoc, call, dissoc, on, simpleCache} from "@welshman/lib"
 import {RELAYS, normalizeRelayUrl, relays as relaySelections} from "@welshman/util"
-import {AuthStateEvent, AuthStatus, SocketEvent, SocketStatus} from "@welshman/net"
+import type {ClientMessage, RelayMessage, Socket} from "@welshman/net"
+import {
+  AuthStateEvent,
+  AuthStatus,
+  RelayReasonPrefix,
+  SocketEvent,
+  SocketStatus,
+  isClientClose,
+  isClientEvent,
+  isClientNegClose,
+  isClientNegOpen,
+  isClientReq,
+  isRelayClosed,
+  isRelayNegErr,
+  isRelayOk,
+  matchReason,
+} from "@welshman/net"
 import {throttled} from "@welshman/store"
-import {Relays} from "@welshman/app"
-import {app, fromApp} from "@app/core/app"
+import {BlockedRelayLists, Relays} from "@welshman/app"
+import type {IApp} from "@welshman/app"
+import {app, appPolicies, fromApp} from "@app/core/app"
 import {network, relayLists, relays, router} from "@app/core/plugins"
-import {INDEXER_RELAYS} from "@app/core/env"
-import {relaysMostlyRestricted} from "@app/core/policies"
+import {BLOCKED_RELAYS, INDEXER_RELAYS} from "@app/core/env"
+
+// Relays that mostly send restricted responses to requests and events
+export const relaysMostlyRestricted = writable<Record<string, string>>({})
 
 export const encodeRelay = (url: string) =>
   encodeURIComponent(
@@ -123,4 +142,115 @@ export const outboxUrls = async (pubkeys: string[], limit: number) => {
   const selections = pubkeys.flatMap(pubkey => relaySelections($relayLists.writeUrls(pubkey).get()))
 
   return (await router.get().resolve(selections)).limit(limit).getUrls()
+}
+
+// Policies
+
+const makeBlockPolicy = ($app: IApp) => (socket: Socket) => {
+  const previousOpen = socket.open
+
+  socket.open = () => {
+    const $pubkey = $app.user?.pubkey
+
+    if (BLOCKED_RELAYS.includes(socket.url)) {
+      return
+    }
+    if ($pubkey && $app.use(BlockedRelayLists).urls($pubkey).get().includes(socket.url)) {
+      return
+    }
+
+    previousOpen()
+  }
+
+  return () => {
+    socket.open = previousOpen
+  }
+}
+
+const mostlyRestrictedPolicy = (socket: Socket) => {
+  let total = 0
+  let refused = 0
+
+  const pending = new Set<string>()
+
+  const updateStatus = (error?: string) => {
+    if (total > 5 && refused > total / 2) {
+      if (error) {
+        return relaysMostlyRestricted.update(assoc(socket.url, error))
+      }
+    } else {
+      relaysMostlyRestricted.update(dissoc(socket.url))
+    }
+  }
+
+  // NIP-01 reserves "blocked: " for a ban and "restricted: " for lacking permission.
+  const countDetails = (details: string) => {
+    if (matchReason(RelayReasonPrefix.AuthRequired, details)) {
+      total--
+      updateStatus()
+    }
+
+    if (
+      matchReason(RelayReasonPrefix.Restricted, details) ||
+      matchReason(RelayReasonPrefix.Blocked, details)
+    ) {
+      refused++
+      updateStatus(details)
+    }
+  }
+
+  const unsubscribers = [
+    on(socket, SocketEvent.Receive, (message: RelayMessage) => {
+      if (isRelayOk(message)) {
+        const [_, id, ok, details = ""] = message
+
+        if (pending.has(id)) {
+          pending.delete(id)
+
+          if (!ok) {
+            countDetails(details)
+          }
+        }
+      }
+
+      if (isRelayClosed(message) || isRelayNegErr(message)) {
+        const [_, id, details = ""] = message
+
+        if (pending.has(id)) {
+          pending.delete(id)
+          countDetails(details)
+        }
+      }
+    }),
+    on(socket, SocketEvent.Send, (message: ClientMessage) => {
+      if (isClientReq(message) || isClientNegOpen(message)) {
+        if (!pending.has(message[1])) {
+          total++
+          pending.add(message[1])
+          updateStatus()
+        }
+      }
+
+      if (isClientEvent(message)) {
+        total++
+        pending.add(message[1].id)
+        updateStatus()
+      }
+
+      if (isClientClose(message) || isClientNegClose(message)) {
+        pending.delete(message[1])
+      }
+    }),
+  ]
+
+  return () => {
+    unsubscribers.forEach(call)
+  }
+}
+
+export const registerRelays = () => {
+  appPolicies.push(
+    $app => $app.pool.addSocketPolicy(makeBlockPolicy($app)),
+    $app => $app.pool.addSocketPolicy(mostlyRestrictedPolicy),
+  )
 }

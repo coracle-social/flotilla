@@ -25,7 +25,7 @@
   import {relays, roomLists} from "@app/core/plugins"
   import {userSpaceUrls} from "@app/features/spaces"
   import {getModal, pushModal} from "@app/ui/modal"
-  import {relaysPendingTrust} from "@app/core/policies"
+  import {relaysPendingTrust} from "@app/features/spaces/trust"
   import {decodeRelay} from "@app/core/relays"
   import {makeSpacePath} from "@app/ui/routes"
   import type {LayoutProps} from "./$types"

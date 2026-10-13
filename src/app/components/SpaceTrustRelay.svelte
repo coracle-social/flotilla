@@ -14,7 +14,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InfoSignatures from "@app/components/InfoSignatures.svelte"
-  import {relaysPendingTrust} from "@app/core/policies"
+  import {relaysPendingTrust} from "@app/features/spaces/trust"
   import {publishRoomList} from "@app/features/spaces/rooms"
   import {addTrustedRelay, removeTrustedRelay} from "@app/core/settings"
   import {navigate, popModal, pushModal} from "@app/ui/modal"

@@ -202,17 +202,19 @@ off on iOS (`HOSTING_ENABLED`).
 
 ## Auth, trust and protected events
 
-- **NIP-42.** `authPolicy` in `src/app/core/policies.ts` never authenticates to a relay on the user's
+- **NIP-42.** `authPolicy` in `src/app/core/auth.ts` never authenticates to a relay on the user's
   blocked-relay list and always does under `relay_auth: aggressive`. Under the default
   `conservative`, it authenticates only to relays in the user's room, relay or messaging-relay
   lists, or ones they have published to this session. `attemptRelayAccess` authenticates
   explicitly before a join.
-- **Refusals.** `mostlyRestrictedPolicy` counts `restricted:` and `blocked:` replies per socket.
+- **Refusals.** `mostlyRestrictedPolicy` in `src/app/core/relays.ts` counts `restricted:` and
+  `blocked:` replies per socket.
   Once most requests fail, `relaysMostlyRestricted` turns the space status to "Access Denied" and
   the layout shows `SpaceAuthError`.
 - **Unsigned events.** Some relays strip signatures (hosted relays have a
-  `policy_strip_signatures` flag). `ingestPolicy` and `trustPolicy` hold back unsigned events
-  unless the relay is in the `trusted_relays` setting, while `SpaceTrustRelay` asks the user.
+  `policy_strip_signatures` flag). The ingest policy (`core/ingest.ts`) and `trustPolicy`
+  (`features/spaces/trust.ts`) hold back unsigned events unless the relay is in the
+  `trusted_relays` setting, while `SpaceTrustRelay` asks the user.
 - **NIP-70.** Space content is protected exactly when the relay advertises NIP-70, so every space
   publish passes `setProtected(await relays.hasNip(url, 70))`. Per NIP-70 (a protocol claim not
   verified in this repo) a relay then accepts the event only from its author, which keeps space

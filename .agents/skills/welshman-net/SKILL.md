@@ -40,6 +40,7 @@ Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `diff`/`pul
 | `pool.has(url)` | Whether a socket already exists for the url |
 | `pool.remove(url)` | Cleans up the socket and forgets the url |
 | `pool.clear()` | Removes every socket |
+| `pool.addSocketPolicy(policy)` | Adds a policy for sockets created from then on; returns a function that removes it |
 | `pool.subscribe(cb)` | Fires `cb(socket)` each time a new socket is created; returns an unsubscriber |
 | `Socket` | WebSocket wrapper with status tracking, send queue, and auth state |
 | `SocketStatus` | Enum: `Open`, `Opening`, `Closing`, `Closed`, `Error` |

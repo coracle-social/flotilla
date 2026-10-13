@@ -414,6 +414,7 @@ Side effects live in `AppPolicy`s (`(app) => Unsubscriber`), run at construction
 
 - `defaultAppPolicies` = `[appPolicyIngest, appPolicyRelayStats, appPolicyWraps, appPolicyCacheDecrypt, appPolicyLogSignerMethods, appPolicyAuthUnlessBlocked]`.
 - Auth builders: `makeAppPolicyAuth(shouldAuth)`, `appPolicyAuthAlways`, `appPolicyAuthNever`, `appPolicyAuthUnlessBlocked`.
+- `app.ingestEvent(event, url)` records an event a relay sent in the tracker and repository, skipping DVM and ephemeral kinds; `appPolicyIngest` calls it for every validly signed event, and a custom ingest policy can call it after its own check.
 - `appPolicyCacheDecrypt` and `appPolicyLogSignerMethods` both layer onto the user's signer via `User.wrapSigner` — the first caches decryptions into `app.use(Plaintext)`, the second records signer calls into `app.use(Logger)` (read them from `app.use(Logger).messages`).
 
 ```typescript

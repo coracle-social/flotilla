@@ -153,18 +153,20 @@ A generic nostr kind belongs upstream in `@welshman/app`, with its reader in `@w
 
 An `AppPolicy` is `(app) => Unsubscriber`, and `app.cleanup()` tears policies down in reverse.
 `core/app.ts` seeds `appPolicies` with welshman's `appPolicyWraps`, `appPolicyRelayStats`,
-`appPolicyCacheDecrypt` and `appPolicyLogSignerMethods`. It leaves out welshman's
-`appPolicyIngest` and `appPolicyAuthUnlessBlocked`, because flotilla replaces them:
+`appPolicyCacheDecrypt` and `appPolicyLogSignerMethods`. The rest are registered by the module
+that owns them, from `registerAll` before anything touches the app:
 
-| Policy | Module | What it adds |
+| Registered by | Module | What it adds |
 |---|---|---|
-| `ingestPolicy` | `policies.ts` | drops DVM and ephemeral kinds; skips signature checks for trusted relays |
-| `authPolicy` | `policies.ts` | NIP-42 by the `relay_auth` setting, conservative or aggressive |
-| `socketPolicy` | `policies.ts` | blocked relays, `relaysPendingTrust`, `relaysMostlyRestricted` |
-| `storagePolicy` | `storage.ts` | the per-user IndexedDB cache, only when the app has a user |
+| `registerIngest` | `core/ingest.ts` | passes events to `app.ingestEvent`, letting trusted relays skip signature checks |
+| `registerAuth` | `core/auth.ts` | NIP-42 by the `relay_auth` setting, conservative or aggressive |
+| `registerRelays` | `core/relays.ts` | refuses to open blocked relays, and tracks `relaysMostlyRestricted` |
+| `registerNotify` | `core/notify.ts` | welshman's `appPolicyNotify` |
+| `registerStorage` | `core/storage.ts` | the per-user IndexedDB cache, only when the app has a user |
+| `registerTrust` | `features/spaces/trust.ts` | holds back unsigned events from untrusted relays, in `relaysPendingTrust` |
 
-`registerPolicies` and `registerStorage` push them, called from `registerAll` before anything touches
-the app. To add a policy:
+A socket policy is registered as `$app => $app.pool.addSocketPolicy(policy)`, which adds it to the
+app's pool and returns the cleanup that removes it. To add a policy:
 
 1. Define it in the module that owns the concern.
 2. Push it onto `appPolicies` in that module's `registerX`.
@@ -176,7 +178,7 @@ app, and `app.get()` recurses into building another one.
 
 ## The repository and derived state
 
-Events enter `app.repository` from `ingestPolicy` (which calls `tracker.track`, then
+Events enter `app.repository` from the ingest policy (which calls `tracker.track`, then
 `repository.publish`), from `Storage` loading the cache at startup, and from the `Publisher`
 publishing optimistically. The tracker records which relays each event was seen on, which is what lets
 space content be keyed by relay.
@@ -460,7 +462,7 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
   badges.
 - **Singleton session state.** `spaces/calls` keeps call state in plain writables (`callState`,
   `currentCallSession`, …).
-- **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `policies.ts`.
+- **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `spaces/trust.ts`.
 - **A controller per flow.** `Nip46Controller` (`nip46.ts`) is a class a component instantiates.
   It holds the writables and actions for a multi-step flow.
 - **Module-owned values.** `wallet` in `wallet.ts` persists itself to `ss` with

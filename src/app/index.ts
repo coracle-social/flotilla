@@ -1,4 +1,7 @@
-import {registerPolicies} from "@app/core/policies"
+import {registerAuth} from "@app/core/auth"
+import {registerIngest} from "@app/core/ingest"
+import {registerNotify} from "@app/core/notify"
+import {registerRelays} from "@app/core/relays"
 import {registerSettings} from "@app/core/settings"
 import {registerStorage} from "@app/core/storage"
 import {registerNotifications} from "@app/ui/notifications"
@@ -13,6 +16,7 @@ import {registerMembership} from "@app/features/spaces/membership"
 import {registerPinboards} from "@app/features/spaces/pinboards"
 import {registerCommands} from "@app/features/spaces/rooms/commands"
 import {registerRooms} from "@app/features/spaces/rooms"
+import {registerTrust} from "@app/features/spaces/trust"
 
 let registered = false
 
@@ -21,7 +25,10 @@ export const registerAll = () => {
   // Hot reloading the root layout calls this again.
   if (!registered) {
     registered = true
-    registerPolicies()
+    registerIngest()
+    registerAuth()
+    registerRelays()
+    registerNotify()
     registerStorage()
     registerSettings()
     registerNotifications()
@@ -36,5 +43,6 @@ export const registerAll = () => {
     registerPinboards()
     registerCommands()
     registerRooms()
+    registerTrust()
   }
 }

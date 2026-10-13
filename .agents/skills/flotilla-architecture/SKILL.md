@@ -91,13 +91,14 @@ add more.
 - `domain.ts`: the `reader`/`writer`/`command` shortcuts
 - `session.ts`: the `session` store, `login`, restoring the saved session at boot, `logout`, and
   `registerLogoutHandler`
-- `policies.ts`: the ingest, auth and socket policies installed on every app
+- `ingest.ts`, `auth.ts`: the ingest and NIP-42 auth policies installed on every app
 - `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage) and the per-user IndexedDB
   cache, with `registerRetention` for what it keeps
 - `sync.ts`: `syncApplicationData`, `registerSync`, and the helpers registered syncs are built
   from (`pullAndListen`, `syncEach`, `syncUserList`)
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
-- `relays.ts`: relay URL encoding for routes, socket status, the LiveKit endpoint and detection
+- `relays.ts`: relay URL encoding for routes, socket status, the LiveKit endpoint and detection,
+  and the policies that block relays and track `relaysMostlyRestricted`
 - `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and
   `signerHealth`), `notify.ts`
 - `env.ts`: every `VITE_` value, parsed
@@ -130,6 +131,7 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 - `spaces/calls/`: call state (`index.ts`), `engine.ts` (LiveKit join, leave, devices, the video
   tiles a call shows), `screenShare/`. `calls/index.ts` stays free of livekit values, since the
   root layout loads it and `engine.ts` is imported lazily.
+- `spaces/trust.ts`: holding back unsigned events from relays the user hasn't trusted yet
 - Content types: `spaces/articles.ts`, `calendar.ts`, `classifieds.ts`, `goals.ts`,
   `pinboards.ts`, `featured.ts`
 
@@ -302,7 +304,8 @@ rather than a persisted store.
 - **A preference** → a `SettingsValues` field in `settings.ts` if it follows the user, or a
   `kv`/`ss` store if it belongs to the device. See `flotilla-state`.
 - **A relay or network policy** (what to ingest, when to AUTH, which sockets may open) → an
-  `AppPolicy` in `policies.ts`. See `flotilla-state` and `welshman-net`.
+  `AppPolicy` registered by the module that owns the concern, using `pool.addSocketPolicy` for a
+  socket policy. See `flotilla-state` and `welshman-net`.
 - **Data every joined space needs locally** → a `registerSync` from the sub-feature's `registerX`,
   usually `syncEach(syncedSpaceUrls, …)` or `syncEach(currentSpaceUrls, …)`. Data that
   one page needs is loaded by that page. See `flotilla-state` and `flotilla-views`.

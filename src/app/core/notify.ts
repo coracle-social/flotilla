@@ -2,9 +2,9 @@ import {derived} from "svelte/store"
 import {append, uniq} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {synced} from "@welshman/store"
-import {Notify} from "@welshman/app"
+import {Notify, appPolicyNotify} from "@welshman/app"
 import type {NotifyItem} from "@welshman/app"
-import {fromApp} from "@app/core/app"
+import {appPolicies, fromApp} from "@app/core/app"
 import {kv} from "@app/core/storage"
 
 // A relay resends after every AUTH, so a dismissal is keyed on the message text.
@@ -29,3 +29,7 @@ export const relayNotify = (url: string) =>
 export const dismissRelayNotify = (notify: Maybe<NotifyItem>) =>
   notify &&
   dismissedNotifies.update($dismissed => uniq(append(notifyKey(notify), $dismissed)).slice(-100))
+
+export const registerNotify = () => {
+  appPolicies.push(appPolicyNotify)
+}
