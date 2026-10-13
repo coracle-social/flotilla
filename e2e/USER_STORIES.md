@@ -1931,8 +1931,7 @@ Acceptance:
 - Each button says how much of its type the feed holds, whether it is on or
   off.
 - A reply in the feed is drawn under the note it answers, which the feed loads
-  before it draws either, so it reads as more than half a conversation. A reply
-  naming no relay and no author for that note is drawn under it too.
+  before it draws either, so it reads as more than half a conversation.
 - An answer leaves the note it names where it was in the feed, so nothing she is
   reading moves under her.
 - The feed draws as much as fills the screen and grows as she scrolls, rather
