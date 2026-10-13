@@ -8,26 +8,24 @@ import {fromApp} from "@app/core/app"
 import {kv} from "@app/core/storage"
 
 // A relay resends after every AUTH, so a dismissal is keyed on the message text.
-const dismissedRelayNotifications = synced<string[]>({
+const dismissedNotifies = synced<string[]>({
   key: "dismissedRelayNotifications",
   storage: kv,
   defaultValue: [],
 })
 
-const notificationKey = (notification: NotifyItem) => `${notification.url} ${notification.message}`
+const notifyKey = (notify: NotifyItem) => `${notify.url} ${notify.message}`
 
-export const relayNotification = (url: string) =>
+export const relayNotify = (url: string) =>
   derived(
-    [fromApp($app => $app.use(Notify).one(url)), dismissedRelayNotifications],
-    ([$notification, $dismissed]) => {
-      const shown = $notification && !$dismissed.includes(notificationKey($notification))
+    [fromApp($app => $app.use(Notify).one(url)), dismissedNotifies],
+    ([$notify, $dismissed]) => {
+      const shown = $notify && !$dismissed.includes(notifyKey($notify))
 
-      return shown ? $notification : undefined
+      return shown ? $notify : undefined
     },
   )
 
-export const dismissRelayNotification = (notification: Maybe<NotifyItem>) =>
-  notification &&
-  dismissedRelayNotifications.update($dismissed =>
-    uniq(append(notificationKey(notification), $dismissed)).slice(-100),
-  )
+export const dismissRelayNotify = (notify: Maybe<NotifyItem>) =>
+  notify &&
+  dismissedNotifies.update($dismissed => uniq(append(notifyKey(notify), $dismissed)).slice(-100))

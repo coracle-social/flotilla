@@ -5,7 +5,7 @@
   import Button from "@lib/components/Button.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {dismissRelayNotification, relayNotification} from "@app/core/notify"
+  import {dismissRelayNotify, relayNotify} from "@app/core/notify"
 
   type Props = {
     url: string
@@ -13,18 +13,18 @@
 
   const {url}: Props = $props()
 
-  const notification = relayNotification(url)
+  const notify = relayNotify(url)
 
-  const dismiss = () => dismissRelayNotification($notification)
+  const dismiss = () => dismissRelayNotify($notify)
 </script>
 
-{#if $notification}
+{#if $notify}
   <div class="space-notify">
     <RelayIcon {url} size={6} />
     <div class="min-w-0 grow">
       <RelayName {url} class="text-sm font-bold" />
       <div class="welshman-content text-sm">
-        {@html renderAsHtml(parse({content: $notification.message}))}
+        {@html renderAsHtml(parse({content: $notify.message}))}
       </div>
     </div>
     <Button class="shrink-0 text-content-subtle hover:text-content" onclick={dismiss}>
