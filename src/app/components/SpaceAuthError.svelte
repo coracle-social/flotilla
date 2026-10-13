@@ -14,7 +14,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
-  import {leaveSpace} from "@app/features/access"
+  import {leaveSpace} from "@app/features/spaces/membership"
   import {clearModals, navigate, pushModal} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"
 

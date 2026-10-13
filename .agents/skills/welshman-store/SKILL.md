@@ -320,9 +320,10 @@ const loadBookmark = makeLoadItem<Bookmark>(
   async (pubkey: string) => {
     const scenario = await app.use(Router).resolve([outbox(pubkey)])
 
-    await app.use(Network).loadComplete({
+    await app.use(Network).load({
       relays: scenario.getUrls(),
       filters: [{ kinds: [BOOKMARK_KIND], authors: [pubkey], limit: 1 }],
+      timeout: 3000,
     })
   },
   getBookmark,

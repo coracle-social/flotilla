@@ -12,7 +12,9 @@ import {Events, publish} from "@welshman/app"
 import {app, fromApp, user} from "@app/core/app"
 import {deletes, relayManagement, relays} from "@app/core/plugins"
 import {command, reader, writer} from "@app/core/domain"
-import {addressWriterToSpace} from "@app/features/rooms"
+import {registerSync} from "@app/core/sync"
+import {syncCurrentSpace} from "@app/features/spaces"
+import {addressWriterToSpace} from "@app/features/spaces/rooms"
 import {isImageUrl} from "@app/features/content"
 
 // Tags from another client may be malformed, and nip19 throws on anything that isn't hex.
@@ -186,3 +188,7 @@ export const deleteLibraryEvent = async (url: string, event: TrustedEvent) => {
 
 export const deletePins = (url: string, pins: PinReader[]) =>
   Promise.all(pins.map(pin => deleteLibraryEvent(url, pin.event)))
+
+export const registerPinboards = () => {
+  registerSync(() => syncCurrentSpace([{kinds: [PINBOARD]}]))
+}

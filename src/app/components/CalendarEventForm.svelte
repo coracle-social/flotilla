@@ -16,7 +16,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
   import EditorContent from "@app/features/editor/EditorContent.svelte"
-  import {publishToSpace} from "@app/features/rooms"
+  import {publishToSpace} from "@app/features/spaces/rooms"
   import {setEventReminders} from "@app/features/reminders"
   import {makeEditor} from "@app/features/editor"
   import {DraftKey} from "@app/features/drafts"

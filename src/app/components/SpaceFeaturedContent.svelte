@@ -5,8 +5,8 @@
   import Button from "@lib/components/Button.svelte"
   import Content from "@app/components/Content.svelte"
   import EditFeaturedContent from "@app/components/EditFeaturedContent.svelte"
-  import {deriveFeaturedContent} from "@app/features/featured"
-  import {deriveUserIsSpaceOwner} from "@app/core/management"
+  import {deriveFeaturedContent} from "@app/features/spaces/featured"
+  import {deriveUserIsSpaceOwner} from "@app/features/spaces/management"
   import {pushModal} from "@app/ui/modal"
 
   type Props = {

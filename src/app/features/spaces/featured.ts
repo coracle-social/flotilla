@@ -1,11 +1,14 @@
 import {derived} from "svelte/store"
-import {APP_DATA, sortEventsDesc, tagSpec, tagValues} from "@welshman/util"
+import {int, MONTH} from "@welshman/lib"
+import {APP_DATA, matchFilter, sortEventsDesc, tagSpec, tagValues} from "@welshman/util"
 import {AppData} from "@welshman/domain"
 import {Events, Relays, publish} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {command, writer} from "@app/core/domain"
-import {registerSpaceSync} from "@app/core/sync"
-import {addressWriterToSpace} from "@app/features/rooms"
+import {registerRetention} from "@app/core/storage"
+import {registerSync} from "@app/core/sync"
+import {syncCurrentSpace} from "@app/features/spaces"
+import {addressWriterToSpace} from "@app/features/spaces/rooms"
 
 // NIP-78 app data from the pubkey the space's NIP-11 names, one ["content", <value>] tag per entry.
 export const FEATURED_CONTENT_D = "flotilla/featured-content"
@@ -38,6 +41,9 @@ export const setFeaturedContent = async (url: string, content: string[]) => {
   return command(await addressWriterToSpace(eventWriter, url)).then(publish)
 }
 
+const featuredContentFilter = {kinds: [APP_DATA], "#d": [FEATURED_CONTENT_D]}
+
 export const registerFeatured = () => {
-  registerSpaceSync({detail: () => [{kinds: [APP_DATA], "#d": [FEATURED_CONTENT_D]}]})
+  registerSync(() => syncCurrentSpace([featuredContentFilter]))
+  registerRetention({match: event => matchFilter(featuredContentFilter, event), ttl: int(1, MONTH)})
 }

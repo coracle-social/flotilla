@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import Profile from "@app/components/Profile.svelte"
-  import {getRsvpsByStatus} from "@app/features/calendar"
+  import {getRsvpsByStatus} from "@app/features/spaces/calendar"
 
   type Props = {
     url: string

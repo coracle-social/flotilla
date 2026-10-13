@@ -21,7 +21,7 @@
     deriveShelves,
     pinMatchesTerm,
     shelfMatchesTerm,
-  } from "@app/features/pinboards"
+  } from "@app/features/spaces/pinboards"
   import {decodeRelay} from "@app/core/relays"
   import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
@@ -76,7 +76,11 @@
     const controller = new AbortController()
 
     $network
-      .loadLenient({relays: [url], filters: [{kinds: [PINBOARD, PIN]}], signal: controller.signal})
+      .load({
+        relays: [url],
+        filters: [{kinds: [PINBOARD, PIN]}],
+        signal: controller.signal,
+      })
       .then(() => {
         loading = false
       })

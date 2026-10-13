@@ -14,24 +14,29 @@
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import SecondaryNavHeader from "@lib/components/SecondaryNavHeader.svelte"
   import SecondaryNavSection from "@lib/components/SecondaryNavSection.svelte"
-  import ChatMenu from "@app/components/ChatMenu.svelte"
-  import ChatStart from "@app/components/ChatStart.svelte"
-  import ChatItem from "@app/components/ChatItem.svelte"
-  import ChatTabs from "@app/components/ChatTabs.svelte"
-  import {ChatTab, chatContext, chatSearch, groupChatsByTab} from "@app/features/chats"
+  import MessagesMenu from "@app/components/MessagesMenu.svelte"
+  import ConversationStart from "@app/components/ConversationStart.svelte"
+  import ConversationItem from "@app/components/ConversationItem.svelte"
+  import MessagesTabs from "@app/components/MessagesTabs.svelte"
+  import {
+    MessagesTab,
+    messagesContext,
+    conversationSearch,
+    groupConversationsByTab,
+  } from "@app/features/messages"
   import {pushModal} from "@app/ui/modal"
-  import {shouldUnwrap} from "@app/core/sync"
+  import {shouldUnwrap} from "@app/features/messages"
   import type {LayoutProps} from "./$types"
 
   const {children, params}: LayoutProps = $props()
 
-  const startChat = () => pushModal(ChatStart)
+  const startConversation = () => pushModal(ConversationStart)
 
   let term = $state("")
-  let tab = $state(ChatTab.Conversations)
+  let tab = $state(MessagesTab.Conversations)
 
-  const chats = $derived($chatSearch.searchOptions(term))
-  const chatsByTab = $derived(groupChatsByTab(chats, $chatContext))
+  const conversations = $derived($conversationSearch.searchOptions(term))
+  const conversationsByTab = $derived(groupConversationsByTab(conversations, $messagesContext))
 
   const promise = sleep(10000)
 
@@ -43,26 +48,26 @@
 <SecondaryNav class="relative w-72 lg:w-80">
   <SecondaryNavSection>
     <SecondaryNavHeader>
-      Chats
+      Messages
       <div class="flex items-center">
         <Button
           class="button button-ghost button-sm button-circle"
           aria-label="Start New Chat"
-          onclick={startChat}>
+          onclick={startConversation}>
           <Icon icon={Add} />
         </Button>
-        <MenuButton component={ChatMenu} aria-label="Chat options" />
+        <MenuButton component={MessagesMenu} aria-label="Chat options" />
       </div>
     </SecondaryNavHeader>
     <label class="input input-sm flex items-center gap-2">
       <Icon icon={Magnifier} />
       <input bind:value={term} class="grow" type="text" />
     </label>
-    <ChatTabs bind:tab {chatsByTab} />
+    <MessagesTabs bind:tab {conversationsByTab} />
   </SecondaryNavSection>
   <div class="overflow-auto">
-    {#each chatsByTab[tab] as { id, pubkeys, messages } (id)}
-      <ChatItem {id} {pubkeys} {messages} />
+    {#each conversationsByTab[tab] as { id, pubkeys, messages } (id)}
+      <ConversationItem {id} {pubkeys} {messages} />
     {/each}
     {#await promise}
       <div class="divider"></div>
@@ -79,7 +84,7 @@
 </Page>
 
 {#if !params.chat}
-  <FAB onclick={startChat}>
+  <FAB onclick={startConversation}>
     <Icon icon={ChatSquarePlus} size={7} />
   </FAB>
 {/if}

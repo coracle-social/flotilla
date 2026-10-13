@@ -6,8 +6,8 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {joinRoom, leaveRoom} from "@app/features/access"
-  import {deriveUserRoomMembershipStatus} from "@app/features/rooms"
+  import {joinRoom, leaveRoom} from "@app/features/spaces/membership"
+  import {deriveUserRoomMembershipStatus} from "@app/features/spaces/rooms"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

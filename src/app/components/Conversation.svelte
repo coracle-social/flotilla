@@ -30,19 +30,19 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import ChatMembers from "@app/components/ChatMembers.svelte"
-  import ChatTitle from "@app/components/ChatTitle.svelte"
-  import ChatMessage from "@app/components/ChatMessage.svelte"
+  import ConversationMembers from "@app/components/ConversationMembers.svelte"
+  import ConversationTitle from "@app/components/ConversationTitle.svelte"
+  import ConversationMessage from "@app/components/ConversationMessage.svelte"
   import ComposeArea, {type ComposeValues} from "@app/components/ComposeArea.svelte"
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import {app, user} from "@app/core/app"
   import {deletes, router, wraps} from "@app/core/plugins"
   import {loadSendDelay} from "@app/core/settings"
-  import {chats, makeChatId} from "@app/features/chats"
+  import {messages, makeConversationId} from "@app/features/messages"
   import {makeFeedContext} from "@app/features/feeds"
   import {navigate, pushModal} from "@app/ui/modal"
-  import {prependParent} from "@app/features/rooms"
-  import type {RoomRow} from "@app/features/rooms"
+  import {prependParent} from "@app/features/spaces/rooms"
+  import type {RoomRow} from "@app/features/spaces/rooms"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {
@@ -51,11 +51,11 @@
 
   const {pubkeys}: Props = $props()
 
-  const chatId = makeChatId(pubkeys)
+  const conversationId = makeConversationId(pubkeys)
   const context = makeFeedContext({relays: $router.resolver.relays([userInbox()])})
 
   onDestroy(context.cleanup)
-  const chat = $chats.one(chatId)
+  const conversation = $messages.one(conversationId)
   const others = remove($user.pubkey, pubkeys)
   const messagingRelayLists = $app.use(MessagingRelayLists).index.$
   const missingRelayLists = $derived(others.filter(pk => !$messagingRelayLists.has(pk)))
@@ -63,7 +63,7 @@
   const showMembers = () =>
     others.length === 1
       ? pushModal(ProfileDetail, {pubkey: others[0]})
-      : pushModal(ChatMembers, {pubkeys: others})
+      : pushModal(ConversationMembers, {pubkeys: others})
 
   const back = () => navigate("/chat")
 
@@ -158,7 +158,7 @@
     let previousPubkey
     let previousCreatedAt = 0
 
-    for (const event of sortBy(e => e.created_at, $chat?.messages || [])) {
+    for (const event of sortBy(e => e.created_at, $conversation?.messages || [])) {
       const {id, pubkey, created_at} = event
       const date = formatTimestampAsDate(created_at)
 
@@ -207,7 +207,7 @@
               <ProfileCircle pubkey={others[0] || $user.pubkey} size={5} />
             {/if}
             <p class="overflow-hidden text-ellipsis whitespace-nowrap">
-              <ChatTitle {pubkeys} />
+              <ConversationTitle {pubkeys} />
             </p>
           </div>
         </Button>
@@ -239,7 +239,7 @@
       {#if row.type === "date"}
         <Divider>{row.value}</Divider>
       {:else if row.type === "note"}
-        <ChatMessage
+        <ConversationMessage
           event={$state.snapshot(row.value)}
           {pubkeys}
           showPubkey={row.showPubkey}
@@ -265,8 +265,8 @@
     <ComposeArea
       {onSubmit}
       encryptFiles
-      draftKey="dm:{chatId}"
-      messages={$chat?.messages || []}
+      draftKey="dm:{conversationId}"
+      messages={$conversation?.messages || []}
       canEdit={canEditEvent}
       disabled={Boolean(missingRelayLists.length)}
       bind:this={composeArea} />

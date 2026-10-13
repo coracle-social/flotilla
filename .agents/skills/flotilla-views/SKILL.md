@@ -42,7 +42,7 @@ is a `+layout.svelte`.
   static `chat` page. A new static segment under `[relay]` shadows any room with that id.
 - `[id]` for regular events, `[address]` for addressable ones. `makeSpacePath(url, ...extra)`
   URI-encodes each extra segment and drops `undefined`, so `makeClassifiedPath(url, address)` is
-  safe. `[chat]` is `makeChatId(pubkeys)` from `src/app/features/chats.ts`, and `[npub]` comes from
+  safe. `[chat]` is `makeConversationId(pubkeys)` from `src/app/features/messages.ts`, and `[npub]` comes from
   `makeProfilePath(pubkey)`.
 - State that shouldn't be a route goes in the query string: `?at=` (jump to a message), `?topic=`,
   `?board=`, `?page=`, and `?h=&shareToChat=1` on article create.
@@ -95,7 +95,7 @@ mobile. Pages outside a space use `Page`, `PageBar` and `PageContent` themselves
 
 `src/app/ui/routes.ts` is the only place paths are built:
 
-- `makeSpacePath`, `makeRoomPath`, `makeSpaceChatPath`, `makeProfilePath`, `makeChatPath`, and
+- `makeSpacePath`, `makeRoomPath`, `makeSpaceChatPath`, `makeProfilePath`, `makeConversationPath`, and
   one builder per content page (`makeThreadPath`, `makeClassifiedPath`, `makeArticlePath`,
   `makeCalendarPath`, `makeGoalPath`, `makePollPath`, `makeLibraryPath`, `makeArticleCreatePath`).
 - `makeContentPath(url, kind, idOrAddress)` maps a kind to its page. `makeEventPath` builds on it
@@ -106,8 +106,8 @@ mobile. Pages outside a space use `Page`, `PageBar` and `PageContent` themselves
 - `goToEvent(event)` scrolls to the event if it is already rendered with a `data-event` attribute
   and navigates otherwise; `makeEventPermalink` is the shareable form.
 - `goToSpace(url)` goes to `makeSpaceEntryPath(url)`: the last page visited in that space, which
-  `setupHistory` records, else chat or about. `goToChat(pubkeys)` checks for messaging relays
-  first, pushing `ChatEnable` if there are none.
+  `setupHistory` records, else chat or about. `goToMessages(pubkeys)` checks for messaging relays
+  first, pushing `MessagesEnable` if there are none.
 
 `src/app/ui/title.ts` maps route ids to tab titles. A new static route needs a `staticTitles` entry,
 and a new event detail route needs an `eventRoutes` entry and a branch in `getPageTitle`.
@@ -181,7 +181,7 @@ Modal components take identifiers like any other component. `Dialog` supplies th
 A modal closes itself with `history.back()`, in 116 call sites. `clearModals()` ends a flow that
 may sit on top of other modals, such as a delete confirmed from a menu. `popModal()` closes the
 modal before doing something else in the same handler, where `history.back()` would race it:
-`ProfileDetail` pops before `goToChat`, and `SearchBody` pops before `goToEvent`.
+`ProfileDetail` pops before `goToMessages`, and `SearchBody` pops before `goToEvent`.
 
 For yes/no questions, push `Confirm` from lib with `{title, message, confirm}`; it runs `confirm`
 behind its own loading state. Reusable confirmations get a `*Confirm` wrapper
@@ -195,7 +195,7 @@ that hides it. It shows the menu-dots icon unless given children, opens `bottom-
 popover, as the hover actions on a chat row do:
 
 ```svelte
-<MenuButton component={ChatMenu} aria-label="Chat options" />
+<MenuButton component={MessagesMenu} aria-label="Chat options" />
 ```
 
 `EventMenu` puts `onClick` on its `<ul>` as `onclickcapture`, so any item closes the popover, and
@@ -311,9 +311,9 @@ How you bind depends on what the method returns:
 ```
 
 In a handler, call `.get()` on a projection instead of subscribing. The app modules add `derive*`
-factories over the same data: `deriveSpaceActionItems` in `src/app/features/actionItems.ts`,
-`deriveSpaceSupportedMethods` in `src/app/core/management.ts`, `deriveRelayAuthError` in
-`src/app/features/access.ts`. Call them at the top of the script with fixed arguments, and wrap one in
+factories over the same data: `deriveSpaceActionItems` in `src/app/features/spaces/management/actionItems.ts`,
+`deriveSpaceSupportedMethods` in `src/app/features/spaces/management/index.ts`, `deriveRelayAuthError` in
+`src/app/features/spaces/membership/index.ts`. Call them at the top of the script with fixed arguments, and wrap one in
 `$derived` only when its arguments change, as the thread page does for filters that wait on the
 root event.
 
@@ -327,7 +327,7 @@ data every page needs lives in `src/app/core/sync.ts`.
 
 **One entity, or a handful of lists:** call plugin `load` in `onMount`, and toast on failure, as
 `people/[npub]/+page.svelte` does for the profile, relay list, follow, pin, room and messaging
-lists before loading the author's outbox with `$network.loadLenient`.
+lists before requesting the author's outbox with `$network.request`.
 
 **A detail page:** `$events.one(address, [url]).$` loads when nothing local matches. While it is
 empty, seven pages show `LoadingFallback`, a spinner that turns into a failure message after

@@ -12,7 +12,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import type {FeedContext} from "@app/features/feeds"
-  import {shelfCoverImages} from "@app/features/pinboards"
+  import {shelfCoverImages} from "@app/features/spaces/pinboards"
   import {makeLibraryPath} from "@app/ui/routes"
 
   type Props = {

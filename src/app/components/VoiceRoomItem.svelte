@@ -18,8 +18,8 @@
     deriveRoomCallState,
     loadCallParticipants,
     type CallParticipant,
-  } from "@app/features/call"
-  import {cancelJoinVoiceRoom} from "@app/features/callEngine"
+  } from "@app/features/spaces/calls"
+  import {cancelJoinVoiceRoom} from "@app/features/spaces/calls/engine"
   import {profiles} from "@app/core/plugins"
 
   type Props = {

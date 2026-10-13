@@ -6,7 +6,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
   import type {FeedContext} from "@app/features/feeds"
-  import {getEventStart} from "@app/features/calendar"
+  import {getEventStart} from "@app/features/spaces/calendar"
 
   type Props = {
     url: string

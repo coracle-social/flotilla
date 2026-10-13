@@ -21,10 +21,10 @@
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {user} from "@app/core/app"
   import {roomPinLists} from "@app/core/plugins"
-  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/rooms"
+  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
   import {shareEvent} from "@app/ui/share"
   import {readAloud} from "@app/features/speech"
-  import {toggleRoomPin} from "@app/features/roomPins"
+  import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
   import {pushModal} from "@app/ui/modal"
 
   type Props = {

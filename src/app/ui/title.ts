@@ -4,7 +4,7 @@ import type {TrustedEvent} from "@welshman/util"
 import {Article, Classified, Thread, ZapGoal, displayPubkey} from "@welshman/domain"
 import {makeRoomKey} from "@welshman/app"
 import {decodePubkey} from "@lib/util"
-import {getEventTitle} from "@app/features/calendar"
+import {getEventTitle} from "@app/features/spaces/calendar"
 import {app} from "@app/core/app"
 import {profiles, rooms} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
@@ -85,13 +85,13 @@ const getContentTitle = (event: TrustedEvent) => {
   }
 }
 
-const getChatTitle = (chatId: string | undefined, pubkey: string | undefined) => {
-  if (!chatId) {
+const getConversationTitle = (conversationId: string | undefined, pubkey: string | undefined) => {
+  if (!conversationId) {
     return "Chat"
   }
 
-  // splitChatId resolves against the signed-in user and throws when there isn't one.
-  const others = uniq(chatId.split(",")).filter(pk => pk !== pubkey)
+  // splitConversationId resolves against the signed-in user and throws when there isn't one.
+  const others = uniq(conversationId.split(",")).filter(pk => pk !== pubkey)
 
   if (others.length === 1) {
     return `Chat with ${displayPubkey(others[0])}`
@@ -119,7 +119,7 @@ export const getPageTitle = ({page, pubkey}: PageTitleContext) => {
   }
 
   if (routeId === "/chat/[chat]") {
-    return makeTitle(getChatTitle(page.params.chat, pubkey))
+    return makeTitle(getConversationTitle(page.params.chat, pubkey))
   }
 
   if (routeId === "/people/[npub]") {

@@ -12,12 +12,12 @@
   import RoomEdit from "@app/components/RoomEdit.svelte"
   import {app} from "@app/core/app"
   import {roomLists, rooms} from "@app/core/plugins"
-  import {joinRoom, leaveRoom} from "@app/features/access"
+  import {joinRoom, leaveRoom} from "@app/features/spaces/membership"
   import {
     deriveUserIsRoomAdmin,
     deriveUserRoomMembershipStatus,
     publishRoomList,
-  } from "@app/features/rooms"
+  } from "@app/features/spaces/rooms"
   import {forgetSpacePage, makeSpacePath} from "@app/ui/routes"
   import {navigate, pushModal} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"

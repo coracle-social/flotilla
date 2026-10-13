@@ -15,7 +15,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {pushToast} from "@app/ui/toast"
-  import {attemptRelayAccess, parseInviteLink} from "@app/features/access"
+  import {attemptRelayAccess, parseInviteLink} from "@app/features/spaces/membership"
 
   type Props = {
     url: string

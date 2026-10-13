@@ -4,7 +4,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import type {TippyController} from "@lib/components/Tippy.svelte"
-  import ChatMessageEmojiButton from "@app/components/ChatMessageEmojiButton.svelte"
+  import ConversationMessageEmojiButton from "@app/components/ConversationMessageEmojiButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import {pushModal} from "@app/ui/modal"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -30,7 +30,7 @@
 </script>
 
 <div class="join text-xs">
-  <ChatMessageEmojiButton {event} {pubkeys} />
+  <ConversationMessageEmojiButton {event} {pubkeys} />
   {#if replyTo}
     <Button aria-label="Reply" class="button button-neutral button-xs join-item" onclick={reply}>
       <Icon size={4} icon={Reply} />

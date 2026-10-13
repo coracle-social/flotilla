@@ -5,7 +5,7 @@
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import {relays} from "@app/core/plugins"
-  import {userSpaceUrls} from "@app/core/spaces"
+  import {userSpaceUrls} from "@app/features/spaces"
   import {pushModal} from "@app/ui/modal"
   import {goToSpace} from "@app/ui/routes"
 

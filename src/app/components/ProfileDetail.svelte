@@ -24,11 +24,11 @@
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
   import {user} from "@app/core/app"
   import {messagingRelayLists, profiles, relayManagement} from "@app/core/plugins"
-  import {deriveSpacePermissions, spaceManagement} from "@app/core/management"
-  import type {BannedPubkeyItem} from "@app/core/management"
+  import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
+  import type {BannedPubkeyItem} from "@app/features/spaces/management"
   import {navigate, popModal, pushModal} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"
-  import {goToChat, makeProfilePath} from "@app/ui/routes"
+  import {goToMessages, makeProfilePath} from "@app/ui/routes"
 
   export type Props = {
     pubkey: string
@@ -49,7 +49,7 @@
 
   const sendMessage = () => {
     popModal()
-    goToChat([pubkey])
+    goToMessages([pubkey])
   }
 
   const loadBans = () => {

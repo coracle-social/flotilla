@@ -4,7 +4,7 @@
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import {roomLists} from "@app/core/plugins"
   import {navigate, pushModal} from "@app/ui/modal"
-  import {publishRoomList} from "@app/features/rooms"
+  import {publishRoomList} from "@app/features/spaces/rooms"
   import {makeSpacePath} from "@app/ui/routes"
   import {pushToast} from "@app/ui/toast"
   import {

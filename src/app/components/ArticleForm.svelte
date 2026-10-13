@@ -33,7 +33,7 @@
   import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
-  import {publishToSpace} from "@app/features/rooms"
+  import {publishToSpace} from "@app/features/spaces/rooms"
   import {makeArticlePath} from "@app/ui/routes"
   import {compressFileForUpload, uploadFile} from "@app/core/uploads"
   import {pushToast} from "@app/ui/toast"

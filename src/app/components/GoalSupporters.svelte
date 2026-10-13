@@ -10,7 +10,7 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import type {GoalProgress} from "@app/features/goals"
+  import type {GoalProgress} from "@app/features/spaces/goals"
 
   type Props = {
     url: string

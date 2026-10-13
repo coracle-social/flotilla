@@ -7,7 +7,7 @@
   import SpaceAdmins from "@app/components/SpaceAdmins.svelte"
   import SpaceRoles from "@app/components/SpaceRoles.svelte"
   import SpaceMembersBanned from "@app/components/SpaceMembersBanned.svelte"
-  import {deriveSpacePermissions} from "@app/core/management"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/ui/modal"
 
   type Props = {

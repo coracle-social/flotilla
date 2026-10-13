@@ -1,7 +1,7 @@
 import type {Writable} from "svelte/store"
 import {derived, writable} from "svelte/store"
-import {append, equals, poll, remove, spec, toggle} from "@welshman/lib"
-import {APP_DATA} from "@welshman/util"
+import {append, equals, int, poll, remove, spec, toggle, MONTH} from "@welshman/lib"
+import {APP_DATA, matchFilter} from "@welshman/util"
 import {projectFrom, withGetter} from "@welshman/store"
 import type {Projection} from "@welshman/store"
 import {AppData} from "@welshman/domain"
@@ -10,6 +10,7 @@ import {DerivedPlugin, Domain, Network, User} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
 import {usePlugin} from "@app/core/plugins"
+import {registerRetention} from "@app/core/storage"
 
 export const SETTINGS = "flotilla/settings"
 
@@ -210,3 +211,7 @@ export const toggleRoomNotifications = (url: string, h: string) =>
 
 export const toggleRoomMuted = (url: string, h: string) =>
   updateSpaceAlert(url, alert => ({...alert, muted: toggle(h, alert.muted ?? [])}))
+
+export const registerSettings = () => {
+  registerRetention({match: event => matchFilter(settingsFilter, event), ttl: int(1, MONTH)})
+}

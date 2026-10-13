@@ -28,7 +28,7 @@ yarn add @welshman/net
 | `AdapterContext` | `Partial<NetContext>` — what every `context` parameter accepts |
 | `AdapterFactory` | `(url: string, context: NetContext) => AbstractAdapter \| undefined` |
 
-Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `makeLoader`, `diff`/`pull`/`push`) takes an optional `context`. There is no default: without `context.pool` a `wss://` url throws `"Unable to connect to relays without context.pool"`, and without `context.repository` `LOCAL_RELAY_URL` throws `"LOCAL_RELAY_URL cannot be used without context.repository"`. In an app, `app.netContext` is that object and `app.use(Network)` passes it for you.
+Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `diff`/`pull`/`push`) takes an optional `context`. There is no default: without `context.pool` a `wss://` url throws `"Unable to connect to relays without context.pool"`, and without `context.repository` `LOCAL_RELAY_URL` throws `"LOCAL_RELAY_URL cannot be used without context.repository"`. In an app, `app.netContext` is that object and `app.use(Network)` passes it for you.
 
 ### Pool & Sockets
 
@@ -53,14 +53,13 @@ Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `makeLoader
 |--------|-------------|
 | `requestOne(options)` | Subscribe to a single relay; returns `Promise<TrustedEvent[]>` |
 | `request(options)` | Subscribe to multiple relays in parallel; returns `Promise<TrustedEvent[]>` |
-| `makeLoader(options)` | Creates a batching `load` function with configurable delay/timeout/threshold |
-| `loadComplete(options)` | Pre-built loader with a 30 ms batch delay and a 3 s timeout. It auto-closes after EOSE, timeout, or disconnect, and resolves once every relay's subscription has closed, so an empty result means every relay answered nothing. It carries no context, so it only works where no pool or repository is needed. |
-| `loadLenient(options)` | The same loader with a 0.5 threshold, resolving once half the relays have closed. The rest stay open and their events still arrive, so use it where nothing routes on the returned array. |
+| `load(options)` | `request` with `autoClose: true`, for a one-shot request |
 
 `request` / `requestOne` options (`BaseRequestOptions`):
 - `relay` / `relays` — relay url(s)
 - `filters` — array of nostr `Filter` objects
-- `autoClose?: boolean` — close the subscription after EOSE, on socket disconnect, or 30 seconds in, whichever comes first, so a relay that answers nothing can't hold the request open
+- `autoClose?: boolean` — close the subscription after EOSE, on socket disconnect, or at the timeout, whichever comes first
+- `timeout?: number` — close the subscription this many ms in (default 8 s with `autoClose`, none without)
 - `signal?: AbortSignal` — cancellation
 - `tracker?: Tracker` — cross-relay deduplication (shared automatically by `request`)
 - `context?: AdapterContext`
@@ -68,9 +67,7 @@ Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `makeLoader
 - `isEventValid?: (event, url) => boolean` — signature check override; defaults to `verifyEvent`
 - Callbacks: `onEvent(event, url)`, `onEose(url)`, `onClose()`, `onDisconnect(url)`, `onFiltered`, `onDuplicate`, `onDeleted`, `onInvalid`, `onClosed(reason, url)`
 
-`request`-only: `threshold?: number` — fraction of relays that must close before the promise resolves (default `1`).
-
-`makeLoader` options: `{delay, timeout?, threshold?, context?, isEventValid?}`. The returned `Loader` takes `{relays, filters, signal?, onEvent?, onDisconnect?, onEose?, onClose?}`.
+`request`-only: `threshold?: number` — fraction of relays that must close before the promise resolves and the rest are closed (default `1`). An auto-closing `request` for a single filter of `ids` resolves as soon as it has every id.
 
 Without `autoClose` or a `signal`, `requestOne` streams indefinitely. The returned promise only resolves if the relay sends CLOSED for all active subscription ids.
 
@@ -227,20 +224,18 @@ socket.on(SocketEvent.Status, (status: SocketStatus) => {
 socket.send(['REQ', 'my-sub', {kinds: [1], limit: 10}])
 ```
 
-### Load events (one-shot, batched)
+### Load events (one-shot)
 
 ```typescript
-import {makeLoader} from '@welshman/net'
+import {load} from '@welshman/net'
 
-// Bind a loader to the context once; concurrent calls within `delay` collapse
-// into a single REQ per relay. Without a `threshold` it resolves when every relay has closed
-// or timed out, which is the exported `loadComplete`; `threshold: 0.5` resolves at half, which is
-// `loadLenient`.
-const load = makeLoader({delay: 30, timeout: 3000, context})
-
+// Without a `threshold` it resolves when every relay has closed or timed out; `threshold: 0.5`
+// resolves at half. `app.use(Network).load` binds the context for you.
 const events = await load({
   relays: ['wss://relay.example.com', 'wss://relay2.example.com'],
   filters: [{kinds: [0], authors: ['<pubkey>']}],
+  timeout: 3000,
+  context,
 })
 ```
 
@@ -355,10 +350,9 @@ class MyAdapter extends AbstractAdapter {
   }
 }
 
-request({
+load({
   relays: ['myscheme://some-id'],
   filters: [{kinds: [1]}],
-  autoClose: true,
   context: {
     ...context,
     getAdapter: url => (url.startsWith('myscheme://') ? new MyAdapter(url) : undefined),

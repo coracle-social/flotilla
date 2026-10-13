@@ -38,7 +38,7 @@ const chatFilter = (page: Page) => page.locator(".secondary-nav input[type='text
 const chatTab = (page: Page, name: string) =>
   page.locator(".secondary-nav").getByRole("button", {name})
 
-// ChatItem's unread mark is a bare dot with no text of its own.
+// ConversationItem's unread mark is a bare dot with no text of its own.
 const unreadDots = (scope: Locator) => scope.locator(".rounded-full.bg-primary")
 
 // The reply preview is a bordered strip above the composer.
@@ -56,7 +56,7 @@ const sendDm = async (page: Page, content: string) => {
 }
 
 // A suggestion carries the pubkey it selects as its label, so the pubkey identifies the row.
-const startChat = async (page: Page, people: {term: string; user: TestUser}[]) => {
+const startConversation = async (page: Page, people: {term: string; user: TestUser}[]) => {
   await page.getByRole("button", {name: "Start New Chat"}).click()
 
   await expect(page.getByRole("heading", {name: "Start a Chat"})).toBeVisible()
@@ -106,7 +106,7 @@ test("US-029 start a one-on-one chat", async ({seed, as}) => {
 
   await expect(pageBar(page)).toContainText("Bob Barnacle")
 
-  await startChat(page, [{term: "Barnacle", user: users.bob}])
+  await startConversation(page, [{term: "Barnacle", user: users.bob}])
 
   await expect(page).toHaveURL(pathPattern(chatPath(users.bob.pubkey)))
 
@@ -138,7 +138,7 @@ test("US-030 start a group chat", async ({seed, as}) => {
   await expect(chatItems(page).filter({hasText: "just us two"})).toContainText("Bob Barnacle")
   await expect(chatItems(page).filter({hasText: "hello from carol"})).toContainText("Carol Cutter")
 
-  await startChat(page, [
+  await startConversation(page, [
     {term: "Barnacle", user: users.bob},
     {term: "Cutter", user: users.carol},
   ])

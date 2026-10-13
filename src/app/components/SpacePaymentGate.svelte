@@ -18,7 +18,11 @@
   import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import SpacePrice from "@app/components/SpacePrice.svelte"
-  import {openCheckout, pendingCheckouts, reconcileSpaceMembership} from "@app/features/access"
+  import {
+    openCheckout,
+    pendingCheckouts,
+    reconcileSpaceMembership,
+  } from "@app/features/spaces/membership"
   import {fromApp} from "@app/core/app"
   import {ENABLE_PAID_SPACES} from "@app/core/env"
   import {clearModals, pushModal} from "@app/ui/modal"

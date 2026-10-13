@@ -19,7 +19,7 @@
   const findEvent = (idOrAddress: string, relays: string[] = []) => {
     let found = false
 
-    $network.loadComplete({
+    $network.load({
       relays: [LOCAL_RELAY_URL, ...relays],
       filters: getIdFilters([idOrAddress]),
       onEvent: (event: TrustedEvent) => {
@@ -39,6 +39,7 @@
           goto("/", {replaceState: true})
         }
       },
+      timeout: 3000,
     })
   }
 

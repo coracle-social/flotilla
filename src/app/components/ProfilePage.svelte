@@ -28,7 +28,7 @@
   import {compressFileForUpload, uploadFile} from "@app/core/uploads"
   import {pushModal} from "@app/ui/modal"
   import {clip, pushToast} from "@app/ui/toast"
-  import {goToChat} from "@app/ui/routes"
+  import {goToMessages} from "@app/ui/routes"
   import {user} from "@app/core/app"
   import {followLists, profiles, relayLists} from "@app/core/plugins"
 
@@ -60,7 +60,7 @@
 
   const createPost = () => pushModal(NoteCreate)
 
-  const openChat = () => goToChat([target])
+  const openChat = () => goToMessages([target])
 
   const toggleFollow = async () => {
     if (isSelf) {

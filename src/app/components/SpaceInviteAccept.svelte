@@ -24,7 +24,7 @@
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
   import {pushToast} from "@app/ui/toast"
   import {goToSpace, makeRoomPath} from "@app/ui/routes"
-  import {acceptInvite, parseInviteLink} from "@app/features/access"
+  import {acceptInvite, parseInviteLink} from "@app/features/spaces/membership"
 
   type Props = {
     invite: string

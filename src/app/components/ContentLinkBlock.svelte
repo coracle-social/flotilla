@@ -34,7 +34,7 @@
     AUDIO_CONTENT_TYPES,
     VIDEO_CONTENT_TYPES,
   } from "@app/features/content"
-  import {isRoomId} from "@app/features/rooms"
+  import {isRoomId} from "@app/features/spaces/rooms"
 
   type Props = {
     url: string

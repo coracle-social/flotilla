@@ -9,7 +9,8 @@ import {fromApp} from "@app/core/app"
 import {network} from "@app/core/plugins"
 import {getLivekitEndpoint} from "@app/core/relays"
 import {getHttpAuthHeader} from "@app/core/signer"
-import {registerSpaceSync} from "@app/core/sync"
+import {registerSync} from "@app/core/sync"
+import {syncCurrentSpace} from "@app/features/spaces"
 
 export const LIVEKIT_PARTICIPANTS = 39004
 
@@ -76,7 +77,7 @@ export const deriveIsCallActiveElsewhere = (url: string | undefined, h: string |
 
 // leaveVoiceRoom no-ops during Joining, so cancel the in-flight join instead.
 export const endCall = async () => {
-  const engine = await import("@app/features/callEngine")
+  const engine = await import("@app/features/spaces/calls/engine")
 
   if (get(callState) === CallState.Joining) {
     engine.cancelJoinVoiceRoom()
@@ -152,7 +153,7 @@ export const syncVideoSpotlight = (tileKeys: string[], shareKeys: string[]) => {
 }
 
 export const loadCallParticipants = (url: string, h: string) =>
-  network.get().loadLenient({
+  network.get().load({
     relays: [url],
     filters: [{kinds: [LIVEKIT_PARTICIPANTS], "#d": [h]}],
   })
@@ -218,6 +219,6 @@ export const fetchLivekitToken = async (
   return response.json()
 }
 
-export const registerCall = () => {
-  registerSpaceSync({detail: () => [{kinds: [LIVEKIT_PARTICIPANTS]}]})
+export const registerCalls = () => {
+  registerSync(() => syncCurrentSpace([{kinds: [LIVEKIT_PARTICIPANTS]}]))
 }

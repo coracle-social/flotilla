@@ -66,8 +66,8 @@ This code reads `app.get().user?.pubkey` and bails when it is missing, as
 `src/app/ui/notifications.ts` do.
 
 Stores derived from `user` throw as soon as they are subscribed signed out. That includes
-`isEventMuted` (`social.ts`), `deriveUserIsRoomAdmin` (`rooms.ts`) and `deriveUserCanCreateRoom`
-(`management.ts`), so only use them from gated components.
+`isEventMuted` (`social.ts`), `deriveUserIsRoomAdmin` (`spaces/rooms`) and `deriveUserCanCreateRoom`
+(`spaces/management`), so only use them from gated components.
 
 ## Reaching plugins
 
@@ -89,7 +89,7 @@ The rule is about when a binding is made:
 - **Module scope, and anything outside the gate**, goes through `app`, `usePlugin`, `fromApp`
   or `deriveUserItem`. A module-level `app.get()` builds the first app before the policies
   register, and a binding made that way keeps reading the discarded app after login. A
-  long-lived listener over the repository belongs on a plugin, as in `Chats` (`chats.ts`), so
+  long-lived listener over the repository belongs on a plugin, as in `Messages` (`messages.ts`), so
   it is dropped with the app. Other listeners re-bind on `app.subscribe`, as
   `syncCheckedRemote` in `notifications.ts` and the resync in the root layout do.
 - **A store handed to `derived`** goes through `fromApp($app => $app.use(X).forUrl(url).$)`,
@@ -103,10 +103,10 @@ there is one. Add an export when several modules need the plugin, and otherwise 
 ### Per-identity caches
 
 Bookkeeping for one identity lives on a plugin instance, so it is discarded with the app.
-`Commands` in `src/app/features/commands.ts` keeps its `pulled` set on the plugin for this reason.
+`Commands` in `src/app/features/spaces/rooms/commands.ts` keeps its `pulled` set on the plugin for this reason.
 
 Module-level caches are fine when their contents do not depend on who is signed in, or when what
-they cache is itself a rebinding store. `deriveCommandsForUrl` (`commands.ts`) caches `fromApp`
+they cache is itself a rebinding store. `deriveCommandsForUrl` (`spaces/rooms/commands.ts`) caches `fromApp`
 stores with `simpleCache`.
 `hasBlossomSupport` (`uploads.ts`) and `deriveHasLivekit` (`relays.ts`) use `simpleCache` from
 `@welshman/lib` to share one store per url across every component that asks.
@@ -117,10 +117,10 @@ stores with `simpleCache`.
 |---|---|---|
 | `Settings` (`settings.ts`) | `DerivedPlugin` | encrypted app-data settings, plus a `values` projection |
 | `Statuses` (`statuses.ts`) | `DerivedPlugin` | NIP-38 general status, keyed by pubkey |
-| `Commands` (`commands.ts`) | `RelayScopedDerivedPlugin` | slash-command definitions, keyed per relay |
+| `Commands` (`spaces/rooms/commands.ts`) | `RelayScopedDerivedPlugin` | slash-command definitions, keyed per relay |
 | `HealthChecks` (`healthChecks.ts`) | none | a plain class over `IApp` exposing `Projection`s |
-| `SpaceManagement` (`management.ts`) | none | NIP-86 supported methods (5-minute TTL), admins and bans per URL |
-| `Chats` (`chats.ts`) | none | DM conversations by chat id (`index`, `one`), and a fuzzy `search` |
+| `SpaceManagement` (`spaces/management`) | none | NIP-86 supported methods (5-minute TTL), admins and bans per URL |
+| `Messages` (`messages.ts`) | none | DM conversations by chat id (`index`, `one`), and a fuzzy `search` |
 | `LatestEvents` (`repository.ts`) | none | the most recent event held from an author (`forPubkey`) |
 | `GoalProgresses` (`goals.ts`) | none | one memoized NIP-75 progress store per goal and relay, behind `deriveGoalProgress` |
 | `Hosting` (`hosting.ts`) | none | the hosting backend's plans, the tenant's relays and billing, shared by every hosting view |
@@ -205,7 +205,7 @@ Most derived state is a plain function in the app module that owns its domain, c
 projections and repository derivations:
 
 ```typescript
-// src/app/features/actionItems.ts
+// src/app/features/spaces/management/actionItems.ts
 export const deriveSpaceActionItems = (url: string) =>
   derived(
     [
@@ -221,7 +221,7 @@ export const deriveSpaceActionItems = (url: string) =>
   )
 ```
 
-`src/app/features/rooms.ts` is the fullest example. Names follow the return type:
+`src/app/features/spaces/rooms/index.ts` is the fullest example. Names follow the return type:
 
 - `derive*` returns a store: `deriveUserRooms`, `deriveUserRoomMembershipStatus`
 - `get*` and `display*` return a snapshot: `displayRoom`
@@ -234,12 +234,12 @@ Rules that involve more than one plugin belong in these functions rather than in
 
 A derivation that every row subscribes to, or that joins large sets, is built by hand:
 
-- `Chats` (`chats.ts`) updates its `index` incrementally from repository `update` events rather
+- `Messages` (`messages.ts`) updates its `index` incrementally from repository `update` events rather
   than re-querying. Its `search` reads profile names when it is rebuilt, so it also follows the
   profiles index.
 - `publicationsByEventId` (`publications.ts`) indexes publish history once, and hands back the
   previous array wherever an event's publications are unchanged so rows don't churn.
-- `latestActivityByPath` (`notifications.ts`) joins chats, room lists, relay info, events and
+- `latestActivityByPath` (`notifications.ts`) joins conversations, room lists, relay info, events and
   settings behind `throttled(1000, …)`.
 - `LatestEvents.forPubkey` (`repository.ts`) shares one repository listener across every
   watched author.
@@ -262,19 +262,21 @@ stores by bumping the database version, so adding or removing a table needs no m
 read walks a cursor, since a `getAll` over a whole table is one structured clone and Chrome refuses
 one past a cap that moves between versions.
 
-The events table keeps an event when a retention rule matches it. A rule is a `match(event)`
-predicate, with an optional `maxAge` (by `created_at`), `ttl` (by when it was cached, and never for
-the user's own events) and `provenance` (dropped on load without a relay). `storage.ts` holds the
-rules for core's own kinds, and features add theirs with `registerRetention`:
+The events table keeps an event when a retention rule matches it. A rule is a
+`match(event, pubkey)` predicate, given the storage owner's pubkey, with an optional `maxAge` (by
+`created_at`), `ttl` (by when it was cached, and never for the user's own events) and
+`provenance` (dropped on load without a relay). `storage.ts` keeps profiles and the lists every
+part of the app reads (follows, mutes, relay lists) from any author. Everything else is
+registered by its owner with `registerRetention`:
 
-- profiles and metadata lists (follows, mutes, relay lists, app data, room lists) from any author
-- alert kinds
-- relay- and room-scoped kinds
-- room membership changes, only when they tag the user
-- DMs, and the unsigned deletes and reactions inside gift wraps (`registerChats`)
+- the user's settings (`registerSettings`)
+- DMs, and the unsigned deletes and reactions inside gift wraps (`registerMessages`)
+- room lists, and a space's own content, meaning a message, comment, delete, report, poll
+  response or content kind carrying an `h` tag (`registerSpaces`)
+- relay membership kinds (`registerMembership`)
+- room state, and room membership changes that tag the user (`registerRooms`)
 - `COMMAND` definitions (`registerCommands`)
-- a space's own content, meaning a message, comment, delete, report, poll response or content kind
-  carrying an `h` tag (`registerContent`)
+- the space owner's featured content (`registerFeatured`)
 
 A note from the wider network carries no `h` tag and is not kept, since nothing asks for it twice.
 
@@ -294,9 +296,9 @@ A note from the wider network carries no `h` tag and is not kept, since nothing 
   failed open, read and write is logged and swallowed, so the app runs on relay data alone and
   recovers on the next load that succeeds.
 
-To persist another kind, register a retention rule from the feature that owns it. To persist a new map-backed plugin,
-add a `TABLES` entry and an `init*` method that calls `persistMapPlugin` with the table, the
-plugin, and how to turn a row into a key and item and back. It loads the rows, subscribes to
+To persist another kind, register a retention rule from the feature that owns it. To persist a
+new map-backed plugin, add a `TABLES` entry and an `init*` method that calls `persistMapPlugin`
+with the table, the plugin, and how to turn a row into a key and item and back. It loads the rows, subscribes to
 `onItem`, and batches the writes.
 
 ### kv, ss and synced stores
@@ -309,11 +311,11 @@ Each persisted store is declared in its owner module with `synced({key, storage,
 or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. The store emits the default first and loads the stored value in the background, so
 `.ready` resolves once it has arrived:
 
-- `theme`, `flTheme` (`theme.ts`), `checked` (`notifications.ts`), `shouldUnwrap` (`sync.ts`),
+- `theme`, `flTheme` (`theme.ts`), `checked` (`notifications.ts`), `shouldUnwrap` (`messages.ts`),
   `device` (`device.ts`), `forceHealthChecks` (`healthChecks.ts`) in `kv`
 - `pushState` (key `notificationState`) and `notificationSettings` in `kv`, both in
   `push/adapters/common.ts` and re-exported from `@app/features/push`
-- `wallet` (`lightning.ts`) in `ss`
+- `wallet` (`wallet.ts`) in `ss`
 
 The root layout awaits `.ready` for the stores boot code reads (`device`, `shouldUnwrap`,
 `wallet`, `notificationSettings`, `pushState`, `forceHealthChecks`) before `Push.sync()` and
@@ -355,34 +357,36 @@ its composer has gone.
 ## Background sync (`src/app/core/sync.ts`)
 
 The root layout calls `syncApplicationData()` once the session is restored and storage is ready,
-and again after every app swap. `completeSpaceJoin` in `access.ts` calls it after a space is joined. Each
-call tears down the previous run.
+and again after every app swap. `completeSpaceJoin` in `spaces/membership` calls it after a space
+is joined. Each call tears down the previous run.
 
-- `syncRelays` loads NIP-11 for the indexer relays, the current route's relay and the user's
-  spaces.
-- `syncUserData` loads the user's relay list, then on each relay-list change their other lists,
-  profile and `Settings`. It also pulls the user's own space and room membership events, and
-  their follows' follow and mute lists.
-- `syncSpaces` covers each joined space plus the current route's space. It pulls membership,
-  roles, room metadata, pins and livekit state in full, and recent content: a month of it, or a
-  week for reactions and comments.
-- `syncDMs` pulls gift wraps from the user's messaging relays, only when `shouldUnwrap` is on.
+`sync.ts` itself only loads NIP-11 for the indexer and search relays, the user's relay list and
+core lists (profile, follows, mutes, blossom servers, blocked and search relays, `Settings`), and
+their follows' follow and mute lists. Everything else is a sync function its owner hands to
+`registerSync` from its `registerX`, started with the rest and restarted when login swaps the app:
 
-Features add to a run through hooks rather than being imported by `sync.ts`. Each one's
-`registerX`, called from `registerAll`, uses:
+- `registerSpaces`: NIP-11 for the user's spaces and the one on screen, the user's room list, and
+  space content (a week of it, plus reactions and a one-per-kind sample for the space on screen)
+- `registerRooms`: room metadata and deletions, the user's room membership and room-creation
+  grants, the latest message per room, and admins, members, pins and join requests for the space
+  on screen
+- `registerMembership`: the relay member list and the user's own relay membership events
+- `registerRoles`, `registerFeatured`, `registerCalls`, `registerPinboards`: their kind for the
+  space on screen
+- `registerMessages`: gift wraps from the user's messaging relays, only when `shouldUnwrap` is on
+- `registerBookmarks`: the user's bookmarks; `registerNotifications`: the home notification feed
 
-- `registerSync(sync)` for a sync of its own, started and restarted with the rest. The home
-  notification sync (`registerNotifications`) is one.
-- `registerUserLoader(load)` to load the user's data alongside their lists (`registerBookmarks`).
-- `registerSpaceSync({activity, detail, sample})` to add filters to the per-space requests:
-  `activity` to the request kept open on every active space, `detail` to the pull of the space on
-  screen, and `sample` to a one-off load from it. Filters join the existing requests rather than
-  opening new ones, which keeps each relay at one subscription per kind of sync.
+The helpers these are built from live in `sync.ts`. `pullAndListen(url, filters)` is a negentropy
+`Sync.pull` plus a live `limit: 0` request, and returns the function that stops it.
+`syncEach(store, start)` keeps one sync per key in a store, starting the new ones and stopping the
+dropped ones. `syncUserList(load)` reloads one of the user's lists whenever their relay list
+changes. A sync reads the pubkey once when it starts, since login triggers a fresh
+`syncApplicationData`.
 
-`pullAndListen` is a negentropy `Sync.pull` plus a live `limit: 0` request, both stopped through
-an `AbortController`. `syncUserData`, `syncSpaces` and `syncDMs` each keep one sync per url with
-`makeKeyedSyncs`, whose `reconcile(urls)` starts the new ones and stops the dropped ones. A run
-reads the pubkey once when it starts, since login triggers a fresh `syncApplicationData`.
+Space syncs run `syncEach` over `syncedSpaceUrls` (the user's spaces plus the one on screen) or
+`currentSpaceUrls`, both from `@app/features/spaces`, and `syncCurrentSpace(filters)` pulls a
+fixed set of filters from the space on screen. Syncs that start together reach each relay as one
+subscription, since welshman's `socketPolicyMultiplex` merges requests queued at the same time.
 
 Background sync keeps badges, navigation, the inbox and notifications correct on any page. Data
 that must be current app-wide belongs here. Data only one page shows is loaded by that page's
@@ -425,7 +429,7 @@ Plugin mutators already return a `Command`: `roomLists.get().addRelay(url).then(
 Some call sites call `publisher.get().publish({event, relays, delay})` directly. Anything that
 honours the `send_delay` window does, because `Command` cannot carry it: room chat
 (`RoomChat.svelte`), and `publishComment` (behind both comment composers) and `publishRoomQuote` in
-`rooms.ts`. So do the push adapters and `ProfileDelete.svelte`. DMs go through
+`spaces/rooms`. So do the push adapters and `ProfileDelete.svelte`. DMs go through
 `wraps.get().publish({event, recipients})`, which returns a `PublicationGroup` (see `reactions.ts`).
 NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publisher`. They return
 `{result, error}`, and the caller handles `error`.
@@ -454,12 +458,12 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
   `allNotifications`, then `notifications` and the counts. The inbox stores
   (`inboxConversations`, `inboxSpaceContent`) derive from the same two, so the inbox matches the
   badges.
-- **Singleton session state.** `call.ts` keeps call state in plain writables (`callState`,
+- **Singleton session state.** `spaces/calls` keeps call state in plain writables (`callState`,
   `currentCallSession`, …).
 - **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `policies.ts`.
 - **A controller per flow.** `Nip46Controller` (`nip46.ts`) is a class a component instantiates.
   It holds the writables and actions for a multi-step flow.
-- **Module-owned values.** `wallet` in `lightning.ts` persists itself to `ss` with
+- **Module-owned values.** `wallet` in `wallet.ts` persists itself to `ss` with
   `withGetter(synced(...))`.
 
 ## Runes and stores

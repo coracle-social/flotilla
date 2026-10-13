@@ -2,13 +2,13 @@ import {registerPlugin} from "@capacitor/core"
 import ScreenSharePicker from "@app/components/ScreenSharePicker.svelte"
 import {PLATFORM_NAME} from "@app/core/env"
 import {pushModal} from "@app/ui/modal"
-import {WebScreenShare} from "@app/features/screenShare/adapters/web"
+import {WebScreenShare} from "@app/features/spaces/calls/screenShare/adapters/web"
 import {
   ScreenShareDenied,
   errorCode,
   type ScreenShareContext,
   type ScreenShareSource,
-} from "@app/features/screenShare/adapters/common"
+} from "@app/features/spaces/calls/screenShare/adapters/common"
 
 type DesktopScreenSharePlugin = {
   getSources: () => Promise<{requiresPicker: boolean; sources: ScreenShareSource[]}>

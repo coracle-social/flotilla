@@ -19,8 +19,8 @@
   import {PLATFORM_RELAYS} from "@app/core/env"
   import {getModal, popModal, pushModal} from "@app/ui/modal"
   import {notifications} from "@app/ui/notifications"
-  import {userSpaceUrls} from "@app/core/spaces"
-  import {goToChat, lastSpaceUrl, makeSpacePath} from "@app/ui/routes"
+  import {userSpaceUrls} from "@app/features/spaces"
+  import {goToMessages, lastSpaceUrl, makeSpacePath} from "@app/ui/routes"
   import {deriveUserItem} from "@app/core/app"
 
   type Props = {
@@ -31,7 +31,7 @@
 
   const userProfile = deriveUserItem(Profiles)
 
-  const chatHandler = () => goToChat()
+  const chatHandler = () => goToMessages()
 
   const showSettingsMenu = () => pushModal(MenuSettings)
 

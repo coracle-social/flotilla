@@ -652,21 +652,22 @@ export class Notes {
   load = async (pointer: EventPointer) =>
     this.app.repository.getEvent(pointer.id) ??
     first(
-      await this.app.use(Network).loadComplete({
+      await this.app.use(Network).load({
         relays: await this.relays(getQuoteRef(pointer)),
         filters: getIdFilters([pointer.id]),
+        timeout: 3000,
       }),
     )
 
   loadParent = async (ref: ReplyRef) =>
     this.app.repository.getEvent(ref.id) ??
     first(
-      await this.app.use(Network).loadComplete({
+      await this.app.use(Network).load({
         relays: await this.app
           .use(Router)
           .resolver.relays([eventOutbox({id: ref.id, pubkey: ref.author, relays: ref.relays})]),
         filters: getIdFilters([ref.id]),
-        signal: AbortSignal.timeout(3000),
+        timeout: 3000,
       }),
     )
 

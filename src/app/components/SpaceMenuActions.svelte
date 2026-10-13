@@ -19,18 +19,18 @@
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceActionItems from "@app/components/SpaceActionItems.svelte"
-  import {deriveUserIsSpaceMember, openCheckout} from "@app/features/access"
+  import {deriveUserIsSpaceMember, openCheckout} from "@app/features/spaces/membership"
   import {user} from "@app/core/app"
   import {relays} from "@app/core/plugins"
   import {ENABLE_PAID_SPACES} from "@app/core/env"
   import {deriveHostedRelay, HOSTING_ENABLED} from "@app/features/hosting"
-  import {deriveSpacePermissions} from "@app/core/management"
-  import {userSpaceUrls} from "@app/core/spaces"
-  import {deriveSpaceActionItems} from "@app/features/actionItems"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {userSpaceUrls} from "@app/features/spaces"
+  import {deriveSpaceActionItems} from "@app/features/spaces/management/actionItems"
   import {deriveShouldNotify, setSpaceNotifications} from "@app/core/settings"
   import {notificationSettings} from "@app/features/push"
   import {pushModal, popModal} from "@app/ui/modal"
-  import {makeSpacePath, goToChat} from "@app/ui/routes"
+  import {makeSpacePath, goToMessages} from "@app/ui/routes"
 
   type Props = {
     url: string
@@ -57,7 +57,7 @@
 
   const showActionItems = () => pushModal(SpaceActionItems, {url}, {replaceState: sheet})
 
-  const contactOwner = () => goToChat([$relay!.pubkey!], {replaceState: sheet})
+  const contactOwner = () => goToMessages([$relay!.pubkey!], {replaceState: sheet})
 
   const manageMembership = () => {
     popModal()

@@ -9,7 +9,7 @@
   import SpaceMemberMethods from "@app/components/SpaceMemberMethods.svelte"
   import SpaceMemberRoles from "@app/components/SpaceMemberRoles.svelte"
   import {profiles, relayManagement} from "@app/core/plugins"
-  import {deriveSpacePermissions} from "@app/core/management"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"
 

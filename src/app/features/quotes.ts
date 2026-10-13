@@ -47,10 +47,9 @@ export const loadQuote = async (pointer: QuotePointer, event: TrustedEvent, url?
   const relays = await getQuoteRelays(pointer, event, url)
   const filters = getIdFilters([getQuoteIdOrAddress(pointer)])
 
-  // An id names one event, so the relays that answer first have it; an address names the newest.
-  const load = pointer.id ? network.get().loadLenient : network.get().loadComplete
+  const events = await network.get().load({filters, relays, timeout: 3000})
 
-  return first(sortEventsDesc(await load({filters, relays})))
+  return first(sortEventsDesc(events))
 }
 
 // A quote names an event that may not have arrived, so a modal loads it before going anywhere.

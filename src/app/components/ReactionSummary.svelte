@@ -30,7 +30,7 @@
   import ZapModal from "@app/components/Zap.svelte"
   import {app, user} from "@app/core/app"
   import type {FeedContext} from "@app/features/feeds"
-  import {deriveSpacePermissions} from "@app/core/management"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/ui/modal"
   import {deriveDisplaysByPubkey} from "@app/features/social"
 

@@ -22,7 +22,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import {network} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
-  import {derivePins, deriveShelf, pinMatchesTerm} from "@app/features/pinboards"
+  import {derivePins, deriveShelf, pinMatchesTerm} from "@app/features/spaces/pinboards"
   import {decodeRelay} from "@app/core/relays"
   import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
@@ -71,7 +71,7 @@
   onMount(() => {
     const controller = new AbortController()
 
-    $network.loadLenient({
+    $network.load({
       relays: [url],
       filters: [{kinds: [PINBOARD, PIN]}],
       signal: controller.signal,

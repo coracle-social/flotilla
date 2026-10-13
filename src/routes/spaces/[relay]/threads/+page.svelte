@@ -15,7 +15,7 @@
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
   import {reader} from "@app/core/domain"
   import {decodeRelay} from "@app/core/relays"
-  import {displayRoom} from "@app/features/rooms"
+  import {displayRoom} from "@app/features/spaces/rooms"
   import {makeCommentFilter, partitionByActivity} from "@app/features/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import type {PageProps} from "./$types"

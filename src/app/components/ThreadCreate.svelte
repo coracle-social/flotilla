@@ -18,7 +18,7 @@
   import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
-  import {displayRoom, publishToSpace} from "@app/features/rooms"
+  import {displayRoom, publishToSpace} from "@app/features/spaces/rooms"
   import {pushToast} from "@app/ui/toast"
 
   type Values = {

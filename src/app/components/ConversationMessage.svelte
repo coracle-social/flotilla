@@ -17,8 +17,8 @@
   import type {FeedContext} from "@app/features/feeds"
   import PublicationFailure from "@app/components/PublicationFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import ChatMessageMenu from "@app/components/ChatMessageMenu.svelte"
-  import ChatMessageMenuMobile from "@app/components/ChatMessageMenuMobile.svelte"
+  import ConversationMessageMenu from "@app/components/ConversationMessageMenu.svelte"
+  import ConversationMessageMenuMobile from "@app/components/ConversationMessageMenuMobile.svelte"
   import {user} from "@app/core/app"
   import {profiles, publisher} from "@app/core/plugins"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
@@ -54,7 +54,8 @@
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey})
 
-  const showMobileMenu = () => pushModal(ChatMessageMenuMobile, {event, pubkeys, reply, edit})
+  const showMobileMenu = () =>
+    pushModal(ConversationMessageMenuMobile, {event, pubkeys, reply, edit})
 
   const togglePopover = () => tippy?.toggle()
 
@@ -71,7 +72,7 @@
   {#if !isMobile}
     <Tippy
       bind:controller={tippy}
-      component={ChatMessageMenu}
+      component={ConversationMessageMenu}
       props={{event, pubkeys, tippy, replyTo, edit}}
       params={{interactive: true, trigger: "manual"}}>
       <button
@@ -84,7 +85,9 @@
     </Tippy>
   {/if}
   <div class={cx("flex min-w-0 flex-col", {"items-end": isOwn})}>
-    <TapTarget class={cx("chat-bubble", {"chat-bubble--user": isOwn})} onTap={showMobileMenu}>
+    <TapTarget
+      class={cx("conversation-bubble", {"conversation-bubble--user": isOwn})}
+      onTap={showMobileMenu}>
       {#if showPubkey}
         <div class="flex items-center gap-2">
           {#if !isOwn}

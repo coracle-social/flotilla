@@ -7,34 +7,12 @@ import {Preferences} from "@capacitor/preferences"
 import {MONTH, ago, int, noop, now, on, batch, call, makeQueue} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
-  ALERT_ANDROID,
-  ALERT_EMAIL,
-  ALERT_IOS,
-  ALERT_STATUS,
-  ALERT_WEB,
-  APP_DATA,
   BLOSSOM_SERVERS,
   FOLLOWS,
   MESSAGING_RELAYS,
   MUTES,
   PROFILE,
-  RELAY_ADD_MEMBER,
-  RELAY_JOIN,
-  RELAY_LEAVE,
-  RELAY_MEMBERS,
-  RELAY_REMOVE_MEMBER,
   RELAYS,
-  ROOM_ADD_MEMBER,
-  ROOM_CREATE_PERMISSION,
-  ROOM_MEMBERS,
-  ROOM_ADMINS,
-  ROOM_META,
-  ROOM_PINS,
-  ROOM_DELETE,
-  ROOM_REMOVE_MEMBER,
-  ROOMS,
-  hexTags,
-  tagValues,
   verifiedSymbol,
 } from "@welshman/util"
 import type {Handle, TrustedEvent} from "@welshman/util"
@@ -144,57 +122,25 @@ type EventItem = {id: string; event: TrustedEvent; relays: string[]; cachedAt?: 
 
 // A ttl expires a row that wasn't replaced inside it, and a maxAge bounds an event by its own age.
 type Retention = {
-  match: (event: TrustedEvent) => boolean
+  match: (event: TrustedEvent, pubkey: string) => boolean
   maxAge?: number
   ttl?: number
   // Anything the app reads through a relay is useless without the provenance keying it to one.
   provenance?: boolean
 }
 
+// Profiles and the lists every part of the app reads; everything else is registered by its owner.
 const retentions: Retention[] = [
   {
     match: event =>
-      [
-        PROFILE,
-        FOLLOWS,
-        MUTES,
-        RELAYS,
-        BLOSSOM_SERVERS,
-        MESSAGING_RELAYS,
-        APP_DATA,
-        ROOMS,
-      ].includes(event.kind),
+      [PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, MESSAGING_RELAYS].includes(event.kind),
     ttl: int(1, MONTH),
-  },
-  {
-    match: event =>
-      [ALERT_STATUS, ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID].includes(event.kind),
-  },
-  {
-    match: event =>
-      [
-        RELAY_ADD_MEMBER,
-        RELAY_REMOVE_MEMBER,
-        RELAY_MEMBERS,
-        RELAY_JOIN,
-        RELAY_LEAVE,
-        ROOM_META,
-        ROOM_DELETE,
-        ROOM_ADMINS,
-        ROOM_MEMBERS,
-        ROOM_CREATE_PERMISSION,
-        ROOM_PINS,
-      ].includes(event.kind),
-    provenance: true,
   },
 ]
 
 export const registerRetention = (retention: Retention) => {
   retentions.push(retention)
 }
-
-const retains = (retention: Retention, event: TrustedEvent) =>
-  retention.match(event) && (!retention.maxAge || event.created_at > ago(retention.maxAge))
 
 type PlaintextItem = {key: string; value: string}
 
@@ -217,22 +163,12 @@ class Storage {
   private stopped = false
 
   private readonly pubkey: string
-  private readonly retentions: Retention[]
 
   constructor(private readonly app: IApp) {
     // Every identity used to share one database; drop it rather than leave it on disk.
     void deleteDB(DATABASE_PREFIX)
 
     this.pubkey = User.require(app).pubkey
-    this.retentions = [
-      ...retentions,
-      {
-        match: event =>
-          [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER].includes(event.kind) &&
-          tagValues(hexTags("p"), event.tags).includes(this.pubkey),
-        provenance: true,
-      },
-    ]
     this.db = new IDB({name: `${DATABASE_PREFIX}-${this.pubkey}`, stores: TABLES})
     this.ready = this.start()
   }
@@ -274,14 +210,18 @@ class Storage {
     defer(this.initWrapManager)
   }
 
+  private retains = (retention: Retention, event: TrustedEvent) =>
+    retention.match(event, this.pubkey) &&
+    (!retention.maxAge || event.created_at > ago(retention.maxAge))
+
   private shouldPersist = (event: TrustedEvent) =>
-    this.retentions.some(retention => retains(retention, event))
+    retentions.some(retention => this.retains(retention, event))
 
   // The user's own rows are state rather than cache, so no ttl expires them.
   private shouldKeep = ({event, relays, cachedAt = now()}: EventItem) =>
-    this.retentions.some(
+    retentions.some(
       retention =>
-        retains(retention, event) &&
+        this.retains(retention, event) &&
         (!retention.provenance || relays.length > 0) &&
         (!retention.ttl || event.pubkey === this.pubkey || cachedAt > ago(retention.ttl)),
     )

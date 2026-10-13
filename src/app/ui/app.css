@@ -2,7 +2,7 @@
    system first, then the families for flotilla's own components. */
 
 @import "../../lib/components/theme.css";
-@import "../components/chat.css";
+@import "../components/conversation.css";
 @import "../components/role-badge.css";
 @import "../components/room.css";
 @import "../components/space-menu.css";

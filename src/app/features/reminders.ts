@@ -2,7 +2,7 @@ import {MINUTE, first, formatTimestampRelative, int, ms, now, uniq} from "@welsh
 import {EVENT_RSVP, EVENT_TIME, getAddress, getIdFilters, isSignedEvent} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp} from "@welshman/domain"
-import {getEventStart, getEventTitle, isAttending} from "@app/features/calendar"
+import {getEventStart, getEventTitle, isAttending} from "@app/features/spaces/calendar"
 import {app} from "@app/core/app"
 import {network, roomLists} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
@@ -67,7 +67,7 @@ const loadAttendedEvents = async (pubkey: string) => {
   const hostedFilter = {kinds: [EVENT_TIME], authors: [pubkey]}
   const relays = roomLists.get().urls(pubkey).get()
 
-  await $network.request({signal, relays, autoClose: true, filters: [rsvpFilter, hostedFilter]})
+  await $network.load({signal, relays, filters: [rsvpFilter, hostedFilter]})
 
   const {repository, tracker} = app.get()
   const getRelay = (event: TrustedEvent) => first(Array.from(tracker.getRelays(event.id)))
@@ -91,9 +91,8 @@ const loadAttendedEvents = async (pubkey: string) => {
     return relay && !answered.has(getAddress(event)) ? [{event, relay}] : []
   })
 
-  await $network.request({
+  await $network.load({
     signal,
-    autoClose: true,
     relays: uniq(attended.map(({relay}) => relay)),
     filters: getIdFilters(attended.map(({address}) => address)),
   })

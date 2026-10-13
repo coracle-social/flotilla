@@ -7,20 +7,25 @@
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import ContentSearch from "@lib/components/ContentSearch.svelte"
-  import ChatItem from "@app/components/ChatItem.svelte"
-  import ChatStart from "@app/components/ChatStart.svelte"
-  import ChatMenu from "@app/components/ChatMenu.svelte"
-  import ChatTabs from "@app/components/ChatTabs.svelte"
-  import {ChatTab, chatContext, chatSearch, groupChatsByTab} from "@app/features/chats"
+  import ConversationItem from "@app/components/ConversationItem.svelte"
+  import ConversationStart from "@app/components/ConversationStart.svelte"
+  import MessagesMenu from "@app/components/MessagesMenu.svelte"
+  import MessagesTabs from "@app/components/MessagesTabs.svelte"
+  import {
+    MessagesTab,
+    messagesContext,
+    conversationSearch,
+    groupConversationsByTab,
+  } from "@app/features/messages"
   import {pushModal} from "@app/ui/modal"
 
   let term = $state("")
-  let tab = $state(ChatTab.Conversations)
+  let tab = $state(MessagesTab.Conversations)
 
-  const startChat = () => pushModal(ChatStart)
+  const startConversation = () => pushModal(ConversationStart)
 
-  const chats = $derived($chatSearch.searchOptions(term))
-  const chatsByTab = $derived(groupChatsByTab(chats, $chatContext))
+  const conversations = $derived($conversationSearch.searchOptions(term))
+  const conversationsByTab = $derived(groupConversationsByTab(conversations, $messagesContext))
 </script>
 
 <PageContent class="flex flex-col gap-2 p-2 sm:gap-4 sm:p-4">
@@ -30,7 +35,7 @@
       No conversation selected.
     </p>
     <p>
-      Click on a conversation in the sidebar, or <Button class="link" onclick={startChat}
+      Click on a conversation in the sidebar, or <Button class="link" onclick={startConversation}
         >start a new one</Button
       >.
     </p>
@@ -48,24 +53,24 @@
               placeholder="Search for conversations..." />
           </label>
           <MenuButton
-            component={ChatMenu}
+            component={MessagesMenu}
             class="button button-neutral"
             aria-label="Chat options" />
         </div>
-        <ChatTabs bind:tab {chatsByTab} />
+        <MessagesTabs bind:tab {conversationsByTab} />
       </div>
     {/snippet}
     {#snippet content()}
       <div class="flex flex-col gap-2">
-        {#each chatsByTab[tab] as { id, pubkeys, messages } (id)}
-          <ChatItem {id} {pubkeys} {messages} class="card" />
+        {#each conversationsByTab[tab] as { id, pubkeys, messages } (id)}
+          <ConversationItem {id} {pubkeys} {messages} class="card" />
         {:else}
           <div class="py-20 max-w-sm flex flex-col gap-4 items-center m-auto text-center">
-            {#if tab === ChatTab.Requests}
+            {#if tab === MessagesTab.Requests}
               <p>No message requests.</p>
             {:else}
               <p>No chats found! Try starting one up.</p>
-              <Button class="button button-primary" onclick={startChat}>
+              <Button class="button button-primary" onclick={startConversation}>
                 <Icon icon={AddCircle} />
                 Start a Chat
               </Button>

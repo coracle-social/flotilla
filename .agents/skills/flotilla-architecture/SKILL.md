@@ -37,7 +37,7 @@ and `sync.ts`.
 - `src/app` modules can be imported from anywhere (routes, components, other modules, the boot
   sequence) without pulling in UI.
 - Core and ui never import features. A feature reaches into core through hooks (`registerSync`,
-  `registerSpaceSync`, `registerRetention`, `registerLogoutHandler`, …) from its own `registerX`,
+  `registerRetention`, `registerLogoutHandler`) from its own `registerX`,
   and `registerAll` in `src/app/index.ts` calls every `registerX`. The root layout calls
   `registerAll` first, and `core/app.ts` builds the `App` lazily after it.
   `flotilla-state` covers this under "App policies".
@@ -50,7 +50,7 @@ only gate.
 - **lib → app.** `Link.svelte` imports `navigate` from `@app/ui/modal`. Don't copy it. A lib
   component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
   `IconInput` and its picker buttons did.
-- **app → components.** `routes.ts` (`goToChat` opens `ChatEnable`, `goToEvent` opens
+- **app → components.** `routes.ts` (`goToMessages` opens `MessagesEnable`, `goToEvent` opens
   `NoteDetail`), `share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`), `speech.ts`
   (`OpenRouterEnable`) and `healthChecks.ts` (`KeyDownload`, the fix for the key backup check)
   import a component so they can open a modal mid-flow. Push adapters and
@@ -78,17 +78,15 @@ only gate.
 ## `src/app` by directory
 
 `src/app/components` is flat except for `hosting/`. It also holds the CSS families for app
-concepts (`chat.css`, `room.css`, `role-badge.css`, `space-menu.css`), which `src/app/ui/app.css`
-imports. `flotilla-views` covers component conventions.
+concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), which
+`src/app/ui/app.css` imports. `flotilla-views` covers component conventions.
 
-The graph doesn't follow the layer table yet: `notifications`, `routes` and `title` in ui still
-import features. Don't add new ones.
+`notifications`, `routes` and `title` in ui import features, which the layer table forbids. Don't
+add more.
 
 **`core/`: the app, session and background machinery**
 - `app.ts`: the `App` store, `appPolicies`, `user`, `fromApp`, `deriveUserItem`,
   `userSearchRelayUrls`
-- `spaces.ts`: the user's room list, `userSpaceUrls`, and `activeSpaceUrls` (platform relays when
-  configured)
 - `plugins.ts`: `usePlugin` and the plugin stores (`profiles`, `rooms`, `events`, …)
 - `domain.ts`: the `reader`/`writer`/`command` shortcuts
 - `session.ts`: the `session` store, `login`, restoring the saved session at boot, `logout`, and
@@ -96,11 +94,10 @@ import features. Don't add new ones.
 - `policies.ts`: the ingest, auth and socket policies installed on every app
 - `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage) and the per-user IndexedDB
   cache, with `registerRetention` for what it keeps
-- `sync.ts`: `syncApplicationData`, the background sync of user data, spaces and DMs, with
-  `registerSync`, `registerUserLoader` and `registerSpaceSync`
+- `sync.ts`: `syncApplicationData`, `registerSync`, and the helpers registered syncs are built
+  from (`pullAndListen`, `syncEach`, `syncUserList`)
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
 - `relays.ts`: relay URL encoding for routes, socket status, the LiveKit endpoint and detection
-- `management.ts`: NIP-86 admin checks and bans
 - `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and
   `signerHealth`), `notify.ts`
 - `env.ts`: every `VITE_` value, parsed
@@ -117,20 +114,33 @@ import features. Don't add new ones.
 - `app.css`: the app stylesheet
 
 **`features/`: one feature each**
-- Spaces and rooms: `rooms.ts` (helpers over `rooms.get()`, the user's rooms and spaces),
-  `access.ts` (joining, invites, relay auth errors), `roles.ts`, `actionItems.ts` (the admin
-  review queue), `featured.ts`, `roomPins.ts`, `commands.ts` (NIP-CD slash commands),
-  `hosting.ts` (client for the hosting backend's HTTP API)
+
+The app's sections are DMs (`messages.ts`), spaces (`spaces/`), the social home page, and
+hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature under `spaces/`:
+
+- `spaces/index.ts`: the user's room list, `userSpaceUrls`, `activeSpaceUrls` (platform relays
+  when configured), `currentSpaceUrls` and `syncedSpaceUrls` (what space syncs run over),
+  `syncCurrentSpace`, and the space-wide content sync and retention
+- `spaces/rooms/`: chat rooms (`index.ts`, helpers over `rooms.get()`), `pins.ts`, `commands.ts`
+  (NIP-CD slash commands)
+- `spaces/membership/`: joining, invites, relay auth errors and paid spaces (`index.ts`), relay
+  fees (`payments.ts`)
+- `spaces/management/`: NIP-86 admin checks and bans (`index.ts`), `roles.ts`, `actionItems.ts`
+  (the admin review queue)
+- `spaces/calls/`: call state (`index.ts`), `engine.ts` (LiveKit join, leave, devices, the video
+  tiles a call shows), `screenShare/`. `calls/index.ts` stays free of livekit values, since the
+  root layout loads it and `engine.ts` is imported lazily.
+- Content types: `spaces/articles.ts`, `calendar.ts`, `classifieds.ts`, `goals.ts`,
+  `pinboards.ts`, `featured.ts`
+
+Outside `spaces/`:
+
 - Content: `content.ts` (kind lists, comment/delete filters, `partitionByActivity`), `feeds.ts`
-  (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`), `classifieds.ts`,
-  `articles.ts`, `calendar.ts`, `goals.ts`, `pins.ts` (a person's pinned notes), `pinboards.ts`,
-  `bookmarks.ts`, `quotes.ts`, `reactions.ts`, `social.ts` (display names, comment trees,
-  muting), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin)
-- Messaging and calls: `chats.ts`, `call.ts` (call state), `callEngine.ts` (LiveKit join, leave,
-  devices, the video tiles a call shows), `screenShare/`. `call.ts` stays free of livekit values,
-  since the root layout loads it and `callEngine.ts` is imported lazily.
-- Identity and payments: `lightning.ts` (wallet, invoices), `payments.ts`, `healthChecks.ts`
-  (prompts for missing inbox/outbox relays)
+  (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`), `pins.ts` (a person's
+  pinned notes), `bookmarks.ts`, `quotes.ts`, `reactions.ts`, `social.ts` (display names,
+  comment trees, muting), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin)
+- `messages.ts`: DM conversations, the gift-wrap sync and `shouldUnwrap`
+- `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays)
 - Platform and voice: `push/` (notification adapters, and `server.ts` for the push server's HTTP
   API), `deepLinks.ts`, `reminders.ts`, `dictation.ts` and `speech.ts` (through `inference/`)
 - `editor/`: flotilla's `@welshman/editor` setup (`makeEditor`), with its suggestion popovers and
@@ -262,12 +272,12 @@ names a relay or host, the e2e harness has to override or mock it (see "Containm
 ## Principles behind placement
 
 **Check welshman before writing flotilla code.** Several commits replace app code with welshman
-primitives: `render.ts` uses welshman's `summarize` (`9b0d8a55`), `actionItems.ts` uses
-`rooms.get().pendingJoins` (`3d66fb31`), and `rooms.ts` uses the membership helpers (`847d8984`).
+primitives: `render.ts` uses welshman's `summarize` (`9b0d8a55`), `spaces/management/actionItems.ts` uses
+`rooms.get().pendingJoins` (`3d66fb31`), and `spaces/rooms` uses the membership helpers (`847d8984`).
 
 **When welshman lacks something, add it there.** The maintainer also maintains welshman, so a
 missing primitive goes upstream rather than into an `@app` workaround. The `Command` and
-`Pinboard` kinds live in `@welshman/domain`, and flotilla's `commands.ts` and `pinboards.ts` only
+`Pinboard` kinds live in `@welshman/domain`, and flotilla's `spaces/rooms/commands.ts` and `pinboards.ts` only
 consume them. Expect rejection for app-level retry loops, liveness heuristics, or registries that
 duplicate what `@welshman/net` already tracks.
 
@@ -293,7 +303,8 @@ rather than a persisted store.
   `kv`/`ss` store if it belongs to the device. See `flotilla-state`.
 - **A relay or network policy** (what to ingest, when to AUTH, which sockets may open) → an
   `AppPolicy` in `policies.ts`. See `flotilla-state` and `welshman-net`.
-- **Data every joined space needs locally** → `registerSpaceSync` from the feature's `registerX`. Data that
+- **Data every joined space needs locally** → a `registerSync` from the sub-feature's `registerX`,
+  usually `syncEach(syncedSpaceUrls, …)` or `syncEach(currentSpaceUrls, …)`. Data that
   one page needs is loaded by that page. See `flotilla-state` and `flotilla-views`.
 - **A modal or dialog** → `src/app/components/<Name>.svelte`, opened with `pushModal`. See
   `flotilla-views`.
@@ -329,7 +340,7 @@ search and the space nav entry. The kind also appears in `CONTENT_NOUNS`, the ki
 `routes.ts`, `title.ts`, `NIP46_PERMS` in `nip46.ts`, and the section regexes in `server.js`.
 `NIP46_PERMS` leaves out polls, articles and goals, so listing a new kind there is optional.
 
-**App module.** `src/app/features/classifieds.ts` holds the listing logic the page would otherwise inline
+**App module.** `src/app/features/spaces/classifieds.ts` holds the listing logic the page would otherwise inline
 (`deriveTopicCounts`, `getStatus`, `matchesTopic`, `matchesQuery`). Each is a
 small function over a domain reader:
 

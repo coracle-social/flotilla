@@ -17,7 +17,7 @@
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
   import {shareEvent} from "@app/ui/share"
-  import {deriveUserAdminDelete} from "@app/features/rooms"
+  import {deriveUserAdminDelete} from "@app/features/spaces/rooms"
   import {pushModal} from "@app/ui/modal"
   import {user} from "@app/core/app"
 

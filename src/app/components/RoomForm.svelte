@@ -11,11 +11,11 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {rooms} from "@app/core/plugins"
-  import {joinRoom} from "@app/features/access"
+  import {joinRoom} from "@app/features/spaces/membership"
   import {pushToast} from "@app/ui/toast"
   import {resolveImageInput} from "@app/core/uploads"
   import {deriveHasLivekit} from "@app/core/relays"
-  import {RoomType} from "@app/features/rooms"
+  import {RoomType} from "@app/features/spaces/rooms"
   import IconInput from "@app/components/IconInput.svelte"
 
   type Props = {

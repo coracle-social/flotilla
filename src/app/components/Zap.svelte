@@ -24,7 +24,7 @@
   import ZapForm from "@app/components/ZapForm.svelte"
   import {app} from "@app/core/app"
   import {domain, network} from "@app/core/plugins"
-  import {payInvoice, wallet} from "@app/features/lightning"
+  import {payInvoice, wallet} from "@app/features/wallet"
   import {pushModal} from "@app/ui/modal"
   import {zapAmounts} from "@app/core/settings"
   import {clip, pushToast} from "@app/ui/toast"
@@ -75,7 +75,7 @@
     const {relays, invoice, filters} = await requestInvoice()
 
     await payInvoice(invoice)
-    await $network.loadLenient({relays, filters})
+    await $network.load({relays, filters, timeout: 3000})
 
     pushToast({message: "Zap successfully sent!"})
     back()

@@ -9,7 +9,8 @@ Flotilla treats a relay as a community (a space) and a NIP-29 group on that rela
 room). Most of the protocol logic lives below the app: `@welshman/domain` has a Reader/Writer pair
 per kind, and `@welshman/app` plugins (`Rooms`, `RelayMemberLists`, `RelayManagement`, …) assemble
 relay state out of those readers. Flotilla's own protocol code is a thin layer on top, mostly in
-`src/app/features/access.ts`, `src/app/features/rooms.ts`, `src/app/core/management.ts` and the components that publish.
+`src/app/features/spaces/` (`membership/`, `rooms/`, `management/`) and the components that
+publish.
 
 The per-feature kind inventory is in [kinds.md](kinds.md).
 
@@ -21,18 +22,20 @@ opened as a space. NIP-29 support only decides whether it has rooms.
 
 **A room is a NIP-29 group `h` on that relay.** The same `h` can exist independently on several
 relays, so anything room-scoped is keyed by both: `makeRoomKey(url, h)` from `@welshman/app` gives
-`${url}'${h}`, and `isRoomId` in `src/app/features/rooms.ts` tests for the `'`. Other relay-scoped keys use
-`|` (`${url}|${d}` for relay roles and NIP-CD commands) so the two can't collide. Room content
+`${url}'${h}`, and `isRoomId` in `src/app/features/spaces/rooms/index.ts` tests for the `'`. Other
+relay-scoped keys use `|` (`${url}|${d}` for relay roles and NIP-CD commands) so the two can't
+collide. Room content
 carries `["h", h]`; content with no `h` belongs to the whole space. `/spaces/[relay]/chat`
 (`makeSpaceChatPath`) is the space-wide chat, which is `RoomChat` with no `h`.
 
 **The user's spaces are their kind 10009 `ROOMS` list** (`RoomList` factory, `RoomLists` plugin):
-`r` tags for spaces, `group` tags for rooms with the space URL as the hint. `userSpaceUrls` and
-`deriveUserRooms(url)` in `src/app/features/rooms.ts` read it. "Joined" in the UI means "in this list",
-which is separate from NIP-43 membership on the relay: `src/routes/spaces/[relay]/+layout.svelte`
-prompts `SpaceJoin` for any URL not in `userSpaceUrls`. A deployment with `VITE_PLATFORM_RELAYS`
-uses `PLATFORM_RELAYS` in place of the list for sync and navigation: `activeSpaceUrls` in
-`src/app/features/rooms.ts` is that choice, read by background sync, notifications and editor suggestions.
+`r` tags for spaces, `group` tags for rooms with the space URL as the hint. `userSpaceUrls` in
+`src/app/features/spaces/index.ts` and `deriveUserRooms(url)` in `spaces/rooms/index.ts` read
+it. "Joined" in the UI means "in this list", which is separate from NIP-43 membership on the
+relay: `src/routes/spaces/[relay]/+layout.svelte` prompts `SpaceJoin` for any URL not in
+`userSpaceUrls`. A deployment with `VITE_PLATFORM_RELAYS` uses `PLATFORM_RELAYS` in place of the
+list for sync and navigation. `activeSpaceUrls` in `spaces/index.ts` is that choice, read by
+background sync, notifications and editor suggestions.
 
 ### NIP-11 relay info
 
@@ -60,7 +63,7 @@ plugin, read `$events.relaySignedForUrl(url, filters)`, which keeps only events 
 
 The app signs everything it publishes with the user's own key. Space-wide content with no author of
 its own belongs to the space's owner, the pubkey NIP-11 names: featured content
-(`setFeaturedContent` in `src/app/features/featured.ts`) is published by that person and read back scoped to
+(`setFeaturedContent` in `src/app/features/spaces/featured.ts`) is published by that person and read back scoped to
 them, so `deriveUserIsSpaceOwner(url)` is what shows the editor.
 
 The library is written by its members. A shelf or a pin is signed with the member's own key and
@@ -81,7 +84,7 @@ delete it, and anyone can pin to it.
 | `ROOM_CREATE` / `ROOM_DELETE` | 9007 / 9008 | `RoomCreate` / `RoomDelete` | admin | `RoomForm`, `RoomDetailMenu` |
 | `ROOM_CREATE_INVITE` | 9009 | `RoomCreateInvite` | admin | `publishRoomInvite` |
 | `ROOM_UPDATE_PINS` | 9010 | `RoomUpdatePins` | admin | `roomPinLists.setPins` |
-| `ROOM_JOIN` / `ROOM_LEAVE` | 9021 / 9022 | `RoomJoin` / `RoomLeave` | user | `joinRoom` / `leaveRoom` in `src/app/features/access.ts` |
+| `ROOM_JOIN` / `ROOM_LEAVE` | 9021 / 9022 | `RoomJoin` / `RoomLeave` | user | `joinRoom` / `leaveRoom` in `src/app/features/spaces/membership/index.ts` |
 | `ROOM_CREATE_PERMISSION` | 19004 | `RoomCreatePermission` | not checked | `deriveUserCanCreateRoom` |
 
 `@welshman/util` also defines `ROOM_ADD_PERM` (9003), `ROOM_REMOVE_PERM` (9004),
@@ -96,10 +99,10 @@ that state, so a room re-created after deletion comes back. Membership (`members
 `membershipStatus(url, h)`) replays the 39002 snapshot, then newer 9000/9001 ops authored by an
 admin or the relay, then pending 9021/9022 requests, into `MembershipStatus.Initial | Pending |
 Granted`. `pendingJoins(url, h?)` lists unanswered join requests, and `deriveSpaceActionItems`
-(`src/app/features/actionItems.ts`) merges them with reports into the admin queue, keeping the half the
+(`src/app/features/spaces/management/actionItems.ts`) merges them with reports into the admin queue, keeping the half the
 user holds a method for — reports under `banevent`, join requests under `allowpubkey`.
 
-`src/app/features/rooms.ts` puts space authority on top:
+`src/app/features/spaces/rooms/index.ts` puts space authority on top:
 
 - `deriveUserIsRoomAdmin`: a space's staff administer every room.
 - `deriveUserRoomMembershipStatus`: an admin is always `Granted`.
@@ -114,13 +117,13 @@ user holds a method for — reports under `banevent`, join requests under `allow
 - **Create** (`RoomForm.svelte`): `rooms.createRoom` (9007, `h` from `randomId()`), tolerating an
   "already" error, then `rooms.editRoom` (9002) with metadata and flags, then `joinRoom`.
 - **Delete** (`RoomDetailMenu.svelte`): `rooms.deleteRoom` (9008), then `roomLists.removeRoom`.
-- **Join and leave** (`joinRoom`, `leaveRoom` in `src/app/features/access.ts`): two publishes, the
+- **Join and leave** (`joinRoom`, `leaveRoom` in `src/app/features/spaces/membership/index.ts`): two publishes, the
   9021/9022 the relay may refuse and the user's 10009 list, which is what puts the room in the
   sidebar. `isMembershipRefusal` counts `duplicate:` and "already a member" replies as success.
 - **Invite** (`publishRoomInvite`): a 9009 with a random `code` tag. The link carries `h` and
   `code`, and `joinRoom(url, h, code)` sends the code as the join's `claim`.
 - **Pins**: `roomPinLists.setPins(url, h, pins)` sends 9010 and the relay republishes 39005.
-  `toggleRoomPin(url, h, id)` (`src/app/features/roomPins.ts`) wraps it for the message menus and toasts
+  `toggleRoomPin(url, h, id)` (`src/app/features/spaces/rooms/pins.ts`) wraps it for the message menus and toasts
   the result. `deriveRoomPinnedEvents` loads the pinned events from the room's relay.
 
 The relay enforces the `RoomMetaReader` flags (`isClosed`, `isHidden`, `isPrivate`,
@@ -140,12 +143,12 @@ flags.
 | `RELAY_ROLE` | 33534 | `RelayRole` | relay-signed role definitions (`relayRoles`) |
 
 Roles are a flotilla extension. A member tag is `["member", pubkey, ...roleIds]`, and
-`deriveSpaceMemberRoles` in `src/app/features/roles.ts` parses the role ids because `RelayMembersReader`
+`deriveSpaceMemberRoles` in `src/app/features/spaces/management/roles.ts` parses the role ids because `RelayMembersReader`
 has no getter for them yet. Roles are only ever changed over
 NIP-86 (`createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole`), never by publishing
 33534.
 
-Joining a space (`attemptRelayAccess` and `completeSpaceJoin` in `src/app/features/access.ts`):
+Joining a space (`attemptRelayAccess` and `completeSpaceJoin` in `src/app/features/spaces/membership/index.ts`):
 
 1. Open the socket and drive NIP-42 auth, retrying up to three times.
 2. Publish `RelayJoin` with the claim. The writer protects the event and requires a forced relay.
@@ -172,7 +175,7 @@ relay's URL, each call signed with a fresh NIP-98 event. Every method resolves t
 
 | Methods | Called from |
 |---|---|
-| `supportedMethods`, `listMethodAssignees`, `listBannedPubkeys` (cached) | `SpaceManagement` (`src/app/core/management.ts`) |
+| `supportedMethods`, `listMethodAssignees`, `listBannedPubkeys` (cached) | `SpaceManagement` (`src/app/features/spaces/management/index.ts`) |
 | `banPubkey`, `unbanPubkey`, `allowPubkey`, `unallowPubkey`, `listBannedPubkeys` | `ProfileDetail`, `SpaceMemberMenu`, `SpaceMemberBannedMenu`, `ReportMenu`, `allowPubkeys` (`SpaceMembersAdd`, `RoleAddMembers`, `addRoomMembers`) |
 | `banEvent` | `RoomItemMenu`, `EventMenu`, `ReportMenu`, `RoomJoinItem` (dismissing a join request) |
 | `createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole` | `RoleCreate`, `RoleEdit`, `SpaceRoleMenu`, `SpaceMemberRoles` (via `syncAssignments`), `RoleAddMembers` |
@@ -298,22 +301,22 @@ featured-content app data.
 These predate the rule or are waiting on welshman. Don't copy them; fix one when you touch it.
 
 - **No factory yet:** `MESSAGE` (9) in `RoomChat` and `publishRoomQuote`; `LIVEKIT_PARTICIPANTS`
-  (39004, a local constant in `src/app/features/call.ts`); `STATUS` (30315) in `src/app/features/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
+  (39004, a local constant in `src/app/features/spaces/calls/index.ts`); `STATUS` (30315) in `src/app/features/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
   subscriptions (`PUSH_SUBSCRIPTION`, 30390, local to `src/app/features/push/adapters/capacitor.ts`); `DIRECT_MESSAGE_FILE`
-  (15) in `Chat.svelte`.
-- **Factory exists but bypassed:** DMs built with `makeEvent` in `Chat.svelte` (`DirectMessage`);
+  (15) in `Conversation.svelte`.
+- **Factory exists but bypassed:** DMs built with `makeEvent` in `Conversation.svelte` (`DirectMessage`);
   relay lists in `SignUp.svelte` (`RelayList`, `MessagingRelayList`); deletes in
   `ProfileDelete.svelte` and the push adapter (`Delete`); the vanish request as a literal `62`
   (`VANISH`).
 - **Getter exists but bypassed:** calendar `start`/`end` in `src/app/features/feeds.ts` and the calendar page; poll `response`
   tags in `PollVotes`; `p` tags of `RELAY_ADD_MEMBER`, `ROOM_ADD_MEMBER` and
-  `ROOM_CREATE_PERMISSION` (`SpaceMembersSummary`, `RoomItemAddMember`, `src/app/core/management.ts`);
-  comment `E`/`A` tags in the list pages and `src/app/features/classifieds.ts`; `imeta` unpacking in
-  `src/app/features/content.ts` and `Chat.svelte`.
-- **Getter missing upstream:** role ids on `member` tags (`src/app/features/roles.ts`); the legacy `name`
+  `ROOM_CREATE_PERMISSION` (`SpaceMembersSummary`, `RoomItemAddMember`, `src/app/features/spaces/management/index.ts`);
+  comment `E`/`A` tags in the list pages and `src/app/features/spaces/classifieds.ts`; `imeta` unpacking in
+  `src/app/features/content.ts` and `Conversation.svelte`.
+- **Getter missing upstream:** role ids on `member` tags (`src/app/features/spaces/management/roles.ts`); the legacy `name`
   fallback for calendar titles (`CalendarEventHeader`).
 
-Mind the name clash: `ROOM` from `@app/features/rooms` is the tag name `"h"`, while `ROOM` from
+Mind the name clash: `ROOM` from `@app/features/spaces/rooms` is the tag name `"h"`, while `ROOM` from
 `@welshman/util` is kind 35834.
 
 ## Related skills

@@ -20,7 +20,7 @@
   import {reader} from "@app/core/domain"
   import {makeFeedContext} from "@app/features/feeds"
   import {decodeRelay} from "@app/core/relays"
-  import {displayReadingTime} from "@app/features/articles"
+  import {displayReadingTime} from "@app/features/spaces/articles"
   import {makeSpacePath} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 

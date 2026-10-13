@@ -13,7 +13,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {roomLists} from "@app/core/plugins"
-  import {publishRoomList} from "@app/features/rooms"
+  import {publishRoomList} from "@app/features/spaces/rooms"
   import {goToMovedSpace} from "@app/ui/routes"
   import {pushToast} from "@app/ui/toast"
 

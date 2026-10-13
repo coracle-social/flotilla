@@ -120,7 +120,7 @@ export const spacePath = (url: string) => `/spaces/${encodeRelay(url)}`
 
 export const roomPath = (url: string, h: string) => `${spacePath(url)}/${h}`
 
-// Mirrors makeChatId in src/app/features/chats.ts.
+// Mirrors makeConversationId in src/app/features/messages.ts.
 export const chatPath = (...pubkeys: string[]) => `/chat/${[...pubkeys].sort().join(",")}`
 
 export const profilePath = (pubkey: string) => `/people/${npubEncode(pubkey)}`

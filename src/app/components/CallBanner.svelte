@@ -10,7 +10,7 @@
   import Button from "@lib/components/Button.svelte"
   import Banner from "@app/components/Banner.svelte"
   import {decodeRelay} from "@app/core/relays"
-  import {displayRoom} from "@app/features/rooms"
+  import {displayRoom} from "@app/features/spaces/rooms"
   import {makeRoomPath} from "@app/ui/routes"
   import {
     CallState,
@@ -19,7 +19,7 @@
     callMicMuted,
     deriveIsCallActiveElsewhere,
     endCall,
-  } from "@app/features/call"
+  } from "@app/features/spaces/calls"
 
   const {relay, h} = $derived($page.params)
   const routeUrl = $derived(relay ? decodeRelay(relay) : undefined)
@@ -43,7 +43,7 @@
   }
 
   const toggleMute = async () => {
-    const engine = await import("@app/features/callEngine")
+    const engine = await import("@app/features/spaces/calls/engine")
 
     await engine.toggleMute()
   }

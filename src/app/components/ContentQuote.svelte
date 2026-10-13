@@ -28,7 +28,10 @@
 
   getQuoteRelays(value, event, url).then(relays => {
     if (!$quote) {
-      $network.loadLenient({filters: getIdFilters([idOrAddress]), relays})
+      $network.load({
+        filters: getIdFilters([idOrAddress]),
+        relays,
+      })
     }
   })
 </script>

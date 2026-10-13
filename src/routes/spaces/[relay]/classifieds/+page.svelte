@@ -32,7 +32,7 @@
     getStatus,
     matchesTopic,
     matchesQuery,
-  } from "@app/features/classifieds"
+  } from "@app/features/spaces/classifieds"
   import {reader} from "@app/core/domain"
   import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"

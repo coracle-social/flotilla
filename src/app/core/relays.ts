@@ -113,9 +113,10 @@ export const outboxUrls = async (pubkeys: string[], limit: number) => {
 
   // Resolving `outbox(pubkey)` would load one relay list per pubkey, where one request answers for all.
   if (pubkeys.filter(isKnown).length < pubkeys.length / 2) {
-    await network.get().loadLenient({
+    await network.get().load({
       relays: INDEXER_RELAYS,
       filters: [{kinds: [RELAYS], authors: pubkeys}],
+      timeout: 3000,
     })
   }
 

@@ -21,7 +21,7 @@ import {app} from "@app/core/app"
 import {messagingRelayLists, network, roomLists} from "@app/core/plugins"
 import {DM_KINDS} from "@app/features/content"
 import {getMutedRooms, shouldNotify, userSettingsValues} from "@app/core/settings"
-import {makeEventPath, goToChat, goToSpace} from "@app/ui/routes"
+import {makeEventPath, goToMessages, goToSpace} from "@app/ui/routes"
 import {kv} from "@app/core/storage"
 
 export type PushSubscription = {
@@ -138,12 +138,11 @@ const ingestNotification = async (relay: string, id: string, json?: string) => {
 
     return pushed
   } else {
-    const events = await network.get().request({
+    const events = await network.get().load({
       filters: getIdFilters([id]),
       relays: [relay, LOCAL_RELAY_URL],
       // The local relay eoses immediately, so anything less waits on it alone
       threshold: 1,
-      autoClose: true,
       signal: AbortSignal.timeout(ms(5)),
     })
 
@@ -171,7 +170,7 @@ export const onPushNotificationAction = async (action: {
   if (path) {
     navigate(path)
   } else if (event?.kind === WRAP) {
-    goToChat()
+    goToMessages()
   } else {
     goToSpace(relay)
   }

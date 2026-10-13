@@ -18,7 +18,7 @@
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import type {ProfileValues} from "@app/components/ProfileEditForm.svelte"
   import SignUpComplete from "@app/components/SignUpComplete.svelte"
-  import {attemptRelayAccess} from "@app/features/access"
+  import {attemptRelayAccess} from "@app/features/spaces/membership"
   import {
     POMADE_SIGNERS,
     INDEXER_RELAYS,
@@ -28,7 +28,7 @@
   } from "@app/core/env"
   import {forceHealthChecks} from "@app/features/healthChecks"
   import {loginWithPomade} from "@app/core/pomade"
-  import {publishRoomList} from "@app/features/rooms"
+  import {publishRoomList} from "@app/features/spaces/rooms"
   import {pushModal, clearModals} from "@app/ui/modal"
   import {app} from "@app/core/app"
   import {domain, roomLists} from "@app/core/plugins"

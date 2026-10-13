@@ -1,12 +1,12 @@
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import type {PluginListenerHandle} from "@capacitor/core"
-import {fetchLivekitToken} from "@app/features/call"
+import {fetchLivekitToken} from "@app/features/spaces/calls"
 import {
   ScreenShareDenied,
   errorCode,
   type IScreenShareAdapter,
   type ScreenShareContext,
-} from "@app/features/screenShare/adapters/common"
+} from "@app/features/spaces/calls/screenShare/adapters/common"
 
 type NativeScreenSharePlugin = {
   start: (options: {serverUrl: string; token: string}) => Promise<void>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import type {GoalProgress} from "@app/features/goals"
+  import type {GoalProgress} from "@app/features/spaces/goals"
 
   type Props = {
     progress: GoalProgress

@@ -5,7 +5,7 @@
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import {reader} from "@app/core/domain"
-  import {getEventTitle} from "@app/features/calendar"
+  import {getEventTitle} from "@app/features/spaces/calendar"
 
   type Props = {
     event: TrustedEvent

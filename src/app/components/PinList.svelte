@@ -16,14 +16,14 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import {user} from "@app/core/app"
   import type {FeedContext} from "@app/features/feeds"
-  import {deriveSpacePermissions} from "@app/core/management"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {
     deletePins,
     deriveShelves,
     displayPin,
     movePinsToShelf,
     removePinsFromShelf,
-  } from "@app/features/pinboards"
+  } from "@app/features/spaces/pinboards"
   import {pushModal} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"
 

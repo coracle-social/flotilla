@@ -161,17 +161,18 @@ export const makeFeedContext = ({
   }
 
   const loadFrom = async (urls: string[], events: TrustedEvent[]) => {
-    const context = await network.get().loadComplete({
+    const context = await network.get().load({
       relays: urls,
       signal: controller.signal,
       filters: [
         ...getReplyFilters(events, {kinds: requestKinds}),
         ...getCommentFiltersForRoot(events),
       ],
+      timeout: 3000,
     })
 
     if (context.length > 0) {
-      network.get().loadLenient({
+      network.get().load({
         relays: urls,
         signal: controller.signal,
         filters: getReplyFilters(context, {kinds: [DELETE]}),
@@ -597,9 +598,8 @@ export const makeFeed = ({
       }
     }
 
-    const found = await network.get().request({
+    const found = await network.get().load({
       relays,
-      autoClose: true,
       // The socket sends five per 100ms first come first served, so the feed on screen goes ahead of the space's background pulls.
       priority: 1,
       signal: spanSignal(controller.signal),
@@ -787,9 +787,8 @@ export const makeCalendarFeed = ({
   const loadTimeframe = async (since: number, until: number) => {
     let complete = false
 
-    const found = await network.get().request({
+    const found = await network.get().load({
       relays,
-      autoClose: true,
       priority: 1,
       signal: spanSignal(controller.signal),
       threshold: SPAN_THRESHOLD,

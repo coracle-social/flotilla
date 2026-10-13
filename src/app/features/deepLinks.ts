@@ -3,7 +3,7 @@ import type {URLOpenListenerEvent} from "@capacitor/app"
 import {goto} from "$app/navigation"
 import {app} from "@app/core/app"
 import {clearModals, getModal, navigate, pushModal} from "@app/ui/modal"
-import {goToChat, goToHome} from "@app/ui/routes"
+import {goToMessages, goToHome} from "@app/ui/routes"
 import {shareFromNative} from "@app/ui/share"
 import {pushToast} from "@app/ui/toast"
 import {onPushNotificationAction} from "@app/features/push/adapters/common"
@@ -12,7 +12,7 @@ import Search from "@app/components/Search.svelte"
 const openShortcut = (pathname: string) => {
   switch (pathname) {
     case "/messages":
-      goToChat()
+      goToMessages()
       break
     case "/search": {
       const modal = getModal()

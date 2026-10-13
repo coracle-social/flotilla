@@ -1,6 +1,6 @@
 <script lang="ts">
   import HomeInboxItemRow from "@app/components/HomeInboxItemRow.svelte"
-  import HomeInboxItemChat from "@app/components/HomeInboxItemChat.svelte"
+  import HomeInboxItemConversation from "@app/components/HomeInboxItemConversation.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomName from "@app/components/RoomName.svelte"
@@ -32,5 +32,5 @@
     {/snippet}
   </HomeInboxItemRow>
 {:else}
-  <HomeInboxItemChat {path} {pubkeys} {event} />
+  <HomeInboxItemConversation {path} {pubkeys} {event} />
 {/if}

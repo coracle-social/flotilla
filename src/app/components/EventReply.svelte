@@ -10,7 +10,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import EditorContent from "@app/features/editor/EditorContent.svelte"
   import ComposeParent from "@app/components/ComposeParent.svelte"
-  import {prependParent, publishComment} from "@app/features/rooms"
+  import {prependParent, publishComment} from "@app/features/spaces/rooms"
   import {makeEditor} from "@app/features/editor"
   import {DraftKey} from "@app/features/drafts"
   import {pushToast} from "@app/ui/toast"

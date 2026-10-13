@@ -1,7 +1,7 @@
 import type {
   IScreenShareAdapter,
   ScreenShareContext,
-} from "@app/features/screenShare/adapters/common"
+} from "@app/features/spaces/calls/screenShare/adapters/common"
 
 // The browser reports a dismissed picker and a denied permission the same way.
 const isCancellation = (error: unknown) =>

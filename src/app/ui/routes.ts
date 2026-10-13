@@ -22,18 +22,18 @@ import {
 } from "@welshman/util"
 import {app, user} from "@app/core/app"
 import {messagingRelayLists} from "@app/core/plugins"
-import {makeChatId} from "@app/features/chats"
+import {makeConversationId} from "@app/features/messages"
 import {PLATFORM_URL, PLATFORM_RELAYS} from "@app/core/env"
 import {decodeRelay, encodeRelay} from "@app/core/relays"
 import {DM_KINDS, getActivityTarget} from "@app/features/content"
 import {navigate, pushModal} from "@app/ui/modal"
 import type {ModalOptions, NavigateOptions} from "@app/ui/modal"
-import ChatEnable from "@app/components/ChatEnable.svelte"
+import MessagesEnable from "@app/components/MessagesEnable.svelte"
 import NoteDetail from "@app/components/NoteDetail.svelte"
 
 // State
 
-export let lastChatUrl: string | undefined = undefined
+export let lastMessagesUrl: string | undefined = undefined
 
 export const lastPageBySpaceUrl = new Map<string, string>()
 
@@ -64,7 +64,7 @@ export const setupHistory = () => {
       }
 
       if ($page.params.chat) {
-        lastChatUrl = path
+        lastMessagesUrl = path
       }
     }
   })
@@ -74,21 +74,21 @@ export const setupHistory = () => {
 
 export const makeProfilePath = (pubkey: string) => `/people/${nip19.npubEncode(pubkey)}`
 
-// Chat
+// Messages
 
-export const makeChatPath = (pubkeys: string[]) => `/chat/${makeChatId(pubkeys)}`
+export const makeConversationPath = (pubkeys: string[]) => `/chat/${makeConversationId(pubkeys)}`
 
 export const makeRoomPath = (url: string, h: string) => `/spaces/${encodeRelay(url)}/${h}`
 
 export const makeSpaceChatPath = (url: string) => makeRoomPath(url, "chat")
 
-export const goToChat = (pubkeys: string[] = [], options: {replaceState?: boolean} = {}) => {
+export const goToMessages = (pubkeys: string[] = [], options: {replaceState?: boolean} = {}) => {
   if (messagingRelayLists.get().urls(user.get().pubkey).get().length === 0) {
-    pushModal(ChatEnable, {next: () => goToChat(pubkeys, options)})
+    pushModal(MessagesEnable, {next: () => goToMessages(pubkeys, options)})
   } else if (pubkeys.length === 0) {
-    navigate(lastChatUrl ?? "/chat", options)
+    navigate(lastMessagesUrl ?? "/chat", options)
   } else {
-    navigate(makeChatPath(pubkeys), options)
+    navigate(makeConversationPath(pubkeys), options)
   }
 }
 
@@ -197,7 +197,7 @@ export const makeContentPath = (url: string, kind: number, idOrAddress?: string)
 
 export const makeEventPath = (event: TrustedEvent, urls: string[]): Maybe<string> => {
   if (DM_KINDS.includes(event.kind)) {
-    return makeChatPath([event.pubkey, ...tagValues(hexTags("p"), event.tags)])
+    return makeConversationPath([event.pubkey, ...tagValues(hexTags("p"), event.tags)])
   }
 
   if (urls.length > 0) {

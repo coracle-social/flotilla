@@ -24,7 +24,7 @@ import {
   createCommandSearch,
   getCommandByAddress,
   getCommandsForTarget,
-} from "@app/features/commands"
+} from "@app/features/spaces/rooms/commands"
 import {CommandNodeView} from "@app/features/editor/CommandNodeView"
 import CommandSuggestionItem from "@app/features/editor/CommandSuggestion.svelte"
 import {MentionNodeView} from "@app/features/editor/MentionNodeView"
@@ -33,7 +33,7 @@ import {RoomReferenceExtension} from "@app/features/editor/RoomReferenceExtensio
 import RoomSuggestion from "@app/features/editor/RoomSuggestion.svelte"
 import {NativeClipboardPasteExtension} from "@app/features/editor/clipboard"
 import {compressFileForUpload, makeImetaTag, uploadFile} from "@app/core/uploads"
-import {activeSpaceUrls} from "@app/core/spaces"
+import {activeSpaceUrls} from "@app/features/spaces"
 import {pushToast} from "@app/ui/toast"
 
 const isEmpty = (editor: Editor) => editor.getText({blockSeparator: "\n"}).trim() === ""

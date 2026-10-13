@@ -11,7 +11,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {deriveUserItem} from "@app/core/app"
   import {profiles} from "@app/core/plugins"
-  import {wallet} from "@app/features/lightning"
+  import {wallet} from "@app/features/wallet"
   import {clearModals} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"
 

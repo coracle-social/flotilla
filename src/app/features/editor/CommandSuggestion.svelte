@@ -1,7 +1,7 @@
 <script lang="ts">
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {getCommandByAddress} from "@app/features/commands"
+  import {getCommandByAddress} from "@app/features/spaces/rooms/commands"
 
   type Props = {
     value: string

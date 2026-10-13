@@ -9,7 +9,7 @@
   import SpaceMenuMobile from "@app/components/SpaceMenuMobile.svelte"
   import SpaceMenuActions from "@app/components/SpaceMenuActions.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {deriveSpaceActionItems} from "@app/features/actionItems"
+  import {deriveSpaceActionItems} from "@app/features/spaces/management/actionItems"
   import {deriveShouldNotify} from "@app/core/settings"
   import {notificationSettings} from "@app/features/push"
   import {pushModal} from "@app/ui/modal"

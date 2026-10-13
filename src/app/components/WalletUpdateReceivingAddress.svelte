@@ -15,7 +15,7 @@
   import {pushToast} from "@app/ui/toast"
   import {user} from "@app/core/app"
   import {profiles} from "@app/core/plugins"
-  import {wallet} from "@app/features/lightning"
+  import {wallet} from "@app/features/wallet"
 
   const back = () => history.back()
 

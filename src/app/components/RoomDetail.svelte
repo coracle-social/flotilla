@@ -30,7 +30,7 @@
     deriveUserIsRoomAdmin,
     deriveUserRooms,
     publishRoomList,
-  } from "@app/features/rooms"
+  } from "@app/features/spaces/rooms"
   import {
     deriveIsMuted,
     deriveShouldNotify,

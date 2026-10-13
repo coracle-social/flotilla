@@ -11,6 +11,11 @@ import {
   FOLLOWS,
   MESSAGING_RELAYS,
   PROFILE,
+  RELAY_ADD_MEMBER,
+  RELAY_JOIN,
+  RELAY_LEAVE,
+  RELAY_MEMBERS,
+  RELAY_REMOVE_MEMBER,
   RELAYS,
 } from "@welshman/util"
 import {RelayJoin, RelayLeave, RoomCreateInvite, RoomJoin, RoomLeave} from "@welshman/domain"
@@ -24,9 +29,11 @@ import {relaysMostlyRestricted} from "@app/core/policies"
 import {optInSpaceNotifications} from "@app/features/push"
 import {deriveSocket} from "@app/core/relays"
 import {makeSpacePath} from "@app/ui/routes"
-import {publishRoomList} from "@app/features/rooms"
+import {publishRoomList} from "@app/features/spaces/rooms"
 import {removeTrustedRelay} from "@app/core/settings"
-import {syncApplicationData} from "@app/core/sync"
+import {registerRetention} from "@app/core/storage"
+import {pullAndListen, registerSync, syncApplicationData, syncEach} from "@app/core/sync"
+import {syncedSpaceUrls} from "@app/features/spaces"
 
 // Invite links
 
@@ -338,4 +345,32 @@ export const acceptInvite = async (data: InviteData, notifications: boolean) => 
   if (data.h && data.code) {
     return joinRoom(data.url, data.h, data.code)
   }
+}
+
+// Sync
+
+const syncSpaceMembership = (url: string) => {
+  const $pubkey = app.get().user?.pubkey
+
+  return pullAndListen(url, [
+    {kinds: [RELAY_MEMBERS]},
+    ...($pubkey
+      ? [
+          {kinds: [RELAY_ADD_MEMBER], "#p": [$pubkey], limit: 1},
+          {kinds: [RELAY_REMOVE_MEMBER], "#p": [$pubkey], limit: 1},
+        ]
+      : []),
+  ])
+}
+
+export const registerMembership = () => {
+  registerSync(() => syncEach(syncedSpaceUrls, syncSpaceMembership))
+
+  registerRetention({
+    match: event =>
+      [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS, RELAY_JOIN, RELAY_LEAVE].includes(
+        event.kind,
+      ),
+    provenance: true,
+  })
 }

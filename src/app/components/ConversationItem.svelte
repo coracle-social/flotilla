@@ -6,10 +6,10 @@
   import type {TrustedEvent} from "@welshman/util"
   import {fade} from "@lib/transition"
   import Button from "@lib/components/Button.svelte"
-  import ChatTitle from "@app/components/ChatTitle.svelte"
+  import ConversationTitle from "@app/components/ConversationTitle.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {makeChatPath, goToChat} from "@app/ui/routes"
+  import {makeConversationPath, goToMessages} from "@app/ui/routes"
   import {notifications} from "@app/ui/notifications"
   import {user} from "@app/core/app"
   import {messagingRelayLists} from "@app/core/plugins"
@@ -25,8 +25,8 @@
 
   const others = uniq(remove($user.pubkey, props.pubkeys))
   const active = $derived($page.params.chat === props.id)
-  const path = makeChatPath(props.pubkeys)
-  const openChat = () => goToChat(props.pubkeys)
+  const path = makeConversationPath(props.pubkeys)
+  const openChat = () => goToMessages(props.pubkeys)
 
   onMount(() => {
     for (const pk of others) {
@@ -51,7 +51,7 @@
             <ProfileCircle pubkey={others[0] || $user.pubkey} size={5} />
           {/if}
           <p class="overflow-hidden text-ellipsis whitespace-nowrap">
-            <ChatTitle pubkeys={props.pubkeys} />
+            <ConversationTitle pubkeys={props.pubkeys} />
           </p>
         </div>
         {#if !active && $notifications.has(path)}

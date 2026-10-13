@@ -44,7 +44,12 @@ import type {EventsById} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
 import {network, router} from "@app/core/plugins"
-import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/ui/routes"
+import {
+  makeRoomPath,
+  makeSpaceChatPath,
+  makeConversationPath,
+  makeContentPath,
+} from "@app/ui/routes"
 import {
   CONTENT_KINDS,
   REPOST_KINDS,
@@ -52,10 +57,10 @@ import {
   makeCommentFilter,
 } from "@app/features/content"
 import {getIsMuted, userSettingsValues} from "@app/core/settings"
-import {Chats} from "@app/features/chats"
+import {Messages} from "@app/features/messages"
 import {dufflepud, DUFFLEPUD_URL, ENABLE_ZAPS} from "@app/core/env"
 import {spaceSupportsRooms} from "@app/core/relays"
-import {activeSpaceUrls} from "@app/core/spaces"
+import {activeSpaceUrls} from "@app/features/spaces"
 import {getNotificationRef, isEventMuted, isNotificationTarget, Notes} from "@app/features/social"
 import {getHttpAuthHeader} from "@app/core/signer"
 import {kv} from "@app/core/storage"
@@ -235,7 +240,7 @@ export const latestActivityByPath = derived(
     derived(
       [
         activeSpaceUrls,
-        fromApp($app => $app.use(Chats).index.$),
+        fromApp($app => $app.use(Messages).index.$),
         // Only here to recompute once a relay's NIP-11 says whether the space supports rooms
         fromApp($app => $app.use(Relays).index.$),
         fromApp(
@@ -250,18 +255,18 @@ export const latestActivityByPath = derived(
       identity,
     ),
   ),
-  ([$activeSpaceUrls, $chatsById, , eventsByIdByUrl, $settings]) => {
+  ([$activeSpaceUrls, $conversationsById, , eventsByIdByUrl, $settings]) => {
     const activity = new Map<string, Activity>()
 
-    for (const {pubkeys, messages} of $chatsById.values()) {
-      const path = makeChatPath(pubkeys)
+    for (const {pubkeys, messages} of $conversationsById.values()) {
+      const path = makeConversationPath(pubkeys)
 
       activity.set(path, {path, pubkeys, event: messages[0]})
     }
 
     for (const url of $activeSpaceUrls) {
       const events = sortEventsDesc((eventsByIdByUrl.get(url) || new Map()).values())
-      // A chat is its own messages; content and its comments carry the room h but belong to the item.
+      // A conversation is its own messages; content and its comments carry the room h but belong to the item.
       const messages = events.filter(spec({kind: MESSAGE}))
 
       if (spaceSupportsRooms(url)) {
@@ -491,7 +496,7 @@ const syncHomeNotificationRelay = (url: string, pubkey: string) => {
   const controller = new AbortController()
   const filters = homeNotificationFilters(pubkey)
 
-  network.get().loadLenient({
+  network.get().load({
     relays: [url],
     signal: controller.signal,
     filters: filters.map(filter => ({...filter, limit: 100})),

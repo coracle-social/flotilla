@@ -15,7 +15,7 @@ Flotilla is a Nostr "relays as groups" community chat client. It implements NIP-
 
 - **Spaces** - Relays used as community groups (like Discord servers)
 - **Rooms** - NIP-29 groups within spaces (like Discord channels), identified by `h`
-- **Chats** - Direct message conversations (NIP-04/NIP-44 encrypted)
+- **Messages** - Direct message conversations (NIP-04/NIP-44 encrypted)
 
 ## Architecture & Dependency Graph
 
@@ -38,8 +38,8 @@ external libraries         (bottom layer)
 ```
 
 Core and ui never import a feature. A feature reaches into core through hooks such as
-`registerSync`, `registerSpaceSync` and `registerRetention`, called from the feature's own
-`registerX`, which `registerAll` in `src/app/index.ts` calls before the app is built.
+`registerSync` and `registerRetention`, called from its own `registerX`, which `registerAll` in
+`src/app/index.ts` calls before the app is built.
 
 **Import Ordering Convention (CRITICAL):**
 Always sort imports by dependency level:

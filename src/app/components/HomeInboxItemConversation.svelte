@@ -2,7 +2,7 @@
   import {remove, uniq} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import HomeInboxItemRow from "@app/components/HomeInboxItemRow.svelte"
-  import ChatTitle from "@app/components/ChatTitle.svelte"
+  import ConversationTitle from "@app/components/ConversationTitle.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import {user} from "@app/core/app"
 
@@ -22,7 +22,7 @@
     <ProfileCircle pubkey={others[0] || $user.pubkey} size={9} class="shrink-0" />
   {/snippet}
   {#snippet title()}
-    <ChatTitle {pubkeys} />
+    <ConversationTitle {pubkeys} />
   {/snippet}
   {#snippet subtitle()}
     direct message

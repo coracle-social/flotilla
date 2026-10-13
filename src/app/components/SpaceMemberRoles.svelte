@@ -17,8 +17,8 @@
   import SpaceRoles from "@app/components/SpaceRoles.svelte"
   import {app} from "@app/core/app"
   import {profiles, relayManagement} from "@app/core/plugins"
-  import {deriveSpacePermissions, syncAssignments} from "@app/core/management"
-  import {deriveSpaceMemberRoles} from "@app/features/roles"
+  import {deriveSpacePermissions, syncAssignments} from "@app/features/spaces/management"
+  import {deriveSpaceMemberRoles} from "@app/features/spaces/management/roles"
   import {pushModal} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"
 

@@ -55,7 +55,12 @@
     )
 
     try {
-      const events = await $network.loadComplete({relays, filters, signal: controller.signal})
+      const events = await $network.load({
+        relays,
+        filters,
+        signal: controller.signal,
+        timeout: 3000,
+      })
 
       results = sortEventsDesc(uniqBy((e: TrustedEvent) => e.id, [...events, ...results]))
     } catch (error) {

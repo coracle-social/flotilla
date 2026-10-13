@@ -13,7 +13,7 @@
   import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
-  import {publishComment} from "@app/features/rooms"
+  import {publishComment} from "@app/features/spaces/rooms"
   import {loadSendDelay} from "@app/core/settings"
   import {pushToast} from "@app/ui/toast"
 

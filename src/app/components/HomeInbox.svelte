@@ -21,7 +21,7 @@
 
   const markAllRead = () => setChecked("*")
 
-  const startChat = () => navigate("/chat")
+  const startConversation = () => navigate("/chat")
 </script>
 
 <HomeSection title="Inbox" icon={Inbox}>
@@ -53,7 +53,7 @@
           <Icon icon={AddCircle} size={4} />
           Add a space
         </Link>
-        <Button class="button button-neutral button-sm" onclick={startChat}>
+        <Button class="button button-neutral button-sm" onclick={startConversation}>
           <Icon icon={ChatRound} size={4} />
           Start a conversation
         </Button>

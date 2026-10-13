@@ -17,7 +17,7 @@
   import PinSave from "@app/components/PinSave.svelte"
   import {events} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {eventToReference} from "@app/features/pinboards"
+  import {eventToReference} from "@app/features/spaces/pinboards"
   import {makeSpacePath} from "@app/ui/routes"
   import {pushModal} from "@app/ui/modal"
 

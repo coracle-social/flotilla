@@ -11,7 +11,7 @@
   import {app, user} from "@app/core/app"
   import {deletes, profiles, relayManagement, relays} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {deriveSpacePermissions} from "@app/core/management"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushToast} from "@app/ui/toast"
   import {pushModal} from "@app/ui/modal"
 

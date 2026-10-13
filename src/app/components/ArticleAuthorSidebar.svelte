@@ -11,7 +11,7 @@
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {displayReadingTime} from "@app/features/articles"
+  import {displayReadingTime} from "@app/features/spaces/articles"
   import {makeArticlePath} from "@app/ui/routes"
 
   type Props = {

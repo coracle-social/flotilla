@@ -8,10 +8,10 @@
   import {app} from "@app/core/app"
   import {relayManagement} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {deriveSpacePermissions} from "@app/core/management"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/ui/modal"
   import {pushToast} from "@app/ui/toast"
-  import {addRoomMembers} from "@app/features/rooms"
+  import {addRoomMembers} from "@app/features/spaces/rooms"
 
   type Props = {
     url: string

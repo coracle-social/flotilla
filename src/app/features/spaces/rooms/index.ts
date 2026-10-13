@@ -1,8 +1,39 @@
 import * as nip19 from "nostr-tools/nip19"
 import {derived, get} from "svelte/store"
-import {addToMapKey, dec, formatTimestampAsDate, int, sortBy, uniq, MINUTE} from "@welshman/lib"
+import {
+  addToMapKey,
+  ago,
+  dec,
+  formatTimestampAsDate,
+  int,
+  sortBy,
+  uniq,
+  MINUTE,
+  MONTH,
+} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {ROOM_DELETE_EVENT, outbox, relay, seen, tagSpec, tagValue, toNostrURI} from "@welshman/util"
+import {
+  MESSAGE,
+  ROOM_ADD_MEMBER,
+  ROOM_ADMINS,
+  ROOM_CREATE_PERMISSION,
+  ROOM_DELETE,
+  ROOM_DELETE_EVENT,
+  ROOM_JOIN,
+  ROOM_LEAVE,
+  ROOM_MEMBERS,
+  ROOM_META,
+  ROOM_PINS,
+  ROOM_REMOVE_MEMBER,
+  hexTags,
+  outbox,
+  relay,
+  seen,
+  tagSpec,
+  tagValue,
+  tagValues,
+  toNostrURI,
+} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
 import {Comment, Message} from "@welshman/domain"
 import type {BaseEventReader, EventWriter, Relay} from "@welshman/domain"
@@ -18,13 +49,19 @@ import {
   publish,
 } from "@welshman/app"
 import type {Command, Room, RoomMeta} from "@welshman/app"
-import {fromApp, user} from "@app/core/app"
-import {roomLists, rooms, router, publisher, relays} from "@app/core/plugins"
+import {app, fromApp, user} from "@app/core/app"
+import {network, roomLists, rooms, router, publisher, relays} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
 import {INDEXER_RELAYS} from "@app/core/env"
-import {allowPubkeys, deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/core/management"
+import {
+  allowPubkeys,
+  deriveSpacePermissions,
+  deriveUserIsSpaceStaff,
+} from "@app/features/spaces/management"
 import {spaceSupportsRooms} from "@app/core/relays"
-import {userRoomList, userSpaceUrls} from "@app/core/spaces"
+import {registerRetention} from "@app/core/storage"
+import {pullAndListen, registerSync, syncEach} from "@app/core/sync"
+import {currentSpaceUrls, syncedSpaceUrls, userRoomList, userSpaceUrls} from "@app/features/spaces"
 import {makeRoomPath, makeSpaceChatPath} from "@app/ui/routes"
 import {loadSendDelay} from "@app/core/settings"
 
@@ -414,4 +451,81 @@ export const groupRoomMessages = ({
   rows.reverse()
 
   return rows
+}
+
+// Sync
+
+const syncSpaceRooms = (url: string) => {
+  const $pubkey = app.get().user?.pubkey
+  const controller = new AbortController()
+  const asked = new Set<string>()
+
+  network.get().request({
+    relays: [url],
+    signal: controller.signal,
+    filters: [{kinds: [MESSAGE], limit: 1}],
+  })
+
+  const unsubscribeState = pullAndListen(url, [
+    {kinds: [ROOM_META, ROOM_DELETE]},
+    ...($pubkey
+      ? [
+          {kinds: [ROOM_CREATE_PERMISSION], "#p": [$pubkey], limit: 1},
+          {kinds: [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER], "#p": [$pubkey]},
+        ]
+      : []),
+  ])
+
+  const unsubscribeRooms = throttled(300, rooms.get().forUrl(url).$).subscribe($rooms => {
+    const hs = $rooms.map(room => room.h).filter(h => !asked.has(h))
+
+    if (hs.length > 0) {
+      for (const h of hs) {
+        asked.add(h)
+      }
+
+      network.get().load({
+        relays: [url],
+        signal: controller.signal,
+        filters: hs.map(h => ({kinds: [MESSAGE], "#h": [h], limit: 1})),
+      })
+    }
+  })
+
+  return () => {
+    unsubscribeRooms()
+    unsubscribeState()
+    controller.abort()
+  }
+}
+
+const syncCurrentSpaceRooms = (url: string) =>
+  pullAndListen(url, [
+    {kinds: [ROOM_ADMINS, ROOM_MEMBERS, ROOM_PINS]},
+    {kinds: [ROOM_JOIN, ROOM_LEAVE], since: ago(MONTH)},
+  ])
+
+export const registerRooms = () => {
+  registerSync(() => syncEach(syncedSpaceUrls, syncSpaceRooms))
+  registerSync(() => syncEach(currentSpaceUrls, syncCurrentSpaceRooms))
+
+  registerRetention({
+    match: event =>
+      [
+        ROOM_META,
+        ROOM_DELETE,
+        ROOM_ADMINS,
+        ROOM_MEMBERS,
+        ROOM_CREATE_PERMISSION,
+        ROOM_PINS,
+      ].includes(event.kind),
+    provenance: true,
+  })
+
+  registerRetention({
+    match: (event, pubkey) =>
+      [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER].includes(event.kind) &&
+      tagValues(hexTags("p"), event.tags).includes(pubkey),
+    provenance: true,
+  })
 }

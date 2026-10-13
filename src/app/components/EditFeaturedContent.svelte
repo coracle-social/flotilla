@@ -12,7 +12,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InputList from "@lib/components/InputList.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {setFeaturedContent} from "@app/features/featured"
+  import {setFeaturedContent} from "@app/features/spaces/featured"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {

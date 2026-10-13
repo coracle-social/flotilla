@@ -27,14 +27,14 @@
     deriveRoomCallState,
     VideoCallLayout,
     videoCallLayout,
-  } from "@app/features/call"
+  } from "@app/features/spaces/calls"
   import {
     RoomType,
     deriveUserRoomMembershipStatus,
     getRoomType,
     prependParent,
     addressWriterToSpace,
-  } from "@app/features/rooms"
+  } from "@app/features/spaces/rooms"
   import {loadSendDelay} from "@app/core/settings"
   import {deferredRoomPath, setChecked} from "@app/ui/notifications"
   import {makeRoomPath} from "@app/ui/routes"

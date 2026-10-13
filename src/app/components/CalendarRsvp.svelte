@@ -12,7 +12,12 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {user} from "@app/core/app"
   import {reader} from "@app/core/domain"
-  import {getRsvpsByStatus, isAttending, publishRsvp, retractRsvp} from "@app/features/calendar"
+  import {
+    getRsvpsByStatus,
+    isAttending,
+    publishRsvp,
+    retractRsvp,
+  } from "@app/features/spaces/calendar"
   import {setEventReminders} from "@app/features/reminders"
   import {pushToast} from "@app/ui/toast"
 

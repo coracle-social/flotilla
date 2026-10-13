@@ -1,7 +1,7 @@
 <script lang="ts">
   import cx from "classnames"
   import type {RelayRoleReader} from "@welshman/domain"
-  import {roleColor} from "@app/features/roles"
+  import {roleColor} from "@app/features/spaces/management/roles"
 
   type Props = {
     role: RelayRoleReader

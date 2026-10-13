@@ -11,8 +11,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import {listMediaDevices} from "@lib/audio"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
-  import {currentCallSession, DeviceKind, type CallSession} from "@app/features/call"
-  import {switchCallActiveDevice} from "@app/features/callEngine"
+  import {currentCallSession, DeviceKind, type CallSession} from "@app/features/spaces/calls"
+  import {switchCallActiveDevice} from "@app/features/spaces/calls/engine"
   import {popModal} from "@app/ui/modal"
 
   const selectValueForActiveDevice = (session: CallSession, kind: DeviceKind): string => {

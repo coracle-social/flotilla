@@ -15,7 +15,7 @@ import type {PluginListenerHandle} from "@capacitor/core"
 import {get} from "svelte/store"
 import {not, nthEq, reject, spec} from "@welshman/lib"
 import {makeRoomKey} from "@welshman/app"
-import {ScreenShare, ScreenShareDenied} from "@app/features/screenShare"
+import {ScreenShare, ScreenShareDenied} from "@app/features/spaces/calls/screenShare"
 import {pushToast} from "@app/ui/toast"
 import {
   CallState,
@@ -33,7 +33,7 @@ import {
   triggerVideoTrackRevision,
   type CallSession,
   type ParticipantMediaState,
-} from "@app/features/call"
+} from "@app/features/spaces/calls"
 
 const LIVEKIT_DEFAULT_DEVICE_ID = "default"
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]

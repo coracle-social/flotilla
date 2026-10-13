@@ -19,7 +19,7 @@
   import {profiles, relayMemberLists} from "@app/core/plugins"
   import {pushToast} from "@app/ui/toast"
   import {pushModal} from "@app/ui/modal"
-  import {addRoomMembers} from "@app/features/rooms"
+  import {addRoomMembers} from "@app/features/spaces/rooms"
 
   type Props = {
     url: string

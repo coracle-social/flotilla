@@ -7,7 +7,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import {popModal} from "@app/ui/modal"
-  import type {ScreenShareSource} from "@app/features/screenShare"
+  import type {ScreenShareSource} from "@app/features/spaces/calls/screenShare"
 
   type Props = {
     sources: ScreenShareSource[]

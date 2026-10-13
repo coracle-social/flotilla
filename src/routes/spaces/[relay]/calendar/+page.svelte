@@ -21,7 +21,7 @@
   import CalendarMonth from "@app/components/CalendarMonth.svelte"
   import CalendarWeek from "@app/components/CalendarWeek.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import type {CalendarView} from "@app/features/calendar"
+  import type {CalendarView} from "@app/features/spaces/calendar"
   import {
     addDays,
     addMonths,
@@ -33,7 +33,7 @@
     groupEventsByDay,
     isCurrentMonth,
     isCurrentWeek,
-  } from "@app/features/calendar"
+  } from "@app/features/spaces/calendar"
   import {getModal, pushModal} from "@app/ui/modal"
   import {decodeRelay} from "@app/core/relays"
   import {makeCommentFilter} from "@app/features/content"

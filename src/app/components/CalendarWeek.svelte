@@ -15,7 +15,7 @@
     isToday,
     layoutMultiDayBars,
     makeDayKey,
-  } from "@app/features/calendar"
+  } from "@app/features/spaces/calendar"
   import {pushModal} from "@app/ui/modal"
 
   type Props = {

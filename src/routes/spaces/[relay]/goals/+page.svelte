@@ -24,8 +24,13 @@
   import {decodeRelay} from "@app/core/relays"
   import {makeCommentFilter, partitionByActivity} from "@app/features/content"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
-  import {deriveGoalProgressById, filterGoals, getGoalTotals, sortGoals} from "@app/features/goals"
-  import type {GoalFilter, GoalSort} from "@app/features/goals"
+  import {
+    deriveGoalProgressById,
+    filterGoals,
+    getGoalTotals,
+    sortGoals,
+  } from "@app/features/spaces/goals"
+  import type {GoalFilter, GoalSort} from "@app/features/spaces/goals"
   import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 

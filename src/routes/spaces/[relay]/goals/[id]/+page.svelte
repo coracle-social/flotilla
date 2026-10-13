@@ -21,7 +21,7 @@
   import {events} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {deriveGoalProgress} from "@app/features/goals"
+  import {deriveGoalProgress} from "@app/features/spaces/goals"
   import {makeFeedContext} from "@app/features/feeds"
   import {decodeRelay} from "@app/core/relays"
   import type {PageProps} from "./$types"

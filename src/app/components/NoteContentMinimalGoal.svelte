@@ -5,7 +5,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import {reader} from "@app/core/domain"
-  import {deriveGoalProgress} from "@app/features/goals"
+  import {deriveGoalProgress} from "@app/features/spaces/goals"
 
   const props: ComponentProps<typeof ContentMinimal> = $props()
 

@@ -22,7 +22,11 @@ export const deriveRoomPinnedEvents = (url: string, h: string): Readable<Trusted
 
         const filters = getIdFilters($pins)
 
-        network.get().loadLenient({relays: [url], filters, signal: controller.signal})
+        network.get().load({
+          relays: [url],
+          filters,
+          signal: controller.signal,
+        })
 
         return events
           .get()

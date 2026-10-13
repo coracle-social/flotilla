@@ -14,7 +14,7 @@
   import RoomName from "@app/components/RoomName.svelte"
   import RoomMembersAdd from "@app/components/RoomMembersAdd.svelte"
   import RoomMemberMenu from "@app/components/RoomMemberMenu.svelte"
-  import {deriveRoomMembers, deriveUserIsRoomAdmin} from "@app/features/rooms"
+  import {deriveRoomMembers, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
   import {pushModal} from "@app/ui/modal"
 
   type Props = {

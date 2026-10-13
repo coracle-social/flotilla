@@ -21,7 +21,7 @@ import type {Command, IApp} from "@welshman/app"
 import {app, deriveUserItem, fromApp, user} from "@app/core/app"
 import {deletes, events, network} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
-import {registerUserLoader} from "@app/core/sync"
+import {registerSync, syncUserList} from "@app/core/sync"
 
 // NIP-51's four item tags: a note, an addressable event, a topic and a url.
 const isBookmark = (tag: string[]) => ["e", "a", "t", "r"].includes(tag[0])
@@ -172,7 +172,11 @@ export const userBookmarkedEvents = derived(
       const relays = uniq(removeUndefined(bookmarks.map(tag => tag[2])))
 
       if (relays.length > 0) {
-        network.get().loadLenient({relays, filters, signal: controller.signal})
+        network.get().load({
+          relays,
+          filters,
+          signal: controller.signal,
+        })
       }
 
       const unsubscribe = events
@@ -269,5 +273,5 @@ export const deleteBookmarkFolder = async (identifier: string) => {
 }
 
 export const registerBookmarks = () => {
-  registerUserLoader(loadUserBookmarks)
+  registerSync(() => syncUserList(loadUserBookmarks))
 }

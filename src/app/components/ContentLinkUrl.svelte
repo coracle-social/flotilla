@@ -7,7 +7,7 @@
   import Link from "@lib/components/Link.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {PLATFORM_URL} from "@app/core/env"
-  import {isRoomId} from "@app/features/rooms"
+  import {isRoomId} from "@app/features/spaces/rooms"
   import {makeRoomPath, makeSpacePath} from "@app/ui/routes"
 
   type Props = {
