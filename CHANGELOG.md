@@ -1,5 +1,20 @@
 # Changelog
 
+# 1.13.0
+
+* Add bookmarks, with folders and a bookmark manager
+* Redesign the chat and room composers
+* Support paid spaces, with checkout and relay notifications
+* Mute people from their profile menu
+* Choose what the home network feed and notifications tab include, and merge notifications about the same note
+* Show replies in the network feed under the note they answer
+* Rework the home inbox to include space activity, and add a relay settings button to the network section
+* Spotlight screen shares in calls
+* Reorder lists by dragging on touch screens
+* Keep a space's content across a reload, and keep working when local storage fails
+* Show room references as links, every name in a reaction tooltip, and open a DM's message menu by clicking it
+* Cap comment indentation on narrow screens
+
 # 1.12.0
 
 * Share your screen in calls on all platforms
