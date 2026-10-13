@@ -4,6 +4,7 @@ import {AppData} from "@welshman/domain"
 import {Events, Relays, publish} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {command, writer} from "@app/core/domain"
+import {registerSpaceSync} from "@app/core/sync"
 import {addressWriterToSpace} from "@app/features/rooms"
 
 // NIP-78 app data from the pubkey the space's NIP-11 names, one ["content", <value>] tag per entry.
@@ -35,4 +36,8 @@ export const setFeaturedContent = async (url: string, content: string[]) => {
     .addTags(...tags)
 
   return command(await addressWriterToSpace(eventWriter, url)).then(publish)
+}
+
+export const registerFeatured = () => {
+  registerSpaceSync({detail: () => [{kinds: [APP_DATA], "#d": [FEATURED_CONTENT_D]}]})
 }

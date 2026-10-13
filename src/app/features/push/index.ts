@@ -1,4 +1,5 @@
 import {Capacitor} from "@capacitor/core"
+import {registerLogoutHandler} from "@app/core/session"
 import {setSpaceNotifications} from "@app/core/settings"
 import {clearBadges} from "@app/ui/notifications"
 import {syncEventReminders} from "@app/features/reminders"
@@ -94,4 +95,8 @@ export const saveNotificationSettings = async (
   }
 
   return permission
+}
+
+export const registerPush = () => {
+  registerLogoutHandler(Push.disable)
 }

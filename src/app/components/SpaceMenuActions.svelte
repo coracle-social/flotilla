@@ -25,7 +25,7 @@
   import {ENABLE_PAID_SPACES} from "@app/core/env"
   import {deriveHostedRelay, HOSTING_ENABLED} from "@app/features/hosting"
   import {deriveSpacePermissions} from "@app/core/management"
-  import {userSpaceUrls} from "@app/features/rooms"
+  import {userSpaceUrls} from "@app/core/spaces"
   import {deriveSpaceActionItems} from "@app/features/actionItems"
   import {deriveShouldNotify, setSpaceNotifications} from "@app/core/settings"
   import {notificationSettings} from "@app/features/push"

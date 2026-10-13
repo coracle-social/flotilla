@@ -1,6 +1,6 @@
 import {derived} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {simpleCache} from "@welshman/lib"
+import {int, simpleCache, spec, WEEK} from "@welshman/lib"
 import {
   Address,
   COMMAND,
@@ -22,6 +22,7 @@ import {Domain, Network, RelayScopedDerivedPlugin, createSearch} from "@welshman
 import type {IApp} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {usePlugin} from "@app/core/plugins"
+import {registerRetention} from "@app/core/storage"
 
 // `|` never appears in a url, and keeps these distinct from the `'`-separated room keys.
 const makeCommandKey = (url: string, address: string) => `${url}|${address}`
@@ -157,4 +158,8 @@ export const describeCommandDraft = (
       activeIndex: getActiveCommandArgIndex(args, invocation.rest),
     }
   }
+}
+
+export const registerCommands = () => {
+  registerRetention({match: spec({kind: COMMAND}), ttl: int(1, WEEK), provenance: true})
 }

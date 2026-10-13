@@ -2168,6 +2168,4 @@ shape of the bug that motivated US-108 — `@welshman/store`'s `load` rejects ra
 empty, so a failure there aborts a publish before its publication is made and nothing reaches the
 timeline to carry a status. Testing it needs a seam for making a relay unusable.
 
-**Internals with no user-visible surface.** The legacy session-storage format
-migration, which has no observable difference and no supported way to seed the
-old shape. `ProfileFeed` and `ProfileLatest` components that no route reaches.
+**Internals with no user-visible surface.** `ProfileFeed` and `ProfileLatest` components that no route reaches.

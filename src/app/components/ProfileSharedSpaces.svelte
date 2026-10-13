@@ -5,7 +5,7 @@
   import Link from "@lib/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {userSpaceUrls} from "@app/features/rooms"
+  import {userSpaceUrls} from "@app/core/spaces"
   import {roomLists} from "@app/core/plugins"
   import {makeSpacePath} from "@app/ui/routes"
 

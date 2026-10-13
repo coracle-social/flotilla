@@ -4,7 +4,7 @@ import {deleteDB} from "idb"
 import {SecureStorage} from "@aparajita/capacitor-secure-storage"
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import {Preferences} from "@capacitor/preferences"
-import {MONTH, WEEK, ago, noop, now, on, batch, call, makeQueue} from "@welshman/lib"
+import {MONTH, ago, int, noop, now, on, batch, call, makeQueue} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   ALERT_ANDROID,
@@ -14,13 +14,9 @@ import {
   ALERT_WEB,
   APP_DATA,
   BLOSSOM_SERVERS,
-  COMMAND,
-  COMMENT,
   FOLLOWS,
-  MESSAGE,
   MESSAGING_RELAYS,
   MUTES,
-  POLL_RESPONSE,
   PROFILE,
   RELAY_ADD_MEMBER,
   RELAY_JOIN,
@@ -37,13 +33,7 @@ import {
   ROOM_DELETE,
   ROOM_REMOVE_MEMBER,
   ROOMS,
-  DELETE,
-  REACTION,
-  REPORT,
   hexTags,
-  isSignedEvent,
-  tagSpec,
-  tagValue,
   tagValues,
   verifiedSymbol,
 } from "@welshman/util"
@@ -56,7 +46,6 @@ import {Handles, Plaintext, Relays, RelayStats, User, Zappers} from "@welshman/a
 import type {AppPolicy, IApp, MapPlugin, RelayStatsItem} from "@welshman/app"
 import {IDB} from "@lib/indexeddb"
 import {appPolicies} from "@app/core/app"
-import {CONTENT_KINDS, DM_KINDS} from "@app/features/content"
 
 type StringStorage = {
   get: (key: string) => Promise<Maybe<string>>
@@ -121,21 +110,7 @@ const secretStorage: StringStorage =
         }
       })
     : {
-        get: async key => {
-          let value = await SecureStorage.getItem(key)
-
-          if (!value) {
-            const legacy = await Preferences.get({key})
-
-            if (legacy.value) {
-              value = legacy.value
-              await SecureStorage.setItem(key, legacy.value)
-              await Preferences.remove({key})
-            }
-          }
-
-          return value ?? undefined
-        },
+        get: async key => (await SecureStorage.getItem(key)) ?? undefined,
         // Android's SecureStorage rejects undefined
         set: (key, value) =>
           value === undefined ? SecureStorage.removeItem(key) : SecureStorage.setItem(key, value),
@@ -165,64 +140,61 @@ const idleWrite = <T>(f: (xs: T[]) => void): ((xs: T[]) => void) => {
   return f
 }
 
-const kinds = {
-  meta: [PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, MESSAGING_RELAYS, APP_DATA, ROOMS],
-  alert: [ALERT_STATUS, ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID],
-  space: [RELAY_ADD_MEMBER, RELAY_REMOVE_MEMBER, RELAY_MEMBERS, RELAY_JOIN, RELAY_LEAVE, COMMAND],
-  room: [
-    ROOM_META,
-    ROOM_DELETE,
-    ROOM_ADMINS,
-    ROOM_MEMBERS,
-    ROOM_ADD_MEMBER,
-    ROOM_REMOVE_MEMBER,
-    ROOM_CREATE_PERMISSION,
-    ROOM_PINS,
-  ],
-  content: [MESSAGE, COMMENT, DELETE, REPORT, POLL_RESPONSE, ...CONTENT_KINDS],
-}
-
-const isRelayScoped = (event: TrustedEvent) =>
-  kinds.space.includes(event.kind) || kinds.room.includes(event.kind)
-
-/** A space is asked for its own content on every load, where the wider network's notes never are. */
-const isSpaceContent = (event: TrustedEvent) =>
-  kinds.content.includes(event.kind) && Boolean(tagValue(tagSpec("h"), event.tags))
-
-/** A month of a space's content is kept, which is what bounds the read at startup. */
-const isRecentSpaceContent = (event: TrustedEvent) =>
-  isSpaceContent(event) && event.created_at > ago(1, MONTH)
-
-/** Anything the app reads through a relay is useless without the provenance keying it to one. */
-const needsProvenance = (event: TrustedEvent) => isRelayScoped(event) || isSpaceContent(event)
-
-const isMembershipChange = (event: TrustedEvent) =>
-  event.kind === ROOM_ADD_MEMBER || event.kind === ROOM_REMOVE_MEMBER
-
-const isConversation = (event: TrustedEvent) =>
-  DM_KINDS.includes(event.kind) ||
-  ([DELETE, REACTION].includes(event.kind) && !isSignedEvent(event))
-
-const shouldPersistEvent = (event: TrustedEvent, pubkey: string) =>
-  isMembershipChange(event)
-    ? tagValues(hexTags("p"), event.tags).includes(pubkey)
-    : kinds.meta.includes(event.kind) ||
-      kinds.alert.includes(event.kind) ||
-      isRelayScoped(event) ||
-      isConversation(event) ||
-      isRecentSpaceContent(event)
-
 type EventItem = {id: string; event: TrustedEvent; relays: string[]; cachedAt?: number}
 
-/**
- * Everyone else's metadata is a cache, so a row not replaced inside its kind's window is dropped.
- * The user's own metadata is state and never expires. A space's content is bounded by its own age
- * instead.
- */
-const isExpired = ({event, cachedAt = now()}: EventItem, pubkey: string) =>
-  event.pubkey !== pubkey &&
-  ((event.kind === COMMAND && cachedAt < ago(1, WEEK)) ||
-    (kinds.meta.includes(event.kind) && cachedAt < ago(1, MONTH)))
+// A ttl expires a row that wasn't replaced inside it, and a maxAge bounds an event by its own age.
+type Retention = {
+  match: (event: TrustedEvent) => boolean
+  maxAge?: number
+  ttl?: number
+  // Anything the app reads through a relay is useless without the provenance keying it to one.
+  provenance?: boolean
+}
+
+const retentions: Retention[] = [
+  {
+    match: event =>
+      [
+        PROFILE,
+        FOLLOWS,
+        MUTES,
+        RELAYS,
+        BLOSSOM_SERVERS,
+        MESSAGING_RELAYS,
+        APP_DATA,
+        ROOMS,
+      ].includes(event.kind),
+    ttl: int(1, MONTH),
+  },
+  {
+    match: event =>
+      [ALERT_STATUS, ALERT_EMAIL, ALERT_WEB, ALERT_IOS, ALERT_ANDROID].includes(event.kind),
+  },
+  {
+    match: event =>
+      [
+        RELAY_ADD_MEMBER,
+        RELAY_REMOVE_MEMBER,
+        RELAY_MEMBERS,
+        RELAY_JOIN,
+        RELAY_LEAVE,
+        ROOM_META,
+        ROOM_DELETE,
+        ROOM_ADMINS,
+        ROOM_MEMBERS,
+        ROOM_CREATE_PERMISSION,
+        ROOM_PINS,
+      ].includes(event.kind),
+    provenance: true,
+  },
+]
+
+export const registerRetention = (retention: Retention) => {
+  retentions.push(retention)
+}
+
+const retains = (retention: Retention, event: TrustedEvent) =>
+  retention.match(event) && (!retention.maxAge || event.created_at > ago(retention.maxAge))
 
 type PlaintextItem = {key: string; value: string}
 
@@ -245,12 +217,22 @@ class Storage {
   private stopped = false
 
   private readonly pubkey: string
+  private readonly retentions: Retention[]
 
   constructor(private readonly app: IApp) {
     // Every identity used to share one database; drop it rather than leave it on disk.
     void deleteDB(DATABASE_PREFIX)
 
     this.pubkey = User.require(app).pubkey
+    this.retentions = [
+      ...retentions,
+      {
+        match: event =>
+          [ROOM_ADD_MEMBER, ROOM_REMOVE_MEMBER].includes(event.kind) &&
+          tagValues(hexTags("p"), event.tags).includes(this.pubkey),
+        provenance: true,
+      },
+    ]
     this.db = new IDB({name: `${DATABASE_PREFIX}-${this.pubkey}`, stores: TABLES})
     this.ready = this.start()
   }
@@ -292,6 +274,18 @@ class Storage {
     defer(this.initWrapManager)
   }
 
+  private shouldPersist = (event: TrustedEvent) =>
+    this.retentions.some(retention => retains(retention, event))
+
+  // The user's own rows are state rather than cache, so no ttl expires them.
+  private shouldKeep = ({event, relays, cachedAt = now()}: EventItem) =>
+    this.retentions.some(
+      retention =>
+        retains(retention, event) &&
+        (!retention.provenance || relays.length > 0) &&
+        (!retention.ttl || event.pubkey === this.pubkey || cachedAt > ago(retention.ttl)),
+    )
+
   private addUnsubscriber = (unsubscriber: Unsubscriber) => {
     if (this.stopped) {
       unsubscriber()
@@ -308,12 +302,7 @@ class Storage {
 
     await table.each(item => {
       // Rows written before provenance was stored inline hold a bare event
-      if (
-        item.event &&
-        shouldPersistEvent(item.event, this.pubkey) &&
-        (!needsProvenance(item.event) || item.relays.length > 0) &&
-        !isExpired(item, this.pubkey)
-      ) {
+      if (item.event && this.shouldKeep(item)) {
         item.event[verifiedSymbol] = true
         this.cachedAt.set(item.id, item.cachedAt ?? now())
         items.push(item)
@@ -354,7 +343,7 @@ class Storage {
 
         for (const update of updates) {
           for (const event of update.added) {
-            if (shouldPersistEvent(event, this.pubkey)) {
+            if (this.shouldPersist(event)) {
               add.push(event)
               remove.delete(event.id)
             }
@@ -402,7 +391,7 @@ class Storage {
         const event = this.app.repository.getEvent(id)
 
         // A brand-new event isn't queryable here, so syncEvents persists its provenance with the event.
-        if (event && shouldPersistEvent(event, this.pubkey)) {
+        if (event && this.shouldPersist(event)) {
           items.push({
             id,
             event,
@@ -536,4 +525,6 @@ export const storagePolicy: AppPolicy = $app => {
   return noop
 }
 
-appPolicies.push(storagePolicy)
+export const registerStorage = () => {
+  appPolicies.push(storagePolicy)
+}

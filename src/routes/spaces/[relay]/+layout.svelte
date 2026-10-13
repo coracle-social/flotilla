@@ -23,7 +23,7 @@
   import {derivePaidGated, deriveRelayAuthError} from "@app/features/access"
   import {user} from "@app/core/app"
   import {relays, roomLists} from "@app/core/plugins"
-  import {userSpaceUrls} from "@app/features/rooms"
+  import {userSpaceUrls} from "@app/core/spaces"
   import {getModal, pushModal} from "@app/ui/modal"
   import {relaysPendingTrust} from "@app/core/policies"
   import {decodeRelay} from "@app/core/relays"

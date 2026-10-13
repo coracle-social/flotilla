@@ -1,12 +1,9 @@
-import {derived, get, readable} from "svelte/store"
+import {derived, readable} from "svelte/store"
 import {ago, avg, ms, now, spec} from "@welshman/lib"
 import {makeHttpAuth, makeHttpAuthHeader} from "@welshman/util"
-import {throttled} from "@welshman/store"
 import {Logger} from "@welshman/app"
 import type {LogMessage} from "@welshman/app"
 import {fromApp, user} from "@app/core/app"
-import {navigate} from "@app/ui/modal"
-import {pushToast, toast} from "@app/ui/toast"
 
 export type SignerRequest = {
   id: string
@@ -70,22 +67,6 @@ export const signerHealth = derived([signerRequests, clock], ([$requests]) => {
     unresponsive: stale.length > 10 || (recent.length > 5 && disconnected),
   }
 })
-
-// Checked on a timer rather than on change, so an alert held back by another toast still goes out.
-export const syncSignerAlerts = () =>
-  throttled(ms(10), signerHealth).subscribe(({unresponsive}) => {
-    if (unresponsive && !get(toast)) {
-      pushToast({
-        theme: "error",
-        timeout: 60_000,
-        message: "Your signer isn't responding.",
-        action: {
-          message: "Details",
-          onclick: () => navigate("/settings/profile"),
-        },
-      })
-    }
-  })
 
 const httpAuthByUrl = new Map<
   string,

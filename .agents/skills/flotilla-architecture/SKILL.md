@@ -36,8 +36,10 @@ and `sync.ts`.
 - `src/lib` stays reusable by other apps.
 - `src/app` modules can be imported from anywhere (routes, components, other modules, the boot
   sequence) without pulling in UI.
-- `core/app.ts` can't import the policy modules that depend on it, so they push themselves onto
-  `appPolicies` when imported, and `core/app.ts` builds the `App` lazily after they have registered.
+- Core and ui never import features. A feature reaches into core through hooks (`registerSync`,
+  `registerSpaceSync`, `registerRetention`, `registerLogoutHandler`, …) from its own `registerX`,
+  and `registerAll` in `src/app/index.ts` calls every `registerX`. The root layout calls
+  `registerAll` first, and `core/app.ts` builds the `App` lazily after it.
   `flotilla-state` covers this under "App policies".
 
 ### Exceptions
@@ -79,20 +81,23 @@ only gate.
 concepts (`chat.css`, `room.css`, `role-badge.css`, `space-menu.css`), which `src/app/ui/app.css`
 imports. `flotilla-views` covers component conventions.
 
-The graph doesn't follow the layer table yet: some core and ui modules still import features
-(`sync`, `storage`, `session`, `notifications`, `routes`, `title`), and `signer`, `nip46` and
-`relays` import ui. Don't add new ones.
+The graph doesn't follow the layer table yet: `notifications`, `routes` and `title` in ui still
+import features. Don't add new ones.
 
 **`core/`: the app, session and background machinery**
 - `app.ts`: the `App` store, `appPolicies`, `user`, `fromApp`, `deriveUserItem`,
   `userSearchRelayUrls`
+- `spaces.ts`: the user's room list, `userSpaceUrls`, and `activeSpaceUrls` (platform relays when
+  configured)
 - `plugins.ts`: `usePlugin` and the plugin stores (`profiles`, `rooms`, `events`, …)
 - `domain.ts`: the `reader`/`writer`/`command` shortcuts
-- `session.ts`: the `session` store, `login`, restoring the saved session at boot, `logout`
+- `session.ts`: the `session` store, `login`, restoring the saved session at boot, `logout`, and
+  `registerLogoutHandler`
 - `policies.ts`: the ingest, auth and socket policies installed on every app
 - `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage) and the per-user IndexedDB
-  cache
-- `sync.ts`: `syncApplicationData`, the background sync of user data, spaces and DMs
+  cache, with `registerRetention` for what it keeps
+- `sync.ts`: `syncApplicationData`, the background sync of user data, spaces and DMs, with
+  `registerSync`, `registerUserLoader` and `registerSpaceSync`
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
 - `relays.ts`: relay URL encoding for routes, socket status, the LiveKit endpoint and detection
 - `management.ts`: NIP-86 admin checks and bans
@@ -106,7 +111,8 @@ The graph doesn't follow the layer table yet: some core and ui modules still imp
 - `routes.ts`: path builders (`makeSpacePath`, `makeContentPath`, …), `goTo*`, history tracking
 - `modal.ts`: `pushModal`, `popModal`, `navigate`, and the modal stack
 - `toast.ts`, `title.ts`, `theme.ts`, `icons.ts` (icon picker options), `markdown.ts`
-- `render.ts` (events as text), `share.ts`, `keyboard.ts`
+- `render.ts` (events as text), `share.ts`, `keyboard.ts`, `signer.ts` (the unresponsive-signer
+  toast)
 - `notifications.ts` (unread state, badges, the home inbox)
 - `app.css`: the app stylesheet
 
@@ -154,9 +160,8 @@ client.
 
 ## Boot sequence
 
-`src/routes/+layout.svelte` runs the boot sequence. It imports `@app/core/policies` for its side effect,
-and `@app/core/storage`, which registers `storagePolicy` the same way, so every `AppPolicy` is on
-`appPolicies` before anything calls `app.get()`. `applySavedTheme()` stamps the last theme and font
+`src/routes/+layout.svelte` runs the boot sequence. It calls `registerAll()` first, so every
+`AppPolicy`, retention rule and sync hook is in place before anything calls `app.get()`. `applySavedTheme()` stamps the last theme and font
 size from `localStorage` before first paint. Then, in order:
 
 1. `restoreSession()` restores the saved session, if there is one, which builds a user-scoped
@@ -288,7 +293,7 @@ rather than a persisted store.
   `kv`/`ss` store if it belongs to the device. See `flotilla-state`.
 - **A relay or network policy** (what to ingest, when to AUTH, which sockets may open) → an
   `AppPolicy` in `policies.ts`. See `flotilla-state` and `welshman-net`.
-- **Data every joined space needs locally** → the filters in `syncSpace` in `sync.ts`. Data that
+- **Data every joined space needs locally** → `registerSpaceSync` from the feature's `registerX`. Data that
   one page needs is loaded by that page. See `flotilla-state` and `flotilla-views`.
 - **A modal or dialog** → `src/app/components/<Name>.svelte`, opened with `pushModal`. See
   `flotilla-views`.
@@ -304,6 +309,9 @@ rather than a persisted store.
 - **A deployment setting** → a `VITE_` variable (see Env and branding).
 - **Startup wiring** → a `setup*` or `sync*` function in the owning module that returns an
   `Unsubscriber`, called from the root layout (`setupHistory`, `syncKeyboard`, `Push.sync`).
+- **A feature's contribution to core** (background sync, what storage keeps, logout cleanup) → a
+  `registerX` in the feature module that calls core's hooks, added to `registerAll` in
+  `src/app/index.ts`.
 
 ## Walkthrough: classifieds
 

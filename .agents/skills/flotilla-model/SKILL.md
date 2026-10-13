@@ -268,8 +268,8 @@ it. Zaps and goals are off on iOS (`ENABLE_ZAPS` in `src/app/core/env.ts`).
    search and `SpaceMenuNavItems`), `CONTENT_NOUNS` and `makeContentPath`, and add routes under
    `spaces/[relay]/`.
 4. If users sign it through a remote signer, add it to `NIP46_PERMS` in `src/app/core/nip46.ts`.
-5. If it is relay-scoped state that has to survive a reload, add it to the `kinds` map in
-   `src/app/core/storage.ts`.
+5. If it is relay-scoped state that has to survive a reload, register a retention rule for it
+   with `registerRetention` (`src/app/core/storage.ts`).
 6. If the relay signs it, read it through a `RelaySignedDerivedPlugin`.
 
 ## Parsing and building events

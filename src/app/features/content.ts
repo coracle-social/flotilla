@@ -1,4 +1,4 @@
-import {max, partition, sortBy, spec} from "@welshman/lib"
+import {ago, int, max, partition, sortBy, spec, MONTH, WEEK} from "@welshman/lib"
 import {
   CLASSIFIED,
   COMMENT,
@@ -9,7 +9,9 @@ import {
   GENERIC_REPOST,
   PINBOARD,
   LONG_FORM,
+  MESSAGE,
   POLL,
+  POLL_RESPONSE,
   REACTION,
   REPORT,
   REPOST,
@@ -27,6 +29,8 @@ import type {Filter, TrustedEvent} from "@welshman/util"
 import {Comment} from "@welshman/domain"
 import {reader} from "@app/core/domain"
 import {ENABLE_ZAPS} from "@app/core/env"
+import {registerRetention} from "@app/core/storage"
+import {registerSpaceSync} from "@app/core/sync"
 
 export const IMAGE_CONTENT_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"]
 
@@ -175,4 +179,25 @@ export const displayReaction = (content: string) => {
     return "👎"
   }
   return content
+}
+
+export const registerContent = () => {
+  registerSpaceSync({
+    activity: () => [
+      {kinds: CONTENT_KINDS, since: ago(WEEK)},
+      makeCommentFilter(CONTENT_KINDS, {since: ago(WEEK)}),
+    ],
+    detail: () => [{kinds: REACTION_KINDS, since: ago(WEEK)}],
+    // Which sections a space offers is a question about its whole history, and one event per kind answers it.
+    sample: () => CONTENT_KINDS.map(kind => ({kinds: [kind], limit: 1})),
+  })
+
+  // A space is asked for its own content on every load, so a month of it bounds the read at startup.
+  registerRetention({
+    match: event =>
+      [MESSAGE, COMMENT, DELETE, REPORT, POLL_RESPONSE, ...CONTENT_KINDS].includes(event.kind) &&
+      Boolean(tagValue(tagSpec("h"), event.tags)),
+    maxAge: int(1, MONTH),
+    provenance: true,
+  })
 }

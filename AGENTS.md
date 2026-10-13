@@ -37,6 +37,10 @@ lib/                       (can only depend on external libraries)
 external libraries         (bottom layer)
 ```
 
+Core and ui never import a feature. A feature reaches into core through hooks such as
+`registerSync`, `registerSpaceSync` and `registerRetention`, called from the feature's own
+`registerX`, which `registerAll` in `src/app/index.ts` calls before the app is built.
+
 **Import Ordering Convention (CRITICAL):**
 Always sort imports by dependency level:
 

@@ -18,6 +18,7 @@
   import AppContainer from "@app/components/AppContainer.svelte"
   import Startup from "@app/components/Startup.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
+  import {registerAll} from "@app/index"
   import * as coreApp from "@app/core/app"
   import {app} from "@app/core/app"
   import * as coreDomain from "@app/core/domain"
@@ -25,10 +26,9 @@
   import {setupHistory} from "@app/ui/routes"
   import {setupAnalytics} from "@app/features/analytics"
   import {setupLogging} from "@app/core/logger"
-  import "@app/core/policies"
   import * as coreSession from "@app/core/session"
   import {restoreSession} from "@app/core/session"
-  import {syncSignerAlerts} from "@app/core/signer"
+  import {syncSignerAlerts} from "@app/ui/signer"
   import {wallet} from "@app/features/lightning"
   import {storage} from "@app/core/storage"
   import {device} from "@app/core/device"
@@ -49,6 +49,7 @@
 
   const {children}: LayoutProps = $props()
 
+  registerAll()
   applySavedTheme()
 
   // Add stuff to window for convenience

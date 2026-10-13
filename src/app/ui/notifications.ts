@@ -36,13 +36,14 @@ import {
   sortEventsDesc,
   tagSpec,
   tagValue,
+  unionFilters,
   userInbox,
 } from "@welshman/util"
 import {synced, throttled, withGetter} from "@welshman/store"
 import type {EventsById} from "@welshman/store"
 import {Events, Relays} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
-import {router} from "@app/core/plugins"
+import {network, router} from "@app/core/plugins"
 import {makeRoomPath, makeSpaceChatPath, makeChatPath, makeContentPath} from "@app/ui/routes"
 import {
   CONTENT_KINDS,
@@ -54,10 +55,11 @@ import {getIsMuted, userSettingsValues} from "@app/core/settings"
 import {Chats} from "@app/features/chats"
 import {dufflepud, DUFFLEPUD_URL, ENABLE_ZAPS} from "@app/core/env"
 import {spaceSupportsRooms} from "@app/core/relays"
-import {activeSpaceUrls} from "@app/features/rooms"
+import {activeSpaceUrls} from "@app/core/spaces"
 import {getNotificationRef, isEventMuted, isNotificationTarget, Notes} from "@app/features/social"
 import {getHttpAuthHeader} from "@app/core/signer"
 import {kv} from "@app/core/storage"
+import {makeKeyedSyncs, registerSync, userRelayList} from "@app/core/sync"
 import {notificationSettings} from "@app/features/push/adapters/common"
 
 // Checked state
@@ -484,6 +486,54 @@ export const getHomeNotificationRelays = () =>
     .resolve([userInbox()])
     .then(scenario => scenario.policy(addMinimalFallbacks).getUrls())
 
+// The home badge reads the repository, so these have to arrive whether or not home is open.
+const syncHomeNotificationRelay = (url: string, pubkey: string) => {
+  const controller = new AbortController()
+  const filters = homeNotificationFilters(pubkey)
+
+  network.get().loadLenient({
+    relays: [url],
+    signal: controller.signal,
+    filters: filters.map(filter => ({...filter, limit: 100})),
+  })
+
+  network.get().request({
+    relays: [url],
+    signal: controller.signal,
+    filters: unionFilters(filters.map(assoc("limit", 0))),
+  })
+
+  return () => controller.abort()
+}
+
+const syncHomeNotifications = () => {
+  const $pubkey = app.get().user?.pubkey
+
+  if ($pubkey) {
+    const relaySyncs = makeKeyedSyncs(url => syncHomeNotificationRelay(url, $pubkey))
+
+    let stopped = false
+
+    const reconcile = async () => {
+      const urls = await getHomeNotificationRelays()
+
+      if (!stopped) {
+        relaySyncs.reconcile(urls)
+      }
+    }
+
+    const unsubscribeRelayList = userRelayList.subscribe(reconcile)
+
+    return () => {
+      stopped = true
+      relaySyncs.stop()
+      unsubscribeRelayList()
+    }
+  }
+
+  return noop
+}
+
 // The notifications tab is no route of its own, so what has been read sits under a path nothing navigates to.
 const homeNotificationsPath = "/home/notifications"
 
@@ -561,3 +611,7 @@ export const homeNotificationsUnread = derived(
   ([$latest, $checked]) =>
     Boolean($latest && $latest.created_at > ($checked[homeNotificationsPath] ?? 0)),
 )
+
+export const registerNotifications = () => {
+  registerSync(syncHomeNotifications)
+}

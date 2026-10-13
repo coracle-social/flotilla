@@ -15,7 +15,6 @@ import type {Nip46ResponseWithResult} from "@welshman/signer"
 import {Nip46Broker} from "@welshman/signer"
 import {makeSecret} from "@welshman/util"
 import {PLATFORM_URL, PLATFORM_NAME, SIGNER_RELAYS} from "@app/core/env"
-import {pushToast} from "@app/ui/toast"
 
 const APP_SCHEME = "social.flotilla"
 
@@ -58,9 +57,17 @@ export class Nip46Controller {
   abortController = new AbortController()
   broker = new Nip46Broker({clientSecret: this.clientSecret, relays: SIGNER_RELAYS})
   onNostrConnect: (response: Nip46ResponseWithResult) => void
+  onError: (message: string) => void
 
-  constructor({onNostrConnect}: {onNostrConnect: (response: Nip46ResponseWithResult) => void}) {
+  constructor({
+    onNostrConnect,
+    onError,
+  }: {
+    onNostrConnect: (response: Nip46ResponseWithResult) => void
+    onError: (message: string) => void
+  }) {
     this.onNostrConnect = onNostrConnect
+    this.onError = onError
   }
 
   async start() {
@@ -78,10 +85,7 @@ export class Nip46Controller {
       response = await this.broker.waitForNostrconnect(url, this.abortController.signal)
     } catch (errorResponse: any) {
       if (errorResponse?.error) {
-        pushToast({
-          theme: "error",
-          message: `Received error from signer: ${errorResponse.error}`,
-        })
+        this.onError(`Received error from signer: ${errorResponse.error}`)
       } else if (errorResponse) {
         console.error(errorResponse)
       }
@@ -98,10 +102,7 @@ export class Nip46Controller {
     const signerUrl = nostrconnectUrl && makeSignerLaunchUrl(nostrconnectUrl)
 
     if (!signerUrl) {
-      pushToast({
-        theme: "error",
-        message: "Unable to open signer app right now. Please try again.",
-      })
+      this.onError("Unable to open signer app right now. Please try again.")
 
       return
     }

@@ -18,12 +18,13 @@ import {
   publish,
 } from "@welshman/app"
 import type {Command, Room, RoomMeta} from "@welshman/app"
-import {deriveUserItem, fromApp, user} from "@app/core/app"
+import {fromApp, user} from "@app/core/app"
 import {roomLists, rooms, router, publisher, relays} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
-import {INDEXER_RELAYS, PLATFORM_RELAYS} from "@app/core/env"
+import {INDEXER_RELAYS} from "@app/core/env"
 import {allowPubkeys, deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/core/management"
 import {spaceSupportsRooms} from "@app/core/relays"
+import {userRoomList, userSpaceUrls} from "@app/core/spaces"
 import {makeRoomPath, makeSpaceChatPath} from "@app/ui/routes"
 import {loadSendDelay} from "@app/core/settings"
 
@@ -172,18 +173,9 @@ export const publishToSpace = async (
 
 // User
 
-export const userRoomList = deriveUserItem(RoomLists)
-
-export const userSpaceUrls = derived(userRoomList, $userRoomList => $userRoomList?.urls() ?? [])
-
 // Room lists also go to the indexers, which is where the space browser looks for them.
 export const publishRoomList = (command: Command) =>
   command.publishToRelays(uniq([...command.relays, ...INDEXER_RELAYS]))
-
-// Platform relays, where configured, stand in for the spaces the user has joined.
-export const activeSpaceUrls = derived(userSpaceUrls, $userSpaceUrls =>
-  PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : $userSpaceUrls,
-)
 
 // Spaces get reordered from lists showing only some of them, so urls go back in the slots they replace.
 export const reorderSpaceUrls = (urls: string[]) => {

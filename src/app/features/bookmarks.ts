@@ -21,6 +21,7 @@ import type {Command, IApp} from "@welshman/app"
 import {app, deriveUserItem, fromApp, user} from "@app/core/app"
 import {deletes, events, network} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
+import {registerUserLoader} from "@app/core/sync"
 
 // NIP-51's four item tags: a note, an addressable event, a topic and a url.
 const isBookmark = (tag: string[]) => ["e", "a", "t", "r"].includes(tag[0])
@@ -265,4 +266,8 @@ export const deleteBookmarkFolder = async (identifier: string) => {
   if (set) {
     return settle(deletes.get().deleteEvent(set.event))
   }
+}
+
+export const registerBookmarks = () => {
+  registerUserLoader(loadUserBookmarks)
 }

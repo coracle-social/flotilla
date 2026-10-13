@@ -49,6 +49,7 @@
       setChecked("*")
       clearModals()
     },
+    onError: message => pushToast({theme: "error", message}),
   })
 
   const {loading, bunker} = controller

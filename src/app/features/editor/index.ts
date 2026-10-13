@@ -33,7 +33,7 @@ import {RoomReferenceExtension} from "@app/features/editor/RoomReferenceExtensio
 import RoomSuggestion from "@app/features/editor/RoomSuggestion.svelte"
 import {NativeClipboardPasteExtension} from "@app/features/editor/clipboard"
 import {compressFileForUpload, makeImetaTag, uploadFile} from "@app/core/uploads"
-import {activeSpaceUrls} from "@app/features/rooms"
+import {activeSpaceUrls} from "@app/core/spaces"
 import {pushToast} from "@app/ui/toast"
 
 const isEmpty = (editor: Editor) => editor.getText({blockSeparator: "\n"}).trim() === ""

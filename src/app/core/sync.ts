@@ -3,7 +3,6 @@ import type {Unsubscriber} from "svelte/store"
 import {ago, assoc, call, noop, MONTH, WEEK} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
-  APP_DATA,
   DELETE,
   FOLLOWS,
   MESSAGE,
@@ -47,15 +46,10 @@ import {
   rooms,
   searchRelayLists,
 } from "@app/core/plugins"
-import {loadUserBookmarks} from "@app/features/bookmarks"
-import {LIVEKIT_PARTICIPANTS} from "@app/features/call"
-import {CONTENT_KINDS, REACTION_KINDS, makeCommentFilter} from "@app/features/content"
 import {INDEXER_RELAYS} from "@app/core/env"
-import {FEATURED_CONTENT_D} from "@app/features/featured"
-import {getHomeNotificationRelays, homeNotificationFilters} from "@app/ui/notifications"
 import {decodeRelay, outboxUrls} from "@app/core/relays"
-import {activeSpaceUrls, userSpaceUrls} from "@app/features/rooms"
 import {Settings} from "@app/core/settings"
+import {activeSpaceUrls, userSpaceUrls} from "@app/core/spaces"
 import {kv} from "@app/core/storage"
 import {hasBlossomSupport} from "@app/core/uploads"
 
@@ -67,6 +61,32 @@ export const shouldUnwrap = withGetter(
     defaultValue: false,
   }),
 )
+
+// Registration
+
+type SpaceSync = {
+  activity?: () => Filter[]
+  detail?: () => Filter[]
+  sample?: () => Filter[]
+}
+
+const syncs: (() => Unsubscriber)[] = []
+const userLoaders: ((pubkey: string) => unknown)[] = []
+const spaceSyncs: SpaceSync[] = []
+
+// Started with the built-in syncs, and restarted with them when login swaps the app.
+export const registerSync = (sync: () => Unsubscriber) => {
+  syncs.push(sync)
+}
+
+export const registerUserLoader = (load: (pubkey: string) => unknown) => {
+  userLoaders.push(load)
+}
+
+// Activity is requested from every active space, detail is pulled from the one on screen, and a sample is loaded from it once.
+export const registerSpaceSync = (spaceSync: SpaceSync) => {
+  spaceSyncs.push(spaceSync)
+}
 
 // Utils
 
@@ -93,7 +113,7 @@ const pullAndListen = ({url, signal, filters}: SyncOpts) => {
 }
 
 // Runs one sync per key, starting it when the key appears and stopping it when the key goes away.
-const makeKeyedSyncs = (start: (key: string) => Unsubscriber) => {
+export const makeKeyedSyncs = (start: (key: string) => Unsubscriber) => {
   const stopsByKey = new Map<string, Unsubscriber>()
 
   const reconcile = (keys: Iterable<string>) => {
@@ -118,7 +138,7 @@ const makeKeyedSyncs = (start: (key: string) => Unsubscriber) => {
   return {reconcile, stop}
 }
 
-const userRelayList = deriveUserItem(RelayLists)
+export const userRelayList = deriveUserItem(RelayLists)
 
 const userFollowList = deriveUserItem(FollowLists)
 
@@ -196,8 +216,8 @@ const syncUserData = () => {
       muteLists.get().load($pubkey)
       profiles.get().load($pubkey)
       searchRelayLists.get().load($pubkey)
-      loadUserBookmarks($pubkey)
       app.get().use(Settings).load($pubkey)
+      userLoaders.forEach(load => load($pubkey))
     }
   }
 
@@ -228,56 +248,6 @@ const syncUserData = () => {
   }
 }
 
-// Home notifications
-
-// The home badge reads the repository, so these have to arrive whether or not home is open.
-const syncHomeNotificationRelay = (url: string, pubkey: string) => {
-  const controller = new AbortController()
-  const filters = homeNotificationFilters(pubkey)
-
-  network.get().loadLenient({
-    relays: [url],
-    signal: controller.signal,
-    filters: filters.map(filter => ({...filter, limit: 100})),
-  })
-
-  network.get().request({
-    relays: [url],
-    signal: controller.signal,
-    filters: unionFilters(filters.map(assoc("limit", 0))),
-  })
-
-  return () => controller.abort()
-}
-
-const syncHomeNotifications = () => {
-  const $pubkey = app.get().user?.pubkey
-
-  if ($pubkey) {
-    const relaySyncs = makeKeyedSyncs(url => syncHomeNotificationRelay(url, $pubkey))
-
-    let stopped = false
-
-    const reconcile = async () => {
-      const urls = await getHomeNotificationRelays()
-
-      if (!stopped) {
-        relaySyncs.reconcile(urls)
-      }
-    }
-
-    const unsubscribeRelayList = userRelayList.subscribe(reconcile)
-
-    return () => {
-      stopped = true
-      relaySyncs.stop()
-      unsubscribeRelayList()
-    }
-  }
-
-  return noop
-}
-
 // Spaces
 
 const syncSpaceActivity = (url: string) => {
@@ -290,9 +260,8 @@ const syncSpaceActivity = (url: string) => {
     signal,
     filters: [
       {kinds: [MESSAGE], limit: 1},
-      {kinds: CONTENT_KINDS, since: ago(WEEK)},
-      makeCommentFilter(CONTENT_KINDS, {since: ago(WEEK)}),
       {kinds: [DELETE, REPORT, POLL_RESPONSE], since: ago(WEEK)},
+      ...spaceSyncs.flatMap(spaceSync => spaceSync.activity?.() ?? []),
     ],
   })
 
@@ -323,25 +292,22 @@ const syncSpaceActivity = (url: string) => {
 
 const syncSpaceDetail = (url: string) => {
   const controller = new AbortController()
+  const samples = spaceSyncs.flatMap(spaceSync => spaceSync.sample?.() ?? [])
 
   pullAndListen({
     url,
     signal: controller.signal,
     filters: [
       {kinds: [RELAY_ROLE]},
-      {kinds: [APP_DATA], "#d": [FEATURED_CONTENT_D]},
-      {kinds: [ROOM_ADMINS, ROOM_MEMBERS, LIVEKIT_PARTICIPANTS, PINBOARD, ROOM_PINS]},
+      {kinds: [ROOM_ADMINS, ROOM_MEMBERS, PINBOARD, ROOM_PINS]},
       {kinds: [ROOM_JOIN, ROOM_LEAVE], since: ago(MONTH)},
-      {kinds: REACTION_KINDS, since: ago(WEEK)},
+      ...spaceSyncs.flatMap(spaceSync => spaceSync.detail?.() ?? []),
     ],
   })
 
-  // Which sections a space offers is a question about its whole history, and one event per kind answers it.
-  network.get().loadLenient({
-    relays: [url],
-    signal: controller.signal,
-    filters: CONTENT_KINDS.map(kind => ({kinds: [kind], limit: 1})),
-  })
+  if (samples.length > 0) {
+    network.get().loadLenient({relays: [url], signal: controller.signal, filters: samples})
+  }
 
   return () => controller.abort()
 }
@@ -426,13 +392,7 @@ let unsubscribe: Unsubscriber | undefined
 export const syncApplicationData = () => {
   unsubscribe?.()
 
-  const unsubscribers = [
-    syncRelays(),
-    syncUserData(),
-    syncHomeNotifications(),
-    syncSpaces(),
-    syncDMs(),
-  ]
+  const unsubscribers = [syncRelays(), syncUserData(), syncSpaces(), syncDMs(), ...syncs.map(call)]
 
   unsubscribe = () => unsubscribers.forEach(call)
 

@@ -1,16 +1,13 @@
 import {writable} from "svelte/store"
-import type {ClientOptions} from "@pomade/core"
+import {call} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {withGetter} from "@welshman/store"
-import type {Wallet} from "@welshman/util"
-import {User, nip01, nip07, nip46, nip55, pomade, toSession} from "@welshman/app"
+import {User} from "@welshman/app"
 import type {Session} from "@welshman/app"
 import {getTestEvents, maybeGetTestSession} from "@lib/test/session"
 import {app, replaceApp} from "@app/core/app"
-import {wallet} from "@app/features/lightning"
 import {hasCachedIdentity, kv, ss, storage} from "@app/core/storage"
 import {deactivateCurrentPomadeSession} from "@app/core/pomade"
-import {Push} from "@app/features/push"
 
 export const session = withGetter(writable<Maybe<Session>>(undefined))
 
@@ -25,57 +22,14 @@ export const login = async ($session: Session) => {
   session.set($session)
 }
 
-// Sessions were a Record keyed by an active pubkey, so convert one rather than logging people out.
-type LegacySession = {
-  method: string
-  pubkey: string
-  secret?: string
-  signer?: string
-  email?: string
-  clientOptions?: ClientOptions
-  handler?: {pubkey: string; relays: string[]}
-  wallet?: Wallet
-}
+const logoutHandlers: (() => Promise<unknown>)[] = []
 
-const toCurrentSession = (legacy: LegacySession): Session | undefined => {
-  switch (legacy.method) {
-    case "nip01":
-      return legacy.secret ? toSession(nip01, {secret: legacy.secret}) : undefined
-    case "nip07":
-      return toSession(nip07, {})
-    case "nip46":
-      return legacy.secret && legacy.handler
-        ? toSession(nip46, {
-            clientSecret: legacy.secret,
-            signerPubkey: legacy.handler.pubkey,
-            relays: legacy.handler.relays,
-          })
-        : undefined
-    case "nip55":
-      return legacy.signer
-        ? toSession(nip55, {pubkey: legacy.pubkey, signer: legacy.signer})
-        : undefined
-    case "pomade":
-      return legacy.clientOptions && legacy.email
-        ? toSession(pomade, {clientOptions: legacy.clientOptions, email: legacy.email})
-        : undefined
-  }
-}
-
-const readLegacySession = async () => {
-  const pubkey = await kv.get<string>("pubkey")
-  const sessions = await ss.get<Record<string, LegacySession>>("sessions")
-  const legacy = pubkey ? sessions?.[pubkey] : undefined
-
-  if (legacy?.wallet) {
-    wallet.set(legacy.wallet)
-  }
-
-  return legacy ? toCurrentSession(legacy) : undefined
+export const registerLogoutHandler = (handler: () => Promise<unknown>) => {
+  logoutHandlers.push(handler)
 }
 
 const readStoredSession = async () => {
-  const session = (await ss.get<Session>("session")) ?? (await readLegacySession())
+  const session = await ss.get<Session>("session")
 
   // A nip01 secret is the account rather than a credential, and a local signer can't stall startup.
   if (session && session.method !== "nip01" && !(await hasCachedIdentity())) {
@@ -126,6 +80,6 @@ export const resetSession = async () => {
 
 export const logout = async () => {
   await deactivateCurrentPomadeSession()
-  await Push.disable()
+  await Promise.all(logoutHandlers.map(call))
   await resetSession()
 }

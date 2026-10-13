@@ -20,7 +20,7 @@
   import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
-  import {userSpaceUrls} from "@app/features/rooms"
+  import {userSpaceUrls} from "@app/core/spaces"
   import {pushToast} from "@app/ui/toast"
 
   type Values = {

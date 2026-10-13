@@ -2,7 +2,7 @@ import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {append, identity, on, partition, remove, sort, sortBy, uniq, uniqBy} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {getPow, hexTags, tagValues} from "@welshman/util"
+import {DELETE, REACTION, getPow, hexTags, isSignedEvent, tagValues} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import type {RepositoryUpdate, WrapItem} from "@welshman/net"
 import {makeDeriveItem, projection, throttled} from "@welshman/store"
@@ -21,6 +21,7 @@ import {app, deriveUserItem, fromApp, user} from "@app/core/app"
 import {usePlugin} from "@app/core/plugins"
 import {DM_KINDS} from "@app/features/content"
 import {userSettingsValues} from "@app/core/settings"
+import {registerRetention} from "@app/core/storage"
 
 export type Chat = {
   id: string
@@ -224,3 +225,12 @@ export const chatContext = derived(
     minWot: Math.max(1, $settings.min_dm_wot),
   }),
 )
+
+export const registerChats = () => {
+  // A deletion or reaction inside a gift wrap is unsigned, which is what sets it apart from a public one.
+  registerRetention({
+    match: event =>
+      DM_KINDS.includes(event.kind) ||
+      ([DELETE, REACTION].includes(event.kind) && !isSignedEvent(event)),
+  })
+}

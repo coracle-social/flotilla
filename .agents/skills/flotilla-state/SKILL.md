@@ -17,9 +17,9 @@ Almost everything per-identity hangs off one welshman `App`, and signing in repl
 
 `src/app/core/app.ts` builds the app lazily. `app` is a hand-written `ReadableWithGetter<App>`
 whose first `get()` or `subscribe` builds an anonymous app. `App` runs its policies in its
-constructor. Flotilla's own policies live in modules that import `core/app.ts` and push themselves
-onto `appPolicies` when imported, so the first app has to be built after those imports run (see
-[App policies](#app-policies)).
+constructor. Flotilla's own policies are pushed onto `appPolicies` by `registerAll` in
+`src/app/index.ts`, which the root layout calls first, so the first app has to be built after it
+runs (see [App policies](#app-policies)).
 
 - **Login swaps the app.** `login(session)` builds a `User` from the session, cleans up the old
   app, builds a new one with that user, then sets `session`. There is no account switching, so
@@ -163,12 +163,12 @@ An `AppPolicy` is `(app) => Unsubscriber`, and `app.cleanup()` tears policies do
 | `socketPolicy` | `policies.ts` | blocked relays, `relaysPendingTrust`, `relaysMostlyRestricted` |
 | `storagePolicy` | `storage.ts` | the per-user IndexedDB cache, only when the app has a user |
 
-The root layout imports `@app/core/policies` and `@app/core/storage` before anything touches the app. To
-add a policy:
+`registerPolicies` and `registerStorage` push them, called from `registerAll` before anything touches
+the app. To add a policy:
 
 1. Define it in the module that owns the concern.
-2. Push it onto `appPolicies` at the bottom of that module.
-3. Make sure the root layout imports that module ahead of the first `app.get()`.
+2. Push it onto `appPolicies` in that module's `registerX`.
+3. Make sure `registerAll` calls that `registerX`.
 
 Inside a policy, use the `$app` argument. During construction the new app is not in the store
 yet, so `app.get()` returns the previous, cleaned-up app. On first boot there is no previous
@@ -262,15 +262,19 @@ stores by bumping the database version, so adding or removing a table needs no m
 read walks a cursor, since a `getAll` over a whole table is one structured clone and Chrome refuses
 one past a cap that moves between versions.
 
-`shouldPersistEvent` keeps:
+The events table keeps an event when a retention rule matches it. A rule is a `match(event)`
+predicate, with an optional `maxAge` (by `created_at`), `ttl` (by when it was cached, and never for
+the user's own events) and `provenance` (dropped on load without a relay). `storage.ts` holds the
+rules for core's own kinds, and features add theirs with `registerRetention`:
 
 - profiles and metadata lists (follows, mutes, relay lists, app data, room lists) from any author
 - alert kinds
 - relay- and room-scoped kinds
-- DMs
 - room membership changes, only when they tag the user
+- DMs, and the unsigned deletes and reactions inside gift wraps (`registerChats`)
+- `COMMAND` definitions (`registerCommands`)
 - a space's own content, meaning a message, comment, delete, report, poll response or content kind
-  carrying an `h` tag
+  carrying an `h` tag (`registerContent`)
 
 A note from the wider network carries no `h` tag and is not kept, since nothing asks for it twice.
 
@@ -290,7 +294,7 @@ A note from the wider network carries no `h` tag and is not kept, since nothing 
   failed open, read and write is logged and swallowed, so the app runs on relay data alone and
   recovers on the next load that succeeds.
 
-To persist another kind, add it to `kinds` in `storage.ts`. To persist a new map-backed plugin,
+To persist another kind, register a retention rule from the feature that owns it. To persist a new map-backed plugin,
 add a `TABLES` entry and an `init*` method that calls `persistMapPlugin` with the table, the
 plugin, and how to turn a row into a key and item and back. It loads the rows, subscribes to
 `onItem`, and batches the writes.
@@ -363,6 +367,17 @@ call tears down the previous run.
   roles, room metadata, pins and livekit state in full, and recent content: a month of it, or a
   week for reactions and comments.
 - `syncDMs` pulls gift wraps from the user's messaging relays, only when `shouldUnwrap` is on.
+
+Features add to a run through hooks rather than being imported by `sync.ts`. Each one's
+`registerX`, called from `registerAll`, uses:
+
+- `registerSync(sync)` for a sync of its own, started and restarted with the rest. The home
+  notification sync (`registerNotifications`) is one.
+- `registerUserLoader(load)` to load the user's data alongside their lists (`registerBookmarks`).
+- `registerSpaceSync({activity, detail, sample})` to add filters to the per-space requests:
+  `activity` to the request kept open on every active space, `detail` to the pull of the space on
+  screen, and `sample` to a one-off load from it. Filters join the existing requests rather than
+  opening new ones, which keeps each relay at one subscription per kind of sync.
 
 `pullAndListen` is a negentropy `Sync.pull` plus a live `limit: 0` request, both stopped through
 an `AbortController`. `syncUserData`, `syncSpaces` and `syncDMs` each keep one sync per url with

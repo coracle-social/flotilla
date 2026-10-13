@@ -9,6 +9,7 @@ import {fromApp} from "@app/core/app"
 import {network} from "@app/core/plugins"
 import {getLivekitEndpoint} from "@app/core/relays"
 import {getHttpAuthHeader} from "@app/core/signer"
+import {registerSpaceSync} from "@app/core/sync"
 
 export const LIVEKIT_PARTICIPANTS = 39004
 
@@ -215,4 +216,8 @@ export const fetchLivekitToken = async (
   }
 
   return response.json()
+}
+
+export const registerCall = () => {
+  registerSpaceSync({detail: () => [{kinds: [LIVEKIT_PARTICIPANTS]}]})
 }

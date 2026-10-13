@@ -16,7 +16,7 @@
   import {app, user, userSearchRelayUrls} from "@app/core/app"
   import {relays, searchRelayLists} from "@app/core/plugins"
   import {pushModal} from "@app/ui/modal"
-  import {userSpaceUrls} from "@app/features/rooms"
+  import {userSpaceUrls} from "@app/core/spaces"
 
   const filter = {kinds: [MESSAGE, ...CONTENT_KINDS]}
 

@@ -282,4 +282,6 @@ export const socketPolicy: AppPolicy = $app => {
   }
 }
 
-appPolicies.push(ingestPolicy, authPolicy, socketPolicy, appPolicyNotify)
+export const registerPolicies = () => {
+  appPolicies.push(ingestPolicy, authPolicy, socketPolicy, appPolicyNotify)
+}
