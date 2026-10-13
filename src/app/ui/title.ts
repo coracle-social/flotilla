@@ -9,7 +9,7 @@ import {app} from "@app/core/app"
 import {profiles, rooms} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
 import {PLATFORM_NAME} from "@app/core/env"
-import {decodeRelay} from "@app/core/relays"
+import {decodeRelay} from "@app/ui/routes"
 
 const staticTitles = new Map<string, string>([
   ["/home", "Home"],

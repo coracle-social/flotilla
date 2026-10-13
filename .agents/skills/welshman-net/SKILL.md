@@ -102,7 +102,9 @@ Options are `{relay | relays, filters, context?, signal?}`. `undefined` means no
 | `AuthState` | Manages auth state for one socket; available as `socket.auth` |
 | `AuthStatus` | Enum: `None`, `Requested`, `PendingSignature`, `DeniedSignature`, `PendingResponse`, `Forbidden`, `Ok` |
 | `AuthStateEvent.Status` | Emitted when auth status changes |
-| `makeSocketPolicyAuth(options)` | Creates a socket policy that auto-handles auth challenges. Options: `{sign, shouldAuth?}` |
+| `makeSocketPolicyAuth(options)` | Creates a socket policy that auto-handles auth challenges. Options: `{sign, shouldAuth?, recheck?}`; `recheck` is a store whose changes re-ask `shouldAuth` for a declined challenge |
+| `socket.auth.authenticate(sign, signal)` | Opens the socket and answers the challenge (again, if an earlier answer failed); resolves to `{ok, status, reason}` |
+| `makeSocketPolicyRefusals({onAllowed, onRefused})` | Reports each request or publish the relay serves, or refuses as `restricted:`/`blocked:`. Not a default policy |
 
 ### Policies
 

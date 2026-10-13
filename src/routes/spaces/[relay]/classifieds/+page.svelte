@@ -23,10 +23,9 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ClassifiedItem from "@app/components/ClassifiedItem.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
-  import {decodeRelay} from "@app/core/relays"
   import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
-  import {makeClassifiedPath} from "@app/ui/routes"
+  import {decodeRelay, makeClassifiedPath} from "@app/ui/routes"
   import {
     CLASSIFIED_STATUS_TABS,
     deriveTopicCounts,

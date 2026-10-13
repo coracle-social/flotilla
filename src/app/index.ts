@@ -18,7 +18,6 @@ import {registerMembership} from "@app/features/spaces/membership"
 import {registerPinboards} from "@app/features/spaces/pinboards"
 import {registerCommands} from "@app/features/spaces/rooms/commands"
 import {registerRooms} from "@app/features/spaces/rooms"
-import {registerTrust} from "@app/features/spaces/trust"
 
 let registered = false
 
@@ -47,6 +46,5 @@ export const registerAll = () => {
     registerPinboards()
     registerCommands()
     registerRooms()
-    registerTrust()
   }
 }

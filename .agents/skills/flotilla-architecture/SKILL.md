@@ -93,14 +93,19 @@ add more.
 - `domain.ts`: the `reader`/`writer`/`command` shortcuts
 - `session.ts`: the `session` store, `login`, restoring the saved session at boot, `logout`, and
   `registerLogoutHandler`
-- `ingest.ts`, `auth.ts`: the ingest and NIP-42 auth policies installed on every app
+- `ingest.ts`: what the app accepts from a relay. It checks signatures, lets a relay in
+  `trusted_relays` strip them, and holds back unsigned events from any other in
+  `relaysPendingTrust` until the user decides
+- `auth.ts`: NIP-42. `shouldAuth` decides which challenges the app answers on its own, and
+  `authenticate(url)` authenticates on demand and explains a failure
 - `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage) and the per-user IndexedDB
   cache, with `registerRetention` for what it keeps
 - `sync.ts`: `syncApplicationData`, `registerSync`, and the helpers registered syncs are built
   from (`pullAndListen`, `syncEach`)
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
-- `relays.ts`: relay URL encoding for routes, socket status, the policies that block relays and
-  track `relaysMostlyRestricted`, and the NIP-11 sync for indexer and search relays
+- `relays.ts`: `deriveRelayAccess(url)`, the one answer to whether the app can use a relay and why
+  not, built from the socket, its auth, whether the relay keeps refusing requests, and pending trust; plus the
+  policy that keeps blocked relays closed
 - `publications.ts` (publish status by event id), `signer.ts` (signer request tracking and
   `signerHealth`), `notify.ts`
 - `env.ts`: every `VITE_` value, parsed
@@ -135,7 +140,6 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 - `spaces/calls/`: call state and LiveKit endpoint detection (`index.ts`), `engine.ts` (LiveKit join, leave, devices, the video
   tiles a call shows), `screenShare/`. `calls/index.ts` stays free of livekit values, since the
   root layout loads it and `engine.ts` is imported lazily.
-- `spaces/trust.ts`: holding back unsigned events from relays the user hasn't trusted yet
 - Content types: `spaces/articles.ts`, `calendar.ts`, `classifieds.ts`, `goals.ts`,
   `pinboards.ts`, `featured.ts`
 

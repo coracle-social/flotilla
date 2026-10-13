@@ -22,7 +22,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
-  import {decodeRelay} from "@app/core/relays"
+  import {decodeRelay} from "@app/ui/routes"
   import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import {

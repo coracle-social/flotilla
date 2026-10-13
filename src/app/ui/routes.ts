@@ -16,6 +16,7 @@ import {
   THREAD,
   ZAP_GOAL,
   hexTags,
+  normalizeRelayUrl,
   tagSpec,
   tagValue,
   tagValues,
@@ -25,13 +26,22 @@ import {user} from "@app/core/user"
 import {messagingRelayLists} from "@app/core/plugins"
 import {makeConversationId} from "@app/features/messages"
 import {PLATFORM_URL, PLATFORM_RELAYS} from "@app/core/env"
-import {decodeRelay, encodeRelay} from "@app/core/relays"
 import {DM_KINDS} from "@app/features/messages"
 import {getActivityTarget} from "@app/features/social"
 import {navigate, pushModal} from "@app/ui/modal"
 import type {ModalOptions, NavigateOptions} from "@app/ui/modal"
 import MessagesEnable from "@app/components/MessagesEnable.svelte"
 import NoteDetail from "@app/components/NoteDetail.svelte"
+
+// A relay url as a route segment, without its scheme or trailing slash.
+export const encodeRelay = (url: string) =>
+  encodeURIComponent(
+    normalizeRelayUrl(url)
+      .replace(/^wss:\/\//, "")
+      .replace(/\/$/, ""),
+  )
+
+export const decodeRelay = (url: string) => normalizeRelayUrl(decodeURIComponent(url))
 
 // State
 

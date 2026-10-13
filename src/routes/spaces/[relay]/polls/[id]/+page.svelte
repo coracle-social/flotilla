@@ -10,7 +10,7 @@
   import EventComments from "@app/components/EventComments.svelte"
   import {events, network} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
-  import {decodeRelay} from "@app/core/relays"
+  import {decodeRelay} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

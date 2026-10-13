@@ -7,7 +7,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
   import RoomChat from "@app/components/RoomChat.svelte"
-  import {decodeRelay} from "@app/core/relays"
+  import {decodeRelay} from "@app/ui/routes"
   import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 

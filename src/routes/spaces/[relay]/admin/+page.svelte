@@ -10,7 +10,7 @@
   import ActivityFeed from "@app/components/hosting/ActivityFeed.svelte"
   import {PLATFORM_NAME} from "@app/core/env"
   import {deriveHostedRelay, deriveRelayActivity} from "@app/features/hosting"
-  import {decodeRelay} from "@app/core/relays"
+  import {decodeRelay} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

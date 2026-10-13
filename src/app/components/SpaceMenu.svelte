@@ -6,7 +6,7 @@
   import SpaceMenuRooms from "@app/components/SpaceMenuRooms.svelte"
   import Link from "@lib/components/Link.svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
-  import {RelayConnection, deriveSocketStatus} from "@app/core/relays"
+  import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {makeSpacePath} from "@app/ui/routes"
 
   type Props = {
@@ -16,10 +16,12 @@
 
   const {url, mobile = false}: Props = $props()
 
-  const status = deriveSocketStatus(url)
+  const access = deriveRelayAccess(url)
 
   const statusPath = $derived(
-    $status === RelayConnection.SignerFailed ? "/settings/profile" : makeSpacePath(url, "about"),
+    $access.status === RelayAccessStatus.SignerFailed
+      ? "/settings/profile"
+      : makeSpacePath(url, "about"),
   )
 </script>
 

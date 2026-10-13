@@ -15,7 +15,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
   import {reader} from "@app/core/domain"
-  import {decodeRelay} from "@app/core/relays"
+  import {decodeRelay} from "@app/ui/routes"
   import {displayRoom} from "@app/features/spaces/rooms"
   import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"

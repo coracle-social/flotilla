@@ -9,9 +9,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Banner from "@app/components/Banner.svelte"
-  import {decodeRelay} from "@app/core/relays"
   import {displayRoom} from "@app/features/spaces/rooms"
-  import {makeRoomPath} from "@app/ui/routes"
+  import {decodeRelay, makeRoomPath} from "@app/ui/routes"
   import {
     CallState,
     callState,

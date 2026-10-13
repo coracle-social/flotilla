@@ -36,7 +36,7 @@
     isCurrentWeek,
   } from "@app/features/spaces/calendar"
   import {getModal, pushModal} from "@app/ui/modal"
-  import {decodeRelay} from "@app/core/relays"
+  import {decodeRelay} from "@app/ui/routes"
   import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import type {PageProps} from "./$types"
 

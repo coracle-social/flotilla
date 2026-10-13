@@ -236,23 +236,23 @@ writing Capacitor's `SecureStorage`/`Preferences` localStorage encoding by hand.
 The injected events go in _after_ `storage.ready`. Storage loads what the last session left behind
 with `Repository.load`, which clears the repository before inserting, so anything put there while
 IndexedDB is still opening is wiped a few milliseconds later — before the layout has rendered
-anything, and long before `authPolicy` reads the room list to decide whether to answer a relay's AUTH
+anything, and long before `shouldAuth` reads the room list to decide whether to answer a relay's AUTH
 challenge.
 
 The cache exists for the harness rather than for the app. In production the client bootstraps itself:
-asking a keyed collection for a pubkey loads it, so `authPolicy` reading the user's room and relay
+asking a keyed collection for a pubkey loads it, so `shouldAuth` reading the user's room and relay
 lists to decide whether to answer a challenge is itself what fetches them, as is any outbox-routed
 load of the user's own data. Kind-10002 comes back from the public indexers, and `syncRelayList`
 cascades into the room list from there.
 
 Here the indexers _are_ the scenario's relays, because `boot()` points every relay list at them, and
-those are members-only — so that first load is refused with `auth-required:`, while `authPolicy`,
+those are members-only — so that first load is refused with `auth-required:`, while `shouldAuth`,
 conservative by default, will not sign for a url no list has named yet. Each waits on the other. The
 injected room list breaks the circle, and it is what a user who joined a space through the UI would
 have on disk anyway.
 
 The price is that no spec exercises the bootstrap: every one of them starts already knowing which
-relays it belongs to, so a regression in the chain from relay list to room list, or in `authPolicy`'s
+relays it belongs to, so a regression in the chain from relay list to room list, or in `shouldAuth`'s
 conservative gate, leaves the suite green. The public relays under "The follow graph" are the
 standing-in indexer that covering it would need.
 
@@ -324,7 +324,7 @@ this, which is why most specs get away with naming the indexer alone.
 
 ### Why a reader has to name the relays it reads from
 
-zooid answers no REQ without NIP-42, whatever `public_read` says, and `authPolicy` is conservative:
+zooid answers no REQ without NIP-42, whatever `public_read` says, and `shouldAuth` is conservative:
 it identifies only to relays the user's own room list or relay list names. So a relay a spec expects
 the client to read from has to appear in that user's list, and a relay list is seeded for the reader
 as well as for the people they follow.

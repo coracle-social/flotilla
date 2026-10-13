@@ -17,7 +17,7 @@ The per-feature kind inventory is in [kinds.md](kinds.md).
 ## Spaces and rooms
 
 **A space is a relay URL.** No event defines one; the normalized URL is the identity, and routes
-carry it as `encodeRelay(url)` (`src/app/core/relays.ts`) under `/spaces/[relay]`. Any relay can be
+carry it as `encodeRelay(url)` (`src/app/ui/routes.ts`) under `/spaces/[relay]`. Any relay can be
 opened as a space. NIP-29 support only decides whether it has rooms.
 
 **A room is a NIP-29 group `h` on that relay.** The same `h` can exist independently on several
@@ -150,13 +150,13 @@ NIP-86 (`createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole`), n
 
 Joining a space (`attemptRelayAccess` and `completeSpaceJoin` in `src/app/features/spaces/membership/index.ts`):
 
-1. Open the socket and drive NIP-42 auth, retrying up to three times.
-2. Publish `RelayJoin` with the claim. The writer protects the event and requires a forced relay.
+1. `authenticate(url)` (`src/app/core/auth.ts`) opens the socket and answers its NIP-42 challenge.
+2. `requestMembership` publishes `RelayJoin` with the claim. The writer protects the event and requires a forced relay.
 3. Translate refusals: a `mute:` reply (`matchReason`) is ignored, and the free-text "invite code"
    means rejected and "claim" means the space needs an invite.
 4. `completeSpaceJoin`: opt into the space's notifications (`optInSpaceNotifications` in
    `src/app/features/push`, which asks for push permission first when push is on), `roomLists.addRelay(url)`,
-   clear the relay from `relaysMostlyRestricted`, restart sync, and `Sync.push` the user's `RELAYS`,
+   restart sync, and `Sync.push` the user's `RELAYS`,
    `MESSAGING_RELAYS`, `FOLLOWS` and `PROFILE` to the space so other members can see them.
 
 Invite links are `${PLATFORM_URL}/join?r=<relay>&c=<claim>`, plus `h` and `code` for a room
@@ -202,19 +202,21 @@ off on iOS (`HOSTING_ENABLED`).
 
 ## Auth, trust and protected events
 
-- **NIP-42.** `authPolicy` in `src/app/core/auth.ts` never authenticates to a relay on the user's
-  blocked-relay list and always does under `relay_auth: aggressive`. Under the default
-  `conservative`, it authenticates only to relays in the user's room, relay or messaging-relay
-  lists, or ones they have published to this session. `attemptRelayAccess` authenticates
-  explicitly before a join.
-- **Refusals.** `mostlyRestrictedPolicy` in `src/app/core/relays.ts` counts `restricted:` and
-  `blocked:` replies per socket.
-  Once most requests fail, `relaysMostlyRestricted` turns the space status to "Access Denied" and
-  the layout shows `SpaceAuthError`.
+- **Blocked relays.** The block policy in `src/app/core/relays.ts` never opens a relay in
+  `BLOCKED_RELAYS` or the user's blocked-relay list, and closes one as soon as it is blocked.
+- **NIP-42.** `shouldAuth` in `src/app/core/auth.ts` answers every challenge under
+  `relay_auth: aggressive`. Under the default `conservative`, it answers only relays in the user's
+  room, relay or messaging-relay lists, or ones they have published to this session, and asks again
+  as those lists load. `authenticate(url)` authenticates explicitly before a join.
+- **Refusals.** welshman's `makeSocketPolicyRefusals` reports each request a relay serves or
+  refuses (`restricted:` or `blocked:`). A relay that refuses more than five in a row is denying
+  access, until it serves one or the user authenticates (`src/app/core/relays.ts`).
+  `deriveRelayAccess` reports that as `RelayAccessStatus.Denied`, and the layout shows
+  `SpaceAuthError`.
 - **Unsigned events.** Some relays strip signatures (hosted relays have a
-  `policy_strip_signatures` flag). The ingest policy (`core/ingest.ts`) and `trustPolicy`
-  (`features/spaces/trust.ts`) hold back unsigned events unless the relay is in the
-  `trusted_relays` setting, while `SpaceTrustRelay` asks the user.
+  `policy_strip_signatures` flag). The ingest policy (`core/ingest.ts`) holds back unsigned events
+  unless the relay is in the `trusted_relays` setting, `deriveRelayAccess` reports the relay as
+  `RelayAccessStatus.Untrusted`, and `SpaceTrustRelay` asks the user. Trusting the relay ingests what was held.
 - **NIP-70.** Space content is protected exactly when the relay advertises NIP-70, so every space
   publish loads the relay (`const relay = await relays.get().load(url)`) and passes
   `setProtected(relay?.hasNip(70))`. Per NIP-70 (a protocol claim not

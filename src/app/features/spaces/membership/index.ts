@@ -1,8 +1,7 @@
 import {Capacitor} from "@capacitor/core"
 import {derived, readable, writable} from "svelte/store"
-import {append, dissoc, fromPairs, last, poll, randomId, remove, tryCatch} from "@welshman/lib"
-import {AuthStatus, RelayReasonPrefix, SocketStatus, matchReason} from "@welshman/net"
-import type {Socket} from "@welshman/net"
+import {append, fromPairs, randomId, remove, tryCatch} from "@welshman/lib"
+import {RelayReasonPrefix, matchReason} from "@welshman/net"
 import {
   displayRelayUrl,
   isRelayUrl,
@@ -22,11 +21,11 @@ import {RelayJoin, RelayLeave, RoomCreateInvite, RoomJoin, RoomLeave} from "@wel
 import {RelayMemberLists, Relays, Sync, User, publish} from "@welshman/app"
 import {stripPrefix} from "@lib/util"
 import {app, fromApp} from "@app/core/app"
+import {authenticate} from "@app/core/auth"
 import {relayMemberLists, relays, roomLists} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
 import {PLATFORM_URL} from "@app/core/env"
 import {optInSpaceNotifications} from "@app/features/push"
-import {deriveSocket, relaysMostlyRestricted} from "@app/core/relays"
 import {makeSpacePath} from "@app/ui/routes"
 import {publishRoomList} from "@app/features/spaces/rooms"
 import {removeTrustedRelay} from "@app/core/settings"
@@ -141,75 +140,10 @@ export const leaveRoom = async (url: string, h: string) => {
   await roomLists.get().removeRoom(h, url).then(publishRoomList)
 }
 
-// Relay authentication
+// Joining
 
-const authTerminalStatuses = [
-  AuthStatus.None,
-  AuthStatus.Ok,
-  AuthStatus.Forbidden,
-  AuthStatus.DeniedSignature,
-]
-
-const waitForAuth = async (socket: Socket) => {
-  await poll({
-    signal: AbortSignal.timeout(10_000),
-    condition: () => authTerminalStatuses.includes(socket.auth.status),
-  }).catch(() => {})
-}
-
-const formatAuthError = (status: AuthStatus, details?: string) => {
-  if (status === AuthStatus.DeniedSignature) {
-    return "Failed to authenticate — check your signer"
-  }
-
-  if (status === AuthStatus.PendingSignature) {
-    return "Failed to authenticate — approve the signing request from your extension or signer"
-  }
-
-  const message = details || last(status.split(":"))
-
-  return `Failed to authenticate (${message})`
-}
-
-export const deriveRelayAuthError = (url: string) =>
-  derived([relaysMostlyRestricted, deriveSocket(url)], ([$relaysMostlyRestricted, $socket]) => {
-    if ($socket.auth.status === AuthStatus.Forbidden && $socket.auth.details) {
-      return stripPrefix($socket.auth.details)
-    }
-
-    if ($relaysMostlyRestricted[url]) {
-      return stripPrefix($relaysMostlyRestricted[url])
-    }
-  })
-
-export const attemptRelayAccess = async (url: string, claim = "") => {
-  const socket = app.get().pool.get(url)
-
-  socket.attemptToOpen()
-
-  await poll({
-    signal: AbortSignal.timeout(3000),
-    condition: () => socket.status === SocketStatus.Open,
-  })
-
-  if (socket.status !== SocketStatus.Open) {
-    return `Failed to connect`
-  }
-
-  await poll({
-    signal: AbortSignal.timeout(3000),
-    condition: () => socket.auth.status === AuthStatus.Requested,
-  })
-
-  for (let i = 0; i < 3 && !authTerminalStatuses.includes(socket.auth.status); i++) {
-    await socket.auth.retryAuth(User.require(app.get()).sign)
-    await waitForAuth(socket)
-  }
-
-  if (![AuthStatus.None, AuthStatus.Ok].includes(socket.auth.status)) {
-    return formatAuthError(socket.auth.status, socket.auth.details)
-  }
-
+// A relay can refuse a join for reasons that still leave the user able to use the space.
+export const requestMembership = async (url: string, claim = "") => {
   const eventWriter = writer(RelayJoin).forceRoutes(relay(url))
 
   if (claim) {
@@ -241,10 +175,15 @@ export const attemptRelayAccess = async (url: string, claim = "") => {
   }
 }
 
+export const attemptRelayAccess = async (url: string, claim = "") => {
+  const authError = await authenticate(url)
+
+  return authError || requestMembership(url, claim)
+}
+
 export const completeSpaceJoin = async (url: string, notifications: boolean) => {
   await optInSpaceNotifications(url, notifications)
   await roomLists.get().addRelay(url).then(publishRoomList)
-  relaysMostlyRestricted.update(dissoc(url))
   syncApplicationData()
   app
     .get()
@@ -313,7 +252,6 @@ export const openCheckout = (url: string) => {
 export const reconcileSpaceMembership = async (url: string) => {
   // Auth that ended Forbidden before the payment never retries on its own.
   app.get().pool.get(url).close()
-  relaysMostlyRestricted.update(dissoc(url))
 
   const members = await relayMemberLists.get().forceLoad(url)
 

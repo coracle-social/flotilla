@@ -17,8 +17,7 @@
   import {events} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {makeFeedContext} from "@app/features/feeds"
-  import {decodeRelay} from "@app/core/relays"
-  import {makeClassifiedPath} from "@app/ui/routes"
+  import {decodeRelay, makeClassifiedPath} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

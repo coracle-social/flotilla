@@ -19,10 +19,9 @@
   import ArticleItem from "@app/components/ArticleItem.svelte"
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
   import {reader} from "@app/core/domain"
-  import {decodeRelay} from "@app/core/relays"
   import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
-  import {makeArticleCreatePath} from "@app/ui/routes"
+  import {decodeRelay, makeArticleCreatePath} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

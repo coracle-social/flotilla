@@ -16,7 +16,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import PollItem from "@app/components/PollItem.svelte"
   import PollCreate from "@app/components/PollCreate.svelte"
-  import {decodeRelay} from "@app/core/relays"
+  import {decodeRelay} from "@app/ui/routes"
   import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import {pushModal} from "@app/ui/modal"

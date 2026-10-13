@@ -15,6 +15,7 @@ import {
   network,
   profiles,
   relayLists,
+  relays,
   router,
   searchRelayLists,
 } from "@app/core/plugins"
@@ -101,9 +102,18 @@ const syncFollowNetwork = async ($followList: Maybe<FollowListReader>) => {
   }
 }
 
+// Search and health checks read the search relays' NIP-11 documents synchronously.
+const syncSearchRelayInfo = () =>
+  userSearchRelayList.subscribe($searchRelayList => {
+    for (const url of $searchRelayList?.urls() ?? []) {
+      relays.get().load(url)
+    }
+  })
+
 // Registry
 
 export const registerUser = () => {
   registerSync(syncUserLists)
+  registerSync(syncSearchRelayInfo)
   registerSync(() => userFollowList.subscribe(syncFollowNetwork))
 }

@@ -17,8 +17,7 @@
   import {events, network} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
   import {getChecked} from "@app/ui/notifications"
-  import {decodeRelay} from "@app/core/relays"
-  import {getPermalinkTarget, scrollToEvent} from "@app/ui/routes"
+  import {decodeRelay, getPermalinkTarget, scrollToEvent} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const REPLY_BATCH_SIZE = 20

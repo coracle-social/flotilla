@@ -10,6 +10,7 @@
   import {once} from "@welshman/lib"
   import {normalizeRelayUrl} from "@welshman/util"
   import {isMobile} from "@lib/html"
+  import {stripPrefix} from "@lib/util"
   import Page from "@lib/components/Page.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
@@ -20,26 +21,25 @@
   import SpaceNotify from "@app/components/SpaceNotify.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
-  import {derivePaidGated, deriveRelayAuthError} from "@app/features/spaces/membership"
+  import {derivePaidGated} from "@app/features/spaces/membership"
   import {user} from "@app/core/user"
+  import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {relays, roomLists} from "@app/core/plugins"
   import {userSpaceUrls} from "@app/features/spaces"
   import {getModal, pushModal} from "@app/ui/modal"
-  import {relaysPendingTrust} from "@app/features/spaces/trust"
-  import {decodeRelay} from "@app/core/relays"
-  import {makeSpacePath} from "@app/ui/routes"
+  import {decodeRelay, makeSpacePath} from "@app/ui/routes"
   import type {LayoutProps} from "./$types"
 
   const {children, params}: LayoutProps = $props()
 
   const url = decodeRelay(params.relay)
 
-  const authError = deriveRelayAuthError(url)
+  const access = deriveRelayAccess(url)
 
   const paidGated = derivePaidGated(url)
 
-  const showAuthError = once(() =>
-    pushModal(SpaceAuthError, {url, error: $authError}, {noEscape: true}),
+  const showAuthError = once((error: string) =>
+    pushModal(SpaceAuthError, {url, error}, {noEscape: true}),
   )
 
   const showPaymentGate = once(() => pushModal(SpacePaymentGate, {url}, {noEscape: true}))
@@ -97,9 +97,9 @@
       } else {
         loadSpaces()
       }
-    } else if ($authError) {
-      showAuthError()
-    } else if ($relaysPendingTrust.includes(url)) {
+    } else if ($access.status === RelayAccessStatus.Denied) {
+      showAuthError(stripPrefix($access.reason))
+    } else if ($access.status === RelayAccessStatus.Untrusted) {
       showPendingTrust()
     }
   })

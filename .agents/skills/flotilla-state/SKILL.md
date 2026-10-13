@@ -161,12 +161,11 @@ that owns them, from `registerAll` before anything touches the app:
 
 | Registered by | Module | What it adds |
 |---|---|---|
-| `registerIngest` | `core/ingest.ts` | passes events to `app.ingestEvent`, letting trusted relays skip signature checks |
-| `registerAuth` | `core/auth.ts` | NIP-42 by the `relay_auth` setting, conservative or aggressive |
-| `registerRelays` | `core/relays.ts` | refuses to open blocked relays, and tracks `relaysMostlyRestricted` |
+| `registerIngest` | `core/ingest.ts` | passes events to `app.ingestEvent`, letting trusted relays skip signature checks and holding unsigned ones from other relays in `relaysPendingTrust` |
+| `registerAuth` | `core/auth.ts` | NIP-42 by the `relay_auth` setting, conservative or aggressive, through welshman's `makeAppPolicyAuth` |
+| `registerRelays` | `core/relays.ts` | keeps blocked relays closed, and marks a relay denied once it refuses several requests in a row, for `deriveRelayAccess` |
 | `registerNotify` | `core/notify.ts` | welshman's `appPolicyNotify` |
 | `registerStorage` | `core/storage.ts` | the per-user IndexedDB cache, only when the app has a user |
-| `registerTrust` | `features/spaces/trust.ts` | holds back unsigned events from untrusted relays, in `relaysPendingTrust` |
 
 A socket policy is registered as `$app => $app.pool.addSocketPolicy(policy)`, which adds it to the
 app's pool and returns the cleanup that removes it. To add a policy:
@@ -467,7 +466,7 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
   badges.
 - **Singleton session state.** `spaces/calls` keeps call state in plain writables (`callState`,
   `currentCallSession`, …).
-- **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `spaces/trust.ts`.
+- **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `core/ingest.ts`.
 - **A controller per flow.** `Nip46Controller` (`nip46.ts`) is a class a component instantiates.
   It holds the writables and actions for a multi-step flow.
 - **Module-owned values.** `wallet` in `wallet.ts` persists itself to `ss` with

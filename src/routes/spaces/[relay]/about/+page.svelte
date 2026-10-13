@@ -14,7 +14,7 @@
   import SpaceMembersSummary from "@app/components/SpaceMembersSummary.svelte"
   import SpaceFeaturedContent from "@app/components/SpaceFeaturedContent.svelte"
   import {relays} from "@app/core/plugins"
-  import {decodeRelay} from "@app/core/relays"
+  import {decodeRelay} from "@app/ui/routes"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

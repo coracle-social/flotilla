@@ -18,7 +18,7 @@
   import {deriveSpaceMemberRoles} from "@app/features/spaces/management/roles"
   import {relayMemberLists, relayRoles} from "@app/core/plugins"
   import {deriveDisplaysByPubkey, deriveMemberPins} from "@app/features/social"
-  import {decodeRelay} from "@app/core/relays"
+  import {decodeRelay} from "@app/ui/routes"
   import {pushModal} from "@app/ui/modal"
   import type {PageProps} from "./$types"
 

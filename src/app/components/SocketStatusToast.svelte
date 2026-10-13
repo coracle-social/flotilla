@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
-  import {RelayConnection, deriveSocketStatus} from "@app/core/relays"
+  import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {pushToast, popToast} from "@app/ui/toast"
 
   type Props = {
@@ -10,7 +10,7 @@
 
   const {url}: Props = $props()
 
-  const status = deriveSocketStatus(url)
+  const access = deriveRelayAccess(url)
 
   let toastId: string | undefined
   let timeout: ReturnType<typeof setTimeout> | undefined
@@ -27,9 +27,9 @@
 
   $effect(() => {
     if (
-      $status !== RelayConnection.Connecting &&
-      $status !== RelayConnection.Authenticating &&
-      $status !== RelayConnection.AwaitingSignature
+      $access.status !== RelayAccessStatus.Connecting &&
+      $access.status !== RelayAccessStatus.Authenticating &&
+      $access.status !== RelayAccessStatus.AwaitingSignature
     ) {
       hide()
       return
@@ -39,7 +39,7 @@
       return
     }
 
-    // deriveSocketStatus is throttled, so a socket that opens at once still reports "Connecting".
+    // deriveRelayAccess is throttled, so a socket that opens at once still reports "Connecting".
     timeout = setTimeout(() => {
       timeout = undefined
       toastId = pushToast({

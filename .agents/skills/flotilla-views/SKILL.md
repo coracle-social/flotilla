@@ -34,7 +34,7 @@ is a `+layout.svelte`.
 
 ### Params
 
-- `[relay]`: `encodeRelay(url)` and `decodeRelay(param)` in `src/app/core/relays.ts`. Encoding strips
+- `[relay]`: `encodeRelay(url)` and `decodeRelay(param)` in `src/app/ui/routes.ts`. Encoding strips
   `wss://` and the trailing slash and URI-encodes the rest; decoding normalizes it back. Build
   paths with the helpers in `src/app/ui/routes.ts` rather than by hand.
 - `[h]`: the NIP-29 room id, unencoded (`makeRoomPath(url, h)`). Static segments win over it,
@@ -312,8 +312,8 @@ How you bind depends on what the method returns:
 
 In a handler, call `.get()` on a projection instead of subscribing. The app modules add `derive*`
 factories over the same data: `deriveSpaceActionItems` in `src/app/features/spaces/management/actionItems.ts`,
-`deriveSpaceSupportedMethods` in `src/app/features/spaces/management/index.ts`, `deriveRelayAuthError` in
-`src/app/features/spaces/membership/index.ts`. Call them at the top of the script with fixed arguments, and wrap one in
+`deriveSpaceSupportedMethods` in `src/app/features/spaces/management/index.ts`, `deriveRelayAccess` in
+`src/app/core/relays.ts`. Call them at the top of the script with fixed arguments, and wrap one in
 `$derived` only when its arguments change, as the thread page does for filters that wait on the
 root event.
 
