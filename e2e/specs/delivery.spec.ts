@@ -499,12 +499,12 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
   // Two bubbles, one status for the pair of them.
   await expect(toast(alice)).toHaveCount(1)
   await expect(toast(alice)).toContainText("Sending...")
-  await expect(alice.locator(".chat-bubble")).toHaveCount(2)
+  await expect(alice.locator(".conversation-bubble")).toHaveCount(2)
   await expect(bubble(alice, "here is the harbour")).toBeVisible()
 
   // Which only becomes a success once both parts have landed everywhere they were sent.
   await expect(toast(alice)).toContainText("Message sent!")
-  await expect(bob.locator(".chat-bubble")).toHaveCount(2)
+  await expect(bob.locator(".conversation-bubble")).toHaveCount(2)
   await expect(toast(alice)).toHaveCount(0)
 
   // The same message to someone one of whose relays refuses it: each part says so for itself.
@@ -522,6 +522,6 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
 
   await composer(alice).press("Enter")
 
-  await expect(alice.locator(".chat-bubble")).toHaveCount(2)
+  await expect(alice.locator(".conversation-bubble")).toHaveCount(2)
   await expect(alice.getByText("Failed to send!")).toHaveCount(2)
 })

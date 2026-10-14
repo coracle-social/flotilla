@@ -200,7 +200,7 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   await composer(alice).press("Enter")
 
   // A conversation's image is uploaded encrypted, so the recipient decrypts it into a blob url.
-  await expect(bob.locator('.chat-bubble img[src^="blob:"]')).toBeVisible()
+  await expect(bob.locator('.conversation-bubble img[src^="blob:"]')).toBeVisible()
 
   // Back to the room on a fresh page, so no toast the conversation raised is still standing.
   await alice.goto(path)

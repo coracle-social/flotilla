@@ -92,7 +92,7 @@ export const openMessageMenu = (page: Page, text: string) =>
   message(page, text).getByRole("button", {name: "More options"}).click()
 
 export const bubble = (page: Page, text: string) =>
-  page.locator(".chat-bubble").filter({hasText: text})
+  page.locator(".conversation-bubble").filter({hasText: text})
 
 // Clicking a composer that already holds the caret would collapse the selection an edit types over.
 export const send = async (page: Page, content: string) => {

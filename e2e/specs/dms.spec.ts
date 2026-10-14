@@ -77,7 +77,7 @@ const startConversation = async (page: Page, people: {term: string; user: TestUs
 
 // A message's actions are a hover popover on a pointer device and named buttons on a touch one.
 const openMessageMenu = (page: Page, id: string) =>
-  message(page, id).locator(".chat-bubble > .text-sm").click()
+  message(page, id).locator(".conversation-bubble > .text-sm").click()
 
 // Events reach indexeddb in three-second batches, so a spec that reloads has to read the cache first.
 const cachedContent = async (page: Page, pubkey: string, kind: number) =>
@@ -369,7 +369,9 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
   await sendDm(alice, "second attempt")
 
   await expect(bubble(bob, "second attempt")).toBeVisible()
-  await expect(bob.locator(".chat-bubble").filter({hasText: "first attempt"})).toHaveCount(0)
+  await expect(bob.locator(".conversation-bubble").filter({hasText: "first attempt"})).toHaveCount(
+    0,
+  )
 
   // React, then take it back, on both sides of the conversation
   await openMessageMenu(alice, his.id)
@@ -574,7 +576,7 @@ test("US-109 keep a conversation or room you have already read", async ({seed, a
   await sendDm(alice, "thanks")
 
   await expect(bubble(alice, "thanks")).toBeVisible()
-  await expect(alice.locator(".chat-bubble").filter({hasText: "thakns"})).toHaveCount(0)
+  await expect(alice.locator(".conversation-bubble").filter({hasText: "thakns"})).toHaveCount(0)
 
   // A reaction travels gift-wrapped the way the messages do, so it is kept or lost with them.
   await openMessageMenu(alice, his.id)
@@ -601,7 +603,7 @@ test("US-109 keep a conversation or room you have already read", async ({seed, a
 
   await expect(bubble(alice, "the tide charts are up")).toBeVisible()
   await expect(bubble(alice, "thanks")).toBeVisible()
-  await expect(alice.locator(".chat-bubble").filter({hasText: "thakns"})).toHaveCount(0)
+  await expect(alice.locator(".conversation-bubble").filter({hasText: "thakns"})).toHaveCount(0)
   await expect(message(alice, his.id)).toContainText("🎉")
 
   // ...and so is the room she had open, which the relay can no longer answer for
