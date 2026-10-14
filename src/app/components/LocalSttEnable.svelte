@@ -10,7 +10,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {popModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {onReady?: () => void; onCancel?: () => void}
   const {onReady, onCancel}: Props = $props()

@@ -15,7 +15,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {
     exportRelayData,
     importRelayData,

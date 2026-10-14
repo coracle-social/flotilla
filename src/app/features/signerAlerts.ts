@@ -3,7 +3,7 @@ import {ms} from "@welshman/lib"
 import {throttled} from "@welshman/store"
 import {signerHealth} from "@app/core/signer"
 import {navigate} from "@app/navigation/navigate"
-import {pushToast, toast} from "@app/ui/toast"
+import {pushToast, toast} from "@app/features/toast"
 
 // Checked on a timer rather than on change, so an alert held back by another toast still goes out.
 export const syncSignerAlerts = () =>

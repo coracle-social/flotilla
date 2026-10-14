@@ -2,7 +2,7 @@
   import {onDestroy} from "svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
-  import {pushToast, popToast} from "@app/ui/toast"
+  import {pushToast, popToast} from "@app/features/toast"
 
   type Props = {
     url: string

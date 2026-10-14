@@ -22,7 +22,7 @@
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {setChecked} from "@app/features/checked"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     email?: string

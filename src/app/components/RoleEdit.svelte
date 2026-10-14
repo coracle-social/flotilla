@@ -9,7 +9,7 @@
   import RelayName from "@app/components/RelayName.svelte"
   import RoleForm, {type Values} from "@app/components/RoleForm.svelte"
   import {relayManagement, relayRoles} from "@app/core/plugins"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

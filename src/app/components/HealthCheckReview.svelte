@@ -18,7 +18,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import type {HealthCheckPlan} from "@app/features/healthChecks"
   import {clearModals} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     plans: HealthCheckPlan[]

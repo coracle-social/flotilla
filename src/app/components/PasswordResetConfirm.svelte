@@ -16,7 +16,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {loginWithPomade, deleteCurrentPomadeSession} from "@app/features/pomade"
   import {clearModals} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {session} from "@app/core/session"
   import {requirePomadeSession} from "@app/features/pomade"
 

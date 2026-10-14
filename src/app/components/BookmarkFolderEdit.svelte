@@ -12,7 +12,7 @@
   import {createBookmarkFolder, renameBookmarkFolder} from "@app/features/bookmarks"
   import type {BookmarkFolder} from "@app/features/bookmarks"
   import {popModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     folder?: BookmarkFolder

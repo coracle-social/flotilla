@@ -13,7 +13,7 @@
   import QRCode from "@app/components/QRCode.svelte"
   import {PLATFORM_URL} from "@app/core/env"
   import * as pages from "@app/navigation/pages"
-  import {clip} from "@app/ui/toast"
+  import {clip} from "@app/features/toast"
 
   type Props = {
     pubkey: string

@@ -38,7 +38,7 @@
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {makeContentPath} from "@app/navigation/pages"
-  import {shareEvent} from "@app/ui/share"
+  import {shareEvent} from "@app/features/share"
   import {readAloud} from "@app/features/voice"
   import {pushModal} from "@app/navigation/dialogs"
   import {publishReaction} from "@app/features/spaces"

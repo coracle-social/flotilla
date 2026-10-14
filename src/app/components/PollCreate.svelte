@@ -21,7 +21,7 @@
   import DragList from "@lib/components/DragList.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {writer} from "@app/core/domain"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {publishToSpace} from "@app/features/spaces/rooms"
   import {DraftKey} from "@app/features/drafts"
 

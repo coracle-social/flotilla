@@ -141,7 +141,7 @@ export const mockAnalytics = (context: BrowserContext) =>
   )
 
 export type DufflepudFixtures = {
-  // The remote half of the read-state sync in src/app/ui/notifications.ts, keyed by path.
+  // The remote half of the read-state sync in src/app/features/checked.ts, keyed by path.
   checked?: Record<string, number>
   // A link preview is only rendered when it carries a title or an image.
   preview?: {title?: string; description?: string; image?: string}

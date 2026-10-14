@@ -31,7 +31,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
   import * as pages from "@app/navigation/pages"
-  import {clip, pushToast} from "@app/ui/toast"
+  import {clip, pushToast} from "@app/features/toast"
   import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {session} from "@app/core/session"

@@ -13,7 +13,7 @@
   import {prependParent, publishComment} from "@app/features/spaces/rooms"
   import {makeEditor} from "@app/features/editor"
   import {DraftKey} from "@app/features/drafts"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Values = {
     content?: string | object

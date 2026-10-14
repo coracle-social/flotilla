@@ -19,7 +19,7 @@
   import {setChecked} from "@app/features/checked"
   import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/features/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     email: string

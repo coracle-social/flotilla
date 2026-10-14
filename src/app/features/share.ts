@@ -9,7 +9,7 @@ import {navigate} from "@app/navigation/navigate"
 import {pushModal} from "@app/navigation/dialogs"
 import {relays} from "@app/core/plugins"
 import * as pages from "@app/navigation/pages"
-import {pushToast} from "@app/ui/toast"
+import {pushToast} from "@app/features/toast"
 import ShareDialog from "@app/components/Share.svelte"
 import ShareEvent from "@app/components/ShareEvent.svelte"
 

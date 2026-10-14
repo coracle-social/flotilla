@@ -18,7 +18,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import {app} from "@app/core/app"
   import {router} from "@app/core/plugins"
-  import {clip} from "@app/ui/toast"
+  import {clip} from "@app/features/toast"
 
   type Props = {
     url?: string

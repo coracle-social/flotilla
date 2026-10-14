@@ -10,7 +10,7 @@
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import PublicationStatusDetail from "@app/components/PublicationStatusDetail.svelte"
   import {publisher} from "@app/core/plugins"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     publication: Publishable

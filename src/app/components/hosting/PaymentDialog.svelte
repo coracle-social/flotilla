@@ -19,7 +19,7 @@
   import QRCode from "@app/components/QRCode.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
   import InvoiceItemsList from "@app/components/hosting/InvoiceItemsList.svelte"
-  import {clip, pushToast} from "@app/ui/toast"
+  import {clip, pushToast} from "@app/features/toast"
   import {pushModal} from "@app/navigation/dialogs"
   import {
     hosting,

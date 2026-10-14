@@ -28,8 +28,6 @@ app/components/            (can depend on app/* and lib/*)
   ↓
 app/features/              (one feature each, with few callers)
   ↓
-app/ui/                    (ui chrome: toasts, notifications, sharing, theme)
-  ↓
 app/navigation/            (routes, dialogs and overlays, history)
   ↓
 app/core/                  (the App, plugins, session, storage, sync, settings, env)
@@ -39,7 +37,7 @@ lib/                       (can only depend on external libraries)
 external libraries         (bottom layer)
 ```
 
-Core and ui never import a feature. A feature reaches into core through hooks such as
+Core and navigation never import a feature. A feature reaches into core through hooks such as
 `registerSync` and `registerRetention`, called from its own `registerX`, which `registerAll` in
 `src/app/index.ts` calls before the app is built.
 
@@ -210,7 +208,7 @@ return a `Command`, so `.then(publish)` is usually all you need.
 
 ### Managing Modals/Toasts
 
-- Import from `app/navigation/dialogs.ts` or `app/ui/toast.ts`
+- Import from `app/navigation/dialogs.ts` or `app/features/toast.ts`
 - Pass component objects with parameters
 - Use `$state.snapshot` if calling component might unmount
 - Navigate with `navigate` from `app/navigation/navigate.ts` rather than `goto` — an open modal owns a history

@@ -19,7 +19,7 @@
   import {deriveCallParticipants, loadCallParticipants} from "@app/features/spaces/calls"
   import {AbortError, TimeoutError, joinVoiceRoom} from "@app/features/spaces/calls/engine"
   import {popModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

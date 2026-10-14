@@ -21,7 +21,7 @@ export type BootOptions = {
   nip07?: boolean
   // What this user's client already has in local storage, e.g. their room list.
   events?: TrustedEvent[]
-  // Which paths this user has already read, keyed the way src/app/ui/notifications.ts keys them.
+  // Which paths this user has already read, keyed the way src/app/features/checked.ts keys them.
   checked?: Record<string, number>
   path?: string
   // VITE_ values the scenario sets for itself. Anything named here has to be something the test owns.

@@ -17,7 +17,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
   import {blockedRelayLists, relayLists, relayStats} from "@app/core/plugins"

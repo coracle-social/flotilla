@@ -9,7 +9,7 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import ProfilePage from "@app/components/ProfilePage.svelte"
   import * as pages from "@app/navigation/pages"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
   import {

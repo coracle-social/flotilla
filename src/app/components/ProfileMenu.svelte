@@ -14,7 +14,7 @@
   import {muteLists, profiles} from "@app/core/plugins"
   import {derivePubkeyMuted} from "@app/features/social/muting"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     pubkey: string

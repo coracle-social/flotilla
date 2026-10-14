@@ -22,7 +22,7 @@
   import {forgetSpacePage} from "@app/navigation/history"
   import {navigate} from "@app/navigation/navigate"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

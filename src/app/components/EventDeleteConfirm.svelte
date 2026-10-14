@@ -4,7 +4,7 @@
   import Confirm from "@lib/components/Confirm.svelte"
   import {deletes, relays, router} from "@app/core/plugins"
   import {clearModals} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url?: string

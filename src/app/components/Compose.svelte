@@ -21,9 +21,9 @@
   import {makeEditor} from "@app/features/editor"
   import {app} from "@app/core/app"
   import {getDictation} from "@app/features/voice"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {DraftKey, type Draft} from "@app/features/drafts"
-  import type {Share} from "@app/ui/share"
+  import type {Share} from "@app/features/share"
 
   type Props = {
     url?: string

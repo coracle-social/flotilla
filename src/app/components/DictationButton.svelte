@@ -11,7 +11,7 @@
   import type {Dictation} from "@app/features/voice"
   import {clearDictation, getDictation, transcribeDictation} from "@app/features/voice"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     key: string

@@ -16,7 +16,7 @@ import {get} from "svelte/store"
 import {not, nthEq, reject, spec} from "@welshman/lib"
 import {makeRoomKey} from "@welshman/app"
 import {ScreenShare, ScreenShareDenied} from "@app/features/spaces/calls/screenShare"
-import {pushToast} from "@app/ui/toast"
+import {pushToast} from "@app/features/toast"
 import {
   CallState,
   DeviceKind,

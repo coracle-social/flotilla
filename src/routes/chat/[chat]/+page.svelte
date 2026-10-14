@@ -13,7 +13,7 @@
   import {onMount} from "svelte"
   import Chat from "@app/components/Conversation.svelte"
   import * as pages from "@app/navigation/pages"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {Push, notificationSettings} from "@app/features/push"
   import type {PageProps} from "./$types"
 

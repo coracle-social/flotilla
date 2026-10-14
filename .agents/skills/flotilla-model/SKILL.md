@@ -44,7 +44,7 @@ domain `Relay`. These fields drive protocol decisions:
 
 | Read | Decides |
 |---|---|
-| `hasNip(29)` | whether the space has rooms, read off `relays.get().get(url)` or `$relays.one(url)`. Without it everything lives in the space chat (`pages.spaceChat`): `shareEvent` (`src/app/ui/share.ts`), room search, notification grouping, `SpaceMenuNavItems`, `SpaceMenuRooms` |
+| `hasNip(29)` | whether the space has rooms, read off `relays.get().get(url)` or `$relays.one(url)`. Without it everything lives in the space chat (`pages.spaceChat`): `shareEvent` (`src/app/features/share.ts`), room search, notification grouping, `SpaceMenuNavItems`, `SpaceMenuRooms` |
 | `hasNip(70)` | whether space content is marked protected (below) |
 | `self` | the relay's own pubkey, the trust anchor for relay-signed state |
 | `pubkey` | the space's owner, who writes space-wide content that has no other author (`deriveUserIsSpaceOwner`) |

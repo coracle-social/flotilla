@@ -13,7 +13,7 @@
   import {userRelayList} from "@app/core/user"
   import {messagingRelayLists, relayLists} from "@app/core/plugins"
   import {DEFAULT_RELAYS, DEFAULT_MESSAGING_RELAYS} from "@app/core/env"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     next: () => void

@@ -16,7 +16,7 @@
   import {handles, profiles} from "@app/core/plugins"
   import {highlightedEvent, makeEventPermalink} from "@app/navigation/locations"
   import {pushModal} from "@app/navigation/dialogs"
-  import {clip} from "@app/ui/toast"
+  import {clip} from "@app/features/toast"
 
   type Props = {
     url: string

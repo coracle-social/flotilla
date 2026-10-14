@@ -19,7 +19,7 @@
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
   import {displayRoom, publishToSpace} from "@app/features/spaces/rooms"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Values = {
     content?: string | object

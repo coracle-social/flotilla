@@ -16,7 +16,7 @@
   import {session} from "@app/core/session"
   import {requirePomadeSession} from "@app/features/pomade"
   import KeyRecoveryConfirm from "@app/components/KeyRecoveryConfirm.svelte"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   const {
     email,

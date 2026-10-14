@@ -21,7 +21,7 @@
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
   import {userSpaceUrls} from "@app/features/spaces"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Values = {
     content?: string | object

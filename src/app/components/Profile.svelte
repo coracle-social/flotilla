@@ -10,7 +10,7 @@
   import WotScore from "@app/components/WotScore.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {clip} from "@app/ui/toast"
+  import {clip} from "@app/features/toast"
   import {handles, profiles} from "@app/core/plugins"
 
   type Props = {

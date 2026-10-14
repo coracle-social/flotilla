@@ -22,7 +22,7 @@
   import {navigate} from "@app/navigation/navigate"
   import {addressWriterToSpace} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {resolveImageInput} from "@app/features/uploads"
 
   type Props = {

@@ -15,7 +15,7 @@
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {clip} from "@app/ui/toast"
+  import {clip} from "@app/features/toast"
   import {publishReaction} from "@app/features/messages"
 
   type Props = {

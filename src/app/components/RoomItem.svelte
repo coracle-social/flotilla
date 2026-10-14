@@ -31,7 +31,7 @@
   import {reader} from "@app/core/domain"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
   import {CONTENT_KINDS, publishReaction, retractReaction} from "@app/features/spaces"
-  import {colorFor} from "@app/ui/theme"
+  import {colorFor} from "@app/features/theme"
   import {ENABLE_ZAPS} from "@app/core/env"
   import type {FeedContext} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"

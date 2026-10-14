@@ -8,7 +8,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import {joinRoom, leaveRoom} from "@app/features/spaces/rooms/membership"
   import {deriveUserRoomMembershipStatus} from "@app/features/spaces/rooms"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

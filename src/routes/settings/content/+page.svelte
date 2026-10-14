@@ -24,9 +24,9 @@
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {deriveUserItem, userMuteList} from "@app/core/user"
   import {blossomServerLists, muteLists} from "@app/core/plugins"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {PLATFORM_NAME} from "@app/core/env"
-  import {flTheme, flThemes, theme} from "@app/ui/theme"
+  import {flTheme, flThemes, theme} from "@app/features/theme"
   import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
 
   const userBlossomServerList = deriveUserItem(BlossomServerLists)

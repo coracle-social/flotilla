@@ -8,7 +8,7 @@
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
   import {pushModal} from "@app/navigation/dialogs"
   import {app} from "@app/core/app"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url?: string

@@ -23,7 +23,7 @@
   import {user} from "@app/core/user"
   import {deriveUserRoomSearch} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
-  import {shareTo, type Share} from "@app/ui/share"
+  import {shareTo, type Share} from "@app/features/share"
 
   type Props = {
     share: Share

@@ -15,11 +15,11 @@
   import {user} from "@app/core/user"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {deleteLibraryEvent} from "@app/features/spaces/pinboards"
-  import {shareEvent} from "@app/ui/share"
+  import {shareEvent} from "@app/features/share"
   import {navigate} from "@app/navigation/navigate"
   import {pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

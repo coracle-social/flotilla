@@ -22,7 +22,7 @@
   import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceJoinNotifications from "@app/components/SpaceJoinNotifications.svelte"
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import * as pages from "@app/navigation/pages"
   import {goToSpace} from "@app/navigation/history"
   import {acceptInvite, parseInviteLink} from "@app/features/spaces/invites"

@@ -22,7 +22,7 @@
   import {user} from "@app/core/user"
   import {roomPinLists} from "@app/core/plugins"
   import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
-  import {shareEvent} from "@app/ui/share"
+  import {shareEvent} from "@app/features/share"
   import {readAloud} from "@app/features/voice"
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
   import {pushModal} from "@app/navigation/dialogs"

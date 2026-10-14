@@ -12,7 +12,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {wallet} from "@app/features/wallet"

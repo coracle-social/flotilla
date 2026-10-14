@@ -15,7 +15,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import KeyDownload from "@app/components/KeyDownload.svelte"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {session} from "@app/core/session"
   import {requirePomadeSession} from "@app/features/pomade"

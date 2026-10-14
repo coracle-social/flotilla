@@ -20,7 +20,7 @@
   import {deriveSpacePermissions, syncAssignments} from "@app/features/spaces/management"
   import {deriveSpaceMemberRoles} from "@app/features/spaces/roles"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

@@ -15,7 +15,7 @@
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import {events, network, profiles} from "@app/core/plugins"
   import {popModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {goToEvent} from "@app/navigation/locations"
 
   type Props = {

@@ -22,7 +22,7 @@
   import {profiles, publisher} from "@app/core/plugins"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
   import {highlightedEvent} from "@app/navigation/locations"
-  import {colorFor} from "@app/ui/theme"
+  import {colorFor} from "@app/features/theme"
   import {pushModal} from "@app/navigation/dialogs"
   import {publishReaction, retractReaction} from "@app/features/messages"
 

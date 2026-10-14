@@ -25,7 +25,7 @@
   import WalletAsReceivingAddress from "@app/components/WalletAsReceivingAddress.svelte"
   import {userProfile} from "@app/core/user"
   import {getWebLn, wallet} from "@app/features/wallet"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {pushModal} from "@app/navigation/dialogs"
 
   const back = () => history.back()

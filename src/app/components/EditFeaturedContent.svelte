@@ -13,7 +13,7 @@
   import InputList from "@lib/components/InputList.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {setFeaturedContent} from "@app/features/spaces/featured"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

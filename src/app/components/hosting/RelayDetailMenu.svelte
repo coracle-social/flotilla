@@ -12,7 +12,7 @@
   import RelayForm from "@app/components/hosting/RelayForm.svelte"
   import type {RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {
     followHostedRelay,
     hosting,

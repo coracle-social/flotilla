@@ -27,7 +27,7 @@
   import {payInvoice, wallet} from "@app/features/wallet"
   import {pushModal} from "@app/navigation/dialogs"
   import {zapAmounts} from "@app/core/settings"
-  import {clip, pushToast} from "@app/ui/toast"
+  import {clip, pushToast} from "@app/features/toast"
 
   type Props = {
     url?: string

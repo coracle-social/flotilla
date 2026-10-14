@@ -19,7 +19,7 @@
     retractRsvp,
   } from "@app/features/spaces/calendar"
   import {setEventReminders} from "@app/features/reminders"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

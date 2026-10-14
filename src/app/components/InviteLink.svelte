@@ -16,7 +16,7 @@
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {PLATFORM_NAME} from "@app/core/env"
   import {spaceManagement} from "@app/features/spaces/management"
-  import {clip} from "@app/ui/toast"
+  import {clip} from "@app/features/toast"
 
   type Props = {
     url: string

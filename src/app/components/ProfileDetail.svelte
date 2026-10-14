@@ -28,7 +28,7 @@
   import type {BannedPubkeyItem} from "@app/features/spaces/management"
   import {navigate} from "@app/navigation/navigate"
   import {popModal, pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import * as pages from "@app/navigation/pages"
   import {goToMessages} from "@app/features/messages"
 

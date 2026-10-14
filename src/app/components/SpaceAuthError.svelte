@@ -17,7 +17,7 @@
   import {leaveSpace} from "@app/features/spaces/membership"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {navigate} from "@app/navigation/navigate"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

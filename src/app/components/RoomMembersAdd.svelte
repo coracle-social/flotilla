@@ -17,7 +17,7 @@
   import RoomName from "@app/components/RoomName.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {profiles, relayMemberLists} from "@app/core/plugins"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {pushModal} from "@app/navigation/dialogs"
   import {addRoomMembers} from "@app/features/spaces/rooms"
 

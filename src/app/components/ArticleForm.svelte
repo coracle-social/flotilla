@@ -36,7 +36,7 @@
   import {publishToSpace} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

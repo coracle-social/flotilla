@@ -1,6 +1,6 @@
 ---
 name: flotilla-architecture
-description: "Use this skill when deciding where new code belongs in flotilla: which layer (routes, app/components, app/features, app/ui, app/core, lib) or welshman package owns it, which src/app module to extend, or how a kind-based space feature is laid out across the layers. Also use it for the layer and import rules, path aliases, the boot sequence, platform-specific behavior (Capacitor, Android, iOS, Electron, PWA), the link-preview server, env and branding variables, the e2e harness, and the lint/check tooling."
+description: "Use this skill when deciding where new code belongs in flotilla: which layer (routes, app/components, app/features, app/navigation, app/core, lib) or welshman package owns it, which src/app module to extend, or how a kind-based space feature is laid out across the layers. Also use it for the layer and import rules, path aliases, the boot sequence, platform-specific behavior (Capacitor, Android, iOS, Electron, PWA), the link-preview server, env and branding variables, the e2e harness, and the lint/check tooling."
 ---
 
 # Flotilla architecture
@@ -17,8 +17,7 @@ and UI.
 |---|---|---|---|
 | Routes | `src/routes` | — | anything |
 | App components | `src/app/components` | `@app/components/X.svelte` | `@app`, `@lib` |
-| Features | `src/app/features` | `@app/features/x` | `@app/ui`, `@app/core`, `@lib` |
-| UI chrome | `src/app/ui` | `@app/ui/x` | `@app/navigation`, `@app/core`, `@lib` |
+| Features | `src/app/features` | `@app/features/x` | `@app/navigation`, `@app/core`, `@lib` |
 | Navigation | `src/app/navigation` | `@app/navigation/x` | `@app/core`, `@lib` |
 | Core | `src/app/core` | `@app/core/x` | `@lib` |
 | Lib | `src/lib` | `@lib/x` | external packages only |
@@ -37,7 +36,7 @@ unrelated to flotilla's `@app/*`. App modules use it freely, for example `naviga
 - `src/lib` stays reusable by other apps.
 - `src/app` modules can be imported from anywhere (routes, components, other modules, the boot
   sequence) without pulling in UI.
-- Core and ui never import features. A feature reaches into core through hooks (`registerSync`,
+- Core and navigation never import features. A feature reaches into core through hooks (`registerSync`,
   `registerRetention`, `registerLogoutHandler`) from its own `registerX`,
   and `registerAll` in `src/app/index.ts` calls every `registerX`. The root layout calls
   `registerAll` first, and `core/app.ts` builds the `App` lazily after it.
@@ -52,7 +51,7 @@ only gate.
   component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
   `IconInput` and its picker buttons did.
 - **app → components.** `features/messages.ts` (`goToMessages` opens `MessagesEnable`),
-  `share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`), the voice providers
+  `features/share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`), the voice providers
   (`OpenRouterEnable`, `LocalSttEnable`) and `healthChecks.ts` (`KeyDownload`, the fix for the key backup check)
   import a component so they can open a modal mid-flow. Push adapters and
   deep links reach those flows from outside any component, and the rest have several component
@@ -82,9 +81,6 @@ only gate.
 `src/app/components` is flat except for `hosting/`. It also holds the CSS families for app
 concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), which
 `src/app.css` imports. `flotilla-views` covers component conventions.
-
-`notifications` in ui imports features, which the layer table forbids. Don't
-add more.
 
 **`core/`: the app, session and background machinery**
 - `app.ts`: the `App` store, `appPolicies`, `fromApp`
@@ -125,10 +121,6 @@ add more.
 - `navigate.ts`: `navigate`, which gives dialog entries back before it moves
 - `history.ts`: the last page per space and in messages, `goToSpace`, `goToHome`
 
-**`ui/`: chrome**
-- `toast.ts`, `theme.ts`
-- `render.ts` (events as text), `share.ts`, `signer.ts` (the unresponsive-signer toast)
-
 **`features/`: one feature each**
 
 The app's sections are DMs (`messages.ts`), spaces (`spaces/`), the social home page, and
@@ -158,6 +150,10 @@ Outside `spaces/`:
   `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38),
   `uploads.ts` (Blossom, image compression)
 - `people.ts`: display names for any list of pubkeys, and `bootstrapPubkeys`
+- `render.ts`: events as plain text or a one-line summary, for push notifications and reading aloud
+- `share.ts`: sharing an event into a room or conversation, and native share intents
+- `signerAlerts.ts`: the toast that offers help when the signer stops answering
+- `toast.ts` (`pushToast`, one at a time), `theme.ts` (the active theme and font size)
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
   `notifications.ts` (the latest activity per path, and which paths are unread), `badges.ts`
   (the app icon badge) and `inbox.ts` (the home inbox's lists)
@@ -311,7 +307,7 @@ names a relay or host, the e2e harness has to override or mock it (see "Containm
 ## Principles behind placement
 
 **Check welshman before writing flotilla code.** Several commits replace app code with welshman
-primitives: `render.ts` uses welshman's `summarize` (`9b0d8a55`), `spaces/actionItems.ts` uses
+primitives: `features/render.ts` uses welshman's `summarize` (`9b0d8a55`), `spaces/actionItems.ts` uses
 `rooms.get().pendingJoins` (`3d66fb31`), and `spaces/rooms` uses the membership helpers (`847d8984`).
 
 **When welshman lacks something, add it there.** The maintainer also maintains welshman, so a

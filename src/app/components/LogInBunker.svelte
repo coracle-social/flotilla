@@ -24,7 +24,7 @@
   import {Nip46Controller} from "@app/core/nip46"
   import {clearModals} from "@app/navigation/dialogs"
   import {setChecked} from "@app/features/checked"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
   import {NIP46_PERMS} from "@app/core/nip46"
 
   const back = () => {

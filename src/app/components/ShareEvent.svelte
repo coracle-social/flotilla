@@ -17,8 +17,8 @@
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import * as pages from "@app/navigation/pages"
   import {makeEventPermalink} from "@app/navigation/locations"
-  import {shareTo} from "@app/ui/share"
-  import {clip} from "@app/ui/toast"
+  import {shareTo} from "@app/features/share"
+  import {clip} from "@app/features/toast"
   import {rooms} from "@app/core/plugins"
 
   type Props = {

@@ -17,7 +17,7 @@
   import LogInOTPConfirm from "@app/components/LogInOTPConfirm.svelte"
   import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     email?: string

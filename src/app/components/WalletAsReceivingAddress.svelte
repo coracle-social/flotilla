@@ -12,7 +12,7 @@
   import {profiles} from "@app/core/plugins"
   import {wallet} from "@app/features/wallet"
   import {clearModals} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/ui/toast"
+  import {pushToast} from "@app/features/toast"
 
   const lud16 = getWalletAddress(wallet.get()!)
 

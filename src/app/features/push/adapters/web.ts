@@ -5,7 +5,7 @@ import {DM_KINDS} from "@lib/util"
 import {app} from "@app/core/app"
 import type {IPushAdapter} from "@app/features/push/adapters/common"
 import {notificationSettings, onNotification} from "@app/features/push/adapters/common"
-import {renderEventAsSummary} from "@app/ui/render"
+import {renderEventAsSummary} from "@app/features/render"
 import {goToEvent} from "@app/navigation/locations"
 
 const PREVIEW_LENGTH = 120
