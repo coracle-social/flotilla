@@ -124,7 +124,6 @@ stores with `simpleCache`.
 | `HealthChecks` (`healthChecks.ts`) | none | a plain class over `IApp` exposing `Projection`s |
 | `SpaceManagement` (`spaces/management`) | none | NIP-86 supported methods (5-minute TTL), admins and bans per URL |
 | `Messages` (`messages.ts`) | none | DM conversations by chat id (`index`, `one`), and a fuzzy `search` |
-| `LatestEvents` (`repository.ts`) | none | the most recent event held from an author (`forPubkey`) |
 | `GoalProgresses` (`goals.ts`) | none | one memoized NIP-75 progress store per goal and relay, behind `deriveGoalProgress` |
 | `Hosting` (`hosting.ts`) | none | the hosting backend's plans, the tenant's relays and billing, shared by every hosting view |
 
@@ -196,8 +195,7 @@ Every method returns a projection over the current app's repository:
 Components bind `$events.forUrl(url, filters).$`. A `derive*` function or a module-scope store
 wraps it in `fromApp($app => $app.use(Events).forUrl(url, filters).$)`, as `latestActivityByPath`
 does with `byIdByUrl`.
-`src/app/features/repository.ts` holds only the `LatestEvents` plugin. Plugin reads (`get`, `one`, `load`,
-`index`) are documented in welshman-app.
+Plugin reads (`get`, `one`, `load`, `index`) are documented in welshman-app.
 
 A relay-scoped read asks the repository for `{ids: <every id the tracker holds for that url>,
 ...filter}`, so what it costs is the url's whole cache rather than what the filter matches.
@@ -245,8 +243,6 @@ A derivation that every row subscribes to, or that joins large sets, is built by
   previous array wherever an event's publications are unchanged so rows don't churn.
 - `latestActivityByPath` (`notifications.ts`) joins conversations, room lists, relay info, events and
   settings behind `throttled(1000, …)`.
-- `LatestEvents.forPubkey` (`repository.ts`) shares one repository listener across every
-  watched author.
 
 ## Local and persisted state
 

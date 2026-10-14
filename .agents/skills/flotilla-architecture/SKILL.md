@@ -158,7 +158,7 @@ Outside `spaces/`:
 - Content: `feeds.ts` (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`),
   `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `reactions.ts` (with
   `REACTION_KINDS`), `social.ts` (display names, comment trees, muting,
-  `REPOST_KINDS`), `statuses.ts` (NIP-38), `repository.ts` (the `LatestEvents` plugin), `uploads.ts`
+  `REPOST_KINDS`), `statuses.ts` (NIP-38), `uploads.ts`
   (Blossom, image compression)
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
