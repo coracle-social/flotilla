@@ -9,8 +9,10 @@ declare global {
     // interface PageData {}
     interface PageState {
       modals?: string[]
-      // The entry was pushed to open the note in the url, so closing the note goes back over it.
-      note?: boolean
+      // The note an entry opened in place, since shallow routing leaves page.url as it was.
+      note?: string
+      // The entry was pushed to open the note, so closing the note goes back over it.
+      ownsNote?: boolean
       reply?: boolean
     }
     // interface Platform {}
