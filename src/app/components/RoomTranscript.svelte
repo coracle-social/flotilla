@@ -27,7 +27,7 @@
   import {groupRoomMessages} from "@app/features/spaces/rooms"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import {pageLoading} from "@app/features/loading"
-  import {checked} from "@app/ui/notifications"
+  import {checked} from "@app/features/checked"
   import {getPermalinkTarget, highlightedEvent} from "@app/navigation/locations"
 
   type Props = Pick<ComponentProps<typeof RoomItem>, "url" | "replyTo" | "canEdit" | "onEdit"> & {

@@ -17,7 +17,7 @@
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
   import {PLATFORM_RELAYS} from "@app/core/env"
   import {getModal, popModal, pushModal} from "@app/navigation/dialogs"
-  import {notifications} from "@app/ui/notifications"
+  import {notifications} from "@app/features/notifications"
   import {userSpaceUrls} from "@app/features/spaces"
   import * as pages from "@app/navigation/pages"
   import {goToMessages} from "@app/features/messages"

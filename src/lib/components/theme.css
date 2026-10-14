@@ -1,5 +1,5 @@
 /* ============================================================================
-   Design-system entry point (imported once, by src/app/ui/app.css).
+   Design-system entry point (imported once, by src/app.css).
 
      tailwindcss  — framework + our @theme token registration (via base.css)
      base.css     — theme-independent structure (base, utilities, integrations)

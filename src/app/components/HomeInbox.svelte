@@ -10,12 +10,9 @@
   import HealthCheckList from "@app/components/HealthCheckList.svelte"
   import HomeInboxItem from "@app/components/HomeInboxItem.svelte"
   import {navigate} from "@app/navigation/navigate"
-  import {
-    allNotifications,
-    inboxConversations,
-    inboxSpaceContent,
-    setChecked,
-  } from "@app/ui/notifications"
+  import {allNotifications} from "@app/features/notifications"
+  import {inboxConversations, inboxSpaceContent} from "@app/features/inbox"
+  import {setChecked} from "@app/features/checked"
 
   const conversations = $derived($inboxConversations.slice(0, 8))
 

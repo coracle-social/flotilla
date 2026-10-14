@@ -5,13 +5,13 @@
   import {Article} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
+  import {markdownToText} from "@lib/markdown"
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import type {FeedContext} from "@app/features/feeds"
   import {reader} from "@app/core/domain"
-  import {markdownToText} from "@app/ui/markdown"
   import * as pages from "@app/navigation/pages"
 
   type Props = {

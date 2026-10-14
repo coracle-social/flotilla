@@ -481,7 +481,7 @@ Rich text uses `makeEditor` from `src/app/features/editor` with `EditorContent`.
 ## Styling
 
 - Classes come from the component families in `src/lib/components/*.css`, which `theme.css`
-  imports, and the app-concept families in `src/app/components/*.css`, which `src/app/ui/app.css`
+  imports, and the app-concept families in `src/app/components/*.css`, which `src/app.css`
   imports after `theme.css`. A class goes in `@layer components` either way. The lib families
   include `button` with `button-primary|neutral|link|ghost|error` and `button-sm|xs|circle|square`,
   `card`, `badge`, `input`, `select`, `textarea` and `menu`. These are flotilla's own; daisyUI is

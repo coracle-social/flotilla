@@ -1,7 +1,7 @@
 import {Capacitor} from "@capacitor/core"
 import {registerLogoutHandler} from "@app/core/session"
 import {setSpaceNotifications} from "@app/core/settings"
-import {clearBadges} from "@app/ui/notifications"
+import {clearBadges} from "@app/features/badges"
 import {syncEventReminders} from "@app/features/reminders"
 import {notificationSettings, pushState} from "@app/features/push/adapters/common"
 import {ElectronNotifications} from "@app/features/push/adapters/electron"

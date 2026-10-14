@@ -21,7 +21,7 @@
   import {ENABLE_ZAPS} from "@app/core/env"
   import {CONTENT_KINDS} from "@app/features/spaces"
   import * as pages from "@app/navigation/pages"
-  import {allNotifications, notifications} from "@app/ui/notifications"
+  import {allNotifications, notifications} from "@app/features/notifications"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

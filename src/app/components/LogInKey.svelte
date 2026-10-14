@@ -21,7 +21,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {login} from "@app/core/session"
   import {clearModals} from "@app/navigation/dialogs"
-  import {setChecked} from "@app/ui/notifications"
+  import {setChecked} from "@app/features/checked"
   import {pushToast} from "@app/ui/toast"
 
   let loading = $state(false)

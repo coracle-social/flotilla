@@ -16,7 +16,7 @@
   import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import LogInSelect from "@app/components/LogInSelect.svelte"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
-  import {setChecked} from "@app/ui/notifications"
+  import {setChecked} from "@app/features/checked"
   import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/features/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
   import {pushToast} from "@app/ui/toast"

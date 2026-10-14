@@ -36,7 +36,7 @@
     addressWriterToSpace,
   } from "@app/features/spaces/rooms"
   import {loadSendDelay} from "@app/core/settings"
-  import {deferredRoomPath, setChecked} from "@app/ui/notifications"
+  import {deferredRoomPath, setChecked} from "@app/features/checked"
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/ui/toast"
 

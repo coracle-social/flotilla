@@ -7,7 +7,7 @@
   import {rooms} from "@app/core/plugins"
   import {RoomType, getRoomType} from "@app/features/spaces/rooms"
   import {deriveIsMuted} from "@app/core/settings"
-  import {notifications} from "@app/ui/notifications"
+  import {notifications} from "@app/features/notifications"
   import * as pages from "@app/navigation/pages"
 
   type Props = {

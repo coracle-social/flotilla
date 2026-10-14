@@ -67,6 +67,7 @@ only gate.
 | `src/routes` | SvelteKit pages; the root `+layout.svelte` also runs the boot sequence |
 | `src/app` | Flotilla's state, policies and feature logic, plus `components/` |
 | `src/lib` | App-agnostic utilities and the design-system components |
+| `src/app.css` | The stylesheet the root layout imports: the design system, then the app's CSS families |
 | `src/assets/icons` | SVG icons |
 | `static/` | Logo, PWA icons, fonts, sounds |
 | `android/`, `ios/` | Capacitor native projects, with flotilla's own plugins and iOS share extension |
@@ -80,7 +81,7 @@ only gate.
 
 `src/app/components` is flat except for `hosting/`. It also holds the CSS families for app
 concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), which
-`src/app/ui/app.css` imports. `flotilla-views` covers component conventions.
+`src/app.css` imports. `flotilla-views` covers component conventions.
 
 `notifications` in ui imports features, which the layer table forbids. Don't
 add more.
@@ -125,11 +126,8 @@ add more.
 - `history.ts`: the last page per space and in messages, `goToSpace`, `goToHome`
 
 **`ui/`: chrome**
-- `toast.ts`, `theme.ts`, `icons.ts` (icon picker options), `markdown.ts`
-- `render.ts` (events as text), `share.ts`, `keyboard.ts`, `signer.ts` (the unresponsive-signer
-  toast)
-- `notifications.ts` (unread state, badges, the home inbox)
-- `app.css`: the app stylesheet
+- `toast.ts`, `theme.ts`
+- `render.ts` (events as text), `share.ts`, `signer.ts` (the unresponsive-signer toast)
 
 **`features/`: one feature each**
 
@@ -160,8 +158,12 @@ Outside `spaces/`:
   `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38),
   `uploads.ts` (Blossom, image compression)
 - `people.ts`: display names for any list of pubkeys, and `bootstrapPubkeys`
+- Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
+  `notifications.ts` (the latest activity per path, and which paths are unread), `badges.ts`
+  (the app icon badge) and `inbox.ts` (the home inbox's lists)
 - `social/`: `index.ts` reads a conversation's shape off its tags and holds the `Notes`
-  plugin; `muting.ts`, `notifications.ts` (home notification grouping, `REPOST_KINDS`),
+  plugin; `muting.ts`, `notifications.ts` (the home notifications tab: its filters, sync,
+  grouping and unread state),
   `networkFeed.ts` (`makeNetworkFeed`) and `reactions.ts` (reacting outside a space)
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
@@ -189,6 +191,9 @@ client.
 - `media.ts`: content types, a url's `imeta` tags, `isImageUrl`, and decrypting an encrypted
   attachment
 - `html.ts`: DOM helpers such as `isMobile`, `createScroller`, `copyToClipboard`
+- `icons.ts` (the icon picker's options, globbed from `@assets/icons`), `markdown.ts`
+  (`markdownToText`), `keyboard.ts` (`syncKeyboard`, which marks the body `keyboard-open` while the native
+  keyboard is up)
 - `indexeddb.ts`: the `IDB` wrapper that `storage.ts` builds on
 - `feeds.ts`: saved feed definitions (kind `FEED`) over `@welshman/feeds`. It is unrelated to
   `@app/features/feeds`, which loads events.
@@ -200,7 +205,7 @@ client.
 - `currency.ts`, `transition.ts`, `implicit.ts` (hands state from one page to the next)
 - `test/`: the DEV-only hooks the e2e harness injects through
 - `components/`: the design system, entered through `theme.css` (see `flotilla-views`), which
-  `src/app/ui/app.css` imports ahead of the app's own CSS families
+  `src/app.css` imports ahead of the app's own CSS families
 
 ## Boot sequence
 
@@ -243,7 +248,7 @@ Platform checks call Capacitor directly. There is no wrapper module:
 export const ENABLE_ZAPS = Capacitor.getPlatform() !== "ios" // src/app/core/env.ts
 export const HOSTING_ENABLED = Capacitor.getPlatform() !== "ios" // src/app/features/hosting.ts
 
-if (!Capacitor.isPluginAvailable("Keyboard")) return noop // src/app/ui/keyboard.ts
+if (!Capacitor.isPluginAvailable("Keyboard")) return noop // src/lib/keyboard.ts
 ```
 
 The iOS flags exist because of App Store payment policy, so anything that takes money checks

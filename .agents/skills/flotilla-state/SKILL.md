@@ -66,7 +66,7 @@ The following run outside that gate:
 
 This code reads `app.get().user?.pubkey` and bails when it is missing, as
 `syncUserSpaceMembership` in `src/app/core/sync.ts` and `syncCheckedRemote` in
-`src/app/ui/notifications.ts` do.
+`src/app/features/checked.ts` do.
 
 Stores derived from `user` throw as soon as they are subscribed signed out. That includes
 `isEventMuted` (`social/muting`), `deriveUserIsRoomAdmin` (`spaces/rooms`) and `deriveUserCanCreateRoom`
@@ -94,7 +94,7 @@ The rule is about when a binding is made:
   register, and a binding made that way keeps reading the discarded app after login. A
   long-lived listener over the repository belongs on a plugin, as in `Messages` (`messages.ts`), so
   it is dropped with the app. Other listeners re-bind on `app.subscribe`, as
-  `syncCheckedRemote` in `notifications.ts` and the resync in the root layout do.
+  `syncCheckedRemote` in `checked.ts` and the resync in the root layout do.
 - **A store handed to `derived`** goes through `fromApp($app => $app.use(X).forUrl(url).$)`,
   never `x.get().forUrl(url)`, which binds the plugin of whichever app was current when the
   `derive*` helper ran and keeps reading it after login, even with `app` among the inputs.
@@ -241,7 +241,7 @@ A derivation that every row subscribes to, or that joins large sets, is built by
   profiles index.
 - `publicationsByEventId` (`publications.ts`) indexes publish history once, and hands back the
   previous array wherever an event's publications are unchanged so rows don't churn.
-- `latestActivityByPath` (`notifications.ts`) joins conversations, room lists, relay info, events and
+- `latestActivityByPath` (`features/notifications.ts`) joins conversations, room lists, relay info, events and
   settings behind `throttled(1000, …)`.
 
 ## Local and persisted state
@@ -311,7 +311,7 @@ Each persisted store is declared in its owner module with `synced({key, storage,
 or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. The store emits the default first and loads the stored value in the background, so
 `.ready` resolves once it has arrived:
 
-- `theme`, `flTheme` (`theme.ts`), `checked` (`notifications.ts`), `shouldUnwrap` (`messages.ts`),
+- `theme`, `flTheme` (`theme.ts`), `checked` (`checked.ts`), `shouldUnwrap` (`messages.ts`),
   `device` (`device.ts`), `forceHealthChecks` (`healthChecks.ts`) in `kv`
 - `pushState` (key `notificationState`) and `notificationSettings` in `kv`, both in
   `push/adapters/common.ts` and re-exported from `@app/features/push`
@@ -376,7 +376,7 @@ is joined. Each call tears down the previous run.
 - `registerRoles`, `registerFeatured`, `registerCalls`, `registerPinboards`: their kind for the
   space on screen
 - `registerMessages`: gift wraps from the user's messaging relays, only when `shouldUnwrap` is on
-- `registerBookmarks`: the user's bookmarks; `registerNotifications`: the home notification feed
+- `registerBookmarks`: the user's bookmarks; `registerHomeNotifications`: the home notification feed
 
 The helpers these are built from live in `sync.ts`, except `syncUserList`, which is in `user.ts`. `pullAndListen(url, filters)` is a negentropy
 `Sync.pull` plus a live `limit: 0` request, and returns the function that stops it.
@@ -456,8 +456,8 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
 
 ## Other app-level stores
 
-- **A join over many sources.** `notifications.ts` derives `latestActivityByPath`, then
-  `allNotifications`, then `notifications` and the counts. The inbox stores
+- **A join over many sources.** `features/notifications.ts` derives `latestActivityByPath`,
+  then `allNotifications`, then `notifications` and the counts. The inbox stores in `inbox.ts`
   (`inboxConversations`, `inboxSpaceContent`) derive from the same two, so the inbox matches the
   badges.
 - **Singleton session state.** `spaces/calls` keeps call state in plain writables (`callState`,
@@ -472,7 +472,7 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
 
 Modules in `src/app` use svelte stores. The navigation modules read the open dialogs from
 `page.state` in `$app/state`, SvelteKit's rune-based replacement for the deprecated `$app/stores`,
-since that state has no store. `sync.ts`, `notifications.ts` and `navigation/history.ts` read
+since that state has no store. `sync.ts`, `checked.ts`, `notifications.ts` and `navigation/history.ts` read
 `page` from `$app/stores` because they subscribe to it outside a component.
 
 Component-local `$state` covers UI state that dies with the component. Everything else is a

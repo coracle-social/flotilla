@@ -6,7 +6,7 @@
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import DragList from "@lib/components/DragList.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
-  import {homeNotificationsUnread} from "@app/ui/notifications"
+  import {homeNotificationsUnread} from "@app/features/social/notifications"
   import {reorderSpaceUrls} from "@app/features/spaces/rooms"
   import {userSpaceUrls} from "@app/features/spaces"
   import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/env"

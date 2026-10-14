@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "@app/ui/app.css"
+  import "@src/app.css"
   import "@welshman/editor/index.css"
   import * as nip19 from "nostr-tools/nip19"
   import type {Unsubscriber} from "svelte/store"
@@ -15,6 +15,7 @@
   import * as lib from "@welshman/lib"
   import * as plugins from "@welshman/app"
   import {isMobile, documentActive} from "@lib/html"
+  import {syncKeyboard} from "@lib/keyboard"
   import AppContainer from "@app/components/AppContainer.svelte"
   import Startup from "@app/components/Startup.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
@@ -38,12 +39,13 @@
   import {shouldUnwrap} from "@app/features/messages"
   import * as env from "@app/core/env"
   import {applySavedTheme, flTheme, syncTheme, theme} from "@app/ui/theme"
-  import * as notifications from "@app/ui/notifications"
-  import {notificationCount, backgroundNotificationCount} from "@app/ui/notifications"
+  import {syncChecked, syncCheckedRemote} from "@app/features/checked"
+  import * as notifications from "@app/features/notifications"
+  import {backgroundNotificationCount, notificationCount} from "@app/features/notifications"
+  import {syncBadges} from "@app/features/badges"
   import {Push, notificationSettings} from "@app/features/push"
   import {pushState} from "@app/features/push/adapters/common"
   import {setupDeepLinks} from "@app/features/deepLinks"
-  import {syncKeyboard} from "@app/ui/keyboard"
   import {getPageTitle} from "@app/navigation/pages"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
   import type {LayoutProps} from "./$types"
@@ -128,13 +130,13 @@
     unsubscribers.push(syncKeyboard())
 
     // Subscribe to badge count for changes
-    unsubscribers.push(notifications.syncBadges())
+    unsubscribers.push(syncBadges())
 
     // Subscribe to page history to update checked state
-    unsubscribers.push(notifications.syncChecked())
+    unsubscribers.push(syncChecked())
 
     // Sync checked state across devices
-    unsubscribers.push(notifications.syncCheckedRemote())
+    unsubscribers.push(syncCheckedRemote())
 
     // Initialize background notifications
     unsubscribers.push(Push.sync())

@@ -16,7 +16,7 @@
   import EventReply from "@app/components/EventReply.svelte"
   import {events, network} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
-  import {getChecked} from "@app/ui/notifications"
+  import {getChecked} from "@app/features/checked"
   import * as pages from "@app/navigation/pages"
   import {getPermalinkTarget, scrollToEvent} from "@app/navigation/locations"
   import type {PageProps} from "./$types"

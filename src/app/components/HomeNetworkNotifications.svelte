@@ -17,7 +17,7 @@
     isHomeNotification,
     isIncludedHomeNotification,
     readHomeNotifications,
-  } from "@app/ui/notifications"
+  } from "@app/features/social/notifications"
   import {groupNotifications} from "@app/features/social/notifications"
 
   const relays = getHomeNotificationRelays()

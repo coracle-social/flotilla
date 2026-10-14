@@ -1,9 +1,9 @@
 <script lang="ts">
   import type {ComponentProps} from "svelte"
   import {Article} from "@welshman/domain"
+  import {markdownToText} from "@lib/markdown"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import {reader} from "@app/core/domain"
-  import {markdownToText} from "@app/ui/markdown"
 
   const props: ComponentProps<typeof ContentMinimal> = $props()
 

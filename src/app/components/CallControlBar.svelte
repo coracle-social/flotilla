@@ -19,7 +19,7 @@
   import {ScreenShare} from "@app/features/spaces/calls/screenShare"
   import {RoomType, getRoomType} from "@app/features/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
-  import {notifications} from "@app/ui/notifications"
+  import {notifications} from "@app/features/notifications"
   import * as pages from "@app/navigation/pages"
   import {
     VideoCallLayout,

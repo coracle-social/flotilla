@@ -3,8 +3,8 @@
   import Link from "@lib/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {displayInboxTimestamp} from "@app/ui/notifications"
-  import type {SpaceContent} from "@app/ui/notifications"
+  import {displayInboxTimestamp} from "@app/features/inbox"
+  import type {SpaceContent} from "@app/features/inbox"
   import * as pages from "@app/navigation/pages"
 
   const {spaces}: {spaces: SpaceContent[]} = $props()

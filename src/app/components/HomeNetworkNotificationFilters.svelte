@@ -3,8 +3,11 @@
   import type {Maybe} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {homeNotificationTypes, includedHomeNotificationTypes} from "@app/ui/notifications"
-  import type {HomeNotificationType} from "@app/ui/notifications"
+  import {
+    homeNotificationTypes,
+    includedHomeNotificationTypes,
+  } from "@app/features/social/notifications"
+  import type {HomeNotificationType} from "@app/features/social/notifications"
 
   type Props = {
     counts: Map<Maybe<HomeNotificationType>, number>

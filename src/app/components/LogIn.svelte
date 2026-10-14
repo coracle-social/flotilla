@@ -26,7 +26,7 @@
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {PLATFORM_NAME, POMADE_SIGNERS} from "@app/core/env"
   import {pushToast} from "@app/ui/toast"
-  import {setChecked} from "@app/ui/notifications"
+  import {setChecked} from "@app/features/checked"
   import {login} from "@app/core/session"
 
   let signers: Nip55AppInfo[] = $state([])

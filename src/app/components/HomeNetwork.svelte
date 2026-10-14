@@ -16,7 +16,7 @@
   import {user} from "@app/core/user"
   import {relayLists} from "@app/core/plugins"
   import {pushModal} from "@app/navigation/dialogs"
-  import {homeNotificationsUnread} from "@app/ui/notifications"
+  import {homeNotificationsUnread} from "@app/features/social/notifications"
 
   type NetworkTab = "recent" | "notifications"
 

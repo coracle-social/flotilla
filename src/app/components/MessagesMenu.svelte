@@ -11,7 +11,7 @@
   import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
   import {pushModal} from "@app/navigation/dialogs"
-  import {setChecked} from "@app/ui/notifications"
+  import {setChecked} from "@app/features/checked"
   import {notificationSettings} from "@app/features/push"
 
   type Props = {
