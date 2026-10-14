@@ -19,19 +19,18 @@ import {
   tagSpec,
   tagValue,
 } from "@welshman/util"
-import type {Filter, TrustedEvent} from "@welshman/util"
+import type {EventContent, Filter, TrustedEvent} from "@welshman/util"
 import {Comment} from "@welshman/domain"
-import {RoomLists} from "@welshman/app"
+import {RoomLists, publishToRelays} from "@welshman/app"
 import {makeCommentFilter} from "@lib/util"
 import {deriveUserItem, syncUserList} from "@app/core/user"
-import {network, relays, roomLists} from "@app/core/plugins"
-import {PLATFORM_RELAYS} from "@app/core/env"
+import {deletes, network, reactions, relays, roomLists} from "@app/core/plugins"
+import {PLATFORM_RELAYS, REACTION_KINDS} from "@app/core/env"
 import {decodeRelay} from "@app/navigation/pages"
 import {registerRetention} from "@app/core/storage"
 import {pullAndListen, registerSync, syncEach} from "@app/core/sync"
 import {hasBlossomSupport} from "@app/features/uploads"
 import {reader} from "@app/core/domain"
-import {REACTION_KINDS} from "@app/features/reactions"
 
 // The kinds that each have a section of their own in a space.
 export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD, CLASSIFIED, POLL, PINBOARD, LONG_FORM]
@@ -130,6 +129,36 @@ const syncCurrentSpaceContent = (url: string) => {
     unsubscribe()
     controller.abort()
   }
+}
+
+// A reaction travels the way its subject does: protected under NIP-70, and tagged into its room.
+export const publishReaction = async (
+  url: string,
+  event: TrustedEvent,
+  {content, tags}: EventContent,
+) => {
+  const relay = await relays.get().load(url)
+  const h = tagValue(tagSpec("h"), event.tags)
+
+  return reactions
+    .get()
+    .react(event, content, writer => {
+      writer.addTags(...tags).setProtected(relay?.hasNip(70))
+
+      // welshman tags the room only once the tracker knows the target's relay, which an unconfirmed message lacks.
+      if (h) {
+        writer.setRoom(url, h)
+      }
+    })
+    .then(publishToRelays([url]))
+}
+
+export const retractReaction = async (url: string, reaction: TrustedEvent) => {
+  const relay = await relays.get().load(url)
+  return deletes
+    .get()
+    .deleteEvent(reaction, writer => writer.setProtected(relay?.hasNip(70)))
+    .then(publishToRelays([url]))
 }
 
 export const registerSpaces = () => {

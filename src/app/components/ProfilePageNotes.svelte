@@ -1,10 +1,9 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {NOTE, outbox} from "@welshman/util"
+  import {NOTE} from "@welshman/util"
   import {fly} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteEntry from "@app/components/NoteEntry.svelte"
-  import {router} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
   import {derivePinnedEvents} from "@app/features/pins"
   import {derivePubkeyMuted, makeNetworkFeed} from "@app/features/social"
@@ -15,10 +14,7 @@
 
   const {pubkey}: Props = $props()
 
-  const context = makeFeedContext({
-    relays: $router.resolver.relays([outbox(pubkey)]),
-    withReplies: true,
-  })
+  const context = makeFeedContext({withReplies: true})
 
   const feed = makeNetworkFeed({
     context,

@@ -5,7 +5,7 @@
   import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
   import NoteEntry from "@app/components/NoteEntry.svelte"
   import {user} from "@app/core/user"
-  import {followLists, relayLists} from "@app/core/plugins"
+  import {followLists} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
   import {
     countNetworkFeedTypes,
@@ -13,10 +13,7 @@
     makeNetworkFeed,
   } from "@app/features/social"
 
-  const context = makeFeedContext({
-    relays: $relayLists.readUrls($user.pubkey).get(),
-    withReplies: true,
-  })
+  const context = makeFeedContext({withReplies: true})
 
   const feed = makeNetworkFeed({context, isIncluded: isIncludedNetworkFeedEvent})
 

@@ -6,7 +6,7 @@
   import EventActionBar from "@app/components/EventActionBar.svelte"
   import {events} from "@app/core/plugins"
   import type {FeedContext} from "@app/features/feeds"
-  import {publishReaction, retractReaction} from "@app/features/reactions"
+  import {publishReaction, retractReaction} from "@app/features/spaces"
 
   type Props = {
     url: string
@@ -18,9 +18,9 @@
 
   const deleted = $derived($events.isDeleted(event).$)
 
-  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url})
+  const deleteReaction = (reaction: TrustedEvent) => retractReaction(url, reaction)
 
-  const createReaction = (values: EventContent) => publishReaction(event, values, {url})
+  const createReaction = (values: EventContent) => publishReaction(url, event, values)
 </script>
 
 <div data-component="ArticleActionBar" class="flex w-full min-w-0 flex-col gap-3">

@@ -1,7 +1,6 @@
 import {Capacitor} from "@capacitor/core"
-import * as nip19 from "nostr-tools/nip19"
 import {identity} from "@welshman/lib"
-import {normalizeRelayUrl} from "@welshman/util"
+import {DELETE, REACTION, REPORT, ZAP_RECEIPT, normalizeRelayUrl} from "@welshman/util"
 import {maybeGetTestEnv} from "@lib/test/env"
 
 const fromCsv = (s: string) => (s || "").split(",").filter(identity)
@@ -15,6 +14,12 @@ export const PUSH_SERVER = env("VITE_PUSH_SERVER")
 export const PUSH_BRIDGE = normalizeRelayUrl(env("VITE_PUSH_BRIDGE"))
 
 export const ENABLE_ZAPS = Capacitor.getPlatform() !== "ios"
+
+export const REACTION_KINDS = [REPORT, DELETE, REACTION]
+
+if (ENABLE_ZAPS) {
+  REACTION_KINDS.push(ZAP_RECEIPT)
+}
 
 export const ENABLE_PAID_SPACES = Capacitor.getPlatform() !== "ios"
 
@@ -74,8 +79,3 @@ export const DUFFLEPUD_URL = "https://dufflepud.coracle.social"
 export const THUMBNAIL_URL = env("VITE_THUMBNAIL_URL")
 
 export const dufflepud = (path: string) => DUFFLEPUD_URL + "/" + path
-
-export const entityLink = (entity: string) => `https://coracle.social/${entity}`
-
-export const pubkeyLink = (pubkey: string, relays: string[] = []) =>
-  entityLink(nip19.nprofileEncode({pubkey, relays}))

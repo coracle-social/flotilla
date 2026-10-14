@@ -42,17 +42,17 @@ import {
   tagValues,
   topicTags,
 } from "@welshman/util"
-import type {IEventRef, TrustedEvent} from "@welshman/util"
+import type {EventContent, IEventRef, TrustedEvent} from "@welshman/util"
 import {synced, withGetter} from "@welshman/store"
 import {Comment, Note, displayPubkey} from "@welshman/domain"
-import {Events, Network, Profiles, Router} from "@welshman/app"
+import {Events, Network, Profiles, Router, publish} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {decodeGeohash} from "@lib/geohash"
 import {createScroller} from "@lib/html"
 import {CONTENT_KINDS} from "@app/features/spaces"
 import {fromApp} from "@app/core/app"
 import {user, userFollowList, userMuteList} from "@app/core/user"
-import {profiles, router, usePlugin} from "@app/core/plugins"
+import {deletes, profiles, reactions, router, usePlugin} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
 import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
 import type {FeedContext, FeedLoadState} from "@app/features/feeds"
@@ -562,6 +562,17 @@ export const makeNetworkFeed = ({
 
   return {candidates, items, entries, loading, exhausted, start, stop}
 }
+
+// Reactions
+
+export const publishReaction = (event: TrustedEvent, {content, tags}: EventContent) =>
+  reactions
+    .get()
+    .react(event, content, writer => writer.addTags(...tags))
+    .then(publish)
+
+export const retractReaction = (reaction: TrustedEvent) =>
+  deletes.get().deleteEvent(reaction).then(publish)
 
 // Muting
 

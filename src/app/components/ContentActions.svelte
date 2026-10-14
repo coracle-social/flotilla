@@ -13,9 +13,9 @@
   import EventActions from "@app/components/EventActions.svelte"
   import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
-  import {publishReaction, retractReaction} from "@app/features/reactions"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
+  import {publishReaction, retractReaction} from "@app/features/spaces"
 
   type EditForm = Component<{url: string; event: TrustedEvent}>
 
@@ -49,9 +49,9 @@
 
   const edit = (form: EditForm) => () => pushModal(form, {url, event})
 
-  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url})
+  const deleteReaction = (reaction: TrustedEvent) => retractReaction(url, reaction)
 
-  const createReaction = (values: EventContent) => publishReaction(event, values, {url})
+  const createReaction = (values: EventContent) => publishReaction(url, event, values)
 </script>
 
 <div class="flex grow flex-wrap items-center justify-end gap-2">

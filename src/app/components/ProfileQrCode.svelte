@@ -11,7 +11,8 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import QRCode from "@app/components/QRCode.svelte"
-  import {pubkeyLink} from "@app/core/env"
+  import {PLATFORM_URL} from "@app/core/env"
+  import * as pages from "@app/navigation/pages"
   import {clip} from "@app/ui/toast"
 
   type Props = {
@@ -20,7 +21,7 @@
 
   const {pubkey}: Props = $props()
 
-  const code = pubkeyLink(pubkey)
+  const code = PLATFORM_URL + pages.profile.path({pubkey})
 
   const back = () => history.back()
 

@@ -14,9 +14,9 @@
   import Button from "@lib/components/Button.svelte"
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
-  import {publishWrappedReaction} from "@app/features/reactions"
   import {pushModal} from "@app/navigation/dialogs"
   import {clip} from "@app/ui/toast"
+  import {publishReaction} from "@app/features/messages"
 
   type Props = {
     pubkeys: string[]
@@ -31,7 +31,7 @@
 
   const onEmoji = (emoji: string) => {
     history.back()
-    publishWrappedReaction(event, {content: emoji, tags: []}, pubkeys)
+    publishReaction(pubkeys, event, {content: emoji, tags: []})
   }
 
   const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})

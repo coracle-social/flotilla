@@ -3,7 +3,7 @@
   import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
-  import {publishWrappedReaction} from "@app/features/reactions"
+  import {publishReaction} from "@app/features/messages"
 
   type Props = {
     event: TrustedEvent
@@ -12,8 +12,7 @@
 
   const {event, pubkeys}: Props = $props()
 
-  const onEmoji = (emoji: string) =>
-    publishWrappedReaction(event, {content: emoji, tags: []}, pubkeys)
+  const onEmoji = (emoji: string) => publishReaction(pubkeys, event, {content: emoji, tags: []})
 </script>
 
 <EmojiButton

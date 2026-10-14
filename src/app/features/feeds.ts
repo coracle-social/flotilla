@@ -3,10 +3,12 @@ import type {Readable} from "svelte/store"
 import {
   batch,
   call,
+  groupBy,
   int,
   ms,
   now,
   on,
+  pushToMapKey,
   range,
   sleep,
   spec,
@@ -30,6 +32,7 @@ import {
   getIdAndAddress,
   getIdOrAddress,
   getReplyFilters,
+  inbox,
   hexTags,
   matchFilters,
   tagValues,
@@ -42,9 +45,9 @@ import type {RepositoryUpdate} from "@welshman/net"
 import {createScroller} from "@lib/html"
 import type {ScrollerOpts} from "@lib/html"
 import {app} from "@app/core/app"
-import {network} from "@app/core/plugins"
+import {network, router} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
-import {REACTION_KINDS} from "@app/features/reactions"
+import {REACTION_KINDS} from "@app/core/env"
 
 const EVENT_CONTEXT_KINDS = [REPORT, REACTION, ZAP_RECEIPT, COMMENT]
 
@@ -78,17 +81,18 @@ const getTargets = (event: TrustedEvent) => {
   return [...tagValues(hexTags("e"), event.tags), ...tagValues(addressTags("a"), event.tags)]
 }
 
+// A space's own relay holds everything about its events, and elsewhere what answers a note goes to its author's inbox.
 export const makeFeedContext = ({
   relays,
   withReplies = false,
 }: {
-  relays: string[] | Promise<string[]>
+  relays?: string[]
   withReplies?: boolean
-}) => {
+} = {}) => {
   // Kind 1 notes reply with `e` tags rather than as NIP-22 comments.
   const contextKinds = withReplies ? [...EVENT_CONTEXT_KINDS, NOTE] : EVENT_CONTEXT_KINDS
   const requestKinds = withReplies ? [...REACTION_KINDS, NOTE] : REACTION_KINDS
-  const {repository, tracker} = app.get()
+  const {repository} = app.get()
   const controller = new AbortController()
   const targets = new Set<string>()
   const eventsByTarget = new Map<string, TrustedEvent[]>()
@@ -191,23 +195,29 @@ export const makeFeedContext = ({
 
     notify(touched)
 
-    const urls = await relays
-
-    // A feed built out of other people's outboxes has no relay holding the whole conversation.
     const eventsByRelay = new Map<string, TrustedEvent[]>()
 
-    for (const event of events) {
-      for (const url of tracker.getRelays(event.id)) {
-        if (!urls.includes(url)) {
-          eventsByRelay.set(url, [...(eventsByRelay.get(url) || []), event])
-        }
+    if (relays) {
+      for (const url of relays) {
+        eventsByRelay.set(url, events)
       }
+    } else {
+      const byAuthor = groupBy(event => event.pubkey, events)
+
+      await Promise.all(
+        Array.from(byAuthor, async ([pubkey, authored]) => {
+          const urls = await router.get().resolver.relays([inbox(pubkey)])
+
+          for (const url of urls) {
+            for (const event of authored) {
+              pushToMapKey(eventsByRelay, url, event)
+            }
+          }
+        }),
+      )
     }
 
-    await Promise.all([
-      loadFrom(urls, events),
-      ...Array.from(eventsByRelay, ([url, seenThere]) => loadFrom([url], seenThere)),
-    ])
+    await Promise.all(Array.from(eventsByRelay, ([url, targets]) => loadFrom([url], targets)))
   })
 
   const unsubscribe = on(

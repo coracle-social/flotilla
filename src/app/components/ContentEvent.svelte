@@ -14,7 +14,7 @@
   const {url, value, relays}: Props = $props()
 
   const event = $events.one(value, relays).$
-  const context = makeFeedContext({relays})
+  const context = makeFeedContext({relays: url ? [url] : undefined})
 
   onDestroy(context.cleanup)
 </script>

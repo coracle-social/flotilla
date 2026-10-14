@@ -2,10 +2,10 @@
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import type {FeedContext} from "@app/features/feeds"
-  import {publishReaction, retractReaction} from "@app/features/reactions"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventActions from "@app/components/EventActions.svelte"
+  import {publishReaction, retractReaction} from "@app/features/spaces"
 
   type Props = {
     url: string
@@ -16,9 +16,9 @@
 
   const {url, event, showActivity = false, context}: Props = $props()
 
-  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url})
+  const deleteReaction = (reaction: TrustedEvent) => retractReaction(url, reaction)
 
-  const createReaction = (values: EventContent) => publishReaction(event, values, {url})
+  const createReaction = (values: EventContent) => publishReaction(url, event, values)
 </script>
 
 <div class="flex flex-wrap items-center justify-between gap-2">

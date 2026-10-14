@@ -3,7 +3,7 @@ import type {Readable} from "svelte/store"
 import {append, identity, noop, on, partition, remove, sortBy, uniqBy} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {DELETE, REACTION, WRAP, getPow, hexTags, isSignedEvent, tagValues} from "@welshman/util"
-import type {TrustedEvent} from "@welshman/util"
+import type {EventContent, TrustedEvent} from "@welshman/util"
 import type {RepositoryUpdate, WrapItem} from "@welshman/net"
 import {makeDeriveItem, projection, synced, throttled, withGetter} from "@welshman/store"
 import type {Projection} from "@welshman/store"
@@ -19,7 +19,14 @@ import type {IApp, Search} from "@welshman/app"
 import {DM_KINDS} from "@lib/util"
 import {app, fromApp} from "@app/core/app"
 import {deriveUserItem, user, userFollowList} from "@app/core/user"
-import {messagingRelayLists, relayLists, usePlugin} from "@app/core/plugins"
+import {
+  deletes,
+  messagingRelayLists,
+  reactions,
+  relayLists,
+  usePlugin,
+  wraps,
+} from "@app/core/plugins"
 import {userSettingsValues} from "@app/core/settings"
 import {kv, registerRetention} from "@app/core/storage"
 import {makeKeyedSyncs, pullAndListen, registerSync} from "@app/core/sync"
@@ -265,6 +272,23 @@ const syncMessages = () => {
   }
 
   return noop
+}
+
+// A conversation's reactions go out gift-wrapped to its members rather than to a relay.
+export const publishReaction = async (
+  pubkeys: string[],
+  event: TrustedEvent,
+  {content, tags}: EventContent,
+) => {
+  const command = await reactions.get().react(event, content, writer => writer.addTags(...tags))
+
+  return wraps.get().publish({event: command.event, recipients: pubkeys, pow: 16})
+}
+
+export const retractReaction = async (pubkeys: string[], reaction: TrustedEvent) => {
+  const command = await deletes.get().deleteEvent(reaction)
+
+  return wraps.get().publish({event: command.event, recipients: pubkeys, pow: 16})
 }
 
 export const registerMessages = () => {

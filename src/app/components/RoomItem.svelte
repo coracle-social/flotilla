@@ -17,7 +17,6 @@
   import MenuButton from "@lib/components/MenuButton.svelte"
   import Tooltip from "@lib/components/Tooltip.svelte"
   import PublicationFailure from "@app/components/PublicationFailure.svelte"
-  import {publishReaction, retractReaction} from "@app/features/reactions"
   import {deriveDisplaysByPubkey} from "@app/features/social"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
@@ -31,7 +30,7 @@
   import {events, profiles, publisher} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
-  import {CONTENT_KINDS} from "@app/features/spaces"
+  import {CONTENT_KINDS, publishReaction, retractReaction} from "@app/features/spaces"
   import {colorFor} from "@app/ui/theme"
   import {ENABLE_ZAPS} from "@app/core/env"
   import type {FeedContext} from "@app/features/feeds"
@@ -96,9 +95,9 @@
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey, url})
 
-  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url})
+  const deleteReaction = (reaction: TrustedEvent) => retractReaction(url, reaction)
 
-  const createReaction = (values: EventContent) => publishReaction(event, values, {url})
+  const createReaction = (values: EventContent) => publishReaction(url, event, values)
 </script>
 
 <TapTarget

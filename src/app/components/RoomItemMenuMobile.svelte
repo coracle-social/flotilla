@@ -36,12 +36,12 @@
   import {roomPinLists} from "@app/core/plugins"
   import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
-  import {publishReaction} from "@app/features/reactions"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {makeContentPath} from "@app/navigation/pages"
   import {shareEvent} from "@app/ui/share"
   import {readAloud} from "@app/features/voice"
   import {pushModal} from "@app/navigation/dialogs"
+  import {publishReaction} from "@app/features/spaces"
 
   type Props = {
     url: string
@@ -62,7 +62,7 @@
 
   const onEmoji = (emoji: string) => {
     history.back()
-    publishReaction(event, {content: emoji, tags: []}, {url})
+    publishReaction(url, event, {content: emoji, tags: []})
   }
 
   const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})

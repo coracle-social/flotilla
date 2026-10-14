@@ -22,7 +22,7 @@
 
   const relays = getHomeNotificationRelays()
 
-  const context = makeFeedContext({relays, withReplies: true})
+  const context = makeFeedContext({withReplies: true})
 
   let element: HTMLElement | undefined = $state()
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()

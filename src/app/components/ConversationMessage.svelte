@@ -11,7 +11,6 @@
   import TapTarget from "@lib/components/TapTarget.svelte"
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
-  import {publishWrappedReaction, retractWrappedReaction} from "@app/features/reactions"
   import Content from "@app/components/Content.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import type {FeedContext} from "@app/features/feeds"
@@ -25,6 +24,7 @@
   import {highlightedEvent} from "@app/navigation/locations"
   import {colorFor} from "@app/ui/theme"
   import {pushModal} from "@app/navigation/dialogs"
+  import {publishReaction, retractReaction} from "@app/features/messages"
 
   type Props = {
     event: TrustedEvent
@@ -48,9 +48,9 @@
   const reply = () => replyTo(event)
   const edit = canEdit?.(event) ? () => onEdit?.(event) : undefined
 
-  const deleteReaction = (reaction: TrustedEvent) => retractWrappedReaction(reaction, pubkeys)
+  const deleteReaction = (reaction: TrustedEvent) => retractReaction(pubkeys, reaction)
 
-  const createReaction = (values: EventContent) => publishWrappedReaction(event, values, pubkeys)
+  const createReaction = (values: EventContent) => publishReaction(pubkeys, event, values)
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey})
 

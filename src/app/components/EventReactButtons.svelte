@@ -5,8 +5,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
-  import {publishReaction} from "@app/features/reactions"
   import {ENABLE_ZAPS} from "@app/core/env"
+  import {publishReaction} from "@app/features/spaces"
 
   type Props = {
     url: string
@@ -17,7 +17,7 @@
 
   const {url, event, hideZap, class: className = ""}: Props = $props()
 
-  const onEmoji = (emoji: string) => publishReaction(event, {content: emoji, tags: []}, {url})
+  const onEmoji = (emoji: string) => publishReaction(url, event, {content: emoji, tags: []})
 </script>
 
 {#if ENABLE_ZAPS && !hideZap}

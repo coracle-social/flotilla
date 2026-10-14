@@ -15,7 +15,7 @@
     formatTimestampAsDate,
   } from "@welshman/lib"
   import type {TrustedEvent, EventTemplate} from "@welshman/util"
-  import {makeEvent, userInbox, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE} from "@welshman/util"
+  import {makeEvent, DIRECT_MESSAGE, DIRECT_MESSAGE_FILE} from "@welshman/util"
   import {parse, isLink} from "@welshman/content"
   import {MessagingRelayLists, Publisher} from "@welshman/app"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
@@ -37,7 +37,7 @@
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
-  import {deletes, router, wraps} from "@app/core/plugins"
+  import {deletes, wraps} from "@app/core/plugins"
   import {loadSendDelay} from "@app/core/settings"
   import {messages} from "@app/features/messages"
   import {makeConversationId} from "@app/navigation/pages"
@@ -55,7 +55,8 @@
   const {pubkeys}: Props = $props()
 
   const conversationId = makeConversationId(pubkeys)
-  const context = makeFeedContext({relays: $router.resolver.relays([userInbox()])})
+  // Reactions in a conversation arrive gift-wrapped, so no relay holds them as plain events.
+  const context = makeFeedContext({relays: []})
 
   onDestroy(context.cleanup)
   const conversation = $messages.one(conversationId)

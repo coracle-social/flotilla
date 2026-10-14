@@ -22,8 +22,7 @@
 
   const {ref, reply = false}: Props = $props()
 
-  const relays = $notes.relays(ref)
-  const context = makeFeedContext({relays})
+  const context = makeFeedContext()
   const event = $notes.deriveEvent(ref)
   const replies = $derived($event ? $notes.deriveReplies($event) : readable<CommentNode[]>([]))
 
