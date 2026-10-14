@@ -20,7 +20,7 @@
   import {pushToast} from "@app/ui/toast"
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
-  import {blockedRelayLists, relayLists} from "@app/core/plugins"
+  import {blockedRelayLists, relayLists, relayStats} from "@app/core/plugins"
 
   type Props = {
     relays: Readable<string[]>
@@ -85,11 +85,12 @@
       .slice(0, limit),
   )
 
-  // Relay search only knows relays whose NIP-11 has been fetched, so seed it from everyone's lists.
+  // Relay search only knows relays whose NIP-11 has been fetched, so seed it from everyone's lists and from every relay stats has a row for.
   onMount(() => {
-    const urls = uniq($relayLists.all.get().flatMap(list => list.urls()))
+    const listUrls = $relayLists.all.get().flatMap(list => list.urls())
+    const statsUrls = $relayStats.all.get().map(stats => stats.url)
 
-    for (const url of urls.filter(isShareableRelayUrl)) {
+    for (const url of uniq([...listUrls, ...statsUrls]).filter(isShareableRelayUrl)) {
       $app.use(Relays).load(url)
     }
 
