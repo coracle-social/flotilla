@@ -10,8 +10,9 @@
   import Button from "@lib/components/Button.svelte"
   import ProfileInfo from "@app/components/ProfileInfo.svelte"
   import ProfileQrCode from "@app/components/ProfileQrCode.svelte"
-  import {user, userMuteList} from "@app/core/user"
+  import {user} from "@app/core/user"
   import {muteLists, profiles} from "@app/core/plugins"
+  import {derivePubkeyMuted} from "@app/features/social"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 
@@ -28,14 +29,14 @@
 
   const isSelf = $derived($user.pubkey === pubkey)
 
-  const isMuted = $derived(($userMuteList?.pubkeys() ?? []).includes(pubkey))
+  const isMuted = derivePubkeyMuted(pubkey)
 
   const showInfo = () => pushModal(ProfileInfo, {event: $profile!.event, url})
 
   const showShare = () => pushModal(ProfileQrCode, {pubkey})
 
   const toggleMute = async () => {
-    if (isMuted) {
+    if ($isMuted) {
       await $muteLists.unmute(pubkey).then(publish)
 
       pushToast({message: "You are no longer muting this person."})
@@ -65,8 +66,8 @@
   {#if !isSelf}
     <li>
       <Button onclick={toggleMute}>
-        <Icon size={4} icon={isMuted ? UserCheck : UserBlock} />
-        {isMuted ? "Unmute User" : "Mute User"}
+        <Icon size={4} icon={$isMuted ? UserCheck : UserBlock} />
+        {$isMuted ? "Unmute User" : "Mute User"}
       </Button>
     </li>
   {/if}

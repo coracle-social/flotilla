@@ -33,7 +33,7 @@
 </script>
 
 {#if anchor}
-  <div class="flex flex-col gap-1">
+  <div data-component="NoteEntry" class="flex flex-col gap-1">
     <NoteItem event={anchor} {context} showReply showThreadLinks />
     {#if shown.length > 0}
       <div class="ml-4 flex flex-col gap-3 border-l border-line-less pt-3 pl-4">

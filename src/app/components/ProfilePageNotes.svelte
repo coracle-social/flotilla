@@ -7,7 +7,7 @@
   import {router} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
   import {derivePinnedEvents} from "@app/features/pins"
-  import {makeNetworkFeed} from "@app/features/social"
+  import {derivePubkeyMuted, makeNetworkFeed} from "@app/features/social"
 
   type Props = {
     pubkey: string
@@ -26,6 +26,8 @@
     pinned: derivePinnedEvents(pubkey),
     sortByTime: true,
   })
+
+  const muted = derivePubkeyMuted(pubkey)
 
   const {entries, loading, exhausted} = feed
 
@@ -47,7 +49,9 @@
       <NoteEntry {entry} {context} />
     </div>
   {/each}
-  {#if $exhausted && $entries.length === 0}
+  {#if $muted}
+    <p class="py-12 text-center text-sm opacity-75">You have muted this person.</p>
+  {:else if $exhausted && $entries.length === 0}
     <p class="py-12 text-center text-sm opacity-75">No notes found for this profile.</p>
   {:else if $loading || $entries.length === 0}
     <p class="my-12 flex items-center justify-center gap-2">

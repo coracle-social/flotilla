@@ -1382,7 +1382,8 @@ Acceptance:
 
 - Her profile lists her notes below her header, newest first, each showing her
   name, avatar, content, and a relative timestamp.
-- A reply of hers is drawn underneath the note it answers, on that note's card.
+- A reply of hers is drawn underneath the note it answers rather than as a card
+  of its own.
 - A note she has pinned appears above newer unpinned notes.
 - Scrolling to the bottom loads older notes automatically; a profile with no
   notes shows a loading indicator that resolves to "No notes found for this
@@ -1434,8 +1435,7 @@ Acceptance:
 
 - Searching for bob in Muted Accounts under Settings › Content adds a removable
   badge with his name, and saving persists it across a reload.
-- His notes then render as "You have muted this person." with a "Show anyway"
-  link instead of their content, and revealing one leaves the others collapsed.
+- His profile then says "You have muted this person." where his notes were.
 - Removing his badge and saving makes his notes display normally again.
 
 ## Settings & preferences

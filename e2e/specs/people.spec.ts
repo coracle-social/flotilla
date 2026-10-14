@@ -52,6 +52,9 @@ const searchResults = (page: Page) => topDialog(page).locator(".card.card-intera
 
 const notes = (page: Page) => pageContent(page).locator(".cv.card")
 
+// A note and the replies answering it, which is a card plus a column rather than one card.
+const entries = (page: Page) => pageContent(page).locator('[data-component="NoteEntry"]')
+
 const readClipboard = (page: Page) => page.evaluate(() => navigator.clipboard.readText())
 
 // The "..." menu on a profile header, which is the only ghost circle button the page renders.
@@ -399,10 +402,12 @@ test("US-079 read a person's notes", async ({seed, as}) => {
   // Nothing is scrolled here: the feed keeps widening its window until the page is full.
   await expect(list.filter({hasText: "OLDEST"})).toBeVisible()
 
-  const answered = list.filter({hasText: "REPLY they are in the chart drawer"})
+  // A reply is drawn in the entry of the note it answers rather than as a card of its own.
+  const answered = entries(page).filter({hasText: "Anyone seen the tide charts?"})
 
   await expect(answered).toHaveCount(1)
-  await expect(answered).toContainText("Anyone seen the tide charts?")
+  await expect(answered).toContainText("REPLY they are in the chart drawer")
+  await expect(list.filter({hasText: "REPLY they are in the chart drawer"})).toHaveCount(0)
 })
 
 test("US-134 write a public post", async ({seed, as}) => {
@@ -600,12 +605,9 @@ test("US-082 mute an account", async ({seed, as}) => {
 
   const list = notes(page)
 
-  await expect(list).toHaveCount(2)
-  await expect(pageContent(page).getByText("Salt on the rigging")).toHaveCount(0)
-
-  await list.first().getByRole("button", {name: "Show anyway"}).click()
-
-  await expect(list.first()).toContainText("The gulls have taken the mainsail")
+  // The page is about one person, so it says he is muted rather than listing his notes collapsed.
+  await expect(pageContent(page).getByText("You have muted this person.")).toBeVisible()
+  await expect(list).toHaveCount(0)
 
   await page.goto("/settings/content")
 

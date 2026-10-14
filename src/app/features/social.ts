@@ -646,6 +646,9 @@ export const isEventMuted = withGetter(
   }),
 )
 
+export const derivePubkeyMuted = (pubkey: string) =>
+  derived(userMuteList, $muteList => ($muteList?.pubkeys() ?? []).includes(pubkey))
+
 // Loading: where a note lives, and the stores a page reads it and its conversation from.
 
 export class Notes {
