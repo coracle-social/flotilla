@@ -1,3 +1,12 @@
+<script module lang="ts">
+  export type MemberPin = {
+    pubkey: string
+    display: string
+    latitude: number
+    longitude: number
+  }
+</script>
+
 <script lang="ts">
   import "leaflet/dist/leaflet.css"
 
@@ -9,7 +18,6 @@
   import {dufflepud} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
   import {activeTheme} from "@app/ui/theme"
-  import type {MemberPin} from "@app/features/social"
 
   type Props = {
     url: string

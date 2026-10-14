@@ -12,7 +12,7 @@
   import RoomEdit from "@app/components/RoomEdit.svelte"
   import {app} from "@app/core/app"
   import {roomLists, rooms} from "@app/core/plugins"
-  import {joinRoom, leaveRoom} from "@app/features/spaces/membership"
+  import {joinRoom, leaveRoom} from "@app/features/spaces/rooms/membership"
   import {
     deriveUserIsRoomAdmin,
     deriveUserRoomMembershipStatus,

@@ -34,9 +34,9 @@ Kinds flotilla renders but never publishes.
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `src/app/features/reactions.ts` | `RoomItem`, `EventReactButtons`, `ContentActions`, `CommentActions`, `ArticleActionBar` |
+| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `publishReaction`/`retractReaction` in `src/app/features/spaces`, `social/reactions.ts` and `messages.ts` | `RoomItem`, `EventReactButtons`, `ContentActions`, `CommentActions`, `ArticleActionBar` |
 | Zaps | `ZAP_REQUEST` (9734), `ZAP_RECEIPT` (9735) | `ZapRequest`; receipts checked by `Zappers.validZapReceipts` | `src/app/features/wallet.ts` (wallets) | `Zap`, `ZapButton`, `GoalSummary`; off on iOS |
-| Reports | `REPORT` (1984) | `Report` | `src/app/features/spaces/management/actionItems.ts` | `Report`, `ReportMenu` |
+| Reports | `REPORT` (1984) | `Report` | `src/app/features/spaces/actionItems.ts` | `Report`, `ReportMenu` |
 | Deletes | `DELETE` (5) | `Delete`, through the `Deletes` plugin | none | `EventDeleteConfirm`, `ReportMenu` |
 
 ## Direct messages
@@ -57,7 +57,7 @@ Gift wraps are only synced once the user opts in (`shouldUnwrap` in `src/app/fea
 | Status (NIP-38) | `STATUS` (30315), `d` = `general` | none | `src/app/features/statuses.ts` | `ProfileStatus` |
 | Profile pins | `PINS` (10001) | `PinList` | `src/app/features/pins.ts` | profile pages |
 | Spaces and rooms | `ROOMS` (10009) | `RoomList` | `src/app/features/spaces/rooms/index.ts` | the sidebar, `spaces` |
-| Follows and mutes | `FOLLOWS` (3), `MUTES` (10000) | `FollowList`, `MuteList` | `src/app/features/social.ts` | people pages, muting |
+| Follows and mutes | `FOLLOWS` (3), `MUTES` (10000) | `FollowList`, `MuteList` | `src/app/features/people.ts`, `social/muting.ts` | people pages, muting |
 | Relay lists | `RELAYS` (10002), `MESSAGING_RELAYS` (10050), `SEARCH_RELAYS` (10007), `BLOCKED_RELAYS` (10006), `BLOSSOM_SERVERS` (10063) | `RelayList`, `MessagingRelayList`, `SearchRelayList`, `BlockedRelayList`, `BlossomServerList` | plugins in `src/app/core/plugins.ts` | `settings/*` |
 | Account deletion | `VANISH` (62, written as a literal), `DELETE` (5) | none; `Delete` bypassed | none | `ProfileDelete` |
 | Push subscriptions | 30390 (`PUSH_SUBSCRIPTION`, local) | none | `src/app/features/push/adapters/capacitor.ts` | background |

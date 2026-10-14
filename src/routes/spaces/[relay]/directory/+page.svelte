@@ -9,15 +9,17 @@
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import {decodeGeohash} from "@lib/geohash"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import SpaceMember from "@app/components/SpaceMember.svelte"
-  import SpaceMemberMap from "@app/components/SpaceMemberMap.svelte"
+  import SpaceMemberMap, {type MemberPin} from "@app/components/SpaceMemberMap.svelte"
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
   import SpaceDirectoryMenu from "@app/components/SpaceDirectoryMenu.svelte"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
-  import {deriveSpaceMemberRoles} from "@app/features/spaces/management/roles"
-  import {relayMemberLists, relayRoles} from "@app/core/plugins"
-  import {deriveDisplaysByPubkey, deriveMemberPins} from "@app/features/social"
+  import {deriveSpaceMemberRoles} from "@app/features/spaces/roles"
+  import {profiles, relayMemberLists, relayRoles} from "@app/core/plugins"
+  import {getProfileGeohash} from "@app/features/location"
+  import {deriveDisplaysByPubkey} from "@app/features/people"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
@@ -29,6 +31,7 @@
   const members = $relayMemberLists.forUrl(url)
   const memberRoles = deriveSpaceMemberRoles(url)
   const permissions = deriveSpacePermissions(url)
+  const profileIndex = $profiles.index.$
 
   // Each member with their resolved roles (sorted by order).
   const memberList = derived([members, memberRoles, roles], ([$members, $memberRoles, $roles]) => {
@@ -56,13 +59,6 @@
     ),
   )
 
-  const pins = $derived(
-    deriveMemberPins(
-      $memberList.map(m => m.pubkey),
-      url,
-    ),
-  )
-
   const matchesTerm = (pubkey: string, t: string) =>
     ($displays.get(pubkey) ?? "").toLowerCase().includes(t) || pubkey.toLowerCase().includes(t)
 
@@ -81,10 +77,20 @@
     )
   })
 
+  // A member is on the map once their profile carries a location.
   const visiblePins = $derived.by(() => {
-    const visible = new Set(visibleMembers.map(m => m.pubkey))
+    const pins: MemberPin[] = []
 
-    return $pins.filter(pin => visible.has(pin.pubkey))
+    for (const {pubkey} of visibleMembers) {
+      const profile = $profileIndex.get(pubkey)
+      const coordinates = decodeGeohash(getProfileGeohash(profile))
+
+      if (profile && coordinates) {
+        pins.push({pubkey, display: profile.display(), ...coordinates})
+      }
+    }
+
+    return pins
   })
 
   const toggleMap = () => (showMap = !showMap)

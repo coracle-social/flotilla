@@ -12,7 +12,7 @@
   import ProfileQrCode from "@app/components/ProfileQrCode.svelte"
   import {user} from "@app/core/user"
   import {muteLists, profiles} from "@app/core/plugins"
-  import {derivePubkeyMuted} from "@app/features/social"
+  import {derivePubkeyMuted} from "@app/features/social/muting"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/ui/toast"
 

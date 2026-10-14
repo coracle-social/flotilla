@@ -21,7 +21,7 @@
   import SpaceNotify from "@app/components/SpaceNotify.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
-  import {derivePaidGated} from "@app/features/spaces/membership"
+  import {derivePaidGated} from "@app/features/spaces/payments"
   import {user} from "@app/core/user"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {relays, roomLists} from "@app/core/plugins"

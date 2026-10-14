@@ -7,7 +7,7 @@
   import EmojiButton from "@lib/components/EmojiButton.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
-  import * as social from "@app/features/social"
+  import * as social from "@app/features/social/reactions"
   import * as spaces from "@app/features/spaces"
   import type {FeedContext} from "@app/features/feeds"
   import {ENABLE_ZAPS} from "@app/core/env"

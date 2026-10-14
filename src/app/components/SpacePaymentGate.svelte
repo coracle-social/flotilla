@@ -22,7 +22,7 @@
     openCheckout,
     pendingCheckouts,
     reconcileSpaceMembership,
-  } from "@app/features/spaces/membership"
+  } from "@app/features/spaces/payments"
   import {fromApp} from "@app/core/app"
   import {ENABLE_PAID_SPACES} from "@app/core/env"
   import {clearModals, pushModal} from "@app/navigation/dialogs"

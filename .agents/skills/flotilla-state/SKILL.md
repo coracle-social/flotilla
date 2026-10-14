@@ -69,7 +69,7 @@ This code reads `app.get().user?.pubkey` and bails when it is missing, as
 `src/app/ui/notifications.ts` do.
 
 Stores derived from `user` throw as soon as they are subscribed signed out. That includes
-`isEventMuted` (`social.ts`), `deriveUserIsRoomAdmin` (`spaces/rooms`) and `deriveUserCanCreateRoom`
+`isEventMuted` (`social/muting`), `deriveUserIsRoomAdmin` (`spaces/rooms`) and `deriveUserCanCreateRoom`
 (`spaces/management`), so only use them from gated components.
 
 ## Reaching plugins
@@ -207,7 +207,7 @@ Most derived state is a plain function in the app module that owns its domain, c
 projections and repository derivations:
 
 ```typescript
-// src/app/features/spaces/management/actionItems.ts
+// src/app/features/spaces/actionItems.ts
 export const deriveSpaceActionItems = (url: string) =>
   derived(
     [
@@ -432,7 +432,7 @@ Some call sites call `publisher.get().publish({event, relays, delay})` directly.
 honours the `send_delay` window does, because `Command` cannot carry it: room chat
 (`RoomChat.svelte`), and `publishComment` (behind both comment composers) and `publishRoomQuote` in
 `spaces/rooms`. So do the push adapters and `ProfileDelete.svelte`. DMs go through
-`wraps.get().publish({event, recipients})`, which returns a `PublicationGroup` (see `reactions.ts`).
+`wraps.get().publish({event, recipients})`, which returns a `PublicationGroup` (see `publishReaction` in `messages.ts`).
 NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publisher`. They return
 `{result, error}`, and the caller handles `error`.
 

@@ -18,7 +18,7 @@
   import type {FeedContext} from "@app/features/feeds"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import {pushModal} from "@app/navigation/dialogs"
-  import {isEventMuted} from "@app/features/social"
+  import {isEventMuted} from "@app/features/social/muting"
   import type {CommentNode} from "@app/features/social"
 
   type Props = {

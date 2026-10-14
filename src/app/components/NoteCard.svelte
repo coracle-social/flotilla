@@ -9,7 +9,7 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import {goToEvent} from "@app/navigation/locations"
-  import {isEventMuted} from "@app/features/social"
+  import {isEventMuted} from "@app/features/social/muting"
 
   type Props = {
     event: TrustedEvent

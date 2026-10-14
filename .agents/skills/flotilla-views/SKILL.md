@@ -322,8 +322,8 @@ How you bind depends on what the method returns:
 ```
 
 In a handler, call `.get()` on a projection instead of subscribing. The app modules add `derive*`
-factories over the same data: `deriveSpaceActionItems` in `src/app/features/spaces/management/actionItems.ts`,
-`deriveSpaceSupportedMethods` in `src/app/features/spaces/management/index.ts`, `deriveRelayAccess` in
+factories over the same data: `deriveSpaceActionItems` in `src/app/features/spaces/actionItems.ts`,
+`deriveSpaceSupportedMethods` in `src/app/features/spaces/management.ts`, `deriveRelayAccess` in
 `src/app/core/relays.ts`. Call them at the top of the script with fixed arguments, and wrap one in
 `$derived` only when its arguments change, as the thread page does for filters that wait on the
 root event.
@@ -401,7 +401,7 @@ every event the feed yields, rows get the same `context`, and their action rows 
 and an `{#if}` chain over loading, empty and exhausted. Calendars use
 `makeCalendarFeed`, which pages by date tag rather than `created_at`.
 
-`makeNetworkFeed` in `src/app/features/social.ts` builds on those helpers to draw each reply under
+`makeNetworkFeed` in `src/app/features/social/networkFeed.ts` builds on those helpers to draw each reply under
 the note it answers. The home Network section and `ProfilePageNotes` both use it. A muted author's
 events are left out of it, so `ProfilePageNotes` says the person is muted where it would otherwise
 report that they have no notes.

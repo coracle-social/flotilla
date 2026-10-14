@@ -12,7 +12,7 @@
   import CardButton from "@lib/components/CardButton.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import SignUp from "@app/components/SignUp.svelte"
-  import {parseInviteLink} from "@app/features/spaces/membership"
+  import {parseInviteLink} from "@app/features/spaces/invites"
   import {
     PLATFORM_ABOUT,
     PLATFORM_TERMS,

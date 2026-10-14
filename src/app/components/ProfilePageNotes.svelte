@@ -6,7 +6,8 @@
   import NoteEntry from "@app/components/NoteEntry.svelte"
   import {makeFeedContext} from "@app/features/feeds"
   import {derivePinnedEvents} from "@app/features/pins"
-  import {derivePubkeyMuted, makeNetworkFeed} from "@app/features/social"
+  import {derivePubkeyMuted} from "@app/features/social/muting"
+  import {makeNetworkFeed} from "@app/features/social/networkFeed"
 
   type Props = {
     pubkey: string

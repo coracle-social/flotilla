@@ -25,7 +25,7 @@
   import {pushToast} from "@app/ui/toast"
   import * as pages from "@app/navigation/pages"
   import {goToSpace} from "@app/navigation/history"
-  import {acceptInvite, parseInviteLink} from "@app/features/spaces/membership"
+  import {acceptInvite, parseInviteLink} from "@app/features/spaces/invites"
 
   type Props = {
     invite: string

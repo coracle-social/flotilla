@@ -11,7 +11,7 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {rooms} from "@app/core/plugins"
-  import {joinRoom} from "@app/features/spaces/membership"
+  import {joinRoom} from "@app/features/spaces/rooms/membership"
   import {pushToast} from "@app/ui/toast"
   import {resolveImageInput} from "@app/features/uploads"
   import {deriveHasLivekit} from "@app/features/spaces/calls"

@@ -17,7 +17,7 @@
   import MenuButton from "@lib/components/MenuButton.svelte"
   import Tooltip from "@lib/components/Tooltip.svelte"
   import PublicationFailure from "@app/components/PublicationFailure.svelte"
-  import {deriveDisplaysByPubkey} from "@app/features/social"
+  import {deriveDisplaysByPubkey} from "@app/features/people"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"

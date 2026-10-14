@@ -6,8 +6,8 @@
   import NoteItem from "@app/components/NoteItem.svelte"
   import type {FeedContext} from "@app/features/feeds"
   import {openEventNote} from "@app/navigation/overlays"
-  import {isEventMuted} from "@app/features/social"
-  import type {NetworkFeedEntry} from "@app/features/social"
+  import {isEventMuted} from "@app/features/social/muting"
+  import type {NetworkFeedEntry} from "@app/features/social/networkFeed"
 
   type Props = {
     entry: NetworkFeedEntry

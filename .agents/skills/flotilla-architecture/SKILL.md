@@ -141,12 +141,13 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
   `syncCurrentSpace`, the space-wide content sync and retention, `CONTENT_KINDS` (the kinds with a
   section of their own) and `partitionByActivity`, which the list pages use to sort a kind by
   latest comment
-- `spaces/rooms/`: chat rooms (`index.ts`, helpers over `rooms.get()`), `pins.ts`, `commands.ts`
-  (NIP-CD slash commands)
-- `spaces/membership/`: joining, invites, relay auth errors and paid spaces (`index.ts`), relay
-  fees (`payments.ts`)
-- `spaces/management/`: NIP-86 admin checks and bans (`index.ts`), `roles.ts`, `actionItems.ts`
-  (the admin review queue)
+- `spaces/rooms/`: chat rooms (`index.ts`, helpers over `rooms.get()`), `membership.ts` (joining
+  and leaving a room, room invite codes), `pins.ts`, `commands.ts` (NIP-CD slash commands)
+- `spaces/membership.ts`: joining and leaving a space, and whether someone is a member
+- `spaces/invites.ts`: invite links, and accepting one
+- `spaces/payments.ts`: relay fees, checkout, and the paid-space gate
+- `spaces/management.ts`: NIP-86 admin checks and bans; `roles.ts` and `actionItems.ts` (the admin
+  review queue)
 - `spaces/calls/`: call state and LiveKit endpoint detection (`index.ts`), `engine.ts` (LiveKit join, leave, devices, the video
   tiles a call shows), `screenShare/`. `calls/index.ts` stays free of livekit values, since the
   root layout loads it and `engine.ts` is imported lazily.
@@ -156,10 +157,12 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 Outside `spaces/`:
 
 - Content: `feeds.ts` (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`),
-  `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `reactions.ts` (with
-  `REACTION_KINDS`), `social.ts` (display names, comment trees, muting,
-  `REPOST_KINDS`), `statuses.ts` (NIP-38), `uploads.ts`
-  (Blossom, image compression)
+  `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38),
+  `uploads.ts` (Blossom, image compression)
+- `people.ts`: display names for any list of pubkeys, and `bootstrapPubkeys`
+- `social/`: `index.ts` reads a conversation's shape off its tags and holds the `Notes`
+  plugin; `muting.ts`, `notifications.ts` (home notification grouping, `REPOST_KINDS`),
+  `networkFeed.ts` (`makeNetworkFeed`) and `reactions.ts` (reacting outside a space)
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)
@@ -303,7 +306,7 @@ names a relay or host, the e2e harness has to override or mock it (see "Containm
 ## Principles behind placement
 
 **Check welshman before writing flotilla code.** Several commits replace app code with welshman
-primitives: `render.ts` uses welshman's `summarize` (`9b0d8a55`), `spaces/management/actionItems.ts` uses
+primitives: `render.ts` uses welshman's `summarize` (`9b0d8a55`), `spaces/actionItems.ts` uses
 `rooms.get().pendingJoins` (`3d66fb31`), and `spaces/rooms` uses the membership helpers (`847d8984`).
 
 **When welshman lacks something, add it there.** The maintainer also maintains welshman, so a

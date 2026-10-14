@@ -56,7 +56,7 @@
   import {removeUndefined, tryCatch} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {fromNostrURI} from "@welshman/util"
-  import {deriveDisplaysByPubkey} from "@app/features/social"
+  import {deriveDisplaysByPubkey} from "@app/features/people"
 
   type Props = {
     event: TrustedEvent

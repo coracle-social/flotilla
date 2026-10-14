@@ -24,8 +24,8 @@
   import {deriveSpaceSearch} from "@app/features/spaces/rooms"
   import {userSpaceUrls} from "@app/features/spaces"
   import {PLATFORM_RELAYS, DEFAULT_RELAYS, INDEXER_RELAYS} from "@app/core/env"
-  import {bootstrapPubkeys} from "@app/features/social"
-  import {parseInviteLink} from "@app/features/spaces/membership"
+  import {bootstrapPubkeys} from "@app/features/people"
+  import {parseInviteLink} from "@app/features/spaces/invites"
   import {pushModal} from "@app/navigation/dialogs"
 
   const addSpace = () => pushModal(SpaceAdd)

@@ -11,7 +11,7 @@
     countNetworkFeedTypes,
     isIncludedNetworkFeedEvent,
     makeNetworkFeed,
-  } from "@app/features/social"
+  } from "@app/features/social/networkFeed"
 
   const context = makeFeedContext({withReplies: true})
 

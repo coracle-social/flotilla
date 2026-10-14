@@ -33,7 +33,7 @@
   import type {FeedContext} from "@app/features/feeds"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
-  import {deriveDisplaysByPubkey} from "@app/features/social"
+  import {deriveDisplaysByPubkey} from "@app/features/people"
 
   type Props = {
     event: TrustedEvent
