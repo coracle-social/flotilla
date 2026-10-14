@@ -7,6 +7,7 @@ import type {TrustedEvent} from "@welshman/util"
 import {
   COMMENT,
   MESSAGE,
+  EventRef,
   NOTE,
   getIdOrAddress,
   hexTags,
@@ -27,12 +28,11 @@ import * as pages from "@app/navigation/pages"
 // What an event is activity on: the root a comment sits under, or the event itself.
 export const getActivityTarget = (event: TrustedEvent) => {
   if (event.kind === COMMENT) {
-    const {kind, id, address} = reader(Comment)(event).root()
-    const rootKind = parseInt(kind || "")
-    const idOrAddress = address || id
+    const root = reader(Comment)(event).root()
+    const idOrAddress = root?.getAddressOrId()
 
-    if (rootKind && idOrAddress) {
-      return {kind: rootKind, idOrAddress}
+    if (root?.kind && idOrAddress) {
+      return {kind: root.kind, idOrAddress}
     }
   }
 
@@ -72,9 +72,7 @@ export const getEventPath = (event: TrustedEvent, urls: string[]): Maybe<string>
 
   // A note belongs to no space, so its path carries the relays it was found on.
   if (event.kind === NOTE) {
-    const {id, pubkey: author, kind} = event
-
-    return pages.note.path({pointer: {id, author, kind, relays: urls.slice(0, 3)}})
+    return pages.note.path({ref: EventRef.fromEvent(event, urls.slice(0, 3))})
   }
 }
 
@@ -124,9 +122,6 @@ export const goToEvent = (event: TrustedEvent, options: NavigateOptions = {}) =>
     }
   } else {
     // A kind with no page of its own opens there too, rather than in another client.
-    openNote(
-      {id: event.id, author: event.pubkey, relays: urls},
-      {replaceState: options.replaceState},
-    )
+    openNote(EventRef.fromEvent(event, urls), {replaceState: options.replaceState})
   }
 }

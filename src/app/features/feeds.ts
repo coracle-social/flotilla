@@ -8,7 +8,6 @@ import {
   now,
   on,
   range,
-  removeUndefined,
   sleep,
   spec,
   uniqBy,
@@ -28,10 +27,10 @@ import {
   compareEventsAsc,
   getAddress,
   getCommentFiltersForRoot,
+  getIdAndAddress,
   getIdOrAddress,
   getReplyFilters,
   hexTags,
-  isReplaceableKind,
   matchFilters,
   tagValues,
 } from "@welshman/util"
@@ -73,17 +72,11 @@ const mergeSorted = <T>(left: T[], right: T[], compare: (a: T, b: T) => number) 
 // A NIP-22 comment points at its thread root with `E`/`A`, which is the scope a reply count wants.
 const getTargets = (event: TrustedEvent) => {
   if (event.kind === COMMENT) {
-    const {id, address} = reader(Comment)(event).root()
-
-    return removeUndefined([id, address])
+    return reader(Comment)(event).root()?.getIdAndAddress() ?? []
   }
 
   return [...tagValues(hexTags("e"), event.tags), ...tagValues(addressTags("a"), event.tags)]
 }
-
-// A related event may point at a replaceable one by either id or address, so both are keys
-const getKeys = (event: TrustedEvent) =>
-  isReplaceableKind(event.kind) ? [event.id, getAddress(event)] : [event.id]
 
 export const makeFeedContext = ({
   relays,
@@ -242,7 +235,7 @@ export const makeFeedContext = ({
   // Track an event so its context gets requested with the rest of the batch
   const add = (event: TrustedEvent) => {
     if (!targets.has(event.id)) {
-      for (const key of getKeys(event)) {
+      for (const key of getIdAndAddress(event)) {
         targets.add(key)
       }
 
@@ -299,7 +292,8 @@ export const makeFeedContext = ({
     related: (event: TrustedEvent): Readable<TrustedEvent[]> => {
       add(event)
 
-      const [key, ...rest] = getKeys(event)
+      // A related event may point at a replaceable one by either id or address, so both are keys.
+      const [key, ...rest] = getIdAndAddress(event)
 
       // A replaceable event collects both buckets, and something tagging it by id and address lands in both.
       return rest.length > 0

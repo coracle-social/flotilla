@@ -56,7 +56,7 @@
       <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
     </div>
   {:else if $entries.length > 0}
-    {#each $entries as entry (entry.ref.id)}
+    {#each $entries as entry (entry.key)}
       <NoteEntry {entry} {context} />
     {/each}
     {#if $loading}

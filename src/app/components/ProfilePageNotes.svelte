@@ -44,7 +44,7 @@
 </script>
 
 <div class="flex flex-col gap-4" bind:this={element}>
-  {#each $entries as entry (entry.ref.id)}
+  {#each $entries as entry (entry.key)}
     <div in:fly>
       <NoteEntry {entry} {context} />
     </div>

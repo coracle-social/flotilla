@@ -1,9 +1,9 @@
 import * as nip19 from "nostr-tools/nip19"
 import {derived} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {isHex32, removeUndefined, sortBy} from "@welshman/lib"
+import {sortBy, tryCatch} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {Address, PIN, PINBOARD, fromNostrURI, getAddress, isReplaceable} from "@welshman/util"
+import {Address, EventRef, PIN, PINBOARD, fromNostrURI, isReplaceable} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {Pin, Pinboard} from "@welshman/domain"
 import type {PinReader, PinReference, PinWriter, PinboardReader} from "@welshman/domain"
@@ -18,93 +18,43 @@ import {registerSync} from "@app/core/sync"
 import {syncCurrentSpace} from "@app/features/spaces"
 import {addressWriterToSpace} from "@app/features/spaces/rooms"
 
-// Tags from another client may be malformed, and nip19 throws on anything that isn't hex.
-const isEncodable = (reference: PinReference) => {
-  if (reference.type === "event") {
-    return isHex32(reference.id)
-  }
-
-  if (reference.type === "address") {
-    return Address.isAddress(reference.address) && isHex32(Address.from(reference.address).pubkey)
-  }
-
-  return true
-}
-
-const encodeReference = (reference: PinReference) => {
-  if (reference.type === "event") {
-    return nip19.neventEncode({id: reference.id, relays: reference.relay ? [reference.relay] : []})
-  }
-
-  if (reference.type === "address") {
-    const {kind, pubkey, identifier} = Address.from(reference.address)
-
-    return nip19.naddrEncode({
-      kind,
-      pubkey,
-      identifier,
-      relays: reference.relay ? [reference.relay] : [],
-    })
-  }
-
-  return reference.id
-}
-
+// A pin's reference as the user would type it: a nostr link for an event, and the external id otherwise.
 export const pinToReference = (pin: PinReader) => {
   const reference = pin.reference()
 
-  return reference && isEncodable(reference) ? encodeReference(reference) : ""
+  return reference instanceof EventRef ? (reference.toNip19() ?? "") : (reference?.external ?? "")
 }
 
-export const eventToReference = (event: TrustedEvent) =>
-  encodeReference(
-    isReplaceable(event)
-      ? {type: "address", address: getAddress(event)}
-      : {type: "event", id: event.id},
-  )
+// A replaceable event is pinned by its address, so the pin follows the newest version.
+export const eventToReference = (event: TrustedEvent) => {
+  const ref = isReplaceable(event)
+    ? EventRef.fromAddress(Address.fromEvent(event))
+    : EventRef.fromEvent(event)
+
+  return ref.toNip19() ?? ""
+}
+
+// Pins have no pubkey reference type, so a person is stored as the external id the user gave.
+const isProfileEntity = (entity: string) => {
+  const type = tryCatch(() => nip19.decode(fromNostrURI(entity)).type)
+
+  return type === "npub" || type === "nprofile"
+}
 
 // Read a user-entered nostr link or external url as a pin reference.
 export const parsePinReference = (input: string): Maybe<PinReference> => {
   const trimmed = input.trim()
-
-  try {
-    const decoded = nip19.decode(fromNostrURI(trimmed))
-
-    if (decoded.type === "note") {
-      return {type: "event", id: decoded.data}
-    }
-
-    if (decoded.type === "nevent") {
-      return {type: "event", id: decoded.data.id, relay: decoded.data.relays?.[0]}
-    }
-
-    // Pins have no pubkey reference type, so a person is stored as the external id the user gave.
-    if (decoded.type === "npub" || decoded.type === "nprofile") {
-      return {type: "external", id: fromNostrURI(trimmed)}
-    }
-
-    if (decoded.type === "naddr") {
-      const {kind, pubkey, identifier, relays} = decoded.data
-
-      return {
-        type: "address",
-        address: new Address(kind, pubkey, identifier).toString(),
-        relay: relays?.[0],
-      }
-    }
-
-    return undefined
-  } catch {
-    // Not a nostr entity; fall through to external url handling.
-  }
-
   const parsed = parse({content: trimmed})
 
-  if (parsed.length === 1 && isLink(parsed[0])) {
-    return {type: "external", id: trimmed}
+  if (isProfileEntity(trimmed)) {
+    return {external: fromNostrURI(trimmed)}
   }
 
-  return undefined
+  if (parsed.length === 1 && isLink(parsed[0])) {
+    return {external: trimmed}
+  }
+
+  return EventRef.fromNip19(trimmed)
 }
 
 export const deriveShelves = (url: string): Readable<PinboardReader[]> =>
@@ -137,19 +87,25 @@ export const pinMatchesTerm = (pin: PinReader, term: string) =>
 // A pin's own words. Its reference is rendered as a link rather than named here.
 export const displayPin = (pin: PinReader) => pin.title() || pin.content() || "Untitled link"
 
-const pinImage = (pin: PinReader) => {
-  const reference = pin.reference()
+// A shelf with no cover of its own is illustrated by the pictures on it.
+export const shelfCoverImages = (pins: PinReader[]) => {
+  const images: string[] = []
 
-  if (reference?.type === "external" && isImageUrl(reference.id, pin.event)) {
-    return reference.id
+  for (const pin of sortBy(pin => -pin.event.created_at, pins)) {
+    const ref = pin.reference()
+    const external = ref instanceof EventRef ? undefined : ref?.external
+
+    if (external && isImageUrl(external, pin.event)) {
+      images.push(external)
+
+      if (images.length === 3) {
+        break
+      }
+    }
   }
 
-  return undefined
+  return images
 }
-
-// A shelf with no cover of its own is illustrated by the pictures on it.
-export const shelfCoverImages = (pins: PinReader[]) =>
-  removeUndefined(sortBy(pin => -pin.event.created_at, pins).map(pinImage)).slice(0, 3)
 
 // A library pin is published to the space rather than to an author outbox, so every write goes there.
 const publishToSpace = async (url: string, eventWriter: PinWriter) => {

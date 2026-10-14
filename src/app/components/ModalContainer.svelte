@@ -26,7 +26,7 @@
     return note
       ? [
           {
-            id: `note:${note.pointer.id}`,
+            id: `note:${note.ref.getIdOrAddress()}`,
             component: NoteDetail,
             props: note,
             options: {size: "large"},

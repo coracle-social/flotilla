@@ -1,7 +1,8 @@
 <script lang="ts">
+  import {readable} from "svelte/store"
   import {removeUndefined} from "@welshman/lib"
-  import type {TrustedEvent} from "@welshman/util"
-  import {MESSAGE, ROOM_META, fromNostrURI, getIdFilters, normalizeRelayUrl} from "@welshman/util"
+  import type {IEventRef, TrustedEvent} from "@welshman/util"
+  import {EventRef, MESSAGE, ROOM_META, fromNostrURI, normalizeRelayUrl} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
@@ -9,41 +10,38 @@
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
   import {events, network} from "@app/core/plugins"
-  import {getQuoteIdOrAddress, getQuoteRelays, goToQuote} from "@app/features/quotes"
-  import type {QuotePointer} from "@app/features/quotes"
+  import {getQuoteRelays, goToQuote} from "@app/features/quotes"
 
   type Props = {
-    value: QuotePointer
+    ref: IEventRef
     raw: string
     event: TrustedEvent
     inline?: boolean
     url?: string
   }
 
-  const {value, raw, event, inline = false, url}: Props = $props()
+  const {ref, raw, event, inline = false, url}: Props = $props()
 
-  const idOrAddress = getQuoteIdOrAddress(value)
-  const hints = removeUndefined([...(value.relays ?? []), url])
-  const quote = $events.one(idOrAddress, hints).$
+  const eventRef = new EventRef(ref)
+  const hints = removeUndefined([...(ref.relays ?? []), url])
+  const idOrAddress = eventRef.getIdOrAddress()
+  const quote = idOrAddress ? $events.one(idOrAddress, hints).$ : readable(undefined)
 
-  getQuoteRelays(value, event, url).then(relays => {
+  getQuoteRelays(ref, event, url).then(relays => {
     if (!$quote) {
-      $network.load({
-        filters: getIdFilters([idOrAddress]),
-        relays,
-      })
+      $network.load({filters: eventRef.getFilters(), relays})
     }
   })
 </script>
 
-{#if value.kind === ROOM_META && hints.length > 0}
-  <RoomLink url={normalizeRelayUrl(hints[0])} h={value.identifier ?? ""} />
+{#if ref.kind === ROOM_META && hints.length > 0}
+  <RoomLink url={normalizeRelayUrl(hints[0])} h={ref.identifier ?? ""} />
 {:else}
   <Button
     class={inline
       ? "max-w-full cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap underline"
       : "my-2 block w-full max-w-full text-left"}
-    onclick={() => goToQuote(value, event, url)}>
+    onclick={() => goToQuote(ref, event, url)}>
     {#if inline}
       {fromNostrURI(raw).slice(0, 16) + "…"}
     {:else if $quote}

@@ -33,7 +33,7 @@
   const interactions = $derived(notification.reactions)
 
   // The note this entry is about, fetched from the hints the notifications naming it carried.
-  const note = $notes.deriveEvent({id: ref.id, author: ref.author, relays: ref.relays})
+  const note = $notes.deriveEvent(ref)
 
   const reactions = $derived(interactions.filter(e => e.kind === REACTION))
 

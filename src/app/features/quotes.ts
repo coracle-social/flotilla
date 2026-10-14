@@ -1,64 +1,42 @@
 import {first, removeUndefined} from "@welshman/lib"
-import {
-  Address,
-  eventOutbox,
-  getIdFilters,
-  relays as relaySelections,
-  seen,
-  sortEventsDesc,
-} from "@welshman/util"
-import type {TrustedEvent} from "@welshman/util"
+import {EventRef, relays as relaySelections, seen, sortEventsDesc} from "@welshman/util"
+import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {isAddress, isEvent} from "@welshman/content"
 import type {Parsed, ParsedAddress, ParsedEvent} from "@welshman/content"
-import type {AddressPointer, EventPointer} from "nostr-tools/nip19"
 import {events, network, router} from "@app/core/plugins"
 import {pushModal} from "@app/navigation/dialogs"
 import {goToEvent} from "@app/navigation/locations"
-import {getQuoteRef} from "@app/features/social"
 import QuoteLoading from "@app/components/QuoteLoading.svelte"
-
-export type QuotePointer =
-  | (EventPointer & {identifier?: undefined})
-  | (AddressPointer & {id?: undefined})
 
 export const isQuote = (parsed: Parsed): parsed is ParsedEvent | ParsedAddress =>
   isEvent(parsed) || isAddress(parsed)
 
-export const getQuoteIdOrAddress = (pointer: QuotePointer) =>
-  pointer.id !== undefined
-    ? pointer.id
-    : new Address(pointer.kind, pointer.pubkey, pointer.identifier).toString()
-
-// Whoever quoted an event saw it, so the relays of the event doing the quoting are asked as well.
-export const getQuoteRelays = (pointer: QuotePointer, event: TrustedEvent, url?: string) => {
-  const ref = getQuoteRef(pointer)
-
-  return router
+// Include the relays an event came from since we're in a partially relay-centric situation.
+export const getQuoteRelays = (ref: IEventRef, event: TrustedEvent, url?: string) =>
+  router
     .get()
     .resolver.relays([
       ...relaySelections(removeUndefined([url])),
-      seen(ref),
-      eventOutbox(ref),
+      ...new EventRef(ref).getRelaySelections(),
       seen(event, 0.5),
     ])
-}
 
-export const loadQuote = async (pointer: QuotePointer, event: TrustedEvent, url?: string) => {
-  const relays = await getQuoteRelays(pointer, event, url)
-  const filters = getIdFilters([getQuoteIdOrAddress(pointer)])
-
+export const loadQuote = async (ref: IEventRef, event: TrustedEvent, url?: string) => {
+  const relays = await getQuoteRelays(ref, event, url)
+  const filters = new EventRef(ref).getFilters()
   const events = await network.get().load({filters, relays, timeout: 3000})
 
   return first(sortEventsDesc(events))
 }
 
 // A quote names an event that may not have arrived, so a modal loads it before going anywhere.
-export const goToQuote = (pointer: QuotePointer, event: TrustedEvent, url?: string) => {
-  const loaded = events.get().one(getQuoteIdOrAddress(pointer)).get()
+export const goToQuote = (ref: IEventRef, event: TrustedEvent, url?: string) => {
+  const idOrAddress = new EventRef(ref).getIdOrAddress()
+  const loaded = idOrAddress ? events.get().one(idOrAddress).get() : undefined
 
   if (loaded) {
     goToEvent(loaded)
   } else {
-    pushModal(QuoteLoading, {pointer, event, url})
+    pushModal(QuoteLoading, {ref, event, url})
   }
 }

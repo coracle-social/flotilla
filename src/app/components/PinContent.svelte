@@ -1,5 +1,6 @@
 <script lang="ts">
   import {removeUndefined} from "@welshman/lib"
+  import {EventRef} from "@welshman/util"
   import type {PinReader} from "@welshman/domain"
   import Content from "@app/components/Content.svelte"
   import ContentEvent from "@app/components/ContentEvent.svelte"
@@ -20,11 +21,11 @@
   {#if pin.content()}
     <Content event={{content: pin.content(), tags: []}} {url} />
   {/if}
-  {#if reference?.type === "event" || reference?.type === "address"}
+  {#if reference instanceof EventRef}
     <ContentEvent
       {url}
-      value={reference.type === "event" ? reference.id : reference.address}
-      relays={removeUndefined([reference.relay, url])} />
+      value={reference.getAddressOrId() ?? ""}
+      relays={removeUndefined([...reference.relays, url])} />
   {:else}
     <Content event={{content: pinToReference(pin), tags: []}} {url} />
   {/if}

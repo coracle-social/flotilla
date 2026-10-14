@@ -8,11 +8,11 @@
 
   const {params}: PageProps = $props()
 
-  const {pointer} = pages.note.decode(params)
+  const {ref} = pages.note.decode(params)
 
   onMount(() => {
-    if (pointer) {
-      goToNote(pointer)
+    if (ref) {
+      goToNote(ref)
     } else {
       goToHome()
     }

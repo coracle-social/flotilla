@@ -1,22 +1,21 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import type {TrustedEvent} from "@welshman/util"
+  import type {IEventRef, TrustedEvent} from "@welshman/util"
   import Spinner from "@lib/components/Spinner.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {popModal} from "@app/navigation/dialogs"
   import {goToEvent} from "@app/navigation/locations"
   import {loadQuote} from "@app/features/quotes"
-  import type {QuotePointer} from "@app/features/quotes"
   import {pushToast} from "@app/ui/toast"
 
   type Props = {
-    pointer: QuotePointer
+    ref: IEventRef
     event: TrustedEvent
     url?: string
   }
 
-  const {pointer, event, url}: Props = $props()
+  const {ref, event, url}: Props = $props()
 
   let waiting = true
 
@@ -24,7 +23,7 @@
     waiting = false
   })
 
-  loadQuote(pointer, event, url).then(quoted => {
+  loadQuote(ref, event, url).then(quoted => {
     if (waiting) {
       popModal()
 

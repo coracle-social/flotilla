@@ -2,7 +2,7 @@
   import {onMount} from "svelte"
   import * as nip19 from "nostr-tools/nip19"
   import type {TrustedEvent} from "@welshman/util"
-  import {Address, NOTE, getIdFilters} from "@welshman/util"
+  import {Address, EventRef, NOTE, getIdFilters} from "@welshman/util"
   import {LOCAL_RELAY_URL} from "@welshman/net"
   import {goto} from "$app/navigation"
   import {decodePubkey} from "@lib/util"
@@ -33,7 +33,7 @@
         if (path && event.kind !== NOTE) {
           goToEvent(event, {replaceState: true})
         } else {
-          goToNote({id: event.id, author: event.pubkey, relays})
+          goToNote(EventRef.fromEvent(event, relays))
         }
       },
       onClose: () => {

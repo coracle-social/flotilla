@@ -1,7 +1,6 @@
 import * as nip19 from "nostr-tools/nip19"
 import type {Page} from "@sveltejs/kit"
-import type {EventPointer} from "nostr-tools/nip19"
-import {append, remove, sort, tryCatch, uniq} from "@welshman/lib"
+import {append, remove, sort, uniq} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   CLASSIFIED,
@@ -11,10 +10,10 @@ import {
   POLL,
   THREAD,
   ZAP_GOAL,
-  fromNostrURI,
+  EventRef,
   normalizeRelayUrl,
 } from "@welshman/util"
-import type {TrustedEvent} from "@welshman/util"
+import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {
   Article,
   Classified,
@@ -83,18 +82,6 @@ const getConversationTitle = (pubkeys: string[]) => {
   return "Chat"
 }
 
-export const decodeNotePointer = (entity: string): Maybe<EventPointer> => {
-  const decoded = tryCatch(() => nip19.decode(fromNostrURI(entity)))
-
-  if (decoded?.type === "nevent") {
-    return decoded.data
-  }
-
-  if (decoded?.type === "note") {
-    return {id: decoded.data}
-  }
-}
-
 // Pages
 
 export const root = defineStaticRoute("/", "")
@@ -116,10 +103,10 @@ export const profile = defineRoute("/people/[npub]", {
 })
 
 export const note = defineRoute("/notes/[nevent]", {
-  encode: ({pointer}: {pointer: Maybe<EventPointer>}) => ({
-    nevent: pointer ? nip19.neventEncode(pointer) : "",
+  encode: ({ref}: {ref: Maybe<IEventRef>}) => ({
+    nevent: (ref && new EventRef(ref).toNip19()) ?? "",
   }),
-  decode: ({nevent}) => ({pointer: decodeNotePointer(nevent)}),
+  decode: ({nevent}) => ({ref: EventRef.fromNip19(nevent)}),
   title: () => "Note",
 })
 

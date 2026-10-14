@@ -16,7 +16,6 @@ import {
   THREAD,
   ZAP_GOAL,
   getIdOrAddress,
-  isReplaceableKind,
   tagSpec,
   tagValue,
 } from "@welshman/util"
@@ -43,8 +42,8 @@ export const partitionByActivity = (kind: number, events: TrustedEvent[]) => {
   const commentedAt = new Map<string, number>()
 
   for (const comment of comments) {
-    const {id, address} = reader(Comment)(comment).root()
-    const key = isReplaceableKind(kind) ? address : id
+    const root = reader(Comment)(comment).root()
+    const key = root?.getAddressOrId()
 
     if (key) {
       commentedAt.set(key, max([commentedAt.get(key), comment.created_at]))

@@ -25,37 +25,26 @@ import {
 import type {Maybe} from "@welshman/lib"
 import {
   COMMENT,
+  EventRef,
   GENERIC_REPOST,
   NOTE,
   REPOST,
-  eventOutbox,
   getAddress,
   getCommentFiltersForRoot,
   getIdAndAddress,
-  getIdFilters,
   getIdOrAddress,
+  getRelayHints,
   hexTags,
-  isRelayUrl,
   matchTag,
   outbox,
-  relays as relaySelections,
-  seen,
   tagSpec,
   tagValue,
   tagValues,
   topicTags,
 } from "@welshman/util"
-import type {EventRef, TrustedEvent} from "@welshman/util"
-import type {EventPointer} from "nostr-tools/nip19"
+import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {synced, withGetter} from "@welshman/store"
-import {
-  Comment,
-  displayPubkey,
-  getCommentTagValues,
-  getReplyTagValues,
-  getReplyTags,
-} from "@welshman/domain"
-import type {CommentRef} from "@welshman/domain"
+import {Comment, Note, displayPubkey} from "@welshman/domain"
 import {Events, Network, Profiles, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {decodeGeohash} from "@lib/geohash"
@@ -68,7 +57,6 @@ import {reader} from "@app/core/domain"
 import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
 import type {FeedContext, FeedLoadState} from "@app/features/feeds"
 import {getProfileGeohash} from "@app/features/location"
-import type {QuotePointer} from "@app/features/quotes"
 import {DEFAULT_PUBKEYS} from "@app/core/env"
 import {kv} from "@app/core/storage"
 
@@ -136,28 +124,29 @@ export const bootstrapPubkeys = derived(userFollowList, $userFollowList => {
 
 // Pointers: how an event is named before it has been loaded.
 
-// A relay selection names an event author `pubkey`, where an event pointer names it `author`.
-export const getQuoteRef = (pointer: QuotePointer): EventRef =>
-  pointer.id
-    ? {id: pointer.id, pubkey: pointer.author, kind: pointer.kind, relays: pointer.relays}
-    : pointer
-
 // Structure: the shape of a conversation, read off tags alone.
 
 export const REPOST_KINDS = [REPOST, GENERIC_REPOST]
 
-// Ids and addresses of an event's immediate parents, falling back to its thread roots.
-export const getParents = ({kind, tags}: TrustedEvent) => {
-  const {roots, replies} = kind === COMMENT ? getCommentTagValues(tags) : getReplyTagValues(tags)
+// Ids and addresses of what an event answers; NIP-25 has a reaction name its target last, as reposts and zaps do.
+export const getParents = (event: TrustedEvent) => {
+  if (isReplyKind(event)) {
+    const {parent, root} = getReplyRefs(event)
 
-  return replies.length > 0 ? replies : roots
+    return (parent ?? root)?.getIdAndAddress() ?? []
+  }
+
+  return tagValues(hexTags("e"), event.tags).slice(-1)
 }
 
 // A reply names the note it answers with an `e` tag, and a deeper one names the thread root too.
 export const getThreadFilters = (event: TrustedEvent) => {
-  const roots = tagValues(hexTags("e"), getReplyTags(event.tags).roots)
+  const root = event.kind === NOTE ? reader(Note)(event).root()?.id : undefined
 
-  return [...getCommentFiltersForRoot([event]), {kinds: [NOTE], "#e": uniq([event.id, ...roots])}]
+  return [
+    ...getCommentFiltersForRoot([event]),
+    {kinds: [NOTE], "#e": uniq(removeUndefined([event.id, root]))},
+  ]
 }
 
 // A reply names only the event above it, so the set grows a generation at a time.
@@ -229,36 +218,24 @@ export const buildCommentTree = (root: TrustedEvent, comments: TrustedEvent[]) =
   return sortBy(node => node.comment.created_at, nodes)
 }
 
-// What a reply answers and the root of its thread, each named with the author its tag carries.
-export type ReplyRef = {id: string; author?: string; relays: string[]}
-
-const fromCommentRef = ({id, pubkey}: CommentRef): Maybe<ReplyRef> =>
-  id ? {id, author: pubkey, relays: []} : undefined
-
-// A tag naming an event carries a relay hint in third position, which is optional and often junk.
-const relayHint = (url: Maybe<string>) => (url && isRelayUrl(url) ? [url] : [])
-
-// NIP-10 names the author of the event answered in the fifth position of the tag naming it.
-const fromReplyTag = (tag: Maybe<string[]>): Maybe<ReplyRef> =>
-  tag && {id: tag[1], author: tag[4] || undefined, relays: relayHint(tag[2])}
-
-// A direct reply names only the thread root, so the event answered and the root can be the same one.
+// Only a note or a comment answers another event, through NIP-10 or NIP-22 tags.
 export const getReplyRefs = (event: TrustedEvent) => {
-  if (event.kind === COMMENT) {
-    const comment = reader(Comment)(event)
+  const thread = call(() => {
+    switch (event.kind) {
+      case NOTE:
+        return reader(Note)(event)
+      case COMMENT:
+        return reader(Comment)(event)
+    }
+  })
 
-    return {parent: fromCommentRef(comment.parent()), root: fromCommentRef(comment.root())}
-  }
-
-  const {roots, replies} = getReplyTags(event.tags)
-
-  return {parent: fromReplyTag(replies[0]), root: fromReplyTag(roots[0])}
+  return {parent: thread?.parent(), root: thread?.root()}
 }
 
 // One entry in the home notifications feed: a note, who answered it, and who reacted to it.
 export type HomeNotification = {
   key: string
-  ref: ReplyRef
+  ref: EventRef
   replies: TrustedEvent[]
   reactions: TrustedEvent[]
   timestamp: number
@@ -267,23 +244,23 @@ export type HomeNotification = {
 const isReplyKind = (event: TrustedEvent) => event.kind === NOTE || event.kind === COMMENT
 
 // What a notification is about: the note it answers or reacts to, or itself when it is a mention.
-export const getNotificationRef = (event: TrustedEvent): Maybe<ReplyRef> => {
+export const getNotificationRef = (event: TrustedEvent): Maybe<EventRef> => {
   if (isReplyKind(event)) {
     const {parent, root} = getReplyRefs(event)
 
-    return parent ?? root ?? {id: event.id, author: event.pubkey, relays: []}
+    return parent ?? root ?? EventRef.fromEvent(event)
   }
 
   // NIP-25 asks a reaction to carry the tags of the event it is about, author included.
   const tag = matchTag(tagSpec("e"), event.tags)
+  const pubkey = tagValue(tagSpec("p"), event.tags)
 
-  return tag && {id: tag[1], author: tagValue(tagSpec("p"), event.tags), relays: relayHint(tag[2])}
+  return tag && new EventRef({id: tag[1], pubkey, relays: getRelayHints(tag)})
 }
 
 // An entry is a note and what was done to it, so nothing else can be the note one is drawn around.
 export const isNotificationTarget = (event: TrustedEvent) =>
-  event.kind === NOTE ||
-  (event.kind === COMMENT && reader(Comment)(event).root().kind === String(NOTE))
+  event.kind === NOTE || (event.kind === COMMENT && reader(Comment)(event).root()?.kind === NOTE)
 
 // Two entries in a row about one note read as a duplicate, whatever bucket split them.
 const mergeAdjacent = (notifications: HomeNotification[]) => {
@@ -292,14 +269,10 @@ const mergeAdjacent = (notifications: HomeNotification[]) => {
   for (const notification of notifications) {
     const previous = merged[merged.length - 1]
 
-    if (previous?.ref.id === notification.ref.id) {
+    if (previous?.ref.getAddressOrId() === notification.ref.getAddressOrId()) {
       merged[merged.length - 1] = {
         ...previous,
-        ref: {
-          ...previous.ref,
-          author: previous.ref.author ?? notification.ref.author,
-          relays: uniq([...previous.ref.relays, ...notification.ref.relays]),
-        },
+        ref: EventRef.merge(previous.ref, notification.ref),
         replies: [...previous.replies, ...notification.replies],
         reactions: [...previous.reactions, ...notification.reactions],
       }
@@ -318,10 +291,11 @@ export const groupNotifications = (events: TrustedEvent[]) => {
 
   for (const event of events) {
     const ref = getNotificationRef(event)
+    const target = ref?.getAddressOrId()
 
-    if (ref) {
+    if (ref && target) {
       // The window is measured back from now, so two answers minutes apart never straddle an edge.
-      const key = `${ref.id}:${Math.round(ago(event.created_at) / interval)}`
+      const key = `${target}:${Math.round(ago(event.created_at) / interval)}`
       const notification = notifications.get(key) ?? {
         key,
         ref,
@@ -338,11 +312,7 @@ export const groupNotifications = (events: TrustedEvent[]) => {
 
       notifications.set(key, {
         ...notification,
-        ref: {
-          id: ref.id,
-          author: notification.ref.author ?? ref.author,
-          relays: uniq([...notification.ref.relays, ...ref.relays]),
-        },
+        ref: EventRef.merge(notification.ref, ref),
         timestamp: max([notification.timestamp, event.created_at]),
       })
     }
@@ -371,7 +341,7 @@ export const includedNetworkFeedTypes = synced<NetworkFeedType[]>({
 
 // Only a kind 1 carries NIP-10 reply tags, so an article or a poll in the feed is a note.
 const networkFeedType = (event: TrustedEvent): NetworkFeedType =>
-  event.kind === NOTE && getReplyTags(event.tags).replies.length > 0 ? "replies" : "notes"
+  event.kind === NOTE && reader(Note)(event).parent() ? "replies" : "notes"
 
 export const isIncludedNetworkFeedEvent = derived(
   includedNetworkFeedTypes,
@@ -382,17 +352,17 @@ export const countNetworkFeedTypes = (events: TrustedEvent[]) => countBy(network
 
 // One card in the network feed: the note it is drawn around, and the replies answering it.
 export type NetworkFeedEntry = {
-  ref: ReplyRef
+  key: string
+  ref: EventRef
   note?: TrustedEvent
   replies: TrustedEvent[]
 }
 
 // What a feed event is drawn under: the note a reply answers, or the event itself.
-const getNetworkFeedRef = (event: TrustedEvent): ReplyRef => {
-  const {parent, root} = getReplyRefs(event)
-  const answered = networkFeedType(event) === "replies" ? (parent ?? root) : undefined
+const getNetworkFeedRef = (event: TrustedEvent) => {
+  const answered = networkFeedType(event) === "replies" ? getReplyRefs(event).parent : undefined
 
-  return answered ?? {id: event.id, author: event.pubkey, relays: []}
+  return answered ?? EventRef.fromEvent(event)
 }
 
 // Where an entry sits in the feed: its note, or the oldest reply when the note is not loaded.
@@ -401,24 +371,26 @@ const getNetworkFeedTimestamp = (entry: NetworkFeedEntry) =>
 
 // A reply collapses into the entry for the note it answers, so two replies to one note share it.
 export const groupNetworkFeedEvents = (events: TrustedEvent[]): NetworkFeedEntry[] => {
-  const grouped = groupBy(
-    ({ref}) => ref.id,
-    events.map(event => ({ref: getNetworkFeedRef(event), event})),
-  )
+  const items = events.flatMap(event => {
+    const ref = getNetworkFeedRef(event)
+    const key = ref.getAddressOrId()
 
-  const entries = Array.from(grouped, ([id, group]): NetworkFeedEntry => {
-    const [anchors, replies] = partition(({ref, event}) => ref.id === event.id, group)
-
-    return {
-      ref: {
-        id,
-        author: first(removeUndefined(group.map(({ref}) => ref.author))),
-        relays: uniq(group.flatMap(({ref}) => ref.relays)),
-      },
-      note: first(anchors)?.event,
-      replies: replies.map(({event}) => event),
-    }
+    return key ? [{key, ref, event}] : []
   })
+
+  const entries = Array.from(
+    groupBy(item => item.key, items),
+    ([key, group]): NetworkFeedEntry => {
+      const [anchors, replies] = partition(({ref, event}) => ref.id === event.id, group)
+
+      return {
+        key,
+        ref: group.map(({ref}) => ref).reduce(EventRef.merge),
+        note: first(anchors)?.event,
+        replies: replies.map(({event}) => event),
+      }
+    },
+  )
 
   return sortBy(entry => -getNetworkFeedTimestamp(entry), entries)
 }
@@ -450,9 +422,9 @@ export const makeNetworkFeed = ({
   let stopped = false
 
   const pinnedFirst = derived(pinned, $pinned => {
-    const ids = new Set($pinned.map(event => event.id))
+    const keys = new Set($pinned.map(getIdOrAddress))
 
-    return (entry: NetworkFeedEntry) => (ids.has(entry.ref.id) ? 0 : 1)
+    return (entry: NetworkFeedEntry) => (keys.has(entry.key) ? 0 : 1)
   })
 
   // Everything the feed holds, newest first, less whoever the reader muted.
@@ -477,21 +449,21 @@ export const makeNetworkFeed = ({
 
   // What the feed holds and has not drawn, newest first. An entry waits here for its note.
   const buffer = derived([grouped, anchors], ([$grouped, $anchors]) =>
-    $grouped.filter(entry => !$anchors.has(entry.ref.id)),
+    $grouped.filter(entry => !$anchors.has(entry.key)),
   )
 
   const entries = derived([grouped, drawn, anchors], ([$grouped, $drawn, $anchors]) => {
-    const drawnIds = new Set($drawn)
-    const byRef = indexBy(entry => entry.ref.id, $grouped)
+    const drawnKeys = new Set($drawn)
+    const byKey = indexBy(entry => entry.key, $grouped)
     // Merged timelines page at their own rates, so time order would move entries already drawn.
     const ordered = sortByTime
-      ? $grouped.filter(entry => drawnIds.has(entry.ref.id))
-      : removeUndefined($drawn.map(id => byRef.get(id)))
+      ? $grouped.filter(entry => drawnKeys.has(entry.key))
+      : removeUndefined($drawn.map(key => byKey.get(key)))
 
     return ordered.map(entry => ({
       ...entry,
       // A note the feed carries itself still belongs on its card when the load missed it.
-      note: $anchors.get(entry.ref.id) ?? entry.note,
+      note: $anchors.get(entry.key) ?? entry.note,
     }))
   })
 
@@ -520,13 +492,12 @@ export const makeNetworkFeed = ({
       try {
         const loaded = await Promise.all(
           batch.map(
-            async entry =>
-              [entry.ref.id, entry.note ?? (await notes.get().loadParent(entry.ref))] as const,
+            async entry => [entry.key, entry.note ?? (await notes.get().load(entry.ref))] as const,
           ),
         )
 
         anchors.update($anchors => new Map([...$anchors, ...loaded]))
-        drawn.update($drawn => [...$drawn, ...batch.map(entry => entry.ref.id)])
+        drawn.update($drawn => [...$drawn, ...batch.map(entry => entry.key)])
       } finally {
         admitting = false
       }
@@ -654,39 +625,36 @@ export const derivePubkeyMuted = (pubkey: string) =>
 export class Notes {
   constructor(private readonly app: IApp) {}
 
-  // The hints it arrived with, the relays it has been seen on, and its author's outbox.
-  relays = (ref: EventRef) =>
-    this.app
-      .use(Router)
-      .resolver.relays([...relaySelections(ref.relays ?? []), seen(ref), eventOutbox(ref)])
+  relays = (ref: IEventRef) =>
+    this.app.use(Router).resolver.relays(new EventRef(ref).getRelaySelections())
 
-  load = async (pointer: EventPointer) =>
-    this.app.repository.getEvent(pointer.id) ??
-    first(
-      await this.app.use(Network).load({
-        relays: await this.relays(getQuoteRef(pointer)),
-        filters: getIdFilters([pointer.id]),
-        timeout: 3000,
-      }),
-    )
+  load = async (ref: IEventRef) => {
+    const eventRef = new EventRef(ref)
+    const idOrAddress = eventRef.getIdOrAddress()
 
-  loadParent = async (ref: ReplyRef) =>
-    this.app.repository.getEvent(ref.id) ??
-    first(
-      await this.app.use(Network).load({
-        relays: await this.app
-          .use(Router)
-          .resolver.relays([eventOutbox({id: ref.id, pubkey: ref.author, relays: ref.relays})]),
-        filters: getIdFilters([ref.id]),
-        timeout: 3000,
-      }),
-    )
+    if (idOrAddress) {
+      return (
+        this.app.repository.getEvent(idOrAddress) ??
+        first(
+          await this.app.use(Network).load({
+            relays: await this.relays(ref),
+            filters: eventRef.getFilters(),
+            timeout: 3000,
+          }),
+        )
+      )
+    }
+  }
 
   // A pointer carrying no hints would never resolve, so the load beside it asks the author's relays.
-  deriveEvent = (pointer: EventPointer) => {
-    this.load(pointer)
+  deriveEvent = (ref: IEventRef) => {
+    const idOrAddress = new EventRef(ref).getIdOrAddress()
 
-    return this.app.use(Events).one(pointer.id, pointer.relays ?? []).$
+    this.load(ref)
+
+    return idOrAddress
+      ? this.app.use(Events).one(idOrAddress, ref.relays ?? []).$
+      : readable<Maybe<TrustedEvent>>(undefined)
   }
 
   // The filters reach past direct replies, so the tree is built from what hangs off the note.

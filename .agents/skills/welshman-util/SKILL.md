@@ -324,6 +324,7 @@ isDVMKind(kind)                    // 5000–7000
 | `tagValue(spec, tags)` | Value of the first matching tag, or `undefined` |
 | `tagMatcher(spec)` / `tagValueExtractor(spec)` | The raw `(tag)=>boolean` / `(tag)=>T` for a spec |
 | `tagValueMatcher(spec, value)` | Predicate for one value, compared after normalization — matches however the tag spelled it |
+| `getRelayHints(tag)` | `[url]` when the tag's relay hint (index 2) is a relay url, `[]` otherwise |
 
 The old `getTagValue`/`getPubkeyTagValues`/`getEventTags`/… accessors were removed — use the spec selectors above (e.g. `tagValues(hexTags("p"), tags)`, `tagValue(tagSpec("title"), tags)`).
 
@@ -352,10 +353,28 @@ The old `getTagValue`/`getPubkeyTagValues`/`getEventTags`/… accessors were rem
 | `Address.isAddress(s)` | Validate address string format |
 | `Address.from(s, relays?)` | Parse from `kind:pubkey:identifier` string |
 | `Address.fromNaddr(naddr)` | Parse from NIP-19 naddr |
-| `Address.fromEvent(event, relays?)` | Create from addressable event |
+| `Address.fromEvent(event, relays?)` | Create from an event; `identifier` is the d tag (or `""`) for a replaceable kind, `undefined` otherwise |
 | `address.toString()` | Serialize to `kind:pubkey:identifier` |
 | `address.toNaddr()` | Serialize to NIP-19 naddr |
 | `getAddress(event)` | Convenience: get address string from event |
+
+### Event references
+
+| Export | Description |
+|--------|-------------|
+| `IEventRef` | Plain `{ id?, pubkey?, kind?, identifier?, relays? }` naming an event by id or address, which selections and APIs take. A known `pubkey` routes without finding the event, an id or address lets the resolver look it up, and `relays` are hints and a last-resort fallback |
+| `EventRef` class | Implements `IEventRef`; parse one with `new EventRef(ref)` for the methods below |
+| `EventRef.fromEvent(event, relays?)` | From an event in hand, keyed as the event is (a replaceable one gets its identifier) |
+| `EventRef.fromPointer(pointer)` | From a nip19 event or address pointer (`author` becomes `pubkey`) |
+| `EventRef.fromAddress(address)` / `EventRef.fromString(idOrAddress, relays?)` | From an `Address`, or an id or address string |
+| `EventRef.fromNip19(entity)` | From a note, nevent or naddr; `undefined` otherwise |
+| `EventRef.merge(a, b)` | One reference pooling what two know of the same event; `a` wins where they disagree |
+| `ref.getIdOrAddress()` / `ref.getAddressOrId()` | The id or the address, preferring the one named first; `getAddressOrId` keys a reference the way `getIdOrAddress(event)` keys an event |
+| `ref.getIdAndAddress()` | Every key it can be found under, as `getIdAndAddress(event)` gives them |
+| `ref.getAddress()` | Its `Address`, if it carries a kind, pubkey and identifier |
+| `ref.getFilters()` | Filters loading it, `[]` if it names neither |
+| `ref.getRelaySelections()` | Its hints, `seen`, and `eventOutbox` |
+| `ref.toNip19()` | An nevent, or an naddr when there is no id |
 
 ### Relay
 
@@ -386,7 +405,7 @@ the capability as its `FeedRouter` interface.
 
 | Type | Description |
 |------|-------------|
-| `EventRef` | `{ id?, pubkey?, kind?, identifier?, relays? }` — all optional and additive. A known `pubkey` routes directly without finding the event; `id` (or `kind`+`pubkey`+`identifier`) lets the resolver look it up; `relays` are hints for that lookup and a last-resort fallback |
+| `IEventRef` | An event named by id or address (see Event references) |
 | `RelayRoute` | Discriminated union: `userInbox` / `userOutbox` / `userMessaging`, `pubkeyInbox` / `pubkeyOutbox` / `pubkeyMessaging` (`{pubkey}`), `eventInbox` / `eventOutbox` / `seen` (`{ref}`), `relay` (`{url}`), `index`, `search` |
 | `RelaySelection` | `{ route: RelayRoute; weight: number }` |
 

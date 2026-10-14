@@ -293,8 +293,7 @@ In order of preference:
 
 1. The kind's reader: `reader(Thread)(event).title()`, `reader(TimeEvent)(event).start()`.
 2. Base reader getters when the kind is known (`room()`, `protect()`, `expiration()`, `imeta()`),
-   or the standalone helpers when it isn't (`getImeta`, `getExpiration`, `getReplyTags`,
-   `getCommentTagValues`, `getEmojis`).
+   or the standalone helpers when it isn't (`getImeta`, `getExpiration`, `getEmojis`).
 3. `tagValue(tagSpec("h"), event.tags)` in code that handles many kinds at once (notifications,
    `getEventPath`, feed grouping), where no single reader applies.
 

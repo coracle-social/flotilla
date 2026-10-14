@@ -1,8 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {readable} from "svelte/store"
-  import type {TrustedEvent} from "@welshman/util"
-  import type {EventPointer} from "nostr-tools/nip19"
+  import type {IEventRef, TrustedEvent} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -13,19 +12,19 @@
   import CommentTree from "@app/components/CommentTree.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {makeFeedContext} from "@app/features/feeds"
-  import {getQuoteRef, notes} from "@app/features/social"
+  import {notes} from "@app/features/social"
   import type {CommentNode} from "@app/features/social"
 
   type Props = {
-    pointer: EventPointer
+    ref: IEventRef
     reply?: boolean
   }
 
-  const {pointer, reply = false}: Props = $props()
+  const {ref, reply = false}: Props = $props()
 
-  const relays = $notes.relays(getQuoteRef(pointer))
+  const relays = $notes.relays(ref)
   const context = makeFeedContext({relays})
-  const event = $notes.deriveEvent(pointer)
+  const event = $notes.deriveEvent(ref)
   const replies = $derived($event ? $notes.deriveReplies($event) : readable<CommentNode[]>([]))
 
   const setReplyTo = (comment?: TrustedEvent) => {

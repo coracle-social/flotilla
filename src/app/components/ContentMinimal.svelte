@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {fromNostrURI, tagValue, tagSpec} from "@welshman/util"
+  import {EventRef, fromNostrURI, tagSpec, tagValue} from "@welshman/util"
   import {
     parse,
     truncate,
@@ -144,7 +144,7 @@
         {:else if isQuote(parsed)}
           <Button
             class="max-w-full cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap underline"
-            onclick={() => goToQuote(parsed.value, event, url)}>
+            onclick={() => goToQuote(EventRef.fromPointer(parsed.value), event, url)}>
             {fromNostrURI(parsed.raw).slice(0, 16) + "…"}
           </Button>
         {:else}

@@ -47,7 +47,7 @@ export class Commands extends RelayScopedDerivedPlugin<CommandReader> {
 
   fetch(key: string) {
     const [url, address] = splitCommandKey(key)
-    const {pubkey, identifier} = Address.from(address)
+    const {pubkey, identifier = ""} = Address.from(address)
 
     return this.app.use(Network).load({
       relays: [url],

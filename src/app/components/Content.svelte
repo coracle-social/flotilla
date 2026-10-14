@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {tagSpec, tagValue} from "@welshman/util"
+  import {EventRef, tagSpec, tagValue} from "@welshman/util"
   import {
     parse,
     truncate,
@@ -186,7 +186,12 @@
             #<RoomName url={parsed.value.url} h={parsed.value.room} />
           </Link>
         {:else if isQuote(parsed)}
-          <ContentQuote {url} value={parsed.value} raw={parsed.raw} {event} inline={!isBlock(i)} />
+          <ContentQuote
+            {url}
+            ref={EventRef.fromPointer(parsed.value)}
+            raw={parsed.raw}
+            {event}
+            inline={!isBlock(i)} />
         {:else if isEllipsis(parsed) && expandInline}
           {@html renderAsHtml(parsed)}
           <button

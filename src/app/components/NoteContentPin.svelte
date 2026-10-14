@@ -1,5 +1,6 @@
 <script lang="ts">
   import type {ComponentProps} from "svelte"
+  import {EventRef} from "@welshman/util"
   import {Pin} from "@welshman/domain"
   import Content from "@app/components/Content.svelte"
   import ContentEvent from "@app/components/ContentEvent.svelte"
@@ -20,10 +21,8 @@
     {#if pin.content()}
       <Content event={{content: pin.content(), tags: []}} />
     {/if}
-    {#if reference?.type === "event"}
-      <ContentEvent value={reference.id} relays={reference.relay ? [reference.relay] : []} />
-    {:else if reference?.type === "address"}
-      <ContentEvent value={reference.address} relays={reference.relay ? [reference.relay] : []} />
+    {#if reference instanceof EventRef}
+      <ContentEvent value={reference.getAddressOrId() ?? ""} relays={reference.relays} />
     {:else}
       <!-- External references are urls or bech32 entities, both of which Content parses. -->
       <Content event={{content: pinToReference(pin), tags: []}} />

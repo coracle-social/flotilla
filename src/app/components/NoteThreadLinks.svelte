@@ -1,12 +1,11 @@
 <script lang="ts">
-  import type {TrustedEvent} from "@welshman/util"
+  import type {EventRef, TrustedEvent} from "@welshman/util"
   import AltArrowUp from "@assets/icons/alt-arrow-up.svg?dataurl"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import {openNote} from "@app/navigation/overlays"
   import {getReplyRefs} from "@app/features/social"
-  import type {ReplyRef} from "@app/features/social"
 
   type Props = {
     event: TrustedEvent
@@ -18,10 +17,11 @@
 
   const parent = $derived(refs.parent ?? refs.root)
 
-  const thread = $derived(refs.root?.id === parent?.id ? undefined : refs.root)
+  const thread = $derived(
+    refs.root?.getAddressOrId() === parent?.getAddressOrId() ? undefined : refs.root,
+  )
 
-  const open = (target: ReplyRef) => () =>
-    openNote({id: target.id, author: target.author, relays: target.relays})
+  const open = (target: EventRef) => () => openNote(target)
 </script>
 
 {#if parent || thread}

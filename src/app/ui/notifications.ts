@@ -31,6 +31,7 @@ import {
   NOTE,
   REACTION,
   ZAP_RECEIPT,
+  getIdAndAddress,
   getIdFilters,
   sortEventsDesc,
   tagSpec,
@@ -554,17 +555,29 @@ const homeNotificationCandidates = derived(
 const homeNotificationTargets = derived(
   [app, throttled(1000, homeNotificationCandidates)],
   ([$app, $candidates], set: (targets: EventsById) => void) => {
-    const refs = uniqBy(ref => ref.id, removeUndefined($candidates.map(getNotificationRef)))
+    const refs = uniqBy(
+      ref => ref.getAddressOrId(),
+      removeUndefined($candidates.map(getNotificationRef)),
+    )
 
     if (refs.length > 0) {
-      for (const {id, author, relays} of refs) {
-        $app.use(Notes).load({id, author, relays}).catch(noop)
+      for (const ref of refs) {
+        $app.use(Notes).load(ref).catch(noop)
       }
 
+      // A reference names its event by id or by address, so the event is found under both.
       return $app
         .use(Events)
-        .byId(getIdFilters(refs.map(ref => ref.id)))
-        .$.subscribe(set)
+        .byId(getIdFilters(removeUndefined(refs.map(ref => ref.getAddressOrId()))))
+        .$.subscribe($byId =>
+          set(
+            new Map(
+              Array.from($byId.values()).flatMap(event =>
+                getIdAndAddress(event).map(key => [key, event] as const),
+              ),
+            ),
+          ),
+        )
     }
 
     set(new Map())
@@ -582,8 +595,8 @@ export const isHomeNotification = derived(
 
     // An entry is drawn around its note, so a thread a muted person started is not one either.
     return (event: TrustedEvent) => {
-      const ref = getNotificationRef(event)
-      const target = ref && $targets.get(ref.id)
+      const key = getNotificationRef(event)?.getAddressOrId()
+      const target = key && $targets.get(key)
 
       return Boolean(
         target &&
