@@ -7,8 +7,8 @@ import {fromApp} from "@app/core/app"
 import {command, writer} from "@app/core/domain"
 import {registerRetention} from "@app/core/storage"
 import {registerSync} from "@app/core/sync"
-import {syncCurrentSpace} from "@app/features/spaces"
-import {addressWriterToSpace} from "@app/features/spaces/rooms"
+import {syncCurrentSpace} from "@app/features/spaces/sync"
+import {addressWriterToSpace} from "@app/features/spaces/rooms/publish"
 
 // NIP-78 app data from the pubkey the space's NIP-11 names, one ["content", <value>] tag per entry.
 export const FEATURED_CONTENT_D = "flotilla/featured-content"

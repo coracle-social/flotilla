@@ -127,7 +127,7 @@ page, and loads events before calling `goToEvent`.
 2. Its routes in `src/app/navigation/pages.ts`, with titles, entries in `pageRoutes`, and a case
    in `makeContentPath`, so notifications and permalinks land there.
 3. A `SecondaryNavItem` in `SpaceMenuNavItems.svelte`. Content entries appear only once the space
-   holds that kind, which comes from `CONTENT_KINDS` in `src/app/features/spaces/index.ts`.
+   holds that kind, which comes from `CONTENT_KINDS` in `src/app/features/spaces/content.ts`.
 
 The registries outside the view layer, including the link-preview server, are in
 flotilla-architecture and flotilla-model.

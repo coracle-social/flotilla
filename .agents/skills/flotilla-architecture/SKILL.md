@@ -36,6 +36,8 @@ unrelated to flotilla's `@app/*`. App modules use it freely, for example `naviga
 - `src/lib` stays reusable by other apps.
 - `src/app` modules can be imported from anywhere (routes, components, other modules, the boot
   sequence) without pulling in UI.
+- An `index.ts` only re-exports its directory's files and defines its `registerX`; files in the
+  directory import each other directly, not through the index. AGENTS.md has the rule.
 - Core and navigation never import features. A feature reaches into core through hooks (`registerSync`,
   `registerRetention`, `registerLogoutHandler`) from its own `registerX`,
   and `registerAll` in `src/app/index.ts` calls every `registerX`. The root layout calls
@@ -126,21 +128,28 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
 The app's sections are DMs (`messages.ts`), spaces (`spaces/`), the social home page, and
 hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature under `spaces/`:
 
-- `spaces/index.ts`: the user's room list, `userSpaceUrls`, `activeSpaceUrls` (platform relays
-  when configured), `currentSpaceUrls` and `syncedSpaceUrls` (what space syncs run over),
-  `syncCurrentSpace`, the space-wide content sync and retention, `CONTENT_KINDS` (the kinds with a
-  section of their own) and `partitionByActivity`, which the list pages use to sort a kind by
-  latest comment
-- `spaces/rooms/`: chat rooms (`index.ts`, helpers over `rooms.get()`), `membership.ts` (joining
-  and leaving a room, room invite codes), `pins.ts`, `commands.ts` (NIP-CD slash commands)
+- `spaces/urls.ts`: the user's room list, `userSpaceUrls`, `activeSpaceUrls` (platform relays
+  when configured), `currentSpaceUrls` and `syncedSpaceUrls` (what space syncs run over)
+- `spaces/content.ts`: `CONTENT_KINDS` (the kinds with a section of their own) and
+  `partitionByActivity`, which the list pages use to sort a kind by latest comment
+- `spaces/sync.ts` (`syncCurrentSpace`, the space-wide relay and content syncs) and
+  `spaces/reactions.ts` (reacting inside a space). `spaces/index.ts` registers the syncs and
+  retention.
+- `spaces/rooms/`: chat rooms. `room.ts` (one room's type, name and members), `publish.ts`
+  (writing into a space or room), `lists.ts` (the user's room list), `permissions.ts`,
+  `search.ts`, `transcript.ts` (grouping a room's messages into rows), `sync.ts`,
+  `membership.ts` (joining and leaving a room, room invite codes), `pins.ts`, `commands.ts`
+  (NIP-CD slash commands)
 - `spaces/membership.ts`: joining and leaving a space, and whether someone is a member
 - `spaces/invites.ts`: invite links, and accepting one
 - `spaces/payments.ts`: relay fees, checkout, and the paid-space gate
 - `spaces/management.ts`: NIP-86 admin checks and bans; `roles.ts` and `actionItems.ts` (the admin
   review queue)
-- `spaces/calls/`: call state and LiveKit endpoint detection (`index.ts`), `engine.ts` (LiveKit join, leave, devices, the video
-  tiles a call shows), `screenShare/`. `calls/index.ts` stays free of livekit values, since the
-  root layout loads it and `engine.ts` is imported lazily.
+- `spaces/calls/`: `state.ts` (call state), `participants.ts`, `layout.ts` (the video layout and
+  spotlight), `endpoint.ts` (the relay's LiveKit endpoint), `engine.ts` (LiveKit join, leave,
+  devices, the video tiles a call shows), `screenShare/`. Everything but `engine.ts` stays free of
+  livekit values, since the root layout loads `calls/index.ts` and `engine.ts` is imported
+  lazily.
 - Content types: `spaces/articles.ts`, `calendar.ts`, `classifieds.ts`, `goals.ts`,
   `pinboards.ts`, `featured.ts`
 
@@ -157,21 +166,21 @@ Outside `spaces/`:
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
   `notifications.ts` (the latest activity per path, and which paths are unread), `badges.ts`
   (the app icon badge) and `inbox.ts` (the home inbox's lists)
-- `social/`: `index.ts` reads a conversation's shape off its tags and holds the `Notes`
+- `social/`: `replies.ts` reads a conversation's shape off its tags, `notes.ts` holds the `Notes`
   plugin; `muting.ts`, `notifications.ts` (the home notifications tab: its filters, sync,
   grouping and unread state),
   `networkFeed.ts` (`makeNetworkFeed`) and `reactions.ts` (reacting outside a space)
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)
-- Platform and voice: `push/` (notification adapters, and `server.ts` for the push server's HTTP
-  API), `deepLinks.ts`, `reminders.ts`
-- `voice/`: speech to text (stt) and text to speech (tts). `index.ts` holds a composer's
-  dictation, kept across navigation and sent as a voice note or transcribed, and reading a
-  message aloud. `providers/` runs each task on the device's stt model or on OpenRouter, and
-  `resolveVoiceProvider` picks one or asks the user to set one up
-- `editor/`: flotilla's `@welshman/editor` setup (`makeEditor`), with its suggestion popovers and
-  node views
+- Platform and voice: `push/` (`push.ts` picks a notification adapter, `settings.ts` saves the
+  user's choices, and `server.ts` talks to the push server's HTTP API), `deepLinks.ts`, `reminders.ts`
+- `voice/`: speech to text (stt) and text to speech (tts). `dictation.ts` holds a composer's
+  dictation, kept across navigation and sent as a voice note or transcribed, and `readAloud.ts`
+  reads a message aloud. `providers/` runs each task on the device's stt model or on OpenRouter,
+  and `resolveVoiceProvider` (`resolve.ts`) picks one or asks the user to set one up
+- `editor/`: flotilla's `@welshman/editor` setup (`makeEditor.ts`), with its suggestion popovers
+  and node views
 - `analytics.ts` (Plausible pageviews), `drafts.ts`, `loading.ts`, `location.ts`
 
 A feature gets a `src/app/features/<feature>.ts` only when it has non-UI logic to hold. Polls, goals,
@@ -260,7 +269,7 @@ Flotilla's own native code:
   `flotilla://share` URL. `handleDeepLink` in `src/app/features/deepLinks.ts` passes that to
   `shareFromNative`.
 
-`Push` in `src/app/features/push/index.ts` chooses an adapter at runtime: the Android fallback, Capacitor
+`Push` in `src/app/features/push/push.ts` chooses an adapter at runtime: the Android fallback, Capacitor
 `PushNotifications` (FCM/APNs through `PUSH_SERVER`), or web notifications.
 
 ## Env and branding
@@ -370,7 +379,7 @@ app module.
 `summary()`, `price()`, `status()`, `images()`, `topics()`) with a `ClassifiedWriter` that has the
 matching setters.
 
-**Kind registries.** `CONTENT_KINDS` in `src/app/features/spaces/index.ts` drives sync, notifications, push,
+**Kind registries.** `CONTENT_KINDS` in `src/app/features/spaces/content.ts` drives sync, notifications, push,
 search and the space nav entry. The kind also appears in the noun switch in `HomeActivity`, the kind dispatch in
 `NoteContent.svelte` and `NoteContentMinimal.svelte`, the `classifieds` and `classified` routes
 and `makeContentPath` in `navigation/pages.ts`, `NIP46_PERMS` in `nip46.ts`, and the section regexes in `server.js`.

@@ -42,7 +42,8 @@ import {kv} from "@app/core/storage"
 import {makeKeyedSyncs, registerSync} from "@app/core/sync"
 import {userRelayList} from "@app/core/user"
 import {checked, setChecked} from "@app/features/checked"
-import {Notes, getReplyRefs, isReplyKind} from "@app/features/social"
+import {getReplyRefs, isReplyKind} from "@app/features/social/replies"
+import {Notes} from "@app/features/social/notes"
 import {isEventMuted} from "@app/features/social/muting"
 
 export const REPOST_KINDS = [REPOST, GENERIC_REPOST]

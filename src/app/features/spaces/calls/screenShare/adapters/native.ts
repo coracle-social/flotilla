@@ -1,6 +1,6 @@
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import type {PluginListenerHandle} from "@capacitor/core"
-import {fetchLivekitToken} from "@app/features/spaces/calls"
+import {fetchLivekitToken} from "@app/features/spaces/calls/endpoint"
 import {
   ScreenShareDenied,
   errorCode,

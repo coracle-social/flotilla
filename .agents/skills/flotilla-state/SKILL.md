@@ -223,7 +223,7 @@ export const deriveSpaceActionItems = (url: string) =>
   )
 ```
 
-`src/app/features/spaces/rooms/index.ts` is the fullest example. Names follow the return type:
+`src/app/features/spaces/rooms` (`lists.ts`, `permissions.ts`) is the fullest example. Names follow the return type:
 
 - `derive*` returns a store: `deriveUserRooms`, `deriveUserRoomMembershipStatus`
 - `get*` and `display*` return a snapshot: `displayRoom`

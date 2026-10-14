@@ -18,7 +18,7 @@ import {Events} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {deletes, publisher, relays} from "@app/core/plugins"
 import {reader, writer} from "@app/core/domain"
-import {addressWriterToSpace} from "@app/features/spaces/rooms"
+import {addressWriterToSpace} from "@app/features/spaces/rooms/publish"
 import {kv} from "@app/core/storage"
 
 // Views

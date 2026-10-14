@@ -17,23 +17,22 @@ import {not, nthEq, reject, spec} from "@welshman/lib"
 import {makeRoomKey} from "@welshman/app"
 import {ScreenShare, ScreenShareDenied} from "@app/features/spaces/calls/screenShare"
 import {pushToast} from "@app/features/toast"
+import {fetchLivekitToken} from "@app/features/spaces/calls/endpoint"
 import {
   CallState,
   DeviceKind,
   callMicMuted,
-  fetchLivekitToken,
   callState,
   callTargetRoom,
   currentCallSession,
-  participantFromLiveKitIdentity,
   participantMediaState,
-  resetVideoCallLayout,
-  resetVideoSpotlight,
   speakingParticipants,
   triggerVideoTrackRevision,
   type CallSession,
   type ParticipantMediaState,
-} from "@app/features/spaces/calls"
+} from "@app/features/spaces/calls/state"
+import {participantFromLiveKitIdentity} from "@app/features/spaces/calls/participants"
+import {resetVideoCallLayout, resetVideoSpotlight} from "@app/features/spaces/calls/layout"
 
 const LIVEKIT_DEFAULT_DEVICE_ID = "default"
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]

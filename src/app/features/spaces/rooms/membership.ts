@@ -3,7 +3,7 @@ import {RoomCreateInvite, RoomJoin, RoomLeave} from "@welshman/domain"
 import {publish} from "@welshman/app"
 import {roomLists} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
-import {publishRoomList} from "@app/features/spaces/rooms"
+import {publishRoomList} from "@app/features/spaces/rooms/lists"
 
 // "duplicate:" and "already a member" both leave us where we wanted to be.
 const isMembershipRefusal = (error: string) =>

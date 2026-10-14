@@ -27,7 +27,8 @@ import {kv} from "@app/core/storage"
 import {CONTENT_KINDS} from "@app/features/spaces"
 import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
 import type {FeedContext, FeedLoadState} from "@app/features/feeds"
-import {getReplyRefs, notes} from "@app/features/social"
+import {getReplyRefs} from "@app/features/social/replies"
+import {notes} from "@app/features/social/notes"
 import {isEventMuted} from "@app/features/social/muting"
 
 // What the feed can be narrowed to, with both types included until the reader says otherwise.

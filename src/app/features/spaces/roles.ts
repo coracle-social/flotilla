@@ -3,7 +3,7 @@ import {RELAY_ROLE} from "@welshman/util"
 import {RelayMemberLists} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {registerSync} from "@app/core/sync"
-import {syncCurrentSpace} from "@app/features/spaces"
+import {syncCurrentSpace} from "@app/features/spaces/sync"
 
 // Roles are rendered at a fixed saturation and lightness, chosen to read on both themes.
 export const roleColor = (hue: number) => `hsl(${hue}, 70%, 50%)`

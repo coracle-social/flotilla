@@ -22,7 +22,7 @@ opened as a space. NIP-29 support only decides whether it has rooms.
 
 **A room is a NIP-29 group `h` on that relay.** The same `h` can exist independently on several
 relays, so anything room-scoped is keyed by both: `makeRoomKey(url, h)` from `@welshman/app` gives
-`${url}'${h}`, and `isRoomId` in `src/app/features/spaces/rooms/index.ts` tests for the `'`. Other
+`${url}'${h}`, and `isRoomId` in `src/app/features/spaces/rooms/room.ts` tests for the `'`. Other
 relay-scoped keys use `|` (`${url}|${d}` for relay roles and NIP-CD commands) so the two can't
 collide. Room content
 carries `["h", h]`; content with no `h` belongs to the whole space. `/spaces/[relay]/chat`
@@ -30,11 +30,11 @@ carries `["h", h]`; content with no `h` belongs to the whole space. `/spaces/[re
 
 **The user's spaces are their kind 10009 `ROOMS` list** (`RoomList` factory, `RoomLists` plugin):
 `r` tags for spaces, `group` tags for rooms with the space URL as the hint. `userSpaceUrls` in
-`src/app/features/spaces/index.ts` and `deriveUserRooms(url)` in `spaces/rooms/index.ts` read
+`src/app/features/spaces/urls.ts` and `deriveUserRooms(url)` in `spaces/rooms/lists.ts` read
 it. "Joined" in the UI means "in this list", which is separate from NIP-43 membership on the
 relay: `src/routes/spaces/[relay]/+layout.svelte` prompts `SpaceJoin` for any URL not in
 `userSpaceUrls`. A deployment with `VITE_PLATFORM_RELAYS` uses `PLATFORM_RELAYS` in place of the
-list for sync and navigation. `activeSpaceUrls` in `spaces/index.ts` is that choice, read by
+list for sync and navigation. `activeSpaceUrls` in `spaces/urls.ts` is that choice, read by
 background sync, notifications and editor suggestions.
 
 ### NIP-11 relay info
@@ -102,7 +102,8 @@ Granted`. `pendingJoins(url, h?)` lists unanswered join requests, and `deriveSpa
 (`src/app/features/spaces/actionItems.ts`) merges them with reports into the admin queue, keeping the half the
 user holds a method for — reports under `banevent`, join requests under `allowpubkey`.
 
-`src/app/features/spaces/rooms/index.ts` puts space authority on top:
+`src/app/features/spaces/rooms` puts space authority on top (`permissions.ts`, and `room.ts` for
+`addRoomMembers`):
 
 - `deriveUserIsRoomAdmin`: a space's staff administer every room.
 - `deriveUserRoomMembershipStatus`: an admin is always `Granted`.
@@ -256,7 +257,7 @@ background; see flotilla-state.
 
 ## Content kinds
 
-The space sections are the kinds in `CONTENT_KINDS` (`src/app/features/spaces/index.ts`): `ZAP_GOAL`,
+The space sections are the kinds in `CONTENT_KINDS` (`src/app/features/spaces/content.ts`): `ZAP_GOAL`,
 `EVENT_TIME`, `THREAD`, `CLASSIFIED`, `POLL`, `PINBOARD` and `LONG_FORM`. Each has list and detail
 routes under `spaces/[relay]/`, reached through `makeContentPath` in `src/app/navigation/pages.ts`. Chat is
 `MESSAGE` (kind 9). Comments (`COMMENT`, NIP-22) thread under any content kind, and
@@ -306,7 +307,7 @@ featured-content app data.
 These predate the rule or are waiting on welshman. Don't copy them; fix one when you touch it.
 
 - **No factory yet:** `MESSAGE` (9) in `RoomChat` and `publishRoomQuote`; `LIVEKIT_PARTICIPANTS`
-  (39004, a local constant in `src/app/features/spaces/calls/index.ts`); `STATUS` (30315) in `src/app/features/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
+  (39004, a local constant in `src/app/features/spaces/calls/participants.ts`); `STATUS` (30315) in `src/app/features/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
   subscriptions (`PUSH_SUBSCRIPTION`, 30390, local to `src/app/features/push/adapters/capacitor.ts`); `DIRECT_MESSAGE_FILE`
   (15) in `Conversation.svelte`.
 - **Factory exists but bypassed:** DMs built with `makeEvent` in `Conversation.svelte` (`DirectMessage`);

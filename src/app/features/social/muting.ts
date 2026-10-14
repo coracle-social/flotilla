@@ -4,7 +4,7 @@ import type {TrustedEvent} from "@welshman/util"
 import {withGetter} from "@welshman/store"
 import {user, userMuteList} from "@app/core/user"
 import {profiles} from "@app/core/plugins"
-import {getParents} from "@app/features/social"
+import {getParents} from "@app/features/social/replies"
 
 export const isEventMuted = withGetter(
   derived([user, userMuteList], ([$user, $muteList]) => {

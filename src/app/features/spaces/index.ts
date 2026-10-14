@@ -1,165 +1,26 @@
-import {page} from "$app/stores"
-import {derived} from "svelte/store"
-import {ago, int, max, partition, sortBy, spec, MONTH, WEEK} from "@welshman/lib"
+import {int, spec, MONTH} from "@welshman/lib"
 import {
-  CLASSIFIED,
   COMMENT,
   DELETE,
-  EVENT_TIME,
-  LONG_FORM,
   MESSAGE,
-  PINBOARD,
-  POLL,
   POLL_RESPONSE,
   REPORT,
   ROOMS,
-  THREAD,
-  ZAP_GOAL,
-  getIdOrAddress,
   tagSpec,
   tagValue,
 } from "@welshman/util"
-import type {EventContent, Filter, TrustedEvent} from "@welshman/util"
-import {Comment} from "@welshman/domain"
-import {RoomLists, publishToRelays} from "@welshman/app"
-import {makeCommentFilter} from "@lib/util"
-import {deriveUserItem, syncUserList} from "@app/core/user"
-import {deletes, network, reactions, relays, roomLists} from "@app/core/plugins"
-import {PLATFORM_RELAYS, REACTION_KINDS} from "@app/core/env"
-import {decodeRelay} from "@app/navigation/pages"
+import {syncUserList} from "@app/core/user"
+import {roomLists} from "@app/core/plugins"
 import {registerRetention} from "@app/core/storage"
-import {pullAndListen, registerSync, syncEach} from "@app/core/sync"
-import {hasBlossomSupport} from "@app/features/uploads"
-import {reader} from "@app/core/domain"
+import {registerSync, syncEach} from "@app/core/sync"
+import {CONTENT_KINDS} from "@app/features/spaces/content"
+import {currentSpaceUrls, syncedSpaceUrls} from "@app/features/spaces/urls"
+import {syncCurrentSpaceContent, syncSpaceContent, syncSpaceRelays} from "@app/features/spaces/sync"
 
-// The kinds that each have a section of their own in a space.
-export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD, CLASSIFIED, POLL, PINBOARD, LONG_FORM]
-
-// An event is active as of its own creation or the newest comment on it, keyed by address when addressable.
-export const partitionByActivity = (kind: number, events: TrustedEvent[]) => {
-  const [items, comments] = partition(spec({kind}), events)
-  const commentedAt = new Map<string, number>()
-
-  for (const comment of comments) {
-    const root = reader(Comment)(comment).root()
-    const key = root?.getAddressOrId()
-
-    if (key) {
-      commentedAt.set(key, max([commentedAt.get(key), comment.created_at]))
-    }
-  }
-
-  const activeAt = new Map(
-    items.map(event => [event.id, max([commentedAt.get(getIdOrAddress(event)), event.created_at])]),
-  )
-
-  return {items: sortBy(event => -(activeAt.get(event.id) ?? 0), items), activeAt}
-}
-
-export const userRoomList = deriveUserItem(RoomLists)
-
-export const userSpaceUrls = derived(userRoomList, $userRoomList => $userRoomList?.urls() ?? [])
-
-// Platform relays, where configured, stand in for the spaces the user has joined.
-export const activeSpaceUrls = derived(userSpaceUrls, $userSpaceUrls =>
-  PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : $userSpaceUrls,
-)
-
-// The space on screen, as a list so it syncs the same way as the others.
-export const currentSpaceUrls = derived(page, $page =>
-  $page.params.relay ? [decodeRelay($page.params.relay)] : [],
-)
-
-export const syncedSpaceUrls = derived(
-  [activeSpaceUrls, currentSpaceUrls],
-  ([$activeSpaceUrls, $currentSpaceUrls]) => [...$activeSpaceUrls, ...$currentSpaceUrls],
-)
-
-export const syncCurrentSpace = (filters: Filter[]) =>
-  syncEach(currentSpaceUrls, url => pullAndListen(url, filters))
-
-const syncSpaceRelays = () => {
-  const unsubscribeCurrent = currentSpaceUrls.subscribe($currentSpaceUrls => {
-    for (const url of $currentSpaceUrls) {
-      relays.get().load(url)
-      hasBlossomSupport(url)
-    }
-  })
-
-  const unsubscribeUser = userSpaceUrls.subscribe($userSpaceUrls => {
-    for (const url of $userSpaceUrls) {
-      relays.get().load(url)
-    }
-  })
-
-  return () => {
-    unsubscribeCurrent()
-    unsubscribeUser()
-  }
-}
-
-const syncSpaceContent = (url: string) => {
-  const controller = new AbortController()
-
-  network.get().request({
-    relays: [url],
-    signal: controller.signal,
-    filters: [
-      {kinds: CONTENT_KINDS, since: ago(WEEK)},
-      makeCommentFilter(CONTENT_KINDS, {since: ago(WEEK)}),
-      {kinds: [DELETE, REPORT, POLL_RESPONSE], since: ago(WEEK)},
-    ],
-  })
-
-  return () => controller.abort()
-}
-
-const syncCurrentSpaceContent = (url: string) => {
-  const controller = new AbortController()
-  const unsubscribe = pullAndListen(url, [{kinds: REACTION_KINDS, since: ago(WEEK)}])
-
-  // Which sections a space offers is a question about its whole history, and one event per kind answers it.
-  network.get().load({
-    relays: [url],
-    signal: controller.signal,
-    filters: CONTENT_KINDS.map(kind => ({kinds: [kind], limit: 1})),
-  })
-
-  return () => {
-    unsubscribe()
-    controller.abort()
-  }
-}
-
-// A reaction travels the way its subject does: protected under NIP-70, and tagged into its room.
-export const publishReaction = async (
-  url: string,
-  event: TrustedEvent,
-  {content, tags}: EventContent,
-) => {
-  const relay = await relays.get().load(url)
-  const h = tagValue(tagSpec("h"), event.tags)
-
-  return reactions
-    .get()
-    .react(event, content, writer => {
-      writer.addTags(...tags).setProtected(relay?.hasNip(70))
-
-      // welshman tags the room only once the tracker knows the target's relay, which an unconfirmed message lacks.
-      if (h) {
-        writer.setRoom(url, h)
-      }
-    })
-    .then(publishToRelays([url]))
-}
-
-export const retractReaction = async (url: string, reaction: TrustedEvent) => {
-  const relay = await relays.get().load(url)
-  return deletes
-    .get()
-    .deleteEvent(reaction, writer => writer.setProtected(relay?.hasNip(70)))
-    .then(publishToRelays([url]))
-}
+export * from "@app/features/spaces/content"
+export * from "@app/features/spaces/urls"
+export * from "@app/features/spaces/reactions"
+export {syncCurrentSpace} from "@app/features/spaces/sync"
 
 export const registerSpaces = () => {
   registerSync(syncSpaceRelays)

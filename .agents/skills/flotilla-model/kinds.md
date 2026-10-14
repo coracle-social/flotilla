@@ -8,9 +8,9 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| Chat | `MESSAGE` (9) | none | `src/app/features/spaces/rooms/index.ts` | `spaces/[relay]/chat`, `spaces/[relay]/[h]` (`RoomChat`) |
+| Chat | `MESSAGE` (9) | none | `src/app/features/spaces/rooms/publish.ts` | `spaces/[relay]/chat`, `spaces/[relay]/[h]` (`RoomChat`) |
 | Threads | `THREAD` (11) | `Thread` | none | `spaces/[relay]/threads`, `threads/[id]` (`ThreadCreate`) |
-| Comments | `COMMENT` (1111) | `Comment` | `src/lib/util.ts` (`makeCommentFilter`), `src/app/features/spaces/rooms/index.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
+| Comments | `COMMENT` (1111) | `Comment` | `src/lib/util.ts` (`makeCommentFilter`), `src/app/features/spaces/rooms/publish.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
 | Articles | `LONG_FORM` (30023) | `Article` | `src/app/features/spaces/articles.ts` | `spaces/[relay]/articles`, `articles/create`, `articles/[address]` |
 | Calendar | `EVENT_TIME` (31923) | `TimeEvent` | `src/app/features/feeds.ts` (`makeCalendarFeed`) | `spaces/[relay]/calendar`, `calendar/[address]` (`CalendarEventForm`) |
 | Classifieds | `CLASSIFIED` (30402) | `Classified` | `src/app/features/spaces/classifieds.ts` | `spaces/[relay]/classifieds`, `classifieds/[address]` (`ClassifiedForm`) |
@@ -20,7 +20,7 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 | Room pins | `ROOM_PINS` (39005), `ROOM_UPDATE_PINS` (9010) | `RoomPins`, `RoomUpdatePins` | `src/app/features/spaces/rooms/pins.ts` | `RoomItemMenu`, `RoomItemMenuMobile`, `RoomPinnedMessagesAll` |
 | Featured content | `APP_DATA` (30078), `d` = `flotilla/featured-content` | `AppData` | `src/app/features/spaces/featured.ts` | `SpaceFeaturedContent`; published as the relay |
 | Bot commands (NIP-CD) | `COMMAND` (31992) | `Command` | `src/app/features/spaces/rooms/commands.ts` | `RoomCompose`, `ContentCommand` |
-| Voice room participants | `LIVEKIT_PARTICIPANTS` (39004, defined in `src/app/features/spaces/calls/index.ts`) | none | `src/app/features/spaces/calls/index.ts` | rooms where `meta.hasLivekit()` |
+| Voice room participants | `LIVEKIT_PARTICIPANTS` (39004, defined in `src/app/features/spaces/calls/participants.ts`) | none | `src/app/features/spaces/calls/participants.ts` | rooms where `meta.hasLivekit()` |
 
 ## Read-only content
 
@@ -56,7 +56,7 @@ Gift wraps are only synced once the user opts in (`shouldUnwrap` in `src/app/fea
 | Settings | `APP_DATA` (30078), `d` = `flotilla/settings`, encrypted | `AppData` | `src/app/core/settings.ts` | `settings/*` |
 | Status (NIP-38) | `STATUS` (30315), `d` = `general` | none | `src/app/features/statuses.ts` | `ProfileStatus` |
 | Profile pins | `PINS` (10001) | `PinList` | `src/app/features/pins.ts` | profile pages |
-| Spaces and rooms | `ROOMS` (10009) | `RoomList` | `src/app/features/spaces/rooms/index.ts` | the sidebar, `spaces` |
+| Spaces and rooms | `ROOMS` (10009) | `RoomList` | `src/app/features/spaces/urls.ts`, `spaces/rooms/lists.ts` | the sidebar, `spaces` |
 | Follows and mutes | `FOLLOWS` (3), `MUTES` (10000) | `FollowList`, `MuteList` | `src/app/features/people.ts`, `social/muting.ts` | people pages, muting |
 | Relay lists | `RELAYS` (10002), `MESSAGING_RELAYS` (10050), `SEARCH_RELAYS` (10007), `BLOCKED_RELAYS` (10006), `BLOSSOM_SERVERS` (10063) | `RelayList`, `MessagingRelayList`, `SearchRelayList`, `BlockedRelayList`, `BlossomServerList` | plugins in `src/app/core/plugins.ts` | `settings/*` |
 | Account deletion | `VANISH` (62, written as a literal), `DELETE` (5) | none; `Delete` bypassed | none | `ProfileDelete` |

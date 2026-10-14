@@ -41,6 +41,11 @@ Core and navigation never import a feature. A feature reaches into core through 
 `registerSync` and `registerRetention`, called from its own `registerX`, which `registerAll` in
 `src/app/index.ts` calls before the app is built.
 
+An `index.ts` holds nothing but exports and initialization: it re-exports the files in its
+directory and defines the directory's `registerX`. Code goes in a file named for what it does.
+Files inside a directory import each other directly, never through their own index, which would
+make an import cycle.
+
 **Import Ordering Convention (CRITICAL):**
 Always sort imports by dependency level:
 
