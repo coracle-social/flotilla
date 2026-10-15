@@ -22,6 +22,7 @@
   import {makeEditor} from "@app/features/editor"
   import {userSpaceUrls} from "@app/features/spaces"
   import {pushToast} from "@app/features/toast"
+  import {openEventNote} from "@app/navigation/overlays"
 
   type Values = {
     content?: string | object
@@ -66,6 +67,10 @@
       if (publication.getUrlsWithStatus(PublishStatus.Success).length > 0) {
         draftKey.clear()
         history.back()
+        pushToast({
+          message: "Your post has been published!",
+          action: {message: "View it", onclick: () => openEventNote(publication.event)},
+        })
       } else {
         pushToast({theme: "error", message: (await publication.getError()) ?? "Failed to post."})
       }

@@ -9,6 +9,7 @@ import {
   DEFAULT_BLOSSOM_ORIGIN,
   GIF,
   WEBP,
+  dialog,
   expect,
   getPublished,
   getPublishedEvents,
@@ -18,6 +19,7 @@ import {
   profilePath,
   spacePath,
   test,
+  toast,
   topDialog,
   users,
 } from "../harness"
@@ -439,7 +441,12 @@ test("US-134 write a public post", async ({seed, as}) => {
   await noteEditor(composer).pressSequentially(post)
   await composer.getByRole("button", {name: "Post"}).click()
 
+  await expect(toast(page)).toContainText("Your post has been published!")
   await expect(notes(page).filter({hasText: post})).toBeVisible()
+
+  await toast(page).getByRole("button", {name: "View it"}).click()
+
+  await expect(dialog(page, "Note")).toContainText(post)
 
   await expect
     .poll(() =>

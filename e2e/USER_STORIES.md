@@ -1405,6 +1405,7 @@ Acceptance:
   open the same composer.
 - Submitting it publishes the post to her own relays and to every space she
   favorited, and it appears at the top of her profile's notes.
+- A toast says the post went out, and offers to open it.
 
 ### US-080 — Preview a profile from anywhere
 
