@@ -543,7 +543,7 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
   const share = topDialog(page)
 
   await expect(share.locator("canvas")).toBeVisible()
-  await expect(share.locator("input")).toHaveValue(/nprofile1/)
+  await expect(share.locator("input")).toHaveValue(new RegExp(`${profilePath(users.bob.pubkey)}$`))
 })
 
 test("US-082 mute an account", async ({seed, as}) => {
