@@ -78,7 +78,7 @@ or its page has to derive from `$page` instead. Routes read `$page` from the dep
   renders `SecondaryNav` with `SpaceMenu` and wraps the page in `Page`, except at the space root.
 - `settings/+layout.svelte` is a `SecondaryNav` of `SecondaryNavItem` links. A new settings page
   needs an entry there.
-- `chat/+layout.svelte` is the conversation list, plus a FAB to start a chat.
+- `chat/+layout.svelte` is the conversation list, plus a FAB to start a conversation.
 
 Since the space layout supplies `Page`, a space page renders a `SpaceBar` and a `PageContent`:
 

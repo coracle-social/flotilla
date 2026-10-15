@@ -505,8 +505,8 @@ that I can message them directly.
 
 Acceptance:
 
-- "Start New Chat" suggests bob as she types his name, and selecting him plus
-  "Create Chat" opens a conversation with a usable composer.
+- "Start New Conversation" suggests bob as she types his name, and selecting
+  him plus "Create Conversation" opens a conversation with a usable composer.
 - The conversation appears at the top of her list, labeled with bob's name.
 - Bob's profile page offers a "Message" button that opens the same conversation;
   her own profile offers none.

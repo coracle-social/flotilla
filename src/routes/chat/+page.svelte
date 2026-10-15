@@ -63,10 +63,10 @@
             {#if tab === MessagesTab.Requests}
               <p>No message requests.</p>
             {:else}
-              <p>No chats found! Try starting one up.</p>
+              <p>No conversations found! Try starting one up.</p>
               <Button class="button button-primary" onclick={startConversation}>
                 <Icon icon={AddCircle} />
-                Start a Chat
+                Start a Conversation
               </Button>
             {/if}
           </div>

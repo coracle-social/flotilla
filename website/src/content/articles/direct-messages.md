@@ -15,12 +15,12 @@ Direct messages (DMs) are private conversations with one person or a small group
 
 ## Starting a conversation
 
-DMs live in their own "Chats" section, apart from your spaces and rooms. Open it, click "Start New Chat," and add people in one of two ways:
+DMs live in their own "Messages" section, apart from your spaces and rooms. Open it, click "Start New Conversation," and add people in one of two ways:
 
 - **Search an existing contact** by name, if you already follow them or have interacted before.
 - **Paste an npub or hex pubkey** directly, if you know someone's Nostr identity but don't have a contact entry for them yet. Flotilla recognizes the key and adds them to the conversation.
 
-Add one person for a one-on-one conversation, or several for a small group chat. Once everyone's in, create the chat and start typing.
+Add one person for a one-on-one conversation, or several for a small group chat. Once everyone's in, create the conversation and start typing.
 
 ## Drafts are saved automatically
 

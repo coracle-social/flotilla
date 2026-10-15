@@ -40,7 +40,7 @@
     {#if actions}
       <Button
         class="button button-ghost button-sm button-circle shrink-0"
-        aria-label="Start New Chat"
+        aria-label="Start New Conversation"
         onclick={startConversation}>
         <Icon icon={Add} />
       </Button>

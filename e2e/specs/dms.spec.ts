@@ -57,9 +57,9 @@ const sendDm = async (page: Page, content: string) => {
 
 // A suggestion carries the pubkey it selects as its label, so the pubkey identifies the row.
 const startConversation = async (page: Page, people: {term: string; user: TestUser}[]) => {
-  await page.getByRole("button", {name: "Start New Chat"}).click()
+  await page.getByRole("button", {name: "Start New Conversation"}).click()
 
-  await expect(page.getByRole("heading", {name: "Start a Chat"})).toBeVisible()
+  await expect(page.getByRole("heading", {name: "Start a Conversation"})).toBeVisible()
 
   for (const {term, user} of people) {
     const suggestion = page.locator(`.tiptap-suggestions__item[aria-label="${user.pubkey}"]`)
@@ -72,7 +72,7 @@ const startConversation = async (page: Page, people: {term: string; user: TestUs
     await suggestion.click()
   }
 
-  await page.getByRole("button", {name: "Create Chat"}).click()
+  await page.getByRole("button", {name: "Create Conversation"}).click()
 }
 
 // A message's actions are a hover popover on a pointer device and named buttons on a touch one.
@@ -187,7 +187,7 @@ test("US-031 direct messaging has to be switched on", async ({seed, as}) => {
 
   // His list is the app's evidence that his kind-10050 has been published
   await expect(bob).toHaveURL(/\/chat$/)
-  await expect(bob.getByRole("button", {name: "Start New Chat"})).toBeVisible()
+  await expect(bob.getByRole("button", {name: "Start New Conversation"})).toBeVisible()
 
   // She reopens the conversation the way she opened it the first time
   await pageBar(alice).getByRole("button", {name: "Bob Barnacle"}).click()
@@ -415,9 +415,9 @@ test("US-036 receive a new conversation live", async ({seed, as}) => {
   await expect(chatItems(bob).filter({hasText: "you too"})).toBeVisible()
 
   // He has never talked to her, so he identifies her by the code she gave him
-  await bob.getByRole("button", {name: "Start New Chat"}).click()
+  await bob.getByRole("button", {name: "Start New Conversation"}).click()
   await bob.getByPlaceholder("Search for profiles...").fill(npubEncode(users.alice.pubkey))
-  await bob.getByRole("button", {name: "Create Chat"}).click()
+  await bob.getByRole("button", {name: "Create Conversation"}).click()
 
   await expect(bob).toHaveURL(pathPattern(chatPath(users.alice.pubkey)))
 

@@ -50,8 +50,8 @@
 <Modal tag="form" onsubmit={preventDefault(onSubmit)}>
   <ModalBody>
     <ModalHeader>
-      <ModalTitle>Start a Chat</ModalTitle>
-      <ModalSubtitle>Create an encrypted chat room for private conversations.</ModalSubtitle>
+      <ModalTitle>Start a Conversation</ModalTitle>
+      <ModalSubtitle>Create an encrypted conversation for private messages.</ModalSubtitle>
     </ModalHeader>
     <Field>
       {#snippet input()}
@@ -65,7 +65,7 @@
       Go back
     </Button>
     <Button type="submit" class="button button-primary" disabled={pubkeys.length === 0}>
-      Create Chat
+      Create Conversation
       <Icon icon={AltArrowRight} />
     </Button>
   </ModalFooter>
