@@ -2,22 +2,16 @@
   import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {sleep} from "@welshman/lib"
-  import Add from "@assets/icons/add.svg?dataurl"
   import ChatSquarePlus from "@assets/icons/chat-square-plus.svg?dataurl"
-  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Page from "@lib/components/Page.svelte"
-  import Button from "@lib/components/Button.svelte"
-  import MenuButton from "@lib/components/MenuButton.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import FAB from "@lib/components/FAB.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
-  import SecondaryNavHeader from "@lib/components/SecondaryNavHeader.svelte"
   import SecondaryNavSection from "@lib/components/SecondaryNavSection.svelte"
-  import MessagesMenu from "@app/components/MessagesMenu.svelte"
   import ConversationStart from "@app/components/ConversationStart.svelte"
   import ConversationItem from "@app/components/ConversationItem.svelte"
-  import MessagesTabs from "@app/components/MessagesTabs.svelte"
+  import MessagesHeader from "@app/components/MessagesHeader.svelte"
   import {
     MessagesTab,
     messagesContext,
@@ -47,23 +41,7 @@
 
 <SecondaryNav class="relative w-72 lg:w-80">
   <SecondaryNavSection>
-    <SecondaryNavHeader>
-      Messages
-      <div class="flex items-center">
-        <Button
-          class="button button-ghost button-sm button-circle"
-          aria-label="Start New Chat"
-          onclick={startConversation}>
-          <Icon icon={Add} />
-        </Button>
-        <MenuButton component={MessagesMenu} aria-label="Chat options" />
-      </div>
-    </SecondaryNavHeader>
-    <label class="input input-sm flex items-center gap-2">
-      <Icon icon={Magnifier} />
-      <input bind:value={term} class="grow" type="text" />
-    </label>
-    <MessagesTabs bind:tab {conversationsByTab} />
+    <MessagesHeader bind:term bind:tab {conversationsByTab} />
   </SecondaryNavSection>
   <div class="overflow-auto">
     {#each conversationsByTab[tab] as { id, pubkeys, messages } (id)}
