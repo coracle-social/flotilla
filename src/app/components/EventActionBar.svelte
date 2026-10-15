@@ -26,7 +26,7 @@
 
 <div class="flex w-full min-w-0 items-start justify-between gap-x-4">
   <div class="flex min-w-0 grow flex-wrap items-center gap-2">
-    <EventReactButtons {url} {event} class="{buttonClass} tip tip-top" />
+    <EventReactButtons {url} {event} class="{buttonClass} tip" />
     {@render leading?.()}
   </div>
   <div class="flex shrink-0 items-center gap-2">

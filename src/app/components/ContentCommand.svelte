@@ -11,6 +11,6 @@
   const {command, value}: Props = $props()
 </script>
 
-<span class="tiptap-object tip tip-top" data-tip={command.description()}>
+<span class="tiptap-object tip" data-tip={command.description()}>
   /{command.command()}{#if value.pubkey}@<ProfileName pubkey={value.pubkey} />{/if}
 </span>

@@ -59,22 +59,22 @@
       {/if}
     </div>
     <div class="flex justify-center gap-4">
-      <div class="tip tip-top" data-tip="Source Code">
+      <div class="tip" data-tip="Source Code">
         <Link external href="https://github.com/coracle-social/flotilla">
           <Icon icon={Code} />
         </Link>
       </div>
-      <div class="tip tip-top" data-tip="About {PLATFORM_NAME}">
+      <div class="tip" data-tip="About {PLATFORM_NAME}">
         <Link external href={PLATFORM_ABOUT}>
           <Icon icon={Planet} />
         </Link>
       </div>
-      <div class="tip tip-top" data-tip="Dev Blog">
+      <div class="tip" data-tip="Dev Blog">
         <Link external href="https://hodlbod.npub.pro/">
           <Icon icon={Pen} />
         </Link>
       </div>
-      <div class="tip tip-top" data-tip="Podcast">
+      <div class="tip" data-tip="Podcast">
         <Link external href="https://fountain.fm/show/vnmoRQQ50siLFRE8k061">
           <Icon icon={HeadphonesRound} />
         </Link>
