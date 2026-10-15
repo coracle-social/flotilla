@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {localSttStatus, runLocalStt} from "@lib/stt"
-  import {sttModelBytes} from "@lib/stt/models"
+  import {sttModel, sttModelBytes} from "@lib/stt/models"
   import {errorMessage} from "@lib/util"
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
@@ -57,8 +57,8 @@
       <ModalTitle>Download a speech model?</ModalTitle>
     </ModalHeader>
     <p>
-      Dictation can run on this device using multilingual Whisper Tiny (about {megabytes} MB). Accuracy
-      varies by language and recording quality.
+      Dictation can run on this device using Whistle (about {megabytes} MB), which reads {sttModel.languages}.
+      A recording in any other language goes to OpenRouter instead.
     </p>
     <p>
       The model downloads once and is cached on this device, and your recordings never leave it.

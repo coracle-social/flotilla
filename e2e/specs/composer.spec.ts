@@ -546,6 +546,34 @@ test("US-142 transcribe a recording on this device", async ({seed, as}) => {
   // The model reads the samples the recorder made rather than uploading a file anywhere.
   expect(localSpeech.recordings).toHaveLength(1)
   expect(localSpeech.recordings[0]).toBeGreaterThan(0)
+
+  await composer(alice).fill("")
+
+  // A transcript the model is unsure of is a language it cannot read, so the composer stays empty.
+  localSpeech.setConfidence(0.5)
+
+  const refused = await record(alice)
+
+  await refused.getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("This device reads English")
+  await expect(composer(alice)).not.toContainText("the tide turns at six")
+  await refused.getByRole("button", {name: "Discard"}).click()
+
+  await expect(refused).toHaveCount(0)
+
+  // With a key saved, the recording it will not read goes to OpenRouter instead.
+  const transcription = await mockOpenRouterStt(alice.context(), "and the gulls came in")
+
+  await alice.goto("/settings/content")
+  await alice.locator('input[name="flotilla-openrouter-key"]').fill("sk-or-test")
+  await alice.getByRole("button", {name: "Save Changes"}).click()
+  await expect(alice.getByRole("alert")).toContainText("Your settings have been saved!")
+  await alice.goto(roomPath(url, "general"))
+  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(composer(alice)).toContainText("and the gulls came in")
+  expect(transcription.uploads).toHaveLength(1)
 })
 
 test("US-126 send a voice note", async ({seed, as}) => {

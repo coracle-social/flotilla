@@ -2,7 +2,8 @@ import {record} from "@lib/audio"
 import type {Recording} from "@lib/audio"
 import {errorMessage} from "@lib/util"
 import {pushToast} from "@app/features/toast"
-import type {Stt} from "@app/features/voice/providers/common"
+import {VoiceDeclined} from "@app/features/voice/providers/common"
+import type {VoiceProviderFor} from "@app/features/voice/providers/common"
 import {resolveVoiceProvider} from "@app/features/voice/resolve"
 
 // Speech to text: a composer's recording, sent as a voice note or transcribed into the draft.
@@ -25,23 +26,32 @@ export const clearDictation = (key: string) => {
   dictations.delete(key)
 }
 
-const runStt = (dictation: Dictation, stt: Stt) => {
+// Each provider that cannot read the recording hands it to the next, so one wait covers the chain.
+const runStt = (dictation: Dictation, providers: VoiceProviderFor<"stt">[]) => {
   if (dictation.finished) {
     return
   }
   const controller = new AbortController()
   dictation.controller = controller
   dictation.error = undefined
-  dictation.finished = dictation.audio
-    .then(audio => stt(audio, controller.signal))
-    .then(
-      transcript => {
-        dictation.transcript = transcript
-      },
-      error => {
+  dictation.finished = (async () => {
+    const audio = await dictation.audio
+
+    for (const provider of providers) {
+      try {
+        dictation.transcript = await provider.stt(audio, controller.signal)
+        dictation.error = undefined
+
+        return
+      } catch (error) {
         dictation.error = error
-      },
-    )
+
+        if (!(error instanceof VoiceDeclined)) {
+          return
+        }
+      }
+    }
+  })()
 }
 
 export const startDictation = async (key: string) => {
@@ -63,16 +73,16 @@ export const startDictation = async (key: string) => {
 // Asks for a provider first when none is ready, with the prompt over the recorder rather than replacing it.
 export const transcribeDictation = async (dictation: Dictation): Promise<boolean> => {
   try {
-    const {provider, ready} = await resolveVoiceProvider("stt")
+    const {providers, setup} = await resolveVoiceProvider("stt")
 
-    if (ready) {
-      runStt(dictation, provider.stt)
+    if (providers.length > 0) {
+      runStt(dictation, providers)
 
       return true
     }
 
     return await new Promise<boolean>(resolve => {
-      provider.enable("stt", {
+      setup.enable("stt", {
         nested: true,
         onReady: () => resolve(transcribeDictation(dictation)),
         onCancel: () => resolve(false),

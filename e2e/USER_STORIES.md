@@ -1075,6 +1075,9 @@ Acceptance:
   download has got.
 - With the model downloaded, dictation transcribes on the device and asks for no
   OpenRouter key.
+- A recording the model cannot read goes to OpenRouter rather than being
+  transcribed as something else.
+- With no OpenRouter key saved, it says which languages the device reads.
 - Removing the model hands dictation back to OpenRouter.
 
 ### US-126 — Send a voice note

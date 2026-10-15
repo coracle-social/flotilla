@@ -313,21 +313,27 @@ Kokoro-82M with the English `am_michael` voice; transcription is Whisper Large v
 Turbo. Each use costs a fraction of a cent.
 
 This device serves transcription only, since generating speech on a phone is
-slower than playing it. Content Settings downloads multilingual Whisper Tiny and
-removes it again, and a downloaded model is what moves dictation off OpenRouter:
-recordings are transcribed where they were made and your voice goes nowhere.
-Sending a voice note still uploads the recording to your media server.
+slower than playing it. Content Settings downloads Whistle and removes it again,
+and a downloaded model is what moves dictation off OpenRouter: recordings are
+transcribed where they were made and your voice goes nowhere. Sending a voice
+note still uploads the recording to your media server.
 
-That download is 44 MB from Hugging Face, cached per device and revision, so
-clearing site storage means downloading it again. The wasm runtime is cached the
-first time the model runs. Offline use needs both the app assets and the model
-files still cached. The worker runs one recording at a time, holds the model for
-two minutes afterwards and releases it when idle. Transcription takes recordings
-up to five minutes and reads them in overlapping 30-second chunks; a longer
+Whistle reads English, German, French, Spanish, Italian, Dutch and Polish, and
+answers any other language as fluent nonsense in one of those. A transcript it is
+not confident in is therefore refused rather than used, and the recording goes to
+OpenRouter when a key is saved. With no key, dictation says which languages the
+device reads.
+
+That download is 17 MB from Hugging Face, the engine and the weights together,
+cached per device and revision, so clearing site storage means downloading it
+again. Offline use needs both the app assets and the model files still cached.
+The worker runs one recording at a time, holds the model for two minutes
+afterwards and releases it when idle. Transcription takes recordings up to five
+minutes and reads anything past 30 seconds as consecutive windows; a longer
 recording can still be sent as a voice note.
 
-The model is a pinned ONNX revision of `onnx-community/whisper-tiny` (MIT), run
-by Transformers.js 3.8.1 (Apache-2.0).
+The model is a pinned revision of `Cactus-Compute/whistle`, run by the
+`Cactus-Compute/needle3` wasm engine, both Apache-2.0.
 
 ## License
 

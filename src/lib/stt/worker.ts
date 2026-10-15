@@ -1,110 +1,165 @@
-import {env, pipeline, Tensor} from "@huggingface/transformers"
-import type {ProgressInfo} from "@huggingface/transformers"
 import {sum} from "@welshman/lib"
-import wasmUrl from "@stt-runtime/ort-wasm-simd-threaded.jsep.wasm?url"
-import wasmModuleUrl from "@stt-runtime/ort-wasm-simd-threaded.jsep.mjs?url"
-import {sttCacheName, sttModel, missingSttBytes} from "./models"
-import type {SttRequest, SttResponse} from "./types"
+import {missingSttBytes, openSttCache, sttFiles} from "./models"
+import type {SttFile, SttRequest, SttResponse} from "./types"
 
-env.allowLocalModels = false
-env.useBrowserCache = false
-env.useCustomCache = true
-if (env.backends.onnx.wasm) {
-  env.backends.onnx.wasm.numThreads = 1
-  env.backends.onnx.wasm.proxy = false
-  env.backends.onnx.wasm.wasmPaths = {wasm: wasmUrl, mjs: wasmModuleUrl}
+// What the engine writes its answer into, which a five minute transcript with word times fits.
+const outputCapacity = 1 << 19
+
+type Engine = {
+  HEAPU8: Uint8Array
+  UTF8ToString: (pointer: number) => string
+  _malloc: (bytes: number) => number
+  _free: (pointer: number) => void
+  _needle_load: (cact: number, bytes: bigint) => number
+  _needle_transcribe: (
+    pcm: number,
+    samples: number,
+    language: number,
+    keywords: number,
+    wordTimestamps: number,
+    out: number,
+    capacity: number,
+  ) => number
 }
+
+type Factory = (options: {wasmBinary: ArrayBuffer}) => Promise<Engine>
+
+type Answer = {text: string; language: string; words?: {probability: number}[]}
 
 const send = (response: SttResponse) => postMessage(response)
 
-// Each file reports its own percent, so the bar reads bytes against the whole download instead.
-const downloadProgress = (remaining: number) => {
+// One bar over every file, so the engine and the weights read as a single download.
+const trackDownload = (remaining: number) => {
   const loaded = new Map<string, number>()
 
-  return (info: ProgressInfo) => {
-    if (info.status === "progress") {
-      loaded.set(info.file, info.loaded)
+  return (url: string, bytes: number) => {
+    loaded.set(url, bytes)
 
-      const percent = Math.min(100, (sum(Array.from(loaded.values())) / remaining) * 100)
+    const percent = Math.min(100, (sum(Array.from(loaded.values())) / remaining) * 100)
 
-      send({
-        type: "progress",
-        message: percent < 100 ? "Downloading model…" : "Preparing model…",
-        percent,
-      })
-    }
+    send({
+      type: "progress",
+      message: percent < 100 ? "Downloading model…" : "Preparing model…",
+      percent,
+    })
   }
 }
 
-type Progress = ReturnType<typeof downloadProgress>
+type Track = ReturnType<typeof trackDownload>
 
-const loadTranscriber = (progress: Progress) => {
-  const {id, revision, device, dtype} = sttModel
+const download = async (cache: Cache, {url}: SttFile, track: Track) => {
+  const cached = await cache.match(url)
 
-  return pipeline("automatic-speech-recognition", id, {
-    revision,
-    dtype,
-    device,
-    progress_callback: progress,
-  })
+  if (cached) {
+    return cached.arrayBuffer()
+  }
+
+  const response = await fetch(url)
+
+  if (!response.ok || !response.body) {
+    throw new Error("The speech model could not be downloaded.")
+  }
+
+  const reader = response.body.getReader()
+  const chunks: BlobPart[] = []
+  let loaded = 0
+  let chunk = await reader.read()
+
+  // Reading the body rather than handing it straight to the cache is what makes the bar move.
+  while (!chunk.done) {
+    chunks.push(chunk.value)
+    loaded += chunk.value.byteLength
+    track(url, loaded)
+    chunk = await reader.read()
+  }
+
+  const body = new Blob(chunks)
+
+  await cache.put(url, new Response(body))
+
+  return body.arrayBuffer()
 }
 
-// Holding the model between requests saves rebuilding its ONNX session, several seconds a recording.
-let transcriber: Promise<Awaited<ReturnType<typeof loadTranscriber>>> | undefined
+const load = async () => {
+  const cache = await openSttCache()
+  const track = trackDownload(await missingSttBytes())
+  const [source, wasmBinary, weights] = await Promise.all([
+    download(cache, sttFiles.script, track).then(buffer => new TextDecoder().decode(buffer)),
+    download(cache, sttFiles.wasm, track),
+    download(cache, sttFiles.weights, track),
+  ])
 
-const getTranscriber = (progress: Progress) =>
-  (transcriber ||= loadTranscriber(progress).catch(error => {
-    transcriber = undefined
-    throw error
-  }))
+  // The engine is a classic script naming its factory, so an export is what a module can import.
+  const url = URL.createObjectURL(
+    new Blob([source, "\nexport default createNeedle"], {type: "text/javascript"}),
+  )
+  const factory: Factory = await import(/* @vite-ignore */ url).then(module => module.default)
 
-const transcribe = async (
-  model: Awaited<ReturnType<typeof loadTranscriber>>,
-  samples: Float32Array,
-) => {
+  URL.revokeObjectURL(url)
+
+  const engine = await factory({wasmBinary})
+  const bytes = new Uint8Array(weights)
+  const cact = engine._malloc(bytes.length)
+  const output = engine._malloc(outputCapacity)
+
+  if (!cact || !output) {
+    throw new Error("The speech model does not fit in this browser's memory.")
+  }
+
+  engine.HEAPU8.set(bytes, cact)
+
+  if (engine._needle_load(cact, BigInt(bytes.length)) !== 0) {
+    throw new Error("The speech model could not be loaded.")
+  }
+
+  return {engine, output}
+}
+
+const transcribe = (engine: Engine, output: number, samples: Float32Array) => {
   send({type: "progress", message: "Transcribing…"})
 
-  // Transformers.js 3 defaults to English; detect the language from Whisper's first token.
-  const config = model.model.generation_config as NonNullable<
-    typeof model.model.generation_config
-  > & {
-    lang_to_id: Record<string, number>
+  const pcm = engine._malloc(samples.byteLength)
+
+  if (!pcm) {
+    throw new Error("The recording does not fit in this browser's memory.")
   }
-  const features = await model.processor(samples.slice(0, sttModel.sampleRate * 30))
-  const {logits}: {logits: Tensor} = await model.model({
-    ...features,
-    decoder_input_ids: new Tensor("int64", [BigInt(config.decoder_start_token_id)], [1, 1]),
-  })
-  const language = Object.entries(config.lang_to_id)
-    .reduce((best, candidate) =>
-      Number(logits.data[candidate[1]]) > Number(logits.data[best[1]]) ? candidate : best,
-    )[0]
-    .slice(2, -2)
-  const result = await model(samples, {
-    language,
-    chunk_length_s: 30,
-    stride_length_s: 5,
-    task: "transcribe",
-  })
+
+  try {
+    engine.HEAPU8.set(new Uint8Array(samples.buffer, samples.byteOffset, samples.byteLength), pcm)
+
+    // Given no language the engine detects one, and the fifth argument asks for word times.
+    if (engine._needle_transcribe(pcm, samples.length, 0, 0, 1, output, outputCapacity) < 0) {
+      throw new Error("The recording could not be transcribed.")
+    }
+  } finally {
+    engine._free(pcm)
+  }
+
+  const {text, language, words = []}: Answer = JSON.parse(engine.UTF8ToString(output))
 
   send({
     type: "transcript",
-    text: (Array.isArray(result) ? result.map(item => item.text).join(" ") : result.text).trim(),
+    text: text.trim(),
+    language,
+    confidence: words.length > 0 ? sum(words.map(word => word.probability)) / words.length : 0,
   })
 }
 
+// Holding the engine between requests saves reloading 17 MB of weights, several seconds a recording.
+let loading: Promise<{engine: Engine; output: number}> | undefined
+
+const getEngine = () =>
+  (loading ||= load().catch(error => {
+    loading = undefined
+    throw error
+  }))
+
 addEventListener("message", async ({data}: MessageEvent<SttRequest>) => {
   try {
-    env.customCache = await caches.open(sttCacheName)
-
-    const progress = downloadProgress(await missingSttBytes())
-
-    send({type: "progress", message: "Loading model…"})
-
-    const model = await getTranscriber(progress)
+    const {engine, output} = await getEngine()
 
     if (data.samples) {
-      await transcribe(model, data.samples)
+      transcribe(engine, output, data.samples)
     } else {
       send({type: "ready"})
     }

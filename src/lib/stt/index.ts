@@ -1,6 +1,6 @@
 import {writable} from "svelte/store"
-import {hasSttModel, sttCacheName} from "./models"
-import type {SttProgress, SttRequest, SttResponse, SttResult} from "./types"
+import {hasSttModel, removeSttCache} from "./models"
+import type {SttProgress, SttRequest, SttResponse, SttResult, SttTranscript} from "./types"
 import {getTestStt} from "@lib/test/stt"
 
 export const localSttStatus = writable<SttProgress>({message: ""})
@@ -120,17 +120,20 @@ export const removeLocalStt = async () => {
   }
   await queue
   releaseWorker()
-  await caches.delete(sttCacheName)
+  await removeSttCache()
 }
 
 // Takes mono samples at the model's sample rate.
-export const transcribeLocally = async (samples: Float32Array, signal?: AbortSignal) => {
+export const transcribeLocally = async (
+  samples: Float32Array,
+  signal?: AbortSignal,
+): Promise<SttTranscript> => {
   if (!samples.length || samples.every(sample => Math.abs(sample) < 0.0001)) {
-    return ""
+    return {type: "transcript", text: "", language: "", confidence: 0}
   }
   const result = await runLocalStt({samples}, signal)
   if (result.type !== "transcript") {
     throw new Error("The speech model returned no transcript.")
   }
-  return result.text
+  return result
 }

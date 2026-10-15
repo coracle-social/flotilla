@@ -1,5 +1,3 @@
-import {createRequire} from "node:module"
-import {dirname} from "node:path"
 import {config} from "dotenv"
 import {defineConfig} from "vite"
 import {SvelteKitPWA} from "@vite-pwa/sveltekit"
@@ -19,9 +17,6 @@ export default defineConfig({
   // and nowhere else, so every name listed here has to be a direct dependency — under pnpm a
   // transitive one isn't reachable from the root and the build fails to resolve it.
   resolve: {
-    alias: {
-      "@stt-runtime": dirname(createRequire(import.meta.url).resolve("@huggingface/transformers")),
-    },
     dedupe: [
       "@tiptap/core",
       "@tiptap/pm",
@@ -31,10 +26,6 @@ export default defineConfig({
       "prosemirror-transform",
       "prosemirror-view",
     ],
-  },
-  optimizeDeps: {
-    // Vite pre-bundles the worker's ?url runtime imports through this alias and emits no file.
-    exclude: ["@stt-runtime"],
   },
   server: {
     port: 1847,
@@ -72,18 +63,6 @@ export default defineConfig({
           // when modifyURLPrefix is unset, and an empty one is a no-op.
           modifyURLPrefix: {},
           globPatterns: ["client/**/*.{js,css,ico,png,svg,webp,webmanifest}"],
-          runtimeCaching: [
-            {
-              urlPattern: /\/_app\/immutable\/workers\/assets\/ort-wasm-.*\.(wasm|mjs)$/,
-              handler: "CacheFirst",
-              options: {
-                // Browsers already hold the runtime under this name, so it outlived the stt rename.
-                cacheName: "speech-runtime",
-                expiration: {maxEntries: 4},
-                cacheableResponse: {statuses: [200]},
-              },
-            },
-          ],
         },
         manifest: {
           name: process.env.VITE_PLATFORM_NAME,

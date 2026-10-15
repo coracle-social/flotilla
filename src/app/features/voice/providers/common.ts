@@ -11,6 +11,9 @@ export type VoiceEnable = {
   nested?: boolean
 }
 
+/** A provider that cannot read a particular recording declines it, so the next one is asked. */
+export class VoiceDeclined extends Error {}
+
 // A provider serves the tasks it declares a method for, and declares nothing it cannot do.
 export type VoiceProvider = {
   // Whether this provider can serve the task on this device as it stands.

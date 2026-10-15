@@ -66,9 +66,10 @@ export const readAloud = async (event: TrustedEvent) => {
   const text = renderEventAsText(event)
 
   try {
-    const {provider, ready} = await resolveVoiceProvider("tts")
+    const {providers, setup} = await resolveVoiceProvider("tts")
+    const provider = providers[0]
 
-    if (ready) {
+    if (provider) {
       if (get(isCallActive)) {
         pushModal(Confirm, {
           title: "Leave the call?",
@@ -83,7 +84,7 @@ export const readAloud = async (event: TrustedEvent) => {
         await play(provider.tts, event, text)
       }
     } else {
-      provider.enable("tts", {onReady: () => readAloud(event)})
+      setup.enable("tts", {onReady: () => readAloud(event)})
     }
   } catch (error) {
     console.error(error)

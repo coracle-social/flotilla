@@ -1,6 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {hasLocalStt, removeLocalStt} from "@lib/stt"
+  import {sttModel} from "@lib/stt/models"
   import {errorMessage} from "@lib/util"
   import Field from "@lib/components/Field.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -55,7 +56,7 @@
   {#snippet info()}
     <p>
       {#if ready}
-        Recordings are transcribed on this device instead of being sent to OpenRouter.
+        Recordings in {sttModel.languages} are transcribed on this device instead of being sent to OpenRouter.
       {:else}
         Download a model to transcribe recordings on this device instead of sending them to
         OpenRouter.

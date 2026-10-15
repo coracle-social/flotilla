@@ -204,8 +204,8 @@ client.
   `@app/features/feeds`, which loads events.
 - `audio.ts`: recording from the microphone, device lists, a live input level, decoding to mono
   samples at a model's rate, and WAV encoding
-- `stt/`: the on-device stt model (Whisper, run in a worker), its download and cache, and
-  `transcribeLocally`
+- `stt/`: the on-device stt model (Whistle over a wasm engine, run in a worker), its download and
+  cache, and `transcribeLocally`
 - `tileGrid.ts` (the call grid's geometry)
 - `currency.ts`, `transition.ts`, `implicit.ts` (hands state from one page to the next)
 - `test/`: the DEV-only hooks the e2e harness injects through

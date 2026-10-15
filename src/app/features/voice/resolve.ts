@@ -11,7 +11,7 @@ const serves =
   (provider: VoiceProvider): provider is VoiceProviderFor<T> =>
     Boolean(provider[task])
 
-// The provider a task runs on, and whether it can run now or has to be set up first.
+// Every provider that can serve the task now, in the order to try them, and the one to set up first.
 export const resolveVoiceProvider = async <T extends VoiceTask>(task: T) => {
   const candidates = await Promise.all(
     runOrder.filter(serves(task)).map(async provider => ({
@@ -20,10 +20,8 @@ export const resolveVoiceProvider = async <T extends VoiceTask>(task: T) => {
     })),
   )
 
-  return (
-    candidates.find(candidate => candidate.ready) ?? {
-      provider: setupOrder.filter(serves(task))[0],
-      ready: false,
-    }
-  )
+  return {
+    providers: candidates.filter(candidate => candidate.ready).map(candidate => candidate.provider),
+    setup: setupOrder.filter(serves(task))[0],
+  }
 }

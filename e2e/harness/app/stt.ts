@@ -1,10 +1,13 @@
 import type {BrowserContext} from "@playwright/test"
 
 type Request = {check?: boolean; samples?: number}
-type Result = {ready?: boolean; text?: string}
+type Result = {ready?: boolean; text?: string; confidence?: number}
 
 /** The local transcription model, answering every recording with the same transcript. */
-export const mockLocalStt = async (context: BrowserContext, {text = ""}: {text?: string} = {}) => {
+export const mockLocalStt = async (
+  context: BrowserContext,
+  {text = "", confidence = 1}: {text?: string; confidence?: number} = {},
+) => {
   // How many samples each recording decoded to, so a spec can tell one happened at all.
   const recordings: number[] = []
   let downloaded = false
@@ -27,7 +30,7 @@ export const mockLocalStt = async (context: BrowserContext, {text = ""}: {text?:
     await held
     downloaded = true
 
-    return request.samples ? {text} : {ready: true}
+    return request.samples ? {text, confidence} : {ready: true}
   })
 
   const install = () => {
@@ -54,7 +57,12 @@ export const mockLocalStt = async (context: BrowserContext, {text = ""}: {text?:
 
           return result.text === undefined
             ? {type: "ready"}
-            : {type: "transcript", text: result.text}
+            : {
+                type: "transcript",
+                text: result.text,
+                language: "en",
+                confidence: result.confidence ?? 1,
+              }
         },
       },
     })
@@ -68,6 +76,10 @@ export const mockLocalStt = async (context: BrowserContext, {text = ""}: {text?:
     recordings,
     setTranscript: (value: string) => {
       text = value
+    },
+    // How sure the model is of the transcript, which is what decides whether it is used at all.
+    setConfidence: (value: number) => {
+      confidence = value
     },
     failNext: (message: string) => {
       failure = message
