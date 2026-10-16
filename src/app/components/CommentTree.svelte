@@ -8,9 +8,8 @@
   import Button from "@lib/components/Button.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
   import CommentCompose from "@app/components/CommentCompose.svelte"
-  import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import Content from "@app/components/Content.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
@@ -18,7 +17,6 @@
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import type {FeedContext} from "@app/features/feeds"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
-  import {pushModal} from "@app/navigation/dialogs"
   import {isEventMuted} from "@app/features/social/muting"
   import type {CommentNode} from "@app/features/social"
 
@@ -68,8 +66,6 @@
 
   const clearReplyTo = () => setReplyTo?.(undefined)
 
-  const openProfile = () => pushModal(ProfileDetail, {pubkey: node.comment.pubkey, url})
-
   const ignoreMute = () => {
     muted = false
   }
@@ -93,51 +89,44 @@
       <Button class="button button-neutral button-xs" onclick={ignoreMute}>Show anyway</Button>
     </div>
   {:else}
-    <div data-component="Comment" class="flex min-w-0 gap-3 py-3">
-      <Button onclick={openProfile} class="shrink-0 self-start">
-        <ProfileCircle pubkey={node.comment.pubkey} {url} size={8} />
-      </Button>
-      <div class="flex min-w-0 grow flex-col gap-1.5">
-        <div class="flex flex-wrap items-baseline gap-x-2">
-          <Button onclick={openProfile} class="text-sm font-bold hover:underline">
-            <ProfileName pubkey={node.comment.pubkey} {url} />
+    <div data-component="Comment" class="flex min-w-0 flex-col gap-1.5 py-3">
+      <div class="flex items-start justify-between gap-2">
+        <Profile pubkey={node.comment.pubkey} {url} avatarSize={8} />
+        <span class="whitespace-nowrap text-sm opacity-75">
+          {formatTimestamp(node.comment.created_at)}
+        </span>
+      </div>
+      <!-- A reply past the cap sits at its parent's level, so it names who it answers. -->
+      {#if parent && atParentLevel}
+        <span class={cx("text-content-subtle text-xs", !atParentLevelOnDesktop && "sm:hidden")}>
+          Replying to <ProfileName pubkey={parent.pubkey} {url} />
+        </span>
+      {/if}
+      <Content showEntire event={node.comment} {url} />
+      <div class="mt-1 flex flex-wrap items-center justify-end gap-2">
+        {#if setReplyTo}
+          <Button class="button button-neutral button-xs mr-auto" onclick={reply}>
+            <Icon icon={Reply} size={4} />
+            Reply
           </Button>
-          <span class="text-content-subtle text-xs">
-            {formatTimestamp(node.comment.created_at)}
-          </span>
-          <!-- A reply past the cap sits at its parent's level, so it names who it answers. -->
-          {#if parent && atParentLevel}
-            <span class={cx("text-content-subtle text-xs", !atParentLevelOnDesktop && "sm:hidden")}>
-              Replying to <ProfileName pubkey={parent.pubkey} {url} />
-            </span>
-          {/if}
-        </div>
-        <Content showEntire event={node.comment} {url} />
-        <div class="mt-1 flex flex-wrap items-center justify-end gap-2">
-          {#if setReplyTo}
-            <Button class="button button-neutral button-xs mr-auto" onclick={reply}>
-              <Icon icon={Reply} size={4} />
-              Reply
-            </Button>
-          {/if}
-          {#if url}
-            <CommentActions event={node.comment} {url} {context} />
-          {:else}
-            <PublicationStatusOrDeleted event={node.comment} {context}>
-              <EventReactions event={node.comment} {context} placement="left" />
-              <EventMenuButton
-                event={node.comment}
-                noun="Comment"
-                customActions={actions}
-                class="rounded-full" />
-            </PublicationStatusOrDeleted>
-          {/if}
-        </div>
+        {/if}
+        {#if url}
+          <CommentActions event={node.comment} {url} {context} />
+        {:else}
+          <PublicationStatusOrDeleted event={node.comment} {context}>
+            <EventReactions event={node.comment} {context} placement="left" />
+            <EventMenuButton
+              event={node.comment}
+              noun="Comment"
+              customActions={actions}
+              class="rounded-full" />
+          </PublicationStatusOrDeleted>
+        {/if}
       </div>
     </div>
   {/if}
   {#if composing}
-    <div class="ml-11 pb-3">
+    <div class="pb-3">
       <CommentCompose
         {url}
         event={root}
@@ -147,8 +136,7 @@
     </div>
   {/if}
   {#if node.children.length > 0}
-    <!-- The thread line runs under the avatar's center and indents replies to line up with
-         this comment's text column; it brightens while the subtree is hovered. -->
+    <!-- The thread line marks the subtree and brightens while it is hovered. -->
     <div
       data-component="CommentReplies"
       class={cx("border-line-less hover:border-line flex flex-col transition-colors", indentClass)}>
