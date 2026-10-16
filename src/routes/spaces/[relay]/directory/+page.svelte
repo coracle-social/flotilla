@@ -1,6 +1,7 @@
 <script lang="ts">
   import {derived} from "svelte/store"
   import {removeUndefined, sortBy} from "@welshman/lib"
+  import {displayPubkey} from "@welshman/domain"
   import UsersGroup from "@assets/icons/users-group-rounded.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
@@ -17,9 +18,9 @@
   import SpaceDirectoryMenu from "@app/components/SpaceDirectoryMenu.svelte"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {deriveSpaceMemberRoles} from "@app/features/spaces/roles"
-  import {profiles, relayMemberLists, relayRoles} from "@app/core/plugins"
+  import {relayMemberLists, relayRoles} from "@app/core/plugins"
   import {getProfileGeohash} from "@app/features/location"
-  import {deriveDisplaysByPubkey} from "@app/features/people"
+  import {deriveProfilesByPubkey} from "@app/features/people"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
@@ -31,7 +32,6 @@
   const members = $relayMemberLists.forUrl(url)
   const memberRoles = deriveSpaceMemberRoles(url)
   const permissions = deriveSpacePermissions(url)
-  const profileIndex = $profiles.index.$
 
   // Each member with their resolved roles (sorted by order).
   const memberList = derived([members, memberRoles, roles], ([$members, $memberRoles, $roles]) => {
@@ -51,16 +51,19 @@
   // A role section matches on its own name, so it survives a term its members don't match.
   let term = $state("")
 
-  // A display is the npub until the profile loads, so search subscribes rather than reading once.
-  const displays = $derived(
-    deriveDisplaysByPubkey(
+  const memberProfiles = $derived(
+    deriveProfilesByPubkey(
       $memberList.map(m => m.pubkey),
       url,
     ),
   )
 
+  // A display is the npub until the profile loads, so search subscribes rather than reading once.
+  const displayMember = (pubkey: string) =>
+    $memberProfiles.get(pubkey)?.display() ?? displayPubkey(pubkey)
+
   const matchesTerm = (pubkey: string, t: string) =>
-    ($displays.get(pubkey) ?? "").toLowerCase().includes(t) || pubkey.toLowerCase().includes(t)
+    displayMember(pubkey).toLowerCase().includes(t) || pubkey.toLowerCase().includes(t)
 
   // In-place search: match by member info or by the name of any role they hold.
   const visibleMembers = $derived.by(() => {
@@ -82,11 +85,10 @@
     const pins: MemberPin[] = []
 
     for (const {pubkey} of visibleMembers) {
-      const profile = $profileIndex.get(pubkey)
-      const coordinates = decodeGeohash(getProfileGeohash(profile))
+      const coordinates = decodeGeohash(getProfileGeohash($memberProfiles.get(pubkey)))
 
-      if (profile && coordinates) {
-        pins.push({pubkey, display: profile.display(), ...coordinates})
+      if (coordinates) {
+        pins.push({pubkey, display: displayMember(pubkey), ...coordinates})
       }
     }
 
