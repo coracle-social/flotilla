@@ -3,7 +3,7 @@ import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {goto, pushState, replaceState} from "$app/navigation"
 import {page} from "$app/state"
 import {app} from "@app/core/app"
-import {getModalStack, popHistory, traverse} from "@app/navigation/dialogs"
+import {popHistory, traverse} from "@app/navigation/dialogs"
 import {getHomePath} from "@app/navigation/history"
 import {navigate} from "@app/navigation/navigate"
 
@@ -39,10 +39,8 @@ export const openNote = (ref: IEventRef, options: OpenNoteOptions = {}) =>
     const note = new EventRef(ref).toNip19()
     const url = withNote(page.url, note)
     const state = {...page.state, modals: [], note, reply: options.reply}
-    // A note opened from the note on screen takes over its entry, so back still closes the modal.
-    const swap = Boolean(getNoteOverlay()) && getModalStack().length === 0
 
-    if (options.replaceState || swap) {
+    if (options.replaceState) {
       replaceState(url, {...state, ownsNote: Boolean(page.state.ownsNote)})
     } else {
       pushState(url, {...state, ownsNote: true})

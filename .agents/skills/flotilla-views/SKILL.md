@@ -168,6 +168,10 @@ navigates. A push without `nested` replaces the whole stack. `replaceState` suit
 that open a follow-up (`RoomItemMenuMobile`) and multi-step flows. `noEscape` removes the close
 button and ignores Escape and the backdrop; the space gates use it.
 
+A note takes an entry the same way, so Back goes back to the note it was opened from rather than
+out of the overlay. One reached by a link or a reload has no entry of its own (`ownsNote`), and
+`closeNote` strips `?note=` from the url instead of going back over it.
+
 Modal components take identifiers like any other component. `Dialog` supplies the chrome, and
 `/join` renders `SpaceInviteAccept` in a `Dialog` directly. The usual shape:
 
