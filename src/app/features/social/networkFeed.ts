@@ -196,14 +196,17 @@ export const makeNetworkFeed = ({
       admitting = true
 
       try {
-        const loaded = await Promise.all(
-          batch.map(
-            async entry => [entry.key, entry.note ?? (await notes.get().load(entry.ref))] as const,
-          ),
+        const loads = batch.map(
+          async entry => [entry.key, entry.note ?? (await notes.get().load(entry.ref))] as const,
         )
 
-        anchors.update($anchors => new Map([...$anchors, ...loaded]))
-        drawn.update($drawn => [...$drawn, ...batch.map(entry => entry.key)])
+        // Released in order, so an entry waits on what is above it and not on the whole batch.
+        for (const load of loads) {
+          const [key, note] = await load
+
+          anchors.update($anchors => new Map($anchors).set(key, note))
+          drawn.update($drawn => [...$drawn, key])
+        }
       } finally {
         admitting = false
       }
