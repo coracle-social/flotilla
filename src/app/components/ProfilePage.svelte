@@ -13,6 +13,7 @@
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
+  import FAB from "@lib/components/FAB.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
@@ -176,7 +177,7 @@
                         Edit profile
                       </Button>
                       <Button
-                        class="button button-primary flex-1 sm:button-sm sm:flex-none"
+                        class="button button-primary flex-1 max-md:hidden sm:button-sm sm:flex-none"
                         onclick={createPost}>
                         <Icon icon={PenNewSquare} size={4} />
                         Create post
@@ -268,3 +269,9 @@
     </aside>
   </div>
 </div>
+
+{#if isSelf}
+  <FAB onclick={createPost}>
+    <Icon icon={PenNewSquare} size={7} />
+  </FAB>
+{/if}

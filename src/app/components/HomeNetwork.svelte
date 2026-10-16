@@ -65,7 +65,10 @@
         onclick={showRelays}>
         <Icon icon={Settings} size={4} />
       </Button>
-      <Button aria-label="Create post" class="button button-primary button-xs" onclick={createPost}>
+      <Button
+        aria-label="Create post"
+        class="button button-primary button-xs max-md:hidden"
+        onclick={createPost}>
         <Icon icon={PenNewSquare} size={4} />
         <span class="hidden @sm:inline">Create post</span>
       </Button>

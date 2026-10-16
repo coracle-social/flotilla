@@ -1,14 +1,16 @@
 <script lang="ts">
   import {fade} from "svelte/transition"
+  import cx from "classnames"
   import AltArrowUp from "@assets/icons/alt-arrow-up.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
 
   type Props = {
     element?: Element
+    class?: string
   }
 
-  const {element}: Props = $props()
+  const {element, class: className = ""}: Props = $props()
 
   let scrolled = $state(false)
 
@@ -31,7 +33,9 @@
 </script>
 
 {#if scrolled}
-  <div transition:fade class="absolute right-4 bottom-20 z-nav mb-sai md:bottom-4 md:mb-0">
+  <div
+    transition:fade
+    class={cx("absolute right-4 bottom-20 z-nav mb-sai md:bottom-4 md:mb-0", className)}>
     <Button
       aria-label="Scroll to top"
       class="button button-neutral button-circle"
