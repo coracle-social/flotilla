@@ -10,6 +10,7 @@
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import CommentCompose from "@app/components/CommentCompose.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
+  import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {makeFeedContext} from "@app/features/feeds"
   import {notes} from "@app/features/social"
@@ -46,13 +47,27 @@
   onDestroy(context.cleanup)
 </script>
 
+{#snippet quoteNote(event: TrustedEvent)}
+  <EventQuoteAction {event} noun="Note" />
+{/snippet}
+
+{#snippet quoteComment(event: TrustedEvent)}
+  <EventQuoteAction {event} noun="Comment" />
+{/snippet}
+
 <Modal label="Note">
   <ModalBody>
     {#if $event}
       {@const note = $event}
       {@const replyToNote = () => setReplyTo(note)}
       <div class="border-line flex flex-col gap-4 border-b pb-4">
-        <NoteItem event={note} {context} card={false} showEntire showThreadLinks>
+        <NoteItem
+          event={note}
+          {context}
+          customActions={quoteNote}
+          card={false}
+          showEntire
+          showThreadLinks>
           {#if replyTo?.id !== note.id}
             <Button class="button button-neutral button-xs" onclick={replyToNote}>
               <Icon icon={Reply} size={4} />
@@ -70,7 +85,13 @@
       </div>
       <div class="flex flex-col">
         {#each $replies as node (node.comment.id)}
-          <CommentTree {node} root={note} {replyTo} {setReplyTo} {context} />
+          <CommentTree
+            {node}
+            root={note}
+            {replyTo}
+            {setReplyTo}
+            customActions={quoteComment}
+            {context} />
         {/each}
         {#if $replies.length === 0}
           <p class="py-2 text-sm opacity-75">No replies yet.</p>

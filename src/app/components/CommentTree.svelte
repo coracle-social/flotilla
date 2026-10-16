@@ -1,5 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
+  import type {Snippet} from "svelte"
   import {formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
@@ -29,10 +30,21 @@
     replyTo?: TrustedEvent
     setReplyTo?: (comment?: TrustedEvent) => void
     url?: string
+    customActions?: Snippet<[TrustedEvent]>
     context: FeedContext
   }
 
-  const {node, root, parent, depth = 1, replyTo, setReplyTo, url, context}: Props = $props()
+  const {
+    node,
+    root,
+    parent,
+    depth = 1,
+    replyTo,
+    setReplyTo,
+    url,
+    customActions,
+    context,
+  }: Props = $props()
 
   // A level costs the text column about 50px, so indentation stops two levels in on a phone and four on a desktop.
   const phoneIndentCap = 2
@@ -64,6 +76,10 @@
 
   let muted = $state($isEventMuted(node.comment))
 </script>
+
+{#snippet actions()}
+  {@render customActions?.(node.comment)}
+{/snippet}
 
 <!-- Vertical rhythm lives on the individual blocks rather than the wrapper, so nesting
      doesn't compound padding at every level. -->
@@ -109,7 +125,11 @@
           {:else}
             <PublicationStatusOrDeleted event={node.comment} {context}>
               <EventReactions event={node.comment} {context} placement="left" />
-              <EventMenuButton event={node.comment} noun="Comment" class="rounded-full" />
+              <EventMenuButton
+                event={node.comment}
+                noun="Comment"
+                customActions={actions}
+                class="rounded-full" />
             </PublicationStatusOrDeleted>
           {/if}
         </div>
@@ -141,6 +161,7 @@
           {replyTo}
           {setReplyTo}
           {url}
+          {customActions}
           {context} />
       {/each}
     </div>

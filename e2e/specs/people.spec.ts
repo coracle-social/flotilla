@@ -2,7 +2,7 @@ import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
 import {npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE, MONTH, uniq} from "@welshman/lib"
-import {NOTE, PROFILE, STATUS, makeEvent} from "@welshman/util"
+import {NOTE, PROFILE, STATUS, makeEvent, tagSpec, tagValue} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {FollowList, Note, PinList, Profile} from "@welshman/domain"
 import {
@@ -466,6 +466,61 @@ test("US-134 write a public post", async ({seed, as}) => {
   await network.getByRole("button", {name: "Create post"}).click()
 
   await expect(topDialog(page).getByText("Create a Public Post")).toBeVisible()
+})
+
+test("US-149 quote a note in a post of your own", async ({seed, as}) => {
+  const comment = "worth reading if you sail here"
+
+  let note!: Seeded
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anderson"})
+    space.profile(user.bob, {name: "Bob Barnacle"})
+    space.relayList(user.alice)
+    space.relayList(user.bob)
+
+    note = space.event(
+      user.bob,
+      makeEvent(NOTE, {content: "the tide charts are in the drawer", created_at: at(1, HOUR)}),
+    )
+  })
+
+  const page = await as(users.alice, profilePath(users.bob.pubkey), {context: DESKTOP})
+  const card = notes(page).filter({hasText: "the tide charts are in the drawer"})
+
+  await expect(card).toBeVisible()
+
+  await card.getByRole("button", {name: "Note actions"}).click()
+  await page.getByRole("button", {name: "Quote Note"}).click()
+
+  const composer = topDialog(page)
+
+  await expect(composer.getByText("Create a Public Post")).toBeVisible()
+
+  await noteEditor(composer).click()
+  await page.keyboard.press("Control+End")
+  await noteEditor(composer).pressSequentially(comment)
+  await composer.getByRole("button", {name: "Post", exact: true}).click()
+
+  await expect(toast(page)).toContainText("Your post has been published!")
+
+  // The q tag is what makes it a quote, and the entity in the content is what draws the embed.
+  await expect
+    .poll(() =>
+      getPublishedEvents(page.context(), NOTE)
+        .filter(event => event.content.includes(comment))
+        .map(event => ({
+          quoted: tagValue(tagSpec("q"), event.tags),
+          opensWithTheQuote: event.content.startsWith("nostr:nevent1"),
+        }))
+        .slice(0, 1),
+    )
+    .toEqual([{quoted: note.id, opensWithTheQuote: true}])
 })
 
 test("US-080 preview a profile from anywhere", async ({seed, as}) => {

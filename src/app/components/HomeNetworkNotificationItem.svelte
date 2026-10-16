@@ -5,6 +5,7 @@
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Reply from "@assets/icons/reply.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
+  import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import HomeNetworkReason from "@app/components/HomeNetworkReason.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
@@ -104,6 +105,10 @@
   }
 </script>
 
+{#snippet quoteNote(event: TrustedEvent)}
+  <EventQuoteAction {event} noun="Note" />
+{/snippet}
+
 {#snippet names(pubkeys: string[])}
   <span>
     {#each pubkeys.length > 4 ? pubkeys.slice(0, 2) : pubkeys as pubkey, i (pubkey)}
@@ -168,13 +173,14 @@
         </HomeNetworkReason>
       {/if}
     </div>
-    <NoteItem event={$note} {context} showReply showThreadLinks />
+    <NoteItem event={$note} {context} customActions={quoteNote} showReply showThreadLinks />
     {#if shown.length > 0}
       <div class="border-line-less ml-4 flex flex-col gap-3 border-l pt-3 pl-4">
         {#each shown as reply (reply.id)}
           <NoteItem
             event={reply}
             {context}
+            customActions={quoteNote}
             card={false}
             interactive
             showReply

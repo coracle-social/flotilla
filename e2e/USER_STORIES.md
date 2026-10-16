@@ -1407,6 +1407,18 @@ Acceptance:
   favorited, and it appears at the top of her profile's notes.
 - A toast says the post went out, and offers to open it.
 
+### US-149 — Quote a note in a post of your own
+
+As alice, I want to quote someone else's note in a post of my own, so that my
+followers see what I am answering.
+
+Acceptance:
+
+- "Quote Note" on a note opens the public post composer with the note already in
+  it.
+- The post goes out with a q tag naming the quoted note, and its content opens
+  with the entity that draws the embed.
+
 ### US-080 — Preview a profile from anywhere
 
 As alice, I want to click a name or avatar wherever it appears, so that I can

@@ -20,6 +20,7 @@
     children?: Snippet
     context: FeedContext
     url?: string
+    customActions?: Snippet<[TrustedEvent]>
     card?: boolean
     interactive?: boolean
     onOpen?: () => void
@@ -33,6 +34,7 @@
     event,
     children,
     context,
+    customActions,
     card = true,
     interactive = card,
     onOpen,
@@ -48,6 +50,10 @@
 
   const openReplies = () => openEventNote(event, {reply: true})
 </script>
+
+{#snippet actions()}
+  {@render customActions?.(event)}
+{/snippet}
 
 {#snippet body()}
   {#if showThreadLinks}
@@ -69,7 +75,7 @@
         </Button>
       {/if}
       {@render children?.()}
-      <EventMenuButton {url} {event} noun="Note" class="rounded-full" />
+      <EventMenuButton {url} {event} noun="Note" customActions={actions} class="rounded-full" />
     </div>
   </div>
 {/snippet}

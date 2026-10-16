@@ -3,6 +3,7 @@
   import {sortEventsDesc} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
+  import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import type {FeedContext} from "@app/features/feeds"
   import {openEventNote} from "@app/navigation/overlays"
@@ -32,15 +33,20 @@
   }
 </script>
 
+{#snippet quoteNote(event: TrustedEvent)}
+  <EventQuoteAction {event} noun="Note" />
+{/snippet}
+
 {#if anchor}
   <div data-component="NoteEntry" class="flex flex-col gap-1">
-    <NoteItem event={anchor} {context} showReply showThreadLinks />
+    <NoteItem event={anchor} {context} customActions={quoteNote} showReply showThreadLinks />
     {#if shown.length > 0}
       <div class="ml-4 flex flex-col gap-3 border-l border-line-less pt-3 pl-4">
         {#each shown as reply (reply.id)}
           <NoteItem
             event={reply}
             {context}
+            customActions={quoteNote}
             card={false}
             interactive
             showReply
@@ -56,6 +62,6 @@
   </div>
 {:else}
   {#each replies as reply (reply.id)}
-    <NoteItem event={reply} {context} showReply showThreadLinks />
+    <NoteItem event={reply} {context} customActions={quoteNote} showReply showThreadLinks />
   {/each}
 {/if}

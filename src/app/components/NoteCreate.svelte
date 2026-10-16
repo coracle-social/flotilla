@@ -28,6 +28,12 @@
     content?: string | object
   }
 
+  type Props = {
+    initialValues?: Values
+  }
+
+  const {initialValues}: Props = $props()
+
   const draftKey = new DraftKey<Values>("note")
   const draft = draftKey.get()
 
@@ -83,7 +89,7 @@
   }
 
   let loading = $state(false)
-  let content = $state(draft?.content ?? "")
+  let content = $state(initialValues?.content ?? draft?.content ?? "")
 
   const onChange = (json: object) => {
     content = json

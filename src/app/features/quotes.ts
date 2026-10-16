@@ -1,11 +1,20 @@
+import * as nip19 from "nostr-tools/nip19"
 import {first, removeUndefined} from "@welshman/lib"
-import {EventRef, relays as relaySelections, seen, sortEventsDesc} from "@welshman/util"
+import {
+  EventRef,
+  outbox,
+  relays as relaySelections,
+  seen,
+  sortEventsDesc,
+  toNostrURI,
+} from "@welshman/util"
 import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {isAddress, isEvent} from "@welshman/content"
 import type {Parsed, ParsedAddress, ParsedEvent} from "@welshman/content"
 import {events, network, router} from "@app/core/plugins"
 import {pushModal} from "@app/navigation/dialogs"
 import {goToEvent} from "@app/navigation/locations"
+import NoteCreate from "@app/components/NoteCreate.svelte"
 import QuoteLoading from "@app/components/QuoteLoading.svelte"
 
 export const isQuote = (parsed: Parsed): parsed is ParsedEvent | ParsedAddress =>
@@ -39,4 +48,13 @@ export const goToQuote = (ref: IEventRef, event: TrustedEvent, url?: string) => 
   } else {
     pushModal(QuoteLoading, {ref, event, url})
   }
+}
+
+// The editor reads the entity back out of the content, which is where the q tag comes from.
+export const quoteEvent = async (event: TrustedEvent) => {
+  const relays = await router.get().resolver.relays([outbox(event.pubkey)])
+  const pointer = {id: event.id, author: event.pubkey, relays}
+  const content = toNostrURI(nip19.neventEncode(pointer)) + "\n"
+
+  pushModal(NoteCreate, {initialValues: {content}})
 }
