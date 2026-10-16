@@ -5,7 +5,7 @@ description: "Use this skill when working with @welshman/feeds: building nostr f
 
 # welshman/feeds — Dynamic Feed Construction
 
-`@welshman/feeds` provides a declarative, composable system for defining and executing Nostr event feeds. You describe what you want (authors, kinds, tags, set operations) as a data structure, and the package compiles it into optimized relay requests and handles pagination, deduplication, and exhaustion. It sits on top of `@welshman/net` for relay communication and `@welshman/util` for types.
+`@welshman/feeds` defines nostr feeds as data and executes them. A feed describes authors, kinds, tags and set operations as a typed tuple, and the package compiles it into relay requests and handles pagination, deduplication, and exhaustion. It uses `@welshman/net` for relay communication and `@welshman/util` for types.
 
 ## Installation
 
@@ -28,7 +28,7 @@ npm install @welshman/feeds
 
 ### Factory Functions
 
-All feed definitions are typed tuples. Always use factories rather than raw arrays.
+All feed definitions are typed tuples. The factories return them with the right tuple type, which raw arrays lack.
 
 ```typescript
 // Leaf feeds
@@ -135,7 +135,7 @@ class FeedController {
   async load(limit: number): Promise<void>
   listen(): () => Promise<void>
   async getLoader(): Promise<(limit: number) => Promise<void>>
-  async getListener(): Promise<() => Promise<void>>
+  async getListener(): Promise<() => () => void>
   async getRequestItems(): Promise<RequestItem[] | undefined>
 }
 
@@ -150,7 +150,7 @@ type FeedControllerOptions = FeedCompilerOptions & {
 
 ### Routing (`FeedRouter`)
 
-`@welshman/feeds` has no way to turn a pubkey into relay urls, so it declares the capability as an interface and the caller supplies it.
+The caller supplies relay routing through the `FeedRouter` interface.
 
 ```typescript
 import type {RelaySelection, RelayScenario} from '@welshman/util'
@@ -164,15 +164,15 @@ getFilterSelections(filters: Filter[], router: FeedRouter): Promise<RelaysAndFil
 // RelaysAndFilters = {relays: string[]; filters: Filter[]}
 ```
 
-`getFilterSelections` applies one rule per outbox source: a `search` filter goes to `searchRelays(10)`; a gift-wrap filter with no `authors` goes to `userMessaging()`; a filter with `authors` is chunked and sent to each author's `outbox()`; and everything additionally gets a low-weight `userInbox(0.2)` pass. Each group resolves with `addMinimalFallbacks`.
+`getFilterSelections` applies one rule per outbox source: a `search` filter goes to `searchRelays(10)`; a gift-wrap filter with no `authors` goes to `userMessaging()`; a filter with `authors` is chunked and sent to each author's `outbox()`; and everything additionally gets a low-weight `userInbox(0.2)` pass. Each group resolves with `addMinimalFallbacks`. The groups overlap by relay, so `requestPage` unions their filters per relay and opens one subscription each; chunking keeps one filter's `authors` array small, which is a separate concern from how many frames reach one relay.
 
-`@welshman/app`'s `Router` plugin implements `FeedRouter`, and `app.use(Feeds).makeFeedController(...)` supplies it (along with `getPubkeysForScope`, `getPubkeysForWOTRange`, the signer, and the app's net context) so you only pass `feed` and your callbacks. The `RelaySelection` DSL itself is documented in the `welshman-util` skill.
+`@welshman/app`'s `Router` plugin implements `FeedRouter`. The `RelaySelection` DSL is documented in the `welshman-util` skill.
 
 ### Display & validation helpers
 
-`display*` functions render a feed definition as human-readable text — `displayFeed(feed)` dispatches on type, with `displayAuthorFeed`, `displayKindFeed`, `displayScopeFeed`, `displayTagFeed`, … underneath, plus `displayFeeds(feeds)` for a list.
+`display*` functions render a feed definition as human-readable text. `displayFeed(feed)` dispatches on type, with `displayAuthorFeed`, `displayKindFeed`, `displayScopeFeed`, `displayTagFeed`, … underneath, plus `displayFeeds(feeds)` for a list.
 
-`validate*` functions throw on a malformed feed tuple — `validateFeed(feed)` dispatches, with `validateAuthorFeed`, `validateDVMFeed`, `validateFeedArgs`, `validateTagFeedMapping`, … underneath. Run `validateFeed` on anything decoded from a kind-31890 event before compiling it.
+`validate*` functions return a `ValidationError` (re-exported from `trava`) for a malformed feed tuple, and the feed itself otherwise. `validateFeed(feed)` dispatches on type, with `validateAuthorFeed`, `validateDVMFeed`, `validateFeedArgs`, `validateTagFeedMapping`, … underneath. Check anything decoded from a kind-31890 event with `validateFeed(feed) instanceof ValidationError` before compiling it.
 
 ## Common Patterns
 
@@ -316,21 +316,19 @@ console.log('Authors in feed:', [...authors])
 
 - **`@welshman/util`** — `Filter`, `TrustedEvent`, and nostr primitives used throughout. `getIdFilters()` is used internally by the compiler for address feeds.
 - **`@welshman/signer`** — `ISigner` interface, passed optionally through `FeedCompilerOptions` for DVM requests that require signing.
-- **`@welshman/net`** — The `FeedController` delegates to `requestPage` for relay communication. The `FeedCompiler` delegates to `requestDVM` for DVM-based feeds. Neither accepts `request` or `requestDVM` as constructor options. `AdapterContext` from net is passed through `FeedCompilerOptions`.
+- **`@welshman/net`** — `FeedController` loads pages through this package's `requestPage` and `countPage`, and `FeedCompiler` runs DVM feeds through `requestDVM`. All three call net's `request`, `count` and `publish` with the `AdapterContext` from `FeedCompilerOptions`.
 - **`@welshman/app`** — `app.use(Feeds).makeFeedController({feed, onEvent, …})` supplies `router` (the `Router` plugin), `getPubkeysForScope`/`getPubkeysForWOTRange` (from `Wot`), the user's signer, and the app's `{pool, repository}` context. `Feeds` is also the kind-31890 saved-feed collection.
-- **`Tracker`** — Optional deduplication helper (from `@welshman/net` or app layer). Pass a shared `Tracker` instance to avoid re-emitting events seen in other controllers.
+- **`Tracker`** — From `@welshman/net`. A `Tracker` shared between controllers suppresses events it has already seen.
 
 ## Gotchas & Tips
 
-- **`router` is required.** `FeedCompilerOptions.router` has no default; a `FeedController` or `FeedCompiler` constructed without one will fail when it tries to resolve relays. In an app, go through `app.use(Feeds).makeFeedController(...)`.
-
-- **Always use factory functions** (`makeAuthorFeed`, etc.) rather than constructing raw tuples — the tuple structure is internal and type safety depends on using factories.
-- **`useWindowing: true`** is for relays that may return events out of chronological order. Do not use it for DVM/algorithmic feeds where order is part of the result.
-- **Windowing is calibrated with COUNT.** From the second page on, a windowed loader asks the relays how many events its next window holds (NIP-45, through `countPage`) and scales the window toward a full page, up to three probes. The first page keeps the window `guessFilterDelta` picked, so no events wait on a count, and relays that do not support COUNT get the blind widening instead.
+- **`router` is required.** `FeedCompilerOptions.router` has no default, and a `FeedController` or `FeedCompiler` without one fails when it resolves relays. In an app, use `app.use(Feeds).makeFeedController(...)`.
+- **`useWindowing: true`** is for relays that may return events out of chronological order. Do not use it for DVM or algorithmic feeds, where order is part of the result.
+- **Windowing is calibrated with COUNT.** From the second page on, a windowed loader asks the relays how many events its next window holds (NIP-45, through `countPage`) and scales the window toward a full page, with up to three probes. The first page keeps the window `guessFilterDelta` picked, so no events wait on a count. Relays that do not support COUNT get a window widened after each short page instead.
 - **`FeedController.load()` is stateful** — each call continues from where the last left off (pagination). Create a new controller to reset.
-- **`canCompile` returns `false` only for `FeedType.Difference`** (and recursively for `Union`/`Intersection` whose sub-feeds include a `Difference`). DVM and List feeds return `true` from `canCompile` and are compiled asynchronously by `_compileDvms` and `_compileLists` inside the compiler's `compile` method. The feeds handled specially by `FeedController` (outside the compiled request flow) are `Difference`, `Union`, and `Intersection` — but only when `canCompile` returns `false` for them.
-- **`simplifyFeed`** flattens nested same-type set operations (e.g. `union(union(a,b), c)` → `union(a,b,c)`). Run it before storing or serializing feed definitions.
+- **`canCompile` returns `false` only for `FeedType.Difference`**, and for a `Union` or `Intersection` that contains one. DVM, List and Label feeds compile, fetching their events inside `compile`. `FeedController` runs a separate controller per sub-feed only for a `Difference`, `Union` or `Intersection` that cannot compile.
+- **`simplifyFeed`** flattens nested same-type set operations (e.g. `union(union(a,b), c)` → `union(a,b,c)`) and unwraps set operations with a single sub-feed.
 - **`makeDifferenceFeed(included, ...excluded)`** — the first argument is the base feed to include; all subsequent feeds define events to exclude.
 - **Tag key convention** — tag feeds use `#t`, `#e`, etc. (hash-prefixed) to match Nostr filter syntax. `makeTagFeed("#t", "bitcoin")` produces filter `{"#t": ["bitcoin"]}`.
-- **`CreatedAtItem.relative`** — when set to `["since"]` or `["until"]`, the compiler treats those timestamps as relative offsets from the current time rather than absolute unix timestamps.
-- **Intersection of feeds is AND logic across relay results** — an event must appear in responses from ALL sub-feeds to be emitted. This can significantly reduce result counts vs. a union.
+- **`CreatedAtItem.relative`** — a field listed in `relative` (`"since"` or `"until"`) is an offset in seconds before now rather than a unix timestamp.
+- **Intersections** — a compilable intersection becomes intersected filters and relays. One that cannot compile emits only events that every sub-feed returned.

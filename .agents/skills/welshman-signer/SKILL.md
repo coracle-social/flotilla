@@ -7,7 +7,7 @@ description: "Use this skill when working with @welshman/signer: nostr signing, 
 
 ## Overview
 
-`@welshman/signer` provides a unified `ISigner` interface and concrete implementations for every major nostr signing method: local keypair (NIP-01), browser extension (NIP-07), remote bunker/Nostr Connect (NIP-46), native mobile app via Capacitor (NIP-55), and Gift Wrap encryption (NIP-59). All signers share the same API surface, so callers can swap signing methods without changing application logic. This package depends on `@welshman/util`, `@welshman/lib`, and (for NIP-46) `@welshman/net`. It has no dependency on `@welshman/app`.
+`@welshman/signer` provides a unified `ISigner` interface and concrete implementations for every major nostr signing method: local keypair (NIP-01), browser extension (NIP-07), remote bunker/Nostr Connect (NIP-46), native mobile app via Capacitor (NIP-55), and Gift Wrap encryption (NIP-59). All signers share the same API, so callers can swap signing methods freely. This package depends on `@welshman/util`, `@welshman/lib`, and (for NIP-46) `@welshman/net`. It has no dependency on `@welshman/app`.
 
 ## Installation
 
@@ -25,23 +25,25 @@ yarn add @welshman/signer
 The common contract all signers implement.
 
 ```typescript
-import type {ISigner, SignOptions, EncryptionImplementation} from '@welshman/signer'
+import type {ISigner, SignerOptions, EncryptionImplementation} from '@welshman/signer'
 
 interface ISigner {
   sign: SignWithOptions
   nip04: EncryptionImplementation
   nip44: EncryptionImplementation
-  getPubkey: () => Promise<string>
+  getPubkey: (options?: SignerOptions) => Promise<string>
   cleanup?: () => Promise<void>
 }
 
-type SignOptions = {signal?: AbortSignal}
+type SignerOptions = {signal?: AbortSignal; priority?: number}
 type Sign = (event: StampedEvent) => Promise<SignedEvent>
-type SignWithOptions = (event: StampedEvent, options?: SignOptions) => Promise<SignedEvent>
-type Encrypt = (pubkey: string, message: string) => Promise<string>
-type Decrypt = (pubkey: string, message: string) => Promise<string>
+type SignWithOptions = (event: StampedEvent, options?: SignerOptions) => Promise<SignedEvent>
+type Encrypt = (pubkey: string, message: string, options?: SignerOptions) => Promise<string>
+type Decrypt = (pubkey: string, message: string, options?: SignerOptions) => Promise<string>
 type EncryptionImplementation = {encrypt: Encrypt; decrypt: Decrypt}
 ```
+
+Every method takes the same options, since every one of them is a request to the same signer. `priority` orders the requests that are waiting, highest first and 0 by default, so bulk work behind the user asks for a negative one. `signal` gives up waiting. Neither recalls a request the signer has already started.
 
 ### Helpers & wrappers
 
@@ -51,7 +53,8 @@ type EncryptionImplementation = {encrypt: Encrypt; decrypt: Decrypt}
 | `nip04` / `nip44` | The raw primitives (`encrypt`/`decrypt` taking an explicit secret; `nip04.detect(m)`; `nip44.getSharedSecret`, LRU-cached) |
 | `WrappedSigner` | An `ISigner` that routes every method through a `SignerMethodWrapper`, and an `Emitter`. `@welshman/app` layers decrypt-caching and signer logging onto the user's signer this way, via `User.wrapSigner(wrap)` |
 | `SignerMethodWrapper` | `<T>(method: string, thunk: () => Promise<T>, args: unknown[]) => Promise<T>` — `method` is `"sign"`, `"getPubkey"`, `"nip44.decrypt"`, …; `args` lets a wrapper key a cache off the call's arguments |
-| `signWithOptions(promise, options)` | Races a signing promise against a 30 s timeout and the caller's `AbortSignal` |
+| `SignerQueue` | One signer's lane: `push(thunk, options)` runs requests one at a time in descending priority order. `Nip07Signer` and `Nip55Signer` each hold one |
+| `signerCall(request, options)` | Starts `request` (a thunk) and bounds it by `SIGNER_TIMEOUT` (30 s) and the caller's `AbortSignal`. What `Nip46Signer` uses in place of a queue |
 
 ### Nip01Signer (local keypair)
 
@@ -73,7 +76,7 @@ type EncryptionImplementation = {encrypt: Encrypt; decrypt: Decrypt}
 | Export | Description |
 |---|---|
 | `new Nip46Signer(broker)` | ISigner that routes operations through a `Nip46Broker` |
-| `new Nip46Broker(params)` | Create a broker directly from `Nip46BrokerParams` |
+| `new Nip46Broker(params)` | Create a broker from `Nip46BrokerParams`: `{relays, clientSecret, connectSecret?, signerPubkey?, algorithm?, context?}` |
 | `Nip46Broker.parseBunkerUrl(url)` | Parses a `bunker://` URL into `{ signerPubkey, connectSecret, relays }` |
 | `Nip46Broker.fromBunkerUrl(url)` | Create a broker directly from a `bunker://` URL |
 | `broker.makeNostrconnectUrl(metadata)` | Generates a `nostrconnect://` URL for QR display |
@@ -82,7 +85,7 @@ type EncryptionImplementation = {encrypt: Encrypt; decrypt: Decrypt}
 
 ### Nip55Signer (native mobile)
 
-This package never imports `nostr-signer-capacitor-plugin` — it types the plugin structurally as `Nip55` and the app hands it over. Install it (`npm install nostr-signer-capacitor-plugin`) and register it once at startup:
+This package never imports `nostr-signer-capacitor-plugin`. It types the plugin structurally as `Nip55`, and the app registers it. Install it (`npm install nostr-signer-capacitor-plugin`) and register it once at startup:
 
 ```ts
 import {NostrSignerPlugin} from "nostr-signer-capacitor-plugin"
@@ -106,33 +109,33 @@ setNip55Plugin(NostrSignerPlugin)
 | `Nip59.fromSecret(secret)` | Create directly from a hex private key |
 | `new Nip59(signer, wrapper?)` | Explicit constructor; `wrapper` defaults to an ephemeral signer |
 | `nip59.wrap(pubkey, template, tags?)` | Encrypt an event for a recipient; returns `Promise<SignedEvent>` — the kind-1059 gift wrap event |
-| `nip59.unwrap(event)` | Decrypt a received wrapped event |
+| `nip59.unwrap(event, options?)` | Decrypt a received wrapped event; `options` go to each of its two decryptions |
 | `nip59.withWrapper(wrapper)` | Return a new `Nip59` instance with a different wrapper signer |
+| `InvalidWrapError` | Thrown by `unwrap` for a wrap that does not check out, as opposed to a signer that did not answer |
 
 ## Common Patterns
 
 ### Local keypair login
 
 ```typescript
-import { makeSecret } from '@welshman/util'
+import { makeEvent } from '@welshman/util'
 import { Nip01Signer } from '@welshman/signer'
 import type { ISigner } from '@welshman/signer'
 
 // New random key
-const signer: ISigner = Nip01Signer.ephemeral()
+const ephemeralSigner: ISigner = Nip01Signer.ephemeral()
 
-// From a stored key
-const signer: ISigner = new Nip01Signer(localStorage.getItem('nsec')!)
+// From a stored hex key
+const signer: ISigner = new Nip01Signer(localStorage.getItem('secret')!)
 
-// With a timeout
-const event = makeEvent(1, { content: 'hello' })
-const signed = await signer.sign(event, { signal: AbortSignal.timeout(5_000) })
+const signed = await signer.sign(makeEvent(1, { content: 'hello' }))
 ```
 
 ### Browser extension login
 
 ```typescript
 import { getNip07, Nip07Signer } from '@welshman/signer'
+import type { ISigner } from '@welshman/signer'
 
 function loginWithExtension(): ISigner {
   if (!getNip07()) {
@@ -207,7 +210,6 @@ const wrappedEvent = await nip59.wrap(
   recipientPubkey,
   makeEvent(14, { content: 'Secret message', tags: [['p', recipientPubkey]] }),
 )
-// Publish the kind-1059 gift wrap event to relays
 await publishToRelays(wrappedEvent)
 
 // Receive and unwrap
@@ -228,17 +230,17 @@ const plaintext = await signer.nip44.decrypt(theirPubkey, ciphertext)
 ## Integration Notes
 
 - **`@welshman/util`** supplies `makeEvent`, `makeSecret`, `StampedEvent`, `SignedEvent`, and nostr kind constants (`NOTE`, `DIRECT_MESSAGE`, etc.) used in all examples above.
-- **`@welshman/net`** and **`@welshman/app`** accept an `ISigner` wherever signing is needed (e.g. publishing events). Pass any concrete signer — they are interchangeable.
-- **`@welshman/app`** has no `signer` store. An identity is a `User` (`{pubkey, signer}`) hanging off the app: `User.fromSigner(signer)` / `User.fromSession(session)`, then `createApp({user})`. Reach it as `app.user?.signer`, and require it with `User.require(app)`.
-- `Nip59` wraps events with an ephemeral `Nip01Signer` by default (per the NIP-59 spec), so callers do not need to supply a wrapper unless they want a custom one.
+- **`@welshman/net`** takes a plain `sign` function for NIP-42 auth (`makeSocketPolicyAuth({sign: e => signer.sign(e)})`).
+- **`@welshman/app`** holds the signer on a `User` (`{pubkey, signer}`) attached to the app: `User.fromSigner(signer)` / `User.fromSession(session)`, then `createApp({user})`. Reach it as `app.user?.signer`, and require it with `User.require(app)`.
 
 ## Gotchas & Tips
 
 - **`Nip07Signer` is browser-only.** Do not instantiate it in SSR or Node environments; always guard with `getNip07()` first.
-- **`Nip55Signer` requires Capacitor.** It will not work in a plain browser build. Only use it in a Capacitor-wrapped mobile app, after calling `setNip55Plugin(NostrSignerPlugin)` and confirming `getNip55()` returns apps. Without the plugin, `getNip55()` returns `[]` rather than throwing, so it doubles as the feature check.
-- **`waitForNostrconnect` holds an open subscription.** Always pass an `AbortSignal` (e.g., from `new AbortController().signal`) so you can cancel if the user navigates away.
-- **A wrap that needs proof of work is mined by its wrapper.** `Nip59` knows nothing about NIP-13; pass your own wrapper with `withWrapper`, then `wrapper.sign(await minePow(wrap, difficulty))` on what comes back. Mining changes the id, so only the key that signed the wrap can sign it again — an ephemeral wrapper `Nip59` made for itself is gone by then.
-- **`makeSecret()`** (from `@welshman/util`) generates a cryptographically secure random hex private key. Use it for the `clientSecret` in NIP-46 — never reuse the user's actual private key as the client secret.
-- **`nip59.wrap()` returns the gift-wrap `SignedEvent` directly** — the return value itself is the kind-1059 event to publish. There is no `.wrap` sub-property on the return value.
+- **`Nip55Signer` requires Capacitor.** Use it only in a Capacitor app, after calling `setNip55Plugin(NostrSignerPlugin)`. Without the plugin `getNip55()` returns `[]` rather than throwing, so it doubles as the feature check.
+- **`waitForNostrconnect` holds an open subscription** until the signer answers or its required `AbortSignal` fires. Abort it if the user navigates away.
+- **A wrap that needs proof of work is mined by its wrapper.** `Nip59` knows nothing about NIP-13; pass your own wrapper with `withWrapper`, then `wrapper.sign(await minePow(wrap, difficulty))` on what comes back. Mining changes the id, so only the key that signed the wrap can sign it again, and the ephemeral wrapper `Nip59` creates by default is not kept.
+- **`makeSecret()`** (from `@welshman/util`) generates a random hex private key. Use it for the NIP-46 `clientSecret`, and never reuse the user's own private key there.
 - **Both `nip04` and `nip44` are supported** on all signers. Prefer `nip44` for new code; `nip04` is provided for backwards compatibility with older clients.
-- **`sign()` options accept `signal: AbortSignal`** — always set a timeout when signing in a UI flow to avoid hanging indefinitely if the user ignores the extension prompt.
+- **Every request gives up after `SIGNER_TIMEOUT`**, 30 seconds, except on `Nip01Signer`, which holds the key and cannot hang. Pass a `signal` for a shorter limit or to cancel from the UI, and a negative `priority` for work the user is not waiting on.
+- **A signer answers one request at a time**, so a priority reorders what is still waiting rather than what the signer is already working on — a signature still waits out one decryption in front of it.
+- **`Nip59.unwrap` remembers a verdict, not a signer failure.** An `InvalidWrapError` is cached under the wrap's id and rethrown forever; anything the signer threw reaches the signer again on the next call.

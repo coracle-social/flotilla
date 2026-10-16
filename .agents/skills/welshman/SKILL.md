@@ -5,7 +5,7 @@ description: "Use this skill for general welshman questions: architecture overvi
 
 ## What is welshman
 
-Welshman is a modular TypeScript nostr toolkit extracted from the [Coracle](https://coracle.social) nostr client, designed for building highly configurable nostr client applications. It is production-tested, powering both Coracle and [Flotilla](https://flotilla.social). Packages are independent and opt-in — you can grab a single utility or use the full batteries-included framework.
+Welshman is a modular TypeScript nostr toolkit for building configurable client applications. It was extracted from the [Coracle](https://coracle.social) nostr client and powers both Coracle and [Flotilla](https://flotilla.social). Its packages are opt-in, from single utilities up to a full application framework.
 
 ## Package map
 
@@ -20,35 +20,34 @@ Welshman is a modular TypeScript nostr toolkit extracted from the [Coracle](http
 | `@welshman/feeds` | Dynamic feed construction, filtering, and composition |
 | `@welshman/app` | Instance-based application framework: an `App` composes net, store, signer, feeds, and domain, exposing data modules via `app.use(...)` |
 | `@welshman/content` | Parser and renderer for nostr note content (links, mentions, media, custom formatting) |
-| `@welshman/editor` | Batteries-included Svelte rich-text editor component with mention and embed support |
+| `@welshman/editor` | Tiptap-based rich-text editor with mention and embed support |
 
 ## Dependency layering
 
-Packages are layered so lower-level ones have no welshman dependencies:
+Each package depends only on packages above it in this list:
 
-- **Foundational** (no welshman deps): `@welshman/lib`, `@welshman/util`
-- **Mid-level** (depend only on foundational): `@welshman/net`, `@welshman/store`, `@welshman/signer`
-- **Composing** (depend on mid-level + foundational): `@welshman/feeds`, `@welshman/domain`
-- **Application** (composes everything above): `@welshman/app`
-- **UI-focused** (largely independent, UI rendering concerns): `@welshman/content`, `@welshman/editor`
+- `@welshman/lib` has no welshman dependencies, and `@welshman/util` depends on it
+- `@welshman/net` depends on `lib` and `util`
+- `@welshman/store` and `@welshman/signer` depend on `net`
+- `@welshman/feeds` depends on `signer`, and `@welshman/domain` depends on `feeds`
+- `@welshman/app` depends on all of the above
+- `@welshman/content` has no welshman dependencies, and `@welshman/editor` depends only on `lib` and `util`
 
 For deep-dives on any package, load the `welshman-<name>` skill (e.g. `welshman-net`, `welshman-app`, `welshman-domain`, `welshman-signer`).
 
-Relay selection spans two packages. The `RelaySelection` DSL, `Resolver` and `RelayScenario` are in `@welshman/util` (`welshman-util` skill); the `Router` plugin that dereferences them is in `@welshman/app` (`welshman-app` skill). There is no `@welshman/router` package.
+Relay selection spans two packages. The `RelaySelection` DSL, `Resolver` and `RelayScenario` are in `@welshman/util` (`welshman-util` skill); the `Router` plugin that dereferences them is in `@welshman/app` (`welshman-app` skill).
 
 ## Getting started
 
 Install only what you need:
 
 ```bash
-# Full application framework (includes app, net, store, signer, feeds, domain)
+# Full application framework, for a conventional client
 npm i @welshman/app
 
-# Or assemble manually for more control
+# Lower-level packages, for assembling a client by hand
 npm i @welshman/util @welshman/net @welshman/signer
 ```
-
-If you're building a conventional nostr web client, use `@welshman/app` for batteries-included functionality. For more advanced usage, use the lower-level modules without `app` for more control.
 
 ## Key nostr concepts
 
@@ -82,9 +81,7 @@ import { Nip07Signer } from "@welshman/signer"
 import { Note } from "@welshman/domain"
 import { createApp, User, Domain, Profiles } from "@welshman/app"
 
-// 1. Create an app instance. Each App owns its own repository, socket pool,
-//    tracker, and (optional) signing user, so data never leaks across identities.
-//    Pass the user at construction rather than assigning app.user afterwards.
+// Each App owns its repository, socket pool, tracker, and signing user
 const user = await User.fromSigner(new Nip07Signer())
 
 const app = createApp({
@@ -95,12 +92,10 @@ const app = createApp({
   },
 })
 
-// 2. Hydrate the repository from storage and flush changes back to it.
-//    See the welshman-net skill for repository.load() and the "update" listener.
+// Hydrate app.repository from storage here (see the welshman-net skill)
 
-// 3. Load the user's profile through the Profiles data module
-//    (triggers a network fetch via the outbox model if not cached)
-const profile = await app.use(Profiles).forceLoad(user.pubkey)
+// Fetches via the outbox model unless the profile was loaded recently; forceLoad always fetches
+const profile = await app.use(Profiles).load(user.pubkey)
 if (profile) console.log("Hello,", profile.display())
 
 // ...or subscribe reactively:
@@ -108,8 +103,7 @@ app.use(Profiles).one(user.pubkey).subscribe($profile => {
   if ($profile) console.log("Profile:", $profile.display())
 })
 
-// 4. Compose and publish a note. Domain builds the event and resolves relays;
-//    the returned Command sends it through the publish pipeline.
+// Domain builds the event and resolves its relays; the Command publishes it
 const writer = app.use(Domain).writer(Note).setContent("Hello, Nostr!")
 const command = await app.use(Domain).command(writer)
 
@@ -141,8 +135,7 @@ export class PrintAdapter extends AbstractAdapter {
   }
 }
 
-// A net context that routes our relay url to the custom adapter. Context is
-// passed per call now — there is no module-level singleton.
+// A net context that routes our relay url to the custom adapter
 const context: NetContext = {
   getAdapter: (url: string) => {
     if (url === RELAY_URL) {

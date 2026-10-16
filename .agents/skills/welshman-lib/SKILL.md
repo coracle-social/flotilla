@@ -5,7 +5,7 @@ description: "Use this skill when working with @welshman/lib: general-purpose ut
 
 # welshman/lib — General Utilities
 
-`@welshman/lib` is a lightweight TypeScript utility library that forms the foundation of the welshman nostr stack. It provides common helpers used across all sibling packages: array/object manipulation, numeric helpers, async primitives, caching, event emission, and encoding utilities. It depends on `@scure/base` (for bech32/utf8 encoding) and `events` (Node.js EventEmitter polyfill).
+`@welshman/lib` is the TypeScript utility library at the bottom of the welshman nostr stack. It provides array, object and number helpers, async primitives, caching, event emission, and encoding utilities. It depends on `@scure/base` (bech32 and utf8 encoding) and `events` (a Node.js EventEmitter polyfill).
 
 ## Installation
 
@@ -25,7 +25,7 @@ pnpm add @welshman/lib
 | `defer<T, E>()` | Creates a `Deferred<T, E>` — a promise with exposed `.resolve()` and `.reject()` |
 | `makePromise<T, E>(executor)` | Creates a strongly-typed promise with typed error (`CustomPromise<T, E>`) |
 
-`E` defaults to `T` when omitted. `defer<void>()` for a signal-style deferred. `thunk.complete` in `@welshman/app` is a `Deferred<void>`.
+`E` defaults to `T` when omitted. `defer<void>()` makes a signal-style deferred.
 
 ```typescript
 import { defer } from '@welshman/lib'
@@ -79,7 +79,7 @@ getProfile.pop(pubkey) // invalidate one entry
 |--------|-------------|
 | `TaskQueue<Item>` | Processes items asynchronously in configurable batches |
 
-Options: `batchSize`, `batchDelay` (ms), `processItem`. Methods: `.push(item)`, `.remove(item)`, `.start()`, `.stop()`, `.clear()`, `.process()`, `.subscribe(cb)`.
+Options: `batchSize`, `batchDelay` (ms), `processItem`, and an optional `getPriority` that orders the queue. A `batchDelay` of 0 runs each batch in a microtask rather than a timer, so a one-item batch never pays a browser's 4ms clamp on a nested `setTimeout(0)`. Methods: `.push(item)`, `.remove(item)`, `.start()`, `.stop()`, `.clear()`, `.process()`, `.subscribe(cb)`.
 
 ```typescript
 import { TaskQueue } from '@welshman/lib'
@@ -111,21 +111,21 @@ displayUrl('https://www.example.com/path/')  // => 'example.com/path'
 displayDomain('relay.damus.io/path')         // => 'relay.damus.io'
 ```
 
-> **Note:** `normalizeUrl` defaults to `http://` protocol. Pass `{ defaultProtocol: 'https' }` if needed.
+`normalizeUrl` defaults to the `http://` protocol. Pass `{ defaultProtocol: 'https' }` to change it.
 
 ### Async Utilities
 
 | Export | Description |
 |--------|-------------|
 | `sleep(ms)` | Returns a promise that resolves after `ms` milliseconds |
-| `yieldThread()` | Yields to the event loop (microtask break) |
+| `yieldThread()` | Yields to the event loop, via `scheduler.yield()` where available and `setTimeout(0)` otherwise |
 | `poll(options)` | Polls until a condition is met or an AbortSignal fires; options: `{ signal, condition, interval? }` |
 | `throttle(ms, fn)` | Returns a throttled version of `fn` |
 | `throttleWithValue(ms, fn)` | Throttled function that returns the cached return value between updates |
 | `batch(t, fn)` | First call fires `fn([item])` immediately; subsequent calls within `t` ms are collected and `fn` is called with all accumulated items |
-| `batcher(t, execute)` | Collects calls for `t` ms, then calls `execute` with all accumulated requests; each individual call returns a `Promise<U>` resolved with its result from the batch. Unlike `batch`, the first call is also deferred — nothing fires immediately. |
+| `batcher(t, execute)` | Collects calls for `t` ms, then calls `execute` with all accumulated requests; each individual call returns a `Promise<U>` resolved with its result from the batch. The first call is also deferred. |
 | `race(threshold, promises)` | Resolves when `threshold` fraction of promises complete |
-| `makeQueue()` | Returns `(f: () => Promise<unknown>) => Promise<unknown>` — chains every call onto one serial promise, logging and swallowing rejections so a failure doesn't stall the chain |
+| `makeQueue()` | Returns `(f: () => Promise<unknown>) => Promise<unknown>`, which chains every call onto one serial promise and logs and swallows rejections so one failure does not stall the chain |
 
 ### Timestamp / Time Constants
 
@@ -145,7 +145,7 @@ displayDomain('relay.damus.io/path')         // => 'relay.damus.io'
 | `formatTimestampAsTime(ts)` | Formats Unix seconds as a time string |
 | `formatTimestampRelative(ts)` | Formats Unix seconds as "x minutes ago" |
 
-> **Note:** All time constants are in **seconds**, not milliseconds. Use `ms(n)` to convert for `setTimeout`.
+Time constants are in **seconds**. Use `ms(n)` to convert for `setTimeout`.
 
 ### Number Utilities
 
@@ -165,7 +165,7 @@ displayDomain('relay.damus.io/path')         // => 'relay.damus.io'
 
 ### Array / Sequence Utilities
 
-All return new arrays — no mutation.
+All return new arrays.
 
 | Export | Description |
 |--------|-------------|
@@ -218,7 +218,7 @@ All return new arrays — no mutation.
 | `switcher(key, map)` | Lookup with implicit `map.default` fallback |
 | `mapPop(k, m)` | Gets and deletes key from a `Map<K, T>` — returns `T \| undefined` |
 
-> **Note:** `mergeLeft(a, b)` means `a` wins — it spreads `b` first, then `a` on top.
+`mergeLeft(a, b)` spreads `b` first and then `a`, so `a` wins.
 
 ### TypeScript Utility Types
 
@@ -244,7 +244,7 @@ type MaybeStr = Maybe<string> // string | undefined
 | `tap(f)` | Returns `(x) => { f(x); return x }` — runs a side effect and passes the value through |
 | `bind(f, ...args)` | Partially applies `f` with leading `args` |
 | `equals(a, b)` | Deep equality (handles arrays, Sets, plain objects) |
-| `tryCatch(f, onError?)` | Calls `f`, swallows errors, returns `undefined` on failure |
+| `tryCatch(f, onError?)` | Calls `f`, swallows errors, and returns `undefined` if it throws or its promise rejects |
 | `thrower(message)` | Returns a function that throws `new Error(message)` when called |
 | `once(f)` | Wraps `f` so it only executes once |
 | `memoize(f)` | Single-slot memoization: caches last call; re-runs when args change |
@@ -343,8 +343,6 @@ pushToMapKey(m, relay, eventId)
 
 ### Pattern 1 — Batching writes (IndexedDB / relay)
 
-`batch(t, f)` — first call fires immediately; subsequent calls within `t` ms are accumulated and flushed together.
-
 ```typescript
 import { batch, on } from '@welshman/lib'
 import type { RepositoryUpdate } from '@welshman/net'
@@ -354,7 +352,7 @@ on(
   'update',
   batch(3000, async (updates: RepositoryUpdate[]) => {
     const toAdd = updates.flatMap(u => u.added)
-    const toRemove = new Set(updates.flatMap(u => u.removed))
+    const toRemove = new Set(updates.flatMap(u => Array.from(u.removed)))
 
     const tx = db.transaction('events', 'readwrite')
     await Promise.all([
@@ -387,8 +385,6 @@ const label = formatTimestampRelative(event.created_at) // "3 hours ago"
 
 ### Pattern 4 — Subscribing to EventEmitter-based objects with `on`
 
-`on(target, event, handler)` returns an unsubscribe function:
-
 ```typescript
 import { on } from '@welshman/lib'
 
@@ -413,6 +409,5 @@ call(async () => {
 ## Integration Notes
 
 - **All welshman packages depend on `@welshman/lib`** — `Deferred`, `Emitter`, time constants, and collection utilities are shared across `@welshman/net`, `@welshman/store`, `@welshman/util`, etc.
-- **`@welshman/net`** uses `Emitter` (via `Tracker`, `Repository`, `WrapManager`), `batch`, and `LRUCache` internally. `Socket` extends Node's built-in `EventEmitter` directly.
-- **`@welshman/app`** thunks use `Deferred<void>` — `thunk.complete` resolves when all relays have responded or timed out.
-- **`batcher`** is used in `@welshman/net` for deduplicating concurrent fetch requests — pass it an `execute` function that returns results in the same order as its inputs.
+- **`@welshman/net`**: `Tracker`, `Repository` and `WrapManager` extend `Emitter`, while `Socket` extends Node's `EventEmitter` directly.
+- **`@welshman/app`**: `publication.settled()` returns a `Deferred` that resolves with the publication once it is sent, failed or aborted.
