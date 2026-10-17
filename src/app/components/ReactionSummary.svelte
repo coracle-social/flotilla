@@ -20,6 +20,8 @@
   import type {Zap} from "@welshman/domain"
   import {Zappers} from "@welshman/app"
   import {isMobile, stopPropagation} from "@lib/html"
+  import Bolt from "@assets/icons/bolt.svg?dataurl"
+  import Heart from "@assets/icons/heart-angle.svg?dataurl"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -41,6 +43,7 @@
     createReaction: (event: EventContent) => void
     url?: string
     placement?: Placement
+    perEmoji?: boolean
     hideZaps?: boolean
     noTooltip?: boolean
     innerEvent?: TrustedEvent
@@ -54,6 +57,7 @@
     createReaction,
     url,
     placement = "top",
+    perEmoji = false,
     hideZaps = false,
     noTooltip = false,
     innerEvent = undefined,
@@ -93,6 +97,12 @@
 
   const displays = $derived(deriveDisplaysByPubkey(reactorPubkeys, url))
 
+  const likePubkeys = $derived(uniq($reactions.map(e => e.pubkey)))
+
+  const zapPubkeys = $derived(uniq($zaps.map(zap => zap.request.pubkey)))
+
+  const zapTotal = $derived(fromMsats(sum($zaps.map(zap => zap.invoiceAmount))))
+
   const toggleReaction = (events: TrustedEvent[]) => {
     const reaction = events.find(spec({pubkey: $user.pubkey}))
 
@@ -115,19 +125,37 @@
   const showReactors = (pubkeys: string[], title: string, subtitle: string) =>
     pushModal(ProfileList, {title, subtitle, pubkeys, url})
 
-  const onReactionClick = (events: TrustedEvent[], pubkeys: string[], info: string) => {
+  const onReactionClick = (events: TrustedEvent[], pubkeys: string[], title: string) => {
     if (isMobile && !pubkeys.includes($user.pubkey)) {
-      showReactors(pubkeys, info.replace(" reacted", ""), "Reacted to this message")
+      showReactors(pubkeys, title, "Reacted to this message")
     } else {
       toggleReaction(events)
     }
   }
 
-  const onZapClick = (pubkeys: string[], info: string) => {
+  const onZapClick = (pubkeys: string[], title: string) => {
     if (isMobile) {
-      showReactors(pubkeys, info.replace(" zapped", ""), "Zapped this message")
+      showReactors(pubkeys, title, "Zapped this message")
     } else {
       pushModal(ZapModal, {url, pubkey: event.pubkey, event})
+    }
+  }
+
+  const toggleLike = () => {
+    const own = $reactions.find(spec({pubkey: $user.pubkey}))
+
+    if (own) {
+      deleteReaction(own)
+    } else {
+      createReaction({content: "+", tags: []})
+    }
+  }
+
+  const onLikeClick = () => {
+    if (isMobile && !likePubkeys.includes($user.pubkey)) {
+      showReactors(likePubkeys, "Likes", "Reacted to this post")
+    } else {
+      toggleLike()
     }
   }
 
@@ -176,14 +204,33 @@
       </Tooltip>
     {/if}
     {#if !hideZaps}
-      {#each groupedZaps.entries() as [key, zaps] (key)}
-        {@const amount = fromMsats(sum(zaps.map(zap => zap.invoiceAmount)))}
-        {@const pubkeys = uniq(zaps.map(zap => zap.request.pubkey))}
-        {@const isOwn = pubkeys.includes($user.pubkey)}
-        {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
-        {@const tooltip = `${info} zapped`}
-        {@const onZapClickHandler = () => onZapClick(pubkeys, tooltip)}
-        <Tooltip content={tooltipContent(tooltip)} {placement} class="flex">
+      {#if perEmoji}
+        {#each groupedZaps.entries() as [key, zaps] (key)}
+          {@const amount = fromMsats(sum(zaps.map(zap => zap.invoiceAmount)))}
+          {@const pubkeys = uniq(zaps.map(zap => zap.request.pubkey))}
+          {@const isOwn = pubkeys.includes($user.pubkey)}
+          {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
+          {@const onZapClickHandler = () => onZapClick(pubkeys, info)}
+          <Tooltip content={tooltipContent(`${info} zapped`)} {placement} class="flex">
+            <Button
+              class={cx(
+                "button button-xs flex-inline flex items-center gap-1 rounded-full text-xs font-normal",
+                {
+                  "button-primary": isOwn,
+                  "button-neutral": !isOwn,
+                },
+              )}
+              onclick={stopPropagation(onZapClickHandler)}>
+              <Reaction event={zaps[0].request} />
+              <span>{amount}</span>
+            </Button>
+          </Tooltip>
+        {/each}
+      {:else if $zaps.length > 0}
+        {@const isOwn = zapPubkeys.includes($user.pubkey)}
+        {@const info = displayList(zapPubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
+        {@const onClick = () => onZapClick(zapPubkeys, "Zaps")}
+        <Tooltip content={tooltipContent(`${info} zapped`)} {placement} class="flex">
           <Button
             class={cx(
               "button button-xs flex-inline flex items-center gap-1 rounded-full text-xs font-normal",
@@ -192,33 +239,53 @@
                 "button-neutral": !isOwn,
               },
             )}
-            onclick={stopPropagation(onZapClickHandler)}>
-            <Reaction event={zaps[0].request} />
-            <span>{amount}</span>
+            aria-label="Zaps"
+            onclick={stopPropagation(onClick)}>
+            <Icon icon={Bolt} size={4} />
+            <span>{zapTotal}</span>
+          </Button>
+        </Tooltip>
+      {/if}
+    {/if}
+    {#if perEmoji}
+      {#each groupedReactions.entries() as [key, events] (key)}
+        {@const pubkeys = events.map(e => e.pubkey)}
+        {@const isOwn = pubkeys.includes($user.pubkey)}
+        {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
+        {@const onClick = () => onReactionClick(events, pubkeys, info)}
+        <Tooltip content={tooltipContent(`${info} reacted`)} {placement} class="flex">
+          <Button
+            class={cx("button button-xs flex-inline gap-1 rounded-full font-normal", {
+              "button-primary": isOwn,
+              "button-neutral": !isOwn,
+            })}
+            onclick={stopPropagation(onClick)}>
+            <Reaction event={events[0]} />
+            {#if events.length > 1}
+              <span>{events.length}</span>
+            {/if}
           </Button>
         </Tooltip>
       {/each}
-    {/if}
-    {#each groupedReactions.entries() as [key, events] (key)}
-      {@const pubkeys = events.map(e => e.pubkey)}
-      {@const isOwn = pubkeys.includes($user.pubkey)}
-      {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
-      {@const tooltip = `${info} reacted`}
-      {@const onClick = () => onReactionClick(events, pubkeys, info)}
-      <Tooltip content={tooltipContent(tooltip)} {placement} class="flex">
+    {:else if $reactions.length > 0}
+      {@const isOwn = likePubkeys.includes($user.pubkey)}
+      {@const info = displayList(likePubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
+      <Tooltip content={tooltipContent(`${info} reacted`)} {placement} class="flex">
         <Button
-          class={cx("button button-xs flex-inline gap-1 rounded-full font-normal", {
-            "button-primary": isOwn,
-            "button-neutral": !isOwn,
-          })}
-          onclick={stopPropagation(onClick)}>
-          <Reaction event={events[0]} />
-          {#if events.length > 1}
-            <span>{events.length}</span>
-          {/if}
+          class={cx(
+            "button button-xs flex-inline flex items-center gap-1 rounded-full font-normal",
+            {
+              "button-primary": isOwn,
+              "button-neutral": !isOwn,
+            },
+          )}
+          aria-label="Likes"
+          onclick={stopPropagation(onLikeClick)}>
+          <Icon icon={Heart} size={4} />
+          <span>{likePubkeys.length}</span>
         </Button>
       </Tooltip>
-    {/each}
+    {/if}
     {@render children?.()}
   </div>
 {/if}

@@ -26,12 +26,12 @@ type Seeded = {readonly id: string; readonly event: SignedEvent}
 const composerForm = (page: Page) =>
   page.locator("form").filter({has: page.locator(".note-editor")})
 
-// One reaction, added and taken back off again.
+// Content tallies its reactions, so one of them reads as a like count of 1.
 const expectReactionRoundTrip = async (page: Page, scope: Locator, opener: Locator) => {
-  const pill = scope.getByRole("button", {name: /🎉/})
+  const pill = scope.getByRole("button", {name: "Likes"})
 
   await pickEmoji(page, opener, "party popper")
-  await expect(pill).toHaveCount(1)
+  await expect(pill).toContainText("1")
 
   await pill.click()
   await expect(pill).toHaveCount(0)

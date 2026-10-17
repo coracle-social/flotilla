@@ -112,7 +112,7 @@
       </div>
     </TapTarget>
     <div class="flex gap-2 z-feature -mt-4 ml-4">
-      <ReactionSummary {event} {context} {deleteReaction} {createReaction} noTooltip />
+      <ReactionSummary {event} {context} {deleteReaction} {createReaction} noTooltip perEmoji />
     </div>
   </div>
 </div>

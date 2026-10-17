@@ -705,9 +705,9 @@ I can respond without writing.
 
 Acceptance:
 
-- Clicking an emoji on an article records bob's reaction with a count of 1,
-  highlighted as his own.
-- Clicking the same emoji again removes it and the count returns to 0.
+- Choosing an emoji on an article records bob's reaction as a like count of 1,
+  highlighted as his own, rather than as a pill carrying the emoji.
+- Clicking that count again removes his reaction and the count goes with it.
 - The same behavior applies to a comment on the article, to a post inside a
   thread, and to a note on someone's profile.
 

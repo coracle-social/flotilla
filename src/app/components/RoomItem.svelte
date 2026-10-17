@@ -147,7 +147,8 @@
       {deleteReaction}
       {createReaction}
       placement="right"
-      innerEvent={$innerEvent} />
+      innerEvent={$innerEvent}
+      perEmoji />
     {#each $threads as thread (thread.id)}
       <Link
         href={pages.thread.path({url, id: thread.id})}
