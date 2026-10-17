@@ -1,8 +1,8 @@
 import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
 import {npubEncode} from "nostr-tools/nip19"
-import {HOUR, MINUTE, MONTH, uniq} from "@welshman/lib"
-import {NOTE, PROFILE, STATUS, makeEvent, tagSpec, tagValue} from "@welshman/util"
+import {HOUR, MINUTE, MONTH, now, uniq} from "@welshman/lib"
+import {FOLLOWS, NOTE, PROFILE, STATUS, makeEvent, tagSpec, tagValue} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {FollowList, Note, PinList, Profile} from "@welshman/domain"
 import {
@@ -169,7 +169,7 @@ test("US-075 view someone's profile", async ({seed, as}) => {
 })
 
 test("US-076 follow and unfollow", async ({seed, as}) => {
-  await seed(({relay, user}) => {
+  const scenario = await seed(({relay, user}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
@@ -180,6 +180,7 @@ test("US-076 follow and unfollow", async ({seed, as}) => {
     space.relayList(user.bob)
   })
 
+  const {url} = scenario.space("space")
   const page = await as(users.alice, profilePath(users.bob.pubkey), {context: DESKTOP})
   const follow = page.getByRole("button", {name: "Follow", exact: true})
   const unfollow = page.getByRole("button", {name: "Unfollow", exact: true})
@@ -190,9 +191,36 @@ test("US-076 follow and unfollow", async ({seed, as}) => {
 
   await expect(unfollow).toBeVisible()
 
+  // A kind 3 replaces only a kind 3 older than it, so the two writes need separate seconds.
+  const followedAt = now()
+
+  while (now() === followedAt) {
+    await page.waitForTimeout(50)
+  }
+
   await unfollow.click()
 
   await expect(follow).toBeVisible()
+
+  // The label flips on the optimistic write, so the frame can still be in flight after it.
+  await expect.poll(() => getPublishedEvents(page.context(), FOLLOWS).length).toBe(2)
+
+  // The dialog is how most of the app reaches a profile, so the control has to be there too.
+  await page.goto(`${spacePath(url)}/directory`)
+
+  const preview = page
+    .locator(".card.card-interactive")
+    .filter({hasText: "Bob Barnacle"})
+    .locator("button[aria-label]")
+    .first()
+
+  await preview.click()
+
+  const profile = dialog(page, "Profile details")
+
+  await profile.getByRole("button", {name: "Follow", exact: true}).click()
+
+  await expect(profile.getByRole("button", {name: "Unfollow", exact: true})).toBeVisible()
 })
 
 test("US-077 see web-of-trust standing build up", async ({seed, as}) => {

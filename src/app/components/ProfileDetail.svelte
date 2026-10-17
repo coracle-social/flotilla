@@ -18,6 +18,7 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
+  import ProfileFollowButton from "@app/components/ProfileFollowButton.svelte"
   import ProfileLocation from "@app/components/ProfileLocation.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import ProfilePinnedNote from "@app/components/ProfilePinnedNote.svelte"
@@ -161,6 +162,9 @@
       Go back
     </Button>
     <div class="flex gap-2">
+      {#if !isSelf}
+        <ProfileFollowButton {pubkey} />
+      {/if}
       <Button onclick={viewProfile} class="button button-primary">
         <Icon icon={UserCircle} />
         View Full Profile

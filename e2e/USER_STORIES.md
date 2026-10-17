@@ -1338,14 +1338,15 @@ Acceptance:
 
 ### US-076 — Follow and unfollow
 
-As alice, I want to follow and unfollow bob from his profile, so that I control
-who I keep up with.
+As alice, I want to follow and unfollow bob wherever I meet him, so that I
+control who I keep up with.
 
 Acceptance:
 
 - His profile shows "Follow" while she doesn't follow him.
 - Clicking it switches to "Unfollow" without a reload.
 - Clicking "Unfollow" switches it back.
+- His profile dialog carries the same control, and following from there sticks.
 
 ### US-077 — See web-of-trust standing build up
 

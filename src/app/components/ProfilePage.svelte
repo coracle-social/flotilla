@@ -1,11 +1,9 @@
 <script lang="ts">
   import * as nip19 from "nostr-tools/nip19"
-  import {publish} from "@welshman/app"
   import {displayPubkey} from "@welshman/domain"
   import Copy from "@assets/icons/copy.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
-  import UserPlus from "@assets/icons/user-plus.svg?dataurl"
   import Pen2 from "@assets/icons/pen-2.svg?dataurl"
   import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
@@ -23,6 +21,7 @@
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
   import ProfilePageNotes from "@app/components/ProfilePageNotes.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
+  import ProfileFollowButton from "@app/components/ProfileFollowButton.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import NoteCreate from "@app/components/NoteCreate.svelte"
   import WotScore from "@app/components/WotScore.svelte"
@@ -31,7 +30,7 @@
   import {clip, pushToast} from "@app/features/toast"
   import {goToMessages} from "@app/features/messages"
   import {user} from "@app/core/user"
-  import {followLists, profiles, relayLists} from "@app/core/plugins"
+  import {profiles, relayLists} from "@app/core/plugins"
 
   type Props = {
     pubkey: string
@@ -42,8 +41,6 @@
   const profile = $profiles.one(target)
   const profileDisplay = $profiles.display(target).$
   const isSelf = $derived($user.pubkey === target)
-  const follows = $derived($followLists.one($user.pubkey))
-  const isFollowing = $derived(($follows?.pubkeys() ?? []).includes(target))
   const website = $derived($profile?.website()?.replace(/^https?:\/\//, ""))
   const websiteHref = $derived(
     website && $profile?.website()?.match(/^https?:\/\//)
@@ -52,7 +49,6 @@
   )
 
   let bannerLoading = $state(false)
-  let followLoading = $state(false)
   let bannerInput: HTMLInputElement | undefined = $state()
 
   const copyNpub = () => clip(nip19.npubEncode(target))
@@ -62,27 +58,6 @@
   const createPost = () => pushModal(NoteCreate)
 
   const openChat = () => goToMessages([target])
-
-  const toggleFollow = async () => {
-    if (isSelf) {
-      return
-    }
-
-    followLoading = true
-
-    try {
-      if (isFollowing) {
-        await $followLists.unfollow(target).then(publish)
-      } else {
-        await $followLists.follow(["p", target]).then(publish)
-      }
-    } catch (e) {
-      console.error(e)
-      pushToast({theme: "error", message: "Failed to update your follows."})
-    } finally {
-      followLoading = false
-    }
-  }
 
   const openBannerPicker = () => bannerInput?.click()
 
@@ -183,17 +158,9 @@
                         Create post
                       </Button>
                     {:else}
-                      <Button
-                        class="button button-neutral flex-1 sm:button-sm sm:flex-none"
-                        disabled={followLoading}
-                        onclick={toggleFollow}>
-                        {#if followLoading}
-                          <Spinner size="xs" />
-                        {:else}
-                          <Icon icon={UserPlus} size={4} />
-                        {/if}
-                        {isFollowing ? "Unfollow" : "Follow"}
-                      </Button>
+                      <ProfileFollowButton
+                        pubkey={target}
+                        class="button button-neutral flex-1 sm:button-sm sm:flex-none" />
                       <Button
                         class="button button-primary flex-1 sm:button-sm sm:flex-none"
                         onclick={openChat}>
