@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {fly} from "@lib/transition"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
@@ -42,7 +41,7 @@
 
 <Page>
   <PageBar>
-    <div class="flex items-center justify-between gap-4" in:fly>
+    <div class="flex items-center justify-between gap-4">
       <div class="truncate min-w-0 flex items-center gap-2 whitespace-nowrap">
         <Icon icon={Bookmark} size={6} />
         <strong>Bookmarks</strong>

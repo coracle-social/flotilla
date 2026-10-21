@@ -109,7 +109,15 @@
   {#if $board}
     <header class="flex flex-col border-b border-line bg-surface">
       {#if $board.image()}
-        <img src={$board.image()} alt="" class="h-40 w-full object-cover" />
+        <!-- A blurred copy fills the band, so the cover shows whole at any width rather than cropped -->
+        <div class="relative flex justify-center overflow-hidden bg-surface-more">
+          <img
+            src={$board.image()}
+            alt=""
+            aria-hidden="true"
+            class="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl" />
+          <img src={$board.image()} alt="" class="relative max-h-72 w-auto max-w-full" />
+        </div>
       {/if}
       <div class="flex flex-col gap-3 p-4">
         {#if $board.description()}
