@@ -84,7 +84,7 @@ const getRelayAccess = (
   return {status: RelayAccessStatus.Connected}
 }
 
-const deriveSocket = (url: string) =>
+export const deriveSocket = (url: string) =>
   fromApp($app => {
     const socket = $app.pool.get(url)
 

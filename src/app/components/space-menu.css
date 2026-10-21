@@ -13,8 +13,8 @@
       @apply mt-sai bg-backdrop mb-0 w-full max-w-full grow border-0;
 
       /* Reserve room for the fixed mobile primary nav (h-14) plus the bottom
-         safe-area inset, otherwise the connection status row at the bottom of
-         the menu is hidden behind the nav footer on devices with an inset. */
+         safe-area inset, otherwise the bottom of the menu is hidden behind the
+         nav footer on devices with an inset. */
       padding-bottom: calc(var(--saib) + 4rem);
 
       .tip[data-tip]::before {
@@ -79,26 +79,6 @@
     .space-menu__scroll {
       @apply min-h-0 flex-1 gap-3 overflow-x-hidden overflow-y-auto;
     }
-
-    .space-menu__status {
-      @apply flex w-full flex-col gap-2;
-    }
-
-    .space-menu__status > .card {
-      @apply w-full gap-1 border-0 bg-transparent p-0 shadow-none;
-    }
-
-    .space-menu__status-link {
-      @apply h-auto w-full border-0 bg-transparent p-0 shadow-none;
-
-      &:hover {
-        @apply text-content border-0 bg-transparent;
-      }
-    }
-
-    .space-menu__status-link .flex {
-      @apply justify-start px-1;
-    }
   }
 
   @media (max-width: 768px) {
@@ -120,16 +100,6 @@
         color: var(--content);
         box-shadow: none;
       }
-    }
-
-    [data-fl-theme="clay"] .space-menu__status-link:hover,
-    [data-fl-theme="clay"] .space-menu__status-link:active {
-      transform: none;
-      box-shadow: none;
-    }
-
-    .space-menu__status .text-sm {
-      @apply font-medium;
     }
   }
 }

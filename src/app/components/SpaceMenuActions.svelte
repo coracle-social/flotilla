@@ -10,6 +10,7 @@
   import Bell from "@assets/icons/bell.svg?dataurl"
   import BellOff from "@assets/icons/bell-off.svg?dataurl"
   import CreditCard from "@assets/icons/card.svg?dataurl"
+  import Pulse from "@assets/icons/pulse.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -19,6 +20,7 @@
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceActionItems from "@app/components/SpaceActionItems.svelte"
+  import SpaceConnectionStatus from "@app/components/SpaceConnectionStatus.svelte"
   import {deriveUserIsSpaceMember} from "@app/features/spaces/membership"
   import {openCheckout} from "@app/features/spaces/payments"
   import {user} from "@app/core/user"
@@ -58,6 +60,8 @@
     pushModal($relay?.isPaid() ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet})
 
   const showActionItems = () => pushModal(SpaceActionItems, {url}, {replaceState: sheet})
+
+  const showConnectionStatus = () => pushModal(SpaceConnectionStatus, {url}, {replaceState: sheet})
 
   const contactOwner = () => goToMessages([$relay!.pubkey!], {replaceState: sheet})
 
@@ -133,6 +137,7 @@
   {/if}
 {/snippet}
 
+{@render actionButton(showConnectionStatus, Pulse, "Connection status")}
 {@render actionButton(createInvite, LinkRound, "Create Invite")}
 {#if $permissions.review}
   {@render actionButton(
