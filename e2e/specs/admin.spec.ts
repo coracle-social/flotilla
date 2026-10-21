@@ -715,11 +715,19 @@ test("US-099 configure a hosted relay", async ({seed, as}) => {
   const editor = dialog(alice, "Edit Space")
 
   await editor.getByPlaceholder("My Space").fill("Harbor")
-  await editor.locator("textarea").fill("Where the fleet ties up.")
+  await editor
+    .locator("textarea")
+    .fill(
+      "Where the fleet ties up. House rules at https://harbor.example/rules, and everyone who " +
+        "moors here keeps to them. Hail the harbourmaster before casting off, leave the pontoon " +
+        "as you found it, and keep the outer wall clear for visitors between April and October.",
+    )
   await editor.getByRole("button", {name: "Save Changes"}).click()
 
   await expect(alice.getByRole("heading", {name: "Harbor", exact: true})).toBeVisible()
   await expect(alice.getByText("Where the fleet ties up.")).toBeVisible()
+  await expect(alice.getByRole("link", {name: "harbor.example/rules"})).toBeVisible()
+  await expect(alice.getByRole("button", {name: "Read more"})).toBeVisible()
 
   const publicRead = settingToggle(alice, "Public read")
 

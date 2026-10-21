@@ -17,6 +17,7 @@
   import ToggleInput from "@lib/components/ToggleInput.svelte"
   import Tooltip from "@lib/components/Tooltip.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
+  import Content from "@app/components/Content.svelte"
   import RelayDetailMenu from "@app/components/hosting/RelayDetailMenu.svelte"
   import CustomDomainModal from "@app/components/hosting/CustomDomainModal.svelte"
   import {pushModal} from "@app/navigation/dialogs"
@@ -151,7 +152,13 @@
           wss://{host}
         </Link>
         {#if relay.info_description.trim()}
-          <p class="mt-2 text-sm text-content-muted">{relay.info_description}</p>
+          <div class="mt-2 text-sm text-content-muted">
+            <Content
+              event={{content: relay.info_description, tags: []}}
+              expandMode="inline"
+              minLength={200}
+              maxLength={320} />
+          </div>
         {/if}
       </div>
     </div>

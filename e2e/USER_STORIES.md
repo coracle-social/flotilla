@@ -1726,6 +1726,8 @@ Acceptance:
 
 - "Edit details" updates the relay's name and description on its detail card,
   and the activity feed lists the relay's creation event.
+  The description renders as content, so a url in it is a link, and a long one
+  is cut short behind "Read more".
 - Toggling "Public read" on persists across a reload.
 - On the free plan, the Blossom and LiveKit toggles are disabled with a "Not
   available on your current plan" explanation.
