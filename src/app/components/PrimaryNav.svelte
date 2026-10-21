@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import cx from "classnames"
   import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import Compass from "@assets/icons/compass.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
@@ -51,15 +50,12 @@
   )
 </script>
 
-<div
-  class={cx("primary-nav ml-sai mt-sai mb-sai hidden md:flex", {
-    "justify-between": PLATFORM_RELAYS.length === 0,
-  })}>
+<div class="primary-nav ml-sai mt-sai mb-sai hidden md:flex">
   <PrimaryNavSpaces />
   {#if PLATFORM_RELAYS.length > 0}
     <Divider />
   {/if}
-  <div class="flex flex-col items-center">
+  <div class="mt-auto flex flex-col items-center">
     <PrimaryNavItem title="Settings" href="/settings/profile" prefix="/settings">
       {#if $userProfile?.picture()}
         <ImageIcon alt="Settings" src={$userProfile.picture()!} class="rounded-full" size={10} />

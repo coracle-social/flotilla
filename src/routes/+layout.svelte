@@ -13,6 +13,7 @@
   import {setNip55Plugin} from "@welshman/signer"
   import * as util from "@welshman/util"
   import * as lib from "@welshman/lib"
+  import * as domain from "@welshman/domain"
   import * as plugins from "@welshman/app"
   import {isMobile, documentActive} from "@lib/html"
   import {syncKeyboard} from "@lib/keyboard"
@@ -61,6 +62,7 @@
     nip19,
     theme,
     notifications,
+    kinds: domain,
     ...plugins,
     ...lib,
     ...util,
