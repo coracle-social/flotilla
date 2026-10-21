@@ -24,6 +24,8 @@
   <StatusIndicator class="bg-error">Signer Failed</StatusIndicator>
 {:else if $access.status === RelayAccessStatus.Denied}
   <StatusIndicator class="bg-error">Access Denied</StatusIndicator>
+{:else if $access.status === RelayAccessStatus.Untrusted}
+  <StatusIndicator class="bg-warning">Untrusted</StatusIndicator>
 {:else}
   <StatusIndicator class="bg-success">Connected</StatusIndicator>
 {/if}

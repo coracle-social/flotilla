@@ -8,17 +8,15 @@
   import {displayRelayUrl} from "@welshman/util"
   import {AuthStatus, SocketStatus} from "@welshman/net"
   import Button from "@lib/components/Button.svelte"
-  import FieldInline from "@lib/components/FieldInline.svelte"
   import Link from "@lib/components/Link.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import ModalHeader from "@lib/components/ModalHeader.svelte"
-  import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
-  import ModalTitle from "@lib/components/ModalTitle.svelte"
   import StatusIndicator from "@lib/components/StatusIndicator.svelte"
+  import ProfileLink from "@app/components/ProfileLink.svelte"
+  import RelayIcon from "@app/components/RelayIcon.svelte"
   import SocketStatusIndicator from "@app/components/SocketStatusIndicator.svelte"
-  import {relayStats} from "@app/core/plugins"
+  import {relays, relayStats} from "@app/core/plugins"
   import {RelayAccessStatus, deriveRelayAccess, deriveSocket} from "@app/core/relays"
   import {relaysPendingTrust} from "@app/core/ingest"
   import {userSettingsValues} from "@app/core/settings"
@@ -31,6 +29,7 @@
 
   const {url}: Props = $props()
 
+  const relay = $relays.one(url)
   const access = deriveRelayAccess(url)
   const socket = deriveSocket(url)
   const stats = $relayStats.one(url)
@@ -39,25 +38,52 @@
   const back = () => history.back()
 </script>
 
-<Modal>
+{#snippet stat(value: number, label: string)}
+  <div class="flex flex-col rounded-xl bg-surface-more p-3">
+    <span class="text-lg font-bold">{value.toLocaleString()}</span>
+    <span class="text-xs text-content-muted">{label}</span>
+  </div>
+{/snippet}
+
+<Modal label="Connection status">
   <ModalBody>
-    <ModalHeader>
-      <ModalTitle>Connection Status</ModalTitle>
-      <ModalSubtitle>
-        To <span class="text-primary">{displayRelayUrl(url)}</span>
-      </ModalSubtitle>
-    </ModalHeader>
+    <div class="flex min-w-0 items-center gap-3">
+      <RelayIcon {url} size={10} class="shrink-0" />
+      <div class="flex min-w-0 flex-col">
+        <strong class="text-2xl">Connection Status</strong>
+        <span class="truncate text-primary">{displayRelayUrl(url)}</span>
+      </div>
+    </div>
+    <div class="card card-sm flex flex-col gap-2">
+      <SocketStatusIndicator {url} />
+      <p class="text-sm text-content-muted">
+        {#if $access.status === RelayAccessStatus.Connecting}
+          Opening a connection to this space.
+        {:else if $access.status === RelayAccessStatus.Disconnected}
+          Not connected right now. The app reconnects when it needs this space.
+        {:else if $access.status === RelayAccessStatus.Unreachable}
+          This space couldn't be reached. It may be down, or your network may be blocking it.
+        {:else if $access.status === RelayAccessStatus.Authenticating}
+          Signing in to this space.
+        {:else if $access.status === RelayAccessStatus.AwaitingSignature}
+          Waiting for your signer to approve signing in.
+        {:else if $access.status === RelayAccessStatus.SignerFailed}
+          Your signer couldn't sign you in.
+          <Link class="link" href={pages.settingsProfile.path()}>Check your signer</Link>
+        {:else if $access.status === RelayAccessStatus.Denied}
+          This space is refusing your requests. It said: {$access.reason}
+        {:else if $access.status === RelayAccessStatus.Untrusted}
+          This space sends events without signatures, which are held until you choose to trust it.
+        {:else}
+          Connected and working normally.
+        {/if}
+      </p>
+    </div>
     <div class="card card-sm flex flex-col gap-3">
-      <FieldInline>
-        {#snippet label()}Status{/snippet}
-        {#snippet input()}<SocketStatusIndicator {url} />{/snippet}
-      </FieldInline>
-      {#if $access.status === RelayAccessStatus.Denied}
-        <p class="text-sm text-content-muted">The space said: {$access.reason}</p>
-      {/if}
-      <FieldInline>
-        {#snippet label()}Connection{/snippet}
-        {#snippet input()}
+      <strong class="text-lg">Connection</strong>
+      <dl class="detail-list">
+        <dt>Socket</dt>
+        <dd>
           {#if $socket.status === SocketStatus.Open}
             <StatusIndicator class="bg-success">Open</StatusIndicator>
           {:else if $socket.status === SocketStatus.Opening}
@@ -69,11 +95,9 @@
           {:else}
             <StatusIndicator class="bg-error">Error</StatusIndicator>
           {/if}
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}Authentication{/snippet}
-        {#snippet input()}
+        </dd>
+        <dt>Authentication</dt>
+        <dd>
           {#if $socket.auth.status === AuthStatus.Ok}
             <StatusIndicator class="bg-success">Authenticated</StatusIndicator>
           {:else if $socket.auth.status === AuthStatus.Requested}
@@ -89,11 +113,9 @@
           {:else}
             <StatusIndicator class="bg-gray-500">Not requested</StatusIndicator>
           {/if}
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}Signatures{/snippet}
-        {#snippet input()}
+        </dd>
+        <dt>Signatures</dt>
+        <dd>
           {#if $relaysPendingTrust.includes(url)}
             <StatusIndicator class="bg-warning">Unsigned events held</StatusIndicator>
           {:else if $userSettingsValues.trusted_relays.includes(url)}
@@ -101,11 +123,9 @@
           {:else}
             <StatusIndicator class="bg-success">Checked</StatusIndicator>
           {/if}
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}Signer{/snippet}
-        {#snippet input()}
+        </dd>
+        <dt>Signer</dt>
+        <dd>
           {#if $signerHealth.disconnected}
             <Link class="link" href={pages.settingsProfile.path()}>
               <StatusIndicator class="bg-error">Not responding</StatusIndicator>
@@ -119,69 +139,83 @@
           {:else}
             <StatusIndicator class="bg-success">OK</StatusIndicator>
           {/if}
-        {/snippet}
-      </FieldInline>
+        </dd>
+      </dl>
     </div>
+    {#if $relay}
+      {@const {pubkey, contact, software, version, limitation} = $relay}
+      <div class="card card-sm flex flex-col gap-3">
+        <strong class="text-lg">Space</strong>
+        <dl class="detail-list">
+          {#if pubkey}
+            <dt>Administrator</dt>
+            <dd><ProfileLink {pubkey} {url} /></dd>
+          {/if}
+          {#if contact}
+            <dt>Contact</dt>
+            <dd><span class="truncate">{contact}</span></dd>
+          {/if}
+          {#if software}
+            <dt>Software</dt>
+            <dd><span class="truncate">{software}</span></dd>
+          {/if}
+          {#if version}
+            <dt>Version</dt>
+            <dd>{version}</dd>
+          {/if}
+        </dl>
+        {#if limitation?.auth_required || limitation?.payment_required || limitation?.min_pow_difficulty}
+          <div class="flex flex-wrap gap-1">
+            {#if limitation.auth_required}
+              <span class="badge badge-warning">Auth Required</span>
+            {/if}
+            {#if limitation.payment_required}
+              <span class="badge badge-warning">Payment Required</span>
+            {/if}
+            {#if limitation.min_pow_difficulty}
+              <span class="badge badge-warning">Min PoW: {limitation.min_pow_difficulty}</span>
+            {/if}
+          </div>
+        {/if}
+      </div>
+    {/if}
     {#if $stats}
       <div class="card card-sm flex flex-col gap-3">
-        <FieldInline>
-          {#snippet label()}Connected{/snippet}
-          {#snippet input()}
-            <span class="text-sm">
-              {$stats.open_count}
-              {$stats.open_count === 1 ? "time" : "times"} since {formatTimestampAsDate(
-                $stats.first_seen,
-              )}
-            </span>
-          {/snippet}
-        </FieldInline>
-        <FieldInline>
-          {#snippet label()}Last connected{/snippet}
-          {#snippet input()}
-            <span class="text-sm">
-              {$stats.last_open ? formatTimestampRelative($stats.last_open) : "Never"}
-            </span>
-          {/snippet}
-        </FieldInline>
-        <FieldInline>
-          {#snippet label()}Last disconnected{/snippet}
-          {#snippet input()}
-            <span class="text-sm">
-              {$stats.last_close ? formatTimestampRelative($stats.last_close) : "Never"}
-            </span>
-          {/snippet}
-        </FieldInline>
-        <FieldInline>
-          {#snippet label()}Requests{/snippet}
-          {#snippet input()}<span class="text-sm">{$stats.request_count}</span>{/snippet}
-        </FieldInline>
-        <FieldInline>
-          {#snippet label()}Events received{/snippet}
-          {#snippet input()}<span class="text-sm">{$stats.event_count}</span>{/snippet}
-        </FieldInline>
-        <FieldInline>
-          {#snippet label()}Publishes{/snippet}
-          {#snippet input()}
-            <span class="text-sm">
-              {$stats.publish_success_count} accepted, {$stats.publish_failure_count} rejected
-            </span>
-          {/snippet}
-        </FieldInline>
-        <FieldInline>
-          {#snippet label()}Notices{/snippet}
-          {#snippet input()}<span class="text-sm">{$stats.notice_count}</span>{/snippet}
-        </FieldInline>
-      </div>
-      <div class="card card-sm flex flex-col gap-2">
-        <strong>Recent connection errors</strong>
-        {#each recentErrors as timestamp (timestamp)}
-          <div class="flex justify-between gap-2 text-sm">
-            <span>{formatTimestamp(timestamp)}</span>
-            <span class="text-content-muted">{formatTimestampRelative(timestamp)}</span>
-          </div>
-        {:else}
-          <p class="text-sm text-content-muted">None recorded.</p>
-        {/each}
+        <strong class="text-lg">Activity</strong>
+        <div class="grid grid-cols-3 gap-2">
+          {@render stat($stats.open_count, "Connections")}
+          {@render stat($stats.request_count, "Requests")}
+          {@render stat($stats.event_count, "Events received")}
+          {@render stat($stats.publish_success_count, "Published")}
+          {@render stat($stats.publish_failure_count, "Rejected")}
+          {@render stat($stats.notice_count, "Notices")}
+        </div>
+        <dl class="detail-list">
+          <dt>First seen</dt>
+          <dd>{formatTimestampAsDate($stats.first_seen)}</dd>
+          <dt>Last connected</dt>
+          <dd>{$stats.last_open ? formatTimestampRelative($stats.last_open) : "Never"}</dd>
+          <dt>Last disconnected</dt>
+          <dd>{$stats.last_close ? formatTimestampRelative($stats.last_close) : "Never"}</dd>
+          <dt>Recent errors</dt>
+          <dd>
+            {#if recentErrors.length > 0}
+              <StatusIndicator class="bg-error">{recentErrors.length}</StatusIndicator>
+            {:else}
+              <StatusIndicator class="bg-success">None</StatusIndicator>
+            {/if}
+          </dd>
+        </dl>
+        {#if recentErrors.length > 0}
+          <ul class="flex flex-col gap-1 text-sm">
+            {#each recentErrors as timestamp (timestamp)}
+              <li class="flex justify-between gap-2">
+                <span>{formatTimestamp(timestamp)}</span>
+                <span class="text-content-muted">{formatTimestampRelative(timestamp)}</span>
+              </li>
+            {/each}
+          </ul>
+        {/if}
       </div>
     {/if}
   </ModalBody>

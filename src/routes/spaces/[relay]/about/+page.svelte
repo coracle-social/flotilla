@@ -10,7 +10,6 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
-  import ProfileLink from "@app/components/ProfileLink.svelte"
   import SpaceMembersSummary from "@app/components/SpaceMembersSummary.svelte"
   import SpaceFeaturedContent from "@app/components/SpaceFeaturedContent.svelte"
   import {relays} from "@app/core/plugins"
@@ -59,46 +58,6 @@
             <Icon icon={ShieldUser} size={4} />
             Privacy Policy
           </Link>
-        {/if}
-      </div>
-    {/if}
-    {#if $relay}
-      {@const {pubkey, software, version, limitation} = $relay}
-      <div class="flex flex-wrap gap-1">
-        {#if pubkey}
-          <div class="badge badge-neutral">
-            <span>Administrator: <ProfileLink unstyled {pubkey} /></span>
-          </div>
-        {/if}
-        {#if $relay?.contact}
-          <div class="badge badge-neutral">
-            <span>Contact: {$relay.contact}</span>
-          </div>
-        {/if}
-        {#if software}
-          <div class="badge badge-neutral">
-            <span>Software: {software}</span>
-          </div>
-        {/if}
-        {#if version}
-          <div class="badge badge-neutral">
-            <span>Version: {version}</span>
-          </div>
-        {/if}
-        {#if limitation?.auth_required}
-          <p class="badge badge-warning">
-            <span>Auth Required</span>
-          </p>
-        {/if}
-        {#if limitation?.payment_required}
-          <p class="badge badge-warning">
-            <span>Payment Required</span>
-          </p>
-        {/if}
-        {#if limitation?.min_pow_difficulty}
-          <p class="badge badge-warning">
-            <span>Min PoW: {limitation?.min_pow_difficulty}</span>
-          </p>
         {/if}
       </div>
     {/if}
