@@ -276,7 +276,6 @@ registered by its owner with `registerRetention`:
 - relay membership kinds (`registerMembership`)
 - room state, and room membership changes that tag the user (`registerRooms`)
 - `COMMAND` definitions (`registerCommands`)
-- the space owner's featured content (`registerFeatured`)
 
 A note from the wider network carries no `h` tag and is not kept, since nothing asks for it twice.
 
@@ -373,7 +372,7 @@ is joined. Each call tears down the previous run.
   grants, the latest message per room, and admins, members, pins and join requests for the space
   on screen
 - `registerMembership`: the relay member list and the user's own relay membership events
-- `registerRoles`, `registerFeatured`, `registerCalls`, `registerPinboards`: their kind for the
+- `registerRoles`, `registerCalls`, `registerPinboards`: their kind for the
   space on screen
 - `registerMessages`: gift wraps from the user's messaging relays, only when `shouldUnwrap` is on
 - `registerBookmarks`: the user's bookmarks; `registerHomeNotifications`: the home notification feed

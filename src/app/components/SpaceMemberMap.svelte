@@ -77,7 +77,7 @@
         const target = document.createElement("div")
 
         target.className =
-          "flex size-11 items-center justify-center rounded-full border border-line bg-surface shadow-lg"
+          "flex size-11 items-center justify-center rounded-full border border-line bg-surface"
 
         avatars.push(
           mount(ProfileCircle, {
@@ -91,7 +91,7 @@
             .marker([pin.latitude, pin.longitude], {
               title: pin.display,
               // An empty className replaces the white box leaflet gives a div icon.
-              icon: leaflet.divIcon({html: target, className: "", iconSize: [48, 48]}),
+              icon: leaflet.divIcon({html: target, className: "", iconSize: [44, 44]}),
             })
             .on("click", () => openProfile(pin.pubkey))
             .addTo(map),
@@ -115,4 +115,4 @@
 </script>
 
 <!-- Leaflet's panes sit at z-index 400, which covers a modal without a stacking context here. -->
-<div bind:this={element} class="isolate min-h-96 flex-1 overflow-hidden rounded-2xl"></div>
+<div bind:this={element} class="isolate min-h-96 flex-1 overflow-hidden"></div>

@@ -156,7 +156,7 @@ test("US-103 see and clear unread indicators", async ({seed, as}) => {
   await expect(message(bob, "the server is on fire")).toBeVisible()
 
   // Reading it clears the room's dot...
-  await bob.getByRole("link", {name: "Space Details"}).click()
+  await bob.getByRole("link", {name: "About", exact: true}).click()
 
   await expect(general).toBeVisible()
   await expect(unreadDot(general)).toHaveCount(0)
@@ -216,7 +216,7 @@ test("US-104 mute a room or a whole space", async ({seed, as}) => {
   await expect(mutedRoomBell(random)).toHaveCount(0)
 
   // Step out of both rooms, so either one is free to raise a dot
-  await alice.getByRole("link", {name: "Space Details"}).click()
+  await alice.getByRole("link", {name: "About", exact: true}).click()
 
   const bob = await as(users.bob, roomPath(space.url, "general"))
 

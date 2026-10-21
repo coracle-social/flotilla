@@ -1,7 +1,7 @@
 import {derived, readable, writable} from "svelte/store"
 import {ago, difference, MINUTE, now, simpleCache} from "@welshman/lib"
 import {ROOM_CREATE_PERMISSION, hexTags, tagValues} from "@welshman/util"
-import {Events, RelayManagement, Relays} from "@welshman/app"
+import {Events, RelayManagement} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {user} from "@app/core/user"
@@ -248,13 +248,6 @@ export const deriveSpacePermissions = (url?: string) =>
 // Holding any management method makes someone staff, for the room permissions NIP-86 has no method for.
 export const deriveUserIsSpaceStaff = (url?: string) =>
   derived(deriveSpaceSupportedMethods(url), $methods => $methods.length > 0)
-
-// The one identity a space names as its own, in its NIP-11 `pubkey`.
-export const deriveUserIsSpaceOwner = (url: string) =>
-  derived(
-    [user, fromApp($app => $app.use(Relays).one(url))],
-    ([$user, $relay]) => $user.pubkey === $relay?.pubkey,
-  )
 
 export const deriveUserCanCreateRoom = (url: string) =>
   derived(

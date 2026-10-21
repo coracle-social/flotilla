@@ -39,7 +39,7 @@
     <li>
       <Button onclick={spaceAdmins}>
         <Icon icon={ShieldUser} />
-        Admins
+        View Admins
       </Button>
     </li>
   {/if}

@@ -12,7 +12,6 @@ import {registerPomade} from "@app/features/pomade"
 import {registerPush} from "@app/features/push"
 import {registerSpaces} from "@app/features/spaces"
 import {registerCalls} from "@app/features/spaces/calls"
-import {registerFeatured} from "@app/features/spaces/featured"
 import {registerRoles} from "@app/features/spaces/roles"
 import {registerMembership} from "@app/features/spaces/membership"
 import {registerPinboards} from "@app/features/spaces/pinboards"
@@ -40,7 +39,6 @@ export const registerAll = () => {
     registerPush()
     registerSpaces()
     registerCalls()
-    registerFeatured()
     registerRoles()
     registerMembership()
     registerPinboards()

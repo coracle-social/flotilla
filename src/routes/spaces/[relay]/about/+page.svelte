@@ -10,8 +10,7 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
-  import SpaceMembersSummary from "@app/components/SpaceMembersSummary.svelte"
-  import SpaceFeaturedContent from "@app/components/SpaceFeaturedContent.svelte"
+  import SpaceDirectory from "@app/components/SpaceDirectory.svelte"
   import {relays} from "@app/core/plugins"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
@@ -27,7 +26,7 @@
     <Icon icon={Home} />
   {/snippet}
   {#snippet title()}
-    <strong>Space Details</strong>
+    <strong>About</strong>
   {/snippet}
 </SpaceBar>
 
@@ -62,12 +61,5 @@
       </div>
     {/if}
   </div>
-  <div class="grid grid-cols-1 gap-4 @2xl:grid-cols-3">
-    <div class="@2xl:col-span-2 flex flex-col gap-4">
-      <SpaceFeaturedContent {url} />
-    </div>
-    <div class="flex flex-col gap-4">
-      <SpaceMembersSummary {url} />
-    </div>
-  </div>
+  <SpaceDirectory {url} />
 </PageContent>

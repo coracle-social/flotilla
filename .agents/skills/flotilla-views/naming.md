@@ -51,7 +51,7 @@ Eleven components are a bare entity, being the root of their feature: `Chat`, `C
 
 Don't follow these:
 
-- Verb-first or verb-in-the-middle: `EditFeaturedContent`, `ShareEvent`, `RoleAddMembers` (next
+- Verb-first or verb-in-the-middle: `ShareEvent`, `RoleAddMembers` (next
   to `RoomMembersAdd`), `WalletUpdateReceivingAddress`, `NewNotificationSound`, `MenuSettings`.
 - `Modal` and `Dialog` suffixes: `IconPickerModal`, `ImageInputModal`, `VoiceRoomJoinDialog`,
   `VoiceCallAudioSettingsDialog`, and hosting's `PaymentDialog`, `PlanModal`,

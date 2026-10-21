@@ -47,7 +47,7 @@ domain `Relay`. These fields drive protocol decisions:
 | `hasNip(29)` | whether the space has rooms, read off `relays.get().get(url)` or `$relays.one(url)`. Without it everything lives in the space chat (`pages.spaceChat`): `shareEvent` (`src/app/features/share.ts`), room search, notification grouping, `SpaceMenuNavItems`, `SpaceMenuRooms` |
 | `hasNip(70)` | whether space content is marked protected (below) |
 | `self` | the relay's own pubkey, the trust anchor for relay-signed state |
-| `pubkey` | the space's owner, who writes space-wide content that has no other author (`deriveUserIsSpaceOwner`) |
+| `pubkey` | the space's owner |
 | `redirect_to` | the relay has moved. The space layout offers `SpaceRedirect`, which runs `roomLists.migrateRelay` and `goToMovedSpace` |
 | `hasNip(50)`, `hasNip("BUD-02")`, `hasNip("9a")` | search, blossom uploads, push |
 
@@ -61,10 +61,7 @@ author isn't the relay's `self`, and re-check when NIP-11 loads. For a relay-aut
 plugin, read `$events.relaySignedForUrl(url, filters)`, which keeps only events signed by that
 `self` key, rather than a bare `$events.forUrl`.
 
-The app signs everything it publishes with the user's own key. Space-wide content with no author of
-its own belongs to the space's owner, the pubkey NIP-11 names: featured content
-(`setFeaturedContent` in `src/app/features/spaces/featured.ts`) is published by that person and read back scoped to
-them, so `deriveUserIsSpaceOwner(url)` is what shows the editor.
+The app signs everything it publishes with the user's own key.
 
 The library is written by its members. A shelf or a pin is signed with the member's own key and
 published to the space like any other space content, so the library reads every `PINBOARD` seen on
@@ -299,8 +296,7 @@ In order of preference:
    `getEventPath`, feed grouping), where no single reader applies.
 
 When welshman lacks a kind or a getter, add it there rather than working around it in the app. A
-tag spec is the right tool only for a tag nothing else will read, like the `content` tags on
-featured-content app data.
+tag spec is the right tool only for a tag nothing else will read.
 
 ### Known exceptions
 
@@ -316,7 +312,7 @@ These predate the rule or are waiting on welshman. Don't copy them; fix one when
   (`VANISH`).
 - **Getter exists but bypassed:** calendar `start`/`end` in `src/app/features/feeds.ts` and the calendar page; poll `response`
   tags in `PollVotes`; `p` tags of `RELAY_ADD_MEMBER`, `ROOM_ADD_MEMBER` and
-  `ROOM_CREATE_PERMISSION` (`SpaceMembersSummary`, `RoomItemAddMember`, `src/app/features/spaces/management.ts`);
+  `ROOM_CREATE_PERMISSION` (`RoomItemAddMember`, `src/app/features/spaces/management.ts`);
   comment `E`/`A` tags in the list pages and `src/app/features/spaces/classifieds.ts`; `imeta` unpacking in
   `src/lib/media.ts` and `Conversation.svelte`.
 - **Getter missing upstream:** role ids on `member` tags (`src/app/features/spaces/roles.ts`); the legacy `name`

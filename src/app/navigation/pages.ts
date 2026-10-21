@@ -144,12 +144,6 @@ export const spaceAdmin = defineRoute("/spaces/[relay]/admin", {
   title: () => "Space Administration",
 })
 
-export const spaceDirectory = defineRoute("/spaces/[relay]/directory", {
-  encode: encodeSpace,
-  decode: decodeSpace,
-  title: () => "Members",
-})
-
 type MessagesParams = {url: string; at?: number}
 
 const decodeAt = (search: URLSearchParams) => parseInt(search.get("at") ?? "") || undefined
@@ -358,7 +352,6 @@ const pageRoutes: Record<PageId, PageRoute> = {
   [space.id]: space,
   [spaceAbout.id]: spaceAbout,
   [spaceAdmin.id]: spaceAdmin,
-  [spaceDirectory.id]: spaceDirectory,
   [spaceChat.id]: spaceChat,
   [room.id]: room,
   [threads.id]: threads,

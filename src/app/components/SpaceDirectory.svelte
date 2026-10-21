@@ -9,9 +9,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
-  import PageContent from "@lib/components/PageContent.svelte"
   import {decodeGeohash} from "@lib/geohash"
-  import SpaceBar from "@app/components/SpaceBar.svelte"
   import SpaceMember from "@app/components/SpaceMember.svelte"
   import SpaceMemberMap, {type MemberPin} from "@app/components/SpaceMemberMap.svelte"
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
@@ -21,13 +19,14 @@
   import {relayMemberLists, relayRoles} from "@app/core/plugins"
   import {getProfileGeohash} from "@app/features/location"
   import {deriveProfilesByPubkey} from "@app/features/people"
-  import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
-  import type {PageProps} from "./$types"
 
-  const {params}: PageProps = $props()
+  type Props = {
+    url: string
+  }
 
-  const {url} = pages.spaceDirectory.decode(params)
+  const {url}: Props = $props()
+
   const roles = $relayRoles.forUrl(url).$
   const members = $relayMemberLists.forUrl(url)
   const memberRoles = deriveSpaceMemberRoles(url)
@@ -100,58 +99,62 @@
   let showMap = $state(false)
 </script>
 
-<SpaceBar>
-  {#snippet leading()}
-    <Icon icon={UsersGroup} />
-  {/snippet}
-  {#snippet title()}
-    <strong>Members</strong>
-  {/snippet}
-  {#snippet action()}
-    <Button class="button button-primary button-sm" onclick={inviteMembers}>
-      <Icon icon={AddCircle} />
-      Invite people
-    </Button>
-    {#if $permissions.directoryMenu}
-      <MenuButton
-        class="button button-neutral button-sm button-square"
-        aria-label="More options"
-        iconSize={4}
-        component={SpaceDirectoryMenu}
-        componentProps={{url}} />
-    {/if}
-  {/snippet}
-</SpaceBar>
-
-<PageContent class="@container flex flex-col gap-4 p-4">
-  <div class="flex items-center gap-2">
-    <label class="input input-group flex w-full items-center gap-2 card">
-      <Icon size={4} icon={Magnifier} />
-      <input
-        bind:value={term}
-        class="min-w-0 grow"
-        type="text"
-        placeholder="Search people or roles..." />
-    </label>
-    <Button
-      class="button button-input shrink-0 {showMap ? 'button-primary' : 'button-neutral'}"
-      aria-pressed={showMap}
-      onclick={toggleMap}>
-      <Icon size={4} icon={MapIcon} />
-      Map
-    </Button>
+<section class="card card-media flex shrink-0 flex-col">
+  <div class="flex flex-col gap-3 border-b border-line p-4">
+    <div class="flex items-center justify-between gap-2">
+      <h2 class="flex items-center gap-2 text-lg font-bold">
+        <Icon icon={UsersGroup} />
+        Members
+        <span class="font-normal text-content-muted">{$memberList.length}</span>
+      </h2>
+      <div class="flex items-center gap-2">
+        <Button class="button button-primary button-sm" onclick={inviteMembers}>
+          <Icon icon={AddCircle} />
+          Invite people
+        </Button>
+        {#if $permissions.directoryMenu}
+          <MenuButton
+            class="button button-neutral button-sm button-square"
+            aria-label="More options"
+            iconSize={4}
+            component={SpaceDirectoryMenu}
+            componentProps={{url}} />
+        {/if}
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <label class="input input-group flex w-full items-center gap-2">
+        <Icon size={4} icon={Magnifier} />
+        <input
+          bind:value={term}
+          class="min-w-0 grow"
+          type="text"
+          placeholder="Search people or roles..." />
+      </label>
+      <Button
+        class="button button-input shrink-0 {showMap ? 'button-primary' : 'button-neutral'}"
+        aria-pressed={showMap}
+        onclick={toggleMap}>
+        <Icon size={4} icon={MapIcon} />
+        Map
+      </Button>
+    </div>
   </div>
   {#if showMap && visiblePins.length > 0}
     <SpaceMemberMap {url} pins={visiblePins} />
-  {:else if showMap}
-    <p class="flex flex-col items-center py-20 text-center">No locations found.</p>
-  {:else if visibleMembers.length === 0}
-    <p class="flex flex-col items-center py-20 text-center">No members found.</p>
   {:else}
-    <div class="grid grid-cols-1 gap-4 @3xl:grid-cols-2 @5xl:grid-cols-3">
-      {#each visibleMembers as { pubkey, roleList } (pubkey)}
-        <SpaceMember {url} {pubkey} roles={roleList} />
-      {/each}
+    <div class="bg-surface-less p-4">
+      {#if showMap}
+        <p class="py-20 text-center">No locations found.</p>
+      {:else if visibleMembers.length === 0}
+        <p class="py-20 text-center">No members found.</p>
+      {:else}
+        <div class="grid grid-cols-1 gap-4 @3xl:grid-cols-2 @5xl:grid-cols-3">
+          {#each visibleMembers as { pubkey, roleList } (pubkey)}
+            <SpaceMember {url} {pubkey} roles={roleList} />
+          {/each}
+        </div>
+      {/if}
     </div>
   {/if}
-</PageContent>
+</section>

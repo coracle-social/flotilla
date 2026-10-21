@@ -88,7 +88,7 @@ const setting = (page: Page, label: string) =>
 
 const settingToggle = (page: Page, label: string) => setting(page, label).getByRole("checkbox")
 
-test("US-092 edit a space's profile and featured content", async ({seed, as}) => {
+test("US-092 edit a space's profile", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
 
@@ -129,31 +129,10 @@ test("US-092 edit a space's profile and featured content", async ({seed, as}) =>
   await expect(admin.getByText("Where the fleet ties up.")).toBeVisible()
   await expect(admin.locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}"]`).first()).toBeVisible()
 
-  const featured = admin
-    .locator(".card")
-    .filter({has: admin.getByRole("heading", {name: "Featured"})})
-
-  await featured.getByRole("button").first().click()
-
-  const featuredEditor = dialog(admin, "Featured Content")
-
-  await featuredEditor.getByRole("button", {name: "Add content"}).click()
-  await featuredEditor.getByPlaceholder("URL or nevent...").fill("Read the harbor rules first")
-  await featuredEditor.getByRole("button", {name: "Save changes"}).click()
-
-  await expect(admin.getByRole("alert")).toContainText("Featured content updated!")
-  await expect(featured.getByText("Read the harbor rules first")).toBeVisible()
-
   // What admin published reaches every visitor
   const bob = await as(users.bob, spacePath(url) + "/about")
 
   await expect(bob.getByRole("heading", {name: "Harbor"})).toBeVisible()
-
-  const bobsFeatured = bob
-    .locator(".card")
-    .filter({has: bob.getByRole("heading", {name: "Featured"})})
-
-  await expect(bobsFeatured.getByText("Read the harbor rules first")).toBeVisible()
 })
 
 test("US-093 create roles and assign them", async ({seed, as}) => {
@@ -169,7 +148,7 @@ test("US-093 create roles and assign them", async ({seed, as}) => {
   })
 
   const {url} = scenario.space("space")
-  const admin = await as(users.admin, spacePath(url) + "/directory")
+  const admin = await as(users.admin, spacePath(url) + "/about")
 
   await expect(memberCard(admin, "Bob Barnacle")).toBeVisible()
 
@@ -293,7 +272,7 @@ test("US-094 invite people to a space", async ({seed, as}) => {
 
   // Adding members opened over the invite, so saving goes back to it.
   await invite.getByRole("button", {name: "Done"}).click()
-  await page.locator(".secondary-nav").getByRole("link", {name: "Directory"}).click()
+  await page.locator(".secondary-nav").getByRole("link", {name: "About", exact: true}).click()
 
   await expect(memberCard(page, "Nadia Newcomer")).toBeVisible()
 
@@ -320,7 +299,7 @@ test("US-095 remove, ban, and restore members", async ({seed, as}) => {
   })
 
   const {url} = scenario.space("space")
-  const admin = await as(users.admin, spacePath(url) + "/directory")
+  const admin = await as(users.admin, spacePath(url) + "/about")
 
   await memberCard(admin, "Bob Barnacle").getByRole("button").last().click()
   await menuItem(admin, "Remove member").click()
@@ -584,7 +563,7 @@ test("US-130 share out admin permissions", async ({seed, as}) => {
   })
 
   const {url} = scenario.space("space")
-  const admin = await as(users.admin, spacePath(url) + "/directory")
+  const admin = await as(users.admin, spacePath(url) + "/about")
 
   await memberCard(admin, "Bob Barnacle").getByRole("button").last().click()
   await menuItem(admin, "Edit permissions").click()
@@ -598,7 +577,7 @@ test("US-130 share out admin permissions", async ({seed, as}) => {
   await expect(admin.getByRole("alert")).toContainText("Permissions updated!")
 
   await admin.getByRole("button", {name: "More options"}).click()
-  await menuItem(admin, "Admins").click()
+  await menuItem(admin, "View Admins").click()
 
   const admins = dialog(admin, "Admins")
 
@@ -609,12 +588,12 @@ test("US-130 share out admin permissions", async ({seed, as}) => {
   await admins.getByRole("button", {name: "Go back"}).click()
 
   // bob holds two methods now, so he gets the one control they cover and nothing else
-  const bob = await as(users.bob, spacePath(url) + "/directory")
+  const bob = await as(users.bob, spacePath(url) + "/about")
 
   await bob.getByRole("button", {name: "More options"}).click()
 
   await expect(menuItem(bob, "Banned Members")).toBeVisible()
-  await expect(menuItem(bob, "Admins")).toHaveCount(0)
+  await expect(menuItem(bob, "View Admins")).toHaveCount(0)
 
   await memberCard(admin, "Bob Barnacle").getByRole("button").last().click()
   await menuItem(admin, "Edit permissions").click()
@@ -625,7 +604,7 @@ test("US-130 share out admin permissions", async ({seed, as}) => {
   await expect(admin.getByRole("alert")).toContainText("Permissions updated!")
 
   await admin.getByRole("button", {name: "More options"}).click()
-  await menuItem(admin, "Admins").click()
+  await menuItem(admin, "View Admins").click()
 
   await expect(admins.getByText("Nobody else has been given management permissions.")).toBeVisible()
 })
@@ -1032,7 +1011,7 @@ test("US-127 a member holding one method gets only that control", async ({seed, 
   await expect(menuItem(alice, "Report Content")).toBeVisible()
   await expect(alice.getByRole("button", {name: "Delete Message", exact: true})).toHaveCount(0)
 
-  await alice.goto(spacePath(url) + "/directory")
+  await alice.goto(spacePath(url) + "/about")
 
   await expect(alice.getByRole("button", {name: "Invite people"})).toBeVisible()
   await expect(alice.getByRole("button", {name: "More options"})).toHaveCount(0)
@@ -1049,7 +1028,7 @@ test("US-127 a member holding one method gets only that control", async ({seed, 
 
   await expect(menuItem(admin, "Delete Message")).toBeVisible()
 
-  await admin.goto(spacePath(url) + "/directory")
+  await admin.goto(spacePath(url) + "/about")
 
   await expect(admin.getByRole("button", {name: "More options"})).toBeVisible()
 

@@ -229,7 +229,7 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
   await expect(alice).toHaveURL(/\/spaces\/closed\.test/)
 
   // A member the admin bans is told why by the relay itself
-  await admin.goto(spacePath(space.url) + "/directory")
+  await admin.goto(spacePath(space.url) + "/about")
 
   const bobCard = admin
     .getByRole("button", {name: "View Bob Barnacle's profile"})
@@ -377,22 +377,15 @@ test("US-015 view a space's details", async ({seed, as}) => {
 
   await expect(carol.getByRole("heading", {name: "space"})).toBeVisible()
   await expect(carol.getByText(/Throwaway relay/)).toBeVisible()
-  await expect(carol.getByText(/harbormaster@space\.test/)).toBeVisible()
   await expect(carol.getByRole("link", {name: "Terms of Service"})).toBeVisible()
 
-  const admin = await as(users.admin, spacePath(space.url) + "/about", {relayInfo})
-  const featuredHeader = admin.getByRole("heading", {name: "Featured"}).locator("xpath=..")
+  // The relay's own details are with its connection, behind the space menu
+  await carol.getByRole("button", {name: /space\.test/}).click()
+  await carol.getByRole("button", {name: "Connection status"}).click()
 
-  await featuredHeader.getByRole("button").click()
-  await admin.getByRole("button", {name: "Add content"}).click()
-  await admin.getByPlaceholder("URL or nevent...").fill("Start with the harbor rules")
-  await admin.getByRole("button", {name: "Save changes"}).click()
-
-  await expect(admin.getByText("Featured content updated!")).toBeVisible()
-
-  // What admin featured reaches every visitor
-  await expect(carol.getByRole("heading", {name: "Featured"})).toBeVisible()
-  await expect(carol.getByText("Start with the harbor rules")).toBeVisible()
+  await expect(
+    carol.getByRole("dialog", {name: "Connection status"}).getByText("harbormaster@space.test"),
+  ).toBeVisible()
 })
 
 test("US-017 search across a space", async ({seed, as}) => {
@@ -408,8 +401,8 @@ test("US-017 search across a space", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // The directory rather than a feed, since a result's own text can't be on the page behind it.
-  const page = await as(users.alice, spacePath(space.url) + "/directory")
+  // The about page rather than a feed, since a result's own text can't be on the page behind it.
+  const page = await as(users.alice, spacePath(space.url) + "/about")
 
   await page.locator(".secondary-nav").getByRole("button", {name: "Search"}).click()
 

@@ -18,7 +18,6 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 | Polls | `POLL` (1068), `POLL_RESPONSE` (1018) | `Poll`, `PollResponse` | none | `spaces/[relay]/polls`, `polls/[id]` (`PollCreate`, `PollVotes`) |
 | Library | `PINBOARD` (30067), `PIN` (39067) | `Pinboard`, `Pin` | `src/app/features/spaces/pinboards.ts` | `spaces/[relay]/library` (`PinboardEdit`, `PinSave`); published by any member |
 | Room pins | `ROOM_PINS` (39005), `ROOM_UPDATE_PINS` (9010) | `RoomPins`, `RoomUpdatePins` | `src/app/features/spaces/rooms/pins.ts` | `RoomItemMenu`, `RoomItemMenuMobile`, `RoomPinnedMessagesAll` |
-| Featured content | `APP_DATA` (30078), `d` = `flotilla/featured-content` | `AppData` | `src/app/features/spaces/featured.ts` | `SpaceFeaturedContent`; published as the relay |
 | Bot commands (NIP-CD) | `COMMAND` (31992) | `Command` | `src/app/features/spaces/rooms/commands.ts` | `RoomCompose`, `ContentCommand` |
 | Voice room participants | `LIVEKIT_PARTICIPANTS` (39004, defined in `src/app/features/spaces/calls/participants.ts`) | none | `src/app/features/spaces/calls/participants.ts` | rooms where `meta.hasLivekit()` |
 

@@ -206,7 +206,7 @@ test("US-076 follow and unfollow", async ({seed, as}) => {
   await expect.poll(() => getPublishedEvents(page.context(), FOLLOWS).length).toBe(2)
 
   // The dialog is how most of the app reaches a profile, so the control has to be there too.
-  await page.goto(`${spacePath(url)}/directory`)
+  await page.goto(`${spacePath(url)}/about`)
 
   const preview = page
     .locator(".card.card-interactive")
@@ -566,7 +566,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
   })
 
   const {url} = scenario.space("space")
-  const page = await as(users.alice, `${spacePath(url)}/directory`, {context: DESKTOP})
+  const page = await as(users.alice, `${spacePath(url)}/about`, {context: DESKTOP})
   // The card's aria-label keeps the npub it fell back to at first render, so it is found by the name.
   const preview = page
     .locator(".card.card-interactive")
@@ -587,7 +587,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
 
   // Closed, and alice is exactly where she opened it from.
   await expect(page.locator(".dialog")).toHaveCount(0)
-  await expect(page).toHaveURL(new RegExp(`${spacePath(url)}/directory$`))
+  await expect(page).toHaveURL(new RegExp(`${spacePath(url)}/about$`))
 
   await preview.click()
   await page.getByRole("button", {name: "View Full Profile"}).click()
@@ -797,7 +797,7 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
   expect(JSON.parse(published[0].content).location).toBe("Portland, Oregon, United States")
   expect(published[0].tags).toContainEqual(["g", "c20fb"])
 
-  await page.goto(`${spacePath(url)}/directory`)
+  await page.goto(`${spacePath(url)}/about`)
 
   const showMap = page.getByRole("button", {name: "Map"})
 
@@ -846,7 +846,7 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
   expect(JSON.parse(republished[1].content).location).toBe("Oregon, United States")
   expect(republished[1].tags.map(tag => tag[0])).not.toContain("g")
 
-  await page.goto(`${spacePath(url)}/directory`)
+  await page.goto(`${spacePath(url)}/about`)
   await page.getByPlaceholder("Search people or roles...").fill("Anders")
 
   // A state is the member card's to show, since the map cannot.

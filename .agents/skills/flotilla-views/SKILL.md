@@ -23,7 +23,7 @@ is a `+layout.svelte`.
 /spaces                    your spaces + discovery       /spaces/create
 /spaces/[relay]            mobile space menu; desktop redirects to goToSpace()
 /spaces/[relay]/[h]        room chat                     /spaces/[relay]/chat  space-level chat
-/spaces/[relay]/{about,admin,directory,library}
+/spaces/[relay]/{about,admin,library}
 /spaces/[relay]/{threads,goals,polls}[/[id]]
 /spaces/[relay]/{classifieds,articles,calendar}[/[address]]     articles/create
 /chat, /chat/[chat]        DMs                           /people/[npub]  profile page

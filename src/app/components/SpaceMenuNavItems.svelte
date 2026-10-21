@@ -4,7 +4,6 @@
   import {EVENT_TIME, ZAP_GOAL, THREAD, CLASSIFIED, PINBOARD, POLL, LONG_FORM} from "@welshman/util"
   import {deriveDeduplicatedByValue} from "@welshman/store"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
-  import UsersGroup from "@assets/icons/users-group-rounded.svg?dataurl"
   import Home from "@assets/icons/home.svg?dataurl"
   import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
@@ -59,16 +58,13 @@
 </script>
 
 <SecondaryNavItem href={pages.spaceAbout.path({url})}>
-  <Icon icon={Home} /> Space Details
+  <Icon icon={Home} /> About
 </SecondaryNavItem>
 {#if !$relay?.hasNip(29)}
   <SecondaryNavItem href={chatPath} notification={$notifications.has(chatPath)}>
     <Icon icon={ChatRound} /> Chat
   </SecondaryNavItem>
 {/if}
-<SecondaryNavItem href={pages.spaceDirectory.path({url})}>
-  <Icon icon={UsersGroup} /> Directory
-</SecondaryNavItem>
 {#if showSection(PINBOARD, libraryPath)}
   <SecondaryNavItem href={libraryPath} notification={$notifications.has(libraryPath)}>
     <Icon icon={GalleryWide} /> Library

@@ -151,7 +151,7 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
   livekit values, since the root layout loads `calls/index.ts` and `engine.ts` is imported
   lazily.
 - Content types: `spaces/articles.ts`, `calendar.ts`, `classifieds.ts`, `goals.ts`,
-  `pinboards.ts`, `featured.ts`
+  `pinboards.ts`
 
 Outside `spaces/`:
 

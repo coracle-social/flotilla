@@ -241,12 +241,10 @@ Acceptance:
 
 - The About page shows the space's icon, name, url, description, and any
   terms-of-service or privacy-policy links.
-- Administrator, contact, software, and version badges appear when the relay
-  reports them, and auth-required, payment-required, or proof-of-work warnings
-  appear when they apply.
-- A members summary listing admins and newest members links through to the full
-  directory.
-- Content admin has featured renders at the top for every visitor.
+- The member directory follows, with its search, map, and invite controls.
+- The space menu's "Connection status" dialog shows the administrator, contact,
+  software, and version when the relay reports them, and auth-required,
+  payment-required, or proof-of-work warnings when they apply.
 
 ### US-017 — Search across a space
 
@@ -1567,18 +1565,16 @@ Acceptance:
 
 ## Admin, moderation & hosting
 
-### US-092 — Edit a space's profile and featured content
+### US-092 — Edit a space's profile
 
-As admin, I want to keep a space's public details and highlights current, so
-that visitors see the right thing first.
+As admin, I want to keep a space's public details current, so that visitors see
+the right thing first.
 
 Acceptance:
 
 - "Edit this Space" updates name, description, and icon, shows a success
   message, and the About page reflects the change.
-- Adding items in the Featured section renders them on the About page for every
-  visitor.
-- bob sees no edit or featured-content controls on the same space.
+- bob sees no edit controls on the same space.
 
 ### US-093 — Create roles and assign them
 
@@ -1677,12 +1673,12 @@ holds what, so that moderation is shared without handing anyone the whole relay.
 
 Acceptance:
 
-- "Admins" in the directory's menu lists the space's owner and everyone holding
-  assigned methods, each with a badge per permission they hold.
+- "View Admins" in the directory's menu lists the space's owner and everyone
+  holding assigned methods, each with a badge per permission they hold.
 - Checking permissions under a member's "Edit permissions" puts them in that
   list, and unchecking those permissions takes them back out.
 - A member given "List banned members" finds "Banned Members" in the directory
-  menu they had no menu in before, and still no "Admins".
+  menu they had no menu in before, and still no "View Admins".
 
 ### US-131 — Say where you are and find members on a map
 
