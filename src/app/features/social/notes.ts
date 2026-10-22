@@ -1,7 +1,7 @@
 import {readable} from "svelte/store"
 import {first} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {EventRef} from "@welshman/util"
+import {EventRef, hexTags, outbox, tagValues} from "@welshman/util"
 import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {Events, Network, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
@@ -13,10 +13,19 @@ import type {CommentNode} from "@app/features/social/replies"
 export class Notes {
   constructor(private readonly app: IApp) {}
 
-  relays = (ref: IEventRef) =>
-    this.app.use(Router).resolver.relays(new EventRef(ref).getRelaySelections())
+  // A reply's e tag can name neither author nor relay, but NIP-10 has the reply p-tag the author.
+  relays = (ref: IEventRef, replies: TrustedEvent[] = []) => {
+    const pubkeys = replies.flatMap(reply => tagValues(hexTags("p"), reply.tags))
 
-  load = async (ref: IEventRef) => {
+    return this.app
+      .use(Router)
+      .resolver.relays([
+        ...new EventRef(ref).getRelaySelections(),
+        ...pubkeys.map(pubkey => outbox(pubkey)),
+      ])
+  }
+
+  load = async (ref: IEventRef, replies: TrustedEvent[] = []) => {
     const eventRef = new EventRef(ref)
     const idOrAddress = eventRef.getIdOrAddress()
 
@@ -25,7 +34,7 @@ export class Notes {
         this.app.repository.getEvent(idOrAddress) ??
         first(
           await this.app.use(Network).load({
-            relays: await this.relays(ref),
+            relays: await this.relays(ref, replies),
             filters: eventRef.getFilters(),
             timeout: 3000,
           }),

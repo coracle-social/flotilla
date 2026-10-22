@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onMount} from "svelte"
   import Home from "@assets/icons/home.svg?dataurl"
   import Compass from "@assets/icons/compass.svg?dataurl"
   import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
@@ -13,8 +12,8 @@
   import HomeNetwork from "@app/components/HomeNetwork.svelte"
   import HomeHealthChecks from "@app/components/HomeHealthChecks.svelte"
   import HomeHosting from "@app/components/HomeHosting.svelte"
+  import HomeSpaces from "@app/components/HomeSpaces.svelte"
   import NoteCreate from "@app/components/NoteCreate.svelte"
-  import {goToSpace} from "@app/navigation/history"
   import {pushModal} from "@app/navigation/dialogs"
   import {HOSTING_ENABLED} from "@app/features/hosting"
   import {PLATFORM_RELAYS} from "@app/core/env"
@@ -22,13 +21,6 @@
   let element: Element | undefined = $state()
 
   const createPost = () => pushModal(NoteCreate)
-
-  // A single-space build has no dashboard to show - everything on it is scoped to the one space.
-  onMount(() => {
-    if (PLATFORM_RELAYS.length > 0) {
-      goToSpace(PLATFORM_RELAYS[0], {replaceState: true})
-    }
-  })
 </script>
 
 <Page>
@@ -39,10 +31,12 @@
           <Icon icon={Home} size={6} />
           Home
         </h1>
-        <Link href="/spaces" class="button button-neutral button-sm">
-          <Icon icon={Compass} size={4} />
-          Browse spaces
-        </Link>
+        {#if PLATFORM_RELAYS.length === 0}
+          <Link href="/spaces" class="button button-neutral button-sm">
+            <Icon icon={Compass} size={4} />
+            Browse spaces
+          </Link>
+        {/if}
       </div>
       <div class="flex min-w-0 flex-col gap-0 @3xl:flex-row @3xl:items-start md:gap-3">
         <div class="contents @3xl:flex @3xl:min-w-0 @3xl:flex-1 @3xl:flex-col @3xl:gap-3">
@@ -51,7 +45,9 @@
         </div>
         <div class="contents @3xl:flex @3xl:w-80 @3xl:shrink-0 @3xl:flex-col @3xl:gap-3">
           <HomeHealthChecks class="@max-3xl:hidden" />
-          {#if HOSTING_ENABLED}
+          {#if PLATFORM_RELAYS.length > 0}
+            <HomeSpaces class="@max-3xl:hidden" />
+          {:else if HOSTING_ENABLED}
             <HomeHosting class="@max-3xl:hidden" />
           {/if}
         </div>

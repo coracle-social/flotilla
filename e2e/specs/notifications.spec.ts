@@ -250,17 +250,28 @@ test("US-105 land on the home page", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // A build that names a platform space sends /home straight into it
-  const platform = await as(users.alice, "/home", {env: {VITE_PLATFORM_RELAYS: space.url}})
+  // A build that names a platform space opens on it, and the rail's Home button reaches a dashboard
+  // that lists the platform spaces in place of hosting, with no way to browse for others
+  const platform = await as(users.alice, "/", {
+    env: {VITE_PLATFORM_RELAYS: space.url},
+    context: {viewport: {width: 1440, height: 900}},
+  })
 
   await expect(platform).toHaveURL(pathPattern(spacePath(space.url)))
 
-  // With none configured, /home is the dashboard, whose empty inbox offers two ways out
+  await platform.locator('.primary-nav [data-tip="Home"]').click()
+
+  await expect(platform).toHaveURL(/\/home$/)
+  await expect(
+    platform.getByRole("region", {name: "Spaces", exact: true}).getByRole("link"),
+  ).toHaveCount(1)
+  await expect(platform.getByRole("region", {name: "Hosting", exact: true})).toHaveCount(0)
+  await expect(platform.getByRole("link", {name: "Browse spaces"})).toHaveCount(0)
+
+  // With none configured, /home is the dashboard
   const page = await as(users.alice, "/home")
 
-  await page.getByRole("link", {name: "Add a space"}).click()
-
-  await expect(page).toHaveURL(/\/spaces$/)
+  await expect(page.getByText("You're all caught up")).toBeVisible()
 })
 
 test("US-116 read the home dashboard", async ({seed, as}) => {

@@ -1862,10 +1862,11 @@ never staring at a blank screen.
 
 Acceptance:
 
-- On a build with a configured platform space, `/home` opens that space.
-- With none configured, it shows the dashboard, whose empty inbox offers "Add a
-  space" and "Start a conversation".
-- Those options navigate to the spaces directory and the chat view respectively.
+- On a build with a configured platform space, the app opens that space, and
+  the Home button at the top of the rail opens the dashboard. There the
+  platform spaces are listed in place of hosting, and nothing offers to browse
+  other spaces.
+- With none configured, `/home` shows the dashboard.
 
 ### US-116 — Read the home dashboard
 

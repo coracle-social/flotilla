@@ -5,6 +5,7 @@
   import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
   import NoteEntry from "@app/components/NoteEntry.svelte"
   import {user} from "@app/core/user"
+  import {PLATFORM_RELAYS} from "@app/core/env"
   import {followLists} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
   import {
@@ -50,7 +51,9 @@
       <p class="max-w-md text-sm opacity-75">
         Posts from the people you follow collect here. Spaces are a good place to find some.
       </p>
-      <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
+      {#if PLATFORM_RELAYS.length === 0}
+        <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
+      {/if}
     </div>
   {:else if $entries.length > 0}
     {#each $entries as entry (entry.key)}
