@@ -42,7 +42,8 @@
   $effect(() => {
     if (leaflet) {
       const created = leaflet
-        .map(element, {worldCopyJump: true, zoomControl: false})
+        // Leaflet focuses the container on mousedown for keyboard panning, which scrolls a tall map out from under the click.
+        .map(element, {worldCopyJump: true, zoomControl: false, keyboard: false})
         .setView([25, 0], 2)
 
       leaflet.control.zoom({position: "bottomright"}).addTo(created)
