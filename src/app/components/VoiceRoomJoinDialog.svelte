@@ -1,6 +1,5 @@
 <script lang="ts">
   import {spec} from "@welshman/lib"
-  import {displayRelayUrl} from "@welshman/util"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Volume from "@assets/icons/volume.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
@@ -15,6 +14,7 @@
   import {listMediaDevices} from "@lib/audio"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
   import {displayRoom} from "@app/features/spaces/rooms"
   import {deriveCallParticipants, loadCallParticipants} from "@app/features/spaces/calls"
   import {AbortError, TimeoutError, joinVoiceRoom} from "@app/features/spaces/calls/engine"
@@ -28,7 +28,6 @@
 
   const {url, h}: Props = $props()
 
-  const spaceLabel = $derived(displayRelayUrl(url))
   const participants = deriveCallParticipants(url, h)
   const participantPubkeys = $derived($participants.flatMap(p => (p.pubkey ? [p.pubkey] : [])))
 
@@ -133,7 +132,7 @@
           <Icon icon={Volume} size={4} class="shrink-0" />
           <span class="truncate min-w-0">{displayRoom(url, h)}</span>
           <span>·</span>
-          <span>{spaceLabel}</span>
+          <RelayLabel {url} />
         </span>
       </ModalSubtitle>
     </ModalHeader>

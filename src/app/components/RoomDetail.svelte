@@ -25,6 +25,7 @@
   import RoomName from "@app/components/RoomName.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
   import {roomLists, rooms} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {
     deriveRoomMembers,
     deriveUserIsRoomAdmin,
@@ -88,7 +89,9 @@
         </div>
         <div class="flex min-w-0 flex-col">
           <RoomName {url} {h} class="block text-2xl" />
-          <span class="truncate text-primary">{displayRelayUrl(url)}</span>
+          {#if !HIDE_NOSTR}
+            <span class="truncate text-primary">{displayRelayUrl(url)}</span>
+          {/if}
         </div>
       </div>
       <MenuButton

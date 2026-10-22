@@ -12,6 +12,7 @@
   import RelayDescription from "@app/components/RelayDescription.svelte"
   import SpaceDirectory from "@app/components/SpaceDirectory.svelte"
   import {relays} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
@@ -40,7 +41,9 @@
         <h1 class="truncate min-w-0 whitespace-nowrap">
           <RelayName {url} class="text-xl sm:text-2xl font-bold" />
         </h1>
-        <p class="truncate min-w-0 text-sm text-primary">{displayRelayUrl(url)}</p>
+        {#if !HIDE_NOSTR}
+          <p class="truncate min-w-0 text-sm text-primary">{displayRelayUrl(url)}</p>
+        {/if}
       </div>
     </div>
     <RelayDescription {url} />

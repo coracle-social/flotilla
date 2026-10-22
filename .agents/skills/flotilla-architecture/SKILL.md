@@ -291,6 +291,9 @@ guards.
   `sync.ts`).
 - `VITE_THEME`, exported as `FL_THEME`, selects the design preset in
   `src/lib/components/theme.css`.
+- `VITE_HIDE_NOSTR`, exported as `HIDE_NOSTR`, hides protocol details: relay addresses and relay
+  settings, npubs, NIP-05 addresses, event and profile JSON, and nostr explainers. A space named by
+  its address goes through `RelayLabel`, which shows its name instead when the flag is set.
 - The native app name is hard-coded in `capacitor.config.ts` (`appName: "Flotilla"`), outside the
   env system.
 

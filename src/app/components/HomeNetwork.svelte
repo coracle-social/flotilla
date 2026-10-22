@@ -15,6 +15,7 @@
   import RelayList from "@app/components/RelayList.svelte"
   import {user} from "@app/core/user"
   import {relayLists} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
   import {homeNotificationsUnread} from "@app/features/social/notifications"
 
@@ -59,12 +60,14 @@
   {/snippet}
   {#snippet action()}
     <div class="flex shrink-0 items-center gap-2">
-      <Button
-        aria-label="Relay settings"
-        class="button button-neutral button-xs"
-        onclick={showRelays}>
-        <Icon icon={Settings} size={4} />
-      </Button>
+      {#if !HIDE_NOSTR}
+        <Button
+          aria-label="Relay settings"
+          class="button button-neutral button-xs"
+          onclick={showRelays}>
+          <Icon icon={Settings} size={4} />
+        </Button>
+      {/if}
       <Button
         aria-label="Create post"
         class="button button-primary button-xs max-md:hidden"

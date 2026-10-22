@@ -24,7 +24,7 @@
   import LogInEmail from "@app/components/LogInEmail.svelte"
   import LogInKey from "@app/components/LogInKey.svelte"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
-  import {PLATFORM_NAME, POMADE_SIGNERS} from "@app/core/env"
+  import {PLATFORM_NAME, POMADE_SIGNERS, HIDE_NOSTR} from "@app/core/env"
   import {pushToast} from "@app/features/toast"
   import {setChecked} from "@app/features/checked"
   import {login} from "@app/core/session"
@@ -108,12 +108,16 @@
 
 <Modal data-testid="login">
   <ModalBody>
-    <ModalTitle>Log in with Nostr</ModalTitle>
-    <p class="m-auto max-w-sm text-center">
-      {PLATFORM_NAME} is built using the
-      <Button class="link" onclick={showInfoNostr}>nostr protocol</Button>, which allows you to own
-      your social identity.
-    </p>
+    {#if HIDE_NOSTR}
+      <ModalTitle>Log in</ModalTitle>
+    {:else}
+      <ModalTitle>Log in with Nostr</ModalTitle>
+      <p class="m-auto max-w-sm text-center">
+        {PLATFORM_NAME} is built using the
+        <Button class="link" onclick={showInfoNostr}>nostr protocol</Button>, which allows you to
+        own your social identity.
+      </p>
+    {/if}
     {#if getNip07()}
       <Button {disabled} onclick={loginWithNip07} class="button button-primary">
         {#if loading === "nip07"}
@@ -140,13 +144,15 @@
         Log in with Email
       </Button>
     {/if}
-    <Button
-      onclick={loginWithBunker}
-      {disabled}
-      class={cx(`button button-${hasSigner || hasPomade ? "neutral" : "primary"}`)}>
-      <Icon icon={Cpu} />
-      Log in with Remote Signer
-    </Button>
+    {#if !HIDE_NOSTR}
+      <Button
+        onclick={loginWithBunker}
+        {disabled}
+        class={cx(`button button-${hasSigner || hasPomade ? "neutral" : "primary"}`)}>
+        <Icon icon={Cpu} />
+        Log in with Remote Signer
+      </Button>
+    {/if}
     {#if hasPomade && hasSigner}
       <Button {disabled} onclick={loginWithEmail} class="button button-neutral">
         <Icon icon={Letter} />
@@ -154,12 +160,18 @@
       </Button>
     {/if}
     {#if !hasSigner}
-      <Button {disabled} onclick={loginWithKey} class="button button-neutral">
+      <Button
+        {disabled}
+        onclick={loginWithKey}
+        class={cx("button", {
+          "button-primary": HIDE_NOSTR && !hasPomade,
+          "button-neutral": !HIDE_NOSTR || hasPomade,
+        })}>
         <Icon icon={Key} />
         Log in with Key
       </Button>
     {/if}
-    {#if !hasSigner || !hasPomade}
+    {#if !HIDE_NOSTR && (!hasSigner || !hasPomade)}
       <Link
         external
         {disabled}

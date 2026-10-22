@@ -3,6 +3,7 @@
   import {displayHandle} from "@welshman/util"
   import {displayPubkey} from "@welshman/domain"
   import {handles, profiles} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
   import WotScore from "@app/components/WotScore.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
 
@@ -29,8 +30,10 @@
       </div>
       <WotScore {pubkey} />
     </div>
-    <div class="overflow-hidden text-ellipsis text-sm opacity-75">
-      {$handle ? displayHandle($handle) : displayPubkey(pubkey)}
-    </div>
+    {#if !HIDE_NOSTR}
+      <div class="overflow-hidden text-ellipsis text-sm opacity-75">
+        {$handle ? displayHandle($handle) : displayPubkey(pubkey)}
+      </div>
+    {/if}
   </div>
 </div>

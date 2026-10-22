@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {displayRelayUrl} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
@@ -9,6 +8,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InviteLink from "@app/components/InviteLink.svelte"
   import RoomName from "@app/components/RoomName.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
 
   type Props = {
     url: string
@@ -27,7 +27,7 @@
       <ModalSubtitle>
         Get a link to invite people to
         <RoomName {url} {h} class="text-primary" />
-        in <span class="text-primary">{displayRelayUrl(url)}</span>
+        in <RelayLabel {url} class="text-primary" />
       </ModalSubtitle>
     </ModalHeader>
     <InviteLink {url} {h} />

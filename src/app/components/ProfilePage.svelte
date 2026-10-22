@@ -31,6 +31,7 @@
   import {goToMessages} from "@app/features/messages"
   import {user} from "@app/core/user"
   import {profiles, relayLists} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
 
   type Props = {
     pubkey: string
@@ -179,14 +180,16 @@
                 {/if}
               </div>
 
-              <div class="flex items-center gap-1 text-sm leading-none opacity-75">
-                <span>{displayPubkey(target)}</span>
-                <Button
-                  onclick={copyNpub}
-                  class="button button-ghost button-xs h-5 min-h-5 w-5 p-0">
-                  <Icon size={3} icon={Copy} />
-                </Button>
-              </div>
+              {#if !HIDE_NOSTR}
+                <div class="flex items-center gap-1 text-sm leading-none opacity-75">
+                  <span>{displayPubkey(target)}</span>
+                  <Button
+                    onclick={copyNpub}
+                    class="button button-ghost button-xs h-5 min-h-5 w-5 p-0">
+                    <Icon size={3} icon={Copy} />
+                  </Button>
+                </div>
+              {/if}
 
               <ProfileStatus pubkey={target} />
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {displayRelayUrl} from "@welshman/util"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -12,6 +11,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
   import {allowPubkeys} from "@app/features/spaces/management"
   import {pushToast} from "@app/features/toast"
 
@@ -52,7 +52,7 @@
     <ModalHeader>
       <ModalTitle>Add Members</ModalTitle>
       <ModalSubtitle>
-        to <span class="text-primary">{displayRelayUrl(url)}</span>
+        to <RelayLabel {url} class="text-primary" />
       </ModalSubtitle>
     </ModalHeader>
     <Field>

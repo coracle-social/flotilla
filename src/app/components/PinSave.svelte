@@ -23,6 +23,7 @@
   import EditorContent from "@app/features/editor/EditorContent.svelte"
   import {makeEditor} from "@app/features/editor"
   import {command, reader, writer} from "@app/core/domain"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {parsePinReference, pinToReference} from "@app/features/spaces/pinboards"
   import {addressWriterToSpace} from "@app/features/spaces/rooms"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
@@ -136,8 +137,12 @@
         Link
       {/snippet}
       {#snippet info()}
-        {#if value.trim() && !pinReference}
+        {#if value.trim() && !pinReference && HIDE_NOSTR}
+          <span class="text-error">Please enter a valid URL.</span>
+        {:else if value.trim() && !pinReference}
           <span class="text-error">Please enter a valid URL or nostr link.</span>
+        {:else if HIDE_NOSTR}
+          <span>A URL, or upload a file.</span>
         {:else}
           <span>A URL or a nostr link, or upload a file.</span>
         {/if}

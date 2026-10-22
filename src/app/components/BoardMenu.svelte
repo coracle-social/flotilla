@@ -13,6 +13,7 @@
   import EventInfo from "@app/components/EventInfo.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
   import {user} from "@app/core/user"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {deleteLibraryEvent} from "@app/features/spaces/pinboards"
   import {shareEvent} from "@app/features/share"
@@ -73,12 +74,14 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
-  <li>
-    <Button onclick={showInfo}>
-      <Icon icon={Code2} />
-      Shelf details
-    </Button>
-  </li>
+  {#if !HIDE_NOSTR}
+    <li>
+      <Button onclick={showInfo}>
+        <Icon icon={Code2} />
+        Shelf details
+      </Button>
+    </li>
+  {/if}
   <li>
     <Button onclick={share}>
       <Icon icon={ShareCircle} />

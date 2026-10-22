@@ -17,6 +17,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {clip} from "@app/features/toast"
   import {publishReaction} from "@app/features/messages"
+  import {HIDE_NOSTR} from "@app/core/env"
 
   type Props = {
     pubkeys: string[]
@@ -89,10 +90,12 @@
             <Icon size={4} icon={Copy} />
             Copy Text
           </Button>
-          <Button class="button button-neutral w-full" onclick={showInfo}>
-            <Icon size={4} icon={Code2} />
-            Message Info
-          </Button>
+          {#if !HIDE_NOSTR}
+            <Button class="button button-neutral w-full" onclick={showInfo}>
+              <Icon size={4} icon={Code2} />
+              Message Info
+            </Button>
+          {/if}
         </div>
       {/if}
     </div>

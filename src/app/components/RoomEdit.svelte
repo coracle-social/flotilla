@@ -1,6 +1,5 @@
 <script lang="ts">
   import {navigate} from "@app/navigation/navigate"
-  import {displayRelayUrl} from "@welshman/util"
   import type {RoomMeta} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -11,6 +10,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RoomForm from "@app/components/RoomForm.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
   import {rooms} from "@app/core/plugins"
   import * as pages from "@app/navigation/pages"
 
@@ -47,7 +47,7 @@
     <ModalHeader>
       <ModalTitle>Edit a Room</ModalTitle>
       <ModalSubtitle>
-        On <span class="text-primary">{displayRelayUrl(url)}</span>
+        On <RelayLabel {url} class="text-primary" />
       </ModalSubtitle>
     </ModalHeader>
   {/snippet}

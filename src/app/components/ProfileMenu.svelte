@@ -12,6 +12,7 @@
   import ProfileQrCode from "@app/components/ProfileQrCode.svelte"
   import {user} from "@app/core/user"
   import {muteLists, profiles} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {derivePubkeyMuted} from "@app/features/social/muting"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
@@ -55,7 +56,7 @@
       Share
     </Button>
   </li>
-  {#if $profile}
+  {#if $profile && !HIDE_NOSTR}
     <li>
       <Button onclick={showInfo}>
         <Icon size={4} icon={Code2} />

@@ -16,7 +16,7 @@
   import {blockedRelayLists} from "@app/core/plugins"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
-  import {PLATFORM_NAME} from "@app/core/env"
+  import {PLATFORM_NAME, HIDE_NOSTR} from "@app/core/env"
   import {analyticsAvailable} from "@app/features/analytics"
   import {sendLogs} from "@app/core/logger"
   import {
@@ -97,33 +97,35 @@
         <Icon icon={ShieldMinimalistic} />
         Privacy Settings
       </strong>
-      <FieldInline>
-        {#snippet label()}
-          <p>Authenticate with unknown relays?</p>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={$settings.relay_auth === RelayAuthMode.Aggressive}
-            onchange={onAuthModeChange} />
-        {/snippet}
-        {#snippet info()}
-          <p>Controls whether {PLATFORM_NAME} will identify you to relays not in your lists.</p>
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}
-          <p>Blocked relays</p>
-        {/snippet}
-        {#snippet input()}
-          <Button class="button button-neutral" onclick={showBlockedRelays}>
-            <Icon icon={ForbiddenCircle} />
-            {$blockedRelayUrls.length} Blocked
-          </Button>
-        {/snippet}
-        {#snippet info()}
-          <p>These relays won't be used unless explicitly requested.</p>
-        {/snippet}
-      </FieldInline>
+      {#if !HIDE_NOSTR}
+        <FieldInline>
+          {#snippet label()}
+            <p>Authenticate with unknown relays?</p>
+          {/snippet}
+          {#snippet input()}
+            <ToggleInput
+              checked={$settings.relay_auth === RelayAuthMode.Aggressive}
+              onchange={onAuthModeChange} />
+          {/snippet}
+          {#snippet info()}
+            <p>Controls whether {PLATFORM_NAME} will identify you to relays not in your lists.</p>
+          {/snippet}
+        </FieldInline>
+        <FieldInline>
+          {#snippet label()}
+            <p>Blocked relays</p>
+          {/snippet}
+          {#snippet input()}
+            <Button class="button button-neutral" onclick={showBlockedRelays}>
+              <Icon icon={ForbiddenCircle} />
+              {$blockedRelayUrls.length} Blocked
+            </Button>
+          {/snippet}
+          {#snippet info()}
+            <p>These relays won't be used unless explicitly requested.</p>
+          {/snippet}
+        </FieldInline>
+      {/if}
       {#if analyticsAvailable}
         <FieldInline>
           {#snippet label()}
@@ -160,32 +162,38 @@
       </strong>
       <p class="text-sm opacity-50">
         Messages from people you have no connection to appear in the Requests tab of your chat list.
-        A sender who meets either threshold below reaches your conversations instead.
+        {#if HIDE_NOSTR}
+          A sender who meets the threshold below reaches your conversations instead.
+        {:else}
+          A sender who meets either threshold below reaches your conversations instead.
+        {/if}
       </p>
-      <Field>
-        {#snippet label()}
-          <p>Proof of work</p>
-        {/snippet}
-        {#snippet secondary()}
-          <p>{$settings.min_dm_pow} bits</p>
-        {/snippet}
-        {#snippet input()}
-          <input
-            class="range w-full"
-            type="range"
-            min="1"
-            max="32"
-            step="1"
-            bind:value={$settings.min_dm_pow} />
-        {/snippet}
-        {#snippet info()}
-          <p>
-            A sender who spends this much proof of work reaches your conversations whether or not
-            you know them. Each step up doubles the work they have to do, and {PLATFORM_NAME} spends 16
-            bits on every message you send.
-          </p>
-        {/snippet}
-      </Field>
+      {#if !HIDE_NOSTR}
+        <Field>
+          {#snippet label()}
+            <p>Proof of work</p>
+          {/snippet}
+          {#snippet secondary()}
+            <p>{$settings.min_dm_pow} bits</p>
+          {/snippet}
+          {#snippet input()}
+            <input
+              class="range w-full"
+              type="range"
+              min="1"
+              max="32"
+              step="1"
+              bind:value={$settings.min_dm_pow} />
+          {/snippet}
+          {#snippet info()}
+            <p>
+              A sender who spends this much proof of work reaches your conversations whether or not
+              you know them. Each step up doubles the work they have to do, and {PLATFORM_NAME} spends
+              16 bits on every message you send.
+            </p>
+          {/snippet}
+        </Field>
+      {/if}
       <Field>
         {#snippet label()}
           <p>Web of trust</p>

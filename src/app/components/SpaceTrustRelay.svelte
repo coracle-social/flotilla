@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {displayRelayUrl} from "@welshman/util"
   import {preventDefault} from "@lib/html"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
@@ -12,11 +11,11 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import InfoSignatures from "@app/components/InfoSignatures.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
   import {publishRoomList} from "@app/features/spaces/rooms"
   import {addTrustedRelay, removeTrustedRelay} from "@app/core/settings"
   import {navigate} from "@app/navigation/navigate"
-  import {popModal, pushModal} from "@app/navigation/dialogs"
+  import {popModal} from "@app/navigation/dialogs"
   import {roomLists} from "@app/core/plugins"
   import {pushToast} from "@app/features/toast"
 
@@ -25,8 +24,6 @@
   }
 
   const {url}: Props = $props()
-
-  const showInfoSignatures = () => pushModal(InfoSignatures)
 
   const untrustSpace = async () => {
     loading = true
@@ -66,14 +63,13 @@
     <ModalHeader>
       <ModalTitle>Do you trust this space?</ModalTitle>
       <ModalSubtitle>
-        Only join <span class="text-primary">{displayRelayUrl(url)}</span> if you trust the adminstrator
+        Only join <RelayLabel {url} class="text-primary" /> if you trust the adminstrator
       </ModalSubtitle>
     </ModalHeader>
     <div class="m-auto flex flex-col gap-4">
       <p>
-        This space has opted not to publish <Button class="link" onclick={showInfoSignatures}
-          >digital signatures</Button
-        >, which means that they have the ability to forge messages from other users.
+        Messages in this space can't be verified, which means its administrator could forge messages
+        from other users.
       </p>
       <p>
         If you trust this space's admin, you can continue. Otherwise, it may be safer not to join

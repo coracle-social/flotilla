@@ -10,11 +10,10 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
-  import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {INDEXER_RELAYS, PLATFORM_NAME} from "@app/core/env"
+  import {INDEXER_RELAYS} from "@app/core/env"
   import {userSpaceUrls} from "@app/features/spaces"
   import {pushToast} from "@app/features/toast"
   import {logout} from "@app/core/session"
@@ -26,7 +25,7 @@
   let progress: number | undefined = $state(undefined)
   let confirmText = $state("")
 
-  const CONFIRM_TEXT = "permanently delete my nostr account"
+  const CONFIRM_TEXT = "permanently delete my account"
   const userWriteRelays = $relayLists.writeUrls($user.pubkey).$
   const confirmOk = $derived(confirmText.toLowerCase().trim() === CONFIRM_TEXT)
   const showProgress = $derived(progress !== undefined)
@@ -106,18 +105,15 @@
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Delete your account</ModalTitle>
-      <ModalSubtitle>From the Nostr network</ModalSubtitle>
     </ModalHeader>
     {#if showProgress}
       <p>
-        We are currently sending deletion requests to your relay selections and space hosts. Please
-        wait while we complete this process. Once we're done, you'll be automatically logged out.
+        We're deleting your account. Please wait while we finish. Once we're done, you'll be
+        automatically logged out.
       </p>
       <progress class="progress w-full" value={progress! * 100} max="100"></progress>
     {:else}
-      <p>
-        This will delete your nostr account everywhere, not just on {PLATFORM_NAME}.
-      </p>
+      <p>This will permanently delete your account.</p>
       <p>
         To confirm, please type "{CONFIRM_TEXT}" into the text box below. This action can't be
         undone.
@@ -125,10 +121,6 @@
       <label class="input input-group flex w-full items-center gap-2">
         <input bind:value={confirmText} class="grow" type="text" />
       </label>
-      <p>
-        <strong>Note:</strong> not all relays may honor your request for deletion. If you find that your
-        content continues to be available, please contact the offending relays directly.
-      </p>
     {/if}
   </ModalBody>
   <ModalFooter>

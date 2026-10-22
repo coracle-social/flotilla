@@ -1,13 +1,13 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {page} from "$app/stores"
-  import {displayRelayUrl} from "@welshman/util"
   import ArrowLeft from "@assets/icons/arrow-left.svg?dataurl"
   import {fade} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
   import {pageLoading} from "@app/features/loading"
   import {decodeRelay} from "@app/navigation/pages"
 
@@ -47,7 +47,7 @@
           {/if}
         </div>
         <div class="truncate text-xs text-primary md:hidden">
-          {displayRelayUrl(url)}
+          <RelayLabel {url} />
         </div>
       </div>
       <div class="flex shrink-0 items-center gap-2">

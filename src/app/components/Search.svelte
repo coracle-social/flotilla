@@ -16,6 +16,7 @@
   import {app} from "@app/core/app"
   import {user, userSearchRelayUrls} from "@app/core/user"
   import {relays, searchRelayLists} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
   import {userSpaceUrls} from "@app/features/spaces"
 
@@ -47,13 +48,15 @@
       <div class="flex flex-col items-center gap-2 py-12 text-center">
         <p class="text-content-muted text-sm">
           Searching {spaces}
-          {spaces === 1 ? "space" : "spaces"}{#if extras > 0}, plus {extras}
+          {spaces === 1 ? "space" : "spaces"}{#if extras > 0 && !HIDE_NOSTR}, plus {extras}
             extra {extras === 1 ? "relay" : "relays"} for people{/if}.
         </p>
-        <Button class="button button-link button-sm" onclick={showRelays}>
-          <Icon size={4} icon={Server} />
-          Manage search relays
-        </Button>
+        {#if !HIDE_NOSTR}
+          <Button class="button button-link button-sm" onclick={showRelays}>
+            <Icon size={4} icon={Server} />
+            Manage search relays
+          </Button>
+        {/if}
       </div>
     {/snippet}
     {#snippet badges(event)}

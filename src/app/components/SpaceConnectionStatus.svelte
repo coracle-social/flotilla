@@ -71,7 +71,7 @@
           Your signer couldn't sign you in.
           <Link class="link" href={pages.settingsProfile.path()}>Check your signer</Link>
         {:else if $access.status === RelayAccessStatus.Denied}
-          This space is refusing your requests. It said: {$access.reason}
+          Your requests to this space are being refused: {$access.reason}
         {:else if $access.status === RelayAccessStatus.Untrusted}
           This space sends events without signatures, which are held until you choose to trust it.
         {:else}
@@ -107,7 +107,7 @@
           {:else if $socket.auth.status === AuthStatus.DeniedSignature}
             <StatusIndicator class="bg-error">Signer declined</StatusIndicator>
           {:else if $socket.auth.status === AuthStatus.PendingResponse}
-            <StatusIndicator class="bg-warning">Waiting for the space</StatusIndicator>
+            <StatusIndicator class="bg-warning">Waiting for a response</StatusIndicator>
           {:else if $socket.auth.status === AuthStatus.Forbidden}
             <StatusIndicator class="bg-error">Refused</StatusIndicator>
           {:else}

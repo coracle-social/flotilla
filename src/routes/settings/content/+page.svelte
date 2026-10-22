@@ -25,7 +25,7 @@
   import {deriveUserItem, userMuteList} from "@app/core/user"
   import {blossomServerLists, muteLists} from "@app/core/plugins"
   import {pushToast} from "@app/features/toast"
-  import {PLATFORM_NAME} from "@app/core/env"
+  import {PLATFORM_NAME, HIDE_NOSTR} from "@app/core/env"
   import {flTheme, flThemes, theme} from "@app/features/theme"
   import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
 
@@ -246,23 +246,25 @@
           </p>
         {/snippet}
       </Field>
-      <Field>
-        {#snippet label()}
-          <p>Media Server</p>
-        {/snippet}
-        {#snippet secondary()}
-          <Button class="link text-sm underline flex items-center gap-1" onclick={addServer}>
-            <Icon icon={AddCircle} size={4} />
-            Add Server
-          </Button>
-        {/snippet}
-        {#snippet input()}
-          <InputList allowAdd={false} bind:value={blossomServers} />
-        {/snippet}
-        {#snippet info()}
-          <p>Choose a media server type and url for files you upload to {PLATFORM_NAME}.</p>
-        {/snippet}
-      </Field>
+      {#if !HIDE_NOSTR}
+        <Field>
+          {#snippet label()}
+            <p>Media Server</p>
+          {/snippet}
+          {#snippet secondary()}
+            <Button class="link text-sm underline flex items-center gap-1" onclick={addServer}>
+              <Icon icon={AddCircle} size={4} />
+              Add Server
+            </Button>
+          {/snippet}
+          {#snippet input()}
+            <InputList allowAdd={false} bind:value={blossomServers} />
+          {/snippet}
+          {#snippet info()}
+            <p>Choose a media server type and url for files you upload to {PLATFORM_NAME}.</p>
+          {/snippet}
+        </Field>
+      {/if}
     </div>
     <div class="card flex flex-col gap-4">
       <strong class="text-lg">Model Settings</strong>

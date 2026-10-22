@@ -12,6 +12,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {clip} from "@app/features/toast"
   import {handles, profiles} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
 
   type Props = {
     pubkey: string
@@ -58,12 +59,12 @@
       {/if}
       <WotScore {pubkey} />
     </div>
-    {#if $handle}
+    {#if $handle && !HIDE_NOSTR}
       <div class="overflow-hidden text-ellipsis text-sm opacity-75">
         {displayHandle($handle)}
       </div>
     {/if}
-    {#if showPubkey}
+    {#if showPubkey && !HIDE_NOSTR}
       <div class="flex items-center gap-1 overflow-hidden text-ellipsis text-xs opacity-60">
         {displayPubkey(pubkey)}
         <Button onclick={copyPubkey} class="pt-1">

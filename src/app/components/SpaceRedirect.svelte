@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {displayRelayUrl} from "@welshman/util"
   import {preventDefault} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import ServerPath from "@assets/icons/server-path.svg?dataurl"
@@ -12,6 +11,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
   import {roomLists} from "@app/core/plugins"
   import {publishRoomList} from "@app/features/spaces/rooms"
   import {goToMovedSpace} from "@app/navigation/history"
@@ -53,9 +53,9 @@
       </div>
       <ModalTitle>This space has moved</ModalTitle>
       <ModalSubtitle>
-        <span class="text-primary">{displayRelayUrl(url)}</span>
+        <RelayLabel {url} class="text-primary" />
         is now located at
-        <span class="text-primary">{displayRelayUrl(newUrl)}</span>.
+        <RelayLabel url={newUrl} class="text-primary" />.
       </ModalSubtitle>
     </ModalHeader>
     <p class="text-center">

@@ -7,7 +7,7 @@ import {MessagingRelayLists, RelayLists, Relays, SearchRelayLists} from "@welshm
 import type {Command, IApp} from "@welshman/app"
 import {usePlugin} from "@app/core/plugins"
 import {session} from "@app/core/session"
-import {DEFAULT_RELAYS} from "@app/core/env"
+import {DEFAULT_RELAYS, HIDE_NOSTR} from "@app/core/env"
 import {kv} from "@app/core/storage"
 import {pushModal} from "@app/navigation/dialogs"
 import KeyDownload from "@app/components/KeyDownload.svelte"
@@ -176,7 +176,7 @@ export class HealthChecks {
     },
   ]
 
-  private checks: HealthCheck[] = [
+  private relayChecks: HealthCheck[] = [
     ...this.relayLists.flatMap(spec =>
       spec.missing ? [missingRelaysCheck(spec, spec.missing)] : [],
     ),
@@ -195,6 +195,9 @@ export class HealthChecks {
           urls => this.app.use(SearchRelayLists).setUrls(urls),
         ),
     },
+  ]
+
+  private keyChecks: HealthCheck[] = [
     {
       id: "backup-key",
       title: "Back Up Your Key",
@@ -214,6 +217,8 @@ export class HealthChecks {
       }),
     },
   ]
+
+  private checks = HIDE_NOSTR ? this.keyChecks : [...this.relayChecks, ...this.keyChecks]
 
   private finishKeyBackup = () => {
     forceHealthChecks.update(assoc("backup-key", false))

@@ -20,6 +20,7 @@
   import {deriveUserAdminDelete} from "@app/features/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
   import {user} from "@app/core/user"
+  import {HIDE_NOSTR} from "@app/core/env"
 
   type Props = {
     url?: string
@@ -51,12 +52,14 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
-  <li>
-    <Button onclick={showInfo}>
-      <Icon size={4} icon={Code2} />
-      {noun} Details
-    </Button>
-  </li>
+  {#if !HIDE_NOSTR}
+    <li>
+      <Button onclick={showInfo}>
+        <Icon size={4} icon={Code2} />
+        {noun} Details
+      </Button>
+    </li>
+  {/if}
   <li>
     <BookmarkButton {url} {event} />
   </li>

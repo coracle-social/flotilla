@@ -7,6 +7,7 @@
   import ConversationMessageEmojiButton from "@app/components/ConversationMessageEmojiButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import {pushModal} from "@app/navigation/dialogs"
+  import {HIDE_NOSTR} from "@app/core/env"
   import Pen from "@assets/icons/pen.svg?dataurl"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
@@ -41,10 +42,12 @@
       <Icon size={4} icon={Pen} />
     </Button>
   {/if}
-  <Button
-    aria-label="Message info"
-    class="button button-neutral button-xs join-item"
-    onclick={showInfo}>
-    <Icon size={4} icon={Code2} />
-  </Button>
+  {#if !HIDE_NOSTR}
+    <Button
+      aria-label="Message info"
+      class="button button-neutral button-xs join-item"
+      onclick={showInfo}>
+      <Icon size={4} icon={Code2} />
+    </Button>
+  {/if}
 </div>

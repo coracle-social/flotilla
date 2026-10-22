@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {displayRelayUrl} from "@welshman/util"
   import UserPlus from "@assets/icons/user-plus.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
@@ -11,6 +10,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import InviteLink from "@app/components/InviteLink.svelte"
   import SpaceMembersAdd from "@app/components/SpaceMembersAdd.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
 
@@ -33,7 +33,7 @@
       <ModalTitle>Create an Invite</ModalTitle>
       <ModalSubtitle>
         Get a link that you can use to invite people to
-        <span class="text-primary">{displayRelayUrl(url)}</span>
+        <RelayLabel {url} class="text-primary" />
       </ModalSubtitle>
     </ModalHeader>
     <InviteLink {url} />

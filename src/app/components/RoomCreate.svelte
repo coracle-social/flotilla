@@ -1,6 +1,5 @@
 <script lang="ts">
   import {navigate} from "@app/navigation/navigate"
-  import {displayRelayUrl} from "@welshman/util"
   import type {RoomMeta} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
@@ -12,6 +11,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RoomForm from "@app/components/RoomForm.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
@@ -30,7 +30,7 @@
     <ModalHeader>
       <ModalTitle>Create a Room</ModalTitle>
       <ModalSubtitle>
-        On <span class="text-primary">{displayRelayUrl(url)}</span>
+        On <RelayLabel {url} class="text-primary" />
       </ModalSubtitle>
     </ModalHeader>
   {/snippet}

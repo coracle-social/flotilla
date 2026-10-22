@@ -21,6 +21,7 @@
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {user} from "@app/core/user"
   import {roomPinLists} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
   import {shareEvent} from "@app/features/share"
   import {readAloud} from "@app/features/voice"
@@ -92,12 +93,14 @@
 </script>
 
 <ul class="menu bg-surface whitespace-nowrap rounded-2xl p-2">
-  <li>
-    <Button onclick={showInfo}>
-      <Icon size={4} icon={Code2} />
-      Message Details
-    </Button>
-  </li>
+  {#if !HIDE_NOSTR}
+    <li>
+      <Button onclick={showInfo}>
+        <Icon size={4} icon={Code2} />
+        Message Details
+      </Button>
+    </li>
+  {/if}
   <li>
     <Button onclick={share}>
       <Icon size={4} icon={ShareCircle} />

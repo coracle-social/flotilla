@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {displayRelayUrl} from "@welshman/util"
   import Widget from "@assets/icons/widget-4.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import {preventDefault} from "@lib/html"
@@ -19,6 +18,7 @@
   import {resolveImageInput} from "@app/features/uploads"
   import {relayManagement, relays} from "@app/core/plugins"
   import IconInput from "@app/components/IconInput.svelte"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
 
   type Props = {
     url: string
@@ -90,7 +90,7 @@
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Edit this Space</ModalTitle>
-      <ModalSubtitle><span class="text-primary">{displayRelayUrl(url)}</span></ModalSubtitle>
+      <ModalSubtitle><RelayLabel {url} class="text-primary" /></ModalSubtitle>
     </ModalHeader>
     <FieldInline>
       {#snippet label()}

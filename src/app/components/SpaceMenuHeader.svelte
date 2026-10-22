@@ -11,6 +11,7 @@
   import RelayName from "@app/components/RelayName.svelte"
   import {deriveSpaceActionItems} from "@app/features/spaces/actionItems"
   import {deriveShouldNotify} from "@app/core/settings"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {notificationSettings} from "@app/features/push"
   import {pushModal} from "@app/navigation/dialogs"
 
@@ -74,7 +75,9 @@
     </strong>
     <Icon icon={AltArrowDown} />
   </div>
-  <span class="text-xs text-primary">{displayRelayUrl(url)}</span>
+  {#if !HIDE_NOSTR}
+    <span class="text-xs text-primary">{displayRelayUrl(url)}</span>
+  {/if}
 </Button>
 {#if showMenu && !mobile}
   <div class="relative w-full">

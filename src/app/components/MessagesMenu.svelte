@@ -10,6 +10,7 @@
   import RelayList from "@app/components/RelayList.svelte"
   import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
   import {setChecked} from "@app/features/checked"
   import {notificationSettings} from "@app/features/push"
@@ -54,10 +55,12 @@
       {/if}
     </Button>
   </li>
-  <li>
-    <Button onclick={showRelays}>
-      <Icon size={4} icon={Mailbox} />
-      Manage Relays
-    </Button>
-  </li>
+  {#if !HIDE_NOSTR}
+    <li>
+      <Button onclick={showRelays}>
+        <Icon size={4} icon={Mailbox} />
+        Manage Relays
+      </Button>
+    </li>
+  {/if}
 </ul>

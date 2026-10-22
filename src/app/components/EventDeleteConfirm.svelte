@@ -3,6 +3,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import Confirm from "@lib/components/Confirm.svelte"
   import {deletes, relays, router} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
 
@@ -36,4 +37,6 @@
   {confirm}
   title="Delete Message"
   subtitle="Are you sure you want to delete this message?"
-  message="This will send a request to delete this message. Be aware that not all relays may honor this request." />
+  message={HIDE_NOSTR
+    ? "This will delete this message for everyone."
+    : "This will send a request to delete this message. Be aware that not all relays may honor this request."} />

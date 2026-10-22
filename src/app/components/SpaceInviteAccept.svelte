@@ -96,7 +96,7 @@
           {#if isRoomInvite}
             Enter a room invite link below to join an existing room.
           {:else}
-            Enter a relay URL or invite link below to join an existing space.
+            Enter an invite link below to join an existing space.
           {/if}
         </ModalSubtitle>
       </ModalHeader>

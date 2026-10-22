@@ -25,7 +25,7 @@
   import {openCheckout} from "@app/features/spaces/payments"
   import {user} from "@app/core/user"
   import {relays} from "@app/core/plugins"
-  import {ENABLE_PAID_SPACES} from "@app/core/env"
+  import {ENABLE_PAID_SPACES, HIDE_NOSTR} from "@app/core/env"
   import {deriveHostedRelay, HOSTING_ENABLED} from "@app/features/hosting"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {userSpaceUrls} from "@app/features/spaces"
@@ -137,7 +137,9 @@
   {/if}
 {/snippet}
 
-{@render actionButton(showConnectionStatus, Pulse, "Connection status")}
+{#if !HIDE_NOSTR}
+  {@render actionButton(showConnectionStatus, Pulse, "Connection status")}
+{/if}
 {@render actionButton(createInvite, LinkRound, "Create Invite")}
 {#if $permissions.review}
   {@render actionButton(

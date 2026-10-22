@@ -36,7 +36,7 @@
   import {roomPinLists} from "@app/core/plugins"
   import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
-  import {ENABLE_ZAPS} from "@app/core/env"
+  import {ENABLE_ZAPS, HIDE_NOSTR} from "@app/core/env"
   import {makeContentPath} from "@app/navigation/pages"
   import {shareEvent} from "@app/features/share"
   import {readAloud} from "@app/features/voice"
@@ -182,10 +182,12 @@
               View Details
             </Link>
           {/if}
-          <Button class="button button-neutral w-full" onclick={showInfo}>
-            <Icon size={4} icon={Code2} />
-            Message Info
-          </Button>
+          {#if !HIDE_NOSTR}
+            <Button class="button button-neutral w-full" onclick={showInfo}>
+              <Icon size={4} icon={Code2} />
+              Message Info
+            </Button>
+          {/if}
           {#if event.pubkey === $user.pubkey}
             <Button class="button button-neutral w-full text-error" onclick={showDelete}>
               <Icon size={4} icon={TrashBin2} />

@@ -25,6 +25,7 @@
     DEFAULT_RELAYS,
     DEFAULT_MESSAGING_RELAYS,
     DEFAULT_SPACES,
+    HIDE_NOSTR,
   } from "@app/core/env"
   import {forceHealthChecks} from "@app/features/healthChecks"
   import {loginWithPomade} from "@app/features/pomade"
@@ -124,7 +125,7 @@
       onclick={flows.nostr.start}
       class={cx(`button button-${hasPomade ? "neutral" : "primary"}`)}>
       <Icon icon={Key} />
-      Generate a key
+      {HIDE_NOSTR ? "Sign up" : "Generate a key"}
     </Button>
     <div class="text-sm">
       Already have an account?

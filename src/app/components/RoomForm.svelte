@@ -39,7 +39,7 @@
     if (roomType === RoomType.Voice && !$relayHasLivekit) {
       return pushToast({
         theme: "error",
-        message: "This relay does not support voice rooms.",
+        message: "This space does not support voice rooms.",
       })
     }
 

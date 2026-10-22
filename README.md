@@ -42,6 +42,7 @@ Create an `.env.local` file to override any of the values in `.env`:
 - `VITE_PLATFORM_PRIVACY` - URL to your privacy policy page
 - `VITE_PLATFORM_LOGEE` - A hex pubkey which will receive logs users send from their privacy settings
 - `VITE_THEME` - The visual preset components are styled with: `clay`, `flat`, `navy`, or `nature`
+- `VITE_HIDE_NOSTR` - Set to `true` to hide protocol details (relay addresses and settings, public keys, nostr addresses, raw event data) for people who don't need to know the app runs on nostr.
 
 **Platform mode**
 

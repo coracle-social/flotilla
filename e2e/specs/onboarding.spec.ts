@@ -15,7 +15,7 @@ const nsecFor = (user: TestUser) => nsecEncode(hexToBytes(user.secret))
 const logInWithKey = async (page: Page, key: string) => {
   await page.getByRole("button", {name: "Log in"}).click()
   await page.getByRole("button", {name: "Log in with Key"}).click()
-  await page.getByPlaceholder("nsec1...").fill(key)
+  await page.getByPlaceholder("Your private key").fill(key)
   // The landing page's own "Log in" is still behind the dialog, so submit is named by the form.
   await page.locator("form").getByRole("button", {name: "Log in", exact: true}).click()
 }
@@ -132,7 +132,7 @@ test("US-003 log in with an existing private key", async ({seed, visit}) => {
 
   const submit = withNcryptsec.locator("form").getByRole("button", {name: "Log in", exact: true})
 
-  await withNcryptsec.getByPlaceholder("nsec1...").fill(ncryptsec)
+  await withNcryptsec.getByPlaceholder("Your private key").fill(ncryptsec)
   await withNcryptsec.getByPlaceholder("Your password").fill("not the password")
   await submit.click()
 
@@ -280,7 +280,7 @@ test("US-008 delete your nostr account", async ({seed, as, visit}) => {
 
   await expect(confirm).toBeDisabled()
 
-  await phrase.fill("permanently delete my nostr account")
+  await phrase.fill("permanently delete my account")
 
   await expect(confirm).toBeEnabled()
 

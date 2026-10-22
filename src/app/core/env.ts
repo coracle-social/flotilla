@@ -62,6 +62,9 @@ export const FL_THEME = env("VITE_THEME")
 
 export const PLATFORM_DESCRIPTION = env("VITE_PLATFORM_DESCRIPTION")
 
+// Hides protocol details (relays, keys, identifiers, raw events) from people who don't need them.
+export const HIDE_NOSTR = env("VITE_HIDE_NOSTR") === "true"
+
 export const POMADE_SIGNERS = fromCsv(env("VITE_POMADE_SIGNERS"))
 
 export const DEFAULT_BLOSSOM_SERVERS = fromCsv(env("VITE_DEFAULT_BLOSSOM_SERVERS"))

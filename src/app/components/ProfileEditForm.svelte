@@ -33,6 +33,7 @@
   import InputProfilePicture from "@app/components/InputProfilePicture.svelte"
   import InfoHandle from "@app/components/InfoHandle.svelte"
   import {pushModal} from "@app/navigation/dialogs"
+  import {HIDE_NOSTR} from "@app/core/env"
 
   type Props = {
     initialValues: Values
@@ -136,27 +137,29 @@
           A link to your personal site or portfolio.
         {/snippet}
       </Field>
-      <Field>
-        {#snippet label()}
-          <p>Nostr Address</p>
-        {/snippet}
-        {#snippet input()}
-          <label class="input flex w-full items-center gap-2">
-            <Icon icon={MapPoint} />
-            <input
-              bind:value={values.profile.nip05}
-              class="grow"
-              type="text"
-              aria-label="Nostr Address" />
-          </label>
-        {/snippet}
-        {#snippet info()}
-          <p>
-            <Button class="button button-link" onclick={showInfoHandle}
-              >What is a nostr address?</Button>
-          </p>
-        {/snippet}
-      </Field>
+      {#if !HIDE_NOSTR}
+        <Field>
+          {#snippet label()}
+            <p>Nostr Address</p>
+          {/snippet}
+          {#snippet input()}
+            <label class="input flex w-full items-center gap-2">
+              <Icon icon={MapPoint} />
+              <input
+                bind:value={values.profile.nip05}
+                class="grow"
+                type="text"
+                aria-label="Nostr Address" />
+            </label>
+          {/snippet}
+          {#snippet info()}
+            <p>
+              <Button class="button button-link" onclick={showInfoHandle}
+                >What is a nostr address?</Button>
+            </p>
+          {/snippet}
+        </Field>
+      {/if}
     {/if}
   </ModalBody>
   {#if progressBar}
