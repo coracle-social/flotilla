@@ -9,8 +9,9 @@
    Every theme is selected the same way, by its own data-fl-theme value — there
    is no default, so VITE_THEME (→ FL_THEME, stamped on <body> + the app root)
    must be set. Themes are mutually exclusive, so import order doesn't matter.
-   Add a theme = a token file, an @import, and its name in app/features/theme.ts's
-   flThemes, which is what offers it in settings. ============================== */
+   Add a theme = a token file, an @import, its name in app/features/theme.ts's
+   flThemes, which is what offers it in settings, and a folder of nav icons in
+   assets/icons/themed. ========================================================= */
 
 @import "tailwindcss";
 @import "./base.css";
