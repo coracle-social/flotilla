@@ -32,7 +32,8 @@
   }
 
   &[data-theme="dark"],
-  & .primary-nav {
+  & .primary-nav,
+  & .mobile-nav {
     --primary: #7161ff;
     --primary-soft: #5a48f0;
     --primary-bold: #8e80ff;

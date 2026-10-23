@@ -64,9 +64,10 @@
     --shadow-inset-strong: inset 0 -3px 0 rgba(0, 0, 0, 0.1);
   }
 
-  /* `.primary-nav` opts the primary nav into this dark palette unconditionally */
+  /* `.primary-nav` and `.mobile-nav` opt the navs into this dark palette unconditionally */
   &[data-theme="dark"],
-  & .primary-nav {
+  & .primary-nav,
+  & .mobile-nav {
     --primary: #8e80ff;
     --primary-soft: #a394ff;
     --primary-bold: #7161ff;

@@ -79,7 +79,7 @@
       notification={$notifications.has("/chat")}>
       <ImageIcon alt="Messages" src={themedIcon("letter")} size={10} />
     </PrimaryNavItem>
-    <PrimaryNavItem title="Bookmarks" href="/bookmarks">
+    <PrimaryNavItem title="Bookmarks" href="/bookmarks" prefix="no-highlight">
       <ImageIcon alt="Bookmarks" src={themedIcon("bookmark")} size={10} />
     </PrimaryNavItem>
     <PrimaryNavItem title="Search" onclick={showSearch}>
@@ -90,37 +90,41 @@
 
 {@render children?.()}
 
-<!-- a little extra something for ios -->
-<div class="hide-on-keyboard fixed bottom-0 left-0 right-0 z-nav h-(--saib) bg-surface md:hidden">
-</div>
-<div
-  class="hide-on-keyboard border-top bottom-sai fixed left-0 right-0 z-nav h-(--mobile-nav-height) border border-line bg-surface md:hidden">
-  <div class="flex h-full justify-between px-2">
-    <div class="flex items-center gap-6">
-      <PrimaryNavItem
-        onclick={toggleSpaceMenu}
-        aria-label={spaceMenuLabel}
-        notification={otherSpaceNotifications}>
-        <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
-      </PrimaryNavItem>
-      <PrimaryNavItem onclick={showSearch}>
-        <ImageIcon alt="Search" src={themedIcon("magnifier")} size={8} />
-      </PrimaryNavItem>
-      <PrimaryNavItem href="/chat" onclick={chatHandler} notification={$notifications.has("/chat")}>
-        <ImageIcon alt="Messages" src={themedIcon("letter")} size={8} />
-      </PrimaryNavItem>
-      {#if PLATFORM_RELAYS.length === 0}
-        <PrimaryNavItem href="/spaces">
-          <ImageIcon alt="All Spaces" src={themedIcon("compass")} size={8} />
+<div class="mobile-nav md:hidden">
+  <!-- a little extra something for ios -->
+  <div class="hide-on-keyboard fixed bottom-0 left-0 right-0 z-nav h-(--saib) bg-surface"></div>
+  <div
+    class="hide-on-keyboard border-top bottom-sai fixed left-0 right-0 z-nav h-(--mobile-nav-height) border border-line bg-surface">
+    <div class="flex h-full justify-between px-2">
+      <div class="flex items-center gap-6">
+        <PrimaryNavItem
+          onclick={toggleSpaceMenu}
+          aria-label={spaceMenuLabel}
+          notification={otherSpaceNotifications}>
+          <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
         </PrimaryNavItem>
-      {/if}
+        <PrimaryNavItem onclick={showSearch}>
+          <ImageIcon alt="Search" src={themedIcon("magnifier")} size={8} />
+        </PrimaryNavItem>
+        <PrimaryNavItem
+          href="/chat"
+          onclick={chatHandler}
+          notification={$notifications.has("/chat")}>
+          <ImageIcon alt="Messages" src={themedIcon("letter")} size={8} />
+        </PrimaryNavItem>
+        {#if PLATFORM_RELAYS.length === 0}
+          <PrimaryNavItem href="/spaces">
+            <ImageIcon alt="All Spaces" src={themedIcon("compass")} size={8} />
+          </PrimaryNavItem>
+        {/if}
+      </div>
+      <PrimaryNavItem onclick={showSettingsMenu} aria-label="Settings">
+        {#if $userProfile?.picture()}
+          <ImageIcon alt="Settings" src={$userProfile.picture()!} size={10} class="rounded-full" />
+        {:else}
+          <ImageIcon alt="Settings" src={Settings} size={8} class="rounded-full" />
+        {/if}
+      </PrimaryNavItem>
     </div>
-    <PrimaryNavItem onclick={showSettingsMenu} aria-label="Settings">
-      {#if $userProfile?.picture()}
-        <ImageIcon alt="Settings" src={$userProfile.picture()!} size={10} class="rounded-full" />
-      {:else}
-        <ImageIcon alt="Settings" src={Settings} size={8} class="rounded-full" />
-      {/if}
-    </PrimaryNavItem>
   </div>
 </div>
