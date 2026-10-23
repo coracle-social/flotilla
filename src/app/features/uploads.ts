@@ -1,5 +1,5 @@
 import type {Maybe} from "@welshman/lib"
-import {first, ms, normalizeUrl, parseJson, randomId, sha256, simpleCache} from "@welshman/lib"
+import {first, ms, normalizeUrl, parseJson, sha256, simpleCache} from "@welshman/lib"
 import {canUploadBlob, encryptFile, makeBlossomAuthEvent, uploadBlob} from "@welshman/util"
 import {Nip01Signer} from "@welshman/signer"
 import {app} from "@app/core/app"
@@ -101,11 +101,7 @@ const compressFile = async (file: File, options: CompressFileOptions) => {
       error: e => {
         // Non-images break compressor, return the original file
         if (e.toString().includes("File or Blob")) {
-          resolve(
-            new File([file], `${randomId()}.${file.type.split("/")[1] || "bin"}`, {
-              type: file.type,
-            }),
-          )
+          resolve(file)
         } else {
           reject(e)
         }
@@ -134,7 +130,7 @@ export type UploadFileResult = {
   result?: UploadResult
 }
 
-// Mirrors the imeta the editor builds for media it holds as a node.
+// Mirrors the imeta the editor builds for media nodes, plus the `name` a download is saved under.
 export const makeImetaTag = (file: File, result: UploadResult) => {
   const meta: Record<string, string> = {
     url: result.url,
@@ -142,6 +138,10 @@ export const makeImetaTag = (file: File, result: UploadResult) => {
     ox: result.sha256,
     m: file.type,
     size: String(file.size),
+  }
+
+  if (file.name) {
+    meta.name = file.name
   }
 
   for (const [k, v] of result.tags) {

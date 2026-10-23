@@ -36,27 +36,52 @@ export const getUrlContentType = (url: string, event: TrustedEvent) => {
   return tagValue(tagSpec("m"), tags) || tagValue(tagSpec("file-type"), tags) || ""
 }
 
+export const getUrlFileName = (url: string, event: TrustedEvent) => {
+  const tags = getUrlTags(url, event)
+  const name =
+    tagValue(tagSpec("name"), tags) ||
+    decodeURIComponent(new URL(url).pathname.split("/").filter(Boolean).at(-1) || "")
+
+  // The name is someone else's to choose, and native downloads write it to disk as a path.
+  return name.replace(/[\p{Cc}/\\]/gu, "_").replace(/^\.+/, "") || "file"
+}
+
 export const isImageUrl = (url: string, event: TrustedEvent) =>
   Boolean(url.match(/\.(jpe?g|png|gif|webp)$/)) ||
   IMAGE_CONTENT_TYPES.includes(getUrlContentType(url, event))
 
-export const decryptUrl = async (url: string, event: TrustedEvent, signal?: AbortSignal) => {
+const getUrlDecryption = (url: string, event: TrustedEvent) => {
   const tags = getUrlTags(url, event)
   const algorithm = tagValue(tagSpec("encryption-algorithm"), tags)
   const key = tagValue(tagSpec("decryption-key"), tags)
   const nonce = tagValue(tagSpec("decryption-nonce"), tags)
 
   if (algorithm === "aes-gcm" && key && nonce) {
-    const response = await fetch(url, {signal})
-    if (!response.ok) {
-      throw new Error(`Attachment download failed (HTTP ${response.status}).`)
-    }
+    return {algorithm, key, nonce}
+  }
+}
+
+export const fetchUrlBlob = async (url: string, event: TrustedEvent, signal?: AbortSignal) => {
+  const decryption = getUrlDecryption(url, event)
+  const response = await fetch(url, {signal})
+
+  if (!response.ok) {
+    throw new Error(`Attachment download failed (HTTP ${response.status}).`)
+  }
+
+  if (decryption) {
     const ciphertext = new Uint8Array(await response.arrayBuffer())
-    const data = await decryptFile({ciphertext, key, nonce, algorithm})
+    const data = await decryptFile({ciphertext, ...decryption})
     signal?.throwIfAborted()
-    return URL.createObjectURL(
-      new Blob([new Uint8Array(data)], {type: getUrlContentType(url, event)}),
-    )
+    return new Blob([new Uint8Array(data)], {type: getUrlContentType(url, event)})
+  }
+
+  return response.blob()
+}
+
+export const decryptUrl = async (url: string, event: TrustedEvent, signal?: AbortSignal) => {
+  if (getUrlDecryption(url, event)) {
+    return URL.createObjectURL(await fetchUrlBlob(url, event, signal))
   }
 
   return url

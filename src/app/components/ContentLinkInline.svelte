@@ -7,6 +7,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import {getUrlContentType, IMAGE_CONTENT_TYPES} from "@lib/media"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
+  import ContentLinkFile from "@app/components/ContentLinkFile.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
   import {pushModal} from "@app/navigation/dialogs"
 
@@ -32,6 +33,8 @@
     <Icon icon={LinkRound} size={3} class="inline-block" />
     {displayUrl(url)}
   </a>
+{:else if fileType}
+  <ContentLinkFile {url} {event} inline class={className} />
 {:else}
   <ContentLinkUrl {url} class={className} />
 {/if}

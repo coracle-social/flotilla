@@ -27,6 +27,7 @@
   import ContentLinkBlockAudio from "@app/components/ContentLinkBlockAudio.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
+  import ContentLinkFile from "@app/components/ContentLinkFile.svelte"
   import {pushModal} from "@app/navigation/dialogs"
   import {PLATFORM_URL, THUMBNAIL_URL} from "@app/core/env"
   import {isRoomId} from "@app/features/spaces/rooms"
@@ -96,6 +97,8 @@
       <ContentLinkBlockImage {url} {event} class="m-auto max-h-96 rounded-2xl" />
     </button>
   </Link>
+{:else if fileType}
+  <ContentLinkFile {url} {event} />
 {:else}
   {#await loadPreview(url)}
     <Link {external} {href} class="my-2 block">

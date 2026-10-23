@@ -89,7 +89,7 @@
     }
 
     const [imetaTags, tags] = partition(nthEq(0, "imeta"), params.tags)
-    const imetas = imetaTags.map(tag => tag.slice(1).map(entry => entry.split(" ")))
+    const imetas = imetaTags.map(tag => tag.slice(1).map(entry => entry.split(/ (.*)/s, 2)))
     const templates: EventTemplate[] = []
     const buffer = []
 

@@ -120,17 +120,25 @@ export const createScroller = ({
 
 export const isMobile = document.documentElement.ontouchstart !== undefined
 
-export const downloadText = async (filename: string, text: string) => {
+const readBlobAsBase64 = (blob: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+
+    reader.addEventListener("load", () => resolve(String(reader.result).split(",")[1]))
+    reader.addEventListener("error", () => reject(reader.error))
+    reader.readAsDataURL(blob)
+  })
+
+export const downloadBlob = async (filename: string, blob: Blob) => {
   // The <a download> blob trick is a no-op in native WebViews, so write the file and share it.
   if (["android", "ios"].includes(Capacitor.getPlatform())) {
-    const {Filesystem, Directory, Encoding} = await import("@capacitor/filesystem")
+    const {Filesystem, Directory} = await import("@capacitor/filesystem")
     const {Share} = await import("@capacitor/share")
 
     const {uri} = await Filesystem.writeFile({
       path: filename,
-      data: text,
+      data: await readBlobAsBase64(blob),
       directory: Directory.Cache,
-      encoding: Encoding.UTF8,
     })
 
     await Share.share({title: filename, files: [uri]})
@@ -138,7 +146,6 @@ export const downloadText = async (filename: string, text: string) => {
     return
   }
 
-  const blob = new Blob([text], {type: "text/plain"})
   const url = URL.createObjectURL(blob)
   const a = document.createElement("a")
 
@@ -149,6 +156,9 @@ export const downloadText = async (filename: string, text: string) => {
   document.body.removeChild(a)
   URL.revokeObjectURL(url)
 }
+
+export const downloadText = (filename: string, text: string) =>
+  downloadBlob(filename, new Blob([text], {type: "text/plain"}))
 
 export const escapeHtml = (html: string) => {
   const element = document.createElement("div")
