@@ -11,7 +11,7 @@ category: advanced
 
 *Part of our guide to [running an online community you actually own](/articles/how-to-run-an-online-community).*
 
-Flotilla supports voice rooms and video calls with screen sharing, but you have to configure the relay before members see the option. This article is for relay operators [self-hosting zooid](/articles/self-hosting-a-space). To use voice and video as a member, see [Spaces and Rooms Explained](/articles/spaces-and-rooms-explained) instead.
+Flotilla supports voice rooms and video calls with screen sharing, but you have to configure the relay before members see the option. This article is for relay operators [self-hosting zooid](/articles/self-hosting-a-space). To use voice and video as a member, see [Using Voice and Video Calls](/articles/using-voice-and-video-calls) instead.
 
 ## The LiveKit server
 

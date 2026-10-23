@@ -69,7 +69,7 @@ Once you have your key, you can explore one of the [hundreds of Nostr applicatio
 
 If keys sound like more than you want to deal with today, you don't have to touch them. Flotilla also offers "Log in with Email," which works the way you'd expect: an email address and a password, or a one-time code sent to your inbox if you forget it. There's still a real Nostr identity behind the scenes — you're just not the one holding the key file, and you can switch to holding it yourself later.
 
-If you're more advanced, you can use a Nostr app that supports "remote signing", like [Primal](https://play.google.com/store/search?q=primal%20nostr&c=apps&hl=en_US), to log in to other apps on the same device.
+If you're more advanced, you can use a Nostr app that supports "remote signing", like [Primal](https://primal.net), to log in to other apps on the same device.
 
 **Learn more:**
 - [Getting Started](/articles/getting-started)

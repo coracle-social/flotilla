@@ -15,7 +15,7 @@ category: basics
 
 Calling something "private" can mean different things to different people, anything from "trust me bro" to full end-to-end encrypted communication. Flotilla covers two main areas where the requirements and guarantees differ: community spaces and direct messages.
 
-### Space Privacy
+## Space Privacy
 
 Flotilla protects spaces through self-hosted community infrastructure rather than encryption. That gives organizers more control over exactly what stays private and who has access.
 
@@ -27,7 +27,7 @@ Flotilla is also built on the Nostr protocol, which uses digital signatures to v
 
 For this reason we describe Flotilla's groups — particularly those [hosted by Flotilla](/articles/hosting-with-flotilla) or using the [Zooid relay implementation](https://github.com/coracle-social/zooid) — as "non-public" rather than "private". Flotilla is built for small communities, not for journalists or activists.
 
-### What Is Public About You
+## What Is Public About You
 
 Some things about *you* are public on any space you join, no matter how tightly its policies are set.
 
@@ -39,7 +39,7 @@ Treat anything you publish as effectively permanent, even where a delete option 
 
 Some relays also ask Flotilla to prove who you are before serving certain content. Answering tells the operator your identity, and a setting decides whether Flotilla answers for relays you haven't added yourself. See [Privacy Settings: Limiting What You Leak](/articles/privacy-settings) for that toggle and the rest of Flotilla's privacy controls.
 
-### Direct Messages
+## Direct Messages
 
 Direct messages get a different approach. A DM rarely involves more than a handful of people (Flotilla supports small group chats as well as one-on-one conversations), and they're often stored on public infrastructure, so it makes sense to protect them with encryption.
 
@@ -47,6 +47,6 @@ Flotilla uses the [NIP 17](https://github.com/nostr-protocol/nips/blob/master/17
 
 What Flotilla DMs *don't* have is [forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy) or [post-compromise security](https://crypto.stackexchange.com/questions/80095/what-is-post-compromise-security-exactly). In plain terms, if your Nostr identity is ever compromised, an attacker could gain access to old messages. That's a trade-off between user experience and security. Those stronger guarantees would also mean your messages weren't available when you signed in on a new device.
 
-### The Future of Messaging
+## The Future of Messaging
 
 Flotilla may eventually support [Marmot](https://github.com/marmot-protocol/marmot/), an emerging standard pioneered by the team at [WhiteNoise](https://www.whitenoise.chat/), which has the encryption features Flotilla's DMs lack plus the ability to host larger groups. The standard is very new, and porting Flotilla's more sophisticated group-management features to it would take a long time, so we aren't adopting it yet. If you're looking for stronger privacy guarantees, try [WhiteNoise](https://www.whitenoise.chat/).

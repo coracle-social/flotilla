@@ -34,7 +34,7 @@ As you might expect, you can react to any message with an emoji instead of sendi
 
 Messages recently sent are editable, so it's possible to fix a typo or clarify something if needed. You can also delete messages outright if you change your mind. Replies and quotes that reference the message stay intact, but it won't be possible to load the deleted message any longer.
 
-Messages can also be shared to other rooms, converted into [Threads](/articles/threads), read aloud, pinned to the top of the room, or added to the space [Library](/articles/community-memory). All of these actions can be accessed from the message menu.
+Messages can also be shared to other rooms, converted into threads, read aloud, pinned to the top of the room, or added to the space [Library](/articles/featured-content-and-library). All of these actions can be accessed from the message menu.
 
 ## Sharing images and media
 

@@ -7,7 +7,9 @@ import { CREATE_SPACE } from '../lib/analytics';
 const CREATE_URL = 'https://app.flotilla.social/spaces/create';
 const DEMO_URL = 'https://cal.com/coracle.social';
 const SELF_HOST_URL = '/articles/self-hosting-a-space';
+const PLATFORM_URL = '/platform';
 
+// Platform is a separate product, so it sits below the grid.
 const tiers = [
   {
     name: 'Free',
@@ -22,7 +24,6 @@ const tiers = [
       'Member directory & activity feed',
     ],
     cta: { label: 'Start free', href: CREATE_URL, variant: 'secondary', class: `w-full ${CREATE_SPACE}` },
-    learnMore: null,
     featured: false,
   },
   {
@@ -32,39 +33,46 @@ const tiers = [
     priceSuffix: '/mo',
     tagline: "For communities that are taking off.",
     features: [
-      'Everything in Free',
+      'Basic, $5/mo: up to 100 members',
+      'Growth, $25/mo: unlimited members',
       'Voice & video calls',
       'Media & file storage',
-      'Higher member limits',
       'Your own custom domain',
     ],
     cta: { label: 'Start a community', href: CREATE_URL, variant: 'primary', class: `w-full ${CREATE_SPACE}` },
-    learnMore: null,
     featured: true,
   },
   {
-    name: 'Platform',
-    priceLabel: '',
-    price: "Let's talk",
-    priceSuffix: '',
-    tagline: 'A fully owned, branded platform — built and run with you.',
+    name: 'Branded',
+    priceLabel: 'from',
+    price: '$300',
+    priceSuffix: '/mo',
+    tagline: 'For community organizers with a curated brand.',
     features: [
       'Everything in Grow',
-      'A white-labeled app we build & maintain',
+      'Your own iOS & Android app',
+      'Your name, icon & colors',
       'Hands-on help migrating your community',
-      'Full API access & custom integrations',
       'Priority support',
     ],
-    cta: { label: 'Book a demo', href: DEMO_URL, variant: 'secondary', class: 'w-full' },
-    learnMore: '/articles/platform-plan',
+    cta: { label: 'Talk to us', href: DEMO_URL, variant: 'secondary', class: 'w-full' },
     featured: false,
   },
+] as const;
+
+const platformFeatures = [
+  'Everything in Branded',
+  'Custom development for how your organization works',
+  'Integrations with your CRM, SSO, payments & the rest of your stack',
+  'A say in the roadmap',
+  'Dedicated hosting, upgrades & backups',
+  'Dedicated support from the people who build Flotilla',
 ] as const;
 ---
 
 <BaseLayout
   title="Pricing"
-  description="Flotilla pricing — start a community for free, grow with hosted plans from $5/mo, or get a fully white-labeled platform built and maintained for you."
+  description="Flotilla pricing — start a community for free, grow with hosted plans from $5/mo, put Flotilla under your own name from $300/mo, or get a platform built around your organization from $6,000/mo."
 >
   <section class="relative py-16 md:py-24">
     <div class="mx-auto max-w-6xl px-5 md:px-8">
@@ -74,8 +82,8 @@ const tiers = [
           Start free. Grow when you're ready.
         </h1>
         <p class="mx-auto mt-5 max-w-xl text-base text-text-muted sm:text-lg">
-          Start a community in minutes, at no cost. Upgrade for hosting as you grow — no ads,
-          no per-seat games, no lock-in.
+          Start a community in minutes, at no cost. Upgrade for hosting as you grow, or put
+          Flotilla under your own name — no ads, no per-seat games, no lock-in.
         </p>
       </div>
 
@@ -115,15 +123,6 @@ const tiers = [
               <Button href={tier.cta.href} variant={tier.cta.variant} class={tier.cta.class}>
                 {tier.cta.label}
               </Button>
-              {tier.learnMore && (
-                <a
-                  href={tier.learnMore}
-                  class="group mt-3 flex items-center justify-center gap-1 text-sm font-bold text-text-muted hover:text-primary-soft transition-colors"
-                >
-                  Learn more
-                  <span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">&rarr;</span>
-                </a>
-              )}
             </div>
           </div>
         ))}
@@ -133,6 +132,49 @@ const tiers = [
         Prefer to run it yourself? Flotilla is
         <a href={SELF_HOST_URL} class="text-primary-soft hover:underline">self-hostable</a> at no cost.
       </p>
+    </div>
+  </section>
+
+  <!-- Platform: a different product, not a bigger plan -->
+  <section class="relative border-t border-border-soft bg-surface-2/30 py-16 md:py-24">
+    <div class="mx-auto max-w-6xl px-5 md:px-8">
+      <div class="mx-auto max-w-2xl text-center">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">For organizations</p>
+        <h2 class="mt-3 text-3xl font-extrabold sm:text-4xl md:text-5xl">
+          Need more than a plan?
+        </h2>
+        <p class="mx-auto mt-5 max-w-xl text-base text-text-muted sm:text-lg">
+          The plans above host a space inside Flotilla. Platform is an app and infrastructure
+          built around one organization, with our team behind it.
+        </p>
+      </div>
+
+      <div class="mt-12 grid gap-10 rounded-3xl border border-primary/30 bg-surface/60 p-8 md:grid-cols-5 md:p-12">
+        <div class="md:col-span-2">
+          <h3 class="text-2xl font-extrabold">Platform</h3>
+          <p class="mt-4 flex items-baseline gap-1.5">
+            <span class="text-sm text-text-dim">from</span>
+            <span class="text-4xl font-extrabold">$6,000</span>
+            <span class="text-sm text-text-dim">/mo</span>
+          </p>
+          <p class="mt-3 text-sm text-text-muted">
+            For membership networks, associations and institutions whose community is too
+            important to run on a generic app.
+          </p>
+          <div class="mt-8 flex flex-col gap-3">
+            <Button href={PLATFORM_URL} variant="primary" class="w-full">See the Platform plan</Button>
+            <Button href={DEMO_URL} variant="secondary" class="w-full">Book a call</Button>
+          </div>
+        </div>
+        <ul class="grid gap-3 text-sm sm:grid-cols-2 md:col-span-3">
+          {platformFeatures.map((f) => (
+            <li class="flex items-start gap-3">
+              <Icon name="ph:check-circle" class="mt-0.5 h-5 w-5 flex-none text-primary-soft" aria-hidden="true" />
+              <span>{f}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   </section>
 </BaseLayout>

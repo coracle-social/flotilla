@@ -15,7 +15,7 @@ category: basics
 
 There are two main ways to join a space on Flotilla: with an invite link, or by browsing to discover existing groups. If you're a community organizer, we recommend inviting your members with a link.
 
-### Using an Invite Link
+## Using an Invite Link
 
 To create an invite link, open the space's main menu and click "Create Invite". Flotilla generates a link pointing to the space. If your space supports it, you'll also get an invite code you can use to grant access to other people.
 
@@ -33,7 +33,7 @@ Next, you may want to set up notifications or customize which rooms appear in yo
 
 ![](/images/34F0xVzKxz8oOafl8Oyba0JN1iU.png)
 
-### Discovering Spaces
+## Discovering Spaces
 
 You can also browse spaces on the discover page. If you follow people on Nostr, spaces that others in your social graph have joined show up here, along with a few members you might know.
 

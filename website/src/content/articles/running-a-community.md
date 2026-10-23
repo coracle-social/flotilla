@@ -15,7 +15,7 @@ category: advanced
 
 Running a community is a commitment to people. Healthy communities make it easier for members to connect, collaborate, and support each other in real life as well as online.
 
-### Community Identity
+## Community Identity
 
 Name your purpose for creating an online space in a mission statement, and make your decisions in line with those values. That purpose might be anything from discussing a shared interest to supporting activities your community already does in the real world.
 
@@ -23,7 +23,7 @@ The community is the people you serve, not the digital space they gather in. Giv
 
 Revisit your mission statement, values, and practices now and then, so the community can grow without losing its core identity.
 
-### Community Leadership
+## Community Leadership
 
 As a community leader, you are responsible for both the spirit and the safety of the space: set expectations, maintain trust, and act swiftly when things go wrong.
 
@@ -50,7 +50,7 @@ Leadership and moderation are hard work, and many community organizers hit burno
 
 Build routines that protect your team's health: rotate duties, set boundaries on availability, and create private channels for support. A burned-out moderation team becomes inconsistent, and inconsistency erodes trust.
 
-### Keeping your Community Safe
+## Keeping your Community Safe
 
 Put members' safety first. That means moderating harmful behavior and reporting illegal content when required. If your community runs into threats, harassment, scams, or illegal activity, act quickly.
 
@@ -58,7 +58,7 @@ Silence erodes trust. Even when a problem takes time to resolve, make it clear y
 
 When illegal content is involved, follow local laws and report it to the appropriate authorities. That is your responsibility whether you self-host your infrastructure or rent it from a third party.
 
-### The Life of a Community
+## The Life of a Community
 
 A good community takes on a life of its own, beyond the purpose or expectations of its organizers.
 
@@ -68,6 +68,6 @@ At the same time, don't let a few loud voices dominate the conversation. Make su
 
 When new members arrive, onboard them thoughtfully. Rapid growth can dilute a community's culture and cut it loose from the common purpose that brought everyone together. If growth leads to tension, slow down and reinforce your norms.
 
-### Winding Down or Handing Off
+## Winding Down or Handing Off
 
 Digital spaces exist to serve real relationships and the culture those connections create. If your digital space ever stops serving the people who use it, don't be afraid to close it down, migrate to another platform, or hand off leadership.

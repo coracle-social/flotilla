@@ -36,7 +36,7 @@ The relay is ready in about a minute. Flotilla joins you to the new space and op
 | Basic | $5/mo | 100 | Included |
 | Growth | $25/mo | Unlimited | Included |
 
-Rooms, the management API and push notifications come with every plan. Media storage and voice/video calls require Basic or Growth. Larger communities that want a white-labeled app, dedicated support and custom development should look at the [Platform plan](/articles/platform-plan), which is arranged by booking a call.
+Rooms, the management API and push notifications come with every plan. Media storage and voice/video calls require Basic or Growth. Communities that want a white-labeled app under their own name can add the Branded plan from $300/mo. Organizations that also need custom development, integrations and dedicated support should look at the [Platform plan](/platform), from $6,000/mo.
 
 You can switch plans at any time, and the change is prorated within the month.
 
@@ -47,7 +47,7 @@ You can switch plans at any time, and the change is prorated within the month.
 ![](/images/hosting-settings.png)
 
 - **Custom domain** — add your own domain and verify it with a DNS record. See [Using a Custom Domain](/articles/custom-domain).
-- **Policy** — public read, public write and public join, whether members can invite others, and signature stripping. See [Controlling Who Can Join Your Space](/articles/controlling-space-access).
+- **Policy** — public read, public write and public join, and whether members can invite others. See [Controlling Who Can Join Your Space](/articles/controlling-space-access). **Strip signatures** makes the relay serve messages to members without their cryptographic signatures, so a message copied out of the space can't be proven authentic. It trades a little portability and trust in the relay for deniability, and most spaces should leave it off.
 - **Features** — rooms, the management API, push notifications, media storage and LiveKit, which powers [voice and video calls](/articles/using-voice-and-video-calls). The last two are greyed out on the Free plan.
 - **Membership** — the number of members in your space, and the limit your plan allows.
 

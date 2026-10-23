@@ -11,7 +11,7 @@ category: advanced
 
 *Part of our guide to [running an online community you actually own](/articles/how-to-run-an-online-community).*
 
-A hosted space comes with a default domain controlled by Flotilla - for example, `myspace.spaces.flotilla.social`. This works fine, but isn't the most aesthetic thing to share with your community members. Using our domain also increases your level of lock-in.
+A hosted space comes with a default domain controlled by Flotilla, for example `myspace.spaces.flotilla.social`. This works fine, but isn't the most aesthetic thing to share with your community members. Using our domain also increases your level of lock-in.
 
 With your own domain, migrating your relay to one you host yourself is just a DNS update away. Setting it up takes a few minutes. To get started, make sure you have your own domain name, purchased through a registrar like [namecheap.com](https://namecheap.com). For our purposes, we'll use `space.example.com` as our custom domain.
 

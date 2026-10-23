@@ -15,21 +15,21 @@ category: advanced
 
 Flotilla gives community organizers tools to manage membership, moderate content, and control access.
 
-Every Flotilla space is hosted by a [Nostr relay](https://nostr.com/), a special kind of server, and which management features you can use depends on the relay your space runs on. We recommend [Zooid by Coracle](https://github.com/coracle-social/zooid), or signing up with [Hosting by Coracle](https://hosting.coracle.social/).
+Every Flotilla space is hosted by a [relay](/articles/nostr-terms-explained), and which management features you can use depends on the relay your space runs on. Everything below works on a space [hosted by Flotilla](/articles/hosting-with-flotilla) or on a [self-hosted zooid relay](/articles/self-hosting-a-space).
 
-### Space Details
+## Space Details
 
-If your relay supports Nostr's [relay management API](https://github.com/nostr-protocol/nips/blob/master/86.md), and you have permission to use it, you can edit your space's details right from Flotilla. Open the main space menu, click "Space Information", then "Edit". From there you can change your space's name, description, and image.
+If your relay supports Nostr's relay management API, and you have permission to use it, you can edit your space's details right from Flotilla. Open the main space menu, click "Space Information", then "Edit". From there you can change your space's name, description, and image.
 
 ![](/images/aEJkBRBQUhOB9Vz6HgSwj7ebv8c.png)
 
-### Space Membership
+## Space Membership
 
 To see your members, open the main space menu and click "View Members". This shows everyone the host relay advertises as having access to your space. For how people get onto that list — invite links, adding members by pubkey, and the open-versus-private access policy — see [Controlling Who Can Join Your Space](/articles/controlling-space-access).
 
 ![](/images/1FZbjuqxKjbk8fhv5l2exQzUmU.png)
 
-### Banning Users
+## Banning Users
 
 The space members dialog also lists people you've banned from your server, and lets you restore their membership.
 
@@ -41,7 +41,7 @@ You can also ban or restore members from their profile detail view.
 
 When you ban someone, their content may also be deleted from your relay, depending on the relay's implementation (Zooid by Coracle does this automatically).
 
-### Reports and Moderation
+## Reports and Moderation
 
 Anyone in the space can report a post by clicking the overflow menu next to a message.
 
@@ -53,7 +53,7 @@ This opens a form asking for a few more details about the report. Admins can the
 
 For each report, you can dismiss it, delete just the message, or ban the member from the space entirely.
 
-### Room Details
+## Room Details
 
 Every room can have its own policies too — default permissions, member lists, and user preferences. To find them, join a room and click the info icon at the top of the screen.
 
@@ -65,7 +65,7 @@ If you're an admin, you can also edit or delete the room and add or remove membe
 
 ![](/images/e1MOHQl9pW03d3peS2hMQamPtNM.png)
 
-### Room Permissions
+## Room Permissions
 
 Rooms have permissions that control how non-members can interact with them:
 
@@ -74,7 +74,7 @@ Rooms have permissions that control how non-members can interact with them:
 - **Hidden** rooms are entirely hidden from non-members.
 - **Closed** rooms are invite-only — there's no way to request access.
 
-### Space Roles
+## Space Roles
 
 Admins can create custom, color-coded roles to help organize a space's membership. From the member directory or member management screens, create a role with a label, a description, and a color, then assign it to whichever members it applies to. Assigned roles appear next to a member's name in the directory.
 

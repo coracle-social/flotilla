@@ -11,9 +11,9 @@ category: basics
 
 *Part of our guide to [running an online community you actually own](/articles/how-to-run-an-online-community).*
 
-Flotilla doesn't own the infrastructure your spaces run on. Instead, each space lives on a server its community controls, and your identity is a key you hold rather than an account Flotilla issues. That cuts both ways - nobody can shut down your community or lock you out of your identity, but there's also no single company that can close your account and erase everything you've posted.
+Flotilla doesn't own the infrastructure your spaces run on. Instead, each space lives on a server its community controls, and your identity is a key you hold rather than an account Flotilla issues. That cuts both ways. Nobody can shut down your community or lock you out of your identity, but there's also no single company that can close your account and erase everything you've posted.
 
-Because content on Flotilla is [digitally signed](/articles/understanding-your-nostr-identity), anyone can prove you said it, regardless of who holds the data. Again, this is great because it allows you to switch providers effortlessly, but it also means you lose what's known as "deniability" - that is, the ability to deny you said something.
+Because content on Flotilla is [digitally signed](/articles/understanding-your-nostr-identity), anyone can prove you said it, regardless of who holds the data. Again, this is great because it allows you to switch providers effortlessly, but it also means you lose what's known as "deniability", the ability to deny you said something.
 
 What you can do is ask spaces to delete your data. You can ask for a single message to go away, or you can ask for your account to be completely deleted. In most cases, space owners will honor these requests.
 

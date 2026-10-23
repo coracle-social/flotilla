@@ -32,9 +32,9 @@ How private your space is comes down to the policies you and your host enforce â
 
 Flotilla is software for running your own online community, and an alternative to Discord. Getting started takes a few minutes. Head to [app.flotilla.social](https://app.flotilla.social) and click "Create an Account." You can sign up with an email and password, or by generating a "key". A key is an identity that belongs to you rather than to any platform, so no one else's decision can lock you out. (Flotilla runs on an open technology called Nostr, though you never have to think about that to use it. See [What is Nostr?](/articles/what-is-nostr) if you're curious how it works under the hood.) If you generate a key, keep the backup somewhere safe, like a password manager. If you lose it, you lose your account.
 
-Once you have an account, create your community. In Flotilla, a community is called a "space." Flotilla doesn't host your space for you. The app is the software you and your members use to get in, and the space itself lives on a server you control.
+Once you have an account, create your community. In Flotilla, a community is called a "space." The Flotilla app doesn't store your space. It's the software you and your members use to get in, and the space itself lives on a server you control.
 
-You have two ways to get a space, and the difference comes down to who keeps that server running. A hosting provider can run it for you: click "Add a Space," then "Create a Space," and browse the available providers. Flotilla's parent company, Coracle, offers a managed option. The other path is running the server yourself, which gives you the most control. Either way, once your space is set up you can invite people and start talking.
+You have two ways to get a space, and the difference comes down to who keeps that server running. Flotilla can run it for you from inside the app: click "Add a Space," then "Create a Space," and pick a plan. The other path is running the server yourself, which gives you the most control. Either way, once your space is set up you can invite people and start talking.
 
 **Learn more:**
 - [What is Flotilla?](/articles/what-is-flotilla)
@@ -63,7 +63,7 @@ Each member can also tune their own view, switching between light and dark or ad
 
 Your community lives on a server that stays online, holds your messages, and lets members connect. You can let someone run that server for you, or run it yourself. Most organizers should start with managed hosting.
 
-Managed hosting means you pay a small monthly fee and someone else keeps the machine running, updated, and online. Flotilla has three plans you can set up yourself. The Free plan costs nothing and supports up to 10 members, but doesn't include image or video sharing. Basic is $5/month for up to 100 members with media included, and Growth is $25/month for an unlimited number of members. There's also a custom plan for larger communities, arranged by booking a call. You set all of it up in the app, in the same place your members chat.
+Managed hosting means you pay a small monthly fee and someone else keeps the machine running, updated, and online. Flotilla has three plans you can set up yourself. The Free plan costs nothing and supports up to 10 members, but doesn't include image or video sharing. Basic is $5/month for up to 100 members with media included, and Growth is $25/month for an unlimited number of members. You set all of it up in the app, in the same place your members chat. Organizations that want the app under their own name can add the Branded plan, from $300/month, and the Platform plan, from $6,000/month, adds custom development, integrations and dedicated support.
 
 Running the server yourself gives you the most control. You rent a plain virtual server (a basic one runs around $11/month), install the community software on it, and point a domain at it. That also makes you responsible for keeping the server updated, secure, and backed up. It's doable if you're comfortable following technical steps, and worth it if your community needs infrastructure fully under your own control.
 

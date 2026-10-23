@@ -45,7 +45,7 @@ Flotilla is a platform for building and running online communities — chat, voi
 
 **You own your identity, and it's portable.** Instead of an account a company issues and can revoke, you sign in with a key that's yours. It works the same across Nostr apps, so no single platform can lock you in or shut you out. If you ever leave Flotilla, you can bring your people and your history with you.
 
-**You own the server your community lives on.** Flotilla doesn't host your community for you. The app is the software members use to get in, and the community itself lives on a server you control. You can [run it yourself](/articles/self-hosting-a-space) on a plain virtual server (around $11/month) using the free, open-source zooid relay software, or use managed hosting where a provider keeps the machine running for you.
+**You own the server your community lives on.** The Flotilla app doesn't store your community. It's the software members use to get in, and the community itself lives on a server you control. You can [run it yourself](/articles/self-hosting-a-space) on a plain virtual server (around $11/month) using the free, open-source zooid relay software, or use managed hosting where a provider keeps the machine running for you.
 
 **You can't be deplatformed the way Discord can deplatform you.** Because your identity is a cryptographic key rather than a company-issued account, your social identity can't be taken away, and keeping a backup of your events protects your content and social graph too.
 

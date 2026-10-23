@@ -25,12 +25,14 @@ Finally, unless you've configured a S3-compatible backend for your relays, image
 
 ## Backing up safely
 
+The commands below use podman, as in the self-hosting guide. If you run Docker instead, swap `podman` for `docker`.
+
 The simplest approach is to stop the relay briefly before copying:
 
 ```bash
-docker compose stop zooid
+podman compose stop zooid
 tar czf zooid-backup-$(date +%F).tar.gz volumes/zooid/config volumes/zooid/data volumes/zooid/media
-docker compose start zooid
+podman compose start zooid
 ```
 
 If you'd rather not take the relay offline, and you have the `sqlite3` CLI available, checkpoint the database first so the `-wal` file merges into `db`, then copy all three files (plus `config/` and `media/`) as a unit:
@@ -47,8 +49,8 @@ Either way, store the archive somewhere other than the server itself, for exampl
 Zooid migrations run automatically when the server is started, so nothing is required to update other than bumping the version of zooid you're running. Pull the new image and restart:
 
 ```bash
-docker compose pull zooid
-docker compose up -d zooid
+podman compose pull zooid
+podman compose up -d zooid
 ```
 
 You should still take a backup first when upgrading, especially when moving from a very old version.

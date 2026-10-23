@@ -17,7 +17,7 @@ Nostr identifies users with cryptographic identities, so your social identity ca
 
 For a regular Nostr user, self-hosting is mostly a nice-to-have. But if you're a community organizer, people depend on you to keep their content private and secure. Depending on the size of your community and your own technical skill, it may be worth running your space on infrastructure you control.
 
-### Getting a Server
+## Getting a Server
 
 This tutorial uses [BitLaunch](https://bitlaunch.io/), which offers domains and servers KYC-free and payable in bitcoin. Any server provider you're comfortable with will work.
 
@@ -58,7 +58,7 @@ sudo apt update && sudo apt upgrade -y
 If you're asked whether to keep or replace a configuration file, keep the current version. When the install finishes, run `sudo reboot now`. You'll get kicked out while the host restarts. After a couple of minutes, ssh back in and install some dependencies:
 
 ```bash
-sudo apt install y podman podman-compose micro
+sudo apt install -y podman podman-compose micro
 ```
 
 Next, create a compose file with `micro compose.yml` and paste in the following:
@@ -97,7 +97,7 @@ networks:
 
 This defines a `zooid` service, your relay, plus an `nginx` service that exposes it to the public internet and provisions certificates. **Be sure to provide your real email address as **`CERTBOT_EMAIL`**.**
 
-Hit `ctrl+s` and `ctrl+q` to save and exit. Then run `micro —mkparents volumes/nginx/user_conf.d/zooid.conf` and paste the following:
+Hit `ctrl+s` and `ctrl+q` to save and exit. Then run `micro --mkparents volumes/nginx/user_conf.d/zooid.conf` and paste the following:
 
 ```nginx
 server {
@@ -140,7 +140,7 @@ server {
 
 The proxy header is `Host $http_host;` rather than the more commonly seen `Host $host;`. zooid is multi-tenant, and routes each incoming connection to the correct relay config by matching the `Host` header **exactly**, including the port if you're using a non-standard one. nginx's `$host` variable silently drops the port, while `$http_host` passes the original header through untouched. With `$host`, zooid may fail to match your relay to the request, and connections fail even though everything looks correctly configured.
 
-Finally, configure zooid itself. For the full set of options, see [the readme](https://github.com/coracle-social/zooid). Run `micro —mkparents volumes/zooid/config/relay.toml` and paste in the following:
+Finally, configure zooid itself. For the full set of options, see [the readme](https://github.com/coracle-social/zooid). Run `micro --mkparents volumes/zooid/config/relay.toml` and paste in the following:
 
 ```toml
 host = "relay.example.com"
@@ -161,6 +161,7 @@ enabled = true
 
 [blossom]
 enabled = true
+authenticated_read = true
 
 [push]
 enabled = true
@@ -173,7 +174,7 @@ Update the following values:
 - `name`, `icon`, and `description` populate the relay's metadata.
 - `pubkey` is **your** Nostr public key. Whoever owns this key is the relay's admin.
 
-Hit `ctrl+s` and `ctrl+q` to save and exit. You can now run `podman compose -d —build` to start your relay.
+Hit `ctrl+s` and `ctrl+q` to save and exit. You can now run `podman compose up -d --build` to start your relay.
 
 Check `podman compose logs` for errors. Invalid configuration files crash zooid, and DNS errors can make certbot fail. Once everything is running, you can close your terminal window and the server keeps running.
 
@@ -183,7 +184,7 @@ To test your connection, open Flotilla and click the compass icon in the sidebar
 
 Enter your relay URL in the search bar and click the first result. If the connection status is green, your relay is set up correctly.
 
-### Inviting Your First Members
+## Inviting Your First Members
 
 The configuration above never mentions a `[policy]` block. **An empty or absent `[policy]` block makes your relay fully closed.** With the config as written, nobody but you can read or write to it, and nobody else can discover it or join.
 
