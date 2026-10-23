@@ -65,7 +65,9 @@ const startConversation = async (page: Page, people: {term: string; user: TestUs
     const suggestion = page.locator(`.tiptap-suggestions__item[aria-label="${user.pubkey}"]`)
 
     // The suggestion list is rebuilt off the term changing, so a term arriving at once is matched once.
-    await page.getByPlaceholder("Search for profiles...").pressSequentially(term, {delay: 150})
+    await page
+      .getByPlaceholder("Search for profiles or paste a pubkey...")
+      .pressSequentially(term, {delay: 150})
 
     await expect(suggestion).toContainText(term)
 
@@ -416,7 +418,9 @@ test("US-036 receive a new conversation live", async ({seed, as}) => {
 
   // He has never talked to her, so he identifies her by the code she gave him
   await bob.getByRole("button", {name: "Start New Conversation"}).click()
-  await bob.getByPlaceholder("Search for profiles...").fill(npubEncode(users.alice.pubkey))
+  await bob
+    .getByPlaceholder("Search for profiles or paste a pubkey...")
+    .fill(npubEncode(users.alice.pubkey))
   await bob.getByRole("button", {name: "Create Conversation"}).click()
 
   await expect(bob).toHaveURL(pathPattern(chatPath(users.alice.pubkey)))

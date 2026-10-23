@@ -187,7 +187,7 @@ test("US-093 create roles and assign them", async ({seed, as}) => {
 
   const addMembers = dialog(admin, "Add to Bosun")
 
-  await addMembers.getByPlaceholder("Search for profiles...").fill("Bob")
+  await addMembers.getByPlaceholder("Search for profiles or paste a pubkey...").fill("Bob")
   await admin.locator(".tiptap-suggestions").getByRole("button", {name: users.bob.pubkey}).click()
   await addMembers.getByRole("button", {name: "Save changes"}).click()
 
@@ -264,7 +264,7 @@ test("US-094 invite people to a space", async ({seed, as}) => {
 
   const addMembers = dialog(page, "Add Members")
 
-  await addMembers.getByPlaceholder("Search for profiles...").fill("Nadia")
+  await addMembers.getByPlaceholder("Search for profiles or paste a pubkey...").fill("Nadia")
   await page.locator(".tiptap-suggestions").getByRole("button", {name: newcomer.pubkey}).click()
   await addMembers.getByRole("button", {name: "Save", exact: true}).click()
 

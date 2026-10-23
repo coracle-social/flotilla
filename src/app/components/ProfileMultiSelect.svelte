@@ -15,6 +15,7 @@
   import ProfileSuggestion from "@app/features/editor/ProfileSuggestion.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
+  import {HIDE_NOSTR} from "@app/core/env"
   import {profiles} from "@app/core/plugins"
   import {pushModal} from "@app/navigation/dialogs"
 
@@ -91,7 +92,9 @@
       {autofocus}
       class="grow"
       type="text"
-      placeholder="Search for profiles..."
+      placeholder={HIDE_NOSTR
+        ? "Search for profiles..."
+        : "Search for profiles or paste a pubkey..."}
       bind:value={$term}
       oninput={onInput}
       onkeydown={onKeyDown} />

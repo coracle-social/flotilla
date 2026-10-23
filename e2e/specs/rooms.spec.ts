@@ -379,7 +379,7 @@ test("US-022 bring people into a room", async ({seed, as}) => {
   await expect(members.getByText("Dora Deckhand")).toHaveCount(0)
 
   await admin.getByRole("button", {name: "Add members"}).click()
-  await admin.getByPlaceholder("Search for profiles...").fill("Dora")
+  await admin.getByPlaceholder("Search for profiles or paste a pubkey...").fill("Dora")
   await admin.locator(".tiptap-suggestions").getByRole("button", {name: dora.pubkey}).click()
   await admin.getByRole("button", {name: "Save changes"}).click()
 

@@ -664,7 +664,7 @@ test("US-082 mute an account", async ({seed, as}) => {
 
   // Typed slower than the search's own debounce, since the profile only arrives after a pause.
   await page
-    .getByPlaceholder("Search for profiles...")
+    .getByPlaceholder("Search for profiles or paste a pubkey...")
     .pressSequentially("Bob Barnacle", {delay: 700})
 
   const suggestion = page.locator(".tiptap-suggestions__item").filter({hasText: "Bob Barnacle"})
