@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {spec} from "@welshman/lib"
   import {RoomEvent, Track, supportsAudioOutputSelection} from "livekit-client"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
@@ -9,7 +8,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
-  import {listMediaDevices} from "@lib/audio"
+  import {listMediaDevices, requestDevicePermission, selectableDevices} from "@lib/audio"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import {currentCallSession, DeviceKind, type CallSession} from "@app/features/spaces/calls"
   import {switchCallActiveDevice} from "@app/features/spaces/calls/engine"
@@ -36,11 +35,18 @@
       ?.mediaStreamTrack
 
   const loadDevices = async () => {
-    const devices = await listMediaDevices()
+    let devices = await listMediaDevices()
 
-    audioInputs = devices.filter(spec({kind: "audioinput"}))
-    audioOutputs = devices.filter(spec({kind: "audiooutput"}))
-    videoInputs = devices.filter(spec({kind: "videoinput"}))
+    // A call joins audio-only, so the camera has to be asked for before one can be picked.
+    if (selectableDevices(devices, "videoinput").length === 0) {
+      await requestDevicePermission({video: true})
+
+      devices = await listMediaDevices()
+    }
+
+    audioInputs = selectableDevices(devices, "audioinput")
+    audioOutputs = selectableDevices(devices, "audiooutput")
+    videoInputs = selectableDevices(devices, "videoinput")
   }
 
   $effect(() => {

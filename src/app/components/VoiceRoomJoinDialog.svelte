@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {spec} from "@welshman/lib"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Volume from "@assets/icons/volume.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
@@ -11,7 +10,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
-  import {listMediaDevices} from "@lib/audio"
+  import {listMediaDevices, selectableDevices} from "@lib/audio"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
@@ -38,7 +37,7 @@
   const withoutMic = $derived(selectedDeviceId === "none")
 
   const loadDevices = async () => {
-    audioInputs = (await listMediaDevices()).filter(spec({kind: "audioinput"}))
+    audioInputs = selectableDevices(await listMediaDevices(), "audioinput")
   }
 
   $effect(() => {
@@ -79,6 +78,9 @@
         }
         previewStream = stream
         previewTrack = stream.getAudioTracks()[0]
+
+        // The microphones are anonymous until this grant, so the list is worth reading again.
+        void loadDevices()
       } catch {
         if (!cancelled) {
           micError = true

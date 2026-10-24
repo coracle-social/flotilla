@@ -1,4 +1,4 @@
-import {noop} from "@welshman/lib"
+import {noop, tryCatch} from "@welshman/lib"
 
 const WAV_BIT_DEPTH = 16
 
@@ -53,6 +53,17 @@ export const listMediaDevices = async (): Promise<MediaDeviceInfo[]> => {
   } catch {
     return []
   }
+}
+
+// enumerateDevices leaves a device's id empty until permission for its kind has been granted.
+export const selectableDevices = (devices: MediaDeviceInfo[], kind: MediaDeviceKind) =>
+  devices.filter(d => d.kind === kind && d.deviceId !== "")
+
+// Granting permission for a kind is the only thing that reveals its devices.
+export const requestDevicePermission = async (constraints: MediaStreamConstraints) => {
+  const stream = await tryCatch(() => navigator.mediaDevices.getUserMedia(constraints))
+
+  stream?.getTracks().forEach(t => t.stop())
 }
 
 // Calls onFrame with the root mean square of the stream's waveform, from 0 to 1, on every animation frame.
