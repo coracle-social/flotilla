@@ -35,6 +35,8 @@ Turning your camera on (or sharing your screen) adds a video tile for you, and y
 
 To focus on one person, click the pin icon in the corner of their tile to spotlight it. The spotlighted tile takes over the main view, and everyone else shrinks into a strip alongside it. Click the pin again (it now reads "Exit spotlight") to return to the grid.
 
+On the mobile apps, locking your phone or switching to another app turns your camera off and leaves you in the call, so turn it back on when you come back.
+
 ## If a Space Doesn't Have Voice Rooms
 
 Voice and video calls only work on a relay that's been set up to support them. If a Space you're in has no voice Rooms at all, that's a setting on the relay's side rather than a problem with your setup. Some Spaces run entirely on text Rooms.

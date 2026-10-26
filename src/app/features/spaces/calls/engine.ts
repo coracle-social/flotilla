@@ -11,7 +11,7 @@ import {
   type TrackPublication,
 } from "livekit-client"
 import {App} from "@capacitor/app"
-import type {PluginListenerHandle} from "@capacitor/core"
+import {Capacitor, type PluginListenerHandle} from "@capacitor/core"
 import {get} from "svelte/store"
 import {not, nthEq, reject, spec} from "@welshman/lib"
 import {makeRoomKey} from "@welshman/app"
@@ -276,13 +276,7 @@ export const toggleMute = async () => {
   }
 }
 
-export const toggleCamera = async () => {
-  const session = get(currentCallSession)
-  if (!session) {
-    return
-  }
-
-  const cameraOn = !session.cameraOn
+const setCamera = async (session: CallSession, cameraOn: boolean) => {
   try {
     await session.livekit.localParticipant.setCameraEnabled(cameraOn)
     currentCallSession.update(s => s && {...s, cameraOn})
@@ -292,6 +286,15 @@ export const toggleCamera = async () => {
       message: cameraOn ? "Could not access camera" : "Could not turn off camera",
     })
   }
+}
+
+export const toggleCamera = async () => {
+  const session = get(currentCallSession)
+  if (!session) {
+    return
+  }
+
+  await setCamera(session, !session.cameraOn)
 }
 
 const stopScreenShare = async (session: CallSession) => {
@@ -366,15 +369,19 @@ let reconnectMicMuted = true
 let reconnectMicDeviceId: string | undefined
 let joinAbortController: AbortController | undefined
 let hadCallSession = false
-let audioResumeListener: Promise<PluginListenerHandle> | undefined
+let appStateListener: Promise<PluginListenerHandle> | undefined
 
-/** Locking the screen can suspend mic capture without ending the track, and LiveKit only guards video. */
+const isMobilePlatform = ["android", "ios"].includes(Capacitor.getPlatform())
+
+/** Locking the screen can suspend mic capture without ending the track, and leaves the camera held. */
 currentCallSession.subscribe(session => {
   if (session) {
     hadCallSession = true
-    audioResumeListener ??= App.addListener("appStateChange", ({isActive}) => {
+    appStateListener ??= App.addListener("appStateChange", ({isActive}) => {
       if (isActive) {
         void reacquireMicrophoneIfNeeded()
+      } else if (isMobilePlatform) {
+        void turnOffCameraInBackground()
       }
     })
     return
@@ -383,8 +390,8 @@ currentCallSession.subscribe(session => {
     return
   }
   hadCallSession = false
-  void audioResumeListener?.then(l => l.remove())
-  audioResumeListener = undefined
+  void appStateListener?.then(l => l.remove())
+  appStateListener = undefined
   resetVideoSpotlight()
   resetVideoCallLayout()
 })
@@ -514,6 +521,14 @@ const reacquireMicrophoneIfNeeded = async () => {
     await track.restartTrack()
   } catch {
     // Mute and unmute or a rejoin recovers the mic if this fails.
+  }
+}
+
+const turnOffCameraInBackground = async () => {
+  const session = get(currentCallSession)
+
+  if (session?.cameraOn) {
+    await setCamera(session, false)
   }
 }
 
