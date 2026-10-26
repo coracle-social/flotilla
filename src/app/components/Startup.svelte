@@ -33,7 +33,7 @@
 </script>
 
 {#if error || stalled}
-  <div class="flex h-screen flex-col items-center justify-center gap-4 p-8 text-center">
+  <div class="flex h-dvh flex-col items-center justify-center gap-4 p-8 text-center">
     <p class="text-xl font-bold">
       {#if error}
         {PLATFORM_NAME} couldn't start

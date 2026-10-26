@@ -22,7 +22,7 @@
   })
 </script>
 
-<div class="flex h-screen flex-col overflow-hidden" inert={blockingModal}>
+<div class="flex h-dvh flex-col overflow-hidden" inert={blockingModal}>
   <div class="relative flex min-h-0 flex-1 overflow-hidden">
     {#if $app.user?.pubkey}
       <PrimaryNav>
