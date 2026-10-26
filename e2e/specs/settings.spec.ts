@@ -1,5 +1,5 @@
 import {MINUTE} from "@welshman/lib"
-import type {Page} from "@playwright/test"
+import type {Locator, Page} from "@playwright/test"
 import {
   dialog,
   expect,
@@ -25,6 +25,14 @@ const waitForToastToClear = (page: Page) => expect(toast(page)).toHaveCount(0)
 const requestsCard = (page: Page) => page.locator(".card").filter({hasText: "Message Requests"})
 
 const requestSliders = (page: Page) => requestsCard(page).locator('input[type="range"]')
+
+// Playwright's own hit-target check scrolls hidden overflow away before it looks.
+const isTappable = (locator: Locator) =>
+  locator.evaluate(element => {
+    const {left, right, top, bottom} = element.getBoundingClientRect()
+
+    return element.contains(document.elementFromPoint((left + right) / 2, (top + bottom) / 2))
+  })
 
 test("US-084 block a relay you never want used", async ({seed, as}) => {
   await seed(({relay, user}) => {
@@ -204,6 +212,30 @@ test("US-089 configure privacy preferences", async ({seed, as}) => {
 
   await expect(settingToggle(page, "Authenticate with unknown relays?")).toBeChecked()
   await expect(settingToggle(page, "Report usage?")).not.toBeChecked()
+})
+
+test("US-089 save privacy settings on a phone", async ({seed, as}) => {
+  await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    space.relayList(user.alice)
+  })
+
+  const page = await as(users.alice, "/settings/privacy", {
+    context: {viewport: {width: 390, height: 844}, hasTouch: true},
+  })
+
+  const save = page.getByRole("button", {name: "Save Changes"})
+
+  await expect.poll(() => isTappable(save)).toBe(true)
+
+  await settingToggle(page, "Report usage?").uncheck()
+  await save.click()
+
+  await expect(page.getByRole("alert")).toContainText("Your settings have been saved!")
 })
 
 test("US-129 raise the thresholds a stranger has to meet", async ({seed, as}) => {

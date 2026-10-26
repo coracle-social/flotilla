@@ -90,7 +90,7 @@
   let sendingLogs = $state(false)
 </script>
 
-<form {onsubmit}>
+<form class="contents" {onsubmit}>
   <PageContent>
     <div class="card flex flex-col gap-4">
       <strong class="flex items-center gap-3 text-lg">

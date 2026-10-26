@@ -1524,6 +1524,8 @@ Acceptance:
   reload.
 - Turning off "Report usage" and saving persists across a reload.
 - "Discard Changes" reverts unsaved toggles.
+- On a phone, "Save Changes" can be tapped rather than sitting under the mobile
+  nav.
 
 ### US-129 — Raise the thresholds a stranger has to meet
 
