@@ -10,12 +10,7 @@
 
   @media (max-width: 768px) {
     .secondary-nav--mobile-space {
-      @apply mt-sai bg-backdrop mb-0 w-full max-w-full grow border-0;
-
-      /* Reserve room for the fixed mobile primary nav (h-14) plus the bottom
-         safe-area inset, otherwise the bottom of the menu is hidden behind the
-         nav footer on devices with an inset. */
-      padding-bottom: calc(var(--saib) + 4rem);
+      @apply mt-sai bg-backdrop mb-0 w-full max-w-full grow border-0 pb-2;
 
       .tip[data-tip]::before {
         display: none !important;

@@ -62,6 +62,12 @@
   font-size: 110%;
 }
 
+@media (min-width: 768px) {
+  :root {
+    --mobile-nav-height: 0px;
+  }
+}
+
 @layer base {
   body {
     @apply text-content font-body bg-surface-less;

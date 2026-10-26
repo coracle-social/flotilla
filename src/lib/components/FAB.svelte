@@ -12,7 +12,7 @@
   const {onclick = () => {}, className = "", children}: Props = $props()
 </script>
 
-<div class={cx("fixed bottom-20 mb-sai right-4 z-nav hide-on-keyboard md:hidden", className)}>
+<div class={cx("absolute bottom-6 right-4 z-nav hide-on-keyboard md:hidden", className)}>
   <Button class="button button-primary button-circle size-[50px]" {onclick}>
     <div class="flex items-center justify-center">
       {@render children?.()}

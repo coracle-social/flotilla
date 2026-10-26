@@ -106,7 +106,7 @@
   in:fly
   bind:this={form}
   onsubmit={preventDefault(submit)}
-  class="left-content bottom-sai right-sai fixed z-feature mb-14 md:mb-0 w-full md:w-auto pr-2">
+  class="absolute inset-x-0 bottom-0 z-feature pr-2">
   <div class="card mx-2 my-2">
     {#if parent}
       <ComposeParent {url} event={parent} clear={() => onClearParent?.()} verb="Replying to" />

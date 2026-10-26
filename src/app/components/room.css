@@ -1,9 +1,6 @@
 @layer components {
   .room {
-    /* The mobile nav is fixed on top of the page, so the room view reserves its
-       height here rather than in each of its children — otherwise an overlaid or
-       floating child ends up stacking a second copy of the offset. */
-    @apply relative mb-14 md:mb-0;
+    @apply relative;
 
     .room__content {
       @apply z-feature flex max-h-screen min-h-0 w-full min-w-0 flex-col flex-col-reverse gap-2 overflow-x-hidden overflow-y-auto;
@@ -81,10 +78,6 @@
 
   .room-pins__nav {
     @apply flex items-center gap-1 text-sm;
-  }
-
-  body.keyboard-open .room {
-    @apply mb-0;
   }
 
   [data-fl-theme="clay"] .room {

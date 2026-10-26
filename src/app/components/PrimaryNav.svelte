@@ -55,7 +55,7 @@
   )
 </script>
 
-<div class="primary-nav ml-sai mt-sai mb-sai hidden md:flex">
+<div class="primary-nav ml-sai mt-sai hidden md:flex">
   <PrimaryNavSpaces />
   {#if PLATFORM_RELAYS.length > 0}
     <Divider />

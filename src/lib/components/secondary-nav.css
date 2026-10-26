@@ -14,7 +14,7 @@
   }
 
   .secondary-nav {
-    @apply border-line mt-sai mb-sai bg-surface-more z-nav max-h-screen min-h-0 w-60 shrink-0 flex-col gap-1 border-r border-solid;
+    @apply border-line mt-sai bg-surface-more z-nav max-h-screen min-h-0 w-60 shrink-0 flex-col gap-1 border-r border-solid;
 
     .secondary-nav__nav-item:hover {
       @apply bg-surface-less text-content;

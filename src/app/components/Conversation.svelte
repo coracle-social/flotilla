@@ -221,7 +221,7 @@
 </PageBar>
 
 <div class="room flex min-h-0 min-w-0 flex-1 flex-col">
-  <PageContent class="flex flex-col-reverse gap-4 py-2 bg-surface !mb-0">
+  <PageContent class="flex flex-col-reverse gap-4 py-2 bg-surface">
     {#if missingRelayLists.length > 0}
       <div class="py-12">
         <div class="card flex flex-col gap-2 m-auto max-w-md items-center text-center">

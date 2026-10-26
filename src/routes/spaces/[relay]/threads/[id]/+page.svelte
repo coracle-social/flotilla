@@ -224,7 +224,7 @@
     </div>
   {/if}
   {#if scrolledUp && !showReply}
-    <div transition:fade class="absolute right-4 bottom-20 z-nav mb-sai md:bottom-4 md:mb-0">
+    <div transition:fade class="absolute right-4 bottom-4 z-nav">
       <Button
         aria-label="Scroll to newest"
         class="button button-neutral button-circle"

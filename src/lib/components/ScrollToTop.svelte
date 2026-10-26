@@ -33,9 +33,7 @@
 </script>
 
 {#if scrolled}
-  <div
-    transition:fade
-    class={cx("absolute right-4 bottom-20 z-nav mb-sai md:bottom-4 md:mb-0", className)}>
+  <div transition:fade class={cx("absolute right-4 bottom-4 z-nav", className)}>
     <Button
       aria-label="Scroll to top"
       class="button button-neutral button-circle"

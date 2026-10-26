@@ -23,7 +23,7 @@
 </script>
 
 <div class="flex h-screen flex-col overflow-hidden" inert={blockingModal}>
-  <div class="flex min-h-0 flex-1 overflow-hidden">
+  <div class="relative flex min-h-0 flex-1 overflow-hidden">
     {#if $app.user?.pubkey}
       <PrimaryNav>
         {@render children?.()}
@@ -34,5 +34,7 @@
   </div>
   <CallBanner />
   <ReadAloudBanner />
+  <!-- The mobile nav is fixed over the page, so its footprint is reserved once here. -->
+  <div class="h-[calc(var(--saib)+var(--mobile-nav-height))] shrink-0"></div>
 </div>
 <Toast />

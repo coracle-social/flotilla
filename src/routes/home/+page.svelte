@@ -55,7 +55,7 @@
     </div>
   </PageContent>
   <!-- The FAB holds this corner on a phone, so the scroll button goes above it. -->
-  <ScrollToTop {element} class="max-md:bottom-36" />
+  <ScrollToTop {element} class="max-md:bottom-20" />
 </Page>
 
 <FAB onclick={createPost}>
