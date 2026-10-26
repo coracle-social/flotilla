@@ -192,6 +192,7 @@ test("US-093 create roles and assign them", async ({seed, as}) => {
   await addMembers.getByRole("button", {name: "Save changes"}).click()
 
   await expect(admin.getByRole("alert")).toContainText("Members assigned!")
+  await expect(addMembers).toHaveCount(0)
 
   await roles.getByRole("button", {name: "Go back"}).click()
 
@@ -217,6 +218,7 @@ test("US-093 create roles and assign them", async ({seed, as}) => {
   await dialog(admin, "Delete Role").getByRole("button", {name: "Confirm"}).click()
 
   await expect(admin.getByRole("alert")).toContainText("Role deleted!")
+  await expect(dialog(admin, "Delete Role")).toHaveCount(0)
 
   await roles.getByRole("button", {name: "Go back"}).click()
 
