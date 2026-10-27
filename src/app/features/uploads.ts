@@ -84,7 +84,7 @@ export type CompressFileOptions = {
 const compressFile = async (file: File, options: CompressFileOptions) => {
   const {default: Compressor} = await import("compressorjs-next")
 
-  return new Promise<File>((resolve, reject) => {
+  return new Promise<File>(resolve => {
     new Compressor(file, {
       maxWidth: 2048,
       maxHeight: 2048,
@@ -98,14 +98,8 @@ const compressFile = async (file: File, options: CompressFileOptions) => {
           resolve(new File([result], file.name || "upload", {type: result.type}))
         }
       },
-      error: e => {
-        // Non-images break compressor, return the original file
-        if (e.toString().includes("File or Blob")) {
-          resolve(file)
-        } else {
-          reject(e)
-        }
-      },
+      // Compressor fails on anything the browser can't decode, heic included.
+      error: () => resolve(file),
     })
   })
 }

@@ -997,6 +997,8 @@ Acceptance:
   behaves the same for its recipient.
 - Dropping an image onto the composer, or pasting one from the clipboard,
   attaches it the same way.
+- A photo in a format the browser cannot decode is uploaded as it is, rather
+  than stranding the composer on a compression that cannot run.
 - A file the editor has no node for attaches as a link instead. What the server
   refuses attaches nothing and shows its reason in an error toast.
 

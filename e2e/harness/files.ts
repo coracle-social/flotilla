@@ -18,6 +18,13 @@ export const WEBP = Buffer.from("UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA=
 
 export const gifFile = (name: string): TestFile => ({name, mimeType: "image/gif", buffer: GIF})
 
+// A photo the browser has no decoder for, which is what an iPhone's heic is on a desktop.
+export const heicFile = (name: string): TestFile => ({
+  name,
+  mimeType: "image/heic",
+  buffer: Buffer.from("ftypheic"),
+})
+
 // Every picker opens the browser's own chooser, and the input behind it is never on screen.
 export const chooseFile = async (page: Page, button: Locator, file: TestFile) => {
   const chooser = page.waitForEvent("filechooser")

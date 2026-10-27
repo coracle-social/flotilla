@@ -11,6 +11,7 @@ import {
   dialog,
   expect,
   gifFile,
+  heicFile,
   makeTestUser,
   messageActions,
   mockBlossom,
@@ -179,6 +180,21 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
   await expect(timeline(alice).locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
   await expect(timeline(bob).locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
+
+  // A photo the compressor can't read reaches the server as itself rather than stranding here.
+  blossom.hold()
+
+  await attachFile(alice, heicFile("photo.heic"))
+
+  await expect(sendButton(alice)).toBeDisabled()
+
+  blossom.release()
+
+  await expect(sendButton(alice)).toBeEnabled()
+  await expect(composer(alice)).toContainText("photo.heic")
+
+  await composer(alice).press("ControlOrMeta+a")
+  await composer(alice).press("Backspace")
 
   await pasteImage(composer(alice), "pasted.gif")
 

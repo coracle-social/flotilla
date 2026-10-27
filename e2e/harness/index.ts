@@ -84,7 +84,7 @@ export {
   toast,
   topDialog,
 } from "./ui"
-export {GIF, GIF_BASE64, WEBP, attachFile, chooseFile, gifFile} from "./files"
+export {GIF, GIF_BASE64, WEBP, attachFile, chooseFile, gifFile, heicFile} from "./files"
 export type {TestFile} from "./files"
 export {
   DEFAULT_BLOSSOM_ORIGIN,
