@@ -67,7 +67,7 @@ Create an `.env.local` file to override any of the values in `.env`:
 - `VITE_POMADE_SIGNERS` - A comma-separated list of Pomade signer server URLs (3+ required to enable email signup)
 - `VITE_THUMBNAIL_URL` - URL of the image thumbnail service
 
-These values **won't** be used for a built version. Instead, env variables should be provided to `scripts/build/app.sh` directly or to the built container.
+A build inlines these, so a built app and the published container carry the values they were built with. `VITE_*` in the environment of `scripts/build/app.sh` takes precedence over both files.
 
 If you're deploying a custom version of flotilla, be sure to remove the `plausible.coracle.social` script from `app.html`. This sends analytics to a server hosted by the developer.
 
@@ -293,11 +293,22 @@ docker run -d -p 3000:3000 gitea.coracle.social/coracle/flotilla:latest
 
 Either one serves the build through `server.js`, which fills in the link preview for each page from the space, person or note its url names.
 
-Alternatively, you can copy the build files into a directory of your choice and serve it yourself, in which case every page gets the platform's own preview:
+Alternatively, you can copy the build files out of the image and serve them yourself, in which case every page gets the platform's own preview:
 
 ```sh
-mkdir ./mount
-docker run -v ./mount:/app/mount gitea.coracle.social/coracle/flotilla:latest bash -c 'cp -r build/* mount'
+docker create --name flotilla-build gitea.coracle.social/coracle/flotilla:latest
+docker cp flotilla-build:/app/build ./build
+docker rm flotilla-build
+```
+
+The published image is built from this repository's `.env`, so it points at app.flotilla.social and its relays. Your own relays or branding need an image of your own:
+
+```sh
+git clone https://gitea.coracle.social/coracle/flotilla.git
+cd flotilla
+# .dockerignore excludes .env.local, so put your values in .env
+docker build -t flotilla .
+docker run -d -p 3000:3000 flotilla
 ```
 
 ## Speech
