@@ -2,7 +2,6 @@
   import type {Snippet} from "svelte"
   import {readable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
-  import {COMMENT} from "@welshman/util"
   import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
   import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
@@ -32,8 +31,6 @@
 
   const {url, noun, event, onClick, customActions}: Props = $props()
 
-  const isRoot = event.kind !== COMMENT
-
   // A note from the network belongs to no space, so everything a space relay answers for is absent.
   const adminDelete = url ? deriveUserAdminDelete(url, event) : readable(undefined)
 
@@ -45,7 +42,7 @@
 
   const addToLibrary = (spaceUrl: string) => () => pushModal(PinboardSelect, {url: spaceUrl, event})
 
-  const share = (spaceUrl: string) => () => shareEvent(spaceUrl, noun, event)
+  const share = () => shareEvent(url, noun, event)
 
   const showAdminDelete = (spaceUrl: string) => () =>
     pushModal(EventAdminDeleteConfirm, {url: spaceUrl, noun, event})
@@ -63,15 +60,13 @@
   <li>
     <BookmarkButton {url} {event} />
   </li>
+  <li>
+    <Button onclick={share}>
+      <Icon size={4} icon={ShareCircle} />
+      Share to Chat
+    </Button>
+  </li>
   {#if url}
-    {#if isRoot}
-      <li>
-        <Button onclick={share(url)}>
-          <Icon size={4} icon={ShareCircle} />
-          Share to Chat
-        </Button>
-      </li>
-    {/if}
     <li>
       <Button onclick={addToLibrary(url)}>
         <Icon size={4} icon={GalleryWide} />

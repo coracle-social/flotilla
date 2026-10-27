@@ -1,7 +1,6 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import type {TrustedEvent} from "@welshman/util"
-  import {COMMENT} from "@welshman/util"
   import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -19,8 +18,6 @@
 
   const buttonClass = "button button-neutral button-sm rounded-full"
 
-  const isRoot = event.kind !== COMMENT
-
   const share = () => shareEvent(url, noun, event)
 </script>
 
@@ -30,11 +27,9 @@
     {@render leading?.()}
   </div>
   <div class="flex shrink-0 items-center gap-2">
-    {#if isRoot}
-      <Button aria-label="Share to Chat" class={buttonClass} onclick={share}>
-        <Icon icon={ShareCircle} size={4} />
-        Share
-      </Button>
-    {/if}
+    <Button aria-label="Share to Chat" class={buttonClass} onclick={share}>
+      <Icon icon={ShareCircle} size={4} />
+      Share
+    </Button>
   </div>
 </div>

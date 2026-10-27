@@ -2030,6 +2030,19 @@ Acceptance:
   pre-loaded in the composer.
 - The composer's content matches the text that was shared.
 
+### US-151 — Share a note into a chat
+
+As alice, I want to send a note out of my feed to one of my chats, so that I
+can pass it on to the people who would want it.
+
+Acceptance:
+
+- "Share to Chat" on a note that belongs to no space opens the same picker a
+  shared link does, listing her rooms and conversations.
+- Choosing a conversation navigates there with the note staged above the
+  composer.
+- Sending posts the message with the note quoted in it.
+
 ### US-107 — Open a nostr link
 
 As alice, I want npub and nevent links to resolve to the right thing, so that

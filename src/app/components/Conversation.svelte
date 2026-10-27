@@ -73,14 +73,13 @@
 
   const replyTo = (event: TrustedEvent) => composeArea?.reply(event)
 
-  const onSubmit = async ({parent, edit, ...values}: ComposeValues) => {
+  const onSubmit = async ({parent, share, edit, ...values}: ComposeValues) => {
     const ptags = others.map(pk => ["p", pk])
+    const shared = await prependParent(share, values)
+    const quoted = await prependParent(parent, shared)
 
-    // p tags would fork the conversation, so drop them before quoting the parent
-    const params = await prependParent(parent, {
-      content: values.content,
-      tags: values.tags.filter(nthNe(0, "p")),
-    })
+    // A p tag naming anyone but the recipients would fork the conversation
+    const params = {...quoted, tags: quoted.tags.filter(nthNe(0, "p"))}
 
     if (edit) {
       const command = await $deletes.deleteEvent(edit)

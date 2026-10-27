@@ -13,7 +13,10 @@ import {
 } from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
+  bubble,
+  chatPath,
   composer,
+  composerEnabled,
   dialog,
   expect,
   homeFeedFilter,
@@ -995,6 +998,57 @@ test("US-106 share text into the app", async ({seed, as}) => {
 
   await expect(page).toHaveURL(pathPattern(roomPath(space.url, "general")))
   await expect(composer(page)).toHaveText(shared)
+})
+
+test("US-151 share a note into a conversation", async ({seed, as}) => {
+  const note = "the tide charts are wrong again"
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.bob, {name: "Bob Barker"})
+
+    seedRelays(space, user.alice)
+    seedRelays(space, user.bob)
+
+    space.event(user.alice, () =>
+      space.kind(FollowList).writer().follow(user.bob.pubkey).renderTemplate(),
+    )
+
+    space.event(user.bob, () => space.kind(Note).writer().setContent(note).renderTemplate())
+    space.dm(user.bob, [user.alice], "are you around?", at(20, MINUTE))
+  })
+
+  // A client only unwraps direct messages once its owner has opened chat.
+  const page = await as(users.alice, "/chat")
+
+  await expect(page.getByText("are you around?").first()).toBeVisible()
+
+  await page.goto("/home")
+
+  const card = page.getByRole("region", {name: "Network"}).locator(".card").filter({hasText: note})
+
+  await card.getByRole("button", {name: "Note actions"}).click()
+  await page.getByRole("button", {name: "Share to Chat"}).click()
+
+  // A note belongs to no space, so the picker is every room and conversation she has.
+  const share = dialog(page, "Share")
+
+  await expect(share.getByRole("button", {name: "General"})).toBeVisible()
+
+  await share.getByRole("button", {name: "Bob Barker"}).click()
+  await share.getByRole("button", {name: "Share", exact: true}).click()
+
+  await expect(page).toHaveURL(pathPattern(chatPath(users.bob.pubkey)))
+  await expect(page.locator(".room__compose")).toContainText(note)
+
+  await composerEnabled(page)
+  await send(page, "look at this")
+
+  await expect(bubble(page, "look at this")).toContainText(note)
 })
 
 test("US-107 open a nostr link", async ({seed, as}) => {

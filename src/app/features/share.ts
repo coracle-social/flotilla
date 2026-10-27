@@ -31,17 +31,21 @@ export const shareTo = async (
   pendingShare.set({path, share})
 }
 
-export const shareEvent = (url: string, noun: string, event: TrustedEvent) => {
-  if (relays.get().get(url)?.hasNip(29)) {
-    pushModal(ShareEvent, {url, noun, event})
-  } else {
-    shareTo(pages.spaceChat.path({url}), {type: "event", value: event})
-  }
-}
-
 const openShareDialog = (share: Share) => {
   if (app.get().user?.pubkey) {
     pushModal(ShareDialog, {share})
+  }
+}
+
+export const shareEvent = (url: Maybe<string>, noun: string, event: TrustedEvent) => {
+  if (url) {
+    if (relays.get().get(url)?.hasNip(29)) {
+      pushModal(ShareEvent, {url, noun, event})
+    } else {
+      shareTo(pages.spaceChat.path({url}), {type: "event", value: event})
+    }
+  } else {
+    openShareDialog({type: "event", value: event})
   }
 }
 
