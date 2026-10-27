@@ -40,7 +40,7 @@
   import {shouldUnwrap} from "@app/features/messages"
   import * as env from "@app/core/env"
   import {applySavedTheme, flTheme, syncTheme, theme} from "@app/features/theme"
-  import {syncChecked, syncCheckedRemote} from "@app/features/checked"
+  import {checked, syncChecked, syncCheckedRemote} from "@app/features/checked"
   import * as notifications from "@app/features/notifications"
   import {backgroundNotificationCount, notificationCount} from "@app/features/notifications"
   import {syncBadges} from "@app/features/badges"
@@ -103,8 +103,9 @@
     // Set up logging
     unsubscribers.push(setupLogging())
 
-    // Boot code reads these, e.g. Push picks its adapter from pushState, so wait for stored values
+    // Boot code reads and writes these, e.g. Push picks its adapter from pushState, so wait for stored values
     await Promise.all([
+      checked.ready,
       device.ready,
       shouldUnwrap.ready,
       wallet.ready,
