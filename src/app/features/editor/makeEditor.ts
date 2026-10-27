@@ -194,8 +194,16 @@ export const makeEditor = async ({
             config: {
               // nostr-editor reads this as the picker's `accept` and as an exact match against the file's type.
               allowedMimeTypes: Object.assign(["*/*"], {includes: () => true}),
-              upload: async (attrs: FileAttributes) =>
-                uploadFile(await compressFileForUpload(attrs.file), {url, encrypt: encryptFiles}),
+              // A rejection here never reaches onUploadError, so the node would keep `uploading`.
+              upload: async (attrs: FileAttributes) => {
+                try {
+                  const file = await compressFileForUpload(attrs.file)
+
+                  return await uploadFile(file, {url, encrypt: encryptFiles})
+                } catch (e) {
+                  return {error: String(e)}
+                }
+              },
               onDrop: () => uploading?.set(true),
               onComplete: () => setUploading(),
               onUploadError(currentEditor, task) {
@@ -313,6 +321,11 @@ export const makeEditor = async ({
   // The constructor's `content` option runs no paste rules, so seeded text would contribute no tags.
   if (typeof content === "string" && content) {
     ed.chain().setMeta("uiEvent", "paste").setContent(escapeHtml(content)).run()
+  }
+
+  // A draft saved mid-upload restores an attachment nothing is uploading, so pick it back up.
+  if (typeof content === "object") {
+    ed.chain().uploadFiles().run()
   }
 
   // Callers clear their draft when this reads true, so keep every await below the constructor.

@@ -999,6 +999,8 @@ Acceptance:
   attaches it the same way.
 - A photo in a format the browser cannot decode is uploaded as it is, rather
   than stranding the composer on a compression that cannot run.
+- Leaving the room while an upload is in flight keeps the attachment, and the
+  composer it comes back to finishes the upload rather than waiting for good.
 - A file the editor has no node for attaches as a link instead. What the server
   refuses attaches nothing and shows its reason in an error toast.
 

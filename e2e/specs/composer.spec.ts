@@ -131,7 +131,8 @@ test("US-057 attach and send an image", async ({seed, as}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
-    space.join(user.alice, "general")
+    space.room("lounge", {name: "Lounge"})
+    space.join(user.alice, "general", "lounge")
     space.join(user.bob, "general")
     space.message(user.bob, "general", "morning all", at(2, HOUR))
 
@@ -195,6 +196,34 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
   await composer(alice).press("ControlOrMeta+a")
   await composer(alice).press("Backspace")
+
+  // An upload still in flight when the room is left resumes in the composer it comes back to.
+  blossom.hold()
+
+  await attachFile(alice, gifFile("away.gif"))
+
+  await expect(sendButton(alice)).toBeDisabled()
+
+  await roomLink(alice, "Lounge").click()
+
+  await expect(composer(alice)).toBeVisible()
+
+  await roomLink(alice, "General").click()
+
+  await expect(composer(alice)).toContainText("away.gif")
+
+  await composer(alice).pressSequentially("look at this")
+
+  await expect(sendButton(alice)).toBeDisabled()
+
+  blossom.release()
+
+  await expect(sendButton(alice)).toBeEnabled()
+
+  await composer(alice).press("Enter")
+
+  await expect(timeline(alice).getByText("look at this")).toBeVisible()
+  await expect(timeline(alice).locator('img[src^="blob:"]')).toHaveCount(0)
 
   await pasteImage(composer(alice), "pasted.gif")
 
