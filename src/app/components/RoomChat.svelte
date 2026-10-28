@@ -19,8 +19,8 @@
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
   import {user} from "@app/core/user"
-  import {deletes, publisher, relays, rooms} from "@app/core/plugins"
-  import {writer} from "@app/core/domain"
+  import {deletes, events, publisher, relays, rooms} from "@app/core/plugins"
+  import {reader, writer} from "@app/core/domain"
   import {
     CallState,
     callState,
@@ -113,7 +113,7 @@
       command.publishToRelays([url])
     }
 
-    // A share is a quote rather than a reply, so setParent prepends the reply's own reference ahead of it.
+    // A share is a quote rather than a reply, so setParent tags the reply's own parent ahead of it.
     if (share) {
       ;({content, tags} = await prependParent(share, {content, tags}, url))
     }
@@ -126,8 +126,13 @@
       h,
     )
 
-    if (parent) {
-      eventWriter.setParent(parent)
+    // The composer builds tags from the content alone, so an edit carries over the parent it replied to.
+    const editParent = edit ? reader(Message)(edit).parent() : undefined
+    const parentEvent =
+      parent ?? (editParent ? $events.one(editParent.value, [url]).get() : undefined)
+
+    if (parentEvent) {
+      eventWriter.setParent(parentEvent)
     }
 
     const delay = await loadSendDelay()
@@ -154,7 +159,7 @@
 
   const onEditEvent = (event: TrustedEvent) => composeArea?.edit(event)
 
-  let events: Readable<TrustedEvent[]> = $state(readable([]))
+  let messages: Readable<TrustedEvent[]> = $state(readable([]))
   let transcript: RoomTranscript | undefined = $state()
   let composeArea: ComposeArea | undefined = $state()
 </script>
@@ -207,7 +212,7 @@
       {replyTo}
       canEdit={canEditEvent}
       onEdit={onEditEvent}
-      bind:events
+      bind:events={messages}
       bind:this={transcript} />
 
     <div class="room__compose flex items-center gap-1 px-2">
@@ -225,7 +230,7 @@
             {h}
             {onSubmit}
             draftKey="room:{url}:{h ?? ''}"
-            messages={$events.toReversed()}
+            messages={$messages.toReversed()}
             canEdit={canEditEvent}
             emptyAction={isVoiceRoom && !voiceConnectedHere ? callButton : undefined}
             bind:this={composeArea} />

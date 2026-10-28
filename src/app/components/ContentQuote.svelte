@@ -14,13 +14,13 @@
 
   type Props = {
     ref: IEventRef
-    raw: string
+    raw?: string
     event: TrustedEvent
     inline?: boolean
     url?: string
   }
 
-  const {ref, raw, event, inline = false, url}: Props = $props()
+  const {ref, raw = "", event, inline = false, url}: Props = $props()
 
   const eventRef = new EventRef(ref)
   const hints = removeUndefined([...(ref.relays ?? []), url])

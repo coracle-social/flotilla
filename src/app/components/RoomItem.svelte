@@ -3,8 +3,15 @@
   import {derived, readable} from "svelte/store"
   import {now, uniq, displayList, formatTimestampAsTime, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {MESSAGE, THREAD, getCommentFiltersForParent, getIdOrAddress} from "@welshman/util"
-  import {Thread, getContentQuote} from "@welshman/domain"
+  import {
+    EventRef,
+    MESSAGE,
+    THREAD,
+    getCommentFiltersForParent,
+    getIdOrAddress,
+  } from "@welshman/util"
+  import {Thread} from "@welshman/domain"
+  import {parse} from "@welshman/content"
   import {isMobile} from "@lib/html"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -34,6 +41,7 @@
   import {colorFor} from "@app/features/theme"
   import {ENABLE_ZAPS} from "@app/core/env"
   import type {FeedContext} from "@app/features/feeds"
+  import {isQuote} from "@app/features/quotes"
   import * as pages from "@app/navigation/pages"
   import {highlightedEvent} from "@app/navigation/locations"
   import {pushModal} from "@app/navigation/dialogs"
@@ -67,12 +75,15 @@
 
   // A message that is nothing but a reference to content renders as the content it quotes.
   const isQuoteOnly = event.content.trim().split(/\s/).length === 1
-  const quote = isQuoteOnly ? getContentQuote(event.content) : undefined
-  const innerEvent = quote
-    ? derived($events.one(quote.value, [url]).$, e =>
-        e && CONTENT_KINDS.includes(e.kind) ? e : undefined,
-      )
-    : readable(undefined)
+  const [parsed] = isQuoteOnly ? parse({content: event.content.trim()}) : []
+  const quoteRef = parsed && isQuote(parsed) ? EventRef.fromPointer(parsed.value) : undefined
+  const quoted = quoteRef?.getIdOrAddress()
+  const innerEvent =
+    quoteRef && quoted
+      ? derived($events.one(quoted, uniq([...quoteRef.relays, url])).$, e =>
+          e && CONTENT_KINDS.includes(e.kind) ? e : undefined,
+        )
+      : readable(undefined)
   const innerComments = $derived(
     $innerEvent ? $events.forUrl(url, getCommentFiltersForParent([$innerEvent])).$ : readable([]),
   )

@@ -18,9 +18,9 @@ export const prependParent = async (
     const resolver = router.get().resolver
     const relays = url ? [url] : await resolver.relays([seen(parent)])
     const hint = url ?? (await resolver.relay([outbox(parent.pubkey)])) ?? ""
-    const nevent = nip19.neventEncode({id: parent.id, author: parent.pubkey, relays})
+    const uri = toNostrURI(nip19.neventEncode({id: parent.id, author: parent.pubkey, relays}))
 
-    content = toNostrURI(nevent) + "\n\n" + content
+    content = content ? uri + "\n\n" + content : uri
     tags = [...tags, ["q", parent.id, hint, parent.pubkey], ["p", parent.pubkey, hint]]
   }
 
@@ -56,7 +56,14 @@ export const publishRoomQuote = async ({
   parent: TrustedEvent
   delay?: number
 }) => {
-  const eventWriter = await addressWriterToSpace(writer(Message).setParent(parent), url, h)
+  const {content, tags} = await prependParent(parent, {content: "", tags: []}, url)
+  const eventWriter = await addressWriterToSpace(
+    writer(Message)
+      .setContent(content)
+      .addTags(...tags),
+    url,
+    h,
+  )
 
   return publisher.get().publish({
     relays: [url],

@@ -1,12 +1,13 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE, WEEK, bech32ToHex, int, now} from "@welshman/lib"
-import {getLnUrl} from "@welshman/util"
+import {MESSAGE, getLnUrl, tagSpec, tagValue} from "@welshman/util"
 import {Profile} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
   composer,
   dialog,
   expect,
+  getPublishedEvents,
   makeTestUser,
   message,
   messageActions,
@@ -397,6 +398,8 @@ test("US-022 bring people into a room", async ({seed, as}) => {
 })
 
 test("US-023 reply to a message", async ({seed, as}) => {
+  let notice!: SeededEvent
+
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
 
@@ -404,7 +407,7 @@ test("US-023 reply to a message", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
     space.profile(user.alice, {name: "Alice Anchor"})
-    space.message(user.alice, "general", "the tide turns at six", at(2, HOUR))
+    notice = space.message(user.alice, "general", "the tide turns at six", at(2, HOUR))
   })
 
   const {url} = scenario.space("space")
@@ -423,6 +426,24 @@ test("US-023 reply to a message", async ({seed, as}) => {
 
   await expect(message(bob, "aye, I'll be there")).toContainText("the tide turns at six")
   await expect(message(alice, "aye, I'll be there")).toContainText("the tide turns at six")
+
+  const quoted = (content: string) =>
+    getPublishedEvents(bob.context(), MESSAGE)
+      .filter(event => event.content === content)
+      .map(event => tagValue(tagSpec("q"), event.tags))
+
+  // The parent is the q tag alone, so the content is just the reply.
+  await expect.poll(() => quoted("aye, I'll be there")).toEqual([notice.id])
+
+  await messageActions(bob, "aye, I'll be there").nth(3).click()
+
+  await expect(bob.getByText("Editing message")).toBeVisible()
+
+  await composer(bob).press("ControlOrMeta+a")
+  await send(bob, "aye, I'll be there early")
+
+  await expect(message(alice, "aye, I'll be there early")).toContainText("the tide turns at six")
+  await expect.poll(() => quoted("aye, I'll be there early")).toEqual([notice.id])
 })
 
 test("US-024 edit or delete a message you sent", async ({seed, as}) => {

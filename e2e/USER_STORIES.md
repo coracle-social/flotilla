@@ -364,8 +364,8 @@ Acceptance:
 
 - Clicking reply shows a "Replying to alice" banner quoting her message above
   the composer.
-- Sending posts a reply that renders her original as an embedded quote for
-  everyone in the room.
+- Sending posts a reply that renders her original as a quote above it for
+  everyone in the room, and editing it keeps the reply.
 - Dismissing the banner with its close button or Escape clears the reply without
   sending.
 

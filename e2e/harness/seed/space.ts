@@ -1,7 +1,6 @@
 import {neventEncode} from "nostr-tools/nip19"
 import type {Maybe} from "@welshman/lib"
 import {
-  MESSAGE,
   ROOM_ADD_MEMBER,
   Resolver,
   makeEvent,
@@ -16,6 +15,7 @@ import {
   DirectMessage,
   EventWriter,
   FollowList,
+  Message,
   MessagingRelayList,
   Profile,
   RelayList,
@@ -29,9 +29,6 @@ import {users} from "../keys"
 import type {TestUser} from "../keys"
 import {makePublisher} from "./publish"
 import type {Enqueue, ProfileValues, RelayListUrls, SeededEvent, SeededTemplate} from "./publish"
-
-// @welshman/domain has no writer for NIP-29 kind-9 messages, so this pairs the base writer and reader.
-class MessageWriter extends EventWriter<BaseEventReader> {}
 
 // The kind-14 a direct message really is. It is never published, since each participant gets a wrap.
 export type SeededRumor = {
@@ -134,7 +131,7 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
   const message = (user: TestUser, h: string, content: string, createdAt = startedAt) =>
     publish(() => relay().message(user, h, content, createdAt))
 
-  // Content.svelte renders a quote from the nostr uri rather than the q tag, as prependParent does.
+  // A reply as sent before the parent moved to the q tag alone, which chat must not render twice.
   const reply = (user: TestUser, parent: SeededEvent, content: string, createdAt = startedAt) =>
     event(
       user,
@@ -144,7 +141,8 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
         if (h) {
           const nevent = neventEncode({...parent.event, relays: [url]})
 
-          return new MessageWriter(MESSAGE, context)
+          return Message.configure(context)
+            .writer()
             .setRoom(url, h)
             .addQuote(parent.event)
             .addMention(parent.event.pubkey)
