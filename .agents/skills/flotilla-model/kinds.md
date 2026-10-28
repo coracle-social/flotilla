@@ -33,7 +33,7 @@ Kinds flotilla renders but never publishes.
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `publishReaction`/`retractReaction` in `src/app/features/spaces`, `social/reactions.ts` and `messages.ts` | `RoomItem`, `EventReactButtons`, `ContentActions`, `CommentActions`, `ArticleActionBar` |
+| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `publishReaction`/`retractReaction` in `src/app/features/spaces`, `social/reactions.ts` and `messages.ts` | `RoomItem`, `ReactionSummary`, `ContentActions`, `CommentActions`, `ArticleActionBar` |
 | Zaps | `ZAP_REQUEST` (9734), `ZAP_RECEIPT` (9735) | `ZapRequest`; receipts checked by `Zappers.validZapReceipts` | `src/app/features/wallet.ts` (wallets) | `Zap`, `ZapButton`, `GoalSummary`; off on iOS |
 | Reports | `REPORT` (1984) | `Report` | `src/app/features/spaces/actionItems.ts` | `Report`, `ReportMenu` |
 | Deletes | `DELETE` (5) | `Delete`, through the `Deletes` plugin | none | `EventDeleteConfirm`, `ReportMenu` |

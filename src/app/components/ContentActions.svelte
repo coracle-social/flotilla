@@ -10,7 +10,7 @@
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
-  import EventActions from "@app/components/EventActions.svelte"
+  import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"
@@ -74,11 +74,12 @@
       {deleteReaction}
       {createReaction}
       hideZaps={hideZap}
-      placement="left" />
+      placement="left"
+      emojiMenu />
     {#if showActivity}
       <EventActivity {event} {context} />
     {/if}
-    <EventActions {url} {event} {hideZap} {noun}>
+    <EventMenuButton {url} {event} {noun} class="rounded-full">
       {#snippet customActions()}
         {#if editForm && event.pubkey === $user.pubkey}
           <li>
@@ -89,6 +90,6 @@
           </li>
         {/if}
       {/snippet}
-    </EventActions>
+    </EventMenuButton>
   </PublicationStatusOrDeleted>
 </div>

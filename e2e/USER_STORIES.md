@@ -705,11 +705,13 @@ I can respond without writing.
 
 Acceptance:
 
-- Choosing an emoji on an article records bob's reaction as a like count of 1,
-  highlighted as his own, rather than as a pill carrying the emoji.
-- Clicking that count again removes his reaction and the count goes with it.
-- The same behavior applies to a comment on the article, to a post inside a
-  thread, and to a note on someone's profile.
+- Choosing an emoji on an article records bob's reaction as a count of 1 on the
+  react button itself, highlighted as his own, rather than as a pill carrying the
+  emoji. Choosing the same emoji again removes it and the count goes with it.
+- A thread post reacts the same way.
+- A comment and a note take a plain like instead of opening the emoji menu, so
+  the react button counts bob's like on the first click and drops it on the
+  second.
 
 ### US-041 — Publish an article from a room
 

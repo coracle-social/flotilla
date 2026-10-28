@@ -19,7 +19,7 @@ PascalCase. This is what the qualifiers mean, drawn from the ~320 components the
 | `Summary` | a compact read-only digest, inline | `RelaySummary`, `GoalSummary`, `ReactionSummary` |
 | `Status` | a small badge or indicator | `ClassifiedStatus`, `SignerStatus`, `PublicationStatus` |
 | `Card` | a framed presentation of an event | `NoteCard`, `HomeInboxItemCard` |
-| `Bar` | a horizontal strip across the top or bottom of something | `SpaceBar`, `ComposeBar`, `EventActionBar` |
+| `Bar` | a horizontal strip across the top or bottom of something | `SpaceBar`, `ComposeBar`, `ArticleActionBar` |
 | `Compose` | a message composer | `ChatCompose`, `RoomCompose`, `CommentCompose` |
 | `Confirm` | the step that confirms an action or a code | `EventDeleteConfirm`, `LogInOTPConfirm`, `SignUpEmailConfirm` |
 | `Add` | a modal that adds something to a collection | `SpaceAdd`, `RoomMembersAdd` |

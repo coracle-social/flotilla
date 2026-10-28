@@ -4,7 +4,7 @@
   import type {FeedContext} from "@app/features/feeds"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
-  import EventActions from "@app/components/EventActions.svelte"
+  import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import {publishReaction, retractReaction} from "@app/features/spaces"
 
   type Props = {
@@ -28,7 +28,7 @@
       {#if showActivity}
         <EventActivity {event} {context} />
       {/if}
-      <EventActions {url} {event} noun="Comment" />
+      <EventMenuButton {url} {event} noun="Comment" class="rounded-full" />
     </PublicationStatusOrDeleted>
   </div>
 </div>

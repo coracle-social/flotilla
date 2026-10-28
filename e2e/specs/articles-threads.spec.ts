@@ -26,15 +26,13 @@ type Seeded = {readonly id: string; readonly event: SignedEvent}
 const composerForm = (page: Page) =>
   page.locator("form").filter({has: page.locator(".note-editor")})
 
-// Content tallies its reactions, so one of them reads as a like count of 1.
-const expectReactionRoundTrip = async (page: Page, scope: Locator, opener: Locator) => {
-  const pill = scope.getByRole("button", {name: "Likes"})
+// Reacting and the count share one button, so a reaction reads as a count of 1 on it.
+const expectReactionRoundTrip = async (button: Locator, react: () => Promise<void>) => {
+  await react()
+  await expect(button).toContainText("1")
 
-  await pickEmoji(page, opener, "party popper")
-  await expect(pill).toContainText("1")
-
-  await pill.click()
-  await expect(pill).toHaveCount(0)
+  await react()
+  await expect(button).not.toContainText("1")
 }
 
 // The card is a div carrying an overlay link, so it is found by its component rather than a role.
@@ -327,14 +325,17 @@ test("US-040 react to a post with an emoji", async ({seed, as}) => {
   const commentCard = comment(page, "A note about the soil")
 
   await expect(articleActions).toBeVisible()
-  await expectReactionRoundTrip(
-    page,
-    articleActions,
-    articleActions.getByRole("button", {name: "Add a reaction"}),
-  )
+
+  const articleReact = emojiButton(articleActions)
+
+  await expectReactionRoundTrip(articleReact, () => pickEmoji(page, articleReact, "party popper"))
 
   await expect(commentCard).toBeVisible()
-  await expectReactionRoundTrip(page, commentCard, emojiButton(commentCard))
+
+  // A comment takes a plain like rather than an emoji, so its button is the whole interaction.
+  const commentLike = commentCard.getByRole("button", {name: "Likes"})
+
+  await expectReactionRoundTrip(commentLike, () => commentLike.click())
 })
 
 test("US-041 publish an article from a room", async ({seed, as}) => {

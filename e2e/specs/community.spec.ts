@@ -569,7 +569,7 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
 
   await pickParty(bob, emojiButton(heroCard))
 
-  await expect(heroCard.getByRole("button", {name: "Likes"})).toContainText("1")
+  await expect(emojiButton(heroCard)).toContainText("1")
 
   await bob.getByRole("button", {name: /^Discussion/}).click()
   await bob.getByRole("button", {name: "Add a comment"}).click()
@@ -590,7 +590,7 @@ test("US-052 comment on and react to community posts", async ({seed, as}) => {
 
   const alicesHeroCard = alice.locator(".card.z-feature").first()
 
-  await expect(alicesHeroCard.getByRole("button", {name: "Likes"})).toContainText("1")
+  await expect(emojiButton(alicesHeroCard)).toContainText("1")
 
   await alice.getByRole("button", {name: /^Discussion/}).click()
 
