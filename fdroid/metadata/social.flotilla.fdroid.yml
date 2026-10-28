@@ -12,32 +12,37 @@ AutoName: Flotilla
 
 RepoType: git
 Repo: https://gitea.coracle.social/coracle/flotilla.git
-Binaries: 
-  https://gitea.coracle.social/api/packages/coracle/generic/flotilla-fdroid/%v/flotilla-fdroid-%v.apk
+Binaries: https://gitea.coracle.social/api/packages/coracle/generic/flotilla-fdroid/%v/flotilla-fdroid-%v.apk
 
 Builds:
-  - versionName: 1.11.2
-    versionCode: 55
-    commit: 95cbb9b6f736df21199185ac4c8dc5c841e2c1b1
+  - versionName: 1.13.0
+    versionCode: 58
+    commit: 62071c784e740049acd38cbd677ed827ad2abda0
     subdir: android/app
     sudo:
+      - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
       - apt-get update
-      - apt-get install -y openjdk-21-jdk-headless
-      - update-alternatives --auto java
-      - curl -Lo node.tar.gz https://nodejs.org/dist/v22.23.3/node-v22.23.3-linux-x64.tar.gz
-      - echo "1084aa36196bba4c3a5e69a1ee388a6e4ff729dad09445fbcd434b28fe3c24af  node.tar.gz"
-        | sha256sum -c -
-      - tar xzf node.tar.gz --strip-components=1 -C /usr/local/
-      - rm node.tar.gz
-      - corepack enable
+      - apt-get install -y -t forky nodejs npm
+      - npm install -g pnpm@11.25.0
     gradle:
       - fdroid
-    prebuild:
-      - cd ../..
-      - V='version:{name:process.env.VITE_BUILD_HASH},'
-      - F=svelte.config.js
-      - grep -q BUILD_HASH $F || sed -i "/serviceWorker:/i $V" $F
-      - scripts/fdroid/prepare.sh
+    prebuild: ../../scripts/fdroid/prepare.sh
+    scanignore:
+      - node_modules
+    build: ../../scripts/fdroid/build.sh
+
+  - versionName: 1.14.0
+    versionCode: 59
+    commit: 1.14.0
+    subdir: android/app
+    sudo:
+      - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
+      - apt-get update
+      - apt-get install -y -t forky nodejs npm
+      - npm install -g pnpm@12.15.0
+    gradle:
+      - fdroid
+    prebuild: ../../scripts/fdroid/prepare.sh
     scanignore:
       - node_modules
     build: ../../scripts/fdroid/build.sh
@@ -48,20 +53,16 @@ MaintainerNotes: |-
   scripts/fdroid/prepare.sh removes Firebase, Google Services, Plausible and the ACINQ
   native secp256k1 library, then installs dependencies, so it runs as prebuild ahead of
   the scanner. node_modules holds FLOSS build tools (esbuild, sharp), hence scanignore.
-  Capacitor needs JDK 21, and Node comes from nodejs.org at a pinned checksum to match
-  the lts/jod in .nvmrc.
+  Node comes from forky because the lockfile needs pnpm 11 or newer, which wants Node 22 or newer,
+  and trixie ships 20. pnpm is pinned to package.json's packageManager so it doesn't
+  fetch another copy of itself. Capacitor needs JDK 21, which is trixie's default.
 
   Builds are reproducible: upstream's release workflow runs this recipe in the
   buildserver-trixie image (scripts/fdroid/reproduce.sh) and publishes that apk, signed
   with the distribution key, at Binaries.
 
-  Tags before 1.11.3 version the SvelteKit build by build time, which no two builds share,
-  so prebuild sets it from the commit instead. Later tags do that themselves, and the
-  patch skips them.
-
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$
-UpdateCheckData: 
-  android/app/build.gradle|(?m)^\s*versionCode\s+(\d+)\s*$|.|(?m)^\s*versionName\s+"([^"]+)"\s*$
-CurrentVersion: 1.11.2
-CurrentVersionCode: 55
+UpdateCheckData: android/app/build.gradle|(?m)^\s*versionCode\s+(\d+)\s*$|.|(?m)^\s*versionName\s+"([^"]+)"\s*$
+CurrentVersion: 1.14.0
+CurrentVersionCode: 59

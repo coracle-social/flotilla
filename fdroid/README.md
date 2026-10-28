@@ -45,8 +45,9 @@ and use its configured Gradle runner for `assembleFdroidRelease`.
 to `fdroiddata`. The listing's text, icon, feature graphic and per-version changelogs come from
 `fastlane/metadata/android/en-US/` at the tag F-Droid builds. Preparation installs dependencies
 before F-Droid's source scan, so the recipe scan-ignores `node_modules`, which holds FLOSS build
-tools such as esbuild and sharp. The recipe installs JDK 21, which Capacitor needs, and Node from
-nodejs.org at a pinned checksum, as a `.tar.gz` since the build server has no `xz`.
+tools such as esbuild and sharp. The recipe installs Node from Debian forky, since the lockfile
+needs a pnpm that wants a newer Node than trixie ships, and pins pnpm to `package.json`'s
+`packageManager`. Capacitor needs JDK 21, which is trixie's default.
 
 ## Reproducible builds
 

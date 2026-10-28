@@ -1,5 +1,22 @@
 # Changelog
 
+# 1.14.0
+
+* Post an article or a poll from the Create post button
+* Merge the home inbox and notifications into one activity stream
+* Zap notes and replies, quote a note in a public post, and follow someone from their profile dialog
+* Tally reactions on content, and show zap totals and like counts on their buttons
+* Move the member directory into the space about page, and redesign the connection status dialog
+* Transcribe voice notes on the device
+* Render highlights as quotations with their source
+* Offer Share to Chat on notes and comments outside any space
+* Walk back through opened notes, and keep a dialog where you left it
+* Redraw the navigation icons and darken the mobile nav
+* Retry relay authentication the relay refused as expired
+* Resume a draft's unfinished upload, and upload photos the compressor can't read
+* Turn the camera off when a call is backgrounded on mobile
+* Fix pages marked read before stored read markers load, and the settings action bar hiding under the mobile nav
+
 # 1.13.0
 
 * Add bookmarks, with folders and a bookmark manager
