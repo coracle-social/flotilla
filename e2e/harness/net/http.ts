@@ -4,8 +4,8 @@ import {HOUR, int, now, omit} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {Handle} from "@welshman/util"
 import type {ZapperValues} from "@welshman/domain"
-import {tenantByUrl} from "../zooid/config"
-import {requestZooid} from "../zooid/transport"
+import {tenantByUrl} from "../relay/config"
+import {requestHost} from "../relay/transport"
 import {makeContextStore} from "./context"
 
 // Mirrors the service urls in src/app/core/env.ts, which reads import.meta.env and pulls in Capacitor.
@@ -62,7 +62,7 @@ export const installHttpRoutes = (context: BrowserContext) => {
 
       if (host) {
         return route.fulfill(
-          await requestZooid(
+          await requestHost(
             host,
             request.method(),
             pathname + search,
@@ -115,15 +115,15 @@ export const mockRelayInfo = (context: BrowserContext, overrides: RelayInfoOverr
 
       // The nip-86 management api posts to this same path, so only the document request is touched.
       if (request.method() === "GET" && host && override) {
-        const {status, headers, body} = await requestZooid(host, "GET", "/", {
+        const {status, headers, body} = await requestHost(host, "GET", "/", {
           ...request.headers(),
-          // The merge has to read the document, and khatru compresses it when invited to.
+          // The merge has to read the document, which a relay may compress when invited to.
           "accept-encoding": "identity",
         })
 
         return route.fulfill({
           status,
-          // khatru's Access-Control-Allow-Origin is what makes the fetch legal, so the relay's headers are kept.
+          // The relay's Access-Control-Allow-Origin is what makes the fetch legal, so its headers are kept.
           headers: omit(["content-length"], headers),
           body: JSON.stringify({...JSON.parse(body.toString()), ...override}),
         })

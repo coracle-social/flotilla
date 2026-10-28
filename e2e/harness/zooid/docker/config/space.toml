@@ -3,7 +3,7 @@
 #
 # `host` must equal the Host header the harness sends, which is the hostname of the url the client
 # is given; anything else gets a 404 from the dispatcher instead of a relay. Keep it in step with
-# `tenants` in harness/zooid/config.ts, and see harness/zooid/transport.ts for why it is a name
+# `tenants` in harness/relay/config.ts, and see harness/relay/transport.ts for why it is a name
 # that resolves nowhere.
 host = "space.test"
 schema = "e2e"

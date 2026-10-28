@@ -21,10 +21,10 @@ import {
   RelayList,
 } from "@welshman/domain"
 import type {BaseEventReader, ConfiguredKind, EventQuery, KindFactory} from "@welshman/domain"
-import type {RoomOptions, TestRelay} from "../zooid/types"
-import type {Zooid} from "../zooid/relay"
-import {tenantUrl} from "../zooid/config"
-import type {SpaceName} from "../zooid/config"
+import type {RoomOptions, TestRelay} from "../relay/types"
+import type {RelayServer} from "../relay/server"
+import {tenantUrl} from "../relay/config"
+import type {SpaceName} from "../relay/config"
 import {users} from "../keys"
 import type {TestUser} from "../keys"
 import {makePublisher} from "./publish"
@@ -69,14 +69,14 @@ export type SeededSpace = {
 }
 
 export type SeedSpaceOptions = {
-  zooid: Zooid
+  server: RelayServer
   enqueue: Enqueue
   // A fixture declared without a timestamp is stamped with the scenario's start, not the wall clock.
   startedAt: number
   name: SpaceName
 }
 
-export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): SeededSpace => {
+export const seedSpace = ({server, enqueue, startedAt, name}: SeedSpaceOptions): SeededSpace => {
   const memberships: SeededMembership[] = []
   // Known before seeding runs, unlike the relay handle below, so another relay's fixture can name it.
   const url = tenantUrl(name)
@@ -92,7 +92,7 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
   }
 
   enqueue(async () => {
-    testRelay = await zooid.relay(name)
+    testRelay = await server.relay(name)
   })
 
   const {seeded, publish, event} = makePublisher({

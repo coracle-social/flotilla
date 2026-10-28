@@ -311,8 +311,8 @@ names a relay or host, the e2e harness has to override or mock it (see "Containm
 - `.husky/pre-commit` runs lint and check, and refuses to commit while a `link:` override is in
   place. CI (`.gitea/workflows/ci.yml`) runs lint, check and the Electron TypeScript build, plus a
   full build on pushes to `dev`.
-- Flotilla has no unit tests. `e2e/` is a Playwright suite against a real zooid relay in Docker;
-  `e2e/ARCHITECTURE.md` explains the harness and `e2e/USER_STORIES.md` lists the stories the specs
+- Flotilla has no unit tests. `e2e/` is a Playwright suite against a real relay in Docker, zooid by
+  default or caravel with `E2E_RELAY=caravel`; `e2e/ARCHITECTURE.md` explains the harness and `e2e/USER_STORIES.md` lists the stories the specs
   cite. Agents don't run it. Its only footprint in the app is `src/lib/test/`.
 - `scripts/link-deps.mjs` links `../welshman/packages/*` by writing temporary `link:` overrides
   into `pnpm-workspace.yaml`, installing, and restoring the file. Without those overrides welshman

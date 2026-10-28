@@ -11,6 +11,10 @@ const deviceNames: Record<string, string> = {
 
 const browserName = process.env.E2E_BROWSER ?? "chromium"
 
+// The relay the suite runs against, the same way: `E2E_RELAY=caravel pnpm test`. The harness picks the
+// backend by the project's name.
+const relayName = process.env.E2E_RELAY ?? "zooid"
+
 const device = devices[deviceNames[browserName]]
 
 // Dictation records from a microphone, and headless chromium has none. The fake device answers
@@ -61,5 +65,5 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
-  projects: [{name: "zooid", use: {...device}}],
+  projects: [{name: relayName, use: {...device}}],
 })

@@ -1,4 +1,4 @@
-// The virtual relays the container serves. .test is reserved by rfc 2606, so none of them resolve.
+// The virtual relays every backend serves, on the same hosts. .test is reserved by rfc 2606, so none of them resolve.
 
 // The relays a space is seeded on: members-only, with nip-29 groups on.
 export const spaceTenants = {

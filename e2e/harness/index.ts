@@ -2,9 +2,14 @@ import {writeFile} from "node:fs/promises"
 import {npubEncode} from "nostr-tools/nip19"
 import {test as base, expect} from "@playwright/test"
 import type {BrowserContext, BrowserContextOptions, Page} from "@playwright/test"
+import {MINUTE, int, ms} from "@welshman/lib"
 import type {Maybe, MaybeAsync} from "@welshman/lib"
 import {normalizeRelayUrl} from "@welshman/util"
-import {Zooid, describeDockerProblem} from "./zooid/relay"
+import {RelayServer} from "./relay/server"
+import {describeDockerProblem} from "./relay/docker"
+import type {Backend} from "./relay/types"
+import {zooid} from "./zooid/backend"
+import {caravel} from "./caravel/backend"
 import {
   installHttpRoutes,
   mockAnalytics,
@@ -40,7 +45,7 @@ export type {Scenario} from "./seed/scenario"
 export type {SeededEvent} from "./seed/publish"
 export type {SeededOpenRelay} from "./seed/openRelay"
 export type {SeededRumor, SeededSpace} from "./seed/space"
-export type {OpenRelayName, SpaceName, TenantName} from "./zooid/config"
+export type {OpenRelayName, SpaceName, TenantName} from "./relay/config"
 export type {PublishedEvent, TranscriptEntry} from "./net/websocket"
 export {
   forgetRelay,
@@ -111,6 +116,22 @@ export type {
 } from "./net/http"
 export type {WebLnInfo} from "./app/webln"
 
+// The project is named for the relay the suite runs against. See playwright.config.ts.
+const backends: Record<string, Backend> = {zooid, caravel}
+
+const getBackend = (name: string) => {
+  const backend = backends[name]
+
+  if (backend) {
+    return backend
+  }
+
+  throw new Error(
+    `No relay backend is named ${name}. E2E_RELAY names the project, and has to be one of ` +
+      `${Object.keys(backends).join(", ")}.`,
+  )
+}
+
 // Mirrors encodeRelay in src/app/core/relays.ts, which cannot be imported without pulling in sveltekit.
 const encodeRelay = (url: string) =>
   encodeURIComponent(
@@ -158,7 +179,7 @@ export type PageOptions = {
 }
 
 export type Harness = {
-  zooid: Zooid
+  relayServer: RelayServer
   seed(build: (tools: SeedTools) => MaybeAsync<void>): Promise<Scenario>
   // A logged-in page for a user, in its own browser context.
   as(user: TestUser, path?: string, options?: PageOptions): Promise<Page>
@@ -174,7 +195,7 @@ export type HarnessFixtures = {
 }
 
 export type HarnessWorkerFixtures = {
-  zooid: Zooid
+  relayServer: RelayServer
 }
 
 export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
@@ -194,24 +215,28 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     )
   },
   // One container per worker, recreated in the teardown of the test that finishes.
-  zooid: [
+  relayServer: [
     // playwright reads a fixture's dependencies off this pattern, so it stays a pattern.
     // eslint-disable-next-line no-empty-pattern
-    async ({}, use) => {
-      const zooid = new Zooid()
+    async ({}, use, workerInfo) => {
+      const relayServer = new RelayServer(getBackend(workerInfo.project.name))
 
-      await use(zooid)
-      await zooid.stop()
+      // Here rather than in a test, whose timeout a cold image build would run out.
+      if (!(await describeDockerProblem())) {
+        await relayServer.start()
+      }
+
+      await use(relayServer)
+      await relayServer.stop()
     },
-    {scope: "worker"},
+    {scope: "worker", timeout: ms(int(30, MINUTE))},
   ],
-  harness: async ({zooid, browser}, use, testInfo) => {
+  harness: async ({relayServer, browser}, use, testInfo) => {
     const dockerProblem = await describeDockerProblem()
 
     testInfo.skip(Boolean(dockerProblem), dockerProblem)
 
-    await zooid.start()
-    await zooid.ensure()
+    await relayServer.ensure()
 
     const contexts: {name: string; context: BrowserContext}[] = []
     const faults = watchFaults()
@@ -229,7 +254,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     const open = async (path: string, options: PageOptions, user?: TestUser) => {
       const {urls, indexerUrls, cache} = requireScenario()
 
-      await zooid.settle()
+      await relayServer.settle()
       // context.route does not see a request a service worker makes, and sveltekit registers one in dev.
       const context = await browser.newContext({
         ...testInfo.project.use,
@@ -244,7 +269,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
       // Playwright matches the most recently registered route first, so the block-all goes in first.
       await installHttpRoutes(context)
-      await installWebSocketRoutes(context, zooid)
+      await installWebSocketRoutes(context, relayServer)
 
       for (const url of options.silent ?? []) {
         silenceRelay(context, url)
@@ -302,11 +327,11 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     }
 
     await use({
-      zooid,
+      relayServer,
       as: (user, path = "/", options = {}) => open(path, options, user),
       visit: (path = "/", options = {}) => open(path, options),
       seed: async build => {
-        scenario = await seed(zooid, build)
+        scenario = await seed(relayServer, build)
 
         return scenario
       },
@@ -318,7 +343,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
     }
 
     // Before the assertions below, which throw: a failing test still owes the next one a container.
-    await zooid.reset()
+    await relayServer.reset()
 
     if (faults.found.length > 0 || testInfo.status !== testInfo.expectedStatus) {
       // A path rather than a body, since the list reporter truncates an inline attachment.

@@ -1,0 +1,54 @@
+# caravel and the Postgres it keeps everything in, bound to loopback only. caravel is the one server
+# this harness connects to for real; Postgres publishes nothing.
+#
+# Both keep their data in a tmpfs, so `up --force-recreate` is a guaranteed-empty database. Relays
+# are rows rather than files, so e2e/harness/caravel/backend.ts creates them once caravel answers.
+name: flotilla-e2e-caravel
+
+services:
+  postgres:
+    image: docker.io/library/postgres:17-alpine
+    environment:
+      POSTGRES_USER: caravel
+      POSTGRES_PASSWORD: caravel
+      POSTGRES_DB: caravel
+    volumes:
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "caravel", "-d", "caravel"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+
+  relay:
+    # Built from a caravel checkout, or named by CARAVEL_IMAGE, by e2e/harness/caravel/backend.ts.
+    image: ${CARAVEL_IMAGE:?staged by e2e/harness/caravel/backend.ts, which starts this container}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # The same port zooid publishes, so e2e/harness/relay/transport.ts needs no backend of its own.
+    ports:
+      - "127.0.0.1:3334:2892"
+    environment:
+      PORT: "2892"
+      DATABASE_URL: postgres://caravel:caravel@postgres:5432/caravel
+      # Every relay is `<name>.test`, matching e2e/harness/relay/config.ts. The API is a host no relay
+      # may take, and the harness reaches it with a Host header like any relay.
+      RELAY_DOMAINS: test
+      API_URL: http://api.test
+      # Required, and never reached: billing, wallets and the robot's own relays all name a host
+      # that resolves nowhere. Every relay is on the free plan, so there is nothing to bill.
+      STRIPE_SECRET_KEY: sk_test_flotilla_e2e
+      ROBOT_SECRET: ca7a7e1000000000000000000000000000000000000000000000000000000009
+      ROBOT_WALLET: nostr+walletconnect://6ada7b6eabb3a8349f88667d278a275c704b553a7c57f9d8156555986884a08e?relay=wss://wallet.test&secret=ca7a7e1000000000000000000000000000000000000000000000000000000009
+      ROBOT_OUTBOX_RELAYS: wss://robot.test
+      ROBOT_INDEXER_RELAYS: wss://robot.test
+      ROBOT_MESSAGING_RELAYS: wss://robot.test
+      MEDIA_DIR: /app/data/media
+      RUST_LOG: caravel=info,caravel_core=info,caravel_relay=info,caravel_api=info
+    volumes:
+      - type: tmpfs
+        target: /app/data
+        tmpfs:
+          mode: 01777

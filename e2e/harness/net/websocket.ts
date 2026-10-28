@@ -4,8 +4,8 @@ import {normalizeRelayUrl} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {ClientMessageType, RelayMessageType, isClientEvent, isClientReq} from "@welshman/net"
 import type {ClientMessage, RelayMessage} from "@welshman/net"
-import type {RelayConnection} from "../zooid/types"
-import type {Zooid} from "../zooid/relay"
+import type {RelayConnection} from "../relay/types"
+import type {RelayServer} from "../relay/server"
 import {makeContextStore} from "./context"
 import {isDevServerUrl} from "./http"
 
@@ -102,7 +102,7 @@ const openStaleAuthRelay = (
   }
 }
 
-const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
+const serve = (traffic: Traffic, server: RelayServer, route: WebSocketRoute) => {
   const url = normalizeRelayUrl(route.url())
   const connection = call(() => {
     if (traffic.silenced.has(url)) {
@@ -113,7 +113,7 @@ const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
       return openEmptyRelay()
     }
 
-    const relay = zooid.relays.get(url)
+    const relay = server.relays.get(url)
 
     if (relay) {
       const connection = relay.connect()
@@ -148,7 +148,7 @@ const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
 }
 
 /** The single interception point for relay traffic. On the context, so it covers a page opened later. */
-export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) => {
+export const installWebSocketRoutes = (context: BrowserContext, server: RelayServer) => {
   const traffic = trafficStore.set(context, {
     transcript: [],
     leaks: new Set(),
@@ -160,7 +160,7 @@ export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) =>
 
   return context.routeWebSocket(
     url => !isDevServerUrl(url),
-    route => serve(traffic, zooid, route),
+    route => serve(traffic, server, route),
   )
 }
 

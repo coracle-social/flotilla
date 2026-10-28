@@ -23,6 +23,7 @@
     "lint": "prettier --check src e2e packages fdroid playwright.config.ts capacitor.config.ts vite.config.server.ts server.js server electron/*.ts electron/electron-builder.config.mjs scripts/desktop/*.mjs scripts/release && eslint src e2e packages fdroid capacitor.config.ts vite.config.server.ts server.js server electron/*.ts electron/electron-builder.config.mjs scripts",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
+    "test:caravel": "E2E_RELAY=caravel playwright test",
     "test:desktop": "playwright test --config e2e/desktop/playwright.config.ts",
     "test:server": "node --test --test-force-exit server/test/*.test.mjs",
     "test:desktop-storage": "node --test packages/desktop-secure-storage/test/*.test.mjs",

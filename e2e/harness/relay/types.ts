@@ -1,6 +1,7 @@
 import type {SignedEvent, StampedEvent} from "@welshman/util"
 import type {ClientMessage, RelayMessage} from "@welshman/net"
 import type {TestUser} from "../keys"
+import type {TenantName} from "./config"
 
 export type PublishOptions = {
   // Which identity the seeding connection authenticates as, defaulting to the event's own author.
@@ -34,4 +35,17 @@ export type RelayConnection = {
   onMessage(listener: (message: RelayMessage) => void): void
   send(message: ClientMessage): void
   close(): void
+}
+
+// A relay implementation the suite can run against. The protocol is the same on all of them, so this is the rest.
+export type Backend = {
+  readonly name: string
+  // Puts the image on this machine, once per worker.
+  prepare(): Promise<void>
+  // Replaces any running container with an empty one, and returns once it can be configured.
+  up(): Promise<void>
+  down(): Promise<void>
+  logs(): Promise<string>
+  // For policy a backend can only grant one member at a time, called once a join is accepted.
+  admit?(name: TenantName, user: TestUser): Promise<void>
 }

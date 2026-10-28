@@ -9,7 +9,7 @@ export type TestUser = {
   signer: Nip01Signer
 }
 
-// zooid refuses an event whose author is not the authenticated pubkey, so seeding looks the author up here.
+// A relay refuses an event whose author is not the authenticated pubkey, so seeding looks the author up here.
 export const testUsersByPubkey = new Map<string, TestUser>()
 
 const makeUser = (name: string, secret: string): TestUser => {
