@@ -44,6 +44,10 @@ export const homeFeedFilter = (scope: Locator, label: string) =>
 export const relayCard = (scope: Locator, name: string) =>
   scope.locator(".card").filter({hasText: name})
 
+// PollOption renders an option as a small card carrying its label, its count and its progress bar.
+export const pollOption = (scope: Locator | Page, label: string) =>
+  scope.locator(".card-sm").filter({hasText: label})
+
 export const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
 
 export const openRoomDetail = (page: Page) =>

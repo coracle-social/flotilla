@@ -2,7 +2,18 @@ import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
 import {npubEncode} from "nostr-tools/nip19"
 import {HOUR, MINUTE, MONTH, now, uniq} from "@welshman/lib"
-import {FOLLOWS, NOTE, PROFILE, STATUS, makeEvent, tagSpec, tagValue} from "@welshman/util"
+import {
+  FOLLOWS,
+  LONG_FORM,
+  NOTE,
+  POLL,
+  PROFILE,
+  STATUS,
+  makeEvent,
+  tagSpec,
+  tagValue,
+  tagValues,
+} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {FollowList, Note, PinList, Profile} from "@welshman/domain"
 import {
@@ -16,6 +27,7 @@ import {
   mockBlossom,
   mockGeocoding,
   noteEditor,
+  pollOption,
   profilePath,
   spacePath,
   test,
@@ -494,6 +506,68 @@ test("US-134 write a public post", async ({seed, as}) => {
   await feed.getByRole("button", {name: "Create post"}).click()
 
   await expect(topDialog(page).getByText("Create a Public Post")).toBeVisible()
+})
+
+test("US-150 post an article or a poll", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.profile(user.alice, {name: "Alice Anderson"})
+    space.relayList(user.alice)
+  })
+
+  const page = await as(users.alice, profilePath(users.alice.pubkey), {context: DESKTOP})
+
+  await page.getByRole("button", {name: "Choose a post type"}).click()
+  await page.getByRole("button", {name: "Article", exact: true}).click()
+
+  // An article gets the same full page composer a space article does, cover image and all.
+  await expect(page).toHaveURL(/\/articles\/create$/)
+
+  await page.getByPlaceholder("Title").fill("Reading the tide charts")
+  await noteEditor(page).click()
+  await noteEditor(page).pressSequentially("They live in the drawer under the chart table.")
+  await page.getByRole("button", {name: "Publish"}).click()
+
+  await expect(toast(page)).toContainText("Your article has been published!")
+
+  // The title is a tag rather than content, so a card carrying it was drawn by the article renderer.
+  await expect(notes(page).filter({hasText: "Reading the tide charts"})).toBeVisible()
+  await expect
+    .poll(() =>
+      getPublishedEvents(page.context(), LONG_FORM).map(event =>
+        tagValue(tagSpec("title"), event.tags),
+      ),
+    )
+    .toContain("Reading the tide charts")
+
+  await page.getByRole("button", {name: "Choose a post type"}).click()
+  await page.getByRole("button", {name: "Poll", exact: true}).click()
+
+  const poll = topDialog(page)
+
+  await poll.getByPlaceholder("What would you like to ask?").fill("Where shall we moor?")
+  await poll.getByPlaceholder("Option 1").fill("The park")
+  await poll.getByPlaceholder("Option 2").fill("The pub")
+  await poll.getByRole("button", {name: "Create Poll"}).click()
+
+  // A poll belongs to no space, so the relays it names are the only place its votes can live.
+  await expect
+    .poll(() =>
+      getPublishedEvents(page.context(), POLL).flatMap(event =>
+        tagValues(tagSpec("relay"), event.tags),
+      ),
+    )
+    .toContain(scenario.space("space").url)
+
+  const card = notes(page).filter({hasText: "Where shall we moor?"})
+
+  await expect(card).toBeVisible()
+
+  await pollOption(card, "The park").getByRole("radio").check()
+  await expect(pollOption(card, "The park")).toContainText("1 vote")
 })
 
 test("US-149 quote a note in a post of your own", async ({seed, as}) => {

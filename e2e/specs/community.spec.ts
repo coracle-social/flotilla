@@ -37,6 +37,7 @@ import {
   modalForm,
   noteEditor,
   pickEmoji,
+  pollOption,
   roomPath,
   spacePath,
   test,
@@ -53,9 +54,6 @@ const shelfCard = (page: Page, title: string) =>
 
 // Button swallows both the default and the propagation of a click, and the middle of a card is one.
 const openCard = (card: Locator, title: string) => card.getByText(title).click()
-
-// PollOption renders an option as a small card carrying its label, its count and its progress bar.
-const pollOption = (page: Page, label: string) => page.locator(".card-sm").filter({hasText: label})
 
 // A multiple choice vote goes out once the delay window closes, so "both publish" is visible here.
 const pollResponses = (page: Page, pollId: string) =>

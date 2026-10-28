@@ -76,6 +76,7 @@ export {
   openRoomDetail,
   pageBar,
   pickEmoji,
+  pollOption,
   relayCard,
   roomLink,
   send,

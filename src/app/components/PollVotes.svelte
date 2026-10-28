@@ -11,11 +11,11 @@
   import {command, reader, writer} from "@app/core/domain"
 
   type Props = {
-    url: string
+    urls: string[]
     event: TrustedEvent
   }
 
-  const {url, event}: Props = $props()
+  const {urls, event}: Props = $props()
 
   const responses = $events.desc([{kinds: [POLL_RESPONSE], "#e": [event.id]}]).$
 
@@ -39,7 +39,9 @@
     activePublication = undefined
 
     if (selection.length > 0) {
-      const eventWriter = writer(PollResponse).forceRoutes(relay(url)).setPollId(event.id)
+      const eventWriter = writer(PollResponse)
+        .forceRoutes(...urls.map(relay))
+        .setPollId(event.id)
 
       for (const id of selection) {
         eventWriter.addSelection(id)

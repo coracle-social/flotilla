@@ -3,7 +3,6 @@
   import {publish} from "@welshman/app"
   import Bell from "@assets/icons/bell.svg?dataurl"
   import Planet from "@assets/icons/planet.svg?dataurl"
-  import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import Settings from "@assets/icons/settings.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -13,7 +12,7 @@
   import HomeActivity from "@app/components/HomeActivity.svelte"
   import HomeNetworkRecent from "@app/components/HomeNetworkRecent.svelte"
   import HealthCheckList from "@app/components/HealthCheckList.svelte"
-  import NoteCreate from "@app/components/NoteCreate.svelte"
+  import PostCreateButton from "@app/components/PostCreateButton.svelte"
   import RelayList from "@app/components/RelayList.svelte"
   import {user} from "@app/core/user"
   import {relayLists} from "@app/core/plugins"
@@ -51,8 +50,6 @@
     }
   })
 
-  const createPost = () => pushModal(NoteCreate)
-
   const showRelays = () =>
     pushModal(RelayList, {
       title: "Your Relays",
@@ -80,13 +77,9 @@
           <Icon icon={Settings} size={4} />
         </Button>
       {/if}
-      <Button
-        aria-label="Create post"
-        class="button button-primary button-xs max-md:hidden"
-        onclick={createPost}>
-        <Icon icon={PenNewSquare} size={4} />
+      <PostCreateButton class="max-md:hidden" buttonClass="button button-primary button-xs">
         <span class="hidden @sm:inline">Create post</span>
-      </Button>
+      </PostCreateButton>
     </div>
   {/snippet}
   <HealthCheckList class="bg-surface-less @3xl:hidden" />

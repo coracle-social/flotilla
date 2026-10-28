@@ -5,13 +5,11 @@
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import Pen2 from "@assets/icons/pen-2.svg?dataurl"
-  import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
-  import FAB from "@lib/components/FAB.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
@@ -23,7 +21,8 @@
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileFollowButton from "@app/components/ProfileFollowButton.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
-  import NoteCreate from "@app/components/NoteCreate.svelte"
+  import PostCreateButton from "@app/components/PostCreateButton.svelte"
+  import PostCreateFab from "@app/components/PostCreateFab.svelte"
   import WotScore from "@app/components/WotScore.svelte"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
   import {pushModal} from "@app/navigation/dialogs"
@@ -55,8 +54,6 @@
   const copyNpub = () => clip(nip19.npubEncode(target))
 
   const startEdit = () => pushModal(ProfileEdit)
-
-  const createPost = () => pushModal(NoteCreate)
 
   const openChat = () => goToMessages([target])
 
@@ -152,12 +149,11 @@
                         <Icon icon={Pen2} size={4} />
                         Edit profile
                       </Button>
-                      <Button
-                        class="button button-primary flex-1 max-md:hidden sm:button-sm sm:flex-none"
-                        onclick={createPost}>
-                        <Icon icon={PenNewSquare} size={4} />
+                      <PostCreateButton
+                        class="flex-1 max-md:hidden sm:flex-none"
+                        buttonClass="button button-primary sm:button-sm">
                         Create post
-                      </Button>
+                      </PostCreateButton>
                     {:else}
                       <ProfileFollowButton
                         pubkey={target}
@@ -241,7 +237,5 @@
 </div>
 
 {#if isSelf}
-  <FAB onclick={createPost}>
-    <Icon icon={PenNewSquare} size={7} />
-  </FAB>
+  <PostCreateFab />
 {/if}

@@ -2,7 +2,7 @@ import type {RouteId, RouteParams} from "$app/types"
 import type {Maybe} from "@welshman/lib"
 
 // SvelteKit names these after directories and layouts, but nothing is served at them.
-export type PageId = Exclude<RouteId, "/notes" | "/people" | "/settings">
+export type PageId = Exclude<RouteId, "/articles" | "/notes" | "/people" | "/settings">
 
 export type Route<Id extends RouteId, P> = {
   id: Id

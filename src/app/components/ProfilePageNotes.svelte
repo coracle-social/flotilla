@@ -1,6 +1,5 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {NOTE} from "@welshman/util"
   import {fly} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteEntry from "@app/components/NoteEntry.svelte"
@@ -19,7 +18,6 @@
 
   const feed = makeNetworkFeed({
     context,
-    kinds: [NOTE],
     pinned: derivePinnedEvents(pubkey),
     sortByTime: true,
   })

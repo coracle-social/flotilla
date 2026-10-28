@@ -22,6 +22,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {writer} from "@app/core/domain"
   import {pushToast} from "@app/features/toast"
+  import {publishToNetwork} from "@app/features/social"
   import {publishToSpace} from "@app/features/spaces/rooms"
   import {DraftKey} from "@app/features/drafts"
 
@@ -38,13 +39,13 @@
   }
 
   type Props = {
-    url: string
+    url?: string
     h?: string
     shareToChat?: boolean
   }
 
   const {url, h, shareToChat = false}: Props = $props()
-  const draftKey = new DraftKey<Values>(`poll:${url}:${h ?? ""}`)
+  const draftKey = new DraftKey<Values>(`poll:${url ?? ""}:${h ?? ""}`)
   const initialValues = draftKey.get()
 
   const back = () => history.back()
@@ -89,7 +90,7 @@
     loading = true
 
     try {
-      const eventWriter = writer(Poll).setTitle(title.trim()).setPollType(pollType).setUrls([url])
+      const eventWriter = writer(Poll).setTitle(title.trim()).setPollType(pollType)
 
       for (const option of nonEmptyOptions) {
         eventWriter.addOption(option)
@@ -99,7 +100,9 @@
         eventWriter.setEndsAt(endsAt)
       }
 
-      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
+      const {error} = url
+        ? await publishToSpace(eventWriter.setUrls([url]), {url, h, shareToChat})
+        : await publishToNetwork(eventWriter)
 
       if (error) {
         return pushToast({theme: "error", message: error})

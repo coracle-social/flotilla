@@ -1,25 +1,20 @@
 <script lang="ts">
   import Home from "@assets/icons/home.svg?dataurl"
   import Compass from "@assets/icons/compass.svg?dataurl"
-  import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Page from "@lib/components/Page.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import ScrollToTop from "@lib/components/ScrollToTop.svelte"
-  import FAB from "@lib/components/FAB.svelte"
   import HomeFeed from "@app/components/HomeFeed.svelte"
   import HomeHealthChecks from "@app/components/HomeHealthChecks.svelte"
   import HomeHosting from "@app/components/HomeHosting.svelte"
   import HomeSpaces from "@app/components/HomeSpaces.svelte"
-  import NoteCreate from "@app/components/NoteCreate.svelte"
-  import {pushModal} from "@app/navigation/dialogs"
+  import PostCreateFab from "@app/components/PostCreateFab.svelte"
   import {HOSTING_ENABLED} from "@app/features/hosting"
   import {PLATFORM_RELAYS} from "@app/core/env"
 
   let element: Element | undefined = $state()
-
-  const createPost = () => pushModal(NoteCreate)
 </script>
 
 <Page>
@@ -54,6 +49,4 @@
   <ScrollToTop {element} class="max-md:bottom-20" />
 </Page>
 
-<FAB onclick={createPost}>
-  <Icon icon={PenNewSquare} size={7} />
-</FAB>
+<PostCreateFab />

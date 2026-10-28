@@ -103,7 +103,6 @@ export const groupNetworkFeedEvents = (events: TrustedEvent[]): NetworkFeedEntry
 
 export type NetworkFeedOptions = {
   context: FeedContext
-  kinds?: number[]
   isIncluded?: Readable<(event: TrustedEvent) => boolean>
   pinned?: Readable<TrustedEvent[]>
   sortByTime?: boolean
@@ -112,7 +111,6 @@ export type NetworkFeedOptions = {
 /** Notes with each reply drawn under the note it answers. The caller owns the context. */
 export const makeNetworkFeed = ({
   context,
-  kinds = [NOTE, ...CONTENT_KINDS],
   isIncluded = readable(() => true),
   pinned = readable<TrustedEvent[]>([]),
   sortByTime = false,
@@ -230,7 +228,7 @@ export const makeNetworkFeed = ({
         // Half the group's relays answering is enough to show its page, since the rest get asked again.
         quorum: 0.5,
         useCache: false,
-        filters: [{kinds, authors: pubkeys}],
+        filters: [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
         onEvent: context.add,
       })
 

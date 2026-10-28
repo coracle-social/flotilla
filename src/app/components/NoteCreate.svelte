@@ -1,8 +1,6 @@
 <script lang="ts">
   import {writable} from "svelte/store"
-  import {uniq} from "@welshman/lib"
   import {Note} from "@welshman/domain"
-  import {PublishStatus} from "@welshman/net"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -16,11 +14,10 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import EditorContent from "@app/features/editor/EditorContent.svelte"
-  import {publisher} from "@app/core/plugins"
   import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
-  import {userSpaceUrls} from "@app/features/spaces"
+  import {publishToNetwork} from "@app/features/social"
   import {pushToast} from "@app/features/toast"
   import {openEventNote} from "@app/navigation/overlays"
 
@@ -58,28 +55,22 @@
     loading = true
 
     try {
-      const {event, relays} = await writer(Note)
-        .setContent(text)
-        .addTags(...ed.storage.nostr.getEditorTags())
-        .render()
+      const {publication, error} = await publishToNetwork(
+        writer(Note)
+          .setContent(text)
+          .addTags(...ed.storage.nostr.getEditorTags()),
+      )
 
-      const publication = $publisher.publish({
-        event,
-        relays: uniq([...relays, ...$userSpaceUrls]),
-      })
-
-      await publication.settled()
-
-      if (publication.getUrlsWithStatus(PublishStatus.Success).length > 0) {
-        draftKey.clear()
-        history.back()
-        pushToast({
-          message: "Your post has been published!",
-          action: {message: "View it", onclick: () => openEventNote(publication.event)},
-        })
-      } else {
-        pushToast({theme: "error", message: (await publication.getError()) ?? "Failed to post."})
+      if (error) {
+        return pushToast({theme: "error", message: error})
       }
+
+      draftKey.clear()
+      history.back()
+      pushToast({
+        message: "Your post has been published!",
+        action: {message: "View it", onclick: () => openEventNote(publication.event)},
+      })
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to post."})

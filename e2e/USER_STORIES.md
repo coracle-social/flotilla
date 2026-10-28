@@ -1412,6 +1412,21 @@ Acceptance:
   favorited, and it appears at the top of her profile's notes.
 - A toast says the post went out, and offers to open it.
 
+### US-150 — Post an article or a poll
+
+As alice, I want to pick what kind of post I am writing, so that a long-form
+article or a poll reaches my followers the same way a note does.
+
+Acceptance:
+
+- "Create post" opens the note composer, and the arrow beside it offers Poll and
+  Article.
+- An article opens the full page composer, goes out as a kind 30023 carrying its
+  title, and her profile draws it with the article renderer rather than as a wall
+  of text.
+- A poll goes out carrying the relays its votes live on, so her profile draws its
+  options and she can vote on it there.
+
 ### US-149 — Quote a note in a post of your own
 
 As alice, I want to quote someone else's note in a post of my own, so that my

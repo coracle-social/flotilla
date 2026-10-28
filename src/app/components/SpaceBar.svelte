@@ -21,7 +21,7 @@
 
   const {back, leading, title, action, ...props}: Props = $props()
 
-  const url = decodeRelay($page.params.relay!)
+  const relay = $page.params.relay
 </script>
 
 <PageBar {...props}>
@@ -46,9 +46,11 @@
             </div>
           {/if}
         </div>
-        <div class="truncate text-xs text-primary md:hidden">
-          <RelayLabel {url} />
-        </div>
+        {#if relay}
+          <div class="truncate text-xs text-primary md:hidden">
+            <RelayLabel url={decodeRelay(relay)} />
+          </div>
+        {/if}
       </div>
       <div class="flex shrink-0 items-center gap-2">
         {@render action?.()}

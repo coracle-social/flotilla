@@ -275,6 +275,9 @@ export const articleCreate = defineRoute("/spaces/[relay]/articles/create", {
   title: () => "Write an Article",
 })
 
+// The same composer with no space behind it, for an article published to the network.
+export const networkArticleCreate = defineStaticRoute("/articles/create", "Write an Article")
+
 export const article = defineRoute("/spaces/[relay]/articles/[address]", {
   encode: encodeByAddress,
   decode: decodeByAddress,
@@ -366,6 +369,7 @@ const pageRoutes: Record<PageId, PageRoute> = {
   [classified.id]: classified,
   [articles.id]: articles,
   [articleCreate.id]: articleCreate,
+  [networkArticleCreate.id]: networkArticleCreate,
   [article.id]: article,
   [library.id]: library,
   [board.id]: board,
