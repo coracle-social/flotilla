@@ -25,7 +25,10 @@ export class Notes {
       ])
   }
 
-  load = async (ref: IEventRef, replies: TrustedEvent[] = []) => {
+  load = async (
+    ref: IEventRef,
+    {replies = [], priority}: {replies?: TrustedEvent[]; priority?: number} = {},
+  ) => {
     const eventRef = new EventRef(ref)
     const idOrAddress = eventRef.getIdOrAddress()
 
@@ -37,6 +40,7 @@ export class Notes {
             relays: await this.relays(ref, replies),
             filters: eventRef.getFilters(),
             timeout: 3000,
+            priority,
           }),
         )
       )

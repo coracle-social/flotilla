@@ -165,11 +165,12 @@ Outside `spaces/`:
 - `toast.ts` (`pushToast`, one at a time), `theme.ts` (the active theme and font size)
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
   `notifications.ts` (the latest activity per path, and which paths are unread), `badges.ts`
-  (the app icon badge) and `inbox.ts` (the home inbox's lists)
+  (the app icon badge) and `activity.ts` (the home stream: its conversations and space content,
+  what was done to your own notes with its sync, grouping and unread state, and the types the
+  stream is narrowed to)
 - `social/`: `replies.ts` reads a conversation's shape off its tags, `notes.ts` holds the `Notes`
-  plugin; `muting.ts`, `notifications.ts` (the home notifications tab: its filters, sync,
-  grouping and unread state),
-  `networkFeed.ts` (`makeNetworkFeed`) and `reactions.ts` (reacting outside a space)
+  plugin; `muting.ts`, `networkFeed.ts` (`makeNetworkFeed`) and `reactions.ts` (reacting outside
+  a space)
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)

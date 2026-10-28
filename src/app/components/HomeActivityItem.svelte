@@ -1,22 +1,22 @@
 <script lang="ts">
-  import HomeInboxItemRow from "@app/components/HomeInboxItemRow.svelte"
-  import HomeInboxItemConversation from "@app/components/HomeInboxItemConversation.svelte"
+  import HomeActivityItemRow from "@app/components/HomeActivityItemRow.svelte"
+  import HomeActivityItemConversation from "@app/components/HomeActivityItemConversation.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import type {Activity} from "@app/features/notifications"
 
   type Props = {
-    conversation: Activity
+    activity: Activity
   }
 
-  const {conversation}: Props = $props()
+  const {activity}: Props = $props()
 
-  const {path, url, h, pubkeys = [], event} = $derived(conversation)
+  const {path, url, h, pubkeys = [], event} = $derived(activity)
 </script>
 
 {#if url}
-  <HomeInboxItemRow {path} {url} {event}>
+  <HomeActivityItemRow {path} {url} {event}>
     {#snippet icon()}
       <RelayIcon {url} size={9} class="shrink-0" />
     {/snippet}
@@ -30,7 +30,7 @@
     {#snippet subtitle()}
       <RelayName {url} />
     {/snippet}
-  </HomeInboxItemRow>
+  </HomeActivityItemRow>
 {:else}
-  <HomeInboxItemConversation {path} {pubkeys} {event} />
+  <HomeActivityItemConversation {path} {pubkeys} {event} />
 {/if}

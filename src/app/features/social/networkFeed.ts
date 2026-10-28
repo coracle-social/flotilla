@@ -196,10 +196,13 @@ export const makeNetworkFeed = ({
       admitting = true
 
       try {
-        const loads = batch.map(
-          async entry =>
-            [entry.key, entry.note ?? (await notes.get().load(entry.ref, entry.replies))] as const,
-        )
+        const loads = batch.map(async entry => {
+          // Drawing waits on these, so they go out at the feed's own priority rather than behind its spans.
+          const note =
+            entry.note ?? (await notes.get().load(entry.ref, {replies: entry.replies, priority: 1}))
+
+          return [entry.key, note] as const
+        })
 
         // Released in order, so an entry waits on what is above it and not on the whole batch.
         for (const load of loads) {

@@ -370,7 +370,7 @@ onMount(() => {
 That is `EventComments`. The thread detail page does the same in an `$effect`.
 
 **A list that pages as you scroll:** `makeFeed`, `makeScrollLoader` and `makeFeedContext` from
-`src/app/features/feeds.ts`. Every space list page uses them, as do `HomeNetwork` and `RoomChat`.
+`src/app/features/feeds.ts`. Every space list page uses them, as do `HomeNetworkRecent` and `RoomChat`.
 The threads and classifieds pages are the reference:
 
 ```typescript

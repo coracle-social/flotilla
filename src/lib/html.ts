@@ -79,7 +79,8 @@ export const createScroller = ({
 
     // A throw here skips the rAF below and ends scrolling for the life of the component.
     try {
-      if (container && !isHidden(container)) {
+      // A feed on a tab that isn't showing has nothing to fill, so it waits until it shows again.
+      if (container && !isHidden(container) && element.getClientRects().length > 0) {
         // While we have empty space, fill it
         const {scrollY, innerHeight} = window
         const {scrollHeight, scrollTop, clientHeight} = container

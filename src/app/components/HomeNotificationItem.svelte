@@ -6,19 +6,19 @@
   import Reply from "@assets/icons/reply.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
-  import HomeNetworkReason from "@app/components/HomeNetworkReason.svelte"
+  import HomeNotificationReason from "@app/components/HomeNotificationReason.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import Reaction from "@app/components/Reaction.svelte"
-  import {REPOST_KINDS} from "@app/features/social/notifications"
   import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
   import {pushModal} from "@app/navigation/dialogs"
   import {openEventNote} from "@app/navigation/overlays"
   import {deriveDisplaysByPubkey} from "@app/features/people"
   import {notes} from "@app/features/social"
-  import type {HomeNotification} from "@app/features/social/notifications"
+  import {REPOST_KINDS} from "@app/features/activity"
+  import type {HomeNotification} from "@app/features/activity"
 
   type Props = {
     notification: HomeNotification
@@ -29,12 +29,12 @@
 
   const {ref} = notification
 
-  // An entry keeps its key while it collects answers, so the component has to follow its prop.
+  // A notification keeps its key while it collects answers, so the component has to follow its prop.
   const replies = $derived(notification.replies)
 
   const interactions = $derived(notification.reactions)
 
-  // The note this entry is about, fetched from the hints the notifications naming it carried.
+  // The note this notification is about, fetched from the hints the events naming it carried.
   const note = $notes.deriveEvent(ref)
 
   const reactions = $derived(interactions.filter(e => e.kind === REACTION))
@@ -64,7 +64,7 @@
 
   const reactionGroups = $derived(groupBy(e => e.content, reactions))
 
-  // A note nobody answered or reacted to is in the feed because it names the user.
+  // A note nobody answered or reacted to is in the stream because it names the user.
   const mention = $derived(replies.length === 0 && interactions.length === 0)
 
   const reasons = $derived(
@@ -129,23 +129,23 @@
     <div class="flex flex-wrap items-center gap-1 px-1">
       {#if mention}
         {@render separator("mention")}
-        <HomeNetworkReason>
+        <HomeNotificationReason>
           {@render names([$note.pubkey])} mentioned you
-        </HomeNetworkReason>
+        </HomeNotificationReason>
       {/if}
       {#if repliers.length > 0}
         {@render separator("replies")}
-        <HomeNetworkReason icon={Reply}>
+        <HomeNotificationReason icon={Reply}>
           {#if $note.pubkey === $user.pubkey}
             {@render names(repliers)} replied to your note
           {:else}
             {@render names(repliers)} replied to a thread you are in
           {/if}
-        </HomeNetworkReason>
+        </HomeNotificationReason>
       {/if}
       {#if reactors.length > 0}
         {@render separator("reactions")}
-        <HomeNetworkReason>
+        <HomeNotificationReason>
           {#if reactionGroups.size === 1}
             {@render names(reactors)} reacted with
             <Reaction event={reactions[0]} />
@@ -158,19 +158,19 @@
               </span>
             {/each}
           {/if}
-        </HomeNetworkReason>
+        </HomeNotificationReason>
       {/if}
       {#if reposters.length > 0}
         {@render separator("reposts")}
-        <HomeNetworkReason>
+        <HomeNotificationReason>
           {@render names(reposters)} reposted this
-        </HomeNetworkReason>
+        </HomeNotificationReason>
       {/if}
       {#if zappers.length > 0}
         {@render separator("zaps")}
-        <HomeNetworkReason icon={Bolt}>
+        <HomeNotificationReason icon={Bolt}>
           {@render names(zappers)} zapped this
-        </HomeNetworkReason>
+        </HomeNotificationReason>
       {/if}
     </div>
     <NoteItem event={$note} {context} customActions={quoteNote} showReply showThreadLinks />

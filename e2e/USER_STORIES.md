@@ -1883,20 +1883,22 @@ that I don't have to walk every space to find out.
 
 Acceptance:
 
-- The inbox lists each room and conversation with unread activity as a row,
-  naming the room and space and showing the latest message, newest first. It
-  holds messages only, and only while they are unread.
-- Activity is one row per space under the conversations in the same section,
-  counting what that space has waiting that isn't a message - threads, events,
-  classifieds and the rest. A row disappears once its space is read.
-- "You're all caught up" shows only when there is neither a conversation nor a
-  space with activity.
-- A conversation carries an unread dot, and "Mark all read" empties the inbox.
+- The Recent tab is one stream, newest first, holding a row per room and
+  conversation that names the room and its space and shows the latest message, a
+  row per space counting what it has waiting that isn't a message - threads,
+  events, classifieds and the rest - and the replies and reactions to her own
+  notes.
+- The stream is history rather than a queue, so a conversation she has read
+  keeps its row and loses its unread dot.
+- The stream spends its first second and a half as a spinner, so its rows are
+  drawn once rather than rearranged as relays answer. The filters above it stay
+  visible throughout.
+- "You're all caught up" shows only while the stream holds nothing at all.
 - Selecting a conversation opens it.
 - Relay health checks name what is wrong and sit in their own panel beside the
-  inbox, or at the top of the inbox itself when the page is too narrow for two
-  columns. Applying one opens a review naming the relays it adds and removes,
-  and publishes nothing until it is confirmed.
+  stream, or above it when the page is too narrow for two columns. Applying one
+  opens a review naming the relays it adds and removes, and publishes nothing
+  until it is confirmed.
 - Hosting is offered whether or not she hosts a space: a shortcut to the hosting
   panel when she has one, an invitation to start one when she doesn't.
 
@@ -1907,14 +1909,16 @@ that home is worth opening when nothing is waiting for me.
 
 Acceptance:
 
-- The Network section lists notes from her follows, resolved through the relays
+- The Network tab lists notes from her follows, resolved through the relays
   those people publish to. A follow who is in none of her spaces reads the same
   way, replies included, since a note's replies are counted from the relay the
   note itself came from.
+- The tab asks for them when she opens it rather than when the page loads, so
+  landing on home costs nothing she did not ask for.
 - A reply is counted on the note it answers and drawn underneath it, around a
   card for the note itself.
-- The section fills from the relays that answer. One that takes the connection
-  and then says nothing does not hold it empty.
+- The tab fills from the relays that answer. One that takes the connection and
+  then says nothing does not hold it empty.
 
 ### US-141 — See replies and reactions to my own notes
 
@@ -1924,10 +1928,10 @@ another client.
 
 Acceptance:
 
-- The network section has two tabs, Network for posts from the people she
-  follows and Notifications for what other people do to her own notes.
-- Notifications carries a badge while it holds something she has not read, and
-  the badge goes down once she has looked at the tab.
+- What other people do to her own notes is in the Recent stream, among her
+  rooms and conversations, rather than behind a tab of its own.
+- Recent carries a badge while it holds something she has not read, and the
+  badge goes down once the stream has drawn it.
 - An entry is the note that was answered or reacted to, fetched whether or not
   it had already been loaded, with the replies to it shown underneath.
 - Everything done to one note is one entry, so two people answering the same
@@ -1938,9 +1942,9 @@ Acceptance:
 - An entry whose note is itself a reply links to the note it answers and to the
   root of its thread.
 - A reply shown under an entry opens its own note when she clicks it.
-- The tab holds notes and what was done to them, so a reaction to one of her
-  room messages lights neither the tab nor its badge.
-- Nothing a muted person does lights the tab or its badge.
+- The stream holds notes and what was done to them, so a reaction to one of her
+  room messages lights neither the stream nor its badge.
+- Nothing a muted person does lights the stream or its badge.
 
 ### US-146 — Choose what the network feed includes
 
@@ -1966,21 +1970,37 @@ Acceptance:
   loading.
 - Her choice survives a reload.
 
-### US-145 — Choose what the notifications tab includes
+### US-145 — Choose which answers the activity stream shows
 
-As alice, I want to say whether the notifications tab shows replies, reactions
+As alice, I want to say whether the activity stream shows replies, reactions
 and zaps, so that the kind of answer I care about is not buried under the kind I
 do not.
 
 Acceptance:
 
-- The tab carries a button per type, all of them on until she turns one off.
-- Each button says how much of its type the tab holds, whether it is on or
+- The stream carries a button per type, all of them on until she turns one off.
+- Each button says how much of its type the stream holds, whether it is on or
   off.
 - Turning a type off drops it from the entries and from the badge, and leaves
   every other type where it was.
-- An entry nothing is left to say about is not drawn, and the tab says so rather
-  than looking empty.
+- An entry nothing is left to say about is not drawn, and the stream says so
+  rather than looking empty.
+- Her choice survives a reload.
+
+### US-152 — Leave my spaces out of the activity stream
+
+As alice, I want to turn my spaces off in the activity stream, so that a busy
+space does not bury what was meant for me.
+
+Acceptance:
+
+- The stream carries a Spaces button beside the answer types, on until she turns
+  it off, saying how many rooms and spaces are behind it.
+- Turning it off drops every room and space row and keeps her direct messages,
+  since a direct message belongs to no space, and keeps the answers to her own
+  notes.
+- A stream holding nothing but spaces says they are filtered out rather than
+  that she is caught up.
 - Her choice survives a reload.
 
 ### US-144 — Mute somebody from their profile
@@ -1994,8 +2014,8 @@ Acceptance:
   profile page alike, and offers Unmute User once she has muted somebody.
 - A muted person's posts are gone from the Network tab on home rather than
   collapsed into a card, and the people she has not muted are unaffected.
-- The Notifications tab drops an entry drawn around a muted person's note as
-  well as anything the muted person did.
+- The activity stream drops an entry drawn around a muted person's note as well
+  as anything the muted person did.
 
 ### US-133 — Keep the search relays that work
 
@@ -2016,8 +2036,9 @@ where my notes go and where people can reach me.
 
 Acceptance:
 
-- The Network section carries a relay settings button, and opening it lists the
-  relays her relay list already names.
+- The Network tab carries a relay settings button, where the relays it edits are
+  the ones the feed reaches, and opening it lists the relays her relay list
+  already names.
 - A relay added from the picker appears in the list, and a relay removed from
   the list leaves it.
 - The list is one list, so a relay she adds is both where she publishes and

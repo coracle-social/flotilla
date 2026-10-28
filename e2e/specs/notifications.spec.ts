@@ -64,6 +64,12 @@ const spaceMenu = (page: Page, url: string) =>
 // The menu closes on the next mouseup, which a click with no gap between press and release reaches.
 const openSpaceMenu = (menu: Locator) => menu.click({delay: 200})
 
+// Home's activity and network feeds are two tabs in one card, the activity one labelled Recent.
+const homeFeed = (page: Page) => page.getByRole("region", {name: "Recent"})
+
+// The network tab asks every follow's relays for their posts only once it is open.
+const openNetworkTab = (feed: Locator) => feed.getByRole("button", {name: "Network"}).click()
+
 // Every story here depends on the message having landed, so posting is finished once it renders.
 const post = async (page: Page, content: string) => {
   await send(page, content)
@@ -309,17 +315,20 @@ test("US-116 read the home dashboard", async ({seed, as}) => {
   await expect(conversation).toContainText("General")
   await expect(unreadDot(conversation)).toBeVisible()
 
-  // Threads, events and classifieds are counted per space in Activity rather than listed as conversations.
+  // Threads, events and classifieds are counted per space in Recent rather than listed as conversations.
   const activity = page.getByRole("link").filter({hasText: "1 thread"})
 
   await expect(activity).toBeVisible()
 
-  // The inbox is the badges, so a conversation leaves the list once it has nothing unread
-  await page.getByRole("button", {name: "Mark all read"}).click()
+  // The stream is history rather than a queue, so reading a room keeps its row and drops its dot
+  await conversation.click()
 
-  await expect(conversation).toHaveCount(0)
-  await expect(activity).toHaveCount(0)
-  await expect(page.getByText("You're all caught up")).toBeVisible()
+  await expect(message(page, "the server is on fire")).toBeVisible()
+
+  await page.goBack()
+
+  await expect(conversation).toBeVisible()
+  await expect(unreadDot(conversation)).toHaveCount(0)
 })
 
 test("US-117 read the network feed on home", async ({seed, as}) => {
@@ -363,17 +372,18 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
 
   const page = await as(users.alice, "/home")
 
-  const network = page.getByRole("region", {name: "Network"})
+  const feed = homeFeed(page)
 
-  await expect(network.getByRole("button", {name: "Network"})).toBeVisible()
+  await openNetworkTab(feed)
+
   await expect(page.getByText(note)).toBeVisible()
 
   // A reply is counted on the note it answers and drawn underneath it.
   await expect(page.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
-  await expect(network.getByText(reply)).toBeVisible()
+  await expect(feed.getByText(reply)).toBeVisible()
 
   // The feed carries every kind of post a follow writes, not only their notes.
-  await expect(network.getByText(topic)).toBeVisible()
+  await expect(feed.getByText(topic)).toBeVisible()
 })
 
 test("US-117 read a follow who is in none of your spaces", async ({seed, as}) => {
@@ -410,16 +420,18 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
 
   const page = await as(users.alice, "/home")
 
-  const network = page.getByRole("region", {name: "Network"})
+  const feed = homeFeed(page)
+
+  await openNetworkTab(feed)
 
   // His answer hangs off his note, so the card the feed draws is around the note.
-  const card = network.locator(".card").filter({hasText: note})
+  const card = feed.locator(".card").filter({hasText: note})
 
-  await expect(network.getByText(note)).toBeVisible()
+  await expect(feed.getByText(note)).toBeVisible()
   await expect(card.getByText("Bob Barker")).toBeVisible()
 
   // Alice reads from her space rather than bob's relay, so a context asked of hers comes back empty.
-  await expect(network.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
+  await expect(feed.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
 })
 
 test("US-117 read the network feed when one relay never answers", async ({seed, as}) => {
@@ -454,11 +466,13 @@ test("US-117 read the network feed when one relay never answers", async ({seed, 
 
   const page = await as(users.alice, "/home", {silent: [stalled]})
 
-  const network = page.getByRole("region", {name: "Network"})
+  const feed = homeFeed(page)
+
+  await openNetworkTab(feed)
 
   // A span releases what it found once it is done waiting, so one silent relay holds it empty.
-  await expect(network.getByText(note)).toBeVisible({timeout: 20_000})
-  await expect(network.getByText("Bob Barker")).toBeVisible()
+  await expect(feed.getByText(note)).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText("Bob Barker")).toBeVisible()
 })
 
 test("US-141 read notifications on home", async ({seed, as}) => {
@@ -519,38 +533,33 @@ test("US-141 read notifications on home", async ({seed, as}) => {
 
   const page = await as(users.alice, "/home")
 
-  const network = page.getByRole("region", {name: "Network"})
-
-  // Something unread is waiting before the tab has ever been opened.
-  const notifications = network.getByRole("button", {name: "Notifications"})
-
-  await expect(notifications.getByRole("img", {name: "Unread"})).toBeVisible({timeout: 20_000})
-
-  await notifications.click()
+  const feed = homeFeed(page)
 
   // Everything done to one note is one entry, whatever the gap, so the note is drawn once.
-  await expect(network.getByText(note)).toHaveCount(1, {timeout: 20_000})
-  await expect(network.getByText("replied to your note")).toHaveCount(1)
-  await expect(network.getByText(reply)).toBeVisible()
-  await expect(network.getByText(second)).toBeVisible()
-  await expect(network.getByText("reacted with")).toBeVisible()
+  await expect(feed.getByText(note)).toHaveCount(1, {timeout: 20_000})
+  await expect(feed.getByText("replied to your note")).toHaveCount(1)
+  await expect(feed.getByText(reply)).toBeVisible()
+  await expect(feed.getByText(second)).toBeVisible()
+  await expect(feed.getByText("reacted with")).toBeVisible()
 
   // The note is itself a reply, so what it answers and the root of its thread are both reachable.
-  await expect(network.getByRole("button", {name: "View parent"})).toBeVisible()
-  await expect(network.getByRole("button", {name: "View thread"})).toBeVisible()
+  await expect(feed.getByRole("button", {name: "View parent"})).toBeVisible()
+  await expect(feed.getByRole("button", {name: "View thread"})).toBeVisible()
 
-  // Reading the tab takes the badge down.
-  await expect(notifications.getByRole("img", {name: "Unread"})).toHaveCount(0)
+  // Drawing the stream is reading it, so the badge is already down.
+  await expect(
+    feed.getByRole("button", {name: "Recent"}).getByRole("img", {name: "Unread"}),
+  ).toHaveCount(0)
 
   // A reply under the entry is a note of its own, so it opens its own modal.
-  await network.getByText(reply).click()
+  await feed.getByText(reply).click()
 
   const dialog = page.getByRole("dialog")
 
   await expect(dialog.getByText(reply)).toBeVisible()
 })
 
-test("US-141 leave what the tab cannot draw out of its badge", async ({seed, as}) => {
+test("US-141 leave what the stream cannot draw out of its badge", async ({seed, as}) => {
   const asked = "where is the sextant"
   const mine = "the chart table drawer, under the almanac"
 
@@ -613,19 +622,22 @@ test("US-141 leave what the tab cannot draw out of its badge", async ({seed, as}
 
   const page = await as(users.alice, "/home")
 
-  const network = page.getByRole("region", {name: "Network"})
-  const notifications = network.getByRole("button", {name: "Notifications"})
+  const feed = homeFeed(page)
 
-  await notifications.click()
+  // Her own message is the room's latest, so the room is all the stream has to draw.
+  await expect(feed.getByText(asked)).toBeVisible({timeout: 20_000})
 
   // Neither a reaction to a chat message nor anything a muted person does can be an entry here.
-  await expect(network.getByText("Nothing here yet")).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText("reacted with")).toHaveCount(0)
+  await expect(feed.getByText(mine)).toHaveCount(0)
 
-  // Nothing marked the tab read, since an empty tab holds nothing to read.
-  await expect(notifications.getByRole("img", {name: "Unread"})).toHaveCount(0)
+  // Nothing marked the stream read, since it holds nothing a badge could be about.
+  await expect(
+    feed.getByRole("button", {name: "Recent"}).getByRole("img", {name: "Unread"}),
+  ).toHaveCount(0)
 })
 
-test("US-145 choose what the notifications tab includes", async ({seed, as}) => {
+test("US-145 choose which answers the activity stream shows", async ({seed, as}) => {
   const mine = "the chandlery moved up behind the sail loft"
   const reply = "they left the old sign on the wall"
 
@@ -669,16 +681,13 @@ test("US-145 choose what the notifications tab includes", async ({seed, as}) => 
 
   const page = await as(users.alice, "/home")
 
-  const network = page.getByRole("region", {name: "Network"})
-  const notifications = network.getByRole("button", {name: "Notifications"})
+  const feed = homeFeed(page)
 
-  const filter = (name: string) => homeFeedFilter(network, name)
-
-  await notifications.click()
+  const filter = (name: string) => homeFeedFilter(feed, name)
 
   // Every type is included until she turns one off.
-  await expect(network.getByText(reply)).toBeVisible({timeout: 20_000})
-  await expect(network.getByText("reacted with")).toBeVisible()
+  await expect(feed.getByText(reply)).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText("reacted with")).toBeVisible()
 
   // Bob answered once and reacted once, and each button says so.
   await expect(filter("Replies")).toHaveAccessibleName("Replies 1")
@@ -687,25 +696,131 @@ test("US-145 choose what the notifications tab includes", async ({seed, as}) => 
 
   await filter("Reactions").click()
 
-  await expect(network.getByText("reacted with")).toHaveCount(0)
-  await expect(network.getByText(reply)).toBeVisible()
+  await expect(feed.getByText("reacted with")).toHaveCount(0)
+  await expect(feed.getByText(reply)).toBeVisible()
 
   await filter("Replies").click()
 
   // The entry was a reply and a reaction, so leaving both out leaves nothing to draw it around.
-  await expect(network.getByText("Nothing matches those filters")).toBeVisible()
+  await expect(feed.getByText("Nothing matches those filters")).toBeVisible()
 
   await page.reload()
-  await notifications.click()
 
   await expect(filter("Replies")).toHaveAttribute("aria-pressed", "false")
   await expect(filter("Reactions")).toHaveAttribute("aria-pressed", "false")
-  await expect(network.getByText("Nothing matches those filters")).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText("Nothing matches those filters")).toBeVisible({timeout: 20_000})
 
   await filter("Replies").click()
 
-  await expect(network.getByText(reply)).toBeVisible()
-  await expect(network.getByText("reacted with")).toHaveCount(0)
+  await expect(feed.getByText(reply)).toBeVisible()
+  await expect(feed.getByText("reacted with")).toHaveCount(0)
+})
+
+test("US-152 leave your spaces out of the activity stream", async ({seed, as}) => {
+  const chat = "the server is on fire"
+  const direct = "are you still down at the dock?"
+  const mine = "the chandlery moved up behind the sail loft"
+  const reply = "they left the old sign on the wall"
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+
+    seedRelays(space, user.alice)
+    seedRelays(space, user.bob)
+
+    space.profile(user.bob, {name: "Bob Barker"})
+    space.message(user.bob, "general", chat, at(2, HOUR))
+
+    space.event(
+      user.bob,
+      () =>
+        space
+          .kind(Thread)
+          .writer()
+          .setRoom(space.url, "general")
+          .setTitle("Bed rotation")
+          .setContent("How often do you move things around?")
+          .renderTemplate(),
+      at(90, MINUTE),
+    )
+
+    space.dm(user.bob, [user.alice], direct, at(1, HOUR))
+
+    const posted = space.event(
+      user.alice,
+      () => space.kind(Note).writer().setContent(mine).renderTemplate(),
+      at(40, MINUTE),
+    )
+
+    space.event(
+      user.bob,
+      () => space.kind(Note).writer().setParent(posted.event).setContent(reply).renderTemplate(),
+      at(20, MINUTE),
+    )
+  })
+
+  // Nothing unwraps a gift wrap until she has opened chat, so the stream holds one once she has.
+  const page = await as(users.alice, chatPath(users.bob.pubkey))
+
+  await expect(bubble(page, direct)).toBeVisible()
+
+  await page.goto("/home")
+
+  const feed = homeFeed(page)
+
+  const filter = (name: string) => homeFeedFilter(feed, name)
+
+  await expect(feed.getByText(reply)).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText(chat)).toBeVisible()
+  await expect(feed.getByText("1 thread")).toBeVisible()
+  await expect(feed.getByText(direct)).toBeVisible()
+
+  // Her one room with a message and her one space with a thread are what the button covers.
+  await expect(filter("Spaces")).toHaveAccessibleName("Spaces 2")
+
+  await filter("Spaces").click()
+
+  await expect(feed.getByText(chat)).toHaveCount(0)
+  await expect(feed.getByText("1 thread")).toHaveCount(0)
+
+  // A direct message belongs to no space, and neither does an answer to a note of her own.
+  await expect(feed.getByText(direct)).toBeVisible()
+  await expect(feed.getByText(reply)).toBeVisible()
+
+  await page.reload()
+
+  await expect(filter("Spaces")).toHaveAttribute("aria-pressed", "false")
+  await expect(feed.getByText(direct)).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText(chat)).toHaveCount(0)
+})
+
+test("US-152 turn off the only thing the stream holds", async ({seed, as}) => {
+  const chat = "the hoist is booked until thursday"
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.message(user.bob, "general", chat, at(1, HOUR))
+  })
+
+  const page = await as(users.alice, "/home")
+
+  const feed = homeFeed(page)
+
+  await expect(feed.getByText(chat)).toBeVisible()
+
+  await homeFeedFilter(feed, "Spaces").click()
+
+  // The room is still there and hidden, which reads differently from having nothing waiting.
+  await expect(feed.getByText("Nothing matches those filters")).toBeVisible()
+  await expect(feed.getByText("You're all caught up")).toHaveCount(0)
 })
 
 test("US-146 choose what the network feed includes", async ({seed, as}) => {
@@ -749,48 +864,51 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
 
   const page = await as(users.alice, "/home")
 
-  const network = page.getByRole("region", {name: "Network"})
+  const feed = homeFeed(page)
 
-  const filter = (name: string) => homeFeedFilter(network, name)
+  const filter = (name: string) => homeFeedFilter(feed, name)
+
+  await openNetworkTab(feed)
 
   // Both types are included until she turns one off.
-  await expect(network.getByText(root)).toBeVisible({timeout: 20_000})
-  await expect(network.getByText(answer)).toBeVisible()
+  await expect(feed.getByText(root)).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText(answer)).toBeVisible()
 
   // Bob's two notes and his answer are what the feed holds, and each button says so.
   await expect(filter("Notes")).toHaveAccessibleName("Notes 2")
   await expect(filter("Replies")).toHaveAccessibleName("Replies 1")
 
   // The reply is drawn under the note it answers rather than behind a link to it.
-  await expect(network.getByRole("button", {name: "View parent"})).toHaveCount(0)
+  await expect(feed.getByRole("button", {name: "View parent"})).toHaveCount(0)
 
   // An answer does not hoist the note it names above a newer post.
-  await expect(network.getByText(later)).toBeVisible()
+  await expect(feed.getByText(later)).toBeVisible()
 
-  const feed = await network.innerText()
+  const text = await feed.innerText()
 
-  expect(feed.indexOf(later)).toBeLessThan(feed.indexOf(root))
+  expect(text.indexOf(later)).toBeLessThan(text.indexOf(root))
 
   await filter("Replies").click()
 
-  await expect(network.getByText(answer)).toHaveCount(0)
-  await expect(network.getByText(root)).toBeVisible()
+  await expect(feed.getByText(answer)).toHaveCount(0)
+  await expect(feed.getByText(root)).toBeVisible()
 
   await filter("Notes").click()
 
-  await expect(network.getByText("Nothing matches those filters")).toBeVisible()
+  await expect(feed.getByText("Nothing matches those filters")).toBeVisible()
 
   await page.reload()
+  await openNetworkTab(feed)
 
   await expect(filter("Notes")).toHaveAttribute("aria-pressed", "false")
   await expect(filter("Replies")).toHaveAttribute("aria-pressed", "false")
-  await expect(network.getByText("Nothing matches those filters")).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText("Nothing matches those filters")).toBeVisible({timeout: 20_000})
 
   await filter("Replies").click()
 
   // The note a reply answers is loaded for it, so it is drawn with notes filtered out.
-  await expect(network.getByText(answer)).toBeVisible()
-  await expect(network.getByText(root)).toBeVisible()
+  await expect(feed.getByText(answer)).toBeVisible()
+  await expect(feed.getByText(root)).toBeVisible()
 })
 
 test("US-144 mute somebody and lose them from the home page", async ({seed, as}) => {
@@ -843,21 +961,18 @@ test("US-144 mute somebody and lose them from the home page", async ({seed, as})
 
   const page = await as(users.alice, "/home")
 
-  const network = page.getByRole("region", {name: "Network"})
-  const recentTab = network.getByRole("button", {name: "Network"})
-  const notificationsTab = network.getByRole("button", {name: "Notifications"})
+  const feed = homeFeed(page)
+  const recentTab = feed.getByRole("button", {name: "Recent"})
 
-  await expect(network.getByText(mine)).toBeVisible()
-  await expect(network.getByText(theirs)).toBeVisible()
+  await expect(feed.getByText("replied to a thread you are in")).toBeVisible({timeout: 20_000})
 
-  await notificationsTab.click()
+  await openNetworkTab(feed)
 
-  await expect(network.getByText("replied to a thread you are in")).toBeVisible()
-
-  await recentTab.click()
+  await expect(feed.getByText(mine)).toBeVisible()
+  await expect(feed.getByText(theirs)).toBeVisible()
 
   // Her name on the card is the way to the profile the mute is reached from.
-  await network.getByRole("button", {name: "Carol Carlson"}).first().click()
+  await feed.getByRole("button", {name: "Carol Carlson"}).first().click()
 
   await dialog(page, "Profile details").getByRole("button", {name: "Profile actions"}).click()
   await page.getByRole("button", {name: "Mute User"}).click()
@@ -866,13 +981,13 @@ test("US-144 mute somebody and lose them from the home page", async ({seed, as})
 
   await page.keyboard.press("Escape")
 
-  await expect(network.getByText(theirs)).toHaveCount(0)
-  await expect(network.getByText(mine)).toBeVisible()
+  await expect(feed.getByText(theirs)).toHaveCount(0)
+  await expect(feed.getByText(mine)).toBeVisible()
 
-  await notificationsTab.click()
+  await recentTab.click()
 
   // Her note was the only entry, and a reply to it is drawn around a note of hers.
-  await expect(network.getByText("Nothing here yet")).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText("You're all caught up")).toBeVisible({timeout: 20_000})
 })
 
 // A url the container does not serve, so its nip-11 document never arrives and nothing knows what it supports.
@@ -939,9 +1054,10 @@ test("US-147 choose the relays you publish to", async ({seed, as}) => {
   const space = scenario.space("space")
   const other = scenario.space("other")
   const page = await as(users.alice, "/home")
-  const network = page.getByRole("region", {name: "Network"})
+  const feed = homeFeed(page)
 
-  await network.getByRole("button", {name: "Relay settings"}).click()
+  await openNetworkTab(feed)
+  await feed.getByRole("button", {name: "Relay settings"}).click()
 
   const relays = dialog(page, "Your Relays")
 
@@ -1029,7 +1145,11 @@ test("US-151 share a note into a conversation", async ({seed, as}) => {
 
   await page.goto("/home")
 
-  const card = page.getByRole("region", {name: "Network"}).locator(".card").filter({hasText: note})
+  const feed = homeFeed(page)
+
+  await openNetworkTab(feed)
+
+  const card = feed.locator(".card").filter({hasText: note})
 
   await card.getByRole("button", {name: "Note actions"}).click()
   await page.getByRole("button", {name: "Share to Chat"}).click()

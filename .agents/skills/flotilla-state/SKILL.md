@@ -375,7 +375,9 @@ is joined. Each call tears down the previous run.
 - `registerRoles`, `registerCalls`, `registerPinboards`: their kind for the
   space on screen
 - `registerMessages`: gift wraps from the user's messaging relays, only when `shouldUnwrap` is on
-- `registerBookmarks`: the user's bookmarks; `registerHomeNotifications`: the home notification feed
+- `registerBookmarks`: the user's bookmarks; `registerActivity`: what was done to the
+  user's own notes, polled from their inbox relays every two minutes at a priority under the
+  default, so the home stream and its badge read the repository rather than loading for themselves
 
 The helpers these are built from live in `sync.ts`, except `syncUserList`, which is in `user.ts`. `pullAndListen(url, filters)` is a negentropy
 `Sync.pull` plus a live `limit: 0` request, and returns the function that stops it.
@@ -456,9 +458,9 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
 ## Other app-level stores
 
 - **A join over many sources.** `features/notifications.ts` derives `latestActivityByPath`,
-  then `allNotifications`, then `notifications` and the counts. The inbox stores in `inbox.ts`
-  (`inboxConversations`, `inboxSpaceContent`) derive from the same two, so the inbox matches the
-  badges.
+  then `allNotifications`, then `notifications` and the counts. The home stream derives
+  `recentConversations` and `unreadSpaceContent` in `activity.ts` from the same two, so the stream
+  matches the badges.
 - **Singleton session state.** `spaces/calls` keeps call state in plain writables (`callState`,
   `currentCallSession`, …).
 - **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `core/ingest.ts`.

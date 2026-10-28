@@ -489,9 +489,9 @@ test("US-134 write a public post", async ({seed, as}) => {
   // The same composer is how a post starts from home, out of the feed it posts into.
   await page.goto("/home")
 
-  const network = page.getByRole("region", {name: "Network"})
+  const feed = page.getByRole("region", {name: "Recent"})
 
-  await network.getByRole("button", {name: "Create post"}).click()
+  await feed.getByRole("button", {name: "Create post"}).click()
 
   await expect(topDialog(page).getByText("Create a Public Post")).toBeVisible()
 })

@@ -1,14 +1,22 @@
 import {derived} from "svelte/store"
 import {
   ago,
-  assoc,
   countBy,
+  first,
+  formatTimestampAsTime,
   HOUR,
   int,
+  LOCALE,
   max,
+  MINUTE,
+  MONTH,
+  ms,
   noop,
+  now,
   removeUndefined,
+  secondsToDate,
   sortBy,
+  uniq,
   uniqBy,
 } from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
@@ -23,32 +31,88 @@ import {
   getIdAndAddress,
   getIdFilters,
   getRelayHints,
+  hexTags,
   matchTag,
   tagSpec,
   tagValue,
-  unionFilters,
+  tagValues,
   userInbox,
 } from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {synced, throttled} from "@welshman/store"
 import type {EventsById} from "@welshman/store"
 import {Comment} from "@welshman/domain"
-import {Events} from "@welshman/app"
+import {Events, Network} from "@welshman/app"
+import type {IApp} from "@welshman/app"
 import {app} from "@app/core/app"
 import {reader} from "@app/core/domain"
 import {network, router} from "@app/core/plugins"
 import {ENABLE_ZAPS} from "@app/core/env"
-import {kv} from "@app/core/storage"
+import {kv, registerRetention} from "@app/core/storage"
 import {makeKeyedSyncs, registerSync} from "@app/core/sync"
 import {userRelayList} from "@app/core/user"
 import {checked, setChecked} from "@app/features/checked"
+import {allNotifications, latestActivityByPath} from "@app/features/notifications"
+import type {Activity} from "@app/features/notifications"
 import {getReplyRefs, isReplyKind} from "@app/features/social/replies"
 import {Notes} from "@app/features/social/notes"
 import {isEventMuted} from "@app/features/social/muting"
 
+// Every conversation, read or not, so the stream reads as history rather than as a queue to drain.
+export const recentConversations = derived(latestActivityByPath, $latestActivityByPath =>
+  sortBy(
+    activity => -activity.event.created_at,
+    [...$latestActivityByPath.values()].filter(activity => !activity.contentKind),
+  ),
+)
+
+const shortDate = (ts: number) =>
+  Intl.DateTimeFormat(LOCALE, {dateStyle: "short"}).format(secondsToDate(ts))
+
+export const displayActivityTimestamp = (ts: number) =>
+  shortDate(ts) === shortDate(now()) ? formatTimestampAsTime(ts) : shortDate(ts)
+
+export type SpaceContent = {
+  url: string
+  timestamp: number
+  countsByKind: Map<number, number>
+}
+
+// Counted only where unread, since a total would be the same number every day.
+export const unreadSpaceContent = derived(
+  [latestActivityByPath, allNotifications],
+  ([$latestActivityByPath, $allNotifications]) => {
+    const byUrl = new Map<string, SpaceContent>()
+
+    for (const {path, url, contentKind, event} of $latestActivityByPath.values()) {
+      if (url && contentKind && $allNotifications.has(path)) {
+        const content = byUrl.get(url) ?? {url, timestamp: 0, countsByKind: new Map()}
+
+        content.timestamp = Math.max(content.timestamp, event.created_at)
+        content.countsByKind.set(contentKind, (content.countsByKind.get(contentKind) ?? 0) + 1)
+        byUrl.set(url, content)
+      }
+    }
+
+    return sortBy(content => -content.timestamp, [...byUrl.values()])
+  },
+)
+
+// Activity in a space names the relay it happened on; a direct message names none.
+export const isSpaceActivity = (activity: Activity) => Boolean(activity.url)
+
+// What the stream can be narrowed to, with every type included until the reader says otherwise.
+export type HomeActivityType = "spaces" | "replies" | "reactions" | "zaps"
+
+export const includedHomeActivityTypes = synced<HomeActivityType[]>({
+  key: "includedHomeActivityTypes",
+  defaultValue: ["spaces", "replies", "reactions", "zaps"],
+  storage: kv,
+})
+
 export const REPOST_KINDS = [REPOST, GENERIC_REPOST]
 
-// One entry in the home notifications feed: a note, who answered it, and who reacted to it.
+// One notification in the home stream: a note, who answered it, and who reacted to it.
 export type HomeNotification = {
   key: string
   ref: EventRef
@@ -58,7 +122,7 @@ export type HomeNotification = {
 }
 
 // What a notification is about: the note it answers or reacts to, or itself when it is a mention.
-export const getNotificationRef = (event: TrustedEvent): Maybe<EventRef> => {
+const getNotificationRef = (event: TrustedEvent): Maybe<EventRef> => {
   if (isReplyKind(event)) {
     const {parent, root} = getReplyRefs(event)
 
@@ -72,11 +136,11 @@ export const getNotificationRef = (event: TrustedEvent): Maybe<EventRef> => {
   return tag && new EventRef({id: tag[1], pubkey, relays: getRelayHints(tag)})
 }
 
-// An entry is a note and what was done to it, so nothing else can be the note one is drawn around.
-export const isNotificationTarget = (event: TrustedEvent) =>
+// A notification is a note and what was done to it, so nothing else can be the note one is drawn around.
+const isNotificationTarget = (event: TrustedEvent) =>
   event.kind === NOTE || (event.kind === COMMENT && reader(Comment)(event).root()?.kind === NOTE)
 
-// Two entries in a row about one note read as a duplicate, whatever bucket split them.
+// Two notifications in a row about one note read as a duplicate, whatever bucket split them.
 const mergeAdjacent = (notifications: HomeNotification[]) => {
   const merged: HomeNotification[] = []
 
@@ -98,9 +162,9 @@ const mergeAdjacent = (notifications: HomeNotification[]) => {
   return merged
 }
 
-// Everything done to one note collapses into a single entry rather than one per answer.
+// Everything done to one note collapses into a single notification rather than one per answer.
 export const groupNotifications = (events: TrustedEvent[]) => {
-  const interval = int(HOUR, 3)
+  const interval = int(3, HOUR)
   const notifications = new Map<string, HomeNotification>()
 
   for (const event of events) {
@@ -144,27 +208,10 @@ if (ENABLE_ZAPS) {
   homeNotificationKinds.push(ZAP_RECEIPT)
 }
 
-export const homeNotificationFilters = (pubkey: string) => [
-  {kinds: homeNotificationKinds, "#p": [pubkey]},
-]
-
-// What the tab can be narrowed to, with every type included until the reader says otherwise.
-export const homeNotificationTypes = [
-  {value: "replies", label: "Replies"},
-  {value: "reactions", label: "Reactions"},
-  {value: "zaps", label: "Zaps"},
-] as const
-
-export type HomeNotificationType = (typeof homeNotificationTypes)[number]["value"]
-
-export const includedHomeNotificationTypes = synced<HomeNotificationType[]>({
-  key: "includedHomeNotificationTypes",
-  defaultValue: homeNotificationTypes.map(({value}) => value),
-  storage: kv,
-})
+const homeNotificationFilters = (pubkey: string) => [{kinds: homeNotificationKinds, "#p": [pubkey]}]
 
 // A mention is the note itself rather than something done to it, so no toggle hides one.
-const homeNotificationType = (event: TrustedEvent): Maybe<HomeNotificationType> => {
+const homeNotificationType = (event: TrustedEvent): Maybe<HomeActivityType> => {
   if (event.kind === ZAP_RECEIPT) {
     return "zaps"
   } else if (event.kind === REACTION || REPOST_KINDS.includes(event.kind)) {
@@ -177,39 +224,44 @@ const homeNotificationType = (event: TrustedEvent): Maybe<HomeNotificationType> 
 export const countHomeNotificationTypes = (events: TrustedEvent[]) =>
   countBy(homeNotificationType, events)
 
-export const isIncludedHomeNotification = derived(
-  includedHomeNotificationTypes,
-  $included => (event: TrustedEvent) => {
-    const type = homeNotificationType(event)
-
-    return !type || $included.includes(type)
-  },
-)
-
-export const getHomeNotificationRelays = () =>
+const getHomeNotificationRelays = () =>
   router
     .get()
     .resolve([userInbox()])
     .then(scenario => scenario.limit(10).getUrls())
 
-// The home badge reads the repository, so these have to arrive whether or not home is open.
+// The badge and the stream both read the repository, so this runs whether or not home is open.
 const syncHomeNotificationRelay = (url: string, pubkey: string) => {
   const controller = new AbortController()
   const filters = homeNotificationFilters(pubkey)
 
-  network.get().load({
-    relays: [url],
-    signal: controller.signal,
-    filters: filters.map(filter => ({...filter, limit: 100})),
-  })
+  // Only the first poll pays for a page; the rest ask for the stretch since the one before.
+  let since: Maybe<number>
 
-  network.get().request({
-    relays: [url],
-    signal: controller.signal,
-    filters: unionFilters(filters.map(assoc("limit", 0))),
-  })
+  const poll = async () => {
+    const asked = now()
+    const extension = since ? {since} : {limit: 100}
 
-  return () => controller.abort()
+    await network.get().load({
+      relays: [url],
+      signal: controller.signal,
+      // The first poll is what the stream opens on; a refresh goes under the default, so nothing on screen waits behind it.
+      priority: since ? -1 : 0,
+      filters: filters.map(filter => ({...filter, ...extension})),
+    })
+
+    // A minute of overlap, since the relay stamps an event by its own clock rather than ours.
+    since = asked - int(MINUTE)
+  }
+
+  poll()
+
+  const interval = setInterval(poll, ms(int(2, MINUTE)))
+
+  return () => {
+    clearInterval(interval)
+    controller.abort()
+  }
 }
 
 const syncHomeNotifications = () => {
@@ -240,12 +292,12 @@ const syncHomeNotifications = () => {
   return noop
 }
 
-// The notifications tab is no route of its own, so what has been read sits under a path nothing navigates to.
+// The stream is no route of its own, so what has been read sits under a path nothing navigates to.
 const homeNotificationsPath = "/home/notifications"
 
 export const readHomeNotifications = () => setChecked(homeNotificationsPath)
 
-// Everything that could be an entry in the tab, newest first, whether or not one could be drawn.
+// Everything that could be a notification in the stream, newest first, whether or not one could be drawn.
 const homeNotificationCandidates = derived(
   app,
   ($app, set: (events: TrustedEvent[]) => void) => {
@@ -260,7 +312,37 @@ const homeNotificationCandidates = derived(
   [] as TrustedEvent[],
 )
 
-// The note each entry is about, loaded here rather than per entry so the tab opens on what it has.
+// Notes asked for and not yet answered, so candidates landing meanwhile don't ask for them again.
+const loadingTargets = new Set<string>()
+
+// Every note the stream is missing goes out in one request rather than one per note.
+const loadHomeNotificationTargets = async ($app: IApp, refs: EventRef[]) => {
+  const missing = refs.filter(ref => {
+    const key = ref.getAddressOrId()
+
+    return key && !loadingTargets.has(key) && !$app.repository.getEvent(key)
+  })
+
+  if (missing.length > 0) {
+    const keys = removeUndefined(missing.map(ref => ref.getAddressOrId()))
+
+    keys.forEach(key => loadingTargets.add(key))
+
+    try {
+      const relaysByRef = await Promise.all(missing.map(ref => $app.use(Notes).relays(ref)))
+
+      await $app.use(Network).load({
+        relays: uniq(relaysByRef.flat()),
+        filters: getIdFilters(keys),
+        timeout: 3000,
+      })
+    } finally {
+      keys.forEach(key => loadingTargets.delete(key))
+    }
+  }
+}
+
+// Each notification's note, loaded here rather than per notification so the stream opens on what it has.
 const homeNotificationTargets = derived(
   [app, throttled(1000, homeNotificationCandidates)],
   ([$app, $candidates], set: (targets: EventsById) => void) => {
@@ -270,9 +352,7 @@ const homeNotificationTargets = derived(
     )
 
     if (refs.length > 0) {
-      for (const ref of refs) {
-        $app.use(Notes).load(ref).catch(noop)
-      }
+      loadHomeNotificationTargets($app, refs).catch(noop)
 
       // A reference names its event by id or by address, so the event is found under both.
       return $app
@@ -294,15 +374,15 @@ const homeNotificationTargets = derived(
   new Map() as EventsById,
 )
 
-// The badge and the tab count the same thing: somebody else's doing to a note an entry can be drawn around.
-export const isHomeNotification = derived(
+// The badge and the stream count the same thing: somebody else's doing to a note a notification can be drawn around.
+const isHomeNotification = derived(
   [app, homeNotificationTargets, isEventMuted],
   ([$app, $targets, $isEventMuted]) => {
     // A zap receipt is signed by an lnurl server rather than by the zapper, so neither test reads it.
     const isFromSomeoneElse = (event: TrustedEvent) =>
       event.kind === ZAP_RECEIPT || (event.pubkey !== $app.user?.pubkey && !$isEventMuted(event))
 
-    // An entry is drawn around its note, so a thread a muted person started is not one either.
+    // A notification is drawn around its note, so a thread a muted person started is not one either.
     return (event: TrustedEvent) => {
       const key = getNotificationRef(event)?.getAddressOrId()
       const target = key && $targets.get(key)
@@ -317,19 +397,41 @@ export const isHomeNotification = derived(
   },
 )
 
-// The badge reads the filters too, so nothing lights up over an entry the tab leaves out.
-const latestHomeNotification = derived(
-  [homeNotificationCandidates, isHomeNotification, isIncludedHomeNotification],
-  ([$candidates, $isHomeNotification, $isIncluded]) =>
-    $candidates.find(event => $isHomeNotification(event) && $isIncluded(event)),
+// Every event the stream can draw a notification around, newest first, before the type filters narrow it.
+export const homeNotificationEvents = derived(
+  [homeNotificationCandidates, isHomeNotification],
+  ([$candidates, $isHomeNotification]) => $candidates.filter($isHomeNotification),
+)
+
+// The badge reads these too, so nothing lights up over a notification the stream leaves out.
+export const includedHomeNotificationEvents = derived(
+  [homeNotificationEvents, includedHomeActivityTypes],
+  ([$events, $included]) =>
+    $events.filter(event => {
+      const type = homeNotificationType(event)
+
+      return !type || $included.includes(type)
+    }),
 )
 
 export const homeNotificationsUnread = derived(
-  [latestHomeNotification, checked],
-  ([$latest, $checked]) =>
-    Boolean($latest && $latest.created_at > ($checked[homeNotificationsPath] ?? 0)),
+  [includedHomeNotificationEvents, checked],
+  ([$events, $checked]) => {
+    const latest = first($events)
+
+    return Boolean(latest && latest.created_at > ($checked[homeNotificationsPath] ?? 0))
+  },
 )
 
-export const registerHomeNotifications = () => {
+export const registerActivity = () => {
   registerSync(syncHomeNotifications)
+
+  // The stream draws on what was done to your notes and on the notes themselves, so neither waits on a relay at startup.
+  registerRetention({
+    match: (event, pubkey) =>
+      (homeNotificationKinds.includes(event.kind) &&
+        tagValues(hexTags("p"), event.tags).includes(pubkey)) ||
+      (event.pubkey === pubkey && isNotificationTarget(event)),
+    maxAge: int(1, MONTH),
+  })
 }
