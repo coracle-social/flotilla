@@ -13,6 +13,7 @@ import {throttled} from "@welshman/store"
 import {BlockedRelayLists} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {appPolicies, fromApp} from "@app/core/app"
+import {isStaleAuth} from "@app/core/auth"
 import {BLOCKED_RELAYS} from "@app/core/env"
 import {relaysPendingTrust} from "@app/core/ingest"
 
@@ -57,9 +58,11 @@ const getRelayAccess = (
     return {status: RelayAccessStatus.AwaitingSignature}
   }
 
+  // A refusal of a stale auth event is answered with a fresh one, so the handshake is still running.
   if (
     socket.auth.status === AuthStatus.Requested ||
-    socket.auth.status === AuthStatus.PendingResponse
+    socket.auth.status === AuthStatus.PendingResponse ||
+    isStaleAuth(socket)
   ) {
     return {status: RelayAccessStatus.Authenticating}
   }

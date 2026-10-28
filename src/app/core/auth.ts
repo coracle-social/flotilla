@@ -1,7 +1,8 @@
 import {get} from "svelte/store"
-import {ms} from "@welshman/lib"
+import {ms, on} from "@welshman/lib"
+import type {Maybe} from "@welshman/lib"
 import type {Socket} from "@welshman/net"
-import {AuthStatus} from "@welshman/net"
+import {AuthStateEvent, AuthStatus} from "@welshman/net"
 import {
   MessagingRelayLists,
   Publisher,
@@ -63,6 +64,25 @@ export const authenticate = async (url: string) => {
   }
 }
 
+// A relay judges the auth event's own created_at, so one signed before the browser suspended the tab is refused for its age rather than for who signed it.
+export const isStaleAuth = ({auth}: Socket) =>
+  auth.status === AuthStatus.Forbidden && Boolean(auth.details?.includes("too much in the past"))
+
+// Answers such a challenge once more, with a signature stamped now.
+const staleAuthPolicy = (socket: Socket) => {
+  let answered: Maybe<string>
+
+  return on(socket.auth, AuthStateEvent.Status, () => {
+    if (isStaleAuth(socket) && socket.auth.challenge !== answered) {
+      answered = socket.auth.challenge
+
+      authenticate(socket.url)
+    }
+  })
+}
+
 export const registerAuth = () => {
-  appPolicies.push(makeAppPolicyAuth(shouldAuth, authInputs))
+  appPolicies.push(makeAppPolicyAuth(shouldAuth, authInputs), $app =>
+    $app.pool.addSocketPolicy(staleAuthPolicy),
+  )
 }

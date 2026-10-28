@@ -20,6 +20,7 @@ import {
   assertNoLeaks,
   formatTranscript,
   installWebSocketRoutes,
+  refuseStaleAuth,
   silenceRelay,
   withholdEose,
 } from "./net/websocket"
@@ -47,6 +48,7 @@ export {
   getPublished,
   getPublishedEvents,
   getTranscript,
+  refuseStaleAuth,
   silenceRelay,
   withholdEose,
 } from "./net/websocket"
@@ -150,6 +152,8 @@ export type PageOptions = {
   silent?: string[]
   // Relay urls that serve events and never eose, so every request runs out its own deadline.
   eoseless?: string[]
+  // Relay urls that read the first auth event as expired; refuseStaleAuth does the same mid-test.
+  staleAuth?: string[]
 }
 
 export type Harness = {
@@ -247,6 +251,10 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
       for (const url of options.eoseless ?? []) {
         withholdEose(context, url)
+      }
+
+      for (const url of options.staleAuth ?? []) {
+        refuseStaleAuth(context, url)
       }
 
       await mockRelayInfo(context, options.relayInfo ?? {})

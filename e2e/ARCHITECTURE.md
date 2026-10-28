@@ -81,6 +81,11 @@ still in flight. `as(user, path, {silent: [url]})` is that from the first connec
 a spec about a page failing to fill needs it; `silenceRelay(context, url)` applies it mid-test. Such
 a url needs no tenant behind it, since nothing it says is ever served.
 
+A refusal the client itself caused is expressible too: `as(user, path, {staleAuth: [url]})` answers
+the first auth event the way a relay answers one whose `created_at` is outside the window it allows,
+which is what a tab the browser suspended mid-handshake sends on waking. The fault is spent on that
+one refusal, so a spec can tell a client that signs again from one that reports the relay denied it.
+
 Interception is installed by `as()` and `visit()`, on a context each of them creates, so a page that
 came from anywhere else has none of it. Playwright's own `context` fixture — and the `page` fixture
 built on it — is therefore overridden to throw, so a spec written the ordinary way fails immediately
