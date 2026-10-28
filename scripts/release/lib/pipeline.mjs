@@ -42,13 +42,14 @@ export const release = async (command, steps) => {
   const warnings = []
 
   // pnpm keeps a copy of the lockfile it last installed from, so any difference means a pull or
-  // checkout since then changed dependencies the build would silently go without
+  // checkout since then changed dependencies the build would silently go without. pnpm 12 prepends
+  // a document pinning itself to the lockfile, which the copy leaves out.
   const installed = join(root, "node_modules/.pnpm/lock.yaml")
+  const lockfile = readFileSync(join(root, "pnpm-lock.yaml"), "utf-8")
+    .split(/^---\n/m)
+    .at(-1)
 
-  if (
-    !existsSync(installed) ||
-    readFileSync(installed, "utf-8") !== readFileSync(join(root, "pnpm-lock.yaml"), "utf-8")
-  ) {
+  if (!existsSync(installed) || readFileSync(installed, "utf-8") !== lockfile) {
     problems.push({
       missing: ["node_modules doesn't match pnpm-lock.yaml: pnpm install --frozen-lockfile"],
     })
