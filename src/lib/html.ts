@@ -94,7 +94,7 @@ export const createScroller = ({
         if (shouldLoad) {
           await onScroll()
         } else {
-          onSettle?.()
+          await onSettle?.()
         }
       }
     } catch (error) {

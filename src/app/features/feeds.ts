@@ -390,7 +390,7 @@ export type FeedLoadState =
   | {status: "exhausted"}
 
 // One span of a feed's timeline. `complete` is whether the relays answered, which a dropped request is not.
-export type FeedSpan = {found: number; complete: boolean; exhausted: boolean}
+export type FeedSpan = {found: number; complete: boolean; exhausted: boolean; behind?: boolean}
 
 // Relatively high because quiet relays eose first.
 const SPAN_THRESHOLD = 0.8
@@ -470,7 +470,26 @@ export const makeScrollLoader = (
   load: () => Promise<FeedSpan>,
   options: Partial<ScrollerOpts> = {},
 ) => {
-  const loader = makeFeedLoader(load)
+  // Whether the feed has drawn further than the relays have answered, which the cache does before any answer.
+  let behind: Maybe<boolean> = true
+
+  const loader = makeFeedLoader(async () => {
+    const span = await load()
+
+    behind = span.behind
+
+    return span
+  })
+
+  // Drawn events fill the runway whether or not they're complete, so a hole in the cache never comes into reach.
+  const settle = async () => {
+    if (behind) {
+      await loader.run()
+    } else {
+      loader.settle()
+    }
+  }
+
   const runway = options.threshold ?? 5000
   const scroller = createScroller({
     element,
@@ -478,7 +497,7 @@ export const makeScrollLoader = (
     ...options,
     threshold: runway,
     onScroll: loader.run,
-    onSettle: loader.settle,
+    onSettle: settle,
   })
 
   // A virtual list this loader feeds has to grow as far as the loader fetches, so it reads it back.
@@ -656,7 +675,7 @@ export const makeFeed = ({
     addEvents(found)
     reach(oldest)
 
-    return {found: found.length, complete, exhausted: false}
+    return {found: found.length, complete, exhausted: false, behind: oldest > reached}
   }
 
   // A limit is answered with the newest events matching it, which reaches away from an anchor in the past.
