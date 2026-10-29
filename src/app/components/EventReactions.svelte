@@ -11,9 +11,10 @@
     context: FeedContext
     url?: string
     placement?: Placement
+    emojiMenu?: boolean
   }
 
-  const {event, context, url, placement = "top"}: Props = $props()
+  const {event, context, url, placement = "top", emojiMenu = false}: Props = $props()
 
   const deleteReaction = (reaction: TrustedEvent) =>
     url ? spaces.retractReaction(url, reaction) : social.retractReaction(reaction)
@@ -22,4 +23,11 @@
     url ? spaces.publishReaction(url, event, values) : social.publishReaction(event, values)
 </script>
 
-<ReactionSummary {url} {event} {context} {deleteReaction} {createReaction} {placement} />
+<ReactionSummary
+  {url}
+  {event}
+  {context}
+  {deleteReaction}
+  {createReaction}
+  {placement}
+  {emojiMenu} />

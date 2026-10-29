@@ -26,6 +26,7 @@ is a `+layout.svelte`.
 /spaces/[relay]/{about,admin,library}
 /spaces/[relay]/{threads,goals,polls}[/[id]]
 /spaces/[relay]/{classifieds,articles,calendar}[/[address]]     articles/create
+/notes/[nevent], /articles/[naddr], /articles/create   content with no space behind it
 /chat, /chat/[chat]        DMs                           /people/[npub]  profile page
 /settings/{profile,alerts,wallet,hosting,content,privacy,theme,about}
 /join                      invite link landing           /share   share-intent landing

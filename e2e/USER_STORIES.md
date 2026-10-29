@@ -725,6 +725,19 @@ Acceptance:
 - The article's detail page and list card show a "Posted in #room" badge.
 - Clicking that badge navigates to the room it names.
 
+### US-153 — Read an article linked from a note
+
+As alice, I want an article a note links to to open as a page I can read, so
+that following a link does not drop me into a space I have never heard of.
+
+Acceptance:
+
+- Clicking a quoted article whose relay is not one of alice's spaces opens
+  `/articles/<naddr>` rather than that relay's space.
+- The page carries the article's title, body and comments, and no prompt to
+  join a space.
+- An article on a space alice has joined still opens inside that space.
+
 ### US-042 — Start a thread and see it filed under its room
 
 As alice, I want threads grouped by the room they belong to, so that the Threads

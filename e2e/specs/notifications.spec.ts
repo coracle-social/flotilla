@@ -1,7 +1,8 @@
-import {neventEncode, npubEncode} from "nostr-tools/nip19"
+import {naddrEncode, neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
-import {POLL, displayRelayUrl} from "@welshman/util"
+import {LONG_FORM, POLL, displayRelayUrl} from "@welshman/util"
 import {
+  Article,
   Comment,
   FollowList,
   MuteList,
@@ -432,6 +433,73 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
 
   // Alice reads from her space rather than bob's relay, so a context asked of hers comes back empty.
   await expect(feed.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
+})
+
+test("US-153 read an article a note links to", async ({seed, as}) => {
+  const note = "the best thing I have read all week"
+  const title = "Signals in the Noise"
+  const body = "Every antenna hears something."
+
+  let naddr!: string
+
+  await seed(({relay, open, user, at}) => {
+    const space = relay("space")
+    const indexer = open("indexer")
+    const outbox = open("outbox")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url],
+      write: [space.url, indexer.url, outbox.url],
+    })
+    indexer.follows(user.alice, [user.bob])
+
+    indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url]})
+    outbox.profile(user.bob, {name: "Bob Barker"})
+
+    // Carol is nobody alice follows, so her article reaches her only through bob's link to it.
+    outbox.event(
+      user.carol,
+      () =>
+        outbox
+          .kind(Article)
+          .writer()
+          .setIdentifier("signals-in-the-noise")
+          .setTitle(title)
+          .setPublishedAt(at(2, HOUR))
+          .setContent(body)
+          .renderTemplate(),
+      at(2, HOUR),
+    )
+
+    naddr = naddrEncode({
+      kind: LONG_FORM,
+      pubkey: user.carol.pubkey,
+      identifier: "signals-in-the-noise",
+      relays: [outbox.url],
+    })
+
+    outbox.note(user.bob, `${note}\n\nnostr:${naddr}`, at(30, MINUTE))
+  })
+
+  const page = await as(users.alice, "/home")
+
+  const feed = homeFeed(page)
+
+  await openNetworkTab(feed)
+
+  const card = feed.locator(".card").filter({hasText: note})
+
+  await expect(card).toBeVisible()
+  await card.getByText(title).click()
+
+  // Her spaces do not carry it, so it reads on a page of its own and asks her to join nothing.
+  await expect(page).toHaveURL(pathPattern(`/articles/${naddr}`))
+  await expect(page.getByRole("button", {name: /Join Space|Request Access/})).toHaveCount(0)
+  await expect(page.locator("article header").getByRole("heading", {name: title})).toBeVisible()
+  await expect(page.locator(".content-markdown")).toContainText(body)
 })
 
 test("US-117 read the network feed when one relay never answers", async ({seed, as}) => {

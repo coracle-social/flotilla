@@ -1,4 +1,4 @@
-import {writable} from "svelte/store"
+import {get, writable} from "svelte/store"
 import * as nip19 from "nostr-tools/nip19"
 import {page} from "$app/state"
 import {tryCatch} from "@welshman/lib"
@@ -6,7 +6,9 @@ import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {
   COMMENT,
+  LONG_FORM,
   MESSAGE,
+  Address,
   EventRef,
   NOTE,
   getIdOrAddress,
@@ -20,6 +22,7 @@ import {DM_KINDS} from "@lib/util"
 import {app} from "@app/core/app"
 import {reader} from "@app/core/domain"
 import {PLATFORM_URL} from "@app/core/env"
+import {userSpaceUrls} from "@app/features/spaces/urls"
 import {navigate} from "@app/navigation/navigate"
 import type {NavigateOptions} from "@app/navigation/navigate"
 import {openNote} from "@app/navigation/overlays"
@@ -46,6 +49,16 @@ const getMessagePath = (url: string, event: TrustedEvent) => {
   return h ? pages.room.path({url, h, at}) : pages.spaceChat.path({url, at})
 }
 
+// An article is ordinary nostr content, so one outside the user's spaces reads on a page of its own.
+const getArticlePath = (address: string, urls: string[]) => {
+  const spaceUrls = get(userSpaceUrls)
+  const url = urls.find(candidate => spaceUrls.includes(candidate))
+
+  return url
+    ? pages.article.path({url, address})
+    : pages.networkArticle.path({address, relays: urls.slice(0, 3)})
+}
+
 // The page an event lives on, given the relays it was seen on.
 export const getEventPath = (event: TrustedEvent, urls: string[]): Maybe<string> => {
   if (DM_KINDS.includes(event.kind)) {
@@ -54,9 +67,14 @@ export const getEventPath = (event: TrustedEvent, urls: string[]): Maybe<string>
     })
   }
 
+  const {kind, idOrAddress} = getActivityTarget(event)
+
+  if (kind === LONG_FORM && idOrAddress && Address.isAddress(idOrAddress)) {
+    return getArticlePath(idOrAddress, urls)
+  }
+
   if (urls.length > 0) {
     const url = urls[0]
-    const {kind, idOrAddress} = getActivityTarget(event)
 
     // A comment inherits the h of the message it answers, so both anchor the same transcript.
     if (kind === MESSAGE) {

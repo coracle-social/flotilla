@@ -1,6 +1,6 @@
 import * as nip19 from "nostr-tools/nip19"
 import type {Page} from "@sveltejs/kit"
-import {append, remove, sort, uniq} from "@welshman/lib"
+import {append, remove, sort, tryCatch, uniq} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   CLASSIFIED,
@@ -10,6 +10,7 @@ import {
   POLL,
   THREAD,
   ZAP_GOAL,
+  Address,
   EventRef,
   normalizeRelayUrl,
 } from "@welshman/util"
@@ -278,10 +279,26 @@ export const articleCreate = defineRoute("/spaces/[relay]/articles/create", {
 // The same composer with no space behind it, for an article published to the network.
 export const networkArticleCreate = defineStaticRoute("/articles/create", "Write an Article")
 
+const readArticleTitle = (address: string) =>
+  readTitle(address, event => reader(Article)(event).title()) || "Article"
+
 export const article = defineRoute("/spaces/[relay]/articles/[address]", {
   encode: encodeByAddress,
   decode: decodeByAddress,
-  title: ({address}) => readTitle(address, event => reader(Article)(event).title()) || "Article",
+  title: ({address}) => readArticleTitle(address),
+})
+
+// The same reader with no space behind it, for an article found on the network.
+export const networkArticle = defineRoute("/articles/[naddr]", {
+  encode: ({address, relays = []}: {address: string; relays?: string[]}) => ({
+    naddr: Address.from(address, relays).toNaddr(),
+  }),
+  decode: ({naddr}) => {
+    const address = tryCatch(() => Address.fromNaddr(naddr))
+
+    return {address: address?.toString() ?? "", relays: address?.relays ?? []}
+  },
+  title: ({address}) => readArticleTitle(address),
 })
 
 export const library = defineRoute("/spaces/[relay]/library", {
@@ -371,6 +388,7 @@ const pageRoutes: Record<PageId, PageRoute> = {
   [articleCreate.id]: articleCreate,
   [networkArticleCreate.id]: networkArticleCreate,
   [article.id]: article,
+  [networkArticle.id]: networkArticle,
   [library.id]: library,
   [board.id]: board,
   [settingsAbout.id]: settingsAbout,
