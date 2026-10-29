@@ -95,7 +95,7 @@ export const getEventPath = (event: TrustedEvent, urls: string[]): Maybe<string>
 }
 
 export const makeEventPermalink = (event: TrustedEvent, url?: string) => {
-  const urls = url ? [url] : Array.from(app.get().tracker.getRelays(event.id))
+  const urls = url ? [url] : Array.from(app.get().repository.tracker.getRelays(event.id))
   const path = getEventPath(event, urls)
   const pointer = nip19.neventEncode({id: event.id, relays: urls})
 
@@ -128,7 +128,7 @@ export const scrollToEvent = (id: string) => {
 }
 
 export const goToEvent = (event: TrustedEvent, options: NavigateOptions = {}) => {
-  const urls = Array.from(app.get().tracker.getRelays(event.id))
+  const urls = Array.from(app.get().repository.tracker.getRelays(event.id))
   // A note has a page of its own and still opens as an overlay, over whatever is on screen.
   const path = event.kind === NOTE ? undefined : getEventPath(event, urls)
 

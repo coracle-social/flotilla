@@ -1,6 +1,6 @@
 import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
-import type {Repository} from "@welshman/net"
+import type {Repository} from "@welshman/store"
 import type {Session} from "@welshman/app"
 
 // The window keys Playwright writes to, duplicated in e2e/harness/app/session.ts.
@@ -16,7 +16,5 @@ export const getTestSession = (): Maybe<Session> =>
 export const publishTestEvents = (repository: Repository) => {
   const events = (globalThis as {[TEST_EVENTS_KEY]?: TrustedEvent[]})[TEST_EVENTS_KEY] ?? []
 
-  for (const event of events) {
-    repository.publish(event)
-  }
+  return Promise.all(events.map(event => repository.publish(event)))
 }

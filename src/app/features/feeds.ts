@@ -11,7 +11,7 @@ import {
   pushToMapKey,
   range,
   sleep,
-  spec,
+  uniq,
   uniqBy,
   DAY,
   MONTH,
@@ -40,8 +40,8 @@ import {
 import {Comment, TimeEvent} from "@welshman/domain"
 import type {Maybe} from "@welshman/lib"
 import type {Filter, TrustedEvent} from "@welshman/util"
-import {mergeRepositoryUpdates} from "@welshman/net"
-import type {RepositoryUpdate} from "@welshman/net"
+import {mergeRepositoryUpdates} from "@welshman/store"
+import type {RepositoryUpdate} from "@welshman/store"
 import {createScroller} from "@lib/html"
 import type {ScrollerOpts} from "@lib/html"
 import {app} from "@app/core/app"
@@ -186,10 +186,12 @@ export const makeFeedContext = ({
     const touched = new Set<string>()
 
     // Local events never come through the update listener, so file them before asking the network.
-    for (const event of repository.query([
+    const stored = await repository.query([
       ...getReplyFilters(events, {kinds: contextKinds}),
       ...getCommentFiltersForRoot(events),
-    ])) {
+    ])
+
+    for (const event of stored) {
       addEvent(event, touched)
     }
 
@@ -336,16 +338,10 @@ const syncFeed = ({
   // Whether an event has to have been seen on one of `relays` to belong to this feed
   requireRelay?: boolean
 }) => {
-  const onTrackedId = batch(150, (ids: string[]) => {
-    const matching: TrustedEvent[] = []
+  const {repository} = app.get()
 
-    for (const id of new Set(ids)) {
-      const event = app.get().repository.getEvent(id)
-
-      if (event && matchFilters(filters, event)) {
-        matching.push(event)
-      }
-    }
+  const onTrackedId = batch(150, async (ids: string[]) => {
+    const matching = await repository.query(filters.map(filter => ({...filter, ids: uniq(ids)})))
 
     if (matching.length > 0) {
       addEvents(matching)
@@ -354,7 +350,7 @@ const syncFeed = ({
 
   return [
     on(
-      app.get().repository,
+      repository,
       "update",
       batch(150, (updates: RepositoryUpdate[]) => {
         const {added, removed} = mergeRepositoryUpdates(updates)
@@ -366,7 +362,7 @@ const syncFeed = ({
         const matching = added.filter(
           event =>
             matchFilters(filters, event) &&
-            (!requireRelay || relays.some(url => app.get().tracker.getRelays(event.id).has(url))),
+            (!requireRelay || relays.some(url => repository.tracker.hasRelay(event.id, url))),
         )
 
         if (matching.length > 0) {
@@ -374,7 +370,7 @@ const syncFeed = ({
         }
       }),
     ),
-    on(app.get().tracker, "add", (id: string, url: string) => {
+    on(repository.tracker, "add", (id: string, url: string) => {
       if (relays.includes(url)) {
         onTrackedId(id)
       }
@@ -698,22 +694,38 @@ export const makeFeed = ({
     return {found: found.length, complete, exhausted: false}
   }
 
-  // What the repository already holds is an answer too, so a page of it renders before any relay replies.
-  if (useCache) {
-    const {repository, tracker} = app.get()
-    const storedEvents = repository.query(filters).sort(compareEventsAsc)
-    const stored = relays.map(url =>
-      storedEvents.filter(event => tracker.hasRelay(event.id, url)).slice(-PAGE_SIZE),
+  // A limit counts each filter, so a relay's page is cut back to one page after they're merged.
+  const loadCache = async () => {
+    const {repository} = app.get()
+    const pages = await Promise.all(
+      relays.map(async relay => {
+        const events = await repository.query(
+          filters.map(filter => ({...filter, limit: PAGE_SIZE})),
+          {relay, signal: controller.signal},
+        )
+
+        return events.slice(0, PAGE_SIZE)
+      }),
     )
 
     // A relay with nothing cached proves nothing either way, and letting it veto the span blanks the feed.
-    const cached = stored.filter(page => page.length > 0)
+    const cached = pages.filter(page => page.length > 0)
 
     if (cached.length > 0) {
-      reach(Math.max(...cached.map(page => page[0].created_at)))
+      reach(Math.max(...cached.map(page => page[page.length - 1].created_at)))
     }
 
-    addEvents(stored.flat())
+    addEvents(pages.flat())
+  }
+
+  // What the repository already holds is an answer too, so a page of it renders before any relay replies.
+  if (useCache) {
+    loadCache().catch(error => {
+      // A feed cleaned up before the repository answered aborts the read
+      if (!controller.signal.aborted) {
+        console.error(error)
+      }
+    })
   }
 
   return {
@@ -760,14 +772,7 @@ export const makeCalendarFeed = ({
     return false
   }
 
-  const {repository, tracker} = app.get()
-  const events = writable(
-    repository
-      .query(filters)
-      .filter(event => relays.some(url => tracker.hasRelay(event.id, url)))
-      .filter(spec({kind: EVENT_TIME}))
-      .sort(compareByStart),
-  )
+  const events = writable<TrustedEvent[]>([])
 
   const insertEvents = (newEvents: TrustedEvent[]) => {
     const valid = newEvents.filter(isValid)
@@ -810,6 +815,22 @@ export const makeCalendarFeed = ({
     addEvents: insertEvents,
     removeEvents,
     requireRelay: false,
+  })
+
+  // What these relays were seen holding shows before any of them replies.
+  const loadCache = async () => {
+    const {repository} = app.get()
+    const stored = await Promise.all(
+      relays.map(relay => repository.query(filters, {relay, signal: controller.signal})),
+    )
+
+    insertEvents(uniqBy(event => event.id, stored.flat()))
+  }
+
+  loadCache().catch(error => {
+    if (!controller.signal.aborted) {
+      console.error(error)
+    }
   })
 
   const loadTimeframe = async (since: number, until: number) => {

@@ -23,7 +23,7 @@
   const filter = {kinds: [MESSAGE, ...CONTENT_KINDS]}
 
   const getSpaceUrl = (event: TrustedEvent) =>
-    $userSpaceUrls.find(url => $app.tracker.getRelays(event.id).has(url))
+    $userSpaceUrls.find(url => $app.repository.tracker.getRelays(event.id).has(url))
 
   const showRelays = () =>
     pushModal(RelayList, {

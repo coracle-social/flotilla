@@ -2,7 +2,6 @@ import type {Subscriber, Unsubscriber} from "svelte/store"
 import {Capacitor} from "@capacitor/core"
 import {call, ms, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
 import {LOCAL_RELAY_URL} from "@welshman/net"
-import type {RepositoryUpdate} from "@welshman/net"
 import {
   getIdFilters,
   matchFilters,
@@ -15,6 +14,7 @@ import {
   type TrustedEvent,
 } from "@welshman/util"
 import {merged, synced, withGetter} from "@welshman/store"
+import type {RepositoryUpdate} from "@welshman/store"
 import {User} from "@welshman/app"
 import {navigate} from "@app/navigation/navigate"
 import {app} from "@app/core/app"
@@ -102,7 +102,11 @@ export const onNotification = call(() => {
 
             const h = tagValue(tagSpec("h"), event.tags)
 
-            if (Array.from($app.tracker.getRelays(event.id)).every(url => !shouldNotify(url, h))) {
+            if (
+              Array.from($app.repository.tracker.getRelays(event.id)).every(
+                url => !shouldNotify(url, h),
+              )
+            ) {
               continue
             }
 
@@ -135,8 +139,7 @@ const ingestNotification = async (relay: string, id: string, json?: string) => {
   const pushed = parseJson<TrustedEvent>(json)
 
   if (pushed && verifyEvent(pushed)) {
-    app.get().tracker.track(pushed.id, relay)
-    app.get().repository.publish(pushed)
+    await app.get().ingestEvent(pushed, relay)
 
     return pushed
   } else {
@@ -154,11 +157,11 @@ const ingestNotification = async (relay: string, id: string, json?: string) => {
 
 // Wraps are ingested into the repository and unwrapped in the background, so wait for the rumor
 const loadNotificationRumor = async (wrap: TrustedEvent) => {
-  const getRumor = () => app.get().wrapManager.getRumor(wrap.id)
+  const {wrapManager} = app.get()
 
-  await poll({condition: () => Boolean(getRumor()), signal: AbortSignal.timeout(ms(5))})
+  await poll({condition: () => wrapManager.hasWrap(wrap.id), signal: AbortSignal.timeout(ms(5))})
 
-  return getRumor()
+  return wrapManager.getRumor(wrap.id)
 }
 
 export const onPushNotificationAction = async (action: {

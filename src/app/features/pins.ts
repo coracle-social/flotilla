@@ -1,10 +1,11 @@
 import {derived} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {getIdFilters, outbox} from "@welshman/util"
+import {getIdFilters, outbox, sortEventsDesc} from "@welshman/util"
+import {observeEventsById} from "@welshman/store"
 import {PinLists} from "@welshman/app"
 import type {TrustedEvent} from "@welshman/util"
-import {fromApp} from "@app/core/app"
-import {events, network, router} from "@app/core/plugins"
+import {app, fromApp} from "@app/core/app"
+import {network, router} from "@app/core/plugins"
 
 export const derivePinnedEvents = (pubkey: string): Readable<TrustedEvent[]> =>
   derived(
@@ -27,7 +28,11 @@ export const derivePinnedEvents = (pubkey: string): Readable<TrustedEvent[]> =>
             }),
           )
 
-        const unsubscribe = events.get().desc(filters).$.subscribe(set)
+        const unsubscribe = observeEventsById({
+          filters,
+          repository: app.get().repository,
+          onEvents: $byId => set(sortEventsDesc($byId.values())),
+        })
 
         return () => {
           controller.abort()

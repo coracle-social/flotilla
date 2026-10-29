@@ -69,11 +69,16 @@ const loadAttendedEvents = async (pubkey: string) => {
 
   await $network.load({signal, relays, filters: [rsvpFilter, hostedFilter]})
 
-  const {repository, tracker} = app.get()
-  const getRelay = (event: TrustedEvent) => first(Array.from(tracker.getRelays(event.id)))
+  const {repository} = app.get()
+  const getRelay = (event: TrustedEvent) =>
+    first(Array.from(repository.tracker.getRelays(event.id)))
+  const [storedRsvps, storedHosted] = await Promise.all([
+    repository.query([rsvpFilter]),
+    repository.query([hostedFilter]),
+  ])
 
   // An RSVP only goes to the space holding its event, so where it was seen is where the event is.
-  const rsvps = repository.query([rsvpFilter]).flatMap(rsvp => {
+  const rsvps = storedRsvps.flatMap(rsvp => {
     const rsvpReader = reader(CalendarRsvp)(rsvp)
     const address = rsvpReader.calendarEvent()
     const relay = getRelay(rsvp)
@@ -85,7 +90,7 @@ const loadAttendedEvents = async (pubkey: string) => {
   const answered = new Set(rsvps.map(({address}) => address))
 
   // A host attends their own event, unless they have answered its RSVP otherwise.
-  const hosted = repository.query([hostedFilter]).flatMap(event => {
+  const hosted = storedHosted.flatMap(event => {
     const relay = getRelay(event)
 
     return relay && !answered.has(getAddress(event)) ? [{event, relay}] : []
@@ -97,13 +102,15 @@ const loadAttendedEvents = async (pubkey: string) => {
     filters: getIdFilters(attended.map(({address}) => address)),
   })
 
-  const rsvped = attended.flatMap(({address, relay}) => {
-    const event = app.get().repository.getEvent(address)
+  const rsvped = await Promise.all(
+    attended.map(async ({address, relay}) => {
+      const event = await repository.getEvent(address)
 
-    return event ? [{event, relay}] : []
-  })
+      return event ? [{event, relay}] : []
+    }),
+  )
 
-  return [...rsvped, ...hosted].filter(({event}) => isUpcoming(event))
+  return [...rsvped.flat(), ...hosted].filter(({event}) => isUpcoming(event))
 }
 
 // Every schedule the push server holds was built from these settings, so redo the lot.

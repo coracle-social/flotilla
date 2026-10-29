@@ -382,7 +382,7 @@ isDVMKind(kind)                    // 5000–7000
 
 | Export | Description |
 |--------|-------------|
-| `LOCAL_RELAY_URL` | `"local://welshman.relay/"` — the conventional url for the in-memory repository |
+| `LOCAL_RELAY_URL` | `"local://welshman.relay/"` — the url that addresses the app's repository |
 | `isRelayUrl(url)` | Validate relay URL |
 | `isShareableRelayUrl(url)` | True if valid relay URL and not a local address |
 | `isOnionUrl(url)` | Tor address check |
@@ -644,8 +644,9 @@ const relayList = makeEvent(RELAYS, {
 
 ### Pre-verifying persisted events with verifiedSymbol
 
-When loading events from a local store (IndexedDB, localStorage, etc.) at startup, you
-can skip expensive signature re-validation by marking them as already verified:
+Events loaded from your own storage can skip signature re-validation by being marked as
+already verified. `SqliteRepository` in `@welshman/store` does this for every signed event it
+reads back; custom storage does it itself:
 
 ```typescript
 import { verifiedSymbol } from '@welshman/util'
@@ -660,7 +661,7 @@ for (const event of storedEvents) {
   event[verifiedSymbol] = true
 }
 
-app.repository.load(storedEvents)
+repository.load(storedEvents) // a MemoryRepository
 ```
 
 Only do this for events you persisted yourself after they were validated. Never set
@@ -812,7 +813,7 @@ await fetch('https://api.example.com/upload', {
 
 - **`getLnUrl` handles three input forms**: bare lightning address (`user@domain`), full HTTPS URL, or already-encoded `lnurl1...`. Returns `undefined` for anything else.
 
-- **`normalizeTopic` is not exported.** `Topics.ts` isn't re-exported from the index; use `topicTags("t")` to get normalized topic values off an event's tags.
+- **`normalizeTopic` strips a leading `#` and nothing else.** `topicTags("t")` applies it to an event's topic values; it doesn't lowercase them.
 
 - **`normalizeRelayUrl` vs `displayRelayUrl`**: Use `normalizeRelayUrl` before storing or comparing relay URLs. Use `displayRelayUrl` only for human-readable display (strips protocol/trailing slash).
 

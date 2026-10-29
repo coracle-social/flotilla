@@ -341,25 +341,19 @@ pushToMapKey(m, relay, eventId)
 
 ## Common Patterns
 
-### Pattern 1 — Batching writes (IndexedDB / relay)
+### Pattern 1 — Batching writes
 
 ```typescript
 import { batch, on } from '@welshman/lib'
-import type { RepositoryUpdate } from '@welshman/net'
+import type { RepositoryUpdate } from '@welshman/store'
 
 on(
-  repository,
+  app.repository,
   'update',
-  batch(3000, async (updates: RepositoryUpdate[]) => {
-    const toAdd = updates.flatMap(u => u.added)
-    const toRemove = new Set(updates.flatMap(u => Array.from(u.removed)))
+  batch(3000, (updates: RepositoryUpdate[]) => {
+    const added = updates.flatMap(u => u.added)
 
-    const tx = db.transaction('events', 'readwrite')
-    await Promise.all([
-      ...toAdd.map(e => tx.store.put(e)),
-      ...Array.from(toRemove).map(id => tx.store.delete(id)),
-      tx.done,
-    ])
+    indexForSearch(added)
   }),
 )
 ```
@@ -388,8 +382,8 @@ const label = formatTimestampRelative(event.created_at) // "3 hours ago"
 ```typescript
 import { on } from '@welshman/lib'
 
-const unsub = on(app.repository, 'update', updates => {
-  console.log('added', updates.flatMap(u => u.added).length, 'events')
+const unsub = on(app.repository, 'update', ({added}) => {
+  console.log('added', added.length, 'events')
 })
 
 // Later:
@@ -409,5 +403,6 @@ call(async () => {
 ## Integration Notes
 
 - **All welshman packages depend on `@welshman/lib`** — `Deferred`, `Emitter`, time constants, and collection utilities are shared across `@welshman/net`, `@welshman/store`, `@welshman/util`, etc.
-- **`@welshman/net`**: `Tracker`, `Repository` and `WrapManager` extend `Emitter`, while `Socket` extends Node's `EventEmitter` directly.
+- **`@welshman/store`**: `Tracker`, `MemoryRepository` and `SqliteRepository` extend `Emitter`.
+- **`@welshman/net`**: `WrapManager` extends `Emitter`, while `Socket` extends Node's `EventEmitter` directly.
 - **`@welshman/app`**: `publication.settled()` returns a `Deferred` that resolves with the publication once it is sent, failed or aborted.

@@ -238,11 +238,10 @@ carries a DEV-only hook: `restoreSession()` prefers `window.__TEST_SESSION__` wh
 on disk. Both branches are stripped from production builds, and injecting through the hook avoids
 writing Capacitor's `SecureStorage`/`Preferences` localStorage encoding by hand.
 
-The injected events go in _after_ `storage.ready`. Storage loads what the last session left behind
-with `Repository.load`, which clears the repository before inserting, so anything put there while
-IndexedDB is still opening is wiped a few milliseconds later — before the layout has rendered
-anything, and long before `shouldAuth` reads the room list to decide whether to answer a relay's AUTH
-challenge.
+The injected events go in once `storage.ready` has resolved, which is when the last session's would
+have been readable, and `restoreSession()` waits for the database to take them. That is before the
+layout has rendered anything, and long before `shouldAuth` reads the room list to decide whether to
+answer a relay's AUTH challenge.
 
 The cache exists for the harness rather than for the app. In production the client bootstraps itself:
 asking a keyed collection for a pubkey loads it, so `shouldAuth` reading the user's room and relay
@@ -261,7 +260,7 @@ relays it belongs to, so a regression in the chain from relay list to room list,
 conservative gate, leaves the suite green. The public relays under "The follow graph" are the
 standing-in indexer that covering it would need.
 
-Each user is a separate `BrowserContext`, which also gives each one its own IndexedDB and
+Each user is a separate `BrowserContext`, which also gives each one its own IndexedDB, OPFS and
 localStorage, so nothing bleeds between users.
 
 An injected session is re-applied on every navigation, so through `as()` a reload, a logout and a

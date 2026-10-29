@@ -22,7 +22,7 @@ import {Domain, Network, RelayScopedDerivedPlugin, createSearch} from "@welshman
 import type {IApp} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {usePlugin} from "@app/core/plugins"
-import {registerRetention} from "@app/core/storage"
+import {registerRetention} from "@app/core/database"
 
 // `|` never appears in a url, and keeps these distinct from the `'`-separated room keys.
 const makeCommandKey = (url: string, address: string) => `${url}|${address}`

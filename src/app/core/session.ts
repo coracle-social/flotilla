@@ -6,7 +6,7 @@ import {User} from "@welshman/app"
 import type {Session} from "@welshman/app"
 import {getTestSession, publishTestEvents} from "@lib/test/session"
 import {app, replaceApp} from "@app/core/app"
-import {hasCachedIdentity, kv, ss, storage} from "@app/core/storage"
+import {hasCachedIdentity, kv, openRepository, ss, storage} from "@app/core/storage"
 
 export const session = withGetter(writable<Maybe<Session>>(undefined))
 
@@ -17,7 +17,7 @@ export const login = async ($session: Session) => {
     throw new Error(`Unable to log in using ${$session.method}`)
   }
 
-  replaceApp($user)
+  replaceApp($user, await openRepository($user.pubkey))
   session.set($session)
 }
 
@@ -34,10 +34,9 @@ export const restoreSession = async () => {
   if (testSession) {
     await login(testSession)
 
-    // Storage loads with Repository.load, which clears the repository, so test events wait for it.
+    // Test events stand in for what storage held, so they land once it has loaded.
     await storage.get()?.ready
-
-    publishTestEvents(app.get().repository)
+    await publishTestEvents(app.get().repository)
   } else {
     const $session = await ss.get<Session>("session")
 

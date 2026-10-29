@@ -27,7 +27,10 @@
       onEvent: (event: TrustedEvent) => {
         found = true
 
-        const path = getEventPath(event, Array.from(app.get().tracker.getRelays(event.id)))
+        const path = getEventPath(
+          event,
+          Array.from(app.get().repository.tracker.getRelays(event.id)),
+        )
 
         // An event with no page of its own opens over home, not over this spinner.
         if (path && event.kind !== NOTE) {

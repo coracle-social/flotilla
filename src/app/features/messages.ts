@@ -1,10 +1,10 @@
 import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {append, identity, noop, on, partition, remove, sortBy, uniqBy} from "@welshman/lib"
+import {append, identity, noop, partition, remove, sortBy, uniqBy} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {DELETE, REACTION, WRAP, getPow, hexTags, isSignedEvent, tagValues} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
-import type {RepositoryUpdate, WrapItem} from "@welshman/net"
+import type {WrapItem} from "@welshman/net"
 import {makeDeriveItem, projection, synced, throttled, withGetter} from "@welshman/store"
 import type {Projection} from "@welshman/store"
 import {
@@ -28,7 +28,8 @@ import {
   wraps,
 } from "@app/core/plugins"
 import {userSettingsValues} from "@app/core/settings"
-import {kv, registerRetention} from "@app/core/storage"
+import {registerRetention} from "@app/core/database"
+import {kv} from "@app/core/storage"
 import {makeKeyedSyncs, pullAndListen, registerSync} from "@app/core/sync"
 import {userRoomList} from "@app/features/spaces"
 import {pushModal} from "@app/navigation/dialogs"
@@ -63,20 +64,24 @@ export class Messages {
 
   constructor(private readonly app: IApp) {
     this.index = projection(
-      readable(this.conversationsById, set => {
-        this.conversationsById.clear()
-        this.addEvents(app.repository.query([{kinds: DM_KINDS}]))
-        set(this.conversationsById)
-
-        return on(app.repository, "update", ({added, removed}: RepositoryUpdate) => {
-          const addedConversations = this.addEvents(added)
-          const removedConversations = this.removeEvents(removed)
-
-          if (addedConversations || removedConversations) {
+      readable(this.conversationsById, set =>
+        app.repository.observe({
+          filters: [{kinds: DM_KINDS}],
+          onLoad: events => {
+            this.conversationsById.clear()
+            this.addEvents(events)
             set(this.conversationsById)
-          }
-        })
-      }),
+          },
+          onUpdate: ({added, removed}) => {
+            const addedConversations = this.addEvents(added)
+            const removedConversations = this.removeEvents(removed)
+
+            if (addedConversations || removedConversations) {
+              set(this.conversationsById)
+            }
+          },
+        }),
+      ),
     )
 
     this.one = makeDeriveItem(this.index.$)

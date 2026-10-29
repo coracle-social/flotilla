@@ -129,7 +129,7 @@
     // The composer builds tags from the content alone, so an edit carries over the parent it replied to.
     const editParent = edit ? reader(Message)(edit).parent() : undefined
     const parentEvent =
-      parent ?? (editParent ? $events.one(editParent.value, [url]).get() : undefined)
+      parent ?? (editParent ? await $events.one(editParent.value, [url]).load() : undefined)
 
     if (parentEvent) {
       eventWriter.setParent(parentEvent)

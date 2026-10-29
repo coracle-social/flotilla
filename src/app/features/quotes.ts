@@ -11,7 +11,8 @@ import {
 import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {isAddress, isEvent} from "@welshman/content"
 import type {Parsed, ParsedAddress, ParsedEvent} from "@welshman/content"
-import {events, network, router} from "@app/core/plugins"
+import {app} from "@app/core/app"
+import {network, router} from "@app/core/plugins"
 import {pushModal} from "@app/navigation/dialogs"
 import {goToEvent} from "@app/navigation/locations"
 import NoteCreate from "@app/components/NoteCreate.svelte"
@@ -39,9 +40,9 @@ export const loadQuote = async (ref: IEventRef, event: TrustedEvent, url?: strin
 }
 
 // A quote names an event that may not have arrived, so a modal loads it before going anywhere.
-export const goToQuote = (ref: IEventRef, event: TrustedEvent, url?: string) => {
+export const goToQuote = async (ref: IEventRef, event: TrustedEvent, url?: string) => {
   const idOrAddress = new EventRef(ref).getIdOrAddress()
-  const loaded = idOrAddress ? events.get().one(idOrAddress).get() : undefined
+  const loaded = idOrAddress ? await app.get().repository.getEvent(idOrAddress) : undefined
 
   if (loaded) {
     goToEvent(loaded)

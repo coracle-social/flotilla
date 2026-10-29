@@ -25,6 +25,8 @@ export default defineConfig({
       "prosemirror-state",
       "prosemirror-transform",
       "prosemirror-view",
+      // Fetches its .wasm by url, which the dev server refuses from outside this project
+      "@sqlite.org/sqlite-wasm",
     ],
   },
   server: {
@@ -38,6 +40,10 @@ export default defineConfig({
     //   clientPort: 443,
     // },
     // cors: true,
+  },
+  // sqlite-wasm finds its .wasm beside its own module, which pre-bundling would move.
+  optimizeDeps: {
+    exclude: ["@sqlite.org/sqlite-wasm"],
   },
   build: {
     sourcemap: false,
@@ -62,7 +68,7 @@ export default defineConfig({
           // "prerendered/**" glob @vite-pwa/sveltekit forces in never matches. It only forces it
           // when modifyURLPrefix is unset, and an empty one is a no-op.
           modifyURLPrefix: {},
-          globPatterns: ["client/**/*.{js,css,ico,png,svg,webp,webmanifest}"],
+          globPatterns: ["client/**/*.{js,css,ico,png,svg,webp,webmanifest,wasm}"],
         },
         manifest: {
           name: process.env.VITE_PLATFORM_NAME,

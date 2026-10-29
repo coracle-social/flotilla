@@ -46,7 +46,7 @@
       pushToast({theme: "error", message: error})
     } else {
       pushToast({message: "Report has successfully been dismissed!"})
-      $app.repository.removeEvent(event.id)
+      await $app.repository.removeEvent(event.id)
       onResolved?.()
     }
   }
@@ -62,8 +62,8 @@
           pushToast({theme: "error", message: error})
         } else {
           pushToast({message: "Content has successfully been deleted!"})
-          $app.repository.removeEvent(event.id)
-          $app.repository.removeEvent(reportedId!)
+          await $app.repository.removeEvent(event.id)
+          await $app.repository.removeEvent(reportedId!)
           history.back()
           setTimeout(() => onResolved?.())
         }
@@ -82,7 +82,7 @@
           pushToast({theme: "error", message: error})
         } else {
           pushToast({message: "User has successfully been banned!"})
-          $app.repository.removeEvent(event.id)
+          await $app.repository.removeEvent(event.id)
           history.back()
           setTimeout(() => onResolved?.())
         }

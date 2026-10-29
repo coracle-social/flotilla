@@ -27,7 +27,7 @@
 
   const {url, event}: Props = $props()
 
-  const seenOn = $app.tracker.getRelays(event.id)
+  const seenOn = $app.repository.tracker.getRelays(event.id)
   const npub1 = nip19.npubEncode(event.pubkey)
   const json = JSON.stringify(event, null, 2)
   const copyLink = () => clip(nevent1)

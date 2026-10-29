@@ -4,7 +4,7 @@ import type {Page} from "@playwright/test"
 import type {SeededSpace} from "../harness"
 import {expect, pathPattern, readCachedEvents, roomPath, spacePath, test, users} from "../harness"
 
-// Room lists reach indexeddb in three-second batches, so a spec about a reload waits on this first.
+// A reload starts from what reached the database, so a spec about one waits for the room list there.
 const cachedFirstSpace = async (page: Page, pubkey: string) => {
   const events = (await readCachedEvents(page, pubkey)).filter(event => event.kind === ROOMS)
   const newest = sortBy(event => -event.created_at, events)[0]

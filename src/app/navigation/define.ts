@@ -1,5 +1,5 @@
 import type {RouteId, RouteParams} from "$app/types"
-import type {Maybe} from "@welshman/lib"
+import type {Maybe, MaybeAsync} from "@welshman/lib"
 
 // SvelteKit names these after directories and layouts, but nothing is served at them.
 export type PageId = Exclude<RouteId, "/articles" | "/notes" | "/people" | "/settings">
@@ -8,15 +8,16 @@ export type Route<Id extends RouteId, P> = {
   id: Id
   path: (params: P) => string
   decode: (params: RouteParams<Id>, search?: URLSearchParams) => P
-  title: (params: P) => string
-  pageTitle: (params: RouteParams<Id>, search: URLSearchParams) => string
+  // A title can name what the page shows, which the repository reads asynchronously
+  title: (params: P) => MaybeAsync<string>
+  pageTitle: (params: RouteParams<Id>, search: URLSearchParams) => MaybeAsync<string>
 }
 
 export type RouteSpec<Id extends RouteId, P> = {
   encode: (params: P) => RouteParams<Id>
   decode: (params: RouteParams<Id>, search: URLSearchParams) => P
   search?: (params: P) => Record<string, Maybe<string>>
-  title: (params: P) => string
+  title: (params: P) => MaybeAsync<string>
 }
 
 export const defineRoute = <Id extends RouteId, P>(

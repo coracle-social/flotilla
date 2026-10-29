@@ -10,7 +10,7 @@ import {DerivedPlugin, Domain, Network, User} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
 import {usePlugin} from "@app/core/plugins"
-import {registerRetention} from "@app/core/storage"
+import {registerRetention} from "@app/core/database"
 
 export const SETTINGS = "flotilla/settings"
 
@@ -123,7 +123,9 @@ export const loadSendDelay = async () => {
   if (!decrypted()) {
     await $app.use(Settings).load(pubkey)
 
-    if ($app.repository.query([{...settingsFilter, authors: [pubkey]}]).length > 0) {
+    const stored = await $app.repository.count([{...settingsFilter, authors: [pubkey]}])
+
+    if (stored > 0) {
       await poll({interval: 30, condition: decrypted, signal: AbortSignal.timeout(3000)})
     }
   }

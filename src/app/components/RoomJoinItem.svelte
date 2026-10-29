@@ -39,7 +39,7 @@
         pushToast({theme: "error", message: error})
       } else {
         pushToast({message: "Join request has been dismissed."})
-        $app.repository.removeEvent(event.id)
+        await $app.repository.removeEvent(event.id)
         onResolved?.()
       }
     } catch (e) {

@@ -1,6 +1,6 @@
 ---
 name: flotilla-state
-description: "Use this skill when deciding where a piece of state belongs in Flotilla, or when touching state: reading or adding stores in src/app, reaching the App instance and welshman plugins (usePlugin, fromApp, deriveUserItem), writing code that must survive login swapping the app or run signed out, adding an app policy or a flotilla plugin, persisting data (IndexedDB storage, kv/ss, synced stores, published settings, drafts), changing what src/app/core/sync.ts pulls in the background, and publishing (domain writer → Command → publication, optimistic updates, undo, showing publish status)."
+description: "Use this skill when deciding where a piece of state belongs in Flotilla, or when touching state: reading or adding stores in src/app, reaching the App instance and welshman plugins (usePlugin, fromApp, deriveUserItem), writing code that must survive login swapping the app or run signed out, adding an app policy or a flotilla plugin, persisting data (the SQLite event database and its retention, IndexedDB caches, kv/ss, synced stores, published settings, drafts), changing what src/app/core/sync.ts pulls in the background, and publishing (domain writer → Command → publication, optimistic updates, undo, showing publish status)."
 ---
 
 # Flotilla state
@@ -21,13 +21,15 @@ constructor. Flotilla's own policies are pushed onto `appPolicies` by `registerA
 `src/app/index.ts`, which the root layout calls first, so the first app has to be built after it
 runs (see [App policies](#app-policies)).
 
-- **Login swaps the app.** `login(session)` builds a `User` from the session, cleans up the old
-  app, builds a new one with that user, then sets `session`. There is no account switching, so
+- **Login swaps the app.** `login(session)` builds a `User` from the session, opens that user's
+  event database with `openRepository`, cleans up the old app, builds a new one with that user over
+  that database, then sets `session`. There is no account switching, so
   `login` only runs while signed out: `restoreSession` at boot, the `LogIn*`/`SignUp*` flows,
   and `loginWithPomade`.
 - **Logout reloads the page.** `logout` in `src/app/core/session.ts` runs the handlers features
   register with `registerLogoutHandler` (pomade deactivates its session, push disables itself),
-  clears `kv`, `ss`, the user's IndexedDB and `localStorage`, cleans up the app, then sets
+  clears `kv`, `ss`, the user's event database and IndexedDB cache, and `localStorage`, cleans up
+  the app, then sets
   `window.location.href = "/"`.
 
 The app is therefore stable for as long as anything under the login gate is mounted.
@@ -179,10 +181,23 @@ app, and `app.get()` recurses into building another one.
 
 ## The repository and derived state
 
-Events enter `app.repository` from the ingest policy (which calls `tracker.track`, then
-`repository.publish`), from `Storage` loading the cache at startup, and from the `Publisher`
-publishing optimistically. The tracker records which relays each event was seen on, which is what lets
-space content be keyed by relay.
+A signed-in app's repository is an `EventDatabase` (`core/database.ts`), the user's events in
+SQLite in a worker. A signed-out app keeps welshman's default `MemoryRepository`. Events enter the
+repository from the ingest policy (which calls `repository.tracker.track`, then
+`repository.publish`) and from the `Publisher` publishing optimistically. The tracker records which
+relays each event was seen on, which is what lets space content be keyed by relay.
+
+Reads are async: `query`, `count` and `getEvent` return promises, and only `isDeleted` and the
+tracker answer synchronously. A projection seeds itself with a query when it is first subscribed
+and follows the repository's `update` events from then on.
+
+- `.get()` on a projection nothing subscribes to returns what it last held, which for a fresh one
+  is nothing. A callback that needs the repository's current contents calls the projection's
+  `load()`, or `repository.query`/`getEvent`.
+- A plugin's `index` stays subscribed for the life of the app, so `get(key)` and the projections
+  built on it are current once its first read has answered. `load(key)` waits for that read.
+- A hand-built index reads and follows the repository with `repository.observe({filters, onLoad,
+  onUpdate})`, which reconciles changes reported while the read was in flight.
 
 Raw event queries go through welshman's `Events` plugin, exported from `core/plugins.ts` as `events`.
 Every method returns a projection over the current app's repository:
@@ -197,9 +212,8 @@ wraps it in `fromApp($app => $app.use(Events).forUrl(url, filters).$)`, as `late
 does with `byIdByUrl`.
 Plugin reads (`get`, `one`, `load`, `index`) are documented in welshman-app.
 
-A relay-scoped read asks the repository for `{ids: <every id the tracker holds for that url>,
-...filter}`, so what it costs is the url's whole cache rather than what the filter matches.
-`makeFeed` queries the filters once and checks `tracker.hasRelay` per event instead.
+A relay-scoped read passes `relay: url` to the query, so SQLite applies the relay before any
+`limit`. `makeFeed` reads one page per relay that way before any relay answers.
 
 ### Free functions in an app module
 
@@ -236,8 +250,8 @@ Rules that involve more than one plugin belong in these functions rather than in
 
 A derivation that every row subscribes to, or that joins large sets, is built by hand:
 
-- `Messages` (`messages.ts`) updates its `index` incrementally from repository `update` events rather
-  than re-querying. Its `search` reads profile names when it is rebuilt, so it also follows the
+- `Messages` (`messages.ts`) keeps its `index` with `repository.observe`, updating conversations
+  as events arrive rather than re-querying. Its `search` reads profile names when it is rebuilt, so it also follows the
   profiles index.
 - `publicationsByEventId` (`publications.ts`) indexes publish history once, and hands back the
   previous array wherever an event's publications are unchanged so rows don't churn.
@@ -248,26 +262,35 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 
 | State | Where | Per user | On logout |
 |---|---|---|---|
-| repository, tracker, relays, relay stats, handles, zappers, plaintext, wraps | IndexedDB | yes | deleted |
-| settings (`SettingsValues`) | an encrypted app-data event, cached in IndexedDB | yes | local copy deleted |
+| repository, tracker, wrap index | SQLite (`EventDatabase`) | yes | cleared |
+| relays, relay stats, handles, zappers, plaintext | IndexedDB | yes | deleted |
+| settings (`SettingsValues`) | an encrypted app-data event, stored with the other events | yes | local copy deleted |
 | `session`, `wallet` | `ss` | no | cleared |
 | `theme`, `flTheme`, `checked`, `shouldUnwrap`, `device`, `notificationSettings`, push state, `forceHealthChecks` | `kv` | no | cleared |
 | drafts, dictations | a module `Map`, lost on reload | no | page reloads |
 
-### IndexedDB (`src/app/core/storage.ts`, `src/lib/indexeddb.ts`)
+### The event database (`src/app/core/database.ts`, `src/app/core/database.worker.ts`)
 
-`storagePolicy` builds a `Storage` only for an app with a user, so a signed-out app caches
-nothing. Each identity gets its own database, `flotilla-9gl-<pubkey>`. `IDB` reconciles object
-stores by bumping the database version, so adding or removing a table needs no migration. Every
-read walks a cursor, since a `getAll` over a whole table is one structured clone and Chrome refuses
-one past a cap that moves between versions.
+`openRepository(pubkey)` in `storage.ts` opens an `EventDatabase` named `flotilla-<pubkey>` before
+`login` builds the app over it. Its worker is `serveSqlite` from `@welshman/store/sqlite-serve`,
+with flotilla's own tables beside the engine's: `retention`, and `wraps`, the `WrapManager`'s
+index. Tabs share one database through welshman's leader election. A database that cannot be
+opened leaves the app on a `MemoryRepository`, running on relay data alone.
 
-The events table keeps an event when a retention rule matches it. A rule is a
-`match(event, pubkey)` predicate, given the storage owner's pubkey, with an optional `maxAge` (by
-`created_at`), `ttl` (by when it was cached, and never for the user's own events) and
-`provenance` (dropped on load without a relay). `storage.ts` keeps profiles and the lists every
-part of the app reads (follows, mutes, relay lists) from any author. Everything else is
-registered by its owner with `registerRetention`:
+Before the app is built, `openRepository`:
+
+1. carries over, once, the events and wrap index an older version cached in IndexedDB. A wrap the
+   index names is never unwrapped again, so the rumors it points at have to come with it.
+2. sweeps what retention no longer keeps.
+3. restores the wrap index into the `WrapManager` the app is built with, so the app doesn't unwrap
+   every stored wrap again.
+
+SQLite stores whatever the repository takes, and retention decides what the sweep evicts. A rule
+is a `match(event, pubkey)` predicate, given the database owner's pubkey, with an optional
+`maxAge` (by `created_at`), `ttl` (by when it was cached, and never for the user's own events) and
+`provenance` (evicted without a relay). `database.ts` keeps profiles and the lists every part of
+the app reads (follows, mutes, relay lists) from any author. Everything else is registered by its
+owner with `registerRetention`:
 
 - the user's settings (`registerSettings`)
 - DMs, and the unsigned deletes and reactions inside gift wraps (`registerMessages`)
@@ -276,27 +299,41 @@ registered by its owner with `registerRetention`:
 - relay membership kinds (`registerMembership`)
 - room state, and room membership changes that tag the user (`registerRooms`)
 - `COMMAND` definitions (`registerCommands`)
+- what was done to the user's notes, and the notes themselves, for a month (`registerActivity`)
 
-A note from the wider network carries no `h` tag and is not kept, since nothing asks for it twice.
+- A trigger on `events` gives every stored event a `retention` row. `EventDatabase` judges each
+  event the repository adds against the rules, which live in the main thread, and records how long
+  to keep it. An event no rule keeps, such as a note from the wider network with no `h` tag, goes
+  at the first sweep after it was cached, as does anything an update reports deleted, superseded
+  or expired.
+- The sweep runs when the database opens, and leaves anything cached in the last day, since
+  another tab may be showing it. It never evicts a delete while an event it names is stored,
+  since that would bring the event back, nor a rumor the wrap index names.
+- `COMMAND` definitions expire a week after they were cached, and a space's content a month after
+  it was created. Scrolling a room further back keeps what it loads until the next sweep.
+- Another author's metadata expires a month after it was cached. The user's own never expires. It
+  is the rail and the follow list, and a quiet month would otherwise empty both until a relay
+  answers. An author who republishes gets a fresh month, and one who does not is fetched again.
 
-- Rows keep each event's relays inline. An event the app reads through a relay cannot be keyed to
-  a space without them, so it is dropped on load.
-- `COMMAND` definitions expire after a week, and a space's content after a month, which is what
-  bounds the read at startup. Content older than a month is never written, so scrolling a room
-  further back than that writes nothing.
-- Another author's metadata expires a month after it was cached, so the table holds a month of
-  profiles and lists rather than every one the app has seen. The user's own never expires. It is
-  the rail and the follow list, and a quiet month would otherwise empty both until a relay answers.
-  `cachedAt` is set when a row is written, so an author who republishes gets a fresh month and one
-  who does not is fetched again.
-- Boot waits only for events and relays (`storage.get()?.ready`). The other tables load on the
-  next tick.
+To persist another kind, register a retention rule from the feature that owns it.
+
+### IndexedDB (`src/app/core/storage.ts`, `src/lib/indexeddb.ts`)
+
+`storagePolicy` builds a `Storage` only for an app with a user. It caches the map-backed plugins,
+which hold no events (relays, relay stats, handles, zappers and decrypted plaintext), in
+`flotilla-9gl-<pubkey>`, which `hasCachedIdentity` reads to tell whether the rest of an install
+survived. `IDB` reconciles object stores by bumping the database version, so adding or removing a
+table needs no migration. Every read walks a cursor, since a `getAll` over a whole table is one
+structured clone and Chrome refuses one past a cap that moves between versions.
+
+- Boot waits only for relays (`storage.get()?.ready`). The other tables load on the next tick.
+  Plugin indexes read the event database when first used, so the user's lists arrive a worker
+  round trip after the first screen, and an encrypted one once the signer decrypts it.
 - A database that cannot be opened, read or written degrades the cache rather than the app. Every
   failed open, read and write is logged and swallowed, so the app runs on relay data alone and
   recovers on the next load that succeeds.
 
-To persist another kind, register a retention rule from the feature that owns it. To persist a
-new map-backed plugin, add a `TABLES` entry and an `init*` method that calls `persistMapPlugin`
+To persist a new map-backed plugin, add a `TABLES` entry and an `init*` method that calls `persistMapPlugin`
 with the table, the plugin, and how to turn a row into a key and item and back. It loads the rows, subscribes to
 `onItem`, and batches the writes.
 
@@ -507,6 +544,6 @@ Take the first answer that fits:
 - `flotilla-views`: routes, components, and how components load data and show state
 - `flotilla-model`: spaces, rooms, NIP-43/29/86, which relays events go to, domain kinds
 - `welshman-app`: `App`, plugins, `Command`, `Publisher`, `Network`/`Sync`, `Events`
-- `welshman-store`: `deriveEventsById`, `deriveItemsByKey`, `synced`, `throttled`, `withGetter`
+- `welshman-store`: the repository (memory and SQLite) and tracker, `deriveEventsById`, `deriveItemsByKey`, `synced`, `throttled`, `withGetter`
 - `welshman-domain`: the readers and writers behind `reader`, `writer` and `command`
-- `welshman-net`: the repository, tracker and socket policies under the app
+- `welshman-net`: the socket policies under the app

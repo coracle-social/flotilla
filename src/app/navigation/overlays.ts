@@ -49,7 +49,10 @@ export const openNote = (ref: IEventRef, options: OpenNoteOptions = {}) =>
 
 // An event already on screen opens as a note, pointed at the relays it was seen on.
 export const openEventNote = (event: TrustedEvent, options: OpenNoteOptions = {}) =>
-  openNote(EventRef.fromEvent(event, Array.from(app.get().tracker.getRelays(event.id))), options)
+  openNote(
+    EventRef.fromEvent(event, Array.from(app.get().repository.tracker.getRelays(event.id))),
+    options,
+  )
 
 // A note opened by a link or a reload has no entry of its own, so closing it reloads the page without it.
 export const closeNote = () =>

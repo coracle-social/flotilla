@@ -165,7 +165,7 @@ The DSL constructors `relays(urls)` and `inboxes(pubkeys)` return **arrays** (sp
 
 `DirectMessageReader`: `recipients()`, `subject()`, `parentId()`; writer `addRecipient`/`removeRecipient`/`setSubject`/`setParent`. The **writer** renders **no** routes (`[]`) — a NIP-17 message is published as one gift wrap per recipient, each to its own relays, so the caller fans it out (`app.use(Wraps).publish`). The **query** routes to `[userMessaging()]`.
 
-`MessageReader`: `parent()` (the `Quote` the content opens with); writer `setParent(event)`/`clearParent()`; query `forParent(event)`. Chat lives on its hosting relay, so the writer sets `requiresRelays` and the query routes to `[]`; pin both with `setRoom`.
+`MessageReader`: `parent()` (the first `q` tag as a `Quote`; anything after it is a plain quote); writer `setParent(event)`/`clearParent()`; query `forParent(event)`. Chat lives on its hosting relay, so the writer sets `requiresRelays` and the query routes to `[]`; pin both with `setRoom`.
 
 `HighlightReader`: `sources()`, `attributions()`, `mentions()`, `sourceContext()`, `comment()`, `references()`, `topics()`; writer `setSourceEvent`/`setSourceExternal`/`setSourceReference`, `addAttribution`/`removeAttribution`, `addMention`, `setSourceContext`/`clearSourceContext`, `setComment`/`clearComment`, `setTopics`.
 

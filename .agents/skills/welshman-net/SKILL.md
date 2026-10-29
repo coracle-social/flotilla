@@ -1,13 +1,13 @@
 ---
 name: welshman-net
-description: "Use this skill when working with @welshman/net: relay connections, request/publish flows, auth, relay pool management, adapters, socket policies, the Repository/Tracker/WrapManager stores, or low-level nostr network I/O."
+description: "Use this skill when working with @welshman/net: relay connections, request/publish flows, auth, relay pool management, adapters, socket policies, the WrapManager, the local relay adapter, or low-level nostr network I/O."
 ---
 
 # welshman/net — Relay Network Layer
 
 `@welshman/net` is the core networking layer for welshman-based nostr apps. It manages WebSocket relay connections, subscriptions, event publishing, NIP-42 auth, and NIP-77 negentropy sync. It sits below `@welshman/app` (which owns instances of these primitives and wires them together) and depends on `@welshman/util` for event types and `@welshman/lib` for utilities.
 
-`Pool`, `Repository`, `Tracker` and `WrapManager` are plain classes you instantiate, and the pool and repository a call should use are passed per call as a `context`.
+`Pool` and `WrapManager` are plain classes you instantiate, and the pool and repository a call uses are passed per call as a `context`. Event storage and provenance (`Repository`, `Tracker`) live in `@welshman/store`, which this package depends on; see the welshman-store skill.
 
 ## Installation
 
@@ -28,7 +28,7 @@ yarn add @welshman/net
 | `AdapterContext` | `Partial<NetContext>` — what every `context` parameter accepts |
 | `AdapterFactory` | `(url: string, context: NetContext) => AbstractAdapter \| undefined` |
 
-Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `diff`/`pull`/`push`) takes an optional `context`. There is no default: without `context.pool` a `wss://` url throws `"Unable to connect to relays without context.pool"`, and without `context.repository` `LOCAL_RELAY_URL` throws `"LOCAL_RELAY_URL cannot be used without context.repository"`. In an app, `app.netContext` is that object and `app.use(Network)` passes it for you.
+Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `diff`/`pull`/`push`) takes an optional `context`. There is no default: without `context.pool` a `wss://` url throws `"Unable to connect to relays without context.pool"`, and without `context.repository` `LOCAL_RELAY_URL` throws `"LOCAL_RELAY_URL cannot be used without context.repository"`. `request` also calls `context.repository.isDeleted(event)` on every incoming event and reports matches through `onDeleted`. In an app, `app.netContext` is that object and `app.use(Network)` passes it for you.
 
 ### Pool & Sockets
 
@@ -60,10 +60,11 @@ Every entry point (`request`, `requestOne`, `publish`, `publishOne`, `diff`/`pul
 - `relay` / `relays` — relay url(s)
 - `filters` — array of nostr `Filter` objects
 - `autoClose?: boolean` — close the subscription after EOSE, on socket disconnect, or at the timeout, whichever comes first
-- `timeout?: number` — close the subscription this many ms in (default 8 s with `autoClose`, none without)
+- `timeout?: number` — close the subscription this many ms after it is sent, so time queued on the socket doesn't count (default 8 s with `autoClose`, none without)
 - `signal?: AbortSignal` — cancellation
 - `priority?: number` — send priority on the socket's queue
-- `tracker?: Tracker` — cross-relay deduplication (shared automatically by `request`)
+- `multiplex?: boolean` — `false` sends each subscription on its own rather than merged by `socketPolicyMultiplex` (default `true`)
+- `tracker?: Tracker` — cross-relay deduplication (shared automatically by `request`); `Tracker` comes from `@welshman/store`
 - `context?: AdapterContext`
 - `resubscribeAttempts?: number` — how many times to retry a subscription the relay CLOSEs for a non-final reason (default `0`; each retry backs off `2 ** attempt` seconds)
 - `isEventValid?: (event, url) => boolean` — signature check override; defaults to `verifyEvent`
@@ -122,42 +123,14 @@ A `SocketPolicy` is `(socket: Socket) => Unsubscriber`, run once per socket at c
 
 `defaultSocketPolicies` is a template. `new Pool()` copies it into `pool.socketPolicies`, so mutating the array after a pool exists does nothing for that pool; assign to `pool.socketPolicies` instead.
 
-### Repository
+### Local relay
 
 | Export | Description |
 |--------|-------------|
-| `Repository` | In-memory indexed event store with delete/expiry support. Construct with `new Repository()` |
-| `repository.publish(event, {shouldNotify?})` | Stores an event; returns `false` if it is a duplicate or older than the stored replaceable. Its `"update"` reports removals like `load` |
-| `repository.query(filters, {shouldSort?, includeDeleted?, includeExpired?, where?})` | Returns matching `TrustedEvent[]`, sorted by `created_at` desc unless disabled. `where` narrows by a predicate before any `limit` counts. A filter with both a `limit` and an `until` and no `ids`/`authors`/tag is paged off the day index, so the window bounds the work |
-| `repository.getEvent(idOrAddress)` | Look up by id or NIP-01 address (`kind:pubkey:d`) |
-| `repository.hasEvent(event)` | Whether the event (or a newer replacement) is already stored |
-| `repository.removeEvent(idOrAddress)` | Drops an event and unwinds its index entries |
-| `repository.isDeleted(event)` | `true` if a kind-5 delete by the same author covers this event, or a newer version at its address replaced it (`isDeletedById` / `isDeletedByAddress` check one path each) |
-| `repository.isExpired(event)` | `true` past the event's NIP-40 `expiration` |
-| `repository.dump()` | All stored events as `TrustedEvent[]` |
-| `repository.load(events)` | Bulk-inserts events alongside those already stored; emits one `"update"` diff whose `removed` holds only what the batch hides |
-| `repository.clear()` | Empties every index; emits `"clear"` |
-| `LOCAL_RELAY_URL` | `"local://welshman.relay/"` — conventional url for the local repository (also exported by `@welshman/util`) |
-| `RepositoryUpdate` | `{added: TrustedEvent[], removed: Set<string>}` — payload of `"update"` events |
-| `mergeRepositoryUpdates(updates)` | Merges an array of `RepositoryUpdate` objects into one |
+| `LOCAL_RELAY_URL` | `"local://welshman.relay/"` — the url that addresses `context.repository` (also exported by `@welshman/util`) |
+| `LocalAdapter` | Answers REQ, COUNT and EVENT from a `Repository`, and streams matching events from its `"update"`s to open subscriptions. A REQ or COUNT the repository fails to answer gets `CLOSED` with an `error:` reason |
 
-Emits `"update"` with a `RepositoryUpdate` whenever events are added or removed.
-
-> **Prefer `LOCAL_RELAY_URL` over direct repository access.** Pass `LOCAL_RELAY_URL` as a relay url to `load()`, `request()` and `publish()` (with the repository in `context`), so local reads and writes go through the same validation, deduplication and tracking as remote ones. Reserve the direct API for bulk startup (`repository.load()`) and low-level introspection (`getEvent`, `isDeleted`, `dump`).
-
-### Tracker
-
-| Export | Description |
-|--------|-------------|
-| `Tracker` | Bidirectional map of `eventId ↔ Set<relayUrl>` (`relaysById` / `idsByRelay`) |
-| `tracker.track(eventId, relay)` | Records the relay; returns `true` if the event was already recorded for any relay |
-| `tracker.addRelay(id, relay)` / `removeRelay(id, relay)` | Explicit edge management; removing an event's last relay forgets the event |
-| `tracker.hasRelay(id, relay)` | Membership check |
-| `tracker.getRelays(eventId)` | Set of relay urls that have sent this event |
-| `tracker.getIds(relay)` | Set of event ids seen from a relay |
-| `tracker.copy(id1, id2)` | Copies relay associations from one id to another (used for gift wraps) |
-| `tracker.load(relaysById)` | Bulk-adds mappings from a `Map<string, Set<string>>`; emits `"load"` |
-| `tracker.clear()` | Removes all mappings; emits `"clear"` |
+Passing `LOCAL_RELAY_URL` to `request()`, `publish()` or a loader sends local reads and writes through the same validation, deduplication and tracking as remote ones. The store itself, its query semantics, and the `Tracker` are covered by the welshman-store skill.
 
 ### Adapters
 
@@ -165,7 +138,6 @@ Emits `"update"` with a `RepositoryUpdate` whenever events are added or removed.
 |--------|-------------|
 | `getAdapter(url, context?)` | Factory: `context.getAdapter` first, then `LocalAdapter` for `LOCAL_RELAY_URL`, then `SocketAdapter` from `context.pool` for relay urls |
 | `SocketAdapter` | WebSocket relay adapter |
-| `LocalAdapter` | In-memory adapter over a `Repository` |
 | `MockAdapter` | Test adapter with manual send control |
 | `AbstractAdapter` | Base class for custom adapters |
 | `AdapterEvent.Receive` | Emitted when a relay message arrives |
@@ -192,11 +164,12 @@ Emits `"update"` with a `RepositoryUpdate` whenever events are added or removed.
 
 | Export | Description |
 |--------|-------------|
-| `WrapManager` | Tracks NIP-59 gift wrap ↔ rumor relationships. `new WrapManager({tracker, repository})` |
-| `wrapManager.add({wrap, rumor, recipient})` | Stores the rumor in the repository and copies the wrap's relay tracking onto it |
-| `wrapManager.getRumor(wrapId)` / `getWraps(rumorId)` | Look up either direction |
+| `WrapManager` | Tracks NIP-59 gift wrap ↔ rumor relationships. `new WrapManager({repository})` |
+| `wrapManager.add({wrap, rumor, recipient})` | Copies the wrap's relays onto the rumor in `repository.tracker`, then publishes the rumor to the repository |
+| `wrapManager.getRumor(wrapId)` | Resolves the rumor from the repository (async) |
+| `wrapManager.hasWrap(wrapId)` / `getWraps(rumorId)` | Synchronous lookups in the wrap index |
 | `wrapManager.remove(id)` / `removeByRumorId(id)` / `clear()` | Teardown; `remove` keeps a rumor another wrap still carries, and `clear` emits `"clear"` |
-| `wrapManager.dump()` / `load(wrapItems)` | Persist and restore (`WrapItem[]`); unlike `Repository` and `Tracker`, `load` clears existing wraps first |
+| `wrapManager.dump()` / `load(wrapItems)` | Persist and restore (`WrapItem[]`); `load` clears existing wraps first |
 
 ---
 
@@ -205,11 +178,12 @@ Emits `"update"` with a `RepositoryUpdate` whenever events are added or removed.
 ### Set up a context
 
 ```typescript
-import {Pool, Repository} from '@welshman/net'
+import {MemoryRepository} from '@welshman/store'
+import {Pool} from '@welshman/net'
 import type {NetContext} from '@welshman/net'
 
 const pool = new Pool()
-const repository = new Repository()
+const repository = new MemoryRepository()
 const context: NetContext = {pool, repository}
 ```
 
@@ -312,8 +286,8 @@ pool.socketPolicies = [
 A policy receives the socket when it is created, attaches listeners or patches socket methods, and returns a cleanup function.
 
 ```typescript
-import {writable} from 'svelte/store'
 import {on} from '@welshman/lib'
+import {writable} from '@welshman/store'
 import {SocketEvent, isRelayEvent} from '@welshman/net'
 import type {Socket, RelayMessage} from '@welshman/net'
 
@@ -368,7 +342,7 @@ load({
 
 A `getAdapter` that returns `undefined` falls through to the built-in resolution, so you can special-case one scheme and leave the rest alone.
 
-### Use LOCAL_RELAY_URL to read/write the local repository
+### Use LOCAL_RELAY_URL to read/write the repository
 
 ```typescript
 import {publish, load, request, LOCAL_RELAY_URL} from '@welshman/net'
@@ -380,7 +354,7 @@ const events = await load({
   context,
 })
 
-// Write to the local repository (and any remote relays) in one call
+// Write to the repository (and any remote relays) in one call
 await publish({
   event: signedEvent,
   relays: [LOCAL_RELAY_URL, 'wss://relay.example.com'],
@@ -396,74 +370,18 @@ request({
 })
 ```
 
-### Startup: bulk-load persisted events
+### Persistence
 
-```typescript
-import {verifiedSymbol} from '@welshman/util'
-import type {TrustedEvent} from '@welshman/util'
-
-// The repository never verifies signatures, but requests against LOCAL_RELAY_URL do,
-// and verifyEvent skips events marked as already verified
-const storedEvents: TrustedEvent[] = await loadFromStorage()
-for (const event of storedEvents) {
-  event[verifiedSymbol] = true
-}
-
-// Inserts every event in one pass and emits a single "update"
-repository.load(storedEvents)
-```
-
-### Startup: bulk-load Tracker state
-
-```typescript
-// Load after repository.load() so orphaned event ids can be dropped
-const relaysById = new Map<string, Set<string>>()
-for (const {id, relays} of storedTrackerItems) {
-  if (repository.getEvent(id)) {
-    relaysById.set(id, new Set(relays))
-  }
-}
-
-tracker.load(relaysById)
-```
-
-### Persist repository changes to IndexedDB (canonical pattern)
-
-```typescript
-import {on, batch} from '@welshman/lib'
-import type {RepositoryUpdate} from '@welshman/net'
-import type {TrustedEvent} from '@welshman/util'
-
-// batch(ms, fn) collects all "update" events fired within `ms` and calls fn once
-on(
-  repository,
-  'update',
-  batch(3000, async (updates: RepositoryUpdate[]) => {
-    const toAdd: TrustedEvent[] = []
-    const toRemove = new Set<string>()
-
-    for (const {added, removed} of updates) {
-      for (const event of added) toAdd.push(event)
-      for (const id of removed) toRemove.add(id)
-    }
-
-    const tx = db.transaction('events', 'readwrite')
-    await Promise.all([
-      ...toAdd.map(e => tx.store.put(e)),
-      ...Array.from(toRemove).map(id => tx.store.delete(id)),
-      tx.done,
-    ])
-  }),
-)
-```
+Persisting events is the repository's job. A `SqliteRepository` from `@welshman/store` writes every event and every tracked relay to SQLite in a worker.
 
 ---
 
 ## Integration Notes
 
 - **`@welshman/util`** — provides `TrustedEvent`, `SignedEvent`, `Filter`, `verifyEvent`, `matchFilters`, `getAddress`, `normalizeRelayUrl`, etc. All event objects flowing through `@welshman/net` are `TrustedEvent`.
-- **`@welshman/lib`** — utility helpers (`Emitter`, `batcher`, `defer`, `on`, …). `Emitter` is the base class for `Tracker`, `Repository` and `WrapManager`; `Socket`, `AuthState`, `AbstractAdapter` and `Difference` extend node's `EventEmitter` directly.
-- **`@welshman/app`** — an `App` owns one `Pool`, `Repository`, `Tracker` and `WrapManager`, exposes the pool and repository as `app.netContext`, and wraps the request/publish entry points as `app.use(Network)`. App-level code goes through that; `@welshman/net` directly is for raw relay I/O or clients without an `App`.
+- **`@welshman/lib`** — utility helpers (`Emitter`, `batcher`, `defer`, `on`, …). `Emitter` is the base class for `WrapManager`; `Socket`, `AuthState`, `AbstractAdapter` and `Difference` extend node's `EventEmitter` directly.
+- **`@welshman/store`** — provides `Repository`, its memory and SQLite implementations, and `Tracker`.
+- **`@welshman/app`** — an `App` owns one `Pool`, `Repository` and `WrapManager`, exposes the pool and repository as `app.netContext`, and wraps the request/publish entry points as `app.use(Network)`. App-level code goes through that; `@welshman/net` directly is for raw relay I/O or clients without an `App`.
 
 ---
 
@@ -475,14 +393,11 @@ on(
 - **`socketPolicyLifecycle` reopens a closed socket only when work is pending.** Opening a socket because something was queued is `socketPolicyConnectOnSend`'s job.
 - **Subscriptions the relay CLOSEs are not retried by default.** Set `resubscribeAttempts` when a caller should survive a transient refusal (e.g. auth in flight).
 - **`Tracker` is shared across relays in `request()`**, so `onDuplicate` fires for events received from more than one relay. That is cross-relay deduplication, not an error.
-- **`Repository.publish()` returns `false` for stale replaceable events.** If a newer version is already stored, the older one is silently dropped.
 - **`makeSocketPolicyAuth` requires a `sign` function** returning `Promise<SignedEvent>`. If the user cancels, throw or reject: `doAuth` catches it and moves to `AuthStatus.DeniedSignature`.
 - **Each filter in `filters` is queued as a separate REQ** inside `requestOne`. `socketPolicyMultiplex` merges REQs queued at the same time, so concurrent requests, live or one-shot, share a relay subscription.
-- **`repository.load()` adds to what is stored.** It inserts every event without per-event notification, then emits a single `"update"`. Call `repository.clear()` first to replace the contents.
-- **`RepositoryUpdate.removed` is a `Set<string>`.** Iterate with `for...of` or `Array.from`. `batch()` from `@welshman/lib` hands your callback a `RepositoryUpdate[]` — merge them yourself or use `mergeRepositoryUpdates`.
 
 ## Related skills
 
 - `welshman-app` — the instance-based layer that owns these primitives (`app.netContext`, `app.use(Network)`, `app.use(Sync)`).
-- `welshman-store` — Svelte derivations over a `Repository` and `Tracker`.
+- `welshman-store` — `Repository`, `Tracker`, and the live views derived from them.
 - `welshman-util` — the event, filter and relay-url types on the wire, and the routing DSL for choosing which urls to pass to these functions.

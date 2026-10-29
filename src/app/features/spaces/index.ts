@@ -11,7 +11,7 @@ import {
 } from "@welshman/util"
 import {syncUserList} from "@app/core/user"
 import {roomLists} from "@app/core/plugins"
-import {registerRetention} from "@app/core/storage"
+import {registerRetention} from "@app/core/database"
 import {registerSync, syncEach} from "@app/core/sync"
 import {CONTENT_KINDS} from "@app/features/spaces/content"
 import {currentSpaceUrls, syncedSpaceUrls} from "@app/features/spaces/urls"

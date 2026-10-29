@@ -90,7 +90,7 @@
         const email = getKey<string>("signup.email")!
         const clientOptions = getKey<ClientOptions>("signup.clientOptions")!
 
-        loginWithPomade(clientOptions, email)
+        await loginWithPomade(clientOptions, email)
         await completeSignup()
       },
     },

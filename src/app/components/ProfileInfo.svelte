@@ -28,7 +28,7 @@
   const {url, event}: Props = $props()
 
   const npub1 = nip19.npubEncode(event.pubkey)
-  const seenOn = $app.tracker.getRelays(event.id)
+  const seenOn = $app.repository.tracker.getRelays(event.id)
   const json = call(() => {
     try {
       return JSON.stringify(JSON.parse(event.content), null, 2)

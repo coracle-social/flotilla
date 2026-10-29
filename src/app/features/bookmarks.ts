@@ -5,12 +5,12 @@ import type {Maybe} from "@welshman/lib"
 import {getIdFilters, getIdOrAddress, isReplaceable, tagSpec, tagValue} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import type {BookmarkListWriter, BookmarkSetReader} from "@welshman/domain"
-import {withGetter} from "@welshman/store"
+import {observeEventsById, withGetter} from "@welshman/store"
 import {BookmarkLists, BookmarkSets, createSearch, publish} from "@welshman/app"
 import type {Command} from "@welshman/app"
 import {app, fromApp} from "@app/core/app"
 import {deriveUserItem, syncUserList} from "@app/core/user"
-import {deletes, events, network} from "@app/core/plugins"
+import {deletes, network} from "@app/core/plugins"
 import {registerSync} from "@app/core/sync"
 
 const settle = async (pending: Promise<Command>) => {
@@ -58,7 +58,7 @@ export const loadUserBookmarks = (pubkey: string) => {
 
 // A bookmark carries a relay hint, which is the only route back to the event it names.
 export const eventToBookmark = (event: TrustedEvent, url?: string) => {
-  const hint = url || Array.from(app.get().tracker.getRelays(event.id))[0]
+  const hint = url || Array.from(app.get().repository.tracker.getRelays(event.id))[0]
   const tag = [isReplaceable(event) ? "a" : "e", getIdOrAddress(event)]
 
   return hint ? [...tag, hint] : tag
@@ -88,10 +88,12 @@ export const userBookmarkedEvents = derived(
         })
       }
 
-      const unsubscribe = events
-        .get()
-        .all(filters)
-        .$.subscribe($events => set(new Map($events.map(event => [getIdOrAddress(event), event]))))
+      const unsubscribe = observeEventsById({
+        filters,
+        repository: app.get().repository,
+        onEvents: $byId =>
+          set(new Map(Array.from($byId.values(), event => [getIdOrAddress(event), event]))),
+      })
 
       return () => {
         controller.abort()

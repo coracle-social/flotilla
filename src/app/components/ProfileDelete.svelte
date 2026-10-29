@@ -38,7 +38,8 @@
       })
     }
 
-    const chunks = chunk(500, $app.repository.query([{authors: [$user.pubkey]}]))
+    const authored = await $app.repository.query([{authors: [$user.pubkey]}])
+    const chunks = chunk(500, authored)
     const profileEvent = await writer(Profile).setName("[deleted]").renderTemplate()
     const vanishEvent = makeEvent(62, {tags: [["relay", "ALL_RELAYS"]]})
     const denominator = chunks.length + 2

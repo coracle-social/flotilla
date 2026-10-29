@@ -178,10 +178,21 @@
   })
 
   $effect(() => {
-    const title = getPageTitle($page) || env.PLATFORM_NAME
     const count = $documentActive ? $notificationCount : $backgroundNotificationCount
+    let current = true
 
-    document.title = count > 0 ? `(${count}) ${title}` : title
+    // A title can wait on the repository, by which time the page may have moved on
+    getPageTitle($page).then(pageTitle => {
+      const title = pageTitle || env.PLATFORM_NAME
+
+      if (current) {
+        document.title = count > 0 ? `(${count}) ${title}` : title
+      }
+    })
+
+    return () => {
+      current = false
+    }
   })
 </script>
 

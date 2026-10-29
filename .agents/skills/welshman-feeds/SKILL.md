@@ -318,7 +318,7 @@ console.log('Authors in feed:', [...authors])
 - **`@welshman/signer`** — `ISigner` interface, passed optionally through `FeedCompilerOptions` for DVM requests that require signing.
 - **`@welshman/net`** — `FeedController` loads pages through this package's `requestPage` and `countPage`, and `FeedCompiler` runs DVM feeds through `requestDVM`. All three call net's `request`, `count` and `publish` with the `AdapterContext` from `FeedCompilerOptions`.
 - **`@welshman/app`** — `app.use(Feeds).makeFeedController({feed, onEvent, …})` supplies `router` (the `Router` plugin), `getPubkeysForScope`/`getPubkeysForWOTRange` (from `Wot`), the user's signer, and the app's `{pool, repository}` context. `Feeds` is also the kind-31890 saved-feed collection.
-- **`Tracker`** — From `@welshman/net`. A `Tracker` shared between controllers suppresses events it has already seen.
+- **`Tracker`** — From `@welshman/store`. A `Tracker` shared between controllers suppresses events it has already seen.
 
 ## Gotchas & Tips
 

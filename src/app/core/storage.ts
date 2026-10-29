@@ -4,26 +4,19 @@ import {deleteDB} from "idb"
 import {SecureStorage} from "@aparajita/capacitor-secure-storage"
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import {Preferences} from "@capacitor/preferences"
-import {MONTH, ago, int, noop, now, on, batch, call, makeQueue} from "@welshman/lib"
+import {noop, batch, call, makeQueue} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {
-  BLOSSOM_SERVERS,
-  FOLLOWS,
-  MESSAGING_RELAYS,
-  MUTES,
-  PROFILE,
-  RELAYS,
-  verifiedSymbol,
-} from "@welshman/util"
+import {isHashedEvent, verifiedSymbol} from "@welshman/util"
 import type {Handle, TrustedEvent} from "@welshman/util"
-import {withGetter} from "@welshman/store"
-import type {RepositoryUpdate, WrapItem} from "@welshman/net"
+import {MemoryRepository, withGetter} from "@welshman/store"
+import type {WrapItem} from "@welshman/net"
 import {Relay, Zapper} from "@welshman/domain"
 import type {RelayInfo, ZapperValues} from "@welshman/domain"
 import {Handles, Plaintext, Relays, RelayStats, User, Zappers} from "@welshman/app"
-import type {AppPolicy, IApp, MapPlugin, RelayStatsItem} from "@welshman/app"
+import type {AppOptions, AppPolicy, IApp, MapPlugin, RelayStatsItem} from "@welshman/app"
 import {IDB} from "@lib/indexeddb"
 import {appPolicies} from "@app/core/app"
+import {EventDatabase} from "@app/core/database"
 
 type StringStorage = {
   get: (key: string) => Promise<Maybe<string>>
@@ -99,12 +92,13 @@ const secretStorage: StringStorage =
 export const ss = makeJsonStore(secretStorage)
 
 const TABLES = [
-  {name: "events", keyPath: "id"},
   {name: "relays", keyPath: "url"},
   {name: "relayStats", keyPath: "url"},
   {name: "handles", keyPath: "nip05"},
   {name: "zappers", keyPath: "lnurl"},
   {name: "plaintext", keyPath: "key"},
+  // Read only to carry what was cached here over to sqlite
+  {name: "events", keyPath: "id"},
   {name: "wrapManager", keyPath: "id"},
 ]
 
@@ -118,33 +112,13 @@ const idleWrite = <T>(f: (xs: T[]) => void): ((xs: T[]) => void) => {
   return f
 }
 
-type EventItem = {id: string; event: TrustedEvent; relays: string[]; cachedAt?: number}
-
-// A ttl expires a row that wasn't replaced inside it, and a maxAge bounds an event by its own age.
-type Retention = {
-  match: (event: TrustedEvent, pubkey: string) => boolean
-  maxAge?: number
-  ttl?: number
-  // Anything the app reads through a relay is useless without the provenance keying it to one.
-  provenance?: boolean
-}
-
-// Profiles and the lists every part of the app reads; everything else is registered by its owner.
-const retentions: Retention[] = [
-  {
-    match: event =>
-      [PROFILE, FOLLOWS, MUTES, RELAYS, BLOSSOM_SERVERS, MESSAGING_RELAYS].includes(event.kind),
-    ttl: int(1, MONTH),
-  },
-]
-
-export const registerRetention = (retention: Retention) => {
-  retentions.push(retention)
-}
+type EventItem = {id: string; event: TrustedEvent; relays: string[]}
 
 type PlaintextItem = {key: string; value: string}
 
 const DATABASE_PREFIX = "flotilla-9gl"
+
+const getDatabaseName = (pubkey: string) => `${DATABASE_PREFIX}-${pubkey}`
 
 // indexeddb goes with the app container on every platform; the iOS keychain the session lives in does not.
 export const hasCachedIdentity = async () =>
@@ -152,30 +126,101 @@ export const hasCachedIdentity = async () =>
     ? (await indexedDB.databases()).some(db => db.name?.startsWith(DATABASE_PREFIX))
     : true
 
-/** Caches an app's repository, tracker and local collections in indexeddb, one database per identity. */
+const onMigrateError = (error: unknown) => console.error("Failed to carry the cache over", error)
+
+const onSweepError = (error: unknown) => console.error("Failed to sweep the event database", error)
+
+const onClearError = (error: unknown) => console.error("Failed to clear the event database", error)
+
+// A wrap the index names is never unwrapped again, so the rumors it points at have to come with it.
+const migrateCache = async (database: EventDatabase) => {
+  const db = new IDB({name: getDatabaseName(database.pubkey), stores: TABLES})
+  const items = await db.table<EventItem>("events").getAll()
+  const wraps = await db.table<WrapItem>("wrapManager").getAll()
+
+  if (items.length > 0 || wraps.length > 0) {
+    // Rows written before provenance was stored inline hold a bare event, and one bad event
+    // would fail the whole batch.
+    const events = items.filter(item => isHashedEvent(item.event))
+
+    for (const {id, relays} of events) {
+      for (const url of relays) {
+        database.tracker.track(id, url)
+      }
+    }
+
+    // A signed event was checked before it was cached, and sqlite stores whether it was
+    await Promise.all(
+      events.map(({event}) => {
+        if (event.sig) {
+          event[verifiedSymbol] = true
+        }
+
+        return database.publish(event)
+      }),
+    )
+
+    await database.call("putWraps", wraps)
+    await db.table("events").bulkDelete(items.map(item => item.id))
+    await db.table("wrapManager").bulkDelete(wraps.map(wrap => wrap.id))
+  }
+
+  await db.close()
+}
+
+/** The user's events in sqlite with the wraps already read from them, or memory alone if that fails. */
+export const openRepository = async (
+  pubkey: string,
+): Promise<Pick<AppOptions, "repository" | "wrapManager">> => {
+  const database = new EventDatabase(pubkey)
+
+  try {
+    await database.ready
+
+    // Neither is needed to read and write, so a failure leaves the database in use
+    await migrateCache(database).catch(onMigrateError)
+    await database.sweep().catch(onSweepError)
+    await database.restoreWraps()
+
+    return {repository: database, wrapManager: database.wrapManager}
+  } catch (e) {
+    console.error("Failed to open the event database", e)
+
+    void database.close()
+
+    return {repository: new MemoryRepository()}
+  }
+}
+
+/** Caches an app's local collections in indexeddb, one database per identity, beside its events. */
 class Storage {
   ready: Promise<void>
 
   private db: IDB
-  private cachedAt = new Map<string, number>()
   private unsubscribers: Unsubscriber[] = []
   private timeouts: ReturnType<typeof setTimeout>[] = []
   private stopped = false
-
-  private readonly pubkey: string
 
   constructor(private readonly app: IApp) {
     // Every identity used to share one database; drop it rather than leave it on disk.
     void deleteDB(DATABASE_PREFIX)
 
-    this.pubkey = User.require(app).pubkey
-    this.db = new IDB({name: `${DATABASE_PREFIX}-${this.pubkey}`, stores: TABLES})
+    this.db = new IDB({name: getDatabaseName(User.require(app).pubkey), stores: TABLES})
     this.ready = this.start()
   }
 
   close = () => this.db.close()
 
-  clear = () => this.db.clear()
+  // Logout clears the device even when a database fails, as it always has with indexeddb
+  clear = async () => {
+    const {repository} = this.app
+
+    if (repository instanceof EventDatabase) {
+      await repository.reset().catch(onClearError)
+    }
+
+    await this.db.clear()
+  }
 
   cleanup = () => {
     this.stopped = true
@@ -187,11 +232,7 @@ class Storage {
   private start = async () => {
     await this.db.connect()
 
-    const [, unsubscribeRelays] = await Promise.all([this.loadCriticalData(), this.initRelays()])
-
-    this.addUnsubscriber(this.syncEvents())
-    this.addUnsubscriber(this.syncTracker())
-    this.addUnsubscriber(unsubscribeRelays)
+    this.addUnsubscriber(await this.initRelays())
 
     const defer = (init: () => Promise<Unsubscriber>) => {
       this.timeouts.push(
@@ -207,155 +248,13 @@ class Storage {
     defer(this.initHandles)
     defer(this.initZappers)
     defer(this.initPlaintext)
-    defer(this.initWrapManager)
   }
-
-  private retains = (retention: Retention, event: TrustedEvent) =>
-    retention.match(event, this.pubkey) &&
-    (!retention.maxAge || event.created_at > ago(retention.maxAge))
-
-  private shouldPersist = (event: TrustedEvent) =>
-    retentions.some(retention => this.retains(retention, event))
-
-  // The user's own rows are state rather than cache, so no ttl expires them.
-  private shouldKeep = ({event, relays, cachedAt = now()}: EventItem) =>
-    retentions.some(
-      retention =>
-        this.retains(retention, event) &&
-        (!retention.provenance || relays.length > 0) &&
-        (!retention.ttl || event.pubkey === this.pubkey || cachedAt > ago(retention.ttl)),
-    )
 
   private addUnsubscriber = (unsubscriber: Unsubscriber) => {
     if (this.stopped) {
       unsubscriber()
     } else {
       this.unsubscribers.push(unsubscriber)
-    }
-  }
-
-  /** An event that lost its provenance can never be keyed to a space again, so drop it. */
-  private loadCriticalData = async () => {
-    const table = this.db.table<EventItem>("events")
-    const items: EventItem[] = []
-    const stale: string[] = []
-
-    await table.each(item => {
-      // Rows written before provenance was stored inline hold a bare event
-      if (item.event && this.shouldKeep(item)) {
-        item.event[verifiedSymbol] = true
-        this.cachedAt.set(item.id, item.cachedAt ?? now())
-        items.push(item)
-      } else {
-        stale.push(item.id)
-      }
-    })
-
-    this.app.repository.load(items.map(item => item.event))
-
-    const relaysById = new Map<string, Set<string>>()
-
-    for (const {id, relays} of items) {
-      // Anything the repository rejected was superseded while we were loading.
-      if (this.app.repository.getEvent(id)) {
-        relaysById.set(id, new Set(relays))
-      } else {
-        stale.push(id)
-      }
-    }
-
-    this.app.tracker.load(relaysById)
-
-    if (stale.length > 0) {
-      void table.bulkDelete(stale)
-    }
-  }
-
-  private syncEvents = () => {
-    const table = this.db.table<EventItem>("events")
-
-    return on(
-      this.app.repository,
-      "update",
-      batch(3000, async (updates: RepositoryUpdate[]) => {
-        const add: TrustedEvent[] = []
-        const remove = new Set<string>()
-
-        for (const update of updates) {
-          for (const event of update.added) {
-            if (this.shouldPersist(event)) {
-              add.push(event)
-              remove.delete(event.id)
-            }
-          }
-
-          for (const id of update.removed) {
-            remove.add(id)
-          }
-        }
-
-        if (add.length > 0) {
-          const cachedAt = now()
-
-          // The ingest policy tracks an event before publishing it, so the tracker already has its provenance.
-          await table.bulkPut(
-            add.map(event => {
-              this.cachedAt.set(event.id, cachedAt)
-
-              return {
-                id: event.id,
-                event,
-                relays: Array.from(this.app.tracker.getRelays(event.id)),
-                cachedAt,
-              }
-            }),
-          )
-        }
-
-        if (remove.size > 0) {
-          remove.forEach(id => this.cachedAt.delete(id))
-
-          await table.bulkDelete(remove)
-        }
-      }),
-    )
-  }
-
-  private syncTracker = () => {
-    const table = this.db.table<EventItem>("events")
-
-    const _onChange = async (ids: Iterable<string>) => {
-      const items: EventItem[] = []
-
-      for (const id of ids) {
-        const event = this.app.repository.getEvent(id)
-
-        // A brand-new event isn't queryable here, so syncEvents persists its provenance with the event.
-        if (event && this.shouldPersist(event)) {
-          items.push({
-            id,
-            event,
-            relays: Array.from(this.app.tracker.getRelays(id)),
-            cachedAt: this.cachedAt.get(id) ?? now(),
-          })
-        }
-      }
-
-      await table.bulkPut(items)
-    }
-
-    const onAdd = batch(3000, _onChange)
-    const onRemove = batch(3000, _onChange)
-    const onLoad = () => _onChange(this.app.tracker.relaysById.keys())
-
-    this.app.tracker.on("add", onAdd)
-    this.app.tracker.on("remove", onRemove)
-    this.app.tracker.on("load", onLoad)
-
-    return () => {
-      this.app.tracker.off("add", onAdd)
-      this.app.tracker.off("remove", onRemove)
-      this.app.tracker.off("load", onLoad)
     }
   }
 
@@ -425,31 +324,12 @@ class Storage {
       (row: PlaintextItem) => [row.key, row.value],
       (key, value) => ({key, value}),
     )
-
-  private initWrapManager = async () => {
-    const table = this.db.table<WrapItem>("wrapManager")
-
-    this.app.wrapManager.load(await table.getAll())
-
-    const addOne = batch(3000, table.bulkPut)
-    const removeOne = batch(3000, (items: WrapItem[]) =>
-      table.bulkDelete(items.map(item => item.id)),
-    )
-
-    this.app.wrapManager.on("add", addOne)
-    this.app.wrapManager.on("remove", removeOne)
-
-    return () => {
-      this.app.wrapManager.off("add", addOne)
-      this.app.wrapManager.off("remove", removeOne)
-    }
-  }
 }
 
 // The current app's cache, which only exists once there's an identity to cache for.
 export const storage = withGetter(writable<Maybe<Storage>>(undefined))
 
-// Storage is scoped to one app's repository, tracker and caches, so it is built and torn down with it.
+// Storage is scoped to one app's caches, so it is built and torn down with it.
 export const storagePolicy: AppPolicy = $app => {
   if ($app.user) {
     const $storage = new Storage($app)

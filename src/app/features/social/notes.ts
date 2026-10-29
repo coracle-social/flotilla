@@ -33,8 +33,10 @@ export class Notes {
     const idOrAddress = eventRef.getIdOrAddress()
 
     if (idOrAddress) {
+      const event = await this.app.repository.getEvent(idOrAddress)
+
       return (
-        this.app.repository.getEvent(idOrAddress) ??
+        event ??
         first(
           await this.app.use(Network).load({
             relays: await this.relays(ref, replies),

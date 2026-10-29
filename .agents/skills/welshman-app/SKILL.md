@@ -7,7 +7,7 @@ description: "Use this skill when working with @welshman/app: the instance-based
 
 ## Overview
 
-`@welshman/app` is the high-level app layer of welshman. It ties `util`, `net`, `store`, `domain`, `signer`, and `feeds` together behind an **`App`** instance. The event repository, connection pool, signed-in user, and every feature hang off that instance, and features are reached through `app.use(...)`.
+`@welshman/app` is the high-level app layer of welshman. It ties `util`, `net`, `store`, `domain`, `signer`, and `feeds` together behind an **`App`** instance. The repository, connection pool, signed-in user, and every feature hang off that instance, and features are reached through `app.use(...)`.
 
 ## Installation
 
@@ -18,15 +18,15 @@ pnpm add @welshman/app
 yarn add @welshman/app
 ```
 
-Peer deps: `svelte` (4 or 5), all `@welshman/*` workspace packages, and `@pomade/core`.
+Peer deps: all `@welshman/*` workspace packages and `@pomade/core`. The stores come from `@welshman/store`, which vendors svelte's store contract, so svelte itself is not a dependency.
 
 ## Core mental model
 
-1. **An app is an `App` instance.** It owns per-identity state (`repository`, `pool`, `tracker`, `wrapManager`), a `config`, and at most one `User`. Two apps never share data.
+1. **An app is an `App` instance.** It owns per-identity state (`repository`, `pool`, `wrapManager`), a `config`, and at most one `User`. Relay provenance is `app.repository.tracker`. Two apps never share data.
 2. **Features are plugins**, resolved lazily and memoized via `app.use(SomeClass)`. Each plugin is constructed with the app and cached per app.
-3. **`Projection<T>` is the universal accessor.** It has `.get()` (sync snapshot) and `.$` (Svelte `Readable`), and is a store itself, so `derived(p, ...)` works too. Bind `.$` in components; call `.get()` in callbacks/hot paths. It comes from `@welshman/store`, along with `projection` and `projectFrom`.
-4. **Reads are reactive and lazy-loading.** `app.use(Profiles).one(pubkey)` returns a store that fetches over the network (outbox model) and updates as events arrive.
-5. **Writes are optimistic.** Publishing goes through the `Publisher` pipeline: the event hits the local repository immediately, signs lazily, and reports per-relay progress, with an abortable delay for soft-undo.
+3. **`Projection<T>` is the universal accessor.** It has `.get()` (sync snapshot) and `.$` (a `Readable`), and is a store itself, so `derived(p, ...)` works too. Bind `.$` in components; call `.get()` in callbacks/hot paths. It comes from `@welshman/store`, along with `projection` and `projectFrom`.
+4. **Reads are reactive and lazy-loading.** `app.use(Profiles).one(pubkey)` returns a store that fetches over the network (outbox model) and updates as events arrive. The repository answers asynchronously, so views fill in after their first query; the [welshman-store](../welshman-store/SKILL.md) skill covers the semantics.
+5. **Writes are optimistic.** Publishing goes through the `Publisher` pipeline: the event goes into the repository immediately, signs lazily, and reports per-relay progress, with an abortable delay for soft-undo.
 
 ## Creating an app
 
@@ -52,9 +52,11 @@ const bare = new App()
 app.cleanup()
 ```
 
-`AppOptions` is `{user?, config?, getAdapter?, policies?}`, `AppConfig` is the `config` field above, and `AppPolicy` is `(app: IApp) => Unsubscriber`.
+`AppOptions` is `{user?, config?, getAdapter?, policies?, repository?, wrapManager?}`, `AppConfig` is the `config` field above, and `AppPolicy` is `(app: IApp) => Unsubscriber`.
 
-`IApp` (what plugins/policies depend on): `{user?, config, use, onCleanup, netContext, pool, tracker, repository, wrapManager}`. A plugin registers teardown with `app.onCleanup(unsubscriber)`; `app.cleanup()` runs them in reverse, then clears the pool, tracker, repository and wrap manager.
+`IApp` (what plugins/policies depend on): `{user?, config, use, onCleanup, netContext, pool, repository, wrapManager}`. A plugin registers teardown with `app.onCleanup(unsubscriber)`; `app.cleanup()` runs them in reverse, then clears the pool.
+
+Without `repository`, an app keeps events in a `MemoryRepository` it creates and clears on cleanup. An injected repository, such as a `SqliteRepository` that persists across sessions, belongs to the caller and survives `cleanup()`, and so does an injected `wrapManager`. With a persistent repository, also pass a `WrapManager` restored from your own copy of its `dump()`: the stored wraps come back on start, and the app unwraps again every wrap its wrap manager doesn't know, one signer call each.
 
 ## User & sessions
 
@@ -122,7 +124,7 @@ Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) i
 | `RelayRoles` / `RelayMemberLists` / `RoomPinLists` | relay-signed state, keyed per relay | relay-scoped collections (see `RelaySignedDerivedPlugin`) |
 | `Handles` | NIP-05 (HTTP, batched) | `forPubkey(pk)`, `display(nip05)`, `loadForPubkey(pk)` |
 | `Zappers` | LNURL zapper info (HTTP) | `forPubkey(pk)`, `validateZapReceipt(...)`, `validateZapReceipts(...)`, `validZapReceipts(...)` |
-| `Topics` | hashtags w/ counts | `all`, `byName` (`Projection`s); `topicSearch` |
+| `Topics` | hashtags w/ counts of the stored events carrying each | `all`, `byName` (`Projection`s); `topicSearch` |
 | `Reactions` / `Deletes` | kind-7 reactions and kind-5 deletes (no collection; read them with `Events`) | `react(event, content, fn?)` / `deleteEvent(event, fn?)` → `Command` |
 | `Rooms` | NIP-29 rooms, keyed `${url}'${h}` | `forRoom(url, h)`, `forUrl(url)`, `members(url, h)`, `membershipStatus(...)`, `pendingJoins(url, h?)`, `createRoom`/`editRoom`/`deleteRoom`/`joinRoom`/`leaveRoom`/`addMember`/`removeMember`/`deleteEvent(url, room, …)` → `Command` |
 | `Plaintext` | decrypted-content cache, keyed by ciphertext; concurrent callers share one decrypt | `ensure(ciphertext, decrypt)`, `get(ciphertext)` |
@@ -245,15 +247,14 @@ await app.use(Sync).push({relays, filters: [{authors: [pk]}]})
 
 ## Querying the repository (`Events`)
 
-`Network` fetches, and `Events` reads what's already local. Every method binds this app's repository
-and tracker and returns a `Projection`.
+`Network` fetches, and `Events` reads what's already local. Every method binds this app's repository and returns a `Projection`. Every view but `isDeleted` is an `AsyncProjection`, whose `load()` reads the repository fresh where `.get()` returns what the view last held.
 
 ```typescript
 import {Events} from "@welshman/app"
 const events = app.use(Events)
 
 events.byId(filters).$           // Map<id, TrustedEvent>
-events.all(filters).$            // repository order
+events.all(filters).$            // store order
 events.asc(filters).$            // oldest first
 events.desc(filters).$           // newest first
 events.one(idOrAddress, hints)   // one event, loaded on first read if missing
@@ -322,7 +323,7 @@ The DSL constructors, `RelayScenario` scoring and the fallback policies are docu
 
 ## Web of trust
 
-Built from the **public** `p` tags on follow (kind 3) and mute (kind 10000) lists as they land in the repository. Every read is a `Projection` (`.get()` / `.$`), and reads *about* a pubkey take a `WotScope`:
+Built from the **public** `p` tags on follow (kind 3) and mute (kind 10000) lists in the repository. It catches up on stored lists asynchronously when first used, then follows the repository's updates. Every read is a `Projection` (`.get()` / `.$`), and reads *about* a pubkey take a `WotScope`:
 
 - `WotScope.Global` — counts every list in the repository.
 - `WotScope.Follows` — counts only lists published by the user's own follows, i.e. the pubkey as this user sees it. With no signed-in user it falls back to global.
@@ -347,7 +348,7 @@ Use `scores(scope)` when ranking a list (search results, a WoT range); it walks 
 
 ```typescript
 import {makeIntersectionFeed, makeScopeFeed, makeKindFeed, Scope} from "@welshman/feeds"
-import {get} from "svelte/store"
+import {get} from "@welshman/store"
 
 const controller = app.use(Feeds).makeFeedController({
   feed: makeIntersectionFeed(makeScopeFeed(Scope.Follows), makeKindFeed(1)),
@@ -366,7 +367,7 @@ const pubkeys = search.searchValues("alice")   // also fires a NIP-50 network se
 
 Base classes in `plugins/base.ts`:
 
-- **`DerivedPlugin<T>`** — collection derived from repository events (the repo is the single source of truth). Pass `{filters, eventToItem, getKey, loadOptions?}`; implement `fetch`. This is the dominant pattern. Gives you `all` (a `Projection`), `index` (an `ItemCollection`, a `Projection` plus a `read(key)` that waits out its outstanding parses), `get(key)`, `one(key)`, `load`/`forceLoad`, and `project(key, read)`.
+- **`DerivedPlugin<T>`** — collection derived from repository events (the repository is the single source of truth). The collection stays subscribed for the life of the app, so its parsed items are held in memory and `get(key)` answers synchronously once the first query lands. With a `SqliteRepository` too, first use reads every stored event the filters match. Pass `{filters, eventToItem, getKey, loadOptions?}`; implement `fetch`. This is the dominant pattern. Gives you `all` (a `Projection`), `index` (an `ItemCollection`, a `Projection` plus a `read(key)` that waits out the repository's pending writes and its own outstanding parses), `get(key)`, `one(key)`, `load`/`forceLoad`, and `project(key, read)`.
 - **`RelayScopedDerivedPlugin<T>`** — the same, keyed per relay via the tracker (`getKey(item, url)`), so the same addressable coordinate on two relays stays two entries. `RelaySignedDerivedPlugin` (in `plugins/relays.ts`) narrows it further to events signed by the relay's own NIP-11 `self` key, which is what `RelayRoles`, `RelayMemberLists` and `RoomPinLists` use.
 - **`LoadableMapPlugin<T>`** — owns its own `Map`, lazily fetches over HTTP (e.g. `Relays`, `Handles`, `Zappers`). Implement `fetch`.
 - **`MapPlugin<T>`** — owns its own `Map`, no network (e.g. `RelayStats`, `Plaintext`).
@@ -409,7 +410,7 @@ Side effects live in `AppPolicy`s (`(app) => Unsubscriber`), run at construction
 
 - `defaultAppPolicies` = `[appPolicyIngest, appPolicyRelayStats, appPolicyWraps, appPolicyCacheDecrypt, appPolicyLogSignerMethods, appPolicyAuthUnlessBlocked]`.
 - Auth builders: `makeAppPolicyAuth(shouldAuth, recheck?)` (`recheck(app)` is a store whose changes re-ask `shouldAuth`), `appPolicyAuthAlways`, `appPolicyAuthNever`, `appPolicyAuthUnlessBlocked`.
-- `app.ingestEvent(event, url)` records an event a relay sent in the tracker and repository, skipping DVM and ephemeral kinds; `appPolicyIngest` calls it for every validly signed event, and a custom ingest policy can call it after its own check.
+- `app.ingestEvent(event, url)` records an event a relay sent in the repository and its tracker, skipping DVM and ephemeral kinds, and resolves once it is stored; `appPolicyIngest` calls it for every validly signed event, and a custom ingest policy can call it after its own check.
 - `appPolicyCacheDecrypt` and `appPolicyLogSignerMethods` both layer onto the user's signer via `User.wrapSigner` — the first caches decryptions into `app.use(Plaintext)`, the second records signer calls into `app.use(Logger)` (read them from `app.use(Logger).messages`).
 
 ```typescript
@@ -427,11 +428,11 @@ const app = new App({user, policies: [appPolicyIngest, appPolicyAuthNever]})
 - **Most loads use the outbox model**, which needs the author's relay list. `loadUsingOutbox` (and therefore most `fetch` methods) first loads NIP-65 relays for the author.
 - **`createApp` vs `new App`.** `createApp` installs default policies; `new App` installs none. In tests prefer `new App` (no background subscriptions) unless you need ingestion.
 - **Pass the `user` to `createApp`/`new App`, don't assign `app.user` afterwards.** Policies run once, at construction. `appPolicyCacheDecrypt` and `appPolicyLogSignerMethods` bail out immediately when there is no user, so a user attached later gets no decrypt caching and no signer log. To switch identities, build a new app and `cleanup()` the old one.
-- **Call `cleanup()`** when discarding an app to close sockets and free the repository/tracker/wrap state.
+- **Call `cleanup()`** when discarding an app to close sockets and free its state.
 
 ## Related skills
 
-- `welshman-store` — the `Repository` and Svelte-store primitives this layer builds on.
+- `welshman-store` — the `Repository`, `Tracker` and store primitives this layer builds on.
 - `welshman-domain` — the `Kind`/reader/writer model behind `app.use(Domain)` (event decoding + publishing).
 - `welshman-util` — the `RelaySelection` DSL, `Resolver` and `RelayScenario` that `app.use(Router)` dereferences.
 - `welshman-net` — request/publish/sockets behind `app.use(Network)`.

@@ -81,7 +81,7 @@ const startConversation = async (page: Page, people: {term: string; user: TestUs
 const openMessageMenu = (page: Page, id: string) =>
   message(page, id).locator(".conversation-bubble > .text-sm").click()
 
-// Events reach indexeddb in three-second batches, so a spec that reloads has to read the cache first.
+// A reload starts from what reached the database, so a spec that reloads waits for its events there.
 const cachedContent = async (page: Page, pubkey: string, kind: number) =>
   (await readCachedEvents(page, pubkey))
     .filter(event => event.kind === kind)

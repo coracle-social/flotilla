@@ -39,7 +39,7 @@ import {
   userInbox,
 } from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {synced, throttled} from "@welshman/store"
+import {observeEventsById, synced, throttled} from "@welshman/store"
 import type {EventsById} from "@welshman/store"
 import {Comment} from "@welshman/domain"
 import {Events, Network} from "@welshman/app"
@@ -48,7 +48,8 @@ import {app} from "@app/core/app"
 import {reader} from "@app/core/domain"
 import {network, router} from "@app/core/plugins"
 import {ENABLE_ZAPS} from "@app/core/env"
-import {kv, registerRetention} from "@app/core/storage"
+import {registerRetention} from "@app/core/database"
+import {kv} from "@app/core/storage"
 import {makeKeyedSyncs, registerSync} from "@app/core/sync"
 import {userRelayList} from "@app/core/user"
 import {checked, setChecked} from "@app/features/checked"
@@ -312,33 +313,37 @@ const homeNotificationCandidates = derived(
   [] as TrustedEvent[],
 )
 
-// Notes asked for and not yet answered, so candidates landing meanwhile don't ask for them again.
+// Notes being looked for, so candidates landing meanwhile don't ask for them again.
 const loadingTargets = new Set<string>()
 
 // Every note the stream is missing goes out in one request rather than one per note.
 const loadHomeNotificationTargets = async ($app: IApp, refs: EventRef[]) => {
-  const missing = refs.filter(ref => {
+  const pending = refs.flatMap(ref => {
     const key = ref.getAddressOrId()
 
-    return key && !loadingTargets.has(key) && !$app.repository.getEvent(key)
+    return key && !loadingTargets.has(key) ? [{ref, key}] : []
   })
 
-  if (missing.length > 0) {
-    const keys = removeUndefined(missing.map(ref => ref.getAddressOrId()))
+  const keys = pending.map(({key}) => key)
 
-    keys.forEach(key => loadingTargets.add(key))
+  keys.forEach(key => loadingTargets.add(key))
 
-    try {
-      const relaysByRef = await Promise.all(missing.map(ref => $app.use(Notes).relays(ref)))
+  try {
+    const stored = await $app.repository.query(getIdFilters(keys))
+    const storedKeys = new Set(stored.flatMap(getIdAndAddress))
+    const missing = pending.filter(({key}) => !storedKeys.has(key))
+
+    if (missing.length > 0) {
+      const relaysByRef = await Promise.all(missing.map(({ref}) => $app.use(Notes).relays(ref)))
 
       await $app.use(Network).load({
         relays: uniq(relaysByRef.flat()),
-        filters: getIdFilters(keys),
+        filters: getIdFilters(missing.map(({key}) => key)),
         timeout: 3000,
       })
-    } finally {
-      keys.forEach(key => loadingTargets.delete(key))
     }
+  } finally {
+    keys.forEach(key => loadingTargets.delete(key))
   }
 }
 
@@ -355,10 +360,10 @@ const homeNotificationTargets = derived(
       loadHomeNotificationTargets($app, refs).catch(noop)
 
       // A reference names its event by id or by address, so the event is found under both.
-      return $app
-        .use(Events)
-        .byId(getIdFilters(removeUndefined(refs.map(ref => ref.getAddressOrId()))))
-        .$.subscribe($byId =>
+      return observeEventsById({
+        repository: $app.repository,
+        filters: getIdFilters(removeUndefined(refs.map(ref => ref.getAddressOrId()))),
+        onEvents: $byId =>
           set(
             new Map(
               Array.from($byId.values()).flatMap(event =>
@@ -366,7 +371,7 @@ const homeNotificationTargets = derived(
               ),
             ),
           ),
-        )
+      })
     }
 
     set(new Map())

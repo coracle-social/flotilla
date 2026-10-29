@@ -39,7 +39,7 @@
     }
 
     pushToast({message: "Event has successfully been deleted!"})
-    $app.repository.removeEvent(event.id)
+    await $app.repository.removeEvent(event.id)
     history.back()
   }
 </script>

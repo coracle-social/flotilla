@@ -13,7 +13,8 @@
   import PeopleItem from "@app/components/PeopleItem.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
-  import {events, network, profiles} from "@app/core/plugins"
+  import {app} from "@app/core/app"
+  import {network, profiles} from "@app/core/plugins"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
   import {goToEvent} from "@app/navigation/locations"
@@ -47,14 +48,13 @@
 
     const filters = [{...filter, search: searchTerm.trim()}]
 
-    results = sortEventsDesc(
-      uniqBy(
-        (e: TrustedEvent) => e.id,
-        relays.flatMap(relay => events.get().forUrl(relay, filters).get()),
-      ),
-    )
-
     try {
+      const stored = await Promise.all(
+        relays.map(relay => $app.repository.query(filters, {relay, signal: controller.signal})),
+      )
+
+      results = sortEventsDesc(uniqBy((e: TrustedEvent) => e.id, stored.flat()))
+
       const events = await $network.load({
         relays,
         filters,

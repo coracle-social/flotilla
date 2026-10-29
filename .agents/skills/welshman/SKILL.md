@@ -13,8 +13,8 @@ Welshman is a modular TypeScript nostr toolkit for building configurable client 
 |---|---|
 | `@welshman/util` | Core nostr types, event helpers, filters, NIP implementations, and the relay-selection routing DSL |
 | `@welshman/lib` | General-purpose utilities: LRU cache, event emitter, deferred promises, task queue |
-| `@welshman/net` | Relay connections, request/publish lifecycle, auth, and the `Repository`/`Tracker`/`WrapManager` stores |
-| `@welshman/store` | Svelte store primitives over a `Repository` — live event and domain-object collections, cached loaders, persistence |
+| `@welshman/net` | Relay connections, request/publish lifecycle, auth, and the gift-wrap `WrapManager` |
+| `@welshman/store` | Where events live (`Repository`, in memory or in SQLite in a worker), relay provenance (`Tracker`), live views over them, and svelte-compatible stores |
 | `@welshman/signer` | Signing and login methods: NIP-01 (privkey), NIP-07 (extension), NIP-46 (bunker), NIP-55 (app), NIP-59 (gift wrap) |
 | `@welshman/domain` | Typed Reader/Writer classes per event kind (profiles, notes, lists, rooms, relay management) that parse events, build templates, and emit relay routing |
 | `@welshman/feeds` | Dynamic feed construction, filtering, and composition |
@@ -70,7 +70,7 @@ npm i @welshman/util @welshman/net @welshman/signer
 | Build a feed UI | `@welshman/feeds` + `@welshman/app` |
 | Parse note text and media | `@welshman/content` |
 | Embed a composer / editor | `@welshman/editor` |
-| Cache nostr events client-side | `@welshman/net` (`Repository`) + `@welshman/store` (reactive views over it) |
+| Store nostr events client-side | `@welshman/store` (`MemoryRepository` or `SqliteRepository`, and reactive views over them) |
 | Core event/filter utilities | `@welshman/util` |
 | Low-level helpers (LRU, emitter, utility functions) | `@welshman/lib` |
 
@@ -81,7 +81,7 @@ import { Nip07Signer } from "@welshman/signer"
 import { Note } from "@welshman/domain"
 import { createApp, User, Domain, Profiles } from "@welshman/app"
 
-// Each App owns its repository, socket pool, tracker, and signing user
+// Each App owns its repository, socket pool, and signing user
 const user = await User.fromSigner(new Nip07Signer())
 
 const app = createApp({
@@ -92,7 +92,7 @@ const app = createApp({
   },
 })
 
-// Hydrate app.repository from storage here (see the welshman-net skill)
+// Pass `repository: new SqliteRepository(...)` to persist events across sessions (see the welshman-store skill)
 
 // Fetches via the outbox model unless the profile was loaded recently; forceLoad always fetches
 const profile = await app.use(Profiles).load(user.pubkey)

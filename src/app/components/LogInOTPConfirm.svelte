@@ -56,7 +56,7 @@
         const {clientOptions, ...res} = await Client.selectLogin(clientSecret, client, peers)
 
         if (res.ok && clientOptions) {
-          loginWithPomade(clientOptions, email)
+          await loginWithPomade(clientOptions, email)
           deleteDeactivatedPomadeSessions()
           setChecked("*")
           clearModals()

@@ -1,7 +1,7 @@
 import * as nip19 from "nostr-tools/nip19"
 import type {Page} from "@sveltejs/kit"
 import {append, remove, sort, tryCatch, uniq} from "@welshman/lib"
-import type {Maybe} from "@welshman/lib"
+import type {Maybe, MaybeAsync} from "@welshman/lib"
 import {
   CLASSIFIED,
   EVENT_TIME,
@@ -48,12 +48,14 @@ const encodeSpace = ({url}: {url: string}) => ({relay: encodeRelay(url)})
 
 const decodeSpace = ({relay}: {relay: string}) => ({url: decodeRelay(relay)})
 
-const getEvent = (idOrAddress: string) => app.get().repository.getEvent(idOrAddress)
+const readTitle = async (
+  idOrAddress: string,
+  fallback: string,
+  read: (event: TrustedEvent) => Maybe<string>,
+) => {
+  const event = await app.get().repository.getEvent(idOrAddress)
 
-const readTitle = (idOrAddress: string, read: (event: TrustedEvent) => Maybe<string>) => {
-  const event = getEvent(idOrAddress)
-
-  return event ? read(event) : undefined
+  return (event && read(event)) || fallback
 }
 
 // Conversations are named by everyone in them but the user, or the user alone for notes to self.
@@ -198,7 +200,7 @@ export const threads = defineRoute("/spaces/[relay]/threads", {
 export const thread = defineRoute("/spaces/[relay]/threads/[id]", {
   encode: encodeById,
   decode: decodeById,
-  title: ({id}) => readTitle(id, event => reader(Thread)(event).title()) || "Thread",
+  title: ({id}) => readTitle(id, "Thread", event => reader(Thread)(event).title()),
 })
 
 export const goals = defineRoute("/spaces/[relay]/goals", {
@@ -211,7 +213,7 @@ export const goal = defineRoute("/spaces/[relay]/goals/[id]", {
   encode: encodeById,
   decode: decodeById,
   title: ({id}) =>
-    readTitle(id, event => event.content || reader(ZapGoal)(event).summary()) || "Goal",
+    readTitle(id, "Goal", event => event.content || reader(ZapGoal)(event).summary()),
 })
 
 export const polls = defineRoute("/spaces/[relay]/polls", {
@@ -223,7 +225,7 @@ export const polls = defineRoute("/spaces/[relay]/polls", {
 export const poll = defineRoute("/spaces/[relay]/polls/[id]", {
   encode: encodeById,
   decode: decodeById,
-  title: ({id}) => readTitle(id, event => reader(Poll)(event).title()) || "Poll",
+  title: ({id}) => readTitle(id, "Poll", event => reader(Poll)(event).title()),
 })
 
 export const calendar = defineRoute("/spaces/[relay]/calendar", {
@@ -235,7 +237,7 @@ export const calendar = defineRoute("/spaces/[relay]/calendar", {
 export const calendarEvent = defineRoute("/spaces/[relay]/calendar/[address]", {
   encode: encodeByAddress,
   decode: decodeByAddress,
-  title: ({address}) => readTitle(address, event => reader(TimeEvent)(event).title()) || "Event",
+  title: ({address}) => readTitle(address, "Event", event => reader(TimeEvent)(event).title()),
 })
 
 type ClassifiedsParams = {url: string; topic?: string}
@@ -253,7 +255,7 @@ export const classifieds = defineRoute("/spaces/[relay]/classifieds", {
 export const classified = defineRoute("/spaces/[relay]/classifieds/[address]", {
   encode: encodeByAddress,
   decode: decodeByAddress,
-  title: ({address}) => readTitle(address, event => reader(Classified)(event).title()) || "Listing",
+  title: ({address}) => readTitle(address, "Listing", event => reader(Classified)(event).title()),
 })
 
 export const articles = defineRoute("/spaces/[relay]/articles", {
@@ -280,7 +282,7 @@ export const articleCreate = defineRoute("/spaces/[relay]/articles/create", {
 export const networkArticleCreate = defineStaticRoute("/articles/create", "Write an Article")
 
 const readArticleTitle = (address: string) =>
-  readTitle(address, event => reader(Article)(event).title()) || "Article"
+  readTitle(address, "Article", event => reader(Article)(event).title())
 
 export const article = defineRoute("/spaces/[relay]/articles/[address]", {
   encode: encodeByAddress,
@@ -310,7 +312,7 @@ export const library = defineRoute("/spaces/[relay]/library", {
 export const board = defineRoute("/spaces/[relay]/library/[address]", {
   encode: encodeByAddress,
   decode: decodeByAddress,
-  title: ({address}) => readTitle(address, event => reader(Pinboard)(event).title()) || "Board",
+  title: ({address}) => readTitle(address, "Board", event => reader(Pinboard)(event).title()),
 })
 
 // The page for a content kind: its list without an id or address, or the item itself.
@@ -352,7 +354,7 @@ export const settingsWallet = defineStaticRoute("/settings/wallet", "Wallet Sett
 // A page's title is read off its route, which lets the browser tab follow the page.
 
 type PageRoute = {
-  pageTitle(params: Record<string, string>, search: URLSearchParams): string
+  pageTitle(params: Record<string, string>, search: URLSearchParams): MaybeAsync<string>
 }
 
 // Every page needs a route here, so one added without a title fails the type check.
@@ -402,5 +404,5 @@ const pageRoutes: Record<PageId, PageRoute> = {
 
 const isPageId = (id: string): id is PageId => Object.hasOwn(pageRoutes, id)
 
-export const getPageTitle = ({route, params, url}: Page) =>
+export const getPageTitle = async ({route, params, url}: Page) =>
   route.id && isPageId(route.id) ? pageRoutes[route.id].pageTitle(params, url.searchParams) : ""

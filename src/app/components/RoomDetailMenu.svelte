@@ -67,7 +67,7 @@
         const message = await publication.getError()
 
         if (message) {
-          $app.repository.removeEvent(publication.event.id)
+          await $app.repository.removeEvent(publication.event.id)
           pushToast({theme: "error", message})
         } else {
           await $roomLists.removeRoom(h, url).then(publishRoomList)

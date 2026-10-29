@@ -10,7 +10,7 @@ import {
   hexTags,
   tagValues,
 } from "@welshman/util"
-import {registerRetention} from "@app/core/storage"
+import {registerRetention} from "@app/core/database"
 import {registerSync, syncEach} from "@app/core/sync"
 import {currentSpaceUrls, syncedSpaceUrls} from "@app/features/spaces/urls"
 import {syncCurrentSpaceRooms, syncSpaceRooms} from "@app/features/spaces/rooms/sync"

@@ -137,7 +137,7 @@ export const deleteLibraryEvent = async (url: string, event: TrustedEvent) => {
   const {error} = await relayManagement.get().forUrl(url).banEvent(event.id)
 
   if (!error) {
-    app.get().repository.removeEvent(event.id)
+    await app.get().repository.removeEvent(event.id)
   }
 
   return error

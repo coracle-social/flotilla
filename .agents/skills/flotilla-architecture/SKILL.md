@@ -98,8 +98,10 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
   `relaysPendingTrust` until the user decides
 - `auth.ts`: NIP-42. `shouldAuth` decides which challenges the app answers on its own, and
   `authenticate(url)` authenticates on demand and explains a failure
-- `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage) and the per-user IndexedDB
-  cache, with `registerRetention` for what it keeps
+- `database.ts`: `EventDatabase`, the signed-in user's events in SQLite, with
+  `registerRetention` for what it keeps; `database.worker.ts` serves it with flotilla's own tables
+- `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage), `openRepository`, and the
+  per-user IndexedDB cache of everything that isn't an event
 - `sync.ts`: `syncApplicationData`, `registerSync`, and the helpers registered syncs are built
   from (`pullAndListen`, `syncEach`)
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings

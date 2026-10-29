@@ -13,7 +13,7 @@ import {
   appPolicyRelayStats,
   appPolicyWraps,
 } from "@welshman/app"
-import type {AppPolicy} from "@welshman/app"
+import type {AppOptions, AppPolicy} from "@welshman/app"
 import {DEFAULT_RELAYS, DEFAULT_SEARCH_RELAYS, DUFFLEPUD_URL, INDEXER_RELAYS} from "@app/core/env"
 
 // Flotilla's own policies depend on this module, so the first app is built after they push themselves in.
@@ -24,9 +24,13 @@ export const appPolicies: AppPolicy[] = [
   appPolicyLogSignerMethods,
 ]
 
-const makeApp = (user?: User) => {
+// Where an identity's events live, which the app is built over rather than making its own
+type AppStores = Pick<AppOptions, "repository" | "wrapManager">
+
+const makeApp = (user?: User, stores: AppStores = {}) => {
   const instance: App = new App({
     user,
+    ...stores,
     config: {
       dufflepudUrl: DUFFLEPUD_URL,
       getDefaultRelays: always(DEFAULT_RELAYS),
@@ -66,9 +70,9 @@ export const app: ReadableWithGetter<App> = {
 }
 
 // Read the store directly, so restoring a session doesn't build an anonymous app to tear it down.
-export const replaceApp = (user: User) => {
+export const replaceApp = (user: User, stores: AppStores) => {
   appStore.get()?.cleanup()
-  setApp(makeApp(user))
+  setApp(makeApp(user, stores))
 }
 
 // Anything bound at module load reads through this, or it keeps reading a discarded app.
