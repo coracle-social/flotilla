@@ -16,8 +16,8 @@ export const modalForm = (page: Page, title: string) =>
 // Named rather than counted, since a card is free to put a join of its own above it.
 export const emojiButton = (scope: Locator) => scope.getByRole("button", {name: "Add a reaction"})
 
-// The menu is the one action with no accessible name, and the last thing in a card's last join.
-export const menuButton = (scope: Locator) => scope.locator(".join").getByRole("button").last()
+// Named after the noun it acts on, as "Article actions", "Event actions" and so on.
+export const menuButton = (scope: Locator) => scope.getByRole("button", {name: / actions$/})
 
 // The picker is a web component with an open shadow root, and searching avoids its category tabs.
 export const pickEmoji = async (page: Page, opener: Locator, annotation: string) => {
