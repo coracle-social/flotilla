@@ -1,13 +1,20 @@
 import {derived, readable, writable} from "svelte/store"
 import {assoc, call, dissoc, noop, on} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import type {Socket} from "@welshman/net"
+import type {RelayMessage, Socket} from "@welshman/net"
 import {
   AuthStateEvent,
   AuthStatus,
+  RelayReasonPrefix,
   SocketEvent,
   SocketStatus,
-  makeSocketPolicyRefusals,
+  isRelayClosed,
+  isRelayEose,
+  isRelayEvent,
+  isRelayNegErr,
+  isRelayNegMsg,
+  isRelayOk,
+  matchReason,
 } from "@welshman/net"
 import {throttled} from "@welshman/store"
 import {BlockedRelayLists} from "@welshman/app"
@@ -137,25 +144,49 @@ const makeBlockPolicy = ($app: IApp) => (socket: Socket) => {
   }
 }
 
-// Serving one request shows the relay grants some access, and authenticating changes who it's judging.
+const isServed = (message: RelayMessage) =>
+  isRelayEvent(message) ||
+  isRelayEose(message) ||
+  isRelayNegMsg(message) ||
+  (isRelayOk(message) && message[2])
+
+// A read refused for access is about the session, since a REQ carries nothing to object to.
+const isAccessRefusal = (message: RelayMessage) =>
+  (isRelayClosed(message) || isRelayNegErr(message)) &&
+  (matchReason(RelayReasonPrefix.Restricted, message[2]) ||
+    matchReason(RelayReasonPrefix.Blocked, message[2]))
+
+// A relay refusing reads and serving nothing has turned the session away, not the request.
 const denialPolicy = (socket: Socket) => {
-  let refusals = 0
+  let denial = ""
+  let timeout: Maybe<ReturnType<typeof setTimeout>>
 
   const allow = () => {
-    refusals = 0
+    clearTimeout(timeout)
+    timeout = undefined
     deniedRelays.update(dissoc(socket.url))
   }
 
-  const refuse = (_: Socket, reason: string) => {
-    refusals++
+  // Some relays restrict a few reads and serve the rest, so wait to see whether anything comes back.
+  const refuse = (reason: string) => {
+    denial = reason
 
-    if (refusals > 5) {
-      deniedRelays.update(assoc(socket.url, reason))
+    if (!timeout) {
+      timeout = setTimeout(() => deniedRelays.update(assoc(socket.url, denial)), 3000)
+    }
+  }
+
+  const onReceive = (message: RelayMessage) => {
+    if (isServed(message)) {
+      allow()
+    } else if (isAccessRefusal(message)) {
+      refuse(message[2])
     }
   }
 
   const unsubscribers = [
-    makeSocketPolicyRefusals({onAllowed: allow, onRefused: refuse})(socket),
+    on(socket, SocketEvent.Receive, onReceive),
+    // Authenticating changes who the relay is judging.
     on(socket.auth, AuthStateEvent.Status, (status: AuthStatus) => {
       if (status === AuthStatus.Ok) {
         allow()
@@ -163,7 +194,10 @@ const denialPolicy = (socket: Socket) => {
     }),
   ]
 
-  return () => unsubscribers.forEach(call)
+  return () => {
+    clearTimeout(timeout)
+    unsubscribers.forEach(call)
+  }
 }
 
 export const registerRelays = () => {
