@@ -330,7 +330,8 @@ this, which is why most specs get away with naming the indexer alone.
 ### Why a reader has to name the relays it reads from
 
 zooid answers no REQ without NIP-42, whatever `public_read` says, and `shouldAuth` is conservative:
-it identifies only to relays the user's own room list or relay list names. So a relay a spec expects
+it identifies only to relays the user's own room list or relay list names, a platform build's
+platform relays, and a space whose page is open. So a relay a spec expects
 the client to read from has to appear in that user's list, and a relay list is seeded for the reader
 as well as for the people they follow.
 

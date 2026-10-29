@@ -203,9 +203,10 @@ off on iOS (`HOSTING_ENABLED`).
 - **Blocked relays.** The block policy in `src/app/core/relays.ts` never opens a relay in
   `BLOCKED_RELAYS` or the user's blocked-relay list, and closes one as soon as it is blocked.
 - **NIP-42.** `shouldAuth` in `src/app/core/auth.ts` answers every challenge under
-  `relay_auth: aggressive`. Under the default `conservative`, it answers only relays in the user's
-  room, relay or messaging-relay lists, or ones they have published to this session, and asks again
-  as those lists load. `authenticate(url)` authenticates explicitly before a join.
+  `relay_auth: aggressive`. Under the default `conservative`, it answers only the platform relays
+  and relays in the user's room, relay or messaging-relay lists, or ones they have published to this
+  session, and asks again as those lists load. `authenticate(url)` authenticates explicitly when
+  the space layout mounts, since visiting a space shows intent, and before a join.
 - **Refusals.** welshman's `makeSocketPolicyRefusals` reports each request a relay serves or
   refuses (`restricted:` or `blocked:`). A relay that refuses more than five in a row is denying
   access, until it serves one or the user authenticates (`src/app/core/relays.ts`).

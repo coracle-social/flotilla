@@ -14,14 +14,16 @@ import {
 import type {IApp} from "@welshman/app"
 import {merged} from "@welshman/store"
 import {app, appPolicies} from "@app/core/app"
+import {PLATFORM_RELAYS} from "@app/core/env"
 import {RelayAuthMode, Settings} from "@app/core/settings"
 
-// Aggressive mode answers every challenge, and otherwise only relays the user has a relationship with.
+// Aggressive mode answers every challenge, and otherwise only platform relays, which may hold the user's only lists, and relays the user has a relationship with.
 const shouldAuth = (socket: Socket, $app: IApp) => {
   const {pubkey} = User.require($app)
 
   return (
     $app.use(Settings).values.get().relay_auth === RelayAuthMode.Aggressive ||
+    PLATFORM_RELAYS.includes(socket.url) ||
     $app.use(RoomLists).urls(pubkey).get().includes(socket.url) ||
     $app.use(RelayLists).urls(pubkey).get().includes(socket.url) ||
     $app.use(MessagingRelayLists).urls(pubkey).get().includes(socket.url) ||

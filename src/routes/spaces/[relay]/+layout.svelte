@@ -4,6 +4,7 @@
 </script>
 
 <script lang="ts">
+  import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {navigating} from "$app/state"
   import type {Maybe} from "@welshman/lib"
@@ -21,6 +22,7 @@
   import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
   import {derivePaidGated} from "@app/features/spaces/payments"
   import {user} from "@app/core/user"
+  import {authenticate} from "@app/core/auth"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {relays, roomLists} from "@app/core/plugins"
   import {userSpaceUrls} from "@app/features/spaces"
@@ -100,6 +102,11 @@
     } else if ($access.status === RelayAccessStatus.Untrusted) {
       showPendingTrust()
     }
+  })
+
+  // Visiting a space is intent enough to identify to it, and requests it refused for auth are sent again once that's done.
+  onMount(() => {
+    authenticate(url)
   })
 </script>
 

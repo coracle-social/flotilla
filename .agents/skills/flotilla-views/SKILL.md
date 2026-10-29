@@ -73,7 +73,8 @@ or its page has to derive from `$page` instead. Routes read `$page` from the dep
 - `src/routes/+layout.svelte` runs the boot sequence, renders `AppContainer` and
   `ModalContainer`, and sets `document.title` from `getPageTitle`. `AppContainer` gates the route
   on a signed-in user (flotilla-state), showing `Landing` in a `noEscape` dialog otherwise.
-- `spaces/[relay]/+layout.svelte` gates the space, pushing one modal at a time, once per url:
+- `spaces/[relay]/+layout.svelte` authenticates to the space on mount and gates it, pushing one
+  modal at a time, once per url:
   `SpaceRedirect` (the NIP-11 document carries a `redirect_to`), `SpaceJoin` (the space is not in
   the user's room list, checked after a `forceLoad`), `SpaceAuthError`, `SpaceTrustRelay`. It
   renders `SecondaryNav` with `SpaceMenu` and wraps the page in `Page`, except at the space root.
