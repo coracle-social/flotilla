@@ -7,6 +7,7 @@
   type Props = {
     onclick?: () => void
     menu?: ComponentProps<typeof MenuButton>["component"]
+    menuProps?: ComponentProps<typeof MenuButton>["componentProps"]
     className?: string
     children?: Snippet
     "aria-label"?: string
@@ -15,6 +16,7 @@
   const {
     onclick = () => {},
     menu,
+    menuProps,
     className = "",
     children,
     "aria-label": ariaLabel,
@@ -31,6 +33,7 @@
   {#if menu}
     <MenuButton
       component={menu}
+      componentProps={menuProps}
       placement="top-end"
       aria-label={ariaLabel}
       class="button button-primary button-circle size-[50px]">

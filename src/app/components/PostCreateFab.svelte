@@ -5,6 +5,6 @@
   import PostCreateMenu from "@app/components/PostCreateMenu.svelte"
 </script>
 
-<FAB aria-label="Create post" menu={PostCreateMenu}>
+<FAB aria-label="Create post" menu={PostCreateMenu} menuProps={{post: true}}>
   <Icon icon={PenNewSquare} size={7} />
 </FAB>

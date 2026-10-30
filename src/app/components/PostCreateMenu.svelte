@@ -12,9 +12,10 @@
 
   type Props = {
     onClick: () => void
+    post?: boolean
   }
 
-  const {onClick}: Props = $props()
+  const {onClick, post = false}: Props = $props()
 
   const createPost = () => pushModal(NoteCreate)
 
@@ -24,12 +25,14 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
-  <li>
-    <Button onclick={createPost}>
-      <Icon size={4} icon={PenNewSquare} />
-      Post
-    </Button>
-  </li>
+  {#if post}
+    <li>
+      <Button onclick={createPost}>
+        <Icon size={4} icon={PenNewSquare} />
+        Post
+      </Button>
+    </li>
+  {/if}
   <li>
     <Button onclick={createPoll}>
       <Icon size={4} icon={Revote} />
