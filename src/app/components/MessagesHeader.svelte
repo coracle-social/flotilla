@@ -33,9 +33,9 @@
 
 <div class="flex flex-col gap-2">
   <div class="flex items-center gap-1">
-    <label class="input input-sm input-subtle input-group">
+    <label class="input input-sm input-subtle input-group min-w-0">
       <Icon icon={Magnifier} size={4} />
-      <input bind:value={term} type="text" placeholder="Search for conversations..." />
+      <input bind:value={term} type="text" placeholder="Search conversations..." />
     </label>
     {#if actions}
       <Button
