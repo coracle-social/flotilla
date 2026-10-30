@@ -16,7 +16,7 @@
 
   const {event, context, size = "xs", hideLastActive}: Props = $props()
 
-  const buttonClass = `button button-neutral button-${size} rounded-full`
+  const buttonClass = `button button-neutral button-${size} rounded-full font-normal`
 
   const related = context.related(event)
   const replies = derived(related, $related => filter(spec({kind: COMMENT}), $related))

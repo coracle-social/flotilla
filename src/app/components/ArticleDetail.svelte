@@ -2,15 +2,19 @@
   import {onDestroy} from "svelte"
   import cx from "classnames"
   import {derived} from "svelte/store"
-  import {formatTimestamp, uniq} from "@welshman/lib"
+  import {formatTimestampAsDate, uniq} from "@welshman/lib"
   import {Article} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
+  import Button from "@lib/components/Button.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ContentMarkdown from "@app/components/ContentMarkdown.svelte"
   import Profile from "@app/components/Profile.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import ProfileName from "@app/components/ProfileName.svelte"
+  import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import ArticleActionBar from "@app/components/ArticleActionBar.svelte"
   import ArticleAuthorSidebar from "@app/components/ArticleAuthorSidebar.svelte"
@@ -22,6 +26,7 @@
   import {makeFeedContext} from "@app/features/feeds"
   import {displayReadingTime} from "@app/features/spaces/articles"
   import * as pages from "@app/navigation/pages"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     address: string
@@ -38,6 +43,12 @@
   const topics = $derived(uniq($article?.topics() ?? []))
 
   const back = () => history.back()
+
+  const openAuthor = () => {
+    if ($event) {
+      pushModal(ProfileDetail, {pubkey: $event.pubkey, url})
+    }
+  }
 
   let contentElement = $state<Element>()
 
@@ -76,8 +87,8 @@
       <div class={cx("flex min-w-0 grow flex-col border-line", url && "@2xl:border-r")}>
         <article class="flex flex-col">
           <div class="flex flex-col px-5 sm:px-8">
-            <header class="mx-auto flex w-full max-w-[68ch] flex-col gap-4 pt-8 sm:pt-12">
-              <h2 class="text-3xl leading-[1.15] font-bold text-balance sm:text-5xl">
+            <header class="mx-auto flex w-full max-w-[68ch] flex-col gap-3 pt-8 sm:pt-12">
+              <h2 class="text-3xl leading-tight font-bold text-balance sm:text-4xl">
                 {$article.title() || "Untitled"}
               </h2>
               {#if $article.summary()}
@@ -85,11 +96,20 @@
                   {$article.summary()}
                 </p>
               {/if}
-              <div class="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2">
-                <Profile pubkey={$event.pubkey} {url} />
-                <span class="text-content-subtle text-sm">
-                  {formatTimestamp($article.publishedAt())} · {displayReadingTime($event.content)}
-                </span>
+              <div class="flex items-center gap-3 pt-3">
+                <Button onclick={openAuthor} class="shrink-0">
+                  <ProfileCircle pubkey={$event.pubkey} {url} size={10} />
+                </Button>
+                <div class="flex min-w-0 flex-col gap-0.5 leading-tight">
+                  <Button onclick={openAuthor} class="truncate text-left text-sm font-bold">
+                    <ProfileName pubkey={$event.pubkey} {url} />
+                  </Button>
+                  <span class="text-content-subtle text-sm">
+                    {formatTimestampAsDate($article.publishedAt())} · {displayReadingTime(
+                      $event.content,
+                    )}
+                  </span>
+                </div>
               </div>
             </header>
             {#if $article.image()}
@@ -98,7 +118,7 @@
                 alt=""
                 class="mx-auto mt-8 max-h-[24rem] w-full max-w-[76ch] rounded-2xl object-cover" />
             {/if}
-            <div class="mx-auto flex w-full max-w-[68ch] flex-col gap-6 py-8">
+            <div class="mx-auto flex w-full max-w-[68ch] flex-col gap-6 pt-6 pb-8">
               <ContentMarkdown
                 event={$event}
                 {url}

@@ -23,20 +23,22 @@
   const share = () => shareEvent(url, "Article", event)
 </script>
 
-<div data-component="ArticleActionBar" class="flex w-full min-w-0 flex-col gap-3">
-  <PublicationStatusOrDeleted {event} {context}>
-    <EventReactions {url} {event} {context} placement="top" emojiMenu />
-  </PublicationStatusOrDeleted>
+<div
+  data-component="ArticleActionBar"
+  class="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
+  <div class="flex min-w-0 flex-wrap items-center gap-2">
+    <PublicationStatusOrDeleted {event} {context}>
+      <EventReactions {url} {event} {context} placement="top" emojiMenu />
+      <EventActivity {event} {context} hideLastActive />
+    </PublicationStatusOrDeleted>
+  </div>
   {#if !$deleted}
-    <div class="flex w-full min-w-0 items-start justify-between gap-x-4">
-      <EventActivity {event} {context} size="sm" hideLastActive />
-      <Button
-        aria-label="Share to Chat"
-        class="button button-neutral button-sm shrink-0 rounded-full"
-        onclick={share}>
-        <Icon icon={ShareCircle} size={4} />
-        Share
-      </Button>
-    </div>
+    <Button
+      aria-label="Share to Chat"
+      class="button button-neutral button-xs shrink-0 rounded-full font-normal"
+      onclick={share}>
+      <Icon icon={ShareCircle} size={4} />
+      Share
+    </Button>
   {/if}
 </div>
