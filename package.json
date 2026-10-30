@@ -26,7 +26,7 @@
     "test:desktop": "playwright test --config e2e/desktop/playwright.config.ts",
     "test:server": "node --test --test-force-exit server/test/*.test.mjs",
     "test:desktop-storage": "node --test packages/desktop-secure-storage/test/*.test.mjs",
-    "format": "git diff head --name-only --diff-filter d | grep -E '(js|ts|svelte|css)$' | xargs -r prettier --write",
+    "format": "git diff HEAD --name-only --diff-filter d | grep -E '(js|ts|svelte|css)$' | xargs -r prettier --write",
     "format:all": "prettier --write src",
     "prepare": "husky",
     "package:desktop:linux": "node scripts/desktop/package.mjs linux",
