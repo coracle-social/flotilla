@@ -24,6 +24,7 @@ import {createScroller} from "@lib/html"
 import {router} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
 import {kv} from "@app/core/storage"
+import {PLATFORM_RELAYS} from "@app/core/env"
 import {CONTENT_KINDS} from "@app/features/spaces"
 import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
 import type {FeedContext, FeedLoadState} from "@app/features/feeds"
@@ -257,7 +258,11 @@ export const makeNetworkFeed = ({
 
   // One selection over every follow lands on the few biggest relays, so each group scores its own.
   const start = (element: HTMLElement, pubkeys: string[]) => {
-    const groups = chunks(3, shuffle(pubkeys)).filter(group => group.length > 0)
+    // Every group would ask the same platform relays, so there they're asked once for everyone.
+    const groups =
+      PLATFORM_RELAYS.length > 0
+        ? [pubkeys]
+        : chunks(3, shuffle(pubkeys)).filter(group => group.length > 0)
     const scroller = createScroller({element, delay: 300, onScroll: admit, onSettle: settle})
 
     pages.set(groups.map(() => []))

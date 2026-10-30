@@ -2,6 +2,7 @@ import {derived, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {always} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
+import type {RouteOverrides} from "@welshman/util"
 import {withGetter} from "@welshman/store"
 import type {ReadableWithGetter} from "@welshman/store"
 import {
@@ -14,7 +15,13 @@ import {
   appPolicyWraps,
 } from "@welshman/app"
 import type {AppOptions, AppPolicy} from "@welshman/app"
-import {DEFAULT_RELAYS, DEFAULT_SEARCH_RELAYS, DUFFLEPUD_URL, INDEXER_RELAYS} from "@app/core/env"
+import {
+  DEFAULT_RELAYS,
+  DEFAULT_SEARCH_RELAYS,
+  DUFFLEPUD_URL,
+  INDEXER_RELAYS,
+  PLATFORM_RELAYS,
+} from "@app/core/env"
 
 // Flotilla's own policies depend on this module, so the first app is built after they push themselves in.
 export const appPolicies: AppPolicy[] = [
@@ -26,6 +33,24 @@ export const appPolicies: AppPolicy[] = [
 
 // Where an identity's events live, which the app is built over rather than making its own
 type AppStores = Pick<AppOptions, "repository" | "wrapManager">
+
+const toPlatformRelays = always(PLATFORM_RELAYS)
+
+// Platform mode never leaves the platform's relays; Required so a new route type can't slip past.
+const platformRoutes: Required<RouteOverrides> = {
+  userInbox: toPlatformRelays,
+  userOutbox: toPlatformRelays,
+  userMessaging: toPlatformRelays,
+  pubkeyInbox: toPlatformRelays,
+  pubkeyOutbox: toPlatformRelays,
+  pubkeyMessaging: toPlatformRelays,
+  eventInbox: toPlatformRelays,
+  eventOutbox: toPlatformRelays,
+  seen: toPlatformRelays,
+  index: toPlatformRelays,
+  search: toPlatformRelays,
+  relay: ({url}) => (PLATFORM_RELAYS.includes(url) ? [url] : []),
+}
 
 const makeApp = (user?: User, stores: AppStores = {}) => {
   const instance: App = new App({
@@ -42,6 +67,7 @@ const makeApp = (user?: User, stores: AppStores = {}) => {
 
         return urls.length > 0 ? urls : DEFAULT_SEARCH_RELAYS
       },
+      routes: PLATFORM_RELAYS.length > 0 ? platformRoutes : {},
     },
     policies: appPolicies,
   })

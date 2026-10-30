@@ -21,7 +21,7 @@ import {BlockedRelayLists} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {appPolicies, fromApp} from "@app/core/app"
 import {isStaleAuth} from "@app/core/auth"
-import {BLOCKED_RELAYS} from "@app/core/env"
+import {BLOCKED_RELAYS, PLATFORM_RELAYS} from "@app/core/env"
 import {relaysPendingTrust} from "@app/core/ingest"
 
 export enum RelayAccessStatus {
@@ -120,13 +120,18 @@ export const deriveRelayAccess = (url: string) =>
 
 // Policies
 
-// A relay the deployment or the user has blocked is never connected to, and is dropped once blocked.
+// A relay outside the platform or blocked is never connected to, and is dropped once blocked.
 const makeBlockPolicy = ($app: IApp) => (socket: Socket) => {
   const blockedUrls = $app.user ? $app.use(BlockedRelayLists).urls($app.user.pubkey) : undefined
+  const outsidePlatform = PLATFORM_RELAYS.length > 0 && !PLATFORM_RELAYS.includes(socket.url)
   const previousOpen = socket.open
 
   socket.open = () => {
-    if (!BLOCKED_RELAYS.includes(socket.url) && !blockedUrls?.get().includes(socket.url)) {
+    if (
+      !outsidePlatform &&
+      !BLOCKED_RELAYS.includes(socket.url) &&
+      !blockedUrls?.get().includes(socket.url)
+    ) {
       previousOpen()
     }
   }

@@ -133,8 +133,8 @@ const onSweepError = (error: unknown) => console.error("Failed to sweep the even
 const onClearError = (error: unknown) => console.error("Failed to clear the event database", error)
 
 // A wrap the index names is never unwrapped again, so the rumors it points at have to come with it.
-const migrateCache = async (database: EventDatabase) => {
-  const db = new IDB({name: getDatabaseName(database.pubkey), stores: TABLES})
+const migrateCache = async ({pubkey, repository}: EventDatabase) => {
+  const db = new IDB({name: getDatabaseName(pubkey), stores: TABLES})
   const items = await db.table<EventItem>("events").getAll()
   const wraps = await db.table<WrapItem>("wrapManager").getAll()
 
@@ -145,7 +145,7 @@ const migrateCache = async (database: EventDatabase) => {
 
     for (const {id, relays} of events) {
       for (const url of relays) {
-        database.tracker.track(id, url)
+        repository.tracker.track(id, url)
       }
     }
 
@@ -156,11 +156,11 @@ const migrateCache = async (database: EventDatabase) => {
           event[verifiedSymbol] = true
         }
 
-        return database.publish(event)
+        return repository.publish(event)
       }),
     )
 
-    await database.call("putWraps", wraps)
+    await repository.call("putWraps", wraps)
     await db.table("events").bulkDelete(items.map(item => item.id))
     await db.table("wrapManager").bulkDelete(wraps.map(wrap => wrap.id))
   }
@@ -172,21 +172,21 @@ const migrateCache = async (database: EventDatabase) => {
 export const openRepository = async (
   pubkey: string,
 ): Promise<Pick<AppOptions, "repository" | "wrapManager">> => {
-  const database = new EventDatabase(pubkey)
+  let database: Maybe<EventDatabase>
 
   try {
-    await database.ready
+    database = await EventDatabase.open(pubkey)
 
     // Neither is needed to read and write, so a failure leaves the database in use
     await migrateCache(database).catch(onMigrateError)
     await database.sweep().catch(onSweepError)
     await database.restoreWraps()
 
-    return {repository: database, wrapManager: database.wrapManager}
+    return {repository: database.repository, wrapManager: database.wrapManager}
   } catch (e) {
     console.error("Failed to open the event database", e)
 
-    void database.close()
+    void database?.repository.close()
 
     return {repository: new MemoryRepository()}
   }
@@ -213,10 +213,10 @@ class Storage {
 
   // Logout clears the device even when a database fails, as it always has with indexeddb
   clear = async () => {
-    const {repository} = this.app
+    const database = EventDatabase.of(this.app.repository)
 
-    if (repository instanceof EventDatabase) {
-      await repository.reset().catch(onClearError)
+    if (database) {
+      await database.reset().catch(onClearError)
     }
 
     await this.db.clear()
