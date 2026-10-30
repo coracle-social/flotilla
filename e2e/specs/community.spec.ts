@@ -835,6 +835,8 @@ test("US-054 curate the library", async ({seed, as}) => {
 
   await expect(page.getByRole("alert")).toContainText("Link added!")
 
+  await expect(page.locator(".dialog")).toHaveCount(0)
+
   await page.goto(libraryPath)
 
   await expect(shelfCard(page, "Reading List")).toContainText("3 links")
