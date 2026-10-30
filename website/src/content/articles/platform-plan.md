@@ -11,7 +11,7 @@ order: 36
 
 *Part of our guide to [running an online community you actually own](/articles/how-to-run-an-online-community).*
 
-The **Platform plan** is for organizations whose community is too important to run on a generic app: membership networks, associations and institutions that need their own app, their own data and a team behind both. It starts at **$6,000/mo** and is described in full on the [Platform page](/platform).
+The **Platform plan** is for organizations whose community is too important to run on a generic app: membership networks, associations and institutions that need their own app, their own data and a team behind both. It starts at **$6,000/mo**.
 
 ## Branded or Platform?
 
@@ -39,4 +39,4 @@ Flotilla is open source, and hosting a community costs a few dollars a month. Th
 
 ## Ready to talk?
 
-[Book a call](https://cal.com/coracle.social) to talk through what your members do today and what you'd change, or read more on the [Platform page](/platform).
+[Book a call](https://cal.com/coracle.social) to talk through what your members do today and what you'd change.

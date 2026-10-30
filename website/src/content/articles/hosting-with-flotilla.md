@@ -36,7 +36,7 @@ The relay is ready in about a minute. Flotilla joins you to the new space and op
 | Basic | $5/mo | 100 | Included |
 | Growth | $25/mo | Unlimited | Included |
 
-Rooms, the management API and push notifications come with every plan. Media storage and voice/video calls require Basic or Growth. Communities that want a white-labeled app under their own name can add the Branded plan from $300/mo. Organizations that also need custom development, integrations and dedicated support should look at the [Platform plan](/platform), from $6,000/mo.
+Rooms, the management API and push notifications come with every plan. Media storage and voice/video calls require Basic or Growth. Communities that want a white-labeled app under their own name can add the Branded plan from $300/mo. Organizations that also need custom development, integrations and dedicated support should look at the [Platform plan](/articles/platform-plan), from $6,000/mo.
 
 You can switch plans at any time, and the change is prorated within the month.
 

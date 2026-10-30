@@ -7,7 +7,6 @@ import { CREATE_SPACE } from '../lib/analytics';
 const CREATE_URL = 'https://app.flotilla.social/spaces/create';
 const DEMO_URL = 'https://cal.com/coracle.social';
 const SELF_HOST_URL = '/articles/self-hosting-a-space';
-const PLATFORM_URL = '/platform';
 
 // Platform is a separate product, so it sits below the grid.
 const tiers = [
@@ -162,7 +161,7 @@ const platformFeatures = [
             important to run on a generic app.
           </p>
           <div class="mt-8 flex flex-col gap-3">
-            <Button href={PLATFORM_URL} variant="primary" class="w-full">See the Platform plan</Button>
+            <Button href="/articles/platform-plan" variant="primary" class="w-full">See the Platform plan</Button>
             <Button href={DEMO_URL} variant="secondary" class="w-full">Book a call</Button>
           </div>
         </div>

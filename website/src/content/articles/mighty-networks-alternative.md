@@ -55,7 +55,7 @@ That ownership is concrete:
 - **No ads and no surveillance.** Like Mighty, Flotilla runs no ads and has no algorithmic feed. It also isn't a closed platform you can be evicted from, and there's no business built on watching your members.
 - **Open source, top to bottom.** The client is open source too.
 
-If you need a branded, white-labeled app under your own name rather than Flotilla's, the Branded plan on our [pricing page](/pricing) starts at $300/mo. The [Platform plan](/platform), from $6,000/mo, adds custom development, integrations, dedicated hosting and support. Together they're the closest analog to Mighty Pro.
+If you need a branded, white-labeled app under your own name rather than Flotilla's, the Branded plan on our [pricing page](/pricing) starts at $300/mo. The [Platform plan](/articles/platform-plan), from $6,000/mo, adds custom development, integrations, dedicated hosting and support. Together they're the closest analog to Mighty Pro.
 
 ## Mighty Networks vs Flotilla at a glance
 
@@ -66,7 +66,7 @@ If you need a branded, white-labeled app under your own name rather than Flotill
 | Ads & algorithmic feed | None — subscription-funded | None — not funded by attention |
 | Deplatforming & lock-in | Suspension takes your live community offline; active paid subscriptions can't be transferred out | Identity and data are yours; keep a backup and move with your members |
 | Built-in courses, paywalls & monetization | Yes — LMS, memberships, paywalls, event tickets out of the box | No LMS or paywalls; optional tips (zaps) only |
-| Branded native app & white-label | On Mighty Pro (custom, commonly five figures/yr) | Branded plan from $300/mo; [Platform plan](/platform) from $6,000/mo |
+| Branded native app & white-label | On Mighty Pro (custom, commonly five figures/yr) | Branded plan from $300/mo; [Platform plan](/articles/platform-plan) from $6,000/mo |
 
 ## When Mighty Networks might be the better choice
 
