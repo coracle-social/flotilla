@@ -59,8 +59,12 @@
 
   const target = document.createElement("div")
 
-  // `mount` only tracks prop changes when the props come from a `$state` object.
-  const mountedProps = $state({...props})
+  // Getters rather than a `$state` object, so nothing here proxies a menu's own props.
+  const mountedProps: Record<string, any> = {}
+
+  for (const key of Object.keys(props)) {
+    Object.defineProperty(mountedProps, key, {enumerable: true, get: () => props[key]})
+  }
 
   let element: Element
   let popover: Maybe<Instance>
@@ -161,10 +165,6 @@
   }
 
   const text = $derived(typeof params.content === "string" ? params.content : undefined)
-
-  $effect(() => {
-    Object.assign(mountedProps, props)
-  })
 
   $effect(() => {
     if (text !== undefined) {
