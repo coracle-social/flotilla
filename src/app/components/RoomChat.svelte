@@ -18,25 +18,27 @@
   import RoomTranscript from "@app/components/RoomTranscript.svelte"
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
-  import {deletes, publisher, relays, rooms, user, writer} from "@app/core"
+  import {user} from "@app/core/user"
+  import {deletes, events, publisher, relays, rooms} from "@app/core/plugins"
+  import {reader, writer} from "@app/core/domain"
   import {
     CallState,
     callState,
     deriveRoomCallState,
     VideoCallLayout,
     videoCallLayout,
-  } from "@app/call"
+  } from "@app/features/spaces/calls"
   import {
     RoomType,
     deriveUserRoomMembershipStatus,
     getRoomType,
     prependParent,
     addressWriterToSpace,
-  } from "@app/rooms"
-  import {loadSendDelay} from "@app/settings"
-  import {deferredRoomPath, setChecked} from "@app/notifications"
-  import {makeRoomPath} from "@app/routes"
-  import {pushToast} from "@app/toast"
+  } from "@app/features/spaces/rooms"
+  import {loadSendDelay} from "@app/core/settings"
+  import {deferredRoomPath, setChecked} from "@app/features/checked"
+  import * as pages from "@app/navigation/pages"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -56,7 +58,7 @@
   const callChatOpen = $derived(voiceConnectedHere && $videoCallLayout === VideoCallLayout.Split)
   const callChatHidden = $derived(voiceConnectedHere && !callChatOpen)
 
-  const roomPath = h ? makeRoomPath(url, h) : undefined
+  const roomPath = h ? pages.room.path({url, h}) : undefined
 
   const closeChat = () => videoCallLayout.set(VideoCallLayout.Video)
 
@@ -87,7 +89,6 @@
     }
   })
 
-  const shouldProtect = $relays.hasNip(url, 70)
   const membershipStatus = h
     ? deriveUserRoomMembershipStatus(url, h)
     : readable(MembershipStatus.Granted)
@@ -102,17 +103,17 @@
 
   const onSubmit = async ({content, tags, parent, share, edit}: ComposeValues) => {
     if (edit) {
-      const protect = await shouldProtect
+      const relay = await $relays.load(url)
 
       // Delete the previous message, to be republished below with the same timestamp
       const command = await $deletes.deleteEvent($state.snapshot(edit), w =>
-        w.setProtected(protect),
+        w.setProtected(relay?.hasNip(70)),
       )
 
       command.publishToRelays([url])
     }
 
-    // A share is a quote rather than a reply, so setParent prepends the reply's own reference ahead of it.
+    // A share is a quote rather than a reply, so setParent tags the reply's own parent ahead of it.
     if (share) {
       ;({content, tags} = await prependParent(share, {content, tags}, url))
     }
@@ -125,8 +126,13 @@
       h,
     )
 
-    if (parent) {
-      eventWriter.setParent(parent)
+    // The composer builds tags from the content alone, so an edit carries over the parent it replied to.
+    const editParent = edit ? reader(Message)(edit).parent() : undefined
+    const parentEvent =
+      parent ?? (editParent ? await $events.one(editParent.value, [url]).load() : undefined)
+
+    if (parentEvent) {
+      eventWriter.setParent(parentEvent)
     }
 
     const delay = await loadSendDelay()
@@ -153,10 +159,16 @@
 
   const onEditEvent = (event: TrustedEvent) => composeArea?.edit(event)
 
-  let events: Readable<TrustedEvent[]> = $state(readable([]))
+  let messages: Readable<TrustedEvent[]> = $state(readable([]))
   let transcript: RoomTranscript | undefined = $state()
   let composeArea: ComposeArea | undefined = $state()
 </script>
+
+{#snippet callButton()}
+  {#if h}
+    <CallControlBar {url} {h} />
+  {/if}
+{/snippet}
 
 <div
   class={cx(
@@ -200,7 +212,7 @@
       {replyTo}
       canEdit={canEditEvent}
       onEdit={onEditEvent}
-      bind:events
+      bind:events={messages}
       bind:this={transcript} />
 
     <div class="room__compose flex items-center gap-1 px-2">
@@ -218,16 +230,12 @@
             {h}
             {onSubmit}
             draftKey="room:{url}:{h ?? ''}"
-            messages={$events.toReversed()}
+            messages={$messages.toReversed()}
             canEdit={canEditEvent}
+            emptyAction={isVoiceRoom && !voiceConnectedHere ? callButton : undefined}
             bind:this={composeArea} />
         {/if}
       </div>
-      {#if h && isVoiceRoom && !voiceConnectedHere}
-        <div class="hide-on-keyboard flex shrink-0 items-center justify-center py-2">
-          <CallControlBar {url} {h} />
-        </div>
-      {/if}
     </div>
   </div>
 </div>

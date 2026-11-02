@@ -1,6 +1,6 @@
 {
   "name": "flotilla",
-  "version": "1.11.2",
+  "version": "1.14.0",
   "author": {
     "name": "Jon Staab"
   },
@@ -26,7 +26,7 @@
     "test:desktop": "playwright test --config e2e/desktop/playwright.config.ts",
     "test:server": "node --test --test-force-exit server/test/*.test.mjs",
     "test:desktop-storage": "node --test packages/desktop-secure-storage/test/*.test.mjs",
-    "format": "git diff head --name-only --diff-filter d | grep -E '(js|ts|svelte|css)$' | xargs -r prettier --write",
+    "format": "git diff HEAD --name-only --diff-filter d | grep -E '(js|ts|svelte|css)$' | xargs -r prettier --write",
     "format:all": "prettier --write src",
     "prepare": "husky",
     "package:desktop:linux": "node scripts/desktop/package.mjs linux",
@@ -79,6 +79,7 @@
     "@capawesome/capacitor-android-dark-mode-support": "^8.0.0",
     "@capawesome/capacitor-badge": "^8.0.0",
     "@capawesome/capacitor-electron": "0.1.1",
+    "@flotilla/desktop-screen-share": "file:packages/desktop-screen-share",
     "@flotilla/desktop-secure-storage": "file:packages/desktop-secure-storage",
     "@flotilla/desktop-window": "file:packages/desktop-window",
     "@getalby/lightning-tools": "^6.1.0",
@@ -88,6 +89,7 @@
     "@noble/hashes": "~2.0.1",
     "@pomade/core": "^0.3.3",
     "@poppanator/sveltekit-svg": "^7.0.0",
+    "@sqlite.org/sqlite-wasm": "3.53.4-build2",
     "@svelte-plugins/datepicker": "^1.0.11",
     "@sveltejs/adapter-static": "^3.0.10",
     "@tiptap/core": "^2.27.3",
@@ -98,16 +100,16 @@
     "@types/throttle-debounce": "^5.0.2",
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vite-pwa/sveltekit": "^1.1.0",
-    "@welshman/app": "^0.12.1",
-    "@welshman/content": "^0.12.1",
-    "@welshman/domain": "^0.12.1",
-    "@welshman/editor": "^0.12.1",
-    "@welshman/feeds": "^0.12.1",
-    "@welshman/lib": "^0.12.1",
-    "@welshman/net": "^0.12.1",
-    "@welshman/signer": "^0.12.1",
-    "@welshman/store": "^0.12.1",
-    "@welshman/util": "^0.12.1",
+    "@welshman/app": "^0.14.0-pre5",
+    "@welshman/content": "^0.14.0-pre5",
+    "@welshman/domain": "^0.14.0-pre5",
+    "@welshman/editor": "^0.14.0-pre5",
+    "@welshman/feeds": "^0.14.0-pre5",
+    "@welshman/lib": "^0.14.0-pre5",
+    "@welshman/net": "^0.14.0-pre5",
+    "@welshman/signer": "^0.14.0-pre5",
+    "@welshman/store": "^0.14.0-pre5",
+    "@welshman/util": "^0.14.0-pre5",
     "cheerio": "^1.2.0",
     "compressorjs-next": "^1.1.2",
     "dompurify": "^3.4.13",
@@ -134,5 +136,5 @@
     "throttle-debounce": "^5.0.2",
     "tippy.js": "^6.3.7"
   },
-  "packageManager": "pnpm@11.25.0"
+  "packageManager": "pnpm@12.15.0"
 }

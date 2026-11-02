@@ -19,17 +19,17 @@
   import GoalStatus from "@app/components/GoalStatus.svelte"
   import GoalSupporters from "@app/components/GoalSupporters.svelte"
   import EventComments from "@app/components/EventComments.svelte"
-  import {events, network, reader} from "@app/core"
-  import {ENABLE_ZAPS} from "@app/env"
-  import {deriveGoalProgress} from "@app/goals"
-  import {makeFeedContext} from "@app/feeds"
-  import {decodeRelay} from "@app/relays"
+  import {events, network} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import {deriveGoalProgress} from "@app/features/spaces/goals"
+  import {makeFeedContext} from "@app/features/feeds"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {relay, id} = params
-  const url = decodeRelay(relay)
+  const {url, id} = pages.goal.decode(params)
   const context = makeFeedContext({relays: [url]})
   const event = $events.one(id, [url]).$
   const goal = derived(event, $event => ($event ? reader(ZapGoal)($event) : undefined))

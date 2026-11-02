@@ -1,0 +1,45 @@
+<script lang="ts">
+  import {onDestroy} from "svelte"
+  import type {IEventRef, TrustedEvent} from "@welshman/util"
+  import Spinner from "@lib/components/Spinner.svelte"
+  import Modal from "@lib/components/Modal.svelte"
+  import ModalBody from "@lib/components/ModalBody.svelte"
+  import {popModal} from "@app/navigation/dialogs"
+  import {goToEvent} from "@app/navigation/locations"
+  import {loadQuote} from "@app/features/quotes"
+  import {pushToast} from "@app/features/toast"
+
+  type Props = {
+    ref: IEventRef
+    event: TrustedEvent
+    url?: string
+  }
+
+  const {ref, event, url}: Props = $props()
+
+  let waiting = true
+
+  onDestroy(() => {
+    waiting = false
+  })
+
+  loadQuote(ref, event, url).then(quoted => {
+    if (waiting) {
+      popModal()
+
+      if (quoted) {
+        goToEvent(quoted, {replaceState: true})
+      } else {
+        pushToast({theme: "error", message: "Failed to load that event."})
+      }
+    }
+  })
+</script>
+
+<Modal label="Quote">
+  <ModalBody>
+    <div class="flex justify-center py-20">
+      <Spinner loading>Loading event...</Spinner>
+    </div>
+  </ModalBody>
+</Modal>

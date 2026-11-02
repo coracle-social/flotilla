@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {displayRelayUrl} from "@welshman/util"
   import {parse, renderAsHtml} from "@welshman/content"
   import Button from "@lib/components/Button.svelte"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -14,9 +13,11 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
-  import {leaveSpace} from "@app/access"
-  import {clearModals, navigate, pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {leaveSpace} from "@app/features/spaces/membership"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
+  import {navigate} from "@app/navigation/navigate"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -53,9 +54,7 @@
       <ModalSubtitle>We couldn't connect you to this space.</ModalSubtitle>
     </ModalHeader>
     <p>
-      We received an error from the relay indicating you don't have access to {displayRelayUrl(
-        url,
-      )}:
+      We received an error from the space indicating you don't have access to <RelayLabel {url} />:
     </p>
     <p class="card welshman-content">
       {@html renderAsHtml(parse({content: ucFirst(error)}))}

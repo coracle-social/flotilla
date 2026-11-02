@@ -9,9 +9,10 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
-  import {events, network, reader} from "@app/core"
-  import {displayReadingTime} from "@app/articles"
-  import {makeArticlePath} from "@app/routes"
+  import {events, network} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {displayReadingTime} from "@app/features/spaces/articles"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -66,7 +67,7 @@
           {#each others as other (getAddress(other))}
             {@const article = reader(Article)(other)}
             <Link
-              href={makeArticlePath(url, getAddress(other))}
+              href={pages.article.path({url, address: getAddress(other)})}
               class="hover:bg-surface-less -mx-2 flex items-start gap-3 rounded-xl px-2 py-2 transition-colors">
               <div class="flex min-w-0 grow flex-col gap-1">
                 <p class="line-clamp-2 text-sm font-bold">{article.title() || "Untitled"}</p>

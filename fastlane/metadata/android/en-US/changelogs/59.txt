@@ -1,0 +1,7 @@
+* Post an article or a poll from the Create post button
+* Merge the home inbox and notifications into one activity stream
+* Zap notes and replies, quote a note in a public post, and follow someone from their profile dialog
+* Tally reactions on content, and show zap totals and like counts on their buttons
+* Move the member directory into the space about page, and redesign the connection status dialog
+* Transcribe voice notes on the device
+* Render highlights as quotations with their source

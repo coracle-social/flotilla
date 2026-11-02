@@ -14,19 +14,18 @@
   import ThreadPost from "@app/components/ThreadPost.svelte"
   import ThreadSummaryBar from "@app/components/ThreadSummaryBar.svelte"
   import EventReply from "@app/components/EventReply.svelte"
-  import {events, network} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {getChecked} from "@app/notifications"
-  import {decodeRelay} from "@app/relays"
-  import {getPermalinkTarget, scrollToEvent} from "@app/routes"
+  import {events, network} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {getChecked} from "@app/features/checked"
+  import * as pages from "@app/navigation/pages"
+  import {getPermalinkTarget, scrollToEvent} from "@app/navigation/locations"
   import type {PageProps} from "./$types"
 
   const REPLY_BATCH_SIZE = 20
 
   const {params}: PageProps = $props()
 
-  const {relay, id} = params
-  const url = decodeRelay(relay)
+  const {url, id} = pages.thread.decode(params)
   const event = $events.one(id, [url]).$
   // Rows register themselves with `related`, so the whole page's reactions load in one batch
   const context = makeFeedContext({relays: [url]})
@@ -228,10 +227,10 @@
     </div>
   {/if}
   {#if scrolledUp && !showReply}
-    <div transition:fade class="absolute right-4 bottom-20 z-nav mb-sai md:bottom-4 md:mb-0">
+    <div transition:fade class="absolute right-4 bottom-4 z-nav">
       <Button
         aria-label="Scroll to newest"
-        class="button button-neutral button-circle shadow-xl"
+        class="button button-neutral button-circle"
         onclick={scrollToBottom}>
         <Icon icon={AltArrowDown} />
       </Button>

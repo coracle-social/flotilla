@@ -62,6 +62,12 @@
   font-size: 110%;
 }
 
+@media (min-width: 768px) {
+  :root {
+    --mobile-nav-height: 0px;
+  }
+}
+
 @layer base {
   body {
     @apply text-content font-body bg-surface-less;
@@ -78,10 +84,7 @@
     @apply cursor-pointer text-left;
   }
 
-  input:focus,
-  textarea:focus,
-  select:focus,
-  [contenteditable]:focus {
+  :focus {
     @apply outline-none;
   }
 }
@@ -110,24 +113,6 @@
   box-shadow:
     inset 3px 0 0 var(--primary),
     inset 0 0 0 9999px color-mix(in srgb, var(--primary) 16%, transparent);
-}
-/* Breathes a control in and out while it's listening to the user's voice. */
-@utility pulse-scale {
-  animation: pulse-scale 200ms ease-in-out infinite;
-}
-@keyframes pulse-scale {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .pulse-scale {
-    animation: none;
-  }
 }
 @utility pt-sai {
   padding-top: var(--sait);
@@ -257,9 +242,11 @@ body.keyboard-open .hide-on-keyboard {
 
 /* tiptap editor */
 .input-editor,
-.chat-editor,
 .note-editor {
   @apply -m-1 p-1;
+}
+.chat-editor {
+  @apply -my-1 p-1;
 }
 .tiptap {
   --tiptap-object-bg: var(--surface-more);
@@ -285,8 +272,14 @@ body.keyboard-open .hide-on-keyboard {
   @apply opacity-40;
 }
 .chat-editor .tiptap {
-  /* standard input border, kept at 1px so the :focus border swap doesn't reflow */
-  @apply bg-surface border-line rounded-3xl border border-solid;
+  @apply bg-surface rounded-3xl;
+  border: var(--border-thin) solid var(--line);
+}
+.chat-editor .tiptap:focus-within {
+  border-color: var(--primary);
+}
+.chat-editor .tiptap p.is-editor-empty:first-child::before {
+  @apply text-content-subtle opacity-100;
 }
 .note-editor .tiptap {
   @apply bg-surface block h-auto min-h-32 w-full rounded-2xl;

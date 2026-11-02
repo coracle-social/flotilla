@@ -18,20 +18,26 @@
   import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter, partitionByActivity} from "@app/content"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {deriveGoalProgressById, filterGoals, getGoalTotals, sortGoals} from "@app/goals"
-  import type {GoalFilter, GoalSort} from "@app/goals"
-  import {pushModal} from "@app/modal"
+  import * as pages from "@app/navigation/pages"
+  import {partitionByActivity} from "@app/features/spaces"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {
+    deriveGoalProgressById,
+    filterGoals,
+    getGoalTotals,
+    sortGoals,
+  } from "@app/features/spaces/goals"
+  import type {GoalFilter, GoalSort} from "@app/features/spaces/goals"
+  import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.goals.decode(params)
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)

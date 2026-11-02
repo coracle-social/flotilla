@@ -1,0 +1,7 @@
+* Add bookmarks, with folders and a bookmark manager
+* Redesign the chat and room composers
+* Support paid spaces, with checkout and relay notifications
+* Mute people from their profile menu
+* Choose what the home network feed and notifications tab include, and merge notifications about the same note
+* Show replies in the network feed under the note they answer
+* Rework the home inbox to include space activity, and add a relay settings button to the network section

@@ -14,10 +14,10 @@
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import SpaceJoinNotifications from "@app/components/SpaceJoinNotifications.svelte"
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
-  import {attemptRelayAccess, completeSpaceJoin} from "@app/access"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {goToSpace} from "@app/routes"
+  import {attemptRelayAccess, completeSpaceJoin} from "@app/features/spaces/membership"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
+  import {goToSpace} from "@app/navigation/history"
 
   type Props = {
     url: string

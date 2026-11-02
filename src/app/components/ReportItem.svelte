@@ -11,9 +11,9 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import ReportMenu from "@app/components/ReportMenu.svelte"
-  import {network} from "@app/core"
-  import {pushModal} from "@app/modal"
-  import {goToEvent} from "@app/routes"
+  import {network} from "@app/core/plugins"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {goToEvent} from "@app/navigation/locations"
 
   type Props = {
     url: string
@@ -56,7 +56,7 @@
   {/if}
   <div class="card card-sm">
     {#if etag}
-      {#await $network.loadComplete( {relays: [url, LOCAL_RELAY_URL], filters: getIdFilters( [etag[1]], )}, )}
+      {#await $network.load( {relays: [url, LOCAL_RELAY_URL], filters: getIdFilters( [etag[1]], ), timeout: 3000}, )}
         <p>Loading</p>
       {:then reportedEvents}
         {#if reportedEvents.length === 0}

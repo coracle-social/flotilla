@@ -8,16 +8,16 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import RelayDetailCard from "@app/components/hosting/RelayDetailCard.svelte"
   import ActivityFeed from "@app/components/hosting/ActivityFeed.svelte"
-  import {PLATFORM_NAME} from "@app/env"
-  import {deriveHostedRelay, deriveRelayActivity} from "@app/hosting"
-  import {decodeRelay} from "@app/relays"
+  import {PLATFORM_NAME} from "@app/core/env"
+  import {deriveHostedRelay, deriveRelayActivity} from "@app/features/hosting"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.spaceAdmin.decode(params)
   const hostedRelay = deriveHostedRelay(url)
-  const relayActivity = deriveRelayActivity(derived(hostedRelay, $h => $h.relay?.id))
+  const relayActivity = deriveRelayActivity(derived(hostedRelay, $h => $h.value?.id))
 </script>
 
 <SpaceBar>
@@ -30,9 +30,9 @@
 </SpaceBar>
 
 <PageContent class="flex flex-col gap-4 p-4">
-  {#if $hostedRelay.relay}
-    <RelayDetailCard relay={$hostedRelay.relay} />
-    <ActivityFeed activity={$relayActivity.activity} loading={$relayActivity.loading} />
+  {#if $hostedRelay.value}
+    <RelayDetailCard relay={$hostedRelay.value} />
+    <ActivityFeed activity={$relayActivity.value} loading={$relayActivity.loading} />
   {:else if $hostedRelay.loading}
     <div class="flex justify-center p-12">
       <Spinner>Loading hosting details...</Spinner>

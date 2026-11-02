@@ -2,7 +2,7 @@
   import cx from "classnames"
   import Link from "@lib/components/Link.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {makeSpacePath} from "@app/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     h: string
@@ -13,7 +13,7 @@
 
   const {h, url, unstyled, ...props}: Props = $props()
 
-  const path = makeSpacePath(url, h)
+  const path = pages.room.path({url, h})
 </script>
 
 <Link href={path} class={cx(props.class, {"link-content": !unstyled})}>

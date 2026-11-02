@@ -1,19 +1,21 @@
 <script lang="ts">
   import {writable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
-  import {Note} from "@welshman/domain"
+  import {Comment} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
+  import Plane from "@assets/icons/plane-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {publisher, writer} from "@app/core"
-  import {DraftKey} from "@app/drafts"
-  import {makeEditor} from "@app/editor"
-  import {publishComment} from "@app/rooms"
-  import {loadSendDelay} from "@app/settings"
-  import {pushToast} from "@app/toast"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {publisher} from "@app/core/plugins"
+  import {writer} from "@app/core/domain"
+  import {DraftKey} from "@app/features/drafts"
+  import {makeEditor} from "@app/features/editor"
+  import {publishComment} from "@app/features/spaces/rooms"
+  import {loadSendDelay} from "@app/core/settings"
+  import {pushToast} from "@app/features/toast"
 
   type Values = {
     content?: string | object
@@ -36,17 +38,18 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  // A reply to a room event is a NIP-22 comment, and a reply to a kind 1 note is a NIP-10 note.
+  // A reply to a space event goes to that space, and any other goes out as a public comment.
   const publishReply = async (content: string, tags: string[][]) => {
     if (url) {
       return publishComment({url, event, parent, content, tags})
     }
 
     return $publisher.publish({
-      ...(await writer(Note)
+      ...(await writer(Comment)
         .setContent(content)
         .addTags(...tags)
-        .setParent(parent ?? event)
+        .setRootFromEvent(event)
+        .setParentFromEvent(parent ?? event)
         .render()),
       delay: await loadSendDelay(),
     })
@@ -67,12 +70,7 @@
     loading = true
 
     try {
-      const publication = await publishReply(content, ed.storage.nostr.getEditorTags())
-      const error = (await publication.settled()).getError()
-
-      if (error) {
-        return pushToast({theme: "error", message: error})
-      }
+      await publishReply(content, ed.storage.nostr.getEditorTags())
 
       draftKey.clear()
       onSubmit()
@@ -134,7 +132,10 @@
   <div class="flex justify-end gap-2">
     <Button class="button button-link" onclick={onCancel} disabled={loading}>Cancel</Button>
     <Button type="submit" class="button button-primary button-sm" disabled={$uploading || loading}>
-      <Spinner {loading} reserveSpace>
+      <Spinner size="sm" {loading}>
+        {#if !loading}
+          <Icon icon={Plane} size={4} />
+        {/if}
         {#if parent}
           Reply
         {:else}

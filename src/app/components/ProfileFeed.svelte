@@ -4,14 +4,15 @@
   import {feedFromFilter, makeIntersectionFeed, makeRelayFeed} from "@welshman/feeds"
   import {NOTE} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import {getReplyTags} from "@welshman/domain"
+  import {Note} from "@welshman/domain"
   import {Feeds} from "@welshman/app"
   import {createScroller} from "@lib/html"
   import {fly} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {app} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
+  import {app} from "@app/core/app"
+  import {reader} from "@app/core/domain"
+  import {makeFeedContext} from "@app/features/feeds"
 
   type Props = {
     url: string
@@ -33,7 +34,7 @@
       feedFromFilter({kinds: [NOTE], authors: [pubkey]}),
     ),
     onEvent: (event: TrustedEvent) => {
-      if (getReplyTags(event.tags).replies.length === 0) {
+      if (!reader(Note)(event).parent()) {
         buffer.push(event)
         context.add(event)
       }

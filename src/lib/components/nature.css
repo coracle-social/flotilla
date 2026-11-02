@@ -40,7 +40,8 @@
   }
 
   &[data-theme="dark"],
-  & .primary-nav {
+  & .primary-nav,
+  & .mobile-nav {
     --primary: #8ac265;
     --primary-soft: #74ac4c;
     --primary-bold: #a1d481;

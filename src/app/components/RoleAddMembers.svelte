@@ -12,9 +12,9 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {relayManagement} from "@app/core"
-  import {allowPubkeys} from "@app/management"
-  import {pushToast} from "@app/toast"
+  import {relayManagement} from "@app/core/plugins"
+  import {allowPubkeys} from "@app/features/spaces/management"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

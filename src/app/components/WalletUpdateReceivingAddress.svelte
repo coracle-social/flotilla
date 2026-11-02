@@ -12,9 +12,10 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import Wallet from "@assets/icons/wallet.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
-  import {pushToast} from "@app/toast"
-  import {profiles, user} from "@app/core"
-  import {wallet} from "@app/lightning"
+  import {pushToast} from "@app/features/toast"
+  import {user} from "@app/core/user"
+  import {profiles} from "@app/core/plugins"
+  import {wallet} from "@app/features/wallet"
 
   const back = () => history.back()
 
@@ -37,7 +38,7 @@
         writer.update({lud06: undefined, lud16: address.trim() || undefined}),
       )
 
-      const error = (await command.publish().settled()).getError()
+      const error = await command.publish().getError()
 
       if (error) {
         pushToast({theme: "error", message: `Failed to update profile: ${errorMessage(error)}`})

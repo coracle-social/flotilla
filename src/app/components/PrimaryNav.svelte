@@ -1,10 +1,5 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import cx from "classnames"
-  import {Profiles} from "@welshman/app"
-  import Compass from "@assets/icons/compass.svg?dataurl"
-  import Letter from "@assets/icons/letter.svg?dataurl"
-  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Settings from "@assets/icons/settings.svg?dataurl"
   import Sidebar from "@assets/icons/sidebar-minimalistic.svg?dataurl"
@@ -15,12 +10,15 @@
   import PrimaryNavSpaces from "@app/components/PrimaryNavSpaces.svelte"
   import Search from "@app/components/Search.svelte"
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
-  import {PLATFORM_RELAYS} from "@app/env"
-  import {getModal, popModal, pushModal} from "@app/modal"
-  import {notifications} from "@app/notifications"
-  import {userSpaceUrls} from "@app/rooms"
-  import {goToChat, lastSpaceUrl, makeSpacePath} from "@app/routes"
-  import {deriveUserItem} from "@app/core"
+  import {PLATFORM_RELAYS} from "@app/core/env"
+  import {getModal, popModal, pushModal} from "@app/navigation/dialogs"
+  import {notifications} from "@app/features/notifications"
+  import {userSpaceUrls} from "@app/features/spaces"
+  import * as pages from "@app/navigation/pages"
+  import {goToMessages} from "@app/features/messages"
+  import {lastSpaceUrl} from "@app/navigation/history"
+  import {userProfile} from "@app/core/user"
+  import {flTheme} from "@app/features/theme"
 
   type Props = {
     children?: Snippet
@@ -28,9 +26,15 @@
 
   const {children}: Props = $props()
 
-  const userProfile = deriveUserItem(Profiles)
+  const themedIcons = import.meta.glob<string>("@assets/icons/themed/*/*.png", {
+    eager: true,
+    import: "default",
+  })
 
-  const chatHandler = () => goToChat()
+  const themedIcon = (name: string) =>
+    themedIcons[`/src/assets/icons/themed/${$flTheme}/${name}.png`]
+
+  const chatHandler = () => goToMessages()
 
   const showSettingsMenu = () => pushModal(MenuSettings)
 
@@ -47,19 +51,16 @@
     spaceMenuIsOpen ? popModal() : pushModal(SpaceMenuDrawer, {url: spaceUrl}, {drawer: true})
 
   const otherSpaceNotifications = $derived(
-    $userSpaceUrls.some(url => url !== spaceUrl && $notifications.has(makeSpacePath(url))),
+    $userSpaceUrls.some(url => url !== spaceUrl && $notifications.has(pages.space.path({url}))),
   )
 </script>
 
-<div
-  class={cx("primary-nav ml-sai mt-sai mb-sai hidden md:flex", {
-    "justify-between": PLATFORM_RELAYS.length === 0,
-  })}>
+<div class="primary-nav ml-sai mt-sai hidden md:flex">
   <PrimaryNavSpaces />
   {#if PLATFORM_RELAYS.length > 0}
     <Divider />
   {/if}
-  <div class="flex flex-col items-center">
+  <div class="mt-auto flex flex-col items-center">
     <PrimaryNavItem title="Settings" href="/settings/profile" prefix="/settings">
       {#if $userProfile?.picture()}
         <ImageIcon alt="Settings" src={$userProfile.picture()!} class="rounded-full" size={10} />
@@ -69,51 +70,61 @@
     </PrimaryNavItem>
     {#if PLATFORM_RELAYS.length === 0}
       <PrimaryNavItem href="/spaces" title="All Spaces" prefix="no-highlight">
-        <ImageIcon alt="All Spaces" src={Compass} size={8} />
+        <ImageIcon alt="All Spaces" src={themedIcon("compass")} size={10} />
       </PrimaryNavItem>
     {/if}
     <PrimaryNavItem
       title="Messages"
       onclick={chatHandler}
       notification={$notifications.has("/chat")}>
-      <ImageIcon alt="Messages" src={Letter} size={8} />
+      <ImageIcon alt="Messages" src={themedIcon("letter")} size={10} />
+    </PrimaryNavItem>
+    <PrimaryNavItem title="Bookmarks" href="/bookmarks" prefix="no-highlight">
+      <ImageIcon alt="Bookmarks" src={themedIcon("bookmark")} size={10} />
     </PrimaryNavItem>
     <PrimaryNavItem title="Search" onclick={showSearch}>
-      <ImageIcon alt="Search" src={Magnifier} size={8} />
+      <ImageIcon alt="Search" src={themedIcon("magnifier")} size={10} />
     </PrimaryNavItem>
   </div>
 </div>
 
 {@render children?.()}
 
-<!-- a little extra something for ios -->
-<div class="hide-on-keyboard fixed bottom-0 left-0 right-0 z-nav h-(--saib) bg-surface md:hidden">
-</div>
-<div
-  class="hide-on-keyboard border-top bottom-sai fixed left-0 right-0 z-nav h-(--mobile-nav-height) border border-line bg-surface md:hidden">
-  <div class="flex h-full justify-between px-2">
-    <div class="flex items-center gap-6">
-      {#if spaceUrl}
+<div class="mobile-nav md:hidden">
+  <!-- a little extra something for ios -->
+  <div class="hide-on-keyboard fixed bottom-0 left-0 right-0 z-nav h-(--saib) bg-surface"></div>
+  <div
+    class="hide-on-keyboard border-top bottom-sai fixed left-0 right-0 z-nav h-(--mobile-nav-height) border border-line bg-surface">
+    <div class="flex h-full justify-between px-2">
+      <div class="flex items-center gap-6">
         <PrimaryNavItem
           onclick={toggleSpaceMenu}
           aria-label={spaceMenuLabel}
           notification={otherSpaceNotifications}>
           <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
         </PrimaryNavItem>
-      {/if}
-      <PrimaryNavItem onclick={showSearch}>
-        <ImageIcon alt="Search" src={Magnifier} size={8} />
-      </PrimaryNavItem>
-      <PrimaryNavItem href="/chat" onclick={chatHandler} notification={$notifications.has("/chat")}>
-        <ImageIcon alt="Messages" src={Letter} size={8} />
+        <PrimaryNavItem onclick={showSearch}>
+          <ImageIcon alt="Search" src={themedIcon("magnifier")} size={8} />
+        </PrimaryNavItem>
+        <PrimaryNavItem
+          href="/chat"
+          onclick={chatHandler}
+          notification={$notifications.has("/chat")}>
+          <ImageIcon alt="Messages" src={themedIcon("letter")} size={8} />
+        </PrimaryNavItem>
+        {#if PLATFORM_RELAYS.length === 0}
+          <PrimaryNavItem href="/spaces">
+            <ImageIcon alt="All Spaces" src={themedIcon("compass")} size={8} />
+          </PrimaryNavItem>
+        {/if}
+      </div>
+      <PrimaryNavItem onclick={showSettingsMenu} aria-label="Settings">
+        {#if $userProfile?.picture()}
+          <ImageIcon alt="Settings" src={$userProfile.picture()!} size={10} class="rounded-full" />
+        {:else}
+          <ImageIcon alt="Settings" src={Settings} size={8} class="rounded-full" />
+        {/if}
       </PrimaryNavItem>
     </div>
-    <PrimaryNavItem onclick={showSettingsMenu} aria-label="Settings">
-      {#if $userProfile?.picture()}
-        <ImageIcon alt="Settings" src={$userProfile.picture()!} size={10} class="rounded-full" />
-      {:else}
-        <ImageIcon alt="Settings" src={Settings} size={8} class="rounded-full" />
-      {/if}
-    </PrimaryNavItem>
   </div>
 </div>

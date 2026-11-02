@@ -32,7 +32,7 @@ export type Scenario = {
   readonly indexerUrls: string[]
   space(name: SpaceName): SeededSpace
   open(name: OpenRelayName): SeededOpenRelay
-  // A relay won't serve the list that would tell authPolicy it may identify to it.
+  // A relay won't serve the list that would tell shouldAuth it may identify to it.
   cache(user: TestUser): SignedEvent[]
 }
 

@@ -1,4 +1,5 @@
 import type {Locator, Page} from "@playwright/test"
+import {composerAddButton} from "./ui"
 
 // A file as the browser's own chooser takes one.
 export type TestFile = {
@@ -17,10 +18,32 @@ export const WEBP = Buffer.from("UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA=
 
 export const gifFile = (name: string): TestFile => ({name, mimeType: "image/gif", buffer: GIF})
 
+// A photo the browser has no decoder for, which is what an iPhone's heic is on a desktop.
+export const heicFile = (name: string): TestFile => ({
+  name,
+  mimeType: "image/heic",
+  buffer: Buffer.from("ftypheic"),
+})
+
 // Every picker opens the browser's own chooser, and the input behind it is never on screen.
 export const chooseFile = async (page: Page, button: Locator, file: TestFile) => {
   const chooser = page.waitForEvent("filechooser")
 
   await button.click()
+  await (await chooser).setFiles(file)
+}
+
+// The composer's picker sits behind the + button, and in a room behind the create menu under it.
+export const attachFile = async (page: Page, file: TestFile) => {
+  const add = composerAddButton(page)
+  const inMenu = (await add.getAttribute("aria-label")) === "Attach or create"
+  const chooser = page.waitForEvent("filechooser")
+
+  await add.click()
+
+  if (inMenu) {
+    await page.getByRole("button", {name: "Photo or File"}).click()
+  }
+
   await (await chooser).setFiles(file)
 }

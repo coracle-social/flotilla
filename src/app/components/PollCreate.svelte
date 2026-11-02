@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {insertAt, now, randomId, removeAt, removeUndefined, spec} from "@welshman/lib"
+  import {now, randomId, removeUndefined} from "@welshman/lib"
   import {Poll} from "@welshman/domain"
   import type {PollType} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
@@ -18,11 +18,13 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
+  import DragList from "@lib/components/DragList.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {writer} from "@app/core"
-  import {pushToast} from "@app/toast"
-  import {publishToSpace} from "@app/rooms"
-  import {DraftKey} from "@app/drafts"
+  import {writer} from "@app/core/domain"
+  import {pushToast} from "@app/features/toast"
+  import {publishToNetwork} from "@app/features/social"
+  import {publishToSpace} from "@app/features/spaces/rooms"
+  import {DraftKey} from "@app/features/drafts"
 
   type Option = {
     id: string
@@ -37,13 +39,13 @@
   }
 
   type Props = {
-    url: string
+    url?: string
     h?: string
     shareToChat?: boolean
   }
 
   const {url, h, shareToChat = false}: Props = $props()
-  const draftKey = new DraftKey<Values>(`poll:${url}:${h ?? ""}`)
+  const draftKey = new DraftKey<Values>(`poll:${url ?? ""}:${h ?? ""}`)
   const initialValues = draftKey.get()
 
   const back = () => history.back()
@@ -62,43 +64,8 @@
     options = options.map(option => (option.id === id ? {...option, value} : option))
   }
 
-  const reorderOptions = (targetId: string) => {
-    if (!draggedOptionId) {
-      return
-    }
-
-    const sourceIndex = options.findIndex(spec({id: draggedOptionId}))
-    const targetIndex = options.findIndex(spec({id: targetId}))
-
-    if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex) {
-      return
-    }
-
-    options = insertAt(targetIndex, options[sourceIndex], removeAt(sourceIndex, options))
-  }
-
-  const onDragStart = (id: string) => (e: DragEvent) => {
-    draggedOptionId = id
-
-    if (e.dataTransfer) {
-      e.dataTransfer.effectAllowed = "move"
-      e.dataTransfer.setData("text/plain", id)
-    }
-  }
-
-  const onDragOver = (targetId: string) => (e: DragEvent) => {
-    e.preventDefault()
-    reorderOptions(targetId)
-  }
-
-  // Dragover has already moved the option, so reordering on drop would move it a second time.
-  const onDrop = (e: DragEvent) => {
-    e.preventDefault()
-    draggedOptionId = undefined
-  }
-
-  const onDragEnd = () => {
-    draggedOptionId = undefined
+  const reorderOptions = (newOptions: Option[]) => {
+    options = newOptions
   }
 
   const submit = async () => {
@@ -123,7 +90,7 @@
     loading = true
 
     try {
-      const eventWriter = writer(Poll).setTitle(title.trim()).setPollType(pollType).setUrls([url])
+      const eventWriter = writer(Poll).setTitle(title.trim()).setPollType(pollType)
 
       for (const option of nonEmptyOptions) {
         eventWriter.addOption(option)
@@ -133,7 +100,9 @@
         eventWriter.setEndsAt(endsAt)
       }
 
-      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
+      const {error} = url
+        ? await publishToSpace(eventWriter.setUrls([url]), {url, h, shareToChat})
+        : await publishToNetwork(eventWriter)
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -151,7 +120,6 @@
 
   let loading = $state(false)
 
-  let draggedOptionId = $state<string | undefined>()
   let title = $state(initialValues?.title ?? "")
   let pollType = $state<PollType>(initialValues?.pollType ?? "singlechoice")
   let endsAt = $state<number | undefined>(initialValues?.endsAt)
@@ -197,15 +165,14 @@
         {/snippet}
         {#snippet input()}
           <div class="flex flex-col gap-2" role="list">
-            {#each options as option, index (option.id)}
-              <div
-                class="flex items-center gap-2"
-                draggable="true"
-                role="listitem"
-                ondragstart={onDragStart(option.id)}
-                ondragover={onDragOver(option.id)}
-                ondrop={onDrop}
-                ondragend={onDragEnd}>
+            <DragList
+              class="contents"
+              itemClass="flex items-center gap-2"
+              itemRole="listitem"
+              items={options}
+              getKey={option => option.id}
+              onReorder={reorderOptions}>
+              {#snippet item(option)}
                 <div class="cursor-move opacity-70" aria-label="Drag handle">
                   <Icon icon={HamburgerMenu} size={4} />
                 </div>
@@ -214,14 +181,14 @@
                     value={option.value}
                     class="grow"
                     type="text"
-                    placeholder={`Option ${index + 1}`}
+                    placeholder={`Option ${options.indexOf(option) + 1}`}
                     oninput={updateOption(option.id)} />
                 </label>
                 <Button class="button button-ghost button-sm" onclick={removeOption(option.id)}>
                   <Icon icon={MinusCircle} size={4} />
                 </Button>
-              </div>
-            {/each}
+              {/snippet}
+            </DragList>
             <Button class="button button-outline button-sm self-end" onclick={addOption}>
               <Icon icon={PlusCircle} size={4} />
               Add option

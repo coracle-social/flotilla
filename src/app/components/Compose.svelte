@@ -1,13 +1,13 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
+  import type {Snippet} from "svelte"
   import {writable} from "svelte/store"
   import cx from "classnames"
   import type {MaybeAsync} from "@welshman/lib"
   import {MESSAGE} from "@welshman/util"
   import type {EventContent} from "@welshman/util"
   import {escapeHtml, isMobile, preventDefault} from "@lib/html"
-  import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
-  import WidgetAdd from "@assets/icons/widget-add.svg?dataurl"
+  import Add from "@assets/icons/add.svg?dataurl"
   import Plane from "@assets/icons/plane-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -17,13 +17,13 @@
   import EditorEmojiButton from "@app/components/EditorEmojiButton.svelte"
   import DictationButton from "@app/components/DictationButton.svelte"
   import CommandArgBar from "@app/components/CommandArgBar.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {makeEditor} from "@app/editor"
-  import {app} from "@app/core"
-  import {getDictation} from "@app/dictation"
-  import {pushToast} from "@app/toast"
-  import {DraftKey, type Draft} from "@app/drafts"
-  import type {Share} from "@app/share"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {makeEditor} from "@app/features/editor"
+  import {app} from "@app/core/app"
+  import {getDictation} from "@app/features/voice"
+  import {pushToast} from "@app/features/toast"
+  import {DraftKey, type Draft} from "@app/features/drafts"
+  import type {Share} from "@app/features/share"
 
   type Props = {
     url?: string
@@ -35,6 +35,7 @@
     onEscape?: () => void
     onEditPrevious?: () => void
     onSubmit: (event: EventContent) => MaybeAsync<void>
+    emptyAction?: Snippet
   }
 
   const {
@@ -47,6 +48,7 @@
     onEscape,
     onEditPrevious,
     onSubmit,
+    emptyAction,
   }: Props = $props()
 
   const draft = initialValues ? undefined : new DraftKey<Draft>(draftKey)
@@ -61,7 +63,7 @@
     ? {url, kind: MESSAGE, pubkey: $app.user?.pubkey, tags: h ? [["h", h]] : []}
     : undefined
 
-  const buttonClass = "join-item h-10 w-10 min-w-10 button button-neutral"
+  const buttonClass = "button button-ghost button-circle"
 
   const editorClass = $derived(
     cx("chat-editor grow overflow-hidden", {
@@ -152,6 +154,7 @@
   const editor = makeEditor({
     url,
     content,
+    placeholder: "Message",
     empty,
     submit,
     text,
@@ -190,35 +193,33 @@
 {#if commandTarget}
   <CommandArgBar target={commandTarget} content={$text} insert={insertCommandToken} />
 {/if}
-<form class="relative flex gap-2 py-2" onsubmit={preventDefault(submit)}>
-  <div class="join">
+<form class="relative flex items-end gap-1 py-2" onsubmit={preventDefault(submit)}>
+  {#if url}
+    <MenuButton
+      component={ComposeMenu}
+      componentProps={{url, h, uploadFiles}}
+      placement="top-start"
+      aria-label="Attach or create"
+      disabled={$uploading || disabled}
+      class={buttonClass}>
+      {@render addIcon()}
+    </MenuButton>
+  {:else}
     <Button
-      data-tip="Add an image"
+      aria-label="Attach a photo or file"
       class={buttonClass}
       disabled={$uploading || disabled}
       onclick={uploadFiles}>
-      {#if $uploading}
-        <Spinner size="xs" />
-      {:else}
-        <Icon icon={GallerySend} />
-      {/if}
+      {@render addIcon()}
     </Button>
-    {#if url}
-      <MenuButton
-        component={ComposeMenu}
-        componentProps={{url, h}}
-        placement="top"
-        disabled={$uploading}
-        class={buttonClass}>
-        <Icon icon={WidgetAdd} />
-      </MenuButton>
-    {/if}
-    <EditorEmojiButton {editor} disabled={$uploading || disabled} class={buttonClass} />
-  </div>
+  {/if}
+  <EditorEmojiButton {editor} disabled={$uploading || disabled} class={buttonClass} />
   <div class={editorClass} aria-disabled={disabled}>
     <EditorContent {autofocus} {editor} />
   </div>
-  {#if dictating || ($empty && !disabled)}
+  {#if emptyAction && $empty && !dictating}
+    {@render emptyAction()}
+  {:else if dictating || ($empty && !disabled)}
     <DictationButton
       key={draftKey}
       bind:dictating
@@ -227,10 +228,18 @@
   {:else}
     <Button
       data-tip="{window.navigator.platform.includes('Mac') ? 'cmd' : 'ctrl'}+enter to send"
-      class="button button-primary button-circle flex justify-center items-center tip tip-left h-10 w-10 min-w-10"
+      class="button button-primary button-circle tip tip-left"
       disabled={$uploading || disabled}
       onclick={submit}>
       <Icon icon={Plane} />
     </Button>
   {/if}
 </form>
+
+{#snippet addIcon()}
+  {#if $uploading}
+    <Spinner size="xs" />
+  {:else}
+    <Icon icon={Add} />
+  {/if}
+{/snippet}

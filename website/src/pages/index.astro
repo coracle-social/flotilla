@@ -1,0 +1,242 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Button from '../components/Button.astro';
+import { Icon } from 'astro-icon/components';
+import Hero from '../components/home/Hero.astro';
+import CommunityPlatform from '../components/home/CommunityPlatform.astro';
+import FeatureGrid from '../components/home/FeatureGrid.astro';
+import Gallery from '../components/home/Gallery.astro';
+import { OPEN_APP } from '../lib/analytics';
+
+const APP_URL = 'https://app.flotilla.social';
+const PRIVACY_URL = '/articles/is-flotilla-private';
+
+const rented = [
+  'Clumsy moderation and access controls',
+  'A feed optimized for ads, not your members',
+  "Little insight into what's actually happening",
+  'Your members and history can be taken away',
+];
+const owned = [
+  'Real moderation, roles, and access controls',
+  'A space that works for your members, not advertisers',
+  'One activity feed to see everything at a glance',
+  'Your community is yours — no one can shut it down',
+];
+---
+
+<BaseLayout title="Flotilla">
+  <Hero />
+
+  <!-- Brand film -->
+  <section class="relative pt-4 pb-4 md:pt-6">
+    <div class="mx-auto max-w-5xl px-5 md:px-8">
+      <p class="text-center text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">
+        Flotilla in one minute
+      </p>
+      <video
+        class="video-player mt-6 w-full shadow-2xl"
+        poster="/images/flotilla-film-poster.webp"
+        controls
+        preload="none"
+        playsinline
+        src="/videos/flotilla-film.mp4"
+      >
+        Your browser does not support embedded video.
+      </video>
+    </div>
+  </section>
+
+  <!-- The problem, framed for organizers -->
+  <section class="relative py-20 md:py-28">
+    <div class="mx-auto max-w-6xl px-5 md:px-8">
+      <div class="mx-auto max-w-3xl text-center">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-accent">
+          Why organizers switch
+        </p>
+        <h2 class="mt-3 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+          You do the work.<br />They make the rules.
+        </h2>
+        <p class="mx-auto mt-5 max-w-2xl text-base text-text-muted sm:text-lg">
+          On the big platforms you're stuck moderating with clumsy tools, guessing at what's
+          working, and fighting an algorithm built to sell ads, not serve your community — while
+          your members, your history, and your access can disappear the day their rules change.
+        </p>
+      </div>
+
+      <div class="mt-14 grid gap-6 md:grid-cols-2">
+        <div class="rounded-2xl border border-border-soft bg-surface/40 p-7">
+          <h3 class="text-lg font-extrabold text-text-muted">On the big platforms</h3>
+          <ul class="mt-5 space-y-3">
+            {rented.map((item) => (
+              <li class="flex items-start gap-3 text-text-muted">
+                <Icon name="ph:x-circle" class="mt-0.5 h-5 w-5 flex-none text-text-dim" aria-hidden="true" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="rounded-2xl border border-primary/30 bg-primary/8 p-7">
+          <h3 class="text-lg font-extrabold text-primary-soft">On Flotilla</h3>
+          <ul class="mt-5 space-y-3">
+            {owned.map((item) => (
+              <li class="flex items-start gap-3">
+                <Icon name="ph:check-circle" class="mt-0.5 h-5 w-5 flex-none text-primary-soft" aria-hidden="true" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CommunityPlatform />
+
+  <Gallery />
+
+  <FeatureGrid />
+
+  <!-- No ads, no spying -->
+  <section class="relative py-20 md:py-28">
+    <div class="mx-auto max-w-6xl px-5 md:px-8">
+      <div class="cta-card relative overflow-hidden rounded-3xl px-6 py-16 text-center md:px-12 md:py-20">
+        <span class="relative inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 text-white">
+          <Icon name="ph:eye-slash" class="h-7 w-7" aria-hidden="true" />
+        </span>
+        <h2 class="relative mt-6 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+          No ads. No spying. No catch.
+        </h2>
+        <p class="relative mx-auto mt-6 max-w-xl text-base text-white/85 sm:text-lg">
+          <strong class="font-extrabold text-white">Flotilla isn't an ad business</strong>, so your
+          members aren't the product. No tracking, no algorithm quietly working against you — just
+          your community, run the way you set it up.
+        </p>
+        <div class="relative mt-8 flex justify-center">
+          <Button href={PRIVACY_URL} variant="inverted">How private is it, really?</Button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- No lock-in -->
+  <section class="relative border-y border-border-soft bg-surface-2/30 py-20 md:py-28">
+    <div class="mx-auto max-w-6xl px-5 md:px-8">
+      <div class="grid items-center gap-12 lg:grid-cols-2">
+        <div class="text-center lg:text-left">
+          <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">
+            No lock-in
+          </p>
+          <h2 class="mt-3 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+            Your community goes where you go
+          </h2>
+          <p class="mt-6 max-w-xl text-base text-text-muted sm:text-lg">
+            Outgrow Flotilla, or want to run things yourself one day? Your members and history come
+            with you. There are no exports to beg for and no platform holding your community hostage —
+            you're never stuck.
+          </p>
+        </div>
+        <div class="relative">
+          <img
+            src="/images/boats-at-sea.jpg"
+            alt="A community of people connected together, illustrated as lantern-lit boats gathered on the water"
+            class="w-full rounded-3xl border border-border shadow-2xl"
+            width="1344"
+            height="768"
+            loading="lazy"
+          />
+        </div>
+      </div>
+
+      <div class="mt-16 grid gap-8 text-center sm:grid-cols-3">
+        <div class="flex flex-col items-center gap-3">
+          <span class="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary-soft ring-1 ring-inset ring-primary/25">
+            <Icon name="ph:shield-check" class="h-7 w-7" aria-hidden="true" />
+          </span>
+          <span class="font-bold">You're never locked out</span>
+        </div>
+        <div class="flex flex-col items-center gap-3">
+          <span class="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary-soft ring-1 ring-inset ring-primary/25">
+            <Icon name="ph:devices" class="h-7 w-7" aria-hidden="true" />
+          </span>
+          <span class="font-bold">Web, iOS &amp; Android</span>
+        </div>
+        <div class="flex flex-col items-center gap-3">
+          <span class="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary-soft ring-1 ring-inset ring-primary/25">
+            <Icon name="ph:plugs-connected" class="h-7 w-7" aria-hidden="true" />
+          </span>
+          <span class="font-bold">Built on open standards</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Video tour -->
+  <section class="relative py-20 md:py-28">
+    <div class="mx-auto max-w-5xl px-5 md:px-8">
+      <div class="text-center">
+        <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">
+          See it in action
+        </p>
+        <h2 class="mt-3 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+          Take the tour
+        </h2>
+        <p class="mx-auto mt-5 max-w-2xl text-base text-text-muted sm:text-lg">
+          Four minutes, start to finish.
+        </p>
+      </div>
+
+      <div class="mx-auto mt-12 max-w-4xl">
+        <video
+          class="video-player w-full"
+          poster="/images/6sCyW16HLSqFcJfXEsrmNatgmK8.png"
+          controls
+          preload="none"
+          playsinline
+          src="https://coracle-media.us-southeast-1.linodeobjects.com/flotilla-tour.mov"
+        >
+          Your browser does not support embedded video.
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="relative border-t border-border-soft bg-surface-2/30 py-20 md:py-28">
+    <div class="mx-auto max-w-3xl px-5 text-center md:px-8">
+      <h2 class="text-4xl font-extrabold sm:text-5xl md:text-6xl">
+        Give your community a better home
+      </h2>
+      <p class="mx-auto mt-6 max-w-lg text-base text-text-muted sm:text-lg">
+        Set up your space in minutes. Free to start.
+      </p>
+      <div class="mt-8 flex justify-center">
+        <Button href={APP_URL} class={OPEN_APP}>Open Flotilla</Button>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .video-player {
+    border-radius: 22px;
+    object-fit: cover;
+    aspect-ratio: 16 / 9;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .cta-card {
+    background: linear-gradient(135deg, #7161ff 0%, #5a4ee0 100%);
+  }
+
+  .cta-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(40% 60% at 20% 10%, rgba(255, 255, 255, 0.18), transparent 70%),
+      radial-gradient(40% 60% at 80% 90%, rgba(0, 0, 0, 0.2), transparent 70%);
+    pointer-events: none;
+  }
+</style>

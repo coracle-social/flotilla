@@ -1,0 +1,30 @@
+<script lang="ts">
+  import {remove, uniq} from "@welshman/lib"
+  import type {TrustedEvent} from "@welshman/util"
+  import HomeActivityItemRow from "@app/components/HomeActivityItemRow.svelte"
+  import ConversationTitle from "@app/components/ConversationTitle.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import {user} from "@app/core/user"
+
+  type Props = {
+    path: string
+    pubkeys: string[]
+    event: TrustedEvent
+  }
+
+  const {path, pubkeys, event}: Props = $props()
+
+  const others = $derived(uniq(remove($user.pubkey, pubkeys)))
+</script>
+
+<HomeActivityItemRow {path} {event}>
+  {#snippet icon()}
+    <ProfileCircle pubkey={others[0] || $user.pubkey} size={9} class="shrink-0" />
+  {/snippet}
+  {#snippet title()}
+    <ConversationTitle {pubkeys} />
+  {/snippet}
+  {#snippet subtitle()}
+    direct message
+  {/snippet}
+</HomeActivityItemRow>

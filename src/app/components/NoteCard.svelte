@@ -8,8 +8,8 @@
   import Button from "@lib/components/Button.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {goToEvent} from "@app/routes"
-  import {isEventMuted} from "@app/social"
+  import {goToEvent} from "@app/navigation/locations"
+  import {isEventMuted} from "@app/features/social/muting"
 
   type Props = {
     event: TrustedEvent
@@ -17,6 +17,7 @@
     minimal?: boolean
     hideProfile?: boolean
     interactive?: boolean
+    onOpen?: () => void
     url?: string
     class?: string
     style?: string
@@ -28,6 +29,7 @@
     minimal = false,
     hideProfile = false,
     interactive = false,
+    onOpen,
     url,
     ...restProps
   }: Props = $props()
@@ -36,10 +38,12 @@
     muted = false
   }
 
+  const open = $derived(onOpen ?? (() => goToEvent(event)))
+
   const goToNote = () => {
     // Releasing a text selection inside the card is not a click on it.
     if (!window.getSelection()?.toString()) {
-      goToEvent(event)
+      open()
     }
   }
 

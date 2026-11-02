@@ -4,7 +4,6 @@
   import {EVENT_TIME, ZAP_GOAL, THREAD, CLASSIFIED, PINBOARD, POLL, LONG_FORM} from "@welshman/util"
   import {deriveDeduplicatedByValue} from "@welshman/store"
   import Magnifier from "@assets/icons/magnifier.svg?dataurl"
-  import UsersGroup from "@assets/icons/users-group-rounded.svg?dataurl"
   import Home from "@assets/icons/home.svg?dataurl"
   import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
   import ChatRound from "@assets/icons/chat-round.svg?dataurl"
@@ -17,13 +16,12 @@
   import Icon from "@lib/components/Icon.svelte"
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
-  import {events} from "@app/core"
-  import {ENABLE_ZAPS} from "@app/env"
-  import {CONTENT_KINDS} from "@app/content"
-  import {deriveSpaceSupportsRooms} from "@app/relays"
-  import {makeSpaceChatPath, makeSpacePath} from "@app/routes"
-  import {allNotifications, notifications} from "@app/notifications"
-  import {pushModal} from "@app/modal"
+  import {events, relays} from "@app/core/plugins"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import {CONTENT_KINDS} from "@app/features/spaces"
+  import * as pages from "@app/navigation/pages"
+  import {allNotifications, notifications} from "@app/features/notifications"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -31,15 +29,15 @@
 
   const {url}: Props = $props()
 
-  const supportsRooms = deriveSpaceSupportsRooms(url)
-  const chatPath = makeSpaceChatPath(url)
-  const goalsPath = makeSpacePath(url, "goals")
-  const threadsPath = makeSpacePath(url, "threads")
-  const classifiedsPath = makeSpacePath(url, "classifieds")
-  const articlesPath = makeSpacePath(url, "articles")
-  const calendarPath = makeSpacePath(url, "calendar")
-  const pollsPath = makeSpacePath(url, "polls")
-  const libraryPath = makeSpacePath(url, "library")
+  const relay = $relays.one(url)
+  const chatPath = pages.spaceChat.path({url})
+  const goalsPath = pages.goals.path({url})
+  const threadsPath = pages.threads.path({url})
+  const classifiedsPath = pages.classifieds.path({url})
+  const articlesPath = pages.articles.path({url})
+  const calendarPath = pages.calendar.path({url})
+  const pollsPath = pages.polls.path({url})
+  const libraryPath = pages.library.path({url})
 
   // Content events aren't retained across page loads, so seed from the kinds seen last time.
   const spaceKindsKey = `space-kinds:${url}`
@@ -59,17 +57,14 @@
   $effect(() => setJson(spaceKindsKey, [...$spaceKinds]))
 </script>
 
-<SecondaryNavItem href={makeSpacePath(url, "about")}>
-  <Icon icon={Home} /> Space Details
+<SecondaryNavItem href={pages.spaceAbout.path({url})}>
+  <Icon icon={Home} /> About
 </SecondaryNavItem>
-{#if !$supportsRooms}
+{#if !$relay?.hasNip(29)}
   <SecondaryNavItem href={chatPath} notification={$notifications.has(chatPath)}>
     <Icon icon={ChatRound} /> Chat
   </SecondaryNavItem>
 {/if}
-<SecondaryNavItem href={makeSpacePath(url, "directory")}>
-  <Icon icon={UsersGroup} /> Directory
-</SecondaryNavItem>
 {#if showSection(PINBOARD, libraryPath)}
   <SecondaryNavItem href={libraryPath} notification={$notifications.has(libraryPath)}>
     <Icon icon={GalleryWide} /> Library
@@ -105,7 +100,7 @@
     <Icon icon={Revote} /> Polls
   </SecondaryNavItem>
 {/if}
-{#if $supportsRooms}
+{#if $relay?.hasNip(29)}
   <SecondaryNavItem onclick={openSearch}>
     <Icon icon={Magnifier} /> Search
   </SecondaryNavItem>

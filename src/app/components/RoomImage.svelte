@@ -3,7 +3,7 @@
   import Volume from "@assets/icons/volume.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
-  import {rooms} from "@app/core"
+  import {rooms} from "@app/core/plugins"
 
   type Props = {
     h: string

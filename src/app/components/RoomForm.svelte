@@ -10,12 +10,12 @@
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {rooms} from "@app/core"
-  import {joinRoom} from "@app/access"
-  import {pushToast} from "@app/toast"
-  import {resolveImageInput} from "@app/uploads"
-  import {deriveHasLivekit} from "@app/relays"
-  import {RoomType} from "@app/rooms"
+  import {rooms} from "@app/core/plugins"
+  import {joinRoom} from "@app/features/spaces/rooms/membership"
+  import {pushToast} from "@app/features/toast"
+  import {resolveImageInput} from "@app/features/uploads"
+  import {deriveHasLivekit} from "@app/features/spaces/calls"
+  import {RoomType} from "@app/features/spaces/rooms"
   import IconInput from "@app/components/IconInput.svelte"
 
   type Props = {
@@ -39,7 +39,7 @@
     if (roomType === RoomType.Voice && !$relayHasLivekit) {
       return pushToast({
         theme: "error",
-        message: "This relay does not support voice rooms.",
+        message: "This space does not support voice rooms.",
       })
     }
 
@@ -48,14 +48,14 @@
     room.picture = await resolveImageInput(imageFile, imagePreview, compressOptions)
 
     const createCommand = await $rooms.createRoom(url, room)
-    const createMessage = (await createCommand.publish().settled()).getError()
+    const createMessage = await createCommand.publish().getError()
 
     if (createMessage && !createMessage.includes("already")) {
       return pushToast({theme: "error", message: createMessage})
     }
 
     const editCommand = await $rooms.editRoom(url, room)
-    const editMessage = (await editCommand.publish().settled()).getError()
+    const editMessage = await editCommand.publish().getError()
 
     if (editMessage) {
       return pushToast({theme: "error", message: editMessage})

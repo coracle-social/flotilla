@@ -5,7 +5,7 @@ description: "Use this skill when working with @welshman/editor: the batteries-i
 
 # welshman/editor — Nostr Editor Component
 
-`@welshman/editor` provides a batteries-included text editor for composing nostr notes, built on top of [Tiptap](https://tiptap.dev) and [nostr-editor](https://github.com/cesardeazevedo/nostr-editor). It bundles a curated set of extensions that handle nostr-specific concerns (nprofile mentions, nevent/naddr embeds, file upload, Lightning invoices) as well as general composition features (history, placeholder, inline code, word count). It is framework-agnostic — the core is plain TypeScript/DOM, though it powers the Svelte-based editors of Coracle and Flotilla.
+`@welshman/editor` is a text editor for composing nostr notes, built on [Tiptap](https://tiptap.dev) and [nostr-editor](https://github.com/cesardeazevedo/nostr-editor). It bundles extensions for nprofile mentions, nevent/naddr embeds, file upload and Lightning invoices, along with history, a placeholder, inline code and a word count. The package is plain TypeScript and DOM, and powers the Svelte editors of Coracle and Flotilla.
 
 ## Installation
 
@@ -20,10 +20,14 @@ yarn add @welshman/editor
 Peer dependencies that must be installed separately:
 
 ```bash
-npm install @welshman/lib @welshman/util nostr-tools nostr-editor
+npm install @welshman/lib @welshman/util nostr-tools nostr-editor \
+  @tiptap/core @tiptap/pm @tiptap/suggestion @tiptap/extension-code @tiptap/extension-code-block \
+  @tiptap/extension-document @tiptap/extension-dropcursor @tiptap/extension-gapcursor \
+  @tiptap/extension-hard-break @tiptap/extension-history @tiptap/extension-paragraph \
+  @tiptap/extension-placeholder @tiptap/extension-text
 ```
 
-Import the bundled CSS to get default object/suggestion styles (optional but recommended):
+The bundled CSS provides default object and suggestion styles:
 
 ```typescript
 import "@welshman/editor/index.css"
@@ -37,31 +41,31 @@ import "@welshman/editor/index.css"
 
 | Export | Description |
 |--------|-------------|
-| `WelshmanExtension` | The main all-in-one Tiptap extension. Configure once; it registers every sub-extension below. `submit` is **required**. |
+| `WelshmanExtension` | The main Tiptap extension. It registers `BreakOrSubmit`, `CodeInline` and `WordCount` along with the Tiptap and nostr-editor extensions listed under `WelshmanExtensionOptions`. `submit` is **required**. |
 | `BreakOrSubmit` | Keyboard handler: `Mod-Enter` always submits; `Enter` submits only when `aggressive: true` (chat-style); `Shift-Enter` inserts a hard break. |
 | `CodeInline` | Inline `code` node with backtick input/paste rules. |
 | `WordCount` | Extension that tracks `editor.storage.wordCount.words` and `editor.storage.wordCount.chars` on every document update. |
-| `CommandExtension` | Inline atom node (`name: "command"`) holding a slash-command invocation — `{command, pubkey?}` attributes. `renderText` emits the canonical invocation via `renderCommandInvocation` from `@welshman/util`, so an executor that knows nothing about this client can read it back out of the note. |
+| `CommandExtension` | Inline atom node (`name: "command"`) holding a slash-command invocation with `{command, pubkey?}` attributes. `renderText` emits the canonical invocation via `renderCommandInvocation` from `@welshman/util`. `WelshmanExtension` does not register it, so add it to `extensions` alongside `CommandSuggestion`. |
 
 ### Node Views
 
-These are drop-in Tiptap node-view factory functions that render inline pill elements with `.tiptap-object` CSS class. Override them via `WelshmanExtensionOptions` to render richer UI.
+These Tiptap node-view factories render inline pills with the `.tiptap-object` CSS class. Override them via `WelshmanExtensionOptions` to render richer UI.
 
 | Export | Renders |
 |--------|---------|
-| `MentionNodeView` | nprofile nodes — shows `@<bech32 prefix>…` |
-| `MediaNodeView` | Image and video nodes — shows filename or URL; adds `.tiptap-uploading` animation while uploading |
-| `EventNodeView` | nevent and naddr nodes — shows bech32 prefix |
-| `Bolt11NodeView` | bolt11 Lightning invoice nodes — shows the first 16 characters of the Lightning invoice string (the `lnbc` attribute) followed by `...` |
+| `MentionNodeView` | nprofile nodes, as `@` and the first 16 characters of the bech32 followed by `...` |
+| `MediaNodeView` | Image and video nodes, as the filename or URL; adds the `.tiptap-uploading` class while uploading |
+| `EventNodeView` | nevent and naddr nodes, as the first 16 characters of the bech32 followed by `...` |
+| `Bolt11NodeView` | bolt11 Lightning invoice nodes, as the first 16 characters of the invoice (the `lnbc` attribute) followed by `...` |
 
 ### Plugins
 
 | Export | Description |
 |--------|-------------|
 | `TippySuggestion` | Generic Tippy.js-powered `@tiptap/suggestion` wrapper. Requires `char`, `name`, `editor`, `search`, and `select`. |
-| `MentionSuggestion` | Pre-configured `TippySuggestion` for `@`-triggered nprofile autocomplete. Requires `editor`, `search`, and `getRelays`. |
-| `CommandSuggestion` | Pre-configured `TippySuggestion` for `/`-triggered slash commands. Requires `editor`, `search`, and `getAttributes(value) => CommandAttributes \| undefined`. Sets `showOnEmpty: true` (a bare `/` lists what's available) and `allow: ({range}) => range.from === 1` (an invocation is only valid at the very start of the content). |
-| `DefaultSuggestionsWrapper` | Default dropdown renderer used by `TippySuggestion`. Implements `ISuggestionsWrapper`; replace to use a framework component. |
+| `MentionSuggestion` | Pre-configured `TippySuggestion` for `@`-triggered nprofile autocomplete. Requires `editor`, `search`, and a synchronous `getRelays(pubkey) => string[]`. |
+| `CommandSuggestion` | Pre-configured `TippySuggestion` for `/`-triggered slash commands. Requires `editor`, `search`, and `getAttributes(value) => CommandAttributes \| undefined`. Sets `showOnEmpty: true`, so a bare `/` lists what's available, and `allow: ({range}) => range.from === 1`, because an invocation is only valid at the very start of the content. |
+| `DefaultSuggestionsWrapper` | Default dropdown renderer used by `TippySuggestion`. It shows the first 5 results of `search`, throttled to 300 ms. Implements `ISuggestionsWrapper`; replace it to use a framework component. |
 
 **`TippySuggestion` options:**
 
@@ -72,14 +76,14 @@ These are drop-in Tiptap node-view factory functions that render inline pill ele
 | `editor` | yes | The Tiptap `Editor` instance |
 | `search` | yes | `(term: string) => string[]` — returns item values matching the query |
 | `select` | yes | `(value: string, props) => void` — called when the user picks an item; call `props.command({...attrs})` to insert the node |
-| `updateSignal` | no | A Svelte `Readable` store; when it emits, the suggestion list re-renders (use for async/reactive search results) |
+| `updateSignal` | no | Anything with a store-style `subscribe`; when it emits, the suggestion list re-runs `search` (for async or reactive search results) |
 | `allowCreate` | no | Let the user commit the raw term as an item (default `false`) |
-| `showOnEmpty` | no | Show the whole list before anything is typed (default `false`). Right for a small closed set the user browses; wrong for profiles, where a bare trigger matches everything |
+| `showOnEmpty` | no | Show the list before anything is typed (default `false`). It suits a small closed set the user browses, and not profiles, where a bare trigger matches everything |
 | `allow` | no | `({state, range}) => boolean` — narrow where the suggestion can fire, on top of the schema check |
 | `createSuggestion` | no | `(value: string) => Element` — renders a custom DOM element for each dropdown item |
 | `createSuggestionsWrapper` | no | `(target, props) => ISuggestionsWrapper` — swap the dropdown for a framework component |
 
-`MentionSuggestion` is a pre-wired `TippySuggestion` for nprofile nodes. It handles `select` internally (encodes the pubkey as an nprofile with relay hints from `getRelays`) so you only need to supply `editor`, `search`, and `getRelays`.
+`MentionSuggestion` handles `select` itself by encoding the pubkey as an nprofile with relay hints from `getRelays`.
 
 ### Re-exports from upstream
 
@@ -143,16 +147,14 @@ import {get, writable} from "svelte/store"
 import {Node, Extension, mergeAttributes} from "@tiptap/core"
 import {Plugin, PluginKey} from "@tiptap/pm/state"
 import type {NodeViewRendererProps} from "@tiptap/core"
-import {Profiles, Router} from "@welshman/app"
-import {outbox} from "@welshman/util"
+import {Profiles, RelayLists} from "@welshman/app"
 import {
   Editor, WelshmanExtension, MentionSuggestion, TippySuggestion, editorProps,
 } from "@welshman/editor"
 import type {FileAttributes, UploadTask} from "@welshman/editor"
 
 // ── Custom inline node: room reference (~) ───────────────────────────────────
-// Defines a new ProseMirror node type for inline room references.
-// Register it alongside WelshmanExtension so Tiptap knows about the "roomref" name.
+// Registered alongside WelshmanExtension so Tiptap knows the "roomref" node type
 
 const RoomReferenceExtension = Node.create({
   name: "roomref",
@@ -192,7 +194,6 @@ export const makeEditor = ({
   charCount?: ReturnType<typeof writable<number>>
   submit: () => void
 }) => {
-  // The Profiles plugin maintains a ready-made fuzzy search over known profiles
   const profileSearch = get(app.use(Profiles).profileSearch)
 
   const editor = new Editor({
@@ -244,12 +245,11 @@ export const makeEditor = ({
               },
               addProseMirrorPlugins() {
                 return [
-                  // "@" — nprofile mention; updateSignal re-renders when search index changes
+                  // "@" — nprofile mention; getRelays must be synchronous
                   MentionSuggestion({
                     editor: (this as any).editor,
                     search: term => profileSearch.searchValues(term),
-                    getRelays: async pubkey =>
-                      (await app.use(Router).resolve([outbox(pubkey)])).getUrls(),
+                    getRelays: pubkey => app.use(RelayLists).get(pubkey)?.writeUrls() ?? [],
                     createSuggestion: pubkey => {
                       const el = document.createElement("span")
                       el.textContent = pubkey.slice(0, 12) + "…"
@@ -326,25 +326,25 @@ const onSubmit = (editor: Editor) => {
 
 ## Integration Notes
 
-- **`@welshman/app`** — `app.use(Profiles).profileSearch` and `app.use(Profiles).display(pubkey)` are the typical sources for mention autocomplete data and display names.
-- **`@welshman/app`** — `app.use(Router).resolve([outbox(pubkey)])` provides the relay hints encoded into nprofile bech32 strings.
-- **`@welshman/util`** — `fromNostrURI` is used internally by `EventNodeView` to strip the `nostr:` scheme before displaying.
-- **`nostr-editor`** — `WelshmanExtension` extends `NostrExtension` from this package. Storage at `editor.storage.nostr` (including `getEditorTags()`) is provided by `nostr-editor`, not welshman itself.
-- **`@tiptap/core`** — `Editor`, `NodeViewProps`, and all extension primitives come from Tiptap. Welshman does not re-export every Tiptap helper; import additional ones directly from `@tiptap/core` as needed.
+- **`@welshman/app`**: `app.use(Profiles).profileSearch` and `app.use(Profiles).display(pubkey)` supply mention autocomplete and display names. `app.use(RelayLists).get(pubkey)?.writeUrls()` supplies the relay hints encoded into nprofiles, synchronously from the cache.
+- **`@welshman/util`**: `EventNodeView` uses `fromNostrURI` to strip the `nostr:` scheme before displaying.
+- **`nostr-editor`**: `WelshmanExtension` extends its `NostrExtension`, which provides `editor.storage.nostr` (including `getEditorTags()`).
+- **`@tiptap/core`**: `Editor`, `NodeViewProps`, and all extension primitives come from Tiptap. Welshman re-exports only `Editor` and `NodeViewProps`; import other helpers from `@tiptap/core` directly.
 
 ---
 
 ## Gotchas & Tips
 
-- **`submit` is required.** `WelshmanExtension.configure({submit})` will throw during editor initialization (when extensions are registered) if `submit` is omitted, not at the `configure()` call site.
-- **Extension options are deep-merged, not replaced.** User-supplied `extensions` options are merged with welshman defaults via `deepMergeLeft`, so you only need to specify the keys you want to change. Supplying `false` for a key fully disables that extension.
-- **Default node views are plain DOM.** The built-in `MentionNodeView`, `MediaNodeView`, etc. render minimal pill text. Override them via the `extend.addNodeView` pattern (see pattern 4) to render framework components, avatars, or rich previews.
-- **`selectFiles()` command.** To open a file picker without a UI button inside the editor, call `editor.chain().selectFiles().run()` from any external button click handler.
+- **`submit` is required.** Without it, `WelshmanExtension` throws when the editor registers its extensions, not at the `configure()` call.
+- **Extension options are deep-merged.** `extensions` options are merged with the welshman defaults via `deepMergeLeft`, so only the keys being changed are needed. `false` disables that extension.
+- **Default node views are plain DOM.** The built-in `MentionNodeView`, `MediaNodeView`, etc. render minimal pill text. Override them with `extend.addNodeView` (see the Example) to render framework components, avatars, or rich previews.
+- **`selectFiles()` command.** `editor.chain().selectFiles().run()` opens a file picker from any external button.
 - **CSS variables.** The bundled `index.css` exposes `--tiptap-object-bg`, `--tiptap-object-fg`, `--tiptap-active-bg`, `--tiptap-active-fg` for theming pills and the suggestion dropdown without overriding classes.
-- **`tiptap-uploading` animation.** While a file is being uploaded, `MediaNodeView` adds the `.tiptap-uploading` class which triggers a pulsing opacity animation defined in `index.css`. No manual wiring is needed.
-- **Tippy appends to dialog when open.** `TippySuggestion` checks for an open `<dialog>` element and appends the suggestion popover inside it to avoid z-index stacking issues in modal composers.
-- **`getEditorTags()` returns NIP-10/27 tags.** This method on `editor.storage.nostr` collects all inline nostr objects (mentions, links, embeds) and returns the appropriate `p`, `e`, `a`, `t`, `r` tags for the published event. Always call this when building the event to publish.
+- **`tiptap-uploading` animation.** While a file uploads, `MediaNodeView` adds the `.tiptap-uploading` class, which `index.css` animates with a pulsing opacity.
+- **Tippy appends to an open dialog.** `TippySuggestion` appends the suggestion popover inside an open `<dialog>` element if there is one, so it stacks above modal composers.
+- **`getEditorTags()` returns NIP-10/27 tags.** This method on `editor.storage.nostr` collects the inline nostr objects (mentions, links, embeds) and returns the `p`, `e`, `a`, `t`, `r` tags for the published event.
 - **Initial content.** Pass either a plain string or a ProseMirror JSON object to `new Editor({content})`. To restore a draft, save `editor.getJSON()` and pass it back as `content`.
-- **`removeFailedUploads()` command.** Call `editor.commands.removeFailedUploads()` in `onUploadError` to clean up any partially-inserted upload nodes so the composer stays in a clean state.
-- **`addFile(file, pos)` command.** Programmatically inserts a file upload node at a given ProseMirror position — useful for native clipboard paste (e.g. mobile) where the browser paste event carries no file data.
+- **`removeFailedUploads()` command.** Call `editor.commands.removeFailedUploads()` in `onUploadError` to remove partially inserted upload nodes.
+- **`addFile(file, pos)` command.** Inserts a file upload node at a ProseMirror position, e.g. for native clipboard paste on mobile, where the browser paste event carries no file data.
+- **Destroy the editor when its DOM goes away.** `editor.destroy()` removes the view's document-level `selectionchange` listener and makes any pending mutation flush a no-op.
 - **`editor.commands.focus('start' | 'end' | number)`.** Pass `"end"` to place the cursor after existing content (restoring a draft), `"start"` for a fresh empty editor. Call inside `requestAnimationFrame` when the editor element was just mounted.

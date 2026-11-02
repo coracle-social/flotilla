@@ -1,13 +1,14 @@
 <script lang="ts">
-  import {MESSAGE, displayRelayUrl, tagSpec, tagValue} from "@welshman/util"
+  import {MESSAGE, tagSpec, tagValue} from "@welshman/util"
   import Modal from "@lib/components/Modal.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import SearchBody from "@app/components/SearchBody.svelte"
-  import {CONTENT_KINDS} from "@app/content"
-  import {relayMemberLists} from "@app/core"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {CONTENT_KINDS} from "@app/features/spaces"
+  import {relayMemberLists} from "@app/core/plugins"
 
   type Props = {
     url: string
@@ -24,7 +25,7 @@
   <ModalHeader>
     <ModalTitle>Search</ModalTitle>
     <ModalSubtitle>
-      on <span class="text-primary">{displayRelayUrl(url)}</span>
+      on <RelayLabel {url} class="text-primary" />
     </ModalSubtitle>
   </ModalHeader>
   <SearchBody

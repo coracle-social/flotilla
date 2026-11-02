@@ -1,6 +1,6 @@
 <script lang="ts">
   import {removeUndefined} from "@welshman/lib"
-  import {profiles} from "@app/core"
+  import {profiles} from "@app/core/plugins"
 
   type Props = {
     pubkey: string

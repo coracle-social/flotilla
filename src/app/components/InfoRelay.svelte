@@ -6,7 +6,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {PLATFORM_NAME} from "@app/env"
+  import {PLATFORM_NAME} from "@app/core/env"
 
   const back = () => history.back()
 </script>

@@ -11,18 +11,19 @@
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
-  import {reader} from "@app/core"
-  import {decodeRelay} from "@app/relays"
-  import {displayRoom} from "@app/rooms"
-  import {makeCommentFilter, partitionByActivity} from "@app/content"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  import {reader} from "@app/core/domain"
+  import * as pages from "@app/navigation/pages"
+  import {displayRoom} from "@app/features/spaces/rooms"
+  import {partitionByActivity} from "@app/features/spaces"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.threads.decode(params)
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)

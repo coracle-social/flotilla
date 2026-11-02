@@ -20,6 +20,7 @@ import {
   assertNoLeaks,
   formatTranscript,
   installWebSocketRoutes,
+  refuseStaleAuth,
   silenceRelay,
   withholdEose,
 } from "./net/websocket"
@@ -47,19 +48,23 @@ export {
   getPublished,
   getPublishedEvents,
   getTranscript,
+  refuseStaleAuth,
   silenceRelay,
   withholdEose,
 } from "./net/websocket"
 export {readCachedEvents} from "./app/cache"
+export {mockLocalStt} from "./app/stt"
 export {
   bubble,
   chatItems,
   chatList,
   composer,
+  composerAddButton,
   composerDisabled,
   composerEnabled,
   dialog,
   emojiButton,
+  homeFeedFilter,
   longDate,
   menuButton,
   message,
@@ -71,6 +76,8 @@ export {
   openRoomDetail,
   pageBar,
   pickEmoji,
+  pollOption,
+  relayCard,
   roomLink,
   send,
   sendButton,
@@ -80,7 +87,7 @@ export {
   toast,
   topDialog,
 } from "./ui"
-export {GIF, GIF_BASE64, WEBP, chooseFile, gifFile} from "./files"
+export {GIF, GIF_BASE64, WEBP, attachFile, chooseFile, gifFile, heicFile} from "./files"
 export type {TestFile} from "./files"
 export {
   DEFAULT_BLOSSOM_ORIGIN,
@@ -90,8 +97,8 @@ export {
   mockDufflepud,
   mockGeocoding,
   mockLivekit,
-  mockOpenRouterSpeech,
-  mockOpenRouterTranscription,
+  mockOpenRouterStt,
+  mockOpenRouterTts,
 } from "./net/http"
 export type {
   DufflepudFixtures,
@@ -99,11 +106,12 @@ export type {
   HostingFixtures,
   HostingHandle,
   HostingRecord,
-  Transcription,
+  Stt,
+  Tts,
 } from "./net/http"
 export type {WebLnInfo} from "./app/webln"
 
-// Mirrors encodeRelay in src/app/relays.ts, which cannot be imported without pulling in sveltekit.
+// Mirrors encodeRelay in src/app/core/relays.ts, which cannot be imported without pulling in sveltekit.
 const encodeRelay = (url: string) =>
   encodeURIComponent(
     normalizeRelayUrl(url)
@@ -115,7 +123,7 @@ export const spacePath = (url: string) => `/spaces/${encodeRelay(url)}`
 
 export const roomPath = (url: string, h: string) => `${spacePath(url)}/${h}`
 
-// Mirrors makeChatId in src/app/chats.ts.
+// Mirrors makeConversationId in src/app/features/messages.ts.
 export const chatPath = (...pubkeys: string[]) => `/chat/${[...pubkeys].sort().join(",")}`
 
 export const profilePath = (pubkey: string) => `/people/${npubEncode(pubkey)}`
@@ -129,11 +137,11 @@ export type PageOptions = {
   context?: BrowserContextOptions
   // VITE_ values applied over the ones derived from the scenario's relays. See BootOptions in app/boot.ts.
   env?: Record<string, string>
-  // A NIP-07 provider signing as this user, for a login that goes through an extension.
+  // A NIP-07 provider signing as this user, so that `as` signs the way an extension does.
   nip07?: TestUser
   // A WebLN provider on window, for a wallet that gets connected through an extension.
   webln?: WebLnInfo
-  // A blossom server installed before boot, for a url src/app/sync.ts probes and caches on load.
+  // A blossom server installed before boot, for a url src/app/core/sync.ts probes and caches on load.
   blossom?: BlossomOptions
   // Fields merged over a relay's own nip-11 document, keyed by relay url.
   relayInfo?: RelayInfoOverrides
@@ -145,6 +153,8 @@ export type PageOptions = {
   silent?: string[]
   // Relay urls that serve events and never eose, so every request runs out its own deadline.
   eoseless?: string[]
+  // Relay urls that read the first auth event as expired; refuseStaleAuth does the same mid-test.
+  staleAuth?: string[]
 }
 
 export type Harness = {
@@ -244,6 +254,10 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         withholdEose(context, url)
       }
 
+      for (const url of options.staleAuth ?? []) {
+        refuseStaleAuth(context, url)
+      }
+
       await mockRelayInfo(context, options.relayInfo ?? {})
       await mockAnalytics(context)
       await mockDufflepud(context)
@@ -276,6 +290,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
 
       return boot(context, {
         user,
+        nip07: Boolean(options.nip07),
         path,
         env: options.env,
         checked: options.checked,

@@ -8,9 +8,9 @@
   import HomeSection from "@app/components/HomeSection.svelte"
   import RelayListItem from "@app/components/hosting/RelayListItem.svelte"
   import RelayCreate from "@app/components/hosting/RelayCreate.svelte"
-  import {pushModal} from "@app/modal"
-  import {hosting} from "@app/hosting"
-  import {PLATFORM_NAME} from "@app/env"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {hosting} from "@app/features/hosting"
+  import {PLATFORM_NAME} from "@app/core/env"
 
   type Props = {
     class?: string
@@ -20,7 +20,7 @@
 
   const tenantRelays = $hosting.relays
 
-  const relays = $derived($tenantRelays.relays)
+  const relays = $derived($tenantRelays.value)
 
   const openCreate = () => pushModal(RelayCreate)
 </script>

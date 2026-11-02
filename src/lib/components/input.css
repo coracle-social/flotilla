@@ -32,6 +32,12 @@
     border-radius: var(--radius-xl);
   }
 
+  /* a quieter input, for filtering a list rather than entering data */
+  .input-subtle {
+    @apply bg-surface-less;
+    box-shadow: none;
+  }
+
   /* a flex wrapper that behaves like an input (for inline icons/buttons) */
   .input-group {
     @apply flex items-center gap-2;

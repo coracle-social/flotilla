@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {relays} from "@app/core"
+  import {relays} from "@app/core/plugins"
 
   type Props = {
     url: string

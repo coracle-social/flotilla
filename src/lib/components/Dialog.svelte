@@ -105,7 +105,9 @@
 
   onMount(() => {
     const overlay = element
-    const autofocus = panel.querySelector<HTMLElement>("[autofocus]")
+
+    // Focus-trap comes back here whenever what held focus is removed, so it is the dialog itself.
+    const getInitialFocus = () => panel.querySelector<HTMLElement>("[autofocus]") ?? panel
 
     const holdsFocus = () => {
       const {activeElement} = document
@@ -117,7 +119,7 @@
       allowOutsideClick: true,
       escapeDeactivates: false,
       fallbackFocus: panel,
-      ...(autofocus ? {initialFocus: autofocus} : {}),
+      initialFocus: getInitialFocus,
       isolateSubtrees: false,
       returnFocusOnDeactivate: false,
       setReturnFocus: previous => (previous.isConnected && holdsFocus() ? previous : false),

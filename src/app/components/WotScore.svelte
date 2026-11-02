@@ -16,7 +16,8 @@
 <script lang="ts">
   import {clamp} from "@welshman/lib"
   import {WotScope} from "@welshman/app"
-  import {followLists, user, wot} from "@app/core"
+  import {user} from "@app/core/user"
+  import {followLists, wot} from "@app/core/plugins"
 
   type Props = {
     pubkey: string
@@ -37,7 +38,7 @@
   const stroke = $derived(active ? "var(--primary)" : "var(--content)")
 </script>
 
-<div class="relative h-[14px] w-[14px]">
+<div class="relative h-[14px] w-[14px] shrink-0">
   <svg height="14" width="14" class="absolute">
     <circle class="wot-background" cx={center} cy={center} r={radius} />
     <circle

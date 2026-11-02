@@ -1,4 +1,4 @@
-import {noop} from "@welshman/lib"
+import {noop, tryCatch} from "@welshman/lib"
 
 const WAV_BIT_DEPTH = 16
 
@@ -55,6 +55,17 @@ export const listMediaDevices = async (): Promise<MediaDeviceInfo[]> => {
   }
 }
 
+// enumerateDevices leaves a device's id empty until permission for its kind has been granted.
+export const selectableDevices = (devices: MediaDeviceInfo[], kind: MediaDeviceKind) =>
+  devices.filter(d => d.kind === kind && d.deviceId !== "")
+
+// Granting permission for a kind is the only thing that reveals its devices.
+export const requestDevicePermission = async (constraints: MediaStreamConstraints) => {
+  const stream = await tryCatch(() => navigator.mediaDevices.getUserMedia(constraints))
+
+  stream?.getTracks().forEach(t => t.stop())
+}
+
 // Calls onFrame with the root mean square of the stream's waveform, from 0 to 1, on every animation frame.
 export const watchAudioLevel = (stream: MediaStream, onFrame: (rms: number) => void) => {
   const context = new AudioContext()
@@ -86,4 +97,74 @@ export const watchAudioLevel = (stream: MediaStream, onFrame: (rms: number) => v
     cancelAnimationFrame(frame)
     context.close().catch(noop)
   }
+}
+
+// Mixes every channel down to one and resamples it to the rate a model expects.
+export const decodeMono = async (file: Blob, sampleRate: number) => {
+  let audio = await new OfflineAudioContext(1, 1, sampleRate).decodeAudioData(
+    await file.arrayBuffer(),
+  )
+
+  if (audio.sampleRate !== sampleRate) {
+    const context = new OfflineAudioContext(
+      audio.numberOfChannels,
+      Math.ceil(audio.duration * sampleRate),
+      sampleRate,
+    )
+    const source = context.createBufferSource()
+    source.buffer = audio
+    source.connect(context.destination)
+    source.start()
+    audio = await context.startRendering()
+  }
+
+  const samples = new Float32Array(audio.length)
+  for (let channel = 0; channel < audio.numberOfChannels; channel++) {
+    const data = audio.getChannelData(channel)
+    for (let i = 0; i < samples.length; i++) {
+      samples[i] += data[i] / audio.numberOfChannels
+    }
+  }
+  return samples
+}
+
+const EXTENSIONS_BY_MIME_TYPE: Record<string, string> = {
+  "audio/webm": "webm",
+  "audio/ogg": "ogg",
+  "audio/mp4": "m4a",
+  "audio/mpeg": "mp3",
+  "audio/wav": "wav",
+}
+
+export type Recording = {
+  // The microphone itself, so a level meter can read it while the recording runs.
+  track: MediaStreamTrack
+  stop: () => void
+  // Resolves once recording has stopped, with the audio named for the format the recorder chose.
+  audio: Promise<File>
+}
+
+export const record = async (name: string): Promise<Recording> => {
+  const stream = await navigator.mediaDevices.getUserMedia({audio: true})
+  const recorder = new MediaRecorder(stream)
+  const chunks: Blob[] = []
+
+  recorder.addEventListener("dataavailable", event => chunks.push(event.data))
+  recorder.start()
+
+  const audio = new Promise<File>(resolve => {
+    recorder.addEventListener("stop", () => {
+      for (const track of stream.getTracks()) {
+        track.stop()
+      }
+
+      // The recorder names its codec alongside the container, which an imeta or a blossom url can't carry.
+      const [type] = recorder.mimeType.split(";")
+      const extension = EXTENSIONS_BY_MIME_TYPE[type] || "webm"
+
+      resolve(new File(chunks, `${name}.${extension}`, {type}))
+    })
+  })
+
+  return {track: stream.getAudioTracks()[0], stop: () => recorder.stop(), audio}
 }

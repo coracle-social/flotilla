@@ -81,6 +81,11 @@ still in flight. `as(user, path, {silent: [url]})` is that from the first connec
 a spec about a page failing to fill needs it; `silenceRelay(context, url)` applies it mid-test. Such
 a url needs no tenant behind it, since nothing it says is ever served.
 
+A refusal the client itself caused is expressible too: `as(user, path, {staleAuth: [url]})` answers
+the first auth event the way a relay answers one whose `created_at` is outside the window it allows,
+which is what a tab the browser suspended mid-handshake sends on waking. The fault is spent on that
+one refusal, so a spec can tell a client that signs again from one that reports the relay denied it.
+
 Interception is installed by `as()` and `visit()`, on a context each of them creates, so a page that
 came from anywhere else has none of it. Playwright's own `context` fixture — and the `page` fixture
 built on it — is therefore overridden to throw, so a spec written the ordinary way fails immediately
@@ -166,7 +171,7 @@ page asks for is meant to be refused.
 
 Configuration is the other half. `boot()` overrides every `VITE_` value that names a relay — default,
 indexer, search, messaging, signer, platform, blocked, the default space list — with the scenario's
-own urls, through the hook `src/app/env.ts` reads them with, and points `VITE_PUSH_BRIDGE` at `ws://localhost:1/`, which nothing serves, so a push
+own urls, through the hook `src/app/core/env.ts` reads them with, and points `VITE_PUSH_BRIDGE` at `ws://localhost:1/`, which nothing serves, so a push
 bridge connection is reported as a leak rather than blending into a relay's traffic. The `VITE_`
 values it does not override still name real hosts — the blossom server, the pomade signers, the
 thumbnail service, the push server, the hosting api — and none of them is contacted at boot. Blossom
@@ -177,7 +182,7 @@ configuration.
 Grepping the repo for hostnames accounts for all of them, and there are only three kinds. Most are an
 `href` in help text — nostr.com, nostrapps.com, nsec.app, nosta.me, nostr.how, github.com,
 fountain.fm, cal.com, figma.com, coracle.tools, gitea.coracle.social, nwc.getalby.com, and the
-`coracle.social` entity links `src/app/env.ts` builds — reachable only by clicking, and routed if
+`coracle.social` entity links `src/app/core/env.ts` builds — reachable only by clicking, and routed if
 clicked. Two are fetched: dufflepud, whose origin is the one service url hard-coded rather than read
 from `VITE_`, and the plausible tag in `src/app.html`. Both are mocked. The rest are in comments.
 Under `e2e` the only hostnames are the four service origins `net/http.ts` matches on, the virtual
@@ -227,36 +232,35 @@ Test identities are deterministic secp256k1 keypairs derived from fixed secrets 
 `makeTestUser(name)` derives a fifth, sixth or hundredth one from its name and registers it, for the
 directory and search specs that need more people than there are named ones.
 
-A logged-in user is created by injecting a NIP-01 session before the app boots. `src/app/session.ts`
+A logged-in user is created by injecting a NIP-01 session before the app boots. `src/app/core/session.ts`
 carries a DEV-only hook: `restoreSession()` prefers `window.__TEST_SESSION__` when it is present, and
 `window.__TEST_EVENTS__` becomes the repository contents a returning user's client would have found
 on disk. Both branches are stripped from production builds, and injecting through the hook avoids
 writing Capacitor's `SecureStorage`/`Preferences` localStorage encoding by hand.
 
-The injected events go in _after_ `storage.ready`. Storage loads what the last session left behind
-with `Repository.load`, which clears the repository before inserting, so anything put there while
-IndexedDB is still opening is wiped a few milliseconds later — before the layout has rendered
-anything, and long before `authPolicy` reads the room list to decide whether to answer a relay's AUTH
-challenge.
+The injected events go in once `storage.ready` has resolved, which is when the last session's would
+have been readable, and `restoreSession()` waits for the database to take them. That is before the
+layout has rendered anything, and long before `shouldAuth` reads the room list to decide whether to
+answer a relay's AUTH challenge.
 
 The cache exists for the harness rather than for the app. In production the client bootstraps itself:
-asking a keyed collection for a pubkey loads it, so `authPolicy` reading the user's room and relay
+asking a keyed collection for a pubkey loads it, so `shouldAuth` reading the user's room and relay
 lists to decide whether to answer a challenge is itself what fetches them, as is any outbox-routed
 load of the user's own data. Kind-10002 comes back from the public indexers, and `syncRelayList`
 cascades into the room list from there.
 
 Here the indexers _are_ the scenario's relays, because `boot()` points every relay list at them, and
-those are members-only — so that first load is refused with `auth-required:`, while `authPolicy`,
+those are members-only — so that first load is refused with `auth-required:`, while `shouldAuth`,
 conservative by default, will not sign for a url no list has named yet. Each waits on the other. The
 injected room list breaks the circle, and it is what a user who joined a space through the UI would
 have on disk anyway.
 
 The price is that no spec exercises the bootstrap: every one of them starts already knowing which
-relays it belongs to, so a regression in the chain from relay list to room list, or in `authPolicy`'s
+relays it belongs to, so a regression in the chain from relay list to room list, or in `shouldAuth`'s
 conservative gate, leaves the suite green. The public relays under "The follow graph" are the
 standing-in indexer that covering it would need.
 
-Each user is a separate `BrowserContext`, which also gives each one its own IndexedDB and
+Each user is a separate `BrowserContext`, which also gives each one its own IndexedDB, OPFS and
 localStorage, so nothing bleeds between users.
 
 An injected session is re-applied on every navigation, so through `as()` a reload, a logout and a
@@ -315,10 +319,18 @@ gets.
 An open relay's url reads before seeding has run, unlike a space's, because a relay list has to name
 the relay a note is seeded on.
 
+### A list is seeded on every relay its author writes to
+
+A read resolves three of the author's write relays and no more, so a list seeded on one of four is
+missed one read in four and the spec reds at random. Seed a follow list on each relay the scenario
+serves, the way a client publishing one does. A user with three write relays or fewer never meets
+this, which is why most specs get away with naming the indexer alone.
+
 ### Why a reader has to name the relays it reads from
 
-zooid answers no REQ without NIP-42, whatever `public_read` says, and `authPolicy` is conservative:
-it identifies only to relays the user's own room list or relay list names. So a relay a spec expects
+zooid answers no REQ without NIP-42, whatever `public_read` says, and `shouldAuth` is conservative:
+it identifies only to relays the user's own room list or relay list names, a platform build's
+platform relays, and a space whose page is open. So a relay a spec expects
 the client to read from has to appear in that user's list, and a relay list is seeded for the reader
 as well as for the people they follow.
 
@@ -381,8 +393,8 @@ it, and the comment saying why it is shaped that way has one copy to keep true. 
 what one spec means differently: `dms.spec.ts` names a message by its `data-event` id, because the
 same words are sent more than once there.
 
-One piece lives outside this directory: `src/lib/test/session.ts` holds the two window keys and the
-getters `src/app/session.ts` reads them through. It is the only file the app ships on the harness's
+One piece lives outside this directory: `src/lib/test/session.ts` holds the two window keys, and
+`getTestSession` and `publishTestEvents`, which `restoreSession` in `src/app/core/session.ts` calls. It is the only file the app ships on the harness's
 behalf, and `harness/app/session.ts` duplicates the key names rather than importing them, since
 importing anything under `src` would pull sveltekit into the node process.
 
@@ -456,7 +468,7 @@ engines adds little coverage. `E2E_BROWSER=webkit pnpm test` runs the whole
 suite under another one. The container listens on a fixed port and cannot be sharded, so
 `workers` is 1.
 
-`src/app/env.ts` resolves every `VITE_` value through a DEV-only hook that prefers
+`src/app/core/env.ts` resolves every `VITE_` value through a DEV-only hook that prefers
 `window.__TEST_ENV__`, which `boot()` injects per browser context, so any dev server will do and a
 server already listening on `:1847` is reused. `boot()` still checks that the app read the injected
 values, and fails naming the hook rather than letting a run drift onto the relays in `.env`.

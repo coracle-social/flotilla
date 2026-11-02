@@ -1,0 +1,5 @@
+@layer components {
+  .space-notify {
+    @apply bg-surface border-line flex items-start gap-3 rounded-2xl border p-3;
+  }
+}

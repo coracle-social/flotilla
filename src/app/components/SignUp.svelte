@@ -4,7 +4,7 @@
   import type {ClientOptions} from "@pomade/core"
   import {makeSecret, RELAYS, MESSAGING_RELAYS, makeEvent} from "@welshman/util"
   import {Profile} from "@welshman/domain"
-  import {Publisher, nip01, publish, toSession} from "@welshman/app"
+  import {Publisher, nip01, toSession} from "@welshman/app"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
   import {getKey, setKey} from "@lib/implicit"
@@ -18,18 +18,22 @@
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import type {ProfileValues} from "@app/components/ProfileEditForm.svelte"
   import SignUpComplete from "@app/components/SignUpComplete.svelte"
-  import {attemptRelayAccess} from "@app/access"
+  import {attemptRelayAccess} from "@app/features/spaces/membership"
   import {
     POMADE_SIGNERS,
     INDEXER_RELAYS,
     DEFAULT_RELAYS,
     DEFAULT_MESSAGING_RELAYS,
     DEFAULT_SPACES,
-  } from "@app/env"
-  import {forceHealthChecks} from "@app/healthChecks"
-  import {loginWithPomade} from "@app/pomade"
-  import {pushModal, clearModals} from "@app/modal"
-  import {app, domain, login, roomLists} from "@app/core"
+    HIDE_NOSTR,
+  } from "@app/core/env"
+  import {forceHealthChecks} from "@app/features/healthChecks"
+  import {loginWithPomade} from "@app/features/pomade"
+  import {publishRoomList} from "@app/features/spaces/rooms"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
+  import {app} from "@app/core/app"
+  import {domain, roomLists} from "@app/core/plugins"
+  import {login} from "@app/core/session"
 
   setKey("signup.email", "")
   setKey("signup.secret", makeSecret())
@@ -66,7 +70,7 @@
         event: await profileWriter.renderTemplate(),
         relays: [...DEFAULT_RELAYS, ...DEFAULT_SPACES],
       }),
-      $roomLists.setRelays(DEFAULT_SPACES).then(publish),
+      $roomLists.setRelays(DEFAULT_SPACES).then(publishRoomList),
     ])
 
     // Wait for all the publications to settle
@@ -86,7 +90,7 @@
         const email = getKey<string>("signup.email")!
         const clientOptions = getKey<ClientOptions>("signup.clientOptions")!
 
-        loginWithPomade(clientOptions, email)
+        await loginWithPomade(clientOptions, email)
         await completeSignup()
       },
     },
@@ -121,7 +125,7 @@
       onclick={flows.nostr.start}
       class={cx(`button button-${hasPomade ? "neutral" : "primary"}`)}>
       <Icon icon={Key} />
-      Generate a key
+      {HIDE_NOSTR ? "Sign up" : "Generate a key"}
     </Button>
     <div class="text-sm">
       Already have an account?

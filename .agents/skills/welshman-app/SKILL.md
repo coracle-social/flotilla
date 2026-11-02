@@ -7,7 +7,7 @@ description: "Use this skill when working with @welshman/app: the instance-based
 
 ## Overview
 
-`@welshman/app` is the high-level app layer of welshman. It ties `util`, `net`, `store`, `domain`, `signer`, and `feeds` together behind a single **`App`** instance. Everything — the event repository, connection pool, the signed-in user, and all features — hangs off that instance. There are **no module-level globals**: you create an app and reach everything through `app.use(...)`.
+`@welshman/app` is the high-level app layer of welshman. It ties `util`, `net`, `store`, `domain`, `signer`, and `feeds` together behind an **`App`** instance. The repository, connection pool, signed-in user, and every feature hang off that instance, and features are reached through `app.use(...)`.
 
 ## Installation
 
@@ -18,23 +18,22 @@ pnpm add @welshman/app
 yarn add @welshman/app
 ```
 
-Peer deps: `svelte` (4 or 5), all `@welshman/*` workspace packages, and `@pomade/core`.
+Peer deps: all `@welshman/*` workspace packages and `@pomade/core`. The stores come from `@welshman/store`, which vendors svelte's store contract, so svelte itself is not a dependency.
 
 ## Core mental model
 
-1. **An app is an `App` instance.** It owns per-identity state (`repository`, `pool`, `tracker`, `wrapManager`), a `config`, and at most one `User`. Two apps never share data.
+1. **An app is an `App` instance.** It owns per-identity state (`repository`, `pool`, `wrapManager`), a `config`, and at most one `User`. Relay provenance is `app.repository.tracker`. Two apps never share data.
 2. **Features are plugins**, resolved lazily and memoized via `app.use(SomeClass)`. Each plugin is constructed with the app and cached per app.
-3. **`Projection<T>` is the universal accessor.** It has `.get()` (sync snapshot) and `.$` (Svelte `Readable`). Bind `.$` in components; call `.get()` in callbacks/hot paths.
-4. **Reads are reactive and lazy-loading.** `app.use(Profiles).one(pubkey)` returns a store that fetches over the network (outbox model) and updates as events arrive.
-5. **Writes are optimistic.** Publishing goes through the `Publisher` pipeline: the event hits the local repository immediately, signs lazily, and reports per-relay progress, with an abortable delay for soft-undo.
+3. **`Projection<T>` is the universal accessor.** It has `.get()` (sync snapshot) and `.$` (a `Readable`), and is a store itself, so `derived(p, ...)` works too. Bind `.$` in components; call `.get()` in callbacks/hot paths. It comes from `@welshman/store`, along with `projection` and `projectFrom`.
+4. **Reads are reactive and lazy-loading.** `app.use(Profiles).one(pubkey)` returns a store that fetches over the network (outbox model) and updates as events arrive. The repository answers asynchronously, so views fill in after their first query; the [welshman-store](../welshman-store/SKILL.md) skill covers the semantics.
+5. **Writes are optimistic.** Publishing goes through the `Publisher` pipeline: the event goes into the repository immediately, signs lazily, and reports per-relay progress, with an abortable delay for soft-undo.
 
 ## Creating an app
 
 ```typescript
 import {createApp} from "@welshman/app"
 
-// Batteries-included: installs default policies (event ingestion, relay stats,
-// gift-wrap unwrapping, NIP-42 auth-unless-blocked).
+// Installs defaultAppPolicies (see Policies & logging below).
 const app = createApp({
   user,                                    // optional User
   config: {
@@ -53,9 +52,11 @@ const bare = new App()
 app.cleanup()
 ```
 
-`AppOptions` is `{user?, config?, getAdapter?, policies?}`, `AppConfig` is the `config` field above, and `AppPolicy` is `(app: IApp) => Unsubscriber`.
+`AppOptions` is `{user?, config?, getAdapter?, policies?, repository?, wrapManager?}`, `AppConfig` is the `config` field above, and `AppPolicy` is `(app: IApp) => Unsubscriber`.
 
-`IApp` (what plugins/policies depend on): `{user?, config, use, onCleanup, netContext, pool, tracker, repository, wrapManager}`. A plugin registers teardown with `app.onCleanup(unsubscriber)`; `app.cleanup()` runs them in reverse, then clears the pool, tracker, repository and wrap manager.
+`IApp` (what plugins/policies depend on): `{user?, config, use, onCleanup, netContext, pool, repository, wrapManager}`. A plugin registers teardown with `app.onCleanup(unsubscriber)`; `app.cleanup()` runs them in reverse, then clears the pool.
+
+Without `repository`, an app keeps events in a `MemoryRepository` it creates and clears on cleanup. An injected repository, such as a `SqliteRepository` that persists across sessions, belongs to the caller and survives `cleanup()`, and so does an injected `wrapManager`. With a persistent repository, also pass a `WrapManager` restored from your own copy of its `dump()`: the stored wraps come back on start, and the app unwraps again every wrap its wrap manager doesn't know, one signer call each.
 
 ## User & sessions
 
@@ -101,36 +102,39 @@ Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) i
 | Plugin | Data | Notable accessors |
 |---|---|---|
 | `Profiles` | kind-0 profiles | `display(pk)`, `update(fn)` → `Command`; `profileSearch` |
-| `FollowLists` | kind-3 follows | `follow(pk, hint?, petname?)`, `unfollow(pk)`, `update(fn)` → `Command` |
+| `FollowLists` | kind-3 follows | `follow(tag)`, `unfollow(value)`, `update(fn)` → `Command` |
 | `MuteLists` | kind-10000 mutes (private = encrypted) | `mutePublicly(tag)`, `mutePrivately(tag)`, `unmute(v)`, `setMutes(...)` → `Command` |
 | `PinLists` | kind-10001 pins | `pin(tag)`, `unpin(value)` → `Command` |
+| `BookmarkLists` | kind-10003 bookmarks (private = encrypted) | `bookmarkPublicly(tag)`, `bookmarkPrivately(tag)`, `removeBookmark(v)`, `update(fn)` → `Command` |
+| `BookmarkSets` | kind-30003 bookmark sets (many per author, keyed by address) | `forAuthor(pk)`, `loadForAuthor(pk)`, `create(fields)`, `update(addr, fn)` → `Command` |
 | `RelayLists` | NIP-65 (kind 10002) | `urls(pk)`, `readUrls(pk)`, `writeUrls(pk)`, `addReadUrl`/`addWriteUrl`, `removeReadUrl`/`removeWriteUrl`, `setReadUrls`/`setWriteUrls` → `Command` |
 | `BlockedRelayLists` | kind-10006 | `urls(pk)`, `addUrl`, `removeUrl`, `setUrls` → `Command` |
 | `MessagingRelayLists` | kind-10050 (NIP-17 DM relays) | `urls(pk)`, `addUrl`, `removeUrl`, `setUrls` → `Command` |
 | `SearchRelayLists` | kind-10007 | `urls(pk)`, `addUrl`, `removeUrl`, `setUrls` → `Command` |
 | `BlossomServerLists` | kind-10063 media servers | `urls(pk)`, `addUrl`, `removeUrl`, `setUrls` → `Command` |
-| `FeedLists` | kind-10014 saved-feed lists | list accessors + `update(fn)` → `Command` |
+| `FeedLists` | kind-10014 saved-feed lists | `addresses(pk)`, `addFeed`/`addFeedPrivately`/`removeFeed`, `update(fn)` → `Command` |
 | `RoomLists` | kind-10009 room lists | `addRoom`/`removeRoom`/`addRelay`/`removeRelay`/`setRelays` → `Command` |
 | `Feeds` | kind-31890 saved feeds (keyed by address) | `forAuthor(pk)`, `loadForAuthor(pk)`, `create(fields)`, `update(addr, fn)` → `Command`; `makeFeedController(...)` |
 | `Pinboards` | kind-30067 pinboards (many per author, keyed by address) | `forAuthor(pk)`, `loadForAuthor(pk)`, `create(fields)`, `update(addr, fn)` → `Command` |
 | `Pins` | kind-39067 pins (keyed by address; each pin has its own `d` tag) | `forBoard(addr)`, `forProfile(pk)`, `loadForBoard(addr)`, `loadForProfile(pk)`, `create`, `update`, `addToBoard`, `removeFromBoard` → `Command` |
-| `Relays` | NIP-11 relay info (HTTP) | `display(url)`, `hasNip(url, n)`, `hasNegentropy(url)`; `relaySearch` |
+| `Relays` | NIP-11 relay info (HTTP) | `display(url)`, `hasNegentropy(url)`; check a NIP on the loaded `Relay` with `relay.hasNip(n)`; `relaySearch` |
+| `Notify` | Latest `NOTIFY` per relay url | `one(url)`, `get(url)` -> `{url, message, receivedAt}` |
 | `RelayManagement` | NIP-86 mgmt API | `forUrl(url)` → a `ManagementApi` client that signs auth as the app's user (role/member ops, ban/allow, …) |
 | `RelayStats` | per-relay connection counters | `get(url)`, `getQuality(url)` (0–1, drives router ranking) |
 | `RelayRoles` / `RelayMemberLists` / `RoomPinLists` | relay-signed state, keyed per relay | relay-scoped collections (see `RelaySignedDerivedPlugin`) |
 | `Handles` | NIP-05 (HTTP, batched) | `forPubkey(pk)`, `display(nip05)`, `loadForPubkey(pk)` |
 | `Zappers` | LNURL zapper info (HTTP) | `forPubkey(pk)`, `validateZapReceipt(...)`, `validateZapReceipts(...)`, `validZapReceipts(...)` |
-| `Topics` | hashtags w/ counts | `all`, `byName` (`Projection`s); `topicSearch` |
-| `Reactions` / `Deletes` | kind-7 reactions and kind-5 deletes over the repository | reactive lookups |
+| `Topics` | hashtags w/ counts of the stored events carrying each | `all`, `byName` (`Projection`s); `topicSearch` |
+| `Reactions` / `Deletes` | kind-7 reactions and kind-5 deletes (no collection; read them with `Events`) | `react(event, content, fn?)` / `deleteEvent(event, fn?)` → `Command` |
 | `Rooms` | NIP-29 rooms, keyed `${url}'${h}` | `forRoom(url, h)`, `forUrl(url)`, `members(url, h)`, `membershipStatus(...)`, `pendingJoins(url, h?)`, `createRoom`/`editRoom`/`deleteRoom`/`joinRoom`/`leaveRoom`/`addMember`/`removeMember`/`deleteEvent(url, room, …)` → `Command` |
-| `Plaintext` | decrypted-content cache, keyed by ciphertext | `ensure(ciphertext, decrypt)`, `get(ciphertext)` |
+| `Plaintext` | decrypted-content cache, keyed by ciphertext; concurrent callers share one decrypt | `ensure(ciphertext, decrypt)`, `get(ciphertext)` |
 
 ```typescript
 import {createApp, Profiles, RelayLists} from "@welshman/app"
 const app = createApp({user})
 
 // Reactive (Svelte): subscribe or use $ in a component
-const profile$ = app.use(Profiles).one(pubkey)        // Readable<Maybe<Profile>>, lazy-loads
+const profile$ = app.use(Profiles).one(pubkey)        // Readable<Maybe<ProfileReader>>, lazy-loads
 const name$    = app.use(Profiles).display(pubkey).$   // Readable<string>
 
 // Synchronous snapshot (no load)
@@ -158,8 +162,7 @@ await app.use(RelayLists).addWriteUrl("wss://relay.example").then(publish)
 import {Publisher, Router} from "@welshman/app"
 import {makeEvent, NOTE, userOutbox} from "@welshman/util"
 
-// Publisher has no outbox helper. Resolve write relays with the Router's Resolver and the
-// RelaySelection DSL, as Command.publish() does for every data-plugin mutation:
+// Publisher takes explicit relays. Resolve the user's write relays with the Router:
 const publication = app.use(Publisher).publish({
   event: makeEvent(NOTE, {content: "hi"}),
   relays: await app.use(Router).resolver.relays([userOutbox()]),   // Promise<string[]>
@@ -175,7 +178,7 @@ publication.subscribe(p => console.log(p.state.stage, p.results))
 publication.abort()                           // unwinds the optimistic write; does nothing once settled
 publication.canAbort()                        // true until any relay has been sent to
 await publication.settled()                   // resolves on a terminal stage
-publication.getError()                        // string | undefined
+await publication.getError()                  // string | undefined, once settled
 publication.event                             // current event (mined/signed as it goes); the rumor for a wrap
 app.use(Publisher).history                    // writable<Publication[]> — optimistic log
 app.use(Publisher).retry(publication)         // re-sends publication.event, same id
@@ -191,7 +194,7 @@ const group = await app.use(Wraps).publish({event: rumor, recipients: [a, b]})
 app.use(Publisher).publish({event, relays, pow: 20})
 ```
 
-`PublishRequest`: `{event, relays, recipient?, delay?, pow?, priority?, timeout?}`. The stages (`STAGES` in `plugins/publisher.ts`) only transform the event. The publisher keeps the repository, tracker and `WrapManager` in step by reacting to state changes. Incoming wraps addressed to the user are auto-unwrapped by the default `appPolicyWraps`. An unwrap that throws is tried again up to `MAX_UNWRAP_ATTEMPTS` times, so a signer that was busy or disconnected doesn't cost the message.
+`PublishRequest`: `{event, relays, recipient?, delay?, pow?, priority?, timeout?}`. The stages (`STAGES` in `plugins/publisher.ts`) only transform the event. The publisher keeps the repository, tracker and `WrapManager` in step by reacting to state changes. Incoming wraps addressed to the user are auto-unwrapped by the default `appPolicyWraps`. An unwrap that throws is tried again up to `MAX_UNWRAP_ATTEMPTS` times, so a signer that was busy or disconnected doesn't cost the message. Each of its decryptions asks the signer for `priority: -1`, which leaves the user's own requests ahead of a backlog, and the signer bounds the decryption rather than the unwrap bounding the pair of them.
 
 ## Commands (deferred publishing)
 
@@ -210,16 +213,16 @@ command.publish()               // normal path: app.use(Publisher).publish({even
 command.publishToRelays(urls)   // publish to a specific relay set instead of command.relays
 ```
 
-This lets a caller preview/log a command, choose a different transport, or drop it entirely, instead of every plugin method publishing unconditionally. `Wraps.publish` is the one exception — it fans a single rumor out to a `PublicationGroup` of per-recipient wraps (each with its own relays), which doesn't fit the one-event/one-relay-set `Command` shape, so it still publishes directly.
+`Wraps.publish` publishes directly instead: it fans one rumor out to a `PublicationGroup` of per-recipient wraps, each with its own relays.
 
-`publish`/`publishToRelays` are also exported as free functions (e.g. `(command) => command.publish()`, `(urls) => (command) => command.publishToRelays(urls)`) so you can chain straight off the mutation method's promise instead of double-awaiting:
+`publish` and `publishToRelays` are also exported as free functions that chain off the mutation method's promise:
 
 ```typescript
 import {publish, publishToRelays} from "@welshman/app"
 
 await app.use(FollowLists).follow(["p", otherPubkey]).then(publish)
-await app.use(Rooms).leave(relayUrl, roomMeta).then(publish)
-await app.use(Rooms).join(relayUrl, roomMeta).then(publishToRelays([relayUrl]))
+await app.use(Rooms).leaveRoom(relayUrl, roomMeta).then(publish)
+await app.use(Rooms).joinRoom(relayUrl, roomMeta).then(publishToRelays([relayUrl]))
 ```
 
 ## Requests & sync
@@ -228,19 +231,14 @@ await app.use(Rooms).join(relayUrl, roomMeta).then(publishToRelays([relayUrl]))
 import {Network, Sync} from "@welshman/app"
 const net = app.use(Network)
 
-// loadComplete waits for every relay, so an empty result means every relay answered
-// nothing. loadLenient resolves once half of them have closed, for the cases where
-// nothing routes on the returned array.
-const events = await net.loadComplete({filters: [{kinds: [1], authors: [pk]}], relays})
-await net.request({filters, relays, autoClose: true})
+// A one-shot request waits for every relay, so an empty result means every relay answered
+// nothing. A request read reactively from the repository needs no timeout.
+const events = await net.load({filters, relays, timeout: 3000})
 
 // Outbox-model author load (resolves the author's write relays automatically).
 // loadUsingOutbox returns the newest matching event; loadAllUsingOutbox returns them all.
 const profileEvent = await net.loadUsingOutbox(pk, {kinds: [0]})
 const allFeeds     = await net.loadAllUsingOutbox(pk, {kinds: [31890]})
-
-// A loader with different batching, still bound to this app's net context:
-const slowLoad = net.makeLoader({delay: 500, timeout: 5000})
 
 // Negentropy-aware reconciliation (falls back to request/publish when unsupported):
 await app.use(Sync).pull({relays, filters: [{authors: [pk]}]})
@@ -249,16 +247,14 @@ await app.use(Sync).push({relays, filters: [{authors: [pk]}]})
 
 ## Querying the repository (`Events`)
 
-`Network` fetches; `Events` reads what's already local. Every method binds this app's repository
-and tracker and returns a `Projection` — `.get()` for a snapshot, `.$` to subscribe — so there's no
-get/derive pair to keep in sync.
+`Network` fetches, and `Events` reads what's already local. Every method binds this app's repository and returns a `Projection`. Every view but `isDeleted` is an `AsyncProjection`, whose `load()` reads the repository fresh where `.get()` returns what the view last held.
 
 ```typescript
 import {Events} from "@welshman/app"
 const events = app.use(Events)
 
 events.byId(filters).$           // Map<id, TrustedEvent>
-events.all(filters).$            // repository order
+events.all(filters).$            // store order
 events.asc(filters).$            // oldest first
 events.desc(filters).$           // newest first
 events.one(idOrAddress, hints)   // one event, loaded on first read if missing
@@ -271,8 +267,7 @@ events.byIdByUrl(filters).$              // Map<url, Map<id, TrustedEvent>>
 events.relaySignedForUrl(url, filters).$ // only what the relay itself signed
 ```
 
-`relaySignedForUrl` is the loose counterpart to `RelaySignedDerivedPlugin` — relay-generated kinds
-mean nothing from another author, so anything not signed by the relay's NIP-11 `self` is dropped.
+`relaySignedForUrl` drops anything not signed by the relay's NIP-11 `self`, as `RelaySignedDerivedPlugin` does.
 
 ## Routing & tags
 
@@ -282,7 +277,7 @@ mean nothing from another author, so anything not signed by the relay's NIP-11 `
 import {Router} from "@welshman/app"
 import {userOutbox, outbox, seen, relay, addMinimalFallbacks} from "@welshman/util"
 
-const router = app.use(Router)                // per-app; NOT Router.get()
+const router = app.use(Router)
 
 // resolver.relays(...) -> Promise<string[]>; resolver.relay(...) -> Promise<string | undefined>
 const writeRelays = await router.resolver.relays([userOutbox()])
@@ -296,7 +291,7 @@ const relays = (await router.resolve([userOutbox()])).policy(addMinimalFallbacks
 // indexers(), searchRelays() — each returns a RelaySelection (relays/inboxes return arrays).
 ```
 
-Event tagging (reply/quote/reaction threading, p-tags, zap splits) now lives on the domain **writers** — `writer.tagPubkey(pk)`, `writer.addQuote(event)`, `writer.addZapSplit(pk)`, and kind-specific setters like `NoteWriter.setParent(parentEvent)` — not on a separate `Tags` plugin. See the `welshman-domain` skill.
+Event tagging (reply, quote and reaction threading, p-tags, zap splits) lives on the domain **writers**: `writer.addMention(pk)`, `writer.addQuote(event)`, `writer.addZapSplit(pk)`, and kind-specific setters like `NoteWriter.setParent(parentEvent)`. See the `welshman-domain` skill.
 
 `Router` is the one `ResolveRoute` implementation in the stack. It resolves each route against the app:
 
@@ -328,7 +323,7 @@ The DSL constructors, `RelayScenario` scoring and the fallback policies are docu
 
 ## Web of trust
 
-Built from the **public** `p` tags on follow (kind 3) and mute (kind 10000) lists as they land in the repository. Every read is a `Projection` (`.get()` / `.$`), and reads *about* a pubkey take a `WotScope`:
+Built from the **public** `p` tags on follow (kind 3) and mute (kind 10000) lists in the repository. It catches up on stored lists asynchronously when first used, then follows the repository's updates. Every read is a `Projection` (`.get()` / `.$`), and reads *about* a pubkey take a `WotScope`:
 
 - `WotScope.Global` — counts every list in the repository.
 - `WotScope.Follows` — counts only lists published by the user's own follows, i.e. the pubkey as this user sees it. With no signed-in user it falls back to global.
@@ -353,7 +348,7 @@ Use `scores(scope)` when ranking a list (search results, a WoT range); it walks 
 
 ```typescript
 import {makeIntersectionFeed, makeScopeFeed, makeKindFeed, Scope} from "@welshman/feeds"
-import {get} from "svelte/store"
+import {get} from "@welshman/store"
 
 const controller = app.use(Feeds).makeFeedController({
   feed: makeIntersectionFeed(makeScopeFeed(Scope.Follows), makeKindFeed(1)),
@@ -361,7 +356,7 @@ const controller = app.use(Feeds).makeFeedController({
 })
 await controller.load(50)              // scopes (Self/Follows/Network/Followers) resolved via Wot
 
-// Search lives on the collection that owns the data. There is no Searches plugin.
+// Search lives on the collection that owns the data.
 const search = get(app.use(Profiles).profileSearch)
 const pubkeys = search.searchValues("alice")   // also fires a NIP-50 network search; ranked by WoT
 // also: app.use(Topics).topicSearch, app.use(Relays).relaySearch
@@ -372,7 +367,7 @@ const pubkeys = search.searchValues("alice")   // also fires a NIP-50 network se
 
 Base classes in `plugins/base.ts`:
 
-- **`DerivedPlugin<T>`** — collection derived from repository events (the repo is the single source of truth). Pass `{filters, eventToItem, getKey, loadOptions?}`; implement `fetch`. This is the dominant pattern. Gives you `index`/`all` (`Projection`s), `get(key)`, `one(key)`, `load`/`forceLoad`, and `project(key, read)`.
+- **`DerivedPlugin<T>`** — collection derived from repository events (the repository is the single source of truth). The collection stays subscribed for the life of the app, so its parsed items are held in memory and `get(key)` answers synchronously once the first query lands. With a `SqliteRepository` too, first use reads every stored event the filters match. Pass `{filters, eventToItem, getKey, loadOptions?}`; implement `fetch`. This is the dominant pattern. Gives you `all` (a `Projection`), `index` (an `ItemCollection`, a `Projection` plus a `read(key)` that waits out the repository's pending writes and its own outstanding parses), `get(key)`, `one(key)`, `load`/`forceLoad`, and `project(key, read)`.
 - **`RelayScopedDerivedPlugin<T>`** — the same, keyed per relay via the tracker (`getKey(item, url)`), so the same addressable coordinate on two relays stays two entries. `RelaySignedDerivedPlugin` (in `plugins/relays.ts`) narrows it further to events signed by the relay's own NIP-11 `self` key, which is what `RelayRoles`, `RelayMemberLists` and `RoomPinLists` use.
 - **`LoadableMapPlugin<T>`** — owns its own `Map`, lazily fetches over HTTP (e.g. `Relays`, `Handles`, `Zappers`). Implement `fetch`.
 - **`MapPlugin<T>`** — owns its own `Map`, no network (e.g. `RelayStats`, `Plaintext`).
@@ -380,7 +375,7 @@ Base classes in `plugins/base.ts`:
 Decode events with the app-configured `@welshman/domain` reader (`app.use(Domain).reader(Kind)`) as `eventToItem`, and mutate through `app.use(Domain).writer(Kind, reader?)` + `app.use(Domain).command(writer)`:
 
 ```typescript
-import {DerivedPlugin, Network, Domain, User, type IApp} from "@welshman/app"
+import {DerivedPlugin, Network, Domain, type IApp} from "@welshman/app"
 import {SOME_KIND} from "@welshman/util"
 import {SomeKind, SomeKindReader, SomeKindWriter} from "@welshman/domain"
 
@@ -388,7 +383,7 @@ export class Somethings extends DerivedPlugin<SomeKindReader> {
   constructor(app: IApp) {
     super(app, {
       filters: [{kinds: [SOME_KIND]}],
-      eventToItem: app.use(Domain).reader(SomeKind),   // async: validates kind + parses
+      eventToItem: app.use(Domain).reader(SomeKind),   // the reader, or a promise of it for kinds that decrypt
       getKey: item => item.author(),
     })
   }
@@ -396,16 +391,10 @@ export class Somethings extends DerivedPlugin<SomeKindReader> {
   fetch = (pk: string, hints: string[] = []) =>
     this.app.use(Network).loadUsingOutbox(pk, {kinds: [SOME_KIND]}, hints)
 
-  // Build a writer (optionally seeded from the current reader for edits), mutate it, then
-  // wrap it in a Command via Domain.command — the caller decides when/how to publish.
-  update = async (fn: (writer: SomeKindWriter) => void) => {
-    const user = User.require(this.app)
-    const writer = this.app.use(Domain).writer(SomeKind, await this.forceLoad(user.pubkey))
-
-    fn(writer)
-
-    return this.app.use(Domain).command(writer)
-  }
+  // Seeds a writer from the user's own event, hands it to the caller's edit, and wraps
+  // the result in a Command — the caller decides when and how to publish it.
+  update = (fn: (writer: SomeKindWriter) => void) =>
+    this.app.use(Domain).update(SomeKind, this.forceLoad, fn)
 }
 
 const things = app.use(Somethings)   // lazily constructed + memoized
@@ -413,12 +402,15 @@ const things = app.use(Somethings)   // lazily constructed + memoized
 
 Caching/backoff for `load` come from `makeLoadItem` (`@welshman/store`); default staleness window is 1 hour; `forceLoad` bypasses it.
 
+`Domain.update` is a method rather than something a base class hands down because `Domain` reaches `RelayLists` through `Router`, so a base class holding it would be the target of an `extends` inside its own import cycle. `app.use(Domain)` is read at call time, which is late enough to be safe.
+
 ## Policies & logging
 
 Side effects live in `AppPolicy`s (`(app) => Unsubscriber`), run at construction, cleaned up by `cleanup()`.
 
 - `defaultAppPolicies` = `[appPolicyIngest, appPolicyRelayStats, appPolicyWraps, appPolicyCacheDecrypt, appPolicyLogSignerMethods, appPolicyAuthUnlessBlocked]`.
-- Auth builders: `makeAppPolicyAuth(shouldAuth)`, `appPolicyAuthAlways`, `appPolicyAuthNever`, `appPolicyAuthUnlessBlocked`.
+- Auth builders: `makeAppPolicyAuth(shouldAuth, recheck?)` (`recheck(app)` is a store whose changes re-ask `shouldAuth`), `appPolicyAuthAlways`, `appPolicyAuthNever`, `appPolicyAuthUnlessBlocked`.
+- `app.ingestEvent(event, url)` records an event a relay sent in the repository and its tracker, skipping DVM and ephemeral kinds, and resolves once it is stored; `appPolicyIngest` calls it for every validly signed event, and a custom ingest policy can call it after its own check.
 - `appPolicyCacheDecrypt` and `appPolicyLogSignerMethods` both layer onto the user's signer via `User.wrapSigner` — the first caches decryptions into `app.use(Plaintext)`, the second records signer calls into `app.use(Logger)` (read them from `app.use(Logger).messages`).
 
 ```typescript
@@ -436,28 +428,11 @@ const app = new App({user, policies: [appPolicyIngest, appPolicyAuthNever]})
 - **Most loads use the outbox model**, which needs the author's relay list. `loadUsingOutbox` (and therefore most `fetch` methods) first loads NIP-65 relays for the author.
 - **`createApp` vs `new App`.** `createApp` installs default policies; `new App` installs none. In tests prefer `new App` (no background subscriptions) unless you need ingestion.
 - **Pass the `user` to `createApp`/`new App`, don't assign `app.user` afterwards.** Policies run once, at construction. `appPolicyCacheDecrypt` and `appPolicyLogSignerMethods` bail out immediately when there is no user, so a user attached later gets no decrypt caching and no signer log. To switch identities, build a new app and `cleanup()` the old one.
-- **Call `cleanup()`** when discarding an app to close sockets and free the repository/tracker/wrap state.
-
-## Old API → new API
-
-| Old (global) | New (instance-based) |
-|---|---|
-| `addSession(...)` / `pubkey.get()` | `User.fromSession(...)` + `createApp({user})`; `app.user?.pubkey` |
-| `deriveProfile(pk)` | `app.use(Profiles).one(pk)` |
-| `deriveProfileDisplay(pk)` | `app.use(Profiles).display(pk).$` |
-| `publishThunk({...})` | `app.use(Publisher).publish({...})` (resolve outbox relays via `await app.use(Router).resolver.relays([userOutbox()])`) |
-| `follow(tag)` / `mute(tag)` | `app.use(FollowLists).follow(tag).then(publish)` / `app.use(MuteLists).mutePublicly(tag).then(publish)`, which return a [`Command`](#commands-deferred-publishing) |
-| `load({...})` / `request({...})` | `app.use(Network).loadComplete({...})` / `request({...})` |
-| `Router.get().FromUser()` / `router.Event(e)` | `app.use(Router).resolver` + the `RelaySelection` DSL (`resolver.relays([userOutbox()])`, `resolver.relay([seen(e)])`) |
-| `app.use(Tags).tagEventForReply(e)` | domain writer tagging (`NoteWriter.setParent(e)`, `writer.tagPubkey/addQuote/addZapSplit`) |
-| `relays` / `handles` / `zappers` stores | `app.use(Relays)` / `Handles` / `Zappers` |
-| `app.use(Searches).profileSearch` | `app.use(Profiles).profileSearch` (likewise `Topics.topicSearch`, `Relays.relaySearch`) |
-| `wot.graph` / `wot.wotScore(a, b)` | `app.use(Wot).scores(WotScope.Follows)` / `.score(pk, scope)` |
-| `RelayLists.addRelay(url, mode)` | `RelayLists.addReadUrl(url)` / `addWriteUrl(url)` |
+- **Call `cleanup()`** when discarding an app to close sockets and free its state.
 
 ## Related skills
 
-- `welshman-store` — the `Repository` and Svelte-store primitives this layer builds on.
+- `welshman-store` — the `Repository`, `Tracker` and store primitives this layer builds on.
 - `welshman-domain` — the `Kind`/reader/writer model behind `app.use(Domain)` (event decoding + publishing).
 - `welshman-util` — the `RelaySelection` DSL, `Resolver` and `RelayScenario` that `app.use(Router)` dereferences.
 - `welshman-net` — request/publish/sockets behind `app.use(Network)`.

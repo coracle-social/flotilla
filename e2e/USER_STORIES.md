@@ -162,8 +162,8 @@ Acceptance:
 - Typing a term filters the list live, matching name, url, or description.
 - Clicking a space she hasn't joined opens a join prompt; a space in the rail
   opens.
-- Dragging a space above another in the rail reorders the list immediately, and
-  the order survives a reload.
+- Dragging a space above another in the rail, with a mouse or a finger, reorders
+  the list immediately, and the order survives a reload.
 
 ### US-010 — Join a space from an invite link
 
@@ -241,12 +241,10 @@ Acceptance:
 
 - The About page shows the space's icon, name, url, description, and any
   terms-of-service or privacy-policy links.
-- Administrator, contact, software, and version badges appear when the relay
-  reports them, and auth-required, payment-required, or proof-of-work warnings
-  appear when they apply.
-- A members summary listing admins and newest members links through to the full
-  directory.
-- Content admin has featured renders at the top for every visitor.
+- The member directory follows, with its search, map, and invite controls.
+- The space menu's "Connection status" dialog shows the administrator, contact,
+  software, and version when the relay reports them, and auth-required,
+  payment-required, or proof-of-work warnings when they apply.
 
 ### US-017 — Search across a space
 
@@ -366,8 +364,8 @@ Acceptance:
 
 - Clicking reply shows a "Replying to alice" banner quoting her message above
   the composer.
-- Sending posts a reply that renders her original as an embedded quote for
-  everyone in the room.
+- Sending posts a reply that renders her original as a quote above it for
+  everyone in the room, and editing it keeps the reply.
 - Dismissing the banner with its close button or Escape clears the reply without
   sending.
 
@@ -399,6 +397,7 @@ Acceptance:
   reaction pill under the message for everyone in the room.
 - When bob and carol react with the same emoji it shows as one pill with a count
   of 2.
+- Hovering that pill names everyone who reacted.
 - Clicking her own reaction again removes it.
 - On a narrow viewport, tapping a pill she hasn't joined shows the list of
   reactors instead of adding her own.
@@ -474,10 +473,10 @@ without looking at the screen.
 
 Acceptance:
 
-- "Read Out Loud" on a message with no OpenRouter key saved asks for one, the
-  same prompt dictation uses.
-- Once a key is saved, the same menu item puts a player at the bottom of the
-  app naming whose message is being read.
+- "Read Out Loud" with no OpenRouter key saved asks for one, the same prompt
+  dictation uses, and saving it reads the message that was asked for.
+- A player sits at the bottom of the app naming whose message is being read,
+  and closing it stops a read whose audio is still in flight.
 - A quote, a mention or a url in the message is named rather than spelled out.
 - The player starts on its own, pauses, scrubs, and closes, and closing it takes
   it away.
@@ -504,8 +503,8 @@ that I can message them directly.
 
 Acceptance:
 
-- "Start New Chat" suggests bob as she types his name, and selecting him plus
-  "Create Chat" opens a conversation with a usable composer.
+- "Start New Conversation" suggests bob as she types his name, and selecting
+  him plus "Create Conversation" opens a conversation with a usable composer.
 - The conversation appears at the top of her list, labeled with bob's name.
 - Bob's profile page offers a "Message" button that opens the same conversation;
   her own profile offers none.
@@ -622,15 +621,17 @@ Acceptance:
 - A messaging relay list written by another client, naming the same relay without the trailing
   slash, is honoured the same way.
 
-### US-109 — Keep a conversation I have already read
+### US-109 — Keep a conversation or room I have already read
 
-As alice, I want a conversation I have already read to stay readable, so that my history does not
-shrink to whatever my messaging relays happen to still be holding.
+As alice, I want a conversation or room I have already read to stay readable, so that my history
+does not shrink to whatever the relays it arrived from happen to still be holding.
 
 Acceptance:
 
 - With a conversation open and read, closing the app and opening it again shows the same messages,
   whether or not the relay they arrived from still serves them.
+- A room I have already opened keeps its messages the same way, whether or not its space still
+  serves them.
 - A message deleted or edited out of that conversation stays gone across the same restart.
 - A reaction I left on one of its messages is still there after the same restart.
 
@@ -704,11 +705,13 @@ I can respond without writing.
 
 Acceptance:
 
-- Clicking an emoji on an article records bob's reaction with a count of 1,
-  highlighted as his own.
-- Clicking the same emoji again removes it and the count returns to 0.
-- The same behavior applies to a comment on the article, to a post inside a
-  thread, and to a note on someone's profile.
+- Choosing an emoji on an article records bob's reaction as a count of 1 on the
+  react button itself, highlighted as his own, rather than as a pill carrying the
+  emoji. Choosing the same emoji again removes it and the count goes with it.
+- A thread post reacts the same way.
+- A comment and a note take a plain like instead of opening the emoji menu, so
+  the react button counts bob's like on the first click and drops it on the
+  second.
 
 ### US-041 — Publish an article from a room
 
@@ -721,6 +724,19 @@ Acceptance:
   that room's chat.
 - The article's detail page and list card show a "Posted in #room" badge.
 - Clicking that badge navigates to the room it names.
+
+### US-153 — Read an article linked from a note
+
+As alice, I want an article a note links to to open as a page I can read, so
+that following a link does not drop me into a space I have never heard of.
+
+Acceptance:
+
+- Clicking a quoted article whose relay is not one of alice's spaces opens
+  `/articles/<naddr>` rather than that relay's space.
+- The page carries the article's title, body and comments, and no prompt to
+  join a space.
+- An article on a space alice has joined still opens inside that space.
 
 ### US-042 — Start a thread and see it filed under its room
 
@@ -885,12 +901,15 @@ resources members have collected.
 
 Acceptance:
 
-- Typing a term filters the shelf list to shelves whose title, description, or
-  topics match.
-- Selecting a shelf shows its pins as a gallery; an empty shelf shows a message
-  instead.
-- Alice is offered "Create Shelf" and "Add a link", and "Add link" on someone
-  else's shelf, but not that shelf's "Edit shelf" or "Delete shelf".
+- A shelf card carries its title, its description, how many links are on it and
+  who has contributed.
+- Typing a term filters the shelves to those whose title, description or topics
+  match, and lists the links that match from any shelf.
+- Opening a shelf shows its links; one that already holds a link still offers
+  "Add a link".
+- Alice is offered "Create Shelf" and "Add a link" on someone else's shelf, and
+  not its "Edit shelf". Its "Delete shelf" opens a dialog saying only the author
+  or an admin can delete a shelf.
 
 ### US-054 — Curate the library
 
@@ -899,13 +918,56 @@ good material first.
 
 Acceptance:
 
-- Creating a shelf with a title and description adds it to the list and
-  navigates into it; editing and deleting it from its menu update the list.
-- Adding a pin with an external url shows it as a content card, and adding one
-  with a nostr note link renders that note as a rich embed.
+- Creating a shelf with a title, description and topics opens it; editing it
+  from its menu updates its page, and deleting it returns to the library.
+- Several links pasted at once each become a link of its own and are offered no
+  title or description between them: an external url renders as the link, a
+  nostr note link as the note it points at.
 - "Add to Library" on a post (for example a poll) with a shelf selected adds it
-  as a pin visible in that shelf; with no shelves yet, the dialog prompts to
-  create one.
+  as a link on that shelf; with no shelves yet, the dialog prompts to create
+  one.
+- Renaming a link from its menu republishes it under the new title.
+- bob signs through a browser extension, so everything he publishes here is
+  signed by something outside the page.
+
+### US-137 — Discuss a shelf and a link on it
+
+As alice, I want to comment on a shelf and on one link on it, so that a question
+about what was collected sits with what it is about.
+
+Acceptance:
+
+- Opening a link raises its own discussion, and a comment posted there appears
+  under it.
+- A link's card counts the comments on it.
+- The shelf has a discussion of its own, for anything about the collection
+  rather than about one link.
+
+### US-138 — Manage a shelf as a list
+
+As bob, I want to work through a shelf as a list, so that tidying up many links
+costs one action rather than one each.
+
+Acceptance:
+
+- A shelf renders as cards or as a list, and the list gives every link a
+  checkbox with a select-all above them.
+- Moving the selected links to another shelf files them there and takes them off
+  this one.
+- Deleting the selected links for everyone asks for confirmation first.
+
+### US-139 — See who built a shelf and where its links point
+
+As alice, I want to see who contributed to a shelf and what each link points at,
+so that a collection reads as somebody's work rather than a list of identifiers.
+
+Acceptance:
+
+- A shelf header counts its contributors, opens the roster of them, and each name
+  in it opens that person's profile.
+- A link to a post reads as a short entity label in the list view, the same way
+  rendered content names one.
+- Following that label lands on the post.
 
 ### US-055 — Create community content from a room
 
@@ -914,8 +976,8 @@ composer, so that the room sees it immediately.
 
 Acceptance:
 
-- The composer's "+" menu lists the content types that can be created and shared
-  into the room.
+- The composer's "Attach or create" menu lists the content types that can be
+  created and shared into the room.
 - Choosing one opens its creation form, and submitting posts a quoted link to
   the new item into the room.
 - Clicking that quote navigates to the item's detail page.
@@ -943,14 +1005,31 @@ visual.
 
 Acceptance:
 
-- Choosing an image from the upload button shows a spinner and disables sending
-  until the upload finishes.
+- Choosing an image from the composer's add menu shows a spinner and disables
+  sending until the upload finishes.
+- Deleting an attachment whose upload has not finished re-enables the composer.
 - After sending, the image renders inline in the timeline for bob as well; a DM
   behaves the same for its recipient.
 - Dropping an image onto the composer, or pasting one from the clipboard,
   attaches it the same way.
+- A photo in a format the browser cannot decode is uploaded as it is, rather
+  than stranding the composer on a compression that cannot run.
+- Leaving the room while an upload is in flight keeps the attachment, and the
+  composer it comes back to finishes the upload rather than waiting for good.
 - A file the editor has no node for attaches as a link instead. What the server
   refuses attaches nothing and shows its reason in an error toast.
+
+### US-142 — An upload that never answers gives up
+
+As alice, I want a stalled upload to fail on its own, so that a server that stops
+answering doesn't leave the composer unusable.
+
+Acceptance:
+
+- A file the editor has no node for holds the composer open while it uploads, and
+  nothing is there to delete.
+- A blossom server that never answers the upload gives the composer back when the
+  deadline passes, with an error toast naming the file.
 
 ### US-058 — Drafts survive navigating away
 
@@ -985,13 +1064,38 @@ one without my hands.
 
 Acceptance:
 
-- The dictation button with no OpenRouter key saved asks for one, the same
-  prompt reading a message out loud uses.
-- Stopping a recording asks whether to transcribe it or send it as a voice
-  note.
+- The dictation button opens a recording dialog, which records from the moment
+  it opens and shows the microphone level while it runs.
+- Asking for a transcript with no provider set up asks for one, the same prompt
+  reading a message out loud uses. Recording and sending a voice note asks for
+  nothing.
+- The prompt sits over the dialog. Leaving it returns to the dialog, with the
+  recording still waiting.
+- The dialog stays open while a transcription is out, with the button that asked
+  for it busy, rather than handing the wait to the composer.
+- A transcription that fails or comes back empty hands the recording back to
+  that dialog, so it can be played, retried, sent or discarded.
 - Choosing to transcribe puts the transcript in the composer, ready to send.
+- Dismissing the dialog while a transcription is out keeps the transcription,
+  and the composer's own button shows the wait instead.
 - Leaving the room while a transcription is still out does not lose it: the
   transcript lands in the composer that is there when it comes back.
+
+### US-142 — Transcribe a recording on this device
+
+As alice, I want my recordings transcribed on my own device, so that dictation
+costs nothing and my voice goes nowhere.
+
+Acceptance:
+
+- Content Settings offers a dictation model to download, and shows how far the
+  download has got.
+- With the model downloaded, dictation transcribes on the device and asks for no
+  OpenRouter key.
+- A recording the model cannot read goes to OpenRouter rather than being
+  transcribed as something else.
+- With no OpenRouter key saved, it says which languages the device reads.
+- Removing the model hands dictation back to OpenRouter.
 
 ### US-126 — Send a voice note
 
@@ -1000,9 +1104,9 @@ voice rather than a transcript of it.
 
 Acceptance:
 
-- Choosing to send a voice note uploads the recording and attaches it to the
-  composer.
-- Sending it publishes the message with the audio, which renders as a player in
+- Sending it as a voice note uploads the recording and attaches it to the
+  composer, and the dialog stays open with its button busy until it does.
+- Sending the message publishes it with the audio, which renders as a player in
   the timeline.
 - Discarding the recording instead leaves the composer empty and uploads
   nothing.
@@ -1083,6 +1187,19 @@ Acceptance:
   author and content.
 - Clicking that card opens the quoted post.
 - A quote whose event has not arrived shows a loading placeholder in its place.
+
+### US-140 — Open a quote before it has loaded
+
+As alice, I want a quote to open in the app whether or not its event has
+arrived, so that tapping one never hands me to another client.
+
+Acceptance:
+
+- A quote surrounded by prose renders as a truncated label, and clicking one
+  whose event has not arrived opens a modal saying it is loading, with no new
+  tab opened.
+- A quote whose event has to be fetched opens that event once it arrives.
+- Clicking the label of a quoted thread opens that thread's page.
 
 ### US-066 — See distinctive inline tokens
 
@@ -1177,6 +1294,8 @@ Acceptance:
   thread it was posted into.
 - A failed post shows "Failed to send!" in the same row, opening the same
   per-relay detail popover.
+- The comment composer closes as soon as the comment appears, rather than
+  waiting for the relay to confirm it.
 
 ### US-072 — A deleted post is marked deleted
 
@@ -1236,14 +1355,15 @@ Acceptance:
 
 ### US-076 — Follow and unfollow
 
-As alice, I want to follow and unfollow bob from his profile, so that I control
-who I keep up with.
+As alice, I want to follow and unfollow bob wherever I meet him, so that I
+control who I keep up with.
 
 Acceptance:
 
 - His profile shows "Follow" while she doesn't follow him.
 - Clicking it switches to "Unfollow" without a reload.
 - Clicking "Unfollow" switches it back.
+- His profile dialog carries the same control, and following from there sticks.
 
 ### US-077 — See web-of-trust standing build up
 
@@ -1282,8 +1402,9 @@ what she has posted.
 Acceptance:
 
 - Her profile lists her notes below her header, newest first, each showing her
-  name, avatar, content, and a relative timestamp; replies to other people's
-  notes are excluded.
+  name, avatar, content, and a relative timestamp.
+- A reply of hers is drawn underneath the note it answers rather than as a card
+  of its own.
 - A note she has pinned appears above newer unpinned notes.
 - Scrolling to the bottom loads older notes automatically; a profile with no
   notes shows a loading indicator that resolves to "No notes found for this
@@ -1302,6 +1423,34 @@ Acceptance:
   open the same composer.
 - Submitting it publishes the post to her own relays and to every space she
   favorited, and it appears at the top of her profile's notes.
+- A toast says the post went out, and offers to open it.
+
+### US-150 — Post an article or a poll
+
+As alice, I want to pick what kind of post I am writing, so that a long-form
+article or a poll reaches my followers the same way a note does.
+
+Acceptance:
+
+- "Create post" opens the note composer, and the arrow beside it offers Poll and
+  Article.
+- An article opens the full page composer, goes out as a kind 30023 carrying its
+  title, and her profile draws it with the article renderer rather than as a wall
+  of text.
+- A poll goes out carrying the relays its votes live on, so her profile draws its
+  options and she can vote on it there.
+
+### US-149 — Quote a note in a post of your own
+
+As alice, I want to quote someone else's note in a post of my own, so that my
+followers see what I am answering.
+
+Acceptance:
+
+- "Quote Note" on a note opens the public post composer with the note already in
+  it.
+- The post goes out with a q tag naming the quoted note, and its content opens
+  with the entity that draws the embed.
 
 ### US-080 — Preview a profile from anywhere
 
@@ -1335,8 +1484,7 @@ Acceptance:
 
 - Searching for bob in Muted Accounts under Settings › Content adds a removable
   badge with his name, and saving persists it across a reload.
-- His notes then render as "You have muted this person." with a "Show anyway"
-  link instead of their content, and revealing one leaves the others collapsed.
+- His profile then says "You have muted this person." where his notes were.
 - Removing his badge and saving makes his notes display normally again.
 
 ## Settings & preferences
@@ -1410,6 +1558,8 @@ Acceptance:
   reload.
 - Turning off "Report usage" and saving persists across a reload.
 - "Discard Changes" reverts unsaved toggles.
+- On a phone, "Save Changes" can be tapped rather than sitting under the mobile
+  nav.
 
 ### US-129 — Raise the thresholds a stranger has to meet
 
@@ -1451,18 +1601,16 @@ Acceptance:
 
 ## Admin, moderation & hosting
 
-### US-092 — Edit a space's profile and featured content
+### US-092 — Edit a space's profile
 
-As admin, I want to keep a space's public details and highlights current, so
-that visitors see the right thing first.
+As admin, I want to keep a space's public details current, so that visitors see
+the right thing first.
 
 Acceptance:
 
 - "Edit this Space" updates name, description, and icon, shows a success
   message, and the About page reflects the change.
-- Adding items in the Featured section renders them on the About page for every
-  visitor.
-- bob sees no edit or featured-content controls on the same space.
+- bob sees no edit controls on the same space.
 
 ### US-093 — Create roles and assign them
 
@@ -1561,12 +1709,12 @@ holds what, so that moderation is shared without handing anyone the whole relay.
 
 Acceptance:
 
-- "Admins" in the directory's menu lists the space's owner and everyone holding
-  assigned methods, each with a badge per permission they hold.
+- "View Admins" in the directory's menu lists the space's owner and everyone
+  holding assigned methods, each with a badge per permission they hold.
 - Checking permissions under a member's "Edit permissions" puts them in that
   list, and unchecking those permissions takes them back out.
 - A member given "List banned members" finds "Banned Members" in the directory
-  menu they had no menu in before, and still no "Admins".
+  menu they had no menu in before, and still no "View Admins".
 
 ### US-131 — Say where you are and find members on a map
 
@@ -1583,6 +1731,8 @@ Acceptance:
   avatar, and opens a pin's profile when it is clicked. A map with nobody on it
   says so.
 - The directory's search narrows the map as it narrows the list.
+- A member's card in the directory shows their location, so a state or a country
+  is visible where the map cannot pin it.
 
 ### US-098 — Browse and create hosted spaces
 
@@ -1608,6 +1758,8 @@ Acceptance:
 
 - "Edit details" updates the relay's name and description on its detail card,
   and the activity feed lists the relay's creation event.
+  The description renders as content, so a url in it is a link, and a long one
+  is cut short behind "Read more".
 - Toggling "Public read" on persists across a reload.
 - On the free plan, the Blossom and LiveKit toggles are disabled with a "Not
   available on your current plan" explanation.
@@ -1725,6 +1877,20 @@ Acceptance:
 - A thread bob starts in the same room raises none, however much of it reaches
   her client.
 
+### US-137 — Reach a thread from the inbox
+
+As alice, I want an unread reply to a thread to lead me to the thread, so that
+the inbox never drops me in a room chat to go looking for it.
+
+Acceptance:
+
+- A comment bob writes on a thread in a room alice belongs to leaves the room's
+  inbox row showing the room's own last message.
+- The row reads as that message's own words, so a reply shows what it says rather
+  than the reference it opens with.
+- The same comment counts toward the space's unread thread activity, and the
+  thread it answers carries the unread dot on the threads board.
+
 ### US-105 — Land on the home page
 
 As a new user, I want the home page to route me somewhere useful, so that I'm
@@ -1732,10 +1898,11 @@ never staring at a blank screen.
 
 Acceptance:
 
-- On a build with a configured platform space, `/home` opens that space.
-- With none configured, it shows the dashboard, whose empty inbox offers "Add a
-  space" and "Start a conversation".
-- Those options navigate to the spaces directory and the chat view respectively.
+- On a build with a configured platform space, the app opens that space, and
+  the Home button at the top of the rail opens the dashboard. There the
+  platform spaces are listed in place of hosting, and nothing offers to browse
+  other spaces.
+- With none configured, `/home` shows the dashboard.
 
 ### US-116 — Read the home dashboard
 
@@ -1744,17 +1911,22 @@ that I don't have to walk every space to find out.
 
 Acceptance:
 
-- The inbox lists each room and conversation with unread activity as a card,
-  naming the room and space and showing the latest message, newest first. It
-  holds messages only, and only while they are unread.
-- Activity is a row of one card per space, counting what that space has waiting
-  that isn't a message - threads, events, classifieds and the rest. A card
-  disappears once its space is read.
-- A conversation carries an unread dot, and "Mark all read" empties the inbox.
+- The Recent tab is one stream, newest first, holding a row per room and
+  conversation that names the room and its space and shows the latest message, a
+  row per space counting what it has waiting that isn't a message - threads,
+  events, classifieds and the rest - and the replies and reactions to her own
+  notes.
+- The stream is history rather than a queue, so a conversation she has read
+  keeps its row and loses its unread dot.
+- The stream spends its first second and a half as a spinner, so its rows are
+  drawn once rather than rearranged as relays answer. The filters above it stay
+  visible throughout.
+- "You're all caught up" shows only while the stream holds nothing at all.
 - Selecting a conversation opens it.
-- Relay health checks are listed alongside the inbox, each naming what is wrong.
-  Applying one opens a review naming the relays it adds and removes, and
-  publishes nothing until it is confirmed.
+- Relay health checks name what is wrong and sit in their own panel beside the
+  stream, or above it when the page is too narrow for two columns. Applying one
+  opens a review naming the relays it adds and removes, and publishes nothing
+  until it is confirmed.
 - Hosting is offered whether or not she hosts a space: a shortcut to the hosting
   panel when she has one, an invitation to start one when she doesn't.
 
@@ -1765,14 +1937,113 @@ that home is worth opening when nothing is waiting for me.
 
 Acceptance:
 
-- The Network section lists notes from her follows, resolved through the relays
+- The Network tab lists notes from her follows, resolved through the relays
   those people publish to. A follow who is in none of her spaces reads the same
   way, replies included, since a note's replies are counted from the relay the
   note itself came from.
-- It is a list of notes: a reply is counted on the note it answers rather than
-  drawn underneath it, and never appears as an item of its own.
-- The section fills from the relays that answer. One that takes the connection
-  and then says nothing does not hold it empty.
+- The tab asks for them when she opens it rather than when the page loads, so
+  landing on home costs nothing she did not ask for.
+- A reply is counted on the note it answers and drawn underneath it, around a
+  card for the note itself.
+- The tab fills from the relays that answer. One that takes the connection and
+  then says nothing does not hold it empty.
+
+### US-141 — See replies and reactions to my own notes
+
+As alice, I want replies, mentions and reactions from outside my spaces
+gathered on the home page, so that answering somebody does not mean opening
+another client.
+
+Acceptance:
+
+- What other people do to her own notes is in the Recent stream, among her
+  rooms and conversations, rather than behind a tab of its own.
+- Recent carries a badge while it holds something she has not read, and the
+  badge goes down once the stream has drawn it.
+- An entry is the note that was answered or reacted to, fetched whether or not
+  it had already been loaded, with the replies to it shown underneath.
+- Everything done to one note is one entry, so two people answering the same
+  note do not fill the section, and an answer hours after the last one joins
+  that entry rather than repeating the note under it.
+- Every entry says why it is there: who replied, mentioned, reacted, reposted
+  or zapped.
+- An entry whose note is itself a reply links to the note it answers and to the
+  root of its thread.
+- A reply shown under an entry opens its own note when she clicks it.
+- The stream holds notes and what was done to them, so a reaction to one of her
+  room messages lights neither the stream nor its badge.
+- Nothing a muted person does lights the stream or its badge.
+
+### US-146 — Choose what the network feed includes
+
+As alice, I want to say whether the network feed shows notes, replies or both,
+so that a conversation I am not part of does not crowd out the posts I follow
+people for.
+
+Acceptance:
+
+- The feed carries a button for notes and a button for replies, both on until
+  she turns one off.
+- Each button says how much of its type the feed holds, whether it is on or
+  off.
+- A reply in the feed is drawn under the note it answers, which the feed loads
+  before it draws either, so it reads as more than half a conversation.
+- An answer leaves the note it names where it was in the feed, so nothing she is
+  reading moves under her.
+- The feed draws as much as fills the screen and grows as she scrolls, rather
+  than drawing everything it has loaded.
+- Turning notes off leaves the replies and turning replies off leaves the
+  notes.
+- A feed nothing is left in says so rather than looking like it is still
+  loading.
+- Her choice survives a reload.
+
+### US-145 — Choose which answers the activity stream shows
+
+As alice, I want to say whether the activity stream shows replies, reactions
+and zaps, so that the kind of answer I care about is not buried under the kind I
+do not.
+
+Acceptance:
+
+- The stream carries a button per type, all of them on until she turns one off.
+- Each button says how much of its type the stream holds, whether it is on or
+  off.
+- Turning a type off drops it from the entries and from the badge, and leaves
+  every other type where it was.
+- An entry nothing is left to say about is not drawn, and the stream says so
+  rather than looking empty.
+- Her choice survives a reload.
+
+### US-152 — Leave my spaces out of the activity stream
+
+As alice, I want to turn my spaces off in the activity stream, so that a busy
+space does not bury what was meant for me.
+
+Acceptance:
+
+- The stream carries a Spaces button beside the answer types, on until she turns
+  it off, saying how many rooms and spaces are behind it.
+- Turning it off drops every room and space row and keeps her direct messages,
+  since a direct message belongs to no space, and keeps the answers to her own
+  notes.
+- A stream holding nothing but spaces says they are filtered out rather than
+  that she is caught up.
+- Her choice survives a reload.
+
+### US-144 — Mute somebody from their profile
+
+As alice, I want to mute a person from their profile, so that I can act on a
+post the moment it annoys me rather than going to look for a settings page.
+
+Acceptance:
+
+- The profile menu offers Mute User, on the preview modal and on the full
+  profile page alike, and offers Unmute User once she has muted somebody.
+- A muted person's posts are gone from the Network tab on home rather than
+  collapsed into a card, and the people she has not muted are unaffected.
+- The activity stream drops an entry drawn around a muted person's note as well
+  as anything the muted person did.
 
 ### US-133 — Keep the search relays that work
 
@@ -1786,6 +2057,21 @@ Acceptance:
   arrives.
 - A relay that answers and advertises no search is.
 
+### US-147 — Choose the relays you publish to
+
+As alice, I want to pick my own relays from the home page, so that I decide
+where my notes go and where people can reach me.
+
+Acceptance:
+
+- The Network tab carries a relay settings button, where the relays it edits are
+  the ones the feed reaches, and opening it lists the relays her relay list
+  already names.
+- A relay added from the picker appears in the list, and a relay removed from
+  the list leaves it.
+- The list is one list, so a relay she adds is both where she publishes and
+  where other people send notes intended for her.
+
 ### US-106 — Share text into the app
 
 As alice, I want to hand text to Flotilla and choose where it lands, so that I
@@ -1798,6 +2084,19 @@ Acceptance:
 - Selecting a room and confirming navigates there with the shared text
   pre-loaded in the composer.
 - The composer's content matches the text that was shared.
+
+### US-151 — Share a note into a chat
+
+As alice, I want to send a note out of my feed to one of my chats, so that I
+can pass it on to the people who would want it.
+
+Acceptance:
+
+- "Share to Chat" on a note that belongs to no space opens the same picker a
+  shared link does, listing her rooms and conversations.
+- Choosing a conversation navigates there with the note staged above the
+  composer.
+- Sending posts the message with the note quoted in it.
 
 ### US-107 — Open a nostr link
 
@@ -1875,6 +2174,23 @@ Acceptance:
 - A message two months old in a room bob has never opened raises a dot on the
   space, and the room carries the same dot once the space is open.
 
+### US-143 — Keep a message in a bookmark folder
+
+As alice, I want to file a message under a folder of my own, so that the things
+worth keeping are somewhere I can find them again.
+
+Acceptance:
+
+- A message's menu offers a bookmark, and the bookmark lands under Uncategorized
+  with no further prompt.
+- The bookmarks page lists each folder with its contents, and a bookmark shows
+  who wrote it and what it says.
+- A bookmark moves into a folder of the user's own from its menu, leaving the
+  folder it came from empty.
+- A search above the list keeps the bookmarks whose text matches, and hides every
+  folder left with nothing in it.
+- Removing a bookmark from the page empties the folder it was in.
+
 ## Out of scope
 
 Features the e2e suite cannot exercise, and what stops it.
@@ -1922,9 +2238,9 @@ hosted checkout and is confirmed by a backend webhook. The Lightning path for
 the same invoice is covered by US-102.
 
 **External link-outs.** Self-hosted and third-party options on the
-space-creation page, the About page's source, blog, podcast and support links,
-and a note's timestamp permalink to another nostr client. The harness blocks
-navigation off the app's origin, so nothing about the destination is observable.
+space-creation page, and the About page's source, blog, podcast and support
+links. The harness blocks navigation off the app's origin, so nothing about the
+destination is observable.
 
 **Diagnostic log sending.** The privacy page's button that bundles client-side
 logs into a DM to the platform's support contact. It targets a hardcoded pubkey
@@ -1938,6 +2254,4 @@ shape of the bug that motivated US-108 — `@welshman/store`'s `load` rejects ra
 empty, so a failure there aborts a publish before its publication is made and nothing reaches the
 timeline to carry a status. Testing it needs a seam for making a relay unusable.
 
-**Internals with no user-visible surface.** The legacy session-storage format
-migration, which has no observable difference and no supported way to seed the
-old shape. `ProfileFeed` and `ProfileLatest` components that no route reaches.
+**Internals with no user-visible surface.** `ProfileFeed` and `ProfileLatest` components that no route reaches.

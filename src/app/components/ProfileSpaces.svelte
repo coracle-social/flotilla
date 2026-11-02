@@ -7,8 +7,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {roomLists} from "@app/core"
-  import {makeSpacePath} from "@app/routes"
+  import {roomLists} from "@app/core/plugins"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     pubkey: string
@@ -33,7 +33,7 @@
           {url}
         </div>
       </div>
-      <Link class="button button-primary" href={makeSpacePath(url)}>
+      <Link class="button button-primary" href={pages.space.path({url})}>
         Go to space
         <Icon icon={AltArrowRight} />
       </Link>

@@ -5,6 +5,7 @@
     ZAP_GOAL,
     THREAD,
     CLASSIFIED,
+    HIGHLIGHT,
     LONG_FORM,
     POLL,
     PINBOARD,
@@ -13,6 +14,7 @@
   import NoteContentMinimalEventTime from "@app/components/NoteContentMinimalEventTime.svelte"
   import NoteContentMinimalThread from "@app/components/NoteContentMinimalThread.svelte"
   import NoteContentMinimalClassified from "@app/components/NoteContentMinimalClassified.svelte"
+  import NoteContentMinimalHighlight from "@app/components/NoteContentMinimalHighlight.svelte"
   import NoteContentMinimalArticle from "@app/components/NoteContentMinimalArticle.svelte"
   import NoteContentMinimalGoal from "@app/components/NoteContentMinimalGoal.svelte"
   import NoteContentMinimalPoll from "@app/components/NoteContentMinimalPoll.svelte"
@@ -30,6 +32,8 @@
     <NoteContentMinimalThread {...props} />
   {:else if props.event.kind === CLASSIFIED}
     <NoteContentMinimalClassified {...props} />
+  {:else if props.event.kind === HIGHLIGHT}
+    <NoteContentMinimalHighlight {...props} />
   {:else if props.event.kind === LONG_FORM}
     <NoteContentMinimalArticle {...props} />
   {:else if props.event.kind === ZAP_GOAL}

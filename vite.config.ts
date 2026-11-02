@@ -25,6 +25,8 @@ export default defineConfig({
       "prosemirror-state",
       "prosemirror-transform",
       "prosemirror-view",
+      // Fetches its .wasm by url, which the dev server refuses from outside this project
+      "@sqlite.org/sqlite-wasm",
     ],
   },
   server: {
@@ -39,9 +41,14 @@ export default defineConfig({
     // },
     // cors: true,
   },
+  // sqlite-wasm finds its .wasm beside its own module, which pre-bundling would move.
+  optimizeDeps: {
+    exclude: ["@sqlite.org/sqlite-wasm"],
+  },
   build: {
     sourcemap: false,
   },
+  worker: {format: "es"},
   plugins: [
     sveltekit(),
     process.env.FLOTILLA_DESKTOP !== "1" &&
@@ -56,12 +63,12 @@ export default defineConfig({
           adapterFallback: "/",
         },
         workbox: {
-          maximumFileSizeToCacheInBytes: 5 * 1024 ** 2, // 5 MB or set to something else
+          maximumFileSizeToCacheInBytes: 5 * 1024 ** 2,
           // The service worker is generated before SvelteKit prerenders anything, so the
           // "prerendered/**" glob @vite-pwa/sveltekit forces in never matches. It only forces it
           // when modifyURLPrefix is unset, and an empty one is a no-op.
           modifyURLPrefix: {},
-          globPatterns: ["client/**/*.{js,css,ico,png,svg,webp,webmanifest}"],
+          globPatterns: ["client/**/*.{js,css,ico,png,svg,webp,webmanifest,wasm}"],
         },
         manifest: {
           name: process.env.VITE_PLATFORM_NAME,

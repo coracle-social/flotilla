@@ -14,16 +14,16 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
-  import ChatTitle from "@app/components/ChatTitle.svelte"
+  import ConversationTitle from "@app/components/ConversationTitle.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
-  import {chatSearch} from "@app/chats"
-  import {user} from "@app/core"
-  import {deriveUserRoomSearch} from "@app/rooms"
-  import {makeChatPath} from "@app/routes"
-  import {shareTo, type Share} from "@app/share"
+  import {conversationSearch} from "@app/features/messages"
+  import {user} from "@app/core/user"
+  import {deriveUserRoomSearch} from "@app/features/spaces/rooms"
+  import * as pages from "@app/navigation/pages"
+  import {shareTo, type Share} from "@app/features/share"
 
   type Props = {
     share: Share
@@ -45,7 +45,7 @@
   let selection = $state("")
 
   const roomResults = $derived($roomSearch.searchOptions(term))
-  const chatResults = $derived($chatSearch.searchOptions(term))
+  const conversationResults = $derived($conversationSearch.searchOptions(term))
 </script>
 
 <Modal tag="form" onsubmit={preventDefault(submit)}>
@@ -87,12 +87,12 @@
           {/each}
         </div>
       {/if}
-      {#if chatResults.length > 0}
+      {#if conversationResults.length > 0}
         <p class="text-xs uppercase tracking-wide opacity-60">Direct Messages</p>
         <div class="flex flex-col gap-2">
-          {#each chatResults as chat (chat.id)}
-            {@const path = makeChatPath(chat.pubkeys)}
-            {@const others = remove($user.pubkey, chat.pubkeys)}
+          {#each conversationResults as conversation (conversation.id)}
+            {@const path = pages.conversation.path({pubkeys: conversation.pubkeys})}
+            {@const others = remove($user.pubkey, conversation.pubkeys)}
             <Button
               type="button"
               class={cx(
@@ -106,13 +106,13 @@
                 <ProfileCircle pubkey={others[0] || $user.pubkey} size={5} />
               {/if}
               <span class="min-w-0 truncate">
-                <ChatTitle pubkeys={chat.pubkeys} />
+                <ConversationTitle pubkeys={conversation.pubkeys} />
               </span>
             </Button>
           {/each}
         </div>
       {/if}
-      {#if roomResults.length === 0 && chatResults.length === 0}
+      {#if roomResults.length === 0 && conversationResults.length === 0}
         <p class="py-12 text-center opacity-75">
           {#if term}
             Nothing matched your search.

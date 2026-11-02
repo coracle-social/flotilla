@@ -5,13 +5,14 @@
   import {Article} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
+  import {markdownToText} from "@lib/markdown"
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import type {FeedContext} from "@app/feeds"
-  import {reader} from "@app/core"
-  import {makeArticlePath} from "@app/routes"
+  import type {FeedContext} from "@app/features/feeds"
+  import {reader} from "@app/core/domain"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -21,12 +22,13 @@
 
   const {url, event, context}: Props = $props()
 
-  const path = $derived(makeArticlePath(url, getAddress(event)))
+  const path = $derived(pages.article.path({url, address: getAddress(event)}))
   const article = $derived(reader(Article)(event))
   const title = $derived(article.title())
   const summary = $derived(article.summary())
   const image = $derived(article.image())
   const topics = $derived(uniq(article.topics()))
+  const excerpt = $derived(summary || markdownToText(event.content))
 </script>
 
 {#snippet topicLabels()}
@@ -51,7 +53,7 @@
       </p>
     </div>
     <Content
-      event={{content: summary || event.content, tags: event.tags}}
+      event={{content: excerpt, tags: event.tags}}
       {url}
       expandMode="inline"
       minLength={100}

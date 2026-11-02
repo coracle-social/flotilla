@@ -1,6 +1,5 @@
 <script lang="ts">
   import {writable} from "svelte/store"
-  import {uniq} from "@welshman/lib"
   import {Note} from "@welshman/domain"
   import {isMobile, preventDefault} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
@@ -14,16 +13,23 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {publisher, writer} from "@app/core"
-  import {DraftKey} from "@app/drafts"
-  import {makeEditor} from "@app/editor"
-  import {userSpaceUrls} from "@app/rooms"
-  import {pushToast} from "@app/toast"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {writer} from "@app/core/domain"
+  import {DraftKey} from "@app/features/drafts"
+  import {makeEditor} from "@app/features/editor"
+  import {publishToNetwork} from "@app/features/social"
+  import {pushToast} from "@app/features/toast"
+  import {openEventNote} from "@app/navigation/overlays"
 
   type Values = {
     content?: string | object
   }
+
+  type Props = {
+    initialValues?: Values
+  }
+
+  const {initialValues}: Props = $props()
 
   const draftKey = new DraftKey<Values>("note")
   const draft = draftKey.get()
@@ -49,17 +55,11 @@
     loading = true
 
     try {
-      const {event, relays} = await writer(Note)
-        .setContent(text)
-        .addTags(...ed.storage.nostr.getEditorTags())
-        .render()
-
-      const publication = $publisher.publish({
-        event,
-        relays: uniq([...relays, ...$userSpaceUrls]),
-      })
-
-      const error = (await publication.settled()).getError()
+      const {publication, error} = await publishToNetwork(
+        writer(Note)
+          .setContent(text)
+          .addTags(...ed.storage.nostr.getEditorTags()),
+      )
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -67,13 +67,20 @@
 
       draftKey.clear()
       history.back()
+      pushToast({
+        message: "Your post has been published!",
+        action: {message: "View it", onclick: () => openEventNote(publication.event)},
+      })
+    } catch (e) {
+      console.error(e)
+      pushToast({theme: "error", message: "Failed to post."})
     } finally {
       loading = false
     }
   }
 
   let loading = $state(false)
-  let content = $state(draft?.content ?? "")
+  let content = $state(initialValues?.content ?? draft?.content ?? "")
 
   const onChange = (json: object) => {
     content = json
@@ -96,7 +103,7 @@
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Create a Public Post</ModalTitle>
-      <ModalSubtitle>Published to your outbox and all favorited spaces.</ModalSubtitle>
+      <ModalSubtitle>Broadcast to the wider network.</ModalSubtitle>
     </ModalHeader>
     <div class="relative">
       <div class="note-editor grow overflow-hidden">

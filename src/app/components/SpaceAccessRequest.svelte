@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {displayUrl} from "@welshman/lib"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -14,8 +13,10 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {pushToast} from "@app/toast"
-  import {attemptRelayAccess, parseInviteLink} from "@app/access"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {pushToast} from "@app/features/toast"
+  import {attemptRelayAccess} from "@app/features/spaces/membership"
+  import {parseInviteLink} from "@app/features/spaces/invites"
 
   type Props = {
     url: string
@@ -55,7 +56,7 @@
     <ModalHeader>
       <ModalTitle>Request Access</ModalTitle>
       <ModalSubtitle
-        >Enter an invite code below to request access to {displayUrl(url)}.</ModalSubtitle>
+        >Enter an invite code below to request access to <RelayLabel {url} />.</ModalSubtitle>
     </ModalHeader>
     <Field>
       {#snippet label()}

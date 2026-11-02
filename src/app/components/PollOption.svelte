@@ -4,7 +4,7 @@
   import {noop, spec} from "@welshman/lib"
   import {Poll} from "@welshman/domain"
   import {stopPropagation} from "@lib/html"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
 
   type Props = {
     event: TrustedEvent

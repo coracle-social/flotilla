@@ -4,6 +4,8 @@ App/output
 App/App/public
 DerivedData
 xcuserdata
+App/App.xcodeproj/xcshareddata/xcschemes/ShareExtension.xcscheme
+App/App.xcodeproj/xcshareddata/xcschemes/BroadcastExtension.xcscheme
 
 # Cordova plugins for Capacitor
 capacitor-cordova-ios-plugins

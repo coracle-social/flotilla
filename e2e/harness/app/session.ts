@@ -8,12 +8,16 @@ const TEST_SESSION_KEY = "__TEST_SESSION__"
 const TEST_EVENTS_KEY = "__TEST_EVENTS__"
 
 // The {method, data} shape @welshman/app's session handlers deserialize, installed before navigating.
-export const injectSession = (context: BrowserContext, user: TestUser) =>
+// A nip07 session carries no key and signs through whatever injectNip07 put on window.
+export const injectSession = (context: BrowserContext, user: TestUser, nip07 = false) =>
   context.addInitScript(
     ([key, session]) => {
       Object.assign(window, {[key]: session})
     },
-    [TEST_SESSION_KEY, {method: "nip01", data: {secret: user.secret}}] as const,
+    [
+      TEST_SESSION_KEY,
+      nip07 ? {method: "nip07", data: {}} : {method: "nip01", data: {secret: user.secret}},
+    ] as const,
   )
 
 // The local cache a returning user would boot with, loaded once the injected session is restored.

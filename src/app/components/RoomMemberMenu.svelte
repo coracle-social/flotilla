@@ -3,9 +3,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {rooms} from "@app/core"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {rooms} from "@app/core/plugins"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -22,7 +22,7 @@
       message: "Are you sure you want to remove this user from the room?",
       confirm: async () => {
         const command = await $rooms.removeMember(url, {h}, pubkey)
-        const error = (await command.publish().settled()).getError()
+        const error = await command.publish().getError()
 
         if (error) {
           pushToast({theme: "error", message: error})

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "@app/app.css"
+  import "@src/app.css"
   import "@welshman/editor/index.css"
   import * as nip19 from "nostr-tools/nip19"
   import type {Unsubscriber} from "svelte/store"
@@ -13,43 +13,64 @@
   import {setNip55Plugin} from "@welshman/signer"
   import * as util from "@welshman/util"
   import * as lib from "@welshman/lib"
+  import * as domain from "@welshman/domain"
   import * as plugins from "@welshman/app"
   import {isMobile, documentActive} from "@lib/html"
+  import {syncKeyboard} from "@lib/keyboard"
   import AppContainer from "@app/components/AppContainer.svelte"
   import Startup from "@app/components/Startup.svelte"
   import ModalContainer from "@app/components/ModalContainer.svelte"
-  import * as core from "@app/core"
-  import {app} from "@app/core"
-  import {setupHistory} from "@app/routes"
-  import {setupAnalytics} from "@app/analytics"
-  import {setupLogging} from "@app/logger"
-  import "@app/policies"
-  import {restoreSession} from "@app/session"
-  import {syncSignerAlerts} from "@app/signer"
-  import {wallet} from "@app/lightning"
-  import {storage} from "@app/storage"
-  import {device} from "@app/device"
-  import {forceHealthChecks} from "@app/healthChecks"
-  import {setupShareIntents} from "@app/share"
-  import {shouldUnwrap, syncApplicationData} from "@app/sync"
-  import * as env from "@app/env"
-  import {applySavedTheme, flTheme, syncTheme, theme} from "@app/theme"
-  import * as notifications from "@app/notifications"
-  import {notificationCount, backgroundNotificationCount} from "@app/notifications"
-  import {Push, notificationSettings} from "@app/push"
-  import {pushState} from "@app/push/adapters/common"
-  import {setupDeepLinks} from "@app/deepLinks"
-  import {syncKeyboard} from "@app/keyboard"
-  import {getPageTitle} from "@app/title"
+  import {registerAll} from "@app/index"
+  import * as coreApp from "@app/core/app"
+  import {app} from "@app/core/app"
+  import * as coreDomain from "@app/core/domain"
+  import * as corePlugins from "@app/core/plugins"
+  import {setupHistory} from "@app/navigation/history"
+  import {setupAnalytics} from "@app/features/analytics"
+  import {setupLogging} from "@app/core/logger"
+  import * as coreSession from "@app/core/session"
+  import {restoreSession} from "@app/core/session"
+  import {syncSignerAlerts} from "@app/features/signerAlerts"
+  import {wallet} from "@app/features/wallet"
+  import {storage} from "@app/core/storage"
+  import {device} from "@app/core/device"
+  import {forceHealthChecks} from "@app/features/healthChecks"
+  import {setupShareIntents} from "@app/features/share"
+  import {syncApplicationData} from "@app/core/sync"
+  import {shouldUnwrap} from "@app/features/messages"
+  import * as env from "@app/core/env"
+  import {applySavedTheme, flTheme, syncTheme, theme} from "@app/features/theme"
+  import {checked, syncChecked, syncCheckedRemote} from "@app/features/checked"
+  import * as notifications from "@app/features/notifications"
+  import {backgroundNotificationCount, notificationCount} from "@app/features/notifications"
+  import {syncBadges} from "@app/features/badges"
+  import {Push, notificationSettings} from "@app/features/push"
+  import {pushState} from "@app/features/push/adapters/common"
+  import {setupDeepLinks} from "@app/features/deepLinks"
+  import {getPageTitle} from "@app/navigation/pages"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
   import type {LayoutProps} from "./$types"
 
   const {children}: LayoutProps = $props()
 
+  registerAll()
   applySavedTheme()
 
   // Add stuff to window for convenience
-  Object.assign(window, {get, nip19, theme, ...plugins, ...lib, ...util, ...core})
+  Object.assign(window, {
+    get,
+    nip19,
+    theme,
+    notifications,
+    kinds: domain,
+    ...plugins,
+    ...lib,
+    ...util,
+    ...coreApp,
+    ...corePlugins,
+    ...coreDomain,
+    ...coreSession,
+  })
 
   // Set up context for various modules
   pomadeContext.setSignerUrls(env.POMADE_SIGNERS)
@@ -82,8 +103,9 @@
     // Set up logging
     unsubscribers.push(setupLogging())
 
-    // Boot code reads these, e.g. Push picks its adapter from pushState, so wait for stored values
+    // Boot code reads and writes these, e.g. Push picks its adapter from pushState, so wait for stored values
     await Promise.all([
+      checked.ready,
       device.ready,
       shouldUnwrap.ready,
       wallet.ready,
@@ -111,13 +133,13 @@
     unsubscribers.push(syncKeyboard())
 
     // Subscribe to badge count for changes
-    unsubscribers.push(notifications.syncBadges())
+    unsubscribers.push(syncBadges())
 
     // Subscribe to page history to update checked state
-    unsubscribers.push(notifications.syncChecked())
+    unsubscribers.push(syncChecked())
 
     // Sync checked state across devices
-    unsubscribers.push(notifications.syncCheckedRemote())
+    unsubscribers.push(syncCheckedRemote())
 
     // Initialize background notifications
     unsubscribers.push(Push.sync())
@@ -156,10 +178,21 @@
   })
 
   $effect(() => {
-    const title = getPageTitle({page: $page, pubkey: $app.user?.pubkey})
     const count = $documentActive ? $notificationCount : $backgroundNotificationCount
+    let current = true
 
-    document.title = count > 0 ? `(${count}) ${title}` : title
+    // A title can wait on the repository, by which time the page may have moved on
+    getPageTitle($page).then(pageTitle => {
+      const title = pageTitle || env.PLATFORM_NAME
+
+      if (current) {
+        document.title = count > 0 ? `(${count}) ${title}` : title
+      }
+    })
+
+    return () => {
+      current = false
+    }
   })
 </script>
 

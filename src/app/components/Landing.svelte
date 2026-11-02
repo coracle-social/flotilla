@@ -1,6 +1,5 @@
 <script lang="ts">
   import {page} from "$app/stores"
-  import {displayRelayUrl} from "@welshman/util"
   import Login from "@assets/icons/login-3.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -12,15 +11,16 @@
   import CardButton from "@lib/components/CardButton.svelte"
   import LogIn from "@app/components/LogIn.svelte"
   import SignUp from "@app/components/SignUp.svelte"
-  import {parseInviteLink} from "@app/access"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {parseInviteLink} from "@app/features/spaces/invites"
   import {
     PLATFORM_ABOUT,
     PLATFORM_TERMS,
     PLATFORM_PRIVACY,
     PLATFORM_NAME,
     PLATFORM_DESCRIPTION,
-  } from "@app/env"
-  import {pushModal} from "@app/modal"
+  } from "@app/core/env"
+  import {pushModal} from "@app/navigation/dialogs"
 
   const invite = $derived(
     $page.url.pathname === "/join" ? parseInviteLink($page.url.href) : undefined,
@@ -36,7 +36,7 @@
     <div class="py-2">
       {#if invite}
         <ModalTitle>Welcome to</ModalTitle>
-        <p class="m-auto max-w-sm text-center text-primary">{displayRelayUrl(invite.url)}</p>
+        <p class="m-auto max-w-sm text-center text-primary"><RelayLabel url={invite.url} /></p>
       {:else}
         <ModalTitle>Welcome to<br />{PLATFORM_NAME}!</ModalTitle>
         <p class="m-auto max-w-sm text-center">{PLATFORM_DESCRIPTION}</p>

@@ -14,7 +14,7 @@
   import type {TippyController} from "@lib/components/Tippy.svelte"
   import Button from "@lib/components/Button.svelte"
   import TopicSuggestion from "@app/components/TopicSuggestion.svelte"
-  import {app} from "@app/core"
+  import {app} from "@app/core/app"
 
   type Props = {
     value: string[]

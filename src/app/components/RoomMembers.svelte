@@ -14,8 +14,8 @@
   import RoomName from "@app/components/RoomName.svelte"
   import RoomMembersAdd from "@app/components/RoomMembersAdd.svelte"
   import RoomMemberMenu from "@app/components/RoomMemberMenu.svelte"
-  import {deriveRoomMembers, deriveUserIsRoomAdmin} from "@app/rooms"
-  import {pushModal} from "@app/modal"
+  import {deriveRoomMembers, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -43,7 +43,7 @@
     <div class="flex flex-col gap-2">
       {#if $members === undefined}
         <div class="card bg-surface p-4">
-          <span class="text-error">Member list not available from this relay</span>
+          <span class="text-error">Member list not available from this space</span>
         </div>
       {:else if $members.length === 0}
         <div class="card bg-surface p-4">

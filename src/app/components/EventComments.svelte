@@ -8,21 +8,29 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
-  import type {FeedContext} from "@app/feeds"
+  import type {FeedContext} from "@app/features/feeds"
   import CommentCompose from "@app/components/CommentCompose.svelte"
-  import {events, network} from "@app/core"
-  import {buildCommentTree} from "@app/social"
+  import {events, network} from "@app/core/plugins"
+  import {buildCommentTree} from "@app/features/social"
 
   type Props = {
     event: TrustedEvent
     url?: string
+    relays?: string[]
     context: FeedContext
     columnClass?: string
+    noun?: string
   }
 
-  const {event, url, context, columnClass}: Props = $props()
+  const {
+    event,
+    url,
+    relays = removeUndefined([url]),
+    context,
+    columnClass,
+    noun = "post",
+  }: Props = $props()
 
-  const relays = removeUndefined([url])
   const filters = getCommentFiltersForRoot([event])
   const comments = $events.asc(filters).$
 
@@ -54,10 +62,10 @@
     <div class={cx("flex w-full flex-wrap items-center justify-between gap-2 py-3", columnClass)}>
       <h2 class="text-lg font-bold">
         {nodes.length === 0
-          ? "Discussion about this post"
+          ? `Discussion about this ${noun}`
           : `${$comments.length} ${$comments.length === 1 ? "comment" : "comments"}`}
       </h2>
-      {#if url && replyTo?.id !== event.id}
+      {#if replyTo?.id !== event.id}
         <Button class="button button-primary button-sm" onclick={commentOnRoot}>
           <Icon icon={Reply} size={4} />
           Add a comment
@@ -67,7 +75,7 @@
   </div>
   <div class="px-5 sm:px-8">
     <div class={cx("flex w-full flex-col pb-10", columnClass)}>
-      {#if url && replyTo?.id === event.id}
+      {#if replyTo?.id === event.id}
         <div class="py-4">
           <CommentCompose {url} {event} onCancel={clearReplyTo} onSubmit={clearReplyTo} />
         </div>

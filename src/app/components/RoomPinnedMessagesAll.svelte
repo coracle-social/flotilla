@@ -14,9 +14,9 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {deriveUserIsRoomAdmin} from "@app/rooms"
-  import {deriveRoomPinnedEvents, toggleRoomPin} from "@app/roomPins"
-  import {goToEvent} from "@app/routes"
+  import {deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
+  import {deriveRoomPinnedEvents, toggleRoomPin} from "@app/features/spaces/rooms/pins"
+  import {goToEvent} from "@app/navigation/locations"
 
   type Props = {
     url: string
@@ -46,7 +46,7 @@
     </ModalHeader>
     <div class="flex flex-col gap-2">
       {#each $pinnedEvents as event (event.id)}
-        {@const onUnpin = () => toggleRoomPin(url, h, event.id)}
+        {@const onUnpin = () => toggleRoomPin(url, h, event)}
         {@const onJump = () => jumpToMessage(event)}
         <div class="card card-sm flex flex-col gap-3 p-4">
           <div class="flex items-start gap-3">

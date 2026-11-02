@@ -1,6 +1,6 @@
 <script lang="ts">
   import Content from "@app/components/Content.svelte"
-  import {relays} from "@app/core"
+  import {relays} from "@app/core/plugins"
 
   type Props = {
     url: string

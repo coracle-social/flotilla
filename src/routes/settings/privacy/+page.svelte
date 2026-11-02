@@ -12,18 +12,19 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import RelayList from "@app/components/RelayList.svelte"
-  import {blockedRelayLists, user} from "@app/core"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {PLATFORM_NAME} from "@app/env"
-  import {analyticsAvailable} from "@app/analytics"
-  import {sendLogs} from "@app/logger"
+  import {user} from "@app/core/user"
+  import {blockedRelayLists} from "@app/core/plugins"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
+  import {PLATFORM_NAME, HIDE_NOSTR} from "@app/core/env"
+  import {analyticsAvailable} from "@app/features/analytics"
+  import {sendLogs} from "@app/core/logger"
   import {
     RelayAuthMode,
     userSettingsValues,
     publishSettings,
     createSettingsForm,
-  } from "@app/settings"
+  } from "@app/core/settings"
 
   const reset = () => {
     settings.set({...$userSettingsValues})
@@ -34,7 +35,7 @@
 
     try {
       const publication = await sendLogs()
-      const error = (await publication.settled()).getError()
+      const error = await publication.getError()
 
       if (error) {
         pushToast({theme: "error", message: error})
@@ -66,9 +67,14 @@
     loading = true
 
     try {
-      await publishSettings($settings)
+      const publication = await publishSettings($settings)
+      const error = await publication.getError()
 
-      pushToast({message: "Your settings have been saved!"})
+      if (error) {
+        pushToast({theme: "error", message: error})
+      } else {
+        pushToast({message: "Your settings have been saved!"})
+      }
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to save your settings."})
@@ -84,40 +90,42 @@
   let sendingLogs = $state(false)
 </script>
 
-<form {onsubmit}>
+<form class="contents" {onsubmit}>
   <PageContent>
     <div class="card flex flex-col gap-4">
       <strong class="flex items-center gap-3 text-lg">
         <Icon icon={ShieldMinimalistic} />
         Privacy Settings
       </strong>
-      <FieldInline>
-        {#snippet label()}
-          <p>Authenticate with unknown relays?</p>
-        {/snippet}
-        {#snippet input()}
-          <ToggleInput
-            checked={$settings.relay_auth === RelayAuthMode.Aggressive}
-            onchange={onAuthModeChange} />
-        {/snippet}
-        {#snippet info()}
-          <p>Controls whether {PLATFORM_NAME} will identify you to relays not in your lists.</p>
-        {/snippet}
-      </FieldInline>
-      <FieldInline>
-        {#snippet label()}
-          <p>Blocked relays</p>
-        {/snippet}
-        {#snippet input()}
-          <Button class="button button-neutral" onclick={showBlockedRelays}>
-            <Icon icon={ForbiddenCircle} />
-            {$blockedRelayUrls.length} Blocked
-          </Button>
-        {/snippet}
-        {#snippet info()}
-          <p>These relays won't be used unless explicitly requested.</p>
-        {/snippet}
-      </FieldInline>
+      {#if !HIDE_NOSTR}
+        <FieldInline>
+          {#snippet label()}
+            <p>Authenticate with unknown relays?</p>
+          {/snippet}
+          {#snippet input()}
+            <ToggleInput
+              checked={$settings.relay_auth === RelayAuthMode.Aggressive}
+              onchange={onAuthModeChange} />
+          {/snippet}
+          {#snippet info()}
+            <p>Controls whether {PLATFORM_NAME} will identify you to relays not in your lists.</p>
+          {/snippet}
+        </FieldInline>
+        <FieldInline>
+          {#snippet label()}
+            <p>Blocked relays</p>
+          {/snippet}
+          {#snippet input()}
+            <Button class="button button-neutral" onclick={showBlockedRelays}>
+              <Icon icon={ForbiddenCircle} />
+              {$blockedRelayUrls.length} Blocked
+            </Button>
+          {/snippet}
+          {#snippet info()}
+            <p>These relays won't be used unless explicitly requested.</p>
+          {/snippet}
+        </FieldInline>
+      {/if}
       {#if analyticsAvailable}
         <FieldInline>
           {#snippet label()}
@@ -154,32 +162,38 @@
       </strong>
       <p class="text-sm opacity-50">
         Messages from people you have no connection to appear in the Requests tab of your chat list.
-        A sender who meets either threshold below reaches your conversations instead.
+        {#if HIDE_NOSTR}
+          A sender who meets the threshold below reaches your conversations instead.
+        {:else}
+          A sender who meets either threshold below reaches your conversations instead.
+        {/if}
       </p>
-      <Field>
-        {#snippet label()}
-          <p>Proof of work</p>
-        {/snippet}
-        {#snippet secondary()}
-          <p>{$settings.min_dm_pow} bits</p>
-        {/snippet}
-        {#snippet input()}
-          <input
-            class="range w-full"
-            type="range"
-            min="1"
-            max="32"
-            step="1"
-            bind:value={$settings.min_dm_pow} />
-        {/snippet}
-        {#snippet info()}
-          <p>
-            A sender who spends this much proof of work reaches your conversations whether or not
-            you know them. Each step up doubles the work they have to do, and {PLATFORM_NAME} spends 16
-            bits on every message you send.
-          </p>
-        {/snippet}
-      </Field>
+      {#if !HIDE_NOSTR}
+        <Field>
+          {#snippet label()}
+            <p>Proof of work</p>
+          {/snippet}
+          {#snippet secondary()}
+            <p>{$settings.min_dm_pow} bits</p>
+          {/snippet}
+          {#snippet input()}
+            <input
+              class="range w-full"
+              type="range"
+              min="1"
+              max="32"
+              step="1"
+              bind:value={$settings.min_dm_pow} />
+          {/snippet}
+          {#snippet info()}
+            <p>
+              A sender who spends this much proof of work reaches your conversations whether or not
+              you know them. Each step up doubles the work they have to do, and {PLATFORM_NAME} spends
+              16 bits on every message you send.
+            </p>
+          {/snippet}
+        </Field>
+      {/if}
       <Field>
         {#snippet label()}
           <p>Web of trust</p>
@@ -201,7 +215,7 @@
         {/snippet}
       </Field>
     </div>
-    <div class="card sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
+    <div class="card sticky -bottom-3 flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}
         >Discard Changes</Button>
       <Button class="button button-primary" type="submit" disabled={loading}>

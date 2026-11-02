@@ -6,9 +6,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {PLATFORM_URL} from "@app/env"
-  import {isRoomId} from "@app/rooms"
-  import {makeRoomPath, makeSpacePath} from "@app/routes"
+  import {PLATFORM_URL} from "@app/core/env"
+  import {isRoomId} from "@app/features/spaces/rooms"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -41,10 +41,10 @@
 
   const [href, external] = call(() => {
     if (roomReference) {
-      return [makeRoomPath(roomReference.url, roomReference.h), false]
+      return [pages.room.path({url: roomReference.url, h: roomReference.h}), false]
     }
     if (relayReference) {
-      return [makeSpacePath(relayReference), false]
+      return [pages.space.path({url: relayReference}), false]
     }
     if (url.startsWith(PLATFORM_URL)) {
       return [url.replace(PLATFORM_URL, ""), false]

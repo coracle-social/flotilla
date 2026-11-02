@@ -6,9 +6,9 @@
   import Button from "@lib/components/Button.svelte"
   import Zap from "@app/components/Zap.svelte"
   import InfoZapperError from "@app/components/InfoZapperError.svelte"
-  import {pushModal} from "@app/modal"
-  import {app} from "@app/core"
-  import {pushToast} from "@app/toast"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {app} from "@app/core/app"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url?: string

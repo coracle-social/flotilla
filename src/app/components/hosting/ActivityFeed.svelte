@@ -2,7 +2,7 @@
   import {formatTimestampRelative} from "@welshman/lib"
   import History from "@assets/icons/history.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import type {Activity} from "@app/hosting"
+  import type {Activity} from "@app/features/hosting"
 
   type Props = {
     activity: Activity[]

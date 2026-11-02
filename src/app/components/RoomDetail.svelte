@@ -1,7 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
   import {displayRelayUrl} from "@welshman/util"
-  import {publish} from "@welshman/app"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import EyeClosed from "@assets/icons/eye-closed.svg?dataurl"
@@ -25,15 +24,21 @@
   import RoomInvite from "@app/components/RoomInvite.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
-  import {roomLists, rooms} from "@app/core"
-  import {deriveRoomMembers, deriveUserIsRoomAdmin, deriveUserRooms} from "@app/rooms"
+  import {roomLists, rooms} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
+  import {
+    deriveRoomMembers,
+    deriveUserIsRoomAdmin,
+    deriveUserRooms,
+    publishRoomList,
+  } from "@app/features/spaces/rooms"
   import {
     deriveIsMuted,
     deriveShouldNotify,
     toggleRoomMuted,
     toggleRoomNotifications,
-  } from "@app/settings"
-  import {pushModal} from "@app/modal"
+  } from "@app/core/settings"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -60,9 +65,9 @@
 
   const toggleFavorite = () => {
     if (isFavorite) {
-      $roomLists.removeRoom(h, url).then(publish)
+      $roomLists.removeRoom(h, url).then(publishRoomList)
     } else {
-      $roomLists.addRoom(h, url).then(publish)
+      $roomLists.addRoom(h, url).then(publishRoomList)
     }
   }
 
@@ -84,7 +89,9 @@
         </div>
         <div class="flex min-w-0 flex-col">
           <RoomName {url} {h} class="block text-2xl" />
-          <span class="truncate text-primary">{displayRelayUrl(url)}</span>
+          {#if !HIDE_NOSTR}
+            <span class="truncate text-primary">{displayRelayUrl(url)}</span>
+          {/if}
         </div>
       </div>
       <MenuButton

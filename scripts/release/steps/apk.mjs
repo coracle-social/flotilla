@@ -1,7 +1,7 @@
 import {rename} from "node:fs/promises"
 import {dirname, join} from "node:path"
 import {apkMetadata, gradle, keystoreEnv} from "../lib/android.mjs"
-import {apk, missingEnv} from "../lib/context.mjs"
+import {apk, checkBundle, missingEnv} from "../lib/context.mjs"
 
 export default {
   name: "apk",
@@ -15,6 +15,7 @@ export default {
     "the same one forever.",
   ],
   run: async () => {
+    await checkBundle("android/app/src/main/assets/public")
     await gradle("assembleRelease", keystoreEnv("ANDROID"))
 
     const {outputFile} = await apkMetadata()

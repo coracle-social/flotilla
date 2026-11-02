@@ -59,9 +59,6 @@
 
   const target = document.createElement("div")
 
-  // `mount` only tracks prop changes when the props come from a `$state` object.
-  const mountedProps = $state({...props})
-
   let element: Element
   let popover: Maybe<Instance>
   let content: Maybe<Record<string, any>>
@@ -87,7 +84,8 @@
               undefined
 
         if (component) {
-          content ??= mount(component, {target, props: mountedProps})
+          // A copy, so the popover's own effect root reads none of the caller's state.
+          content ??= mount(component, {target, props: {...props}})
         }
 
         visible = true
@@ -99,8 +97,13 @@
 
         return params.onShow?.(instance)
       },
-      onHidden: (instance: Instance) => {
+      // At hide rather than hidden, so a click mid-fade reopens instead of toggling closed.
+      onHide: (instance: Instance) => {
         visible = false
+
+        return params.onHide?.(instance)
+      },
+      onHidden: (instance: Instance) => {
         document.removeEventListener("keydown", onKeyDown)
         document.removeEventListener("mousemove", onMouseMove)
 
@@ -155,8 +158,12 @@
     },
   }
 
+  const text = $derived(typeof params.content === "string" ? params.content : undefined)
+
   $effect(() => {
-    Object.assign(mountedProps, props)
+    if (text !== undefined) {
+      popover?.setContent(text)
+    }
   })
 
   onMount(() => {

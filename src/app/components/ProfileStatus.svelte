@@ -1,10 +1,11 @@
 <script lang="ts">
   import {now, removeUndefined} from "@welshman/lib"
+  import {tagValue, urlTags} from "@welshman/util"
   import {getExpiration} from "@welshman/domain"
   import Pulse from "@assets/icons/pulse.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
-  import {statuses} from "@app/statuses"
+  import {statuses} from "@app/features/statuses"
 
   type Props = {
     pubkey: string
@@ -18,7 +19,7 @@
   // NIP-38 reports nothing with empty content, and an expiration asks relays to stop serving it.
   const expiration = $derived($status ? getExpiration($status) : undefined)
   const text = $derived(expiration && expiration <= now() ? "" : $status?.content)
-  const link = $derived($status?.tags.find(t => t[0] === "r")?.[1])
+  const link = $derived($status ? tagValue(urlTags("r"), $status.tags) : undefined)
 </script>
 
 {#if text}

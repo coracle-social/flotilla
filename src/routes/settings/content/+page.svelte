@@ -1,11 +1,11 @@
 <script lang="ts">
   import cx from "classnames"
   import {difference} from "@welshman/lib"
-  import {BlossomServerLists, MuteLists, publish} from "@welshman/app"
+  import {BlossomServerLists, publish} from "@welshman/app"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Accessibility from "@assets/icons/accessibility.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
-  import Microphone from "@assets/icons/microphone.svg?dataurl"
+  import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
   import Monitor from "@assets/icons/monitor.svg?dataurl"
   import Moon from "@assets/icons/moon.svg?dataurl"
   import Palette from "@assets/icons/palette.svg?dataurl"
@@ -15,19 +15,20 @@
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
   import InputList from "@lib/components/InputList.svelte"
-  import Link from "@lib/components/Link.svelte"
   import Icon from "@lib/components/Icon.svelte"
+  import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import LocalSttSettings from "@app/components/LocalSttSettings.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {blossomServerLists, deriveUserItem, muteLists} from "@app/core"
-  import {pushToast} from "@app/toast"
-  import {PLATFORM_NAME} from "@app/env"
-  import {flTheme, flThemes, theme} from "@app/theme"
-  import {userSettingsValues, publishSettings, createSettingsForm} from "@app/settings"
+  import {deriveUserItem, userMuteList} from "@app/core/user"
+  import {blossomServerLists, muteLists} from "@app/core/plugins"
+  import {pushToast} from "@app/features/toast"
+  import {PLATFORM_NAME, HIDE_NOSTR} from "@app/core/env"
+  import {flTheme, flThemes, theme} from "@app/features/theme"
+  import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
 
-  const userMuteList = deriveUserItem(MuteLists)
   const userBlossomServerList = deriveUserItem(BlossomServerLists)
 
   const reset = () => {
@@ -38,6 +39,8 @@
 
   const setTheme = (value: string) => () => theme.set(value)
 
+  const saveFontSize = () => publishSettings({font_size: $settings.font_size})
+
   const addServer = () => {
     blossomServers = [...blossomServers, ""]
   }
@@ -46,7 +49,7 @@
     loading = true
 
     try {
-      await publishSettings($settings)
+      const publications = [await publishSettings($settings)]
 
       const previous = $userMuteList?.pubkeys() ?? []
       const added = difference(mutedPubkeys, previous)
@@ -54,17 +57,28 @@
 
       // Private and non-pubkey mutes aren't shown here, so only the pubkeys the user changed are touched.
       if (added.length > 0 || removed.length > 0) {
-        await $muteLists
-          .update(writer => {
-            added.forEach(pubkey => writer.mutePublicly(pubkey))
-            removed.forEach(pubkey => writer.unmute(pubkey))
-          })
-          .then(publish)
+        publications.push(
+          await $muteLists
+            .update(writer => {
+              added.forEach(pubkey => writer.mutePublicly(pubkey))
+              removed.forEach(pubkey => writer.unmute(pubkey))
+            })
+            .then(publish),
+        )
       }
 
-      await $blossomServerLists.setUrls($state.snapshot(blossomServers)).then(publish)
+      publications.push(
+        await $blossomServerLists.setUrls($state.snapshot(blossomServers)).then(publish),
+      )
 
-      pushToast({message: "Your settings have been saved!"})
+      const errors = await Promise.all(publications.map(publication => publication.getError()))
+      const error = errors.find(Boolean)
+
+      if (error) {
+        pushToast({theme: "error", message: error})
+      } else {
+        pushToast({message: "Your settings have been saved!"})
+      }
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to save your settings."})
@@ -106,7 +120,7 @@
   </Button>
 {/snippet}
 
-<form {onsubmit}>
+<form class="contents" {onsubmit}>
   <PageContent>
     <div class="card flex flex-col gap-4">
       <strong class="flex items-center gap-3 text-lg">
@@ -204,11 +218,12 @@
             max="1.3"
             step="0.05"
             aria-label="Font size"
-            bind:value={$settings.font_size} />
+            bind:value={$settings.font_size}
+            onchange={saveFontSize} />
         {/snippet}
       </Field>
     </div>
-    <div class="card flex flex-col gap-4 shadow-md">
+    <div class="card flex flex-col gap-4">
       <strong class="text-lg">Editor Settings</strong>
       <Field>
         {#snippet label()}
@@ -231,49 +246,56 @@
           </p>
         {/snippet}
       </Field>
+      {#if !HIDE_NOSTR}
+        <Field>
+          {#snippet label()}
+            <p>Media Server</p>
+          {/snippet}
+          {#snippet secondary()}
+            <Button class="link text-sm underline flex items-center gap-1" onclick={addServer}>
+              <Icon icon={AddCircle} size={4} />
+              Add Server
+            </Button>
+          {/snippet}
+          {#snippet input()}
+            <InputList allowAdd={false} bind:value={blossomServers} />
+          {/snippet}
+          {#snippet info()}
+            <p>Choose a media server type and url for files you upload to {PLATFORM_NAME}.</p>
+          {/snippet}
+        </Field>
+      {/if}
+    </div>
+    <div class="card flex flex-col gap-4">
+      <strong class="text-lg">Model Settings</strong>
       <Field>
         {#snippet label()}
-          <p>OpenRouter</p>
+          <p>OpenRouter API Key</p>
         {/snippet}
         {#snippet input()}
           <label class="input flex w-full items-center gap-2">
-            <Icon icon={Microphone} />
+            <Icon icon={Lock} />
             <input
               bind:value={$settings.openrouter_key}
               autocomplete="off"
               name="flotilla-openrouter-key"
-              placeholder="OpenRouter API key"
               class="grow"
               type="password" />
           </label>
         {/snippet}
         {#snippet info()}
           <p>
-            Add an <Link external href="https://openrouter.ai/settings/keys" class="text-primary"
-              >OpenRouter API key</Link> to transcribe what you record with the microphone button in your
-            composer, and to have messages read out loud to you.
+            Read out loud and dictation go through <Link
+              external
+              href="https://openrouter.ai"
+              class="text-primary">OpenRouter</Link
+            >, which charges a fraction of a cent for each use.
           </p>
         {/snippet}
       </Field>
-      <Field>
-        {#snippet label()}
-          <p>Media Server</p>
-        {/snippet}
-        {#snippet secondary()}
-          <Button class="link text-sm underline flex items-center gap-1" onclick={addServer}>
-            <Icon icon={AddCircle} size={4} />
-            Add Server
-          </Button>
-        {/snippet}
-        {#snippet input()}
-          <InputList allowAdd={false} bind:value={blossomServers} />
-        {/snippet}
-        {#snippet info()}
-          <p>Choose a media server type and url for files you upload to {PLATFORM_NAME}.</p>
-        {/snippet}
-      </Field>
+      <LocalSttSettings />
     </div>
-    <div class="card sticky -bottom-3 shadow-md flex flex-row items-center justify-between gap-4">
+    <div class="card sticky -bottom-3 flex flex-row items-center justify-between gap-4">
       <Button class="button button-neutral" onclick={reset} disabled={loading}
         >Discard Changes</Button>
       <Button class="button button-primary" type="submit" disabled={loading}>

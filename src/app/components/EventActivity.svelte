@@ -5,7 +5,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import type {FeedContext} from "@app/feeds"
+  import type {FeedContext} from "@app/features/feeds"
 
   type Props = {
     event: TrustedEvent

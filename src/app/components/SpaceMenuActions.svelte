@@ -9,6 +9,8 @@
   import Login from "@assets/icons/login-3.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
   import BellOff from "@assets/icons/bell-off.svg?dataurl"
+  import CreditCard from "@assets/icons/card.svg?dataurl"
+  import Pulse from "@assets/icons/pulse.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -16,16 +18,23 @@
   import SpaceExit from "@app/components/SpaceExit.svelte"
   import SpaceEdit from "@app/components/SpaceEdit.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
+  import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceActionItems from "@app/components/SpaceActionItems.svelte"
-  import {relays, user} from "@app/core"
-  import {deriveHostedRelay, HOSTING_ENABLED} from "@app/hosting"
-  import {deriveSpacePermissions} from "@app/management"
-  import {userSpaceUrls} from "@app/rooms"
-  import {deriveSpaceActionItems} from "@app/actionItems"
-  import {deriveShouldNotify, setSpaceNotifications} from "@app/settings"
-  import {notificationSettings} from "@app/push"
-  import {pushModal, popModal} from "@app/modal"
-  import {makeSpacePath, goToChat} from "@app/routes"
+  import SpaceConnectionStatus from "@app/components/SpaceConnectionStatus.svelte"
+  import {deriveUserIsSpaceMember} from "@app/features/spaces/membership"
+  import {openCheckout} from "@app/features/spaces/payments"
+  import {user} from "@app/core/user"
+  import {relays} from "@app/core/plugins"
+  import {ENABLE_PAID_SPACES, HIDE_NOSTR} from "@app/core/env"
+  import {deriveHostedRelay, HOSTING_ENABLED} from "@app/features/hosting"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {userSpaceUrls} from "@app/features/spaces"
+  import {deriveSpaceActionItems} from "@app/features/spaces/actionItems"
+  import {deriveShouldNotify, setSpaceNotifications} from "@app/core/settings"
+  import {notificationSettings} from "@app/features/push"
+  import {popModal, pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
+  import {goToMessages} from "@app/features/messages"
 
   type Props = {
     url: string
@@ -39,6 +48,7 @@
   const hostedRelay = deriveHostedRelay(url)
   const actionItems = deriveSpaceActionItems(url)
   const shouldNotify = deriveShouldNotify(url)
+  const isMember = deriveUserIsSpaceMember(url)
 
   const createInvite = () => pushModal(SpaceInvite, {url}, {replaceState: sheet})
 
@@ -46,11 +56,24 @@
 
   const leaveSpace = () => pushModal(SpaceExit, {url}, {replaceState: sheet})
 
-  const joinSpace = () => pushModal(SpaceJoin, {url}, {replaceState: sheet})
+  const joinSpace = () =>
+    pushModal($relay?.isPaid() ? SpacePaymentGate : SpaceJoin, {url}, {replaceState: sheet})
 
   const showActionItems = () => pushModal(SpaceActionItems, {url}, {replaceState: sheet})
 
-  const contactOwner = () => goToChat([$relay!.pubkey!], {replaceState: sheet})
+  const showConnectionStatus = () => pushModal(SpaceConnectionStatus, {url}, {replaceState: sheet})
+
+  const contactOwner = () => goToMessages([$relay!.pubkey!], {replaceState: sheet})
+
+  const manageMembership = () => {
+    popModal()
+    openCheckout(url)
+  }
+
+  // The owner is a member by construction and has nothing to manage.
+  const canManageMembership = $derived(
+    ENABLE_PAID_SPACES && $relay?.isPaid() && $relay?.pubkey !== $user.pubkey && $isMember,
+  )
 
   const toggleSpaceNotifications = () => {
     popModal()
@@ -114,6 +137,9 @@
   {/if}
 {/snippet}
 
+{#if !HIDE_NOSTR}
+  {@render actionButton(showConnectionStatus, Pulse, "Connection status")}
+{/if}
 {@render actionButton(createInvite, LinkRound, "Create Invite")}
 {#if $permissions.review}
   {@render actionButton(
@@ -136,8 +162,11 @@
 {:else}
   {@render actionLink("/settings/alerts", Bell, "Enable notifications")}
 {/if}
-{#if HOSTING_ENABLED && $hostedRelay.relay}
-  {@render actionLink(makeSpacePath(url, "admin"), ServerPath, "Hosting settings")}
+{#if canManageMembership}
+  {@render actionButton(manageMembership, CreditCard, "Manage membership")}
+{/if}
+{#if HOSTING_ENABLED && $hostedRelay.value}
+  {@render actionLink(pages.spaceAdmin.path({url}), ServerPath, "Hosting settings")}
 {:else if $permissions.editSpace}
   {@render actionButton(startEdit, Pen, "Edit Space")}
 {/if}

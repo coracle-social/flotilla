@@ -1,6 +1,6 @@
 <script module lang="ts">
   import {synced} from "@welshman/store"
-  import {kv} from "@app/storage"
+  import {kv} from "@app/core/storage"
 
   const dmNotificationsPrompted = synced({
     key: "dmNotificationsPrompted",
@@ -11,15 +11,15 @@
 
 <script lang="ts">
   import {onMount} from "svelte"
-  import Chat from "@app/components/Chat.svelte"
-  import {splitChatId} from "@app/chats"
-  import {pushToast} from "@app/toast"
-  import {Push, notificationSettings} from "@app/push"
+  import Chat from "@app/components/Conversation.svelte"
+  import * as pages from "@app/navigation/pages"
+  import {pushToast} from "@app/features/toast"
+  import {Push, notificationSettings} from "@app/features/push"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const pubkeys = splitChatId(params.chat)
+  const pubkeys = pages.getConversationPubkeys(pages.conversation.decode(params).pubkeys)
 
   onMount(async () => {
     if (!$dmNotificationsPrompted) {

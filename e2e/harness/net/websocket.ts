@@ -29,6 +29,7 @@ type Traffic = {
   forgotten: Set<string>
   silenced: Set<string>
   eoseless: Set<string>
+  staleAuth: Set<string>
 }
 
 const trafficStore = makeContextStore<Traffic>("installWebSocketRoutes")
@@ -72,6 +73,35 @@ const openSilentRelay = (): RelayConnection => ({
   close() {},
 })
 
+// A relay that refuses one auth event the way a real one refuses a created_at older than it allows, then serves the next.
+const openStaleAuthRelay = (
+  traffic: Traffic,
+  url: string,
+  connection: RelayConnection,
+): RelayConnection => {
+  let listener: (message: RelayMessage) => void = () => undefined
+
+  return {
+    onMessage(f) {
+      listener = f
+      connection.onMessage(f)
+    },
+    send(message) {
+      if (message[0] === ClientMessageType.Auth && traffic.staleAuth.delete(url)) {
+        listener([
+          RelayMessageType.Ok,
+          message[1].id,
+          false,
+          "error: failed to authenticate: auth event too much in the past",
+        ])
+      } else {
+        connection.send(message)
+      }
+    },
+    close: () => connection.close(),
+  }
+}
+
 const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
   const url = normalizeRelayUrl(route.url())
   const connection = call(() => {
@@ -87,6 +117,10 @@ const serve = (traffic: Traffic, zooid: Zooid, route: WebSocketRoute) => {
 
     if (relay) {
       const connection = relay.connect()
+
+      if (traffic.staleAuth.has(url)) {
+        return openStaleAuthRelay(traffic, url, connection)
+      }
 
       return traffic.eoseless.has(url) ? openEoselessRelay(connection) : connection
     }
@@ -121,6 +155,7 @@ export const installWebSocketRoutes = (context: BrowserContext, zooid: Zooid) =>
     forgotten: new Set(),
     silenced: new Set(),
     eoseless: new Set(),
+    staleAuth: new Set(),
   })
 
   return context.routeWebSocket(
@@ -156,6 +191,10 @@ export const silenceRelay = (context: BrowserContext, url: string) =>
 // Resolved at open too, so a page that boots into it passes `eoseless` to `as`.
 export const withholdEose = (context: BrowserContext, url: string) =>
   trafficStore.get(context).eoseless.add(normalizeRelayUrl(url))
+
+// Resolved at open too, so a page that boots into it passes `staleAuth` to `as`, and spent on the first auth event.
+export const refuseStaleAuth = (context: BrowserContext, url: string) =>
+  trafficStore.get(context).staleAuth.add(normalizeRelayUrl(url))
 
 // Every frame in both directions, oldest first. Attach it to a failing test.
 export const formatTranscript = (context: BrowserContext) =>

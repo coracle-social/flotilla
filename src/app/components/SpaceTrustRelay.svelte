@@ -1,7 +1,4 @@
 <script lang="ts">
-  import {remove} from "@welshman/lib"
-  import {displayRelayUrl} from "@welshman/util"
-  import {publish} from "@welshman/app"
   import {preventDefault} from "@lib/html"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
@@ -14,12 +11,13 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import InfoSignatures from "@app/components/InfoSignatures.svelte"
-  import {relaysPendingTrust} from "@app/policies"
-  import {addTrustedRelay, removeTrustedRelay} from "@app/settings"
-  import {navigate, popModal, pushModal} from "@app/modal"
-  import {roomLists} from "@app/core"
-  import {pushToast} from "@app/toast"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {publishRoomList} from "@app/features/spaces/rooms"
+  import {addTrustedRelay, removeTrustedRelay} from "@app/core/settings"
+  import {navigate} from "@app/navigation/navigate"
+  import {popModal} from "@app/navigation/dialogs"
+  import {roomLists} from "@app/core/plugins"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -27,13 +25,11 @@
 
   const {url}: Props = $props()
 
-  const showInfoSignatures = () => pushModal(InfoSignatures)
-
   const untrustSpace = async () => {
     loading = true
 
     try {
-      await $roomLists.removeRelay(url).then(publish)
+      await $roomLists.removeRelay(url).then(publishRoomList)
       await removeTrustedRelay(url)
       navigate("/home")
     } catch (e) {
@@ -50,7 +46,6 @@
     try {
       await addTrustedRelay(url)
 
-      relaysPendingTrust.update($r => remove(url, $r))
       popModal()
     } catch (e) {
       console.error(e)
@@ -68,14 +63,13 @@
     <ModalHeader>
       <ModalTitle>Do you trust this space?</ModalTitle>
       <ModalSubtitle>
-        Only join <span class="text-primary">{displayRelayUrl(url)}</span> if you trust the adminstrator
+        Only join <RelayLabel {url} class="text-primary" /> if you trust the adminstrator
       </ModalSubtitle>
     </ModalHeader>
     <div class="m-auto flex flex-col gap-4">
       <p>
-        This space has opted not to publish <Button class="link" onclick={showInfoSignatures}
-          >digital signatures</Button
-        >, which means that they have the ability to forge messages from other users.
+        Messages in this space can't be verified, which means its administrator could forge messages
+        from other users.
       </p>
       <p>
         If you trust this space's admin, you can continue. Otherwise, it may be safer not to join

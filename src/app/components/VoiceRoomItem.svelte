@@ -7,9 +7,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RoomImage from "@app/components/RoomImage.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {makeRoomPath} from "@app/routes"
-  import {navigate, pushModal} from "@app/modal"
-  import VoiceRoomJoinDialog from "@app/components/VoiceRoomJoinDialog.svelte"
+  import * as pages from "@app/navigation/pages"
   import VoiceParticipantMediaBadges from "@app/components/VoiceParticipantMediaBadges.svelte"
   import {
     CallState,
@@ -20,9 +18,9 @@
     deriveRoomCallState,
     loadCallParticipants,
     type CallParticipant,
-  } from "@app/call"
-  import {cancelJoinVoiceRoom} from "@app/callEngine"
-  import {profiles} from "@app/core"
+  } from "@app/features/spaces/calls"
+  import {cancelJoinVoiceRoom} from "@app/features/spaces/calls/engine"
+  import {profiles} from "@app/core/plugins"
 
   type Props = {
     url: string
@@ -41,20 +39,11 @@
   const isActive = $derived($roomCallState === CallState.Connected)
   const isJoining = $derived($roomCallState === CallState.Joining)
 
-  const handleClick = async (e: MouseEvent) => {
-    if (isActive) {
-      return
-    }
-
+  const onClick = (e: MouseEvent) => {
     if (isJoining) {
       e.preventDefault()
       cancelJoinVoiceRoom()
-      return
     }
-
-    e.preventDefault()
-    await navigate(makeRoomPath(url, h))
-    pushModal(VoiceRoomJoinDialog, {url, h})
   }
 
   $effect(() => {
@@ -71,9 +60,9 @@
 </script>
 
 <SecondaryNavItem
-  href={makeRoomPath(url, h)}
+  href={pages.room.path({url, h})}
   {notification}
-  onclick={handleClick}
+  onclick={onClick}
   class={cx("items-start!", isActive && "bg-surface! text-content!")}>
   <div class="flex w-full min-w-0 flex-col gap-2">
     <div class="flex gap-2 items-center">

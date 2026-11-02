@@ -7,7 +7,7 @@ import {injectChecked, injectEvents, injectSession} from "./session"
 // Must match TEST_ENV_KEY in src/lib/test/env.ts.
 const TEST_ENV_KEY = "__TEST_ENV__"
 
-// Set the first time the app reads the injected env, the only evidence here that src/app/env.ts ran.
+// Set the first time the app reads the injected env, the only evidence here that src/app/core/env.ts ran.
 const TEST_ENV_READ_KEY = "__TEST_ENV_READ__"
 
 export type BootOptions = {
@@ -17,9 +17,11 @@ export type BootOptions = {
   indexers?: string[]
   spaces?: string[]
   user?: TestUser
+  // Whether this user signs through the window.nostr injectNip07 installed, rather than with a key.
+  nip07?: boolean
   // What this user's client already has in local storage, e.g. their room list.
   events?: TrustedEvent[]
-  // Which paths this user has already read, keyed the way src/app/notifications.ts keys them.
+  // Which paths this user has already read, keyed the way src/app/features/checked.ts keys them.
   checked?: Record<string, number>
   path?: string
   // VITE_ values the scenario sets for itself. Anything named here has to be something the test owns.
@@ -33,6 +35,7 @@ export const boot = async (
     indexers = relays,
     spaces = [],
     user,
+    nip07 = false,
     events = [],
     checked,
     path = "/",
@@ -73,7 +76,7 @@ export const boot = async (
   )
 
   if (user) {
-    await injectSession(context, user)
+    await injectSession(context, user, nip07)
     await injectEvents(context, events)
   }
 
@@ -101,7 +104,7 @@ export const boot = async (
     }
   }
 
-  // src/app/env.ts reads every VITE_ value as it is imported, so by now the app has resolved them.
+  // src/app/core/env.ts reads every VITE_ value as it is imported, so by now the app has resolved them.
   const usedTestEnv = await page.evaluate(
     key => Boolean(Reflect.get(window, key)),
     TEST_ENV_READ_KEY,
@@ -110,7 +113,7 @@ export const boot = async (
   if (!usedTestEnv) {
     throw new Error(
       "The app read none of its VITE_ values from the harness, so it is pointed at the relays in " +
-        ".env rather than at this scenario's. Check that src/app/env.ts still resolves them " +
+        ".env rather than at this scenario's. Check that src/app/core/env.ts still resolves them " +
         "through maybeGetTestEnv, and that the dev server is running in dev mode.",
     )
   }

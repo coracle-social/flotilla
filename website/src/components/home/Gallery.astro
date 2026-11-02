@@ -1,0 +1,170 @@
+---
+import { Icon } from 'astro-icon/components';
+
+// Shots are exported at 16:10 to match the aspect-16/10 figure below.
+const shots = [
+  {
+    src: '/images/screenshots/desktop-chat.webp',
+    title: 'A room for every conversation',
+    body: 'Replies, reactions, and images all sit inline in the conversation.',
+    alt: 'A Flotilla chat room with a sidebar of rooms on the left and a conversation with photos and reactions on the right',
+  },
+  {
+    src: '/images/screenshots/desktop-space-details.webp',
+    title: "Your space's front page",
+    body: 'Featured posts sit up front, with your admins and newest members beside them.',
+    alt: "A space's detail page showing featured posts and a list of admins and new members",
+  },
+  {
+    src: '/images/screenshots/desktop-video-call.webp',
+    title: 'Voice and video, built in',
+    body: 'Hop into a voice room without sending anyone off to a second app.',
+    alt: 'A Flotilla voice room in progress with call controls and a chat panel open beside it',
+  },
+  {
+    src: '/images/screenshots/desktop-space-membership.webp',
+    title: "Who's in your space",
+    body: 'Search the whole member list, and assign roles as you go.',
+    alt: 'A member directory of profile cards, each with a name, bio, and role badge',
+  },
+  {
+    src: '/images/screenshots/desktop-invite.webp',
+    title: 'A link or a QR code',
+    body: 'Send people a link, or show them the QR code to scan.',
+    alt: 'An invite dialog showing a QR code and a shareable join link',
+  },
+  {
+    src: '/images/screenshots/desktop-hosting.webp',
+    title: 'Every space you host',
+    body: "One settings page shows each space's plan and payment method.",
+    alt: 'A hosting settings page listing several spaces with their plans, plus payment methods',
+  },
+] as const;
+
+const arrow = 'flex h-11 w-11 items-center justify-center rounded-full border border-border bg-bg/70 text-text backdrop-blur-sm transition hover:border-primary/50 hover:bg-bg/90 hover:text-primary-soft';
+---
+
+<section class="relative py-20 md:py-28">
+  <div class="mx-auto max-w-6xl px-5 md:px-8">
+    <div class="text-center">
+      <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">
+        Inside Flotilla
+      </p>
+      <h2 class="mt-3 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+        What your space looks like
+      </h2>
+      <p class="mx-auto mt-5 max-w-2xl text-base text-text-muted sm:text-lg">
+        Curious what the app looks like? Below are real screenshots from Flotilla.
+      </p>
+    </div>
+
+    <div class="mx-auto mt-14 max-w-5xl" data-gallery>
+      <div
+        class="relative"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Flotilla screenshots"
+      >
+        <ul class="gallery-track flex snap-x snap-mandatory overflow-x-auto" data-track tabindex="0">
+          {shots.map((shot, i) => (
+            <li
+              class="w-full flex-none snap-center"
+              role="group"
+              aria-roledescription="slide"
+              aria-label={`${i + 1} of ${shots.length}: ${shot.title}`}
+            >
+              <figure class="relative aspect-16/10 overflow-hidden rounded-2xl border border-border-soft bg-surface/50">
+                <img
+                  src={shot.src}
+                  alt={shot.alt}
+                  class="h-full w-full object-cover"
+                  width="1920"
+                  height="1200"
+                  loading={i === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+                <figcaption class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-bg via-bg/90 to-transparent px-5 pb-5 pt-20 text-left sm:px-7 sm:pb-7">
+                  <h3 class="text-lg font-extrabold">{shot.title}</h3>
+                  <p class="mt-1 text-sm text-text-muted">{shot.body}</p>
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
+
+        <button type="button" class={`${arrow} absolute left-3 top-1/2 -translate-y-1/2`} data-prev aria-label="Previous screenshot">
+          <Icon name="ph:caret-left" class="h-5 w-5" aria-hidden="true" />
+        </button>
+        <button type="button" class={`${arrow} absolute right-3 top-1/2 -translate-y-1/2`} data-next aria-label="Next screenshot">
+          <Icon name="ph:caret-right" class="h-5 w-5" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div class="mt-6 flex justify-center gap-2">
+        {shots.map((shot, i) => (
+          <button
+            type="button"
+            class="h-2 w-2 rounded-pill bg-text-dim transition-all hover:bg-text-muted aria-[current=true]:w-6 aria-[current=true]:bg-primary-soft"
+            data-goto={i}
+            aria-current={i === 0 ? 'true' : 'false'}
+            aria-label={`Show ${shot.title}`}
+          ></button>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* The dots and arrows do the navigating, so the scrollbar is hidden. */
+  .gallery-track {
+    scrollbar-width: none;
+  }
+  .gallery-track::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<script>
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  document.querySelectorAll<HTMLElement>('[data-gallery]').forEach((root) => {
+    const track = root.querySelector<HTMLElement>('[data-track]')!;
+    const slides = Array.from(track.children) as HTMLElement[];
+    const dots = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-goto]'));
+
+    const behavior = (): ScrollBehavior => (reduceMotion.matches ? 'auto' : 'smooth');
+
+    let index = 0;
+
+    const goTo = (i: number, smooth = true) => {
+      const next = (i + slides.length) % slides.length;
+      track.scrollTo({left: next * track.clientWidth, behavior: smooth ? behavior() : 'auto'});
+    };
+
+    const sync = () => {
+      index = Math.min(slides.length - 1, Math.max(0, Math.round(track.scrollLeft / track.clientWidth)));
+      dots.forEach((dot, i) => dot.setAttribute('aria-current', i === index ? 'true' : 'false'));
+    };
+
+    track.addEventListener('scroll', () => window.requestAnimationFrame(sync), {passive: true});
+    root.querySelector('[data-prev]')!.addEventListener('click', () => goTo(index - 1));
+    root.querySelector('[data-next]')!.addEventListener('click', () => goTo(index + 1));
+    dots.forEach((dot, i) => dot.addEventListener('click', () => goTo(i)));
+
+    // Slide width is the track width, so a resize leaves scrollLeft pointing between
+    // slides. Re-align to whichever slide was showing when the resize started.
+    let resizeTimer: number | null = null;
+    let indexBeforeResize = 0;
+    window.addEventListener('resize', () => {
+      if (resizeTimer === null) indexBeforeResize = index;
+      else window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        resizeTimer = null;
+        goTo(indexBeforeResize, false);
+      }, 150);
+    });
+
+    sync();
+  });
+</script>

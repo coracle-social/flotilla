@@ -18,16 +18,20 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
+  import ProfileFollowButton from "@app/components/ProfileFollowButton.svelte"
   import ProfileLocation from "@app/components/ProfileLocation.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import ProfilePinnedNote from "@app/components/ProfilePinnedNote.svelte"
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
-  import {messagingRelayLists, profiles, relayManagement, user} from "@app/core"
-  import {deriveSpacePermissions, spaceManagement} from "@app/management"
-  import type {BannedPubkeyItem} from "@app/management"
-  import {navigate, popModal, pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {goToChat, makeProfilePath} from "@app/routes"
+  import {user} from "@app/core/user"
+  import {messagingRelayLists, profiles, relayManagement} from "@app/core/plugins"
+  import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
+  import type {BannedPubkeyItem} from "@app/features/spaces/management"
+  import {navigate} from "@app/navigation/navigate"
+  import {popModal, pushModal} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
+  import * as pages from "@app/navigation/pages"
+  import {goToMessages} from "@app/features/messages"
 
   export type Props = {
     pubkey: string
@@ -44,11 +48,11 @@
 
   const back = () => history.back()
 
-  const viewProfile = () => navigate(makeProfilePath(pubkey))
+  const viewProfile = () => navigate(pages.profile.path({pubkey}))
 
   const sendMessage = () => {
     popModal()
-    goToChat([pubkey])
+    goToMessages([pubkey])
   }
 
   const loadBans = () => {
@@ -93,6 +97,7 @@
   $effect(loadBans)
 
   onMount(() => {
+    $profiles.forceLoad(pubkey)
     $messagingRelayLists.load(pubkey)
   })
 </script>
@@ -139,7 +144,10 @@
             {/if}
           {/if}
         {/snippet}
-        <MenuButton component={ProfileMenu} componentProps={{pubkey, url, customActions}} />
+        <MenuButton
+          aria-label="Profile actions"
+          component={ProfileMenu}
+          componentProps={{pubkey, url, customActions}} />
       </div>
       <ProfileStatus {pubkey} {url} />
       <ProfileLocation {pubkey} {url} />
@@ -154,6 +162,9 @@
       Go back
     </Button>
     <div class="flex gap-2">
+      {#if !isSelf}
+        <ProfileFollowButton {pubkey} />
+      {/if}
       <Button onclick={viewProfile} class="button button-primary">
         <Icon icon={UserCircle} />
         View Full Profile

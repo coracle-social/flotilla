@@ -19,16 +19,16 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import VirtualList from "@lib/components/VirtualList.svelte"
   import type {VirtualListController} from "@lib/components/VirtualList.svelte"
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/navigation/navigate"
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@app/components/RoomItemAddMember.svelte"
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
-  import {user} from "@app/core"
-  import {groupRoomMessages} from "@app/rooms"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {pageLoading} from "@app/loading"
-  import {checked} from "@app/notifications"
-  import {getPermalinkTarget, highlightedEvent} from "@app/routes"
+  import {user} from "@app/core/user"
+  import {groupRoomMessages} from "@app/features/spaces/rooms"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {pageLoading} from "@app/features/loading"
+  import {checked} from "@app/features/checked"
+  import {getPermalinkTarget, highlightedEvent} from "@app/navigation/locations"
 
   type Props = Pick<ComponentProps<typeof RoomItem>, "url" | "replyTo" | "canEdit" | "onEdit"> & {
     h?: string
@@ -209,9 +209,11 @@
 
   const reachedStartOfHistory = $derived($older?.status === "exhausted")
 
-  // The page bar carries one loader for both directions of an anchored walk.
+  // A private room nobody has joined draws a join card rather than a transcript, so it waits on nothing.
+  const awaitingContent = $derived(!(h && locked) && (awaitingJump || $events.length === 0))
+
   $effect(() => {
-    pageLoading.set(isFeedLoading($older) || isFeedLoading($newer))
+    pageLoading.set(awaitingContent && (isFeedLoading($older) || isFeedLoading($newer)))
 
     return () => pageLoading.set(false)
   })
@@ -329,6 +331,7 @@
         items={elements}
         getKey={getElementKey}
         container={element}
+        threshold={older?.runway}
         bind:controller={virtualList}>
         {#snippet row(item)}
           {#if item.type === "new-messages"}

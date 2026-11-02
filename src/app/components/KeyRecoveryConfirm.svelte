@@ -15,10 +15,10 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import KeyDownload from "@app/components/KeyDownload.svelte"
-  import {pushToast} from "@app/toast"
-  import {pushModal, clearModals} from "@app/modal"
-  import {session} from "@app/core"
-  import {requirePomadeSession} from "@app/pomade"
+  import {pushToast} from "@app/features/toast"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
+  import {session} from "@app/core/session"
+  import {requirePomadeSession} from "@app/features/pomade"
 
   type Props = {
     peersByPrefix: Map<string, string>

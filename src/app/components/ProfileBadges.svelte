@@ -1,13 +1,13 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {formatTimestampRelative} from "@welshman/lib"
+  import {derived} from "svelte/store"
+  import {first, formatTimestampRelative} from "@welshman/lib"
   import {NOTE, COMMENT, MESSAGE} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import ProfileSpaces from "@app/components/ProfileSpaces.svelte"
-  import {network, roomLists} from "@app/core"
-  import {latestEvents} from "@app/repository"
-  import {goToEvent} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {events, network, roomLists} from "@app/core/plugins"
+  import {goToEvent} from "@app/navigation/locations"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     pubkey: string
@@ -16,7 +16,7 @@
 
   const {pubkey, url}: Props = $props()
 
-  const latest = $latestEvents.forPubkey(pubkey)
+  const latest = derived($events.desc([{authors: [pubkey]}]).$, first)
 
   const spaceUrls = $roomLists.urls(pubkey).$
 

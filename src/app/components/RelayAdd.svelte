@@ -17,8 +17,10 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
-  import {pushToast} from "@app/toast"
-  import {app, blockedRelayLists, relayLists, user} from "@app/core"
+  import {pushToast} from "@app/features/toast"
+  import {app} from "@app/core/app"
+  import {user} from "@app/core/user"
+  import {blockedRelayLists, relayLists, relayStats} from "@app/core/plugins"
 
   type Props = {
     relays: Readable<string[]>
@@ -37,7 +39,7 @@
 
     try {
       const publication = await addRelay(url)
-      const error = (await publication.settled()).getError()
+      const error = await publication.getError()
 
       if (error) {
         pushToast({
@@ -83,11 +85,12 @@
       .slice(0, limit),
   )
 
-  // Relay search only knows relays whose NIP-11 has been fetched, so seed it from everyone's lists.
+  // Relay search only knows relays whose NIP-11 has been fetched, so seed it from everyone's lists and from every relay stats has a row for.
   onMount(() => {
-    const urls = uniq($relayLists.all.get().flatMap(list => list.urls()))
+    const listUrls = $relayLists.all.get().flatMap(list => list.urls())
+    const statsUrls = $relayStats.all.get().map(stats => stats.url)
 
-    for (const url of urls.filter(isShareableRelayUrl)) {
+    for (const url of uniq([...listUrls, ...statsUrls]).filter(isShareableRelayUrl)) {
       $app.use(Relays).load(url)
     }
 

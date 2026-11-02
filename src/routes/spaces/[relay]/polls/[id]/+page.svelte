@@ -8,15 +8,14 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventComments from "@app/components/EventComments.svelte"
-  import {events, network} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {decodeRelay} from "@app/relays"
+  import {events, network} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {relay, id} = params
-  const url = decodeRelay(relay)
+  const {url, id} = pages.poll.decode(params)
   const context = makeFeedContext({relays: [url]})
   const event = $events.one(id, [url]).$
 

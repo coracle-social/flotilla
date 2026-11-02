@@ -4,8 +4,7 @@
   import {TimeEvent} from "@welshman/domain"
   import ClockCircle from "@assets/icons/clock-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {reader} from "@app/core"
-  import {getEventTitle} from "@app/calendar"
+  import {reader} from "@app/core/domain"
 
   type Props = {
     event: TrustedEvent
@@ -15,7 +14,7 @@
 
   const timeEvent = $derived(reader(TimeEvent)(event))
 
-  const title = $derived(getEventTitle(event))
+  const title = $derived(timeEvent.title())
   const start = $derived(timeEvent.start())
   const end = $derived(timeEvent.end())
 </script>

@@ -1,22 +1,13 @@
 @layer components {
   .page {
-    @apply ml-sai mb-sai mt-sai mr-sai relative flex min-w-0 grow flex-col md:mb-0 md:ml-0;
+    @apply ml-sai mt-sai mr-sai relative flex min-w-0 grow flex-col md:ml-0;
 
     .page__content {
-      @apply z-feature mb-14 flex h-full max-h-screen min-h-0 w-full min-w-0 flex-col gap-2 overflow-x-hidden overflow-y-auto sm:gap-4 md:mb-0;
+      @apply z-feature flex h-full max-h-screen min-h-0 w-full min-w-0 flex-col gap-2 overflow-x-hidden overflow-y-auto sm:gap-4;
     }
 
     .page__content:not(.page__content--no-pad) {
       @apply p-2 sm:p-4;
-    }
-  }
-
-  /* left edge of the content column, for fixed elements the page cannot position */
-  .left-content {
-    left: var(--sail);
-
-    @media (min-width: 768px) {
-      left: calc(18.5rem + var(--sail));
     }
   }
 }

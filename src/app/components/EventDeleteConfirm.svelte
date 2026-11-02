@@ -1,23 +1,29 @@
 <script lang="ts">
+  import {seen} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {deletes, relays} from "@app/core"
-  import {clearModals} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {deletes, relays, router} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
+  import {clearModals} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
-    url: string
+    url?: string
     event: TrustedEvent
   }
 
   const {url, event}: Props = $props()
 
-  const shouldProtect = $relays.hasNip(url, 70)
+  // A deletion goes where its subject lives: the space's own relay, or wherever the event was seen.
+  const getRelays = () => (url ? [url] : $router.resolver.relays([seen(event)]))
 
   const confirm = async () => {
-    const protect = await shouldProtect
-    const command = await $deletes.deleteEvent(event, writer => writer.setProtected(protect))
-    const error = (await command.publishToRelays([url]).settled()).getError()
+    // NIP-70 keeps a deletion on the one relay that accepts it, which is wrong for a note on several.
+    const relay = url ? await $relays.load(url) : undefined
+    const command = await $deletes.deleteEvent(event, writer =>
+      writer.setProtected(relay?.hasNip(70)),
+    )
+    const error = await command.publishToRelays(await getRelays()).getError()
 
     if (error) {
       return pushToast({theme: "error", message: error})
@@ -31,4 +37,6 @@
   {confirm}
   title="Delete Message"
   subtitle="Are you sure you want to delete this message?"
-  message="This will send a request to delete this message. Be aware that not all relays may honor this request." />
+  message={HIDE_NOSTR
+    ? "This will delete this message for everyone."
+    : "This will send a request to delete this message. Be aware that not all relays may honor this request."} />

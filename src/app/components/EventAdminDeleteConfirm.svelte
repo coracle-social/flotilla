@@ -2,9 +2,10 @@
   import type {TrustedEvent} from "@welshman/util"
   import {tagSpec, tagValue} from "@welshman/util"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {app, relayManagement, rooms} from "@app/core"
-  import {AdminDelete, deriveUserAdminDelete} from "@app/rooms"
-  import {pushToast} from "@app/toast"
+  import {app} from "@app/core/app"
+  import {relayManagement, rooms} from "@app/core/plugins"
+  import {AdminDelete, deriveUserAdminDelete} from "@app/features/spaces/rooms"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -22,7 +23,7 @@
     if ($adminDelete === AdminDelete.Room) {
       const command = await $rooms.deleteEvent(url, {h}, event.id)
 
-      return (await command.publish().settled()).getError()
+      return command.publish().getError()
     }
 
     const {error} = await $relayManagement.forUrl(url).banEvent(event.id)
@@ -38,7 +39,7 @@
     }
 
     pushToast({message: "Event has successfully been deleted!"})
-    $app.repository.removeEvent(event.id)
+    await $app.repository.removeEvent(event.id)
     history.back()
   }
 </script>

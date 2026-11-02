@@ -12,18 +12,21 @@
   import VolumeLoud from "@assets/icons/volume-loud.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
+  import BookmarkButton from "@app/components/BookmarkButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import Report from "@app/components/Report.svelte"
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
   import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import {roomPinLists, user} from "@app/core"
-  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/rooms"
-  import {shareEvent} from "@app/share"
-  import {readAloud} from "@app/speech"
-  import {toggleRoomPin} from "@app/roomPins"
-  import {pushModal} from "@app/modal"
+  import {user} from "@app/core/user"
+  import {roomPinLists} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
+  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
+  import {shareEvent} from "@app/features/share"
+  import {readAloud} from "@app/features/voice"
+  import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -85,17 +88,19 @@
 
   const togglePin = () => {
     onClick()
-    toggleRoomPin(url, h, event.id)
+    toggleRoomPin(url, h, event)
   }
 </script>
 
 <ul class="menu bg-surface whitespace-nowrap rounded-2xl p-2">
-  <li>
-    <Button onclick={showInfo}>
-      <Icon size={4} icon={Code2} />
-      Message Details
-    </Button>
-  </li>
+  {#if !HIDE_NOSTR}
+    <li>
+      <Button onclick={showInfo}>
+        <Icon size={4} icon={Code2} />
+        Message Details
+      </Button>
+    </li>
+  {/if}
   <li>
     <Button onclick={share}>
       <Icon size={4} icon={ShareCircle} />
@@ -107,6 +112,9 @@
       <Icon size={4} icon={GalleryWide} />
       Add to Library
     </Button>
+  </li>
+  <li>
+    <BookmarkButton {url} {event} {onClick} />
   </li>
   <li>
     <Button onclick={read}>

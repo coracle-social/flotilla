@@ -1,3 +1,9 @@
+<style>
+  img {
+    -webkit-touch-callout: none;
+  }
+</style>
+
 <script lang="ts">
   import {maybe} from "@welshman/lib"
   import Icon from "@lib/components/Icon.svelte"

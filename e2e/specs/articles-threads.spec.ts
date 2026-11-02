@@ -5,6 +5,7 @@ import type {SignedEvent} from "@welshman/util"
 import {Article, Comment, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
+  composerAddButton,
   emojiButton,
   expect,
   getPublishedEvents,
@@ -25,25 +26,13 @@ type Seeded = {readonly id: string; readonly event: SignedEvent}
 const composerForm = (page: Page) =>
   page.locator("form").filter({has: page.locator(".note-editor")})
 
-// A room composer's join is the upload button and then the compose menu.
-const openComposeMenu = (page: Page) =>
-  page
-    .locator("form")
-    .filter({has: page.locator(".chat-editor")})
-    .locator(".join")
-    .getByRole("button")
-    .nth(1)
-    .click()
+// Reacting and the count share one button, so a reaction reads as a count of 1 on it.
+const expectReactionRoundTrip = async (button: Locator, react: () => Promise<void>) => {
+  await react()
+  await expect(button).toContainText("1")
 
-// One reaction, added and taken back off again.
-const expectReactionRoundTrip = async (page: Page, scope: Locator, opener: Locator) => {
-  const pill = scope.getByRole("button", {name: /🎉/})
-
-  await pickEmoji(page, opener, "party popper")
-  await expect(pill).toHaveCount(1)
-
-  await pill.click()
-  await expect(pill).toHaveCount(0)
+  await react()
+  await expect(button).not.toContainText("1")
 }
 
 // The card is a div carrying an overlay link, so it is found by its component rather than a role.
@@ -336,14 +325,17 @@ test("US-040 react to a post with an emoji", async ({seed, as}) => {
   const commentCard = comment(page, "A note about the soil")
 
   await expect(articleActions).toBeVisible()
-  await expectReactionRoundTrip(
-    page,
-    articleActions,
-    articleActions.getByRole("button", {name: "Add a reaction"}),
-  )
+
+  const articleReact = emojiButton(articleActions)
+
+  await expectReactionRoundTrip(articleReact, () => pickEmoji(page, articleReact, "party popper"))
 
   await expect(commentCard).toBeVisible()
-  await expectReactionRoundTrip(page, commentCard, emojiButton(commentCard))
+
+  // A comment takes a plain like rather than an emoji, so its button is the whole interaction.
+  const commentLike = commentCard.getByRole("button", {name: "Likes"})
+
+  await expectReactionRoundTrip(commentLike, () => commentLike.click())
 })
 
 test("US-041 publish an article from a room", async ({seed, as}) => {
@@ -358,7 +350,7 @@ test("US-041 publish an article from a room", async ({seed, as}) => {
   const {url} = scenario.space("space")
   const page = await as(users.alice, roomPath(url, "lounge"))
 
-  await openComposeMenu(page)
+  await composerAddButton(page).click()
   await page.getByRole("button", {name: "Write an Article"}).click()
 
   await page.getByPlaceholder("Title", {exact: true}).fill("Repotting in Winter")
@@ -392,7 +384,7 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
   const {url} = scenario.space("space")
   const page = await as(users.alice, roomPath(url, "lounge"))
 
-  await openComposeMenu(page)
+  await composerAddButton(page).click()
   await page.getByRole("button", {name: "Create Thread"}).click()
 
   const fromRoom = modalForm(page, "Create a Thread")

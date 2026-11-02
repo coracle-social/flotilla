@@ -25,21 +25,23 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import ZapButton from "@app/components/ZapButton.svelte"
+  import BookmarkButton from "@app/components/BookmarkButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import Report from "@app/components/Report.svelte"
   import PinboardSelect from "@app/components/PinboardSelect.svelte"
   import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
-  import {roomPinLists, user} from "@app/core"
-  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/rooms"
-  import {toggleRoomPin} from "@app/roomPins"
-  import {publishReaction} from "@app/reactions"
-  import {ENABLE_ZAPS} from "@app/env"
-  import {makeContentPath} from "@app/routes"
-  import {shareEvent} from "@app/share"
-  import {readAloud} from "@app/speech"
-  import {pushModal} from "@app/modal"
+  import {user} from "@app/core/user"
+  import {roomPinLists} from "@app/core/plugins"
+  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
+  import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
+  import {ENABLE_ZAPS, HIDE_NOSTR} from "@app/core/env"
+  import {makeContentPath} from "@app/navigation/pages"
+  import {shareEvent} from "@app/features/share"
+  import {readAloud} from "@app/features/voice"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {publishReaction} from "@app/features/spaces"
 
   type Props = {
     url: string
@@ -60,7 +62,7 @@
 
   const onEmoji = (emoji: string) => {
     history.back()
-    publishReaction(event, {content: emoji, tags: []}, {url})
+    publishReaction(url, event, {content: emoji, tags: []})
   }
 
   const showEmojiPicker = () => pushModal(EmojiPicker, {onClick: onEmoji}, {replaceState: true})
@@ -112,7 +114,7 @@
 
   const togglePin = () => {
     history.back()
-    toggleRoomPin(url, h, event.id)
+    toggleRoomPin(url, h, event)
   }
 
   let showMore = $state(false)
@@ -157,6 +159,7 @@
             <Icon size={4} icon={GalleryWide} />
             Add to Library
           </Button>
+          <BookmarkButton {url} {event} class="button button-neutral w-full" />
           <Button class="button button-neutral w-full" onclick={read}>
             <Icon size={4} icon={VolumeLoud} />
             Read Out Loud
@@ -179,10 +182,12 @@
               View Details
             </Link>
           {/if}
-          <Button class="button button-neutral w-full" onclick={showInfo}>
-            <Icon size={4} icon={Code2} />
-            Message Info
-          </Button>
+          {#if !HIDE_NOSTR}
+            <Button class="button button-neutral w-full" onclick={showInfo}>
+              <Icon size={4} icon={Code2} />
+              Message Info
+            </Button>
+          {/if}
           {#if event.pubkey === $user.pubkey}
             <Button class="button button-neutral w-full text-error" onclick={showDelete}>
               <Icon size={4} icon={TrashBin2} />

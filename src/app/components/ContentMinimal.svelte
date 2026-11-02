@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {fromNostrURI, tagValue, tagSpec} from "@welshman/util"
+  import {EventRef, fromNostrURI, tagSpec, tagValue} from "@welshman/util"
   import {
     parse,
     truncate,
@@ -14,12 +14,9 @@
     isInvoice,
     isLink,
     isProfile,
-    isEvent,
-    isAddress,
     isNewline,
   } from "@welshman/content"
   import type {Parsed} from "@welshman/content"
-  import Link from "@lib/components/Link.svelte"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -31,17 +28,16 @@
   import ContentNewline from "@app/components/ContentNewline.svelte"
   import ContentTopic from "@app/components/ContentTopic.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
-  import {entityLink} from "@app/env"
-  import {userSettingsValues} from "@app/settings"
+  import {goToQuote, isQuote} from "@app/features/quotes"
+  import {userSettingsValues} from "@app/core/settings"
 
   type Props = {
     event: any
-    trimParent?: boolean
     singleLine?: boolean
     url?: string
   }
 
-  const {event, trimParent = false, singleLine = false, url}: Props = $props()
+  const {event, singleLine = false, url}: Props = $props()
 
   const fullContent = $derived(parse(event))
 
@@ -63,8 +59,6 @@
   const isEnd = (i: number) => isBoundary(i + 1)
 
   const isStartAndEnd = (i: number) => isStart(i) && isEnd(i)
-
-  const isQuote = (p: Parsed) => isEvent(p) || isAddress(p)
 
   let warningDismissed = $state(false)
 
@@ -92,15 +86,19 @@
     return result
   }
 
-  const shortContent = $derived.by(() => {
-    let result = fullContent
+  // A reply leads with a reference to its parent, which says nothing a preview can use.
+  const withoutParent = (content: Parsed[]) => {
+    const rest =
+      content.length > 0 && isQuote(content[0])
+        ? dropWhile(p => isQuote(p) || isNewline(p), content)
+        : content
 
-    if (trimParent && result.length > 0 && isQuote(result[0])) {
-      result = dropWhile(p => isQuote(p) || isNewline(p), result)
-    }
+    return rest.length > 0 ? rest : content
+  }
 
-    return truncate(result, {minLength: 200, maxLength: 300, mediaLength: 20})
-  })
+  const shortContent = $derived(
+    truncate(withoutParent(fullContent), {minLength: 200, maxLength: 300, mediaLength: 20}),
+  )
 </script>
 
 <div class="relative">
@@ -135,20 +133,20 @@
         {:else if isCode(parsed)}
           <ContentCode
             value={parsed.value}
-            isBlock={isStartAndEnd(i) || parsed.value.includes("\n")} />
+            {singleLine}
+            isBlock={!singleLine && (isStartAndEnd(i) || parsed.value.includes("\n"))} />
         {:else if isCashu(parsed) || isInvoice(parsed)}
           <ContentToken value={parsed.value} />
         {:else if isLink(parsed)}
-          <ContentLinkInline url={parsed.value.url.toString()} {event} />
+          <ContentLinkInline url={parsed.value.url.toString()} {event} {singleLine} />
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />
         {:else if isQuote(parsed)}
-          <Link
-            external
-            class="overflow-hidden text-ellipsis whitespace-nowrap underline"
-            href={entityLink(parsed.raw)}>
+          <Button
+            class="max-w-full cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap underline"
+            onclick={() => goToQuote(EventRef.fromPointer(parsed.value), event, url)}>
             {fromNostrURI(parsed.raw).slice(0, 16) + "…"}
-          </Link>
+          </Button>
         {:else}
           {@html renderAsHtml(parsed)}
         {/if}

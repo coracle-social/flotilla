@@ -4,38 +4,45 @@
 </script>
 
 <script lang="ts">
+  import {onMount} from "svelte"
   import {page} from "$app/stores"
   import {navigating} from "$app/state"
   import type {Maybe} from "@welshman/lib"
   import {once} from "@welshman/lib"
   import {normalizeRelayUrl} from "@welshman/util"
-  import {isMobile} from "@lib/html"
+  import {stripPrefix} from "@lib/util"
   import Page from "@lib/components/Page.svelte"
   import SecondaryNav from "@lib/components/SecondaryNav.svelte"
   import SpaceMenu from "@app/components/SpaceMenu.svelte"
-  import SocketStatusToast from "@app/components/SocketStatusToast.svelte"
   import SpaceAuthError from "@app/components/SpaceAuthError.svelte"
   import SpaceTrustRelay from "@app/components/SpaceTrustRelay.svelte"
   import SpaceJoin from "@app/components/SpaceJoin.svelte"
+  import SpaceNotify from "@app/components/SpaceNotify.svelte"
+  import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
-  import {deriveRelayAuthError} from "@app/access"
-  import {relays, roomLists, user} from "@app/core"
-  import {userSpaceUrls} from "@app/rooms"
-  import {getModal, pushModal} from "@app/modal"
-  import {relaysPendingTrust} from "@app/policies"
-  import {decodeRelay} from "@app/relays"
-  import {makeSpacePath} from "@app/routes"
+  import {derivePaidGated} from "@app/features/spaces/payments"
+  import {user} from "@app/core/user"
+  import {authenticate} from "@app/core/auth"
+  import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
+  import {relays, roomLists} from "@app/core/plugins"
+  import {userSpaceUrls} from "@app/features/spaces"
+  import {getModal, pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
   import type {LayoutProps} from "./$types"
 
   const {children, params}: LayoutProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.space.decode(params)
 
-  const authError = deriveRelayAuthError(url)
+  const access = deriveRelayAccess(url)
 
-  const showAuthError = once(() =>
-    pushModal(SpaceAuthError, {url, error: $authError}, {noEscape: true}),
+  const paidGated = derivePaidGated(url)
+
+  const showAuthError = once((error: string) =>
+    pushModal(SpaceAuthError, {url, error}, {noEscape: true}),
   )
+
+  const showPaymentGate = once(() => pushModal(SpacePaymentGate, {url}, {noEscape: true}))
 
   const showPendingTrust = once(() => pushModal(SpaceTrustRelay, {url}, {noEscape: true}))
 
@@ -81,6 +88,8 @@
     if (redirectUrl && redirectUrl !== url && !redirectPrompted.has(url)) {
       redirectPrompted.add(url)
       pushModal(SpaceRedirect, {url, newUrl: redirectUrl})
+    } else if ($paidGated) {
+      showPaymentGate()
     } else if (!$userSpaceUrls.includes(url) && !joinPrompted.has(url)) {
       if (spacesLoaded) {
         joinPrompted.add(url)
@@ -88,26 +97,27 @@
       } else {
         loadSpaces()
       }
-    } else if ($authError) {
-      showAuthError()
-    } else if ($relaysPendingTrust.includes(url)) {
+    } else if ($access.status === RelayAccessStatus.Denied) {
+      showAuthError(stripPrefix($access.reason))
+    } else if ($access.status === RelayAccessStatus.Untrusted) {
       showPendingTrust()
     }
   })
+
+  // Visiting a space is intent enough to identify to it, and requests it refused for auth are sent again once that's done.
+  onMount(() => {
+    authenticate(url)
+  })
 </script>
 
-<!-- Desktop shows the same status pinned to the space menu; on mobile that's behind the drawer -->
-{#if isMobile}
-  <SocketStatusToast {url} />
-{/if}
-
-{#if $page.url.pathname === makeSpacePath(url)}
+{#if $page.url.pathname === pages.space.path({url})}
   {@render children?.()}
 {:else}
   <SecondaryNav>
     <SpaceMenu {url} />
   </SecondaryNav>
   <Page>
+    <SpaceNotify {url} />
     <!-- SvelteKit builds a new page when the route changes and keeps the one it has when only the
          params change, so this rebuilds it for the second case. The url the page store reports
          arrives a tick after the page is built, so keying on that throws the new page away. -->

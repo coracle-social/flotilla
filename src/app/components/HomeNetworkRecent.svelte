@@ -1,0 +1,74 @@
+<script lang="ts">
+  import {onDestroy} from "svelte"
+  import Link from "@lib/components/Link.svelte"
+  import Spinner from "@lib/components/Spinner.svelte"
+  import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
+  import NoteEntry from "@app/components/NoteEntry.svelte"
+  import {user} from "@app/core/user"
+  import {PLATFORM_RELAYS} from "@app/core/env"
+  import {followLists} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
+  import {
+    countNetworkFeedTypes,
+    isIncludedNetworkFeedEvent,
+    makeNetworkFeed,
+  } from "@app/features/social/networkFeed"
+
+  const context = makeFeedContext({withReplies: true})
+
+  const feed = makeNetworkFeed({context, isIncluded: isIncludedNetworkFeedEvent})
+
+  const {candidates, items, entries, loading, exhausted} = feed
+
+  const followList = $derived($followLists.one($user.pubkey))
+  const follows = $derived($followList?.pubkeys())
+
+  let element: HTMLElement | undefined = $state()
+  let started = false
+
+  const isEmpty = $derived(follows?.length === 0 || ($exhausted && $candidates.length === 0))
+  const hidden = $derived($items.length === 0 && $candidates.length > 0)
+
+  // The follow list is what the feed is made of, and follows added later don't rebuild it.
+  $effect(() => {
+    if (!started && element && follows && follows.length > 0) {
+      started = true
+      feed.start(element, follows)
+    }
+  })
+
+  onDestroy(() => {
+    feed.stop()
+    context.cleanup()
+  })
+</script>
+
+<div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4" bind:this={element}>
+  <HomeNetworkRecentFilters counts={countNetworkFeedTypes($candidates)} />
+  {#if isEmpty}
+    <div class="flex flex-col items-center gap-3 pb-4 text-center">
+      <p class="font-medium">Follow a few people to fill this out</p>
+      <p class="max-w-md text-sm opacity-75">
+        Posts from the people you follow collect here. Spaces are a good place to find some.
+      </p>
+      {#if PLATFORM_RELAYS.length === 0}
+        <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
+      {/if}
+    </div>
+  {:else if $entries.length > 0}
+    {#each $entries as entry (entry.key)}
+      <NoteEntry {entry} {context} />
+    {/each}
+    {#if $loading}
+      <div class="flex justify-center py-8">
+        <Spinner loading />
+      </div>
+    {/if}
+  {:else if hidden}
+    <div class="pb-4 text-center font-medium">Nothing matches those filters</div>
+  {:else}
+    <div class="flex justify-center py-8">
+      <Spinner loading>Loading recent posts...</Spinner>
+    </div>
+  {/if}
+</div>

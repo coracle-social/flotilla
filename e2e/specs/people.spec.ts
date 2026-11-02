@@ -1,23 +1,37 @@
 import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
 import {npubEncode} from "nostr-tools/nip19"
-import {HOUR, MINUTE, MONTH, uniq} from "@welshman/lib"
-import {NOTE, PROFILE, STATUS, makeEvent} from "@welshman/util"
+import {HOUR, MINUTE, MONTH, now, uniq} from "@welshman/lib"
+import {
+  FOLLOWS,
+  LONG_FORM,
+  NOTE,
+  POLL,
+  PROFILE,
+  STATUS,
+  makeEvent,
+  tagSpec,
+  tagValue,
+  tagValues,
+} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {FollowList, Note, PinList, Profile} from "@welshman/domain"
 import {
   DEFAULT_BLOSSOM_ORIGIN,
   GIF,
   WEBP,
+  dialog,
   expect,
   getPublished,
   getPublishedEvents,
   mockBlossom,
   mockGeocoding,
   noteEditor,
+  pollOption,
   profilePath,
   spacePath,
   test,
+  toast,
   topDialog,
   users,
 } from "../harness"
@@ -51,6 +65,9 @@ const searchTerm = (page: Page) => page.getByPlaceholder("Search your spaces..."
 const searchResults = (page: Page) => topDialog(page).locator(".card.card-interactive")
 
 const notes = (page: Page) => pageContent(page).locator(".cv.card")
+
+// A note and the replies answering it, which is a card plus a column rather than one card.
+const entries = (page: Page) => pageContent(page).locator('[data-component="NoteEntry"]')
 
 const readClipboard = (page: Page) => page.evaluate(() => navigator.clipboard.readText())
 
@@ -164,7 +181,7 @@ test("US-075 view someone's profile", async ({seed, as}) => {
 })
 
 test("US-076 follow and unfollow", async ({seed, as}) => {
-  await seed(({relay, user}) => {
+  const scenario = await seed(({relay, user}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
@@ -175,6 +192,7 @@ test("US-076 follow and unfollow", async ({seed, as}) => {
     space.relayList(user.bob)
   })
 
+  const {url} = scenario.space("space")
   const page = await as(users.alice, profilePath(users.bob.pubkey), {context: DESKTOP})
   const follow = page.getByRole("button", {name: "Follow", exact: true})
   const unfollow = page.getByRole("button", {name: "Unfollow", exact: true})
@@ -185,9 +203,36 @@ test("US-076 follow and unfollow", async ({seed, as}) => {
 
   await expect(unfollow).toBeVisible()
 
+  // A kind 3 replaces only a kind 3 older than it, so the two writes need separate seconds.
+  const followedAt = now()
+
+  while (now() === followedAt) {
+    await page.waitForTimeout(50)
+  }
+
   await unfollow.click()
 
   await expect(follow).toBeVisible()
+
+  // The label flips on the optimistic write, so the frame can still be in flight after it.
+  await expect.poll(() => getPublishedEvents(page.context(), FOLLOWS).length).toBe(2)
+
+  // The dialog is how most of the app reaches a profile, so the control has to be there too.
+  await page.goto(`${spacePath(url)}/about`)
+
+  const preview = page
+    .locator(".card.card-interactive")
+    .filter({hasText: "Bob Barnacle"})
+    .locator("button[aria-label]")
+    .first()
+
+  await preview.click()
+
+  const profile = dialog(page, "Profile details")
+
+  await profile.getByRole("button", {name: "Follow", exact: true}).click()
+
+  await expect(profile.getByRole("button", {name: "Unfollow", exact: true})).toBeVisible()
 })
 
 test("US-077 see web-of-trust standing build up", async ({seed, as}) => {
@@ -283,7 +328,7 @@ test("US-078 edit your own profile", async ({seed, as}) => {
   await edit.click()
 
   const form = page.locator("form").first()
-  const nickname = form.locator('input[type="text"]').first()
+  const nickname = form.getByRole("textbox", {name: "Nickname"})
   const about = form.locator("textarea")
   const picker = page.locator('label[aria-label="Drag and drop files here."]')
 
@@ -368,7 +413,7 @@ test("US-079 read a person's notes", async ({seed, as}) => {
       makeEvent(NOTE, {content: "OLDEST from the spring refit", created_at: at(8, MONTH)}),
     )
 
-    // A reply to carol, which a profile's note list leaves out.
+    // A reply to carol, which the list draws under her note.
     space.event(
       user.alice,
       () =>
@@ -398,7 +443,13 @@ test("US-079 read a person's notes", async ({seed, as}) => {
 
   // Nothing is scrolled here: the feed keeps widening its window until the page is full.
   await expect(list.filter({hasText: "OLDEST"})).toBeVisible()
-  await expect(list.filter({hasText: "REPLY"})).toHaveCount(0)
+
+  // A reply is drawn in the entry of the note it answers rather than as a card of its own.
+  const answered = entries(page).filter({hasText: "Anyone seen the tide charts?"})
+
+  await expect(answered).toHaveCount(1)
+  await expect(answered).toContainText("REPLY they are in the chart drawer")
+  await expect(list.filter({hasText: "REPLY they are in the chart drawer"})).toHaveCount(0)
 })
 
 test("US-134 write a public post", async ({seed, as}) => {
@@ -430,7 +481,12 @@ test("US-134 write a public post", async ({seed, as}) => {
   await noteEditor(composer).pressSequentially(post)
   await composer.getByRole("button", {name: "Post"}).click()
 
+  await expect(toast(page)).toContainText("Your post has been published!")
   await expect(notes(page).filter({hasText: post})).toBeVisible()
+
+  await toast(page).getByRole("button", {name: "View it"}).click()
+
+  await expect(dialog(page, "Note")).toContainText(post)
 
   await expect
     .poll(() =>
@@ -445,13 +501,128 @@ test("US-134 write a public post", async ({seed, as}) => {
   // The same composer is how a post starts from home, out of the feed it posts into.
   await page.goto("/home")
 
-  const network = page
-    .locator("section")
-    .filter({has: page.getByRole("heading", {name: "Network"})})
+  const feed = page.getByRole("region", {name: "Recent"})
 
-  await network.getByRole("button", {name: "Create post"}).click()
+  await feed.getByRole("button", {name: "Create post"}).click()
 
   await expect(topDialog(page).getByText("Create a Public Post")).toBeVisible()
+})
+
+test("US-150 post an article or a poll", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.profile(user.alice, {name: "Alice Anderson"})
+    space.relayList(user.alice)
+  })
+
+  const page = await as(users.alice, profilePath(users.alice.pubkey), {context: DESKTOP})
+
+  await page.getByRole("button", {name: "Choose a post type"}).click()
+  await page.getByRole("button", {name: "Article", exact: true}).click()
+
+  // An article gets the same full page composer a space article does, cover image and all.
+  await expect(page).toHaveURL(/\/articles\/create$/)
+
+  await page.getByPlaceholder("Title").fill("Reading the tide charts")
+  await noteEditor(page).click()
+  await noteEditor(page).pressSequentially("They live in the drawer under the chart table.")
+  await page.getByRole("button", {name: "Publish"}).click()
+
+  await expect(toast(page)).toContainText("Your article has been published!")
+
+  // The title is a tag rather than content, so a card carrying it was drawn by the article renderer.
+  await expect(notes(page).filter({hasText: "Reading the tide charts"})).toBeVisible()
+  await expect
+    .poll(() =>
+      getPublishedEvents(page.context(), LONG_FORM).map(event =>
+        tagValue(tagSpec("title"), event.tags),
+      ),
+    )
+    .toContain("Reading the tide charts")
+
+  await page.getByRole("button", {name: "Choose a post type"}).click()
+  await page.getByRole("button", {name: "Poll", exact: true}).click()
+
+  const poll = topDialog(page)
+
+  await poll.getByPlaceholder("What would you like to ask?").fill("Where shall we moor?")
+  await poll.getByPlaceholder("Option 1").fill("The park")
+  await poll.getByPlaceholder("Option 2").fill("The pub")
+  await poll.getByRole("button", {name: "Create Poll"}).click()
+
+  // A poll belongs to no space, so the relays it names are the only place its votes can live.
+  await expect
+    .poll(() =>
+      getPublishedEvents(page.context(), POLL).flatMap(event =>
+        tagValues(tagSpec("relay"), event.tags),
+      ),
+    )
+    .toContain(scenario.space("space").url)
+
+  const card = notes(page).filter({hasText: "Where shall we moor?"})
+
+  await expect(card).toBeVisible()
+
+  await pollOption(card, "The park").getByRole("radio").check()
+  await expect(pollOption(card, "The park")).toContainText("1 vote")
+})
+
+test("US-149 quote a note in a post of your own", async ({seed, as}) => {
+  const comment = "worth reading if you sail here"
+
+  let note!: Seeded
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anderson"})
+    space.profile(user.bob, {name: "Bob Barnacle"})
+    space.relayList(user.alice)
+    space.relayList(user.bob)
+
+    note = space.event(
+      user.bob,
+      makeEvent(NOTE, {content: "the tide charts are in the drawer", created_at: at(1, HOUR)}),
+    )
+  })
+
+  const page = await as(users.alice, profilePath(users.bob.pubkey), {context: DESKTOP})
+  const card = notes(page).filter({hasText: "the tide charts are in the drawer"})
+
+  await expect(card).toBeVisible()
+
+  await card.getByRole("button", {name: "Note actions"}).click()
+  await page.getByRole("button", {name: "Quote Note"}).click()
+
+  const composer = topDialog(page)
+
+  await expect(composer.getByText("Create a Public Post")).toBeVisible()
+
+  await noteEditor(composer).click()
+  await page.keyboard.press("Control+End")
+  await noteEditor(composer).pressSequentially(comment)
+  await composer.getByRole("button", {name: "Post", exact: true}).click()
+
+  await expect(toast(page)).toContainText("Your post has been published!")
+
+  // The q tag is what makes it a quote, and the entity in the content is what draws the embed.
+  await expect
+    .poll(() =>
+      getPublishedEvents(page.context(), NOTE)
+        .filter(event => event.content.includes(comment))
+        .map(event => ({
+          quoted: tagValue(tagSpec("q"), event.tags),
+          opensWithTheQuote: event.content.startsWith("nostr:nevent1"),
+        }))
+        .slice(0, 1),
+    )
+    .toEqual([{quoted: note.id, opensWithTheQuote: true}])
 })
 
 test("US-080 preview a profile from anywhere", async ({seed, as}) => {
@@ -469,7 +640,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
   })
 
   const {url} = scenario.space("space")
-  const page = await as(users.alice, `${spacePath(url)}/directory`, {context: DESKTOP})
+  const page = await as(users.alice, `${spacePath(url)}/about`, {context: DESKTOP})
   // The card's aria-label keeps the npub it fell back to at first render, so it is found by the name.
   const preview = page
     .locator(".card.card-interactive")
@@ -490,7 +661,7 @@ test("US-080 preview a profile from anywhere", async ({seed, as}) => {
 
   // Closed, and alice is exactly where she opened it from.
   await expect(page.locator(".dialog")).toHaveCount(0)
-  await expect(page).toHaveURL(new RegExp(`${spacePath(url)}/directory$`))
+  await expect(page).toHaveURL(new RegExp(`${spacePath(url)}/about$`))
 
   await preview.click()
   await page.getByRole("button", {name: "View Full Profile"}).click()
@@ -536,7 +707,7 @@ test("US-081 inspect and share a profile", async ({seed, as}) => {
   const share = topDialog(page)
 
   await expect(share.locator("canvas")).toBeVisible()
-  await expect(share.locator("input")).toHaveValue(/nprofile1/)
+  await expect(share.locator("input")).toHaveValue(new RegExp(`${profilePath(users.bob.pubkey)}$`))
 })
 
 test("US-082 mute an account", async ({seed, as}) => {
@@ -567,7 +738,7 @@ test("US-082 mute an account", async ({seed, as}) => {
 
   // Typed slower than the search's own debounce, since the profile only arrives after a pause.
   await page
-    .getByPlaceholder("Search for profiles...")
+    .getByPlaceholder("Search for profiles or paste a pubkey...")
     .pressSequentially("Bob Barnacle", {delay: 700})
 
   const suggestion = page.locator(".tiptap-suggestions__item").filter({hasText: "Bob Barnacle"})
@@ -598,12 +769,9 @@ test("US-082 mute an account", async ({seed, as}) => {
 
   const list = notes(page)
 
-  await expect(list).toHaveCount(2)
-  await expect(pageContent(page).getByText("Salt on the rigging")).toHaveCount(0)
-
-  await list.first().getByRole("button", {name: "Show anyway"}).click()
-
-  await expect(list.first()).toContainText("The gulls have taken the mainsail")
+  // The page is about one person, so it says he is muted rather than listing his notes collapsed.
+  await expect(pageContent(page).getByText("You have muted this person.")).toBeVisible()
+  await expect(list).toHaveCount(0)
 
   await page.goto("/settings/content")
 
@@ -703,7 +871,7 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
   expect(JSON.parse(published[0].content).location).toBe("Portland, Oregon, United States")
   expect(published[0].tags).toContainEqual(["g", "c20fb"])
 
-  await page.goto(`${spacePath(url)}/directory`)
+  await page.goto(`${spacePath(url)}/about`)
 
   const showMap = page.getByRole("button", {name: "Map"})
 
@@ -752,9 +920,13 @@ test("US-131 say where you are and find members on a map", async ({seed, as}) =>
   expect(JSON.parse(republished[1].content).location).toBe("Oregon, United States")
   expect(republished[1].tags.map(tag => tag[0])).not.toContain("g")
 
-  // The map is offered whether or not anyone is on it, so an empty one says so.
-  await page.goto(`${spacePath(url)}/directory`)
+  await page.goto(`${spacePath(url)}/about`)
   await page.getByPlaceholder("Search people or roles...").fill("Anders")
+
+  // A state is the member card's to show, since the map cannot.
+  await expect(pageContent(page).getByText("Oregon, United States")).toBeVisible()
+
+  // The map is offered whether or not anyone is on it, so an empty one says so.
   await page.getByRole("button", {name: "Map"}).click()
 
   await expect(pageContent(page).getByText("No locations found.")).toBeVisible()

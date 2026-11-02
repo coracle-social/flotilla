@@ -1,0 +1,78 @@
+---
+import { Icon } from 'astro-icon/components';
+import Button from '../Button.astro';
+
+const PRICING_URL = '/pricing';
+const DEMO_URL = 'https://cal.com/coracle.social';
+
+const groups = [
+  {
+    title: 'Talk & connect',
+    items: [
+      { label: 'Chat rooms', icon: 'ph:chats-circle' },
+      { label: 'Voice & video', icon: 'ph:video-camera' },
+      { label: 'Threads', icon: 'ph:chat-text' },
+      { label: 'Direct messages', icon: 'ph:paper-plane-tilt' },
+    ],
+  },
+  {
+    title: 'Plan & moderate',
+    items: [
+      { label: 'Event calendar', icon: 'ph:calendar-dots' },
+      { label: 'Roles & moderation', icon: 'ph:shield-check' },
+      { label: 'Access controls', icon: 'ph:lock-simple' },
+      { label: 'Polls & goals', icon: 'ph:chart-bar' },
+    ],
+  },
+  {
+    title: 'Grow your community',
+    items: [
+      { label: 'Activity feed', icon: 'ph:pulse' },
+      { label: 'Member directory', icon: 'ph:users-three' },
+      { label: 'Content library', icon: 'ph:books' },
+      { label: 'Your own branding', icon: 'ph:paint-brush-broad' },
+    ],
+  },
+] as const;
+---
+
+<section class="relative border-y border-border-soft bg-surface-2/30 py-20 md:py-28">
+  <div class="mx-auto max-w-6xl px-5 md:px-8">
+    <div class="text-center">
+      <p class="text-sm font-bold uppercase tracking-[0.2em] text-primary-soft">
+        For organizers
+      </p>
+      <h2 class="mt-3 text-4xl font-extrabold sm:text-5xl md:text-6xl">
+        All a community<br class="hidden sm:block" /> needs, in one app
+      </h2>
+      <p class="mx-auto mt-5 max-w-2xl text-base text-text-muted sm:text-lg">
+        Everything it takes to run a real community, from the first hello to the annual meetup.
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-6 md:grid-cols-3">
+      {groups.map((group) => (
+        <div class="rounded-2xl border border-border-soft bg-surface/50 p-7 backdrop-blur-sm">
+          <h3 class="text-sm font-bold uppercase tracking-[0.16em] text-text-dim">
+            {group.title}
+          </h3>
+          <ul class="mt-5 space-y-4">
+            {group.items.map((item) => (
+              <li class="flex items-center gap-3">
+                <span class="flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-primary/12 text-primary-soft">
+                  <Icon name={item.icon} class="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span class="text-base font-bold text-white">{item.label}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-12 flex flex-wrap justify-center gap-3">
+      <Button href={PRICING_URL}>Start a community</Button>
+      <Button href={DEMO_URL} variant="secondary">Book a demo</Button>
+    </div>
+  </div>
+</section>

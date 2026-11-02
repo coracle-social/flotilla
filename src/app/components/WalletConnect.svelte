@@ -4,7 +4,6 @@
   import {sleep} from "@welshman/lib"
   import {WalletType} from "@welshman/util"
   import type {NWCInfo} from "@welshman/util"
-  import {Profiles} from "@welshman/app"
   import Link from "@lib/components/Link.svelte"
   import Cpu from "@assets/icons/cpu-bolt.svg?dataurl"
   import Lock from "@assets/icons/lock-keyhole.svg?dataurl"
@@ -24,12 +23,10 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import WalletAsReceivingAddress from "@app/components/WalletAsReceivingAddress.svelte"
-  import {deriveUserItem} from "@app/core"
-  import {getWebLn, wallet} from "@app/lightning"
-  import {pushToast} from "@app/toast"
-  import {pushModal} from "@app/modal"
-
-  const userProfile = deriveUserItem(Profiles)
+  import {userProfile} from "@app/core/user"
+  import {getWebLn, wallet} from "@app/features/wallet"
+  import {pushToast} from "@app/features/toast"
+  import {pushModal} from "@app/navigation/dialogs"
 
   const back = () => history.back()
 

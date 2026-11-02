@@ -5,9 +5,9 @@
   import Link from "@lib/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {userSpaceUrls} from "@app/rooms"
-  import {roomLists} from "@app/core"
-  import {makeSpacePath} from "@app/routes"
+  import {userSpaceUrls} from "@app/features/spaces"
+  import {roomLists} from "@app/core/plugins"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     pubkey: string
@@ -35,7 +35,7 @@
         {@const count = $roomLists.pubkeysForUrl(url).get().length}
         {@const isMember = !isSelf && $userSpaceUrls.includes(url)}
         <Link
-          href={makeSpacePath(url)}
+          href={pages.space.path({url})}
           class="card card-interactive flex flex-row items-center justify-between gap-3 p-3 sm:p-4">
           <RelayIcon {url} size={8} />
           <div class="min-w-0 flex-1">

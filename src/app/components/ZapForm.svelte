@@ -6,7 +6,7 @@
   import Field from "@lib/components/Field.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import EmojiButton from "@lib/components/EmojiButton.svelte"
-  import {zapAmounts} from "@app/settings"
+  import {zapAmounts} from "@app/core/settings"
 
   export type Values = {
     amount: number

@@ -4,7 +4,10 @@
 
     &[data-tip]::before {
       content: attr(data-tip);
-      @apply z-tooltip pointer-events-none absolute max-w-32 overflow-hidden rounded-xl bg-black px-2 py-1 text-xs text-ellipsis whitespace-nowrap text-white/90 opacity-0;
+      @apply z-tooltip pointer-events-none absolute w-max max-w-48 rounded-xl bg-black px-2 py-1 text-center text-xs whitespace-normal text-white/90 opacity-0;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-0.4rem);
       transition: opacity 0.15s ease;
     }
 
@@ -19,21 +22,19 @@
     }
   }
 
-  .tip-top[data-tip]::before {
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-0.4rem);
-  }
-
   .tip-left[data-tip]::before {
-    right: 100%;
     top: 50%;
+    right: 100%;
+    bottom: auto;
+    left: auto;
     transform: translateY(-50%) translateX(-0.4rem);
   }
 
   .tip-right[data-tip]::before {
-    left: 100%;
     top: 50%;
+    right: auto;
+    bottom: auto;
+    left: 100%;
     transform: translateY(-50%) translateX(0.4rem);
   }
 

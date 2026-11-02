@@ -38,7 +38,7 @@ const chatFilter = (page: Page) => page.locator(".secondary-nav input[type='text
 const chatTab = (page: Page, name: string) =>
   page.locator(".secondary-nav").getByRole("button", {name})
 
-// ChatItem's unread mark is a bare dot with no text of its own.
+// ConversationItem's unread mark is a bare dot with no text of its own.
 const unreadDots = (scope: Locator) => scope.locator(".rounded-full.bg-primary")
 
 // The reply preview is a bordered strip above the composer.
@@ -56,30 +56,32 @@ const sendDm = async (page: Page, content: string) => {
 }
 
 // A suggestion carries the pubkey it selects as its label, so the pubkey identifies the row.
-const startChat = async (page: Page, people: {term: string; user: TestUser}[]) => {
-  await page.getByRole("button", {name: "Start New Chat"}).click()
+const startConversation = async (page: Page, people: {term: string; user: TestUser}[]) => {
+  await page.getByRole("button", {name: "Start New Conversation"}).click()
 
-  await expect(page.getByRole("heading", {name: "Start a Chat"})).toBeVisible()
+  await expect(page.getByRole("heading", {name: "Start a Conversation"})).toBeVisible()
 
   for (const {term, user} of people) {
     const suggestion = page.locator(`.tiptap-suggestions__item[aria-label="${user.pubkey}"]`)
 
     // The suggestion list is rebuilt off the term changing, so a term arriving at once is matched once.
-    await page.getByPlaceholder("Search for profiles...").pressSequentially(term, {delay: 150})
+    await page
+      .getByPlaceholder("Search for profiles or paste a pubkey...")
+      .pressSequentially(term, {delay: 150})
 
     await expect(suggestion).toContainText(term)
 
     await suggestion.click()
   }
 
-  await page.getByRole("button", {name: "Create Chat"}).click()
+  await page.getByRole("button", {name: "Create Conversation"}).click()
 }
 
 // A message's actions are a hover popover on a pointer device and named buttons on a touch one.
 const openMessageMenu = (page: Page, id: string) =>
-  message(page, id).locator(".chat-bubble").click()
+  message(page, id).locator(".conversation-bubble > .text-sm").click()
 
-// Events reach indexeddb in three-second batches, so a spec that reloads has to read the cache first.
+// A reload starts from what reached the database, so a spec that reloads waits for its events there.
 const cachedContent = async (page: Page, pubkey: string, kind: number) =>
   (await readCachedEvents(page, pubkey))
     .filter(event => event.kind === kind)
@@ -106,7 +108,7 @@ test("US-029 start a one-on-one chat", async ({seed, as}) => {
 
   await expect(pageBar(page)).toContainText("Bob Barnacle")
 
-  await startChat(page, [{term: "Barnacle", user: users.bob}])
+  await startConversation(page, [{term: "Barnacle", user: users.bob}])
 
   await expect(page).toHaveURL(pathPattern(chatPath(users.bob.pubkey)))
 
@@ -138,7 +140,7 @@ test("US-030 start a group chat", async ({seed, as}) => {
   await expect(chatItems(page).filter({hasText: "just us two"})).toContainText("Bob Barnacle")
   await expect(chatItems(page).filter({hasText: "hello from carol"})).toContainText("Carol Cutter")
 
-  await startChat(page, [
+  await startConversation(page, [
     {term: "Barnacle", user: users.bob},
     {term: "Cutter", user: users.carol},
   ])
@@ -187,7 +189,7 @@ test("US-031 direct messaging has to be switched on", async ({seed, as}) => {
 
   // His list is the app's evidence that his kind-10050 has been published
   await expect(bob).toHaveURL(/\/chat$/)
-  await expect(bob.getByRole("button", {name: "Start New Chat"})).toBeVisible()
+  await expect(bob.getByRole("button", {name: "Start New Conversation"})).toBeVisible()
 
   // She reopens the conversation the way she opened it the first time
   await pageBar(alice).getByRole("button", {name: "Bob Barnacle"}).click()
@@ -308,7 +310,7 @@ test("US-034 track and clear unread conversations", async ({seed, as}) => {
   await expect(unreadDots(bobChat)).toHaveCount(0)
 
   // Mark all read clears what is left of them in one go
-  await alice.locator(".secondary-nav__header").getByRole("button", {name: "Chat options"}).click()
+  await alice.locator(".secondary-nav").getByRole("button", {name: "Chat options"}).click()
   await alice.getByRole("button", {name: "Mark all read"}).click()
 
   await expect(unreadDots(chatList(alice))).toHaveCount(0)
@@ -369,7 +371,9 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
   await sendDm(alice, "second attempt")
 
   await expect(bubble(bob, "second attempt")).toBeVisible()
-  await expect(bob.locator(".chat-bubble").filter({hasText: "first attempt"})).toHaveCount(0)
+  await expect(bob.locator(".conversation-bubble").filter({hasText: "first attempt"})).toHaveCount(
+    0,
+  )
 
   // React, then take it back, on both sides of the conversation
   await openMessageMenu(alice, his.id)
@@ -413,9 +417,11 @@ test("US-036 receive a new conversation live", async ({seed, as}) => {
   await expect(chatItems(bob).filter({hasText: "you too"})).toBeVisible()
 
   // He has never talked to her, so he identifies her by the code she gave him
-  await bob.getByRole("button", {name: "Start New Chat"}).click()
-  await bob.getByPlaceholder("Search for profiles...").fill(npubEncode(users.alice.pubkey))
-  await bob.getByRole("button", {name: "Create Chat"}).click()
+  await bob.getByRole("button", {name: "Start New Conversation"}).click()
+  await bob
+    .getByPlaceholder("Search for profiles or paste a pubkey...")
+    .fill(npubEncode(users.alice.pubkey))
+  await bob.getByRole("button", {name: "Create Conversation"}).click()
 
   await expect(bob).toHaveURL(pathPattern(chatPath(users.alice.pubkey)))
 
@@ -531,7 +537,7 @@ test("US-108 read messages from a relay you only use for messages", async ({seed
   await expect(bubble(page, "over on your inbox relay")).toBeVisible()
 })
 
-test("US-109 keep a conversation you have already read", async ({seed, as}) => {
+test("US-109 keep a conversation or room you have already read", async ({seed, as}) => {
   let his!: SeededRumor
   let hers!: SeededRumor
 
@@ -548,7 +554,7 @@ test("US-109 keep a conversation you have already read", async ({seed, as}) => {
     his = space.dm(user.bob, [user.alice], "the tide charts are up", at(2, HOUR))
     hers = space.dm(user.alice, [user.bob], "thakns", at(1, HOUR))
 
-    // A room message comes off the same relay and is read back off the wire every time.
+    // A room message comes off the same relay, so it is kept or lost the same way.
     space.message(user.bob, "general", "boat is in the water", at(2, HOUR))
   })
 
@@ -574,7 +580,7 @@ test("US-109 keep a conversation you have already read", async ({seed, as}) => {
   await sendDm(alice, "thanks")
 
   await expect(bubble(alice, "thanks")).toBeVisible()
-  await expect(alice.locator(".chat-bubble").filter({hasText: "thakns"})).toHaveCount(0)
+  await expect(alice.locator(".conversation-bubble").filter({hasText: "thakns"})).toHaveCount(0)
 
   // A reaction travels gift-wrapped the way the messages do, so it is kept or lost with them.
   await openMessageMenu(alice, his.id)
@@ -601,11 +607,11 @@ test("US-109 keep a conversation you have already read", async ({seed, as}) => {
 
   await expect(bubble(alice, "the tide charts are up")).toBeVisible()
   await expect(bubble(alice, "thanks")).toBeVisible()
-  await expect(alice.locator(".chat-bubble").filter({hasText: "thakns"})).toHaveCount(0)
+  await expect(alice.locator(".conversation-bubble").filter({hasText: "thakns"})).toHaveCount(0)
   await expect(message(alice, his.id)).toContainText("🎉")
 
-  // ...and the room, which she keeps no copy of, is as empty as the relay now is
+  // ...and so is the room she had open, which the relay can no longer answer for
   await alice.goto(roomPath(url, "general"))
 
-  await expect(alice.locator(".room__item")).toHaveCount(0)
+  await expect(alice.locator(".room__item").filter({hasText: "boat is in the water"})).toBeVisible()
 })

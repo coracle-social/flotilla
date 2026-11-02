@@ -3,7 +3,8 @@
   import {POLL_RESPONSE} from "@welshman/util"
   import {Poll} from "@welshman/domain"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
-  import {events, reader} from "@app/core"
+  import {events} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
 
   const props: ComponentProps<typeof ContentMinimal> = $props()
 

@@ -12,15 +12,18 @@
   import RelayList from "@app/components/RelayList.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import SearchBody from "@app/components/SearchBody.svelte"
-  import {CONTENT_KINDS} from "@app/content"
-  import {app, relays, searchRelayLists, user, userSearchRelayUrls} from "@app/core"
-  import {pushModal} from "@app/modal"
-  import {userSpaceUrls} from "@app/rooms"
+  import {CONTENT_KINDS} from "@app/features/spaces"
+  import {app} from "@app/core/app"
+  import {user, userSearchRelayUrls} from "@app/core/user"
+  import {relays, searchRelayLists} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {userSpaceUrls} from "@app/features/spaces"
 
   const filter = {kinds: [MESSAGE, ...CONTENT_KINDS]}
 
   const getSpaceUrl = (event: TrustedEvent) =>
-    $userSpaceUrls.find(url => $app.tracker.getRelays(event.id).has(url))
+    $userSpaceUrls.find(url => $app.repository.tracker.getRelays(event.id).has(url))
 
   const showRelays = () =>
     pushModal(RelayList, {
@@ -45,13 +48,15 @@
       <div class="flex flex-col items-center gap-2 py-12 text-center">
         <p class="text-content-muted text-sm">
           Searching {spaces}
-          {spaces === 1 ? "space" : "spaces"}{#if extras > 0}, plus {extras}
+          {spaces === 1 ? "space" : "spaces"}{#if extras > 0 && !HIDE_NOSTR}, plus {extras}
             extra {extras === 1 ? "relay" : "relays"} for people{/if}.
         </p>
-        <Button class="button button-link button-sm" onclick={showRelays}>
-          <Icon size={4} icon={Server} />
-          Manage search relays
-        </Button>
+        {#if !HIDE_NOSTR}
+          <Button class="button button-link button-sm" onclick={showRelays}>
+            <Icon size={4} icon={Server} />
+            Manage search relays
+          </Button>
+        {/if}
       </div>
     {/snippet}
     {#snippet badges(event)}

@@ -6,7 +6,7 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
-  import {makeProfilePath} from "@app/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     pubkey: string
@@ -19,14 +19,14 @@
 <Cv class="card card-interactive flex flex-col gap-4">
   <div class="flex justify-between">
     <Profile {pubkey} {url} />
-    <Link href={makeProfilePath(pubkey)} class="button button-primary hidden sm:flex">
+    <Link href={pages.profile.path({pubkey})} class="button button-primary hidden sm:flex">
       <Icon icon={UserCircle} />
       View Profile
     </Link>
   </div>
   <ProfileAbout {pubkey} {url} />
   <ProfileBadges {pubkey} {url} />
-  <Link href={makeProfilePath(pubkey)} class="button button-primary sm:hidden">
+  <Link href={pages.profile.path({pubkey})} class="button button-primary sm:hidden">
     <Icon icon={UserCircle} />
     View Profile
   </Link>

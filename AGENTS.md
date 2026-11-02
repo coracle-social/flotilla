@@ -8,14 +8,14 @@ Flotilla is a Nostr "relays as groups" community chat client. It implements NIP-
 - Capacitor for cross-platform (Web/PWA, Android, iOS)
 - TailwindCSS for styling
 - Welshman library suite for Nostr protocol
-- IndexedDB for local storage
+- SQLite (sqlite-wasm in a worker, over OPFS) for events, IndexedDB for other local caches
 - Vite for building
 
 **Key Concepts:**
 
 - **Spaces** - Relays used as community groups (like Discord servers)
 - **Rooms** - NIP-29 groups within spaces (like Discord channels), identified by `h`
-- **Chats** - Direct message conversations (NIP-04/NIP-44 encrypted)
+- **Messages** - Direct message conversations (NIP-04/NIP-44 encrypted)
 
 ## Architecture & Dependency Graph
 
@@ -26,12 +26,25 @@ routes/                    (top layer - can depend on anything)
   ↓
 app/components/            (can depend on app/* and lib/*)
   ↓
-app/*                      (can only depend on lib/*)
+app/features/              (one feature each, with few callers)
+  ↓
+app/navigation/            (routes, dialogs and overlays, history)
+  ↓
+app/core/                  (the App, plugins, session, storage, sync, settings, env)
   ↓
 lib/                       (can only depend on external libraries)
   ↓
 external libraries         (bottom layer)
 ```
+
+Core and navigation never import a feature. A feature reaches into core through hooks such as
+`registerSync` and `registerRetention`, called from its own `registerX`, which `registerAll` in
+`src/app/index.ts` calls before the app is built.
+
+An `index.ts` holds nothing but exports and initialization: it re-exports the files in its
+directory and defines the directory's `registerX`. Code goes in a file named for what it does.
+Files inside a directory import each other directly, never through their own index, which would
+make an import cycle.
 
 **Import Ordering Convention (CRITICAL):**
 Always sort imports by dependency level:
@@ -47,7 +60,7 @@ import {derived} from "svelte/store"
 import {throttle} from "throttle-debounce"
 import {Profiles} from "@welshman/app"
 import {Dialog} from "$lib/components"
-import {app} from "@app/core"
+import {app} from "@app/core/app"
 ```
 
 ## Cleanup Pass
@@ -68,10 +81,12 @@ Conventions below.
 **Core Principles:**
 
 - Use Svelte 4 **stores** for all state (NOT runes outside UI components)
-- Everything hangs off the single `App` instance in `app/core.ts`. There are no welshman globals —
+- Everything hangs off the single `App` instance in `app/core/app.ts`. There are no welshman globals —
   reach features with `app.use(Plugin)`, which is memoized per app and cheap to call inline.
-- `app/core.ts` also exports `pubkey`, `signer`, `user` and `session` stores (all with `.get()`),
-  `login`, and `deriveUserItem(plugin)` for the current user's entry in a keyed collection.
+- `app/core/app.ts` also exports `fromApp`. The `user` store (with `.get()`), `deriveUserItem(plugin)`
+  for the current user's entry in a keyed collection, and shared entries such as `userProfile` and
+  `userFollowList` are in `app/core/user.ts`. The plugin stores are in `app/core/plugins.ts`, `reader`/`writer`/`command` in `app/core/domain.ts`, and the `session`
+  store and `login` in `app/core/session.ts`.
 - Most global state flows through the app's `repository` (unidirectional)
 - Query state with a plugin's `one(key)` / `index` / `all`, or `deriveEventsById` /
   `deriveItemsByKey` from `@welshman/store` against `app.repository`
@@ -113,6 +128,7 @@ callbacks and hot paths.
 - NIP-42: Relay authentication
 - NIP-43: Relay membership
 - NIP-46: Nostr Connect (remote signing)
+- NIP-51: Lists and sets (bookmarks, mutes, pins)
 - NIP-57: Lightning Zaps
 
 ## Development Conventions
@@ -126,7 +142,7 @@ callbacks and hot paths.
 **CRITICAL Code Style Guidelines:**
 
 - **No `null`** - only use `undefined`
-- Never hard-code the app's name. The brand is a build-time `VITE_PLATFORM_*` variable, so user-facing copy interpolates `PLATFORM_NAME` from `@app/env`, and `PLATFORM_URL`, `PLATFORM_LOGO`, `PLATFORM_ABOUT` for the rest of it. Each is set by the deployment, so don't write a `"Flotilla"` fallback behind one either.
+- Never hard-code the app's name. The brand is a build-time `VITE_PLATFORM_*` variable, so user-facing copy interpolates `PLATFORM_NAME` from `@app/core/env`, and `PLATFORM_URL`, `PLATFORM_LOGO`, `PLATFORM_ABOUT` for the rest of it. Each is set by the deployment, so don't write a `"Flotilla"` fallback behind one either.
 - Svelte 5 runes (`$state`, `$derived`, `$effect`) only in UI components
 - TailwindCSS styling with css components customized by theme. See lib/components for examples.
 - A component class goes in `@layer components`, in its own file under `lib/components`. An unlayered rule beats a layered one whatever the specificity, so a class outside the layer can never be overridden by a utility in markup. The third-party overrides in `base.css` stay unlayered. The library defaults they beat are unlayered too.
@@ -143,6 +159,8 @@ callbacks and hot paths.
 - Use `type Props` instead of interface when defining props for svelte components.
 - When a component's value/prop shape mirrors a subset of an existing type, derive it with `Pick`/`Partial` and `export` that type from the component's `<script module>` (e.g. a `Values` type) for callers to import, instead of re-enumerating its sub-properties.
 - Avoid pass-through functions except when the wrapper is part of an abstraction. `x => y()` is not ok, but `x => this.impl.y()` is ok, for example.
+- Don't reach into an awaited expression inline, as in `(await relays.load(url))?.hasNip(70)`. Await into a named variable and use that: `const relay = await relays.load(url)`, then `relay?.hasNip(70)`.
+- Prefer semantic utilities, named variables and plain statements over dense inline syntax. Code should scan at a glance, so write `if (ENABLE_ZAPS) { kinds.push(ZAP_RECEIPT) }` rather than `[...kinds, ...(ENABLE_ZAPS ? [ZAP_RECEIPT] : [])]`, and reach for a `@welshman/lib` helper before chaining spreads, ternaries and inline lambdas.
 - Use `call` from `@welshman/lib` instead of an IIFE: `const x = call(() => {...})`, not `const x = (() => {...})()`. It reads left-to-right and drops the wrapping parens and the leading-semicolon hazard. `call` ignores extra arguments, so it also works directly as a callback — `unsubscribers.forEach(call)`.
 - To match on field equality, use `spec` from `@welshman/lib` rather than an arrow comparing properties: `.filter(spec({shortcode}))`, not `.filter(emoji => emoji.shortcode === shortcode)`. It takes an object of key/value pairs and matches when every pair is equal, so it covers multi-key checks too (`spec({kind, pubkey})`), and it accepts an array for positional matching on tags (`spec(["p", pubkey])`). Keep an explicit arrow when the predicate isn't plain equality — ranges, negation, or a comparison joined with `&&`.
 - For durations and timestamps, use `@welshman/lib`'s time helpers and constants (`MINUTE`, `HOUR`, `DAY`, `WEEK`, `MONTH`, `YEAR`) rather than raw milliseconds: `int(5, MINUTE)` for a duration in seconds, `ago(5, MINUTE)` for a past timestamp, `now()` for the current one, and `ms()`/`ms(int(...))` only where a browser API needs milliseconds. So `checkedAt < ago(5, MINUTE)` instead of `checkedAt < Date.now() - 300_000`. Write these count-first (`int(3, MONTH)`, `ago(2, WEEK)`) — the declared parameter order is `(unit, count)`, but the product is the same either way and every call site in this repo reads count-first. Nostr timestamps are seconds, so prefer `now()` over `Date.now()` for anything stored on an event.
@@ -195,10 +213,10 @@ return a `Command`, so `.then(publish)` is usually all you need.
 
 ### Managing Modals/Toasts
 
-- Import from `app/modal.ts` or `app/toast.ts`
+- Import from `app/navigation/dialogs.ts` or `app/features/toast.ts`
 - Pass component objects with parameters
 - Use `$state.snapshot` if calling component might unmount
-- Navigate with `navigate` from `app/modal.ts` rather than `goto` — an open modal owns a history
+- Navigate with `navigate` from `app/navigation/navigate.ts` rather than `goto` — an open modal owns a history
   entry, and a navigation that drops the modal gives that entry back before it pushes its own.
   A plain `<a>` inside a modal goes the same way, through `ModalContainer`'s `beforeNavigate`
 - `navigate` is async and gives those entries back before it goes anywhere, so the page store

@@ -4,7 +4,7 @@ import type {Page} from "@playwright/test"
 import type {SeededSpace} from "../harness"
 import {expect, pathPattern, readCachedEvents, roomPath, spacePath, test, users} from "../harness"
 
-// Room lists reach indexeddb in three-second batches, so a spec about a reload waits on this first.
+// A reload starts from what reached the database, so a spec about one waits for the room list there.
 const cachedFirstSpace = async (page: Page, pubkey: string) => {
   const events = (await readCachedEvents(page, pubkey)).filter(event => event.kind === ROOMS)
   const newest = sortBy(event => -event.created_at, events)[0]
@@ -13,7 +13,18 @@ const cachedFirstSpace = async (page: Page, pubkey: string) => {
 }
 
 // The rail shows icons and no text, so a row is read by the tooltip naming its relay.
-const railSpaces = (page: Page) => page.locator(".primary-nav [draggable=true]")
+const railSpaces = (page: Page) => page.locator(".primary-nav [data-drag-key]")
+
+// A pointer drag is driven by coordinates, so a row is measured rather than located.
+const railCenter = async (page: Page, index: number) => {
+  const box = await railSpaces(page).nth(index).boundingBox()
+
+  if (!box) {
+    throw new Error(`The rail has no space at index ${index}`)
+  }
+
+  return {x: box.x + box.width / 2, y: box.y + box.height / 2}
+}
 
 const expectRailFirst = (page: Page, name: string) =>
   expect(railSpaces(page).first().locator("[data-tip]")).toHaveAttribute(
@@ -73,12 +84,17 @@ test("US-009 browse and search spaces, and reorder your own", async ({seed, as})
 
   await expectRailFirst(page, space.name)
 
-  // Chromium's synthetic drag starts and moves it but never delivers the drop the reorder needs.
-  const dataTransfer = await page.evaluateHandle(() => new DataTransfer())
-  const rail = railSpaces(page)
+  const start = await railCenter(page, 0)
+  const end = await railCenter(page, 1)
 
-  await rail.nth(0).dispatchEvent("dragstart", {dataTransfer})
-  await rail.nth(1).dispatchEvent("drop", {dataTransfer})
+  await page.mouse.move(start.x, start.y)
+  await page.mouse.down()
+  await page.mouse.move(end.x, end.y, {steps: 5})
+
+  // The rows flip into their new slots over 300ms, and one more move reads the settled list.
+  await page.waitForTimeout(400)
+  await page.mouse.move(end.x, end.y + 1)
+  await page.mouse.up()
 
   await expectReordered(page, users.alice.pubkey, other)
 
@@ -213,7 +229,7 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
   await expect(alice).toHaveURL(/\/spaces\/closed\.test/)
 
   // A member the admin bans is told why by the relay itself
-  await admin.goto(spacePath(space.url) + "/directory")
+  await admin.goto(spacePath(space.url) + "/about")
 
   const bobCard = admin
     .getByRole("button", {name: "View Bob Barnacle's profile"})
@@ -361,22 +377,15 @@ test("US-015 view a space's details", async ({seed, as}) => {
 
   await expect(carol.getByRole("heading", {name: "space"})).toBeVisible()
   await expect(carol.getByText(/Throwaway relay/)).toBeVisible()
-  await expect(carol.getByText(/harbormaster@space\.test/)).toBeVisible()
   await expect(carol.getByRole("link", {name: "Terms of Service"})).toBeVisible()
 
-  const admin = await as(users.admin, spacePath(space.url) + "/about", {relayInfo})
-  const featuredHeader = admin.getByRole("heading", {name: "Featured"}).locator("xpath=..")
+  // The relay's own details are with its connection, behind the space menu
+  await carol.getByRole("button", {name: /space\.test/}).click()
+  await carol.getByRole("button", {name: "Connection status"}).click()
 
-  await featuredHeader.getByRole("button").click()
-  await admin.getByRole("button", {name: "Add content"}).click()
-  await admin.getByPlaceholder("URL or nevent...").fill("Start with the harbor rules")
-  await admin.getByRole("button", {name: "Save changes"}).click()
-
-  await expect(admin.getByText("Featured content updated!")).toBeVisible()
-
-  // What admin featured reaches every visitor
-  await expect(carol.getByRole("heading", {name: "Featured"})).toBeVisible()
-  await expect(carol.getByText("Start with the harbor rules")).toBeVisible()
+  await expect(
+    carol.getByRole("dialog", {name: "Connection status"}).getByText("harbormaster@space.test"),
+  ).toBeVisible()
 })
 
 test("US-017 search across a space", async ({seed, as}) => {
@@ -392,8 +401,8 @@ test("US-017 search across a space", async ({seed, as}) => {
 
   const space = scenario.space("space")
 
-  // The directory rather than a feed, since a result's own text can't be on the page behind it.
-  const page = await as(users.alice, spacePath(space.url) + "/directory")
+  // The about page rather than a feed, since a result's own text can't be on the page behind it.
+  const page = await as(users.alice, spacePath(space.url) + "/about")
 
   await page.locator(".secondary-nav").getByRole("button", {name: "Search"}).click()
 

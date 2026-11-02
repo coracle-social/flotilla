@@ -1,7 +1,7 @@
 <script lang="ts">
   import cx from "classnames"
   import {derived, readable} from "svelte/store"
-  import type {Snippet} from "svelte"
+  import type {Placement} from "tippy.js"
   import {
     displayList,
     filter,
@@ -19,30 +19,39 @@
   import type {Zap} from "@welshman/domain"
   import {Zappers} from "@welshman/app"
   import {isMobile, stopPropagation} from "@lib/html"
+  import Bolt from "@assets/icons/bolt.svg?dataurl"
+  import Heart from "@assets/icons/heart-angle.svg?dataurl"
+  import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import EmojiButton from "@lib/components/EmojiButton.svelte"
+  import Tooltip from "@lib/components/Tooltip.svelte"
   import Reaction from "@app/components/Reaction.svelte"
   import ReportDetails from "@app/components/ReportDetails.svelte"
   import ProfileList from "@app/components/ProfileList.svelte"
+  import ZapButton from "@app/components/ZapButton.svelte"
   import ZapModal from "@app/components/Zap.svelte"
-  import {app, user} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushModal} from "@app/modal"
-  import {deriveDisplaysByPubkey} from "@app/social"
+  import {app} from "@app/core/app"
+  import {user} from "@app/core/user"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import type {FeedContext} from "@app/features/feeds"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {deriveDisplaysByPubkey} from "@app/features/people"
 
   type Props = {
     event: TrustedEvent
     deleteReaction: (event: TrustedEvent) => void
     createReaction: (event: EventContent) => void
     url?: string
-    reactionClass?: string
+    placement?: Placement
+    perEmoji?: boolean
+    emojiMenu?: boolean
     hideZaps?: boolean
     noTooltip?: boolean
     innerEvent?: TrustedEvent
     context: FeedContext
-    children?: Snippet
   }
 
   const {
@@ -50,12 +59,13 @@
     deleteReaction,
     createReaction,
     url,
-    reactionClass = "",
+    placement = "top",
+    perEmoji = false,
+    emojiMenu = false,
     hideZaps = false,
     noTooltip = false,
     innerEvent = undefined,
     context,
-    children,
   }: Props = $props()
 
   const ownRelated = context.related(event)
@@ -90,6 +100,12 @@
 
   const displays = $derived(deriveDisplaysByPubkey(reactorPubkeys, url))
 
+  const likePubkeys = $derived(uniq($reactions.map(e => e.pubkey)))
+
+  const zapPubkeys = $derived(uniq($zaps.map(zap => zap.request.pubkey)))
+
+  const zapTotal = $derived(fromMsats(sum($zaps.map(zap => zap.invoiceAmount))))
+
   const toggleReaction = (events: TrustedEvent[]) => {
     const reaction = events.find(spec({pubkey: $user.pubkey}))
 
@@ -112,19 +128,39 @@
   const showReactors = (pubkeys: string[], title: string, subtitle: string) =>
     pushModal(ProfileList, {title, subtitle, pubkeys, url})
 
-  const onReactionClick = (events: TrustedEvent[], pubkeys: string[], info: string) => {
+  const onReactionClick = (events: TrustedEvent[], pubkeys: string[], title: string) => {
     if (isMobile && !pubkeys.includes($user.pubkey)) {
-      showReactors(pubkeys, info.replace(" reacted", ""), "Reacted to this message")
+      showReactors(pubkeys, title, "Reacted to this message")
     } else {
       toggleReaction(events)
     }
   }
 
-  const onZapClick = (pubkeys: string[], info: string) => {
+  const onZapClick = (pubkeys: string[], title: string) => {
     if (isMobile) {
-      showReactors(pubkeys, info.replace(" zapped", ""), "Zapped this message")
+      showReactors(pubkeys, title, "Zapped this message")
     } else {
       pushModal(ZapModal, {url, pubkey: event.pubkey, event})
+    }
+  }
+
+  const toggleLike = () => {
+    const own = $reactions.find(spec({pubkey: $user.pubkey}))
+
+    if (own) {
+      deleteReaction(own)
+    } else {
+      createReaction({content: "+", tags: []})
+    }
+  }
+
+  const onEmoji = (content: string) => {
+    const own = $reactions.find(spec({pubkey: $user.pubkey, content}))
+
+    if (own) {
+      deleteReaction(own)
+    } else {
+      createReaction({content, tags: []})
     }
   }
 
@@ -151,69 +187,113 @@
   )
 
   const groupedZaps = $derived(groupBy(e => getReactionKey(e.request), $zaps.values()))
+
+  const tooltipContent = (text: string) => (noTooltip || isMobile ? "" : text)
+
+  const summaryClass = (isOwn: boolean) =>
+    cx("button button-xs gap-1 rounded-full font-normal", {
+      "button-primary": isOwn,
+      "button-neutral": !isOwn,
+    })
+
+  // Chat draws its own zap and react buttons in a hover bar, so there the pills are all there is.
+  const shown = $derived(
+    !perEmoji || $reports.length > 0 || $reactions.length > 0 || $zaps.length > 0,
+  )
 </script>
 
-{#if $reactions.length > 0 || (!hideZaps && $zaps.length > 0) || $reports.length > 0 || children}
+{#snippet reactLabel()}
+  <Icon icon={emojiMenu ? SmileCircle : Heart} size={4} />
+  {#if likePubkeys.length > 0}
+    <span>{likePubkeys.length}</span>
+  {/if}
+{/snippet}
+
+{#if shown}
   <div class="flex min-w-0 flex-wrap gap-2">
     {#if url && $reports.length > 0 && $permissions.deleteContent}
-      <Button
-        data-tip={`This content has been reported as "${displayList(reportReasons)}".`}
-        class={cx(
-          "button button-error button-xs tip-right flex items-center gap-1 rounded-full font-normal",
-          {
-            tip: !noTooltip && !isMobile,
-          },
+      <Tooltip
+        content={tooltipContent(
+          `This content has been reported as "${displayList(reportReasons)}".`,
         )}
-        onclick={stopPropagation(onReportClick)}>
-        <Icon icon={Danger} />
-        <span>{$reports.length}</span>
-      </Button>
+        {placement}
+        class="flex">
+        <Button
+          class="button button-error button-xs flex items-center gap-1 rounded-full font-normal"
+          onclick={stopPropagation(onReportClick)}>
+          <Icon icon={Danger} />
+          <span>{$reports.length}</span>
+        </Button>
+      </Tooltip>
     {/if}
-    {#if !hideZaps}
+    {#if perEmoji}
       {#each groupedZaps.entries() as [key, zaps] (key)}
         {@const amount = fromMsats(sum(zaps.map(zap => zap.invoiceAmount)))}
         {@const pubkeys = uniq(zaps.map(zap => zap.request.pubkey))}
-        {@const isOwn = pubkeys.includes($user.pubkey)}
         {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
-        {@const tooltip = `${info} zapped`}
-        {@const onZapClickHandler = () => onZapClick(pubkeys, tooltip)}
-        <Button
-          data-tip={tooltip}
-          class={cx(
-            reactionClass,
-            "button button-xs flex-inline flex items-center gap-1 rounded-full text-xs font-normal",
-            {
-              tip: !noTooltip && !isMobile,
-              "button-primary": isOwn,
-              "button-neutral": !isOwn,
-            },
-          )}
-          onclick={stopPropagation(onZapClickHandler)}>
-          <Reaction event={zaps[0].request} />
-          <span>{amount}</span>
-        </Button>
+        {@const onZapClickHandler = () => onZapClick(pubkeys, info)}
+        <Tooltip content={tooltipContent(`${info} zapped`)} {placement} class="flex">
+          <Button
+            class={summaryClass(pubkeys.includes($user.pubkey))}
+            onclick={stopPropagation(onZapClickHandler)}>
+            <Reaction event={zaps[0].request} />
+            <span>{amount}</span>
+          </Button>
+        </Tooltip>
       {/each}
-    {/if}
-    {#each groupedReactions.entries() as [key, events] (key)}
-      {@const pubkeys = events.map(e => e.pubkey)}
-      {@const isOwn = pubkeys.includes($user.pubkey)}
-      {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
-      {@const tooltip = `${info} reacted`}
-      {@const onClick = () => onReactionClick(events, pubkeys, info)}
-      <Button
-        data-tip={tooltip}
-        class={cx(reactionClass, "button button-xs flex-inline gap-1 rounded-full font-normal", {
-          tip: !noTooltip && !isMobile,
-          "button-primary": isOwn,
-          "button-neutral": !isOwn,
-        })}
-        onclick={stopPropagation(onClick)}>
-        <Reaction event={events[0]} />
-        {#if events.length > 1}
-          <span>{events.length}</span>
+      {#each groupedReactions.entries() as [key, events] (key)}
+        {@const pubkeys = events.map(e => e.pubkey)}
+        {@const info = displayList(pubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
+        {@const onClick = () => onReactionClick(events, pubkeys, info)}
+        <Tooltip content={tooltipContent(`${info} reacted`)} {placement} class="flex">
+          <Button
+            class={summaryClass(pubkeys.includes($user.pubkey))}
+            onclick={stopPropagation(onClick)}>
+            <Reaction event={events[0]} />
+            {#if events.length > 1}
+              <span>{events.length}</span>
+            {/if}
+          </Button>
+        </Tooltip>
+      {/each}
+    {:else}
+      {#if ENABLE_ZAPS && !hideZaps}
+        {@const zapInfo = displayList(zapPubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
+        <Tooltip
+          content={tooltipContent(zapInfo ? `${zapInfo} zapped` : "Zap")}
+          {placement}
+          class="flex">
+          <ZapButton
+            {url}
+            {event}
+            aria-label="Zaps"
+            class={summaryClass(zapPubkeys.includes($user.pubkey))}>
+            <Icon icon={Bolt} size={4} />
+            {#if $zaps.length > 0}
+              <span>{zapTotal}</span>
+            {/if}
+          </ZapButton>
+        </Tooltip>
+      {/if}
+      {@const reactInfo = displayList(likePubkeys.map(pubkey => $displays.get(pubkey) ?? ""))}
+      {@const isOwn = likePubkeys.includes($user.pubkey)}
+      <Tooltip
+        content={tooltipContent(reactInfo ? `${reactInfo} reacted` : "React")}
+        {placement}
+        class="flex">
+        {#if emojiMenu}
+          <EmojiButton {onEmoji} aria-label="Add a reaction" class={summaryClass(isOwn)}>
+            {@render reactLabel()}
+          </EmojiButton>
+        {:else}
+          <Button
+            aria-label="Likes"
+            class={summaryClass(isOwn)}
+            onclick={stopPropagation(toggleLike)}>
+            {@render reactLabel()}
+          </Button>
         {/if}
-      </Button>
-    {/each}
-    {@render children?.()}
+      </Tooltip>
+    {/if}
   </div>
 {/if}

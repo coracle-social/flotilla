@@ -1,15 +1,15 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {page} from "$app/stores"
-  import {displayRelayUrl} from "@welshman/util"
   import ArrowLeft from "@assets/icons/arrow-left.svg?dataurl"
   import {fade} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageBar from "@lib/components/PageBar.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {pageLoading} from "@app/loading"
-  import {decodeRelay} from "@app/relays"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {pageLoading} from "@app/features/loading"
+  import {decodeRelay} from "@app/navigation/pages"
 
   type Props = {
     back?: () => unknown
@@ -21,7 +21,7 @@
 
   const {back, leading, title, action, ...props}: Props = $props()
 
-  const url = decodeRelay($page.params.relay!)
+  const relay = $page.params.relay
 </script>
 
 <PageBar {...props}>
@@ -46,9 +46,11 @@
             </div>
           {/if}
         </div>
-        <div class="truncate text-xs text-primary md:hidden">
-          {displayRelayUrl(url)}
-        </div>
+        {#if relay}
+          <div class="truncate text-xs text-primary md:hidden">
+            <RelayLabel url={decodeRelay(relay)} />
+          </div>
+        {/if}
       </div>
       <div class="flex shrink-0 items-center gap-2">
         {@render action?.()}

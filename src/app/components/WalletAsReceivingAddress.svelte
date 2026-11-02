@@ -1,6 +1,5 @@
 <script lang="ts">
   import {getWalletAddress} from "@welshman/util"
-  import {Profiles} from "@welshman/app"
   import {errorMessage} from "@lib/util"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -9,12 +8,11 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {deriveUserItem, profiles} from "@app/core"
-  import {wallet} from "@app/lightning"
-  import {clearModals} from "@app/modal"
-  import {pushToast} from "@app/toast"
-
-  const userProfile = deriveUserItem(Profiles)
+  import {userProfile} from "@app/core/user"
+  import {profiles} from "@app/core/plugins"
+  import {wallet} from "@app/features/wallet"
+  import {clearModals} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
 
   const lud16 = getWalletAddress(wallet.get()!)
 
@@ -23,7 +21,7 @@
 
     try {
       const command = await $profiles.update(writer => writer.update({lud06: undefined, lud16}))
-      const error = (await command.publish().settled()).getError()
+      const error = await command.publish().getError()
 
       if (error) {
         pushToast({theme: "error", message: `Failed to update profile: ${errorMessage(error)}`})

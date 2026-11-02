@@ -16,11 +16,11 @@
   import Compose from "@app/components/Compose.svelte"
   import ComposeEdit from "@app/components/ComposeEdit.svelte"
   import ComposeParent from "@app/components/ComposeParent.svelte"
-  import {pendingShare, type Share} from "@app/share"
+  import {pendingShare, type Share} from "@app/features/share"
 
   type Props = Pick<
     ComponentProps<typeof Compose>,
-    "url" | "h" | "draftKey" | "encryptFiles" | "disabled"
+    "url" | "h" | "draftKey" | "encryptFiles" | "disabled" | "emptyAction"
   > & {
     messages: TrustedEvent[]
     canEdit: (event: TrustedEvent) => boolean

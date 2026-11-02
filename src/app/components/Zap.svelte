@@ -22,11 +22,12 @@
   import QRCode from "@app/components/QRCode.svelte"
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import ZapForm from "@app/components/ZapForm.svelte"
-  import {app, domain, network} from "@app/core"
-  import {payInvoice, wallet} from "@app/lightning"
-  import {pushModal} from "@app/modal"
-  import {zapAmounts} from "@app/settings"
-  import {clip, pushToast} from "@app/toast"
+  import {app} from "@app/core/app"
+  import {domain, network} from "@app/core/plugins"
+  import {payInvoice, wallet} from "@app/features/wallet"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {zapAmounts} from "@app/core/settings"
+  import {clip, pushToast} from "@app/features/toast"
 
   type Props = {
     url?: string
@@ -74,7 +75,7 @@
     const {relays, invoice, filters} = await requestInvoice()
 
     await payInvoice(invoice)
-    await $network.loadLenient({relays, filters})
+    await $network.load({relays, filters, timeout: 3000})
 
     pushToast({message: "Zap successfully sent!"})
     back()

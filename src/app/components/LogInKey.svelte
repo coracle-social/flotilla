@@ -5,11 +5,9 @@
   import {preventDefault} from "@lib/html"
   import {nsecDecode} from "@lib/util"
   import Spinner from "@lib/components/Spinner.svelte"
-  import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import Key from "@assets/icons/key.svg?dataurl"
-  import Danger from "@assets/icons/danger-triangle.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -19,10 +17,10 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {login} from "@app/core"
-  import {clearModals} from "@app/modal"
-  import {setChecked} from "@app/notifications"
-  import {pushToast} from "@app/toast"
+  import {login} from "@app/core/session"
+  import {clearModals} from "@app/navigation/dialogs"
+  import {setChecked} from "@app/features/checked"
+  import {pushToast} from "@app/features/toast"
 
   let loading = $state(false)
   let keyInput = $state("")
@@ -79,7 +77,7 @@
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Log In with Key</ModalTitle>
-      <ModalSubtitle>Enter your nostr private key to log in.</ModalSubtitle>
+      <ModalSubtitle>Enter your private key to log in.</ModalSubtitle>
     </ModalHeader>
     <FieldInline>
       {#snippet label()}
@@ -88,7 +86,7 @@
       {#snippet input()}
         <label class="input input-group flex w-full items-center gap-2">
           <Icon icon={Key} />
-          <input type="password" bind:value={keyInput} placeholder="nsec1..." />
+          <input type="password" bind:value={keyInput} placeholder="Your private key" />
         </label>
       {/snippet}
     </FieldInline>
@@ -105,17 +103,6 @@
         {/snippet}
       </FieldInline>
     {/if}
-    <div class="card card-sm flex flex-col gap-2 text-sm">
-      <strong class="flex items-center gap-2">
-        <Icon icon={Danger} />
-        Please note!
-      </strong>
-      <p>
-        Logging in this way is not a best practice. For better security, please consider using a
-        <Link external href="https://nostrapps.com#signers" class="link">signer app</Link>
-        to keep your keys safe.
-      </p>
-    </div>
   </ModalBody>
   <ModalFooter>
     <Button class="button button-link" onclick={back} disabled={loading}>

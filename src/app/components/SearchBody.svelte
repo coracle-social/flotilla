@@ -13,10 +13,11 @@
   import PeopleItem from "@app/components/PeopleItem.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
-  import {events, network, profiles} from "@app/core"
-  import {popModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {goToEvent} from "@app/routes"
+  import {app} from "@app/core/app"
+  import {network, profiles} from "@app/core/plugins"
+  import {popModal} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
+  import {goToEvent} from "@app/navigation/locations"
 
   type Props = {
     placeholder: string
@@ -47,15 +48,19 @@
 
     const filters = [{...filter, search: searchTerm.trim()}]
 
-    results = sortEventsDesc(
-      uniqBy(
-        (e: TrustedEvent) => e.id,
-        relays.flatMap(relay => events.get().forUrl(relay, filters).get()),
-      ),
-    )
-
     try {
-      const events = await $network.loadComplete({relays, filters, signal: controller.signal})
+      const stored = await Promise.all(
+        relays.map(relay => $app.repository.query(filters, {relay, signal: controller.signal})),
+      )
+
+      results = sortEventsDesc(uniqBy((e: TrustedEvent) => e.id, stored.flat()))
+
+      const events = await $network.load({
+        relays,
+        filters,
+        signal: controller.signal,
+        timeout: 3000,
+      })
 
       results = sortEventsDesc(uniqBy((e: TrustedEvent) => e.id, [...events, ...results]))
     } catch (error) {

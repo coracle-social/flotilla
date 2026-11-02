@@ -11,8 +11,8 @@
   import PlanModal from "@app/components/hosting/PlanModal.svelte"
   import RelayForm from "@app/components/hosting/RelayForm.svelte"
   import type {RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
-  import {pushModal, clearModals} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {clearModals, pushModal} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
   import {
     followHostedRelay,
     hosting,
@@ -22,7 +22,7 @@
     deactivateRelay,
     reactivateRelay,
     type HostedRelay,
-  } from "@app/hosting"
+  } from "@app/features/hosting"
 
   type Props = {
     relay: HostedRelay

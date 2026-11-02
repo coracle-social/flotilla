@@ -4,7 +4,7 @@ import {tmpdir} from "node:os"
 import {join} from "node:path"
 import {HOUR, MINUTE, ago, ms, now, sleep} from "@welshman/lib"
 import {keystoreEnv} from "../lib/android.mjs"
-import {missingEnv, root} from "../lib/context.mjs"
+import {git, missingEnv, root, version} from "../lib/context.mjs"
 import {fdroidPackage, packageToken, signedApk, unsignedApk} from "../lib/fdroid.mjs"
 import {output, run} from "../lib/shell.mjs"
 
@@ -34,27 +34,44 @@ export default {
   ],
   run: async () => {
     const api = fdroidPackage(packageToken)
+    const commit = git("rev-parse", `${version}^{commit}`)
     const started = now()
-    let unsigned = await api.download(unsignedApk)
-
-    while (!unsigned) {
-      if (started < ago(2 * HOUR)) {
-        throw new Error(
-          `The release workflow hasn't uploaded ${api.url(unsignedApk)} after two hours`,
-        )
-      }
-
-      console.log(`Waiting for the release workflow to upload ${unsignedApk}`)
-      await sleep(ms(MINUTE))
-      unsigned = await api.download(unsignedApk)
-    }
-
     const work = await mkdtemp(join(tmpdir(), "flotilla-fdroid-sign-"))
 
-    try {
-      const signing = keystoreEnv("ANDROID")
+    // A moved tag leaves the old build in the package until the release workflow replaces it
+    const downloadFresh = async () => {
+      const unsigned = await api.download(unsignedApk)
 
-      await writeFile(join(work, unsignedApk), unsigned)
+      if (unsigned) {
+        await writeFile(join(work, unsignedApk), unsigned)
+
+        const stamp = output("unzip", [
+          "-p",
+          join(work, unsignedApk),
+          "assets/public/_app/version.json",
+        ])
+
+        return commit.startsWith(JSON.parse(stamp).version)
+      }
+
+      return false
+    }
+
+    try {
+      while (!(await downloadFresh())) {
+        if (started < ago(2 * HOUR)) {
+          throw new Error(
+            `The release workflow hasn't uploaded ${api.url(unsignedApk)} built from ${commit} after two hours`,
+          )
+        }
+
+        console.log(
+          `Waiting for the release workflow to upload ${unsignedApk} built from ${commit}`,
+        )
+        await sleep(ms(MINUTE))
+      }
+
+      const signing = keystoreEnv("ANDROID")
 
       // F-Droid copies this signature onto its own build, so nothing but the signature may change
       await run(

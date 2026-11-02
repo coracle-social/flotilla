@@ -1,0 +1,118 @@
+<script lang="ts">
+  import cx from "classnames"
+  import {formatTimestampAsTime} from "@welshman/lib"
+  import type {Maybe} from "@welshman/lib"
+  import type {TrustedEvent, EventContent} from "@welshman/util"
+  import {isMobile} from "@lib/html"
+  import MenuDots from "@assets/icons/menu-dots.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
+  import Button from "@lib/components/Button.svelte"
+  import Tippy from "@lib/components/Tippy.svelte"
+  import TapTarget from "@lib/components/TapTarget.svelte"
+  import type {TippyController} from "@lib/components/Tippy.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import Content from "@app/components/Content.svelte"
+  import ReactionSummary from "@app/components/ReactionSummary.svelte"
+  import type {FeedContext} from "@app/features/feeds"
+  import PublicationFailure from "@app/components/PublicationFailure.svelte"
+  import ProfileDetail from "@app/components/ProfileDetail.svelte"
+  import ConversationMessageMenu from "@app/components/ConversationMessageMenu.svelte"
+  import ConversationMessageMenuMobile from "@app/components/ConversationMessageMenuMobile.svelte"
+  import {user} from "@app/core/user"
+  import {profiles, publisher} from "@app/core/plugins"
+  import {noPublications, publicationsByEventId} from "@app/core/publications"
+  import {highlightedEvent} from "@app/navigation/locations"
+  import {colorFor} from "@app/features/theme"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {publishReaction, retractReaction} from "@app/features/messages"
+
+  type Props = {
+    event: TrustedEvent
+    replyTo: (event: TrustedEvent) => void
+    canEdit?: (event: TrustedEvent) => boolean
+    onEdit?: (event: TrustedEvent) => void
+    pubkeys: string[]
+    showPubkey?: boolean
+    context: FeedContext
+  }
+
+  const {event, replyTo, canEdit, onEdit, pubkeys, showPubkey = false, context}: Props = $props()
+
+  const isOwn = event.pubkey === $user.pubkey
+  const profileDisplay = $profiles.display(event.pubkey).$
+  const publication = $derived(
+    $publisher.merge($publicationsByEventId.get(event.id) ?? noPublications),
+  )
+  const colorValue = colorFor(event.pubkey)
+
+  const reply = () => replyTo(event)
+  const edit = canEdit?.(event) ? () => onEdit?.(event) : undefined
+
+  const deleteReaction = (reaction: TrustedEvent) => retractReaction(pubkeys, reaction)
+
+  const createReaction = (values: EventContent) => publishReaction(pubkeys, event, values)
+
+  const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey})
+
+  const showMobileMenu = () =>
+    pushModal(ConversationMessageMenuMobile, {event, pubkeys, reply, edit})
+
+  const togglePopover = () => tippy?.toggle()
+
+  let tippy: Maybe<TippyController> = $state()
+</script>
+
+<PublicationFailure showToastOnRetry {publication} class="mt-1" />
+<div
+  data-event={event.id}
+  class={cx("group flex items-center justify-end gap-1 px-2", {
+    "flex-row-reverse": !isOwn,
+    "highlight-target": $highlightedEvent === event.id,
+  })}>
+  {#if !isMobile}
+    <Tippy
+      bind:controller={tippy}
+      component={ConversationMessageMenu}
+      props={{event, pubkeys, tippy, replyTo, edit}}
+      params={{interactive: true, trigger: "manual"}}>
+      <button
+        type="button"
+        aria-label="Message actions"
+        class="opacity-0 transition-all group-hover:opacity-100 focus:opacity-100"
+        onclick={togglePopover}>
+        <Icon icon={MenuDots} size={4} />
+      </button>
+    </Tippy>
+  {/if}
+  <div class={cx("flex min-w-0 flex-col", {"items-end": isOwn})}>
+    <TapTarget
+      class={cx("conversation-bubble", {"conversation-bubble--user": isOwn})}
+      onTap={showMobileMenu}>
+      {#if showPubkey}
+        <div class="flex items-center gap-2">
+          {#if !isOwn}
+            <Button onclick={openProfile} class="flex items-center gap-1">
+              <ProfileCircle
+                pubkey={event.pubkey}
+                class="border border-solid border-line"
+                size={4} />
+              <div class="flex items-center gap-2">
+                <Button onclick={openProfile} class="text-sm font-bold" style="color: {colorValue}">
+                  {$profileDisplay}
+                </Button>
+              </div>
+            </Button>
+          {/if}
+          <span class="whitespace-nowrap text-xs opacity-50"
+            >{formatTimestampAsTime(event.created_at)}</span>
+        </div>
+      {/if}
+      <div class="text-sm">
+        <Content showEntire {event} />
+      </div>
+    </TapTarget>
+    <div class="flex gap-2 z-feature -mt-4 ml-4">
+      <ReactionSummary {event} {context} {deleteReaction} {createReaction} noTooltip perEmoji />
+    </div>
+  </div>
+</div>

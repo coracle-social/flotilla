@@ -1,40 +1,33 @@
 <script lang="ts">
+  import type {Placement} from "tippy.js"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {seen} from "@welshman/util"
-  import SmileCircle from "@assets/icons/smile-circle.svg?dataurl"
-  import Icon from "@lib/components/Icon.svelte"
-  import EmojiButton from "@lib/components/EmojiButton.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import {publishReaction, retractReaction} from "@app/reactions"
-  import type {FeedContext} from "@app/feeds"
-  import {router} from "@app/core"
+  import * as social from "@app/features/social/reactions"
+  import * as spaces from "@app/features/spaces"
+  import type {FeedContext} from "@app/features/feeds"
 
   type Props = {
     event: TrustedEvent
     context: FeedContext
     url?: string
-    reactionClass?: string
+    placement?: Placement
+    emojiMenu?: boolean
   }
 
-  const {event, context, url, reactionClass = ""}: Props = $props()
+  const {event, context, url, placement = "top", emojiMenu = false}: Props = $props()
 
-  // A reaction goes where its subject lives: the space's own relay, or wherever the event was seen.
-  const getRelays = () => (url ? [url] : $router.resolver.relays([seen(event)]))
+  const deleteReaction = (reaction: TrustedEvent) =>
+    url ? spaces.retractReaction(url, reaction) : social.retractReaction(reaction)
 
-  const deleteReaction = async (reaction: TrustedEvent) =>
-    retractReaction(reaction, {url, urls: await getRelays()})
-
-  const createReaction = async (values: EventContent) =>
-    publishReaction(event, values, {url, urls: await getRelays()})
-
-  const onEmoji = (emoji: string) => createReaction({content: emoji, tags: []})
+  const createReaction = (values: EventContent) =>
+    url ? spaces.publishReaction(url, event, values) : social.publishReaction(event, values)
 </script>
 
-<ReactionSummary {url} {event} {context} {deleteReaction} {createReaction} {reactionClass}>
-  <EmojiButton
-    {onEmoji}
-    aria-label="Add a reaction"
-    class="button button-neutral button-xs rounded-full">
-    <Icon icon={SmileCircle} size={4} />
-  </EmojiButton>
-</ReactionSummary>
+<ReactionSummary
+  {url}
+  {event}
+  {context}
+  {deleteReaction}
+  {createReaction}
+  {placement}
+  {emojiMenu} />

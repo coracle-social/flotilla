@@ -1,19 +1,22 @@
 import type {Locator, Page} from "@playwright/test"
-import {HOUR} from "@welshman/lib"
+import {HOUR, ms} from "@welshman/lib"
 import {
   DEFAULT_BLOSSOM_ORIGIN,
   GIF_BASE64,
+  attachFile,
   chatPath,
-  chooseFile,
   composer,
+  composerAddButton,
   composerEnabled,
   dialog,
   expect,
   gifFile,
+  heicFile,
   makeTestUser,
   messageActions,
   mockBlossom,
-  mockOpenRouterTranscription,
+  mockLocalStt,
+  mockOpenRouterStt,
   roomLink,
   roomPath,
   sendButton,
@@ -23,11 +26,6 @@ import {
 } from "../harness"
 
 const suggestions = (page: Page) => page.locator(".tiptap-suggestions__item")
-
-// A room composer leads with a two button group: upload, then the create menu.
-const roomUploadButton = (page: Page) => page.locator(".room__compose-inner .join-item").first()
-
-const chatUploadButton = (page: Page) => page.locator("button[data-tip='Add an image']")
 
 // The reply preview and the editing indicator are the same bordered strip, each with its own X.
 const banner = (page: Page, text: string) =>
@@ -133,7 +131,8 @@ test("US-057 attach and send an image", async ({seed, as}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
-    space.join(user.alice, "general")
+    space.room("lounge", {name: "Lounge"})
+    space.join(user.alice, "general", "lounge")
     space.join(user.bob, "general")
     space.message(user.bob, "general", "morning all", at(2, HOUR))
 
@@ -157,7 +156,19 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
   blossom.hold()
 
-  await chooseFile(alice, roomUploadButton(alice), gifFile("photo.gif"))
+  await attachFile(alice, gifFile("photo.gif"))
+
+  await expect(sendButton(alice)).toBeDisabled()
+  await expect(composerAddButton(alice)).toBeDisabled()
+
+  // Deleting a stalled upload has to give the composer back.
+  await composer(alice).press("ControlOrMeta+a")
+  await composer(alice).press("Backspace")
+
+  await expect(composer(alice)).not.toContainText("photo.gif")
+  await expect(composerAddButton(alice)).toBeEnabled()
+
+  await attachFile(alice, gifFile("photo.gif"))
 
   await expect(sendButton(alice)).toBeDisabled()
 
@@ -171,6 +182,49 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   await expect(timeline(alice).locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
   await expect(timeline(bob).locator(`img[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
 
+  // A photo the compressor can't read reaches the server as itself rather than stranding here.
+  blossom.hold()
+
+  await attachFile(alice, heicFile("photo.heic"))
+
+  await expect(sendButton(alice)).toBeDisabled()
+
+  blossom.release()
+
+  await expect(sendButton(alice)).toBeEnabled()
+  await expect(composer(alice)).toContainText("photo.heic")
+
+  await composer(alice).press("ControlOrMeta+a")
+  await composer(alice).press("Backspace")
+
+  // An upload still in flight when the room is left resumes in the composer it comes back to.
+  blossom.hold()
+
+  await attachFile(alice, gifFile("away.gif"))
+
+  await expect(sendButton(alice)).toBeDisabled()
+
+  await roomLink(alice, "Lounge").click()
+
+  await expect(composer(alice)).toBeVisible()
+
+  await roomLink(alice, "General").click()
+
+  await expect(composer(alice)).toContainText("away.gif")
+
+  await composer(alice).pressSequentially("look at this")
+
+  await expect(sendButton(alice)).toBeDisabled()
+
+  blossom.release()
+
+  await expect(sendButton(alice)).toBeEnabled()
+
+  await composer(alice).press("Enter")
+
+  await expect(timeline(alice).getByText("look at this")).toBeVisible()
+  await expect(timeline(alice).locator('img[src^="blob:"]')).toHaveCount(0)
+
   await pasteImage(composer(alice), "pasted.gif")
 
   await expect(composer(alice)).toContainText("pasted.gif")
@@ -181,7 +235,7 @@ test("US-057 attach and send an image", async ({seed, as}) => {
 
   await composerEnabled(alice)
 
-  await chooseFile(alice, chatUploadButton(alice), gifFile("selfie.gif"))
+  await attachFile(alice, gifFile("selfie.gif"))
 
   await expect(composer(alice)).toContainText("selfie.gif")
 
@@ -191,7 +245,7 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   await composer(alice).press("Enter")
 
   // A conversation's image is uploaded encrypted, so the recipient decrypts it into a blob url.
-  await expect(bob.locator('.chat-bubble img[src^="blob:"]')).toBeVisible()
+  await expect(bob.locator('.conversation-bubble img[src^="blob:"]')).toBeVisible()
 
   // Back to the room on a fresh page, so no toast the conversation raised is still standing.
   await alice.goto(path)
@@ -202,13 +256,45 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   // What the server refuses is what the composer refuses, in the words the server used.
   blossom.refuse("text files are not allowed here")
 
-  await chooseFile(alice, roomUploadButton(alice), {
+  await attachFile(alice, {
     name: "notes.txt",
     mimeType: "text/plain",
     buffer: Buffer.from("not an image"),
   })
 
   await expect(alice.getByRole("alert")).toContainText("text files are not allowed here")
+})
+
+test("US-142 an upload that never answers gives up", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.profile(user.alice, {name: user.alice.name})
+    space.relayList(user.alice)
+  })
+
+  const path = roomPath(scenario.space("space").url, "general")
+  const alice = await as(users.alice, path)
+  const blossom = await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
+
+  blossom.hold()
+
+  // A text file attaches as a link rather than a node, so there is nothing to delete while it uploads.
+  await attachFile(alice, {
+    name: "notes.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("not an image"),
+  })
+
+  await expect(composerAddButton(alice)).toBeDisabled()
+
+  await expect(alice.getByRole("alert")).toContainText("notes.txt took too long to upload", {
+    timeout: ms(45),
+  })
+
+  await expect(composerAddButton(alice)).toBeEnabled()
 })
 
 test("US-058 drafts survive navigating away", async ({seed, as}) => {
@@ -344,18 +430,29 @@ test("US-059 cancel a reply or an edit in progress", async ({seed, as}) => {
   await expect(editor).toHaveText("half-written thought")
 })
 
-// Dictation's two buttons are one button in two states, so the label is what says which.
 const dictateButton = (page: Page) => page.getByRole("button", {name: "Start dictation"})
 
-const stopButton = (page: Page) => page.getByRole("button", {name: "Stop recording"})
-
-// Every recording ends at the same question, so each spec starts from the answer it is about.
+// The fake microphone beeps twice a second, so a shorter take records only silence.
 const record = async (page: Page) => {
-  await dictateButton(page).click()
-  await expect(stopButton(page)).toBeVisible()
-  await stopButton(page).click()
+  const recorder = dialog(page, "Record a message")
 
-  return dialog(page, "Transcribe or send?")
+  await dictateButton(page).click()
+  // The dialog this one replaces is still animating out, so wait for it to be the only one.
+  await expect(recorder).toHaveCount(1)
+  await expect(recorder.getByText("0:01")).toBeVisible()
+
+  return recorder
+}
+
+// A transcription that came back with nothing hands the recording back to the recorder.
+const retryTranscribe = async (page: Page) => {
+  const recorder = dialog(page, "Record a message")
+
+  await expect(recorder).toHaveCount(1)
+  await expect(recorder.locator("audio")).toBeVisible()
+  await recorder.getByRole("button", {name: "Transcribe"}).click()
+  await expect(composer(page)).toContainText("the tide turns at six")
+  await composer(page).fill("")
 }
 
 test("US-125 dictate a message", async ({seed, as}) => {
@@ -371,23 +468,32 @@ test("US-125 dictate a message", async ({seed, as}) => {
 
   const {url} = scenario.space("space")
   const alice = await as(users.alice, roomPath(url, "general"))
-  const transcription = await mockOpenRouterTranscription(alice.context(), "the tide turns at six")
+  const transcription = await mockOpenRouterStt(alice.context(), "the tide turns at six")
 
-  // Recording asks for nothing. Asking for a transcript with no key saved asks for one.
-  const action = await record(alice)
+  // Recording asks for nothing. Asking for a transcript with no provider set up asks for one.
+  const recorder = await record(alice)
 
-  await action.getByRole("button", {name: "Transcribe it"}).click()
+  await recorder.getByRole("button", {name: "Transcribe"}).click()
 
   const enable = dialog(alice, "Enable voice input?")
+
+  // The prompt sits over the recorder rather than taking its place.
+  await expect(enable).toHaveCount(1)
+  await expect(recorder).toHaveCount(1)
+
+  // Leaving the prompt hands the recording back to the recorder, still playable.
+  await enable.getByRole("button", {name: "Go back"}).click()
+
+  await expect(enable).toHaveCount(0)
+  await expect(recorder.locator("audio")).toBeVisible()
+  await recorder.getByRole("button", {name: "Transcribe"}).click()
 
   await enable.locator('input[name="flotilla-openrouter-key"]').fill("sk-or-test")
   await enable.getByRole("button", {name: "Enable voice input"}).click()
 
   await expect(alice.getByRole("alert")).toContainText("Voice input is ready to use!")
 
-  // The recording is still waiting behind that prompt for the answer it asked for.
-  await action.getByRole("button", {name: "Transcribe it"}).click()
-
+  // The recording is still waiting behind that prompt, so saving the key spends it.
   await expect(composer(alice)).toContainText("the tide turns at six")
 
   // OpenRouter picks its decoder off the extension, so the upload has to name the format.
@@ -397,21 +503,122 @@ test("US-125 dictate a message", async ({seed, as}) => {
 
   await expect(timeline(alice)).toContainText("the tide turns at six")
 
-  // A transcription outlives the composer that asked for it, and waits for whichever comes next.
+  // A transcription that fails says so and hands the recording back to the recorder.
+  transcription.failNext("The model is overloaded")
+
+  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("The model is overloaded")
+  await retryTranscribe(alice)
+
+  // An empty transcript is silence rather than a failure, and the recording survives it too.
+  transcription.setTranscript(" ")
+
+  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("No speech was detected")
+
+  transcription.setTranscript("the tide turns at six")
+
+  await retryTranscribe(alice)
+
+  // A transcription that is still out holds the recorder open, with its own button busy.
   transcription.hold()
 
-  await (await record(alice)).getByRole("button", {name: "Transcribe it"}).click()
+  const transcribing = await record(alice)
+  const transcribeButton = transcribing.getByRole("button", {name: "Transcribe"})
 
-  // A dictation is held by the app rather than by the composer, so reloading the page is losing it.
+  await transcribeButton.click()
+
+  await expect(transcribeButton.locator(".spinner")).toBeVisible()
+  await expect(transcribeButton).toBeDisabled()
+  await expect(dictateButton(alice).locator(".spinner")).toHaveCount(0)
+
+  // Leaving the recorder keeps the transcription, so the recording is not thrown away with it.
+  await transcribing.getByRole("button", {name: "Close dialog"}).click()
+
+  await expect(transcribing).toHaveCount(0)
+
+  // A transcription outlives the composer that asked for it, and waits for whichever comes next.
   await roomLink(alice, "Lounge").click()
 
   await expect(composer(alice)).toBeVisible()
 
   await roomLink(alice, "General").click()
 
+  // The composer it comes back to shows the wait the recorder was showing.
+  await expect(dictateButton(alice).locator(".spinner")).toBeVisible()
+
   transcription.release()
 
   await expect(composer(alice)).toContainText("the tide turns at six")
+})
+
+test("US-142 transcribe a recording on this device", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+  })
+
+  const {url} = scenario.space("space")
+  const alice = await as(users.alice, "/settings/content")
+  const localSpeech = await mockLocalStt(alice.context(), {text: "the tide turns at six"})
+
+  // Downloading the model is the whole of the choice, so no OpenRouter key is ever saved here.
+  await alice.getByRole("button", {name: "Download model"}).click()
+
+  const download = dialog(alice, "Download a speech model?")
+
+  localSpeech.hold()
+
+  await download.getByRole("button", {name: "Download model"}).click()
+
+  // How far the download has got is a bar rather than a number in the status line.
+  await expect(download.locator("progress")).toHaveJSProperty("value", 40)
+
+  localSpeech.release()
+
+  await expect(alice.getByRole("button", {name: "Remove model"})).toBeVisible()
+
+  await alice.goto(roomPath(url, "general"))
+
+  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(composer(alice)).toContainText("the tide turns at six")
+
+  // The model reads the samples the recorder made rather than uploading a file anywhere.
+  expect(localSpeech.recordings).toHaveLength(1)
+  expect(localSpeech.recordings[0]).toBeGreaterThan(0)
+
+  await composer(alice).fill("")
+
+  // A transcript the model is unsure of is a language it cannot read, so the composer stays empty.
+  localSpeech.setConfidence(0.5)
+
+  const refused = await record(alice)
+
+  await refused.getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("This device reads English")
+  await expect(composer(alice)).not.toContainText("the tide turns at six")
+  await refused.getByRole("button", {name: "Discard"}).click()
+
+  await expect(refused).toHaveCount(0)
+
+  // With a key saved, the recording it will not read goes to OpenRouter instead.
+  const transcription = await mockOpenRouterStt(alice.context(), "and the gulls came in")
+
+  await alice.goto("/settings/content")
+  await alice.locator('input[name="flotilla-openrouter-key"]').fill("sk-or-test")
+  await alice.getByRole("button", {name: "Save Changes"}).click()
+  await expect(alice.getByRole("alert")).toContainText("Your settings have been saved!")
+  await alice.goto(roomPath(url, "general"))
+  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
+
+  await expect(composer(alice)).toContainText("and the gulls came in")
+  expect(transcription.uploads).toHaveLength(1)
 })
 
 test("US-126 send a voice note", async ({seed, as}) => {
@@ -427,14 +634,14 @@ test("US-126 send a voice note", async ({seed, as}) => {
 
   await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
 
-  // Leaving the question unanswered throws the recording away.
+  // Discarding the recording throws it away rather than attaching it.
   await (await record(alice)).getByRole("button", {name: "Discard"}).click()
 
-  await expect(dialog(alice, "Transcribe or send?")).toHaveCount(0)
+  await expect(dialog(alice, "Record a message")).toHaveCount(0)
   await expect(composer(alice)).toHaveText("")
 
-  // Sending the recording as it is needs no OpenRouter key, only somewhere to upload it.
-  await (await record(alice)).getByRole("button", {name: "Send a voice note"}).click()
+  // Sending the recording as it is needs no speech model, only somewhere to upload it.
+  await (await record(alice)).getByRole("button", {name: "Send voice note"}).click()
 
   await expect(composer(alice)).toContainText(DEFAULT_BLOSSOM_ORIGIN)
 

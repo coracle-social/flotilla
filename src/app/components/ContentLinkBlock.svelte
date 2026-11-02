@@ -1,6 +1,6 @@
 <script module lang="ts">
   import {postJson, simpleCache} from "@welshman/lib"
-  import {dufflepud} from "@app/env"
+  import {dufflepud} from "@app/core/env"
 
   // Cache previews by url so the same link isn't re-fetched across renders/instances.
   const loadPreview = simpleCache(async ([url]: [string]) => {
@@ -22,19 +22,15 @@
   import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import {AUDIO_CONTENT_TYPES, getUrlContentType, isImageUrl, VIDEO_CONTENT_TYPES} from "@lib/media"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import ContentLinkBlockAudio from "@app/components/ContentLinkBlockAudio.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
-  import {pushModal} from "@app/modal"
-  import {PLATFORM_URL, THUMBNAIL_URL} from "@app/env"
-  import {
-    getUrlContentType,
-    AUDIO_CONTENT_TYPES,
-    IMAGE_CONTENT_TYPES,
-    VIDEO_CONTENT_TYPES,
-  } from "@app/content"
-  import {isRoomId} from "@app/rooms"
+  import ContentLinkFile from "@app/components/ContentLinkFile.svelte"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {PLATFORM_URL, THUMBNAIL_URL} from "@app/core/env"
+  import {isRoomId} from "@app/features/spaces/rooms"
 
   type Props = {
     url: string
@@ -62,8 +58,7 @@
 
   const isVideo = Boolean(url.match(/\.(mov|webm|mp4)$/)) || VIDEO_CONTENT_TYPES.includes(fileType)
 
-  const isImage =
-    Boolean(url.match(/\.(jpe?g|png|gif|webp)$/)) || IMAGE_CONTENT_TYPES.includes(fileType)
+  const isImage = isImageUrl(url, event)
 
   const getVideoPoster = (videoUrl: string): string | undefined => {
     if (Capacitor.getPlatform() === "android" && THUMBNAIL_URL) {
@@ -102,6 +97,8 @@
       <ContentLinkBlockImage {url} {event} class="m-auto max-h-96 rounded-2xl" />
     </button>
   </Link>
+{:else if fileType}
+  <ContentLinkFile {url} {event} />
 {:else}
   {#await loadPreview(url)}
     <Link {external} {href} class="my-2 block">

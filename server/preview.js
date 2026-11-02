@@ -3,7 +3,13 @@ import {Hono} from "hono"
 import {load} from "cheerio"
 import {ParsedType, parse, renderAsText, summarize} from "@welshman/content"
 import {MINUTE, ellipsize, first, identity, int, ms, sleep, tryCatch} from "@welshman/lib"
-import {displayRelayUrl, getIdFilters, normalizeRelayUrl} from "@welshman/util"
+import {
+  displayRelayUrl,
+  getIdFilters,
+  isIPAddress,
+  isShareableRelayUrl,
+  normalizeRelayUrl,
+} from "@welshman/util"
 import {
   Article,
   Classified,
@@ -13,6 +19,7 @@ import {
   ZapGoal,
   displayPubkey,
 } from "@welshman/domain"
+import {LOCAL_RELAY_URL, MockAdapter} from "@welshman/net"
 import {Domain, Network, Profiles, Relays, Rooms, createApp, makeRoomKey} from "@welshman/app"
 
 const PLATFORM_NAME = process.env.VITE_PLATFORM_NAME
@@ -21,7 +28,29 @@ const fromCsv = value => (value || "").split(",").filter(identity)
 
 const defaultRelays = fromCsv(process.env.VITE_DEFAULT_RELAYS).map(normalizeRelayUrl)
 
+// Anyone can put any host in a url or an event's tags, so the server only reaches public relays.
+const isPublicRelayUrl = url => isShareableRelayUrl(url) && !isIPAddress(url)
+
+const toRelayUrl = value => {
+  const url = tryCatch(() => normalizeRelayUrl(value))
+
+  return url && isPublicRelayUrl(url) ? url : undefined
+}
+
+// Every socket goes through here, so a relay that isn't public refuses rather than being dialed.
+const refuseRelay = url => {
+  const adapter = new MockAdapter(url, ([verb, id]) => {
+    if (verb === "REQ") {
+      setTimeout(() => adapter.receive(["CLOSED", id, "blocked: not a public relay"]))
+    }
+  })
+
+  return adapter
+}
+
 const app = createApp({
+  getAdapter: url =>
+    url === LOCAL_RELAY_URL || isPublicRelayUrl(url) ? undefined : refuseRelay(url),
   config: {
     getDefaultRelays: () => defaultRelays,
     getIndexerRelays: () => fromCsv(process.env.VITE_INDEXER_RELAYS).map(normalizeRelayUrl),
@@ -200,13 +229,16 @@ const remember = async (key, describe) => {
     return cached.metadata
   }
 
-  const metadata = await describe()
+  // A relay that stalls leaves the page to go out without a preview rather than hold it open.
+  const metadata = await Promise.race([describe(), sleep(ms(4))])
 
-  if (cache.size > 500) {
-    cache.clear()
+  if (metadata) {
+    if (cache.size > 500) {
+      cache.clear()
+    }
+
+    cache.set(key, {metadata, expiresAt: Date.now() + ms(int(5, MINUTE))})
   }
-
-  cache.set(key, {metadata, expiresAt: Date.now() + ms(int(5, MINUTE))})
 
   return metadata
 }
@@ -234,7 +266,7 @@ export const createPreview = template => {
   // A space relay answers nothing without auth, so most of these fall back to its nip-11 profile.
   const renderSpace = describe =>
     render(async (url, params) => {
-      const relayUrl = tryCatch(() => normalizeRelayUrl(params.relay))
+      const relayUrl = toRelayUrl(params.relay)
 
       if (relayUrl) {
         const space = await loadSpace(relayUrl)
@@ -248,7 +280,7 @@ export const createPreview = template => {
   preview.get(
     "/join",
     render(async url => {
-      const relayUrl = tryCatch(() => normalizeRelayUrl(url.searchParams.get("r")))
+      const relayUrl = toRelayUrl(url.searchParams.get("r"))
 
       if (relayUrl) {
         const space = await loadSpace(relayUrl)

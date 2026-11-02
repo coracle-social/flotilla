@@ -5,12 +5,12 @@
   import Cv from "@lib/components/Cv.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
-  import {reader} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
+  import {reader} from "@app/core/domain"
+  import type {FeedContext} from "@app/features/feeds"
   import RoomLink from "@app/components/RoomLink.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {makePollPath} from "@app/routes"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
@@ -20,7 +20,7 @@
 
   const {url, event, context}: Props = $props()
 
-  const path = makePollPath(url, event.id)
+  const path = pages.poll.path({url, id: event.id})
   const h = reader(Poll)(event).room()
 </script>
 

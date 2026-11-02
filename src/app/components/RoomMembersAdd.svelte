@@ -16,10 +16,10 @@
   import Confirm from "@lib/components/Confirm.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {profiles, relayMemberLists} from "@app/core"
-  import {pushToast} from "@app/toast"
-  import {pushModal} from "@app/modal"
-  import {addRoomMembers} from "@app/rooms"
+  import {profiles, relayMemberLists} from "@app/core/plugins"
+  import {pushToast} from "@app/features/toast"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {addRoomMembers} from "@app/features/spaces/rooms"
 
   type Props = {
     url: string

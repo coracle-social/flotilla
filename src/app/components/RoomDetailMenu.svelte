@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {Maybe} from "@welshman/lib"
-  import {MembershipStatus, publish} from "@welshman/app"
+  import {MembershipStatus} from "@welshman/app"
   import Pen from "@assets/icons/pen.svg?dataurl"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import Login3 from "@assets/icons/login-3.svg?dataurl"
@@ -10,12 +10,19 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
   import RoomEdit from "@app/components/RoomEdit.svelte"
-  import {app, roomLists, rooms} from "@app/core"
-  import {joinRoom, leaveRoom} from "@app/access"
-  import {deriveUserIsRoomAdmin, deriveUserRoomMembershipStatus} from "@app/rooms"
-  import {forgetSpacePage, makeSpacePath} from "@app/routes"
-  import {navigate, pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {app} from "@app/core/app"
+  import {roomLists, rooms} from "@app/core/plugins"
+  import {joinRoom, leaveRoom} from "@app/features/spaces/rooms/membership"
+  import {
+    deriveUserIsRoomAdmin,
+    deriveUserRoomMembershipStatus,
+    publishRoomList,
+  } from "@app/features/spaces/rooms"
+  import * as pages from "@app/navigation/pages"
+  import {forgetSpacePage} from "@app/navigation/history"
+  import {navigate} from "@app/navigation/navigate"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -57,16 +64,16 @@
       confirm: async () => {
         const command = await $rooms.deleteRoom(url, {h})
         const publication = command.publish()
-        const message = (await publication.settled()).getError()
+        const message = await publication.getError()
 
         if (message) {
-          $app.repository.removeEvent(publication.event.id)
+          await $app.repository.removeEvent(publication.event.id)
           pushToast({theme: "error", message})
         } else {
-          await $roomLists.removeRoom(h, url).then(publish)
+          await $roomLists.removeRoom(h, url).then(publishRoomList)
 
           forgetSpacePage(url)
-          navigate(makeSpacePath(url))
+          navigate(pages.space.path({url}))
         }
       },
     })

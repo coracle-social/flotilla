@@ -11,12 +11,13 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
-  import type {FeedContext} from "@app/feeds"
+  import type {FeedContext} from "@app/features/feeds"
   import ContentActions from "@app/components/ContentActions.svelte"
-  import {handles, profiles} from "@app/core"
-  import {highlightedEvent, makeEventPermalink} from "@app/routes"
-  import {pushModal} from "@app/modal"
-  import {clip} from "@app/toast"
+  import {handles, profiles} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
+  import {highlightedEvent, makeEventPermalink} from "@app/navigation/locations"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {clip} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -57,7 +58,7 @@
         <Button onclick={openProfile} class="text-bold truncate min-w-0 text-sm">
           {$profileDisplay}
         </Button>
-        {#if $handle}
+        {#if $handle && !HIDE_NOSTR}
           <span class="truncate min-w-0 text-xs opacity-75">{displayHandle($handle)}</span>
         {/if}
         {#if isOp}

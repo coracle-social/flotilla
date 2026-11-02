@@ -31,6 +31,7 @@ If you would like to be interoperable with Flotilla, please check out
 Create an `.env.local` file to override any of the values in `.env`:
 
 **Platform branding**
+
 - `VITE_PLATFORM_URL` - The url where the app will be hosted
 - `VITE_PLATFORM_NAME` - The name of the app
 - `VITE_PLATFORM_LOGO` - A logo url for the app. Can be a local path or https link. Must be a PNG file.
@@ -41,11 +42,14 @@ Create an `.env.local` file to override any of the values in `.env`:
 - `VITE_PLATFORM_PRIVACY` - URL to your privacy policy page
 - `VITE_PLATFORM_LOGEE` - A hex pubkey which will receive logs users send from their privacy settings
 - `VITE_THEME` - The visual preset components are styled with: `clay`, `flat`, `navy`, or `nature`
+- `VITE_HIDE_NOSTR` - Set to `true` to hide protocol details (relay addresses and settings, public keys, nostr addresses, raw event data) for people who don't need to know the app runs on nostr.
 
 **Platform mode**
+
 - `VITE_PLATFORM_RELAYS` - A comma-separated list of relay urls that will make flotilla operate in "platform mode". Disables all space browse/add/select functionality and makes the first platform relay the home page.
 
 **Defaults**
+
 - `VITE_DEFAULT_PUBKEYS` - A comma-separated list of hex pubkeys for bootstrapping web of trust
 - `VITE_DEFAULT_SPACES` - A comma-separated list of relay urls that new users will be automatically joined to on signup. Each one may optionally include an invite code, delimited by `|`, e.g. `my.space.com|CODE`.
 - `VITE_DEFAULT_RELAYS` - A comma-separated list of relay urls used as default outbox/inbox relays
@@ -54,6 +58,7 @@ Create an `.env.local` file to override any of the values in `.env`:
 - `VITE_DEFAULT_BLOSSOM_SERVERS` - A comma-separated list of blossom server urls used for file uploads
 
 **Infrastructure**
+
 - `VITE_INDEXER_RELAYS` - A comma-separated list of relay urls used for user profile/key lookup
 - `VITE_SIGNER_RELAYS` - A comma-separated list of relay urls used for NIP-55 remote signers
 - `VITE_BLOCKED_RELAYS` - A comma-separated list of relay urls that will be blocked
@@ -61,10 +66,8 @@ Create an `.env.local` file to override any of the values in `.env`:
 - `VITE_PUSH_BRIDGE` - WebSocket URL of the push notification relay bridge
 - `VITE_POMADE_SIGNERS` - A comma-separated list of Pomade signer server URLs (3+ required to enable email signup)
 - `VITE_THUMBNAIL_URL` - URL of the image thumbnail service
-- `VITE_CARTO_BASEMAP_KEY` - A CARTO Basemaps key for the member map's tiles, free from https://carto.com/basemaps/apikey/. Without one the tiles carry an "API key required" watermark.
-- `VITE_CARTO_BASEMAP_KEY_LOCALHOST` - The CARTO key for the native apps and the dev server, which both serve from `localhost`. CARTO authorizes a key against a list of domains and refuses `localhost` on one that also names a real domain, so this is a second key.
 
-These values **won't** be used for a built version. Instead, env variables should be provided to `scripts/build/app.sh` directly or to the built container.
+A build inlines these, so a built app and the published container carry the values they were built with. `VITE_*` in the environment of `scripts/build/app.sh` takes precedence over both files.
 
 If you're deploying a custom version of flotilla, be sure to remove the `plausible.coracle.social` script from `app.html`. This sends analytics to a server hosted by the developer.
 
@@ -212,17 +215,17 @@ step that fails stops the run and prints the command to pick up from there. To r
 the Release workflow by hand from a branch with the fix, naming the steps; it releases
 `package.json`'s version without moving its tag, and skips the container image.
 
-| step | run by | what it does |
-| --- | --- | --- |
-| `web` | local | `scripts/build/app.sh`: web bundle, `cap sync`, generated icons and splash screens |
-| `apk` | local | `assembleRelease` signed with the distribution key, renamed to the path in `zapstore.yaml` |
-| `play` | local | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft (or `PLAY_STATUS`) |
-| `ios` | local | `cap build ios` to an archive and IPA, uploaded with `altool`, then attached to the App Store version with its release notes once processed |
-| `fdroid` | ci | builds the tag with F-Droid's recipe in their buildserver image and uploads the unsigned apk to the `flotilla-fdroid` package |
-| `fdroid-sign` | local | waits for that apk, signs it with the distribution key, and uploads it beside it for F-Droid to verify its own build against |
-| `desktop` | both | `package:desktop:*` for this OS: signed and notarized macOS from a Mac, Linux and Windows from Linux |
-| `gitea` | both | creates a draft release from the changelog, attaches what this run built, and publishes it once every platform is there |
-| `zapstore` | local | `zsp publish --skip-preview --quiet zapstore.yaml` |
+| step          | run by | what it does                                                                                                                                |
+| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `web`         | local  | `scripts/build/app.sh`: web bundle, `cap sync`, generated icons and splash screens                                                          |
+| `apk`         | local  | `assembleRelease` signed with the distribution key, renamed to the path in `zapstore.yaml`                                                  |
+| `play`        | local  | `bundleRelease` signed with the upload key, uploaded to a Play track as a draft (or `PLAY_STATUS`)                                          |
+| `ios`         | local  | `cap build ios` to an archive and IPA, uploaded with `altool`, then attached to the App Store version with its release notes once processed |
+| `fdroid`      | ci     | builds the tag with F-Droid's recipe in their buildserver image and uploads the unsigned apk to the `flotilla-fdroid` package               |
+| `fdroid-sign` | local  | waits for that apk, signs it with the distribution key, and uploads it beside it for F-Droid to verify its own build against                |
+| `desktop`     | both   | `package:desktop:*` for this OS: signed and notarized macOS from a Mac, Linux and Windows from Linux                                        |
+| `gitea`       | both   | creates a draft release from the changelog, attaches what this run built, and publishes it once every platform is there                     |
+| `zapstore`    | local  | `zsp publish --skip-preview --quiet zapstore.yaml`                                                                                          |
 
 Gitea's latest release is the desktop update feed, so the release stays a draft, hidden from
 updaters and Obtainium, until it has the APK and all three `latest*.yml` manifests. Whichever run
@@ -245,15 +248,15 @@ because it installs and builds from scratch.
 These go in `.env.local`, which is gitignored. `pnpm release:local --check` lists whichever are missing
 along with how to get them.
 
-| variable | what it is |
-| --- | --- |
-| `GITEA_TOKEN` | gitea access token with `write:repository` and `write:package`, from Settings → Applications |
-| `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEYSTORE_ALIAS` | the key APKs outside the app stores are signed with; it can never change without breaking updates |
-| `PLAY_KEYSTORE_PATH`, `PLAY_KEYSTORE_PASSWORD`, `PLAY_KEYSTORE_ALIAS` | the Play upload key |
-| `PLAY_SERVICE_ACCOUNT` | path to a service account json with the Release manager role, from Play Console → Setup → API access |
-| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH` | App Store Connect API key with the App Manager role, from Users and Access → Integrations; also notarizes the macOS app |
-| `CSC_NAME` | the Developer ID Application certificate in the keychain that signs the macOS app, without its prefix |
-| `SIGN_WITH` | nostr key for zapstore: an nsec, a `bunker://` url, or `browser` |
+| variable                                                                       | what it is                                                                                                              |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `GITEA_TOKEN`                                                                  | gitea access token with `write:repository` and `write:package`, from Settings → Applications                            |
+| `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEYSTORE_ALIAS` | the key APKs outside the app stores are signed with; it can never change without breaking updates                       |
+| `PLAY_KEYSTORE_PATH`, `PLAY_KEYSTORE_PASSWORD`, `PLAY_KEYSTORE_ALIAS`          | the Play upload key                                                                                                     |
+| `PLAY_SERVICE_ACCOUNT`                                                         | path to a service account json with the Release manager role, from Play Console → Setup → API access                    |
+| `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_PATH`                                  | App Store Connect API key with the App Manager role, from Users and Access → Integrations; also notarizes the macOS app |
+| `CSC_NAME`                                                                     | the Developer ID Application certificate in the keychain that signs the macOS app, without its prefix                   |
+| `SIGN_WITH`                                                                    | nostr key for zapstore: an nsec, a `bunker://` url, or `browser`                                                        |
 
 Add `_ALIAS_PASSWORD` to either keystore prefix when the alias has its own password. `PLAY_TRACK`
 (default `production`) and `PLAY_STATUS` (default `draft`) choose where a Play upload lands.
@@ -290,12 +293,59 @@ docker run -d -p 3000:3000 gitea.coracle.social/coracle/flotilla:latest
 
 Either one serves the build through `server.js`, which fills in the link preview for each page from the space, person or note its url names.
 
-Alternatively, you can copy the build files into a directory of your choice and serve it yourself, in which case every page gets the platform's own preview:
+Alternatively, you can copy the build files out of the image and serve them yourself, in which case every page gets the platform's own preview:
 
 ```sh
-mkdir ./mount
-docker run -v ./mount:/app/mount gitea.coracle.social/coracle/flotilla:latest bash -c 'cp -r build/* mount'
+docker create --name flotilla-build gitea.coracle.social/coracle/flotilla:latest
+docker cp flotilla-build:/app/build ./build
+docker rm flotilla-build
 ```
+
+The published image is built from this repository's `.env`, so it points at app.flotilla.social and its relays. Your own relays or branding need an image of your own:
+
+```sh
+git clone https://gitea.coracle.social/coracle/flotilla.git
+cd flotilla
+# .dockerignore excludes .env.local, so put your values in .env
+docker build -t flotilla .
+docker run -d -p 3000:3000 flotilla
+```
+
+## Speech
+
+Read Out Loud and dictation go through a provider, and `src/app/features/inference` holds
+one adapter per provider plus the registry that picks between them. A provider
+declares the tasks it can serve, so adding one is a file there and a line in that
+registry.
+
+OpenRouter serves both tasks and needs an API key, which flotilla keeps in your
+encrypted settings and asks for the first time you use either feature. Content
+Settings holds that key too, so you can replace or clear it there. Speech is
+Kokoro-82M with the English `am_michael` voice; transcription is Whisper Large v3
+Turbo. Each use costs a fraction of a cent.
+
+This device serves transcription only, since generating speech on a phone is
+slower than playing it. Content Settings downloads Whistle and removes it again,
+and a downloaded model is what moves dictation off OpenRouter: recordings are
+transcribed where they were made and your voice goes nowhere. Sending a voice
+note still uploads the recording to your media server.
+
+Whistle reads English, German, French, Spanish, Italian, Dutch and Polish, and
+answers any other language as fluent nonsense in one of those. A transcript it is
+not confident in is therefore refused rather than used, and the recording goes to
+OpenRouter when a key is saved. With no key, dictation says which languages the
+device reads.
+
+That download is 17 MB from Hugging Face, the engine and the weights together,
+cached per device and revision, so clearing site storage means downloading it
+again. Offline use needs both the app assets and the model files still cached.
+The worker runs one recording at a time, holds the model for two minutes
+afterwards and releases it when idle. Transcription takes recordings up to five
+minutes and reads anything past 30 seconds as consecutive windows; a longer
+recording can still be sent as a voice note.
+
+The model is a pinned revision of `Cactus-Compute/whistle`, run by the
+`Cactus-Compute/needle3` wasm engine, both Apache-2.0.
 
 ## License
 

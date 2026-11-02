@@ -5,7 +5,7 @@ description: "Use this skill when working with @welshman/content: parsing nostr 
 
 # welshman/content — Note Content Parsing
 
-`@welshman/content` parses raw nostr event content strings into structured typed elements (links, profiles, events, topics, media, etc.) and renders them back to text or HTML. It is a standalone package with no welshman sibling dependencies — it sits at the bottom of the stack and can be used independently or alongside `@welshman/app`, `@welshman/net`, etc.
+`@welshman/content` parses nostr event content into typed elements (links, profiles, events, topics, media, etc.) and renders them back to text or HTML. It depends on no other welshman package.
 
 ## Installation
 
@@ -24,8 +24,8 @@ yarn add @welshman/content
 |--------|-------------|
 | `parse({ content?, tags? })` | Main entry point. Parses a content string (and optional event tags) into a `Parsed[]` array. Falls back to the `alt` tag if content is empty. |
 | `truncate(content, opts?)` | Truncates a `Parsed[]` array, appending an `Ellipsis` element. Leaves content unchanged if it fits within `maxLength`. |
-| `reduceLinks(content)` | Collapses consecutive block-level links (each on its own line) into a single `LinkGrid` element for gallery rendering. |
-| `urlIsMedia(url)` | Returns `true` if the URL has a media file extension (jpg, png, gif, webp, mp4, etc.). |
+| `reduceLinks(content)` | Collapses consecutive block-level links (each on its own line) into a single `LinkGrid` element. |
+| `urlIsMedia(url)` | Returns `true` if the URL string has an image, audio or video extension (jpg, png, gif, webp, mp3, mp4, etc.). |
 
 ### Parsed Types
 
@@ -36,14 +36,14 @@ yarn add @welshman/content
 | `Text` | `string` | Plain text |
 | `Newline` | `string` | One or more `\n` characters |
 | `Topic` | `string` | Hashtag text without the `#`; numeric-only tags are skipped |
-| `Command` | `{ command: string, pubkey?: string }` | A NIP-CD invocation (`/kick`, `/kick@npub1…`), only ever at the start of the content; `pubkey` is the executor the qualifier names |
-| `Link` | `{ url: URL, meta: Record<string, string> }` | URLs with any scheme (http, https, ftp, ws, wss, etc.) and bare domains without a protocol; `meta` is populated from `imeta` tags or URL hash params |
+| `Command` | `{ command: string, pubkey?: string }` | A NIP-CD invocation (`/kick`, `/kick@npub1…`) at the start of the content; `pubkey` is the executor the qualifier names |
+| `Link` | `{ url: URL, meta: Record<string, string> }` | `http`, `https`, `ws` and `wss` URLs only, since renderers put the url in an href; other schemes (`javascript:`, `data:`, `ftp:`, …), bare domains and URLs containing `..` are not links. `meta` is populated from `imeta` tags and URL hash params |
 | `LinkGrid` | `{ links: ParsedLinkValue[] }` | Produced by `reduceLinks`; a collection of adjacent block links |
-| `Profile` | `ProfilePointer` (`{ pubkey, relays? }`) | nostr:npub / nostr:nprofile / @nostr:npub / @nostr:nprofile references (the `nostr:` prefix is required) |
+| `Profile` | `ProfilePointer` (`{ pubkey, relays? }`) | npub / nprofile references, with optional `@` and `nostr:` prefixes |
 | `Event` | `EventPointer` (`{ id, relays?, author?, kind? }`) | note / nevent references |
 | `Address` | `AddressPointer` (`{ identifier, pubkey, kind, relays? }`) | naddr references |
 | `Emoji` | `{ name: string, url?: string }` | `:shortcode:` — `url` resolved from `emoji` tags |
-| `Room` | `ParsedRoomValue` (`{ url, room }`) | A NIP-29 room reference written as `relay.example.com'roomid` (an apostrophe or `’` between host and room id). The url is normalized to include a protocol and trailing slash; possessives like `example.com's` are skipped |
+| `Room` | `ParsedRoomValue` (`{ url, room }`) | A NIP-29 room reference written as `relay.example.com'roomid` (an apostrophe or `’` between host and room id). The url is normalized to include a protocol and trailing slash. Possessives like `example.com's` are skipped |
 | `Code` | `string` | Backtick inline code or triple-backtick blocks |
 | `Cashu` | `string` | cashu: token strings |
 | `Invoice` | `string` | Bare lightning invoice string (without `lightning:` prefix); the `lightning:` prefix is in `raw` |
@@ -54,7 +54,7 @@ Every `Parsed` element also has a `raw: string` field holding the original match
 
 ### Type Guards
 
-All guards narrow the union type:
+All guards narrow the `Parsed` union:
 
 ```
 isAddress  isCashu    isCode     isCommand  isEllipsis
@@ -63,14 +63,14 @@ isLink     isLinkGrid isNewline  isProfile  isRoom
 isText     isTopic
 ```
 
-`isImage(parsed)` — special guard: true only for `ParsedLink` elements whose URL ends in `.jpg/.jpeg/.png/.gif/.webp`.
+`isImage(parsed)` is true only for `ParsedLink` elements whose URL ends in `.jpg/.jpeg/.png/.gif/.webp`.
 
 ### Rendering
 
 | Export | Description |
 |--------|-------------|
-| `renderAsText(parsed, options?)` | Renders `Parsed \| Parsed[]` to a `Renderer`; call `.toString()` to get a string. Text rendering shows links as full raw URLs and entities as their full bech32 string (the `renderEntity` truncation is discarded in text mode since `renderLink` returns the href). |
-| `renderAsHtml(parsed, options?)` | Same, but produces sanitized HTML with `<a>` tags. Default `entityBase` is `https://njump.me/`. |
+| `renderAsText(parsed, options?)` | Renders `Parsed \| Parsed[]` to a `Renderer`; call `.toString()` to get a string. Links render as full URLs and entities as their full bech32 string, because the text `renderLink` returns the href and drops the `renderEntity` display text. |
+| `renderAsHtml(parsed, options?)` | Same, but produces escaped HTML with `<a>` tags and sanitized hrefs. Default `entityBase` is `https://njump.me/`. |
 | `render(parsed, renderer)` | Low-level: renders into an existing `Renderer` instance. |
 | `makeTextRenderer(options?)` | Creates a `Renderer` pre-configured for text output. |
 | `makeHtmlRenderer(options?)` | Creates a `Renderer` pre-configured for HTML output. |
@@ -83,6 +83,7 @@ isText     isTopic
 | Field | Default (HTML) | Description |
 |---|---|---|
 | `newline` | `"\n"` | String emitted for each newline character |
+| `escapeText(value)` | Escapes HTML via `innerText` | Applied to every text run (identity for text rendering) |
 | `entityBase` | `"https://njump.me/"` | Base URL prepended to bech32 entity strings |
 | `renderLink(href, display)` | `<a href=... target=_blank>display</a>` | Custom link HTML/text |
 | `renderEntity(entity)` | `entity.slice(0, 16) + "…"` | Display text for entity links |
@@ -111,7 +112,7 @@ const html = renderAsHtml(parsed, {
   entityBase: 'https://njump.me/',
   renderEntity: (entity) => entity.slice(0, 12) + '…',
 }).toString()
-// → 'Hello nostr! Check out <a href="https://njump.me/nprofile1..." target="_blank">nprofile1qqsj…</a>'
+// → 'Hello nostr! Check out <a href="https://njump.me/nprofile1..." target="_blank">nprofile1qqs…</a>'
 ```
 
 ### Truncate long notes for a feed preview
@@ -130,7 +131,7 @@ const html = renderAsHtml(preview).toString()
 ```typescript
 import { parse, ParsedType, renderAsText, summarize } from '@welshman/content'
 
-// A notification body or a speech synthesizer wants each entity named as it reads
+// Names each entity, for a notification body or a speech synthesizer
 const summary = renderAsText(
   summarize(parse({ content, tags }), p => {
     if (p.type === ParsedType.Profile) {
@@ -216,22 +217,22 @@ const emojiElements = parsed.filter(isEmoji)
 ## Integration Notes
 
 - `@welshman/content` has no dependencies on other welshman packages. It depends on `@braintree/sanitize-url` as a direct dependency and requires `nostr-tools` ^2.x as a peer dependency (consumers must install it).
-- In `@welshman/app`, content parsing is typically done at the component layer. The `parse` function is called with `event.content` and `event.tags` together so that `imeta` and `emoji` tags are resolved.
-- `ParsedLinkValue.meta` is populated from `imeta` tags (NIP-92). When an event carries rich media metadata, the parsed link's `meta` object will include fields like `url`, `m` (MIME type), `blurhash`, `dim`, etc.
-- `reduceLinks` should be called after `parse` and before `truncate` if you want link grids to count as single media units for truncation purposes.
+- Pass `event.content` and `event.tags` to `parse` together so that `imeta`, `emoji` and legacy mention tags are resolved.
+- `ParsedLinkValue.meta` is populated from `imeta` tags (NIP-92). When an event carries media metadata, `meta` includes fields like `url`, `m` (MIME type), `blurhash` and `dim`.
+- Call `reduceLinks` after `parse` and before `truncate` so that a link grid counts as a single media unit when truncating.
 
 ## Gotchas & Tips
 
 - **`parse` trims content** before processing. Leading/trailing whitespace in the raw content string is dropped.
-- **`parse` fallback**: if `content` is empty or whitespace, `parse` will use the first `alt` tag value instead. This is useful for kind-1 reposts and other events with alternative text.
-- **`truncate` is non-destructive** when content is short: it returns the original array unchanged if the total estimated size is under `maxLength`.
-- **`reduceLinks` requires block-level links**: a link is only pulled into a grid if it appears at the start of a block (i.e. preceded by a newline or at the very beginning). Inline links in the middle of a sentence are left as `ParsedLink`.
-- **`isImage` is stricter than `urlIsMedia`**: `isImage` only matches `.jpg/.jpeg/.png/.gif/.webp` — it will not match `.mp4` or `.webm`. Use `urlIsMedia` directly if you need to detect video; note that `urlIsMedia` takes a URL string, not a `Parsed` element — usage would be: `urlIsMedia(parsed.value.url.toString())`.
-- **`Renderer.toString()`** is how you get the final string out. `renderAsHtml` and `renderAsText` both return a `Renderer` instance, not a string.
-- **`LinkGrid` is not rendered by default renderers**: `renderOne` has no case for `ParsedType.LinkGrid`. You must handle it yourself when building a custom UI (e.g. render each `value.links` entry as an image or card grid). `summarize` does name it ("some images"), so a summary is not affected.
+- **`parse` fallback**: if `content` is empty or whitespace, `parse` uses the first `alt` tag value instead.
+- **`truncate` returns the original array** if the total estimated size is under `maxLength`.
+- **`reduceLinks` requires block-level links**: a link joins a grid only at the start of a block (after a newline or at the very beginning). Inline links in the middle of a sentence stay `ParsedLink`.
+- **`isImage` is stricter than `urlIsMedia`**: `isImage` only matches `.jpg/.jpeg/.png/.gif/.webp`, not `.mp4` or `.webm`. `urlIsMedia` detects video too, and takes a URL string rather than a `Parsed` element: `urlIsMedia(parsed.value.url.toString())`.
+- **`renderAsHtml` and `renderAsText` return a `Renderer`**, and `Renderer.toString()` gives the string.
+- **`LinkGrid` is not rendered by the default renderers**, because `renderOne` has no case for `ParsedType.LinkGrid`. A custom UI renders each `value.links` entry itself, e.g. as an image or card grid. `summarize` names it ("some images").
 - **Legacy mentions** (`#[0]`, `#[1]`) are parsed automatically from the `tags` array and emitted as `ParsedProfile` or `ParsedEvent` elements.
 - **Numeric hashtags are skipped**: `#42` will not produce a `Topic` element.
-- **A `Command` is syntax, not a promise that anyone answers to it**: the parser has no idea which NIP-CD definitions exist, so `/nonsense` parses as a `Command` too. Match `value.command` (and `value.pubkey`, when the invocation names an executor) against the definitions you have, and render the element's `raw` as text when nothing matches.
-- **Only the start of the content is an invocation**: a slash later in the text is punctuation or part of a path, so `look in /etc/passwd` produces no `Command`.
-- **`ParsedRoom` is emitted by `renderOne` as plain text** (`r.addText(p.raw)`) rather than a link, because the renderer has no way to know a room's display name. Handle `isRoom` yourself when building a UI, the same as `isLinkGrid`.
-- **Email matching** strips a leading `mailto:` — the resulting `ParsedEmail.value` is always the bare address string.
+- **Any `/trigger` parses as a `Command`**, because the parser does not know which NIP-CD definitions exist, so `/nonsense` is a `Command` too. Match `value.command` (and `value.pubkey`, when the invocation names an executor) against the known definitions, and render the element's `raw` as text when nothing matches. A qualifier that names no valid pubkey leaves the whole invocation as text.
+- **Only the start of the content is an invocation**, so `look in /etc/passwd` produces no `Command`.
+- **`renderOne` renders `ParsedRoom` as plain text** (`r.addText(p.raw)`) rather than a link, because the renderer does not know a room's display name. A UI handles `isRoom` itself, the same as `isLinkGrid`.
+- **Email matching strips a leading `mailto:`**, so `ParsedEmail.value` is always the bare address.

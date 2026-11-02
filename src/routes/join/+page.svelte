@@ -2,8 +2,8 @@
   import {page} from "$app/stores"
   import Dialog from "@lib/components/Dialog.svelte"
   import SpaceInviteAccept from "@app/components/SpaceInviteAccept.svelte"
-  import {goToHome} from "@app/routes"
-  import {getModal} from "@app/modal"
+  import {goToHome} from "@app/navigation/history"
+  import {getModal} from "@app/navigation/dialogs"
 
   const children = {
     component: SpaceInviteAccept,

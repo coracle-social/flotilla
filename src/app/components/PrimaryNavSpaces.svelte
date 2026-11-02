@@ -6,8 +6,10 @@
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import DragList from "@lib/components/DragList.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
-  import {reorderSpaceUrls, userSpaceUrls} from "@app/rooms"
-  import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/env"
+  import {homeNotificationsUnread} from "@app/features/activity"
+  import {reorderSpaceUrls} from "@app/features/spaces/rooms"
+  import {userSpaceUrls} from "@app/features/spaces"
+  import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/env"
 
   const fadeSize = 24
 
@@ -39,13 +41,13 @@
 </script>
 
 <div class={cx("flex min-h-0 flex-col items-center", {"flex-1": PLATFORM_RELAYS.length === 0})}>
+  <PrimaryNavItem title="Home" href="/home" notification={$homeNotificationsUnread}>
+    <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={10} />
+  </PrimaryNavItem>
+  <Divider class="w-full" />
   {#each PLATFORM_RELAYS as url (url)}
     <PrimaryNavItemSpace {url} />
   {:else}
-    <PrimaryNavItem title="Home" href="/home">
-      <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={10} />
-    </PrimaryNavItem>
-    <Divider class="w-full" />
     <div
       bind:this={element}
       onscroll={measure}

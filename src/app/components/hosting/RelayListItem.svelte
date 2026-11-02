@@ -4,8 +4,8 @@
   import {ucFirst} from "@lib/util"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Link from "@lib/components/Link.svelte"
-  import {canonicalRelayHost, getHostedRelayUrl, type HostedRelay} from "@app/hosting"
-  import {makeSpacePath} from "@app/routes"
+  import {canonicalRelayHost, getHostedRelayUrl, type HostedRelay} from "@app/features/hosting"
+  import * as pages from "@app/navigation/pages"
 
   type Props = {
     relay: HostedRelay
@@ -17,7 +17,7 @@
 
   const name = $derived(relay.info_name || relay.subdomain)
   const host = $derived(canonicalRelayHost(relay))
-  const href = $derived(makeSpacePath(getHostedRelayUrl(relay), "admin"))
+  const href = $derived(pages.spaceAdmin.path({url: getHostedRelayUrl(relay)}))
 </script>
 
 {#snippet details()}

@@ -20,13 +20,13 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {writer} from "@app/core"
-  import {pushToast} from "@app/toast"
-  import {publishToSpace} from "@app/rooms"
-  import {makeEditor} from "@app/editor"
-  import {DraftKey} from "@app/drafts"
-  import {compressFileForUpload, uploadFile} from "@app/uploads"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {writer} from "@app/core/domain"
+  import {pushToast} from "@app/features/toast"
+  import {publishToSpace} from "@app/features/spaces/rooms"
+  import {makeEditor} from "@app/features/editor"
+  import {DraftKey} from "@app/features/drafts"
+  import {compressFileForUpload, uploadFile} from "@app/features/uploads"
 
   type Values = {
     title: string

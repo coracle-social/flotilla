@@ -5,8 +5,8 @@
   import type {TrustedEvent} from "@welshman/util"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {user} from "@app/core"
-  import {decryptUrl, getUrlTags} from "@app/content"
+  import {decryptUrl, getUrlFileName, getUrlTags} from "@lib/media"
+  import {user} from "@app/core/user"
 
   type Props = {
     url: string
@@ -21,10 +21,7 @@
   // Fallback to filename if hash was omitted from the message for interoperability
   const hash = tagValue(tagSpec("x"), meta) || url.split(/[\/\.]/).slice(-2)[0]
   const controller = new AbortController()
-  const fileName =
-    tagValue(tagSpec("filename"), meta) ||
-    tagValue(tagSpec("name"), meta) ||
-    decodeURIComponent(new URL(url).pathname.split("/").filter(Boolean).at(-1) || "image")
+  const fileName = getUrlFileName(url, event)
 
   const revokeSrc = () => {
     if (src.startsWith("blob:")) {

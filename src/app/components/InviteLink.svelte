@@ -10,11 +10,13 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import QRCode from "@app/components/QRCode.svelte"
-  import {deriveRelayAuthError, makeInviteLink, publishRoomInvite} from "@app/access"
-  import {relayManagement} from "@app/core"
-  import {PLATFORM_NAME} from "@app/env"
-  import {spaceManagement} from "@app/management"
-  import {clip} from "@app/toast"
+  import {makeInviteLink} from "@app/features/spaces/invites"
+  import {publishRoomInvite} from "@app/features/spaces/rooms/membership"
+  import {relayManagement} from "@app/core/plugins"
+  import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
+  import {PLATFORM_NAME} from "@app/core/env"
+  import {spaceManagement} from "@app/features/spaces/management"
+  import {clip} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -23,7 +25,7 @@
 
   const {url, h}: Props = $props()
 
-  const authError = deriveRelayAuthError(url)
+  const access = deriveRelayAccess(url)
 
   const copyInvite = () => clip(invite)
 
@@ -100,11 +102,11 @@
     <p class="flex justify-center items-center">
       <Spinner {loading}>Requesting an invite link...</Spinner>
     </p>
-  {:else if $authError && /failed|timeout|network/i.test($authError)}
+  {:else if $access.status === RelayAccessStatus.Denied && /failed|timeout|network/i.test($access.reason)}
     <p class="flex justify-center items-center">
       Unable to reach the space. Please check your connection and try again.
     </p>
-  {:else if $authError || roomInviteError}
+  {:else if $access.status === RelayAccessStatus.Denied || roomInviteError}
     <p class="flex justify-center items-center">
       {#if h}
         Oops! It looks like you're not allowed to create invites for this room.

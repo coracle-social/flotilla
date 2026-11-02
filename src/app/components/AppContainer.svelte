@@ -4,10 +4,10 @@
   import Landing from "@app/components/Landing.svelte"
   import Toast from "@app/components/Toast.svelte"
   import CallBanner from "@app/components/CallBanner.svelte"
-  import SpeechBanner from "@app/components/SpeechBanner.svelte"
+  import ReadAloudBanner from "@app/components/ReadAloudBanner.svelte"
   import PrimaryNav from "@app/components/PrimaryNav.svelte"
-  import {app} from "@app/core"
-  import {getModal} from "@app/modal"
+  import {app} from "@app/core/app"
+  import {getModal} from "@app/navigation/dialogs"
 
   type Props = {
     children: Snippet
@@ -22,8 +22,8 @@
   })
 </script>
 
-<div class="flex h-screen flex-col overflow-hidden" inert={blockingModal}>
-  <div class="flex min-h-0 flex-1 overflow-hidden">
+<div class="flex h-dvh flex-col overflow-hidden" inert={blockingModal}>
+  <div class="relative flex min-h-0 flex-1 overflow-hidden">
     {#if $app.user?.pubkey}
       <PrimaryNav>
         {@render children?.()}
@@ -33,6 +33,8 @@
     {/if}
   </div>
   <CallBanner />
-  <SpeechBanner />
+  <ReadAloudBanner />
+  <!-- The mobile nav is fixed over the page, so its footprint is reserved once here. -->
+  <div class="h-[calc(var(--saib)+var(--mobile-nav-height))] shrink-0"></div>
 </div>
 <Toast />

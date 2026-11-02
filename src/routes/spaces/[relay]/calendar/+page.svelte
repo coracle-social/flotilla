@@ -16,12 +16,13 @@
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import CalendarAgenda from "@app/components/CalendarAgenda.svelte"
   import CalendarMonth from "@app/components/CalendarMonth.svelte"
   import CalendarWeek from "@app/components/CalendarWeek.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import type {CalendarView} from "@app/calendar"
+  import type {CalendarView} from "@app/features/spaces/calendar"
   import {
     addDays,
     addMonths,
@@ -33,16 +34,15 @@
     groupEventsByDay,
     isCurrentMonth,
     isCurrentWeek,
-  } from "@app/calendar"
-  import {getModal, pushModal} from "@app/modal"
-  import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter} from "@app/content"
-  import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
+  } from "@app/features/spaces/calendar"
+  import {getModal, pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
+  import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.calendar.decode(params)
   const context = makeFeedContext({relays: [url]})
 
   const makeEvent = () => pushModal(CalendarEventCreate, {url})

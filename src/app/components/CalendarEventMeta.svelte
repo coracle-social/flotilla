@@ -4,7 +4,7 @@
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import MapPoint from "@assets/icons/map-point.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
   import ProfileLink from "@app/components/ProfileLink.svelte"
 
   type Props = {

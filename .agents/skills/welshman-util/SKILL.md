@@ -1,11 +1,11 @@
 ---
 name: welshman-util
-description: "Use this skill when working with @welshman/util: nostr event types, kinds, tags, filters, addresses, keys, NIPs (13/42/86/98), relay urls, lightning, wallets, slash commands, or any core nostr data structure. Also covers relay selection — the RelaySelection routing DSL, Resolver, RelayScenario and fallback policies all live here (there is no @welshman/router package). (Profiles, lists, handlers, and rooms now live in @welshman/domain as Reader/Writer classes.)"
+description: "Use this skill when working with @welshman/util: nostr event types, kinds, tags, filters, addresses, keys, NIPs (13/42/86/98), relay urls, lightning, wallets, slash commands, or any core nostr data structure. Also covers relay selection: the RelaySelection routing DSL, Resolver, RelayScenario and fallback policies. Profiles, lists, handlers, and rooms are Reader/Writer classes in @welshman/domain."
 ---
 
 # welshman/util — Core Nostr Utilities
 
-`@welshman/util` is the foundational layer of the welshman nostr stack, providing types, constants, and helpers for every nostr primitive: events, kinds, tags, filters, addresses, zaps, relays, and Lightning wallet integration. Higher level welshman packages (`@welshman/net`, `@welshman/app`, `@welshman/store`, etc.) depend on the types and utilities defined here.
+`@welshman/util` is the bottom layer of the welshman nostr stack. It provides types, constants, and helpers for events, kinds, tags, filters, addresses, relays, relay selection, and Lightning. The higher-level welshman packages depend on it.
 
 ## Installation
 
@@ -39,6 +39,7 @@ yarn add @welshman/util
 |--------|-------------|
 | `verifiedSymbol` | Symbol (re-exported from `nostr-tools`) used as a key on events; set `event[verifiedSymbol] = true` to skip signature re-validation |
 | `makeEvent(kind, opts?)` | Create a `StampedEvent` with optional content, tags, created_at |
+| `parseVerifiedEvent(json, kind)` | Parse an event embedded as JSON, returning it only if it is a validly signed event of `kind` |
 | `verifyEvent(event)` | Verify event signature; returns `false` for unsigned events (no `sig` field) even if `verifiedSymbol` is set, because `isSignedEvent` is checked first; returns `true` immediately for signed events where `event[verifiedSymbol]` is already set |
 | `getIdentifier(event)` | Get `d` tag value |
 | `getIdOrAddress(event)` | Returns address string for replaceable events, id otherwise |
@@ -50,10 +51,9 @@ yarn add @welshman/util
 | `isReplaceable(event)` | True for plain or parameterized replaceable |
 | `isPlainReplaceable(event)` | True for kinds 10000–19999 and metadata/contacts |
 | `isParameterizedReplaceable(event)` | True for kinds 30000–39999 |
-| `sortEventsAsc(events)` / `sortEventsDesc(events)` | Sort by `created_at` |
 | `asEventTemplate`, `asStampedEvent`, `asOwnedEvent`, `asHashedEvent`, `asSignedEvent` | Narrow an event down to the fields of a given level |
 
-NIP-10 and NIP-22 threading lives on the `Note` and `Comment` classes in `@welshman/domain`, not here. The free helpers `getAncestors`, `getParentIdOrAddr`, `isChildOf`, `getReplyTags` and `getCommentTags` do not exist in this package.
+NIP-10 and NIP-22 threading lives on the `Note` and `Comment` classes in `@welshman/domain`.
 
 ### Type Guards
 
@@ -93,7 +93,7 @@ DELETE = 5             REPOST = 6            REACTION = 7
 BADGE_AWARD = 8        MESSAGE = 9           THREAD = 11
 SEAL = 13              DIRECT_MESSAGE = 14   DIRECT_MESSAGE_FILE = 15
 GENERIC_REPOST = 16    PICTURE_NOTE = 20     VANISH = 62
-COMMENT = 1111         GENERIC_REPOST = 16
+COMMENT = 1111
 ```
 
 **Channels (NIP-28)**
@@ -113,7 +113,7 @@ WRAPPED_KINDS = [DIRECT_MESSAGE, DIRECT_MESSAGE_FILE]   // convenience array
 **Media / files**
 
 ```
-FILE_METADATA = 1063   PICTURE_NOTE = 20     AUDIO = 31337
+FILE_METADATA = 1063   AUDIO = 31337
 ```
 
 **Polls**
@@ -155,6 +155,7 @@ LIVE_EVENT = 30311     LIVE_CHAT_MESSAGE = 1311
 
 ```
 ROOM_CREATE = 9007     ROOM_DELETE = 9008    ROOM = 35834
+ROOM_CREATE_INVITE = 9009
 ROOM_JOIN = 9021       ROOM_LEAVE = 9022     ROOM_META = 39000
 ROOM_ADMINS = 39001    ROOM_MEMBERS = 39002  ROOM_EDIT_META = 9002
 ROOM_ADD_MEMBER = 9000 ROOM_REMOVE_MEMBER = 9001
@@ -233,6 +234,7 @@ ALERT_ANDROID = 32833  ALERT_IOS = 32834
 
 ```
 ZAP_GOAL = 9041        ZAP_REQUEST = 9734    ZAP_RECEIPT = 9735
+BOLT12_ZAP = 9736      BOLT12_ZAP_INTENT = 9737  BOLT12_OFFER = 10058
 WALLET_INFO = 13194    WALLET_REQUEST = 23194 WALLET_RESPONSE = 23195
 LIGHTNING_PUB_RPC = 21000
 OTS = 1040
@@ -316,16 +318,17 @@ isDVMKind(kind)                    // 5000–7000
 | `hexTags(keys)` | Spec matching 32-byte hex values (`isHex32`) — e/p tags |
 | `addressTags(keys)` | Spec matching replaceable addresses (`Address.isAddress`) — a tags |
 | `relayTags(keys)` | Spec matching relay urls (`isRelayUrl`) — r/relay tags |
+| `urlTags(keys)` | Spec matching any absolute http(s) or ws(s) url, unnormalized — e.g. NIP-32 `r` label subjects |
 | `topicTags(keys)` | Spec that strips a leading `#` from values — t tags |
 | `kindTags(keys)` | Spec whose values parse to `number` — k tags |
+| `msatsTags(keys)` | Spec matching a whole number of millisats, parsed to `number` — amount tags |
 | `matchTags(spec, tags)` | All tags matching the spec — spec first, then the tags array |
 | `matchTag(spec, tags)` | First tag matching the spec, or `undefined` |
 | `tagValues(spec, tags)` | Values (index 1, normalized) of all matching tags; undefined dropped |
 | `tagValue(spec, tags)` | Value of the first matching tag, or `undefined` |
 | `tagMatcher(spec)` / `tagValueExtractor(spec)` | The raw `(tag)=>boolean` / `(tag)=>T` for a spec |
 | `tagValueMatcher(spec, value)` | Predicate for one value, compared after normalization — matches however the tag spelled it |
-
-The old `getTagValue`/`getPubkeyTagValues`/`getEventTags`/… accessors were removed — use the spec selectors above (e.g. `tagValues(hexTags("p"), tags)`, `tagValue(tagSpec("title"), tags)`).
+| `getRelayHints(tag)` | `[url]` when the tag's relay hint (index 2) is a relay url, `[]` otherwise |
 
 ### Filters
 
@@ -352,16 +355,34 @@ The old `getTagValue`/`getPubkeyTagValues`/`getEventTags`/… accessors were rem
 | `Address.isAddress(s)` | Validate address string format |
 | `Address.from(s, relays?)` | Parse from `kind:pubkey:identifier` string |
 | `Address.fromNaddr(naddr)` | Parse from NIP-19 naddr |
-| `Address.fromEvent(event, relays?)` | Create from addressable event |
+| `Address.fromEvent(event, relays?)` | Create from an event; `identifier` is the d tag (or `""`) for a replaceable kind, `undefined` otherwise |
 | `address.toString()` | Serialize to `kind:pubkey:identifier` |
 | `address.toNaddr()` | Serialize to NIP-19 naddr |
 | `getAddress(event)` | Convenience: get address string from event |
+
+### Event references
+
+| Export | Description |
+|--------|-------------|
+| `IEventRef` | Plain `{ id?, pubkey?, kind?, identifier?, relays? }` naming an event by id or address, which selections and APIs take. A known `pubkey` routes without finding the event, an id or address lets the resolver look it up, and `relays` are hints and a last-resort fallback |
+| `EventRef` class | Implements `IEventRef`; parse one with `new EventRef(ref)` for the methods below |
+| `EventRef.fromEvent(event, relays?)` | From an event in hand, keyed as the event is (a replaceable one gets its identifier) |
+| `EventRef.fromPointer(pointer)` | From a nip19 event or address pointer (`author` becomes `pubkey`) |
+| `EventRef.fromAddress(address)` / `EventRef.fromString(idOrAddress, relays?)` | From an `Address`, or an id or address string |
+| `EventRef.fromNip19(entity)` | From a note, nevent or naddr; `undefined` otherwise |
+| `EventRef.merge(a, b)` | One reference pooling what two know of the same event; `a` wins where they disagree |
+| `ref.getIdOrAddress()` / `ref.getAddressOrId()` | The id or the address, preferring the one named first; `getAddressOrId` keys a reference the way `getIdOrAddress(event)` keys an event |
+| `ref.getIdAndAddress()` | Every key it can be found under, as `getIdAndAddress(event)` gives them |
+| `ref.getAddress()` | Its `Address`, if it carries a kind, pubkey and identifier |
+| `ref.getFilters()` | Filters loading it, `[]` if it names neither |
+| `ref.getRelaySelections()` | Its hints, `seen`, and `eventOutbox` |
+| `ref.toNip19()` | An nevent, or an naddr when there is no id |
 
 ### Relay
 
 | Export | Description |
 |--------|-------------|
-| `LOCAL_RELAY_URL` | `"local://welshman.relay/"` — the conventional url for the in-memory repository |
+| `LOCAL_RELAY_URL` | `"local://welshman.relay/"` — the url that addresses the app's repository |
 | `isRelayUrl(url)` | Validate relay URL |
 | `isShareableRelayUrl(url)` | True if valid relay URL and not a local address |
 | `isOnionUrl(url)` | Tor address check |
@@ -370,23 +391,22 @@ The old `getTagValue`/`getPubkeyTagValues`/`getEventTags`/… accessors were rem
 | `normalizeRelayUrl(url)` | Normalize to standard wss:// format (passes `LOCAL_RELAY_URL` through unchanged) |
 | `displayRelayUrl(url)` | Strip protocol and trailing slash |
 
-`RelayMode`, `RelayProfile` and `displayRelayProfile` are gone. Read/write intent is expressed by the NIP-65 `RelayList` reader/writer in `@welshman/domain` (`readUrls()`/`writeUrls()`, `addReadUrl`/`addWriteUrl`), and NIP-11 relay info by the `Relay` type in `@welshman/domain` plus `app.use(Relays)`.
+Read/write intent belongs to the NIP-65 `RelayList` reader/writer in `@welshman/domain` (`readUrls()`/`writeUrls()`, `addReadUrl`/`addWriteUrl`). NIP-11 relay info is the `Relay` type in `@welshman/domain`, loaded through `app.use(Relays)`.
 
 ### Relay Selection (routing DSL)
 
-`RelaySelection.ts` holds the relay-routing DSL. A *relay selection* names a source, such as
-"the author's outbox" or "the relays this event was seen on", rather than a list of urls. Turning
-one into urls needs relay lists, a tracker and a repository, so producing and resolving selections
-are separate steps: this package defines and scores them, and `@welshman/app`'s `Router` plugin
-supplies the one `ResolveRoute` implementation that dereferences them (see the `welshman-app`
-skill). `@welshman/domain` readers/writers/queries emit selections, and `@welshman/feeds` asks for
-the capability as its `FeedRouter` interface.
+A *relay selection* names a source of relays, such as "the author's outbox" or "the relays this
+event was seen on". Turning one into urls needs relay lists, a tracker and a repository, so this
+package only defines and scores selections. `@welshman/app`'s `Router` plugin supplies the
+`ResolveRoute` implementation that dereferences them (see the `welshman-app` skill).
+`@welshman/domain` readers, writers and queries emit selections, and `@welshman/feeds` consumes the
+resolver through its `FeedRouter` interface.
 
 **Route + selection types**
 
 | Type | Description |
 |------|-------------|
-| `EventRef` | `{ id?, pubkey?, kind?, identifier?, relays? }` — all optional and additive. A known `pubkey` routes directly without finding the event; `id` (or `kind`+`pubkey`+`identifier`) lets the resolver look it up; `relays` are hints for that lookup and a last-resort fallback |
+| `IEventRef` | An event named by id or address (see Event references) |
 | `RelayRoute` | Discriminated union: `userInbox` / `userOutbox` / `userMessaging`, `pubkeyInbox` / `pubkeyOutbox` / `pubkeyMessaging` (`{pubkey}`), `eventInbox` / `eventOutbox` / `seen` (`{ref}`), `relay` (`{url}`), `index`, `search` |
 | `RelaySelection` | `{ route: RelayRoute; weight: number }` |
 
@@ -400,14 +420,14 @@ the capability as its `FeedRouter` interface.
 | `userInbox(weight?)` / `userOutbox(weight?)` / `userMessaging(weight?)` | `RelaySelection` | the current user's relays |
 | `eventInbox(ref, weight?)` / `eventOutbox(ref, weight?)` | `RelaySelection` | the referenced event's author's relays |
 | `seen(ref, weight?)` | `RelaySelection` | relays the event was found on (tracker + ref hints) |
-| `relay(url, weight?)` | `RelaySelection` | a literal relay url (formerly `relayHint`) |
-| `relays(urls, weight?)` | `RelaySelection[]` | one selection per url (formerly `relayHints`) |
+| `relay(url, weight?)` | `RelaySelection` | a literal relay url |
+| `relays(urls, weight?)` | `RelaySelection[]` | one selection per url |
 | `inboxes(pubkeys, weight?)` | `RelaySelection[]` | `uniq(pubkeys).map(inbox)` — inbox per referenced pubkey |
 | `indexers(weight?)` | `RelaySelection` | profile/relay-list index relays |
 | `searchRelays(weight?)` | `RelaySelection` | full-text search relays |
 
-Note `relays` and `inboxes` return **arrays** — spread them with `...` into a route list; every
-other constructor returns a single `RelaySelection`.
+`relays` and `inboxes` return **arrays**, so spread them with `...` into a route list. Every other
+constructor returns a single `RelaySelection`.
 
 **Resolved selections + fallback policies**
 
@@ -437,8 +457,7 @@ scenario.getUrl()          // first of getUrls()
 `getUrls()` drops onion, local and plain-`ws://` urls unless explicitly allowed, sums each url's
 weight across selections, scores as `quality * (1 + log(weight))` times a random factor, takes the
 best `limit` (default 3), then adds shuffled `getDefaultRelays()` urls per the fallback policy. The
-log keeps a relay that many selections name from dominating, and the random factor lets lower-ranked
-relays get picked occasionally.
+random factor means lower-ranked relays are occasionally picked.
 
 **`Resolver`** — bundles a single route-resolution function with the scenario options to apply to
 everything it produces:
@@ -491,7 +510,7 @@ the invocation grammar — `parseCommandInvocation`, `renderCommandInvocation`, 
 `parseCommandArgs`, `getActiveCommandArgIndex`. Kind `COMMAND` is 31992. `@welshman/editor`'s
 `CommandExtension`/`CommandSuggestion` render and autocomplete these in the composer.
 
-### Lightning (NIP-57 support)
+### Lightning (NIP-57 and NIP-B1 support)
 
 | Export | Description |
 |--------|-------------|
@@ -499,8 +518,27 @@ the invocation grammar — `parseCommandInvocation`, `renderCommandInvocation`, 
 | `getInvoiceAmount(bolt11)` | Extract the millisatoshi amount from a BOLT11 invoice |
 | `hrpToMillisat(hrpString)` | Convert a human-readable BTC amount to millisats (`bigint`) |
 | `toMsats(sats)` / `fromMsats(msats)` | Unit conversion |
+| `canonicalBolt12(encoded)` | Lowercase a BOLT12 string and drop its separators and whitespace |
+| `isBolt12Offer(offer)` / `isBolt12PayerProof(proof)` / `isBolt12ZapId(zapId)` | Shape checks for what a NIP-B1 zap carries |
+| `isMsats(amount)` | Whether an amount tag is a whole number of millisats, which `msatsTags` reads it as |
+| `makeBolt12ZapId()` | A fresh zap id, 128 bits of entropy as lowercase hex |
+| `makeBolt12PayerNote(zapIntentId)` | The `nostr:nipB1:<id>` note a BOLT12 payment has to carry |
 
-The `Zapper` and `Zap` types moved to `@welshman/domain` (`other/Zapper.ts`), alongside the `ZapRequest`/`ZapReceipt`/`ZapGoal` kinds. Receipt validation is `app.use(Zappers).validateZapReceipt(...)`.
+### BOLT12 payer proofs
+
+| Export | Description |
+|--------|-------------|
+| `decodeBolt12PayerProof(proof)` | Decode and validate an `lnp` proof; `undefined` unless the preimage, the invoice signature and the payer signature all check out |
+| `bolt12ProofPaysOffer(proof, offer)` | Whether every field of a raw offer is in the proof unchanged |
+| `decodeBolt12(encoded, prefix)` | Bech32 with no checksum, as BOLT12 encodes its strings |
+| `parseBolt12Tlvs(bytes)` | The tlv stream underneath, types ascending |
+
+A proof withholds invoice fields for privacy and carries merkle branches in their place, so
+validating one means rebuilding the invoice merkle root out of what is left.
+`packages/util/__tests__/bolt12-payer-proof-vectors.json` is the BOLT12 conformance suite,
+five valid proofs and twenty-three the spec names a reason to refuse.
+
+The `Zapper` and `Zap` types live in `@welshman/domain`, alongside the `ZapRequest`/`ZapReceipt`/`ZapGoal` kinds. Receipt validation is `app.use(Zappers).validateZapReceipt(...)`.
 
 ### NIP-05 handles
 
@@ -546,7 +584,7 @@ sendManagementRequest(url: string, request: ManagementRequest, authEvent: Signed
 
 Requests are built by `make*` factories rather than an enum: `makeBanPubkey`, `makeAllowPubkey`, `makeBanEvent`, `makeAllowEvent`, `makeCreateRole`/`makeEditRole`/`makeDeleteRole`, `makeAssignRole`/`makeUnassignRole`, `makeAssignMethod`/`makeUnassignMethod`/`makeListMethodAssignees`, `makeCreateClaim`/`makeDeleteClaim`/`makeListClaims`, `makeChangeRelayName`/`Description`/`Icon`, `makeAllowKind`/`makeDisallowKind`, `makeBlockIp`/`makeUnblockIp`, `makeSupportedMethods`, and the matching `makeList*` readers.
 
-`ManagementApi` is a client class that pairs a relay url with a `ManagementSign` function so you don't have to build the NIP-98 auth event per call. `app.use(RelayManagement).forUrl(url)` returns one bound to the app's user.
+`ManagementApi` pairs a relay url with a `ManagementSign` function and builds the NIP-98 auth event for each call. `app.use(RelayManagement).forUrl(url)` returns one bound to the app's user.
 
 ### Links
 
@@ -560,14 +598,18 @@ toNostrURI(s: string): string    // ensures "nostr:" prefix
 ```typescript
 makeBlossomAuthEvent(opts: BlossomAuthEventOpts): StampedEvent
 uploadBlob(server, blob, opts?): Promise<Response>
+mirrorBlob(server, blobUrl, opts?): Promise<Response>  // BUD-04; auth: upload + x=sha256
 getBlob(server, sha256, opts?): Promise<Response>
 deleteBlob(server, sha256, opts?): Promise<Response>
 listBlobs(server, pubkey, opts?): Promise<Response>
+canUploadBlob(server, opts?): Promise<Response>  // BUD-06 preflight, HEAD /upload
 checkBlobExists(server, sha256, opts?): Promise<{exists, size?}>
 buildBlobUrl(server, sha256, extension?): string
 encryptFile(file: Blob): Promise<EncryptedFile>
 decryptFile(encryptedFile: EncryptedFile): Promise<Uint8Array>
 ```
+
+Every call taking `opts` takes a `signal` in it, so `AbortSignal.timeout(ms)` is how a caller puts a deadline on a server that accepts the connection and never answers.
 
 ---
 
@@ -602,8 +644,9 @@ const relayList = makeEvent(RELAYS, {
 
 ### Pre-verifying persisted events with verifiedSymbol
 
-When loading events from a local store (IndexedDB, localStorage, etc.) at startup, you
-can skip expensive signature re-validation by marking them as already verified:
+Events loaded from your own storage can skip signature re-validation by being marked as
+already verified. `SqliteRepository` in `@welshman/store` does this for every signed event it
+reads back; custom storage does it itself:
 
 ```typescript
 import { verifiedSymbol } from '@welshman/util'
@@ -618,7 +661,7 @@ for (const event of storedEvents) {
   event[verifiedSymbol] = true
 }
 
-app.repository.load(storedEvents)
+repository.load(storedEvents) // a MemoryRepository
 ```
 
 Only do this for events you persisted yourself after they were validated. Never set
@@ -736,7 +779,7 @@ import { makeHttpAuth, makeHttpAuthHeader } from '@welshman/util'
 
 const body = JSON.stringify({ data: 'example' })
 const authEvent = await makeHttpAuth('https://api.example.com/upload', 'POST', body)
-const signed = await signer.signEvent(authEvent)
+const signed = await signer.sign(authEvent)
 
 await fetch('https://api.example.com/upload', {
   method: 'POST',
@@ -754,7 +797,7 @@ await fetch('https://api.example.com/upload', {
 
 - **`@welshman/net`** — uses `TrustedEvent`, `Filter`, `SignedEvent` from this package as the wire types for relay connections and subscriptions.
 - **`@welshman/store`** — provides Svelte stores over repositories built on `TrustedEvent`; relies on `isReplaceable`, `getAddress`, etc. for deduplication.
-- **`@welshman/app`** — high-level application layer; composes net/store/domain and uses the lightning helpers from this package (profile/list/handler/room helpers now live in `@welshman/domain`).
+- **`@welshman/app`** — high-level application layer; composes net/store/domain and uses the lightning helpers from this package.
 - **`@welshman/app`'s `Router` plugin** — dereferences the `RelaySelection` DSL defined here, and injects its `Resolver` into every `@welshman/domain` kind.
 - **`@welshman/signer`** — produces `SignedEvent` objects that satisfy types defined here; signers also provide the `nip44` encrypt/decrypt functions used by `@welshman/domain` list writers to encrypt private (NIP-44) tags.
 
@@ -766,11 +809,11 @@ await fetch('https://api.example.com/upload', {
 
 - **Replaceable event identity**: Use `getIdOrAddress` rather than `event.id` when referencing events that may be addressable — the address string is stable across updates, the id is not.
 
-- **`app.use(Zappers).validateZapReceipt` returns `undefined` on any validation failure** including amount mismatch, wrong zapper pubkey, malformed invoice, or self-zap. Always check the result. For a reactive list of a parent's valid zaps use `validZapReceipts(receipts, parent)`, which re-validates as each recipient's zapper loads.
+- **`app.use(Zappers).validateZapReceipt` returns `undefined` on any validation failure** including amount mismatch, wrong zapper pubkey, malformed invoice, or self-zap. Always check the result. For a reactive list of a parent's valid zaps use `app.use(Zappers).validZapReceipts(receipts, parent)`, which re-validates as each recipient's zapper loads.
 
 - **`getLnUrl` handles three input forms**: bare lightning address (`user@domain`), full HTTPS URL, or already-encoded `lnurl1...`. Returns `undefined` for anything else.
 
-- **`normalizeTopic` is not exported.** `Topics.ts` isn't re-exported from the index; use `topicTags("t")` to get normalized topic values off an event's tags.
+- **`normalizeTopic` strips a leading `#` and nothing else.** `topicTags("t")` applies it to an event's topic values; it doesn't lowercase them.
 
 - **`normalizeRelayUrl` vs `displayRelayUrl`**: Use `normalizeRelayUrl` before storing or comparing relay URLs. Use `displayRelayUrl` only for human-readable display (strips protocol/trailing slash).
 
@@ -785,4 +828,4 @@ await fetch('https://api.example.com/upload', {
 ## Related skills
 
 - **`welshman-app`** (welshman-app skill) — the `Router` plugin that dereferences the routing DSL above, plus `RelayStats.getQuality` for the scoring input.
-- **`@welshman/domain`** (welshman-domain skill) — Profiles, lists, handlers, rooms, and event routing moved out of `@welshman/util` and now live here. The old free functions (`readProfile`/`makeProfile`, `readList`/`makeList`, `PublishedProfile`/`PublishedList`, `Encryptable`, the handler/room helpers, …) were replaced by configurable `KindFactory` bundles: `Kind.configure(context).reader(event)` returns an async Reader that decodes the event, and `.writer(reader?)` builds/edits one. Private (NIP-44) list tags are handled inside the list Reader/Writer, so `Encryptable`/`DecryptedEvent` no longer exist.
+- **`@welshman/domain`** (welshman-domain skill) — profiles, lists, handlers, rooms, and per-kind event routing, as `KindFactory` bundles: `Kind.configure(context).reader(event)` returns a Reader (`await reader.parse()` decodes it), and `.writer(reader?)` builds or edits an event. The list Reader/Writer handles private (NIP-44) list tags.

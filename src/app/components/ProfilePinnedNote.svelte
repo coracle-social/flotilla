@@ -4,7 +4,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
-  import {derivePinnedEvents} from "@app/pins"
+  import {derivePinnedEvents} from "@app/features/pins"
 
   type Props = {
     pubkey: string

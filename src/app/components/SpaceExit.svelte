@@ -1,6 +1,5 @@
 <script lang="ts">
-  import {navigate} from "@app/modal"
-  import {displayRelayUrl} from "@welshman/util"
+  import {navigate} from "@app/navigation/navigate"
   import {preventDefault} from "@lib/html"
   import Spinner from "@lib/components/Spinner.svelte"
   import Button from "@lib/components/Button.svelte"
@@ -11,8 +10,9 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {leaveSpace} from "@app/access"
-  import {pushToast} from "@app/toast"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {leaveSpace} from "@app/features/spaces/membership"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -43,7 +43,7 @@
   <ModalBody>
     <ModalHeader>
       <ModalTitle>
-        You are leaving<br /><span class="text-primary">{displayRelayUrl(url)}</span>
+        You are leaving<br /><RelayLabel {url} class="text-primary" />
       </ModalTitle>
     </ModalHeader>
     <p class="text-center">Are you sure you want to leave?</p>

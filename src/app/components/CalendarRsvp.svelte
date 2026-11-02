@@ -10,10 +10,16 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
-  import {reader, user} from "@app/core"
-  import {getRsvpsByStatus, isAttending, publishRsvp, retractRsvp} from "@app/calendar"
-  import {setEventReminders} from "@app/reminders"
-  import {pushToast} from "@app/toast"
+  import {user} from "@app/core/user"
+  import {reader} from "@app/core/domain"
+  import {
+    getRsvpsByStatus,
+    isAttending,
+    publishRsvp,
+    retractRsvp,
+  } from "@app/features/spaces/calendar"
+  import {setEventReminders} from "@app/features/reminders"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string

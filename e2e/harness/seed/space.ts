@@ -1,7 +1,6 @@
 import {neventEncode} from "nostr-tools/nip19"
 import type {Maybe} from "@welshman/lib"
 import {
-  MESSAGE,
   ROOM_ADD_MEMBER,
   Resolver,
   makeEvent,
@@ -12,7 +11,15 @@ import {
 } from "@welshman/util"
 import type {HashedEvent} from "@welshman/util"
 import {Nip59} from "@welshman/signer"
-import {DirectMessage, EventWriter, MessagingRelayList, Profile, RelayList} from "@welshman/domain"
+import {
+  DirectMessage,
+  EventWriter,
+  FollowList,
+  Message,
+  MessagingRelayList,
+  Profile,
+  RelayList,
+} from "@welshman/domain"
 import type {BaseEventReader, ConfiguredKind, EventQuery, KindFactory} from "@welshman/domain"
 import type {RoomOptions, TestRelay} from "../zooid/types"
 import type {Zooid} from "../zooid/relay"
@@ -22,9 +29,6 @@ import {users} from "../keys"
 import type {TestUser} from "../keys"
 import {makePublisher} from "./publish"
 import type {Enqueue, ProfileValues, RelayListUrls, SeededEvent, SeededTemplate} from "./publish"
-
-// @welshman/domain has no writer for NIP-29 kind-9 messages, so this pairs the base writer and reader.
-class MessageWriter extends EventWriter<BaseEventReader> {}
 
 // The kind-14 a direct message really is. It is never published, since each participant gets a wrap.
 export type SeededRumor = {
@@ -49,6 +53,8 @@ export type SeededSpace = {
   message(user: TestUser, h: string, content: string, createdAt?: number): SeededEvent
   reply(user: TestUser, parent: SeededEvent, content: string, createdAt?: number): SeededEvent
   profile(user: TestUser, values: ProfileValues, createdAt?: number): SeededEvent
+  // A follow list belongs on every relay its author writes to, so a space takes one too.
+  follows(user: TestUser, follows: TestUser[], createdAt?: number): SeededEvent
   // Outbox routing resolves everything about a person through their relay list.
   relayList(user: TestUser, urls?: RelayListUrls, createdAt?: number): SeededEvent
   // Having one is what makes a person reachable, so messaging being off is a person without one.
@@ -125,7 +131,7 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
   const message = (user: TestUser, h: string, content: string, createdAt = startedAt) =>
     publish(() => relay().message(user, h, content, createdAt))
 
-  // Content.svelte renders a quote from the nostr uri rather than the q tag, as prependParent does.
+  // A reply as sent before the parent moved to the q tag alone, which chat must not render twice.
   const reply = (user: TestUser, parent: SeededEvent, content: string, createdAt = startedAt) =>
     event(
       user,
@@ -135,7 +141,8 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
         if (h) {
           const nevent = neventEncode({...parent.event, relays: [url]})
 
-          return new MessageWriter(MESSAGE, context)
+          return Message.configure(context)
+            .writer()
             .setRoom(url, h)
             .addQuote(parent.event)
             .addMention(parent.event.pubkey)
@@ -158,6 +165,21 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
   const kind = <R extends BaseEventReader, W extends EventWriter<R>, Q extends EventQuery>(
     factory: KindFactory<R, W, Q>,
   ) => factory.configure(context)
+
+  const follows = (user: TestUser, followed: TestUser[], createdAt = startedAt) =>
+    event(
+      user,
+      () => {
+        const writer = kind(FollowList).writer()
+
+        for (const {pubkey} of followed) {
+          writer.follow(pubkey)
+        }
+
+        return writer.renderTemplate()
+      },
+      createdAt,
+    )
 
   const relayList = (
     user: TestUser,
@@ -213,6 +235,7 @@ export const seedSpace = ({zooid, enqueue, startedAt, name}: SeedSpaceOptions): 
     message,
     reply,
     profile,
+    follows,
     relayList,
     messagingRelayList,
     event,

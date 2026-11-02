@@ -1,7 +1,7 @@
-import {HOUR, spec} from "@welshman/lib"
+import {HOUR, MINUTE, spec} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {RelayMessageType} from "@welshman/net"
-import {Article} from "@welshman/domain"
+import {Article, Note} from "@welshman/domain"
 import type {Page} from "@playwright/test"
 import {
   dialog,
@@ -13,6 +13,7 @@ import {
   roomPath,
   spacePath,
   test,
+  topDialog,
   users,
 } from "../harness"
 
@@ -331,4 +332,52 @@ test("goes back to the room a profile modal was opened over", async ({seed, as})
 
   await expect(page).toHaveURL(new RegExp(`${roomPath(space.url, "lounge")}$`))
   await expect(message(page, "anyone seen the anchor")).toBeVisible()
+})
+
+test("goes back to the note another note was opened from", async ({seed, as}) => {
+  const note = "the lighthouse has been dark since tuesday"
+  const answer = "the keeper is on holiday"
+
+  await seed(({open, user, at}) => {
+    const indexer = open("indexer")
+    const outbox = open("outbox")
+
+    indexer.relayList(user.alice, {
+      read: [indexer.url, outbox.url],
+      write: [indexer.url, outbox.url],
+    })
+    outbox.profile(user.alice, {name: "Alice Anderson"})
+
+    const posted = outbox.note(user.alice, note, at(30, MINUTE))
+
+    outbox.event(
+      user.alice,
+      () => outbox.kind(Note).writer().setParent(posted.event).setContent(answer).renderTemplate(),
+      at(20, MINUTE),
+    )
+  })
+
+  const page = await as(users.alice, profilePath(users.alice.pubkey))
+
+  // Her answer hangs off her note, so the feed draws it under the note it answers.
+  const entry = page.locator('[data-component="NoteEntry"]')
+
+  await expect(entry.getByText(answer)).toBeVisible()
+
+  await entry.getByText(answer).click()
+  await expect(topDialog(page)).toContainText(answer)
+
+  // The note on screen is in the url, which is what tells the two dialogs apart.
+  const answered = page.url()
+
+  await topDialog(page).getByRole("button", {name: "View parent"}).click()
+
+  await expect(page).not.toHaveURL(answered)
+  await expect(topDialog(page)).toContainText(note)
+
+  // Opening a note from a note takes an entry of its own, so back is the note it came from.
+  await page.goBack()
+
+  await expect(page).toHaveURL(answered)
+  await expect(topDialog(page)).toContainText(answer)
 })

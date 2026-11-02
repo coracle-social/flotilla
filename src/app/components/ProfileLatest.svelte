@@ -4,8 +4,8 @@
   import {NOTE} from "@welshman/util"
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {network} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
+  import {network} from "@app/core/plugins"
+  import {makeFeedContext} from "@app/features/feeds"
 
   type Props = {
     url: string
@@ -20,9 +20,10 @@
 
   onDestroy(context.cleanup)
 
-  const events = $network.loadComplete({
+  const events = $network.load({
     relays: [url],
     filters: [{authors: [pubkey], kinds: [NOTE], limit}],
+    timeout: 3000,
   })
 </script>
 

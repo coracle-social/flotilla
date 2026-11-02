@@ -7,10 +7,11 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
   import type {Values} from "@app/components/ProfileEditForm.svelte"
-  import {clearModals} from "@app/modal"
-  import {pushToast} from "@app/toast"
-  import {profiles, user} from "@app/core"
-  import {getProfileGeohash} from "@app/location"
+  import {clearModals} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
+  import {user} from "@app/core/user"
+  import {profiles} from "@app/core/plugins"
+  import {getProfileGeohash} from "@app/features/location"
 
   const existingProfile = $profiles.get($user.pubkey)
 
@@ -30,7 +31,7 @@
 
         return geohash ? writer.addTags(["g", geohash]) : writer
       })
-      const error = (await command.publish().settled()).getError()
+      const error = await command.publish().getError()
 
       if (error) {
         pushToast({

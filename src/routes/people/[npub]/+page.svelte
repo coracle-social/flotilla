@@ -5,13 +5,14 @@
   import {ROOMS, NOTE, FOLLOWS} from "@welshman/util"
   import {outbox} from "@welshman/util"
   import {PinLists} from "@welshman/app"
-  import {decodePubkey} from "@lib/util"
   import Page from "@lib/components/Page.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import ProfilePage from "@app/components/ProfilePage.svelte"
-  import {pushToast} from "@app/toast"
+  import * as pages from "@app/navigation/pages"
+  import {pushToast} from "@app/features/toast"
+  import {app} from "@app/core/app"
+  import {user} from "@app/core/user"
   import {
-    app,
     followLists,
     messagingRelayLists,
     network,
@@ -19,15 +20,12 @@
     relayLists,
     roomLists,
     router,
-    user,
-  } from "@app/core"
+  } from "@app/core/plugins"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {npub} = params
-
-  const pubkey = decodePubkey(npub)
+  const {pubkey} = pages.profile.decode(params)
 
   onMount(async () => {
     if (!pubkey) {
@@ -35,7 +33,7 @@
     }
 
     try {
-      await $profiles.load(pubkey)
+      await $profiles.forceLoad(pubkey)
       await $relayLists.load(pubkey)
 
       const viewer = user.get().pubkey
@@ -57,7 +55,7 @@
         filters.push({kinds: [FOLLOWS], "#p": [pubkey], limit: 500})
       }
 
-      $network.loadLenient({
+      $network.load({
         relays: await $router.resolver.relays([outbox(pubkey)]),
         filters,
       })

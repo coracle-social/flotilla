@@ -3,8 +3,8 @@
   import {ms} from "@welshman/lib"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {PLATFORM_NAME} from "@app/env"
-  import {resetSession} from "@app/session"
+  import {PLATFORM_NAME} from "@app/core/env"
+  import {resetSession} from "@app/core/session"
 
   type Props = {
     error?: unknown
@@ -33,7 +33,7 @@
 </script>
 
 {#if error || stalled}
-  <div class="flex h-screen flex-col items-center justify-center gap-4 p-8 text-center">
+  <div class="flex h-dvh flex-col items-center justify-center gap-4 p-8 text-center">
     <p class="text-xl font-bold">
       {#if error}
         {PLATFORM_NAME} couldn't start
@@ -46,7 +46,7 @@
       back to the login screen.
     </p>
     <Button class="button button-primary" onclick={logout} disabled={loading}>
-      <Spinner {loading} reserveSpace>Log out</Spinner>
+      <Spinner {loading}>Log out</Spinner>
     </Button>
   </div>
 {/if}

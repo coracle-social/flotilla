@@ -56,7 +56,6 @@ jobs:
           VITE_PLATFORM_URL: https://pr-${{ github.event.number }}.preview.flowboat.lol
           VITE_PLATFORM_NAME: "Flotilla PR #${{ github.event.number }}"
           VITE_PLATFORM_DESCRIPTION: "Preview build of coracle/flotilla PR #${{ github.event.number }}. Not the real Flotilla."
-          VITE_CARTO_BASEMAP_KEY: cb1_42g1_2_bc3246a5d40392210ca7ab64
         run: |
           export VITE_BUILD_HASH="${HEAD_SHA:0:8}"
           pnpm run build

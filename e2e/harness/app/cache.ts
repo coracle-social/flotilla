@@ -1,34 +1,20 @@
 import type {Page} from "@playwright/test"
-import type {TrustedEvent} from "@welshman/util"
+import type {Filter, TrustedEvent} from "@welshman/util"
 
-// Must match the database name and the `events` table in src/app/storage.ts.
-const databaseName = (pubkey: string) => `flotilla-9gl-${pubkey}`
+// The slice of the `app` store src/routes/+layout.svelte puts on window that this reads.
+type AppStore = {
+  get: () => {
+    user?: {pubkey: string}
+    repository: {query: (filters: Filter[]) => Promise<TrustedEvent[]>}
+  }
+}
 
-/** What this user's client has written to disk. Events reach indexeddb in three-second batches. */
+/** What this user's client has written to disk, read through the app, which flushes pending writes first. */
 export const readCachedEvents = (page: Page, pubkey: string): Promise<TrustedEvent[]> =>
-  page.evaluate(async name => {
-    const open = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open(name)
+  page.evaluate(async owner => {
+    const app: AppStore = Reflect.get(window, "app")
+    const $app = app.get()
 
-      request.onsuccess = () => resolve(request.result)
-      request.onerror = () => reject(request.error)
-    })
-
-    // An unversioned open creates the database when it is missing, so a client with no writes has no store.
-    if (!open.objectStoreNames.contains("events")) {
-      open.close()
-
-      return []
-    }
-
-    const items = await new Promise<{event: TrustedEvent}[]>((resolve, reject) => {
-      const request = open.transaction("events", "readonly").objectStore("events").getAll()
-
-      request.onsuccess = () => resolve(request.result)
-      request.onerror = () => reject(request.error)
-    })
-
-    open.close()
-
-    return items.map(item => item.event)
-  }, databaseName(pubkey))
+    // Each identity has a database of its own, which only its app reads.
+    return $app.user?.pubkey === owner ? $app.repository.query([{}]) : []
+  }, pubkey)

@@ -1,10 +1,17 @@
 <script lang="ts">
   import cx from "classnames"
-  import {readable} from "svelte/store"
+  import {derived, readable} from "svelte/store"
   import {now, uniq, displayList, formatTimestampAsTime, formatTimestampAsDate} from "@welshman/lib"
   import type {TrustedEvent, EventContent} from "@welshman/util"
-  import {MESSAGE, THREAD, getCommentFiltersForParent, getIdOrAddress} from "@welshman/util"
-  import {Thread, getContentQuote} from "@welshman/domain"
+  import {
+    EventRef,
+    MESSAGE,
+    THREAD,
+    getCommentFiltersForParent,
+    getIdOrAddress,
+  } from "@welshman/util"
+  import {Thread} from "@welshman/domain"
+  import {parse} from "@welshman/content"
   import {isMobile} from "@lib/html"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
@@ -15,9 +22,9 @@
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
+  import Tooltip from "@lib/components/Tooltip.svelte"
   import PublicationFailure from "@app/components/PublicationFailure.svelte"
-  import {publishReaction, retractReaction} from "@app/reactions"
-  import {deriveDisplaysByPubkey} from "@app/social"
+  import {deriveDisplaysByPubkey} from "@app/features/people"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
@@ -26,13 +33,18 @@
   import RoomItemMenu from "@app/components/RoomItemMenu.svelte"
   import RoomItemMenuMobile from "@app/components/RoomItemMenuMobile.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
-  import {events, profiles, publisher, reader, user} from "@app/core"
-  import {noPublications, publicationsByEventId} from "@app/publications"
-  import {colorFor} from "@app/theme"
-  import {ENABLE_ZAPS} from "@app/env"
-  import type {FeedContext} from "@app/feeds"
-  import {highlightedEvent, makeContentPath, makeThreadPath} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {user} from "@app/core/user"
+  import {events, profiles, publisher} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {noPublications, publicationsByEventId} from "@app/core/publications"
+  import {CONTENT_KINDS, publishReaction, retractReaction} from "@app/features/spaces"
+  import {colorFor} from "@app/features/theme"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import type {FeedContext} from "@app/features/feeds"
+  import {isQuote} from "@app/features/quotes"
+  import * as pages from "@app/navigation/pages"
+  import {highlightedEvent} from "@app/navigation/locations"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -61,16 +73,23 @@
   )
   const colorValue = colorFor(event.pubkey)
 
-  // A message that is nothing but a reference renders as the event it quotes.
+  // A message that is nothing but a reference to content renders as the content it quotes.
   const isQuoteOnly = event.content.trim().split(/\s/).length === 1
-  const quote = isQuoteOnly ? getContentQuote(event.content) : undefined
-  const innerEvent = quote ? $events.one(quote.value, [url]).$ : readable(undefined)
+  const [parsed] = isQuoteOnly ? parse({content: event.content.trim()}) : []
+  const quoteRef = parsed && isQuote(parsed) ? EventRef.fromPointer(parsed.value) : undefined
+  const quoted = quoteRef?.getIdOrAddress()
+  const innerEvent =
+    quoteRef && quoted
+      ? derived($events.one(quoted, uniq([...quoteRef.relays, url])).$, e =>
+          e && CONTENT_KINDS.includes(e.kind) ? e : undefined,
+        )
+      : readable(undefined)
   const innerComments = $derived(
     $innerEvent ? $events.forUrl(url, getCommentFiltersForParent([$innerEvent])).$ : readable([]),
   )
 
   const path = $derived(
-    $innerEvent && makeContentPath(url, $innerEvent.kind, getIdOrAddress($innerEvent)),
+    $innerEvent && pages.makeContentPath(url, $innerEvent.kind, getIdOrAddress($innerEvent)),
   )
 
   const threads = $events.forUrl(url, [{kinds: [THREAD], "#q": [event.id]}]).$
@@ -87,9 +106,9 @@
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey, url})
 
-  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url})
+  const deleteReaction = (reaction: TrustedEvent) => retractReaction(url, reaction)
 
-  const createReaction = (values: EventContent) => publishReaction(event, values, {url})
+  const createReaction = (values: EventContent) => publishReaction(url, event, values)
 </script>
 
 <TapTarget
@@ -138,11 +157,12 @@
       {context}
       {deleteReaction}
       {createReaction}
-      reactionClass="tip-right"
-      innerEvent={$innerEvent} />
+      placement="right"
+      innerEvent={$innerEvent}
+      perEmoji />
     {#each $threads as thread (thread.id)}
       <Link
-        href={makeThreadPath(url, thread.id)}
+        href={pages.thread.path({url, id: thread.id})}
         class="button button-xs button-neutral gap-1 rounded-full">
         <Icon icon={NotesMinimalistic} />
         <span class="max-w-48 truncate">
@@ -155,7 +175,7 @@
       {@const isOwn = pubkeys.includes($user.pubkey)}
       {@const info = displayList(pubkeys.map(pubkey => $commenterDisplays.get(pubkey) ?? ""))}
       {@const tooltip = `${info} commented`}
-      <div data-tip={tooltip} class="tip tip-right flex">
+      <Tooltip content={isMobile ? "" : tooltip} placement="right" class="flex">
         <Link
           href={path}
           class={cx("button button-xs gap-1 rounded-full", {
@@ -165,7 +185,7 @@
           <Icon icon={ReplyAlt} />
           <span>{$innerComments.length} comment{$innerComments.length === 1 ? "" : "s"}</span>
         </Link>
-      </div>
+      </Tooltip>
     {/if}
   </div>
   {#if !isMobile}

@@ -2,7 +2,7 @@
   import cx from "classnames"
   import {isMobile} from "@lib/html"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
-  import {profiles} from "@app/core"
+  import {profiles} from "@app/core/plugins"
 
   type Props = {
     pubkeys: string[]

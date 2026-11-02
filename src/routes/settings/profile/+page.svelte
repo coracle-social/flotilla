@@ -28,12 +28,15 @@
   import SignerStatus from "@app/components/SignerStatus.svelte"
   import PasswordReset from "@app/components/PasswordReset.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
-  import {pushModal} from "@app/modal"
-  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/pomade"
-  import {makeProfilePath} from "@app/routes"
-  import {clip, pushToast} from "@app/toast"
-  import {profiles, session, user} from "@app/core"
-  import {isPomadeSession, requirePomadeSession} from "@app/pomade"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
+  import * as pages from "@app/navigation/pages"
+  import {clip, pushToast} from "@app/features/toast"
+  import {user} from "@app/core/user"
+  import {profiles} from "@app/core/plugins"
+  import {session} from "@app/core/session"
+  import {HIDE_NOSTR} from "@app/core/env"
+  import {isPomadeSession, requirePomadeSession} from "@app/features/pomade"
 
   const npub = nip19.npubEncode($user.pubkey)
   const profile = $profiles.one($user.pubkey)
@@ -94,9 +97,9 @@
 </script>
 
 <PageContent class="@container">
-  <div class="card shadow-md flex flex-col gap-2">
+  <div class="card flex flex-col gap-2">
     <div class="flex justify-between gap-2">
-      <Link href={makeProfilePath($user.pubkey)} class="flex max-w-full gap-3">
+      <Link href={pages.profile.path({pubkey: $user.pubkey})} class="flex max-w-full gap-3">
         <div class="py-1">
           <ProfileCircle pubkey={$user.pubkey} size={10} />
         </div>
@@ -106,9 +109,11 @@
               {$profile?.display() ?? pubkeyDisplay}
             </div>
           </div>
-          <div class="overflow-hidden text-ellipsis text-sm opacity-75">
-            {$profile?.nip05() ? displayNip05($profile.nip05()!) : pubkeyDisplay}
-          </div>
+          {#if !HIDE_NOSTR}
+            <div class="overflow-hidden text-ellipsis text-sm opacity-75">
+              {$profile?.nip05() ? displayNip05($profile.nip05()!) : pubkeyDisplay}
+            </div>
+          {/if}
         </div>
       </Link>
       <Button
@@ -119,7 +124,7 @@
     </div>
     <ProfileAbout pubkey={$user.pubkey} />
   </div>
-  <div class="card flex flex-col gap-4 shadow-md">
+  <div class="card flex flex-col gap-4">
     {#if pomadeEmail}
       <FieldInline>
         {#snippet label()}
@@ -134,31 +139,33 @@
         {/snippet}
       </FieldInline>
     {/if}
-    <FieldInline>
-      {#snippet label()}
-        <p class="flex items-center gap-3">
-          <Icon icon={Key} />
-          Public Key
-        </p>
-      {/snippet}
-      {#snippet input()}
-        <label class="input flex w-full items-center justify-between gap-2">
-          <div class="flex gap-2 grow items-center">
-            <Icon icon={LinkRound} />
-            <input readonly class="truncate min-w-0 grow" value={npub} />
-          </div>
-          <Button class="flex items-center" onclick={copyNpub}>
-            <Icon icon={Copy} />
-          </Button>
-        </label>
-      {/snippet}
-      {#snippet info()}
-        <p>
-          Your public key is your user identifier. It also allows other people to authenticate your
-          messages.
-        </p>
-      {/snippet}
-    </FieldInline>
+    {#if !HIDE_NOSTR}
+      <FieldInline>
+        {#snippet label()}
+          <p class="flex items-center gap-3">
+            <Icon icon={Key} />
+            Public Key
+          </p>
+        {/snippet}
+        {#snippet input()}
+          <label class="input flex w-full items-center justify-between gap-2">
+            <div class="flex gap-2 grow items-center">
+              <Icon icon={LinkRound} />
+              <input readonly class="truncate min-w-0 grow" value={npub} />
+            </div>
+            <Button class="flex items-center" onclick={copyNpub}>
+              <Icon icon={Copy} />
+            </Button>
+          </label>
+        {/snippet}
+        {#snippet info()}
+          <p>
+            Your public key is your user identifier. It also allows other people to authenticate
+            your messages.
+          </p>
+        {/snippet}
+      </FieldInline>
+    {/if}
     {#if $session?.method === "nip01"}
       <FieldInline>
         {#snippet label()}
@@ -181,18 +188,22 @@
         {/snippet}
       </FieldInline>
     {/if}
-    <SignerStatus />
+    {#if !HIDE_NOSTR}
+      <SignerStatus />
+    {/if}
     {#if pomadeEmail}
       <div class="flex flex-col @2xl:flex-row gap-4 @2xl:gap-2 justify-end">
         <Button class="button button-neutral" onclick={startPasswordReset} disabled={loading}>
           <Spinner {loading}>Update your password</Spinner>
         </Button>
-        <Button class="button button-primary" onclick={startRecovery}
-          >Start holding your own keys</Button>
+        {#if !HIDE_NOSTR}
+          <Button class="button button-primary" onclick={startRecovery}
+            >Start holding your own keys</Button>
+        {/if}
       </div>
     {/if}
   </div>
-  <div class="card shadow-md">
+  <div class="card">
     <div class="flex items-center justify-between">
       <strong class="flex items-center gap-3">
         <Icon icon={Settings} />

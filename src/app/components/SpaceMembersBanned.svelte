@@ -1,6 +1,5 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {displayRelayUrl} from "@welshman/util"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
@@ -13,7 +12,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Profile from "@app/components/Profile.svelte"
   import SpaceMemberBannedMenu from "@app/components/SpaceMemberBannedMenu.svelte"
-  import {deriveSpacePermissions, spaceManagement} from "@app/management"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
 
   type Props = {
     url: string
@@ -35,7 +35,7 @@
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Banned users</ModalTitle>
-      <ModalSubtitle>on {displayRelayUrl(url)}</ModalSubtitle>
+      <ModalSubtitle>on <RelayLabel {url} /></ModalSubtitle>
     </ModalHeader>
     <div class="flex flex-col gap-2">
       {#if $bans.length === 0}

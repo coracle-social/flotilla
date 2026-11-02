@@ -1,18 +1,19 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE, WEEK, bech32ToHex, int, now} from "@welshman/lib"
-import {getLnUrl} from "@welshman/util"
+import {MESSAGE, getLnUrl, tagSpec, tagValue} from "@welshman/util"
 import {Profile} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
   composer,
   dialog,
   expect,
+  getPublishedEvents,
   makeTestUser,
   message,
   messageActions,
   messages,
   mockDufflepud,
-  mockOpenRouterSpeech,
+  mockOpenRouterTts,
   openMessageMenu,
   openRoomDetail,
   pageBar,
@@ -379,7 +380,7 @@ test("US-022 bring people into a room", async ({seed, as}) => {
   await expect(members.getByText("Dora Deckhand")).toHaveCount(0)
 
   await admin.getByRole("button", {name: "Add members"}).click()
-  await admin.getByPlaceholder("Search for profiles...").fill("Dora")
+  await admin.getByPlaceholder("Search for profiles or paste a pubkey...").fill("Dora")
   await admin.locator(".tiptap-suggestions").getByRole("button", {name: dora.pubkey}).click()
   await admin.getByRole("button", {name: "Save changes"}).click()
 
@@ -397,6 +398,8 @@ test("US-022 bring people into a room", async ({seed, as}) => {
 })
 
 test("US-023 reply to a message", async ({seed, as}) => {
+  let notice!: SeededEvent
+
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
 
@@ -404,7 +407,7 @@ test("US-023 reply to a message", async ({seed, as}) => {
     space.join(user.alice, "general")
     space.join(user.bob, "general")
     space.profile(user.alice, {name: "Alice Anchor"})
-    space.message(user.alice, "general", "the tide turns at six", at(2, HOUR))
+    notice = space.message(user.alice, "general", "the tide turns at six", at(2, HOUR))
   })
 
   const {url} = scenario.space("space")
@@ -423,6 +426,24 @@ test("US-023 reply to a message", async ({seed, as}) => {
 
   await expect(message(bob, "aye, I'll be there")).toContainText("the tide turns at six")
   await expect(message(alice, "aye, I'll be there")).toContainText("the tide turns at six")
+
+  const quoted = (content: string) =>
+    getPublishedEvents(bob.context(), MESSAGE)
+      .filter(event => event.content === content)
+      .map(event => tagValue(tagSpec("q"), event.tags))
+
+  // The parent is the q tag alone, so the content is just the reply.
+  await expect.poll(() => quoted("aye, I'll be there")).toEqual([notice.id])
+
+  await messageActions(bob, "aye, I'll be there").nth(3).click()
+
+  await expect(bob.getByText("Editing message")).toBeVisible()
+
+  await composer(bob).press("ControlOrMeta+a")
+  await send(bob, "aye, I'll be there early")
+
+  await expect(message(alice, "aye, I'll be there early")).toContainText("the tide turns at six")
+  await expect.poll(() => quoted("aye, I'll be there early")).toEqual([notice.id])
 })
 
 test("US-024 edit or delete a message you sent", async ({seed, as}) => {
@@ -532,6 +553,9 @@ test("US-025 react to a message", async ({seed, as}) => {
 
   await expect(reactionPill(carol, "we made port")).toContainText("2")
   await expect(reactionPill(bob, "we made port")).toContainText("2")
+
+  await reactionPill(carol, "we made port").hover()
+  await expect(carol.getByRole("tooltip")).toContainText("Bob Barnacle reacted")
 
   await reactionPill(carol, "we made port").click()
 
@@ -795,7 +819,7 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
   const {url} = scenario.space("space")
   const alice = await as(users.alice, roomPath(url, "general"))
   // Long enough that playback is still going when it is stopped.
-  const spoken = await mockOpenRouterSpeech(alice.context(), 10)
+  const speech = await mockOpenRouterTts(alice.context(), 10)
 
   // The mention has to have resolved on screen before it can be expected in what was spoken.
   await expect(message(alice, "heads up")).toContainText("@Alice Anchor")
@@ -811,17 +835,29 @@ test("US-119 have a message read out loud", async ({seed, as}) => {
 
   await expect(alice.getByRole("alert")).toContainText("Read out loud is ready to use!")
 
+  // Saving the key reads the message that was asked for rather than asking for the menu again.
+  await expect(alice.getByText("a message from Bob Barnacle")).toBeVisible()
+
+  // The quote, the mention and the url are named rather than spelled out a character at a time.
+  expect(speech.spoken).toEqual([
+    "another message\n\nheads up Alice Anchor, the notice is at a link to harbor.example",
+  ])
+
+  await alice.getByRole("button", {name: "Stop reading"}).click()
+
+  await expect(alice.getByText("a message from Bob Barnacle")).toHaveCount(0)
+
+  // Stopping a read whose audio is still in flight has to end that request too.
+  speech.hold()
+
   await openMessageMenu(alice, "heads up")
   await alice.getByRole("button", {name: "Read Out Loud"}).click()
 
   await expect(alice.getByText("a message from Bob Barnacle")).toBeVisible()
 
-  // The quote, the mention and the url are named rather than spelled out a character at a time.
-  expect(spoken).toEqual([
-    "another message\n\nheads up Alice Anchor, the notice is at a link to harbor.example",
-  ])
-
   await alice.getByRole("button", {name: "Stop reading"}).click()
+
+  speech.release()
 
   await expect(alice.getByText("a message from Bob Barnacle")).toHaveCount(0)
 })

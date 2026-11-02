@@ -8,10 +8,13 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Confirm from "@lib/components/Confirm.svelte"
-  import {app, deletes, profiles, reader, relayManagement, relays, user} from "@app/core"
-  import {deriveSpacePermissions} from "@app/management"
-  import {pushToast} from "@app/toast"
-  import {pushModal} from "@app/modal"
+  import {app} from "@app/core/app"
+  import {user} from "@app/core/user"
+  import {deletes, profiles, relayManagement, relays} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {pushToast} from "@app/features/toast"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -29,8 +32,8 @@
   const reason = report.reason() ?? ""
 
   const deleteReport = async () => {
-    const protect = await $relays.hasNip(url, 70)
-    const command = await $deletes.deleteEvent(event, w => w.setProtected(protect))
+    const relay = await $relays.load(url)
+    const command = await $deletes.deleteEvent(event, w => w.setProtected(relay?.hasNip(70)))
 
     command.publishToRelays([url])
     onResolved?.()
@@ -43,7 +46,7 @@
       pushToast({theme: "error", message: error})
     } else {
       pushToast({message: "Report has successfully been dismissed!"})
-      $app.repository.removeEvent(event.id)
+      await $app.repository.removeEvent(event.id)
       onResolved?.()
     }
   }
@@ -59,8 +62,8 @@
           pushToast({theme: "error", message: error})
         } else {
           pushToast({message: "Content has successfully been deleted!"})
-          $app.repository.removeEvent(event.id)
-          $app.repository.removeEvent(reportedId!)
+          await $app.repository.removeEvent(event.id)
+          await $app.repository.removeEvent(reportedId!)
           history.back()
           setTimeout(() => onResolved?.())
         }
@@ -79,7 +82,7 @@
           pushToast({theme: "error", message: error})
         } else {
           pushToast({message: "User has successfully been banned!"})
-          $app.repository.removeEvent(event.id)
+          await $app.repository.removeEvent(event.id)
           history.back()
           setTimeout(() => onResolved?.())
         }

@@ -1,7 +1,6 @@
 <script lang="ts">
   import {fade} from "svelte/transition"
   import cx from "classnames"
-  import {Capacitor} from "@capacitor/core"
   import Microphone from "@assets/icons/microphone.svg?dataurl"
   import MicrophoneOff from "@assets/icons/microphone-off.svg?dataurl"
   import VideocameraOff from "@assets/icons/videocamera-off.svg?dataurl"
@@ -16,11 +15,12 @@
   import Button from "@lib/components/Button.svelte"
   import VoiceCallAudioSettingsDialog from "@app/components/VoiceCallAudioSettingsDialog.svelte"
   import VoiceRoomJoinDialog from "@app/components/VoiceRoomJoinDialog.svelte"
-  import {rooms} from "@app/core"
-  import {RoomType, getRoomType} from "@app/rooms"
-  import {pushModal} from "@app/modal"
-  import {notifications} from "@app/notifications"
-  import {makeRoomPath} from "@app/routes"
+  import {rooms} from "@app/core/plugins"
+  import {ScreenShare} from "@app/features/spaces/calls/screenShare"
+  import {RoomType, getRoomType} from "@app/features/spaces/rooms"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {notifications} from "@app/features/notifications"
+  import * as pages from "@app/navigation/pages"
   import {
     VideoCallLayout,
     videoCallLayout,
@@ -28,14 +28,14 @@
     currentCallSession,
     callMicMuted,
     deriveRoomCallState,
-  } from "@app/call"
+  } from "@app/features/spaces/calls"
   import {
     cancelJoinVoiceRoom,
     leaveVoiceRoom,
     toggleCamera,
     toggleMute,
     toggleScreenShare,
-  } from "@app/callEngine"
+  } from "@app/features/spaces/calls/engine"
 
   type Props = {
     url: string
@@ -57,9 +57,11 @@
   const openJoinDialog = () => pushModal(VoiceRoomJoinDialog, {url, h})
   const openCallSettings = () => pushModal(VoiceCallAudioSettingsDialog)
 
-  const roomPath = $derived(makeRoomPath(url, h))
+  const roomPath = $derived(pages.room.path({url, h}))
   const chatUnread = $derived($notifications.has(roomPath))
   const isChatPanelActive = $derived($videoCallLayout === VideoCallLayout.Split)
+
+  const canShareScreen = ScreenShare.isSupported()
 
   const buttonClass = "button button-circle max-md:h-9 max-md:w-9"
 
@@ -120,7 +122,7 @@
               icon={$currentCallSession.cameraOn ? VideocameraRecord : VideocameraOff}
               size={4.5} />
           </Button>
-          {#if !Capacitor.isNativePlatform()}
+          {#if canShareScreen}
             <Button
               data-tip={$currentCallSession.screenShareOn ? "Stop sharing" : "Share screen"}
               aria-label={$currentCallSession.screenShareOn
@@ -175,7 +177,7 @@
         <Button
           data-tip="Join call"
           aria-label="Join voice room"
-          class="button button-primary button-circle shadow-xl"
+          class="button button-ghost button-circle"
           onclick={openJoinDialog}>
           <Icon icon={PhoneCallingRounded} size={4.5} />
         </Button>

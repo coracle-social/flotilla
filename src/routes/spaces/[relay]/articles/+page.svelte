@@ -14,19 +14,19 @@
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ArticleItem from "@app/components/ArticleItem.svelte"
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
-  import {reader} from "@app/core"
-  import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter, partitionByActivity} from "@app/content"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {makeArticleCreatePath} from "@app/routes"
+  import {reader} from "@app/core/domain"
+  import {partitionByActivity} from "@app/features/spaces"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.articles.decode(params)
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)
@@ -40,7 +40,7 @@
   let element: HTMLElement | undefined = $state()
   let events: Readable<TrustedEvent[]> = $state(readable([]))
 
-  const createArticle = () => goto(makeArticleCreatePath(url))
+  const createArticle = () => goto(pages.articleCreate.path({url}))
 
   const {items: articles} = $derived(partitionByActivity(LONG_FORM, $events))
 

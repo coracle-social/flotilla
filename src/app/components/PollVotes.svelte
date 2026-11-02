@@ -1,19 +1,21 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {formatTimestampRelative} from "@welshman/lib"
+  import {formatTimestampRelative, now} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {POLL_RESPONSE, tagSpec, tagValues, relay} from "@welshman/util"
+  import {POLL_RESPONSE, relay, stamp, tagSpec, tagValues} from "@welshman/util"
   import {Poll, PollResponse} from "@welshman/domain"
   import type {Publication} from "@welshman/app"
   import PollOption from "@app/components/PollOption.svelte"
-  import {command, events, publisher, reader, user, writer} from "@app/core"
+  import {user} from "@app/core/user"
+  import {events, publisher} from "@app/core/plugins"
+  import {command, reader, writer} from "@app/core/domain"
 
   type Props = {
-    url: string
+    urls: string[]
     event: TrustedEvent
   }
 
-  const {url, event}: Props = $props()
+  const {urls, event}: Props = $props()
 
   const responses = $events.desc([{kinds: [POLL_RESPONSE], "#e": [event.id]}]).$
 
@@ -37,7 +39,9 @@
     activePublication = undefined
 
     if (selection.length > 0) {
-      const eventWriter = writer(PollResponse).forceRoutes(relay(url)).setPollId(event.id)
+      const eventWriter = writer(PollResponse)
+        .forceRoutes(...urls.map(relay))
+        .setPollId(event.id)
 
       for (const id of selection) {
         eventWriter.addSelection(id)
@@ -46,8 +50,11 @@
       const responseCommand = await command(eventWriter)
 
       // Give the user time to check more boxes before the vote actually goes out.
+      // A vote is read by its timestamp, so a change within the same second has to sort after it.
+      const created_at = Math.max(now(), (ownResponse?.created_at ?? 0) + 1)
+
       activePublication = $publisher.publish({
-        event: responseCommand.event,
+        event: stamp(responseCommand.event, created_at),
         relays: responseCommand.relays,
         delay: pollType === "multiplechoice" ? 1000 : undefined,
       })

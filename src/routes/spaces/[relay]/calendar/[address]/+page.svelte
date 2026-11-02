@@ -22,16 +22,16 @@
   import EventComments from "@app/components/EventComments.svelte"
   import CalendarEventPeople from "@app/components/CalendarEventPeople.svelte"
   import CalendarRsvp from "@app/components/CalendarRsvp.svelte"
-  import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/calendar"
-  import {events, network, reader} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {decodeRelay} from "@app/relays"
+  import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/features/spaces/calendar"
+  import {events, network} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {makeFeedContext} from "@app/features/feeds"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {relay, address} = params
-  const url = decodeRelay(relay)
+  const {url, address} = pages.calendarEvent.decode(params)
   const context = makeFeedContext({relays: [url]})
   const event = $events.one(address, [url]).$
   const timeEvent = derived(event, $event => ($event ? reader(TimeEvent)($event) : undefined))

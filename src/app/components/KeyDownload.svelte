@@ -18,8 +18,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProgressBar from "@app/components/ProgressBar.svelte"
-  import {pushToast} from "@app/toast"
-  import {PLATFORM_NAME} from "@app/env"
+  import {pushToast} from "@app/features/toast"
+  import {PLATFORM_NAME} from "@app/core/env"
 
   type Props = {
     secret: string
@@ -42,13 +42,6 @@
 
   const downloadKey = async () => {
     const sharedCopy = `
-    Most online services keep track of users by giving them a username and password. This gives the
-    service total control over their users, allowing them to ban them at any time, or sell their activity.
-
-    On Nostr, you control your own identity and social data, through the magic of cryptography. The basic
-    idea is that you have a public key, which acts as your user ID, and a private key which allows you to
-    prove your identity.
-
     It's very important to keep your private key secret because it grants permanent and complete access to your
     account.
     `
@@ -65,7 +58,7 @@
 
       const ncryptsec = encrypt(hexToBytes(secret), password)
       instructions = `
-      This file contains a backup of your Nostr secret key, downloaded from ${PLATFORM_NAME} and encrypted using
+      This file contains a backup of your secret key, downloaded from ${PLATFORM_NAME} and encrypted using
       a password you chose when you backed up your key.
 
       ${sharedCopy}
@@ -74,13 +67,12 @@
 
       ${ncryptsec}
 
-      To use it to log in to other Nostr apps, find a Nostr Signer app (https://nostrapps.com/#signers is a good
-      place to look), and import your key.
+      To log in with it, choose "Log in with Key" in ${PLATFORM_NAME} and enter it with your password.
       `
     } else {
       const nsec = nsecEncode(hexToBytes(secret))
       instructions = `
-      This file contains a backup of your Nostr secret key, downloaded from ${PLATFORM_NAME}.
+      This file contains a backup of your secret key, downloaded from ${PLATFORM_NAME}.
 
       ${sharedCopy}
 
@@ -88,13 +80,12 @@
 
       ${nsec}
 
-      To use it to log in to other Nostr apps, find a Nostr Signer app (https://nostrapps.com/#signers is a good
-      place to look), and import your key.
+      To log in with it, choose "Log in with Key" in ${PLATFORM_NAME} and paste it in.
       `
     }
 
     try {
-      await downloadText("Nostr Secret Key.txt", cleanupCopy(instructions))
+      await downloadText(`${PLATFORM_NAME} Secret Key.txt`, cleanupCopy(instructions))
       didDownload = true
     } catch (e) {
       // Dismissing the native share sheet rejects with "Share canceled".

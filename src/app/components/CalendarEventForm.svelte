@@ -15,12 +15,13 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {publishToSpace} from "@app/rooms"
-  import {makeEditor} from "@app/editor"
-  import {DraftKey} from "@app/drafts"
-  import {pushToast} from "@app/toast"
-  import {writer} from "@app/core"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {publishToSpace} from "@app/features/spaces/rooms"
+  import {setEventReminders} from "@app/features/reminders"
+  import {makeEditor} from "@app/features/editor"
+  import {DraftKey} from "@app/features/drafts"
+  import {pushToast} from "@app/features/toast"
+  import {writer} from "@app/core/domain"
 
   type Values = {
     d: string
@@ -106,7 +107,7 @@
         .setContent(content)
         .addTags(...ed.storage.nostr.getEditorTags())
 
-      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
+      const {publication, error} = await publishToSpace(eventWriter, {url, h, shareToChat})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -115,6 +116,8 @@
       draftKey?.clear()
       history.back()
       pushToast({message: "Your event has been saved!"})
+
+      await setEventReminders(url, publication.event, true)
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to save your event."})

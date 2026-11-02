@@ -1,5 +1,54 @@
 # Changelog
 
+# 1.14.0
+
+* Post an article or a poll from the Create post button
+* Merge the home inbox and notifications into one activity stream
+* Zap notes and replies, quote a note in a public post, and follow someone from their profile dialog
+* Tally reactions on content, and show zap totals and like counts on their buttons
+* Move the member directory into the space about page, and redesign the connection status dialog
+* Transcribe voice notes on the device
+* Render highlights as quotations with their source
+* Offer Share to Chat on notes and comments outside any space
+* Walk back through opened notes, and keep a dialog where you left it
+* Redraw the navigation icons and darken the mobile nav
+* Retry relay authentication the relay refused as expired
+* Resume a draft's unfinished upload, and upload photos the compressor can't read
+* Turn the camera off when a call is backgrounded on mobile
+* Fix pages marked read before stored read markers load, and the settings action bar hiding under the mobile nav
+
+# 1.13.0
+
+* Add bookmarks, with folders and a bookmark manager
+* Redesign the chat and room composers
+* Support paid spaces, with checkout and relay notifications
+* Mute people from their profile menu
+* Choose what the home network feed and notifications tab include, and merge notifications about the same note
+* Show replies in the network feed under the note they answer
+* Rework the home inbox to include space activity, and add a relay settings button to the network section
+* Spotlight screen shares in calls
+* Reorder lists by dragging on touch screens
+* Keep a space's content across a reload, and keep working when local storage fails
+* Show room references as links, every name in a reaction tooltip, and open a DM's message menu by clicking it
+* Cap comment indentation on narrow screens
+
+# 1.12.0
+
+* Share your screen in calls on all platforms
+* Redesign the content library
+* Add a location to profiles and a member map to the directory
+* Add a notifications tab to the home network section
+* Add a create post button to the home page and profiles
+* Remind people about calendar events they're going to
+* Record voice notes in a dialog, and go straight to the call in voice rooms
+* Add a nature theme, more emoji and kaomoji
+* Show rich link previews for links to spaces, rooms and profiles
+* Keep a message in the composer when it fails to send, instead of dropping it
+* Only raise notifications for new messages
+* Keep private mutes when saving content settings, and handle muted words from other clients
+* Keep edited listings and calendar events in their room
+* Fix stalled uploads, quotes that hadn't loaded, misplaced comments and the emoji picker overflowing
+
 # 1.11.2
 
 * Offer a way out when startup gets stuck waiting on a remote signer

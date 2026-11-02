@@ -1,13 +1,10 @@
 <script lang="ts">
   import * as nip19 from "nostr-tools/nip19"
-  import {publish} from "@welshman/app"
   import {displayPubkey} from "@welshman/domain"
   import Copy from "@assets/icons/copy.svg?dataurl"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
-  import UserPlus from "@assets/icons/user-plus.svg?dataurl"
   import Pen2 from "@assets/icons/pen-2.svg?dataurl"
-  import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
@@ -22,14 +19,18 @@
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
   import ProfilePageNotes from "@app/components/ProfilePageNotes.svelte"
   import ProfileEdit from "@app/components/ProfileEdit.svelte"
+  import ProfileFollowButton from "@app/components/ProfileFollowButton.svelte"
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
-  import NoteCreate from "@app/components/NoteCreate.svelte"
+  import PostCreateButton from "@app/components/PostCreateButton.svelte"
+  import PostCreateFab from "@app/components/PostCreateFab.svelte"
   import WotScore from "@app/components/WotScore.svelte"
-  import {compressFileForUpload, uploadFile} from "@app/uploads"
-  import {pushModal} from "@app/modal"
-  import {clip, pushToast} from "@app/toast"
-  import {goToChat} from "@app/routes"
-  import {followLists, profiles, relayLists, user} from "@app/core"
+  import {compressFileForUpload, uploadFile} from "@app/features/uploads"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {clip, pushToast} from "@app/features/toast"
+  import {goToMessages} from "@app/features/messages"
+  import {user} from "@app/core/user"
+  import {profiles, relayLists} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
 
   type Props = {
     pubkey: string
@@ -40,8 +41,6 @@
   const profile = $profiles.one(target)
   const profileDisplay = $profiles.display(target).$
   const isSelf = $derived($user.pubkey === target)
-  const follows = $derived($followLists.one($user.pubkey))
-  const isFollowing = $derived(($follows?.pubkeys() ?? []).includes(target))
   const website = $derived($profile?.website()?.replace(/^https?:\/\//, ""))
   const websiteHref = $derived(
     website && $profile?.website()?.match(/^https?:\/\//)
@@ -56,21 +55,7 @@
 
   const startEdit = () => pushModal(ProfileEdit)
 
-  const createPost = () => pushModal(NoteCreate)
-
-  const openChat = () => goToChat([target])
-
-  const toggleFollow = async () => {
-    if (isSelf) {
-      return
-    }
-
-    if (isFollowing) {
-      await $followLists.unfollow(target).then(publish)
-    } else {
-      await $followLists.follow(["p", target]).then(publish)
-    }
-  }
+  const openChat = () => goToMessages([target])
 
   const openBannerPicker = () => bannerInput?.click()
 
@@ -164,19 +149,15 @@
                         <Icon icon={Pen2} size={4} />
                         Edit profile
                       </Button>
-                      <Button
-                        class="button button-primary flex-1 sm:button-sm sm:flex-none"
-                        onclick={createPost}>
-                        <Icon icon={PenNewSquare} size={4} />
+                      <PostCreateButton
+                        class="flex-1 max-md:hidden sm:flex-none"
+                        buttonClass="button button-primary sm:button-sm">
                         Create post
-                      </Button>
+                      </PostCreateButton>
                     {:else}
-                      <Button
-                        class="button button-neutral flex-1 sm:button-sm sm:flex-none"
-                        onclick={toggleFollow}>
-                        <Icon icon={UserPlus} size={4} />
-                        {isFollowing ? "Unfollow" : "Follow"}
-                      </Button>
+                      <ProfileFollowButton
+                        pubkey={target}
+                        class="button button-neutral flex-1 sm:button-sm sm:flex-none" />
                       <Button
                         class="button button-primary flex-1 sm:button-sm sm:flex-none"
                         onclick={openChat}>
@@ -186,20 +167,25 @@
                     {/if}
 
                     <div class="shrink-0">
-                      <MenuButton component={ProfileMenu} componentProps={{pubkey: target}} />
+                      <MenuButton
+                        aria-label="Profile actions"
+                        component={ProfileMenu}
+                        componentProps={{pubkey: target}} />
                     </div>
                   </div>
                 {/if}
               </div>
 
-              <div class="flex items-center gap-1 text-sm leading-none opacity-75">
-                <span>{displayPubkey(target)}</span>
-                <Button
-                  onclick={copyNpub}
-                  class="button button-ghost button-xs h-5 min-h-5 w-5 p-0">
-                  <Icon size={3} icon={Copy} />
-                </Button>
-              </div>
+              {#if !HIDE_NOSTR}
+                <div class="flex items-center gap-1 text-sm leading-none opacity-75">
+                  <span>{displayPubkey(target)}</span>
+                  <Button
+                    onclick={copyNpub}
+                    class="button button-ghost button-xs h-5 min-h-5 w-5 p-0">
+                    <Icon size={3} icon={Copy} />
+                  </Button>
+                </div>
+              {/if}
 
               <ProfileStatus pubkey={target} />
 
@@ -249,3 +235,7 @@
     </aside>
   </div>
 </div>
+
+{#if isSelf}
+  <PostCreateFab />
+{/if}

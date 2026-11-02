@@ -23,6 +23,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // livekit-android pulls com.github.davidliu:audioswitch from here
+        maven { url 'https://jitpack.io' }
     }
 }
 

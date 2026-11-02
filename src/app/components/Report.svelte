@@ -14,8 +14,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {command, writer} from "@app/core"
-  import {pushToast} from "@app/toast"
+  import {command, writer} from "@app/core/domain"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -44,7 +44,7 @@
         .setContent(content)
 
       const reportCommand = await command(eventWriter)
-      const error = (await reportCommand.publishToRelays([url]).settled()).getError()
+      const error = await reportCommand.publishToRelays([url]).getError()
 
       if (error) {
         return pushToast({theme: "error", message: error})

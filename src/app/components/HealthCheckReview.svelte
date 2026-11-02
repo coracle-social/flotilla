@@ -16,9 +16,9 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import type {HealthCheckPlan} from "@app/healthChecks"
-  import {clearModals} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import type {HealthCheckPlan} from "@app/features/healthChecks"
+  import {clearModals} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     plans: HealthCheckPlan[]
@@ -33,7 +33,7 @@
 
   const save = async (plan: HealthCheckPlan) => {
     const command = await plan.apply()
-    const error = command && (await publish(command).settled()).getError()
+    const error = command && (await publish(command).getError())
 
     if (error) {
       pushToast({theme: "error", message: `Your relays couldn't be saved: ${errorMessage(error)}`})

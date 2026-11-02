@@ -16,8 +16,8 @@ export const modalForm = (page: Page, title: string) =>
 // Named rather than counted, since a card is free to put a join of its own above it.
 export const emojiButton = (scope: Locator) => scope.getByRole("button", {name: "Add a reaction"})
 
-// The menu is the one action with no accessible name, and the last thing in a card's last join.
-export const menuButton = (scope: Locator) => scope.locator(".join").getByRole("button").last()
+// Named after the noun it acts on, as "Article actions", "Event actions" and so on.
+export const menuButton = (scope: Locator) => scope.getByRole("button", {name: / actions$/})
 
 // The picker is a web component with an open shadow root, and searching avoids its category tabs.
 export const pickEmoji = async (page: Page, opener: Locator, annotation: string) => {
@@ -36,6 +36,18 @@ export const pickEmoji = async (page: Page, opener: Locator, annotation: string)
     .click()
 }
 
+// Every home feed filter carries a count, so its name is the label and a number.
+export const homeFeedFilter = (scope: Locator, label: string) =>
+  scope.getByRole("button", {name: new RegExp(`^${label} \\d+$`)})
+
+// RelayItem draws a card, in a relay list and in the picker pushed over it alike.
+export const relayCard = (scope: Locator, name: string) =>
+  scope.locator(".card").filter({hasText: name})
+
+// PollOption renders an option as a small card carrying its label, its count and its progress bar.
+export const pollOption = (scope: Locator | Page, label: string) =>
+  scope.locator(".card-sm").filter({hasText: label})
+
 export const pageBar = (page: Page) => page.locator('[data-component="PageBar"]')
 
 export const openRoomDetail = (page: Page) =>
@@ -44,7 +56,7 @@ export const openRoomDetail = (page: Page) =>
 export const roomLink = (page: Page, name: string) =>
   page.locator(".space-menu__scroll").getByRole("link", {name})
 
-// One toast at a time — src/app/toast.ts holds a single writable — so this is the toast.
+// One toast at a time — src/app/features/toast.ts holds a single writable — so this is the toast.
 export const toast = (page: Page) => page.getByRole("alert")
 
 // FieldInline, RoomDetail and EventInfo all lay a labelled control out as a single row.
@@ -63,6 +75,10 @@ export const composerEnabled = (page: Page) =>
 export const composerDisabled = (page: Page) =>
   expect(page.locator(".room__compose .chat-editor")).toHaveAttribute("aria-disabled", "true")
 
+// The + at the start of the composer. A room's opens the create menu; a conversation's is the picker.
+export const composerAddButton = (page: Page) =>
+  page.locator(".room__compose").getByRole("button", {name: /^Attach/})
+
 // The send button carries the shortcut it advertises, which differs by platform.
 export const sendButton = (page: Page) => page.locator("button[data-tip$='enter to send']")
 
@@ -80,7 +96,7 @@ export const openMessageMenu = (page: Page, text: string) =>
   message(page, text).getByRole("button", {name: "More options"}).click()
 
 export const bubble = (page: Page, text: string) =>
-  page.locator(".chat-bubble").filter({hasText: text})
+  page.locator(".conversation-bubble").filter({hasText: text})
 
 // Clicking a composer that already holds the caret would collapse the selection an edit types over.
 export const send = async (page: Page, content: string) => {

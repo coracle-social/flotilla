@@ -1,43 +1,42 @@
 <script lang="ts">
-  import type {TrustedEvent, EventContent} from "@welshman/util"
-  import ReactionSummary from "@app/components/ReactionSummary.svelte"
+  import type {TrustedEvent} from "@welshman/util"
+  import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
+  import Button from "@lib/components/Button.svelte"
+  import EventReactions from "@app/components/EventReactions.svelte"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
-  import EventActionBar from "@app/components/EventActionBar.svelte"
-  import {events} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {publishReaction, retractReaction} from "@app/reactions"
+  import {events} from "@app/core/plugins"
+  import type {FeedContext} from "@app/features/feeds"
+  import {shareEvent} from "@app/features/share"
 
   type Props = {
-    url: string
     event: TrustedEvent
     context: FeedContext
+    url?: string
   }
 
-  const {url, event, context}: Props = $props()
+  const {event, context, url}: Props = $props()
 
   const deleted = $derived($events.isDeleted(event).$)
 
-  const deleteReaction = (reaction: TrustedEvent) => retractReaction(reaction, {url})
-
-  const createReaction = (values: EventContent) => publishReaction(event, values, {url})
+  const share = () => shareEvent(url, "Article", event)
 </script>
 
 <div data-component="ArticleActionBar" class="flex w-full min-w-0 flex-col gap-3">
   <PublicationStatusOrDeleted {event} {context}>
-    <ReactionSummary
-      {url}
-      {event}
-      {context}
-      {deleteReaction}
-      {createReaction}
-      reactionClass="tip-top" />
+    <EventReactions {url} {event} {context} placement="top" emojiMenu />
   </PublicationStatusOrDeleted>
   {#if !$deleted}
-    <EventActionBar {url} {event} noun="Article">
-      {#snippet leading()}
-        <EventActivity {event} {context} size="sm" hideLastActive />
-      {/snippet}
-    </EventActionBar>
+    <div class="flex w-full min-w-0 items-start justify-between gap-x-4">
+      <EventActivity {event} {context} size="sm" hideLastActive />
+      <Button
+        aria-label="Share to Chat"
+        class="button button-neutral button-sm shrink-0 rounded-full"
+        onclick={share}>
+        <Icon icon={ShareCircle} size={4} />
+        Share
+      </Button>
+    </div>
   {/if}
 </div>

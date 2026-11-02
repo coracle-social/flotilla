@@ -6,7 +6,7 @@
   import Button from "@lib/components/Button.svelte"
   import ComposeBar from "@app/components/ComposeBar.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
-  import {profiles} from "@app/core"
+  import {profiles} from "@app/core/plugins"
 
   type Props = {
     url?: string
@@ -23,7 +23,7 @@
 <ComposeBar class="relative pr-8">
   <p class="text-primary text-xs">{verb} @{$display}</p>
   {#key event.id}
-    <NoteContentMinimal trimParent {event} />
+    <NoteContentMinimal {event} />
   {/key}
   <Button class="absolute right-2 top-2 cursor-pointer" onclick={clear}>
     <Icon icon={CloseCircle} />

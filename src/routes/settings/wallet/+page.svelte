@@ -21,11 +21,12 @@
   import WalletConnect from "@app/components/WalletConnect.svelte"
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
   import WalletUpdateReceivingAddress from "@app/components/WalletUpdateReceivingAddress.svelte"
-  import {pushModal} from "@app/modal"
-  import {displayLnurl, getNwcClient, getWebLn, wallet} from "@app/lightning"
-  import {userSettingsValues, publishSettings, createSettingsForm} from "@app/settings"
-  import {pushToast} from "@app/toast"
-  import {profiles, user} from "@app/core"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {displayLnurl, getNwcClient, getWebLn, wallet} from "@app/features/wallet"
+  import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
+  import {pushToast} from "@app/features/toast"
+  import {user} from "@app/core/user"
+  import {profiles} from "@app/core/plugins"
 
   const connect = () => pushModal(WalletConnect)
 
@@ -122,7 +123,12 @@
         })
       }
 
-      await publishSettings({zap_amounts: $settings.zap_amounts})
+      const publication = await publishSettings({zap_amounts: $settings.zap_amounts})
+      const error = await publication.getError()
+
+      if (error) {
+        return pushToast({theme: "error", message: error})
+      }
 
       pushToast({message: "Your zap amounts have been saved!"})
     } catch (e) {

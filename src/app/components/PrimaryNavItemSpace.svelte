@@ -2,10 +2,11 @@
   import {page} from "$app/stores"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
-  import {relays} from "@app/core"
-  import {navigate} from "@app/modal"
-  import {makeSpacePath, makeSpaceEntryPath, hasSpacePage} from "@app/routes"
-  import {notifications} from "@app/notifications"
+  import {relays} from "@app/core/plugins"
+  import {navigate} from "@app/navigation/navigate"
+  import * as pages from "@app/navigation/pages"
+  import {hasSpacePage, makeSpaceEntryPath} from "@app/navigation/history"
+  import {notifications} from "@app/features/notifications"
 
   type Props = {
     url: string
@@ -23,7 +24,7 @@
     })
   }
 
-  const path = makeSpacePath(url)
+  const path = pages.space.path({url})
 
   const display = $relays.display(url).$
 </script>

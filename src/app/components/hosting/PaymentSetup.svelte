@@ -15,10 +15,15 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {user} from "@app/core"
-  import {pushToast} from "@app/toast"
-  import {getNwcClient, wallet} from "@app/lightning"
-  import {hosting, hostingErrorMessage, updateTenant, createPortalSession} from "@app/hosting"
+  import {user} from "@app/core/user"
+  import {pushToast} from "@app/features/toast"
+  import {getNwcClient, wallet} from "@app/features/wallet"
+  import {
+    hosting,
+    hostingErrorMessage,
+    updateTenant,
+    createPortalSession,
+  } from "@app/features/hosting"
 
   type Tab = "nwc" | "card"
 

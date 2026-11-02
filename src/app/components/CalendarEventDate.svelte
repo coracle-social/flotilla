@@ -2,7 +2,7 @@
   import {LOCALE, secondsToDate} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {TimeEvent} from "@welshman/domain"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
 
   type Props = {
     event: TrustedEvent

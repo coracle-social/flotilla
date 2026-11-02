@@ -17,10 +17,11 @@
   import ToggleInput from "@lib/components/ToggleInput.svelte"
   import Tooltip from "@lib/components/Tooltip.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
+  import Content from "@app/components/Content.svelte"
   import RelayDetailMenu from "@app/components/hosting/RelayDetailMenu.svelte"
   import CustomDomainModal from "@app/components/hosting/CustomDomainModal.svelte"
-  import {pushModal} from "@app/modal"
-  import {clip, pushToast} from "@app/toast"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {clip, pushToast} from "@app/features/toast"
   import {
     RELAY_FLAG_DEFAULTS,
     flagToBool,
@@ -38,7 +39,7 @@
     type HostedRelay,
     type RelayFlag,
     type UpdateRelayInput,
-  } from "@app/hosting"
+  } from "@app/features/hosting"
 
   type Props = {
     relay: HostedRelay
@@ -151,7 +152,13 @@
           wss://{host}
         </Link>
         {#if relay.info_description.trim()}
-          <p class="mt-2 text-sm text-content-muted">{relay.info_description}</p>
+          <div class="mt-2 text-sm text-content-muted">
+            <Content
+              event={{content: relay.info_description, tags: []}}
+              expandMode="inline"
+              minLength={200}
+              maxLength={320} />
+          </div>
         {/if}
       </div>
     </div>

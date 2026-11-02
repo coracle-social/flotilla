@@ -1,0 +1,84 @@
+import {Capacitor} from "@capacitor/core"
+import {identity} from "@welshman/lib"
+import {DELETE, REACTION, REPORT, ZAP_RECEIPT, normalizeRelayUrl} from "@welshman/util"
+import {maybeGetTestEnv} from "@lib/test/env"
+
+const fromCsv = (s: string) => (s || "").split(",").filter(identity)
+
+// Test-only: vite folds DEV to false in a production build, stripping the branch and the import.
+const env = (key: string): string =>
+  (import.meta.env.DEV ? maybeGetTestEnv(key) : undefined) ?? import.meta.env[key]
+
+export const PUSH_SERVER = env("VITE_PUSH_SERVER")
+
+export const PUSH_BRIDGE = normalizeRelayUrl(env("VITE_PUSH_BRIDGE"))
+
+export const ENABLE_ZAPS = Capacitor.getPlatform() !== "ios"
+
+export const REACTION_KINDS = [REPORT, DELETE, REACTION]
+
+if (ENABLE_ZAPS) {
+  REACTION_KINDS.push(ZAP_RECEIPT)
+}
+
+export const ENABLE_PAID_SPACES = Capacitor.getPlatform() !== "ios"
+
+export const SIGNER_RELAYS = fromCsv(env("VITE_SIGNER_RELAYS")).map(normalizeRelayUrl)
+
+export const BLOCKED_RELAYS = fromCsv(env("VITE_BLOCKED_RELAYS")).map(normalizeRelayUrl)
+
+export const INDEXER_RELAYS = fromCsv(env("VITE_INDEXER_RELAYS")).map(normalizeRelayUrl)
+
+export const DEFAULT_RELAYS = fromCsv(env("VITE_DEFAULT_RELAYS")).map(normalizeRelayUrl)
+
+export const DEFAULT_SEARCH_RELAYS = fromCsv(env("VITE_DEFAULT_SEARCH_RELAYS")).map(
+  normalizeRelayUrl,
+)
+
+export const DEFAULT_MESSAGING_RELAYS = fromCsv(env("VITE_DEFAULT_MESSAGING_RELAYS")).map(
+  normalizeRelayUrl,
+)
+
+export const PLATFORM_RELAYS = fromCsv(env("VITE_PLATFORM_RELAYS")).map(normalizeRelayUrl)
+
+export const PLATFORM_URL = env("VITE_PLATFORM_URL")
+
+export const PLATFORM_ABOUT = env("VITE_PLATFORM_ABOUT")
+
+export const PLATFORM_TERMS = env("VITE_PLATFORM_TERMS")
+
+export const PLATFORM_PRIVACY = env("VITE_PLATFORM_PRIVACY")
+
+export const PLATFORM_LOGO = env("VITE_PLATFORM_LOGO").replace(/^static/, "")
+
+export const PLATFORM_NAME = env("VITE_PLATFORM_NAME")
+
+export const PLATFORM_LOGEE = env("VITE_PLATFORM_LOGEE")
+
+export const PLATFORM_ACCENT = env("VITE_PLATFORM_ACCENT")
+
+// Components visual preset (see src/lib/components/theme.css), set per deployment with no default.
+export const FL_THEME = env("VITE_THEME")
+
+export const PLATFORM_DESCRIPTION = env("VITE_PLATFORM_DESCRIPTION")
+
+// Hides protocol details (relays, keys, identifiers, raw events) from people who don't need them.
+export const HIDE_NOSTR = env("VITE_HIDE_NOSTR") === "true"
+
+export const POMADE_SIGNERS = fromCsv(env("VITE_POMADE_SIGNERS"))
+
+export const DEFAULT_BLOSSOM_SERVERS = fromCsv(env("VITE_DEFAULT_BLOSSOM_SERVERS"))
+
+export const DEFAULT_SPACES = fromCsv(env("VITE_DEFAULT_SPACES")).map(normalizeRelayUrl)
+
+export const DEFAULT_PUBKEYS = env("VITE_DEFAULT_PUBKEYS")
+
+export const HOSTING_BACKEND_URL = env("VITE_HOSTING_BACKEND_URL")
+
+export const HOSTING_RELAY_DOMAIN = env("VITE_HOSTING_RELAY_DOMAIN")
+
+export const DUFFLEPUD_URL = "https://dufflepud.coracle.social"
+
+export const THUMBNAIL_URL = env("VITE_THUMBNAIL_URL")
+
+export const dufflepud = (path: string) => DUFFLEPUD_URL + "/" + path

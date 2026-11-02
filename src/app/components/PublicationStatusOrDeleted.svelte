@@ -3,9 +3,9 @@
   import type {TrustedEvent} from "@welshman/util"
   import {PublishStatus} from "@welshman/net"
   import PublicationStatus from "@app/components/PublicationStatus.svelte"
-  import {publisher} from "@app/core"
-  import type {FeedContext} from "@app/feeds"
-  import {noPublications, publicationsByEventId} from "@app/publications"
+  import {publisher} from "@app/core/plugins"
+  import type {FeedContext} from "@app/features/feeds"
+  import {noPublications, publicationsByEventId} from "@app/core/publications"
 
   type Props = {
     event: TrustedEvent

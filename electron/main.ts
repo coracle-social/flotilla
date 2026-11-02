@@ -138,7 +138,7 @@ createCapacitorElectronApp({
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://plausible.coracle.social",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://basemaps.cartocdn.com",
+      "img-src 'self' data: blob: https://dufflepud.coracle.social",
       "font-src 'self' data:",
       "media-src 'self' blob:",
       "connect-src 'self' https: wss: ws: http:",

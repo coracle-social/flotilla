@@ -9,7 +9,7 @@
   import Button from "@lib/components/Button.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ReportItem from "@app/components/ReportItem.svelte"
-  import {events} from "@app/core"
+  import {events} from "@app/core/plugins"
 
   type Props = {
     url: string

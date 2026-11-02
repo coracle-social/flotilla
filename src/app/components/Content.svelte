@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {tagSpec, tagValue} from "@welshman/util"
+  import {EventRef, tagSpec, tagValue} from "@welshman/util"
   import {
     parse,
     truncate,
@@ -15,12 +15,9 @@
     isLink,
     isProfile,
     isRoom,
-    isEvent,
     isEllipsis,
-    isAddress,
     isNewline,
   } from "@welshman/content"
-  import type {Parsed} from "@welshman/content"
   import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
   import Danger from "@assets/icons/danger-triangle.svg?dataurl"
@@ -38,9 +35,10 @@
   import ContentCommand from "@app/components/ContentCommand.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {makeRoomPath} from "@app/routes"
-  import {deriveValidCommands, getCommandsForInvocation} from "@app/commands"
-  import {userSettingsValues} from "@app/settings"
+  import * as pages from "@app/navigation/pages"
+  import {isQuote} from "@app/features/quotes"
+  import {deriveValidCommands, getCommandsForInvocation} from "@app/features/spaces/rooms/commands"
+  import {userSettingsValues} from "@app/core/settings"
 
   type Props = {
     event: any
@@ -48,7 +46,6 @@
     maxLength?: number
     showEntire?: boolean
     expandMode?: string
-    trimParent?: boolean
     url?: string
   }
 
@@ -58,7 +55,6 @@
     maxLength = 700,
     showEntire = $bindable(false),
     expandMode = "block",
-    trimParent = false,
     url,
   }: Props = $props()
 
@@ -113,8 +109,6 @@
 
   const isStartAndEnd = (i: number) => isStart(i) && isEnd(i)
 
-  const isQuote = (p: Parsed) => isEvent(p) || isAddress(p)
-
   let warningDismissed = $state(false)
 
   const ignoreWarning = () => {
@@ -127,37 +121,15 @@
       : $userSettingsValues.hide_sensitive && tagValue(tagSpec("content-warning"), event.tags),
   )
 
-  const dropWhile = <T,>(f: (x: T) => boolean, xs: Iterable<T>) => {
-    const result: T[] = []
-
-    for (const x of xs) {
-      if (result.length === 0 && f(x)) {
-        continue
-      }
-
-      result.push(x)
-    }
-
-    return result
-  }
-
-  const shortContent = $derived.by(() => {
-    let result = fullContent
-
-    if (trimParent && result.length > 0 && isQuote(result[0])) {
-      result = dropWhile(p => isQuote(p) || isNewline(p), result)
-    }
-
-    if (!showEntire) {
-      result = truncate(result, {
-        minLength,
-        maxLength,
-        mediaLength: 200,
-      })
-    }
-
-    return result
-  })
+  const shortContent = $derived(
+    showEntire
+      ? fullContent
+      : truncate(fullContent, {
+          minLength,
+          maxLength,
+          mediaLength: 200,
+        }),
+  )
 
   const hasEllipsis = $derived(shortContent.some(isEllipsis))
   const expandInline = $derived(hasEllipsis && expandMode === "inline")
@@ -208,11 +180,18 @@
         {:else if isProfile(parsed)}
           <ContentMention value={parsed.value} {url} />
         {:else if isRoom(parsed)}
-          <Link href={makeRoomPath(parsed.value.url, parsed.value.room)} class="link-content">
+          <Link
+            href={pages.room.path({url: parsed.value.url, h: parsed.value.room})}
+            class="link-content">
             #<RoomName url={parsed.value.url} h={parsed.value.room} />
           </Link>
         {:else if isQuote(parsed)}
-          <ContentQuote {url} value={parsed.value} raw={parsed.raw} {event} inline={!isBlock(i)} />
+          <ContentQuote
+            {url}
+            ref={EventRef.fromPointer(parsed.value)}
+            raw={parsed.raw}
+            {event}
+            inline={!isBlock(i)} />
         {:else if isEllipsis(parsed) && expandInline}
           {@html renderAsHtml(parsed)}
           <button

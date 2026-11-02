@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Bookmark from "@assets/icons/bookmark.svg?dataurl"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import ServerPath from "@assets/icons/server-path.svg?dataurl"
   import GalleryMinimalistic from "@assets/icons/gallery-minimalistic.svg?dataurl"
@@ -12,11 +13,11 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import Profile from "@app/components/Profile.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import {user} from "@app/core"
-  import {ENABLE_ZAPS} from "@app/env"
-  import {HOSTING_ENABLED} from "@app/hosting"
-  import {pushModal} from "@app/modal"
-  import {makeProfilePath} from "@app/routes"
+  import {user} from "@app/core/user"
+  import {ENABLE_ZAPS} from "@app/core/env"
+  import {HOSTING_ENABLED} from "@app/features/hosting"
+  import {pushModal} from "@app/navigation/dialogs"
+  import * as pages from "@app/navigation/pages"
 
   const logout = () => pushModal(LogOut)
 </script>
@@ -24,10 +25,16 @@
 <Modal label="Settings">
   <ModalBody>
     <div class="flex flex-col gap-8 items-center py-12 max-w-[16rem] m-auto w-full">
-      <Link href={makeProfilePath($user.pubkey)}>
+      <Link href={pages.profile.path({pubkey: $user.pubkey})}>
         <Profile inert pubkey={$user.pubkey} />
       </Link>
       <div class="grid grid-cols-3 gap-3 w-full">
+        <Link
+          href="/bookmarks"
+          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+          <Icon icon={Bookmark} size={5} />
+          Bookmarks
+        </Link>
         <Link
           href="/settings/profile"
           class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">

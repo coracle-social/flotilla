@@ -1,7 +1,7 @@
 <script lang="ts">
   import {debounce} from "throttle-debounce"
   import {maybe} from "@welshman/lib"
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/navigation/navigate"
   import {preventDefault} from "@lib/html"
   import {slideAndFade} from "@lib/transition"
   import Spinner from "@lib/components/Spinner.svelte"
@@ -22,9 +22,10 @@
   import RelaySummary from "@app/components/RelaySummary.svelte"
   import SpaceJoinNotifications from "@app/components/SpaceJoinNotifications.svelte"
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
-  import {pushToast} from "@app/toast"
-  import {goToSpace, makeRoomPath} from "@app/routes"
-  import {acceptInvite, parseInviteLink} from "@app/access"
+  import {pushToast} from "@app/features/toast"
+  import * as pages from "@app/navigation/pages"
+  import {goToSpace} from "@app/navigation/history"
+  import {acceptInvite, parseInviteLink} from "@app/features/spaces/invites"
 
   type Props = {
     invite: string
@@ -52,7 +53,7 @@
     }
 
     if (data.h) {
-      const path = makeRoomPath(data.url, data.h)
+      const path = pages.room.path({url: data.url, h: data.h})
       const qp = data.code ? `?code=${encodeURIComponent(data.code)}` : ""
 
       pushToast({message: "Welcome to the room!"})
@@ -95,7 +96,7 @@
           {#if isRoomInvite}
             Enter a room invite link below to join an existing room.
           {:else}
-            Enter a relay URL or invite link below to join an existing space.
+            Enter an invite link below to join an existing space.
           {/if}
         </ModalSubtitle>
       </ModalHeader>

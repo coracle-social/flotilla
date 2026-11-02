@@ -1,8 +1,8 @@
-import {readFile, readdir} from "node:fs/promises"
+import {readFile, readdir, rm} from "node:fs/promises"
 import {join, resolve} from "node:path"
 import {HOUR, ago, ms, now, sleep} from "@welshman/lib"
 import {appStore} from "../lib/appstore.mjs"
-import {followUps, missingEnv, notes, root, version} from "../lib/context.mjs"
+import {checkBundle, followUps, missingEnv, notes, root, version} from "../lib/context.mjs"
 import {run} from "../lib/shell.mjs"
 
 const editableStates = [
@@ -57,9 +57,12 @@ export default {
 
     // App Store Connect never takes a build number twice, so a rerun uses the build already there
     if (!(await findBuild())) {
+      const directory = join(root, "ios/App/output")
+
+      await checkBundle("ios/App/App/public")
+      await rm(directory, {recursive: true, force: true})
       await run("npx", ["cap", "build", "ios"], {cwd: root})
 
-      const directory = join(root, "ios/App/output")
       const ipa = (await readdir(directory)).find(file => file.endsWith(".ipa"))
 
       if (!ipa) {

@@ -1,12 +1,33 @@
 <script lang="ts">
-  import {publish} from "@welshman/app"
   import RelayForm, {type RelayFormValues} from "@app/components/hosting/RelayForm.svelte"
   import PaymentDialog from "@app/components/hosting/PaymentDialog.svelte"
   import PaymentSetup from "@app/components/hosting/PaymentSetup.svelte"
-  import {roomLists} from "@app/core"
-  import {navigate, pushModal} from "@app/modal"
-  import {makeSpacePath} from "@app/routes"
-  import {createHostedRelay, getHostedRelayUrl, hosting, isPaidPlan} from "@app/hosting"
+  import {roomLists} from "@app/core/plugins"
+  import {navigate} from "@app/navigation/navigate"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {publishRoomList} from "@app/features/spaces/rooms"
+  import * as pages from "@app/navigation/pages"
+  import {pushToast} from "@app/features/toast"
+  import {
+    createHostedRelay,
+    getHostedRelayUrl,
+    hosting,
+    hostingErrorMessage,
+    isPaidPlan,
+  } from "@app/features/hosting"
+
+  // The space exists by now, so a failed billing check mustn't keep the user on the create form.
+  const onPaymentLookupError = (e: unknown) => {
+    pushToast({
+      theme: "error",
+      message: hostingErrorMessage(
+        e,
+        "Your space was created, but its billing couldn't be checked.",
+      ),
+    })
+
+    return undefined
+  }
 
   const submit = async (values: RelayFormValues) => {
     const relay = await createHostedRelay(values)
@@ -15,11 +36,13 @@
     $hosting.setRelay(relay)
 
     // Join the space now, or the space layout prompts for it and displaces the payment modals.
-    await $roomLists.addRelay(url).then(publish)
+    await $roomLists.addRelay(url).then(publishRoomList)
 
-    const due = isPaidPlan(values.plan_id) ? await $hosting.findPaymentDue() : undefined
+    const due = isPaidPlan(values.plan_id)
+      ? await $hosting.findPaymentDue().catch(onPaymentLookupError)
+      : undefined
 
-    await navigate(makeSpacePath(url, "admin"), {replaceState: true})
+    await navigate(pages.spaceAdmin.path({url}), {replaceState: true})
 
     if (due?.invoice) {
       pushModal(PaymentDialog, {invoice: due.invoice})

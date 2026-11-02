@@ -16,8 +16,9 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
-  import {app, router} from "@app/core"
-  import {clip} from "@app/toast"
+  import {app} from "@app/core/app"
+  import {router} from "@app/core/plugins"
+  import {clip} from "@app/features/toast"
 
   type Props = {
     url?: string
@@ -27,7 +28,7 @@
   const {url, event}: Props = $props()
 
   const npub1 = nip19.npubEncode(event.pubkey)
-  const seenOn = $app.tracker.getRelays(event.id)
+  const seenOn = $app.repository.tracker.getRelays(event.id)
   const json = call(() => {
     try {
       return JSON.stringify(JSON.parse(event.content), null, 2)

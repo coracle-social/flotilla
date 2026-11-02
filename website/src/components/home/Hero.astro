@@ -1,0 +1,75 @@
+---
+import Button from '../Button.astro';
+import { Icon } from 'astro-icon/components';
+import { OPEN_APP } from '../../lib/analytics';
+
+const APP_URL = 'https://app.flotilla.social';
+---
+
+<section class="hero relative overflow-hidden">
+  <div class="hero-media" aria-hidden="true">
+    <img
+      src="/images/hero-archipelago.jpg"
+      alt=""
+      width="1344"
+      height="768"
+      fetchpriority="high"
+    />
+    <div class="hero-scrim"></div>
+  </div>
+
+  <div class="relative mx-auto max-w-6xl px-5 pt-24 pb-28 md:px-8 md:pt-32 md:pb-40">
+    <div class="max-w-3xl text-center md:text-left">
+      <p class="inline-flex items-center gap-2 rounded-pill border border-border bg-surface/50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-primary-soft backdrop-blur-sm">
+        <Icon name="ph:chats-circle" class="h-4 w-4" /> Communities for free people
+      </p>
+
+      <h1 class="mt-6 text-balance text-4xl font-extrabold sm:text-5xl md:text-6xl">
+        Run your community,<br />
+        <span class="bg-gradient-to-r from-primary-soft to-primary bg-clip-text text-transparent">
+          not the other way around.
+        </span>
+      </h1>
+
+      <p class="mx-auto mt-6 max-w-xl text-base text-text-muted sm:text-lg md:mx-0">
+        Chat, events, moderation, and member tools in one place — without the ads,
+        surveillance, or shutdown risk of the big platforms. The community you build
+        stays yours.
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-3 md:justify-start">
+        <Button href={APP_URL} class={OPEN_APP}>Open Flotilla</Button>
+        <Button href="/pricing" variant="secondary">Start a community</Button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero-media {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .hero-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 70% center;
+  }
+  /* Dark scrim so the headline stays legible over the illustration.
+     Heavier on the left (where the copy sits) and along the bottom. */
+  .hero-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, var(--color-bg) 0%, rgba(17, 17, 17, 0.85) 32%, rgba(17, 17, 17, 0.35) 70%, rgba(17, 17, 17, 0.55) 100%),
+      linear-gradient(0deg, var(--color-bg) 2%, transparent 40%);
+  }
+  @media (max-width: 767px) {
+    .hero-scrim {
+      background:
+        linear-gradient(0deg, var(--color-bg) 4%, rgba(17, 17, 17, 0.7) 45%, rgba(17, 17, 17, 0.55) 100%);
+    }
+  }
+</style>

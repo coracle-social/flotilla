@@ -16,8 +16,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import RelayAdd from "@app/components/RelayAdd.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
-  import {pushModal} from "@app/modal"
-  import {pushToast} from "@app/toast"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {pushToast} from "@app/features/toast"
 
   type Props = {
     title: string
@@ -39,7 +39,7 @@
 
     try {
       const publication = await removeRelay(url)
-      const error = (await publication.settled()).getError()
+      const error = await publication.getError()
 
       if (error) {
         pushToast({

@@ -4,7 +4,15 @@ import {readFile} from "node:fs/promises"
 import {join, resolve} from "node:path"
 import {spec} from "@welshman/lib"
 import {gradle, keystoreEnv} from "../lib/android.mjs"
-import {followUps, missingEnv, root, shortNotes, version, versionCode} from "../lib/context.mjs"
+import {
+  checkBundle,
+  followUps,
+  missingEnv,
+  root,
+  shortNotes,
+  version,
+  versionCode,
+} from "../lib/context.mjs"
 import {play} from "../lib/play.mjs"
 
 const aab = join(root, "android/app/build/outputs/bundle/release/app-release.aab")
@@ -59,6 +67,7 @@ export default {
 
       console.log(`Play already has version code ${versionCode} from this build, releasing it`)
     } else {
+      await checkBundle("android/app/src/main/assets/public")
       await gradle("bundleRelease", keystoreEnv("PLAY"))
     }
 

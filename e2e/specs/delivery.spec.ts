@@ -4,10 +4,10 @@ import {Article, Comment} from "@welshman/domain"
 import type {Page} from "@playwright/test"
 import {
   DEFAULT_BLOSSOM_ORIGIN,
+  attachFile,
   bubble,
   chatItems,
   chatPath,
-  chooseFile,
   composer,
   composerEnabled,
   expect,
@@ -64,10 +64,14 @@ const writeArticle = async (page: Page, title: string, body: string) => {
   await pageBar(page).getByRole("button", {name: "Publish"}).click()
 }
 
+// The comment composer, which is the only form on a content page carrying an editor.
+const commentComposer = (page: Page) =>
+  page.locator("form").filter({has: page.locator(".note-editor")})
+
 const writeComment = async (page: Page, body: string) => {
   await page.getByRole("button", {name: "Add a comment"}).click()
 
-  const form = page.locator("form").filter({has: page.locator(".note-editor")})
+  const form = commentComposer(page)
 
   // The editor takes focus itself once it has mounted, and typing before that puts the caret back.
   await expect(noteEditor(form)).toBeFocused()
@@ -359,6 +363,10 @@ test("US-071 content posts show delivery status in place", async ({seed, as}) =>
   const footnote = commentCard(alice, "A footnote nobody asked for.")
 
   await expect(footnote.getByText("Sending...")).toBeVisible()
+
+  // The comment is still in flight to a relay that says nothing, and the composer has already gone.
+  await expect(commentComposer(alice)).toHaveCount(0, {timeout: 2000})
+
   await expect(footnote.getByRole("button", {name: "Cancel"})).toBeVisible()
 
   await footnote.getByRole("button", {name: "Cancel"}).click()
@@ -479,7 +487,7 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
 
   await composer(alice).click()
   await composer(alice).pressSequentially("here is the harbour")
-  await chooseFile(alice, alice.locator("button[data-tip='Add an image']"), gifFile("harbour.gif"))
+  await attachFile(alice, gifFile("harbour.gif"))
 
   // The editor names the file the moment it is attached, and a submit while it uploads is dropped.
   await expect(composer(alice)).toContainText("harbour.gif")
@@ -491,12 +499,12 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
   // Two bubbles, one status for the pair of them.
   await expect(toast(alice)).toHaveCount(1)
   await expect(toast(alice)).toContainText("Sending...")
-  await expect(alice.locator(".chat-bubble")).toHaveCount(2)
+  await expect(alice.locator(".conversation-bubble")).toHaveCount(2)
   await expect(bubble(alice, "here is the harbour")).toBeVisible()
 
   // Which only becomes a success once both parts have landed everywhere they were sent.
   await expect(toast(alice)).toContainText("Message sent!")
-  await expect(bob.locator(".chat-bubble")).toHaveCount(2)
+  await expect(bob.locator(".conversation-bubble")).toHaveCount(2)
   await expect(toast(alice)).toHaveCount(0)
 
   // The same message to someone one of whose relays refuses it: each part says so for itself.
@@ -506,7 +514,7 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
 
   await composer(alice).click()
   await composer(alice).pressSequentially("and one for you")
-  await chooseFile(alice, alice.locator("button[data-tip='Add an image']"), gifFile("harbour.gif"))
+  await attachFile(alice, gifFile("harbour.gif"))
 
   await expect(composer(alice)).toContainText("harbour.gif")
   await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)
@@ -514,6 +522,6 @@ test("US-073 a multi-part message reports one status", async ({seed, as}) => {
 
   await composer(alice).press("Enter")
 
-  await expect(alice.locator(".chat-bubble")).toHaveCount(2)
+  await expect(alice.locator(".conversation-bubble")).toHaveCount(2)
   await expect(alice.getByText("Failed to send!")).toHaveCount(2)
 })

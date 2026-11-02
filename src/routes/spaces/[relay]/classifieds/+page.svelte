@@ -19,27 +19,27 @@
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ClassifiedItem from "@app/components/ClassifiedItem.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {makeCommentFilter, partitionByActivity} from "@app/content"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/feeds"
-  import {makeClassifiedPath} from "@app/routes"
+  import {partitionByActivity} from "@app/features/spaces"
+  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import * as pages from "@app/navigation/pages"
   import {
     CLASSIFIED_STATUS_TABS,
     deriveTopicCounts,
     getStatus,
     matchesTopic,
     matchesQuery,
-  } from "@app/classifieds"
-  import {reader} from "@app/core"
-  import {pushModal} from "@app/modal"
+  } from "@app/features/spaces/classifieds"
+  import {reader} from "@app/core/domain"
+  import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.classifieds.decode(params)
   const context = makeFeedContext({relays: [url]})
 
   onDestroy(context.cleanup)
@@ -47,7 +47,7 @@
   const createClassified = () => pushModal(ClassifiedCreate, {url})
 
   const setTopic = (value?: string) => () => {
-    const path = makeClassifiedPath(url) + (value ? `?topic=${encodeURIComponent(value)}` : "")
+    const path = pages.classifieds.path({url, topic: value || undefined})
 
     goto(path, {replaceState: true, noScroll: true})
   }

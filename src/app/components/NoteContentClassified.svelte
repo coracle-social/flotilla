@@ -2,7 +2,7 @@
   import type {ComponentProps} from "svelte"
   import {Classified} from "@welshman/domain"
   import CurrencySymbol from "@lib/components/CurrencySymbol.svelte"
-  import {reader} from "@app/core"
+  import {reader} from "@app/core/domain"
   import Content from "@app/components/Content.svelte"
   import ContentLinkBlock from "@app/components/ContentLinkBlock.svelte"
 

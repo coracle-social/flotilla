@@ -10,16 +10,15 @@
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RelayDescription from "@app/components/RelayDescription.svelte"
-  import ProfileLink from "@app/components/ProfileLink.svelte"
-  import SpaceMembersSummary from "@app/components/SpaceMembersSummary.svelte"
-  import SpaceFeaturedContent from "@app/components/SpaceFeaturedContent.svelte"
-  import {relays} from "@app/core"
-  import {decodeRelay} from "@app/relays"
+  import SpaceDirectory from "@app/components/SpaceDirectory.svelte"
+  import {relays} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const url = decodeRelay(params.relay)
+  const {url} = pages.spaceAbout.decode(params)
   const relay = $relays.one(url)
 </script>
 
@@ -28,7 +27,7 @@
     <Icon icon={Home} />
   {/snippet}
   {#snippet title()}
-    <strong>Space Details</strong>
+    <strong>About</strong>
   {/snippet}
 </SpaceBar>
 
@@ -42,7 +41,9 @@
         <h1 class="truncate min-w-0 whitespace-nowrap">
           <RelayName {url} class="text-xl sm:text-2xl font-bold" />
         </h1>
-        <p class="truncate min-w-0 text-sm text-primary">{displayRelayUrl(url)}</p>
+        {#if !HIDE_NOSTR}
+          <p class="truncate min-w-0 text-sm text-primary">{displayRelayUrl(url)}</p>
+        {/if}
       </div>
     </div>
     <RelayDescription {url} />
@@ -62,53 +63,6 @@
         {/if}
       </div>
     {/if}
-    {#if $relay}
-      {@const {pubkey, software, version, limitation} = $relay}
-      <div class="flex flex-wrap gap-1">
-        {#if pubkey}
-          <div class="badge badge-neutral">
-            <span>Administrator: <ProfileLink unstyled {pubkey} /></span>
-          </div>
-        {/if}
-        {#if $relay?.contact}
-          <div class="badge badge-neutral">
-            <span>Contact: {$relay.contact}</span>
-          </div>
-        {/if}
-        {#if software}
-          <div class="badge badge-neutral">
-            <span>Software: {software}</span>
-          </div>
-        {/if}
-        {#if version}
-          <div class="badge badge-neutral">
-            <span>Version: {version}</span>
-          </div>
-        {/if}
-        {#if limitation?.auth_required}
-          <p class="badge badge-warning">
-            <span>Auth Required</span>
-          </p>
-        {/if}
-        {#if limitation?.payment_required}
-          <p class="badge badge-warning">
-            <span>Payment Required</span>
-          </p>
-        {/if}
-        {#if limitation?.min_pow_difficulty}
-          <p class="badge badge-warning">
-            <span>Min PoW: {limitation?.min_pow_difficulty}</span>
-          </p>
-        {/if}
-      </div>
-    {/if}
   </div>
-  <div class="grid grid-cols-1 gap-4 @2xl:grid-cols-3">
-    <div class="@2xl:col-span-2 flex flex-col gap-4">
-      <SpaceFeaturedContent {url} />
-    </div>
-    <div class="flex flex-col gap-4">
-      <SpaceMembersSummary {url} />
-    </div>
-  </div>
+  <SpaceDirectory {url} />
 </PageContent>

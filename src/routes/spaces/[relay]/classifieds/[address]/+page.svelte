@@ -15,16 +15,15 @@
   import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
   import ClassifiedStatus from "@app/components/ClassifiedStatus.svelte"
   import EventComments from "@app/components/EventComments.svelte"
-  import {events, network, reader} from "@app/core"
-  import {makeFeedContext} from "@app/feeds"
-  import {decodeRelay} from "@app/relays"
-  import {makeClassifiedPath} from "@app/routes"
+  import {events, network} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {makeFeedContext} from "@app/features/feeds"
+  import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
-  const {relay, address} = params
-  const url = decodeRelay(relay)
+  const {url, address} = pages.classified.decode(params)
   const context = makeFeedContext({relays: [url]})
   const event = $events.one(address, [url]).$
   const classified = derived(event, $event => ($event ? reader(Classified)($event) : undefined))
@@ -39,7 +38,7 @@
 {#snippet topicLinks()}
   {#each topics as topic (topic)}
     <Link
-      href="{makeClassifiedPath(url)}?topic={encodeURIComponent(topic)}"
+      href={pages.classifieds.path({url, topic})}
       class="badge badge-neutral badge-sm font-normal">
       #{topic}
     </Link>

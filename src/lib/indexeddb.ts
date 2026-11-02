@@ -56,10 +56,21 @@ export class IDB {
     })
   }
 
+  /** A cache that cannot be opened, read or written degrades to no cache instead of stopping the app. */
+  private fail = (error: unknown) => console.error(`Failed to access ${this.options.name}`, error)
+
+  private attempt = async (f: () => Promise<void>) => {
+    try {
+      await f()
+    } catch (e) {
+      this.fail(e)
+    }
+  }
+
   async connect() {
     if (!this.failedToConnect && !this.connection) {
       this.connection = this.open().catch(e => {
-        console.error("Failed to connect to indexeddb", e)
+        this.fail(e)
 
         this.failedToConnect = true
 
@@ -80,56 +91,68 @@ export class IDB {
 
   table = <T>(name: string) => new IDBTable<T>(this, name)
 
-  getAll = async <T>(table: string): Promise<T[]> => {
-    const connection = await this.live()
+  /**
+   * A getAll serializes the whole table into one structured clone. Chrome refuses a clone past a
+   * cap that moves between versions, so every read walks a cursor instead.
+   */
+  each = <T>(table: string, visit: (item: T) => void) =>
+    this.attempt(async () => {
+      const connection = await this.live()
 
-    if (!connection) {
-      return []
-    }
+      if (connection) {
+        const tx = connection.transaction(table, "readonly")
+        let cursor = await tx.objectStore(table).openCursor()
 
-    const tx = connection.transaction(table, "readonly")
-    const store = tx.objectStore(table)
-    const result = await store.getAll()
+        while (cursor) {
+          visit(cursor.value)
 
-    await tx.done
+          cursor = await cursor.continue()
+        }
 
-    return result || []
-  }
-
-  bulkPut = async <T>(table: string, data: Iterable<T>) => {
-    const connection = await this.live()
-
-    if (!connection) {
-      return
-    }
-
-    const tx = connection.transaction(table, "readwrite")
-    const store = tx.objectStore(table)
-
-    for (const item of data) {
-      try {
-        store.put(item)
-      } catch (e) {
-        console.error(e, item)
+        await tx.done
       }
-    }
+    })
 
-    await tx.done
+  getAll = async <T>(table: string): Promise<T[]> => {
+    const items: T[] = []
+
+    await this.each<T>(table, item => items.push(item))
+
+    return items
   }
 
-  bulkDelete = async (table: string, ids: Iterable<string>) => {
-    const connection = await this.live()
+  bulkPut = <T>(table: string, data: Iterable<T>) =>
+    this.attempt(async () => {
+      const connection = await this.live()
 
-    if (!connection) {
-      return
-    }
+      if (connection) {
+        const tx = connection.transaction(table, "readwrite")
+        const store = tx.objectStore(table)
 
-    const tx = connection.transaction(table, "readwrite")
-    const store = tx.objectStore(table)
+        for (const item of data) {
+          try {
+            store.put(item)
+          } catch (e) {
+            console.error(e, item)
+          }
+        }
 
-    await Promise.all(Array.from(ids).map(id => store.delete(id)))
-    await tx.done
-  }
+        await tx.done
+      }
+    })
+
+  bulkDelete = (table: string, ids: Iterable<string>) =>
+    this.attempt(async () => {
+      const connection = await this.live()
+
+      if (connection) {
+        const tx = connection.transaction(table, "readwrite")
+        const store = tx.objectStore(table)
+
+        await Promise.all(Array.from(ids).map(id => store.delete(id)))
+        await tx.done
+      }
+    })
 
   close = async () => {
     const connection = this.connection
@@ -154,6 +177,8 @@ export class IDBTable<T> {
     readonly db: IDB,
     readonly name: string,
   ) {}
+
+  each = (visit: (item: T) => void) => this.db.each<T>(this.name, visit)
 
   getAll = () => this.db.getAll<T>(this.name)
 

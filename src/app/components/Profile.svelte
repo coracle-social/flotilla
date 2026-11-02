@@ -9,9 +9,10 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import WotScore from "@app/components/WotScore.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import {pushModal} from "@app/modal"
-  import {clip} from "@app/toast"
-  import {handles, profiles} from "@app/core"
+  import {pushModal} from "@app/navigation/dialogs"
+  import {clip} from "@app/features/toast"
+  import {handles, profiles} from "@app/core/plugins"
+  import {HIDE_NOSTR} from "@app/core/env"
 
   type Props = {
     pubkey: string
@@ -33,7 +34,7 @@
   const copyPubkey = () => clip(nip19.npubEncode(pubkey))
 </script>
 
-<div class="flex max-w-full items-start gap-2">
+<div class="flex max-w-full min-w-0 items-start gap-2">
   {#if inert}
     <span class="py-1">
       <ProfileCircle {pubkey} {url} size={avatarSize} />
@@ -44,24 +45,26 @@
     </Button>
   {/if}
   <div class="flex min-w-0 flex-col">
-    <div class="flex items-center gap-2">
+    <div class="flex min-w-0 items-center gap-2">
       {#if inert}
-        <span class="text-bold overflow-hidden text-ellipsis whitespace-nowrap">
+        <span class="text-bold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
           {$profileDisplay}
         </span>
       {:else}
-        <Button onclick={openProfile} class="text-bold overflow-hidden text-ellipsis">
+        <Button
+          onclick={openProfile}
+          class="text-bold min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
           {$profileDisplay}
         </Button>
       {/if}
       <WotScore {pubkey} />
     </div>
-    {#if $handle}
+    {#if $handle && !HIDE_NOSTR}
       <div class="overflow-hidden text-ellipsis text-sm opacity-75">
         {displayHandle($handle)}
       </div>
     {/if}
-    {#if showPubkey}
+    {#if showPubkey && !HIDE_NOSTR}
       <div class="flex items-center gap-1 overflow-hidden text-ellipsis text-xs opacity-60">
         {displayPubkey(pubkey)}
         <Button onclick={copyPubkey} class="pt-1">

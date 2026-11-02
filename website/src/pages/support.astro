@@ -1,0 +1,23 @@
+---
+import TextPageLayout from '../layouts/TextPageLayout.astro';
+import { OPEN_APP } from '../lib/analytics';
+
+const SUPPORT_SPACE_URL = 'https://app.flotilla.social/spaces/support.flotilla.social/about';
+---
+
+<TextPageLayout
+  title="Get Help"
+  description="Get help with Flotilla. Reach our support team by email at support@coracle.social, or ask in the Flotilla support space."
+>
+  <p>
+    Need help? Please get in touch by sending an email to <a href="mailto:support@coracle.social">support@coracle.social</a>.
+  </p>
+  <p>
+    You can also ask questions, give feedback, and suggest features in the <a
+      href={SUPPORT_SPACE_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      class={OPEN_APP}>Flotilla support space</a
+    >.
+  </p>
+</TextPageLayout>

@@ -1,0 +1,84 @@
+---
+import '../styles/global.css';
+import '@fontsource-variable/baloo-2';
+import '@fontsource/lato/400.css';
+import '@fontsource/lato/700.css';
+import '@fontsource/lato/900.css';
+import '@fontsource/lato/400-italic.css';
+import '@fontsource/fragment-mono/400.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  ogType?: string;
+  /** JSON-LD structured data to embed in <head> (e.g. an Article schema). */
+  jsonLd?: Record<string, unknown> | null;
+}
+
+const DEFAULT_DESCRIPTION =
+  'Flotilla is a community platform — chat, voice, video, and events — built on the open Nostr protocol, so the community you build is one you truly own, and no one can take it away.';
+
+const {
+  title,
+  description = DEFAULT_DESCRIPTION,
+  ogImage = '/og-image.png',
+  ogType = 'website',
+  jsonLd = null,
+} = Astro.props;
+
+const fullTitle = title === 'Flotilla' ? title : `${title} — Flotilla`;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImageAbsolute = new URL(ogImage, Astro.site).href;
+const feedUrl = new URL('/rss.xml', Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon-light.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/favicon-dark.png" media="(prefers-color-scheme: dark)" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Flotilla Knowledge Base"
+      href={feedUrl}
+    />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImageAbsolute} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageAbsolute} />
+    {jsonLd && (
+      <script
+        type="application/ld+json"
+        set:html={JSON.stringify(jsonLd)}
+      />
+    )}
+  </head>
+  <body class="bg-bg text-text">
+    <Nav />
+    <main><slot /></main>
+    <Footer />
+    <!-- outbound-links: every off-site click (app, app stores, cal.com) is recorded.
+         tagged-events: links carrying a `plausible-event-name=` class (see lib/analytics)
+         report under that name instead, so the funnel CTAs get their own goals. -->
+    <script
+      defer
+      data-domain="flotilla.social"
+      src="https://plausible.coracle.social/js/script.outbound-links.tagged-events.js"></script>
+  </body>
+</html>

@@ -1,17 +1,16 @@
 <script lang="ts">
-  import {navigate} from "@app/modal"
+  import {navigate} from "@app/navigation/navigate"
   import {page} from "$app/stores"
   import cx from "classnames"
-  import {displayRelayUrl} from "@welshman/util"
   import Microphone from "@assets/icons/microphone.svg?dataurl"
   import MicrophoneOff from "@assets/icons/microphone-off.svg?dataurl"
   import EndCall from "@assets/icons/end-call-rounded.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Banner from "@app/components/Banner.svelte"
-  import {decodeRelay} from "@app/relays"
-  import {displayRoom} from "@app/rooms"
-  import {makeRoomPath} from "@app/routes"
+  import RelayLabel from "@app/components/RelayLabel.svelte"
+  import {displayRoom} from "@app/features/spaces/rooms"
+  import * as pages from "@app/navigation/pages"
   import {
     CallState,
     callState,
@@ -19,10 +18,10 @@
     callMicMuted,
     deriveIsCallActiveElsewhere,
     endCall,
-  } from "@app/call"
+  } from "@app/features/spaces/calls"
 
   const {relay, h} = $derived($page.params)
-  const routeUrl = $derived(relay ? decodeRelay(relay) : undefined)
+  const routeUrl = $derived(relay ? pages.decodeRelay(relay) : undefined)
 
   // CallControlBar already shows full controls on the call's own room page.
   const isCallActiveElsewhere = $derived(
@@ -33,17 +32,16 @@
   const roomName = $derived(
     $callTargetRoom ? displayRoom($callTargetRoom.url, $callTargetRoom.h) : "",
   )
-  const spaceName = $derived($callTargetRoom ? displayRelayUrl($callTargetRoom.url) : "")
 
   const goToRoom = () => {
     if (!$callTargetRoom) {
       return
     }
-    void navigate(makeRoomPath($callTargetRoom.url, $callTargetRoom.h))
+    void navigate(pages.room.path({url: $callTargetRoom.url, h: $callTargetRoom.h}))
   }
 
   const toggleMute = async () => {
-    const engine = await import("@app/callEngine")
+    const engine = await import("@app/features/spaces/calls/engine")
 
     await engine.toggleMute()
   }
@@ -65,7 +63,11 @@
         <span class="font-semibold">
           {$callState === CallState.Joining ? "Joining call…" : "Voice connected"}
         </span>
-        <span class="text-content-muted">· {roomName} / {spaceName}</span>
+        {#if $callTargetRoom}
+          <span class="text-content-muted">
+            · {roomName} / <RelayLabel url={$callTargetRoom.url} />
+          </span>
+        {/if}
       </span>
     </Button>
     <div class="flex shrink-0 items-center gap-2">

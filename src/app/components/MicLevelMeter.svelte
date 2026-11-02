@@ -8,9 +8,10 @@
     track: MediaStreamTrack | undefined
     error?: string
     offMessage?: string
+    hint?: string
   }
 
-  const {track, error, offMessage = "Microphone is off"}: Props = $props()
+  const {track, error, offMessage = "Microphone is off", hint = "Speak to test"}: Props = $props()
 
   const NOISE_FLOOR = 0.03
 
@@ -67,6 +68,6 @@
         </div>
       {/each}
     </div>
-    <span class="shrink-0 text-xs opacity-60">Speak to test</span>
+    <span class="shrink-0 text-xs opacity-60">{hint}</span>
   {/if}
 </div>

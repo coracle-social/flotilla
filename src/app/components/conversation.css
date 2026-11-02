@@ -1,0 +1,14 @@
+@layer components {
+  .conversation-bubble {
+    @apply bg-surface-less text-content border-line mx-1 mb-2 flex min-w-[100px] cursor-auto flex-col gap-1 rounded-2xl border-solid p-2 text-left lg:max-w-2xl;
+    border-width: var(--border-thin);
+  }
+
+  .conversation-bubble--user {
+    @apply border-primary;
+  }
+
+  [data-fl-theme="clay"] .conversation-bubble {
+    box-shadow: var(--shadow-sm), var(--shadow-inset);
+  }
+}

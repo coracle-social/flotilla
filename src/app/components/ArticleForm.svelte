@@ -29,17 +29,19 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import TopicMultiSelect from "@app/components/TopicMultiSelect.svelte"
-  import EditorContent from "@app/editor/EditorContent.svelte"
-  import {writer} from "@app/core"
-  import {DraftKey} from "@app/drafts"
-  import {makeEditor} from "@app/editor"
-  import {publishToSpace} from "@app/rooms"
-  import {makeArticlePath} from "@app/routes"
-  import {compressFileForUpload, uploadFile} from "@app/uploads"
-  import {pushToast} from "@app/toast"
+  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import {writer} from "@app/core/domain"
+  import {DraftKey} from "@app/features/drafts"
+  import {makeEditor} from "@app/features/editor"
+  import {publishToNetwork} from "@app/features/social"
+  import {publishToSpace} from "@app/features/spaces/rooms"
+  import * as pages from "@app/navigation/pages"
+  import {compressFileForUpload, uploadFile} from "@app/features/uploads"
+  import {pushToast} from "@app/features/toast"
+  import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {
-    url: string
+    url?: string
     h?: string
     shareToChat?: boolean
     header: Snippet
@@ -47,14 +49,14 @@
 
   const {url, h, shareToChat = false, header}: Props = $props()
 
-  const draftKey = new DraftKey<Values>(`article:${url}:${h ?? ""}`)
+  const draftKey = new DraftKey<Values>(`article:${url ?? ""}:${h ?? ""}`)
   const initialValues = draftKey.get()
 
   const coverInputId = randomId()
 
   const uploading = writable(false)
 
-  const back = () => goto(makeArticlePath(url))
+  const back = () => (url ? goto(pages.articles.path({url})) : history.back())
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
@@ -131,14 +133,25 @@
         eventWriter.setImage(image)
       }
 
-      const {publication, error} = await publishToSpace(eventWriter, {url, h, shareToChat})
+      const {publication, error} = url
+        ? await publishToSpace(eventWriter, {url, h, shareToChat})
+        : await publishToNetwork(eventWriter)
 
       if (error) {
         return pushToast({theme: "error", message: error})
       }
 
       draftKey.clear()
-      goto(makeArticlePath(url, getAddress(publication.event)))
+
+      if (url) {
+        goto(pages.article.path({url, address: getAddress(publication.event)}))
+      } else {
+        history.back()
+        pushToast({
+          message: "Your article has been published!",
+          action: {message: "View it", onclick: () => openEventNote(publication.event)},
+        })
+      }
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to publish your article."})

@@ -15,10 +15,11 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import PinSave from "@app/components/PinSave.svelte"
-  import {events, reader} from "@app/core"
-  import {eventToReference} from "@app/pinboards"
-  import {makeSpacePath} from "@app/routes"
-  import {pushModal} from "@app/modal"
+  import {events} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
+  import {eventToReference} from "@app/features/spaces/pinboards"
+  import * as pages from "@app/navigation/pages"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -46,9 +47,7 @@
     {#if $boards.length === 0}
       <div class="flex flex-col items-center gap-4 py-8 text-center">
         <p class="opacity-70">This space doesn't have any shelves yet.</p>
-        <Link href={makeSpacePath(url, "library")} class="button button-primary">
-          Go to Library
-        </Link>
+        <Link href={pages.library.path({url})} class="button button-primary">Go to Library</Link>
       </div>
     {:else}
       {#each $boards as board (board.address())}
