@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {POLL, POLL_RESPONSE} from "@welshman/util"
+  import {POLL, POLL_RESPONSE, getIdFilters} from "@welshman/util"
   import PageContent from "@lib/components/PageContent.svelte"
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
@@ -58,6 +58,9 @@
     </NoteCard>
     <EventComments event={$event} {url} {context} />
   {:else}
-    <LoadingFallback loadingMessage="Loading poll..." failureMessage="Failed to load poll." />
+    <LoadingFallback
+      loadingMessage="Loading poll..."
+      failureMessage="Failed to load poll."
+      retry={() => void $network.loadLenient({filters: getIdFilters([id]), relays: [url]})} />
   {/if}
 </PageContent>

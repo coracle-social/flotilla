@@ -6,7 +6,7 @@
   import {onDestroy} from "svelte"
   import {derived, readable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
-  import {getCommentFiltersForRoot} from "@welshman/util"
+  import {getCommentFiltersForRoot, getIdFilters} from "@welshman/util"
   import {TimeEvent} from "@welshman/domain"
   import PageContent from "@lib/components/PageContent.svelte"
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
@@ -126,6 +126,9 @@
       <CalendarEventPeople {url} event={$event} rsvps={$rsvps} />
     {/if}
   {:else}
-    <LoadingFallback loadingMessage="Loading event..." failureMessage="Failed to load event." />
+    <LoadingFallback
+      loadingMessage="Loading event..."
+      failureMessage="Failed to load event."
+      retry={() => void $network.loadLenient({filters: getIdFilters([address]), relays: [url]})} />
   {/if}
 </PageContent>

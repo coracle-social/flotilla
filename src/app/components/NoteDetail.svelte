@@ -68,7 +68,10 @@
         {/if}
       </div>
     {:else}
-      <LoadingFallback loadingMessage="Loading note..." failureMessage="Failed to load note." />
+      <LoadingFallback
+        loadingMessage="Loading note..."
+        failureMessage="Failed to load note."
+        retry={() => void $notes.load(pointer)} />
     {/if}
   </ModalBody>
 </Modal>

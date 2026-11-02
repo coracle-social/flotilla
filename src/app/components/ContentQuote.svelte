@@ -41,20 +41,43 @@
   const quote = $events.one(idOrAddress, hints).$
 
   // Whoever quoted the event must have seen it, so the quoting event's relays are asked too.
-  $router.resolver
-    .relays([
-      ...relaySelections(removeUndefined([url])),
-      seen(ref),
-      eventOutbox(ref),
-      seen(event, 0.5),
-    ])
-    .then(urls => {
-      mergedRelays.set(urls)
+  const ask = () =>
+    $router.resolver
+      .relays([
+        ...relaySelections(removeUndefined([url])),
+        seen(ref),
+        eventOutbox(ref),
+        seen(event, 0.5),
+      ])
+      .then(urls => {
+        mergedRelays.set(urls)
 
-      if (!$quote) {
-        $network.loadLenient({filters: getIdFilters([idOrAddress]), relays: urls})
-      }
-    })
+        if (!$quote) {
+          $network.loadLenient({filters: getIdFilters([idOrAddress]), relays: urls})
+        }
+      })
+
+  ask()
+
+  // A load can settle before the event reaches the repository, so ask again while it is missing.
+  let attempts = $state(0)
+  let failed = $state(false)
+
+  $effect(() => {
+    if ($quote || failed) return
+
+    if (attempts >= 3) {
+      failed = true
+      return
+    }
+
+    const timer = setTimeout(() => {
+      attempts += 1
+      ask()
+    }, 5000)
+
+    return () => clearTimeout(timer)
+  })
 
   const entity = derived(mergedRelays, $mergedRelays =>
     id
@@ -92,6 +115,8 @@
         <NoteContentMinimal {url} event={$quote} />
       </NoteCard>
     {/if}
+  {:else if failed}
+    <div class="rounded-2xl p-4 opacity-75">Couldn't load this event</div>
   {:else}
     <div class="rounded-2xl p-4">
       <Spinner loading>Loading event...</Spinner>

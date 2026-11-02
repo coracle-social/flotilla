@@ -3,6 +3,7 @@
   import {derived} from "svelte/store"
   import {uniq} from "@welshman/lib"
   import {Classified} from "@welshman/domain"
+  import {getIdFilters} from "@welshman/util"
   import {normalizeTopic} from "@lib/util"
   import Link from "@lib/components/Link.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -14,7 +15,7 @@
   import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
   import ClassifiedStatus from "@app/components/ClassifiedStatus.svelte"
   import EventComments from "@app/components/EventComments.svelte"
-  import {events, reader} from "@app/core"
+  import {events, network, reader} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
   import {makeClassifiedPath} from "@app/routes"
@@ -74,6 +75,7 @@
   {:else}
     <LoadingFallback
       loadingMessage="Loading listing..."
-      failureMessage="Failed to load classified listing." />
+      failureMessage="Failed to load classified listing."
+      retry={() => void $network.loadLenient({filters: getIdFilters([address]), relays: [url]})} />
   {/if}
 </PageContent>

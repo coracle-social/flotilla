@@ -3,6 +3,7 @@
   import {derived} from "svelte/store"
   import {formatTimestamp, uniq} from "@welshman/lib"
   import {Article} from "@welshman/domain"
+  import {getIdFilters} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
@@ -16,7 +17,7 @@
   import EventComments from "@app/components/EventComments.svelte"
   import EventMenu from "@app/components/EventMenu.svelte"
   import ReadingProgress from "@app/components/ReadingProgress.svelte"
-  import {events, reader} from "@app/core"
+  import {events, network, reader} from "@app/core"
   import {makeFeedContext} from "@app/feeds"
   import {decodeRelay} from "@app/relays"
   import {displayReadingTime} from "@app/articles"
@@ -137,6 +138,7 @@
     <LoadingFallback
       class="grow"
       loadingMessage="Loading article..."
-      failureMessage="Failed to load article." />
+      failureMessage="Failed to load article."
+      retry={() => void $network.loadLenient({filters: getIdFilters([address]), relays: [url]})} />
   {/if}
 </PageContent>

@@ -3,7 +3,7 @@
   import {page} from "$app/state"
   import {spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {getCommentFiltersForRoot} from "@welshman/util"
+  import {getCommentFiltersForRoot, getIdFilters} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
   import {fade, fly} from "@lib/transition"
@@ -216,7 +216,10 @@
         </div>
       {/if}
     {:else}
-      <LoadingFallback loadingMessage="Loading thread..." failureMessage="Failed to load thread." />
+      <LoadingFallback
+        loadingMessage="Loading thread..."
+        failureMessage="Failed to load thread."
+        retry={() => void $network.loadLenient({filters: getIdFilters([id]), relays: [url]})} />
     {/if}
   </PageContent>
   {#if $event && scrolledPastRoot}

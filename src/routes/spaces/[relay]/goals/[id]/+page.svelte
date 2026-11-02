@@ -3,6 +3,7 @@
   import {derived} from "svelte/store"
   import {DAY, formatTimestampRelative, now} from "@welshman/lib"
   import {ZapGoal} from "@welshman/domain"
+  import {getIdFilters} from "@welshman/util"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -18,7 +19,7 @@
   import GoalStatus from "@app/components/GoalStatus.svelte"
   import GoalSupporters from "@app/components/GoalSupporters.svelte"
   import EventComments from "@app/components/EventComments.svelte"
-  import {events, reader} from "@app/core"
+  import {events, network, reader} from "@app/core"
   import {ENABLE_ZAPS} from "@app/env"
   import {deriveGoalProgress} from "@app/goals"
   import {makeFeedContext} from "@app/feeds"
@@ -118,6 +119,7 @@
   {:else}
     <LoadingFallback
       loadingMessage="Loading funding goal..."
-      failureMessage="Failed to load funding goal." />
+      failureMessage="Failed to load funding goal."
+      retry={() => void $network.loadLenient({filters: getIdFilters([id]), relays: [url]})} />
   {/if}
 </PageContent>
