@@ -59,13 +59,6 @@
 
   const target = document.createElement("div")
 
-  // Getters rather than a `$state` object, so nothing here proxies a menu's own props.
-  const mountedProps: Record<string, any> = {}
-
-  for (const key of Object.keys(props)) {
-    Object.defineProperty(mountedProps, key, {enumerable: true, get: () => props[key]})
-  }
-
   let element: Element
   let popover: Maybe<Instance>
   let content: Maybe<Record<string, any>>
@@ -91,7 +84,8 @@
               undefined
 
         if (component) {
-          content ??= mount(component, {target, props: mountedProps})
+          // A copy, so the popover's own effect root reads none of the caller's state.
+          content ??= mount(component, {target, props: {...props}})
         }
 
         visible = true
