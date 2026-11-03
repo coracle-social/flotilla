@@ -432,9 +432,22 @@ test("US-059 cancel a reply or an edit in progress", async ({seed, as}) => {
 
 const dictateButton = (page: Page) => page.getByRole("button", {name: "Start dictation"})
 
+// fill() sets the dom under ProseMirror's feet, which can put its own document straight back.
+const clearComposer = async (page: Page) => {
+  const editor = composer(page)
+
+  await editor.click()
+  await editor.press("ControlOrMeta+a")
+  await editor.press("Backspace")
+  await expect(editor).toHaveText("")
+}
+
 // The fake microphone beeps twice a second, so a shorter take records only silence.
 const record = async (page: Page) => {
   const recorder = dialog(page, "Record a message")
+
+  // An empty composer is what renders the dictate button, so a leftover draft leaves nothing to click.
+  await expect(composer(page)).toHaveText("")
 
   await dictateButton(page).click()
   // The dialog this one replaces is still animating out, so wait for it to be the only one.
@@ -452,7 +465,10 @@ const retryTranscribe = async (page: Page) => {
   await expect(recorder.locator("audio")).toBeVisible()
   await recorder.getByRole("button", {name: "Transcribe"}).click()
   await expect(composer(page)).toContainText("the tide turns at six")
-  await composer(page).fill("")
+
+  // The recorder is still animating out over the composer, so wait for it to go before touching it.
+  await expect(recorder).toHaveCount(0)
+  await clearComposer(page)
 }
 
 test("US-125 dictate a message", async ({seed, as}) => {
@@ -592,7 +608,7 @@ test("US-142 transcribe a recording on this device", async ({seed, as}) => {
   expect(localSpeech.recordings).toHaveLength(1)
   expect(localSpeech.recordings[0]).toBeGreaterThan(0)
 
-  await composer(alice).fill("")
+  await clearComposer(alice)
 
   // A transcript the model is unsure of is a language it cannot read, so the composer stays empty.
   localSpeech.setConfidence(0.5)

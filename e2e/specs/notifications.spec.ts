@@ -58,6 +58,19 @@ const spaceNavItem = (page: Page, name: string) =>
 // The desktop rail has no equivalent, since the menu is always on screen there.
 const spaceMenuNavItem = (page: Page) => page.getByRole("button", {name: "Open space menu"})
 
+// A page is marked read 300ms after it opens, and only then does the mark reach storage, so a
+// reload that beats the timer loses the visit.
+const expectChecked = (page: Page, path: string) =>
+  expect
+    .poll(() =>
+      page.evaluate(key => {
+        const stored = localStorage.getItem("CapacitorStorage.checked")
+
+        return stored ? JSON.parse(stored)[key] : undefined
+      }, path),
+    )
+    .toBeTruthy()
+
 // The space menu's header, the one button in the secondary nav carrying the relay's address.
 const spaceMenu = (page: Page, url: string) =>
   page.locator(".secondary-nav").getByRole("button", {name: pathPattern(displayRelayUrl(url))})
@@ -1342,6 +1355,8 @@ test("US-110 see another space's unread activity from a phone", async ({seed, as
   await bob.goto(roomPath(other.url, "general"))
 
   await expect(message(bob, "the server is on fire")).toBeVisible()
+
+  await expectChecked(bob, roomPath(other.url, "general"))
 
   // Bob's own space still has an unread room, which is that space's own business.
   await bob.goto(spacePath(space.url))
