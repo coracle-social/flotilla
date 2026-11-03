@@ -69,7 +69,7 @@
   {/snippet}
   {#snippet action()}
     <div class="flex shrink-0 items-center gap-2">
-      {#if tab === "network" && !HIDE_NOSTR}
+      {#if !HIDE_NOSTR}
         <Button
           aria-label="Relay settings"
           class="button button-neutral button-xs"

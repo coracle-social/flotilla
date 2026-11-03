@@ -17,7 +17,9 @@
   let failed = $state(false)
 
   $effect(() => {
-    if (failed) return
+    if (failed) {
+      return
+    }
 
     if (attempts >= 3) {
       failed = true

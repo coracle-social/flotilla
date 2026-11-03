@@ -75,6 +75,6 @@
     <LoadingFallback
       loadingMessage="Loading listing..."
       failureMessage="Failed to load classified listing."
-      retry={() => void $network.loadLenient({filters: getIdFilters([address]), relays: [url]})} />
+      retry={() => void $network.load({filters: getIdFilters([address]), relays: [url]})} />
   {/if}
 </PageContent>

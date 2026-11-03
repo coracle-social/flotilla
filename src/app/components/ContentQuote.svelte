@@ -42,7 +42,9 @@
   let failed = $state(false)
 
   $effect(() => {
-    if ($quote || failed) return
+    if ($quote || failed) {
+      return
+    }
 
     if (attempts >= 3) {
       failed = true
