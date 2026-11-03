@@ -84,8 +84,12 @@
               undefined
 
         if (component) {
+          if (content) {
+            unmount(content)
+          }
+
           // A copy, so the popover's own effect root reads none of the caller's state.
-          content ??= mount(component, {target, props: {...props}})
+          content = mount(component, {target, props: {...props}})
         }
 
         visible = true
