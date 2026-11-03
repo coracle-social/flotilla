@@ -56,7 +56,9 @@
 
   // Messages arriving at the origin push the pinned row away, and the browser does not compensate.
   const keepPinned = (caughtUp: boolean) => {
-    const target = pinned && element?.querySelector(`[data-event="${pinned.id}"]`)
+    const target =
+      pinned &&
+      (element?.querySelector(`[data-event="${pinned.id}"]`) ?? document.getElementById(pinned.id))
 
     if (target instanceof HTMLElement && pinned) {
       const origin = Math.abs(element!.scrollTop)
@@ -130,7 +132,11 @@
       const {y} = newMessages.getBoundingClientRect()
 
       if (y > 0 && y < 300) {
-        newMessagesSeen = true
+        // A jump or a pin moves the divider under the reader, which isn't them reading it.
+        if (!awaitingJump && !pinned) {
+          newMessagesSeen = true
+        }
+
         showFixedNewMessages = false
       } else {
         showFixedNewMessages = y < 0
@@ -164,7 +170,7 @@
   // Asking for the divider takes the scroll position over, so a permalink's pin lets go of it.
   const scrollToNewMessages = () => {
     release()
-    scrollToRow("new-messages", {behavior: "smooth"})
+    scrollToRow("new-messages", {pin: true})
   }
 
   // Dropping the anchor remounts the transcript on the present, which puts the reader at the live end.
