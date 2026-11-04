@@ -7,10 +7,12 @@
   import type {TrustedEvent} from "@welshman/util"
   import {THREAD} from "@welshman/util"
   import {Thread} from "@welshman/domain"
+  import {page} from "$app/stores"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Add from "@assets/icons/add.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Link from "@lib/components/Link.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {makeCommentFilter} from "@lib/util"
@@ -18,6 +20,7 @@
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import ThreadLatest from "@app/components/ThreadLatest.svelte"
+  import ThreadLatestItem from "@app/components/ThreadLatestItem.svelte"
   import {reader} from "@app/core/domain"
   import * as pages from "@app/navigation/pages"
   import {displayRoom} from "@app/features/spaces/rooms"
@@ -50,6 +53,15 @@
     return {items, boards}
   })
 
+  // The board a board card opened, named as a query so the same page shows
+  // that board's topics alone, most recent activity first.
+  const board = $derived($page.url.searchParams.get("board") ?? undefined)
+  const inBoard = $derived(board !== undefined)
+  const boardName = $derived(board === "" ? "General" : board ? displayRoom(url, board) : "")
+  const boardItems = $derived(
+    inBoard ? threadFeed.items.filter(e => (reader(Thread)(e).room() || "") === board) : [],
+  )
+
   onMount(() => {
     const feed = makeFeed({
       relays: [url],
@@ -74,10 +86,12 @@
     <Icon icon={NotesMinimalistic} />
   {/snippet}
   {#snippet title()}
-    <strong>Threads</strong>
+    <strong>{inBoard ? boardName : "Threads"}</strong>
   {/snippet}
   {#snippet action()}
-    <Button class="button button-primary button-sm" onclick={() => pushModal(ThreadCreate, {url})}>
+    <Button
+      class="button button-primary button-sm"
+      onclick={() => pushModal(ThreadCreate, {url, h: board ?? undefined})}>
       <Icon icon={Add} />
       New topic
     </Button>
@@ -86,18 +100,39 @@
 
 <PageContent bind:element class="p-2 sm:p-4">
   <div class="grid items-start gap-2 sm:gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-    <div class="flex flex-col gap-2 sm:gap-4">
-      {#each threadFeed.boards as [h, threads] (h)}
-        <ThreadBoard {url} {h} {threads} {context} />
-      {/each}
-    </div>
-    <ThreadLatest {url} items={threadFeed.items} {context} />
+    {#if inBoard}
+      <section class="card card-flat p-0 lg:col-span-2">
+        <header
+          class="flex items-center justify-between gap-2 border-b border-solid border-line px-4 py-3">
+          <h2 class="text-lg">{boardName}</h2>
+          <Link href={pages.threads.path({url})} class="text-primary text-sm">All boards</Link>
+        </header>
+        {#if boardItems.length === 0}
+          <p class="text-content-muted p-4 text-sm">No topics yet in this board.</p>
+        {:else}
+          <table class="w-full border-collapse">
+            <tbody>
+              {#each boardItems as event (event.id)}
+                <ThreadLatestItem {url} {event} {context} showRoom={false} />
+              {/each}
+            </tbody>
+          </table>
+        {/if}
+      </section>
+    {:else}
+      <div class="flex flex-col gap-2 sm:gap-4">
+        {#each threadFeed.boards as [h, threads] (h)}
+          <ThreadBoard {url} {h} {threads} {context} />
+        {/each}
+      </div>
+      <ThreadLatest {url} items={threadFeed.items} {context} />
+    {/if}
   </div>
   <p class="flex h-10 items-center justify-center py-20">
     <Spinner {loading}>
       {#if loading}
         Looking for threads...
-      {:else if exhausted && threadFeed.items.length === 0}
+      {:else if exhausted && (inBoard ? boardItems.length : threadFeed.items.length) === 0}
         No threads found.
       {/if}
     </Spinner>

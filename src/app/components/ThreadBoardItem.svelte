@@ -36,7 +36,7 @@
   <Cv
     tag={Link}
     href={path}
-    class="hover:bg-surface-less flex w-full flex-col gap-2 border-b border-solid border-line px-4 py-3 text-left text-sm transition-colors">
+    class="hover:bg-surface-less flex w-full flex-col gap-2 border-b border-solid border-line px-4 py-3 text-left text-sm transition-colors last:border-b-0">
     <p class="truncate font-medium">
       <UnreadDot {path} class="mr-1" />{title || "Untitled thread"}
     </p>
@@ -54,7 +54,7 @@
 {:else}
   <tr
     onclick={onClick}
-    class="hover:bg-surface-less cursor-pointer border-b border-solid border-line text-sm transition-colors">
+    class="hover:bg-surface-less cursor-pointer border-b border-solid border-line text-sm transition-colors last:border-b-0">
     <td class="max-w-0 truncate px-4 py-3 align-top">
       <UnreadDot {path} class="mr-1" />{title || "Untitled thread"}
     </td>

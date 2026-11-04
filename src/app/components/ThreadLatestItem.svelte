@@ -16,9 +16,11 @@
     url: string
     event: TrustedEvent
     context: FeedContext
+    // The row's board, left off a page that already says which board it is.
+    showRoom?: boolean
   }
 
-  const {url, event, context}: Props = $props()
+  const {url, event, context, showRoom = true}: Props = $props()
 
   const related = context.related(event)
   const replies = derived(related, $related => filter(spec({kind: COMMENT}), $related))
@@ -32,7 +34,7 @@
 
 <tr
   onclick={onClick}
-  class="hover:bg-surface-less cursor-pointer border-b border-solid border-line text-sm transition-colors">
+  class="hover:bg-surface-less cursor-pointer border-b border-solid border-line text-sm transition-colors last:border-b-0">
   <td class="w-12 px-4 py-3 align-middle">
     <ProfileCircle pubkey={event.pubkey} {url} size={6} />
   </td>
@@ -41,10 +43,12 @@
       <UnreadDot {path} class="mr-1" />{title || "Untitled thread"}
     </p>
     <div class="text-content-muted mt-0.5">
-      {#if h}
-        <RoomNameWithImage {url} {h} size={4} />
-      {:else}
-        General
+      {#if showRoom}
+        {#if h}
+          <RoomNameWithImage {url} {h} size={4} />
+        {:else}
+          General
+        {/if}
       {/if}
     </div>
   </td>

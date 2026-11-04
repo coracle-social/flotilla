@@ -2,10 +2,12 @@
   import type {TrustedEvent} from "@welshman/util"
   import {WEEK, sortBy, uniq} from "@welshman/lib"
   import {tagValues, topicTags} from "@welshman/util"
+  import Link from "@lib/components/Link.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import ThreadBoardItem from "@app/components/ThreadBoardItem.svelte"
   import {normalizeTopic} from "@lib/util"
   import {rooms} from "@app/core/plugins"
+  import * as pages from "@app/navigation/pages"
   import type {FeedContext} from "@app/features/feeds"
 
   type Props = {
@@ -16,6 +18,9 @@
   }
 
   const {url, h, threads, context}: Props = $props()
+  const boardPath = $derived(
+    pages.threads.path({url}) + (h ? `?board=${encodeURIComponent(h)}` : "?board="),
+  )
 
   const room = $rooms.forRoom(url, h)
   const description = $derived($room?.meta?.about() ?? "")
@@ -31,8 +36,9 @@
 </script>
 
 <section class="card card-flat p-0">
-  <header
-    class="flex items-start justify-between gap-2 border-b border-solid border-line px-4 py-3">
+  <Link
+    href={boardPath}
+    class="hover:bg-surface-less flex w-full items-start justify-between gap-2 px-4 py-3 transition-colors">
     <div class="min-w-0">
       <h2 class="text-lg">
         {#if h}
@@ -52,16 +58,14 @@
         </div>
       {/if}
     </div>
-    <span class="text-content-muted whitespace-nowrap pt-1 text-sm">
-      {topicsThisWeek} / week
-    </span>
-  </header>
+    <span class="text-content-muted whitespace-nowrap pt-1 text-sm">{topicsThisWeek} / week</span>
+  </Link>
   <!-- The board's own rows only on mobile, where the Latest panel is hidden. -->
   <div class="lg:hidden">
     {#if threads.length === 0}
       <p class="text-content-muted p-4 text-sm">No topics yet.</p>
     {:else}
-      <div class="pb-4">
+      <div class="border-t border-solid border-line">
         {#each threads as event (event.id)}
           <ThreadBoardItem stacked {url} {event} {context} />
         {/each}
