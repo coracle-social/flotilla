@@ -22,7 +22,7 @@ const source =
 
 const image = process.env.CARAVEL_IMAGE ?? "localhost/flotilla-e2e-caravel:latest"
 
-// API_URL's host in docker/compose.yaml.
+// PLATFORM_URL's host in docker/compose.yaml, which serves the api under /api.
 const apiHost = "api.test"
 
 const compose = makeCompose(fileURLToPath(new URL("docker/compose.yaml", import.meta.url)), {
@@ -111,10 +111,10 @@ const provision = async () => {
   )
 
   const auth = await users.admin.signer.sign(
-    await makeHttpAuth(`http://${apiHost}/session`, "POST"),
+    await makeHttpAuth(`http://${apiHost}/api/session`, "POST"),
   )
   const session = parseJson<{data: {token: string}}>(
-    await request(apiHost, "/session", {authorization: makeHttpAuthHeader(auth)}),
+    await request(apiHost, "/api/session", {authorization: makeHttpAuthHeader(auth)}),
   )
   const headers = {
     "content-type": "application/json",
@@ -127,7 +127,7 @@ const provision = async () => {
     // The free plan has nothing to bill, and caps a relay at ten members.
     await request(
       apiHost,
-      "/relays",
+      "/api/relays",
       headers,
       JSON.stringify({
         tenant_pubkey: users.admin.pubkey,

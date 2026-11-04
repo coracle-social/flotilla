@@ -14,7 +14,7 @@
   import {reader} from "@app/core/domain"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushToast} from "@app/features/toast"
-  import {pushModal} from "@app/navigation/dialogs"
+  import {popModal, pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -51,43 +51,52 @@
     }
   }
 
+  // Nested so the queue stays mounted beneath it, since resolving here reports back to that instance.
   const banContent = () => {
-    pushModal(Confirm, {
-      title: `Remove Content`,
-      message: `Are you sure you want to delete this content from the space?`,
-      confirm: async () => {
-        const {error} = await $relayManagement.forUrl(url).banEvent(reportedId!, reason)
+    pushModal(
+      Confirm,
+      {
+        title: `Remove Content`,
+        message: `Are you sure you want to delete this content from the space?`,
+        confirm: async () => {
+          const {error} = await $relayManagement.forUrl(url).banEvent(reportedId!, reason)
 
-        if (error) {
-          pushToast({theme: "error", message: error})
-        } else {
-          pushToast({message: "Content has successfully been deleted!"})
-          await $app.repository.removeEvent(event.id)
-          await $app.repository.removeEvent(reportedId!)
-          history.back()
-          setTimeout(() => onResolved?.())
-        }
+          if (error) {
+            pushToast({theme: "error", message: error})
+          } else {
+            pushToast({message: "Content has successfully been deleted!"})
+            await $app.repository.removeEvent(event.id)
+            await $app.repository.removeEvent(reportedId!)
+            await popModal()
+            onResolved?.()
+          }
+        },
       },
-    })
+      {nested: true},
+    )
   }
 
   const banMember = () => {
-    pushModal(Confirm, {
-      title: "Ban User",
-      message: `Are you sure you want to ban @${$profiles.display(reportedPubkey!, [url]).get()} from the space?`,
-      confirm: async () => {
-        const {error} = await $relayManagement.forUrl(url).banPubkey(reportedPubkey!, reason)
+    pushModal(
+      Confirm,
+      {
+        title: "Ban User",
+        message: `Are you sure you want to ban @${$profiles.display(reportedPubkey!, [url]).get()} from the space?`,
+        confirm: async () => {
+          const {error} = await $relayManagement.forUrl(url).banPubkey(reportedPubkey!, reason)
 
-        if (error) {
-          pushToast({theme: "error", message: error})
-        } else {
-          pushToast({message: "User has successfully been banned!"})
-          await $app.repository.removeEvent(event.id)
-          history.back()
-          setTimeout(() => onResolved?.())
-        }
+          if (error) {
+            pushToast({theme: "error", message: error})
+          } else {
+            pushToast({message: "User has successfully been banned!"})
+            await $app.repository.removeEvent(event.id)
+            await popModal()
+            onResolved?.()
+          }
+        },
       },
-    })
+      {nested: true},
+    )
   }
 </script>
 

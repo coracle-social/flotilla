@@ -161,7 +161,9 @@ the merge is installed with the page, since the document is read at startup and 
 The hosting API is a small stateful fake rather than fixed answers: a write mutates the record it
 names and the next read sees it, so editing a space, deactivating it or paying an invoice is
 observable. `getHosting(context)` changes the backend's mind between two of the user's clicks — a
-custom domain that verifies, an invoice that gets paid.
+custom domain that verifies, an invoice that gets paid. It also answers `POST /session`, trading the
+NIP-98 header the app sends for the bearer token every other route carries, since a mock that
+skipped it would leave every hosting page empty.
 
 ## Containment
 
@@ -193,9 +195,11 @@ page asks for is meant to be refused.
 Configuration is the other half. `boot()` overrides every `VITE_` value that names a relay — default,
 indexer, search, messaging, signer, platform, blocked, the default space list — with the scenario's
 own urls, through the hook `src/app/core/env.ts` reads them with, and points `VITE_PUSH_BRIDGE` at `ws://localhost:1/`, which nothing serves, so a push
-bridge connection is reported as a leak rather than blending into a relay's traffic. The `VITE_`
+bridge connection is reported as a leak rather than blending into a relay's traffic. The hosting
+api's url is pinned to the origin above the same way, because a developer's `.env.local` may point it
+at a caravel of their own that no mock answers for. The `VITE_`
 values it does not override still name real hosts — the blossom server, the pomade signers, the
-thumbnail service, the push server, the hosting api — and none of them is contacted at boot. Blossom
+thumbnail service, the push server — and none of them is contacted at boot. Blossom
 is read only when an upload starts, the thumbnail url only on android, pomade only when a signup uses
 it, and the hosting api and dufflepud are mocked. They are contained by the block-all rather than by
 configuration.

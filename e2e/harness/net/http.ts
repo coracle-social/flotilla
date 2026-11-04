@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto"
 import type {BrowserContext} from "@playwright/test"
-import {HOUR, int, now, omit} from "@welshman/lib"
+import {HOUR, int, now, omit, parseJson} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {Handle} from "@welshman/util"
 import type {ZapperValues} from "@welshman/domain"
@@ -11,7 +11,7 @@ import {makeContextStore} from "./context"
 // Mirrors the service urls in src/app/core/env.ts, which reads import.meta.env and pulls in Capacitor.
 const DUFFLEPUD_ORIGIN = "https://dufflepud.coracle.social"
 const PUSH_SERVER_ORIGIN = "https://nps.flotilla.social"
-const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
+export const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
 
 // Hard-coded in src/app.html, so every navigation asks for it whatever the scenario is doing.
 const PLAUSIBLE_ORIGIN = "https://plausible.coracle.social"
@@ -481,10 +481,22 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
 
     const missing = (what: string) => route.fulfill({status: 404, json: {error: `No such ${what}`}})
 
-    // The app trades a NIP-98 signature for a bearer token, which every other request carries.
+    // The app trades a NIP-98 signature for a bearer token, which every other request carries,
+    // and caches it against the pubkey that signed, so the token answers for that key.
     if (resource === "session") {
+      const header = request.headers().authorization ?? ""
+      const event = parseJson<{pubkey: string}>(
+        Buffer.from(header.replace(/^Nostr /, ""), "base64").toString(),
+      )
+
       return route.fulfill({
-        json: {data: {token: "test-hosting-token", expires_at: now() + int(1, HOUR)}},
+        json: {
+          data: {
+            pubkey: event?.pubkey ?? "",
+            token: "test-hosting-token",
+            expires_at: now() + int(1, HOUR),
+          },
+        },
       })
     }
 

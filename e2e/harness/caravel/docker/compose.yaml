@@ -33,22 +33,22 @@ services:
     environment:
       PORT: "2892"
       DATABASE_URL: postgres://caravel:caravel@postgres:5432/caravel
-      # Every relay is `<name>.test`, matching e2e/harness/relay/config.ts. The API is a host no relay
-      # may take, and the harness reaches it with a Host header like any relay.
+      # The platform's own host, which serves the API under /api. Every relay is `<name>.test`,
+      # matching e2e/harness/relay/config.ts, so no relay may take this one.
+      PLATFORM_URL: http://api.test
       RELAY_DOMAINS: test
-      API_URL: http://api.test
-      # Required, and never reached: billing, wallets and the robot's own relays all name a host
-      # that resolves nowhere. Every relay is on the free plan, so there is nothing to bill.
+      # Required, and never reached: billing, media, wallets and the robot's own relays all name a
+      # host that resolves nowhere. Every relay is on the free plan, and none of them has media,
+      # calls or paid memberships, so there is nothing to store, connect to or bill.
       STRIPE_SECRET_KEY: sk_test_flotilla_e2e
       ROBOT_SECRET: ca7a7e1000000000000000000000000000000000000000000000000000000009
       ROBOT_WALLET: nostr+walletconnect://6ada7b6eabb3a8349f88667d278a275c704b553a7c57f9d8156555986884a08e?relay=wss://wallet.test&secret=ca7a7e1000000000000000000000000000000000000000000000000000000009
       ROBOT_OUTBOX_RELAYS: wss://robot.test
       ROBOT_INDEXER_RELAYS: wss://robot.test
       ROBOT_MESSAGING_RELAYS: wss://robot.test
-      MEDIA_DIR: /app/data/media
+      MEDIA_S3_BUCKET: flotilla-e2e
+      MEDIA_S3_REGION: us-east-1
+      MEDIA_S3_ACCESS_KEY: flotilla-e2e
+      MEDIA_S3_SECRET_KEY: flotilla-e2e
+      MEDIA_S3_ENDPOINT: http://media.test
       RUST_LOG: caravel=info,caravel_core=info,caravel_relay=info,caravel_api=info
-    volumes:
-      - type: tmpfs
-        target: /app/data
-        tmpfs:
-          mode: 01777
