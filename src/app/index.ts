@@ -17,6 +17,7 @@ import {registerMembership} from "@app/features/spaces/membership"
 import {registerPinboards} from "@app/features/spaces/pinboards"
 import {registerCommands} from "@app/features/spaces/rooms/commands"
 import {registerRooms} from "@app/features/spaces/rooms"
+import {registerWallet} from "@app/features/wallet"
 
 let registered = false
 
@@ -37,6 +38,7 @@ export const registerAll = () => {
     registerMessages()
     registerPomade()
     registerPush()
+    registerWallet()
     registerSpaces()
     registerCalls()
     registerRoles()
