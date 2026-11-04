@@ -159,7 +159,7 @@
       {#if $permissions.createInvite}
         <Button class="button button-neutral" onclick={createInvite}>
           <Icon icon={LinkRound} />
-          Create invite
+          Invite members
         </Button>
       {/if}
     </div>

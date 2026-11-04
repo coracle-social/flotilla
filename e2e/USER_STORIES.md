@@ -346,7 +346,7 @@ that I can populate a closed room without waiting on requests.
 
 Acceptance:
 
-- "Create invite" shows a QR code and a copyable invite url; copying confirms,
+- "Invite members" shows a QR code and a copyable invite url; copying confirms,
   and opening that link as carol lands her in the right space and room with a
   join option.
 - The room's member list shows every current member; searching for and adding
@@ -1637,7 +1637,7 @@ the space.
 
 Acceptance:
 
-- "Create Invite" shows a QR code and a copyable link, and copying puts it on
+- "Invite Members" shows a QR code and a copyable link, and copying puts it on
   the clipboard.
 - Where the relay supports it, "Add members" in the invite dialog opens a member
   search that adds someone straight into the member list.

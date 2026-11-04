@@ -16,6 +16,7 @@ import {MembershipStatus, Rooms} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {user} from "@app/core/user"
 import {deriveSpacePermissions, deriveUserIsSpaceOwner} from "@app/features/spaces/management"
+import {deriveRoomMembers} from "@app/features/spaces/rooms/room"
 
 // The room's admin list names the moderation kinds each admin may publish.
 export const deriveRoomPermissions = (url: string, h: string) =>
@@ -35,6 +36,27 @@ export const deriveRoomPermissions = (url: string, h: string) =>
         updatePins: can(ROOM_UPDATE_PINS),
       }
     },
+  )
+
+// Removal from a room is offered only for a member of it, and nobody moderates themselves.
+export const deriveMemberModeration = (url: string, h = "") =>
+  derived(
+    [user, deriveRoomPermissions(url, h), deriveRoomMembers(url, h), deriveSpacePermissions(url)],
+    ([$user, $roomPermissions, $roomMembers, $spacePermissions]) =>
+      (pubkey: string) => {
+        const other = pubkey !== $user.pubkey
+        const removeFromRoom =
+          other && Boolean(h) && $roomPermissions.removeMembers && $roomMembers.includes(pubkey)
+        const removeFromSpace = other && $spacePermissions.removeMembers
+        const ban = other && $spacePermissions.ban
+
+        return {
+          removeFromRoom,
+          removeFromSpace,
+          ban,
+          manage: removeFromRoom || removeFromSpace || ban,
+        }
+      },
   )
 
 // Deleting someone else's content goes one of two ways, and a space answers for either one.

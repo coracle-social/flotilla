@@ -76,7 +76,7 @@ delete it, and anyone can pin to it.
 | `ROOM_ADMINS` | 39001 | `RoomAdmins` | relay | room admins |
 | `ROOM_MEMBERS` | 39002 | `RoomMembers` | relay | member snapshot |
 | `ROOM_PINS` | 39005 | `RoomPins` | relay | pinned messages |
-| `ROOM_ADD_MEMBER` / `ROOM_REMOVE_MEMBER` | 9000 / 9001 | `RoomAddMember` / `RoomRemoveMember` | admin | `addRoomMembers`, `RoomMemberMenu` |
+| `ROOM_ADD_MEMBER` / `ROOM_REMOVE_MEMBER` | 9000 / 9001 | `RoomAddMember` / `RoomRemoveMember` | admin | `addRoomMembers`, `SpaceMemberManage` |
 | `ROOM_EDIT_META` | 9002 | `RoomEdit` | admin | `rooms.editRoom` |
 | `ROOM_CREATE` / `ROOM_DELETE` | 9007 / 9008 | `RoomCreate` / `RoomDelete` | admin | `RoomForm`, `RoomDetailMenu` |
 | `ROOM_CREATE_INVITE` | 9009 | `RoomCreateInvite` | admin | `publishRoomInvite` |
@@ -106,6 +106,9 @@ user holds a method for — reports under `banevent`, join requests under `allow
   (`$permissions.editRoom`, `$permissions.updatePins`). Each is a 9000-9010 kind, and the room's
   39001 admin list names the kinds each admin may publish (`["p", pubkey, "9000", "9001"]`, per
   [nips#2440](https://github.com/nostr-protocol/nips/pull/2440)). The space's owner holds every kind.
+- `deriveMemberModeration(url, h?)`: a function of a member's pubkey giving the ways the user may
+  take them out (from the room, from the space, banned), and `manage` for whether any applies.
+  `SpaceMemberManage` offers those choices, and every member menu gates its "Manage member" on it.
 - `deriveUserRoomMembershipStatus`: the owner is always `Granted`.
 - `addRoomMembers`: allows each non-member at the relay (NIP-86 `allowPubkey`) before publishing
   9000, because a room member the relay won't serve can't read the room.
@@ -177,7 +180,7 @@ relay's URL, each call signed with a fresh NIP-98 event. Every method resolves t
 | Methods | Called from |
 |---|---|
 | `supportedMethods`, `listMethodAssignees`, `listBannedPubkeys` (cached) | `SpaceManagement` (`src/app/features/spaces/management.ts`) |
-| `banPubkey`, `unbanPubkey`, `allowPubkey`, `unallowPubkey`, `listBannedPubkeys` | `ProfileDetail`, `SpaceMemberMenu`, `SpaceMemberBannedMenu`, `ReportMenu`, `allowPubkeys` (`SpaceMembersAdd`, `RoleAddMembers`, `addRoomMembers`) |
+| `banPubkey`, `unbanPubkey`, `allowPubkey`, `unallowPubkey`, `listBannedPubkeys` | `SpaceMemberManage`, `ProfileDetail`, `SpaceMemberBannedMenu`, `ReportMenu`, `allowPubkeys` (`SpaceMembersAdd`, `RoleAddMembers`, `addRoomMembers`) |
 | `banEvent` | `RoomItemMenu`, `EventMenu`, `ReportMenu`, `RoomJoinItem` (dismissing a join request) |
 | `createRole`, `editRole`, `deleteRole`, `assignRole`, `unassignRole` | `RoleCreate`, `RoleEdit`, `SpaceRoleMenu`, `SpaceMemberRoles` (via `syncAssignments`), `RoleAddMembers` |
 | `listClaims`, `createClaim` | `InviteLink` |
