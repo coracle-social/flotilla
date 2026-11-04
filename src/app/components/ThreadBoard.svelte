@@ -7,6 +7,7 @@
   import ThreadBoardItem from "@app/components/ThreadBoardItem.svelte"
   import {normalizeTopic} from "@lib/util"
   import {rooms} from "@app/core/plugins"
+  import {displayRoom} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
   import type {FeedContext} from "@app/features/feeds"
 
@@ -24,6 +25,7 @@
 
   const room = $rooms.forRoom(url, h)
   const description = $derived($room?.meta?.about() ?? "")
+  const boardName = $derived(h ? displayRoom(url, h) : "General")
   const topicsThisWeek = $derived(
     threads.filter(e => e.created_at > Math.floor(Date.now() / 1000) - WEEK).length,
   )
@@ -35,10 +37,12 @@
   )
 </script>
 
-<section class="card card-flat p-0">
+<section class="card card-interactive card-flat relative p-0">
   <Link
     href={boardPath}
-    class="hover:bg-surface-less flex w-full items-start justify-between gap-2 px-4 py-3 transition-colors">
+    aria-label={`View the ${boardName} board`}
+    class="absolute inset-0 cursor-pointer rounded-3xl" />
+  <div class="pointer-events-none relative flex w-full items-start justify-between gap-2 px-4 py-3">
     <div class="min-w-0">
       <h2 class="text-lg">
         {#if h}
@@ -59,9 +63,9 @@
       {/if}
     </div>
     <span class="text-content-muted whitespace-nowrap pt-1 text-sm">{topicsThisWeek} / week</span>
-  </Link>
+  </div>
   <!-- The board's own rows only on mobile, where the Latest panel is hidden. -->
-  <div class="lg:hidden">
+  <div class="relative lg:hidden">
     {#if threads.length === 0}
       <p class="text-content-muted p-4 text-sm">No topics yet.</p>
     {:else}

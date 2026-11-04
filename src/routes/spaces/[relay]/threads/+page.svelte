@@ -57,6 +57,7 @@
   // that board's topics alone, most recent activity first.
   const board = $derived($page.url.searchParams.get("board") ?? undefined)
   const inBoard = $derived(board !== undefined)
+  const back = () => history.back()
   const boardName = $derived(board === "" ? "General" : board ? displayRoom(url, board) : "")
   const boardItems = $derived(
     inBoard ? threadFeed.items.filter(e => (reader(Thread)(e).room() || "") === board) : [],
@@ -81,7 +82,7 @@
   })
 </script>
 
-<SpaceBar>
+<SpaceBar back={inBoard ? back : undefined}>
   {#snippet leading()}
     <Icon icon={NotesMinimalistic} />
   {/snippet}
@@ -101,9 +102,8 @@
 <PageContent bind:element class="p-2 sm:p-4">
   <div class="grid items-start gap-2 sm:gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
     {#if inBoard}
-      <section class="card card-flat p-0 lg:col-span-2">
-        <header
-          class="flex items-center justify-between gap-2 border-b border-solid border-line px-4 py-3">
+      <div class="lg:col-span-2">
+        <header class="flex items-center justify-between gap-2 px-4 py-3">
           <h2 class="text-lg">{boardName}</h2>
           <Link href={pages.threads.path({url})} class="text-primary text-sm">All boards</Link>
         </header>
@@ -118,7 +118,7 @@
             </tbody>
           </table>
         {/if}
-      </section>
+      </div>
     {:else}
       <div class="flex flex-col gap-2 sm:gap-4">
         {#each threadFeed.boards as [h, threads] (h)}
