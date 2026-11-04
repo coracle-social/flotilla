@@ -43,32 +43,36 @@
   })
 </script>
 
-<div class="flex flex-col gap-3 border-t border-line bg-surface-less p-4" bind:this={element}>
-  <HomeNetworkRecentFilters counts={countNetworkFeedTypes($candidates)} />
-  {#if isEmpty}
-    <div class="flex flex-col items-center gap-3 pb-4 text-center">
-      <p class="font-medium">Follow a few people to fill this out</p>
-      <p class="max-w-md text-sm opacity-75">
-        Posts from the people you follow collect here. Spaces are a good place to find some.
-      </p>
-      {#if PLATFORM_RELAYS.length === 0}
-        <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
+<div class="flex flex-col border-t border-line bg-surface-less">
+  <div class="border-b border-line px-4 py-3">
+    <HomeNetworkRecentFilters counts={countNetworkFeedTypes($candidates)} />
+  </div>
+  <div class="flex flex-col gap-3 p-4" bind:this={element}>
+    {#if isEmpty}
+      <div class="flex flex-col items-center gap-3 pb-4 text-center">
+        <p class="font-medium">Follow a few people to fill this out</p>
+        <p class="max-w-md text-sm opacity-75">
+          Posts from the people you follow collect here. Spaces are a good place to find some.
+        </p>
+        {#if PLATFORM_RELAYS.length === 0}
+          <Link href="/spaces" class="button button-neutral button-sm">Browse spaces</Link>
+        {/if}
+      </div>
+    {:else if $entries.length > 0}
+      {#each $entries as entry (entry.key)}
+        <NoteEntry {entry} {context} />
+      {/each}
+      {#if $loading}
+        <div class="flex justify-center py-8">
+          <Spinner loading />
+        </div>
       {/if}
-    </div>
-  {:else if $entries.length > 0}
-    {#each $entries as entry (entry.key)}
-      <NoteEntry {entry} {context} />
-    {/each}
-    {#if $loading}
+    {:else if hidden}
+      <div class="pb-4 text-center font-medium">Nothing matches those filters</div>
+    {:else}
       <div class="flex justify-center py-8">
-        <Spinner loading />
+        <Spinner loading>Loading recent posts...</Spinner>
       </div>
     {/if}
-  {:else if hidden}
-    <div class="pb-4 text-center font-medium">Nothing matches those filters</div>
-  {:else}
-    <div class="flex justify-center py-8">
-      <Spinner loading>Loading recent posts...</Spinner>
-    </div>
-  {/if}
+  </div>
 </div>
