@@ -57,7 +57,7 @@
         writer(Pinboard, board)
           .setTitle(title)
           .setDescription(description)
-          .setImage((await resolveImageInput(imageFile, image)) ?? "")
+          .setImage((await resolveImageInput(imageFile, image, {url})) ?? "")
           .setTopics(topics),
         url,
       )

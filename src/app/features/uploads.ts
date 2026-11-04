@@ -261,17 +261,20 @@ export const uploadFileOrFallback = async (
   return {url: await readFileAsDataUrl(file), tags: []}
 }
 
+export type ResolveImageInputOptions = CompressFileOptions & Pick<UploadFileOptions, "url">
+
 export const resolveImageInput = async (
   file: Maybe<File>,
   url: Maybe<string>,
-  options: CompressFileOptions = {},
+  options: ResolveImageInputOptions = {},
 ) => {
   if (!file) {
     return url
   }
 
-  const compressedFile = await compressFileForUpload(file, options)
-  const result = await uploadFileOrFallback(compressedFile)
+  const {maxWidth, maxHeight, quality, mimeType, ...uploadOptions} = options
+  const compressedFile = await compressFileForUpload(file, {maxWidth, maxHeight, quality, mimeType})
+  const result = await uploadFileOrFallback(compressedFile, uploadOptions)
 
   return result.url
 }
