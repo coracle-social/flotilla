@@ -22,8 +22,10 @@ services:
       retries: 30
 
   relay:
-    # Built from a caravel checkout, or named by CARAVEL_IMAGE, by e2e/harness/caravel/backend.ts.
+    # Pulled by e2e/harness/caravel/backend.ts, or built from a checkout and tagged as this.
     image: ${CARAVEL_IMAGE:?staged by e2e/harness/caravel/backend.ts, which starts this container}
+    # Staged by backend.ts with the architecture caravel publishes, which an arm64 host emulates.
+    platform: ${CARAVEL_PLATFORM:?staged by e2e/harness/caravel/backend.ts}
     depends_on:
       postgres:
         condition: service_healthy

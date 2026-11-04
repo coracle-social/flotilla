@@ -397,7 +397,7 @@ e2e/
         compose.yaml       no data volume; tmpfs for /app/data and /app/media
         config/            one toml per virtual relay: its host, and its whole policy
     caravel/
-      backend.ts           the image built from a checkout, and the relays created through its api
+      backend.ts           the published image, and the relays created through its api
       config.ts            each toml's policy as caravel's relay settings
       docker/
         compose.yaml       caravel and its postgres, both on tmpfs
@@ -493,11 +493,13 @@ fetches that image the first time a machine needs it. So a spec asserting relay 
 against the relay the diff names, and needing a newer zooid is a bump in that file. `ZOOID_IMAGE`
 overrides the pin, which is how a spec is tried against a zooid built from a checkout.
 
-No published caravel image serves relays yet, so the harness builds one from a checkout beside this
-repo, `../caravel`, on the monolith branch, at the start of every run. An unchanged checkout is all
-layer cache and takes seconds; the first build compiles the whole workspace and takes minutes.
-`CARAVEL_SOURCE` points at another checkout, and `CARAVEL_IMAGE` names an image to run instead of
-building one.
+caravel is not pinned. Its CI publishes `gitea.coracle.social/coracle/caravel:latest` on each push
+to master, and the harness pulls it at the start of every run, which costs a manifest check when the
+image is already on the machine. That image is amd64, so a host of another architecture runs the
+container under emulation. `CARAVEL_IMAGE` names another reference, such as a digest. `CARAVEL_SOURCE`
+builds from a checkout instead, which is how an unreleased change is tried: the build is this host's
+own architecture, is tagged apart from the published reference so it never stands in for what CI
+shipped, and compiles the whole workspace the first time.
 
 A test fails when the app broke while it ran, whatever it asserted: an uncaught exception on any
 of its pages, or code of ours the browser refused under the content security policy. A refusal

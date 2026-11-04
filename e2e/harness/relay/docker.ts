@@ -30,12 +30,13 @@ export const hasImage = (image: string) =>
     () => false,
   )
 
-// A pull of a pinned reference can only produce the relay this suite was written against.
-export const pullImage = async (image: string, override: string) => {
+// A pull of a pinned reference can only produce the relay this suite was written against. A backend
+// published for one architecture only says which, so a host of another one runs it under emulation.
+export const pullImage = async (image: string, override: string, platform?: string) => {
   console.warn(`\nFetching the relay image this suite runs against:\n  ${image}\n`)
 
   try {
-    await docker("pull", image)
+    await docker("pull", ...(platform ? ["--platform", platform] : []), image)
   } catch (error) {
     throw new Error(
       `Could not fetch ${image}: ${describeFailure(error)}\n\n` +

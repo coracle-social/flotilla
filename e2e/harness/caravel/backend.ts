@@ -16,21 +16,31 @@ import {requestHost} from "../relay/transport"
 import type {Backend} from "../relay/types"
 import {memberMethods, relaySettings} from "./config"
 
-// A checkout beside this one, on the monolith branch, which is where caravel serves relays itself.
-const source =
-  process.env.CARAVEL_SOURCE ?? fileURLToPath(new URL("../../../../caravel", import.meta.url))
+// What caravel's CI publishes on each push to master, and what this backend runs.
+const published = process.env.CARAVEL_IMAGE ?? "gitea.coracle.social/coracle/caravel:latest"
 
-const image = process.env.CARAVEL_IMAGE ?? "localhost/flotilla-e2e-caravel:latest"
+// A checkout to build from instead, for a caravel the published image does not have yet.
+const source = process.env.CARAVEL_SOURCE
+
+const hostArch = process.arch === "arm64" ? "arm64" : "amd64"
+
+// CI publishes amd64 only, so a pull brings that and a host of another one emulates it. A build has
+// this host's own architecture instead.
+const platform = `linux/${source ? hostArch : "amd64"}`
+
+// Kept apart from the published reference, so a build never stands in for what CI shipped.
+const image = source ? "localhost/flotilla-e2e-caravel:latest" : published
 
 // PLATFORM_URL's host in docker/compose.yaml, which serves the api under /api.
 const apiHost = "api.test"
 
 const compose = makeCompose(fileURLToPath(new URL("docker/compose.yaml", import.meta.url)), {
   CARAVEL_IMAGE: image,
+  CARAVEL_PLATFORM: platform,
 })
 
-// Rebuilt every run so a spec meets the caravel the checkout holds. An unchanged one is all cache.
-const build = async () => {
+// Built from a checkout rather than pulled, and tagged as this backend's image so compose runs it.
+const build = async (source: string) => {
   if (!(await hasImage(image))) {
     console.warn(
       `\nBuilding caravel from ${source}. A cold build compiles the whole workspace, which takes ` +
@@ -43,7 +53,7 @@ const build = async () => {
   } catch (error) {
     throw new Error(
       `Could not build caravel from ${source}: ${describeFailure(error)}\n\nPoint CARAVEL_SOURCE ` +
-        "at a caravel checkout on the monolith branch, or CARAVEL_IMAGE at an image built from one.",
+        "at a caravel checkout, or CARAVEL_IMAGE at a published image.",
       {cause: error},
     )
   }
@@ -144,12 +154,11 @@ const provision = async () => {
 export const caravel: Backend = {
   name: "caravel",
   prepare: async () => {
-    if (process.env.CARAVEL_IMAGE) {
-      if (!(await hasImage(image))) {
-        await pullImage(image, "CARAVEL_IMAGE")
-      }
+    if (source) {
+      await build(source)
     } else {
-      await build()
+      // `latest` moves with caravel's master, so every run asks what it is now.
+      await pullImage(image, "CARAVEL_IMAGE", platform)
     }
   },
   up: async () => {
