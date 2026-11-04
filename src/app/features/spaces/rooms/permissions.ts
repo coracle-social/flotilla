@@ -1,25 +1,40 @@
 import {derived} from "svelte/store"
 import type {Maybe} from "@welshman/lib"
-import {ROOM_DELETE_EVENT, tagSpec, tagValue} from "@welshman/util"
+import {
+  ROOM_ADD_MEMBER,
+  ROOM_CREATE_INVITE,
+  ROOM_DELETE,
+  ROOM_DELETE_EVENT,
+  ROOM_EDIT_META,
+  ROOM_REMOVE_MEMBER,
+  ROOM_UPDATE_PINS,
+  tagSpec,
+  tagValue,
+} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {MembershipStatus, Rooms} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {user} from "@app/core/user"
-import {deriveSpacePermissions, deriveUserIsSpaceStaff} from "@app/features/spaces/management"
+import {deriveSpacePermissions, deriveUserIsSpaceOwner} from "@app/features/spaces/management"
 
-// A space's staff administer every room in it, so space staff implies room admin.
-export const deriveUserIsRoomAdmin = (url: string, h: string) =>
+// The room's admin list names the moderation kinds each admin may publish.
+export const deriveRoomPermissions = (url: string, h: string) =>
   derived(
-    [user, fromApp($app => $app.use(Rooms).forRoom(url, h)), deriveUserIsSpaceStaff(url)],
-    ([$user, $room, $isStaff]) =>
-      $isStaff || Boolean($room?.admins?.pubkeys().includes($user.pubkey)),
-  )
+    [user, fromApp($app => $app.use(Rooms).forRoom(url, h)), deriveUserIsSpaceOwner(url)],
+    ([$user, $room, $isOwner]) => {
+      const kinds = $room?.admins?.rolesFor($user.pubkey).map(Number) ?? []
+      const can = (kind: number) => $isOwner || kinds.includes(kind)
 
-// The room's admin list names the management kinds each admin may publish.
-export const deriveUserRoomPermissions = (url: string, h: string) =>
-  derived(
-    [user, fromApp($app => $app.use(Rooms).forRoom(url, h))],
-    ([$user, $room]) => $room?.admins?.rolesFor($user.pubkey).map(Number) ?? [],
+      return {
+        addMembers: can(ROOM_ADD_MEMBER),
+        removeMembers: can(ROOM_REMOVE_MEMBER),
+        editRoom: can(ROOM_EDIT_META),
+        deleteContent: can(ROOM_DELETE_EVENT),
+        deleteRoom: can(ROOM_DELETE),
+        createInvite: can(ROOM_CREATE_INVITE),
+        updatePins: can(ROOM_UPDATE_PINS),
+      }
+    },
   )
 
 // Deleting someone else's content goes one of two ways, and a space answers for either one.
@@ -33,9 +48,9 @@ export const deriveUserAdminDelete = (url: string, event: TrustedEvent) => {
   const h = tagValue(tagSpec("h"), event.tags) ?? ""
 
   return derived(
-    [deriveUserRoomPermissions(url, h), deriveSpacePermissions(url)],
+    [deriveRoomPermissions(url, h), deriveSpacePermissions(url)],
     ([$roomPermissions, $spacePermissions]): Maybe<AdminDelete> => {
-      if (h && $roomPermissions.includes(ROOM_DELETE_EVENT)) {
+      if (h && $roomPermissions.deleteContent) {
         return AdminDelete.Room
       }
 
@@ -48,9 +63,9 @@ export const deriveUserAdminDelete = (url: string, event: TrustedEvent) => {
   )
 }
 
-// Room membership is the relay's business, but a space admin outranks it.
+// Room membership is the relay's business, but the owner may read and write every room.
 export const deriveUserRoomMembershipStatus = (url: string, h: string) =>
   derived(
-    [fromApp($app => $app.use(Rooms).membershipStatus(url, h).$), deriveUserIsRoomAdmin(url, h)],
-    ([$status, $isAdmin]) => ($isAdmin ? MembershipStatus.Granted : $status),
+    [fromApp($app => $app.use(Rooms).membershipStatus(url, h).$), deriveUserIsSpaceOwner(url)],
+    ([$status, $isOwner]) => ($isOwner ? MembershipStatus.Granted : $status),
   )

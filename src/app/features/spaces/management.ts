@@ -1,10 +1,12 @@
 import {derived, readable, writable} from "svelte/store"
 import {ago, difference, MINUTE, now, simpleCache} from "@welshman/lib"
-import {ROOM_CREATE_PERMISSION, hexTags, tagValues} from "@welshman/util"
-import {Events, RelayManagement} from "@welshman/app"
+import {ROOM_CREATE_PERMISSION} from "@welshman/util"
+import {RoomCreatePermission} from "@welshman/domain"
+import {Events, RelayManagement, Relays} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {user} from "@app/core/user"
+import {reader} from "@app/core/domain"
 import {relayManagement, relayMemberLists, usePlugin} from "@app/core/plugins"
 
 // `supportedmethods` answers for the pubkey that signed the request, so this catalog is the client's.
@@ -245,17 +247,21 @@ export const deriveSpacePermissions = (url?: string) =>
 
 // User
 
-// Holding any management method makes someone staff, for the room permissions NIP-86 has no method for.
-export const deriveUserIsSpaceStaff = (url?: string) =>
-  derived(deriveSpaceSupportedMethods(url), $methods => $methods.length > 0)
+// Relays let the owner named in NIP-11 publish every NIP-29 moderation kind, in any room.
+export const deriveUserIsSpaceOwner = (url: string) =>
+  derived(
+    [user, fromApp($app => $app.use(Relays).one(url))],
+    ([$user, $relay]) => $relay?.pubkey === $user.pubkey,
+  )
 
 export const deriveUserCanCreateRoom = (url: string) =>
   derived(
     [
       user,
       fromApp($app => $app.use(Events).forUrl(url, [{kinds: [ROOM_CREATE_PERMISSION]}]).$),
-      deriveUserIsSpaceStaff(url),
+      deriveUserIsSpaceOwner(url),
     ],
-    ([$user, $events, $isStaff]) =>
-      $isStaff || $events.some(event => tagValues(hexTags("p"), event.tags).includes($user.pubkey)),
+    ([$user, $events, $isOwner]) =>
+      $isOwner ||
+      $events.some(event => reader(RoomCreatePermission)(event).canCreate($user.pubkey)),
   )

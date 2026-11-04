@@ -2,8 +2,8 @@ import {derived, readable, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {Capacitor} from "@capacitor/core"
 import type {Maybe} from "@welshman/lib"
-import {sortBy, spec, int, MINUTE, ms} from "@welshman/lib"
-import {normalizeRelayUrl} from "@welshman/util"
+import {sortBy, spec, ms, now} from "@welshman/lib"
+import {makeHttpAuth, makeHttpAuthHeader, normalizeRelayUrl} from "@welshman/util"
 import {User} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {user} from "@app/core/user"
@@ -11,7 +11,6 @@ import {roomLists, usePlugin} from "@app/core/plugins"
 import {HOSTING_BACKEND_URL, HOSTING_RELAY_DOMAIN, PLATFORM_URL} from "@app/core/env"
 import {goToMovedSpace} from "@app/navigation/history"
 import {publishRoomList} from "@app/features/spaces/rooms"
-import {getHttpAuthHeader} from "@app/core/signer"
 
 // Apple doesn't allow selling hosting outside their payment system.
 export const HOSTING_ENABLED = Capacitor.getPlatform() !== "ios"
@@ -185,17 +184,8 @@ export const hostingErrorMessage = (e: unknown, fallback: string) => {
 
 type HostingResponse<T> = {data: T; error?: string}
 
-const hostingRequest = async (method: string, path: string, init: RequestInit = {}) =>
-  fetch(new URL(path, HOSTING_BACKEND_URL).toString(), {
-    ...init,
-    method,
-    headers: {
-      Accept: "application/json",
-      // The backend checks the signature and `u` tag but not freshness, so a token is reusable.
-      Authorization: await getHttpAuthHeader(HOSTING_BACKEND_URL, int(10, MINUTE)),
-      ...init.headers,
-    },
-  })
+// The backend mounts its API under a path, which `new URL` would throw away.
+const hostingUrl = (path: string) => HOSTING_BACKEND_URL.replace(/\/$/, "") + path
 
 const hostingJson = async <T>(response: Response): Promise<T> => {
   const payload: Maybe<HostingResponse<T>> = await response.json().catch(() => undefined)
@@ -205,6 +195,54 @@ const hostingJson = async <T>(response: Response): Promise<T> => {
   }
 
   throw new HostingError(payload?.error || `Request failed (${response.status})`, response.status)
+}
+
+// The backend trades a NIP-98 signature for a bearer token, which every other request carries.
+let session: {pubkey: string; token: string; expiresAt: number} | undefined
+
+const getSessionToken = async () => {
+  const {pubkey, signer} = user.get()
+
+  if (session?.pubkey === pubkey && session.expiresAt > now()) {
+    return session.token
+  }
+
+  const url = hostingUrl("/session")
+  const event = await signer.sign(await makeHttpAuth(url, "POST"))
+  const {token, expires_at} = await hostingJson<{token: string; expires_at: number}>(
+    await fetch(url, {
+      method: "POST",
+      headers: {Accept: "application/json", Authorization: makeHttpAuthHeader(event)},
+    }),
+  )
+
+  session = {pubkey, token, expiresAt: expires_at}
+
+  return token
+}
+
+const hostingRequest = async (method: string, path: string, init: RequestInit = {}) => {
+  const send = async () =>
+    fetch(hostingUrl(path), {
+      ...init,
+      method,
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${await getSessionToken()}`,
+        ...init.headers,
+      },
+    })
+
+  const response = await send()
+
+  // A token the backend has forgotten is worth one more try.
+  if (response.status === 401) {
+    session = undefined
+
+    return send()
+  }
+
+  return response
 }
 
 export const hostingFetch = async <T>(method: string, path: string, body?: unknown): Promise<T> =>

@@ -28,7 +28,7 @@
   import {HIDE_NOSTR} from "@app/core/env"
   import {
     deriveRoomMembers,
-    deriveUserIsRoomAdmin,
+    deriveRoomPermissions,
     deriveUserRooms,
     publishRoomList,
   } from "@app/features/spaces/rooms"
@@ -50,7 +50,7 @@
   const room = $rooms.forRoom(url, h)
   const members = deriveRoomMembers(url, h)
   const userRooms = deriveUserRooms(url)
-  const userIsAdmin = deriveUserIsRoomAdmin(url, h)
+  const permissions = deriveRoomPermissions(url, h)
 
   const meta = $derived($room?.meta)
   const isFavorite = $derived($userRooms.includes(h))
@@ -156,7 +156,7 @@
       {:else}
         <span class="opacity-75">No member list is available for this room.</span>
       {/if}
-      {#if $userIsAdmin}
+      {#if $permissions.createInvite}
         <Button class="button button-neutral" onclick={createInvite}>
           <Icon icon={LinkRound} />
           Create invite

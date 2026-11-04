@@ -102,8 +102,11 @@ user holds a method for — reports under `banevent`, join requests under `allow
 `src/app/features/spaces/rooms` puts space authority on top (`permissions.ts`, and `room.ts` for
 `addRoomMembers`):
 
-- `deriveUserIsRoomAdmin`: a space's staff administer every room.
-- `deriveUserRoomMembershipStatus`: an admin is always `Granted`.
+- `deriveRoomPermissions`: what the user may moderate in a room, as named booleans
+  (`$permissions.editRoom`, `$permissions.updatePins`). Each is a 9000-9010 kind, and the room's
+  39001 admin list names the kinds each admin may publish (`["p", pubkey, "9000", "9001"]`, per
+  [nips#2440](https://github.com/nostr-protocol/nips/pull/2440)). The space's owner holds every kind.
+- `deriveUserRoomMembershipStatus`: the owner is always `Granted`.
 - `addRoomMembers`: allows each non-member at the relay (NIP-86 `allowPubkey`) before publishing
   9000, because a room member the relay won't serve can't read the room.
 - `deriveUserRooms`, `deriveOtherRooms(url, type)`: rooms from the user's 10009 list and the rest
@@ -189,9 +192,11 @@ methods per app, re-checked at most every five minutes per URL, and `InviteLink`
 them through `loadSupportedMethods`. It also holds the admin and ban lists, which
 `loadMethodAssignees`/`loadBannedPubkeys` refresh after a change. Still handle an error from the
 call, since a listed method can be refused for a particular event or target.
-`deriveUserIsSpaceStaff(url)` is only "the list came back non-empty", which is all there is to go
-on for the room permissions NIP-86 has no method for — `deriveUserIsRoomAdmin` and
-`deriveUserCanCreateRoom`, which also takes `ROOM_CREATE_PERMISSION` grants.
+NIP-86 methods say nothing about rooms. A relay may hand ordinary members a method (zooid's
+`member_methods`, caravel's `members_can_invite`), so holding one doesn't make anyone an admin.
+Room controls are gated on `deriveRoomPermissions` instead, and room creation on
+`deriveUserCanCreateRoom`: the owner (`deriveUserIsSpaceOwner`, the NIP-11 `pubkey`), or a
+`ROOM_CREATE_PERMISSION` grant.
 
 The hosting backend in `src/app/features/hosting.ts` is a separate HTTP API at `HOSTING_BACKEND_URL` for
 relays the platform hosts. It authenticates with one NIP-98 header per pubkey, cached for a TTL,
@@ -312,8 +317,7 @@ These predate the rule or are waiting on welshman. Don't copy them; fix one when
   `ProfileDelete.svelte` and the push adapter (`Delete`); the vanish request as a literal `62`
   (`VANISH`).
 - **Getter exists but bypassed:** calendar `start`/`end` in `src/app/features/feeds.ts` and the calendar page; poll `response`
-  tags in `PollVotes`; `p` tags of `RELAY_ADD_MEMBER`, `ROOM_ADD_MEMBER` and
-  `ROOM_CREATE_PERMISSION` (`RoomItemAddMember`, `src/app/features/spaces/management.ts`);
+  tags in `PollVotes`; `p` tags of `RELAY_ADD_MEMBER` and `ROOM_ADD_MEMBER` (`RoomItemAddMember`);
   comment `E`/`A` tags in the list pages and `src/app/features/spaces/classifieds.ts`; `imeta` unpacking in
   `src/lib/media.ts` and `Conversation.svelte`.
 - **Getter missing upstream:** role ids on `member` tags (`src/app/features/spaces/roles.ts`); the legacy `name`
