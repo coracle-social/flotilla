@@ -14,6 +14,10 @@ android {
         targetSdk rootProject.ext.targetSdkVersion
         versionCode 59
         versionName "1.14.0"
+        // livekit ships no x86 uniffi library, and JNA's jar also carries armeabi, mips and mips64
+        ndk {
+            abiFilters "arm64-v8a", "armeabi-v7a", "x86_64"
+        }
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
