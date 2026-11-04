@@ -400,9 +400,9 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
 
   await page.goto(`${spacePath(url)}/threads`)
 
-  const lounge = page.locator("section").filter({has: page.getByRole("heading", {name: "Lounge"})})
+  const latest = page.locator("section").filter({has: page.getByRole("heading", {name: "Latest"})})
 
-  await expect(lounge.getByRole("row").filter({hasText: "Bike shed colors"})).toBeVisible()
+  await expect(latest.getByRole("row").filter({hasText: "Bike shed colors"})).toBeVisible()
 
   const general = page
     .locator("section")
@@ -419,7 +419,7 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
 
   await expect(page.getByRole("heading", {name: "Create a Thread"})).toHaveCount(0)
 
-  await expect(general.getByRole("row").filter({hasText: "Open floor"})).toBeVisible()
+  await expect(latest.getByRole("row").filter({hasText: "Open floor"})).toBeVisible()
 })
 
 test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
@@ -634,9 +634,9 @@ test("US-045 turn a chat message into a thread", async ({seed, as}) => {
 
   await page.goto(`${spacePath(url)}/threads`)
 
-  const lounge = page.locator("section").filter({has: page.getByRole("heading", {name: "Lounge"})})
+  const latest = page.locator("section").filter({has: page.getByRole("heading", {name: "Latest"})})
 
-  await lounge.getByRole("row").filter({hasText: "Deploy failures"}).click()
+  await latest.getByRole("row").filter({hasText: "Deploy failures"}).click()
 
   await expect(page.locator("article").filter({hasText: "Deploy failures"})).toBeVisible()
   await expect(page.getByText("the deploy broke again")).toBeVisible()

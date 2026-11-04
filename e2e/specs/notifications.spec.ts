@@ -1700,7 +1700,9 @@ test("US-136 hear about a new message and not about a new thread", async ({seed,
   await noteEditor(threadForm).pressSequentially("sunday, apparently")
   await threadForm.getByRole("button", {name: "Create Thread"}).click()
 
-  await expect(board.getByRole("row").filter({hasText: "the dock is closing"})).toBeVisible()
+  const latest = bob.locator("section").filter({has: bob.getByRole("heading", {name: "Latest"})})
+
+  await expect(latest.getByRole("row").filter({hasText: "the dock is closing"})).toBeVisible()
 
   // Alice holds the thread before bob says anything, so a notification for it would be here by now.
   await contentNavItem(alice, "Threads").click()

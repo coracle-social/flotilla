@@ -14,6 +14,7 @@
   import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
+  import ThreadLatest from "@app/components/ThreadLatest.svelte"
   import {reader} from "@app/core/domain"
   import * as pages from "@app/navigation/pages"
   import {displayRoom} from "@app/features/spaces/rooms"
@@ -73,10 +74,15 @@
   {/snippet}
 </SpaceBar>
 
-<PageContent bind:element class="flex flex-col gap-2 p-2 sm:gap-4 sm:p-4">
-  {#each threadFeed.boards as [h, threads] (h)}
-    <ThreadBoard {url} {h} {threads} {context} />
-  {/each}
+<PageContent bind:element class="p-2 sm:p-4">
+  <div class="grid items-start gap-2 sm:gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+    <div class="flex flex-col gap-2 sm:gap-4">
+      {#each threadFeed.boards as [h, threads] (h)}
+        <ThreadBoard {url} {h} {threads} {context} />
+      {/each}
+    </div>
+    <ThreadLatest {url} items={threadFeed.items} {context} />
+  </div>
   <p class="flex h-10 items-center justify-center py-20">
     <Spinner {loading}>
       {#if loading}
