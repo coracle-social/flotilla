@@ -4,17 +4,21 @@
   import {spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {getCommentFiltersForRoot, getIdFilters} from "@welshman/util"
+  import {Thread} from "@welshman/domain"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
+  import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import {fade, fly} from "@lib/transition"
   import Icon from "@lib/components/Icon.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import Button from "@lib/components/Button.svelte"
+  import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadPost from "@app/components/ThreadPost.svelte"
   import ThreadSummaryBar from "@app/components/ThreadSummaryBar.svelte"
   import EventReply from "@app/components/EventReply.svelte"
   import {events, network} from "@app/core/plugins"
+  import {reader} from "@app/core/domain"
   import {makeFeedContext} from "@app/features/feeds"
   import {getChecked} from "@app/features/checked"
   import * as pages from "@app/navigation/pages"
@@ -27,6 +31,7 @@
 
   const {url, id} = pages.thread.decode(params)
   const event = $events.one(id, [url]).$
+  const threadTitle = $derived($event ? reader(Thread)($event).title() : "")
   // Rows register themselves with `related`, so the whole page's reactions load in one batch
   const context = makeFeedContext({relays: [url]})
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
@@ -160,6 +165,15 @@
   })
 </script>
 
+<SpaceBar back={() => history.back()}>
+  {#snippet leading()}
+    <Icon icon={NotesMinimalistic} />
+  {/snippet}
+  {#snippet title()}
+    <strong class="truncate">{threadTitle || "Thread"}</strong>
+  {/snippet}
+</SpaceBar>
+
 <div class="relative flex min-h-0 flex-1 flex-col">
   <PageContent bind:element noPad class="flex flex-col">
     {#if $event}
@@ -171,7 +185,8 @@
             event={$event}
             threadPubkey={$event.pubkey}
             replyCount={$replies.length}
-            onReply={openReply} />
+            onReply={openReply}
+            hideTitle />
         </div>
         {#if hiddenCount > 0}
           <div class="flex justify-center py-4">

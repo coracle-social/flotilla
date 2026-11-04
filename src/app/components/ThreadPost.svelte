@@ -26,9 +26,18 @@
     onReply: (event: TrustedEvent) => void
     context: FeedContext
     replyCount?: number
+    hideTitle?: boolean
   }
 
-  const {url, event, threadPubkey, onReply, context, replyCount}: Props = $props()
+  const {
+    url,
+    event,
+    threadPubkey,
+    onReply,
+    context,
+    replyCount,
+    hideTitle = false,
+  }: Props = $props()
 
   const profileDisplay = $profiles.display(event.pubkey, [url]).$
   const handle = $handles.forPubkey(event.pubkey).$
@@ -84,7 +93,7 @@
         </Button>
       </div>
       <div class="px-3 py-4 @lg:px-4">
-        <NoteContent showEntire {event} {url} />
+        <NoteContent showEntire {event} {url} {hideTitle} />
       </div>
       <div
         class="bg-surface flex shrink-0 flex-col gap-2 border-t px-3 py-3 @lg:flex-row @lg:items-center @lg:justify-between @lg:px-4 border-line">

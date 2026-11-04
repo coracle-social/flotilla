@@ -47,6 +47,7 @@
     showEntire?: boolean
     expandMode?: string
     url?: string
+    hideTitle?: boolean
   }
 
   let {

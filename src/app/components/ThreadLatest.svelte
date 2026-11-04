@@ -19,12 +19,10 @@
   {#if items.length === 0}
     <p class="text-content-muted p-4 text-sm">No topics yet.</p>
   {:else}
-    <table class="w-full border-collapse">
-      <tbody>
-        {#each items as event (event.id)}
-          <ThreadLatestItem {url} {event} {context} />
-        {/each}
-      </tbody>
-    </table>
+    <div>
+      {#each items as event (event.id)}
+        <ThreadLatestItem {url} {event} {context} />
+      {/each}
+    </div>
   {/if}
 </section>

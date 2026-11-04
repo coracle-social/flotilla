@@ -35,9 +35,10 @@
     event: any
     singleLine?: boolean
     url?: string
+    class?: string
   }
 
-  const {event, singleLine = false, url}: Props = $props()
+  const {event, singleLine = false, url, ...props}: Props = $props()
 
   const fullContent = $derived(parse(event))
 
@@ -115,6 +116,7 @@
       class={cx(
         "overflow-hidden text-ellipsis",
         singleLine ? "whitespace-nowrap" : "wrap-break-word",
+        props.class,
       )}>
       {#each shortContent as parsed, i (i)}
         {#if isNewline(parsed)}

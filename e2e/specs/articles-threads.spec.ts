@@ -402,7 +402,7 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
 
   const latest = page.locator("section").filter({has: page.getByRole("heading", {name: "Latest"})})
 
-  await expect(latest.getByRole("row").filter({hasText: "Bike shed colors"})).toBeVisible()
+  await expect(latest.getByRole("link").filter({hasText: "Bike shed colors"})).toBeVisible()
 
   // The header's New topic button creates in the default room, General.
   await page.getByRole("button", {name: "New topic"}).click()
@@ -415,7 +415,7 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
 
   await expect(page.getByRole("heading", {name: "Create a Thread"})).toHaveCount(0)
 
-  await expect(latest.getByRole("row").filter({hasText: "Open floor"})).toBeVisible()
+  await expect(latest.getByRole("link").filter({hasText: "Open floor"})).toBeVisible()
 })
 
 test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
@@ -632,8 +632,8 @@ test("US-045 turn a chat message into a thread", async ({seed, as}) => {
 
   const latest = page.locator("section").filter({has: page.getByRole("heading", {name: "Latest"})})
 
-  await latest.getByRole("row").filter({hasText: "Deploy failures"}).click()
+  await latest.getByRole("link").filter({hasText: "Deploy failures"}).click()
 
-  await expect(page.locator("article").filter({hasText: "Deploy failures"})).toBeVisible()
+  await expect(page.locator("article").filter({hasText: "the deploy broke again"})).toBeVisible()
   await expect(page.getByText("the deploy broke again")).toBeVisible()
 })

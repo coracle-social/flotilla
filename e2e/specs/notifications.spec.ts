@@ -1393,9 +1393,9 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
 
   await threadsNav.click()
 
-  const hers = bob.getByRole("row").filter({hasText: "the server is on fire"})
-  const unopened = bob.getByRole("row").filter({hasText: "the anchor is dragging"})
-  const his = bob.getByRole("row").filter({hasText: "where is the sextant"})
+  const hers = bob.getByRole("link").filter({hasText: "the server is on fire"})
+  const unopened = bob.getByRole("link").filter({hasText: "the anchor is dragging"})
+  const his = bob.getByRole("link").filter({hasText: "where is the sextant"})
 
   await expect(his).toBeVisible()
 
@@ -1408,7 +1408,7 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
 
   await hers.click()
 
-  await expect(bob.locator("article").filter({hasText: "the server is on fire"})).toBeVisible()
+  await expect(bob.locator("article").filter({hasText: "worth talking about"})).toBeVisible()
 
   // Opening a thread is what marks it read, so only the one he opened loses its dot
   await bob.goBack()
@@ -1474,7 +1474,7 @@ test("US-137 reach a thread from the inbox activity its comment raised", async (
 
   await contentNavItem(alice, "Threads").click()
 
-  const topic = alice.getByRole("row").filter({hasText: "where is the sextant"})
+  const topic = alice.getByRole("link").filter({hasText: "where is the sextant"})
 
   await expect(topic).toBeVisible()
 
@@ -1699,11 +1699,11 @@ test("US-136 hear about a new message and not about a new thread", async ({seed,
 
   const latest = bob.locator("section").filter({has: bob.getByRole("heading", {name: "Latest"})})
 
-  await expect(latest.getByRole("row").filter({hasText: "the dock is closing"})).toBeVisible()
+  await expect(latest.getByRole("link").filter({hasText: "the dock is closing"})).toBeVisible()
 
   // Alice holds the thread before bob says anything, so a notification for it would be here by now.
   await contentNavItem(alice, "Threads").click()
-  await expect(alice.getByRole("row").filter({hasText: "the dock is closing"})).toBeVisible()
+  await expect(alice.getByRole("link").filter({hasText: "the dock is closing"})).toBeVisible()
 
   await postTo(bob, "General", "when does the dock close?")
 

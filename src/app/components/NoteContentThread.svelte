@@ -10,7 +10,7 @@
 </script>
 
 <div class="flex flex-col gap-2">
-  {#if title}
+  {#if title && !props.hideTitle}
     <p class="text-xl">{title}</p>
   {/if}
   {#if props.event.content}

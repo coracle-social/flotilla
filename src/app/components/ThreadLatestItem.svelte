@@ -4,10 +4,12 @@
   import type {TrustedEvent} from "@welshman/util"
   import {COMMENT} from "@welshman/util"
   import {Thread} from "@welshman/domain"
-  import {navigate} from "@app/navigation/navigate"
+  import Link from "@lib/components/Link.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
+  import ProfileName from "@app/components/ProfileName.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
+  import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import {reader} from "@app/core/domain"
   import type {FeedContext} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"
@@ -29,31 +31,34 @@
   const title = reader(Thread)(event).title()
   const path = pages.thread.path({url, id: event.id})
   const h = reader(Thread)(event).room() || ""
-  const onClick = () => navigate(path)
 </script>
 
-<tr
-  onclick={onClick}
-  class="hover:bg-surface-less cursor-pointer border-b border-solid border-line text-sm transition-colors last:border-b-0">
-  <td class="w-12 px-4 py-3 align-middle">
-    <ProfileCircle pubkey={event.pubkey} {url} size={6} />
-  </td>
-  <td class="max-w-0 px-4 py-3 align-top">
-    <p class="truncate font-medium">
-      <UnreadDot {path} class="mr-1" />{title || "Untitled thread"}
-    </p>
-    <div class="text-content-muted mt-0.5">
-      {#if showRoom}
-        {#if h}
-          <RoomNameWithImage {url} {h} size={4} />
-        {:else}
-          General
+<Link
+  href={path}
+  class="group flex flex-col gap-2 border-b border-solid border-line px-4 py-3 transition-colors last:border-b-0 hover:bg-surface-less">
+  <div class="flex min-w-0 items-start gap-3">
+    <ProfileCircle pubkey={event.pubkey} {url} size={8} class="mt-0.5 shrink-0" />
+    <div class="flex min-w-0 grow flex-col gap-1">
+      <p class="truncate font-medium">
+        <UnreadDot {path} class="mr-1" />{title || "Untitled thread"}
+      </p>
+      <div class="text-content-muted flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+        <ProfileName pubkey={event.pubkey} {url} />
+        {#if showRoom}
+          {#if h}
+            <RoomNameWithImage {url} {h} size={4} />
+          {:else}
+            <span>General</span>
+          {/if}
         {/if}
+      </div>
+      {#if event.content}
+        <ContentMinimal {event} {url} class="line-clamp-2 text-sm" />
       {/if}
     </div>
-  </td>
-  <td class="w-16 px-4 py-3 text-center align-middle">{replyCount}</td>
-  <td class="w-28 whitespace-nowrap px-4 py-3 text-right align-middle">
-    {formatTimestamp(lastActive)}
-  </td>
-</tr>
+    <div class="shrink-0 text-right text-xs text-content-muted">
+      <div class="whitespace-nowrap">{replyCount} {replyCount === 1 ? "reply" : "replies"}</div>
+      <div class="whitespace-nowrap">{formatTimestamp(lastActive)}</div>
+    </div>
+  </div>
+</Link>
