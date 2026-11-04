@@ -15,22 +15,6 @@ Repo: https://gitea.coracle.social/coracle/flotilla.git
 Binaries: https://gitea.coracle.social/api/packages/coracle/generic/flotilla-fdroid/%v/flotilla-fdroid-%v.apk
 
 Builds:
-  - versionName: 1.13.0
-    versionCode: 58
-    commit: 62071c784e740049acd38cbd677ed827ad2abda0
-    subdir: android/app
-    sudo:
-      - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
-      - apt-get update
-      - apt-get install -y -t forky nodejs npm
-      - npm install -g pnpm@11.25.0
-    gradle:
-      - fdroid
-    prebuild: ../../scripts/fdroid/prepare.sh
-    scanignore:
-      - node_modules
-    build: ../../scripts/fdroid/build.sh
-
   - versionName: 1.14.0
     versionCode: 59
     commit: 1.14.0
@@ -55,11 +39,15 @@ MaintainerNotes: |-
   the scanner. node_modules holds FLOSS build tools (esbuild, sharp), hence scanignore.
   Node comes from forky because the lockfile needs pnpm 11 or newer, which wants Node 22 or newer,
   and trixie ships 20. pnpm is pinned to package.json's packageManager so it doesn't
-  fetch another copy of itself. Capacitor needs JDK 21, which is trixie's default.
+  fetch another copy of itself. Capacitor needs JDK 21, which trixie's default-jdk-headless
+  provides, so the recipe installs no JDK.
 
   Builds are reproducible: upstream's release workflow runs this recipe in the
   buildserver-trixie image (scripts/fdroid/reproduce.sh) and publishes that apk, signed
   with the distribution key, at Binaries.
+
+  The Reports tab entries for the microphone and the camera are expected: voice rooms,
+  calls and voice notes need them.
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$
