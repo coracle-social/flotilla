@@ -481,6 +481,13 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
 
     const missing = (what: string) => route.fulfill({status: 404, json: {error: `No such ${what}`}})
 
+    // The app trades a NIP-98 signature for a bearer token, which every other request carries.
+    if (resource === "session") {
+      return route.fulfill({
+        json: {data: {token: "test-hosting-token", expires_at: now() + int(1, HOUR)}},
+      })
+    }
+
     if (resource === "plans") {
       return route.fulfill({json: {data: plans}})
     }
