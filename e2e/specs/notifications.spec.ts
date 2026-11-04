@@ -1688,11 +1688,8 @@ test("US-136 hear about a new message and not about a new thread", async ({seed,
   const notifications = await captureNotifications(alice)
 
   const bob = await as(users.bob, `${spacePath(space.url)}/threads`)
-  const board = bob
-    .locator("section")
-    .filter({has: bob.getByRole("heading", {name: "General", exact: true})})
 
-  await board.getByRole("button", {name: "Create", exact: true}).click()
+  await bob.getByRole("button", {name: "New topic"}).click()
 
   const threadForm = modalForm(bob, "Create a Thread")
 

@@ -8,18 +8,22 @@
   import {THREAD} from "@welshman/util"
   import {Thread} from "@welshman/domain"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
+  import Add from "@assets/icons/add.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
+  import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
+  import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import ThreadLatest from "@app/components/ThreadLatest.svelte"
   import {reader} from "@app/core/domain"
   import * as pages from "@app/navigation/pages"
   import {displayRoom} from "@app/features/spaces/rooms"
   import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
@@ -71,6 +75,12 @@
   {/snippet}
   {#snippet title()}
     <strong>Threads</strong>
+  {/snippet}
+  {#snippet action()}
+    <Button class="button button-primary button-sm" onclick={() => pushModal(ThreadCreate, {url})}>
+      <Icon icon={Add} />
+      New topic
+    </Button>
   {/snippet}
 </SpaceBar>
 

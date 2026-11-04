@@ -2,16 +2,11 @@
   import type {TrustedEvent} from "@welshman/util"
   import {WEEK, sortBy, uniq} from "@welshman/lib"
   import {tagValues, topicTags} from "@welshman/util"
-  import Add from "@assets/icons/add.svg?dataurl"
-  import Icon from "@lib/components/Icon.svelte"
-  import Button from "@lib/components/Button.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import ThreadBoardItem from "@app/components/ThreadBoardItem.svelte"
-  import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {normalizeTopic} from "@lib/util"
   import {rooms} from "@app/core/plugins"
   import type {FeedContext} from "@app/features/feeds"
-  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -33,13 +28,11 @@
       uniq(threads.flatMap(e => tagValues(topicTags("t"), e.tags))),
     ),
   )
-
-  const createThread = () => pushModal(ThreadCreate, {url, h})
 </script>
 
 <section class="card card-flat p-0">
   <header
-    class="flex items-center justify-between gap-2 border-b border-solid border-line px-4 py-3">
+    class="flex items-start justify-between gap-2 border-b border-solid border-line px-4 py-3">
     <div class="min-w-0">
       <h2 class="text-lg">
         {#if h}
@@ -59,15 +52,9 @@
         </div>
       {/if}
     </div>
-    <div class="flex shrink-0 flex-col items-end gap-2">
-      <span class="text-content-muted whitespace-nowrap text-sm">
-        {topicsThisWeek} / week
-      </span>
-      <Button class="button button-primary button-sm" onclick={createThread}>
-        <Icon icon={Add} />
-        Create
-      </Button>
-    </div>
+    <span class="text-content-muted whitespace-nowrap pt-1 text-sm">
+      {topicsThisWeek} / week
+    </span>
   </header>
   <!-- The board's own rows only on mobile, where the Latest panel is hidden. -->
   <div class="lg:hidden">

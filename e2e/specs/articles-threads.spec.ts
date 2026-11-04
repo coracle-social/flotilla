@@ -404,12 +404,8 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
 
   await expect(latest.getByRole("row").filter({hasText: "Bike shed colors"})).toBeVisible()
 
-  const general = page
-    .locator("section")
-    .filter({has: page.getByRole("heading", {name: "General", exact: true})})
-
-  // Each board creates its own threads, so the room comes from the button that was clicked.
-  await general.getByRole("button", {name: "Create", exact: true}).click()
+  // The header's New topic button creates in the default room, General.
+  await page.getByRole("button", {name: "New topic"}).click()
 
   const fromThreads = modalForm(page, "Create a Thread")
 

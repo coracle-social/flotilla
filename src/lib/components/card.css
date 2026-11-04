@@ -60,6 +60,12 @@
     box-shadow: var(--shadow), var(--shadow-inset);
   }
 
+  /* card-flat stays flat under clay, where the rules above would otherwise give
+     every card the offset shadow and draw a stray tinted line under the card. */
+  [data-fl-theme="clay"] .card-flat {
+    box-shadow: none;
+  }
+
   [data-fl-theme="clay"] .card-primary,
   [data-fl-theme="clay"] .card-secondary {
     box-shadow:
