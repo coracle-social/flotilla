@@ -52,8 +52,7 @@
     return {items, boards}
   })
 
-  // The board a board card opened, named as a query so the same page shows
-  // that board's topics alone, most recent activity first.
+  // The board a board card opened, named as a query so the page shows that board's topics alone.
   const board = $derived($page.url.searchParams.get("board") ?? undefined)
   const inBoard = $derived(board !== undefined)
   const back = () => history.back()
