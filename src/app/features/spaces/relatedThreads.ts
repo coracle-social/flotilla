@@ -218,6 +218,29 @@ export const threadTokens = (event: TrustedEvent) => {
   return counts
 }
 
+// Inverse document frequency: a term shared by only a few of the space's
+// threads signals they belong together, so it weighs more than one nearly
+// every thread uses. Computed per ranking from the candidate term counts,
+// smoothed so a term every thread shares keeps a small weight instead of zero.
+const inverseDocumentFrequency = (total: number, docs: number) =>
+  Math.log((total + 1) / (docs + 1)) + 1
+
+// Scales a term-count map by how rare each term is across the candidate set,
+// leaving out the terms no candidate holds, which cannot match anyway.
+const weighIDF = (counts: Map<string, number>, idf: Map<string, number>) => {
+  const scaled = new Map<string, number>()
+
+  for (const [word, n] of counts) {
+    const w = idf.get(word)
+
+    if (w) {
+      scaled.set(word, n * w)
+    }
+  }
+
+  return scaled
+}
+
 // Cosine over the two weighted term counts, 0 when either side has no tokens.
 export const cosine = (a: Map<string, number>, b: Map<string, number>) => {
   let dot = 0
@@ -256,7 +279,9 @@ export const MAX_RELATED = 3
 export const loadSpaceThreads = (url: string) =>
   makeFeed({relays: [url], filters: [{kinds: [THREAD]}]})
 
-// Ranks candidate threads by how many topic words they share with a query's counts.
+// Ranks candidate threads by how many rare topic words they share with a
+// query's counts: IDF makes a term two threads alone share outweigh one
+// everyone uses, so proper nouns and specific subjects surface.
 export const rankThreads = ({
   query,
   candidates,
@@ -265,11 +290,35 @@ export const rankThreads = ({
   query: Map<string, number>
   candidates: TrustedEvent[]
   exclude?: string
-}) =>
-  candidates
+}) => {
+  // Pair each candidate with its own term counts, dropping the query's thread.
+  const pairs = candidates
     .filter(event => event.id !== exclude)
-    .map(event => ({event, score: cosine(query, threadTokens(event))}))
+    .map(event => ({event, doc: threadTokens(event)}))
+    .filter(({doc}) => doc.size > 0)
+
+  // How many of the space's other threads hold each word, for its IDF weight.
+  const df = new Map<string, number>()
+
+  for (const {doc} of pairs) {
+    for (const word of doc.keys()) {
+      df.set(word, (df.get(word) ?? 0) + 1)
+    }
+  }
+
+  const total = Math.max(pairs.length, 1)
+  const idf = new Map<string, number>()
+
+  for (const [word, count] of df) {
+    idf.set(word, inverseDocumentFrequency(total, count))
+  }
+
+  const queryWeighted = weighIDF(query, idf)
+
+  return pairs
+    .map(({event, doc}) => ({event, score: cosine(queryWeighted, weighIDF(doc, idf))}))
     .filter(({score}) => score >= MIN_SCORE)
     .sort((a, b) => b.score - a.score)
     .slice(0, MAX_RELATED)
     .map(({event}) => event)
+}
