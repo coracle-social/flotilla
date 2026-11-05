@@ -2,6 +2,7 @@
   import type {TrustedEvent, EventContent} from "@welshman/util"
 
   export type ComposeValues = EventContent & {
+    scheduleAt?: number
     parent?: TrustedEvent
     share?: TrustedEvent
     edit?: TrustedEvent
@@ -20,14 +21,14 @@
 
   type Props = Pick<
     ComponentProps<typeof Compose>,
-    "url" | "h" | "draftKey" | "encryptFiles" | "disabled" | "emptyAction"
+    "url" | "h" | "draftKey" | "encryptFiles" | "disabled" | "emptyAction" | "canSchedule"
   > & {
     messages: TrustedEvent[]
     canEdit: (event: TrustedEvent) => boolean
     onSubmit: (values: ComposeValues) => Promise<void>
   }
 
-  const {messages, canEdit, onSubmit, ...props}: Props = $props()
+  const {messages, canEdit, onSubmit, canSchedule = true, ...props}: Props = $props()
 
   export const reply = (event: TrustedEvent) => {
     parent = event
@@ -60,12 +61,12 @@
 
   const onEditPrevious = () => ifLet(messages.find(canEdit), edit)
 
-  const submit = async ({content, tags}: EventContent) => {
+  const submit = async ({content, tags, scheduleAt}: ComposeValues) => {
     // An edit that changes nothing is just a dismissal
     if (eventToEdit?.content === content) {
       clearEventToEdit()
     } else if (content || sharedEvent) {
-      await onSubmit({content, tags, parent, share: sharedEvent, edit: eventToEdit})
+      await onSubmit({content, tags, scheduleAt, parent, share: sharedEvent, edit: eventToEdit})
 
       // Only once it's sent, so a failure leaves the reply or edit in place to try again.
       clearParent()
@@ -115,6 +116,7 @@
   <Compose
     {...props}
     {initialValues}
+    {canSchedule}
     {onEscape}
     {onEditPrevious}
     onSubmit={submit}

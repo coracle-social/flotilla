@@ -3,7 +3,7 @@
   import cx from "classnames"
   import {removeUndefined, randomId, uniq, toggle} from "@welshman/lib"
   import {Classified} from "@welshman/domain"
-  import {isMobile, preventDefault} from "@lib/html"
+  import {isMobile} from "@lib/html"
   import {normalizeTopic} from "@lib/util"
   import {SUGGESTED_TOPICS} from "@app/features/spaces/classifieds"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -21,6 +21,7 @@
   import {writer} from "@app/core/domain"
   import {pushToast} from "@app/features/toast"
   import {publishToSpace} from "@app/features/spaces/rooms"
+  import PublishButton from "@app/components/PublishButton.svelte"
   import {makeEditor} from "@app/features/editor"
   import {DraftKey} from "@app/features/drafts"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
@@ -56,7 +57,7 @@
 
   const back = () => history.back()
 
-  const submit = async () => {
+  const publish = async (scheduleAt?: number) => {
     loading = true
 
     try {
@@ -109,7 +110,7 @@
         .setImages(imageUrls)
         .addTags(...ed.storage.nostr.getEditorTags())
 
-      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
+      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat, scheduleAt})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -143,14 +144,14 @@
     topics = toggle(topic, topics)
   }
 
-  const editor = makeEditor({url, submit, onChange, content})
+  const editor = makeEditor({url, submit: publish, onChange, content})
 
   $effect(() => {
     draftKey?.set({d, title, status, price, currency, images, topics, content})
   })
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(submit)}>
+<Modal>
   <ModalBody>
     {@render header?.()}
     <div class="flex flex-col gap-8 relative">
@@ -244,8 +245,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" disabled={loading} class="button button-primary">
+    <PublishButton onPublish={publish} disabled={loading}>
       <Spinner {loading}>Save Listing</Spinner>
-    </Button>
+    </PublishButton>
   </ModalFooter>
 </Modal>

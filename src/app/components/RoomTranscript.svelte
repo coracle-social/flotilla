@@ -11,6 +11,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import {MESSAGE, RELAY_ADD_MEMBER, ROOM_ADD_MEMBER} from "@welshman/util"
   import AltArrowDown from "@assets/icons/alt-arrow-down.svg?dataurl"
+  import Clock from "@assets/icons/clock-circle.svg?dataurl"
   import {fade, fly} from "@lib/transition"
   import {documentActive} from "@lib/html"
   import Button from "@lib/components/Button.svelte"
@@ -356,6 +357,16 @@
                 New Messages
               </p>
               <div class="h-px grow bg-primary text-primary-content"></div>
+            </div>
+          {:else if item.type === "scheduled"}
+            <div class="flex items-center py-2 text-xs">
+              <div class="h-px grow bg-line"></div>
+              <p
+                class="flex items-center gap-1 rounded-full bg-surface px-2 py-1 text-content-muted">
+                <Icon icon={Clock} size={3} />
+                Scheduled Posts
+              </p>
+              <div class="h-px grow bg-line"></div>
             </div>
           {:else if item.type === "date"}
             <Divider>{item.value}</Divider>

@@ -29,6 +29,7 @@
   <MenuButton
     aria-label="Choose a post type"
     component={PostCreateMenu}
+    componentProps={{includePost: false}}
     class={cx(buttonClass, "join-item")}>
     <Icon icon={AltArrowDown} size={4} />
   </MenuButton>

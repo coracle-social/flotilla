@@ -10,9 +10,15 @@
     value?: number | undefined
     end?: number | undefined
     isRange?: boolean
+    disablePast?: boolean
   }
 
-  let {value = $bindable(), end = $bindable(), isRange = false}: Props = $props()
+  let {
+    value = $bindable(),
+    end = $bindable(),
+    isRange = false,
+    disablePast = false,
+  }: Props = $props()
 
   const toggle = () => {
     isOpen = !isOpen
@@ -86,6 +92,21 @@
     }
   })
 
+  // `alwaysShow` keeps the picker open on a date click so the time can be set, but also silences its outside click.
+  $effect(() => {
+    if (isOpen && element) {
+      const onPointerDown = (event: PointerEvent) => {
+        if (event.target instanceof Node && !element.contains(event.target)) {
+          isOpen = false
+        }
+      }
+
+      document.addEventListener("pointerdown", onPointerDown, true)
+
+      return () => document.removeEventListener("pointerdown", onPointerDown, true)
+    }
+  })
+
   $effect(() => {
     value = startDate ? Math.round(startDate / 1000) : undefined
   })
@@ -113,8 +134,10 @@
     bind:startDateTime
     bind:endDateTime
     {isRange}
+    alwaysShow
     showTimePicker
     enableFutureDates
+    enablePastDates={!disablePast}
     includeFont={false}>
     <label class="input input-group cursor-pointer">
       <Icon icon={CalendarMinimalistic} />

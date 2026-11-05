@@ -3,7 +3,6 @@
   import {writable} from "svelte/store"
   import {randomId} from "@welshman/lib"
   import {TimeEvent} from "@welshman/domain"
-  import {preventDefault} from "@lib/html"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import MapPoint from "@assets/icons/map-point.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -17,6 +16,7 @@
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
   import EditorContent from "@app/features/editor/EditorContent.svelte"
   import {publishToSpace} from "@app/features/spaces/rooms"
+  import PublishButton from "@app/components/PublishButton.svelte"
   import {setEventReminders} from "@app/features/reminders"
   import {makeEditor} from "@app/features/editor"
   import {DraftKey} from "@app/features/drafts"
@@ -66,7 +66,7 @@
 
   const selectFiles = () => editor.then(ed => ed.chain().selectFiles().run())
 
-  const submit = async () => {
+  const publish = async (scheduleAt?: number) => {
     if ($uploading || loading) {
       return
     }
@@ -107,7 +107,12 @@
         .setContent(content)
         .addTags(...ed.storage.nostr.getEditorTags())
 
-      const {publication, error} = await publishToSpace(eventWriter, {url, h, shareToChat})
+      const {publication, error} = await publishToSpace(eventWriter, {
+        url,
+        h,
+        shareToChat,
+        scheduleAt,
+      })
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -140,14 +145,14 @@
     content = json
   }
 
-  const editor = makeEditor({url, submit, uploading, onChange, content})
+  const editor = makeEditor({url, submit: publish, uploading, onChange, content})
 
   $effect(() => {
     draftKey?.set({d, title, location, start, end, content})
   })
 </script>
 
-<Modal tag="form" novalidate onsubmit={preventDefault(submit)}>
+<Modal>
   <ModalBody>
     {@render header()}
     <Field>
@@ -208,8 +213,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button class="button button-primary" type="submit" disabled={$uploading || loading}>
+    <PublishButton onPublish={publish} disabled={$uploading || loading}>
       <Spinner loading={$uploading || loading}>Save Event</Spinner>
-    </Button>
+    </PublishButton>
   </ModalFooter>
 </Modal>

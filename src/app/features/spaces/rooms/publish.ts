@@ -1,6 +1,6 @@
 import * as nip19 from "nostr-tools/nip19"
 import type {Maybe} from "@welshman/lib"
-import {outbox, relay, seen, tagSpec, tagValue, toNostrURI} from "@welshman/util"
+import {outbox, relay, seen, stamp, tagSpec, tagValue, toNostrURI} from "@welshman/util"
 import type {EventContent, TrustedEvent} from "@welshman/util"
 import {Comment, Message} from "@welshman/domain"
 import type {BaseEventReader, EventWriter} from "@welshman/domain"
@@ -8,6 +8,7 @@ import {publish} from "@welshman/app"
 import {publisher, relays, router} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
 import {loadSendDelay} from "@app/core/settings"
+import {SCHEDULE_UNSUPPORTED} from "@app/features/scheduling"
 
 export const prependParent = async (
   parent: Maybe<TrustedEvent>,
@@ -102,12 +103,28 @@ export const publishComment = async ({
 
 export const publishToSpace = async (
   eventWriter: EventWriter<BaseEventReader>,
-  {url, h, shareToChat}: {url: string; h?: string; shareToChat?: boolean},
+  {
+    url,
+    h,
+    shareToChat,
+    scheduleAt,
+  }: {url: string; h?: string; shareToChat?: boolean; scheduleAt?: number},
 ) => {
-  const publication = await command(await addressWriterToSpace(eventWriter, url, h)).then(publish)
-  const error = await publication.getError()
+  const link = await addressWriterToSpace(eventWriter, url, h)
 
-  if (shareToChat && !error) {
+  // A scheduled post is dated ahead of now and handed to the space relay, which holds it until its time.
+  const publication = scheduleAt
+    ? publisher
+        .get()
+        .publish({relays: [url], event: stamp(await link.renderTemplate(), scheduleAt)})
+    : await command(link).then(publish)
+
+  const error = scheduleAt
+    ? (await publication.getError()) && SCHEDULE_UNSUPPORTED
+    : await publication.getError()
+
+  // A thread scheduled for later has nothing yet to quote in the chat.
+  if (shareToChat && !scheduleAt && !error) {
     publishRoomQuote({url, h, parent: publication.event})
   }
 

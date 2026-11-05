@@ -1,7 +1,7 @@
 <script lang="ts">
   import {writable} from "svelte/store"
   import {Note} from "@welshman/domain"
-  import {isMobile, preventDefault} from "@lib/html"
+  import {isMobile} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -20,6 +20,7 @@
   import {publishToNetwork} from "@app/features/social"
   import {pushToast} from "@app/features/toast"
   import {openEventNote} from "@app/navigation/overlays"
+  import PublishButton from "@app/components/PublishButton.svelte"
 
   type Values = {
     content?: string | object
@@ -36,11 +37,13 @@
 
   const uploading = writable(false)
 
+  const empty = writable(true)
+
   const back = () => history.back()
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  const submit = async () => {
+  const publish = async (scheduleAt?: number) => {
     if ($uploading || loading) {
       return
     }
@@ -59,6 +62,7 @@
         writer(Note)
           .setContent(text)
           .addTags(...ed.storage.nostr.getEditorTags()),
+        scheduleAt,
       )
 
       if (error) {
@@ -68,7 +72,9 @@
       draftKey.clear()
       history.back()
       pushToast({
-        message: "Your post has been published!",
+        message: scheduleAt
+          ? `Your post is scheduled for ${new Date(scheduleAt * 1000).toLocaleString([], {dateStyle: "medium", timeStyle: "short"})}.`
+          : "Your post has been published!",
         action: {message: "View it", onclick: () => openEventNote(publication.event)},
       })
     } catch (e) {
@@ -87,7 +93,8 @@
   }
 
   const editor = makeEditor({
-    submit,
+    submit: publish,
+    empty,
     uploading,
     onChange,
     content,
@@ -99,7 +106,7 @@
   })
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(submit)}>
+<Modal>
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Create a Public Post</ModalTitle>
@@ -127,8 +134,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={$uploading || loading}>
+    <PublishButton onPublish={publish} disabled={$uploading || loading || $empty}>
       <Spinner {loading}>Post</Spinner>
-    </Button>
+    </PublishButton>
   </ModalFooter>
 </Modal>

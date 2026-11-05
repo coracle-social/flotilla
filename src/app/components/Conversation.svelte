@@ -267,6 +267,7 @@
   <div class="room__compose bg-surface px-2">
     <ComposeArea
       {onSubmit}
+      canSchedule={false}
       encryptFiles
       draftKey="dm:{conversationId}"
       messages={$conversation?.messages || []}

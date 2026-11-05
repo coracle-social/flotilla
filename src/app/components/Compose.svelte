@@ -6,7 +6,7 @@
   import type {MaybeAsync} from "@welshman/lib"
   import {MESSAGE} from "@welshman/util"
   import type {EventContent} from "@welshman/util"
-  import {escapeHtml, isMobile, preventDefault} from "@lib/html"
+  import {escapeHtml, isMobile} from "@lib/html"
   import Add from "@assets/icons/add.svg?dataurl"
   import Plane from "@assets/icons/plane-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -16,6 +16,7 @@
   import ComposeMenu from "@app/components/ComposeMenu.svelte"
   import EditorEmojiButton from "@app/components/EditorEmojiButton.svelte"
   import DictationButton from "@app/components/DictationButton.svelte"
+  import MessageSchedule from "@app/components/MessageSchedule.svelte"
   import CommandArgBar from "@app/components/CommandArgBar.svelte"
   import EditorContent from "@app/features/editor/EditorContent.svelte"
   import {makeEditor} from "@app/features/editor"
@@ -24,6 +25,9 @@
   import {pushToast} from "@app/features/toast"
   import {DraftKey, type Draft} from "@app/features/drafts"
   import type {Share} from "@app/features/share"
+  import {pushModal} from "@app/navigation/dialogs"
+
+  type SubmitValues = EventContent & {scheduleAt?: number}
 
   type Props = {
     url?: string
@@ -32,9 +36,10 @@
     encryptFiles?: boolean
     disabled?: boolean
     initialValues?: Share
+    canSchedule?: boolean
     onEscape?: () => void
     onEditPrevious?: () => void
-    onSubmit: (event: EventContent) => MaybeAsync<void>
+    onSubmit: (event: SubmitValues) => MaybeAsync<void>
     emptyAction?: Snippet
   }
 
@@ -45,6 +50,7 @@
     encryptFiles = false,
     disabled = false,
     initialValues,
+    canSchedule = false,
     onEscape,
     onEditPrevious,
     onSubmit,
@@ -114,6 +120,13 @@
       .run()
   }
 
+  const clear = async () => {
+    const ed = await editor
+
+    draft?.clear()
+    ed.chain().clearContent(true).run()
+  }
+
   const submit = async () => {
     if ($uploading || disabled || sending) {
       return
@@ -135,9 +148,20 @@
       sending = false
     }
 
-    draft?.clear()
-    ed.chain().clearContent(true).run()
+    clear()
   }
+
+  const schedule = async (values: Required<SubmitValues>) => {
+    await onSubmit(values)
+    clear()
+  }
+
+  const openSchedule = () =>
+    pushModal(
+      MessageSchedule,
+      {url, content: $state.snapshot(content), onSchedule: schedule},
+      {nested: true},
+    )
 
   let sending = false
   let content = $state(
@@ -193,11 +217,11 @@
 {#if commandTarget}
   <CommandArgBar target={commandTarget} content={$text} insert={insertCommandToken} />
 {/if}
-<form class="relative flex items-end gap-1 py-2" onsubmit={preventDefault(submit)}>
+<div class="relative flex items-end gap-1 py-2">
   {#if url}
     <MenuButton
       component={ComposeMenu}
-      componentProps={{url, h, uploadFiles}}
+      componentProps={{url, h, uploadFiles, schedule: canSchedule ? openSchedule : undefined}}
       placement="top-start"
       aria-label="Attach or create"
       disabled={$uploading || disabled}
@@ -234,7 +258,7 @@
       <Icon icon={Plane} />
     </Button>
   {/if}
-</form>
+</div>
 
 {#snippet addIcon()}
   {#if $uploading}

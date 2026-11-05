@@ -11,10 +11,11 @@
   import * as pages from "@app/navigation/pages"
 
   type Props = {
+    includePost?: boolean
     onClick: () => void
   }
 
-  const {onClick}: Props = $props()
+  const {includePost = true, onClick}: Props = $props()
 
   const createPost = () => pushModal(NoteCreate)
 
@@ -24,22 +25,24 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
-  <li>
-    <Button onclick={createPost}>
-      <Icon size={4} icon={PenNewSquare} />
-      Post
-    </Button>
-  </li>
+  {#if includePost}
+    <li>
+      <Button onclick={createPost}>
+        <Icon size={4} icon={PenNewSquare} />
+        Create post
+      </Button>
+    </li>
+  {/if}
   <li>
     <Button onclick={createPoll}>
       <Icon size={4} icon={Revote} />
-      Poll
+      Create poll
     </Button>
   </li>
   <li>
     <Button onclick={createArticle}>
       <Icon size={4} icon={DocumentText} />
-      Article
+      Create article
     </Button>
   </li>
 </ul>

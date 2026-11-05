@@ -3,7 +3,7 @@
   import {now} from "@welshman/lib"
   import {toMsats} from "@welshman/util"
   import {ZapGoal} from "@welshman/domain"
-  import {isMobile, preventDefault} from "@lib/html"
+  import {isMobile} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -24,6 +24,7 @@
   import {writer} from "@app/core/domain"
   import {pushToast} from "@app/features/toast"
   import {publishToSpace} from "@app/features/spaces/rooms"
+  import PublishButton from "@app/components/PublishButton.svelte"
   import {makeEditor} from "@app/features/editor"
   import {DraftKey} from "@app/features/drafts"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
@@ -54,7 +55,7 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  const submit = async () => {
+  const publish = async (scheduleAt?: number) => {
     if ($uploading || loading) {
       return
     }
@@ -115,7 +116,7 @@
         eventWriter.setClosedAt(closedAt)
       }
 
-      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat})
+      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat, scheduleAt})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -145,7 +146,7 @@
 
   const editor = makeEditor({
     url,
-    submit,
+    submit: publish,
     uploading,
     onChange,
     placeholder: "What's on your mind?",
@@ -157,7 +158,7 @@
   })
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(submit)}>
+<Modal>
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Create a Funding Goal</ModalTitle>
@@ -252,8 +253,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={$uploading || loading}>
+    <PublishButton onPublish={publish} disabled={$uploading || loading}>
       <Spinner {loading}>Create Goal</Spinner>
-    </Button>
+    </PublishButton>
   </ModalFooter>
 </Modal>

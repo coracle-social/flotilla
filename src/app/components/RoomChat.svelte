@@ -39,6 +39,7 @@
   import {deferredRoomPath, setChecked} from "@app/features/checked"
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/features/toast"
+  import {SCHEDULE_UNSUPPORTED, ScheduleError} from "@app/features/scheduling"
 
   type Props = {
     url: string
@@ -101,7 +102,7 @@
 
   const replyTo = (event: TrustedEvent) => composeArea?.reply(event)
 
-  const onSubmit = async ({content, tags, parent, share, edit}: ComposeValues) => {
+  const onSubmit = async ({content, tags, scheduleAt, parent, share, edit}: ComposeValues) => {
     if (edit) {
       const relay = await $relays.load(url)
 
@@ -133,6 +134,20 @@
 
     if (parentEvent) {
       eventWriter.setParent(parentEvent)
+    }
+
+    // A scheduled message is dated ahead of now and held by the relay until its time.
+    if (scheduleAt) {
+      const publication = $publisher.publish({
+        relays: [url],
+        event: stamp(await eventWriter.renderTemplate(), scheduleAt),
+      })
+
+      if (await publication.getError()) {
+        throw new ScheduleError(SCHEDULE_UNSUPPORTED)
+      }
+
+      return
     }
 
     const delay = await loadSendDelay()

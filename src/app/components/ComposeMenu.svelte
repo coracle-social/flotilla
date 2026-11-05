@@ -1,18 +1,17 @@
 <script lang="ts">
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import StarFallMinimalistic from "@assets/icons/star-fall-minimalistic.svg?dataurl"
-  import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import CaseMinimalistic from "@assets/icons/case-minimalistic.svg?dataurl"
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import DocumentText from "@assets/icons/document-text.svg?dataurl"
   import Revote from "@assets/icons/revote.svg?dataurl"
+  import Clock from "@assets/icons/clock-circle.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import {navigate} from "@app/navigation/navigate"
   import {pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
   import PollCreate from "@app/components/PollCreate.svelte"
@@ -21,16 +20,15 @@
     url: string
     onClick: () => void
     uploadFiles: () => void
+    schedule?: () => void
     h?: string
   }
 
-  const {url, h, onClick, uploadFiles}: Props = $props()
+  const {url, h, onClick, uploadFiles, schedule}: Props = $props()
 
   const createGoal = () => pushModal(GoalCreate, {url, h, shareToChat: true})
 
   const createCalendarEvent = () => pushModal(CalendarEventCreate, {url, h, shareToChat: true})
-
-  const createThread = () => pushModal(ThreadCreate, {url, h, shareToChat: true})
 
   const createClassified = () => pushModal(ClassifiedCreate, {url, h, shareToChat: true})
 
@@ -46,6 +44,14 @@
       Photo or File
     </Button>
   </li>
+  {#if schedule}
+    <li>
+      <Button onclick={schedule}>
+        <Icon size={4} icon={Clock} />
+        Schedule Message
+      </Button>
+    </li>
+  {/if}
   <li>
     <Button onclick={createPoll}>
       <Icon size={4} icon={Revote} />
@@ -68,12 +74,6 @@
     <Button onclick={createClassified}>
       <Icon size={4} icon={CaseMinimalistic} />
       Classified Listing
-    </Button>
-  </li>
-  <li>
-    <Button onclick={createThread}>
-      <Icon size={4} icon={NotesMinimalistic} />
-      Create Thread
     </Button>
   </li>
   <li>

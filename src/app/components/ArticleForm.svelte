@@ -35,6 +35,7 @@
   import {makeEditor} from "@app/features/editor"
   import {publishToNetwork} from "@app/features/social"
   import {publishToSpace} from "@app/features/spaces/rooms"
+  import PublishButton from "@app/components/PublishButton.svelte"
   import * as pages from "@app/navigation/pages"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
   import {pushToast} from "@app/features/toast"
@@ -92,7 +93,7 @@
     }
   }
 
-  const submit = async () => {
+  const publish = async (scheduleAt?: number) => {
     if ($uploading || uploadingCover || loading) {
       return
     }
@@ -134,8 +135,8 @@
       }
 
       const {publication, error} = url
-        ? await publishToSpace(eventWriter, {url, h, shareToChat})
-        : await publishToNetwork(eventWriter)
+        ? await publishToSpace(eventWriter, {url, h, shareToChat, scheduleAt})
+        : await publishToNetwork(eventWriter, scheduleAt)
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -184,7 +185,7 @@
 
   const editor = makeEditor({
     url,
-    submit,
+    submit: publish,
     uploading,
     onChange,
     placeholder: "Write your article...",
@@ -204,12 +205,12 @@
     {@render header()}
   {/snippet}
   {#snippet action()}
-    <Button
-      class="button button-primary button-sm"
-      onclick={submit}
+    <PublishButton
+      onPublish={publish}
+      class="button-sm"
       disabled={$uploading || uploadingCover || loading}>
       <Spinner {loading}>Publish</Spinner>
-    </Button>
+    </PublishButton>
   {/snippet}
 </SpaceBar>
 

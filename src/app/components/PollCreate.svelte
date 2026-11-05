@@ -2,7 +2,7 @@
   import {now, randomId, removeUndefined} from "@welshman/lib"
   import {Poll} from "@welshman/domain"
   import type {PollType} from "@welshman/domain"
-  import {isMobile, preventDefault} from "@lib/html"
+  import {isMobile} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import HamburgerMenu from "@assets/icons/hamburger-menu.svg?dataurl"
   import PlusCircle from "@assets/icons/add-circle.svg?dataurl"
@@ -24,6 +24,7 @@
   import {pushToast} from "@app/features/toast"
   import {publishToNetwork} from "@app/features/social"
   import {publishToSpace} from "@app/features/spaces/rooms"
+  import PublishButton from "@app/components/PublishButton.svelte"
   import {DraftKey} from "@app/features/drafts"
 
   type Option = {
@@ -68,7 +69,7 @@
     options = newOptions
   }
 
-  const submit = async () => {
+  const publish = async (scheduleAt?: number) => {
     if (loading) {
       return
     }
@@ -101,8 +102,8 @@
       }
 
       const {error} = url
-        ? await publishToSpace(eventWriter.setUrls([url]), {url, h, shareToChat})
-        : await publishToNetwork(eventWriter)
+        ? await publishToSpace(eventWriter.setUrls([url]), {url, h, shareToChat, scheduleAt})
+        : await publishToNetwork(eventWriter, scheduleAt)
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -135,7 +136,7 @@
   })
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(submit)}>
+<Modal>
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Create a Poll</ModalTitle>
@@ -225,8 +226,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={loading}>
+    <PublishButton onPublish={publish} disabled={loading}>
       <Spinner {loading}>Create Poll</Spinner>
-    </Button>
+    </PublishButton>
   </ModalFooter>
 </Modal>

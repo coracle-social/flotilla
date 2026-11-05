@@ -73,6 +73,9 @@ export const DEFAULT_SPACES = fromCsv(env("VITE_DEFAULT_SPACES")).map(normalizeR
 
 export const DEFAULT_PUBKEYS = env("VITE_DEFAULT_PUBKEYS")
 
+// A relay that holds an outbox post dated ahead of now and forwards it to the user's relays when it is due.
+export const SCHEDULER_RELAY = normalizeRelayUrl(env("VITE_SCHEDULER_RELAY"))
+
 export const HOSTING_BACKEND_URL = env("VITE_HOSTING_BACKEND_URL")
 
 export const HOSTING_RELAY_DOMAIN = env("VITE_HOSTING_RELAY_DOMAIN")

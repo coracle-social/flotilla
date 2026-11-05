@@ -1,7 +1,7 @@
 <script lang="ts">
   import {writable} from "svelte/store"
   import {Thread} from "@welshman/domain"
-  import {isMobile, preventDefault} from "@lib/html"
+  import {isMobile} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -19,6 +19,7 @@
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
   import {displayRoom, publishToSpace} from "@app/features/spaces/rooms"
+  import PublishButton from "@app/components/PublishButton.svelte"
   import {pushToast} from "@app/features/toast"
 
   type Values = {
@@ -45,7 +46,7 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  const submit = async () => {
+  const publish = async (scheduleAt?: number) => {
     if ($uploading || loading) {
       return
     }
@@ -75,7 +76,7 @@
         .setTitle(title)
         .addTags(...ed.storage.nostr.getEditorTags())
 
-      const {error} = await publishToSpace(eventWriter, {url, h: room, shareToChat})
+      const {error} = await publishToSpace(eventWriter, {url, h: room, shareToChat, scheduleAt})
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -102,7 +103,7 @@
 
   const editor = makeEditor({
     url,
-    submit,
+    submit: publish,
     uploading,
     onChange,
     placeholder: "What's on your mind?",
@@ -114,7 +115,7 @@
   })
 </script>
 
-<Modal tag="form" onsubmit={preventDefault(submit)}>
+<Modal>
   <ModalBody>
     <ModalHeader>
       <ModalTitle>Create a Thread</ModalTitle>
@@ -167,8 +168,8 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <Button type="submit" class="button button-primary" disabled={$uploading || loading}>
+    <PublishButton onPublish={publish} disabled={$uploading || loading}>
       <Spinner {loading}>Create Thread</Spinner>
-    </Button>
+    </PublishButton>
   </ModalFooter>
 </Modal>

@@ -1,10 +1,11 @@
-import {formatTimestampAsDate, int, MINUTE} from "@welshman/lib"
+import {formatTimestampAsDate, int, MINUTE, now} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 
-// A row of a room transcript: a message, a date divider, or the reader's unread marker.
+// A row of a room transcript: a message, a date divider, the reader's unread marker, or the start of scheduled posts.
 export type RoomRow =
   | {type: "new-messages"; id: string}
+  | {type: "scheduled"; id: string}
   | {type: "date"; id: string; value: string}
   | {type: "note"; id: string; value: TrustedEvent; showPubkey: boolean}
 
@@ -30,6 +31,7 @@ export const groupRoomMessages = ({
   const after = unreadAfter && lastOwn ? Math.max(lastOwn.created_at, unreadAfter) : unreadAfter
 
   let markedUnread = false
+  let markedScheduled = false
   let previousDate: Maybe<string>
   let previousKind: Maybe<number>
   let previousPubkey: Maybe<string>
@@ -53,6 +55,12 @@ export const groupRoomMessages = ({
     ) {
       rows.push({type: "new-messages", id: "new-messages"})
       markedUnread = true
+    }
+
+    // A scheduled post is dated ahead and held by the relay, so only its author sees it this early.
+    if (!markedScheduled && event.created_at > now()) {
+      rows.push({type: "scheduled", id: "scheduled"})
+      markedScheduled = true
     }
 
     if (date !== previousDate) {
