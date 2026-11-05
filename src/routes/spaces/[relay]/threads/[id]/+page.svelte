@@ -179,41 +179,47 @@
   <PageContent bind:element noPad class="flex flex-col">
     {#if $event}
       <div bind:this={panel} class="bg-surface border-y border-line">
-        <div bind:this={root}>
-          <ThreadPost
-            {url}
-            {context}
-            event={$event}
-            threadPubkey={$event.pubkey}
-            replyCount={$replies.length}
-            onReply={openReply}
-            hideTitle />
-        </div>
-        {#if hiddenCount > 0}
-          <div class="flex justify-center py-4">
-            <Button class="button button-neutral button-sm" onclick={showEarlier}>
-              Show earlier replies ({hiddenCount})
-            </Button>
-          </div>
-        {/if}
-        {#each visibleReplies as reply (reply.id)}
-          {#if reply.id === oldestUnread?.id}
-            <div bind:this={unreadDivider} class="flex items-center gap-2 px-4 py-2 text-xs">
-              <div class="h-px grow bg-primary"></div>
-              <p class="rounded-full bg-primary px-2 py-1" style="color: var(--primary-content)">
-                New replies
-              </p>
-              <div class="h-px grow bg-primary"></div>
+        <div class="flex min-h-full shrink-0 flex-col @2xl:flex-row">
+          <div class="flex min-w-0 grow flex-col border-line @2xl:border-r">
+            <div bind:this={root}>
+              <ThreadPost
+                {url}
+                {context}
+                event={$event}
+                threadPubkey={$event.pubkey}
+                replyCount={$replies.length}
+                onReply={openReply}
+                hideTitle />
             </div>
-          {/if}
-          <ThreadPost
-            {url}
-            {context}
-            event={reply}
-            threadPubkey={$event.pubkey}
-            onReply={openReply} />
-        {/each}
-        <RelatedThreads {url} event={$event} {context} />
+            {#if hiddenCount > 0}
+              <div class="flex justify-center py-4">
+                <Button class="button button-neutral button-sm" onclick={showEarlier}>
+                  Show earlier replies ({hiddenCount})
+                </Button>
+              </div>
+            {/if}
+            {#each visibleReplies as reply (reply.id)}
+              {#if reply.id === oldestUnread?.id}
+                <div bind:this={unreadDivider} class="flex items-center gap-2 px-4 py-2 text-xs">
+                  <div class="h-px grow bg-primary"></div>
+                  <p
+                    class="rounded-full bg-primary px-2 py-1"
+                    style="color: var(--primary-content)">
+                    New replies
+                  </p>
+                  <div class="h-px grow bg-primary"></div>
+                </div>
+              {/if}
+              <ThreadPost
+                {url}
+                {context}
+                event={reply}
+                threadPubkey={$event.pubkey}
+                onReply={openReply} />
+            {/each}
+          </div>
+          <RelatedThreads {url} event={$event} {context} />
+        </div>
       </div>
       {#if showReply && replyTo && $event}
         <EventReply

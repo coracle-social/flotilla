@@ -34,12 +34,16 @@
 </script>
 
 {#if related.length > 0}
-  <section class="border-t border-solid border-line">
-    <header class="px-4 py-3">
-      <h2 class="text-lg">Related Threads</h2>
-    </header>
-    {#each related as threadEvent (threadEvent.id)}
-      <ThreadBoardItem {url} event={threadEvent} {context} stacked />
-    {/each}
-  </section>
+  <aside class="bg-surface border-line hidden shrink-0 flex-col @2xl:flex @2xl:w-80">
+    <div class="flex flex-col @2xl:sticky @2xl:top-0">
+      <section class="flex flex-col gap-2 px-4 py-4">
+        <h2 class="text-sm font-bold tracking-wide uppercase opacity-60">Related Threads</h2>
+        <div class="flex flex-col">
+          {#each related as threadEvent (threadEvent.id)}
+            <ThreadBoardItem {url} event={threadEvent} {context} stacked />
+          {/each}
+        </div>
+      </section>
+    </div>
+  </aside>
 {/if}
