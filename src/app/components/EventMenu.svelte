@@ -2,6 +2,7 @@
   import type {Snippet} from "svelte"
   import {readable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
+  import Chart from "@assets/icons/chart-2.svg?dataurl"
   import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
   import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
@@ -11,6 +12,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import BookmarkButton from "@app/components/BookmarkButton.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
+  import NoteStats from "@app/components/NoteStats.svelte"
   import Report from "@app/components/Report.svelte"
   import EventAdminDeleteConfirm from "@app/components/EventAdminDeleteConfirm.svelte"
   import EventDeleteConfirm from "@app/components/EventDeleteConfirm.svelte"
@@ -36,6 +38,8 @@
 
   const showInfo = () => pushModal(EventInfo, {url, event})
 
+  const showStats = () => pushModal(NoteStats, {event, noun})
+
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 
   const report = (spaceUrl: string) => () => pushModal(Report, {url: spaceUrl, event})
@@ -57,6 +61,12 @@
       </Button>
     </li>
   {/if}
+  <li>
+    <Button onclick={showStats}>
+      <Icon size={4} icon={Chart} />
+      {noun} Stats
+    </Button>
+  </li>
   <li>
     <BookmarkButton {url} {event} />
   </li>

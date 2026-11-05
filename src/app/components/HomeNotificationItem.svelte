@@ -1,24 +1,22 @@
 <script lang="ts">
-  import {groupBy, removeUndefined, uniq} from "@welshman/lib"
+  import {call, removeUndefined, uniq} from "@welshman/lib"
   import {REACTION, ZAP_RECEIPT, sortEventsDesc, tagSpec, tagValue} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import Bolt from "@assets/icons/bolt.svg?dataurl"
-  import Reply from "@assets/icons/reply.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
-  import HomeNotificationReason from "@app/components/HomeNotificationReason.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import ProfileCircles from "@app/components/ProfileCircles.svelte"
+  import NoteStats from "@app/components/NoteStats.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
-  import Reaction from "@app/components/Reaction.svelte"
+  import ProfileName from "@app/components/ProfileName.svelte"
   import {user} from "@app/core/user"
   import type {FeedContext} from "@app/features/feeds"
+  import {REPOST_KINDS, displayActivityTimestamp} from "@app/features/activity"
+  import type {HomeNotification} from "@app/features/activity"
+  import {notes} from "@app/features/social"
   import {pushModal} from "@app/navigation/dialogs"
   import {openEventNote} from "@app/navigation/overlays"
-  import {deriveDisplaysByPubkey} from "@app/features/people"
-  import {notes} from "@app/features/social"
-  import {REPOST_KINDS} from "@app/features/activity"
-  import type {HomeNotification} from "@app/features/activity"
+
+  type Part = {pubkey?: string; text?: string}
 
   type Props = {
     notification: HomeNotification
@@ -37,9 +35,13 @@
   // The note this notification is about, fetched from the hints the events naming it carried.
   const note = $notes.deriveEvent(ref)
 
-  const reactions = $derived(interactions.filter(e => e.kind === REACTION))
+  const repliers = $derived(uniq(replies.map(e => e.pubkey)))
 
-  const reposts = $derived(interactions.filter(e => REPOST_KINDS.includes(e.kind)))
+  const reactors = $derived(uniq(interactions.filter(e => e.kind === REACTION).map(e => e.pubkey)))
+
+  const reposters = $derived(
+    uniq(interactions.filter(e => REPOST_KINDS.includes(e.kind)).map(e => e.pubkey)),
+  )
 
   // A zap receipt is signed by the lnurl server, so the zapper is in the `P` tag.
   const zappers = $derived(
@@ -50,31 +52,78 @@
     ),
   )
 
-  const repliers = $derived(uniq(replies.map(e => e.pubkey)))
+  const target = $derived($note?.pubkey === $user.pubkey ? "your note" : "a thread you are in")
 
-  const reactors = $derived(uniq(reactions.map(e => e.pubkey)))
+  const actions = $derived(
+    call(() => {
+      const actions: {pubkeys: string[]; verb: string; object: string}[] = []
 
-  const reposters = $derived(uniq(reposts.map(e => e.pubkey)))
+      if (repliers.length > 0) {
+        actions.push({pubkeys: repliers, verb: "replied", object: `to ${target}`})
+      }
+      if (reactors.length > 0) {
+        actions.push({pubkeys: reactors, verb: "reacted", object: `to ${target}`})
+      }
+      if (reposters.length > 0) {
+        actions.push({pubkeys: reposters, verb: "reposted", object: "this"})
+      }
+      if (zappers.length > 0) {
+        actions.push({pubkeys: zappers, verb: "zapped", object: "this"})
+      }
 
-  const displays = $derived(
-    deriveDisplaysByPubkey(
-      uniq(removeUndefined([...repliers, ...reactors, ...reposters, ...zappers, $note?.pubkey])),
-    ),
+      return actions
+    }),
   )
 
-  const reactionGroups = $derived(groupBy(e => e.content, reactions))
+  // Whoever did the same things shares a clause, so nobody is named twice.
+  const clauses = $derived(
+    call(() => {
+      const clauses = new Map<string, {pubkeys: string[]; verbsByObject: Map<string, string[]>}>()
 
-  // A note nobody answered or reacted to is in the stream because it names the user.
-  const mention = $derived(replies.length === 0 && interactions.length === 0)
+      for (const {pubkeys, verb, object} of actions) {
+        const key = pubkeys.toSorted().join()
+        const clause = clauses.get(key) ?? {pubkeys, verbsByObject: new Map<string, string[]>()}
+        const verbs = clause.verbsByObject.get(object) ?? []
 
-  const reasons = $derived(
-    removeUndefined([
-      mention ? "mention" : undefined,
-      repliers.length > 0 ? "replies" : undefined,
-      reactors.length > 0 ? "reactions" : undefined,
-      reposters.length > 0 ? "reposts" : undefined,
-      zappers.length > 0 ? "zaps" : undefined,
-    ]),
+        verbs.push(verb)
+        clause.verbsByObject.set(object, verbs)
+        clauses.set(key, clause)
+      }
+
+      return Array.from(clauses.values())
+    }),
+  )
+
+  const words = (words: string[]) =>
+    words.length > 1 ? `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}` : words[0]
+
+  const parts = $derived(
+    call(() => {
+      // A note nobody answered or reacted to is in the stream because it names the user.
+      if (clauses.length === 0 && $note) {
+        return [{pubkey: $note.pubkey, text: " mentioned you"}]
+      }
+
+      const parts: Part[] = []
+
+      clauses.forEach(({pubkeys, verbsByObject}, i) => {
+        const text = words(
+          Array.from(verbsByObject, ([object, verbs]) => `${words(verbs)} ${object}`),
+        )
+
+        if (i > 0) {
+          parts.push({text: i === clauses.length - 1 ? " and " : ", "})
+        }
+
+        if (pubkeys.length === 1) {
+          parts.push({pubkey: pubkeys[0]}, {text: ` ${text}`})
+        } else {
+          parts.push({text: `${pubkeys.length} people ${text}`})
+        }
+      })
+
+      return parts
+    }),
   )
 
   let showEvery = $state(false)
@@ -83,16 +132,9 @@
 
   const shown = $derived(showEvery ? sorted : sorted.slice(0, 3))
 
-  // Follows the name at index i, so no whitespace lands before a comma.
-  const conjunction = (pubkeys: string[], i: number) => {
-    if (pubkeys.length > 4) {
-      return i === 0 ? ", " : `, and ${pubkeys.length - 2} others`
-    } else if (i === pubkeys.length - 2) {
-      return pubkeys.length > 2 ? ", and " : " and "
-    } else if (i < pubkeys.length - 2) {
-      return ", "
-    } else {
-      return ""
+  const open = () => {
+    if ($note) {
+      pushModal(NoteStats, {event: $note})
     }
   }
 
@@ -103,75 +145,40 @@
   const showAll = () => {
     showEvery = true
   }
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault()
+      open()
+    }
+  }
 </script>
 
 {#snippet quoteNote(event: TrustedEvent)}
   <EventQuoteAction {event} noun="Note" />
 {/snippet}
 
-{#snippet names(pubkeys: string[])}
-  <span>
-    {#each pubkeys.length > 4 ? pubkeys.slice(0, 2) : pubkeys as pubkey, i (pubkey)}
-      <Button class="link" onclick={openProfile(pubkey)}>{$displays.get(pubkey)}</Button
-      >{conjunction(pubkeys, i)}
-    {/each}
-  </span>
-{/snippet}
-
-{#snippet separator(reason: string)}
-  {#if reasons[0] !== reason}
-    <span class="text-sm opacity-75">&bull;</span>
-  {/if}
-{/snippet}
-
 {#if $note}
   <div class="flex flex-col gap-1">
-    <div class="flex flex-wrap items-center gap-1 px-1">
-      {#if mention}
-        {@render separator("mention")}
-        <HomeNotificationReason>
-          {@render names([$note.pubkey])} mentioned you
-        </HomeNotificationReason>
-      {/if}
-      {#if repliers.length > 0}
-        {@render separator("replies")}
-        <HomeNotificationReason icon={Reply}>
-          {#if $note.pubkey === $user.pubkey}
-            {@render names(repliers)} replied to your note
-          {:else}
-            {@render names(repliers)} replied to a thread you are in
+    <div
+      role="button"
+      tabindex="0"
+      class="-mx-2 flex min-w-0 cursor-pointer items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-surface"
+      onclick={open}
+      onkeydown={onKeyDown}>
+      <div class="min-w-0 flex-1 truncate text-sm opacity-75">
+        {#each parts as part, i (i)}
+          {#if part.pubkey}
+            <Button class="link" onclick={openProfile(part.pubkey)}>
+              <ProfileName pubkey={part.pubkey} />
+            </Button>
           {/if}
-        </HomeNotificationReason>
-      {/if}
-      {#if reactors.length > 0}
-        {@render separator("reactions")}
-        <HomeNotificationReason>
-          {#if reactionGroups.size === 1}
-            {@render names(reactors)} reacted with
-            <Reaction event={reactions[0]} />
-          {:else}
-            {@render names(reactors)} reacted with
-            {#each reactionGroups.entries() as [content, group] (content)}
-              <span class="badge badge-neutral gap-1 font-normal">
-                <Reaction event={group[0]} />
-                <ProfileCircles pubkeys={uniq(group.map(e => e.pubkey))} size={5} limit={3} />
-              </span>
-            {/each}
-          {/if}
-        </HomeNotificationReason>
-      {/if}
-      {#if reposters.length > 0}
-        {@render separator("reposts")}
-        <HomeNotificationReason>
-          {@render names(reposters)} reposted this
-        </HomeNotificationReason>
-      {/if}
-      {#if zappers.length > 0}
-        {@render separator("zaps")}
-        <HomeNotificationReason icon={Bolt}>
-          {@render names(zappers)} zapped this
-        </HomeNotificationReason>
-      {/if}
+          {part.text}
+        {/each}
+      </div>
+      <span class="shrink-0 text-xs opacity-50">
+        {displayActivityTimestamp(notification.timestamp)}
+      </span>
     </div>
     <NoteItem event={$note} {context} customActions={quoteNote} showReply showThreadLinks />
     {#if shown.length > 0}
