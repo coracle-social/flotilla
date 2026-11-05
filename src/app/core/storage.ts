@@ -101,8 +101,28 @@ type PlaintextItem = {key: string; value: string}
 
 const IDENTITY = "identity"
 
+// The cache an install kept before the marker existed, which is the only sign of it left
+const LEGACY_PREFIX = "flotilla-9gl"
+
+const hasLegacyCache = async () => {
+  if (!indexedDB.databases) {
+    return false
+  }
+
+  const databases = await indexedDB.databases()
+
+  return databases.some(db => db.name?.startsWith(LEGACY_PREFIX))
+}
+
 /** True while an identity is set up here, which the keychain the session lives in can outlast. */
-export const hasCachedIdentity = async () => (await kv.get(IDENTITY)) !== undefined
+export const hasCachedIdentity = async () => {
+  if ((await kv.get(IDENTITY)) !== undefined) {
+    return true
+  }
+
+  // The login this allows records the marker, so the fallback only answers once per install
+  return hasLegacyCache()
+}
 
 const onSweepError = (error: unknown) => console.error("Failed to sweep the event database", error)
 

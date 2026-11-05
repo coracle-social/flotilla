@@ -285,7 +285,8 @@ Before the app is built, `openRepository`:
 
 It also records the identity in `kv` first, so `restoreSession` can tell whether the rest of an
 install is still there before it restores a session whose signer needs this device. The keychain
-that `ss` lives in outlives the app container holding everything else.
+that `ss` lives in outlives the app container holding everything else, and an install from before
+that marker is recognised by the cache it left in IndexedDB, which its first login replaces.
 
 SQLite stores whatever the repository takes, and retention decides what the sweep evicts. A rule
 is a `match(event, pubkey)` predicate, given the database owner's pubkey, with an optional
