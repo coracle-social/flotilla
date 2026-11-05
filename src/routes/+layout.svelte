@@ -29,7 +29,7 @@
   import {setupAnalytics} from "@app/features/analytics"
   import {setupLogging} from "@app/core/logger"
   import * as coreSession from "@app/core/session"
-  import {restoreSession} from "@app/core/session"
+  import {restoreSession, syncLogout} from "@app/core/session"
   import {syncSignerAlerts} from "@app/features/signerAlerts"
   import {wallet} from "@app/features/wallet"
   import {pluginCaches} from "@app/core/storage"
@@ -101,8 +101,8 @@
     // Attach the user before anything reads or decrypts on their behalf
     unsubscribers.push(await restoreSession())
 
-    // Set up logging
-    unsubscribers.push(setupLogging())
+    // Set up logging, and logout in another tab
+    unsubscribers.push(setupLogging(), syncLogout())
 
     // Boot code reads and writes these, e.g. Push picks its adapter from pushState, so wait for stored values
     await Promise.all([

@@ -1,5 +1,5 @@
 import {writable} from "svelte/store"
-import {call} from "@welshman/lib"
+import {call, randomId} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {withGetter} from "@welshman/store"
 import {User} from "@welshman/app"
@@ -9,6 +9,9 @@ import {app, replaceApp} from "@app/core/app"
 import {hasCachedIdentity, kv, openRepository, pluginCaches, ss} from "@app/core/storage"
 
 export const session = withGetter(writable<Maybe<Session>>(undefined))
+
+// Set by a tab that logs out, so the others stop showing what it deleted
+const LOGGED_OUT = "flotilla-logged-out"
 
 export const login = async ($session: Session) => {
   const $user = await User.fromSession($session)
@@ -65,7 +68,23 @@ export const resetSession = async () => {
 
   localStorage.clear()
 
+  // What every other tab reads its session from is gone, so tell them to look again
+  localStorage.setItem(LOGGED_OUT, randomId())
+
   window.location.href = "/"
+}
+
+// Another tab's logout leaves this one showing an identity the device no longer holds
+export const syncLogout = () => {
+  const onStorage = ({key, newValue}: StorageEvent) => {
+    if (key === LOGGED_OUT && newValue) {
+      window.location.href = "/"
+    }
+  }
+
+  window.addEventListener("storage", onStorage)
+
+  return () => window.removeEventListener("storage", onStorage)
 }
 
 export const logout = async () => {
