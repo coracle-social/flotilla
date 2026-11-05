@@ -138,14 +138,18 @@
     }
 
     if (at && !released && !pinned) {
-      // The pointer only helps once that message has arrived, so the anchor still carries the jump.
-      const pointedAt = target ? $events.find(spec({id: target})) : undefined
-      const targetEvent = pointedAt ?? $events.find(event => event.created_at >= at)
+      // A link that names an event waits for exactly that one; a bare timestamp anchor honors
+      // the first event at or after it. Landing on a newer neighbor while the named event is
+      // still arriving would leave the reader on the wrong note, so the wait holds instead.
+      const targetEvent = target
+        ? $events.find(spec({id: target}))
+        : $events.find(event => event.created_at >= at)
 
       if (targetEvent) {
         scrollToRow(targetEvent.id, {highlight: true, pin: true})
-      } else {
-        // Nothing to jump to yet, so don't hold the room back waiting for it
+      } else if (reachedStartOfHistory && !windowStopsShort) {
+        // The feed walked everything around the anchor and the event never came back, so let
+        // the room show what it has rather than holding the jump open.
         jumpSettled = true
       }
     }
@@ -239,7 +243,12 @@
   const showScrollButton = $derived(scrolledUp || windowStopsShort)
 
   $effect(() => {
-    if (elements.length > 0 && !isUserScrolling) {
+    // Re-check as the anchor or the feed's windows move, since a jump into history waits on an
+    // event that may not arrive with the first page the feed draws.
+    if (
+      !isUserScrolling &&
+      (elements.length > 0 || (at && reachedStartOfHistory && !windowStopsShort))
+    ) {
       requestAnimationFrame(manageScrollPosition)
     }
   })

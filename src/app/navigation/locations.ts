@@ -134,9 +134,14 @@ export const goToEvent = (event: TrustedEvent, options: NavigateOptions = {}) =>
 
   if (path) {
     if (!scrollToEvent(event.id)) {
-      const replaceState = path.replace(/\?.*$/, "") === page.url.pathname
+      // A message's transcript anchors on its timestamp, so the pointer lets the jump wait
+      // for this exact event instead of landing on whatever sits at or after the anchor.
+      const pointer =
+        event.kind === MESSAGE ? nip19.neventEncode({id: event.id, relays: urls}) : undefined
+      const target = pointer ? `${path}${path.includes("?") ? "&" : "?"}event=${pointer}` : path
+      const replaceState = target.replace(/\?.*$/, "") === page.url.pathname
 
-      navigate(path, {replaceState, ...options})
+      navigate(target, {replaceState, ...options})
     }
   } else {
     // A kind with no page of its own opens there too, rather than in another client.

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {onMount, tick} from "svelte"
+  import {onMount} from "svelte"
   import {debounce} from "throttle-debounce"
   import {formatTimestampRelative, groupBy, now, uniqBy, DAY, WEEK} from "@welshman/lib"
   import type {Filter, TrustedEvent} from "@welshman/util"
@@ -36,7 +36,6 @@
   let term = $state("")
   let results = $state<TrustedEvent[]>([])
   let loading = $state(false)
-  let input: HTMLInputElement | undefined = $state()
   let controller: AbortController | undefined
 
   const doSearch = debounce(300, async (searchTerm: string, controller: AbortController) => {
@@ -119,22 +118,21 @@
 
   const eventsByAge = $derived(groupBy(e => getAgeSection(e.created_at), results))
 
-  onMount(() => {
-    tick().then(() => input?.focus())
-
-    return () => controller?.abort()
-  })
+  onMount(() => () => controller?.abort())
 </script>
 
 <ModalBody>
   <label class="input input-sm input-group flex w-full items-center gap-2">
     <Icon size={4} icon={Magnifier} />
+    <!-- The dialog's focus trap takes the [autofocus] field as its initial focus, so search
+         is ready to type the moment the modal opens. -->
+    <!-- svelte-ignore a11y_autofocus -->
     <input
-      bind:this={input}
       bind:value={term}
       class="min-w-0 grow"
       type="text"
       {placeholder}
+      autofocus
       oninput={onInput}
       onkeydown={onKeyDown} />
   </label>
