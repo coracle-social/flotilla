@@ -3,7 +3,7 @@ import {registerIngest} from "@app/core/ingest"
 import {registerNotify} from "@app/core/notify"
 import {registerRelays} from "@app/core/relays"
 import {registerSettings} from "@app/core/settings"
-import {registerStorage} from "@app/core/storage"
+import {registerPluginCaches} from "@app/core/storage"
 import {registerUser} from "@app/core/user"
 import {registerActivity} from "@app/features/activity"
 import {registerBookmarks} from "@app/features/bookmarks"
@@ -30,7 +30,7 @@ export const registerAll = () => {
     registerAuth()
     registerRelays()
     registerNotify()
-    registerStorage()
+    registerPluginCaches()
     registerSettings()
     registerUser()
     registerActivity()

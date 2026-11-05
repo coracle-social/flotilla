@@ -165,7 +165,7 @@ that owns them, from `registerAll` before anything touches the app:
 | `registerAuth` | `core/auth.ts` | NIP-42 by the `relay_auth` setting, conservative or aggressive, through welshman's `makeAppPolicyAuth` |
 | `registerRelays` | `core/relays.ts` | keeps blocked relays closed, and marks a relay denied once it refuses several requests in a row, for `deriveRelayAccess` |
 | `registerNotify` | `core/notify.ts` | welshman's `appPolicyNotify` |
-| `registerStorage` | `core/storage.ts` | the per-user cache in the event database, only when the app has a user and a database |
+| `registerPluginCaches` | `core/storage.ts` | the per-user cache of plugin items in the event database, only when the app has a user and a database |
 
 A socket policy is registered as `$app => $app.pool.addSocketPolicy(policy)`, which adds it to the
 app's pool and returns the cleanup that removes it. To add a policy:
@@ -268,14 +268,16 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 | `theme`, `flTheme`, `checked`, `shouldUnwrap`, `device`, `notificationSettings`, push state, `forceHealthChecks` | `kv` | no | cleared |
 | drafts, dictations | a module `Map`, lost on reload | no | page reloads |
 
-### The event database (`src/app/core/database.ts`, `src/app/core/database.worker.ts`)
+### The event database (`database.ts`, `database.worker.ts`)
 
 `openRepository(pubkey)` in `storage.ts` opens an `EventDatabase` named `flotilla-<pubkey>` before
 `login` builds the app over it. Its worker is `serveSqlite` from `@welshman/store/sqlite-serve`,
-with flotilla's own tables beside the engine's: `retention`, `wraps` (the `WrapManager`'s index)
-and `plugin` (the map-backed caches). Tabs share one database through welshman's leader election. A
-database that cannot be opened leaves the app on a `MemoryRepository`, running on relay data alone,
-and no `Storage` at all.
+with flotilla's own tables beside the engine's, one module each: `retention`
+(`database.retention.ts`), `wraps`, the `WrapManager`'s index (`database.wraps.ts`), and `plugin`,
+the map-backed caches (`database.plugins.ts`). `database.worker.ts` composes them into the extension
+`serveSqlite` serves. Tabs share one database through welshman's leader election. A database that
+cannot be opened leaves the app on a `MemoryRepository`, running on relay data alone, and no
+`PluginCaches` at all.
 
 Before the app is built, `openRepository`:
 
@@ -322,14 +324,15 @@ To persist another kind, register a retention rule from the feature that owns it
 
 ### The plugin caches (`src/app/core/storage.ts`)
 
-`storagePolicy` builds a `Storage` only for an app with a user and an open event database. It
-caches the map-backed plugins, which hold no events (relays, relay stats, handles, zappers and
+`pluginCachesPolicy` builds `PluginCaches` only for an app with a user and an open event database.
+It caches the map-backed plugins, which hold no events (relays, relay stats, handles, zappers and
 decrypted plaintext), in the `plugin` table of that database, one row per key holding the item as
-json. `persistMapPlugin` is handed the `fromRow` that both judges a row and rebuilds the item, so a
-row no longer worth keeping is dropped as it's read and the plugin fills the gap from relays. A
-browser that cannot open SQLite gets no `Storage`: the plugins start empty on every load.
+json, and deletes the row of an item the plugin drops. `persistMapPlugin` is handed the `fromRow`
+that both judges a row and rebuilds the item, so a row no longer worth keeping is dropped as it's
+read and the plugin fills the gap from relays. A browser that cannot open SQLite gets no
+`PluginCaches`: the plugins start empty on every load.
 
-- Boot waits only for relays (`storage.get()?.ready`). The other tables load on the next tick.
+- Boot waits only for relays (`pluginCaches.get()?.ready`). The other tables load on the next tick.
   Plugin indexes read the event database when first used, so the user's lists arrive a worker
   round trip after the first screen, and an encrypted one once the signer decrypts it.
 - Writes accumulate for three seconds and go out in an idle callback, since relay stats change
@@ -337,9 +340,9 @@ browser that cannot open SQLite gets no `Storage`: the plugins start empty on ev
 - A failed read or write is logged and swallowed. The database holds nothing that isn't on the
   network, so the app recovers on the next load that succeeds.
 
-To persist a new map-backed plugin, add a `TABLES` entry and an `init*` method that calls `persistMapPlugin`
-with the table, the plugin, and how to turn a row into a key and item and back. It loads the rows, subscribes to
-`onItem`, and batches the writes.
+To persist a new map-backed plugin, add an `init*` method that calls `persistMapPlugin` with the name
+its rows go under, the plugin, and how to turn a row into a key and item and back. It loads the rows,
+subscribes to `onItem`, and batches the writes and deletions.
 
 ### kv, ss and synced stores
 

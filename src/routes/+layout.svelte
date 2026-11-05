@@ -32,7 +32,7 @@
   import {restoreSession} from "@app/core/session"
   import {syncSignerAlerts} from "@app/features/signerAlerts"
   import {wallet} from "@app/features/wallet"
-  import {storage} from "@app/core/storage"
+  import {pluginCaches} from "@app/core/storage"
   import {EventDatabase} from "@app/core/database"
   import {device} from "@app/core/device"
   import {forceHealthChecks} from "@app/features/healthChecks"
@@ -115,8 +115,8 @@
       forceHealthChecks.ready,
     ])
 
-    // Wait for critical storage data only
-    await storage.get()?.ready
+    // Wait for the caches sync reads from only
+    await pluginCaches.get()?.ready
 
     // Handle warm and cold start deep links
     unsubscribers.push(await setupDeepLinks())
@@ -145,11 +145,11 @@
     // Initialize background notifications
     unsubscribers.push(Push.sync())
 
-    // Wait for the new app's storage the way startup does, so sync reconciles against cached events.
+    // Wait for the new app's caches the way startup does, so sync reconciles against cached events.
     let currentApp = app.get()
 
     const resync = async () => {
-      await storage.get()?.ready
+      await pluginCaches.get()?.ready
 
       syncApplicationData()
     }

@@ -99,7 +99,8 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
 - `auth.ts`: NIP-42. `shouldAuth` decides which challenges the app answers on its own, and
   `authenticate(url)` authenticates on demand and explains a failure
 - `database.ts`: `EventDatabase`, the signed-in user's events in SQLite, with
-  `registerRetention` for what it keeps; `database.worker.ts` serves it with flotilla's own tables
+  `registerRetention` for what it keeps; `database.worker.ts` serves it with flotilla's own tables,
+  one module each for retention, wraps and plugin items
 - `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage), `openRepository`, and the
   per-user cache of everything that isn't an event, in the same database
 - `sync.ts`: `syncApplicationData`, `registerSync`, and the helpers registered syncs are built

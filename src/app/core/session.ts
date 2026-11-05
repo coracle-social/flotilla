@@ -6,7 +6,7 @@ import {User} from "@welshman/app"
 import type {Session} from "@welshman/app"
 import {getTestSession, publishTestEvents} from "@lib/test/session"
 import {app, replaceApp} from "@app/core/app"
-import {hasCachedIdentity, kv, openRepository, ss, storage} from "@app/core/storage"
+import {hasCachedIdentity, kv, openRepository, pluginCaches, ss} from "@app/core/storage"
 
 export const session = withGetter(writable<Maybe<Session>>(undefined))
 
@@ -35,7 +35,7 @@ export const restoreSession = async () => {
     await login(testSession)
 
     // Test events stand in for what storage held, so they land once it has loaded.
-    await storage.get()?.ready
+    await pluginCaches.get()?.ready
     await publishTestEvents(app.get().repository)
   } else {
     const $session = await ss.get<Session>("session")
@@ -61,7 +61,7 @@ export const restoreSession = async () => {
 export const resetSession = async () => {
   await kv.clear()
   await ss.clear()
-  await storage.get()?.clear()
+  await pluginCaches.get()?.clear()
 
   localStorage.clear()
 

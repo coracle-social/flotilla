@@ -13,6 +13,7 @@ import {Handles, Plaintext, Relays, RelayStats, Zappers} from "@welshman/app"
 import type {AppOptions, AppPolicy, IApp, MapPlugin, RelayStatsItem} from "@welshman/app"
 import {appPolicies} from "@app/core/app"
 import {EventDatabase} from "@app/core/database"
+import type {PluginItems} from "@app/core/database.plugins"
 
 type StringStorage = {
   get: (key: string) => Promise<Maybe<string>>
@@ -161,8 +162,8 @@ export const openRepository = async (
   }
 }
 
-/** Caches an app's local collections in the database its events are in, one database per identity. */
-class Storage {
+/** Caches the app's collections outside the repository, in the database its events are in. */
+class PluginCaches {
   ready: Promise<void>
 
   private unsubscribers: Unsubscriber[] = []
@@ -231,15 +232,14 @@ class Storage {
 
     const enqueue = batch(
       FLUSH_INTERVAL,
-      idleWrite((items: [string, string][]) =>
+      idleWrite((items: PluginItems) =>
         repository.call("putPluginItems", name, items).catch(onCacheError),
       ),
     )
 
     return plugin.onItem((key, item) => {
-      if (item) {
-        enqueue([key, JSON.stringify(toRow(key, item))])
-      }
+      // A removed item has to go, or it comes back on the next load
+      enqueue([key, item ? JSON.stringify(toRow(key, item)) : undefined])
     })
   }
 
@@ -286,27 +286,27 @@ class Storage {
     )
 }
 
-// The current app's cache, which only exists once there's an identity and a database to cache for.
-export const storage = withGetter(writable<Maybe<Storage>>(undefined))
+// The caches of the current app, which only exist once there's an identity and a database to keep them in.
+export const pluginCaches = withGetter(writable<Maybe<PluginCaches>>(undefined))
 
-// Storage is scoped to one app's caches, so it is built and torn down with it.
-export const storagePolicy: AppPolicy = $app => {
+// The caches are scoped to one app, so they are built and torn down with it.
+export const pluginCachesPolicy: AppPolicy = $app => {
   const database = EventDatabase.of($app.repository)
 
   if ($app.user && database) {
-    const $storage = new Storage($app, database)
+    const caches = new PluginCaches($app, database)
 
-    storage.set($storage)
+    pluginCaches.set(caches)
 
     return () => {
-      $storage.cleanup()
-      storage.set(undefined)
+      caches.cleanup()
+      pluginCaches.set(undefined)
     }
   }
 
   return noop
 }
 
-export const registerStorage = () => {
-  appPolicies.push(storagePolicy)
+export const registerPluginCaches = () => {
+  appPolicies.push(pluginCachesPolicy)
 }

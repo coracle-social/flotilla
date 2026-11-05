@@ -6,7 +6,8 @@ import type {Repository, RepositoryUpdate} from "@welshman/store"
 import {WrapManager} from "@welshman/net"
 import type {WrapItem} from "@welshman/net"
 import DatabaseWorker from "@app/core/database.worker?worker"
-import type {Retention, extend} from "@app/core/database.worker"
+import type {extend} from "@app/core/database.worker"
+import type {Retention} from "@app/core/database.retention"
 
 // A ttl bounds an event by how long ago it was cached, and a maxAge by its own age.
 type RetentionRule = {
