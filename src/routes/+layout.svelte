@@ -33,6 +33,7 @@
   import {syncSignerAlerts} from "@app/features/signerAlerts"
   import {wallet} from "@app/features/wallet"
   import {storage} from "@app/core/storage"
+  import {EventDatabase} from "@app/core/database"
   import {device} from "@app/core/device"
   import {forceHealthChecks} from "@app/features/healthChecks"
   import {setupShareIntents} from "@app/features/share"
@@ -89,10 +90,10 @@
     }
   })
 
-  const closeStorage = () => storage.get()?.close()
+  const closeDatabase = () => void EventDatabase.of(app.get().repository)?.close()
 
   // Cleanup on page close
-  window.addEventListener("beforeunload", closeStorage)
+  window.addEventListener("beforeunload", closeDatabase)
 
   const unsubscribe = lib.call(async () => {
     const unsubscribers: Unsubscriber[] = []
@@ -121,7 +122,7 @@
     unsubscribers.push(await setupDeepLinks())
 
     // Close the database connection on reload
-    unsubscribers.push(closeStorage)
+    unsubscribers.push(closeDatabase)
 
     // History, navigation, application data
     unsubscribers.push(setupHistory(), setupAnalytics(), syncApplicationData())

@@ -1,4 +1,4 @@
-import {DAY, MONTH, ago, int, max, now} from "@welshman/lib"
+import {DAY, MONTH, ago, int, isDefined, max, now} from "@welshman/lib"
 import {BLOSSOM_SERVERS, FOLLOWS, MESSAGING_RELAYS, MUTES, PROFILE, RELAYS} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {SqliteRepository, connectSqlite} from "@welshman/store"
@@ -56,7 +56,8 @@ const getRetention = (event: TrustedEvent, pubkey: string): Retention => {
   if (matching.length > 0) {
     return {
       id: event.id,
-      keepUntil: deadlines.includes(undefined) ? undefined : max(deadlines),
+      // A rule without a deadline keeps what it matches for good
+      keepUntil: deadlines.every(isDefined) ? max(deadlines) : undefined,
       provenance: matching.every(rule => rule.provenance),
     }
   }
@@ -141,6 +142,9 @@ export class EventDatabase {
 
     await this.repository.call("wipe")
   }
+
+  // Releasing the lock lets another tab lead the database, or this one open it again
+  close = () => this.repository.close()
 
   private putWrap = (item: WrapItem) => {
     this.repository.call("putWraps", [item]).catch(onWrapsError)

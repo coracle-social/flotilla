@@ -176,15 +176,13 @@ class Storage {
     this.ready = this.start()
   }
 
-  close = () => void this.database.repository.close()
-
   clear = () => this.database.reset().catch(onClearError)
 
   cleanup = () => {
     this.stopped = true
     this.timeouts.forEach(clearTimeout)
     this.unsubscribers.forEach(call)
-    this.close()
+    this.database.close()
   }
 
   private start = async () => {
