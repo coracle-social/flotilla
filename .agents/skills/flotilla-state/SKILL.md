@@ -1,6 +1,6 @@
 ---
 name: flotilla-state
-description: "Use this skill when deciding where a piece of state belongs in Flotilla, or when touching state: reading or adding stores in src/app, reaching the App instance and welshman plugins (usePlugin, fromApp, deriveUserItem), writing code that must survive login swapping the app or run signed out, adding an app policy or a flotilla plugin, persisting data (the SQLite event database and its retention, IndexedDB caches, kv/ss, synced stores, published settings, drafts), changing what src/app/core/sync.ts pulls in the background, and publishing (domain writer → Command → publication, optimistic updates, undo, showing publish status)."
+description: "Use this skill when deciding where a piece of state belongs in Flotilla, or when touching state: reading or adding stores in src/app, reaching the App instance and welshman plugins (usePlugin, fromApp, deriveUserItem), writing code that must survive login swapping the app or run signed out, adding an app policy or a flotilla plugin, persisting data (the SQLite event database and its retention, the plugin caches in it, kv/ss, synced stores, published settings, drafts), changing what src/app/core/sync.ts pulls in the background, and publishing (domain writer → Command → publication, optimistic updates, undo, showing publish status)."
 ---
 
 # Flotilla state
@@ -28,8 +28,7 @@ runs (see [App policies](#app-policies)).
   and `loginWithPomade`.
 - **Logout reloads the page.** `logout` in `src/app/core/session.ts` runs the handlers features
   register with `registerLogoutHandler` (pomade deactivates its session, push disables itself),
-  clears `kv`, `ss`, the user's event database and IndexedDB cache, and `localStorage`, cleans up
-  the app, then sets
+  clears `kv`, `ss`, the user's event database, and `localStorage`, cleans up the app, then sets
   `window.location.href = "/"`.
 
 The app is therefore stable for as long as anything under the login gate is mounted.
@@ -166,7 +165,7 @@ that owns them, from `registerAll` before anything touches the app:
 | `registerAuth` | `core/auth.ts` | NIP-42 by the `relay_auth` setting, conservative or aggressive, through welshman's `makeAppPolicyAuth` |
 | `registerRelays` | `core/relays.ts` | keeps blocked relays closed, and marks a relay denied once it refuses several requests in a row, for `deriveRelayAccess` |
 | `registerNotify` | `core/notify.ts` | welshman's `appPolicyNotify` |
-| `registerStorage` | `core/storage.ts` | the per-user IndexedDB cache, only when the app has a user |
+| `registerStorage` | `core/storage.ts` | the per-user cache in the event database, only when the app has a user and a database |
 
 A socket policy is registered as `$app => $app.pool.addSocketPolicy(policy)`, which adds it to the
 app's pool and returns the cleanup that removes it. To add a policy:
@@ -263,7 +262,7 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 | State | Where | Per user | On logout |
 |---|---|---|---|
 | repository, tracker, wrap index | SQLite (`EventDatabase`) | yes | cleared |
-| relays, relay stats, handles, zappers, plaintext | IndexedDB | yes | deleted |
+| relays, relay stats, handles, zappers, plaintext | the `plugin` table in SQLite | yes | the file is wiped |
 | settings (`SettingsValues`) | an encrypted app-data event, stored with the other events | yes | local copy deleted |
 | `session`, `wallet` | `ss` | no | cleared |
 | `theme`, `flTheme`, `checked`, `shouldUnwrap`, `device`, `notificationSettings`, push state, `forceHealthChecks` | `kv` | no | cleared |
@@ -273,17 +272,20 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 
 `openRepository(pubkey)` in `storage.ts` opens an `EventDatabase` named `flotilla-<pubkey>` before
 `login` builds the app over it. Its worker is `serveSqlite` from `@welshman/store/sqlite-serve`,
-with flotilla's own tables beside the engine's: `retention`, and `wraps`, the `WrapManager`'s
-index. Tabs share one database through welshman's leader election. A database that cannot be
-opened leaves the app on a `MemoryRepository`, running on relay data alone.
+with flotilla's own tables beside the engine's: `retention`, `wraps` (the `WrapManager`'s index)
+and `plugin` (the map-backed caches). Tabs share one database through welshman's leader election. A
+database that cannot be opened leaves the app on a `MemoryRepository`, running on relay data alone,
+and no `Storage` at all.
 
 Before the app is built, `openRepository`:
 
-1. carries over, once, the events and wrap index an older version cached in IndexedDB. A wrap the
-   index names is never unwrapped again, so the rumors it points at have to come with it.
-2. sweeps what retention no longer keeps.
-3. restores the wrap index into the `WrapManager` the app is built with, so the app doesn't unwrap
+1. sweeps what retention no longer keeps.
+2. restores the wrap index into the `WrapManager` the app is built with, so the app doesn't unwrap
    every stored wrap again.
+
+It also records the identity in `kv` first, so `restoreSession` can tell whether the rest of an
+install is still there before it restores a session whose signer needs this device. The keychain
+that `ss` lives in outlives the app container holding everything else.
 
 SQLite stores whatever the repository takes, and retention decides what the sweep evicts. A rule
 is a `match(event, pubkey)` predicate, given the database owner's pubkey, with an optional
@@ -317,21 +319,22 @@ owner with `registerRetention`:
 
 To persist another kind, register a retention rule from the feature that owns it.
 
-### IndexedDB (`src/app/core/storage.ts`, `src/lib/indexeddb.ts`)
+### The plugin caches (`src/app/core/storage.ts`)
 
-`storagePolicy` builds a `Storage` only for an app with a user. It caches the map-backed plugins,
-which hold no events (relays, relay stats, handles, zappers and decrypted plaintext), in
-`flotilla-9gl-<pubkey>`, which `hasCachedIdentity` reads to tell whether the rest of an install
-survived. `IDB` reconciles object stores by bumping the database version, so adding or removing a
-table needs no migration. Every read walks a cursor, since a `getAll` over a whole table is one
-structured clone and Chrome refuses one past a cap that moves between versions.
+`storagePolicy` builds a `Storage` only for an app with a user and an open event database. It
+caches the map-backed plugins, which hold no events (relays, relay stats, handles, zappers and
+decrypted plaintext), in the `plugin` table of that database, one row per key holding the item as
+json. `persistMapPlugin` is handed the `fromRow` that both judges a row and rebuilds the item, so a
+row no longer worth keeping is dropped as it's read and the plugin fills the gap from relays. A
+browser that cannot open SQLite gets no `Storage`: the plugins start empty on every load.
 
 - Boot waits only for relays (`storage.get()?.ready`). The other tables load on the next tick.
   Plugin indexes read the event database when first used, so the user's lists arrive a worker
   round trip after the first screen, and an encrypted one once the signer decrypts it.
-- A database that cannot be opened, read or written degrades the cache rather than the app. Every
-  failed open, read and write is logged and swallowed, so the app runs on relay data alone and
-  recovers on the next load that succeeds.
+- Writes accumulate for three seconds and go out in an idle callback, since relay stats change
+  constantly and each flush is a call to the worker.
+- A failed read or write is logged and swallowed. The database holds nothing that isn't on the
+  network, so the app recovers on the next load that succeeds.
 
 To persist a new map-backed plugin, add a `TABLES` entry and an `init*` method that calls `persistMapPlugin`
 with the table, the plugin, and how to turn a row into a key and item and back. It loads the rows, subscribes to

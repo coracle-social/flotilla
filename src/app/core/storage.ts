@@ -1,20 +1,16 @@
 import {writable} from "svelte/store"
 import type {Unsubscriber} from "svelte/store"
-import {deleteDB} from "idb"
 import {SecureStorage} from "@aparajita/capacitor-secure-storage"
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import {Preferences} from "@capacitor/preferences"
 import {noop, batch, call, makeQueue} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {isHashedEvent, verifiedSymbol} from "@welshman/util"
-import type {Handle, TrustedEvent} from "@welshman/util"
+import type {Handle} from "@welshman/util"
 import {MemoryRepository, withGetter} from "@welshman/store"
-import type {WrapItem} from "@welshman/net"
 import {Relay, Zapper} from "@welshman/domain"
 import type {RelayInfo, ZapperValues} from "@welshman/domain"
-import {Handles, Plaintext, Relays, RelayStats, User, Zappers} from "@welshman/app"
+import {Handles, Plaintext, Relays, RelayStats, Zappers} from "@welshman/app"
 import type {AppOptions, AppPolicy, IApp, MapPlugin, RelayStatsItem} from "@welshman/app"
-import {IDB} from "@lib/indexeddb"
 import {appPolicies} from "@app/core/app"
 import {EventDatabase} from "@app/core/database"
 
@@ -91,17 +87,6 @@ const secretStorage: StringStorage =
 
 export const ss = makeJsonStore(secretStorage)
 
-const TABLES = [
-  {name: "relays", keyPath: "url"},
-  {name: "relayStats", keyPath: "url"},
-  {name: "handles", keyPath: "nip05"},
-  {name: "zappers", keyPath: "lnurl"},
-  {name: "plaintext", keyPath: "key"},
-  // Read only to carry what was cached here over to sqlite
-  {name: "events", keyPath: "id"},
-  {name: "wrapManager", keyPath: "id"},
-]
-
 const FLUSH_INTERVAL = 3000
 
 const idleWrite = <T>(f: (xs: T[]) => void): ((xs: T[]) => void) => {
@@ -112,73 +97,37 @@ const idleWrite = <T>(f: (xs: T[]) => void): ((xs: T[]) => void) => {
   return f
 }
 
-type EventItem = {id: string; event: TrustedEvent; relays: string[]}
-
 type PlaintextItem = {key: string; value: string}
 
-const DATABASE_PREFIX = "flotilla-9gl"
+const IDENTITY = "identity"
 
-const getDatabaseName = (pubkey: string) => `${DATABASE_PREFIX}-${pubkey}`
-
-// indexeddb goes with the app container on every platform; the iOS keychain the session lives in does not.
-export const hasCachedIdentity = async () =>
-  typeof indexedDB.databases === "function"
-    ? (await indexedDB.databases()).some(db => db.name?.startsWith(DATABASE_PREFIX))
-    : true
-
-const onMigrateError = (error: unknown) => console.error("Failed to carry the cache over", error)
+/** True while an identity is set up here, which the keychain the session lives in can outlast. */
+export const hasCachedIdentity = async () => (await kv.get(IDENTITY)) !== undefined
 
 const onSweepError = (error: unknown) => console.error("Failed to sweep the event database", error)
 
 const onClearError = (error: unknown) => console.error("Failed to clear the event database", error)
 
-// A wrap the index names is never unwrapped again, so the rumors it points at have to come with it.
-const migrateCache = async ({pubkey, repository}: EventDatabase) => {
-  const db = new IDB({name: getDatabaseName(pubkey), stores: TABLES})
-  const items = await db.table<EventItem>("events").getAll()
-  const wraps = await db.table<WrapItem>("wrapManager").getAll()
+const onCacheError = (error: unknown): [string, string][] => {
+  console.error("Failed to read or write a cached collection", error)
 
-  if (items.length > 0 || wraps.length > 0) {
-    // Rows written before provenance was stored inline hold a bare event, and one bad event
-    // would fail the whole batch.
-    const events = items.filter(item => isHashedEvent(item.event))
-
-    for (const {id, relays} of events) {
-      for (const url of relays) {
-        repository.tracker.track(id, url)
-      }
-    }
-
-    // A signed event was checked before it was cached, and sqlite stores whether it was
-    await Promise.all(
-      events.map(({event}) => {
-        if (event.sig) {
-          event[verifiedSymbol] = true
-        }
-
-        return repository.publish(event)
-      }),
-    )
-
-    await repository.call("putWraps", wraps)
-    await db.table("events").bulkDelete(items.map(item => item.id))
-    await db.table("wrapManager").bulkDelete(wraps.map(wrap => wrap.id))
-  }
-
-  await db.close()
+  // Anything missing here comes back from the relays
+  return []
 }
 
 /** The user's events in sqlite with the wraps already read from them, or memory alone if that fails. */
 export const openRepository = async (
   pubkey: string,
 ): Promise<Pick<AppOptions, "repository" | "wrapManager">> => {
+  // Preferences go with the app container on every platform, and the keychain the session lives in does not
+  await kv.set(IDENTITY, pubkey)
+
   let database: Maybe<EventDatabase>
 
   try {
     database = await EventDatabase.open(pubkey)
 
     // Neither is needed to read and write, so a failure leaves the database in use
-    await migrateCache(database).catch(onMigrateError)
     await database.sweep().catch(onSweepError)
     await database.restoreWraps()
 
@@ -192,35 +141,24 @@ export const openRepository = async (
   }
 }
 
-/** Caches an app's local collections in indexeddb, one database per identity, beside its events. */
+/** Caches an app's local collections in the database its events are in, one database per identity. */
 class Storage {
   ready: Promise<void>
 
-  private db: IDB
   private unsubscribers: Unsubscriber[] = []
   private timeouts: ReturnType<typeof setTimeout>[] = []
   private stopped = false
 
-  constructor(private readonly app: IApp) {
-    // Every identity used to share one database; drop it rather than leave it on disk.
-    void deleteDB(DATABASE_PREFIX)
-
-    this.db = new IDB({name: getDatabaseName(User.require(app).pubkey), stores: TABLES})
+  constructor(
+    private readonly app: IApp,
+    private readonly database: EventDatabase,
+  ) {
     this.ready = this.start()
   }
 
-  close = () => this.db.close()
+  close = () => void this.database.repository.close()
 
-  // Logout clears the device even when a database fails, as it always has with indexeddb
-  clear = async () => {
-    const database = EventDatabase.of(this.app.repository)
-
-    if (database) {
-      await database.reset().catch(onClearError)
-    }
-
-    await this.db.clear()
-  }
+  clear = () => this.database.reset().catch(onClearError)
 
   cleanup = () => {
     this.stopped = true
@@ -230,8 +168,6 @@ class Storage {
   }
 
   private start = async () => {
-    await this.db.connect()
-
     this.addUnsubscriber(await this.initRelays())
 
     const defer = (init: () => Promise<Unsubscriber>) => {
@@ -264,21 +200,27 @@ class Storage {
     fromRow: (row: Row) => Maybe<[string, T]>,
     toRow: (key: string, item: T) => Row,
   ) => {
-    const table = this.db.table<Row>(name)
+    const {repository} = this.database
+    const rows = await repository.call("getPluginItems", name).catch(onCacheError)
 
-    await table.each(row => {
-      const entry = fromRow(row)
+    for (const [, json] of rows) {
+      const entry = fromRow(JSON.parse(json))
 
       if (entry) {
         plugin.set(...entry)
       }
-    })
+    }
 
-    const enqueue = batch(FLUSH_INTERVAL, idleWrite(table.bulkPut))
+    const enqueue = batch(
+      FLUSH_INTERVAL,
+      idleWrite((items: [string, string][]) =>
+        repository.call("putPluginItems", name, items).catch(onCacheError),
+      ),
+    )
 
     return plugin.onItem((key, item) => {
       if (item) {
-        enqueue(toRow(key, item))
+        enqueue([key, JSON.stringify(toRow(key, item))])
       }
     })
   }
@@ -326,13 +268,15 @@ class Storage {
     )
 }
 
-// The current app's cache, which only exists once there's an identity to cache for.
+// The current app's cache, which only exists once there's an identity and a database to cache for.
 export const storage = withGetter(writable<Maybe<Storage>>(undefined))
 
 // Storage is scoped to one app's caches, so it is built and torn down with it.
 export const storagePolicy: AppPolicy = $app => {
-  if ($app.user) {
-    const $storage = new Storage($app)
+  const database = EventDatabase.of($app.repository)
+
+  if ($app.user && database) {
+    const $storage = new Storage($app, database)
 
     storage.set($storage)
 

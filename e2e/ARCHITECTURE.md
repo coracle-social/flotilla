@@ -285,8 +285,8 @@ relays it belongs to, so a regression in the chain from relay list to room list,
 conservative gate, leaves the suite green. The public relays under "The follow graph" are the
 standing-in indexer that covering it would need.
 
-Each user is a separate `BrowserContext`, which also gives each one its own IndexedDB, OPFS and
-localStorage, so nothing bleeds between users.
+Each user is a separate `BrowserContext`, which also gives each one its own OPFS and localStorage,
+so nothing bleeds between users.
 
 An injected session is re-applied on every navigation, so through `as()` a reload, a logout and a
 login are all unobservable. `visit(path, options)` is the same page without one — same context, same

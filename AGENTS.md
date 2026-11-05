@@ -8,7 +8,7 @@ Flotilla is a Nostr "relays as groups" community chat client. It implements NIP-
 - Capacitor for cross-platform (Web/PWA, Android, iOS)
 - TailwindCSS for styling
 - Welshman library suite for Nostr protocol
-- SQLite (sqlite-wasm in a worker, over OPFS) for events, IndexedDB for other local caches
+- SQLite (sqlite-wasm in a worker, over OPFS) for events and the app's local caches
 - Vite for building
 
 **Key Concepts:**

@@ -101,7 +101,7 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
 - `database.ts`: `EventDatabase`, the signed-in user's events in SQLite, with
   `registerRetention` for what it keeps; `database.worker.ts` serves it with flotilla's own tables
 - `storage.ts`: `kv`/`ss` (Capacitor Preferences and SecureStorage), `openRepository`, and the
-  per-user IndexedDB cache of everything that isn't an event
+  per-user cache of everything that isn't an event, in the same database
 - `sync.ts`: `syncApplicationData`, `registerSync`, and the helpers registered syncs are built
   from (`pullAndListen`, `syncEach`)
 - `settings.ts`: the `Settings` plugin over encrypted app data, plus notification settings
@@ -202,7 +202,6 @@ client.
 - `icons.ts` (the icon picker's options, globbed from `@assets/icons`), `markdown.ts`
   (`markdownToText`), `keyboard.ts` (`syncKeyboard`, which marks the body `keyboard-open` while the native
   keyboard is up)
-- `indexeddb.ts`: the `IDB` wrapper that `storage.ts` builds on
 - `feeds.ts`: saved feed definitions (kind `FEED`) over `@welshman/feeds`. It is unrelated to
   `@app/features/feeds`, which loads events.
 - `audio.ts`: recording from the microphone, device lists, a live input level, decoding to mono

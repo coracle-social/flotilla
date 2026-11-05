@@ -45,6 +45,12 @@ export const extend = (db: SqliteDatabase) => {
       item TEXT NOT NULL
     ) WITHOUT ROWID;
     CREATE INDEX IF NOT EXISTS wraps_rumor_id ON wraps (rumor_id);
+    CREATE TABLE IF NOT EXISTS plugin (
+      name TEXT NOT NULL,
+      key TEXT NOT NULL,
+      value TEXT NOT NULL,
+      PRIMARY KEY (name, key)
+    ) WITHOUT ROWID;
   `)
 
   return {
@@ -102,6 +108,22 @@ export const extend = (db: SqliteDatabase) => {
       db.run("DELETE FROM wraps WHERE id IN (SELECT value FROM json_each(?))", [
         JSON.stringify(ids),
       ]),
+    // The app's collections outside the repository, such as relay stats and decrypted plaintext.
+    // A row's json goes out as it came in, for the app to judge when it reads it back.
+    getPluginItems: (name: string): [string, string][] =>
+      db
+        .all<{key: string; value: string}>(`SELECT key, value FROM plugin WHERE name = ?`, [name])
+        .map(row => [row.key, row.value]),
+    putPluginItems: (name: string, items: [string, string][]) =>
+      transaction(db, () => {
+        for (const [key, value] of items) {
+          db.run("INSERT OR REPLACE INTO plugin (name, key, value) VALUES (?, ?, ?)", [
+            name,
+            key,
+            value,
+          ])
+        }
+      }),
   }
 }
 
