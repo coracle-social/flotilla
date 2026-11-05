@@ -78,7 +78,8 @@ const getTargets = (event: TrustedEvent) => {
     return reader(Comment)(event).root()?.getIdAndAddress() ?? []
   }
 
-  return [...tagValues(hexTags("e"), event.tags), ...tagValues(addressTags("a"), event.tags)]
+  // A direct reply marks its parent as both root and reply, so the same id arrives twice.
+  return uniq([...tagValues(hexTags("e"), event.tags), ...tagValues(addressTags("a"), event.tags)])
 }
 
 // A space's own relay holds everything about its events, and elsewhere what answers a note goes to its author's inbox.
