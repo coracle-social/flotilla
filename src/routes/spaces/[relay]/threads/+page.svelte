@@ -12,7 +12,6 @@
   import Add from "@assets/icons/add.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Link from "@lib/components/Link.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {makeCommentFilter} from "@lib/util"
@@ -99,34 +98,27 @@
   {/snippet}
 </SpaceBar>
 
-<PageContent bind:element class="p-2 sm:p-4">
-  <div class="grid items-start gap-2 sm:gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-    {#if inBoard}
-      <div class="lg:col-span-2">
-        <div class="border-y border-solid border-line bg-surface">
-          <div class="flex items-center justify-end gap-2 px-4 py-3">
-            <Link href={pages.threads.path({url})} class="text-primary text-sm">All boards</Link>
-          </div>
-          {#if boardItems.length === 0}
-            <p class="text-content-muted p-4 text-sm">No topics yet in this board.</p>
-          {:else}
-            <div class="border-t border-solid border-line">
-              {#each boardItems as event (event.id)}
-                <ThreadLatestItem {url} {event} {context} showRoom={false} />
-              {/each}
-            </div>
-          {/if}
-        </div>
-      </div>
-    {:else}
+<PageContent bind:element noPad={inBoard} class={inBoard ? "flex flex-col" : "p-2 sm:p-4"}>
+  {#if inBoard}
+    <div class="bg-surface border-y border-line">
+      {#if boardItems.length === 0}
+        <p class="text-content-muted p-4 text-sm">No topics yet in this board.</p>
+      {:else}
+        {#each boardItems as event (event.id)}
+          <ThreadLatestItem {url} {event} {context} showRoom={false} />
+        {/each}
+      {/if}
+    </div>
+  {:else}
+    <div class="grid items-start gap-2 sm:gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
       <div class="flex flex-col gap-2 sm:gap-4">
         {#each threadFeed.boards as [h, threads] (h)}
-          <ThreadBoard {url} {h} {threads} {context} />
+          <ThreadBoard {url} {h} {threads} />
         {/each}
       </div>
       <ThreadLatest {url} items={threadFeed.items} {context} />
-    {/if}
-  </div>
+    </div>
+  {/if}
   <p class="flex h-10 items-center justify-center py-20">
     <Spinner {loading}>
       {#if loading}

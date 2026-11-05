@@ -4,21 +4,18 @@
   import {tagValues, topicTags} from "@welshman/util"
   import Link from "@lib/components/Link.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
-  import ThreadBoardItem from "@app/components/ThreadBoardItem.svelte"
   import {normalizeTopic} from "@lib/util"
   import {rooms} from "@app/core/plugins"
   import {displayRoom} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
-  import type {FeedContext} from "@app/features/feeds"
 
   type Props = {
     url: string
     h: string
     threads: TrustedEvent[]
-    context: FeedContext
   }
 
-  const {url, h, threads, context}: Props = $props()
+  const {url, h, threads}: Props = $props()
   const boardPath = $derived(
     pages.threads.path({url}) + (h ? `?board=${encodeURIComponent(h)}` : "?board="),
   )
@@ -63,17 +60,5 @@
       {/if}
     </div>
     <span class="text-content-muted whitespace-nowrap pt-1 text-sm">{topicsThisWeek} / week</span>
-  </div>
-  <!-- The board's own rows only on mobile, where the Latest panel is hidden. -->
-  <div class="relative lg:hidden">
-    {#if threads.length === 0}
-      <p class="text-content-muted p-4 text-sm">No topics yet.</p>
-    {:else}
-      <div class="border-t border-solid border-line">
-        {#each threads as event (event.id)}
-          <ThreadBoardItem stacked {url} {event} {context} />
-        {/each}
-      </div>
-    {/if}
   </div>
 </section>
