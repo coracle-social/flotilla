@@ -15,6 +15,7 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import ThreadSuggestions from "@app/components/ThreadSuggestions.svelte"
   import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/features/drafts"
   import {makeEditor} from "@app/features/editor"
@@ -96,6 +97,8 @@
 
   let title = $state(initialValues?.title ?? draft?.title ?? "")
   let content = $state(initialValues?.content ?? draft?.content ?? "")
+  // The editor reports its plain text here so the draft can query the space's threads.
+  const editorText = writable("")
 
   const onChange = (json: object) => {
     content = json
@@ -106,6 +109,7 @@
     submit: publish,
     uploading,
     onChange,
+    text: editorText,
     placeholder: "What's on your mind?",
     content,
   })
@@ -150,6 +154,7 @@
           </div>
         {/snippet}
       </Field>
+      <ThreadSuggestions {url} query={`${title}\n${$editorText}`} />
       <Button
         data-tip="Add an image"
         class="tip tip-left absolute bottom-1 right-2"

@@ -16,6 +16,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadPost from "@app/components/ThreadPost.svelte"
   import ThreadSummaryBar from "@app/components/ThreadSummaryBar.svelte"
+  import RelatedThreads from "@app/components/RelatedThreads.svelte"
   import EventReply from "@app/components/EventReply.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
@@ -212,6 +213,7 @@
             threadPubkey={$event.pubkey}
             onReply={openReply} />
         {/each}
+        <RelatedThreads {url} event={$event} {context} />
       </div>
       {#if showReply && replyTo && $event}
         <EventReply
