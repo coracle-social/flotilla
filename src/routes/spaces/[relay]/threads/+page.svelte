@@ -103,19 +103,20 @@
   <div class="grid items-start gap-2 sm:gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
     {#if inBoard}
       <div class="lg:col-span-2">
-        <header class="flex items-center justify-between gap-2 px-4 py-3">
-          <h2 class="text-lg">{boardName}</h2>
-          <Link href={pages.threads.path({url})} class="text-primary text-sm">All boards</Link>
-        </header>
-        {#if boardItems.length === 0}
-          <p class="text-content-muted p-4 text-sm">No topics yet in this board.</p>
-        {:else}
-          <div>
-            {#each boardItems as event (event.id)}
-              <ThreadLatestItem {url} {event} {context} showRoom={false} />
-            {/each}
+        <div class="border-y border-solid border-line bg-surface">
+          <div class="flex items-center justify-end gap-2 px-4 py-3">
+            <Link href={pages.threads.path({url})} class="text-primary text-sm">All boards</Link>
           </div>
-        {/if}
+          {#if boardItems.length === 0}
+            <p class="text-content-muted p-4 text-sm">No topics yet in this board.</p>
+          {:else}
+            <div class="border-t border-solid border-line">
+              {#each boardItems as event (event.id)}
+                <ThreadLatestItem {url} {event} {context} showRoom={false} />
+              {/each}
+            </div>
+          {/if}
+        </div>
       </div>
     {:else}
       <div class="flex flex-col gap-2 sm:gap-4">
