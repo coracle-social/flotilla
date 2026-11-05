@@ -237,7 +237,7 @@ importers:
         version: 2.0.1
       '@pomade/core':
         specifier: ^0.3.3
-        version: 0.3.3(1202690167ebd2317dc491e0759df256)
+        version: 0.3.3(c414fbae2c89052645752dec46aaab4a)
       '@poppanator/sveltekit-svg':
         specifier: ^7.0.0
         version: 7.0.0(rollup@4.60.4)(svelte@5.55.9(@typescript-eslint/types@8.67.0))(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0))
@@ -275,35 +275,35 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0(@sveltejs/kit@2.61.1(@sveltejs/vite-plugin-svelte@5.1.1(supports-color@8.1.1)(svelte@5.55.9(@typescript-eslint/types@8.67.0))(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)))(svelte@5.55.9(@typescript-eslint/types@8.67.0))(typescript@5.9.3)(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0)))(@vite-pwa/assets-generator@1.0.2(@types/node@25.9.1))(supports-color@8.1.1)(vite@6.4.2(@types/node@25.9.1)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.48.0))(workbox-build@7.4.1(supports-color@8.1.1))(workbox-window@7.4.1)
       '@welshman/app':
-        specifier: ^0.14.0
-        version: 0.14.0(e836a1bc82e96f11785632f792e9b565)
+        specifier: ^0.14.1
+        version: 0.14.1(99dd4072a1efe5d9e5cdeeb632297a5c)
       '@welshman/content':
-        specifier: ^0.14.0
-        version: 0.14.0(nostr-tools@2.25.2(typescript@5.9.3))
+        specifier: ^0.14.1
+        version: 0.14.1(nostr-tools@2.25.2(typescript@5.9.3))
       '@welshman/domain':
-        specifier: ^0.14.0
-        version: 0.14.0(52bdb2f10b951b482bcfc2a6773aeeee)
+        specifier: ^0.14.1
+        version: 0.14.1(1ca61365a20dfa0335b3d4f9d15ea5d0)
       '@welshman/editor':
-        specifier: ^0.14.0
-        version: 0.14.0(6e29d00b98b933e476e0db3c8f9785de)
+        specifier: ^0.14.1
+        version: 0.14.1(b63f04d3a95e820684f7e6e54bae901d)
       '@welshman/feeds':
-        specifier: ^0.14.0
-        version: 0.14.0(095dfc7a5b72bab0ed7a0034db0685f6)
+        specifier: ^0.14.1
+        version: 0.14.1(1e2a0e3c5f9b87a37995a210471466f3)
       '@welshman/lib':
-        specifier: ^0.14.0
-        version: 0.14.0
+        specifier: ^0.14.1
+        version: 0.14.1
       '@welshman/net':
-        specifier: ^0.14.0
-        version: 0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+        specifier: ^0.14.1
+        version: 0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
       '@welshman/signer':
-        specifier: ^0.14.0
-        version: 0.14.0(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(@welshman/net@0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+        specifier: ^0.14.1
+        version: 0.14.1(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(@welshman/net@0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
       '@welshman/store':
-        specifier: ^0.14.0
-        version: 0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))
+        specifier: ^0.14.1
+        version: 0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))
       '@welshman/util':
-        specifier: ^0.14.0
-        version: 0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))
+        specifier: ^0.14.1
+        version: 0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))
       cheerio:
         specifier: ^1.2.0
         version: 1.2.0
@@ -2400,35 +2400,35 @@ packages:
       '@vite-pwa/assets-generator':
         optional: true
 
-  '@welshman/app@0.14.0':
-    resolution: {integrity: sha512-Ciy7jDpO1r41spm+SLbD6fGTV7JkKsRWk8QMxxnvJ5hgxw4HEbzax+2SJak4tkxZejDkWevEua8Wwb5tCsIZTg==}
+  '@welshman/app@0.14.1':
+    resolution: {integrity: sha512-LO+uCmyRbOCUQNbYj6ECI5DWkFyOyKhvkGlJL1LN6yv33XO4NyyhBmGfDHSBgecO8i7vKl9VUgq0ARPX+FRP3Q==}
     peerDependencies:
       '@pomade/core': ^0.3.3
-      '@welshman/domain': 0.14.0
-      '@welshman/feeds': 0.14.0
-      '@welshman/lib': 0.14.0
-      '@welshman/net': 0.14.0
-      '@welshman/signer': 0.14.0
-      '@welshman/store': 0.14.0
-      '@welshman/util': 0.14.0
+      '@welshman/domain': 0.14.1
+      '@welshman/feeds': 0.14.1
+      '@welshman/lib': 0.14.1
+      '@welshman/net': 0.14.1
+      '@welshman/signer': 0.14.1
+      '@welshman/store': 0.14.1
+      '@welshman/util': 0.14.1
 
-  '@welshman/content@0.14.0':
-    resolution: {integrity: sha512-wnGWfIUHPydEbYlDLFgNVYcfZxJmBIVPDqKw6lgEk1YFXZ0DxcBGLtyPoS3+pq4VQ5igBVadsOTsE/nvY6vwLw==}
+  '@welshman/content@0.14.1':
+    resolution: {integrity: sha512-C1Thcthgj8vnCUFIwBB1EGkYvmSOXb6GdERNKgug57BKsOYpyG3EMp6LoXJFLLy7an9EdLV/qcepprRMc/a83g==}
     peerDependencies:
       nostr-tools: ^2.22.0
 
-  '@welshman/domain@0.14.0':
-    resolution: {integrity: sha512-E8SZKnVfAU82ePQsw28SgHRZzsxICS3ZTl/rVz6ukKaWJh89vsxILmbsKrEwRwa5l20xyyz/WgiMZY3jRUidyQ==}
+  '@welshman/domain@0.14.1':
+    resolution: {integrity: sha512-OjNNNwCsT17rxW5w47HhBDRLhTa7xgrPGhXCcBvOizmQEdMV8SlzVQNvGIy6CHgsPT1waWUYFRlDfRGDXSlqSg==}
     peerDependencies:
-      '@welshman/feeds': 0.14.0
-      '@welshman/lib': 0.14.0
-      '@welshman/net': 0.14.0
-      '@welshman/signer': 0.14.0
-      '@welshman/util': 0.14.0
+      '@welshman/feeds': 0.14.1
+      '@welshman/lib': 0.14.1
+      '@welshman/net': 0.14.1
+      '@welshman/signer': 0.14.1
+      '@welshman/util': 0.14.1
       nostr-tools: ^2.22.0
 
-  '@welshman/editor@0.14.0':
-    resolution: {integrity: sha512-7ybREnoPgNBLel1M+yjLG9nQ4EohOvI6cAOYYLSGha/kYBphIvQ7y1jFi/6p9xPliw3GQ8uEMZy0yjq7pFePNQ==}
+  '@welshman/editor@0.14.1':
+    resolution: {integrity: sha512-zBFTJl8ZEbw4LPTJjTrwGlvFAZDMzcv2/7iTnU6jfVNyGBY+AnHGylW9/woFECYNsOxOtsst19V1Jvm3mRm6ug==}
     peerDependencies:
       '@tiptap/core': ^2.11.7
       '@tiptap/extension-code': ^2.11.7
@@ -2443,56 +2443,56 @@ packages:
       '@tiptap/extension-text': ^2.11.7
       '@tiptap/pm': ^2.11.7
       '@tiptap/suggestion': ^2.11.7
-      '@welshman/lib': 0.14.0
-      '@welshman/util': 0.14.0
+      '@welshman/lib': 0.14.1
+      '@welshman/util': 0.14.1
       nostr-editor: ^1.1.2
       nostr-tools: ^2.22.0
 
-  '@welshman/feeds@0.14.0':
-    resolution: {integrity: sha512-f60Ax65RvQUF8qKX8zz5aHrTHch1yTUtudoFj/Li5N1sBfBT4USIbfHklmBM186o1PWGogAEs9LE4dBGpWLeUw==}
+  '@welshman/feeds@0.14.1':
+    resolution: {integrity: sha512-gl/I1+AkWje6d/HT8xq9H82dStgK3ki+0XJnxUjBDpcfRA7CBD8k6iCB4iV2OFAH7TkrtpCJBJnT3FP3qvrwZw==}
     peerDependencies:
-      '@welshman/lib': 0.14.0
-      '@welshman/net': 0.14.0
-      '@welshman/signer': 0.14.0
-      '@welshman/store': 0.14.0
-      '@welshman/util': 0.14.0
+      '@welshman/lib': 0.14.1
+      '@welshman/net': 0.14.1
+      '@welshman/signer': 0.14.1
+      '@welshman/store': 0.14.1
+      '@welshman/util': 0.14.1
 
-  '@welshman/lib@0.14.0':
-    resolution: {integrity: sha512-Qy04X5JgjS6+xU8XLKUGEQBUXq0B9wQoEmMHiYrNdBf+RRp0BkE1ALnXl0Zcfce8Hr3OXeeBJcRKw6fhtBQMmQ==}
+  '@welshman/lib@0.14.1':
+    resolution: {integrity: sha512-NIw0BzSoARbq9XpepVCdKnmgujRefkYU7GY3lkQRuRRM1UHs4A0y2BG0gI5dZ3LrNu9/js/Di+hfuRr84QtN0A==}
     engines: {node: '>=12.0.0'}
 
-  '@welshman/net@0.14.0':
-    resolution: {integrity: sha512-2kwyoPh/imRIAHUwp3oB2xDia0vn2gQ/c8bIu2EsP9kAZka9c1sDphscLH54lSa1LZyKb1SRfUUc903sPvvTSQ==}
+  '@welshman/net@0.14.1':
+    resolution: {integrity: sha512-uz2cExD0mOKf5N0hfONfFLv63yjA9TOwPTsaE4Qd6+JLCMHE+dx8U/I69jMRoK+yGAuCTT9Kf+fmF0tOUtPgDw==}
     peerDependencies:
-      '@welshman/lib': 0.14.0
-      '@welshman/store': 0.14.0
-      '@welshman/util': 0.14.0
+      '@welshman/lib': 0.14.1
+      '@welshman/store': 0.14.1
+      '@welshman/util': 0.14.1
 
-  '@welshman/signer@0.14.0':
-    resolution: {integrity: sha512-Dook1nMvsqRtl2rws+mm448QwkliWiuH+dg8OlfAcGX2Fv3h2fsWZFYuuMBKOpddUf6EIwceFXCiGtxMKc2jwQ==}
+  '@welshman/signer@0.14.1':
+    resolution: {integrity: sha512-jtFoPZDlzR575AGJ1prLoxDzq05RKnGzQeoS38s/WvLxK5RREQ3meB0qnigM6nAGcBRhMD6e3z8VamDf87FqHg==}
     peerDependencies:
       '@noble/hashes': ~2.0.1
-      '@welshman/lib': 0.14.0
-      '@welshman/net': 0.14.0
-      '@welshman/util': 0.14.0
+      '@welshman/lib': 0.14.1
+      '@welshman/net': 0.14.1
+      '@welshman/util': 0.14.1
       nostr-tools: ^2.22.0
 
-  '@welshman/store@0.14.0':
-    resolution: {integrity: sha512-dgTwYClp238FCO1Pl5wrLfb3nrK2FZGBpbCdRRDSUM7tWqZoGNjaLLbl2f+N6zCro4SFasSTr0pBValSg0rT9Q==}
+  '@welshman/store@0.14.1':
+    resolution: {integrity: sha512-wSqd9H7DmutUgNz9+fPdpWhs1AE6HVJQd5yOj7tGXBU7VMTwTPF9brUBbKUwhEG2LH8RM46lty+5i2bpgXRtdA==}
     peerDependencies:
       '@sqlite.org/sqlite-wasm': ^3.53.4-build1
-      '@welshman/lib': 0.14.0
-      '@welshman/util': 0.14.0
+      '@welshman/lib': 0.14.1
+      '@welshman/util': 0.14.1
     peerDependenciesMeta:
       '@sqlite.org/sqlite-wasm':
         optional: true
 
-  '@welshman/util@0.14.0':
-    resolution: {integrity: sha512-O1B0Or2oOKSu2USjxpG3fl1RKJSzWoWCTclujeIcK+SXglAmPIp744/oAzcjUo72yHFUJaGkUH9/IgoVj0hEpw==}
+  '@welshman/util@0.14.1':
+    resolution: {integrity: sha512-mocgPwCRnrgBMbGy5WXnxpX3UJcbqtovA9EiPMFMEAFs0a3k1uE90AmIVdEBFRKGnHQ2wGPwGrI4HZcfIUkevg==}
     peerDependencies:
       '@noble/curves': ~2.0.1
       '@noble/hashes': ~2.0.1
-      '@welshman/lib': 0.14.0
+      '@welshman/lib': 0.14.1
       nostr-tools: ^2.22.0
 
   '@xml-tools/parser@1.0.11':
@@ -7228,15 +7228,15 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@pomade/core@0.3.3(1202690167ebd2317dc491e0759df256)':
+  '@pomade/core@0.3.3(c414fbae2c89052645752dec46aaab4a)':
     dependencies:
       '@frostr/bifrost': 1.0.7(typescript@5.9.3)
       '@noble/hashes': 2.0.1
       '@peculiar/x509': 1.14.3
-      '@welshman/lib': 0.14.0
-      '@welshman/net': 0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.14.0(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(@welshman/net@0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
-      '@welshman/util': 0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.14.1
+      '@welshman/net': 0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.14.1(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(@welshman/net@0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/util': 0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))
       cbor-x: 1.6.4
       hash-wasm: 4.12.0
       nostr-tools: 2.25.2(typescript@5.9.3)
@@ -7865,34 +7865,34 @@ snapshots:
       - workbox-build
       - workbox-window
 
-  '@welshman/app@0.14.0(e836a1bc82e96f11785632f792e9b565)':
+  '@welshman/app@0.14.1(99dd4072a1efe5d9e5cdeeb632297a5c)':
     dependencies:
-      '@pomade/core': 0.3.3(1202690167ebd2317dc491e0759df256)
-      '@welshman/domain': 0.14.0(52bdb2f10b951b482bcfc2a6773aeeee)
-      '@welshman/feeds': 0.14.0(095dfc7a5b72bab0ed7a0034db0685f6)
-      '@welshman/lib': 0.14.0
-      '@welshman/net': 0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.14.0(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(@welshman/net@0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
-      '@welshman/store': 0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))
-      '@welshman/util': 0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@pomade/core': 0.3.3(c414fbae2c89052645752dec46aaab4a)
+      '@welshman/domain': 0.14.1(1ca61365a20dfa0335b3d4f9d15ea5d0)
+      '@welshman/feeds': 0.14.1(1e2a0e3c5f9b87a37995a210471466f3)
+      '@welshman/lib': 0.14.1
+      '@welshman/net': 0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.14.1(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(@welshman/net@0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/store': 0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))
+      '@welshman/util': 0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))
       fuse.js: 7.3.0
       throttle-debounce: 5.0.2
 
-  '@welshman/content@0.14.0(nostr-tools@2.25.2(typescript@5.9.3))':
+  '@welshman/content@0.14.1(nostr-tools@2.25.2(typescript@5.9.3))':
     dependencies:
       '@braintree/sanitize-url': 7.1.2
       nostr-tools: 2.25.2(typescript@5.9.3)
 
-  '@welshman/domain@0.14.0(52bdb2f10b951b482bcfc2a6773aeeee)':
+  '@welshman/domain@0.14.1(1ca61365a20dfa0335b3d4f9d15ea5d0)':
     dependencies:
-      '@welshman/feeds': 0.14.0(095dfc7a5b72bab0ed7a0034db0685f6)
-      '@welshman/lib': 0.14.0
-      '@welshman/net': 0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.14.0(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(@welshman/net@0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
-      '@welshman/util': 0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/feeds': 0.14.1(1e2a0e3c5f9b87a37995a210471466f3)
+      '@welshman/lib': 0.14.1
+      '@welshman/net': 0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.14.1(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(@welshman/net@0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/util': 0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))
       nostr-tools: 2.25.2(typescript@5.9.3)
 
-  '@welshman/editor@0.14.0(6e29d00b98b933e476e0db3c8f9785de)':
+  '@welshman/editor@0.14.1(b63f04d3a95e820684f7e6e54bae901d)':
     dependencies:
       '@tiptap/core': 2.27.3(@tiptap/pm@2.27.3)
       '@tiptap/extension-code': 2.27.2(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))
@@ -7907,58 +7907,58 @@ snapshots:
       '@tiptap/extension-text': 2.27.2(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))
       '@tiptap/pm': 2.27.3
       '@tiptap/suggestion': 2.27.3(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))(@tiptap/pm@2.27.3)
-      '@welshman/lib': 0.14.0
-      '@welshman/util': 0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.14.1
+      '@welshman/util': 0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))
       nostr-editor: 1.2.0(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))(@tiptap/extension-image@2.27.2(@tiptap/core@2.27.3(@tiptap/pm@2.27.3)))(@tiptap/extension-link@2.27.2(@tiptap/core@2.27.3(@tiptap/pm@2.27.3))(@tiptap/pm@2.27.3))(@tiptap/pm@2.27.3)(linkifyjs@4.3.3)(nostr-tools@2.25.2(typescript@5.9.3))(prosemirror-markdown@1.13.4)(prosemirror-model@1.25.11)(prosemirror-state@1.4.4)(prosemirror-view@1.42.3)(tiptap-markdown@0.8.10(@tiptap/core@2.27.3(@tiptap/pm@2.27.3)))
       nostr-tools: 2.25.2(typescript@5.9.3)
       tippy.js: 6.3.7
 
-  '@welshman/feeds@0.14.0(095dfc7a5b72bab0ed7a0034db0685f6)':
+  '@welshman/feeds@0.14.1(1e2a0e3c5f9b87a37995a210471466f3)':
     dependencies:
-      '@welshman/lib': 0.14.0
-      '@welshman/net': 0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/signer': 0.14.0(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(@welshman/net@0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
-      '@welshman/store': 0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))
-      '@welshman/util': 0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.14.1
+      '@welshman/net': 0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/signer': 0.14.1(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(@welshman/net@0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/store': 0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))
+      '@welshman/util': 0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))
       trava: 1.2.1
 
-  '@welshman/lib@0.14.0':
+  '@welshman/lib@0.14.1':
     dependencies:
       '@scure/base': 1.2.6
       '@types/events': 3.0.3
       events: 3.3.0
 
-  '@welshman/net@0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)':
+  '@welshman/net@0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)':
     dependencies:
-      '@welshman/lib': 0.14.0
-      '@welshman/store': 0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))
-      '@welshman/util': 0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.14.1
+      '@welshman/store': 0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))
+      '@welshman/util': 0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))
       events: 3.3.0
       isomorphic-ws: 5.0.0(ws@8.21.2)
     transitivePeerDependencies:
       - ws
 
-  '@welshman/signer@0.14.0(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(@welshman/net@0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))':
+  '@welshman/signer@0.14.1(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(@welshman/net@0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(nostr-tools@2.25.2(typescript@5.9.3))':
     dependencies:
       '@noble/hashes': 2.0.1
-      '@welshman/lib': 0.14.0
-      '@welshman/net': 0.14.0(@welshman/lib@0.14.0)(@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
-      '@welshman/util': 0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.14.1
+      '@welshman/net': 0.14.1(@welshman/lib@0.14.1)(@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))))(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))(ws@8.21.2)
+      '@welshman/util': 0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))
       nostr-tools: 2.25.2(typescript@5.9.3)
 
-  '@welshman/store@0.14.0(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.0)(@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3)))':
+  '@welshman/store@0.14.1(@sqlite.org/sqlite-wasm@3.53.4-build2)(@welshman/lib@0.14.1)(@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3)))':
     dependencies:
-      '@welshman/lib': 0.14.0
-      '@welshman/util': 0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))
+      '@welshman/lib': 0.14.1
+      '@welshman/util': 0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))
     optionalDependencies:
       '@sqlite.org/sqlite-wasm': 3.53.4-build2
 
-  '@welshman/util@0.14.0(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.0)(nostr-tools@2.25.2(typescript@5.9.3))':
+  '@welshman/util@0.14.1(@noble/curves@2.0.1)(@noble/hashes@2.0.1)(@welshman/lib@0.14.1)(nostr-tools@2.25.2(typescript@5.9.3))':
     dependencies:
       '@noble/curves': 2.0.1
       '@noble/hashes': 2.0.1
       '@types/ws': 8.18.1
-      '@welshman/lib': 0.14.0
+      '@welshman/lib': 0.14.1
       js-base64: 3.9.2
       nostr-tools: 2.25.2(typescript@5.9.3)
       nostr-wasm: 0.1.0

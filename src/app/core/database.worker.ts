@@ -102,7 +102,6 @@ export const extend = (db: SqliteDatabase) => {
       db.run("DELETE FROM wraps WHERE id IN (SELECT value FROM json_each(?))", [
         JSON.stringify(ids),
       ]),
-    clearWraps: () => db.run("DELETE FROM wraps"),
   }
 }
 

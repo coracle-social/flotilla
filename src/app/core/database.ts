@@ -134,13 +134,12 @@ export class EventDatabase {
     this.wrapManager.on("remove", this.deleteWrap)
   }
 
-  // A wrap indexed after the clear would name a rumor that's gone, so the index stops first.
+  // The file goes rather than its rows, so a damaged image doesn't outlive a logout.
   reset = async () => {
     this.wrapManager.off("add", this.putWrap)
     this.wrapManager.off("remove", this.deleteWrap)
 
-    await this.repository.clear()
-    await this.repository.call("clearWraps")
+    await this.repository.call("wipe")
   }
 
   private putWrap = (item: WrapItem) => {
