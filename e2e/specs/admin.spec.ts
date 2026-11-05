@@ -256,7 +256,7 @@ test("US-094 invite people to a space", async ({seed, as}) => {
   // In-app navigation rather than a reload, which would empty the repository she was loaded into
   await page.locator('.primary-nav [data-tip^="space"]').click()
   await openSpaceMenu(page)
-  await menuItem(page, "Create Invite").click()
+  await menuItem(page, "Invite Members").click()
 
   const invite = dialog(page, "Create an Invite")
 
@@ -281,7 +281,7 @@ test("US-094 invite people to a space", async ({seed, as}) => {
   // A room's own invite carries the space's claim and that room's join code alongside it
   await page.locator(".space-menu__scroll").getByRole("link", {name: "General"}).click()
   await page.locator('[data-component="PageBar"]').getByRole("button").last().click()
-  await page.getByRole("button", {name: "Create invite"}).click()
+  await page.getByRole("button", {name: "Invite members"}).click()
 
   await expect(dialog(page, "Create a Room Invite").locator("input[readonly]")).toHaveValue(
     /\/join\?r=space\.test&c=[^&]+&h=general&code=.+/,
@@ -304,19 +304,22 @@ test("US-095 remove, ban, and restore members", async ({seed, as}) => {
   const admin = await as(users.admin, spacePath(url) + "/about")
 
   await memberCard(admin, "Bob Barnacle").getByRole("button").last().click()
-  await menuItem(admin, "Remove member").click()
+  await menuItem(admin, "Manage member").click()
 
-  await dialog(admin, "Remove Member").getByRole("button", {name: "Confirm"}).click()
+  const manage = dialog(admin, "Manage Member")
 
-  await expect(admin.getByRole("alert")).toContainText("Member has successfully been removed!")
+  await manage.getByRole("radio", {name: /Remove from the space/}).check()
+  await manage.getByRole("button", {name: "Remove from space"}).click()
+
+  await expect(admin.getByRole("alert")).toContainText("They've been removed from the space.")
   await expect(memberCard(admin, "Bob Barnacle")).toHaveCount(0)
 
   await memberCard(admin, "Carol Cutter").getByRole("button").last().click()
-  await menuItem(admin, "Ban member").click()
+  await menuItem(admin, "Manage member").click()
+  await manage.getByRole("radio", {name: /Ban from the space/}).check()
+  await manage.getByRole("button", {name: "Ban member"}).click()
 
-  await dialog(admin, "Ban Member").getByRole("button", {name: "Confirm"}).click()
-
-  await expect(admin.getByRole("alert")).toContainText("Member has successfully been banned!")
+  await expect(admin.getByRole("alert")).toContainText("They've been banned from the space.")
   await expect(memberCard(admin, "Carol Cutter")).toHaveCount(0)
 
   await admin.getByRole("button", {name: "More options"}).click()

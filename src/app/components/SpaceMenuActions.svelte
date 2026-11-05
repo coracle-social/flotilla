@@ -140,7 +140,7 @@
 {#if !HIDE_NOSTR}
   {@render actionButton(showConnectionStatus, Pulse, "Connection status")}
 {/if}
-{@render actionButton(createInvite, LinkRound, "Create Invite")}
+{@render actionButton(createInvite, LinkRound, "Invite Members")}
 {#if $permissions.review}
   {@render actionButton(
     showActionItems,

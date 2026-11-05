@@ -32,7 +32,10 @@
 
   const relay = fromApp($app => $app.use(Relays).one(url))
   const assignees = $spaceManagement.methodAssignees(url)
-  const others = $derived($assignees.filter(({pubkey}) => pubkey !== $relay?.pubkey))
+  // The relay's own key holds every method too, and is no one's to edit.
+  const others = $derived(
+    $assignees.filter(({pubkey}) => pubkey !== $relay?.pubkey && pubkey !== $relay?.self),
+  )
   const permissions = deriveSpacePermissions(url)
 
   const back = () => history.back()

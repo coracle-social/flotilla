@@ -47,7 +47,8 @@ to `fdroiddata`. The listing's text, icon, feature graphic and per-version chang
 before F-Droid's source scan, so the recipe scan-ignores `node_modules`, which holds FLOSS build
 tools such as esbuild and sharp. The recipe installs Node from Debian forky, since the lockfile
 needs a pnpm that wants a newer Node than trixie ships, and pins pnpm to `package.json`'s
-`packageManager`. Capacitor needs JDK 21, which is trixie's default.
+`packageManager`. Capacitor needs JDK 21, which trixie's `default-jdk-headless` provides, so the
+recipe installs no JDK.
 
 ## Reproducible builds
 
@@ -67,6 +68,30 @@ The recipe in `metadata/` is the one both builds read, so a change to it goes to
 Stable releases use bare version tags such as `1.9.1`, and the recipe checks tags matching
 `^[0-9]+\.[0-9]+\.[0-9]+$` against `versionCode` and `versionName` in
 `android/app/build.gradle` at that tag.
+
+## Submitting to fdroiddata
+
+fdroiddata merges a new app's recipe with one build, the version being submitted, so the previous
+one is deleted rather than kept beside it. Once the app is merged, `AutoUpdateMode` and
+`UpdateCheckMode` let fdroiddata's bot add each new tag and retire old builds on its own.
+
+The merge request's Reports tab annotates the recipe with what fdroidserver found in the built
+apk: permissions, cleartext traffic, native libraries per ABI, the signing key, size, the R8
+marker, and the fastlane listing. Most of it is informational. What we have had to answer:
+
+- `APK has different libs in different ABI` is settled by `abiFilters` in
+  `android/app/build.gradle`, which keeps only the ABIs whose native libraries match: livekit
+  ships no 32-bit x86 uniffi library, and JNA's jar also carries armeabi, mips and mips64 copies
+  of `libjnidispatch.so`.
+- `Cleartext Traffic Permitted` is settled by `android:usesCleartextTraffic="false"`, which costs
+  `ws://` relays and `http://` blossom servers.
+- The microphone and camera permissions, and the missing JDK, are explained in the recipe's
+  `MaintainerNotes`. The recipe installs no JDK because the buildserver image's
+  `default-jdk-headless` is openjdk-21, which Capacitor needs. fdroiddata's CI installs JDK 21 on
+  the runner before `fdroid build`, so a green pipeline never shows whether the recipe needs one.
+
+Findings belong to the version the recipe builds, so a fix in the app clears them only once the
+recipe points at a tag that contains it.
 
 The initial `fdroiddata` submission must still review scanner exceptions for FLOSS
 build tools and optional OpenRouter use for a possible `NonFreeNet` declaration.

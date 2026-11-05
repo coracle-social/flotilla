@@ -129,6 +129,6 @@
     <LoadingFallback
       loadingMessage="Loading event..."
       failureMessage="Failed to load event."
-      retry={() => void $network.loadLenient({filters: getIdFilters([address]), relays: [url]})} />
+      retry={() => void $network.load({filters: getIdFilters([address]), relays: [url]})} />
   {/if}
 </PageContent>

@@ -353,7 +353,7 @@ test("US-022 bring people into a room", async ({seed, as}) => {
   await expect(message(admin, "passing through")).toContainText("Dora Deckhand")
 
   await openRoomDetail(admin)
-  await admin.getByRole("button", {name: "Create invite"}).click()
+  await admin.getByRole("button", {name: "Invite members"}).click()
 
   const invite = dialog(admin, "Create a Room Invite").locator("input[readonly]")
 
@@ -390,10 +390,14 @@ test("US-022 bring people into a room", async ({seed, as}) => {
   const doraCard = members.locator(".card").filter({hasText: "Dora Deckhand"})
 
   await doraCard.getByRole("button").last().click()
-  await admin.getByRole("button", {name: "Remove Member"}).click()
-  await admin.getByRole("button", {name: "Confirm"}).click()
+  await admin.getByRole("button", {name: "Manage member"}).click()
 
-  await expect(admin.getByText("Member has successfully been removed!")).toBeVisible()
+  const manage = dialog(admin, "Manage Member")
+
+  await manage.getByRole("radio", {name: /Remove from General/}).check()
+  await manage.getByRole("button", {name: "Remove from room"}).click()
+
+  await expect(admin.getByText("They've been removed from the room.")).toBeVisible()
   await expect(members.getByText("Dora Deckhand")).toHaveCount(0)
 })
 

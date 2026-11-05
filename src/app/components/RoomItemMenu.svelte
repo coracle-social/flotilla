@@ -22,7 +22,7 @@
   import {user} from "@app/core/user"
   import {roomPinLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
-  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
+  import {deriveRoomPermissions, deriveUserAdminDelete} from "@app/features/spaces/rooms"
   import {shareEvent} from "@app/features/share"
   import {readAloud} from "@app/features/voice"
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
@@ -38,7 +38,7 @@
 
   const h = tagValue(tagSpec("h"), event.tags) ?? ""
   const pinIds = $roomPinLists.pins(url, h).$
-  const userIsRoomAdmin = deriveUserIsRoomAdmin(url, h)
+  const permissions = deriveRoomPermissions(url, h)
   const adminDelete = deriveUserAdminDelete(url, event)
   const isPinned = $derived($pinIds.includes(event.id))
 
@@ -130,7 +130,7 @@
       </Button>
     </li>
   {/if}
-  {#if h && $userIsRoomAdmin}
+  {#if h && $permissions.updatePins}
     <li>
       <Button onclick={togglePin}>
         <Icon size={4} icon={Pin} />

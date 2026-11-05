@@ -6,18 +6,18 @@ import type {RelayConnection} from "./types"
 
 /** The only place that knows the container has a loopback address. A relay selection drops a local url. */
 
-// Must match the published port in zooid/docker/compose.yaml.
+// Must match the port every backend's docker/compose.yaml publishes.
 export const port = 3334
 
 const headersFor = (host: string) => ({Host: host, "X-Forwarded-Proto": "https"})
 
-export type ZooidConnection = RelayConnection & {
+export type HostConnection = RelayConnection & {
   // Resolves with the first message the relay sends that matches.
   wait(match: (message: RelayMessage) => boolean): Promise<RelayMessage>
 }
 
 // Node's own WebSocket cannot carry a Host header, which fetch forbids, so this depends on `ws`.
-export const connectToZooid = (host: string): ZooidConnection => {
+export const connectToHost = (host: string): HostConnection => {
   const socket = new WebSocket(`ws://127.0.0.1:${port}/`, {headers: headersFor(host)})
   const listeners = new Set<(message: RelayMessage) => void>()
   const pending: ClientMessage[] = []
@@ -36,9 +36,9 @@ export const connectToZooid = (host: string): ZooidConnection => {
     }
   })
 
-  // A 404 from zooid's dispatcher means `tenants` and the tenant toml's `host` have drifted apart.
+  // A 404 means the backend has no relay on that host, so it and `tenants` have drifted apart.
   socket.on("error", error =>
-    console.error(`The zooid container refused a socket for ${host}: ${error.message}`),
+    console.error(`The relay container refused a socket for ${host}: ${error.message}`),
   )
 
   return {
@@ -68,20 +68,20 @@ export const connectToZooid = (host: string): ZooidConnection => {
   }
 }
 
-export type ZooidResponse = {
+export type HostResponse = {
   status: number
   headers: Record<string, string>
   body: Buffer
 }
 
 // Carries the same two headers, so the nip-11 and nip-86 answers the browser reads are the relay's.
-export const requestZooid = (
+export const requestHost = (
   host: string,
   method: string,
   path: string,
   requestHeaders: Record<string, string>,
   body?: Buffer,
-): Promise<ZooidResponse> =>
+): Promise<HostResponse> =>
   new Promise((resolve, reject) => {
     const request = httpRequest(
       {

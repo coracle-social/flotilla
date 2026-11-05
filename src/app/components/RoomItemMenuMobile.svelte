@@ -34,7 +34,7 @@
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {user} from "@app/core/user"
   import {roomPinLists} from "@app/core/plugins"
-  import {deriveUserAdminDelete, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
+  import {deriveRoomPermissions, deriveUserAdminDelete} from "@app/features/spaces/rooms"
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
   import {ENABLE_ZAPS, HIDE_NOSTR} from "@app/core/env"
   import {makeContentPath} from "@app/navigation/pages"
@@ -55,7 +55,7 @@
   const h = tagValue(tagSpec("h"), event.tags) ?? ""
   const path = makeContentPath(url, event.kind, getIdOrAddress(event))
   const pinIds = $roomPinLists.pins(url, h).$
-  const userIsRoomAdmin = deriveUserIsRoomAdmin(url, h)
+  const permissions = deriveRoomPermissions(url, h)
   const adminDelete = deriveUserAdminDelete(url, event)
   const isPinned = $derived($pinIds.includes(event.id))
   const tile = "button h-auto flex-col gap-1.5 py-4 text-xs"
@@ -170,7 +170,7 @@
               Create a Thread
             </Button>
           {/if}
-          {#if h && $userIsRoomAdmin}
+          {#if h && $permissions.updatePins}
             <Button class="button button-neutral w-full" onclick={togglePin}>
               <Icon size={4} icon={Pin} />
               {isPinned ? "Unpin Message" : "Pin Message"}

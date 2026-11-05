@@ -1,9 +1,9 @@
 import {Resolver} from "@welshman/util"
 import {EventWriter, FollowList, Note, Profile, RelayList} from "@welshman/domain"
 import type {BaseEventReader, ConfiguredKind, EventQuery, KindFactory} from "@welshman/domain"
-import type {Zooid} from "../zooid/relay"
-import {tenantUrl} from "../zooid/config"
-import type {OpenRelayName} from "../zooid/config"
+import type {RelayServer} from "../relay/server"
+import {tenantUrl} from "../relay/config"
+import type {OpenRelayName} from "../relay/config"
 import type {TestUser} from "../keys"
 import {makePublisher} from "./publish"
 import type {Enqueue, ProfileValues, RelayListUrls, SeededEvent, SeededTemplate} from "./publish"
@@ -28,20 +28,20 @@ export type SeededOpenRelay = {
 }
 
 export type SeedOpenRelayOptions = {
-  zooid: Zooid
+  server: RelayServer
   enqueue: Enqueue
   startedAt: number
   name: OpenRelayName
 }
 
 export const seedOpenRelay = ({
-  zooid,
+  server,
   enqueue,
   startedAt,
   name,
 }: SeedOpenRelayOptions): SeededOpenRelay => {
   const url = tenantUrl(name)
-  const relay = zooid.relay(name)
+  const relay = server.relay(name)
   const relayLists: SeededEvent[] = []
   const context = {resolver: new Resolver(() => [url])}
 

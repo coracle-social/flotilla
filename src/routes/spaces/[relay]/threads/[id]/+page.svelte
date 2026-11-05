@@ -218,7 +218,7 @@
       <LoadingFallback
         loadingMessage="Loading thread..."
         failureMessage="Failed to load thread."
-        retry={() => void $network.loadLenient({filters: getIdFilters([id]), relays: [url]})} />
+        retry={() => void $network.load({filters: getIdFilters([id]), relays: [url]})} />
     {/if}
   </PageContent>
   {#if $event && scrolledPastRoot}

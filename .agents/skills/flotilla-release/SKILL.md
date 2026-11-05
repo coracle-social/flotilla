@@ -62,6 +62,7 @@ CI uses the job's own token for the release, and the `PACKAGE_TOKEN` and `GH_MIR
 - [ ] `pnpm release:changelog` to write `fastlane/.../changelogs/<versionCode>.txt`.
 - [ ] New F-Droid screenshots or listing text, if the UI changed, go in `fastlane/` now; F-Droid only reads them from the tag.
 - [ ] If the F-Droid build environment changed (Node major in `.nvmrc`, the JDK, the fdroid scripts), update the recipe in `fdroid/metadata/` and open an fdroiddata merge request with the same change.
+- [ ] Point `fdroid/metadata/social.flotilla.fdroid.yml` at this version: `versionName`, `versionCode`, and `commit`, which is the tag here and the full hash in fdroiddata. It holds one build, so replace it rather than adding another, and send the same file to the fdroiddata merge request.
 - [ ] `git add -A && git commit`, `pnpm release:check`, then `git tag <version>` and `git push origin dev <version>`.
 
 ### Releasing

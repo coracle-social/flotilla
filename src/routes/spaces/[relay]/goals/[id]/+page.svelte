@@ -120,6 +120,6 @@
     <LoadingFallback
       loadingMessage="Loading funding goal..."
       failureMessage="Failed to load funding goal."
-      retry={() => void $network.loadLenient({filters: getIdFilters([id]), relays: [url]})} />
+      retry={() => void $network.load({filters: getIdFilters([id]), relays: [url]})} />
   {/if}
 </PageContent>

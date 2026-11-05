@@ -5,6 +5,7 @@ import {isNWCWallet, isWebLNWallet, toMsats} from "@welshman/util"
 import type {Wallet} from "@welshman/util"
 import {synced, withGetter} from "@welshman/store"
 import {ss} from "@app/core/storage"
+import {registerLogoutHandler} from "@app/core/session"
 
 /** Both lud06 and lud16 normalize into the bech32 lnurl zapping needs, so decode it before display. */
 export const displayLnurl = (lnurl: string) => {
@@ -44,6 +45,30 @@ export const getNwcClient = () => {
   }
 
   return new nwc.NWCClient(info)
+}
+
+// NIP-47 logout revokes the connection on the wallet service's side. The SDK has no method for it yet,
+// and a wallet that doesn't support it or doesn't answer mustn't hold up logging out.
+export const logoutNwc = async () => {
+  const $wallet = wallet.get()
+
+  if (!$wallet || !isNWCWallet($wallet)) {
+    return
+  }
+
+  const client = getNwcClient() as any
+
+  try {
+    await client.executeNip47Request("logout", {}, () => true, {replyTimeout: 3000})
+  } catch (e) {
+    console.warn("Failed to log out of NWC wallet", e)
+  } finally {
+    client.close()
+  }
+}
+
+export const registerWallet = () => {
+  registerLogoutHandler(logoutNwc)
 }
 
 export const payInvoice = async (invoice: string, msats?: number) => {

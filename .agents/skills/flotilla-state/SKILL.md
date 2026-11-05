@@ -71,7 +71,7 @@ This code reads `app.get().user?.pubkey` and bails when it is missing, as
 `src/app/features/checked.ts` do.
 
 Stores derived from `user` throw as soon as they are subscribed signed out. That includes
-`isEventMuted` (`social/muting`), `deriveUserIsRoomAdmin` (`spaces/rooms`) and `deriveUserCanCreateRoom`
+`isEventMuted` (`social/muting`), `deriveRoomPermissions` (`spaces/rooms`) and `deriveUserCanCreateRoom`
 (`spaces/management`), so only use them from gated components.
 
 ## Reaching plugins
@@ -244,7 +244,7 @@ export const deriveSpaceActionItems = (url: string) =>
 - plain verbs mutate: `addRoomMembers`, `reorderSpaceUrls`
 
 Rules that involve more than one plugin belong in these functions rather than in components.
-"A space's staff are room admins" lives in `deriveUserIsRoomAdmin`.
+"A space's owner moderates every room" lives in `deriveRoomPermissions`.
 
 ### Hand-built indexes for hot paths
 

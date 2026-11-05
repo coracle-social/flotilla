@@ -15,10 +15,11 @@ export type TestRelayOptions = {
   name: string
   url: string
   publish: (event: SignedEvent, options?: PublishOptions) => Promise<void>
+  admit: (user: TestUser) => Promise<void>
 }
 
-// admin is the only test identity the tomls grant can_manage, and every timestamp is the caller's.
-export const makeTestRelay = ({name, url, publish}: TestRelayOptions): TestRelay => {
+// admin owns every relay, so it is the only test identity that may manage one. Every timestamp is the caller's.
+export const makeTestRelay = ({name, url, publish, admit}: TestRelayOptions): TestRelay => {
   const event = async (user: TestUser, template: StampedEvent) => {
     const signed = await user.signer.sign(template)
 
@@ -63,6 +64,7 @@ export const makeTestRelay = ({name, url, publish}: TestRelayOptions): TestRelay
       event(user, makeEvent(MESSAGE, {content, tags: [["h", h]], created_at: createdAt})),
     member: async (user, h, createdAt) => {
       await event(user, makeEvent(RELAY_JOIN, {created_at: createdAt}))
+      await admit(user)
 
       if (h) {
         const tags = [

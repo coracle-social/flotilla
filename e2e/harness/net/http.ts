@@ -1,17 +1,17 @@
 import {createHash} from "node:crypto"
 import type {BrowserContext} from "@playwright/test"
-import {HOUR, int, now, omit} from "@welshman/lib"
+import {HOUR, int, now, omit, parseJson} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {Handle} from "@welshman/util"
 import type {ZapperValues} from "@welshman/domain"
-import {tenantByUrl} from "../zooid/config"
-import {requestZooid} from "../zooid/transport"
+import {tenantByUrl} from "../relay/config"
+import {requestHost} from "../relay/transport"
 import {makeContextStore} from "./context"
 
 // Mirrors the service urls in src/app/core/env.ts, which reads import.meta.env and pulls in Capacitor.
 const DUFFLEPUD_ORIGIN = "https://dufflepud.coracle.social"
 const PUSH_SERVER_ORIGIN = "https://nps.flotilla.social"
-const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
+export const HOSTING_ORIGIN = "https://api.hosting.coracle.social"
 
 // Hard-coded in src/app.html, so every navigation asks for it whatever the scenario is doing.
 const PLAUSIBLE_ORIGIN = "https://plausible.coracle.social"
@@ -62,7 +62,7 @@ export const installHttpRoutes = (context: BrowserContext) => {
 
       if (host) {
         return route.fulfill(
-          await requestZooid(
+          await requestHost(
             host,
             request.method(),
             pathname + search,
@@ -115,15 +115,15 @@ export const mockRelayInfo = (context: BrowserContext, overrides: RelayInfoOverr
 
       // The nip-86 management api posts to this same path, so only the document request is touched.
       if (request.method() === "GET" && host && override) {
-        const {status, headers, body} = await requestZooid(host, "GET", "/", {
+        const {status, headers, body} = await requestHost(host, "GET", "/", {
           ...request.headers(),
-          // The merge has to read the document, and khatru compresses it when invited to.
+          // The merge has to read the document, which a relay may compress when invited to.
           "accept-encoding": "identity",
         })
 
         return route.fulfill({
           status,
-          // khatru's Access-Control-Allow-Origin is what makes the fetch legal, so the relay's headers are kept.
+          // The relay's Access-Control-Allow-Origin is what makes the fetch legal, so its headers are kept.
           headers: omit(["content-length"], headers),
           body: JSON.stringify({...JSON.parse(body.toString()), ...override}),
         })
@@ -480,6 +480,25 @@ export const mockHosting = async (context: BrowserContext, fixtures: HostingFixt
     const [resource, id, sub, detail] = new URL(request.url()).pathname.split("/").filter(Boolean)
 
     const missing = (what: string) => route.fulfill({status: 404, json: {error: `No such ${what}`}})
+
+    // The app trades a NIP-98 signature for a bearer token, which every other request carries,
+    // and caches it against the pubkey that signed, so the token answers for that key.
+    if (resource === "session") {
+      const header = request.headers().authorization ?? ""
+      const event = parseJson<{pubkey: string}>(
+        Buffer.from(header.replace(/^Nostr /, ""), "base64").toString(),
+      )
+
+      return route.fulfill({
+        json: {
+          data: {
+            pubkey: event?.pubkey ?? "",
+            token: "test-hosting-token",
+            expires_at: now() + int(1, HOUR),
+          },
+        },
+      })
+    }
 
     if (resource === "plans") {
       return route.fulfill({json: {data: plans}})

@@ -9,6 +9,8 @@
     THREAD,
     getCommentFiltersForParent,
     getIdOrAddress,
+    tagSpec,
+    tagValue,
   } from "@welshman/util"
   import {Thread} from "@welshman/domain"
   import {parse} from "@welshman/content"
@@ -104,7 +106,8 @@
 
   const onTap = () => pushModal(RoomItemMenuMobile, {url, event, reply, edit})
 
-  const openProfile = () => pushModal(ProfileDetail, {pubkey: event.pubkey, url})
+  const openProfile = () =>
+    pushModal(ProfileDetail, {pubkey: event.pubkey, url, h: tagValue(tagSpec("h"), event.tags)})
 
   const deleteReaction = (reaction: TrustedEvent) => retractReaction(url, reaction)
 

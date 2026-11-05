@@ -18,8 +18,7 @@ curl --silent https://gitlab.com/fdroid/fdroidserver/-/archive/master/fdroidserv
   tar -xz --directory="$fdroidserver" --strip-components=1
 git -C "$home_vagrant/gradlew-fdroid" pull
 
-apt-get install -y sudo openjdk-21-jdk-headless
-update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
+apt-get install -y sudo
 
 # The recipe with its one build pointed at this tag, and without the published apk it would
 # otherwise try to compare against, since this is the build that becomes it

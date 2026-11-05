@@ -14,7 +14,7 @@
   import {roomLists, rooms} from "@app/core/plugins"
   import {joinRoom, leaveRoom} from "@app/features/spaces/rooms/membership"
   import {
-    deriveUserIsRoomAdmin,
+    deriveRoomPermissions,
     deriveUserRoomMembershipStatus,
     publishRoomList,
   } from "@app/features/spaces/rooms"
@@ -32,7 +32,7 @@
 
   const {url, h, onClick}: Props = $props()
 
-  const userIsAdmin = deriveUserIsRoomAdmin(url, h)
+  const permissions = deriveRoomPermissions(url, h)
   const membershipStatus = deriveUserRoomMembershipStatus(url, h)
 
   const startEdit = () => pushModal(RoomEdit, {url, h})
@@ -82,19 +82,23 @@
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
-  {#if $userIsAdmin}
-    <li>
-      <Button onclick={startEdit}>
-        <Icon icon={Pen} />
-        Edit Room
-      </Button>
-    </li>
-    <li>
-      <Button class="text-error" onclick={startDelete}>
-        <Icon icon={TrashBin2} />
-        Delete Room
-      </Button>
-    </li>
+  {#if $permissions.editRoom || $permissions.deleteRoom}
+    {#if $permissions.editRoom}
+      <li>
+        <Button onclick={startEdit}>
+          <Icon icon={Pen} />
+          Edit Room
+        </Button>
+      </li>
+    {/if}
+    {#if $permissions.deleteRoom}
+      <li>
+        <Button class="text-error" onclick={startDelete}>
+          <Icon icon={TrashBin2} />
+          Delete Room
+        </Button>
+      </li>
+    {/if}
   {:else if $membershipStatus === MembershipStatus.Initial}
     <li>
       <Button disabled={loading} onclick={join}>

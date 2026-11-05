@@ -2,6 +2,7 @@ import type {BrowserContext} from "@playwright/test"
 import {ms} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import type {TestUser} from "../keys"
+import {HOSTING_ORIGIN} from "../net/http"
 import {injectChecked, injectEvents, injectSession} from "./session"
 
 // Must match TEST_ENV_KEY in src/lib/test/env.ts.
@@ -68,6 +69,8 @@ export const boot = async (
         VITE_DEFAULT_SPACES: spaces.join(","),
         VITE_PLATFORM_RELAYS: "",
         VITE_BLOCKED_RELAYS: "",
+        // A developer's .env.local may point the hosting api at their own backend, which nothing mocks.
+        VITE_HOSTING_BACKEND_URL: HOSTING_ORIGIN,
         // Nothing serves this url, so a push bridge connection is reported as a leak.
         VITE_PUSH_BRIDGE: "ws://localhost:1/",
         ...env,

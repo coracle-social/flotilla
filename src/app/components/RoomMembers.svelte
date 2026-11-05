@@ -14,7 +14,11 @@
   import RoomName from "@app/components/RoomName.svelte"
   import RoomMembersAdd from "@app/components/RoomMembersAdd.svelte"
   import RoomMemberMenu from "@app/components/RoomMemberMenu.svelte"
-  import {deriveRoomMembers, deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
+  import {
+    deriveMemberModeration,
+    deriveRoomMembers,
+    deriveRoomPermissions,
+  } from "@app/features/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
@@ -25,7 +29,8 @@
   const {url, h}: Props = $props()
 
   const members = deriveRoomMembers(url, h)
-  const userIsAdmin = deriveUserIsRoomAdmin(url, h)
+  const permissions = deriveRoomPermissions(url, h)
+  const moderation = deriveMemberModeration(url, h)
 
   const back = () => history.back()
 
@@ -56,7 +61,9 @@
               <div class="min-w-0 flex-1">
                 <Profile {pubkey} {url} />
               </div>
-              <MenuButton component={RoomMemberMenu} componentProps={{url, h, pubkey}} />
+              {#if $moderation(pubkey).manage}
+                <MenuButton component={RoomMemberMenu} componentProps={{url, h, pubkey}} />
+              {/if}
             </div>
           </div>
         {/each}
@@ -68,7 +75,7 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    {#if $userIsAdmin}
+    {#if $permissions.addMembers}
       <Button class="button button-primary" onclick={addMember}>
         <Icon icon={AddCircle} />
         Add members

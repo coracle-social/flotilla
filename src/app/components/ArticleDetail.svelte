@@ -150,6 +150,6 @@
       class="grow"
       loadingMessage="Loading article..."
       failureMessage="Failed to load article."
-      retry={() => void $network.loadLenient({filters: getIdFilters([address]), relays})} />
+      retry={() => void $network.load({filters: getIdFilters([address]), relays})} />
   {/if}
 </PageContent>

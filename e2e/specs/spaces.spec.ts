@@ -195,7 +195,7 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
 
   await admin.locator("form").getByRole("button", {name: "Go back"}).click()
   await admin.getByRole("button", {name: /closed\.test/}).click()
-  await admin.getByRole("button", {name: "Create Invite"}).click()
+  await admin.getByRole("button", {name: "Invite Members"}).click()
 
   const inviteLink = admin.locator("input[readonly]")
 
@@ -236,11 +236,11 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
     .locator("xpath=..")
 
   await bobCard.getByRole("button").last().click()
+  await admin.getByRole("button", {name: "Manage member"}).click()
+  await admin.getByRole("radio", {name: /Ban from the space/}).check()
   await admin.getByRole("button", {name: "Ban member"}).click()
 
-  await admin.getByRole("button", {name: "Confirm"}).click()
-
-  await expect(admin.getByText("Member has successfully been banned!")).toBeVisible()
+  await expect(admin.getByText("They've been banned from the space.")).toBeVisible()
 
   const bob = await as(users.bob, spacePath(space.url))
 

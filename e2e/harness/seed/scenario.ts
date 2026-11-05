@@ -2,8 +2,8 @@ import {int, now} from "@welshman/lib"
 import type {MaybeAsync} from "@welshman/lib"
 import {ROOMS, makeEvent} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
-import type {Zooid} from "../zooid/relay"
-import type {OpenRelayName, SpaceName} from "../zooid/config"
+import type {RelayServer} from "../relay/server"
+import type {OpenRelayName, SpaceName} from "../relay/config"
 import {users} from "../keys"
 import type {TestUser} from "../keys"
 import {seedSpace} from "./space"
@@ -15,7 +15,7 @@ import type {SeededOpenRelay} from "./openRelay"
 export type At = (count: number, unit: number) => number
 
 export type SeedTools = {
-  // Names a space the container already serves. Its policy is its toml in zooid/docker/config.
+  // Names a space the container already serves. Its policy is the backend's: a toml, or caravel/config.ts.
   relay: (name: SpaceName) => SeededSpace
   // Names one of the public relays, where the follow graph lives. See ARCHITECTURE.md, "The follow graph".
   open: (name: OpenRelayName) => SeededOpenRelay
@@ -37,7 +37,7 @@ export type Scenario = {
 }
 
 export const seed = async (
-  zooid: Zooid,
+  server: RelayServer,
   build: (tools: SeedTools) => MaybeAsync<void>,
 ): Promise<Scenario> => {
   const startedAt = now()
@@ -51,7 +51,7 @@ export const seed = async (
   const enqueue = (write: () => Promise<void>) => writes.push(write)
 
   const relay = (name: SpaceName) => {
-    const space = seedSpace({zooid, startedAt, name, enqueue})
+    const space = seedSpace({server, startedAt, name, enqueue})
 
     spaces.set(name, space)
 
@@ -59,7 +59,7 @@ export const seed = async (
   }
 
   const open = (name: OpenRelayName) => {
-    const relay = seedOpenRelay({zooid, startedAt, name, enqueue})
+    const relay = seedOpenRelay({server, startedAt, name, enqueue})
 
     opened.push(relay)
 
@@ -92,7 +92,7 @@ export const seed = async (
     const event = await user.signer.sign(makeEvent(ROOMS, {tags, created_at: startedAt}))
 
     for (const url of urls) {
-      await zooid.publish(url, event)
+      await server.publish(url, event)
     }
 
     roomLists.set(user.pubkey, event)

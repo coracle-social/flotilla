@@ -1,17 +1,15 @@
 <script lang="ts">
   import Pen from "@assets/icons/pen.svg?dataurl"
   import ShieldUser from "@assets/icons/shield-user.svg?dataurl"
-  import UserMinus from "@assets/icons/user-minus.svg?dataurl"
-  import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
+  import Tuning from "@assets/icons/tuning-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Confirm from "@lib/components/Confirm.svelte"
   import SpaceMemberMethods from "@app/components/SpaceMemberMethods.svelte"
   import SpaceMemberRoles from "@app/components/SpaceMemberRoles.svelte"
-  import {profiles, relayManagement} from "@app/core/plugins"
+  import SpaceMemberManage from "@app/components/SpaceMemberManage.svelte"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {deriveMemberModeration} from "@app/features/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
 
   type Props = {
     url: string
@@ -22,44 +20,13 @@
   const {url, pubkey, onClick}: Props = $props()
 
   const permissions = deriveSpacePermissions(url)
-
-  const back = () => history.back()
+  const moderation = deriveMemberModeration(url)
 
   const editRoles = () => pushModal(SpaceMemberRoles, {url, pubkey})
 
   const editMethods = () => pushModal(SpaceMemberMethods, {url, pubkey})
 
-  const removeMember = () =>
-    pushModal(Confirm, {
-      title: "Remove Member",
-      message: `Remove @${$profiles.display(pubkey, [url]).get()} from the space?`,
-      confirm: async () => {
-        const {error} = await $relayManagement.forUrl(url).unallowPubkey(pubkey)
-
-        if (error) {
-          pushToast({theme: "error", message: error})
-        } else {
-          pushToast({message: "Member has successfully been removed!"})
-          back()
-        }
-      },
-    })
-
-  const banMember = () =>
-    pushModal(Confirm, {
-      title: "Ban Member",
-      message: `Ban @${$profiles.display(pubkey, [url]).get()} from the space?`,
-      confirm: async () => {
-        const {error} = await $relayManagement.forUrl(url).banPubkey(pubkey)
-
-        if (error) {
-          pushToast({theme: "error", message: error})
-        } else {
-          pushToast({message: "Member has successfully been banned!"})
-          back()
-        }
-      },
-    })
+  const manageMember = () => pushModal(SpaceMemberManage, {url, pubkey})
 </script>
 
 <ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
@@ -79,19 +46,11 @@
       </Button>
     </li>
   {/if}
-  {#if $permissions.removeMembers}
+  {#if $moderation(pubkey).manage}
     <li>
-      <Button onclick={removeMember}>
-        <Icon icon={UserMinus} />
-        Remove member
-      </Button>
-    </li>
-  {/if}
-  {#if $permissions.ban}
-    <li>
-      <Button class="text-error" onclick={banMember}>
-        <Icon icon={MinusCircle} />
-        Ban member
+      <Button onclick={manageMember}>
+        <Icon icon={Tuning} />
+        Manage member
       </Button>
     </li>
   {/if}

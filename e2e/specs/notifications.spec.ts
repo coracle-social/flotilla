@@ -1089,7 +1089,8 @@ test("US-133 keep the search relays that support search", async ({seed, as}) => 
   const outbox = scenario.open("outbox")
 
   const page = await as(users.alice, "/home", {
-    relayInfo: {[indexer.url]: {supported_nips: [1, 50]}},
+    // An open relay advertises search on some backends and not on others, so the spec says which.
+    relayInfo: {[indexer.url]: {supported_nips: [1, 50]}, [outbox.url]: {supported_nips: [1]}},
   })
 
   const healthCheck = page.getByRole("group", {name: "Invalid Search Relays"})

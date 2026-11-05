@@ -10,9 +10,9 @@ name: flotilla-e2e-zooid
 
 services:
   relay:
-    # Pinned by digest in e2e/harness/zooid/relay.ts, the only thing that brings this container up.
+    # Pinned by digest in e2e/harness/zooid/backend.ts, the only thing that brings this container up.
     # No default, for the same reason the config mount below has none.
-    image: ${ZOOID_IMAGE:?staged by e2e/harness/zooid/relay.ts, which starts this container}
+    image: ${ZOOID_IMAGE:?staged by e2e/harness/zooid/backend.ts, which starts this container}
     # The harness dials this published port and sends a `Host` per virtual relay, which is what the
     # dispatcher matches against the `host` in each file under config/.
     ports:
@@ -29,7 +29,7 @@ services:
       # this container up, and mounting ./config itself would leave the repo's fixtures rewritten
       # by whatever the last test did.
       - type: bind
-        source: "${ZOOID_CONFIG:?staged by e2e/harness/zooid/relay.ts, which starts this container}"
+        source: "${ZOOID_CONFIG:?staged by e2e/harness/zooid/backend.ts, which starts this container}"
         target: /app/config
       - type: tmpfs
         target: /app/data

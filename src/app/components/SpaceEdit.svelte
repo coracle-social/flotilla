@@ -53,7 +53,7 @@
       }
     }
 
-    const icon = await resolveImageInput(imageFile, imagePreview, compressOptions)
+    const icon = await resolveImageInput(imageFile, imagePreview, {...compressOptions, url})
 
     if (icon && icon !== relay?.icon) {
       const res = await $relayManagement.forUrl(url).changeRelayIcon(icon)

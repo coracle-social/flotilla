@@ -101,7 +101,7 @@
       <LoadingFallback
         loadingMessage="Loading note..."
         failureMessage="Failed to load note."
-        retry={() => void $notes.load(pointer)} />
+        retry={() => void $notes.load(ref)} />
     {/if}
   </ModalBody>
 </Modal>

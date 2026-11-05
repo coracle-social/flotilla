@@ -1,15 +1,13 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {readable} from "svelte/store"
-  import {removeUndefined, spec} from "@welshman/lib"
+  import {spec} from "@welshman/lib"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
-  import MinusCircle from "@assets/icons/minus-circle.svg?dataurl"
-  import UserMinus from "@assets/icons/user-minus.svg?dataurl"
+  import Tuning from "@assets/icons/tuning-2.svg?dataurl"
   import Letter from "@assets/icons/letter-opened.svg?dataurl"
   import Restart from "@assets/icons/restart.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Confirm from "@lib/components/Confirm.svelte"
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import Modal from "@lib/components/Modal.svelte"
@@ -23,10 +21,12 @@
   import ProfileMenu from "@app/components/ProfileMenu.svelte"
   import ProfilePinnedNote from "@app/components/ProfilePinnedNote.svelte"
   import ProfileStatus from "@app/components/ProfileStatus.svelte"
+  import SpaceMemberManage from "@app/components/SpaceMemberManage.svelte"
   import {user} from "@app/core/user"
   import {messagingRelayLists, profiles, relayManagement} from "@app/core/plugins"
   import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
   import type {BannedPubkeyItem} from "@app/features/spaces/management"
+  import {deriveMemberModeration} from "@app/features/spaces/rooms"
   import {navigate} from "@app/navigation/navigate"
   import {popModal, pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
@@ -36,11 +36,13 @@
   export type Props = {
     pubkey: string
     url?: string
+    h?: string
   }
 
-  const {pubkey, url}: Props = $props()
+  const {pubkey, url, h}: Props = $props()
 
   const permissions = deriveSpacePermissions(url)
+  const moderation = url ? deriveMemberModeration(url, h) : readable(undefined)
   const bans = url ? $spaceManagement.bannedPubkeys(url) : readable<BannedPubkeyItem[]>([])
   const isBanned = $derived($bans.some(spec({pubkey})))
 
@@ -71,22 +73,7 @@
     }
   }
 
-  const banMember = () =>
-    pushModal(Confirm, {
-      title: "Ban User",
-      message: `Are you sure you want to ban @${$profiles.display(pubkey, removeUndefined([url])).get()} from the space?`,
-      confirm: async () => {
-        const {error} = await $relayManagement.forUrl(url!).banPubkey(pubkey)
-
-        report(error, "User has successfully been banned!")
-      },
-    })
-
-  const removeMember = async () => {
-    const {error} = await $relayManagement.forUrl(url!).unallowPubkey(pubkey)
-
-    report(error, "User has successfully been removed!")
-  }
+  const manageMember = () => pushModal(SpaceMemberManage, {url: url!, pubkey, h}, {nested: true})
 
   const restoreMember = async () => {
     const {error} = await $relayManagement.forUrl(url!).allowPubkey(pubkey)
@@ -125,23 +112,13 @@
                 </Button>
               </li>
             {/if}
-          {:else}
-            {#if $permissions.removeMembers}
-              <li>
-                <Button onclick={removeMember}>
-                  <Icon size={4} icon={UserMinus} />
-                  Remove Member
-                </Button>
-              </li>
-            {/if}
-            {#if $permissions.ban}
-              <li>
-                <Button class="text-error" onclick={banMember}>
-                  <Icon size={4} icon={MinusCircle} />
-                  Ban User
-                </Button>
-              </li>
-            {/if}
+          {:else if $moderation?.(pubkey).manage}
+            <li>
+              <Button onclick={manageMember}>
+                <Icon size={4} icon={Tuning} />
+                Manage member
+              </Button>
+            </li>
           {/if}
         {/snippet}
         <MenuButton

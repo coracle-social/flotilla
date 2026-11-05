@@ -14,7 +14,7 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {deriveUserIsRoomAdmin} from "@app/features/spaces/rooms"
+  import {deriveRoomPermissions} from "@app/features/spaces/rooms"
   import {deriveRoomPinnedEvents, toggleRoomPin} from "@app/features/spaces/rooms/pins"
   import {goToEvent} from "@app/navigation/locations"
 
@@ -26,7 +26,7 @@
   const {url, h}: Props = $props()
 
   const pinnedEvents = deriveRoomPinnedEvents(url, h)
-  const userIsAdmin = deriveUserIsRoomAdmin(url, h)
+  const permissions = deriveRoomPermissions(url, h)
 
   const back = () => history.back()
 
@@ -63,7 +63,7 @@
           </div>
           <RoomItemContent {url} {event} />
           <div class="flex flex-wrap items-center justify-end gap-2">
-            {#if $userIsAdmin}
+            {#if $permissions.updatePins}
               <Button class="button button-link button-sm" onclick={onUnpin}>Unpin</Button>
             {/if}
             <Button class="button button-primary button-sm" onclick={onJump}>

@@ -45,7 +45,7 @@
 
     room.livekit = roomType === RoomType.Voice
 
-    room.picture = await resolveImageInput(imageFile, imagePreview, compressOptions)
+    room.picture = await resolveImageInput(imageFile, imagePreview, {...compressOptions, url})
 
     const createCommand = await $rooms.createRoom(url, room)
     const createMessage = await createCommand.publish().getError()
