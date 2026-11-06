@@ -55,8 +55,8 @@
 
     const icon = await resolveImageInput(imageFile, imagePreview, {...compressOptions, url})
 
-    if (icon && icon !== relay?.icon) {
-      const res = await $relayManagement.forUrl(url).changeRelayIcon(icon)
+    if (icon !== relay?.icon) {
+      const res = await $relayManagement.forUrl(url).changeRelayIcon(icon || "")
 
       if (res.error) {
         return pushToast({theme: "error", message: res.error})

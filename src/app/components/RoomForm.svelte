@@ -1,6 +1,7 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import {randomId} from "@welshman/lib"
+  import {RoomEdit} from "@welshman/domain"
   import type {RoomMeta} from "@welshman/app"
   import Hashtag from "@assets/icons/hashtag.svg?dataurl"
   import Volume from "@assets/icons/volume.svg?dataurl"
@@ -11,6 +12,7 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {rooms} from "@app/core/plugins"
+  import {command, writer} from "@app/core/domain"
   import {joinRoom} from "@app/features/spaces/rooms/membership"
   import {pushToast} from "@app/features/toast"
   import {resolveImageInput} from "@app/features/uploads"
@@ -59,6 +61,16 @@
 
     if (editMessage) {
       return pushToast({theme: "error", message: editMessage})
+    }
+
+    // editRoom leaves out an empty picture, and relays keep any field an edit leaves out.
+    if (initialValues.picture && !room.picture) {
+      const clearCommand = await command(writer(RoomEdit).setRoom(url, room.h).setPicture(""))
+      const clearMessage = await clearCommand.publish().getError()
+
+      if (clearMessage) {
+        return pushToast({theme: "error", message: clearMessage})
+      }
     }
 
     const joinMessage = await joinRoom(url, room.h)

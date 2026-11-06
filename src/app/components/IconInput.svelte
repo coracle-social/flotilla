@@ -1,7 +1,9 @@
 <script lang="ts">
   import StickerSmileSquare from "@assets/icons/sticker-smile-square.svg?dataurl"
   import UploadMinimalistic from "@assets/icons/upload-minimalistic.svg?dataurl"
+  import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
+  import Button from "@lib/components/Button.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import IconPickerButton from "@app/components/IconPickerButton.svelte"
   import ImageInputButton from "@app/components/ImageInputButton.svelte"
@@ -49,6 +51,11 @@
 
     reader.readAsDataURL(image)
   }
+
+  const clear = () => {
+    file = undefined
+    preview = undefined
+  }
 </script>
 
 <div class="flex grow items-center justify-between gap-4">
@@ -61,6 +68,11 @@
     <span class="text-sm opacity-75">No icon selected</span>
   {/if}
   <div class="flex gap-2">
+    {#if preview}
+      <Button onclick={clear} aria-label="Remove icon" class="button button-neutral button-sm">
+        <Icon icon={TrashBin2} size={4} />
+      </Button>
+    {/if}
     <IconPickerButton onSelect={handleIconSelect} class="button button-primary button-sm">
       <Icon icon={StickerSmileSquare} size={4} />
     </IconPickerButton>
