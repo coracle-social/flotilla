@@ -1,5 +1,19 @@
 # Changelog
 
+# 1.15.0
+
+* Redesign threads with a board view, search, and related threads
+* Suggest existing answers while composing a thread
+* Schedule posts for later
+* Show a note's stats, with a histogram of interactions
+* Manage members and invites from one dialog
+* Jump from a search result to the exact message
+* Store events in an on-device database instead of loading a cache into memory
+* Read an article from outside your spaces on a page of its own
+* Upload space and room images to the space's media server
+* Log in to a space without waiting on relay authentication
+* Fix replies counted twice, threads scrolling themselves to the bottom, and feeds leaving gaps in cached history
+
 # 1.14.0
 
 * Post an article or a poll from the Create post button

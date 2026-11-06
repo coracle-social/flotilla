@@ -15,9 +15,9 @@ Repo: https://gitea.coracle.social/coracle/flotilla.git
 Binaries: https://gitea.coracle.social/api/packages/coracle/generic/flotilla-fdroid/%v/flotilla-fdroid-%v.apk
 
 Builds:
-  - versionName: 1.14.0
-    versionCode: 59
-    commit: 1.14.0
+  - versionName: 1.15.0
+    versionCode: 60
+    commit: 1.15.0
     subdir: android/app
     sudo:
       - echo "deb https://deb.debian.org/debian forky main" > /etc/apt/sources.list.d/forky.list
@@ -52,5 +52,5 @@ MaintainerNotes: |-
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^[0-9]+\.[0-9]+\.[0-9]+$
 UpdateCheckData: android/app/build.gradle|(?m)^\s*versionCode\s+(\d+)\s*$|.|(?m)^\s*versionName\s+"([^"]+)"\s*$
-CurrentVersion: 1.14.0
-CurrentVersionCode: 59
+CurrentVersion: 1.15.0
+CurrentVersionCode: 60
