@@ -7,7 +7,7 @@
 # A .env in the build context is picked up by scripts/build/web.sh for branding config.
 
 # https://pnpm.io/docker#example-3-build-on-cicd
-FROM node:24-slim AS builder
+FROM --platform=$BUILDPLATFORM node:24-slim AS builder
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
