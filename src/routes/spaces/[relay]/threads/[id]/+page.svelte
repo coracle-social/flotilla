@@ -176,11 +176,11 @@
 </SpaceBar>
 
 <div class="relative flex min-h-0 flex-1 flex-col">
-  <PageContent bind:element noPad class="flex flex-col">
+  <PageContent bind:element noPad class="@container flex flex-col">
     {#if $event}
       <div bind:this={panel} class="bg-surface border-y border-line">
-        <div class="flex min-h-full shrink-0 flex-col @2xl:flex-row">
-          <div class="flex min-w-0 grow flex-col border-line @2xl:border-r">
+        <div class="flex">
+          <div class="flex min-w-0 grow flex-col">
             <div bind:this={root}>
               <ThreadPost
                 {url}
@@ -218,7 +218,7 @@
                 onReply={openReply} />
             {/each}
           </div>
-          <RelatedThreads {url} event={$event} {context} />
+          <RelatedThreads {url} event={$event} />
         </div>
       </div>
       {#if showReply && replyTo && $event}

@@ -10,8 +10,9 @@ import {
   getIdOrAddress,
 } from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {Comment} from "@welshman/domain"
+import {Comment, Thread} from "@welshman/domain"
 import {reader} from "@app/core/domain"
+import {makeFeed} from "@app/features/feeds"
 
 // The kinds that each have a section of their own in a space.
 export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD, CLASSIFIED, POLL, PINBOARD, LONG_FORM]
@@ -36,3 +37,13 @@ export const partitionByActivity = (kind: number, events: TrustedEvent[]) => {
 
   return {items: sortBy(event => -(activeAt.get(event.id) ?? 0), items), activeAt}
 }
+
+// The title goes in twice, so the words that name a thread's topic weigh double.
+export const threadText = (event: TrustedEvent) => {
+  const title = reader(Thread)(event).title() ?? ""
+
+  return `${title} ${title} ${event.content}`
+}
+
+export const makeThreadFeed = (url: string) =>
+  makeFeed({relays: [url], filters: [{kinds: [THREAD]}]})

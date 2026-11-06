@@ -43,6 +43,8 @@
 
   const uploading = writable(false)
 
+  const editorText = writable("")
+
   const back = () => history.back()
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
@@ -97,8 +99,6 @@
 
   let title = $state(initialValues?.title ?? draft?.title ?? "")
   let content = $state(initialValues?.content ?? draft?.content ?? "")
-  // The editor reports its plain text here so the draft can query the space's threads.
-  const editorText = writable("")
 
   const onChange = (json: object) => {
     content = json
@@ -154,7 +154,6 @@
           </div>
         {/snippet}
       </Field>
-      <ThreadSuggestions {url} query={`${title}\n${$editorText}`} />
       <Button
         data-tip="Add an image"
         class="tip tip-left absolute bottom-1 right-2"
@@ -167,6 +166,7 @@
         {/if}
       </Button>
     </div>
+    <ThreadSuggestions {url} query={`${title}\n${$editorText}`} />
   </ModalBody>
   <ModalFooter>
     <Button class="button button-link" onclick={back} disabled={loading}>

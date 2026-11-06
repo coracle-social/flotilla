@@ -7,9 +7,11 @@
   import type {TrustedEvent} from "@welshman/util"
   import {THREAD} from "@welshman/util"
   import {Thread} from "@welshman/domain"
+  import {createSearch} from "@welshman/app"
   import {page} from "$app/stores"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Add from "@assets/icons/add.svg?dataurl"
+  import Magnifier from "@assets/icons/magnifier.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
@@ -61,6 +63,31 @@
     inBoard ? threadFeed.items.filter(e => (reader(Thread)(e).room() || "") === board) : [],
   )
 
+  const boardSearch = $derived(
+    createSearch(boardItems, {
+      getValue: (event: TrustedEvent) => event.id,
+      fuseOptions: {
+        ignoreLocation: true,
+        threshold: 0.3,
+        keys: [
+          {name: "title", getFn: (event: TrustedEvent) => reader(Thread)(event).title() ?? ""},
+          {name: "content", getFn: (event: TrustedEvent) => event.content},
+        ],
+      },
+    }),
+  )
+
+  let search = $state("")
+
+  const term = $derived(search.trim())
+  const visibleItems = $derived(boardSearch.searchOptions(term))
+
+  $effect(() => {
+    if (board !== undefined) {
+      search = ""
+    }
+  })
+
   onMount(() => {
     const feed = makeFeed({
       relays: [url],
@@ -100,12 +127,24 @@
 <PageContent bind:element noPad={inBoard} class={inBoard ? "flex flex-col" : "p-2 sm:p-4"}>
   {#if inBoard}
     <div class="bg-surface border-y border-line">
-      {#if boardItems.length === 0}
-        <p class="text-content-muted p-4 text-sm">No topics yet in this board.</p>
-      {:else}
-        {#each boardItems as event (event.id)}
+      <div class="border-b border-line px-4 py-3">
+        <label class="input input-group flex w-full items-center gap-2">
+          <Icon size={4} icon={Magnifier} />
+          <input
+            bind:value={search}
+            class="min-w-0 grow"
+            type="text"
+            placeholder="Search this board..." />
+        </label>
+      </div>
+      {#if visibleItems.length > 0}
+        {#each visibleItems as event (event.id)}
           <ThreadLatestItem {url} {event} {context} showRoom={false} />
         {/each}
+      {:else if term}
+        <p class="text-content-muted p-4 text-sm">No topics match your search.</p>
+      {:else}
+        <p class="text-content-muted p-4 text-sm">No topics yet in this board.</p>
       {/if}
     </div>
   {:else}
