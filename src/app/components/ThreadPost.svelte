@@ -54,10 +54,10 @@
 <article
   id="post-{event.id}"
   data-event={event.id}
-  class={cx("bg-surface border-b border-line @container", {
+  class={cx("bg-surface flex flex-col border-b border-line last:grow last:border-b-0 @container", {
     "highlight-target": $highlightedEvent === event.id,
   })}>
-  <div class="flex flex-col @2xl:flex-row">
+  <div class="flex grow flex-col @2xl:flex-row">
     <aside
       class="bg-surface flex shrink-0 flex-row items-center gap-3 border-b p-3 @2xl:w-40 @2xl:flex-col @2xl:items-center @2xl:border-b-0 @2xl:border-r @2xl:p-4 @2xl:text-center border-line">
       <Button onclick={openProfile}>
@@ -92,7 +92,7 @@
           Permalink
         </Button>
       </div>
-      <div class="px-3 py-4 @lg:px-4">
+      <div class="grow px-3 py-4 @lg:px-4">
         <NoteContent showEntire {event} {url} {hideTitle} />
       </div>
       <div

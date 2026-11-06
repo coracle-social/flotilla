@@ -164,7 +164,15 @@
       <div class="bg-surface border-y border-line">
         <div class="flex">
           <div class="flex min-w-0 grow flex-col">
-            <div bind:this={root}>
+            <!-- Sticks within the posts column so it doesn't cover the related threads sidebar -->
+            <div class="sticky top-0 z-nav h-0">
+              {#if scrolledPastRoot}
+                <div transition:fly={{y: -20, duration: 200}}>
+                  <ThreadSummaryBar {url} event={$event} onClick={scrollToTop} />
+                </div>
+              {/if}
+            </div>
+            <div bind:this={root} class="flex flex-col last:grow">
               <ThreadPost
                 {url}
                 {context}
@@ -227,11 +235,6 @@
         retry={() => void $network.load({filters: getIdFilters([id]), relays: [url]})} />
     {/if}
   </PageContent>
-  {#if $event && scrolledPastRoot}
-    <div transition:fly={{y: -20, duration: 200}} class="absolute inset-x-0 top-0 z-nav">
-      <ThreadSummaryBar {url} event={$event} onClick={scrollToTop} />
-    </div>
-  {/if}
   {#if scrolledUp && !showReply}
     <div transition:fade class="absolute right-4 bottom-4 z-nav">
       <Button
