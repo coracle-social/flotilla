@@ -94,7 +94,7 @@
 <div class="flex flex-col gap-4">
   <div class="flex flex-col gap-3 xl:flex-row xl:items-start">
     <div class="min-w-0 flex-1 overflow-hidden border-line bg-surface md:rounded-3xl md:border">
-      <div class="relative overflow-hidden border-b border-line bg-surface-more">
+      <div class="relative overflow-hidden border-b border-line bg-surface-more md:rounded-t-3xl">
         {#if $profile?.banner()}
           <img src={$profile.banner()} alt="" class="h-28 w-full object-cover sm:h-32 md:h-40" />
         {:else}

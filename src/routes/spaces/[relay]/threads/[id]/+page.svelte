@@ -104,7 +104,6 @@
   let showReply = $state(false)
   let replyTo: TrustedEvent | undefined = $state()
   let element: Element | undefined = $state()
-  let panel: HTMLElement | undefined = $state()
   let root: HTMLElement | undefined = $state()
   let unreadDivider: HTMLElement | undefined = $state()
   let scrolledPastRoot = $state(false)
@@ -139,22 +138,6 @@
     }
   })
 
-  // Replies arrive after the page and their images later, so the bottom moves as the thread settles.
-  $effect(() => {
-    const container = element
-    const content = panel
-
-    if (container && content && unreadAfter && !target && !released) {
-      const observer = new ResizeObserver(() => {
-        container.scrollTo({top: container.scrollHeight, behavior: "smooth"})
-      })
-
-      observer.observe(content)
-
-      return () => observer.disconnect()
-    }
-  })
-
   $effect(() => {
     if (filters.length > 0) {
       const controller = new AbortController()
@@ -178,7 +161,7 @@
 <div class="relative flex min-h-0 flex-1 flex-col">
   <PageContent bind:element noPad class="@container flex flex-col">
     {#if $event}
-      <div bind:this={panel} class="bg-surface border-y border-line">
+      <div class="bg-surface border-y border-line">
         <div class="flex">
           <div class="flex min-w-0 grow flex-col">
             <div bind:this={root}>
