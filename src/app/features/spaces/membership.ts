@@ -4,7 +4,6 @@ import {
   relay,
   FOLLOWS,
   MESSAGING_RELAYS,
-  PROFILE,
   RELAY_ADD_MEMBER,
   RELAY_JOIN,
   RELAY_LEAVE,
@@ -76,7 +75,7 @@ export const completeSpaceJoin = async (url: string, notifications: boolean) => 
       relays: [url],
       filters: [
         {
-          kinds: [RELAYS, MESSAGING_RELAYS, FOLLOWS, PROFILE],
+          kinds: [RELAYS, MESSAGING_RELAYS, FOLLOWS],
           authors: [User.require(app.get()).pubkey],
         },
       ],

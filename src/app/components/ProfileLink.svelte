@@ -19,5 +19,5 @@
 </script>
 
 <Button onclick={preventDefault(openProfile)} class={cx(props.class, {"link-content": !unstyled})}>
-  @<ProfileName {pubkey} {url} />
+  @<ProfileName {pubkey} />
 </Button>

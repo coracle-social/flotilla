@@ -66,7 +66,7 @@
     <div class="flex items-start justify-between gap-2">
       {#if !hideProfile}
         {#if minimal}
-          @<ProfileName pubkey={event.pubkey} {url} />
+          @<ProfileName pubkey={event.pubkey} />
         {:else}
           <Profile pubkey={event.pubkey} {url} />
         {/if}

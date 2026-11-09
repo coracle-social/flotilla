@@ -74,7 +74,7 @@
         <span class="opacity-75">Several bots answer this — pick one:</span>
         {#each draft.matches as match (match.address())}
           <Button class="button button-xs button-neutral" onclick={qualify(match.author())}>
-            @<ProfileName pubkey={match.author()} url={target.url} />
+            @<ProfileName pubkey={match.author()} />
           </Button>
         {/each}
       </div>

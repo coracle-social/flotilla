@@ -257,7 +257,7 @@ export const makeEditor = async ({
                     createSuggestion: (value: string) => {
                       const target = document.createElement("div")
 
-                      mount(ProfileSuggestion, {target, props: {value, url}})
+                      mount(ProfileSuggestion, {target, props: {value}})
 
                       return target
                     },

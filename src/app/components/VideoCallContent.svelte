@@ -66,7 +66,6 @@
   const displays = $derived(
     deriveDisplaysByPubkey(
       removeUndefined(videoTiles.map(t => pubkeyFromLiveKitIdentity(t.liveKitIdentity))),
-      url,
     ),
   )
 
@@ -104,7 +103,7 @@
         class="pointer-events-none absolute inset-0" />
     {:else}
       <div class="absolute inset-0 flex items-center justify-center">
-        <ProfileCircle pubkey={pubkeyFromLiveKitIdentity(tile.liveKitIdentity)} {url} size={14} />
+        <ProfileCircle pubkey={pubkeyFromLiveKitIdentity(tile.liveKitIdentity)} size={14} />
       </div>
     {/if}
     {#if tile.track}

@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {removeUndefined} from "@welshman/lib"
   import {publish} from "@welshman/app"
   import Code2 from "@assets/icons/code-2.svg?dataurl"
   import ShareCircle from "@assets/icons/share-circle.svg?dataurl"
@@ -26,7 +25,7 @@
 
   const {pubkey, url, onClick, customActions}: Props = $props()
 
-  const profile = $profiles.one(pubkey, removeUndefined([url]))
+  const profile = $profiles.one(pubkey)
 
   const isSelf = $derived($user.pubkey === pubkey)
 

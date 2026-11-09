@@ -69,7 +69,7 @@
   }: Props = $props()
 
   const today = formatTimestampAsDate(now())
-  const profileDisplay = $profiles.display(event.pubkey, [url]).$
+  const profileDisplay = $profiles.display(event.pubkey).$
   const publication = $derived(
     $publisher.merge($publicationsByEventId.get(event.id) ?? noPublications),
   )
@@ -97,7 +97,7 @@
   const threads = $events.forUrl(url, [{kinds: [THREAD], "#q": [event.id]}]).$
 
   const commenterDisplays = $derived(
-    deriveDisplaysByPubkey(uniq($innerComments.map(e => e.pubkey)), url),
+    deriveDisplaysByPubkey(uniq($innerComments.map(e => e.pubkey))),
   )
 
   const reply = () => replyTo!(event)

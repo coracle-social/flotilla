@@ -98,7 +98,7 @@
     uniq([...$reactions.map(e => e.pubkey), ...$zaps.map(zap => zap.request.pubkey)]),
   )
 
-  const displays = $derived(deriveDisplaysByPubkey(reactorPubkeys, url))
+  const displays = $derived(deriveDisplaysByPubkey(reactorPubkeys))
 
   const likePubkeys = $derived(uniq($reactions.map(e => e.pubkey)))
 

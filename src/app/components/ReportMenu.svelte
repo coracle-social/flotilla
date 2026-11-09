@@ -81,7 +81,7 @@
       Confirm,
       {
         title: "Ban User",
-        message: `Are you sure you want to ban @${$profiles.display(reportedPubkey!, [url]).get()} from the space?`,
+        message: `Are you sure you want to ban @${$profiles.display(reportedPubkey!).get()} from the space?`,
         confirm: async () => {
           const {error} = await $relayManagement.forUrl(url).banPubkey(reportedPubkey!, reason)
 

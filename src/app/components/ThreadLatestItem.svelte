@@ -37,13 +37,13 @@
   href={path}
   class="group flex flex-col gap-2 border-b border-solid border-line px-4 py-3 transition-colors last:border-b-0 hover:bg-surface-less">
   <div class="flex min-w-0 items-start gap-3">
-    <ProfileCircle pubkey={event.pubkey} {url} size={8} class="mt-0.5 shrink-0" />
+    <ProfileCircle pubkey={event.pubkey} size={8} class="mt-0.5 shrink-0" />
     <div class="flex min-w-0 grow flex-col gap-1">
       <p class="truncate font-medium">
         <UnreadDot {path} class="mr-1" />{title || "Untitled thread"}
       </p>
       <div class="text-content-muted flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
-        <ProfileName pubkey={event.pubkey} {url} />
+        <ProfileName pubkey={event.pubkey} />
         {#if showRoom}
           {#if h}
             <RoomNameWithImage {url} {h} size={4} />

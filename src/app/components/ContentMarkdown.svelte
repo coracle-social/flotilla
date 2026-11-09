@@ -60,11 +60,10 @@
 
   type Props = {
     event: TrustedEvent
-    url?: string
     class?: string
   }
 
-  const {event, url, class: className}: Props = $props()
+  const {event, class: className}: Props = $props()
 
   const entityPattern = /(nostr:)?n(event|ote|pub|profile|addr)\w{10,1000}/g
 
@@ -91,7 +90,7 @@
     ),
   )
 
-  const displays = $derived(deriveDisplaysByPubkey(mentionedPubkeys, url))
+  const displays = $derived(deriveDisplaysByPubkey(mentionedPubkeys))
 
   // Bech32 entities aren't markdown, so swap them for links before parsing.
   const linkEntities = (markdown: string) =>

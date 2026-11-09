@@ -83,7 +83,7 @@
         avatars.push(
           mount(ProfileCircle, {
             target,
-            props: {pubkey: pin.pubkey, url, size: 9},
+            props: {pubkey: pin.pubkey, size: 9},
           }),
         )
 

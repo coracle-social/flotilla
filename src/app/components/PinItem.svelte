@@ -41,7 +41,7 @@
 
 {#snippet body()}
   <div class="flex min-w-0 items-center gap-2 text-xs text-content-muted">
-    <ProfileCircle pubkey={pin.event.pubkey} {url} size={4} />
+    <ProfileCircle pubkey={pin.event.pubkey} size={4} />
     <span class="min-w-0 truncate">
       <ProfileLink unstyled pubkey={pin.event.pubkey} {url} />
     </span>

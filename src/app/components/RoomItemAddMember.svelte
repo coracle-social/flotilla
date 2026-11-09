@@ -25,6 +25,7 @@
   {#if pubkeys.length === 1}
     <ProfileLink unstyled class="text-primary" {url} pubkey={pubkeys[0]} /> joined the room
   {:else}
-    <Button class="text-primary cursor-pointer" onclick={showAll}>{pubkeys.length} people</Button> joined the room
+    <Button class="text-primary cursor-pointer" onclick={showAll}>{pubkeys.length} people</Button> joined
+    the room
   {/if}
 </div>

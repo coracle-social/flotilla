@@ -77,7 +77,7 @@
   <div class="flex justify-between gap-2">
     <div>
       <Button class="link text-primary" onclick={showProfile}>
-        <ProfileName pubkey={event.pubkey} {url} />
+        <ProfileName pubkey={event.pubkey} />
       </Button>
       <span>
         requested membership in #<RoomName {url} {h} />

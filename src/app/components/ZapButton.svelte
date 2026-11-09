@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
-  import {removeUndefined} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {Zappers} from "@welshman/app"
   import Button from "@lib/components/Button.svelte"
@@ -22,7 +21,7 @@
 
   const {url, event, children, replaceState, ...props}: Props = $props()
 
-  const zapperPromise = $app.use(Zappers).loadForPubkey(event.pubkey, removeUndefined([url]))
+  const zapperPromise = $app.use(Zappers).loadForPubkey(event.pubkey)
 
   const onClick = async () => {
     loading = true
@@ -33,7 +32,7 @@
       if (zapper?.allowsNostr) {
         pushModal(Zap, {url, pubkey: event.pubkey, event}, {replaceState})
       } else {
-        pushModal(InfoZapperError, {url, pubkey: event.pubkey}, {replaceState})
+        pushModal(InfoZapperError, {pubkey: event.pubkey}, {replaceState})
       }
     } catch (e) {
       console.error(e)

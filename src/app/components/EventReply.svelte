@@ -109,7 +109,7 @@
   class="absolute inset-x-0 bottom-0 z-feature pr-2">
   <div class="card mx-2 my-2">
     {#if parent}
-      <ComposeParent {url} event={parent} clear={() => onClearParent?.()} verb="Replying to" />
+      <ComposeParent event={parent} clear={() => onClearParent?.()} verb="Replying to" />
     {/if}
     <div class="relative">
       <div class="note-editor grow overflow-hidden">

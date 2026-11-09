@@ -39,7 +39,7 @@
     hideTitle = false,
   }: Props = $props()
 
-  const profileDisplay = $profiles.display(event.pubkey, [url]).$
+  const profileDisplay = $profiles.display(event.pubkey).$
   const handle = $handles.forPubkey(event.pubkey).$
   const isOp = event.pubkey === threadPubkey
   const isComment = event.kind === COMMENT
@@ -61,7 +61,7 @@
     <aside
       class="bg-surface flex shrink-0 flex-row items-center gap-3 border-b p-3 @2xl:w-40 @2xl:flex-col @2xl:items-center @2xl:border-b-0 @2xl:border-r @2xl:p-4 @2xl:text-center border-line">
       <Button onclick={openProfile}>
-        <ProfileCircle pubkey={event.pubkey} {url} size={10} class="@2xl:size-14" />
+        <ProfileCircle pubkey={event.pubkey} size={10} class="@2xl:size-14" />
       </Button>
       <div class="flex min-w-0 flex-col gap-1 @2xl:items-center">
         <Button onclick={openProfile} class="text-bold truncate min-w-0 text-sm">

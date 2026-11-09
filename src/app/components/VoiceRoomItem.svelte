@@ -53,7 +53,7 @@
   $effect(() => {
     for (const p of $participants) {
       if (p.pubkey) {
-        $profiles.load(p.pubkey, [url])
+        $profiles.load(p.pubkey)
       }
     }
   })
@@ -88,7 +88,7 @@
             </div>
             <span class="truncate min-w-0 flex-1 text-xs opacity-70">
               {#if p.pubkey}
-                <ProfileName pubkey={p.pubkey} {url} />
+                <ProfileName pubkey={p.pubkey} />
               {:else}
                 Unknown
               {/if}

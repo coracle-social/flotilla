@@ -1,6 +1,5 @@
 <script lang="ts">
   import * as nip19 from "nostr-tools/nip19"
-  import {removeUndefined} from "@welshman/lib"
   import {displayHandle} from "@welshman/util"
   import {displayPubkey} from "@welshman/domain"
   import Icon from "@lib/components/Icon.svelte"
@@ -24,7 +23,7 @@
 
   const {pubkey, url, showPubkey, inert, avatarSize = 10}: Props = $props()
 
-  const profileDisplay = $profiles.display(pubkey, removeUndefined([url])).$
+  const profileDisplay = $profiles.display(pubkey).$
   const handle = $handles.forPubkey(pubkey).$
 
   const openProfile = () => {
@@ -37,11 +36,11 @@
 <div class="flex max-w-full min-w-0 items-start gap-2">
   {#if inert}
     <span class="py-1">
-      <ProfileCircle {pubkey} {url} size={avatarSize} />
+      <ProfileCircle {pubkey} size={avatarSize} />
     </span>
   {:else}
     <Button onclick={openProfile} class="py-1">
-      <ProfileCircle {pubkey} {url} size={avatarSize} />
+      <ProfileCircle {pubkey} size={avatarSize} />
     </Button>
   {/if}
   <div class="flex min-w-0 flex-col">
