@@ -1,5 +1,15 @@
 # Changelog
 
+# 1.15.1
+
+* Fix app stalling on startup
+* Load the network feed much faster
+* Open spaces and the member directory faster
+* Load profiles from each person's own relays rather than from spaces
+* Count a board's unread threads on its card
+* Collapse consecutive join messages into one line
+* Show the activity stream without a delay
+
 # 1.15.0
 
 * Redesign threads with a board view, search, and related threads
