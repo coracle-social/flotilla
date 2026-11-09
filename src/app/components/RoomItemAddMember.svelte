@@ -5,14 +5,21 @@
 
   type Props = {
     url: string
-    event: TrustedEvent
+    events: TrustedEvent[]
   }
 
-  const {url, event}: Props = $props()
+  const {url, events}: Props = $props()
+
+  // The same person joining twice in a run counts once.
+  const pubkeys = $derived([
+    ...new Set(events.flatMap(event => tagValues(hexTags("p"), event.tags))),
+  ])
+
+  const separator = (i: number) => (i === 0 ? "" : i === pubkeys.length - 1 ? " and " : ", ")
 </script>
 
-{#each tagValues(hexTags("p"), event.tags) as pubkey (pubkey)}
-  <div class="py-1 text-center text-xs opacity-75">
-    <ProfileLink unstyled class="text-primary" {url} {pubkey} /> joined the room
-  </div>
-{/each}
+<div class="py-1 text-center text-xs opacity-75">
+  {#each pubkeys as pubkey, i (pubkey)}
+    {separator(i)}<ProfileLink unstyled class="text-primary" {url} {pubkey} />
+  {/each} joined the room
+</div>

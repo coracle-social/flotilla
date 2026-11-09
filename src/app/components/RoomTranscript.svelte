@@ -370,8 +370,8 @@
             </div>
           {:else if item.type === "date"}
             <Divider>{item.value}</Divider>
-          {:else if item.value.kind === addMemberKind}
-            <RoomItemAddMember {url} event={item.value} />
+          {:else if item.type === "add-members"}
+            <RoomItemAddMember {url} events={item.value} />
           {:else}
             <RoomItem
               {url}
