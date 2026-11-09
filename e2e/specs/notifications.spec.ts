@@ -1406,6 +1406,9 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
   await expect(unreadDot(unopened)).toBeVisible()
   await expect(unreadDot(his)).toHaveCount(0)
 
+  // A phone leaves the latest list off, so the board card counts the unread threads under it.
+  await expect(bob.getByText("2 unread")).toBeVisible()
+
   await hers.click()
 
   await expect(bob.locator("article").filter({hasText: "worth talking about"})).toBeVisible()
@@ -1415,6 +1418,7 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
 
   await expect(unreadDot(hers)).toHaveCount(0)
   await expect(unreadDot(unopened)).toBeVisible()
+  await expect(bob.getByText("1 unread")).toBeVisible()
 
   await roomLink(bob, "General").click()
 

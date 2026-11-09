@@ -2139,6 +2139,8 @@ Acceptance:
   new, and bob's row still carries none.
 - Opening a thread takes its own row's dot down, and one he left alone keeps its
   dot.
+- Each board card counts the unread threads under it, so a phone that hides the
+  latest list still says which board to open.
 - The nav item stays clear once he has opened the list, whether or not a thread
   under it is still unread.
 

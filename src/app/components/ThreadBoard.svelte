@@ -6,6 +6,7 @@
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import {normalizeTopic} from "@lib/util"
   import {rooms} from "@app/core/plugins"
+  import {notifications} from "@app/features/notifications"
   import {displayRoom} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
 
@@ -32,6 +33,10 @@
       uniq(threads.flatMap(e => tagValues(topicTags("t"), e.tags))),
     ),
   )
+  // The rows that carry a dot are the latest list, which a phone leaves off, so the board says it too.
+  const unread = $derived(
+    threads.filter(e => $notifications.has(pages.thread.path({url, id: e.id}))).length,
+  )
 </script>
 
 <section class="card card-interactive card-flat relative p-0">
@@ -48,8 +53,15 @@
           General
         {/if}
       </h2>
-      <span class="text-content-muted shrink-0 whitespace-nowrap text-sm">
-        {topicsThisWeek} / week
+      <span class="flex shrink-0 items-center gap-2">
+        {#if unread > 0}
+          <span class="badge badge-primary badge-sm">
+            {unread} unread
+          </span>
+        {/if}
+        <span class="text-content-muted whitespace-nowrap text-sm">
+          {topicsThisWeek} / week
+        </span>
       </span>
     </div>
     {#if description}
