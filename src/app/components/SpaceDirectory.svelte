@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {onMount} from "svelte"
   import {derived} from "svelte/store"
   import {removeUndefined, sortBy} from "@welshman/lib"
   import {displayPubkey} from "@welshman/domain"
@@ -10,6 +11,7 @@
   import Button from "@lib/components/Button.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
   import {decodeGeohash} from "@lib/geohash"
+  import {createScroller} from "@lib/html"
   import SpaceMember from "@app/components/SpaceMember.svelte"
   import SpaceMemberMap, {type MemberPin} from "@app/components/SpaceMemberMap.svelte"
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
@@ -92,9 +94,25 @@
   const toggleMap = () => (showMap = !showMap)
 
   let showMap = $state(false)
+  let element: HTMLElement | undefined = $state()
+
+  // Every card mounts a handful of components, so a big space renders as the list scrolls
+  let limit = $state(30)
+
+  onMount(() => {
+    const scroller = createScroller({
+      element: element!,
+      delay: 300,
+      onScroll: () => {
+        limit += 30
+      },
+    })
+
+    return () => scroller.stop()
+  })
 </script>
 
-<section class="card card-media flex shrink-0 flex-col">
+<section class="card card-media flex shrink-0 flex-col" bind:this={element}>
   <div class="flex flex-col gap-3 border-b border-line p-4">
     <div class="flex items-center justify-between gap-2">
       <h2 class="flex items-center gap-2 text-lg font-bold">
@@ -145,7 +163,7 @@
         <p class="py-20 text-center">No members found.</p>
       {:else}
         <div class="grid grid-cols-1 gap-4 @3xl:grid-cols-2 @5xl:grid-cols-3">
-          {#each visibleMembers as { pubkey, roleList } (pubkey)}
+          {#each visibleMembers.slice(0, limit) as { pubkey, roleList } (pubkey)}
             <SpaceMember {url} {pubkey} roles={roleList} />
           {/each}
         </div>

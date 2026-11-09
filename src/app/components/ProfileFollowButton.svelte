@@ -16,7 +16,7 @@
   const {pubkey, class: className = "button button-neutral"}: Props = $props()
 
   const follows = $derived($followLists.one($user.pubkey))
-  const isFollowing = $derived(($follows?.pubkeys() ?? []).includes(pubkey))
+  const isFollowing = $derived(Boolean($follows?.includes(pubkey)))
 
   let loading = $state(false)
 

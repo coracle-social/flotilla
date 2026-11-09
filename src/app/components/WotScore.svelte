@@ -31,7 +31,7 @@
 
   const score = $derived($wot.score(target, WotScope.Follows).$)
   const follows = $derived($followLists.one($user.pubkey))
-  const active = $derived(($follows?.pubkeys() ?? []).includes(target))
+  const active = $derived(Boolean($follows?.includes(target)))
   const normalizedScore = $derived(clamp([0, max], $score) / max)
   const dashOffset = $derived(100 - 44 * normalizedScore)
   const style = $derived(`transform: rotate(${135 - normalizedScore * 180}deg)`)
