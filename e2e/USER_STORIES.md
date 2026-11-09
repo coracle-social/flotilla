@@ -1212,6 +1212,8 @@ Acceptance:
   shortcode renders as a small inline image instead of the raw text.
 - Single-backtick text renders as an inline monospace snippet and a fenced block
   renders as a full-width code block.
+- An inline snippet too long for the line wraps onto the next line, so the whole
+  command stays readable rather than ending in an ellipsis.
 - A mention renders as a clickable "@displayname" that opens that person's
   profile, and a plain email address renders as a mailto link.
 

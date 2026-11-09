@@ -388,9 +388,14 @@ test("US-140 open a quote before it has loaded", async ({seed, as}) => {
 
 test("US-066 see distinctive inline tokens", async ({seed, as}) => {
   const mention = `nostr:${npubEncode(users.bob.pubkey)}`
+  const command = [
+    "fla trigger-add gitea-pull https://gitea.coracle.social/coracle/flotilla",
+    `--agent meta --ask "Keep the pull request's preview in step with it."`,
+  ].join(" ")
   const content = [
     "Shipping today :partyparrot:",
     `Run \`npm install\` first, then ping ${mention}`,
+    `The preview trigger is \`${command}\` once the update lands`,
     "```",
     "const answer = 42",
     "```",
@@ -433,6 +438,12 @@ test("US-066 see distinctive inline tokens", async ({seed, as}) => {
   await expect(message.getByAltText(":partyparrot:")).toBeVisible()
   await expect(message.locator("code").filter({hasText: "npm install"})).toBeVisible()
   await expect(message.locator("code").filter({hasText: "const answer = 42"})).toBeVisible()
+
+  // A long snippet wraps over two or more lines instead of being cut off with an ellipsis.
+  const snippet = message.locator("code").filter({hasText: "fla trigger-add"})
+
+  await expect(snippet).toHaveText(command)
+  expect(await snippet.evaluate(element => element.getClientRects().length)).toBeGreaterThan(1)
 
   await message.getByRole("button", {name: "@Bob Boberton"}).click()
 
