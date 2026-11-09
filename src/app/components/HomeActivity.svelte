@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {sleep, sortBy} from "@welshman/lib"
+  import {sortBy} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeActivityItem from "@app/components/HomeActivityItem.svelte"
@@ -13,6 +13,7 @@
     countHomeNotificationTypes,
     groupNotifications,
     homeNotificationEvents,
+    homeNotificationsLoaded,
     homeNotificationsUnread,
     includedHomeActivityTypes,
     includedHomeNotificationEvents,
@@ -103,32 +104,30 @@
   <div class="px-4 py-3">
     <HomeActivityFilters {counts} />
   </div>
-  {#await sleep(1500)}
+  {#each entries as entry (entry.key)}
+    {#if entry.type === "conversation"}
+      <HomeActivityItem activity={entry.activity} />
+    {:else if entry.type === "space"}
+      <HomeActivityItemSpace content={entry.content} />
+    {:else}
+      <div class="p-4">
+        <HomeNotificationItem notification={entry.notification} {context} />
+      </div>
+    {/if}
+  {/each}
+  {#if hidden}
+    <div class="px-4 py-12 text-center font-medium">Nothing matches those filters</div>
+  {:else if entries.length === 0 && !$homeNotificationsLoaded}
     <div class="flex justify-center px-4 py-12">
       <Spinner loading />
     </div>
-  {:then}
-    {#each entries as entry (entry.key)}
-      {#if entry.type === "conversation"}
-        <HomeActivityItem activity={entry.activity} />
-      {:else if entry.type === "space"}
-        <HomeActivityItemSpace content={entry.content} />
-      {:else}
-        <div class="p-4">
-          <HomeNotificationItem notification={entry.notification} {context} />
-        </div>
-      {/if}
-    {/each}
-    {#if hidden}
-      <div class="px-4 py-12 text-center font-medium">Nothing matches those filters</div>
-    {:else if entries.length === 0}
-      <div class="flex flex-col items-center gap-3 px-4 py-12 text-center">
-        <p class="font-medium">You're all caught up</p>
-        <p class="max-w-md text-sm opacity-75">
-          Your rooms, chats and direct messages collect here, with replies and reactions to your
-          notes.
-        </p>
-      </div>
-    {/if}
-  {/await}
+  {:else if entries.length === 0}
+    <div class="flex flex-col items-center gap-3 px-4 py-12 text-center">
+      <p class="font-medium">You're all caught up</p>
+      <p class="max-w-md text-sm opacity-75">
+        Your rooms, chats and direct messages collect here, with replies and reactions to your
+        notes.
+      </p>
+    </div>
+  {/if}
 </div>

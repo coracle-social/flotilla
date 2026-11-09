@@ -1,4 +1,4 @@
-import {derived} from "svelte/store"
+import {derived, writable} from "svelte/store"
 import {
   ago,
   countBy,
@@ -231,8 +231,11 @@ const getHomeNotificationRelays = () =>
     .resolve([userInbox()])
     .then(scenario => scenario.limit(10).getUrls())
 
+// Whether every inbox relay has answered its first poll, which tells an empty stream from a loading one.
+export const homeNotificationsLoaded = writable(false)
+
 // The badge and the stream both read the repository, so this runs whether or not home is open.
-const syncHomeNotificationRelay = (url: string, pubkey: string) => {
+const syncHomeNotificationRelay = (url: string, pubkey: string, onLoaded: () => void) => {
   const controller = new AbortController()
   const filters = homeNotificationFilters(pubkey)
 
@@ -255,7 +258,7 @@ const syncHomeNotificationRelay = (url: string, pubkey: string) => {
     since = asked - int(MINUTE)
   }
 
-  poll()
+  poll().finally(onLoaded)
 
   const interval = setInterval(poll, ms(int(2, MINUTE)))
 
@@ -268,8 +271,23 @@ const syncHomeNotificationRelay = (url: string, pubkey: string) => {
 const syncHomeNotifications = () => {
   const $pubkey = app.get().user?.pubkey
 
+  homeNotificationsLoaded.set(false)
+
   if ($pubkey) {
-    const relaySyncs = makeKeyedSyncs(url => syncHomeNotificationRelay(url, $pubkey))
+    // The first set of relays decides when the stream has loaded; ones added later just add to it.
+    let unanswered: Maybe<Set<string>>
+
+    const onAnswered = (url: string) => {
+      unanswered?.delete(url)
+
+      if (unanswered?.size === 0) {
+        homeNotificationsLoaded.set(true)
+      }
+    }
+
+    const relaySyncs = makeKeyedSyncs(url =>
+      syncHomeNotificationRelay(url, $pubkey, () => onAnswered(url)),
+    )
 
     let stopped = false
 
@@ -277,6 +295,14 @@ const syncHomeNotifications = () => {
       const urls = await getHomeNotificationRelays()
 
       if (!stopped) {
+        if (!unanswered) {
+          unanswered = new Set(urls)
+
+          if (urls.length === 0) {
+            homeNotificationsLoaded.set(true)
+          }
+        }
+
         relaySyncs.reconcile(urls)
       }
     }

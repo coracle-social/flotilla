@@ -7,10 +7,13 @@ import {
   first,
   groupBy,
   indexBy,
+  initArray,
   min,
+  noop,
   partition,
   removeUndefined,
   shuffle,
+  sleep,
   sortBy,
   take,
   uniqBy,
@@ -21,7 +24,7 @@ import type {TrustedEvent} from "@welshman/util"
 import {synced} from "@welshman/store"
 import {Note} from "@welshman/domain"
 import {createScroller} from "@lib/html"
-import {router} from "@app/core/plugins"
+import {relayLists, router} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
 import {kv} from "@app/core/storage"
 import {PLATFORM_RELAYS} from "@app/core/env"
@@ -195,10 +198,17 @@ export const makeNetworkFeed = ({
       admitting = true
 
       try {
+        // A reply reads poorly without its note, but one nobody can find would hold up every entry below it
+        const deadline = sleep(6000).then(() => undefined)
+
         const loads = batch.map(async entry => {
           // Drawing waits on these, so they go out at the feed's own priority rather than behind its spans.
           const note =
-            entry.note ?? (await notes.get().load(entry.ref, {replies: entry.replies, priority: 1}))
+            entry.note ??
+            (await Promise.race([
+              notes.get().load(entry.ref, {replies: entry.replies, priority: 1}),
+              deadline,
+            ]))
 
           return [entry.key, note] as const
         })
@@ -259,16 +269,28 @@ export const makeNetworkFeed = ({
   // One selection over every follow lands on the few biggest relays, so each group scores its own.
   const start = (element: HTMLElement, pubkeys: string[]) => {
     // Every group would ask the same platform relays, so there they're asked once for everyone.
+    const [known, unknown] =
+      PLATFORM_RELAYS.length > 0
+        ? [pubkeys, []]
+        : partition(pubkey => Boolean(relayLists.get().get(pubkey)), pubkeys)
     const groups =
       PLATFORM_RELAYS.length > 0
-        ? [pubkeys]
-        : chunks(3, shuffle(pubkeys)).filter(group => group.length > 0)
+        ? [known]
+        : chunks(3, shuffle(known)).filter(group => group.length > 0)
+    const count = unknown.length > 0 ? groups.length + 1 : groups.length
     const scroller = createScroller({element, delay: 300, onScroll: admit, onSettle: settle})
 
-    pages.set(groups.map(() => []))
-    states.set(groups.map(() => ({status: "idle"})))
+    pages.set(initArray(count, () => []))
+    states.set(initArray(count, () => ({status: "idle"})))
     groups.forEach(startGroup)
     unsubscribers.push(scroller.stop)
+
+    // A follow whose relay list has to be fetched, or who has none, would hold up a whole group
+    if (unknown.length > 0) {
+      Promise.all(unknown.map(pubkey => relayLists.get().load(pubkey).catch(noop))).then(() =>
+        startGroup(unknown, groups.length),
+      )
+    }
   }
 
   const stop = () => {
