@@ -1,7 +1,10 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import {tagValues, hexTags} from "@welshman/util"
+  import Button from "@lib/components/Button.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
+  import RoomMembersJoined from "@app/components/RoomMembersJoined.svelte"
+  import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
@@ -15,11 +18,13 @@
     ...new Set(events.flatMap(event => tagValues(hexTags("p"), event.tags))),
   ])
 
-  const separator = (i: number) => (i === 0 ? "" : i === pubkeys.length - 1 ? " and " : ", ")
+  const showAll = () => pushModal(RoomMembersJoined, {url, pubkeys})
 </script>
 
 <div class="py-1 text-center text-xs opacity-75">
-  {#each pubkeys as pubkey, i (pubkey)}
-    {separator(i)}<ProfileLink unstyled class="text-primary" {url} {pubkey} />
-  {/each} joined the room
+  {#if pubkeys.length === 1}
+    <ProfileLink unstyled class="text-primary" {url} pubkey={pubkeys[0]} /> joined the room
+  {:else}
+    <Button class="text-primary cursor-pointer" onclick={showAll}>{pubkeys.length} people</Button> joined the room
+  {/if}
 </div>
