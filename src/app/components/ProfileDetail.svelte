@@ -127,8 +127,8 @@
           componentProps={{pubkey, url, customActions}} />
       </div>
       <ProfileStatus {pubkey} {url} />
-      <ProfileLocation {pubkey} {url} />
-      <ProfileAbout {pubkey} {url} />
+      <ProfileLocation {pubkey} />
+      <ProfileAbout {pubkey} />
       <ProfileBadges {pubkey} {url} />
       <ProfilePinnedNote {pubkey} {url} />
     </div>

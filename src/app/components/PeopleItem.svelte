@@ -24,7 +24,7 @@
       View Profile
     </Link>
   </div>
-  <ProfileAbout {pubkey} {url} />
+  <ProfileAbout {pubkey} />
   <ProfileBadges {pubkey} {url} />
   <Link href={pages.profile.path({pubkey})} class="button button-primary sm:hidden">
     <Icon icon={UserCircle} />

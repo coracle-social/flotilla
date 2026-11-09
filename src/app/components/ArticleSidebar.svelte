@@ -9,13 +9,12 @@
   import {reader} from "@app/core/domain"
 
   type Props = {
-    url: string
     events: TrustedEvent[]
     author?: string
     topic?: string
   }
 
-  let {url, events, author = $bindable(), topic = $bindable()}: Props = $props()
+  let {events, author = $bindable(), topic = $bindable()}: Props = $props()
 
   const byCount = <T,>(counts: Map<T, number>) =>
     sortBy(([, count]) => -count, Array.from(counts.entries()))
@@ -50,9 +49,9 @@
         class={cx("button button-xs w-full rounded-full font-normal", {
           "button-primary": pubkey === author,
         })}>
-        <ProfileCircle {pubkey} {url} size={5} />
+        <ProfileCircle {pubkey} size={5} />
         <span class="min-w-0 grow truncate text-left">
-          <ProfileName {pubkey} {url} />
+          <ProfileName {pubkey} />
         </span>
         <span class="opacity-75">{count}</span>
       </Button>

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {removeUndefined} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -9,15 +8,14 @@
   import {profiles} from "@app/core/plugins"
 
   type Props = {
-    url?: string
     verb: string
     event: TrustedEvent
     clear: () => void
   }
 
-  const {url, verb, event, clear}: Props = $props()
+  const {verb, event, clear}: Props = $props()
 
-  const display = $profiles.display(event.pubkey, removeUndefined([url])).$
+  const display = $profiles.display(event.pubkey).$
 </script>
 
 <ComposeBar class="relative pr-8">

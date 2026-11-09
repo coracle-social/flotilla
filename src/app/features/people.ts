@@ -1,5 +1,5 @@
 import {derived} from "svelte/store"
-import {noop, removeUndefined, shuffle} from "@welshman/lib"
+import {noop, shuffle} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {displayPubkey} from "@welshman/domain"
 import type {ProfileReader} from "@welshman/domain"
@@ -11,13 +11,11 @@ import {DEFAULT_PUBKEYS} from "@app/core/env"
 
 const profileIndex = fromApp($app => $app.use(Profiles).index.$)
 
-export const deriveProfilesByPubkey = (pubkeys: string[], url?: string) => {
-  const relays = removeUndefined([url])
-
+export const deriveProfilesByPubkey = (pubkeys: string[]) => {
   // Load profiles
   for (const pubkey of pubkeys) {
     if (pubkey) {
-      profiles.get().load(pubkey, relays).catch(noop)
+      profiles.get().load(pubkey).catch(noop)
     }
   }
 
@@ -28,9 +26,9 @@ export const deriveProfilesByPubkey = (pubkeys: string[], url?: string) => {
   )
 }
 
-export const deriveDisplaysByPubkey = (pubkeys: string[], url?: string) =>
+export const deriveDisplaysByPubkey = (pubkeys: string[]) =>
   derived(
-    deriveProfilesByPubkey(pubkeys, url),
+    deriveProfilesByPubkey(pubkeys),
     $profiles =>
       new Map(
         pubkeys.map(pubkey => [

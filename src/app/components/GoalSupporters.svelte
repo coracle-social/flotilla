@@ -65,10 +65,10 @@
                 <span class="text-sm text-content-subtle">{rank + 1}</span>
               {/if}
             </div>
-            <ProfileCircle pubkey={supporter.pubkey} {url} size={8} />
+            <ProfileCircle pubkey={supporter.pubkey} size={8} />
             <div class="flex min-w-0 grow flex-col">
               <span class="truncate font-bold">
-                <ProfileName pubkey={supporter.pubkey} {url} />
+                <ProfileName pubkey={supporter.pubkey} />
               </span>
               <span class="text-xs text-content-subtle">
                 {formatTimestampRelative(supporter.zappedAt)}

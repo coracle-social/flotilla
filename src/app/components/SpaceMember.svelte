@@ -19,7 +19,7 @@
 
   const {url, pubkey, roles = []}: Props = $props()
 
-  const profileDisplay = $profiles.display(pubkey, [url]).$
+  const profileDisplay = $profiles.display(pubkey).$
   const permissions = deriveSpacePermissions(url)
 
   const openProfile = () => pushModal(ProfileDetail, {pubkey, url})
@@ -43,9 +43,9 @@
         </div>
       {/if}
       <div class="line-clamp-1 text-sm opacity-70">
-        <ProfileAbout {pubkey} {url} singleLine />
+        <ProfileAbout {pubkey} singleLine />
       </div>
-      <ProfileLocation {pubkey} {url} />
+      <ProfileLocation {pubkey} />
     </div>
     {#if $permissions.memberMenu}
       <div class="pointer-events-auto shrink-0">

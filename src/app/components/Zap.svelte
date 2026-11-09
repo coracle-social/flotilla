@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {first, removeUndefined} from "@welshman/lib"
+  import {first} from "@welshman/lib"
   import {relay, toMsats} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {ZapRequest} from "@welshman/domain"
@@ -37,7 +37,7 @@
 
   const {url, pubkey, event}: Props = $props()
 
-  const zapper = $app.use(Zappers).forPubkey(pubkey, removeUndefined([url]))
+  const zapper = $app.use(Zappers).forPubkey(pubkey)
 
   const back = () => history.back()
 

@@ -68,7 +68,7 @@
       }),
       $app.use(Publisher).publish({
         event: await profileWriter.renderTemplate(),
-        relays: [...DEFAULT_RELAYS, ...DEFAULT_SPACES],
+        relays: DEFAULT_RELAYS,
       }),
       $roomLists.setRelays(DEFAULT_SPACES).then(publishRoomList),
     ])

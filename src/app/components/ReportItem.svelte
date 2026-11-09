@@ -39,7 +39,7 @@
 <Cv class="card card-sm flex flex-col gap-4">
   <div class="flex justify-between">
     <div>
-      <ProfileName pubkey={event.pubkey} {url} />
+      <ProfileName pubkey={event.pubkey} />
       <span>
         Reported this event
         {#if reason}
@@ -66,7 +66,7 @@
           <Button class="flex flex-col gap-2 w-full" onclick={onClick(event)}>
             <div class="flex items-center justify-between gap-2">
               <span class="profile-name">
-                @<ProfileName pubkey={event.pubkey} {url} />
+                @<ProfileName pubkey={event.pubkey} />
               </span>
               <span class="text-xs opacity-75">
                 {formatTimestamp(event.created_at)}

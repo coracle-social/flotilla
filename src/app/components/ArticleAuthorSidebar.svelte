@@ -51,7 +51,7 @@
     <section class="flex flex-col gap-3 border-b px-4 py-4 border-line">
       <Profile pubkey={event.pubkey} {url} />
       <div class="text-content-muted line-clamp-3 text-sm leading-snug">
-        <ProfileAbout pubkey={event.pubkey} {url} />
+        <ProfileAbout pubkey={event.pubkey} />
       </div>
       <p class="text-content-subtle text-xs font-bold tracking-wide uppercase">
         {articleCount}
@@ -61,7 +61,7 @@
     {#if others.length > 0}
       <section class="flex flex-col gap-2 px-4 py-4">
         <h2 class="text-sm font-bold tracking-wide uppercase opacity-60">
-          More from <ProfileName pubkey={event.pubkey} {url} />
+          More from <ProfileName pubkey={event.pubkey} />
         </h2>
         <div class="flex flex-col">
           {#each others as other (getAddress(other))}

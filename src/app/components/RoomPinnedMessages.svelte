@@ -86,17 +86,17 @@
         {#key currentEvent.pubkey}
           {#if expanded}
             <div class="flex min-w-0 flex-1 items-start gap-3">
-              <ProfileCircle pubkey={currentEvent.pubkey} {url} size={6} />
+              <ProfileCircle pubkey={currentEvent.pubkey} size={6} />
               <div class="min-w-0">
                 <p class="room-pins__label">Pinned message</p>
                 <p class="text-primary-content/70 truncate text-xs">
-                  <ProfileName pubkey={currentEvent.pubkey} {url} />
+                  <ProfileName pubkey={currentEvent.pubkey} />
                 </p>
               </div>
             </div>
           {:else}
             <button type="button" class="room-pins__expand" onclick={expand}>
-              <ProfileCircle pubkey={currentEvent.pubkey} {url} size={5} />
+              <ProfileCircle pubkey={currentEvent.pubkey} size={5} />
               <p class="room-pins__preview">{preview(currentEvent) || "Pinned message"}</p>
             </button>
           {/if}

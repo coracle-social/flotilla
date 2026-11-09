@@ -106,5 +106,5 @@
       </Spinner>
     </p>
   </div>
-  <ArticleSidebar {url} events={articles} bind:author bind:topic />
+  <ArticleSidebar events={articles} bind:author bind:topic />
 </PageContent>

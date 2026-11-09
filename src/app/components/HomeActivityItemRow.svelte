@@ -35,7 +35,7 @@
           {#if event.pubkey === $user.pubkey}
             You
           {:else}
-            <ProfileName pubkey={event.pubkey} {url} />
+            <ProfileName pubkey={event.pubkey} />
           {/if}
         </span>
         <span>:</span>

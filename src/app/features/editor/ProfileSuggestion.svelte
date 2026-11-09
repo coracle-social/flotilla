@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {removeUndefined} from "@welshman/lib"
   import {displayHandle} from "@welshman/util"
   import {displayPubkey} from "@welshman/domain"
   import {handles, profiles} from "@app/core/plugins"
@@ -9,19 +8,18 @@
 
   type Props = {
     value: string
-    url?: string
   }
 
-  const {value, url}: Props = $props()
+  const {value}: Props = $props()
 
   const pubkey = value
-  const profileDisplay = $profiles.display(pubkey, removeUndefined([url])).$
+  const profileDisplay = $profiles.display(pubkey).$
   const handle = $handles.forPubkey(pubkey).$
 </script>
 
 <div class="flex max-w-full gap-3">
   <div class="py-1">
-    <ProfileCircle {pubkey} {url} />
+    <ProfileCircle {pubkey} />
   </div>
   <div class="flex min-w-0 flex-col">
     <div class="flex items-center gap-2">

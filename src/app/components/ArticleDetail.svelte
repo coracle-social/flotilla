@@ -102,7 +102,6 @@
             <div class="mx-auto flex w-full max-w-[68ch] flex-col gap-6 py-8">
               <ContentMarkdown
                 event={$event}
-                {url}
                 class="content-markdown--article {$article.summary()
                   ? ''
                   : 'content-markdown--lead'}" />

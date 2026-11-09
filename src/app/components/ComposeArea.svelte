@@ -103,10 +103,10 @@
 
 <div class="flex flex-col gap-px">
   {#if parent}
-    <ComposeParent url={props.url} event={parent} clear={clearParent} verb="Replying to" />
+    <ComposeParent event={parent} clear={clearParent} verb="Replying to" />
   {/if}
   {#if sharedEvent}
-    <ComposeParent url={props.url} event={sharedEvent} clear={clearShare} verb="Sharing" />
+    <ComposeParent event={sharedEvent} clear={clearShare} verb="Sharing" />
   {/if}
   {#if eventToEdit}
     <ComposeEdit clear={clearEventToEdit} />

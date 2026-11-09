@@ -29,7 +29,7 @@
     {#if event}
       <Button onclick={open} class="flex w-full min-w-0 flex-col items-start gap-0.5 text-left">
         <strong class="truncate min-w-0 max-w-full text-sm">
-          <ProfileName pubkey={event.pubkey} url={tag[2]} />
+          <ProfileName pubkey={event.pubkey} />
         </strong>
         <span class="w-full min-w-0">
           <NoteContentMinimal {event} url={tag[2]} singleLine />

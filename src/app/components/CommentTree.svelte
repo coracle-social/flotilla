@@ -99,7 +99,7 @@
       <!-- A reply past the cap sits at its parent's level, so it names who it answers. -->
       {#if parent && atParentLevel}
         <span class={cx("text-content-subtle text-xs", !atParentLevelOnDesktop && "sm:hidden")}>
-          Replying to <ProfileName pubkey={parent.pubkey} {url} />
+          Replying to <ProfileName pubkey={parent.pubkey} />
         </span>
       {/if}
       <Content showEntire event={node.comment} {url} />

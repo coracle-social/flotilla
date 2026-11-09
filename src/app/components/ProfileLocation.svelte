@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {removeUndefined} from "@welshman/lib"
   import MapPoint from "@assets/icons/map-point.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import {profiles} from "@app/core/plugins"
@@ -7,12 +6,11 @@
 
   type Props = {
     pubkey: string
-    url?: string
   }
 
-  const {pubkey, url}: Props = $props()
+  const {pubkey}: Props = $props()
 
-  const profile = $profiles.one(pubkey, removeUndefined([url]))
+  const profile = $profiles.one(pubkey)
   const location = $derived(getProfileLocation($profile))
 </script>
 

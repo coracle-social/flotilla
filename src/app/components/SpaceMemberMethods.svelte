@@ -28,7 +28,7 @@
 
   const {url, pubkey}: Props = $props()
 
-  const profileDisplay = $profiles.display(pubkey, [url]).$
+  const profileDisplay = $profiles.display(pubkey).$
   const permissions = deriveSpacePermissions(url)
 
   // A relay can grant methods this client doesn't know, and leaving them out would revoke them.

@@ -50,13 +50,13 @@
         {@const onJump = () => jumpToMessage(event)}
         <div class="card card-sm flex flex-col gap-3 p-4">
           <div class="flex items-start gap-3">
-            <ProfileCircle pubkey={event.pubkey} {url} size={6} />
+            <ProfileCircle pubkey={event.pubkey} size={6} />
             <div class="min-w-0 flex-1">
               <p class="text-content-muted text-xs font-bold tracking-wide uppercase">
                 Pinned message
               </p>
               <p class="truncate text-sm">
-                <ProfileName pubkey={event.pubkey} {url} />
+                <ProfileName pubkey={event.pubkey} />
               </p>
             </div>
             <Icon icon={Pin} size={4} class="text-primary shrink-0 opacity-70" />

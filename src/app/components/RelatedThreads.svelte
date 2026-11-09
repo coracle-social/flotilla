@@ -43,7 +43,7 @@
               {reader(Thread)(thread).title() || "Untitled thread"}
             </p>
             <p class="text-xs opacity-75">
-              <ProfileName pubkey={thread.pubkey} {url} /> · {formatTimestamp(thread.created_at)}
+              <ProfileName pubkey={thread.pubkey} /> · {formatTimestamp(thread.created_at)}
             </p>
           </Link>
         {/each}

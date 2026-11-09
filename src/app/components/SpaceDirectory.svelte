@@ -50,12 +50,7 @@
   // A role section matches on its own name, so it survives a term its members don't match.
   let term = $state("")
 
-  const memberProfiles = $derived(
-    deriveProfilesByPubkey(
-      $memberList.map(m => m.pubkey),
-      url,
-    ),
-  )
+  const memberProfiles = $derived(deriveProfilesByPubkey($memberList.map(m => m.pubkey)))
 
   // A display is the npub until the profile loads, so search subscribes rather than reading once.
   const displayMember = (pubkey: string) =>

@@ -70,7 +70,7 @@
         subtitle: "Automatically add members to space",
         message:
           nonSpaceMembers.length === 1
-            ? `${$profiles.display(nonSpaceMembers[0], [url]).get()} is not a member of this space. Add them?`
+            ? `${$profiles.display(nonSpaceMembers[0]).get()} is not a member of this space. Add them?`
             : `${nonSpaceMembers.length} people are not members of this space. Add them?`,
         confirm: async () => {
           setKey("RoomMembersAdd.confirm", true)
