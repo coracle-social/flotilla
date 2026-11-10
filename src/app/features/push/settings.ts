@@ -24,10 +24,31 @@ export const saveNotificationSettings = async (
   }
 
   const permission = values.push ? await Push.request() : "granted"
+  const push = values.push && permission.startsWith("granted")
+
+  notificationSettings.set({...values, push})
+  syncEventReminders().catch(console.error)
+
+  return permission
+}
+
+export const getPermissionMessage = (permission: string) => {
+  if (permission === "denied") {
+    return "Notifications are blocked. Allow them for this app in your browser or device settings, then try again."
+  }
+
+  if (["default", "prompt", "prompt-with-rationale"].includes(permission)) {
+    return "Notifications weren't allowed. Choose Allow when your browser or device asks."
+  }
+
+  return `Failed to request notification permissions (${permission}).`
+}
+
+export const enableMessageNotifications = async () => {
+  const permission = await Push.request()
 
   if (permission.startsWith("granted")) {
-    notificationSettings.set(values)
-    syncEventReminders().catch(console.error)
+    notificationSettings.update(values => ({...values, push: true, messages: true}))
   }
 
   return permission

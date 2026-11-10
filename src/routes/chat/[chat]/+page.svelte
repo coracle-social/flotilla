@@ -11,9 +11,10 @@
 
 <script lang="ts">
   import {onMount} from "svelte"
+  import ConversationNotificationsPrompt from "@app/components/ConversationNotificationsPrompt.svelte"
   import Chat from "@app/components/Conversation.svelte"
   import * as pages from "@app/navigation/pages"
-  import {pushToast} from "@app/features/toast"
+  import {pushModal} from "@app/navigation/dialogs"
   import {Push, notificationSettings} from "@app/features/push"
   import type {PageProps} from "./$types"
 
@@ -22,25 +23,17 @@
   const pubkeys = pages.getConversationPubkeys(pages.conversation.decode(params).pubkeys)
 
   onMount(async () => {
-    if (!$dmNotificationsPrompted) {
+    await Promise.all([dmNotificationsPrompted.ready, notificationSettings.ready])
+
+    const {push, messages} = notificationSettings.get()
+
+    if (!$dmNotificationsPrompted && !(push && messages)) {
       dmNotificationsPrompted.set(true)
 
-      const permission = await Push.request()
-
-      if (!permission.startsWith("granted")) {
-        return pushToast({
-          theme: "error",
-          message: `Failed to request notification permissions (${permission}).`,
-        })
+      // A permission that was already refused can't be asked for again, so there's nothing to offer.
+      if ((await Push.check()) !== "denied") {
+        pushModal(ConversationNotificationsPrompt)
       }
-
-      notificationSettings.update(current => ({
-        ...current,
-        push: true,
-        messages: true,
-      }))
-
-      pushToast({message: "Notifications enabled!"})
     }
   })
 </script>

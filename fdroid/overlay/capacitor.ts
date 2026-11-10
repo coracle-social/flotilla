@@ -2,6 +2,10 @@ import type {IPushAdapter} from "@app/features/push/adapters/common"
 
 // Resolves the static import after the push plugin is removed; Android selects the fallback adapter.
 export class CapacitorNotifications implements IPushAdapter {
+  async check() {
+    return "denied"
+  }
+
   async request() {
     return "denied"
   }

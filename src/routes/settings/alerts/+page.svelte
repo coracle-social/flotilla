@@ -14,7 +14,13 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import SettingsFooter from "@app/components/SettingsFooter.svelte"
   import {pushToast} from "@app/features/toast"
-  import {notificationSettings, saveNotificationSettings} from "@app/features/push"
+  import {
+    getPermissionMessage,
+    notificationSettings,
+    saveNotificationSettings,
+  } from "@app/features/push"
+
+  const showSound = !Capacitor.isNativePlatform()
 
   const reset = () => {
     settings = {...notificationSettings.get()}
@@ -54,10 +60,7 @@
 
         settings.push = false
 
-        pushToast({
-          theme: "error",
-          message: `Failed to request notification permissions (${permission}).`,
-        })
+        pushToast({theme: "error", message: getPermissionMessage(permission)})
       }
     } catch (e) {
       console.error(e)
@@ -69,8 +72,16 @@
 
   let loading = $state(false)
   let settings = $state({...notificationSettings.get()})
+  let badgeSupported = $state(false)
+
+  Badge.isSupported().then(result => {
+    badgeSupported = result.isSupported
+  })
 
   const dirty = $derived(!equals($state.snapshot(settings), notificationSettings.get()))
+  const anyChannelOn = $derived(
+    (badgeSupported && settings.badge) || (showSound && settings.sound) || settings.push,
+  )
 </script>
 
 <form class="contents" {onsubmit}>
@@ -80,24 +91,20 @@
         <Icon icon={Bell} />
         Alert Settings
       </strong>
-      {#await Badge.isSupported()}
-        <!-- pass -->
-      {:then { isSupported }}
-        {#if isSupported}
-          <FieldInline>
-            {#snippet label()}
-              <p>Show badge for unread alerts</p>
-            {/snippet}
-            {#snippet input()}
-              <ToggleInput bind:checked={settings.badge} />
-            {/snippet}
-          </FieldInline>
-        {/if}
-      {/await}
-      {#if !Capacitor.isNativePlatform()}
+      {#if badgeSupported}
         <FieldInline>
           {#snippet label()}
-            <p>Play sound for new messages</p>
+            <p>Show badge for unread alerts</p>
+          {/snippet}
+          {#snippet input()}
+            <ToggleInput bind:checked={settings.badge} />
+          {/snippet}
+        </FieldInline>
+      {/if}
+      {#if showSound}
+        <FieldInline>
+          {#snippet label()}
+            <p>Play notification sounds</p>
           {/snippet}
           {#snippet input()}
             <ToggleInput bind:checked={settings.sound} />
@@ -115,7 +122,7 @@
     </div>
     <div
       class={cx("card bg-surface flex flex-col gap-4", {
-        "pointer-events-none opacity-50": !settings.badge && !settings.sound && !settings.push,
+        "pointer-events-none opacity-50": !anyChannelOn,
       })}>
       <strong class="text-lg">Alert Types</strong>
       <FieldInline>

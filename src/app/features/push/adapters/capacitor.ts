@@ -60,6 +60,11 @@ const requestToken = async () => {
 export class CapacitorNotifications implements IPushAdapter {
   _controller = maybe<AbortController>()
 
+  async check() {
+    const status = await PushNotifications.checkPermissions()
+    return status.receive
+  }
+
   async request() {
     const status = await requestPermissions()
     return status === "granted" ? requestToken() : status

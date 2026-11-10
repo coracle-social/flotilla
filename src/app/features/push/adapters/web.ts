@@ -13,12 +13,16 @@ const PREVIEW_LENGTH = 120
 export class WebNotifications implements IPushAdapter {
   _unsubscriber = maybe<Unsubscriber>()
 
+  async check() {
+    return Notification?.permission || "denied"
+  }
+
   async request(prompt = true) {
     if (prompt && Notification?.permission === "default") {
       await Notification.requestPermission()
     }
 
-    return Notification?.permission || "denied"
+    return this.check()
   }
 
   _notify(event: TrustedEvent, title: string, body: string) {

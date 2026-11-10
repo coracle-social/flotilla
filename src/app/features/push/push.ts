@@ -44,12 +44,24 @@ export class Push {
     return permission
   }
 
+  static check() {
+    return Push._getAdapter().check()
+  }
+
   static disable() {
     return Push._getAdapter().disable()
   }
 
-  static enable() {
-    return Push._getAdapter().enable()
+  // Permission can be revoked outside the app, so enabling turns the setting off instead of going quiet.
+  static async enable() {
+    const adapter = Push._getAdapter()
+    const permission = await adapter.check()
+
+    if (permission.startsWith("granted")) {
+      await adapter.enable()
+    } else {
+      notificationSettings.update(settings => ({...settings, push: false}))
+    }
   }
 
   static sync() {

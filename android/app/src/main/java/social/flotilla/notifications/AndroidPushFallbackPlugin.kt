@@ -42,6 +42,13 @@ class AndroidPushFallbackPlugin : Plugin() {
   }
 
   @PluginMethod
+  fun checkNotificationPermission(call: PluginCall) {
+    val state = getPermissionState("notifications")
+    val granted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || state == PermissionState.GRANTED
+    call.resolve(JSObject().put("receive", if (granted) "granted" else state.toString()))
+  }
+
+  @PluginMethod
   fun requestNotificationPermission(call: PluginCall) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || getPermissionState("notifications") == PermissionState.GRANTED) {
       call.resolve(JSObject().put("receive", "granted"))

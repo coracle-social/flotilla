@@ -26,6 +26,7 @@ type AndroidPushFallbackState = {
 }
 
 type AndroidPushFallbackPlugin = {
+  checkNotificationPermission: () => Promise<{receive: string}>
   requestNotificationPermission: () => Promise<{receive: string}>
   syncState: (args: {state: AndroidPushFallbackState}) => Promise<void>
 }
@@ -36,6 +37,10 @@ export class AndroidFallbackNotifications implements IPushAdapter {
   _controller = maybe<AbortController>()
   _subscriptions = new Map<string, AndroidFallbackSubscription>()
   _activeSince = now()
+
+  async check() {
+    return (await AndroidPushFallback.checkNotificationPermission()).receive
+  }
 
   async request() {
     return (await AndroidPushFallback.requestNotificationPermission()).receive

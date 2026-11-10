@@ -81,7 +81,7 @@ test("US-086 configure alerts", async ({seed, as}) => {
 
   const page = await as(users.alice, "/settings/alerts")
 
-  const sound = settingToggle(page, "Play sound for new messages")
+  const sound = settingToggle(page, "Play notification sounds")
   const alertTypes = page.locator("div.card").filter({has: page.getByText("Alert Types")})
 
   await expect(sound).toBeChecked()
@@ -114,7 +114,7 @@ test("US-086 configure alerts", async ({seed, as}) => {
   await waitForToastToClear(page)
   await page.reload()
 
-  await expect(settingToggle(page, "Play sound for new messages")).not.toBeChecked()
+  await expect(settingToggle(page, "Play notification sounds")).not.toBeChecked()
   await expect(reminders).toHaveCount(2)
   await expect(reminders.nth(1).locator("input")).toHaveValue("1440")
 })

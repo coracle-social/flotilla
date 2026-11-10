@@ -4,9 +4,12 @@ import {call, ms, now, on, parseJson, poll, spec, throttle, uniq} from "@welshma
 import {LOCAL_RELAY_URL} from "@welshman/net"
 import {
   getIdFilters,
+  hexTags,
+  matchFilter,
   matchFilters,
   tagSpec,
   tagValue,
+  tagValues,
   verifyEvent,
   MESSAGE,
   WRAP,
@@ -74,6 +77,7 @@ notificationSettings.ready.then(() =>
 )
 
 export interface IPushAdapter {
+  check: () => Promise<string>
   request: (prompt?: boolean) => Promise<string>
   disable: () => Promise<void>
   enable: () => Promise<void>
@@ -110,7 +114,13 @@ export const onNotification = call(() => {
               continue
             }
 
-            if (matchFilters(filters, event)) {
+            const {spaces, mentions, messages} = notificationSettings.get()
+            const notifyDirect = messages && matchFilter({kinds: DM_KINDS}, event)
+            const notifyMention =
+              mentions && $pubkey && tagValues(hexTags("p"), event.tags).includes($pubkey)
+            const notifySpace = spaces && event.kind === MESSAGE
+
+            if (matchFilters(filters, event) && (notifyDirect || notifyMention || notifySpace)) {
               for (const f of subscribers) {
                 f(event)
               }
