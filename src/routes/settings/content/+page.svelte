@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {difference} from "@welshman/lib"
+  import {difference, equals} from "@welshman/lib"
   import {BlossomServerLists, publish} from "@welshman/app"
   import NotesMinimalistic from "@assets/icons/notes-minimalistic.svg?dataurl"
   import Accessibility from "@assets/icons/accessibility.svg?dataurl"
@@ -18,9 +18,9 @@
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import LocalSttSettings from "@app/components/LocalSttSettings.svelte"
+  import SettingsFooter from "@app/components/SettingsFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {deriveUserItem, userMuteList} from "@app/core/user"
   import {blossomServerLists, muteLists} from "@app/core/plugins"
@@ -93,6 +93,12 @@
   let blossomServers = $state($userBlossomServerList?.urls() ?? [])
   let loadedMutes = Boolean($userMuteList)
   let loadedServers = Boolean($userBlossomServerList)
+
+  const dirty = $derived(
+    !equals($settings, $userSettingsValues) ||
+      !equals(mutedPubkeys, $userMuteList?.pubkeys() ?? []) ||
+      !equals(blossomServers, $userBlossomServerList?.urls() ?? []),
+  )
 
   // Both lists land after this page mounts, and a field that never saw one would publish over it.
   $effect(() => {
@@ -295,12 +301,6 @@
       </Field>
       <LocalSttSettings />
     </div>
-    <div class="card sticky -bottom-3 flex flex-row items-center justify-between gap-4">
-      <Button class="button button-neutral" onclick={reset} disabled={loading}
-        >Discard Changes</Button>
-      <Button class="button button-primary" type="submit" disabled={loading}>
-        <Spinner {loading}>Save Changes</Spinner>
-      </Button>
-    </div>
+    <SettingsFooter {dirty} {loading} {reset} />
   </PageContent>
 </form>

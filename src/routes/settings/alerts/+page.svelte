@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {removeAt, replaceAt, sleep} from "@welshman/lib"
+  import {equals, removeAt, replaceAt, sleep} from "@welshman/lib"
   import {Capacitor} from "@capacitor/core"
   import {Badge} from "@capawesome/capacitor-badge"
   import Bell from "@assets/icons/bell.svg?dataurl"
@@ -9,10 +9,10 @@
   import {preventDefault} from "@lib/html"
   import FieldInline from "@lib/components/FieldInline.svelte"
   import ToggleInput from "@lib/components/ToggleInput.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import SettingsFooter from "@app/components/SettingsFooter.svelte"
   import {pushToast} from "@app/features/toast"
   import {notificationSettings, saveNotificationSettings} from "@app/features/push"
 
@@ -69,6 +69,8 @@
 
   let loading = $state(false)
   let settings = $state({...notificationSettings.get()})
+
+  const dirty = $derived(!equals($state.snapshot(settings), notificationSettings.get()))
 </script>
 
 <form class="contents" {onsubmit}>
@@ -176,12 +178,6 @@
         </div>
       {/if}
     </div>
-    <div class="card sticky -bottom-3 flex flex-row items-center justify-between gap-4">
-      <Button class="button button-neutral" onclick={reset} disabled={loading}
-        >Discard Changes</Button>
-      <Button type="submit" class="button button-primary" disabled={loading}>
-        <Spinner {loading}>Save Changes</Spinner>
-      </Button>
-    </div>
+    <SettingsFooter {dirty} {loading} {reset} />
   </PageContent>
 </form>

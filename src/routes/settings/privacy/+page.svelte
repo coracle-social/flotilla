@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {equals} from "@welshman/lib"
   import {publish} from "@welshman/app"
   import ShieldMinimalistic from "@assets/icons/shield-minimalistic.svg?dataurl"
   import ForbiddenCircle from "@assets/icons/forbidden-circle.svg?dataurl"
@@ -12,6 +13,7 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import RelayList from "@app/components/RelayList.svelte"
+  import SettingsFooter from "@app/components/SettingsFooter.svelte"
   import {user} from "@app/core/user"
   import {blockedRelayLists} from "@app/core/plugins"
   import {pushModal} from "@app/navigation/dialogs"
@@ -84,6 +86,8 @@
   })
 
   const settings = createSettingsForm()
+
+  const dirty = $derived(!equals($settings, $userSettingsValues))
   const blockedRelayUrls = $blockedRelayLists.urls($user.pubkey).$
 
   let loading = $state(false)
@@ -215,12 +219,6 @@
         {/snippet}
       </Field>
     </div>
-    <div class="card sticky -bottom-3 flex flex-row items-center justify-between gap-4">
-      <Button class="button button-neutral" onclick={reset} disabled={loading}
-        >Discard Changes</Button>
-      <Button class="button button-primary" type="submit" disabled={loading}>
-        <Spinner {loading}>Save Changes</Spinner>
-      </Button>
-    </div>
+    <SettingsFooter {dirty} {loading} {reset} />
   </PageContent>
 </form>
