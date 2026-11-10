@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import {LOCALE, always, call, removeAt, replaceAt, sleep} from "@welshman/lib"
+  import {LOCALE, always, call, equals, removeAt, replaceAt, sleep} from "@welshman/lib"
   import {WalletType, displayRelayUrl, getLnUrl, isNWCWallet, fromMsats} from "@welshman/util"
   import DownloadMinimalistic from "@assets/icons/download-minimalistic.svg?dataurl"
   import UploadMinimalistic from "@assets/icons/upload-minimalistic.svg?dataurl"
@@ -140,6 +140,8 @@
   })
 
   const settings = createSettingsForm()
+  const dirty = $derived(!equals($settings.zap_amounts, $userSettingsValues.zap_amounts))
+
   let zapAmountsLoading = $state(false)
 </script>
 
@@ -303,10 +305,10 @@
         class="button button-neutral"
         type="button"
         onclick={resetZapAmounts}
-        disabled={zapAmountsLoading}>
+        disabled={zapAmountsLoading || !dirty}>
         Discard Changes
       </Button>
-      <Button type="submit" class="button button-primary" disabled={zapAmountsLoading}>
+      <Button type="submit" class="button button-primary" disabled={zapAmountsLoading || !dirty}>
         <Spinner loading={zapAmountsLoading}>Save Changes</Spinner>
       </Button>
     </div>
