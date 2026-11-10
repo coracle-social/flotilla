@@ -1,8 +1,13 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
+  import Bookmark from "@assets/icons/nav/bookmark.png"
+  import Compass from "@assets/icons/nav/compass.png"
+  import Letter from "@assets/icons/nav/letter.png"
+  import Magnifier from "@assets/icons/nav/magnifier.png"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Settings from "@assets/icons/settings.svg?dataurl"
   import Sidebar from "@assets/icons/sidebar-minimalistic.svg?dataurl"
+  import Icon from "@lib/components/Icon.svelte"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Divider from "@lib/components/Divider.svelte"
   import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
@@ -18,21 +23,12 @@
   import {goToMessages} from "@app/features/messages"
   import {lastSpaceUrl} from "@app/navigation/history"
   import {userProfile} from "@app/core/user"
-  import {flTheme} from "@app/features/theme"
 
   type Props = {
     children?: Snippet
   }
 
   const {children}: Props = $props()
-
-  const themedIcons = import.meta.glob<string>("@assets/icons/themed/*/*.png", {
-    eager: true,
-    import: "default",
-  })
-
-  const themedIcon = (name: string) =>
-    themedIcons[`/src/assets/icons/themed/${$flTheme}/${name}.png`]
 
   const chatHandler = () => goToMessages()
 
@@ -70,20 +66,20 @@
     </PrimaryNavItem>
     {#if PLATFORM_RELAYS.length === 0}
       <PrimaryNavItem href="/spaces" title="All Spaces" prefix="no-highlight">
-        <ImageIcon alt="All Spaces" src={themedIcon("compass")} size={10} />
+        <Icon icon={Compass} size={10} />
       </PrimaryNavItem>
     {/if}
     <PrimaryNavItem
       title="Messages"
       onclick={chatHandler}
       notification={$notifications.has("/chat")}>
-      <ImageIcon alt="Messages" src={themedIcon("letter")} size={10} />
+      <Icon icon={Letter} size={10} />
     </PrimaryNavItem>
     <PrimaryNavItem title="Bookmarks" href="/bookmarks" prefix="no-highlight">
-      <ImageIcon alt="Bookmarks" src={themedIcon("bookmark")} size={10} />
+      <Icon icon={Bookmark} size={10} />
     </PrimaryNavItem>
     <PrimaryNavItem title="Search" onclick={showSearch}>
-      <ImageIcon alt="Search" src={themedIcon("magnifier")} size={10} />
+      <Icon icon={Magnifier} size={10} />
     </PrimaryNavItem>
   </div>
 </div>
@@ -104,17 +100,17 @@
           <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
         </PrimaryNavItem>
         <PrimaryNavItem onclick={showSearch}>
-          <ImageIcon alt="Search" src={themedIcon("magnifier")} size={8} />
+          <Icon icon={Magnifier} size={8} />
         </PrimaryNavItem>
         <PrimaryNavItem
           href="/chat"
           onclick={chatHandler}
           notification={$notifications.has("/chat")}>
-          <ImageIcon alt="Messages" src={themedIcon("letter")} size={8} />
+          <Icon icon={Letter} size={8} />
         </PrimaryNavItem>
         {#if PLATFORM_RELAYS.length === 0}
           <PrimaryNavItem href="/spaces">
-            <ImageIcon alt="All Spaces" src={themedIcon("compass")} size={8} />
+            <Icon icon={Compass} size={8} />
           </PrimaryNavItem>
         {/if}
       </div>
