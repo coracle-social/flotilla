@@ -6,9 +6,10 @@ import type {Filter} from "@welshman/util"
 import type {Session} from "@welshman/app"
 import {app} from "@app/core/app"
 import {session} from "@app/core/session"
-import {pushState, requiresFallback} from "@app/features/push/adapters/common"
 import type {IPushAdapter} from "@app/features/push/adapters/common"
 import {syncRelaySubscriptions} from "@app/features/push/adapters/common"
+import {toPermission} from "@app/features/push/permission"
+import {requiresFallback, useFallback} from "@app/features/push/registration"
 
 type AndroidFallbackSubscription = {
   relay: string
@@ -39,11 +40,15 @@ export class AndroidFallbackNotifications implements IPushAdapter {
   _activeSince = now()
 
   async check() {
-    return (await AndroidPushFallback.checkNotificationPermission()).receive
+    const {receive} = await AndroidPushFallback.checkNotificationPermission()
+
+    return toPermission(receive)
   }
 
   async request() {
-    return (await AndroidPushFallback.requestNotificationPermission()).receive
+    const {receive} = await AndroidPushFallback.requestNotificationPermission()
+
+    return toPermission(receive)
   }
 
   async enable() {
@@ -85,8 +90,6 @@ export class AndroidFallbackNotifications implements IPushAdapter {
 
         doSync()
       })
-
-      pushState.set({useFallback: true})
     }
   }
 
@@ -97,6 +100,6 @@ export class AndroidFallbackNotifications implements IPushAdapter {
 
     await AndroidPushFallback.syncState({state: {}})
 
-    pushState.set({useFallback: requiresFallback})
+    useFallback.set(requiresFallback)
   }
 }

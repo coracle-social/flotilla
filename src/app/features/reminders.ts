@@ -2,17 +2,18 @@ import {MINUTE, first, formatTimestampRelative, int, ms, now, uniq} from "@welsh
 import {EVENT_RSVP, EVENT_TIME, getAddress, getIdFilters, isSignedEvent} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp, TimeEvent} from "@welshman/domain"
+import {merged} from "@welshman/store"
 import {getEventStart, isAttending} from "@app/features/spaces/calendar"
 import {app} from "@app/core/app"
 import {network, roomLists} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
-import {notificationSettings, pushState} from "@app/features/push/adapters/common"
-import {deleteReminderSchedule, putReminderSchedule} from "@app/features/push/server"
-import type {Reminder} from "@app/features/push/server"
+import {alertSettings} from "@app/features/alerts"
+import {deleteReminderSchedule, putReminderSchedule, pushRegistration} from "@app/features/push"
+import type {Reminder} from "@app/features/push"
 import {pushToast} from "@app/features/toast"
 
 const getLeadTimes = () => {
-  const {events, reminder_minutes} = notificationSettings.get()
+  const {events, reminder_minutes} = alertSettings.get()
 
   return events ? uniq(reminder_minutes) : []
 }
@@ -27,7 +28,7 @@ const makeReminders = (event: TrustedEvent, start: number): Reminder[] =>
     .filter(({at}) => at > now())
 
 const putSchedule = async (relay: string, event: TrustedEvent, reminders: Reminder[]) => {
-  const {subscription} = pushState.get()
+  const {subscription} = pushRegistration.get()
 
   if (subscription) {
     const res = await putReminderSchedule(subscription.key, {
@@ -113,9 +114,8 @@ const loadAttendedEvents = async (pubkey: string) => {
   return [...rsvped.flat(), ...hosted].filter(({event}) => isUpcoming(event))
 }
 
-// Every schedule the push server holds was built from these settings, so redo the lot.
-export const syncEventReminders = async () => {
-  const {subscription} = pushState.get()
+const syncEventReminders = async () => {
+  const {subscription} = pushRegistration.get()
   const pubkey = app.get().user?.pubkey
 
   if (subscription && pubkey) {
@@ -131,4 +131,20 @@ export const syncEventReminders = async () => {
       }
     }
   }
+}
+
+// Every schedule the push server holds was built from these settings, so rebuild them on any change.
+export const syncReminders = () => {
+  let syncedFor: string | undefined
+
+  return merged([pushRegistration, alertSettings]).subscribe(
+    ([{subscription}, {events, reminder_minutes}]) => {
+      const next = JSON.stringify([subscription?.key, events, reminder_minutes])
+
+      if (next !== syncedFor) {
+        syncedFor = next
+        syncEventReminders().catch(console.error)
+      }
+    },
+  )
 }

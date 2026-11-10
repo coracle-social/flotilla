@@ -15,7 +15,8 @@
   import Chat from "@app/components/Conversation.svelte"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
-  import {Push, notificationSettings} from "@app/features/push"
+  import {alertSettings} from "@app/features/alerts"
+  import {checkPushPermission, isBlocked} from "@app/features/push"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
@@ -23,15 +24,15 @@
   const pubkeys = pages.getConversationPubkeys(pages.conversation.decode(params).pubkeys)
 
   onMount(async () => {
-    await Promise.all([dmNotificationsPrompted.ready, notificationSettings.ready])
+    await Promise.all([dmNotificationsPrompted.ready, alertSettings.ready])
 
-    const {push, messages} = notificationSettings.get()
+    const {push, messages} = alertSettings.get()
 
     if (!$dmNotificationsPrompted && !(push && messages)) {
       dmNotificationsPrompted.set(true)
 
       // A permission that was already refused can't be asked for again, so there's nothing to offer.
-      if ((await Push.check()) !== "denied") {
+      if (!isBlocked(await checkPushPermission())) {
         pushModal(ConversationNotificationsPrompt)
       }
     }

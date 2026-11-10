@@ -46,8 +46,9 @@
   import * as notifications from "@app/features/notifications"
   import {backgroundNotificationCount, notificationCount} from "@app/features/notifications"
   import {syncBadges} from "@app/features/badges"
-  import {Push, notificationSettings} from "@app/features/push"
-  import {pushState} from "@app/features/push/adapters/common"
+  import {alertSettings} from "@app/features/alerts"
+  import {migratePushState, pushRegistration, syncPush, useFallback} from "@app/features/push"
+  import {syncReminders} from "@app/features/reminders"
   import {setupDeepLinks} from "@app/features/deepLinks"
   import {getPageTitle} from "@app/navigation/pages"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"
@@ -105,16 +106,19 @@
     // Set up logging, and logout in another tab
     unsubscribers.push(setupLogging(), syncLogout())
 
-    // Boot code reads and writes these, e.g. Push picks its adapter from pushState, so wait for stored values
+    // Boot code reads and writes these, e.g. the push transport is picked from the stored fallback flag
     await Promise.all([
       checked.ready,
       device.ready,
       shouldUnwrap.ready,
       wallet.ready,
-      notificationSettings.ready,
-      pushState.ready,
+      alertSettings.ready,
+      pushRegistration.ready,
+      useFallback.ready,
       forceHealthChecks.ready,
     ])
+
+    await migratePushState()
 
     // Wait for the caches sync reads from only
     await pluginCaches.get()?.ready
@@ -147,7 +151,7 @@
     unsubscribers.push(syncCheckedRemote())
 
     // Initialize background notifications
-    unsubscribers.push(Push.sync())
+    unsubscribers.push(syncPush(), syncReminders())
 
     // Wait for the new app's caches the way startup does, so sync reconciles against cached events.
     let currentApp = app.get()

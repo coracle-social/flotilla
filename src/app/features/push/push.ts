@@ -1,76 +1,106 @@
 import {Capacitor} from "@capacitor/core"
-import {notificationSettings, pushState} from "@app/features/push/adapters/common"
+import {alertSettings, setAlertChannels} from "@app/features/alerts"
 import type {IPushAdapter} from "@app/features/push/adapters/common"
+import {AndroidFallbackNotifications} from "@app/features/push/adapters/android"
+import {CapacitorNotifications} from "@app/features/push/adapters/capacitor"
 import {ElectronNotifications} from "@app/features/push/adapters/electron"
 import {WebNotifications} from "@app/features/push/adapters/web"
-import {CapacitorNotifications} from "@app/features/push/adapters/capacitor"
-import {AndroidFallbackNotifications} from "@app/features/push/adapters/android"
+import {isGranted} from "@app/features/push/permission"
+import type {PushPermission} from "@app/features/push/permission"
+import {useFallback} from "@app/features/push/registration"
 
-// Picks the platform's adapter once, and moves Android to its fallback when push permission is refused.
-export class Push {
-  static _adapter: IPushAdapter | undefined
+type PushTransport = "web" | "electron" | "capacitor" | "poll"
 
-  static _getAdapter() {
-    if (!Push._adapter) {
-      const {useFallback} = pushState.get()
-
-      if (Capacitor.getPlatform() === "electron") {
-        Push._adapter = new ElectronNotifications()
-      } else if (Capacitor.getPlatform() === "android" && useFallback) {
-        Push._adapter = new AndroidFallbackNotifications()
-      } else if (Capacitor.isPluginAvailable("PushNotifications")) {
-        Push._adapter = new CapacitorNotifications()
-      } else {
-        Push._adapter = new WebNotifications()
-      }
-    }
-
-    return Push._adapter
+const getTransport = (): PushTransport => {
+  if (Capacitor.getPlatform() === "electron") {
+    return "electron"
   }
 
-  static async request() {
-    const adapter = Push._getAdapter()
+  if (Capacitor.getPlatform() === "android" && useFallback.get()) {
+    return "poll"
+  }
 
-    let permission = await adapter.request()
-    if (permission !== "granted" && adapter instanceof CapacitorNotifications) {
-      Push._adapter = new AndroidFallbackNotifications()
-      permission = await Push._adapter.request()
+  if (Capacitor.isPluginAvailable("PushNotifications")) {
+    return "capacitor"
+  }
 
-      if (permission === "granted") {
-        pushState.set({useFallback: true})
-      }
-    }
+  return "web"
+}
 
+const makeAdapter = (transport: PushTransport): IPushAdapter => {
+  switch (transport) {
+    case "electron":
+      return new ElectronNotifications()
+    case "poll":
+      return new AndroidFallbackNotifications()
+    case "capacitor":
+      return new CapacitorNotifications()
+    default:
+      return new WebNotifications()
+  }
+}
+
+const adapters = new Map<PushTransport, IPushAdapter>()
+
+// Kept per transport, since an adapter holds the listeners and controllers its enable installed.
+const getAdapter = () => {
+  const transport = getTransport()
+  let adapter = adapters.get(transport)
+
+  if (!adapter) {
+    adapter = makeAdapter(transport)
+    adapters.set(transport, adapter)
+  }
+
+  return adapter
+}
+
+export const checkPushPermission = () => getAdapter().check()
+
+export const requestPushPermission = async (): Promise<PushPermission> => {
+  const permission = await getAdapter().request()
+
+  if (isGranted(permission) || getTransport() !== "capacitor") {
     return permission
   }
 
-  static check() {
-    return Push._getAdapter().check()
+  // A device whose FCM permission is refused can still be reached by the polling worker.
+  useFallback.set(true)
+
+  return getAdapter().request()
+}
+
+let enabled: IPushAdapter | undefined
+
+export const enablePush = async () => {
+  const adapter = getAdapter()
+
+  if (enabled && enabled !== adapter) {
+    await enabled.disable()
+    enabled = undefined
   }
 
-  static disable() {
-    return Push._getAdapter().disable()
-  }
-
-  // Permission can be revoked outside the app, so enabling turns the setting off instead of going quiet.
-  static async enable() {
-    const adapter = Push._getAdapter()
-    const permission = await adapter.check()
-
-    if (permission.startsWith("granted")) {
-      await adapter.enable()
-    } else {
-      notificationSettings.update(settings => ({...settings, push: false}))
-    }
-  }
-
-  static sync() {
-    return notificationSettings.subscribe(({push}) => {
-      if (push) {
-        Push.enable()
-      } else {
-        Push.disable()
-      }
-    })
+  // Permission can be revoked outside the app, so this turns the setting off instead of going quiet.
+  if (isGranted(await adapter.check())) {
+    await adapter.enable()
+    enabled = adapter
+  } else {
+    setAlertChannels({push: false})
   }
 }
+
+export const disablePush = async () => {
+  const adapter = enabled ?? getAdapter()
+  enabled = undefined
+
+  await adapter.disable()
+}
+
+export const syncPush = () =>
+  alertSettings.subscribe(({push}) => {
+    if (push) {
+      enablePush()
+    } else {
+      disablePush()
+    }
+  })

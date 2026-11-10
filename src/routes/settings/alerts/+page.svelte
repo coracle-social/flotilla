@@ -2,7 +2,6 @@
   import cx from "classnames"
   import {equals, removeAt, replaceAt, sleep} from "@welshman/lib"
   import {Capacitor} from "@capacitor/core"
-  import {Badge} from "@capawesome/capacitor-badge"
   import Bell from "@assets/icons/bell.svg?dataurl"
   import AddCircle from "@assets/icons/add-circle.svg?dataurl"
   import TrashBin2 from "@assets/icons/trash-bin-2.svg?dataurl"
@@ -14,16 +13,14 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import SettingsFooter from "@app/components/SettingsFooter.svelte"
   import {pushToast} from "@app/features/toast"
-  import {
-    getPermissionMessage,
-    notificationSettings,
-    saveNotificationSettings,
-  } from "@app/features/push"
+  import {badgesSupported} from "@app/features/badges"
+  import {alertSettings} from "@app/features/alerts"
+  import {getPermissionMessage, isGranted, saveAlertSettings} from "@app/features/push"
 
   const showSound = !Capacitor.isNativePlatform()
 
   const reset = () => {
-    settings = {...notificationSettings.get()}
+    settings = {...alertSettings.get()}
   }
 
   const addReminder = () => {
@@ -51,9 +48,9 @@
         })
       }
 
-      const permission = await saveNotificationSettings($state.snapshot(settings))
+      const permission = await saveAlertSettings($state.snapshot(settings))
 
-      if (permission.startsWith("granted")) {
+      if (isGranted(permission)) {
         pushToast({message: "Your settings have been saved!"})
       } else {
         await sleep(300)
@@ -71,16 +68,11 @@
   })
 
   let loading = $state(false)
-  let settings = $state({...notificationSettings.get()})
-  let badgeSupported = $state(false)
+  let settings = $state({...alertSettings.get()})
 
-  Badge.isSupported().then(result => {
-    badgeSupported = result.isSupported
-  })
-
-  const dirty = $derived(!equals($state.snapshot(settings), notificationSettings.get()))
+  const dirty = $derived(!equals($state.snapshot(settings), alertSettings.get()))
   const anyChannelOn = $derived(
-    (badgeSupported && settings.badge) || (showSound && settings.sound) || settings.push,
+    ($badgesSupported && settings.badge) || (showSound && settings.sound) || settings.push,
   )
 </script>
 
@@ -91,7 +83,7 @@
         <Icon icon={Bell} />
         Alert Settings
       </strong>
-      {#if badgeSupported}
+      {#if $badgesSupported}
         <FieldInline>
           {#snippet label()}
             <p>Show badge for unread alerts</p>

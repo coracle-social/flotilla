@@ -8,11 +8,12 @@ import {app} from "@app/core/app"
 import {messagingRelayLists, publisher, roomLists} from "@app/core/plugins"
 import {device} from "@app/core/device"
 import {PUSH_BRIDGE} from "@app/core/env"
-import {pushState} from "@app/features/push/adapters/common"
 import type {IPushAdapter} from "@app/features/push/adapters/common"
 import {onPushNotificationAction, syncRelaySubscriptions} from "@app/features/push/adapters/common"
+import {isGranted, toPermission} from "@app/features/push/permission"
+import type {PushPermission} from "@app/features/push/permission"
+import {pushRegistration} from "@app/features/push/registration"
 import {createPushSubscription, deletePushSubscription} from "@app/features/push/server"
-import {syncEventReminders} from "@app/features/reminders"
 
 // NIP-9a: asks a relay to post matching events to the push server's callback
 const PUSH_SUBSCRIPTION = 30390
@@ -28,7 +29,7 @@ const requestPermissions = async () => {
 }
 
 const requestToken = async () => {
-  let {token} = pushState.get()
+  let {token} = pushRegistration.get()
   let error = "failed to retrieve token"
 
   if (!token) {
@@ -52,26 +53,38 @@ const requestToken = async () => {
     listeners.forEach(p => p.then(listener => listener.remove()))
   }
 
-  pushState.update(assoc("token", token))
+  if (!token) {
+    console.error(`Failed to register for push notifications: ${error}`)
 
-  return token ? "granted" : error
+    return
+  }
+
+  pushRegistration.update(assoc("token", token))
+
+  return token
 }
 
 export class CapacitorNotifications implements IPushAdapter {
   _controller = maybe<AbortController>()
 
-  async check() {
+  async check(): Promise<PushPermission> {
     const status = await PushNotifications.checkPermissions()
-    return status.receive
+
+    return toPermission(status.receive)
   }
 
-  async request() {
-    const status = await requestPermissions()
-    return status === "granted" ? requestToken() : status
+  async request(): Promise<PushPermission> {
+    const permission = toPermission(await requestPermissions())
+
+    if (isGranted(permission) && !(await requestToken())) {
+      return "unavailable"
+    }
+
+    return permission
   }
 
   async _syncServer(signal: AbortSignal) {
-    const {token, subscription} = pushState.get()
+    const {token, subscription} = pushRegistration.get()
 
     if (!token) {
       throw new Error("Attempted to sync push server without a token")
@@ -88,7 +101,7 @@ export class CapacitorNotifications implements IPushAdapter {
           const json = await res.json()
 
           if (json?.callback && json?.key) {
-            pushState.update(assoc("subscription", json))
+            pushRegistration.update(assoc("subscription", json))
           } else {
             console.warn("Failed to register with push server (bad response)")
           }
@@ -113,7 +126,7 @@ export class CapacitorNotifications implements IPushAdapter {
   }
 
   _syncRelay = async (relay: string, key: string, filters: Filter[], ignore: Filter[] = []) => {
-    const {subscription} = pushState.get()
+    const {subscription} = pushRegistration.get()
 
     if (!subscription) {
       console.warn(`Failed to subscribe ${relay} to notifications: no subscription`)
@@ -194,8 +207,6 @@ export class CapacitorNotifications implements IPushAdapter {
             this._unsyncRelay(url, key)
           }
         })
-
-        await syncEventReminders()
       } catch (e) {
         console.error(e)
       }
@@ -206,7 +217,7 @@ export class CapacitorNotifications implements IPushAdapter {
     this._controller?.abort()
     this._controller = undefined
 
-    const {subscription} = pushState.get()
+    const {subscription} = pushRegistration.get()
 
     if (subscription) {
       const res = await deletePushSubscription(subscription.key)
@@ -216,7 +227,7 @@ export class CapacitorNotifications implements IPushAdapter {
       }
     }
 
-    pushState.set({})
+    pushRegistration.set({})
 
     const $pubkey = app.get().user?.pubkey
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onMount} from "svelte"
   import {Capacitor} from "@capacitor/core"
-  import {notificationSettings, onNotification} from "@app/features/push"
+  import {alertSettings, onAlert} from "@app/features/alerts"
 
   let audioElement: HTMLAudioElement
 
@@ -24,8 +24,8 @@
 
     document.addEventListener("visibilitychange", onVisibilityChange)
 
-    const unsubscribe = onNotification(() => {
-      if (enabled && $notificationSettings.sound) {
+    const unsubscribe = onAlert(() => {
+      if (enabled && $alertSettings.sound) {
         audioElement?.play()
       }
     })

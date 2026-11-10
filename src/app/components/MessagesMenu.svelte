@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {assoc} from "@welshman/lib"
   import {publish} from "@welshman/app"
   import Check from "@assets/icons/check.svg?dataurl"
   import Bell from "@assets/icons/bell.svg?dataurl"
@@ -13,7 +12,7 @@
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
   import {setChecked} from "@app/features/checked"
-  import {notificationSettings} from "@app/features/push"
+  import {alertSettings, setAlertTypes} from "@app/features/alerts"
 
   type Props = {
     onClick: () => void
@@ -23,8 +22,7 @@
 
   const markAsRead = () => setChecked("/chat/*")
 
-  const toggleAlerts = () =>
-    notificationSettings.update(assoc("messages", !$notificationSettings.messages))
+  const toggleAlerts = () => setAlertTypes({messages: !$alertSettings.messages})
 
   const showRelays = () =>
     pushModal(RelayList, {
@@ -46,7 +44,7 @@
   </li>
   <li>
     <Button onclick={toggleAlerts}>
-      {#if $notificationSettings.messages}
+      {#if $alertSettings.messages}
         <Icon size={4} icon={BellOff} />
         Disable alerts
       {:else}

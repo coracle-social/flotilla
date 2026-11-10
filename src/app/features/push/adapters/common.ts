@@ -1,149 +1,25 @@
-import type {Subscriber, Unsubscriber} from "svelte/store"
-import {Capacitor} from "@capacitor/core"
-import {call, ms, now, on, parseJson, poll, spec, throttle, uniq} from "@welshman/lib"
+import {ms, parseJson, poll, throttle} from "@welshman/lib"
 import {LOCAL_RELAY_URL} from "@welshman/net"
-import {
-  getIdFilters,
-  hexTags,
-  matchFilter,
-  matchFilters,
-  tagSpec,
-  tagValue,
-  tagValues,
-  verifyEvent,
-  MESSAGE,
-  WRAP,
-  type Filter,
-  type TrustedEvent,
-} from "@welshman/util"
-import {merged, synced, withGetter} from "@welshman/store"
-import type {RepositoryUpdate} from "@welshman/store"
+import {getIdFilters, verifyEvent, WRAP} from "@welshman/util"
+import type {Filter, TrustedEvent} from "@welshman/util"
+import {merged} from "@welshman/store"
 import {User} from "@welshman/app"
-import {navigate} from "@app/navigation/navigate"
 import {app} from "@app/core/app"
 import {messagingRelayLists, network, roomLists} from "@app/core/plugins"
-import {DM_KINDS} from "@lib/util"
+import {userSettingsValues} from "@app/core/settings"
+import {alertSettings, getMessageAlertFilters, getSpaceAlertFilters} from "@app/features/alerts"
+import type {PushPermission} from "@app/features/push/permission"
 import {goToMessages} from "@app/features/messages"
-import {getMutedRooms, shouldNotify, userSettingsValues} from "@app/core/settings"
+import {navigate} from "@app/navigation/navigate"
 import {getEventPath} from "@app/navigation/locations"
 import {goToSpace} from "@app/navigation/history"
-import {kv} from "@app/core/storage"
-
-export type PushSubscription = {
-  key: string
-  callback: string
-}
-
-export type PushState = {
-  token?: string
-  useFallback?: boolean
-  subscription?: PushSubscription
-}
-
-// The F-Droid build ships without the push plugin, so those installs can only ever poll
-export const requiresFallback =
-  Capacitor.getPlatform() === "android" && !Capacitor.isPluginAvailable("PushNotifications")
-
-export const pushState = withGetter(
-  synced<PushState>({
-    key: "notificationState",
-    storage: kv,
-    defaultValue: {useFallback: requiresFallback},
-  }),
-)
-
-const defaultNotificationSettings = {
-  push: false,
-  sound: true,
-  badge: false,
-  spaces: true,
-  mentions: true,
-  messages: true,
-  events: true,
-  reminder_minutes: [5],
-}
-
-export const notificationSettings = withGetter(
-  synced({
-    key: "notificationSettings",
-    storage: kv,
-    defaultValue: defaultNotificationSettings,
-  }),
-)
-
-// synced restores the saved object whole, so fill in fields added since it was saved.
-notificationSettings.ready.then(() =>
-  notificationSettings.update(settings => ({...defaultNotificationSettings, ...settings})),
-)
 
 export interface IPushAdapter {
-  check: () => Promise<string>
-  request: (prompt?: boolean) => Promise<string>
+  check: () => Promise<PushPermission>
+  request: () => Promise<PushPermission>
   disable: () => Promise<void>
   enable: () => Promise<void>
 }
-
-export const onNotification = call(() => {
-  const subscribers: Subscriber<TrustedEvent>[] = []
-
-  let unsubscribe: Unsubscriber | undefined
-
-  return (f: (event: TrustedEvent) => void) => {
-    subscribers.push(f)
-
-    if (!unsubscribe) {
-      let unsubscribeRepository: Unsubscriber | undefined
-      const unsubscribeApp = app.subscribe($app => {
-        unsubscribeRepository?.()
-        const filters = [{kinds: [MESSAGE, ...DM_KINDS], since: now()}]
-        unsubscribeRepository = on($app.repository, "update", ({added}: RepositoryUpdate) => {
-          const $pubkey = $app.user?.pubkey
-
-          for (const event of added) {
-            if (event.pubkey == $pubkey) {
-              continue
-            }
-
-            const h = tagValue(tagSpec("h"), event.tags)
-
-            if (
-              Array.from($app.repository.tracker.getRelays(event.id)).every(
-                url => !shouldNotify(url, h),
-              )
-            ) {
-              continue
-            }
-
-            const {spaces, mentions, messages} = notificationSettings.get()
-            const notifyDirect = messages && matchFilter({kinds: DM_KINDS}, event)
-            const notifyMention =
-              mentions && $pubkey && tagValues(hexTags("p"), event.tags).includes($pubkey)
-            const notifySpace = spaces && event.kind === MESSAGE
-
-            if (matchFilters(filters, event) && (notifyDirect || notifyMention || notifySpace)) {
-              for (const f of subscribers) {
-                f(event)
-              }
-            }
-          }
-        })
-      })
-      unsubscribe = () => {
-        unsubscribeApp()
-        unsubscribeRepository?.()
-      }
-    }
-
-    return () => {
-      subscribers.splice(subscribers.indexOf(f), 1)
-
-      if (subscribers.length === 0) {
-        unsubscribe?.()
-        unsubscribe = undefined
-      }
-    }
-  }
-})
 
 const ingestNotification = async (relay: string, id: string, json?: string) => {
   const pushed = parseJson<TrustedEvent>(json)
@@ -191,6 +67,7 @@ export const onPushNotificationAction = async (action: {
   }
 }
 
+// NIP-9a: asks a relay to post matching events to the push server's callback
 export const syncRelaySubscriptions = (
   signal: AbortSignal,
   sync: (url: string, key: string, filters: Filter[], ignore: Filter[]) => void,
@@ -199,57 +76,30 @@ export const syncRelaySubscriptions = (
 
   const unsubscribeSpaces = merged([
     roomLists.get().urls($pubkey).$,
-    notificationSettings,
+    alertSettings,
     userSettingsValues,
   ]).subscribe(
-    throttle(3000, ([$spaceUrls, {spaces, mentions}, $settings]) => {
-      const baseFilter = {kinds: [MESSAGE]}
-
+    throttle(3000, ([$spaceUrls, $types, $settings]) => {
       for (const url of $spaceUrls) {
-        const {notify = true, exceptions = []} = $settings.alerts.find(spec({url})) || {}
-        const muted = getMutedRooms($settings, url)
-        const filters: Filter[] = []
-        const ignore: Filter[] = []
+        const {include, ignore} = getSpaceAlertFilters({
+          url,
+          types: $types,
+          settings: $settings,
+          pubkey: $pubkey,
+        })
 
-        if (spaces) {
-          if (notify) {
-            const skipped = uniq([...exceptions, ...muted])
-
-            if (skipped.length > 0) {
-              ignore.push({"#h": skipped})
-            }
-            filters.push(baseFilter)
-          } else {
-            const included = exceptions.filter(h => !muted.includes(h))
-
-            if (included.length > 0) {
-              filters.push({...baseFilter, "#h": included})
-            }
-          }
-        }
-
-        if (mentions) {
-          filters.push({...baseFilter, "#p": [$pubkey]})
-        }
-
-        sync(url, "spaces", filters, ignore)
+        sync(url, "spaces", include, ignore)
       }
     }),
   )
 
   const unsubscribeMessages = merged([
     messagingRelayLists.get().urls($pubkey).$,
-    notificationSettings,
+    alertSettings,
   ]).subscribe(
-    throttle(3000, ([$messagingUrls, {messages}]) => {
+    throttle(3000, ([$messagingUrls, $types]) => {
       for (const url of $messagingUrls) {
-        const filters: Filter[] = []
-
-        if (messages) {
-          filters.push({kinds: [WRAP], "#p": [$pubkey]})
-        }
-
-        sync(url, "messages", filters, [])
+        sync(url, "messages", getMessageAlertFilters($types, $pubkey), [])
       }
     }),
   )

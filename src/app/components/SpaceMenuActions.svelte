@@ -31,7 +31,7 @@
   import {userSpaceUrls} from "@app/features/spaces"
   import {deriveSpaceActionItems} from "@app/features/spaces/actionItems"
   import {deriveShouldNotify, setSpaceNotifications} from "@app/core/settings"
-  import {notificationSettings} from "@app/features/push"
+  import {alertSettings} from "@app/features/alerts"
   import {popModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
   import {goToMessages} from "@app/features/messages"
@@ -153,7 +153,7 @@
 {#if $relay?.pubkey && $relay.pubkey !== $user.pubkey}
   {@render actionButton(contactOwner, Letter, "Contact Owner")}
 {/if}
-{#if $notificationSettings.push}
+{#if $alertSettings.push}
   {@render actionButton(
     toggleSpaceNotifications,
     $shouldNotify ? Bell : BellOff,

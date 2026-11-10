@@ -12,7 +12,7 @@
   import {deriveSpaceActionItems} from "@app/features/spaces/actionItems"
   import {deriveShouldNotify} from "@app/core/settings"
   import {HIDE_NOSTR} from "@app/core/env"
-  import {notificationSettings} from "@app/features/push"
+  import {alertSettings} from "@app/features/alerts"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
@@ -69,7 +69,7 @@
           $actionItems.length > 0 ? "opacity-100" : "opacity-0",
         )}>
       </div>
-      {#if $notificationSettings.push && !$shouldNotify}
+      {#if $alertSettings.push && !$shouldNotify}
         <Icon icon={BellOff} size={3} class="opacity-50" />
       {/if}
     </strong>
