@@ -1,6 +1,6 @@
 import {derived} from "svelte/store"
-import {addToMapKey, dec} from "@welshman/lib"
-import type {Relay} from "@welshman/domain"
+import {addToMapKey, dec, indexBy} from "@welshman/lib"
+import {Relay} from "@welshman/domain"
 import {throttled} from "@welshman/store"
 import {RoomLists, Rooms, Relays, createSearch} from "@welshman/app"
 import {fromApp} from "@app/core/app"
@@ -34,9 +34,11 @@ export const deriveSpaceSearch = () => {
       ),
       spacePubkeysByUrl,
     ],
-    ([$relays, $spacePubkeysByUrl]) =>
-      createSearch(
-        $relays.filter(r => $spacePubkeysByUrl.has(r.url)),
+    ([$relays, $spacePubkeysByUrl]) => {
+      const relaysByUrl = indexBy((relay: Relay) => relay.url, $relays)
+
+      return createSearch(
+        Array.from($spacePubkeysByUrl.keys(), url => relaysByUrl.get(url) ?? new Relay(url)),
         {
           getValue: (relay: Relay) => relay.url,
           sortFn: ({score, item}) => {
@@ -53,7 +55,8 @@ export const deriveSpaceSearch = () => {
             shouldSort: false,
           },
         },
-      ),
+      )
+    },
   )
 }
 

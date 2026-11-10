@@ -1,6 +1,6 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {sleep, uniq} from "@welshman/lib"
+  import {sleep} from "@welshman/lib"
   import {ROOMS} from "@welshman/util"
   import {Sync} from "@welshman/app"
   import {createScroller, isMobile} from "@lib/html"
@@ -20,7 +20,7 @@
   import SpaceResult from "@app/components/SpaceResult.svelte"
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
-  import {roomLists} from "@app/core/plugins"
+  import {relays, roomLists} from "@app/core/plugins"
   import {deriveSpaceSearch} from "@app/features/spaces/rooms"
   import {userSpaceUrls} from "@app/features/spaces"
   import {PLATFORM_RELAYS, DEFAULT_RELAYS, INDEXER_RELAYS} from "@app/core/env"
@@ -44,6 +44,13 @@
     searchResults.filter(r => !userSpaceSet.has(r.url) && r.url !== inviteData?.url),
   )
 
+  // A space shows as soon as someone lists it, so read a relay document for each row rather than waiting for it.
+  $effect(() => {
+    for (const {url} of otherSpaces.slice(0, limit)) {
+      $relays.load(url)
+    }
+  })
+
   onMount(() => {
     const scroller = createScroller({
       element,
@@ -52,10 +59,11 @@
       },
     })
 
-    $app.use(Sync).pull({
-      filters: [{kinds: [ROOMS], authors: $bootstrapPubkeys}],
-      relays: uniq([...DEFAULT_RELAYS, ...INDEXER_RELAYS]),
-    })
+    const sync = $app.use(Sync)
+
+    // Every room list the indexers hold, so browse is not limited to the people the user follows.
+    sync.pull({filters: [{kinds: [ROOMS]}], relays: INDEXER_RELAYS})
+    sync.pull({filters: [{kinds: [ROOMS], authors: $bootstrapPubkeys}], relays: DEFAULT_RELAYS})
 
     return () => {
       scroller.stop()
