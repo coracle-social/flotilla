@@ -3,9 +3,7 @@
   import type {Snippet} from "svelte"
   import {COMMENT, NOTE} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
-  import Reply from "@assets/icons/reply-2.svg?dataurl"
-  import Button from "@lib/components/Button.svelte"
-  import Icon from "@lib/components/Icon.svelte"
+  import ReplyButton from "@lib/components/ReplyButton.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import NoteCard from "@app/components/NoteCard.svelte"
@@ -64,15 +62,7 @@
     <EventReactions {event} {context} {url} placement="right" />
     <div class="flex shrink-0 items-center gap-2">
       {#if showReply}
-        <Button class="button button-neutral button-xs rounded-full" onclick={openReplies}>
-          <Icon icon={Reply} size={4} />
-          {#if replyCount === 0}
-            Reply
-          {:else}
-            {replyCount}
-            {replyCount === 1 ? "reply" : "replies"}
-          {/if}
-        </Button>
+        <ReplyButton count={replyCount} onclick={openReplies} />
       {/if}
       {@render children?.()}
       <EventMenuButton {url} {event} noun="Note" customActions={actions} class="rounded-full" />
