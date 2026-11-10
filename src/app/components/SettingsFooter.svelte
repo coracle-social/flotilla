@@ -12,11 +12,11 @@
   const {dirty, loading = false, reset}: Props = $props()
 </script>
 
-<!-- The spacer holds the bar's height, so revealing the bar never slides a field under it. -->
-<div class="h-24 shrink-0" aria-hidden="true"></div>
+<!-- The spacer keeps the end of the page clear of the bar, which floats over the page column. -->
+<div class="h-28 shrink-0 sm:h-32" aria-hidden="true"></div>
 <div
   data-component="SettingsFooter"
-  class="pointer-events-none fixed inset-x-0 bottom-[calc(var(--saib)+var(--mobile-nav-height))] z-nav px-2 sm:px-4">
+  class="pointer-events-none absolute inset-x-0 bottom-0 z-nav px-2 pb-2 sm:px-4 sm:pb-4">
   <div
     class={cx(
       "card flex flex-row items-center justify-between gap-4 transition-[translate,opacity] duration-300 ease-out",
