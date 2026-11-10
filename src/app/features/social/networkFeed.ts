@@ -290,6 +290,12 @@ export const makeNetworkFeed = ({
 
     pages.set(initArray(count, () => []))
     states.set(initArray(count, () => ({status: "idle"})))
+
+    // A follow with no relays to ask means nothing to show, rather than a spinner that never stops.
+    if (count === 0) {
+      states.set([{status: "exhausted"}])
+    }
+
     groups.forEach(startGroup)
     unsubscribers.push(scroller.stop)
 
