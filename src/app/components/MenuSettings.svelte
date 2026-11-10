@@ -31,26 +31,26 @@
       <div class="grid grid-cols-3 gap-3 w-full">
         <Link
           href="/bookmarks"
-          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center text-xs">
           <Icon icon={Bookmark} size={5} />
-          Bookmarks
+          Saved
         </Link>
         <Link
           href="/settings/profile"
-          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center text-xs">
           <Icon icon={UserCircle} size={5} />
           Profile
         </Link>
         <Link
           href="/settings/alerts"
-          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center text-xs">
           <Icon icon={Bell} size={5} />
           Alerts
         </Link>
         {#if ENABLE_ZAPS}
           <Link
             href="/settings/wallet"
-            class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+            class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center text-xs">
             <Icon icon={Wallet} size={5} />
             Wallet
           </Link>
@@ -58,20 +58,20 @@
         {#if HOSTING_ENABLED}
           <Link
             href="/settings/hosting"
-            class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+            class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center text-xs">
             <Icon icon={ServerPath} size={5} />
             Hosting
           </Link>
         {/if}
         <Link
           href="/settings/content"
-          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center text-xs">
           <Icon icon={GalleryMinimalistic} size={5} />
           Content
         </Link>
         <Link
           href="/settings/privacy"
-          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center">
+          class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center text-xs">
           <Icon icon={Shield} size={5} />
           Privacy
         </Link>
