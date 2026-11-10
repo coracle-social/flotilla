@@ -12,17 +12,25 @@
   const {dirty, loading = false, reset}: Props = $props()
 </script>
 
-<!-- Hidden rather than removed, so the page doesn't jump when there is something to save. -->
+<!-- The spacer holds the bar's height, so revealing the bar never slides a field under it. -->
+<div class="h-24 shrink-0" aria-hidden="true"></div>
 <div
   data-component="SettingsFooter"
-  class={cx(
-    "card sticky -bottom-3 flex flex-row items-center justify-between gap-4 transition-opacity duration-200",
-    {"pointer-events-none opacity-0": !dirty},
-  )}
-  inert={!dirty}
-  aria-hidden={!dirty}>
-  <Button class="button button-neutral" onclick={reset} disabled={loading}>Discard Changes</Button>
-  <Button class="button button-primary" type="submit" disabled={loading}>
-    <Spinner {loading}>Save Changes</Spinner>
-  </Button>
+  class="pointer-events-none fixed inset-x-0 bottom-[calc(var(--saib)+var(--mobile-nav-height))] z-nav px-2 sm:px-4">
+  <div
+    class={cx(
+      "card flex flex-row items-center justify-between gap-4 transition-[translate,opacity] duration-300 ease-out",
+      {
+        "pointer-events-auto": dirty,
+        "translate-y-[calc(100%+1rem)] opacity-0": !dirty,
+      },
+    )}
+    inert={!dirty}
+    aria-hidden={!dirty}>
+    <Button class="button button-neutral" onclick={reset} disabled={loading}
+      >Discard Changes</Button>
+    <Button class="button button-primary" type="submit" disabled={loading}>
+      <Spinner {loading}>Save Changes</Spinner>
+    </Button>
+  </div>
 </div>
