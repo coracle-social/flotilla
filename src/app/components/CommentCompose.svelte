@@ -61,6 +61,10 @@
     }
 
     const ed = await editor
+
+    // A name typed and sent without the suggestion list is only text, so link it before reading.
+    ed.resolveMentions()
+
     const content = ed.getText({blockSeparator: "\n"}).trim()
 
     if (!content) {

@@ -16,9 +16,10 @@ import {
   editorProps,
 } from "@welshman/editor"
 import type {CommandScopeTarget} from "@welshman/util"
+import {nprofileEncode} from "nostr-tools/nip19"
 import {escapeHtml} from "@lib/html"
 import {fromApp} from "@app/core/app"
-import {relayLists} from "@app/core/plugins"
+import {profiles, relayLists} from "@app/core/plugins"
 import {
   commands,
   createCommandSearch,
@@ -332,6 +333,66 @@ export const makeEditor = async ({
   empty?.set(isEmpty(ed))
   text?.set(ed.getText({blockSeparator: "\n"}))
 
+  const getProfileNames = (pubkey: string) => {
+    const profile = profiles.get().get(pubkey)
+
+    if (profile) {
+      const nip05 = profile.nip05() ?? ""
+
+      return [profile.display(), nip05, nip05.split("@")[0]]
+        .filter(name => name)
+        .map(name => name.toLowerCase())
+    }
+
+    return []
+  }
+
+  // A name links only when it is the whole name or handle of exactly one person.
+  const findMentionedPubkey = (term: string) => {
+    const name = term.toLowerCase()
+    const pubkeys = uniq(
+      get(searchProfiles)(term).filter(pubkey => getProfileNames(pubkey).includes(name)),
+    )
+
+    if (pubkeys.length === 1) {
+      return pubkeys[0]
+    }
+  }
+
+  // Dictation, pasting and phone keyboards never open the suggestion list, so link what they leave.
+  const resolveMentions = () => {
+    const mentions: {from: number; to: number; pubkey: string}[] = []
+
+    ed.state.doc.descendants((node, pos) => {
+      if (node.isText) {
+        for (const match of (node.text ?? "").matchAll(/(?:^|\s)@([\p{L}\p{N}_.-]+)/gu)) {
+          const term = match[1]
+          const from = pos + match.index + match[0].length - term.length - 1
+          const pubkey = findMentionedPubkey(term)
+
+          if (pubkey) {
+            mentions.push({from, to: from + term.length + 1, pubkey})
+          }
+        }
+      }
+    })
+
+    if (mentions.length > 0) {
+      const tr = ed.state.tr
+
+      // Backwards, so a replacement never moves a range this still has to visit.
+      for (const {from, to, pubkey} of mentions.reverse()) {
+        const relays = relayLists.get().writeUrls(pubkey).get()
+        const bech32 = nprofileEncode({pubkey, relays})
+        const attrs = {type: "nprofile", bech32, pubkey, relays}
+
+        tr.replaceWith(from, to, ed.schema.nodes.nprofile.create(attrs))
+      }
+
+      ed.view.dispatch(tr)
+    }
+  }
+
   // Deleting the url an attachment was inserted as is how you remove it, since there is no node.
   const getEditorTags = ed.storage.nostr.getEditorTags
 
@@ -344,5 +405,6 @@ export const makeEditor = async ({
     ]
   }
 
-  return ed
+  // Callers read the text and the tags to send, so they resolve what the text left unlinked first.
+  return Object.assign(ed, {resolveMentions})
 }
