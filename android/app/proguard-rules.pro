@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Capacitor caches each plugin's @CapacitorPlugin annotation on its PluginHandle and reads it back to
+# answer permission checks, and R8 full mode optimizes the field and its getter away, so a release
+# build reports a missing annotation and checkPermissions resolves with no states.
+-keep class com.getcapacitor.PluginHandle { *; }
