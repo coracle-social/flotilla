@@ -45,7 +45,7 @@
       <p class="text-sm">
         Built with 💜 by
         <span class="text-primary">
-          @<Button onclick={openProfile} class="button button-link">hodlbod</Button>
+          @<Button onclick={openProfile} class="button-link p-0">hodlbod</Button>
         </span>
       </p>
       <p class="text-xs">

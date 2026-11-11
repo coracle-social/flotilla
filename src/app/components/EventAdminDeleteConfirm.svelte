@@ -17,7 +17,7 @@
 
   const h = tagValue(tagSpec("h"), event.tags) ?? ""
   const adminDelete = deriveUserAdminDelete(url, event)
-  const scope = $derived($adminDelete === AdminDelete.Room ? "room" : "space")
+  const scope = $derived(h ? "room" : "space")
 
   const remove = async () => {
     if ($adminDelete === AdminDelete.Room) {

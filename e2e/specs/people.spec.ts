@@ -521,7 +521,7 @@ test("US-150 post an article or a poll", async ({seed, as}) => {
   const page = await as(users.alice, profilePath(users.alice.pubkey), {context: DESKTOP})
 
   await page.getByRole("button", {name: "Choose a post type"}).click()
-  await page.getByRole("button", {name: "Article", exact: true}).click()
+  await page.getByRole("button", {name: "Create article"}).click()
 
   // An article gets the same full page composer a space article does, cover image and all.
   await expect(page).toHaveURL(/\/articles\/create$/)
@@ -544,7 +544,7 @@ test("US-150 post an article or a poll", async ({seed, as}) => {
     .toContain("Reading the tide charts")
 
   await page.getByRole("button", {name: "Choose a post type"}).click()
-  await page.getByRole("button", {name: "Poll", exact: true}).click()
+  await page.getByRole("button", {name: "Create poll"}).click()
 
   const poll = topDialog(page)
 

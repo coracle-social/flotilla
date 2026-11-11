@@ -35,9 +35,12 @@ services:
     environment:
       PORT: "2892"
       DATABASE_URL: postgres://caravel:caravel@postgres:5432/caravel
-      # The platform's own host, which serves the API under /api. Every relay is `<name>.test`,
-      # matching e2e/harness/relay/config.ts, so no relay may take this one.
-      PLATFORM_URL: http://api.test
+      # One url per section, and the API's is the only one dialled: the harness posts to
+      # `/api/session` and `/api/relays`, and signs its NIP-98 header against that url. Every relay
+      # is `<name>.test`, matching e2e/harness/relay/config.ts, so no relay may take these hosts.
+      API_URL: http://api.test/api
+      TENANT_URL: http://tenant.test
+      ADMIN_URL: http://admin.test
       RELAY_DOMAINS: test
       # Required, and never reached: billing, media, wallets and the robot's own relays all name a
       # host that resolves nowhere. Every relay is on the free plan, and none of them has media,

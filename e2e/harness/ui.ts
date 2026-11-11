@@ -9,7 +9,7 @@ export const dialog = (page: Page, title: string) =>
 // The modal on top, for one with no heading of its own or one pushed over another.
 export const topDialog = (page: Page) => page.getByRole("dialog").last()
 
-// A modal is mounted alongside the page it covers, so both forms are in the dom at once.
+// A dialog that submits as a form, like a confirmation; a composer is a plain dialog instead.
 export const modalForm = (page: Page, title: string) =>
   page.locator("form").filter({has: page.getByRole("heading", {name: title})})
 

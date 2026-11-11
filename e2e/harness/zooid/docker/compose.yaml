@@ -1,5 +1,5 @@
-# The relay the whole suite runs against. Bound to loopback only, and the one server this harness is
-# allowed to connect to for real.
+# The relay the whole suite runs against, and the Postgres the current zooid keeps everything in.
+# Bound to loopback only, and the one server this harness is allowed to connect to for real.
 #
 # The image is distroless and runs as `nonroot`. zooid creates DATA and MEDIA itself, but it cannot
 # create their parent /app, so both have to arrive already mounted — and writable by uid 65532,
@@ -9,10 +9,29 @@
 name: flotilla-e2e-zooid
 
 services:
+  postgres:
+    # zooid refuses to start without one, and asks for Postgres 16.
+    image: docker.io/library/postgres:16-alpine
+    environment:
+      POSTGRES_USER: zooid
+      POSTGRES_PASSWORD: zooid
+      POSTGRES_DB: zooid
+    volumes:
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "zooid", "-d", "zooid"]
+      interval: 1s
+      timeout: 5s
+      retries: 30
+
   relay:
-    # Pinned by digest in e2e/harness/zooid/backend.ts, the only thing that brings this container up.
+    # Pulled by e2e/harness/zooid/backend.ts, the only thing that brings this container up.
     # No default, for the same reason the config mount below has none.
     image: ${ZOOID_IMAGE:?staged by e2e/harness/zooid/backend.ts, which starts this container}
+    depends_on:
+      postgres:
+        condition: service_healthy
     # The harness dials this published port and sends a `Host` per virtual relay, which is what the
     # dispatcher matches against the `host` in each file under config/.
     ports:
@@ -22,6 +41,7 @@ services:
       CONFIG: /app/config
       DATA: /app/data
       MEDIA: /app/media
+      DATABASE_URL: postgres://zooid:zooid@postgres:5432/zooid
     volumes:
       # A copy of ./config that relay.ts stages outside the repo and refreshes on every recreate,
       # mounted writable because zooid saves a relay's toml back when a nip-86 call edits its name,

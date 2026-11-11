@@ -351,6 +351,13 @@ missed one read in four and the spec reds at random. Seed a follow list on each 
 serves, the way a client publishing one does. A user with three write relays or fewer never meets
 this, which is why most specs get away with naming the indexer alone.
 
+### A profile is only reachable through its author's relay list
+
+The client reads a profile through the outbox alone, so a name seeded on a space is invisible until
+its author names that space. `profile()` therefore gives every author it seeds one a relay list
+naming the space, stamped a second before the scenario began so a list the scenario seeded itself
+wins. Without it a spec reds on a display name where an `npub` is drawn.
+
 ### Why a reader has to name the relays it reads from
 
 zooid answers no REQ without NIP-42, whatever `public_read` says, and caravel's relays are created
@@ -488,18 +495,21 @@ pnpm test:caravel            # the same suite, against caravel
 
 Every test skips when docker is unavailable, rather than failing.
 
-The default relay is one pinned zooid, named by digest in `harness/zooid/backend.ts`, and the harness
-fetches that image the first time a machine needs it. So a spec asserting relay behaviour runs
-against the relay the diff names, and needing a newer zooid is a bump in that file. `ZOOID_IMAGE`
-overrides the pin, which is how a spec is tried against a zooid built from a checkout.
+Neither relay is pinned. zooid and caravel each publish `latest` on every push to master, and the
+harness pulls its backend at the start of every run, which costs a manifest check when the image is
+already on the machine. A digest was pinned once to keep a run on one build, and the image cached
+under that reference went stale: the suite ran a zooid that predated the nip-29 delete-event op and
+red a moderation spec for a relay that had since fixed it. `ZOOID_IMAGE` names another reference,
+which is how a spec is tried against a zooid built from a checkout.
 
-caravel is not pinned. Its CI publishes `gitea.coracle.social/coracle/caravel:latest` on each push
-to master, and the harness pulls it at the start of every run, which costs a manifest check when the
-image is already on the machine. That image is amd64, so a host of another architecture runs the
-container under emulation. `CARAVEL_IMAGE` names another reference, such as a digest. `CARAVEL_SOURCE`
-builds from a checkout instead, which is how an unreleased change is tried: the build is this host's
-own architecture, is tagged apart from the published reference so it never stands in for what CI
-shipped, and compiles the whole workspace the first time.
+zooid keeps everything in Postgres now, so its compose file brings up a `postgres:16-alpine` service
+alongside the relay and hands it a `DATABASE_URL`.
+
+caravel's image is amd64, so a host of another architecture runs the container under emulation.
+`CARAVEL_IMAGE` names another reference, such as a digest. `CARAVEL_SOURCE` builds from a checkout
+instead, which is how an unreleased change is tried: the build is this host's own architecture, is
+tagged apart from the published reference so it never stands in for what CI shipped, and compiles
+the whole workspace the first time.
 
 A test fails when the app broke while it ran, whatever it asserted: an uncaught exception on any
 of its pages, or code of ours the browser refused under the content security policy. A refusal

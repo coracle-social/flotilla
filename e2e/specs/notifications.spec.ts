@@ -23,7 +23,6 @@ import {
   homeFeedFilter,
   message,
   messageActions,
-  modalForm,
   noteEditor,
   openRoomDetail,
   pageBar,
@@ -608,7 +607,7 @@ test("US-141 read notifications on home", async ({seed, as}) => {
   await expect(feed.getByText("replied to your note")).toHaveCount(1)
   await expect(feed.getByText(reply)).toBeVisible()
   await expect(feed.getByText(second)).toBeVisible()
-  await expect(feed.getByText("reacted with")).toBeVisible()
+  await expect(feed.getByText("reacted to your note")).toBeVisible()
 
   // The note is itself a reply, so what it answers and the root of its thread are both reachable.
   await expect(feed.getByRole("button", {name: "View parent"})).toBeVisible()
@@ -696,7 +695,7 @@ test("US-141 leave what the stream cannot draw out of its badge", async ({seed, 
   await expect(feed.getByText(asked)).toBeVisible({timeout: 20_000})
 
   // Neither a reaction to a chat message nor anything a muted person does can be an entry here.
-  await expect(feed.getByText("reacted with")).toHaveCount(0)
+  await expect(feed.getByText("reacted to your note")).toHaveCount(0)
   await expect(feed.getByText(mine)).toHaveCount(0)
 
   // Nothing marked the stream read, since it holds nothing a badge could be about.
@@ -755,7 +754,7 @@ test("US-145 choose which answers the activity stream shows", async ({seed, as})
 
   // Every type is included until she turns one off.
   await expect(feed.getByText(reply)).toBeVisible({timeout: 20_000})
-  await expect(feed.getByText("reacted with")).toBeVisible()
+  await expect(feed.getByText("reacted to your note")).toBeVisible()
 
   // Bob answered once and reacted once, and each button says so.
   await expect(filter("Replies")).toHaveAccessibleName("Replies 1")
@@ -764,7 +763,7 @@ test("US-145 choose which answers the activity stream shows", async ({seed, as})
 
   await filter("Reactions").click()
 
-  await expect(feed.getByText("reacted with")).toHaveCount(0)
+  await expect(feed.getByText("reacted to your note")).toHaveCount(0)
   await expect(feed.getByText(reply)).toBeVisible()
 
   await filter("Replies").click()
@@ -781,7 +780,7 @@ test("US-145 choose which answers the activity stream shows", async ({seed, as})
   await filter("Replies").click()
 
   await expect(feed.getByText(reply)).toBeVisible()
-  await expect(feed.getByText("reacted with")).toHaveCount(0)
+  await expect(feed.getByText("reacted to your note")).toHaveCount(0)
 })
 
 test("US-152 leave your spaces out of the activity stream", async ({seed, as}) => {
@@ -1695,7 +1694,7 @@ test("US-136 hear about a new message and not about a new thread", async ({seed,
 
   await bob.getByRole("button", {name: "New topic"}).click()
 
-  const threadForm = modalForm(bob, "Create a Thread")
+  const threadForm = dialog(bob, "Create a Thread")
 
   await threadForm.getByPlaceholder("What is this thread about?").fill("the dock is closing")
   await noteEditor(threadForm).pressSequentially("sunday, apparently")

@@ -68,6 +68,11 @@ export const seed = async (
 
   await build({relay, open, user: users, at})
 
+  // A profile is only reachable through the author's relay list, which a scenario may have named already.
+  for (const space of spaces.values()) {
+    space.seedProfileRelayLists()
+  }
+
   // Fixtures depend on one another, so the builder only records what to write and this drains it.
   for (const write of writes) {
     await write()

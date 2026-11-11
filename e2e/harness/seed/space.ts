@@ -53,6 +53,8 @@ export type SeededSpace = {
   message(user: TestUser, h: string, content: string, createdAt?: number): SeededEvent
   reply(user: TestUser, parent: SeededEvent, content: string, createdAt?: number): SeededEvent
   profile(user: TestUser, values: ProfileValues, createdAt?: number): SeededEvent
+  // Called once the scenario is built: names this space for every author whose profile it seeded.
+  seedProfileRelayLists(): void
   // A follow list belongs on every relay its author writes to, so a space takes one too.
   follows(user: TestUser, follows: TestUser[], createdAt?: number): SeededEvent
   // Outbox routing resolves everything about a person through their relay list.
@@ -82,6 +84,9 @@ export const seedSpace = ({server, enqueue, startedAt, name}: SeedSpaceOptions):
   const url = tenantUrl(name)
 
   let testRelay: Maybe<TestRelay>
+
+  const profiled = new Map<string, TestUser>()
+  const relayListed = new Set<string>()
 
   const relay = () => {
     if (testRelay) {
@@ -155,12 +160,24 @@ export const seedSpace = ({server, enqueue, startedAt, name}: SeedSpaceOptions):
       createdAt,
     )
 
-  const profile = (user: TestUser, values: ProfileValues, createdAt = startedAt) =>
-    event(
+  const profile = (user: TestUser, values: ProfileValues, createdAt = startedAt) => {
+    profiled.set(user.pubkey, user)
+
+    return event(
       user,
       () => Profile.configure(context).writer().update(values).renderTemplate(),
       createdAt,
     )
+  }
+
+  // A profile is read through the outbox alone, so an author that never named its relays has no reachable name.
+  const seedProfileRelayLists = () => {
+    for (const [pubkey, user] of profiled) {
+      if (!relayListed.has(pubkey)) {
+        relayList(user, {}, startedAt - 1)
+      }
+    }
+  }
 
   const kind = <R extends BaseEventReader, W extends EventWriter<R>, Q extends EventQuery>(
     factory: KindFactory<R, W, Q>,
@@ -185,12 +202,15 @@ export const seedSpace = ({server, enqueue, startedAt, name}: SeedSpaceOptions):
     user: TestUser,
     {read = [url], write = [url]}: RelayListUrls = {},
     createdAt = startedAt,
-  ) =>
-    event(
+  ) => {
+    relayListed.add(user.pubkey)
+
+    return event(
       user,
       () => kind(RelayList).writer().setReadUrls(read).setWriteUrls(write).renderTemplate(),
       createdAt,
     )
+  }
 
   const messagingRelayList = (user: TestUser, urls = [url], createdAt = startedAt) =>
     event(user, () => kind(MessagingRelayList).writer().setUrls(urls).renderTemplate(), createdAt)
@@ -235,6 +255,7 @@ export const seedSpace = ({server, enqueue, startedAt, name}: SeedSpaceOptions):
     message,
     reply,
     profile,
+    seedProfileRelayLists,
     follows,
     relayList,
     messagingRelayList,

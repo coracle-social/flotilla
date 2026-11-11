@@ -2,13 +2,11 @@ import {chmod, cp, readdir, rm} from "node:fs/promises"
 import {tmpdir} from "node:os"
 import {join} from "node:path"
 import {fileURLToPath} from "node:url"
-import {composeLogs, hasImage, makeCompose, pullImage} from "../relay/docker"
+import {composeLogs, makeCompose, pullImage} from "../relay/docker"
 import type {Backend} from "../relay/types"
 
-// Pinned by digest so a spec runs against one zooid. ZOOID_IMAGE is how an unreleased build is tried.
-const image =
-  process.env.ZOOID_IMAGE ??
-  "gitea.coracle.social/coracle/zooid:latest@sha256:7950843900cbb1c7c1f17de5524f6999badd1002cde94476855e90e67e0f2248"
+// What zooid's CI publishes on each push to master. ZOOID_IMAGE is how another build is tried.
+const image = process.env.ZOOID_IMAGE ?? "gitea.coracle.social/coracle/zooid:latest"
 
 const configSource = fileURLToPath(new URL("docker/config", import.meta.url))
 
@@ -24,9 +22,8 @@ const compose = makeCompose(fileURLToPath(new URL("docker/compose.yaml", import.
 export const zooid: Backend = {
   name: "zooid",
   prepare: async () => {
-    if (!(await hasImage(image))) {
-      await pullImage(image, "ZOOID_IMAGE")
-    }
+    // `latest` moves with zooid's master, so every run asks what it is now.
+    await pullImage(image, "ZOOID_IMAGE")
   },
   // Storage is tmpfs with no volume mounted for it, so a new container is a new database.
   up: async () => {

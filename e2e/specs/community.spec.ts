@@ -34,7 +34,6 @@ import {
   makeTestUser,
   menuButton,
   mockDufflepud,
-  modalForm,
   noteEditor,
   pickEmoji,
   pollOption,
@@ -107,7 +106,7 @@ test("US-046 create and browse a calendar event", async ({seed, as}) => {
 
   await page.getByRole("button", {name: "Create", exact: true}).click()
 
-  const composer = modalForm(page, "Create an Event")
+  const composer = dialog(page, "Create an Event")
 
   // Field renders its label and input as siblings, so the writable fields are taken in document order.
   const textInputs = composer.locator('input[type="text"]:not([readonly])')
@@ -187,7 +186,7 @@ test("US-047 manage your own calendar event", async ({seed, as}) => {
   await menuButton(eventCard).click()
   await page.getByRole("button", {name: "Edit Event"}).click()
 
-  const composer = modalForm(page, "Edit this Event")
+  const composer = dialog(page, "Edit this Event")
   const textInputs = composer.locator('input[type="text"]:not([readonly])')
 
   await expect(textInputs.first()).toHaveValue("Harvest Supper")
@@ -251,7 +250,7 @@ test("US-048 create a poll and vote on it", async ({seed, as}) => {
 
   await alice.getByRole("button", {name: "Create", exact: true}).click()
 
-  const composer = modalForm(alice, "Create a Poll")
+  const composer = dialog(alice, "Create a Poll")
 
   await composer.getByPlaceholder("What would you like to ask?").fill("Where should we meet?")
   await composer.getByPlaceholder("Option 1").fill("The park")
@@ -422,7 +421,7 @@ test("US-050 create a funding goal and track its progress", async ({seed, as}) =
 
   await page.getByRole("button", {name: "Create", exact: true}).click()
 
-  const composer = modalForm(page, "Create a Funding Goal")
+  const composer = dialog(page, "Create a Funding Goal")
 
   await composer.getByPlaceholder("What do funds go towards?").fill("Repair the roof")
   await noteEditor(composer).pressSequentially("Three tiles came off in the storm.")
@@ -475,7 +474,7 @@ test("US-051 post, edit, and close out a classified listing", async ({seed, as})
 
   await page.getByRole("button", {name: "Create", exact: true}).click()
 
-  const composer = modalForm(page, "Create a Classified Listing")
+  const composer = dialog(page, "Create a Classified Listing")
   const topics = composer.getByPlaceholder("Add topics...")
 
   await composer.getByPlaceholder("What is this listing for?").fill("Vintage Road Bike")
@@ -509,7 +508,7 @@ test("US-051 post, edit, and close out a classified listing", async ({seed, as})
   await menuButton(detail).click()
   await page.getByRole("button", {name: "Edit Listing"}).click()
 
-  const editor = modalForm(page, "Edit this Listing")
+  const editor = dialog(page, "Edit this Listing")
 
   await expect(editor.getByPlaceholder("What is this listing for?")).toHaveValue(
     "Vintage Road Bike",
@@ -1146,7 +1145,7 @@ test("US-055 create community content from a room", async ({seed, as}) => {
   await composerAddButton(page).click()
   await page.getByRole("button", {name: "Ask a Question", exact: true}).click()
 
-  const composer = modalForm(page, "Create a Poll")
+  const composer = dialog(page, "Create a Poll")
 
   await composer.getByPlaceholder("What would you like to ask?").fill("Pizza or tacos?")
   await composer.getByPlaceholder("Option 1").fill("Pizza")
@@ -1155,13 +1154,12 @@ test("US-055 create community content from a room", async ({seed, as}) => {
 
   await expect(page.getByRole("heading", {name: "Create a Poll"})).toHaveCount(0)
 
-  // A room item is itself a role=button wrapping its content, so the quote is the inner of the two.
-  const quote = page.getByRole("button").filter({hasText: "Pizza or tacos?"}).last()
+  // The poll lands in the room as a message of its own, and the space files it under Polls.
+  await expect(page.getByText("Pizza or tacos?").first()).toBeVisible()
 
-  await expect(quote).toBeVisible()
+  await page.goto(`${spacePath(url)}/polls`)
 
-  await quote.click()
+  await page.getByRole("link").filter({hasText: "Pizza or tacos?"}).click()
 
   await expect(page).toHaveURL(new RegExp(`${spacePath(url)}/polls/[0-9a-f]{64}$`))
-  await expect(page.getByRole("heading", {name: "Pizza or tacos?"})).toBeVisible()
 })

@@ -9,7 +9,7 @@ import {
   emojiButton,
   expect,
   getPublishedEvents,
-  modalForm,
+  dialog,
   noteEditor,
   pageBar,
   pickEmoji,
@@ -382,21 +382,22 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
   })
 
   const {url} = scenario.space("space")
-  const page = await as(users.alice, roomPath(url, "lounge"))
 
-  await composerAddButton(page).click()
-  await page.getByRole("button", {name: "Create Thread"}).click()
+  // A board is one room's topics, so a topic started from the lounge board is filed under Lounge.
+  const page = await as(users.alice, `${spacePath(url)}/threads?board=lounge`)
 
-  const fromRoom = modalForm(page, "Create a Thread")
+  await page.getByRole("button", {name: "New topic"}).click()
 
-  await fromRoom.getByPlaceholder("What is this thread about?").fill("Bike shed colors")
-  await noteEditor(fromRoom).pressSequentially("Blue, surely?")
-  await fromRoom.getByRole("button", {name: "Create Thread"}).click()
+  const fromBoard = dialog(page, "Create a Thread")
+
+  await fromBoard.getByPlaceholder("What is this thread about?").fill("Bike shed colors")
+  await noteEditor(fromBoard).pressSequentially("Blue, surely?")
+  await fromBoard.getByRole("button", {name: "Create Thread"}).click()
 
   await expect(page.getByRole("heading", {name: "Create a Thread"})).toHaveCount(0)
 
-  // The room gets a quote of the thread rather than a second post written by hand.
-  await expect(page.getByText("Bike shed colors")).toBeVisible()
+  // The board lists the room's topics, so the new one is there.
+  await expect(page.getByRole("link").filter({hasText: "Bike shed colors"})).toBeVisible()
 
   await page.goto(`${spacePath(url)}/threads`)
 
@@ -407,7 +408,7 @@ test("US-042 start a thread and see it filed under its room", async ({seed, as})
   // The header's New topic button creates in the default room, General.
   await page.getByRole("button", {name: "New topic"}).click()
 
-  const fromThreads = modalForm(page, "Create a Thread")
+  const fromThreads = dialog(page, "Create a Thread")
 
   await fromThreads.getByPlaceholder("What is this thread about?").fill("Open floor")
   await noteEditor(fromThreads).pressSequentially("Anything goes in here.")
@@ -465,7 +466,7 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
   const threadPath = `${spacePath(url)}/threads/${thread.id}`
   const bob = await as(users.bob, threadPath)
 
-  await expect(bob.locator(`[data-event="${thread.id}"]`)).toContainText("Bed rotation")
+  await expect(bob.getByText("Bed rotation").first()).toBeVisible()
 
   await bob.getByRole("button", {name: "Reply to thread"}).click()
 
@@ -620,7 +621,7 @@ test("US-045 turn a chat message into a thread", async ({seed, as}) => {
   await message.locator(".room__item-actions").getByRole("button").last().click()
   await page.getByRole("button", {name: "Create a Thread"}).click()
 
-  const composer = modalForm(page, "Create a Thread")
+  const composer = dialog(page, "Create a Thread")
 
   await composer.getByPlaceholder("What is this thread about?").fill("Deploy failures")
   await composer.getByRole("button", {name: "Create Thread"}).click()

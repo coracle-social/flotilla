@@ -31,7 +31,7 @@ const platform = `linux/${source ? hostArch : "amd64"}`
 // Kept apart from the published reference, so a build never stands in for what CI shipped.
 const image = source ? "localhost/flotilla-e2e-caravel:latest" : published
 
-// PLATFORM_URL's host in docker/compose.yaml, which serves the api under /api.
+// API_URL's host in docker/compose.yaml, which serves the api under /api.
 const apiHost = "api.test"
 
 const compose = makeCompose(fileURLToPath(new URL("docker/compose.yaml", import.meta.url)), {

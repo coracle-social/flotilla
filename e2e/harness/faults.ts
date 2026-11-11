@@ -7,6 +7,9 @@ const isRefusal = (text: string) => text.includes("Content Security Policy")
 // Recreating the container between tests aborts route chunks in flight, until #529 stops the churn.
 const isChunkLoss = (text: string) => text.includes("Failed to fetch dynamically imported module")
 
+// The app closes its database as the page unloads, which rejects whatever the page still had in flight.
+const isCloseOnUnload = (text: string) => text.includes("The sqlite connection is closed")
+
 // Chrome carries a failed request's url nowhere but the message's location.
 const locate = (message: ConsoleMessage) => {
   const text = message.text()
@@ -56,7 +59,7 @@ export const watchFaults = (): FaultWatch => {
       context.on("weberror", error => {
         const text = describe(error.error())
 
-        record(`[${who}] uncaught: ${text}`, !isChunkLoss(text))
+        record(`[${who}] uncaught: ${text}`, !isChunkLoss(text) && !isCloseOnUnload(text))
       })
     },
     assertNone() {
