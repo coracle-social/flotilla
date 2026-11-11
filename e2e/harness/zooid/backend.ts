@@ -2,7 +2,7 @@ import {chmod, cp, readdir, rm} from "node:fs/promises"
 import {tmpdir} from "node:os"
 import {join} from "node:path"
 import {fileURLToPath} from "node:url"
-import {composeLogs, makeCompose, pullImage} from "../relay/docker"
+import {composeLogs, hasImage, makeCompose, pullImage} from "../relay/docker"
 import type {Backend} from "../relay/types"
 
 // What zooid's CI publishes on each push to master. ZOOID_IMAGE is how another build is tried.
@@ -22,8 +22,16 @@ const compose = makeCompose(fileURLToPath(new URL("docker/compose.yaml", import.
 export const zooid: Backend = {
   name: "zooid",
   prepare: async () => {
-    // `latest` moves with zooid's master, so every run asks what it is now.
-    await pullImage(image, "ZOOID_IMAGE")
+    // `latest` moves with zooid's master, so every run pulls, unless ZOOID_IMAGE names a local build.
+    try {
+      await pullImage(image, "ZOOID_IMAGE")
+    } catch (error) {
+      if (await hasImage(image)) {
+        console.warn(`\nUsing the ${image} already on this machine.\n`)
+      } else {
+        throw error
+      }
+    }
   },
   // Storage is tmpfs with no volume mounted for it, so a new container is a new database.
   up: async () => {

@@ -51,8 +51,8 @@ type Seeded = {readonly id: string; readonly event: SignedEvent}
 const shelfCard = (page: Page, title: string) =>
   page.locator('[data-component="PinboardItem"]').filter({hasText: title})
 
-// Button swallows both the default and the propagation of a click, and the middle of a card is one.
-const openCard = (card: Locator, title: string) => card.getByText(title).click()
+// The card's text and the title inside it both match, so click the outermost, the card's own Button.
+const openCard = (card: Locator, title: string) => card.getByText(title).first().click()
 
 // A multiple choice vote goes out once the delay window closes, so "both publish" is visible here.
 const pollResponses = (page: Page, pollId: string) =>
