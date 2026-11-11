@@ -2,6 +2,7 @@ import {randomId} from "@welshman/lib"
 import {RoomCreateInvite, RoomJoin, RoomLeave} from "@welshman/domain"
 import {publish} from "@welshman/app"
 import {roomLists} from "@app/core/plugins"
+import {authenticate} from "@app/core/auth"
 import {command, writer} from "@app/core/domain"
 import {publishRoomList} from "@app/features/spaces/rooms/lists"
 
@@ -11,6 +12,13 @@ const isMembershipRefusal = (error: string) =>
 
 // Joining takes two publishes: the NIP-29 request the relay can refuse, and the user's room list.
 export const joinRoom = async (url: string, h: string, code?: string) => {
+  // No challenge is answered for a relay the user's lists don't name yet, which this one may not be.
+  const authError = await authenticate(url)
+
+  if (authError) {
+    return authError
+  }
+
   const eventWriter = writer(RoomJoin).setRoom(url, h)
 
   if (code) {
