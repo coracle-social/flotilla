@@ -5,8 +5,7 @@
   import {Article} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
-  import {markdownToText} from "@lib/markdown"
-  import Content from "@app/components/Content.svelte"
+  import ContentMarkdown from "@app/components/ContentMarkdown.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
@@ -28,7 +27,6 @@
   const summary = $derived(article.summary())
   const image = $derived(article.image())
   const topics = $derived(uniq(article.topics()))
-  const excerpt = $derived(summary || markdownToText(event.content))
 </script>
 
 {#snippet topicLabels()}
@@ -52,12 +50,11 @@
         {formatTimestamp(article.publishedAt())}
       </p>
     </div>
-    <Content
-      event={{content: excerpt, tags: event.tags}}
-      {url}
-      expandMode="inline"
-      minLength={100}
-      maxLength={300} />
+    {#if summary}
+      <p class="line-clamp-3 text-content-muted">{summary}</p>
+    {:else}
+      <ContentMarkdown {event} class="content-markdown--excerpt" />
+    {/if}
     <div class="flex w-full flex-col items-end justify-between gap-2 sm:flex-row">
       <span class="pointer-events-auto whitespace-nowrap py-1 text-sm opacity-75">
         Written by

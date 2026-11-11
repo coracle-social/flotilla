@@ -3,6 +3,7 @@
   import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
   import {goto} from "$app/navigation"
+  import {sortBy, spec} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {LONG_FORM, getAddress} from "@welshman/util"
@@ -19,7 +20,6 @@
   import ArticleItem from "@app/components/ArticleItem.svelte"
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
   import {reader} from "@app/core/domain"
-  import {partitionByActivity} from "@app/features/spaces"
   import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
@@ -42,7 +42,10 @@
 
   const createArticle = () => goto(pages.articleCreate.path({url}))
 
-  const {items: articles} = $derived(partitionByActivity(LONG_FORM, $events))
+  // An article is addressable, so its created_at moves with every edit. published_at is when it went out.
+  const articles = $derived(
+    sortBy(event => -reader(Article)(event).publishedAt(), $events.filter(spec({kind: LONG_FORM}))),
+  )
 
   const filtered = $derived(
     articles.filter(

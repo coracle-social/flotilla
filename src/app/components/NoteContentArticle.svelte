@@ -1,10 +1,10 @@
 <script lang="ts">
   import type {ComponentProps} from "svelte"
   import {Article} from "@welshman/domain"
-  import Content from "@app/components/Content.svelte"
+  import ContentMarkdown from "@app/components/ContentMarkdown.svelte"
   import {reader} from "@app/core/domain"
 
-  const props: ComponentProps<typeof Content> = $props()
+  const props: ComponentProps<typeof ContentMarkdown> = $props()
 
   const article = $derived(reader(Article)(props.event))
   const title = $derived(article.title())
@@ -19,6 +19,6 @@
     <p class="text-xl">{title}</p>
   {/if}
   {#if props.event.content}
-    <Content {...props} />
+    <ContentMarkdown event={props.event} class="content-markdown--excerpt" />
   {/if}
 </div>

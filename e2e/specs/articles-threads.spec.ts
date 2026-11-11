@@ -143,12 +143,11 @@ test("US-038 browse, filter, and read articles", async ({seed, as}) => {
           .writer()
           .setIdentifier("cooking-with-fire")
           .setTitle("Cooking with Fire")
-          .setSummary("Heat, and what to do with it.")
           .setTopics(["cooking"])
           .setPublishedAt(at(3, HOUR))
-          .setContent("Build the fire first.")
+          .setContent("## Build the fire first\n\nThen wait.")
           .renderTemplate(),
-      at(3, HOUR),
+      at(10, MINUTE),
     )
 
     space.event(
@@ -176,6 +175,13 @@ test("US-038 browse, filter, and read articles", async ({seed, as}) => {
   await expect(articleCards(page)).toHaveCount(3)
   await expect(garden).toContainText("Alice Anderson")
   await expect(garden).toContainText("A short teaser about gardens.")
+
+  // Newest published first: cooking was written last but went out between the other two, and its
+  // body is drawn as markdown rather than as a flattened summary.
+  await expect(articleCards(page).nth(1)).toContainText("Cooking with Fire")
+  await expect(
+    articleCards(page).nth(1).getByRole("heading", {name: "Build the fire first"}),
+  ).toBeVisible()
 
   const authors = page
     .locator("section")

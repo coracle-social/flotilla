@@ -134,6 +134,26 @@
     }
   }
 
+  /* A card carries the opening of the body, whichever blocks that opening spans. */
+  .content-markdown--excerpt {
+    @apply gap-2 text-sm leading-snug;
+    max-height: 6rem;
+    mask-image: linear-gradient(0deg, transparent 0px, black 3rem);
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      @apply text-base leading-snug;
+    }
+
+    /* A picture or a table would take the whole excerpt, and the card already shows a cover. */
+    img,
+    table {
+      display: none;
+    }
+  }
+
   /* Only when there's no summary/deck above it — the opening line stands in for one instead. */
   .content-markdown--lead > p:first-child {
     @apply text-content-muted text-xl leading-snug font-normal;

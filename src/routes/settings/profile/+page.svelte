@@ -5,7 +5,6 @@
   import {displayNip05} from "@welshman/util"
   import {displayPubkey} from "@welshman/domain"
   import {slideAndFade} from "@lib/transition"
-  import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import UserRounded from "@assets/icons/user-rounded.svg?dataurl"
   import Key from "@assets/icons/key-minimalistic.svg?dataurl"
   import Letter from "@assets/icons/letter.svg?dataurl"
@@ -23,7 +22,6 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
-  import ProfileEdit from "@app/components/ProfileEdit.svelte"
   import ProfileDelete from "@app/components/ProfileDelete.svelte"
   import SignerStatus from "@app/components/SignerStatus.svelte"
   import PasswordReset from "@app/components/PasswordReset.svelte"
@@ -49,8 +47,6 @@
   const copyNpub = () => clip(npub)
 
   const copyNsec = () => clip(nip19.nsecEncode(hexToBytes(nip01Secret!)))
-
-  const startEdit = () => pushModal(ProfileEdit)
 
   const startDelete = () => pushModal(ProfileDelete)
 
@@ -116,11 +112,11 @@
           {/if}
         </div>
       </Link>
-      <Button
-        class="button button-neutral button-circle flex justify-center items-center -mr-2 -mt-2 h-12 w-12"
-        onclick={startEdit}>
-        <Icon icon={PenNewSquare} />
-      </Button>
+      <Link
+        class="button button-neutral whitespace-nowrap"
+        href={pages.profile.path({pubkey: $user.pubkey})}>
+        View Profile
+      </Link>
     </div>
     <ProfileAbout pubkey={$user.pubkey} />
   </div>

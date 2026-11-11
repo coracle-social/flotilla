@@ -15,7 +15,7 @@ import {
   tagValues,
 } from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
-import {FollowList, Note, PinList, Profile} from "@welshman/domain"
+import {Article, FollowList, Note, PinList, Profile} from "@welshman/domain"
 import {
   DEFAULT_BLOSSOM_ORIGIN,
   GIF,
@@ -509,13 +509,42 @@ test("US-134 write a public post", async ({seed, as}) => {
 })
 
 test("US-150 post an article or a poll", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
+  const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
 
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
     space.profile(user.alice, {name: "Alice Anderson"})
     space.relayList(user.alice)
+
+    // Written after the other and published before it, so the two disagree about which is newer.
+    space.event(
+      user.alice,
+      () =>
+        space
+          .kind(Article)
+          .writer()
+          .setIdentifier("anchorages")
+          .setTitle("Anchorages Worth Knowing")
+          .setPublishedAt(at(1, HOUR))
+          .setContent("## Shelter\n\nOut of the wind.")
+          .renderTemplate(),
+      at(3, HOUR),
+    )
+
+    space.event(
+      user.alice,
+      () =>
+        space
+          .kind(Article)
+          .writer()
+          .setIdentifier("tacking")
+          .setTitle("Tacking in a Squall")
+          .setPublishedAt(at(4, HOUR))
+          .setContent("Brace early.")
+          .renderTemplate(),
+      at(20, MINUTE),
+    )
   })
 
   const page = await as(users.alice, profilePath(users.alice.pubkey), {context: DESKTOP})
@@ -535,6 +564,21 @@ test("US-150 post an article or a poll", async ({seed, as}) => {
 
   // The title is a tag rather than content, so a card carrying it was drawn by the article renderer.
   await expect(notes(page).filter({hasText: "Reading the tide charts"})).toBeVisible()
+
+  // A card is dated by when its article was published, not by when it was last written.
+  const anchorageCard = notes(page).filter({hasText: "Anchorages Worth Knowing"})
+
+  await expect(anchorageCard).toBeVisible()
+  await expect(notes(page).filter({hasText: "Tacking in a Squall"})).toBeVisible()
+
+  const cards = await notes(page).evaluateAll(nodes => nodes.map(node => node.textContent ?? ""))
+
+  expect(cards.findIndex(text => text.includes("Anchorages Worth Knowing"))).toBeLessThan(
+    cards.findIndex(text => text.includes("Tacking in a Squall")),
+  )
+
+  // The body is markdown, drawn rather than flattened to text.
+  await expect(anchorageCard.getByRole("heading", {name: "Shelter"})).toBeVisible()
   await expect
     .poll(() =>
       getPublishedEvents(page.context(), LONG_FORM).map(event =>
