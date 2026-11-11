@@ -6,7 +6,7 @@
   import {user} from "@app/core/user"
   import {followLists} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
-  import {describeDiscoverEntry, makeDiscoverFeed} from "@app/features/social/discoverFeed"
+  import {makeDiscoverFeed} from "@app/features/social/discoverFeed"
 
   type Props = {
     onbrowse: () => void
@@ -48,8 +48,8 @@
       <div class="flex flex-col items-center gap-3 pb-4 text-center">
         <p class="font-medium">Follow people to see what they like</p>
         <p class="max-w-md text-sm opacity-75">
-          Notes the people you follow like or repost collect here. The network tab shows what they
-          write.
+          Posts the people you follow like or repost, of any kind, collect here. The network tab
+          shows what they write.
         </p>
         <Button class="button button-neutral button-sm" onclick={onbrowse}>
           Find people to follow
@@ -57,12 +57,9 @@
       </div>
     {:else if $entries.length > 0}
       {#each $entries as entry (entry.key)}
-        <div class="flex flex-col gap-1">
-          <p class="px-1 text-sm text-content-muted">{describeDiscoverEntry(entry)}</p>
-          <NoteEntry
-            entry={{key: entry.key, ref: entry.ref, note: entry.note, replies: []}}
-            {context} />
-        </div>
+        <NoteEntry
+          entry={{key: entry.key, ref: entry.ref, note: entry.event, replies: []}}
+          {context} />
       {/each}
       {#if $loading}
         <div class="flex justify-center py-8">
@@ -77,7 +74,7 @@
       <div class="flex flex-col items-center gap-3 pb-4 text-center">
         <p class="font-medium">Nothing liked or reposted yet</p>
         <p class="max-w-md text-sm opacity-75">
-          Notes the people you follow like or repost collect here.
+          Posts the people you follow like or repost collect here.
         </p>
       </div>
     {:else}

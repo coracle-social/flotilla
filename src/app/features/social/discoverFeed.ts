@@ -33,26 +33,36 @@ import type {FeedLoadState} from "@app/features/feeds"
 import {notes} from "@app/features/social/notes"
 import {isEventMuted} from "@app/features/social/muting"
 
-// A like and a repost both name the note they answer, and both are drawn as that note.
+// A like and a repost both name what they answer, and both are drawn as that.
 export const DISCOVER_KINDS = [REACTION, REPOST, GENERIC_REPOST]
 
-// NIP-25 has a reaction name its note last, as a repost does, and carries the note's author in a p tag.
+// NIP-25 has a reaction name its note last in an e tag, as a repost does. A reaction to an
+// addressable event names it in an a tag instead, and either way the p tag carries its author.
 export const getDiscoverRef = (event: TrustedEvent): Maybe<EventRef> => {
-  const tags = event.tags.filter(tag => tag[0] === "e" && Boolean(tag[1]))
+  const tags = event.tags.filter(tag => (tag[0] === "e" || tag[0] === "a") && Boolean(tag[1]))
   const tag = tags[tags.length - 1]
 
-  if (tag) {
-    const pubkey = tagValue(tagSpec("p"), event.tags)
-
-    return new EventRef({id: tag[1], pubkey, relays: getRelayHints(tag)})
+  if (!tag) {
+    return
   }
+
+  const ref = EventRef.fromString(tag[1], getRelayHints(tag))
+  const pubkey = tagValue(tagSpec("p"), event.tags)
+
+  return new EventRef({
+    id: ref.id,
+    kind: ref.kind,
+    identifier: ref.identifier,
+    pubkey: pubkey ?? ref.pubkey,
+    relays: ref.relays,
+  })
 }
 
-// One card in the discover feed: a note, and what the reader's follows did to it.
+// One card in the discover feed: what a follow answered, and the event it names of whatever kind.
 export type DiscoverEntry = {
   key: string
   ref: EventRef
-  note?: TrustedEvent
+  event?: TrustedEvent
   interactions: TrustedEvent[]
   pubkeys: string[]
   timestamp: number
@@ -90,19 +100,7 @@ export const groupDiscoverEvents = (events: TrustedEvent[]): DiscoverEntry[] => 
   return entries.sort((a, b) => b.pubkeys.length - a.pubkeys.length || b.timestamp - a.timestamp)
 }
 
-// Two people are worth saying, and one person twice is still one person.
-export const describeDiscoverEntry = (entry: DiscoverEntry) => {
-  const count = entry.pubkeys.length
-  const liked = entry.interactions.some(event => event.kind === REACTION)
-  const reposted = entry.interactions.some(event => event.kind !== REACTION)
-  const verb = liked && reposted ? "liked or reposted" : liked ? "liked" : "reposted"
-
-  return count === 1
-    ? `One person you follow ${verb} this`
-    : `${count} people you follow ${verb} this`
-}
-
-/** Notes the reader's follows liked or reposted. The caller draws them and owns their context. */
+/** What the reader's follows liked or reposted. The caller draws it and owns its context. */
 export const makeDiscoverFeed = () => {
   const pages = writable<TrustedEvent[][]>([])
   const states = writable<FeedLoadState[]>([])
@@ -124,7 +122,7 @@ export const makeDiscoverFeed = () => {
 
   const grouped = derived(candidates, groupDiscoverEvents)
 
-  // What the feed holds and has not drawn, best liked first. An entry waits here for its note.
+  // What the feed holds and has not drawn, best liked first. An entry waits here for its event.
   const buffer = derived([grouped, anchors], ([$grouped, $anchors]) =>
     $grouped.filter(entry => !$anchors.has(entry.key)),
   )
@@ -137,8 +135,8 @@ export const makeDiscoverFeed = () => {
       const ordered = removeUndefined($drawn.map(key => byKey.get(key)))
 
       return ordered
-        .map(entry => ({...entry, note: $anchors.get(entry.key)}))
-        .filter(entry => entry.note && !$isEventMuted(entry.note))
+        .map(entry => ({...entry, event: $anchors.get(entry.key)}))
+        .filter(entry => entry.event && !$isEventMuted(entry.event))
     },
   )
 
@@ -152,9 +150,9 @@ export const makeDiscoverFeed = () => {
     $states => $states.length > 0 && $states.every(state => state.status === "exhausted"),
   )
 
-  // Every entry's note is in hand before it is drawn, so no card gains one above it afterwards.
+  // Every entry's event is in hand before it is drawn, so no card gains one above it afterwards.
   const admit = async () => {
-    // Drawing waits on each entry's note, so the page grows too slowly to say when to fetch.
+    // Drawing waits on each entry's event, so the page grows too slowly to say when to fetch.
     if (get(buffer).length < 20) {
       loaders.forEach(loader => loader.run())
     }
@@ -165,23 +163,23 @@ export const makeDiscoverFeed = () => {
       admitting = true
 
       try {
-        // A note nobody can find would hold up every entry below it
+        // An event nobody can find would hold up every entry below it
         const deadline = sleep(6000).then(() => undefined)
 
         const loads = batch.map(async entry => {
           // Drawing waits on these, so they go out at the feed's own priority rather than behind its spans.
-          const note =
-            entry.note ??
+          const event =
+            entry.event ??
             (await Promise.race([notes.get().load(entry.ref, {priority: 1}), deadline]))
 
-          return [entry.key, note] as const
+          return [entry.key, event] as const
         })
 
         // Released in order, so an entry waits on what is above it and not on the whole batch.
         for (const load of loads) {
-          const [key, note] = await load
+          const [key, event] = await load
 
-          anchors.update($anchors => new Map($anchors).set(key, note))
+          anchors.update($anchors => new Map($anchors).set(key, event))
           drawn.update($drawn => [...$drawn, key])
         }
       } finally {
