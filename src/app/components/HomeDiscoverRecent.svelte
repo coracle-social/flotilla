@@ -48,8 +48,8 @@
       <div class="flex flex-col items-center gap-3 pb-4 text-center">
         <p class="font-medium">Follow people to see what they like</p>
         <p class="max-w-md text-sm opacity-75">
-          Posts the people you follow like or repost, of any kind, collect here. The network tab
-          shows what they write.
+          Posts the people you follow like, repost or zap, of any kind, collect here. The network
+          tab shows what they write.
         </p>
         <Button class="button button-neutral button-sm" onclick={onbrowse}>
           Find people to follow
@@ -72,9 +72,9 @@
       </div>
     {:else if $exhausted}
       <div class="flex flex-col items-center gap-3 pb-4 text-center">
-        <p class="font-medium">Nothing liked or reposted yet</p>
+        <p class="font-medium">Nothing liked, reposted or zapped yet</p>
         <p class="max-w-md text-sm opacity-75">
-          Posts the people you follow like or repost collect here.
+          Posts the people you follow like, repost or zap collect here.
         </p>
       </div>
     {:else}

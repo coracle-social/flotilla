@@ -11,6 +11,7 @@ import {
   shuffle,
   sleep,
   take,
+  uniq,
   uniqBy,
 } from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
@@ -19,15 +20,22 @@ import {
   GENERIC_REPOST,
   REACTION,
   REPOST,
+  ZAP_RECEIPT,
+  addressTags,
   getRelayHints,
+  hexTags,
+  matchTag,
+  matchTags,
   outbox,
   tagSpec,
   tagValue,
 } from "@welshman/util"
-import type {TrustedEvent} from "@welshman/util"
+import type {Filter, TrustedEvent} from "@welshman/util"
+import {ZapReceipt} from "@welshman/domain"
 import {createScroller} from "@lib/html"
+import {reader} from "@app/core/domain"
+import {ENABLE_ZAPS, PLATFORM_RELAYS} from "@app/core/env"
 import {relayLists, router} from "@app/core/plugins"
-import {PLATFORM_RELAYS} from "@app/core/env"
 import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
 import type {FeedLoadState} from "@app/features/feeds"
 import {notes} from "@app/features/social/notes"
@@ -36,26 +44,51 @@ import {isEventMuted} from "@app/features/social/muting"
 // A like and a repost both name what they answer, and both are drawn as that.
 export const DISCOVER_KINDS = [REACTION, REPOST, GENERIC_REPOST]
 
-// NIP-25 has a reaction name its note last in an e tag, as a repost does. A reaction to an
-// addressable event names it in an a tag instead, and either way the p tag carries its author.
-export const getDiscoverRef = (event: TrustedEvent): Maybe<EventRef> => {
-  const tags = event.tags.filter(tag => (tag[0] === "e" || tag[0] === "a") && Boolean(tag[1]))
-  const tag = tags[tags.length - 1]
+// The event a follow answered, and the follow whose answer it is.
+export type DiscoverAnswer = {
+  ref: EventRef
+  pubkey: string
+}
 
-  if (!tag) {
-    return
+// An a tag names an addressable event outright, and NIP-25 names any other in the last e tag,
+// since a reaction copies the tags of the note it answers.
+const getTargetTag = (tags: string[][]): Maybe<string[]> => {
+  const address = matchTag(addressTags("a"), tags)
+
+  if (address) {
+    return address
   }
 
-  const ref = EventRef.fromString(tag[1], getRelayHints(tag))
-  const pubkey = tagValue(tagSpec("p"), event.tags)
+  const ids = matchTags(hexTags("e"), tags)
 
-  return new EventRef({
-    id: ref.id,
-    kind: ref.kind,
-    identifier: ref.identifier,
-    pubkey: pubkey ?? ref.pubkey,
-    relays: ref.relays,
-  })
+  return ids[ids.length - 1]
+}
+
+// A zap receipt is signed by the recipient's wallet, so the request inside it names the zapper and
+// the event that was zapped.
+export const getDiscoverAnswer = (event: TrustedEvent): Maybe<DiscoverAnswer> => {
+  const receipt = event.kind === ZAP_RECEIPT ? reader(ZapReceipt)(event).parse() : undefined
+  const tagGroups = receipt ? [event.tags, receipt.request()?.tags ?? []] : [event.tags]
+
+  for (const tags of tagGroups) {
+    const tag = getTargetTag(tags)
+
+    if (tag) {
+      const ref = EventRef.fromString(tag[1], getRelayHints(tag))
+      const pubkey = tagValue(tagSpec("p"), tags) ?? ref.pubkey
+
+      return {
+        ref: new EventRef({
+          id: ref.id,
+          kind: ref.kind,
+          identifier: ref.identifier,
+          pubkey,
+          relays: ref.relays,
+        }),
+        pubkey: receipt ? (receipt.sender() ?? event.pubkey) : event.pubkey,
+      }
+    }
+  }
 }
 
 // One card in the discover feed: what a follow answered, and the event it names of whatever kind.
@@ -68,18 +101,18 @@ export type DiscoverEntry = {
   timestamp: number
 }
 
-// The notes the reader's follows liked or reposted, the ones most of them answered first.
+// What the reader's follows liked, reposted or zapped, the ones most of them answered first.
 export const groupDiscoverEvents = (events: TrustedEvent[]): DiscoverEntry[] => {
   const items = events.flatMap(event => {
-    const ref = getDiscoverRef(event)
+    const answer = getDiscoverAnswer(event)
 
-    if (!ref) {
+    if (!answer) {
       return []
     }
 
-    const key = ref.getAddressOrId()
+    const key = answer.ref.getAddressOrId()
 
-    return key ? [{key, ref, event}] : []
+    return key ? [{key, ...answer, event}] : []
   })
 
   const entries = Array.from(
@@ -91,7 +124,7 @@ export const groupDiscoverEvents = (events: TrustedEvent[]): DiscoverEntry[] => 
         key,
         ref: group.map(({ref}) => ref).reduce(EventRef.merge),
         interactions: answered,
-        pubkeys: uniqBy(event => event.pubkey, answered).map(event => event.pubkey),
+        pubkeys: uniq(group.map(({pubkey}) => pubkey)),
         timestamp: Math.max(...answered.map(event => event.created_at)),
       }
     },
@@ -100,7 +133,7 @@ export const groupDiscoverEvents = (events: TrustedEvent[]): DiscoverEntry[] => 
   return entries.sort((a, b) => b.pubkeys.length - a.pubkeys.length || b.timestamp - a.timestamp)
 }
 
-/** What the reader's follows liked or reposted. The caller draws it and owns its context. */
+/** What the reader's follows liked, reposted or zapped. The caller draws it and owns its context. */
 export const makeDiscoverFeed = () => {
   const pages = writable<TrustedEvent[][]>([])
   const states = writable<FeedLoadState[]>([])
@@ -196,12 +229,19 @@ export const makeDiscoverFeed = () => {
     const relays = scenario.limit(10).getUrls()
 
     if (!stopped) {
+      const filters: Filter[] = [{kinds: DISCOVER_KINDS, authors: pubkeys}]
+
+      // A receipt pays its recipient rather than being published by the zapper, so it is found by who it names.
+      if (ENABLE_ZAPS) {
+        filters.push({kinds: [ZAP_RECEIPT], "#p": pubkeys})
+      }
+
       const feed = makeFeed({
         relays,
         // Half the group's relays answering is enough to show its page, since the rest get asked again.
         quorum: 0.5,
         useCache: false,
-        filters: [{kinds: DISCOVER_KINDS, authors: pubkeys}],
+        filters,
       })
 
       const loader = makeFeedLoader(feed.loadOlder)
