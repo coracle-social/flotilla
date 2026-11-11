@@ -1,7 +1,8 @@
 import {derived} from "svelte/store"
-import {addToMapKey, dec, indexBy} from "@welshman/lib"
+import {addToMapKey, dec, indexBy, nth, uniq} from "@welshman/lib"
 import {Relay} from "@welshman/domain"
-import {normalizeRelayUrl} from "@welshman/util"
+import type {RoomListReader} from "@welshman/domain"
+import {isRelayUrl, normalizeRelayUrl} from "@welshman/util"
 import {throttled} from "@welshman/store"
 import {RoomLists, Rooms, Relays, createSearch} from "@welshman/app"
 import {fromApp} from "@app/core/app"
@@ -9,6 +10,14 @@ import {relays} from "@app/core/plugins"
 import * as pages from "@app/navigation/pages"
 import {userRoomList, userSpaceUrls} from "@app/features/spaces/urls"
 import {displayRoom} from "@app/features/spaces/rooms/room"
+
+// `RoomList.urls()` throws on a room tag with no relay hint, so skip those tags rather than the list.
+const listUrls = (list: RoomListReader) =>
+  uniq(
+    [...list.relays(), ...list.roomTags().map(nth(2))]
+      .filter(url => url && isRelayUrl(url))
+      .map(normalizeRelayUrl),
+  )
 
 // Who lists each space, rebuilt once a second while room lists stream in by the hundred.
 const spacePubkeysByUrl = derived(
@@ -20,7 +29,7 @@ const spacePubkeysByUrl = derived(
     const result = new Map<string, Set<string>>()
 
     for (const roomList of $roomLists) {
-      for (const url of roomList.urls()) {
+      for (const url of listUrls(roomList)) {
         addToMapKey(result, url, roomList.author())
       }
     }
