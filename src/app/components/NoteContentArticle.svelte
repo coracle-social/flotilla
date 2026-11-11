@@ -1,12 +1,16 @@
 <script lang="ts">
-  import type {ComponentProps} from "svelte"
+  import type {TrustedEvent} from "@welshman/util"
   import {Article} from "@welshman/domain"
-  import ContentMarkdown from "@app/components/ContentMarkdown.svelte"
+  import ArticleExcerpt from "@app/components/ArticleExcerpt.svelte"
   import {reader} from "@app/core/domain"
 
-  const props: ComponentProps<typeof ContentMarkdown> = $props()
+  type Props = {
+    event: TrustedEvent
+  }
 
-  const article = $derived(reader(Article)(props.event))
+  const {event}: Props = $props()
+
+  const article = $derived(reader(Article)(event))
   const title = $derived(article.title())
   const image = $derived(article.image())
 </script>
@@ -18,7 +22,5 @@
   {#if title}
     <p class="text-xl">{title}</p>
   {/if}
-  {#if props.event.content}
-    <ContentMarkdown event={props.event} class="content-markdown--excerpt" />
-  {/if}
+  <ArticleExcerpt {event} />
 </div>

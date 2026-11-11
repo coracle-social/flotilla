@@ -19,16 +19,17 @@ import {
   uniqBy,
 } from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {EventRef, LONG_FORM, NOTE, getIdOrAddress, outbox} from "@welshman/util"
+import {EventRef, NOTE, getIdOrAddress, outbox} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {synced} from "@welshman/store"
-import {Article, Note} from "@welshman/domain"
+import {Note} from "@welshman/domain"
 import {createScroller} from "@lib/html"
 import {relayLists, router} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
 import {kv} from "@app/core/storage"
 import {PLATFORM_RELAYS} from "@app/core/env"
 import {CONTENT_KINDS} from "@app/features/spaces"
+import {getPublishedTimestamp} from "@app/features/spaces/articles"
 import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
 import type {FeedContext, FeedLoadState} from "@app/features/feeds"
 import {getReplyRefs} from "@app/features/social/replies"
@@ -75,17 +76,9 @@ const getNetworkFeedRef = (event: TrustedEvent) => {
   return answered ?? EventRef.fromEvent(event)
 }
 
-// Where an entry sits in the feed: its note, or the oldest reply when the note is not loaded. An
-// article is dated by when it was published, since its created_at moves with every edit.
-const getNetworkFeedTimestamp = (entry: NetworkFeedEntry) => {
-  if (entry.note) {
-    return entry.note.kind === LONG_FORM
-      ? reader(Article)(entry.note).publishedAt()
-      : entry.note.created_at
-  }
-
-  return min(entry.replies.map(reply => reply.created_at))
-}
+// Where an entry sits in the feed: its note, or the oldest reply when the note is not loaded.
+const getNetworkFeedTimestamp = (entry: NetworkFeedEntry) =>
+  entry.note ? getPublishedTimestamp(entry.note) : min(entry.replies.map(reply => reply.created_at))
 
 // A reply collapses into the entry for the note it answers, so two replies to one note share it.
 export const groupNetworkFeedEvents = (events: TrustedEvent[]): NetworkFeedEntry[] => {

@@ -9,6 +9,7 @@
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import {goToEvent} from "@app/navigation/locations"
+  import {getPublishedTimestamp} from "@app/features/spaces/articles"
   import {isEventMuted} from "@app/features/social/muting"
 
   type Props = {
@@ -74,7 +75,7 @@
       <Button
         class={cx("whitespace-nowrap text-sm opacity-75", {"text-xs": minimal})}
         onclick={goToNote}>
-        {formatTimestamp(event.created_at)}
+        {formatTimestamp(getPublishedTimestamp(event))}
       </Button>
     </div>
     {@render children?.()}

@@ -1,6 +1,5 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {sortBy} from "@welshman/lib"
   import {formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {LONG_FORM, getAddress} from "@welshman/util"
@@ -11,7 +10,7 @@
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {displayReadingTime} from "@app/features/spaces/articles"
+  import {displayReadingTime, sortArticles} from "@app/features/spaces/articles"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
@@ -30,10 +29,7 @@
   const articleCount = $derived($articles.length)
 
   const others = $derived(
-    sortBy(
-      e => -reader(Article)(e).publishedAt(),
-      $articles.filter(e => getAddress(e) !== address),
-    ).slice(0, MAX_ARTICLES),
+    sortArticles($articles.filter(e => getAddress(e) !== address)).slice(0, MAX_ARTICLES),
   )
 
   onMount(() => {

@@ -5,12 +5,13 @@
   import {Article} from "@welshman/domain"
   import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
-  import ContentMarkdown from "@app/components/ContentMarkdown.svelte"
+  import ArticleExcerpt from "@app/components/ArticleExcerpt.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import type {FeedContext} from "@app/features/feeds"
   import {reader} from "@app/core/domain"
+  import {getPublishedTimestamp} from "@app/features/spaces/articles"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
@@ -24,7 +25,6 @@
   const path = $derived(pages.article.path({url, address: getAddress(event)}))
   const article = $derived(reader(Article)(event))
   const title = $derived(article.title())
-  const summary = $derived(article.summary())
   const image = $derived(article.image())
   const topics = $derived(uniq(article.topics()))
 </script>
@@ -47,14 +47,10 @@
     <div class="flex w-full items-center justify-between gap-2">
       <p class="text-xl">{title || "Untitled"}</p>
       <p class="whitespace-nowrap text-sm opacity-75">
-        {formatTimestamp(article.publishedAt())}
+        {formatTimestamp(getPublishedTimestamp(event))}
       </p>
     </div>
-    {#if summary}
-      <p class="line-clamp-3 text-content-muted">{summary}</p>
-    {:else}
-      <ContentMarkdown {event} class="content-markdown--excerpt" />
-    {/if}
+    <ArticleExcerpt {event} />
     <div class="flex w-full flex-col items-end justify-between gap-2 sm:flex-row">
       <span class="pointer-events-auto whitespace-nowrap py-1 text-sm opacity-75">
         Written by

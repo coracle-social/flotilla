@@ -1,7 +1,7 @@
 import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
 import {npubEncode} from "nostr-tools/nip19"
-import {HOUR, MINUTE, MONTH, now, uniq} from "@welshman/lib"
+import {HOUR, MINUTE, MONTH, formatTimestamp, now, uniq} from "@welshman/lib"
 import {
   FOLLOWS,
   LONG_FORM,
@@ -509,6 +509,8 @@ test("US-134 write a public post", async ({seed, as}) => {
 })
 
 test("US-150 post an article or a poll", async ({seed, as}) => {
+  let anchorage!: Seeded
+
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
 
@@ -518,7 +520,7 @@ test("US-150 post an article or a poll", async ({seed, as}) => {
     space.relayList(user.alice)
 
     // Written after the other and published before it, so the two disagree about which is newer.
-    space.event(
+    anchorage = space.event(
       user.alice,
       () =>
         space
@@ -579,6 +581,11 @@ test("US-150 post an article or a poll", async ({seed, as}) => {
 
   // The body is markdown, drawn rather than flattened to text.
   await expect(anchorageCard.getByRole("heading", {name: "Shelter"})).toBeVisible()
+
+  // And the card is dated when the article went out, an hour ago, not when it was written, three.
+  const publishedAt = Number(tagValue(tagSpec("published_at"), anchorage.event.tags))
+
+  await expect(anchorageCard).toContainText(formatTimestamp(publishedAt))
   await expect
     .poll(() =>
       getPublishedEvents(page.context(), LONG_FORM).map(event =>
