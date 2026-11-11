@@ -7,6 +7,7 @@ import android.os.Bundle;
 
 import com.getcapacitor.BridgeActivity;
 
+import social.flotilla.downloads.WebViewDownloadPlugin;
 import social.flotilla.notifications.AndroidPushFallbackPlugin;
 import social.flotilla.screenshare.ScreenSharePlugin;
 import social.flotilla.share.ShareIntentPlugin;
@@ -15,6 +16,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     registerPlugin(AndroidPushFallbackPlugin.class);
+    registerPlugin(WebViewDownloadPlugin.class);
     registerPlugin(ScreenSharePlugin.class);
     registerPlugin(ShareIntentPlugin.class);
     createPushNotificationChannel();

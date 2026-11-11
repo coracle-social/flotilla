@@ -37,6 +37,7 @@
   import {device} from "@app/core/device"
   import {forceHealthChecks} from "@app/features/healthChecks"
   import {setupShareIntents} from "@app/features/share"
+  import {setupWebViewDownloads} from "@app/features/downloads"
   import {syncApplicationData} from "@app/core/sync"
   import {shouldUnwrap} from "@app/features/messages"
   import * as env from "@app/core/env"
@@ -129,6 +130,9 @@
 
     // Listen for links shared into the app from elsewhere on the device
     unsubscribers.push(setupShareIntents())
+
+    // Take the downloads the web view's own player offers, which it cannot carry out itself
+    unsubscribers.push(setupWebViewDownloads())
 
     // Initialize keyboard state tracking
     unsubscribers.push(syncKeyboard())
