@@ -113,6 +113,7 @@ Every mutation method (`create`/`update`/`follow`/`addRelay`/`setRelays`/etc.) i
 | `SearchRelayLists` | kind-10007 | `urls(pk)`, `addUrl`, `removeUrl`, `setUrls` → `Command` |
 | `BlossomServerLists` | kind-10063 media servers | `urls(pk)`, `addUrl`, `removeUrl`, `setUrls` → `Command` |
 | `FeedLists` | kind-10014 saved-feed lists | `addresses(pk)`, `addFeed`/`addFeedPrivately`/`removeFeed`, `update(fn)` → `Command` |
+| `CommandLists` | kind-10992 installed slash commands (NIP-CD) | `addresses(pk)`, `addCommand`/`addCommandPrivately`/`removeCommand`, `update(fn)` → `Command` |
 | `RoomLists` | kind-10009 room lists | `addRoom`/`removeRoom`/`addRelay`/`removeRelay`/`setRelays` → `Command` |
 | `Feeds` | kind-31890 saved feeds (keyed by address) | `forAuthor(pk)`, `loadForAuthor(pk)`, `create(fields)`, `update(addr, fn)` → `Command`; `makeFeedController(...)` |
 | `Pinboards` | kind-30067 pinboards (many per author, keyed by address) | `forAuthor(pk)`, `loadForAuthor(pk)`, `create(fields)`, `update(addr, fn)` → `Command` |

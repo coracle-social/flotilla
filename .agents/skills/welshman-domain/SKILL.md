@@ -191,6 +191,7 @@ The DSL constructors `relays(urls)` and `inboxes(pubkeys)` return **arrays** (sp
 | 10030 | NIP-51 | `EmojiListReader` / `EmojiListWriter` |
 | 10050 | NIP-17 | `MessagingRelayListReader` / `MessagingRelayListWriter` |
 | 10063 | Blossom BUD-03 | `BlossomServerListReader` / `BlossomServerListWriter` |
+| 10992 | NIP-CD | `CommandListReader` / `CommandListWriter` |
 | 30002 | NIP-51 | `RelaySetReader` / `RelaySetWriter` |
 | 30003 | NIP-51 | `BookmarkSetReader` / `BookmarkSetWriter` |
 

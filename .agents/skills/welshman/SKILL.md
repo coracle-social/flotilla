@@ -92,7 +92,7 @@ const app = createApp({
   },
 })
 
-// Pass `repository: new SqliteRepository(...)` to persist events across sessions (see the welshman-store skill)
+// Pass `repository: await SqliteRepository.open(...)` to persist events across sessions (see the welshman-store skill)
 
 // Fetches via the outbox model unless the profile was loaded recently; forceLoad always fetches
 const profile = await app.use(Profiles).load(user.pubkey)

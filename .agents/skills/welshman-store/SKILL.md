@@ -27,7 +27,6 @@ pnpm add @sqlite.org/sqlite-wasm
 ```typescript
 interface Repository {
   tracker: Tracker
-  ready: Promise<void>
   query(filters: Filter[], options?: QueryOptions): Promise<TrustedEvent[]>   // newest first
   count(filters: Filter[], options?: QueryOptions): Promise<number>
   countTags(name: string, options?: {signal?}): Promise<Map<string, number>> // value -> visible events carrying it
@@ -37,7 +36,7 @@ interface Repository {
   removeEvent(idOrAddress: string): Promise<void>
   pendingWrites(): Promise<void> | undefined     // settles once writes made so far are reported; undefined if none are outstanding
   clear(): Promise<void>
-  observe(options: ObserveOptions): Unsubscriber // {filters, onUpdate, onLoad?, onError?, includeDeleted?, relay?}: the read, then each change
+  observe(options: ObserveOptions): Unsubscriber // {filters, onUpdate, onLoad?, onError?, includeDeleted?, relay?}: the read, then each change; a clear loads nothing
   on("update", (update: RepositoryUpdate) => void) // {added: TrustedEvent[], removed: Set<string>}
   on("clear", () => void)
 }
@@ -67,20 +66,19 @@ The in-memory store. It is the default in `@welshman/app` and right for tests, s
 import {SqliteRepository, connectSqlite} from "@welshman/store"
 import SqliteWorker from "@welshman/store/sqlite-worker?worker" // Vite; other bundlers differ
 
-const repository = new SqliteRepository({
+// Resolves once the deletes `isDeleted` answers from are loaded
+const repository = await SqliteRepository.open({
   connection: connectSqlite({name: `events-${pubkey}`, createWorker: () => new SqliteWorker()}),
 })
-
-await repository.ready
 
 // On logout or account switch: send pending writes, then free the database for another tab
 await repository.close()
 ```
 
 - **Worker.** `@welshman/store/sqlite-worker` opens the database in OPFS with a sqlite-wasm SAH pool of its own. That needs no cross-origin isolation, but it only runs in a dedicated worker and holds the database exclusively. Each database gets its own pool, so different databases open side by side.
-- **Leader election.** `connectSqlite` returns a `SqliteConnection` (`call`, `subscribe`, `close`) and elects one tab with a web lock to run the worker. The other tabs send their calls over a `BroadcastChannel`, and every answer comes back through the leader in commit order. `subscribe` hears the changes other tabs commit in that order, which is how each tab's repository reports every tab's writes as `update` events and keeps its tracker and `isDeleted` current with them. When the leader closes, the next tab takes over and runs the calls left unanswered, so a write the old leader committed but never answered reports nothing new.
-- **Write batching.** Writes collect for `batchDelay` ms (default 10) and commit as one transaction. A read sends any waiting writes first, so it sees them. The batch's `update` fires after the commit.
-- **Synchronous state.** The tracker fills from every query result, from every event a write reports, from another tab's writes, and from `tracker.track` calls, and the repository persists the last of these. Reading provenance back emits no `"add"`, since nothing new was seen. `isDeleted` reads a mirror of the delete table, loaded at `ready` and kept current by each write, this tab's or another's.
+- **Leader election.** `connectSqlite` returns a `SqliteConnection` (`call`, `subscribe`, `close`) and elects one tab with a web lock to run the worker. The other tabs send it their calls. Each answer goes only to the tab that asked, and the leader tells every tab its place in commit order over a `BroadcastChannel`. `subscribe` hears the changes other tabs commit in that order, which is how each tab's repository reports every tab's writes as `update` events and keeps its tracker and `isDeleted` current with them. When the leader closes, the next tab takes over and answers the calls left unanswered. A write the old leader committed but never answered runs again there and reports nothing new. A worker that fails to load answers every call with its failure.
+- **Write batching.** Writes collect for `batchDelay` ms (default 10) and commit as one transaction. A read sends any waiting writes first, so it sees them; `pendingWrites()` waits for the batch to go out when due. The batch's `update` fires after the commit.
+- **Synchronous state.** The tracker fills from every query result, from every event a write reports, from another tab's writes, and from `tracker.track` calls, and the repository persists the last of these. Reading provenance back emits no `"add"`, since nothing new was seen. `isDeleted` reads a mirror of the delete table, loaded before `open` resolves and kept current by each write, this tab's or another's.
 - **Storage housekeeping.** It keeps one superseded version per address and deletes older ones. On open, `prune()` drops expired events and relay rows that no longer point at an event, and every open tab hears what that changed. Dropping a current version, by `prune()` or `evict()`, drops the version it kept back too.
 - **SQLite-only methods.** `evict(filters)` drops matching events outright, with nothing restored in their place; use it for retention. `close()` sends pending writes, then closes the connection.
 - **Signatures.** An event read back is marked verified only if it was verified before it was stored.

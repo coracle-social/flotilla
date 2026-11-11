@@ -177,7 +177,7 @@ PINBOARD = 30067       PIN = 39067
 **Slash commands**
 
 ```
-COMMAND = 31992
+COMMAND = 31992       COMMANDS = 10992
 ```
 
 **Replaceable lists (kinds 10000–10099)**
@@ -509,6 +509,12 @@ const urls = await resolver.relays(selections)   // string[]
 the invocation grammar — `parseCommandInvocation`, `renderCommandInvocation`, `bindCommandArgs`,
 `parseCommandArgs`, `getActiveCommandArgIndex`. Kind `COMMAND` is 31992. `@welshman/editor`'s
 `CommandExtension`/`CommandSuggestion` render and autocomplete these in the composer.
+
+A tag scope has two forms: `tag:<name>:<value>` requires that value, and `tag:<name>` requires
+only that the tag be present with a non-empty value, which is a `CommandScope` with no `value`.
+A bare alternative can't be expressed as a nostr filter, so `commandScopesToFilter` drops its
+whole tag group — one more reason to check what the subscription returns with
+`matchesCommandScopes`.
 
 ### Lightning (NIP-57 and NIP-B1 support)
 
