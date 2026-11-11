@@ -1,5 +1,6 @@
-import {ago, MONTH} from "@welshman/lib"
+import {ago, MINUTE, MONTH, on, spec, throttle} from "@welshman/lib"
 import {
+  DELETE,
   MESSAGE,
   ROOM_ADD_MEMBER,
   ROOM_ADMINS,
@@ -12,6 +13,7 @@ import {
   ROOM_PINS,
   ROOM_REMOVE_MEMBER,
 } from "@welshman/util"
+import type {RepositoryUpdate} from "@welshman/store"
 import {throttled} from "@welshman/store"
 import {app} from "@app/core/app"
 import {network, rooms} from "@app/core/plugins"
@@ -38,6 +40,24 @@ export const syncSpaceRooms = (url: string) => {
       : []),
   ])
 
+  // An edit republishes a message with its old timestamp, which the live subscription is too new to catch.
+  const reloadRecent = throttle(1000, () =>
+    network
+      .get()
+      .load({
+        relays: [url],
+        signal: controller.signal,
+        filters: [{kinds: [MESSAGE], since: ago(5, MINUTE)}],
+      })
+      .catch(console.error),
+  )
+
+  const unsubscribeDeletes = on(app.get().repository, "update", ({added}: RepositoryUpdate) => {
+    if (added.some(spec({kind: DELETE}))) {
+      reloadRecent()
+    }
+  })
+
   const unsubscribeRooms = throttled(300, rooms.get().forUrl(url).$).subscribe($rooms => {
     const hs = $rooms.map(room => room.h).filter(h => !asked.has(h))
 
@@ -57,6 +77,7 @@ export const syncSpaceRooms = (url: string) => {
   return () => {
     unsubscribeRooms()
     unsubscribeState()
+    unsubscribeDeletes()
     controller.abort()
   }
 }
