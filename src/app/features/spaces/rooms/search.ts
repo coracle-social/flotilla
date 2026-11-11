@@ -1,6 +1,7 @@
 import {derived} from "svelte/store"
 import {addToMapKey, dec, indexBy} from "@welshman/lib"
 import {Relay} from "@welshman/domain"
+import {normalizeRelayUrl} from "@welshman/util"
 import {throttled} from "@welshman/store"
 import {RoomLists, Rooms, Relays, createSearch} from "@welshman/app"
 import {fromApp} from "@app/core/app"
@@ -9,23 +10,31 @@ import * as pages from "@app/navigation/pages"
 import {userRoomList, userSpaceUrls} from "@app/features/spaces/urls"
 import {displayRoom} from "@app/features/spaces/rooms/room"
 
-// How many people list each space both scopes and ranks the search.
-export const deriveSpaceSearch = () => {
-  const spacePubkeysByUrl = derived(
+// Who lists each space, rebuilt once a second while room lists stream in by the hundred.
+const spacePubkeysByUrl = derived(
+  throttled(
+    1000,
     fromApp($app => $app.use(RoomLists).all.$),
-    $roomLists => {
-      const result = new Map<string, Set<string>>()
+  ),
+  $roomLists => {
+    const result = new Map<string, Set<string>>()
 
-      for (const roomList of $roomLists) {
-        for (const url of roomList.urls()) {
-          addToMapKey(result, url, roomList.author())
-        }
+    for (const roomList of $roomLists) {
+      for (const url of roomList.urls()) {
+        addToMapKey(result, url, roomList.author())
       }
+    }
 
-      return result
-    },
+    return result
+  },
+)
+
+export const spacePubkeysForUrl = (url: string) =>
+  derived(spacePubkeysByUrl, $pubkeysByUrl =>
+    Array.from($pubkeysByUrl.get(normalizeRelayUrl(url)) ?? []),
   )
 
+export const deriveSpaceSearch = () => {
   return derived(
     [
       throttled(

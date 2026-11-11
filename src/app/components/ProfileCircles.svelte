@@ -22,14 +22,15 @@
         : {box: "h-8 w-8", overlap: "-mr-3", overflow: "text-xs"},
   )
 
+  const displayPubkeys = $derived([...pubkeys].toSorted().slice(0, effectiveLimit))
+  const overflowCount = $derived(Math.max(0, pubkeys.length - effectiveLimit))
+
+  // Only the faces drawn are loaded, since a popular space is listed by hundreds of people.
   $effect(() => {
-    for (const pk of pubkeys) {
+    for (const pk of displayPubkeys) {
       $profiles.load(pk)
     }
   })
-
-  const displayPubkeys = $derived([...pubkeys].toSorted().slice(0, effectiveLimit))
-  const overflowCount = $derived(Math.max(0, pubkeys.length - effectiveLimit))
 </script>
 
 <div class={cx("flex", size <= 5 ? "pr-2" : "pr-3", className)}>

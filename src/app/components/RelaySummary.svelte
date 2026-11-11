@@ -7,7 +7,7 @@
   import RelayDescription from "@app/components/RelayDescription.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {user} from "@app/core/user"
-  import {roomLists} from "@app/core/plugins"
+  import {spacePubkeysForUrl} from "@app/features/spaces/rooms/search"
   import {userSpaceUrls} from "@app/features/spaces"
 
   type Props = {
@@ -15,7 +15,7 @@
   }
 
   const {url}: Props = $props()
-  const favorited = $roomLists.pubkeysForUrl(url).$
+  const favorited = spacePubkeysForUrl(url)
   const favoritedPubkeys = $derived(remove($user.pubkey, $favorited))
 </script>
 

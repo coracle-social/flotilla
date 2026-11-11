@@ -1,6 +1,5 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {sleep} from "@welshman/lib"
   import {ROOMS} from "@welshman/util"
   import {Sync} from "@welshman/app"
   import {createScroller, isMobile} from "@lib/html"
@@ -35,6 +34,7 @@
 
   let term = $state("")
   let limit = $state(20)
+  let loading = $state(true)
   let element: Element
 
   const inviteData = $derived(parseInviteLink(term))
@@ -62,8 +62,12 @@
     const sync = $app.use(Sync)
 
     // Every room list the indexers hold, so browse is not limited to the people the user follows.
-    sync.pull({filters: [{kinds: [ROOMS]}], relays: INDEXER_RELAYS})
-    sync.pull({filters: [{kinds: [ROOMS], authors: $bootstrapPubkeys}], relays: DEFAULT_RELAYS})
+    Promise.allSettled([
+      sync.pull({filters: [{kinds: [ROOMS]}], relays: INDEXER_RELAYS}),
+      sync.pull({filters: [{kinds: [ROOMS], authors: $bootstrapPubkeys}], relays: DEFAULT_RELAYS}),
+    ]).then(() => {
+      loading = false
+    })
 
     return () => {
       scroller.stop()
@@ -126,13 +130,11 @@
                 <SpaceResult url={relay.url} />
               {/each}
               <div class="flex justify-center py-20">
-                {#await sleep(5000)}
-                  <Spinner loading>Looking for spaces...</Spinner>
-                {:then}
-                  {#if otherSpaces.length === 0}
-                    <Spinner>No spaces found.</Spinner>
-                  {/if}
-                {/await}
+                {#if loading}
+                  <Spinner>Looking for spaces...</Spinner>
+                {:else if otherSpaces.length === 0}
+                  <Spinner loading={false}>No spaces found.</Spinner>
+                {/if}
               </div>
             {/await}
           {/each}
