@@ -1,7 +1,6 @@
 import {neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE, WEEK, bech32ToHex, int, now} from "@welshman/lib"
 import {MESSAGE, getLnUrl, tagSpec, tagValue} from "@welshman/util"
-import {Profile} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
   composer,
@@ -879,9 +878,7 @@ test("US-115 connect a wallet without losing the zap you were composing", async 
     space.join(user.alice, "general")
     space.join(user.bob, "general")
     space.profile(user.alice, {name: "Alice Anchor"})
-    space.event(user.bob, () =>
-      space.kind(Profile).writer().update({name: "Bob Barnacle", lud16}).renderTemplate(),
-    )
+    space.profile(user.bob, {name: "Bob Barnacle", lud16})
     space.message(user.bob, "general", "the new sail came in")
   })
 

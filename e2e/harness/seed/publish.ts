@@ -25,6 +25,9 @@ export type ProfileValues = {
   about?: string
   picture?: string
   nip05?: string
+  // A lightning address, which is what a zap spec needs a profile for.
+  lud16?: string
+  lud06?: string
 }
 
 export type PublisherOptions = {
