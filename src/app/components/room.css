@@ -27,8 +27,9 @@
     }
   }
 
+  /* Above the compose bar so its buttons take taps; the bottom nav comes later and wins the tie. */
   .room-pins-anchor {
-    @apply z-compose pointer-events-none absolute top-0 right-0 left-0;
+    @apply z-nav pointer-events-none absolute top-0 right-0 left-0;
   }
 
   .room-pins {
