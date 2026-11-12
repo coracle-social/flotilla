@@ -5,7 +5,7 @@
   import {preventDefault, stopPropagation} from "@lib/html"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {getUrlContentType, IMAGE_CONTENT_TYPES} from "@lib/media"
+  import {getUrlContentType, isImageUrl, isVideoUrl} from "@lib/media"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
   import ContentLinkFile from "@app/components/ContentLinkFile.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
@@ -27,7 +27,7 @@
     pushModal(ContentLinkDetail, {url, event}, {fullscreen: true, label: "Content preview"})
 </script>
 
-{#if url.match(/\.(jpe?g|png|gif|webp)$/) || IMAGE_CONTENT_TYPES.includes(fileType)}
+{#if isImageUrl(url, event) || isVideoUrl(url, event)}
   <!-- Use a real link so people can copy the href -->
   <a href={url} class={className} onclick={stopPropagation(preventDefault(expand))}>
     <Icon icon={LinkRound} size={3} class="inline-block" />

@@ -46,9 +46,26 @@ export const getUrlFileName = (url: string, event: TrustedEvent) => {
   return name.replace(/[\p{Cc}/\\]/gu, "_").replace(/^\.+/, "") || "file"
 }
 
+// Read from the path, so a query string or a fragment after the extension doesn't hide it.
+const getUrlExtension = (url: string) => {
+  try {
+    return new URL(url).pathname.toLowerCase().match(/\.([^./]+)$/)?.[1] || ""
+  } catch {
+    return ""
+  }
+}
+
 export const isImageUrl = (url: string, event: TrustedEvent) =>
   Boolean(url.match(/\.(jpe?g|png|gif|webp)$/)) ||
   IMAGE_CONTENT_TYPES.includes(getUrlContentType(url, event))
+
+export const isVideoUrl = (url: string, event: TrustedEvent) =>
+  ["mov", "mp4", "webm"].includes(getUrlExtension(url)) ||
+  VIDEO_CONTENT_TYPES.includes(getUrlContentType(url, event))
+
+export const isAudioUrl = (url: string, event: TrustedEvent) =>
+  ["flac", "m4a", "mp3", "oga", "ogg", "opus", "wav"].includes(getUrlExtension(url)) ||
+  AUDIO_CONTENT_TYPES.includes(getUrlContentType(url, event))
 
 const getUrlDecryption = (url: string, event: TrustedEvent) => {
   const tags = getUrlTags(url, event)

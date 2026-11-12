@@ -100,6 +100,7 @@ test("US-061 expand a long post", async ({seed, as}) => {
 test("US-062 see images and video inline", async ({seed, as}) => {
   let picture!: SeededEvent
   let clip!: SeededEvent
+  let mentioned!: SeededEvent
 
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -110,6 +111,12 @@ test("US-062 see images and video inline", async ({seed, as}) => {
 
     picture = space.message(user.bob, "general", "https://images.test/sunset.png", at(40, MINUTE))
     clip = space.message(user.bob, "general", "https://media.test/clip.mp4", at(35, MINUTE))
+    mentioned = space.message(
+      user.bob,
+      "general",
+      "clip https://media.test/clip.mp4 again",
+      at(30, MINUTE),
+    )
   })
 
   const {url} = scenario.space("space")
@@ -117,6 +124,7 @@ test("US-062 see images and video inline", async ({seed, as}) => {
 
   const pictureMessage = page.locator(`[data-event="${picture.id}"]`)
   const clipMessage = page.locator(`[data-event="${clip.id}"]`)
+  const mentionedMessage = page.locator(`[data-event="${mentioned.id}"]`)
   const inlineImage = pictureMessage.locator('img[src="https://images.test/sunset.png"]')
 
   await inlineImage.click()
@@ -129,6 +137,22 @@ test("US-062 see images and video inline", async ({seed, as}) => {
 
   await expect(preview).toHaveCount(0)
   await expect(clipMessage.locator("video")).toBeVisible()
+
+  // The player keeps the click, so the preview comes from its own button rather than a link.
+  await clipMessage.getByRole("button", {name: "Open video"}).click()
+
+  await expect(preview.locator("video")).toBeVisible()
+
+  await page.keyboard.press("Escape")
+
+  await expect(preview).toHaveCount(0)
+
+  // A video url mid-sentence opens the same player instead of downloading the file.
+  const mentionedLink = mentionedMessage.getByRole("link", {name: "media.test/clip.mp4"})
+
+  await mentionedLink.click()
+
+  await expect(preview.locator("video")).toBeVisible()
 })
 
 test("US-063 preview a shared link", async ({seed, as}) => {

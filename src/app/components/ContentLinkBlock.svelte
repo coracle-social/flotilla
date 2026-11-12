@@ -15,15 +15,19 @@
 </script>
 
 <script lang="ts">
-  import {call, ellipsize, displayUrl} from "@welshman/lib"
+  import {call, ellipsize, displayUrl, noop} from "@welshman/lib"
   import {isRelayUrl} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import {Capacitor} from "@capacitor/core"
   import {preventDefault, stopPropagation} from "@lib/html"
   import Link from "@lib/components/Link.svelte"
+  import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {AUDIO_CONTENT_TYPES, getUrlContentType, isImageUrl, VIDEO_CONTENT_TYPES} from "@lib/media"
+  import Icon from "@lib/components/Icon.svelte"
+  import Maximize from "@assets/icons/maximize.svg?dataurl"
+  import {getUrlContentType, isAudioUrl, isImageUrl, isVideoUrl} from "@lib/media"
   import ContentLinkDetail from "@app/components/ContentLinkDetail.svelte"
+  import ContentLinkVideo from "@app/components/ContentLinkVideo.svelte"
   import ContentLinkBlockAudio from "@app/components/ContentLinkBlockAudio.svelte"
   import ContentLinkUrl from "@app/components/ContentLinkUrl.svelte"
   import ContentLinkBlockImage from "@app/components/ContentLinkBlockImage.svelte"
@@ -52,11 +56,9 @@
 
   const fileType = getUrlContentType(url, event)
 
-  const isAudio =
-    Boolean(url.match(/\.(mp3|m4a|wav|ogg|oga|opus|flac)$/)) ||
-    AUDIO_CONTENT_TYPES.includes(fileType)
+  const isAudio = isAudioUrl(url, event)
 
-  const isVideo = Boolean(url.match(/\.(mov|webm|mp4)$/)) || VIDEO_CONTENT_TYPES.includes(fileType)
+  const isVideo = isVideoUrl(url, event)
 
   const isImage = isImageUrl(url, event)
 
@@ -81,16 +83,23 @@
 {:else if isAudio}
   <ContentLinkBlockAudio {url} {event} />
 {:else if isVideo}
-  <Link {external} {href} class="my-2 block">
-    <video
+  <!-- The card underneath opens the note, which a click on the player must not reach -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <div class="relative my-2 inline-block" onclick={stopPropagation(noop)}>
+    <ContentLinkVideo
+      {url}
+      {event}
       controls
-      src={url}
       poster={getVideoPoster(url)}
-      preload="metadata"
-      class="max-h-96 rounded-2xl object-contain object-center">
-      <track kind="captions" />
-    </video>
-  </Link>
+      class="max-h-96 rounded-2xl object-contain object-center" />
+    <Button
+      aria-label="Open video"
+      class="absolute right-2 top-2 rounded-full bg-black/50 p-2 text-white"
+      onclick={stopPropagation(preventDefault(expand))}>
+      <Icon icon={Maximize} size={4} />
+    </Button>
+  </div>
 {:else if isImage}
   <Link {external} {href} class="my-2 block">
     <button type="button" onclick={stopPropagation(preventDefault(expand))}>

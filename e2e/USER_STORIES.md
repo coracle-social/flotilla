@@ -1148,6 +1148,9 @@ Acceptance:
   back) returns to the room.
 - A message that is only a video url renders an embedded player with visible
   controls.
+- The expand button on a video opens the same fullscreen lightbox, which plays
+  it with controls, and tapping its player does not open the file.
+- A video url mid-sentence opens that lightbox rather than downloading the file.
 
 ### US-063 — Preview a shared link
 
