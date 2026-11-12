@@ -409,7 +409,7 @@ and an `{#if}` chain over loading, empty and exhausted. Calendars use
 
 `makeNetworkFeed` in `src/app/features/social/networkFeed.ts` builds on those helpers to draw each reply under
 the note it answers. The home Network section and `ProfilePageNotes` both use it. The home tab passes
-`includeMuted`, so a muted note stays on the tab and `Content` draws the mute, while `ProfilePageNotes`
+`includeMuted`, so a muted note stays on the tab and `NoteCard` draws the mute, while `ProfilePageNotes`
 leaves a muted author's notes out and says the person is muted where it would otherwise report none.
 The home tab also merges `extra` events while its Popular toggle is on, which is what
 `makePopularFeed` holds: the notes her follows liked, reposted or zapped, drawn in time order with

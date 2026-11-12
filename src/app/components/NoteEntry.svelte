@@ -16,9 +16,6 @@
 
   const {entry, context}: Props = $props()
 
-  // The note is drawn whatever its author: content decides how a muted one reads.
-  const anchor = $derived(entry.note)
-
   const replies = $derived(sortEventsDesc(entry.replies))
 
   let showEvery = $state(false)
@@ -36,9 +33,9 @@
   <EventQuoteAction {event} noun="Note" />
 {/snippet}
 
-{#if anchor}
+{#if entry.note}
   <div data-component="NoteEntry" class="flex flex-col gap-1">
-    <NoteItem event={anchor} {context} customActions={quoteNote} showReply showThreadLinks />
+    <NoteItem event={entry.note} {context} customActions={quoteNote} showReply showThreadLinks />
     {#if shown.length > 0}
       <div class="ml-4 flex flex-col gap-3 border-l border-line-less pt-3 pl-4">
         {#each shown as reply (reply.id)}

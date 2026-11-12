@@ -37,7 +37,6 @@
   import RoomName from "@app/components/RoomName.svelte"
   import * as pages from "@app/navigation/pages"
   import {isQuote} from "@app/features/quotes"
-  import {isEventMuted} from "@app/features/social/muting"
   import {deriveValidCommands, getCommandsForInvocation} from "@app/features/spaces/rooms/commands"
   import {userSettingsValues} from "@app/core/settings"
 
@@ -117,15 +116,6 @@
     warningDismissed = true
   }
 
-  // Muting reaches content already drawn, so the state is read here rather than fixed by whoever drew it.
-  let muteDismissed = $state<string>()
-
-  const ignoreMute = () => {
-    muteDismissed = event.id
-  }
-
-  const muted = $derived($isEventMuted(event) && muteDismissed !== event.id)
-
   const warning = $derived(
     warningDismissed
       ? undefined
@@ -148,15 +138,7 @@
 </script>
 
 <div class="relative">
-  {#if muted}
-    <div class="card card-sm shadow-none flex gap-2">
-      <Icon icon={Danger} />
-      <p>
-        You have muted this person.<br />
-        <Button onclick={ignoreMute} class="button button-link">Show anyway</Button>
-      </p>
-    </div>
-  {:else if warning}
+  {#if warning}
     <div class="card card-sm shadow-none flex gap-2">
       <Icon icon={Danger} />
       <p>
