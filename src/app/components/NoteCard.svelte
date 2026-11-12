@@ -58,29 +58,29 @@
   {...restProps}
   onclick={interactive ? goToNote : undefined}
   class={cx("flex flex-col gap-2", restProps.class)}>
-  <div class="flex items-start justify-between gap-2">
-    {#if !hideProfile}
-      {#if minimal}
-        @<ProfileName pubkey={event.pubkey} />
-      {:else}
-        <Profile pubkey={event.pubkey} {url} />
-      {/if}
-    {/if}
-    <Button
-      class={cx("whitespace-nowrap text-sm opacity-75", {"text-xs": minimal})}
-      onclick={goToNote}>
-      {formatTimestamp(getPublishedTimestamp(event))}
-    </Button>
-  </div>
   {#if muted}
-    <div class="card card-sm shadow-none flex gap-2">
-      <Icon icon={Danger} />
-      <p>
-        You have muted this person.<br />
-        <Button onclick={ignoreMute} class="button button-link">Show anyway</Button>
-      </p>
+    <div class="flex items-center justify-between">
+      <div class="flex gap-2 relative">
+        <Icon icon={Danger} class="mt-1" />
+        <p>You have muted this person.</p>
+      </div>
+      <Button class="link ml-8" onclick={ignoreMute}>Show anyway</Button>
     </div>
   {:else}
+    <div class="flex items-start justify-between gap-2">
+      {#if !hideProfile}
+        {#if minimal}
+          @<ProfileName pubkey={event.pubkey} />
+        {:else}
+          <Profile pubkey={event.pubkey} {url} />
+        {/if}
+      {/if}
+      <Button
+        class={cx("whitespace-nowrap text-sm opacity-75", {"text-xs": minimal})}
+        onclick={goToNote}>
+        {formatTimestamp(getPublishedTimestamp(event))}
+      </Button>
+    </div>
     {@render children?.()}
   {/if}
 </div>
