@@ -26,9 +26,8 @@
     isIncluded: isIncludedNetworkFeedEvent,
     // A muted note stays on the tab and reads as a muted card rather than being dropped from it.
     includeMuted: true,
-    extra: derived([includePopularNotes, popular.notes], ([$includePopular, $notes]) =>
-      $includePopular ? $notes : [],
-    ),
+    extra: popular.notes,
+    includeExtra: includePopularNotes,
   })
 
   const {candidates, items, entries, loading, exhausted, extraCount} = feed

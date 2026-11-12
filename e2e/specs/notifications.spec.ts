@@ -1157,6 +1157,12 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
   await feed.getByRole("button", {name: "Show anyway"}).first().click()
 
   await expect(feed.getByText(theirs)).toBeVisible()
+
+  // The count stays beside the toggle when it is turned off, as the type counts do.
+  await popular.click()
+
+  await expect(popular).toHaveAttribute("aria-pressed", "false")
+  await expect(popular).toContainText("1")
 })
 
 test("US-144 keep what a muted person answered on the Network tab", async ({seed, as}) => {

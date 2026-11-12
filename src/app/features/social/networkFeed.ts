@@ -118,6 +118,7 @@ export type NetworkFeedOptions = {
   isIncluded?: Readable<(event: TrustedEvent) => boolean>
   pinned?: Readable<TrustedEvent[]>
   extra?: Readable<TrustedEvent[]>
+  includeExtra?: Readable<boolean>
   includeMuted?: boolean
   sortByTime?: boolean
 }
@@ -128,6 +129,7 @@ export const makeNetworkFeed = ({
   isIncluded = readable(() => true),
   pinned = readable<TrustedEvent[]>([]),
   extra = readable<TrustedEvent[]>([]),
+  includeExtra = readable(true),
   includeMuted = false,
   sortByTime = false,
 }: NetworkFeedOptions) => {
@@ -149,16 +151,23 @@ export const makeNetworkFeed = ({
 
   const muted = includeMuted ? readable(() => false) : isEventMuted
 
+  // Held back until they are included, while extraCount still counts them.
+  const included = derived([extra, includeExtra], ([$extra, $includeExtra]) =>
+    $includeExtra ? $extra : [],
+  )
+
   // Everything the feed holds, newest first, less whoever the reader muted.
-  const candidates = derived([pages, pinned, extra, muted], ([$pages, $pinned, $extra, $muted]) =>
-    uniqBy(
-      getIdOrAddress,
-      sortBy(
-        event => -event.created_at,
-        // A pinned note can be older than the feed has paged back to, and extras come from elsewhere.
-        [...$pinned, ...$pages.flat(), ...$extra].filter(event => !$muted(event)),
+  const candidates = derived(
+    [pages, pinned, included, muted],
+    ([$pages, $pinned, $extra, $muted]) =>
+      uniqBy(
+        getIdOrAddress,
+        sortBy(
+          event => -event.created_at,
+          // A pinned note can be older than the feed has paged back to, and extras come from elsewhere.
+          [...$pinned, ...$pages.flat(), ...$extra].filter(event => !$muted(event)),
+        ),
       ),
-    ),
   )
 
   // How many notes the extras add to what the feed paged itself.
