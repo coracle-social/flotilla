@@ -3,14 +3,11 @@
   import type {Snippet} from "svelte"
   import {formatTimestamp} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import Danger from "@assets/icons/danger-triangle.svg?dataurl"
-  import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import {goToEvent} from "@app/navigation/locations"
   import {getPublishedTimestamp} from "@app/features/spaces/articles"
-  import {isEventMuted} from "@app/features/social/muting"
 
   type Props = {
     event: TrustedEvent
@@ -35,10 +32,6 @@
     ...restProps
   }: Props = $props()
 
-  const ignoreMute = () => {
-    dismissed = event.id
-  }
-
   const open = $derived(onOpen ?? (() => goToEvent(event)))
 
   const goToNote = () => {
@@ -47,40 +40,25 @@
       open()
     }
   }
-
-  // Muting reaches a card already drawn, and a card drawn after the mute starts collapsed.
-  let dismissed = $state<string>()
-
-  const muted = $derived($isEventMuted(event) && dismissed !== event.id)
 </script>
 
 <div
   {...restProps}
   onclick={interactive ? goToNote : undefined}
   class={cx("flex flex-col gap-2", restProps.class)}>
-  {#if muted}
-    <div class="flex items-center justify-between">
-      <div class="flex gap-2 relative">
-        <Icon icon={Danger} class="mt-1" />
-        <p>You have muted this person.</p>
-      </div>
-      <Button class="link ml-8" onclick={ignoreMute}>Show anyway</Button>
-    </div>
-  {:else}
-    <div class="flex items-start justify-between gap-2">
-      {#if !hideProfile}
-        {#if minimal}
-          @<ProfileName pubkey={event.pubkey} />
-        {:else}
-          <Profile pubkey={event.pubkey} {url} />
-        {/if}
+  <div class="flex items-start justify-between gap-2">
+    {#if !hideProfile}
+      {#if minimal}
+        @<ProfileName pubkey={event.pubkey} />
+      {:else}
+        <Profile pubkey={event.pubkey} {url} />
       {/if}
-      <Button
-        class={cx("whitespace-nowrap text-sm opacity-75", {"text-xs": minimal})}
-        onclick={goToNote}>
-        {formatTimestamp(getPublishedTimestamp(event))}
-      </Button>
-    </div>
-    {@render children?.()}
-  {/if}
+    {/if}
+    <Button
+      class={cx("whitespace-nowrap text-sm opacity-75", {"text-xs": minimal})}
+      onclick={goToNote}>
+      {formatTimestamp(getPublishedTimestamp(event))}
+    </Button>
+  </div>
+  {@render children?.()}
 </div>

@@ -60,12 +60,3 @@ export const isEventMuted = withGetter(
 
 export const derivePubkeyMuted = (pubkey: string) =>
   derived(userMuteList, $muteList => ($muteList?.pubkeys() ?? []).includes(pubkey))
-
-// Who the reader has muted by key, for what is hidden by who did it rather than by the event itself.
-export const isPubkeyMuted = withGetter(
-  derived([user, userMuteList], ([$user, $muteList]) => {
-    const muted = new Set($muteList?.pubkeys() ?? [])
-
-    return (pubkey: string) => $user.pubkey !== pubkey && muted.has(pubkey)
-  }),
-)

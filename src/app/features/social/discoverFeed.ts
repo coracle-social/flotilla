@@ -39,7 +39,6 @@ import {relayLists, router} from "@app/core/plugins"
 import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
 import type {FeedLoadState} from "@app/features/feeds"
 import {notes} from "@app/features/social/notes"
-import {isEventMuted, isPubkeyMuted} from "@app/features/social/muting"
 
 // A like and a repost both name what they answer, and both are drawn as that.
 export const DISCOVER_KINDS = [REACTION, REPOST, GENERIC_REPOST]
@@ -145,20 +144,8 @@ export const makeDiscoverFeed = () => {
   let admitting = false
   let stopped = false
 
-  // A reader who muted someone is not told what that person answered: a like or a repost names its
-  // author, while a receipt is signed by the payee's wallet and names the zapper in its request.
-  const candidates = derived(
-    [pages, isEventMuted, isPubkeyMuted],
-    ([$pages, $isEventMuted, $isPubkeyMuted]) =>
-      uniqBy(
-        event => event.id,
-        $pages.flat().filter(event => {
-          const answer = getDiscoverAnswer(event)
-
-          return !(answer && $isPubkeyMuted(answer.pubkey)) && !$isEventMuted(event)
-        }),
-      ),
-  )
+  // Nothing a reader muted is dropped: what an answer brought is drawn, and content shows the mute.
+  const candidates = derived(pages, $pages => uniqBy(event => event.id, $pages.flat()))
 
   const grouped = derived(candidates, groupDiscoverEvents)
 
@@ -167,18 +154,15 @@ export const makeDiscoverFeed = () => {
     $grouped.filter(entry => !$anchors.has(entry.key)),
   )
 
-  const entries = derived(
-    [grouped, drawn, anchors, isEventMuted],
-    ([$grouped, $drawn, $anchors, $isEventMuted]) => {
-      const byKey = indexBy(entry => entry.key, $grouped)
-      // More interactions keep arriving and reorder the group, so a card stays where it was drawn.
-      const ordered = removeUndefined($drawn.map(key => byKey.get(key)))
+  const entries = derived([grouped, drawn, anchors], ([$grouped, $drawn, $anchors]) => {
+    const byKey = indexBy(entry => entry.key, $grouped)
+    // More interactions keep arriving and reorder the group, so a card stays where it was drawn.
+    const ordered = removeUndefined($drawn.map(key => byKey.get(key)))
 
-      return ordered
-        .map(entry => ({...entry, event: $anchors.get(entry.key)}))
-        .filter(entry => entry.event && !$isEventMuted(entry.event))
-    },
-  )
+    return ordered
+      .map(entry => ({...entry, event: $anchors.get(entry.key)}))
+      .filter(entry => entry.event)
+  })
 
   const loading = derived(
     [states, buffer],

@@ -1070,7 +1070,7 @@ test("US-144 mute somebody and lose them from the home page", async ({seed, as})
   await expect(feed.getByText("You're all caught up")).toBeVisible({timeout: 20_000})
 })
 
-test("US-144 lose a muted author from the Discover tab as it is drawn", async ({seed, as}) => {
+test("US-144 show a muted author's note in the Discover tab as it is drawn", async ({seed, as}) => {
   const theirs = "the channel markers moved again"
   const dave = makeTestUser("dave")
 
@@ -1124,10 +1124,16 @@ test("US-144 lose a muted author from the Discover tab as it is drawn", async ({
 
   await page.keyboard.press("Escape")
 
+  // The card stays where it was and its content reads as muted, rather than the note being dropped.
   await expect(feed.getByText(theirs)).toHaveCount(0)
+  await expect(feed.getByText("You have muted this person.").first()).toBeVisible()
+
+  await feed.getByRole("button", {name: "Show anyway"}).first().click()
+
+  await expect(feed.getByText(theirs)).toBeVisible()
 })
 
-test("US-144 lose what a muted person answered from the Discover tab", async ({seed, as}) => {
+test("US-144 keep what a muted person answered in the Discover tab", async ({seed, as}) => {
   const zapped = "the channel markers moved again"
   const liked = "the buoys are lit at last"
   const dave = makeTestUser("dave")
@@ -1219,9 +1225,9 @@ test("US-144 lose what a muted person answered from the Discover tab", async ({s
   await page.goto("/home")
   await openDiscoverTab(feed)
 
-  // What dave liked is still there, so the tab is drawn and only bob's zap has gone.
+  // Nothing the tab held goes when bob is muted: a mute reads as a state, it drops no entry.
   await expect(feed.getByText(liked)).toBeVisible({timeout: 20_000})
-  await expect(feed.getByText(zapped)).toHaveCount(0)
+  await expect(feed.getByText(zapped)).toBeVisible()
 })
 
 // A url the container does not serve, so its nip-11 document never arrives and nothing knows what it supports.

@@ -7,7 +7,6 @@
   import NoteItem from "@app/components/NoteItem.svelte"
   import type {FeedContext} from "@app/features/feeds"
   import {openEventNote} from "@app/navigation/overlays"
-  import {isEventMuted} from "@app/features/social/muting"
   import type {NetworkFeedEntry} from "@app/features/social/networkFeed"
 
   type Props = {
@@ -17,8 +16,8 @@
 
   const {entry, context}: Props = $props()
 
-  // A muted person's note is not drawn above a reply to it that she has not muted.
-  const anchor = $derived(entry.note && !$isEventMuted(entry.note) ? entry.note : undefined)
+  // The note is drawn whatever its author: content decides how a muted one reads.
+  const anchor = $derived(entry.note)
 
   const replies = $derived(sortEventsDesc(entry.replies))
 
