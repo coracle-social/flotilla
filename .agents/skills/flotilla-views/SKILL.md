@@ -413,7 +413,8 @@ the note it answers. The home Network section and `ProfilePageNotes` both use it
 leaves a muted author's notes out and says the person is muted where it would otherwise report none.
 The home tab also merges `extra` events while its Popular toggle is on, which is what
 `makePopularFeed` holds: the notes her follows liked, reposted or zapped, drawn in time order with
-the rest rather than on a tab of their own.
+the rest rather than on a tab of their own. That toggle sits beside Notes and Replies and carries the
+feed's `extraCount`, so it says how many notes it adds beyond what the follows wrote.
 
 `ProfileFeed` still drives welshman's `FeedController` through
 `$app.use(Feeds).makeFeedController` and `createScroller`, but 27fa25c3 moved the home feed onto

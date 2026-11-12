@@ -31,7 +31,7 @@
     ),
   })
 
-  const {candidates, items, entries, loading, exhausted} = feed
+  const {candidates, items, entries, loading, exhausted, extraCount} = feed
 
   // Popular pages behind the same scroll, so its spinner counts while it is on.
   const spinning = derived(
@@ -82,6 +82,7 @@
     <HomeNetworkRecentFilters
       counts={countNetworkFeedTypes($candidates)}
       popular={$includePopularNotes}
+      popularCount={$extraCount}
       onpopular={togglePopular} />
   </div>
   <div class="flex flex-col gap-3 p-4" bind:this={element}>

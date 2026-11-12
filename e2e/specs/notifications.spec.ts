@@ -80,8 +80,10 @@ const homeFeed = (page: Page) => page.getByRole("region", {name: "Recent"})
 // The network tab asks every follow's relays for their posts only once it is open.
 const openNetworkTab = (feed: Locator) => feed.getByRole("button", {name: "Network"}).click()
 
-// Popular adds what the follows answered, and asks for them only once it is turned on.
-const openPopular = (feed: Locator) => feed.getByRole("button", {name: "Popular"}).click()
+// Popular adds what the follows answered, and asks for them only once it is turned on. Its label
+// carries a count of the notes it adds, so it is matched by its label alone.
+const popularButton = (feed: Locator) => feed.getByRole("button", {name: /^Popular/})
+const openPopular = (feed: Locator) => popularButton(feed).click()
 
 // Every story here depends on the message having landed, so posting is finished once it renders.
 const post = async (page: Page, content: string) => {
@@ -1120,7 +1122,7 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
 
   const page = await as(users.alice, "/home")
   const feed = homeFeed(page)
-  const popular = feed.getByRole("button", {name: "Popular"})
+  const popular = popularButton(feed)
 
   await openNetworkTab(feed)
 
@@ -1135,6 +1137,9 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
 
   await expect(popular).toHaveAttribute("aria-pressed", "true")
   await expect(feed.getByText(theirs)).toBeVisible({timeout: 20_000})
+
+  // The toggle sits beside the types and counts the notes it adds, as they do.
+  await expect(popular).toContainText("1")
 
   // Her name on the card is the way to the profile the mute is reached from.
   await feed.getByRole("button", {name: "Carol Carlson"}).first().click()
@@ -1249,7 +1254,7 @@ test("US-144 keep what a muted person answered on the Network tab", async ({seed
   await openNetworkTab(feed)
 
   // Popular is a choice she keeps, so the tab still asks for what her follows answered.
-  await expect(feed.getByRole("button", {name: "Popular"})).toHaveAttribute("aria-pressed", "true")
+  await expect(popularButton(feed)).toHaveAttribute("aria-pressed", "true")
 
   // Nothing the tab held goes when bob is muted: a mute reads as a state, it drops no entry.
   await expect(feed.getByText(liked)).toBeVisible({timeout: 20_000})

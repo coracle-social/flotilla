@@ -161,6 +161,13 @@ export const makeNetworkFeed = ({
     ),
   )
 
+  // How many notes the extras add to what the feed paged itself.
+  const extraCount = derived([pages, pinned, extra], ([$pages, $pinned, $extra]) => {
+    const drawn = new Set([...$pinned, ...$pages.flat()].map(getIdOrAddress))
+
+    return uniqBy(getIdOrAddress, $extra).filter(event => !drawn.has(getIdOrAddress(event))).length
+  })
+
   const items = derived([candidates, isIncluded], ([$candidates, $isIncluded]) =>
     $candidates.filter($isIncluded),
   )
@@ -318,5 +325,5 @@ export const makeNetworkFeed = ({
     unsubscribers.forEach(call)
   }
 
-  return {candidates, items, entries, loading, exhausted, start, stop}
+  return {candidates, items, entries, loading, exhausted, extraCount, start, stop}
 }

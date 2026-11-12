@@ -2057,9 +2057,10 @@ Acceptance:
   Show anyway to open that one, and the people she has not muted are unaffected.
 - The activity stream drops an entry drawn around a muted person's note as well
   as anything the muted person did.
-- The Network tab carries a Popular toggle in place of the Discover tab, which
-  adds the notes her follows liked, reposted or zapped, and a mute drops none of
-  them: a muted person's answer still brings the note it named.
+- The Network tab carries a Popular toggle beside Notes and Replies, in place of
+  the Discover tab, which says how many notes it adds and adds them on a tap:
+  the ones her follows liked, reposted or zapped. A mute drops none of them,
+  since a muted person's answer still brings the note it named.
 
 ### US-133 — Keep the search relays that work
 
