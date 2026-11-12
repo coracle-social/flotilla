@@ -172,9 +172,9 @@ export const makeNetworkFeed = ({
 
   // How many notes the extras add to what the feed paged itself.
   const extraCount = derived([pages, pinned, extra], ([$pages, $pinned, $extra]) => {
-    const drawn = new Set([...$pinned, ...$pages.flat()].map(getIdOrAddress))
+    const paged = new Set([...$pinned, ...$pages.flat()].map(getIdOrAddress))
 
-    return uniqBy(getIdOrAddress, $extra).filter(event => !drawn.has(getIdOrAddress(event))).length
+    return uniqBy(getIdOrAddress, $extra).filter(event => !paged.has(getIdOrAddress(event))).length
   })
 
   const items = derived([candidates, isIncluded], ([$candidates, $isIncluded]) =>
