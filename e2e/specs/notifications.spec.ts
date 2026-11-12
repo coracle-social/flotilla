@@ -1,6 +1,14 @@
 import {naddrEncode, neventEncode, npubEncode} from "nostr-tools/nip19"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
-import {LONG_FORM, POLL, displayRelayUrl} from "@welshman/util"
+import {
+  LONG_FORM,
+  POLL,
+  REACTION,
+  ZAP_RECEIPT,
+  ZAP_REQUEST,
+  displayRelayUrl,
+  makeEvent,
+} from "@welshman/util"
 import {
   Article,
   Comment,
@@ -21,12 +29,14 @@ import {
   dialog,
   expect,
   homeFeedFilter,
+  makeTestUser,
   message,
   messageActions,
   noteEditor,
   openRoomDetail,
   pageBar,
   pathPattern,
+  profilePath,
   roomLink,
   relayCard,
   roomPath,
@@ -69,6 +79,9 @@ const homeFeed = (page: Page) => page.getByRole("region", {name: "Recent"})
 
 // The network tab asks every follow's relays for their posts only once it is open.
 const openNetworkTab = (feed: Locator) => feed.getByRole("button", {name: "Network"}).click()
+
+// The discover tab asks for what follows answered only once it is open.
+const openDiscoverTab = (feed: Locator) => feed.getByRole("button", {name: "Discover"}).click()
 
 // Every story here depends on the message having landed, so posting is finished once it renders.
 const post = async (page: Page, content: string) => {
@@ -1055,6 +1068,160 @@ test("US-144 mute somebody and lose them from the home page", async ({seed, as})
 
   // Her note was the only entry, and a reply to it is drawn around a note of hers.
   await expect(feed.getByText("You're all caught up")).toBeVisible({timeout: 20_000})
+})
+
+test("US-144 lose a muted author from the Discover tab as it is drawn", async ({seed, as}) => {
+  const theirs = "the channel markers moved again"
+  const dave = makeTestUser("dave")
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.carol, "general")
+
+    seedRelays(space, user.alice)
+    seedRelays(space, user.carol)
+    seedRelays(space, dave)
+
+    space.profile(user.carol, {name: "Carol Carlson"})
+    space.follows(user.alice, [user.carol, dave])
+
+    const note = space.event(
+      user.carol,
+      () => space.kind(Note).writer().setContent(theirs).renderTemplate(),
+      at(2, HOUR),
+    )
+
+    space.event(
+      dave,
+      () =>
+        makeEvent(REACTION, {
+          content: "+",
+          tags: [
+            ["e", note.id],
+            ["p", user.carol.pubkey],
+          ],
+        }),
+      at(1, HOUR),
+    )
+  })
+
+  const page = await as(users.alice, "/home")
+  const feed = homeFeed(page)
+
+  await openDiscoverTab(feed)
+
+  await expect(feed.getByText(theirs)).toBeVisible({timeout: 20_000})
+
+  // Her name on the card is the way to the profile the mute is reached from.
+  await feed.getByRole("button", {name: "Carol Carlson"}).first().click()
+  await dialog(page, "Profile details").getByRole("button", {name: "Profile actions"}).click()
+  await page.getByRole("button", {name: "Mute User"}).click()
+
+  await expect(toast(page)).toContainText("You have muted this person.")
+
+  await page.keyboard.press("Escape")
+
+  await expect(feed.getByText(theirs)).toHaveCount(0)
+})
+
+test("US-144 lose what a muted person answered from the Discover tab", async ({seed, as}) => {
+  const zapped = "the channel markers moved again"
+  const liked = "the buoys are lit at last"
+  const dave = makeTestUser("dave")
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.carol, "general")
+
+    seedRelays(space, user.alice)
+    seedRelays(space, user.carol)
+    seedRelays(space, dave)
+
+    space.profile(user.bob, {name: "Bob Barker"})
+    space.follows(user.alice, [user.carol, dave])
+
+    const zappedNote = space.event(
+      user.carol,
+      () => space.kind(Note).writer().setContent(zapped).renderTemplate(),
+      at(2, HOUR),
+    )
+
+    const likedNote = space.event(
+      user.carol,
+      () => space.kind(Note).writer().setContent(liked).renderTemplate(),
+      at(2, HOUR),
+    )
+
+    // A like is found by who wrote it, so dave is a follow and his like reaches the tab once he is one.
+    space.event(
+      dave,
+      () =>
+        makeEvent(REACTION, {
+          content: "+",
+          tags: [
+            ["e", likedNote.id],
+            ["p", user.carol.pubkey],
+          ],
+        }),
+      at(1, HOUR),
+    )
+
+    // A receipt is signed by the wallet that paid out, so only the request carried inside it names bob.
+    const request = space.event(
+      user.bob,
+      () =>
+        makeEvent(ZAP_REQUEST, {
+          content: "",
+          tags: [
+            ["p", user.carol.pubkey],
+            ["e", zappedNote.id],
+          ],
+        }),
+      at(1, HOUR),
+    )
+
+    space.event(
+      makeTestUser("wallet"),
+      () =>
+        makeEvent(ZAP_RECEIPT, {
+          content: "",
+          tags: [
+            ["p", user.carol.pubkey],
+            ["P", user.bob.pubkey],
+            ["e", zappedNote.id],
+            ["description", JSON.stringify(request.event)],
+          ],
+        }),
+      at(1, HOUR),
+    )
+  })
+
+  const page = await as(users.alice, "/home")
+  const feed = homeFeed(page)
+
+  await openDiscoverTab(feed)
+
+  await expect(feed.getByText(zapped)).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText(liked)).toBeVisible()
+
+  await page.goto(profilePath(users.bob.pubkey))
+  await page.getByRole("button", {name: "Profile actions"}).click()
+  await page.getByRole("button", {name: "Mute User"}).click()
+
+  await expect(toast(page)).toContainText("You have muted this person.")
+
+  await page.goto("/home")
+  await openDiscoverTab(feed)
+
+  // What dave liked is still there, so the tab is drawn and only bob's zap has gone.
+  await expect(feed.getByText(liked)).toBeVisible({timeout: 20_000})
+  await expect(feed.getByText(zapped)).toHaveCount(0)
 })
 
 // A url the container does not serve, so its nip-11 document never arrives and nothing knows what it supports.

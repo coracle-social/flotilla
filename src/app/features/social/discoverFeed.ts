@@ -39,7 +39,7 @@ import {relayLists, router} from "@app/core/plugins"
 import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
 import type {FeedLoadState} from "@app/features/feeds"
 import {notes} from "@app/features/social/notes"
-import {isEventMuted} from "@app/features/social/muting"
+import {isEventMuted, isPubkeyMuted} from "@app/features/social/muting"
 
 // A like and a repost both name what they answer, and both are drawn as that.
 export const DISCOVER_KINDS = [REACTION, REPOST, GENERIC_REPOST]
@@ -145,12 +145,19 @@ export const makeDiscoverFeed = () => {
   let admitting = false
   let stopped = false
 
-  // A reader who muted someone is not told what that person liked, and a note they wrote is not drawn.
-  const candidates = derived([pages, isEventMuted], ([$pages, $isEventMuted]) =>
-    uniqBy(
-      event => event.id,
-      $pages.flat().filter(event => !$isEventMuted(event)),
-    ),
+  // A reader who muted someone is not told what that person answered: a like or a repost names its
+  // author, while a receipt is signed by the payee's wallet and names the zapper in its request.
+  const candidates = derived(
+    [pages, isEventMuted, isPubkeyMuted],
+    ([$pages, $isEventMuted, $isPubkeyMuted]) =>
+      uniqBy(
+        event => event.id,
+        $pages.flat().filter(event => {
+          const answer = getDiscoverAnswer(event)
+
+          return !(answer && $isPubkeyMuted(answer.pubkey)) && !$isEventMuted(event)
+        }),
+      ),
   )
 
   const grouped = derived(candidates, groupDiscoverEvents)

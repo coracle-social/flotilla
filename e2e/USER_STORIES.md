@@ -2055,6 +2055,9 @@ Acceptance:
   collapsed into a card, and the people she has not muted are unaffected.
 - The activity stream drops an entry drawn around a muted person's note as well
   as anything the muted person did.
+- The Discover tab drops a note as soon as its author is muted, and a muted
+  person puts nothing there by liking or reposting it, nor by zapping it, which
+  is found through the receipt their wallet signs rather than through them.
 
 ### US-133 — Keep the search relays that work
 

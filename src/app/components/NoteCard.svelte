@@ -36,7 +36,7 @@
   }: Props = $props()
 
   const ignoreMute = () => {
-    muted = false
+    dismissed = event.id
   }
 
   const open = $derived(onOpen ?? (() => goToEvent(event)))
@@ -48,7 +48,10 @@
     }
   }
 
-  let muted = $state($isEventMuted(event))
+  // Muting reaches a card already drawn, and a card drawn after the mute starts collapsed.
+  let dismissed = $state<string>()
+
+  const muted = $derived($isEventMuted(event) && dismissed !== event.id)
 </script>
 
 <div
