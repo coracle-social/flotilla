@@ -374,7 +374,7 @@ const loadHomeNotificationTargets = async ($app: IApp, refs: EventRef[]) => {
 }
 
 // Each notification's note, loaded here rather than per notification so the stream opens on what it has.
-const homeNotificationTargets = derived(
+export const homeNotificationTargets = derived(
   [app, throttled(1000, homeNotificationCandidates)],
   ([$app, $candidates], set: (targets: EventsById) => void) => {
     const refs = uniqBy(

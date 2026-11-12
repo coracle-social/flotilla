@@ -12,7 +12,6 @@
   import type {FeedContext} from "@app/features/feeds"
   import {REPOST_KINDS, displayActivityTimestamp} from "@app/features/activity"
   import type {HomeNotification} from "@app/features/activity"
-  import {notes} from "@app/features/social"
   import {pushModal} from "@app/navigation/dialogs"
   import {openEventNote} from "@app/navigation/overlays"
 
@@ -20,20 +19,16 @@
 
   type Props = {
     notification: HomeNotification
+    note: TrustedEvent
     context: FeedContext
   }
 
-  const {notification, context}: Props = $props()
-
-  const {ref} = notification
+  const {notification, note, context}: Props = $props()
 
   // A notification keeps its key while it collects answers, so the component has to follow its prop.
   const replies = $derived(notification.replies)
 
   const interactions = $derived(notification.reactions)
-
-  // The note this notification is about, fetched from the hints the events naming it carried.
-  const note = $notes.deriveEvent(ref)
 
   const repliers = $derived(uniq(replies.map(e => e.pubkey)))
 
@@ -52,7 +47,7 @@
     ),
   )
 
-  const target = $derived($note?.pubkey === $user.pubkey ? "your note" : "a thread you are in")
+  const target = $derived(note.pubkey === $user.pubkey ? "your note" : "a thread you are in")
 
   const actions = $derived(
     call(() => {
@@ -100,8 +95,8 @@
   const parts = $derived(
     call(() => {
       // A note nobody answered or reacted to is in the stream because it names the user.
-      if (clauses.length === 0 && $note) {
-        return [{pubkey: $note.pubkey, text: " mentioned you"}]
+      if (clauses.length === 0) {
+        return [{pubkey: note.pubkey, text: " mentioned you"}]
       }
 
       const parts: Part[] = []
@@ -133,9 +128,7 @@
   const shown = $derived(showEvery ? sorted : sorted.slice(0, 3))
 
   const open = () => {
-    if ($note) {
-      pushModal(NoteStats, {event: $note})
-    }
+    pushModal(NoteStats, {event: note})
   }
 
   const openProfile = (pubkey: string) => () => pushModal(ProfileDetail, {pubkey})
@@ -158,47 +151,45 @@
   <EventQuoteAction {event} noun="Note" />
 {/snippet}
 
-{#if $note}
-  <div class="flex flex-col gap-1">
-    <div
-      role="button"
-      tabindex="0"
-      class="-mx-2 flex min-w-0 cursor-pointer items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-surface"
-      onclick={open}
-      onkeydown={onKeyDown}>
-      <div class="min-w-0 flex-1 truncate text-sm opacity-75">
-        {#each parts as part, i (i)}
-          {#if part.pubkey}
-            <Button class="link" onclick={openProfile(part.pubkey)}>
-              <ProfileName pubkey={part.pubkey} />
-            </Button>
-          {/if}
-          {part.text}
-        {/each}
-      </div>
-      <span class="shrink-0 text-xs opacity-50">
-        {displayActivityTimestamp(notification.timestamp)}
-      </span>
-    </div>
-    <NoteItem event={$note} {context} customActions={quoteNote} showReply showThreadLinks />
-    {#if shown.length > 0}
-      <div class="border-line-less ml-4 flex flex-col gap-3 border-l pt-3 pl-4">
-        {#each shown as reply (reply.id)}
-          <NoteItem
-            event={reply}
-            {context}
-            customActions={quoteNote}
-            card={false}
-            interactive
-            showReply
-            onOpen={openReply(reply)} />
-        {/each}
-        {#if shown.length < replies.length}
-          <Button class="link self-start text-sm" onclick={showAll}>
-            Show {replies.length - shown.length} more
+<div class="flex flex-col gap-1">
+  <div
+    role="button"
+    tabindex="0"
+    class="-mx-2 flex min-w-0 cursor-pointer items-center gap-2 rounded px-2 py-1 transition-colors hover:bg-surface"
+    onclick={open}
+    onkeydown={onKeyDown}>
+    <div class="min-w-0 flex-1 truncate text-sm opacity-75">
+      {#each parts as part, i (i)}
+        {#if part.pubkey}
+          <Button class="link" onclick={openProfile(part.pubkey)}>
+            <ProfileName pubkey={part.pubkey} />
           </Button>
         {/if}
-      </div>
-    {/if}
+        {part.text}
+      {/each}
+    </div>
+    <span class="shrink-0 text-xs opacity-50">
+      {displayActivityTimestamp(notification.timestamp)}
+    </span>
   </div>
-{/if}
+  <NoteItem event={note} {context} customActions={quoteNote} showReply showThreadLinks />
+  {#if shown.length > 0}
+    <div class="border-line-less ml-4 flex flex-col gap-3 border-l pt-3 pl-4">
+      {#each shown as reply (reply.id)}
+        <NoteItem
+          event={reply}
+          {context}
+          customActions={quoteNote}
+          card={false}
+          interactive
+          showReply
+          onOpen={openReply(reply)} />
+      {/each}
+      {#if shown.length < replies.length}
+        <Button class="link self-start text-sm" onclick={showAll}>
+          Show {replies.length - shown.length} more
+        </Button>
+      {/if}
+    </div>
+  {/if}
+</div>

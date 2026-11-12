@@ -1964,6 +1964,8 @@ Acceptance:
   badge goes down once the stream has drawn it.
 - An entry is the note that was answered or reacted to, fetched whether or not
   it had already been loaded, with the replies to it shown underneath.
+- An entry is drawn from the note the stream already holds, so the stream never
+  shows a row with nothing in it while a note is found.
 - Everything done to one note is one entry, so two people answering the same
   note do not fill the section, and an answer hours after the last one joins
   that entry rather than repeating the note under it.

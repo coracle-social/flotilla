@@ -2,6 +2,7 @@
   import {onDestroy} from "svelte"
   import {sortBy} from "@welshman/lib"
   import type {Maybe} from "@welshman/lib"
+  import type {TrustedEvent} from "@welshman/util"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeActivityItem from "@app/components/HomeActivityItem.svelte"
   import HomeActivityItemSpace from "@app/components/HomeActivityItemSpace.svelte"
@@ -13,6 +14,7 @@
     countHomeNotificationTypes,
     groupNotifications,
     homeNotificationEvents,
+    homeNotificationTargets,
     homeNotificationsLoaded,
     homeNotificationsUnread,
     includedHomeActivityTypes,
@@ -27,7 +29,7 @@
   type Entry = {key: string; timestamp: number} & (
     | {type: "conversation"; activity: Activity}
     | {type: "space"; content: SpaceContent}
-    | {type: "notification"; notification: HomeNotification}
+    | {type: "notification"; notification: HomeNotification; note: TrustedEvent}
   )
 
   const context = makeFeedContext({withReplies: true})
@@ -72,14 +74,25 @@
             content,
           }),
         ),
-        ...notifications.map(
-          (notification): Entry => ({
-            type: "notification",
-            key: notification.key,
-            timestamp: notification.timestamp,
-            notification,
-          }),
-        ),
+        ...notifications.flatMap((notification): Entry[] => {
+          // Drawn from the note the stream already holds, so a row never waits on a second read.
+          const key = notification.ref.getAddressOrId()
+          const note = key && $homeNotificationTargets.get(key)
+
+          if (note) {
+            return [
+              {
+                type: "notification",
+                key: notification.key,
+                timestamp: notification.timestamp,
+                notification,
+                note,
+              },
+            ]
+          }
+
+          return []
+        }),
       ],
     ),
   )
@@ -111,7 +124,7 @@
       <HomeActivityItemSpace content={entry.content} />
     {:else}
       <div class="p-4">
-        <HomeNotificationItem notification={entry.notification} {context} />
+        <HomeNotificationItem notification={entry.notification} note={entry.note} {context} />
       </div>
     {/if}
   {/each}
