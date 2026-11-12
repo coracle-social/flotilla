@@ -622,6 +622,48 @@ test("US-026 pin a message and browse pins", async ({seed, as}) => {
   await expect(banner).toHaveCount(0)
 })
 
+test("US-026 a tall pinned message scrolls inside its banner", async ({seed, as}) => {
+  const tideTable = Array.from({length: 40}, (_, i) => `Readings for station ${i + 1}.`).join(
+    "\n\n",
+  )
+
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.admin, "general")
+    space.join(user.alice, "general")
+
+    space.message(user.alice, "general", tideTable, at(2, HOUR))
+  })
+
+  const {url} = scenario.space("space")
+  const admin = await as(users.admin, roomPath(url, "general"))
+
+  await openMessageMenu(admin, "Readings for station 1.")
+  await admin.getByRole("button", {name: "Pin Message"}).click()
+
+  const banner = admin.locator(".room-pins")
+
+  await banner.locator(".room-pins__expand").click()
+
+  const last = banner.getByText("Readings for station 40.")
+  const body = banner.locator(".room-pins__message")
+  const box = await banner.boundingBox()
+  const {height} = admin.viewportSize()!
+
+  // The banner takes a share of the room rather than the whole message
+  expect(box!.height).toBeLessThan(height * 0.6)
+
+  // The rest of the message is a scroll away, not off the bottom of the screen
+  await expect(last).not.toBeInViewport()
+  await body.evaluate(element => element.scrollTo(0, element.scrollHeight))
+  await expect(last).toBeInViewport()
+
+  // The banner's own buttons stay put while the message moves under them
+  await expect(banner.getByRole("button", {name: "Jump to message"})).toBeInViewport()
+})
+
 test("US-027 find a past message and jump to it", async ({seed, as}) => {
   let lastWeek!: SeededEvent
   let older!: SeededEvent

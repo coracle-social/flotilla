@@ -413,6 +413,8 @@ Acceptance:
   the room showing the message.
 - "View all pinned" lists the message with a working "Jump to message".
 - Unpinning from that list removes both the entry and the banner.
+- A message taller than the banner scrolls inside it, with the pinned author
+  and the banner's own buttons still in place.
 
 ### US-027 — Find a past message and jump to it
 
