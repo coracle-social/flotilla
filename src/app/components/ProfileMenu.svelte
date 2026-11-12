@@ -7,6 +7,7 @@
   import UserCheck from "@assets/icons/user-check.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Spinner from "@lib/components/Spinner.svelte"
   import ProfileInfo from "@app/components/ProfileInfo.svelte"
   import ProfileQrCode from "@app/components/ProfileQrCode.svelte"
   import {user} from "@app/core/user"
@@ -36,19 +37,38 @@
   const showShare = () => pushModal(ProfileQrCode, {pubkey})
 
   const toggleMute = async () => {
-    if ($isMuted) {
-      await $muteLists.unmute(pubkey).then(publish)
+    loading = true
 
-      pushToast({message: "You are no longer muting this person."})
-    } else {
-      await $muteLists.mutePublicly(["p", pubkey]).then(publish)
-
-      pushToast({message: "You have muted this person."})
+    try {
+      if ($isMuted) {
+        await $muteLists.unmute(pubkey).then(publish)
+        pushToast({message: "You are no longer muting this person."})
+      } else {
+        await $muteLists.mutePublicly(["p", pubkey]).then(publish)
+        pushToast({message: "You have muted this person."})
+      }
+    } catch (error) {
+      console.error(error)
+      pushToast({theme: "error", message: "Failed to update your mutes."})
+    } finally {
+      loading = false
+      onClick()
     }
   }
+
+  // The menu closes on any click in it, except on an item that closes it once its work is done.
+  const onClickCapture = (event: MouseEvent) => {
+    const holdsOpen = event.target instanceof Element && event.target.closest(".menu-holds-open")
+
+    if (!holdsOpen) {
+      onClick()
+    }
+  }
+
+  let loading = $state(false)
 </script>
 
-<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClick}>
+<ul class="menu whitespace-nowrap rounded-2xl bg-surface p-2" onclickcapture={onClickCapture}>
   <li>
     <Button onclick={showShare}>
       <Icon size={4} icon={ShareCircle} />
@@ -64,9 +84,13 @@
     </li>
   {/if}
   {#if !isSelf}
-    <li>
-      <Button onclick={toggleMute}>
-        <Icon size={4} icon={$isMuted ? UserCheck : UserBlock} />
+    <li class="menu-holds-open">
+      <Button onclick={toggleMute} disabled={loading}>
+        {#if loading}
+          <Spinner size="xs" />
+        {:else}
+          <Icon size={4} icon={$isMuted ? UserCheck : UserBlock} />
+        {/if}
         {$isMuted ? "Unmute User" : "Mute User"}
       </Button>
     </li>
