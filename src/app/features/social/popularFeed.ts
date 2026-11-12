@@ -3,8 +3,9 @@ import {
   call,
   chunks,
   groupBy,
-  indexBy,
   initArray,
+  last,
+  max,
   noop,
   partition,
   removeUndefined,
@@ -40,32 +41,26 @@ import {isFeedLoading, makeFeed, makeFeedLoader} from "@app/features/feeds"
 import type {FeedLoadState} from "@app/features/feeds"
 import {notes} from "@app/features/social/notes"
 
-// A like and a repost both name what they answer, and both are drawn as that.
-export const DISCOVER_KINDS = [REACTION, REPOST, GENERIC_REPOST]
-
 // The event a follow answered, and the follow whose answer it is.
-export type DiscoverAnswer = {
+type Answer = {
   ref: EventRef
   pubkey: string
 }
 
-// An a tag names an addressable event outright, and NIP-25 names any other in the last e tag,
-// since a reaction copies the tags of the note it answers.
-const getTargetTag = (tags: string[][]): Maybe<string[]> => {
-  const address = matchTag(addressTags("a"), tags)
-
-  if (address) {
-    return address
-  }
-
-  const ids = matchTags(hexTags("e"), tags)
-
-  return ids[ids.length - 1]
+// Every answer to one event, and how many follows gave one.
+type PopularEntry = {
+  key: string
+  ref: EventRef
+  pubkeys: string[]
+  timestamp: number
 }
 
-// A zap receipt is signed by the recipient's wallet, so the request inside it names the zapper and
-// the event that was zapped.
-export const getDiscoverAnswer = (event: TrustedEvent): Maybe<DiscoverAnswer> => {
+// An a tag names an addressable event, and NIP-25 names any other in the last e tag.
+const getTargetTag = (tags: string[][]): Maybe<string[]> =>
+  matchTag(addressTags("a"), tags) ?? last(matchTags(hexTags("e"), tags))
+
+// A zap receipt is signed by the recipient's wallet, so the request inside it names the zapper.
+const getAnswer = (event: TrustedEvent): Maybe<Answer> => {
   const receipt = event.kind === ZAP_RECEIPT ? reader(ZapReceipt)(event).parse() : undefined
   const tagGroups = receipt ? [event.tags, receipt.request()?.tags ?? []] : [event.tags]
 
@@ -73,110 +68,66 @@ export const getDiscoverAnswer = (event: TrustedEvent): Maybe<DiscoverAnswer> =>
     const tag = getTargetTag(tags)
 
     if (tag) {
-      const ref = EventRef.fromString(tag[1], getRelayHints(tag))
-      const pubkey = tagValue(tagSpec("p"), tags) ?? ref.pubkey
+      const target = EventRef.fromString(tag[1], getRelayHints(tag))
 
       return {
-        ref: new EventRef({
-          id: ref.id,
-          kind: ref.kind,
-          identifier: ref.identifier,
-          pubkey,
-          relays: ref.relays,
-        }),
+        ref: EventRef.merge({pubkey: tagValue(tagSpec("p"), tags)}, target),
         pubkey: receipt ? (receipt.sender() ?? event.pubkey) : event.pubkey,
       }
     }
   }
 }
 
-// One card in the discover feed: what a follow answered, and the event it names of whatever kind.
-export type DiscoverEntry = {
-  key: string
-  ref: EventRef
-  event?: TrustedEvent
-  interactions: TrustedEvent[]
-  pubkeys: string[]
-  timestamp: number
-}
+// What the reader's follows answered, the events most of them answered first.
+const groupAnswers = (events: TrustedEvent[]): PopularEntry[] => {
+  const answers = events.flatMap(event => {
+    const answer = getAnswer(event)
+    const key = answer?.ref.getAddressOrId()
 
-// What the reader's follows liked, reposted or zapped, the ones most of them answered first.
-export const groupDiscoverEvents = (events: TrustedEvent[]): DiscoverEntry[] => {
-  const items = events.flatMap(event => {
-    const answer = getDiscoverAnswer(event)
-
-    if (!answer) {
-      return []
-    }
-
-    const key = answer.ref.getAddressOrId()
-
-    return key ? [{key, ...answer, event}] : []
+    return answer && key ? [{key, event, ...answer}] : []
   })
 
   const entries = Array.from(
-    groupBy(item => item.key, items),
-    ([key, group]): DiscoverEntry => {
-      const answered = group.map(({event}) => event)
-
-      return {
-        key,
-        ref: group.map(({ref}) => ref).reduce(EventRef.merge),
-        interactions: answered,
-        pubkeys: uniq(group.map(({pubkey}) => pubkey)),
-        timestamp: Math.max(...answered.map(event => event.created_at)),
-      }
-    },
+    groupBy(answer => answer.key, answers),
+    ([key, group]): PopularEntry => ({
+      key,
+      ref: group.map(({ref}) => ref).reduce(EventRef.merge),
+      pubkeys: uniq(group.map(({pubkey}) => pubkey)),
+      timestamp: max(group.map(({event}) => event.created_at)),
+    }),
   )
 
   return entries.sort((a, b) => b.pubkeys.length - a.pubkeys.length || b.timestamp - a.timestamp)
 }
 
-/** What the reader's follows liked, reposted or zapped. The caller draws it and owns its context. */
-export const makeDiscoverFeed = () => {
+/** The notes the reader's follows liked, reposted or zapped. The caller draws them. */
+export const makePopularFeed = () => {
   const pages = writable<TrustedEvent[][]>([])
   const states = writable<FeedLoadState[]>([])
-  const drawn = writable<string[]>([])
-  const anchors = writable(new Map<string, Maybe<TrustedEvent>>())
+  const targets = writable(new Map<string, Maybe<TrustedEvent>>())
   const unsubscribers: (() => void)[] = []
   const loaders: ReturnType<typeof makeFeedLoader>[] = []
 
   let admitting = false
   let stopped = false
 
-  // Nothing a reader muted is dropped: what an answer brought is drawn, and content shows the mute.
-  const candidates = derived(pages, $pages => uniqBy(event => event.id, $pages.flat()))
+  // Nothing a reader muted is dropped, since a muted person's answer still brings the note it named.
+  const entries = derived(pages, $pages => groupAnswers(uniqBy(event => event.id, $pages.flat())))
 
-  const grouped = derived(candidates, groupDiscoverEvents)
-
-  // What the feed holds and has not drawn, best liked first. An entry waits here for its event.
-  const buffer = derived([grouped, anchors], ([$grouped, $anchors]) =>
-    $grouped.filter(entry => !$anchors.has(entry.key)),
+  // The entries whose note hasn't been loaded yet, best liked first.
+  const buffer = derived([entries, targets], ([$entries, $targets]) =>
+    $entries.filter(entry => !$targets.has(entry.key)),
   )
 
-  const entries = derived([grouped, drawn, anchors], ([$grouped, $drawn, $anchors]) => {
-    const byKey = indexBy(entry => entry.key, $grouped)
-    // More interactions keep arriving and reorder the group, so a card stays where it was drawn.
-    const ordered = removeUndefined($drawn.map(key => byKey.get(key)))
-
-    return ordered
-      .map(entry => ({...entry, event: $anchors.get(entry.key)}))
-      .filter(entry => entry.event)
-  })
+  const loadedNotes = derived(targets, $targets => removeUndefined(Array.from($targets.values())))
 
   const loading = derived(
     [states, buffer],
     ([$states, $buffer]) => $states.some(isFeedLoading) || $buffer.length > 0,
   )
 
-  const exhausted = derived(
-    states,
-    $states => $states.length > 0 && $states.every(state => state.status === "exhausted"),
-  )
-
-  // Every entry's event is in hand before it is drawn, so no card gains one above it afterwards.
   const admit = async () => {
-    // Drawing waits on each entry's event, so the page grows too slowly to say when to fetch.
+    // Notes join only once loaded, so the buffer rather than the page says when to fetch more.
     if (get(buffer).length < 20) {
       loaders.forEach(loader => loader.run())
     }
@@ -187,25 +138,17 @@ export const makeDiscoverFeed = () => {
       admitting = true
 
       try {
-        // An event nobody can find would hold up every entry below it
+        // A note nobody can find would hold up the rest of the batch
         const deadline = sleep(6000).then(() => undefined)
 
-        const loads = batch.map(async entry => {
-          // Drawing waits on these, so they go out at the feed's own priority rather than behind its spans.
-          const event =
-            entry.event ??
-            (await Promise.race([notes.get().load(entry.ref, {priority: 1}), deadline]))
+        await Promise.all(
+          batch.map(async entry => {
+            // At the feed's own priority, so these don't wait behind its spans.
+            const note = await Promise.race([notes.get().load(entry.ref, {priority: 1}), deadline])
 
-          return [entry.key, event] as const
-        })
-
-        // Released in order, so an entry waits on what is above it and not on the whole batch.
-        for (const load of loads) {
-          const [key, event] = await load
-
-          anchors.update($anchors => new Map($anchors).set(key, event))
-          drawn.update($drawn => [...$drawn, key])
-        }
+            targets.update($targets => new Map($targets).set(entry.key, note))
+          }),
+        )
       } finally {
         admitting = false
       }
@@ -220,7 +163,8 @@ export const makeDiscoverFeed = () => {
     const relays = scenario.limit(10).getUrls()
 
     if (!stopped) {
-      const filters: Filter[] = [{kinds: DISCOVER_KINDS, authors: pubkeys}]
+      // A like and a repost both name what they answer.
+      const filters: Filter[] = [{kinds: [REACTION, REPOST, GENERIC_REPOST], authors: pubkeys}]
 
       // A receipt pays its recipient rather than being published by the zapper, so it is found by who it names.
       if (ENABLE_ZAPS) {
@@ -275,11 +219,6 @@ export const makeDiscoverFeed = () => {
     pages.set(initArray(count, () => []))
     states.set(initArray(count, () => ({status: "idle"})))
 
-    // Nobody to ask means nothing to show, rather than a spinner that never stops.
-    if (count === 0) {
-      states.set([{status: "exhausted"}])
-    }
-
     groups.forEach(startGroup)
     unsubscribers.push(scroller.stop)
 
@@ -296,5 +235,5 @@ export const makeDiscoverFeed = () => {
     unsubscribers.forEach(call)
   }
 
-  return {candidates, entries, loading, exhausted, start, stop}
+  return {notes: loadedNotes, loading, start, stop}
 }

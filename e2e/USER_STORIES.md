@@ -2051,13 +2051,15 @@ Acceptance:
 
 - The profile menu offers Mute User, on the preview modal and on the full
   profile page alike, and offers Unmute User once she has muted somebody.
-- A muted person's posts are gone from the Network tab on home rather than
-  collapsed into a card, and the people she has not muted are unaffected.
+- The mute item shows a spinner and takes no tap until the list is published,
+  and the menu closes once it is rather than on the tap.
+- A muted person's posts stay in the Network tab and read as a muted card, with
+  Show anyway to open that one, and the people she has not muted are unaffected.
 - The activity stream drops an entry drawn around a muted person's note as well
   as anything the muted person did.
-- Muting somebody drops nothing from the Discover tab: a note by a muted author
-  reads as a muted card, with Show anyway to open it, and what they liked,
-  reposted or zapped still brings the note it answered.
+- The Network tab carries a Popular toggle in place of the Discover tab, which
+  adds the notes her follows liked, reposted or zapped, and a mute drops none of
+  them: a muted person's answer still brings the note it named.
 
 ### US-133 — Keep the search relays that work
 

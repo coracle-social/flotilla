@@ -1,5 +1,6 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
+  import {derived} from "svelte/store"
   import Link from "@lib/components/Link.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
@@ -8,25 +9,49 @@
   import {PLATFORM_RELAYS} from "@app/core/env"
   import {followLists} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
+  import {makePopularFeed} from "@app/features/social/popularFeed"
   import {
     countNetworkFeedTypes,
+    includePopularNotes,
     isIncludedNetworkFeedEvent,
     makeNetworkFeed,
   } from "@app/features/social/networkFeed"
 
   const context = makeFeedContext({withReplies: true})
 
-  const feed = makeNetworkFeed({context, isIncluded: isIncludedNetworkFeedEvent})
+  const popular = makePopularFeed()
+
+  const feed = makeNetworkFeed({
+    context,
+    isIncluded: isIncludedNetworkFeedEvent,
+    // A muted note stays on the tab and reads as a muted card rather than being dropped from it.
+    includeMuted: true,
+    extra: derived([includePopularNotes, popular.notes], ([$includePopular, $notes]) =>
+      $includePopular ? $notes : [],
+    ),
+  })
 
   const {candidates, items, entries, loading, exhausted} = feed
+
+  // Popular pages behind the same scroll, so its spinner counts while it is on.
+  const spinning = derived(
+    [loading, popular.loading, includePopularNotes],
+    ([$loading, $popularLoading, $includePopular]) =>
+      $loading || ($includePopular && $popularLoading),
+  )
 
   const followList = $derived($followLists.one($user.pubkey))
   const follows = $derived($followList?.pubkeys())
 
+  const togglePopular = () => includePopularNotes.update($includePopular => !$includePopular)
+
   let element: HTMLElement | undefined = $state()
   let started = false
+  let popularStarted = false
 
-  const isEmpty = $derived(follows?.length === 0 || ($exhausted && $candidates.length === 0))
+  const isEmpty = $derived(
+    follows?.length === 0 || ($exhausted && $candidates.length === 0 && !$spinning),
+  )
   const hidden = $derived($items.length === 0 && $candidates.length > 0)
 
   // The follow list is what the feed is made of, and follows added later don't rebuild it.
@@ -37,15 +62,27 @@
     }
   })
 
+  // Popular asks the same relays what the follows answered, and starts when it is first asked for.
+  $effect(() => {
+    if ($includePopularNotes && !popularStarted && element && follows && follows.length > 0) {
+      popularStarted = true
+      popular.start(element, follows)
+    }
+  })
+
   onDestroy(() => {
     feed.stop()
+    popular.stop()
     context.cleanup()
   })
 </script>
 
 <div class="flex flex-col border-t border-line bg-surface-less">
   <div class="border-b border-line px-4 py-3">
-    <HomeNetworkRecentFilters counts={countNetworkFeedTypes($candidates)} />
+    <HomeNetworkRecentFilters
+      counts={countNetworkFeedTypes($candidates)}
+      popular={$includePopularNotes}
+      onpopular={togglePopular} />
   </div>
   <div class="flex flex-col gap-3 p-4" bind:this={element}>
     {#if isEmpty}
@@ -62,7 +99,7 @@
       {#each $entries as entry (entry.key)}
         <NoteEntry {entry} {context} />
       {/each}
-      {#if $loading}
+      {#if $spinning}
         <div class="flex justify-center py-8">
           <Spinner loading />
         </div>

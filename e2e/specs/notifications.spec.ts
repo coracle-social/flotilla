@@ -80,8 +80,8 @@ const homeFeed = (page: Page) => page.getByRole("region", {name: "Recent"})
 // The network tab asks every follow's relays for their posts only once it is open.
 const openNetworkTab = (feed: Locator) => feed.getByRole("button", {name: "Network"}).click()
 
-// The discover tab asks for what follows answered only once it is open.
-const openDiscoverTab = (feed: Locator) => feed.getByRole("button", {name: "Discover"}).click()
+// Popular adds what the follows answered, and asks for them only once it is turned on.
+const openPopular = (feed: Locator) => feed.getByRole("button", {name: "Popular"}).click()
 
 // Every story here depends on the message having landed, so posting is finished once it renders.
 const post = async (page: Page, content: string) => {
@@ -991,7 +991,7 @@ test("US-146 choose what the network feed includes", async ({seed, as}) => {
   await expect(feed.getByText(root)).toBeVisible()
 })
 
-test("US-144 mute somebody and lose them from the home page", async ({seed, as}) => {
+test("US-144 mute somebody and read their notes as muted on the home page", async ({seed, as}) => {
   const mine = "the new buoys are finally lit"
   const theirs = "the channel markers moved again"
   const answer = "they moved them last spring too"
@@ -1061,8 +1061,14 @@ test("US-144 mute somebody and lose them from the home page", async ({seed, as})
 
   await page.keyboard.press("Escape")
 
+  // The card stays where it was and reads as muted, rather than the note being dropped from the tab.
   await expect(feed.getByText(theirs)).toHaveCount(0)
+  await expect(feed.getByText("You have muted this person.").first()).toBeVisible()
   await expect(feed.getByText(mine)).toBeVisible()
+
+  await feed.getByRole("button", {name: "Show anyway"}).first().click()
+
+  await expect(feed.getByText(theirs)).toBeVisible()
 
   await recentTab.click()
 
@@ -1070,7 +1076,10 @@ test("US-144 mute somebody and lose them from the home page", async ({seed, as})
   await expect(feed.getByText("You're all caught up")).toBeVisible({timeout: 20_000})
 })
 
-test("US-144 show a muted author's note in the Discover tab as it is drawn", async ({seed, as}) => {
+test("US-144 add what her follows answered with Popular, and read a mute as a state", async ({
+  seed,
+  as,
+}) => {
   const theirs = "the channel markers moved again"
   const dave = makeTestUser("dave")
 
@@ -1086,7 +1095,8 @@ test("US-144 show a muted author's note in the Discover tab as it is drawn", asy
     seedRelays(space, dave)
 
     space.profile(user.carol, {name: "Carol Carlson"})
-    space.follows(user.alice, [user.carol, dave])
+    // Carol is nobody alice follows, so her note only reaches the tab through what dave answered.
+    space.follows(user.alice, [dave])
 
     const note = space.event(
       user.carol,
@@ -1110,9 +1120,20 @@ test("US-144 show a muted author's note in the Discover tab as it is drawn", asy
 
   const page = await as(users.alice, "/home")
   const feed = homeFeed(page)
+  const popular = feed.getByRole("button", {name: "Popular"})
 
-  await openDiscoverTab(feed)
+  await openNetworkTab(feed)
 
+  // Dave wrote nothing, so the tab settles on the follow prompt holding none of what he answered.
+  await expect(feed.getByText("Follow a few people to fill this out")).toBeVisible({
+    timeout: 20_000,
+  })
+  await expect(feed.getByText(theirs)).toHaveCount(0)
+  await expect(popular).toHaveAttribute("aria-pressed", "false")
+
+  await openPopular(feed)
+
+  await expect(popular).toHaveAttribute("aria-pressed", "true")
   await expect(feed.getByText(theirs)).toBeVisible({timeout: 20_000})
 
   // Her name on the card is the way to the profile the mute is reached from.
@@ -1133,7 +1154,7 @@ test("US-144 show a muted author's note in the Discover tab as it is drawn", asy
   await expect(feed.getByText(theirs)).toBeVisible()
 })
 
-test("US-144 keep what a muted person answered in the Discover tab", async ({seed, as}) => {
+test("US-144 keep what a muted person answered on the Network tab", async ({seed, as}) => {
   const zapped = "the channel markers moved again"
   const liked = "the buoys are lit at last"
   const dave = makeTestUser("dave")
@@ -1150,7 +1171,8 @@ test("US-144 keep what a muted person answered in the Discover tab", async ({see
     seedRelays(space, dave)
 
     space.profile(user.bob, {name: "Bob Barker"})
-    space.follows(user.alice, [user.carol, dave])
+    // Carol is nobody alice follows, so both notes reach the tab through what was answered.
+    space.follows(user.alice, [dave])
 
     const zappedNote = space.event(
       user.carol,
@@ -1211,7 +1233,8 @@ test("US-144 keep what a muted person answered in the Discover tab", async ({see
   const page = await as(users.alice, "/home")
   const feed = homeFeed(page)
 
-  await openDiscoverTab(feed)
+  await openNetworkTab(feed)
+  await openPopular(feed)
 
   await expect(feed.getByText(zapped)).toBeVisible({timeout: 20_000})
   await expect(feed.getByText(liked)).toBeVisible()
@@ -1223,7 +1246,10 @@ test("US-144 keep what a muted person answered in the Discover tab", async ({see
   await expect(toast(page)).toContainText("You have muted this person.")
 
   await page.goto("/home")
-  await openDiscoverTab(feed)
+  await openNetworkTab(feed)
+
+  // Popular is a choice she keeps, so the tab still asks for what her follows answered.
+  await expect(feed.getByRole("button", {name: "Popular"})).toHaveAttribute("aria-pressed", "true")
 
   // Nothing the tab held goes when bob is muted: a mute reads as a state, it drops no entry.
   await expect(feed.getByText(liked)).toBeVisible({timeout: 20_000})

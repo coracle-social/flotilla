@@ -6,9 +6,11 @@
 
   type Props = {
     counts: Map<NetworkFeedType, number>
+    popular: boolean
+    onpopular: () => void
   }
 
-  const {counts}: Props = $props()
+  const {counts, popular, onpopular}: Props = $props()
 
   const toggle = (type: NetworkFeedType) => () =>
     includedNetworkFeedTypes.update($types =>
@@ -25,4 +27,8 @@
       pressed={$includedNetworkFeedTypes.includes(option.value)}
       onclick={toggle(option.value)} />
   {/each}
+  <!-- What the people she follows answered joins what they wrote, rather than living on a tab of its own. -->
+  <div class="ml-auto flex items-center">
+    <SegmentedButton label="Popular" size="xs" pressed={popular} onclick={onpopular} />
+  </div>
 </div>

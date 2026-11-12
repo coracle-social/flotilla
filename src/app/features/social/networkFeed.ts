@@ -50,6 +50,13 @@ export const includedNetworkFeedTypes = synced<NetworkFeedType[]>({
   storage: kv,
 })
 
+// The tab carries what the follows wrote, and Popular adds what they answered as well.
+export const includePopularNotes = synced<boolean>({
+  key: "includePopularNotes",
+  defaultValue: false,
+  storage: kv,
+})
+
 // Only a kind 1 carries NIP-10 reply tags, so an article or a poll in the feed is a note.
 const networkFeedType = (event: TrustedEvent): NetworkFeedType =>
   event.kind === NOTE && reader(Note)(event).parent() ? "replies" : "notes"
@@ -110,6 +117,8 @@ export type NetworkFeedOptions = {
   context: FeedContext
   isIncluded?: Readable<(event: TrustedEvent) => boolean>
   pinned?: Readable<TrustedEvent[]>
+  extra?: Readable<TrustedEvent[]>
+  includeMuted?: boolean
   sortByTime?: boolean
 }
 
@@ -118,6 +127,8 @@ export const makeNetworkFeed = ({
   context,
   isIncluded = readable(() => true),
   pinned = readable<TrustedEvent[]>([]),
+  extra = readable<TrustedEvent[]>([]),
+  includeMuted = false,
   sortByTime = false,
 }: NetworkFeedOptions) => {
   const pages = writable<TrustedEvent[][]>([])
@@ -136,14 +147,16 @@ export const makeNetworkFeed = ({
     return (entry: NetworkFeedEntry) => (keys.has(entry.key) ? 0 : 1)
   })
 
+  const muted = includeMuted ? readable(() => false) : isEventMuted
+
   // Everything the feed holds, newest first, less whoever the reader muted.
-  const candidates = derived([pages, pinned, isEventMuted], ([$pages, $pinned, $isEventMuted]) =>
+  const candidates = derived([pages, pinned, extra, muted], ([$pages, $pinned, $extra, $muted]) =>
     uniqBy(
       getIdOrAddress,
       sortBy(
         event => -event.created_at,
-        // A pinned note can be older than the feed has paged back to, so it is merged in.
-        [...$pinned, ...$pages.flat()].filter(event => !$isEventMuted(event)),
+        // A pinned note can be older than the feed has paged back to, and extras come from elsewhere.
+        [...$pinned, ...$pages.flat(), ...$extra].filter(event => !$muted(event)),
       ),
     ),
   )

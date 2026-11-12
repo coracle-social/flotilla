@@ -408,9 +408,12 @@ and an `{#if}` chain over loading, empty and exhausted. Calendars use
 `makeCalendarFeed`, which pages by date tag rather than `created_at`.
 
 `makeNetworkFeed` in `src/app/features/social/networkFeed.ts` builds on those helpers to draw each reply under
-the note it answers. The home Network section and `ProfilePageNotes` both use it. A muted author's
-events are left out of it, so `ProfilePageNotes` says the person is muted where it would otherwise
-report that they have no notes.
+the note it answers. The home Network section and `ProfilePageNotes` both use it. The home tab passes
+`includeMuted`, so a muted note stays on the tab and `Content` draws the mute, while `ProfilePageNotes`
+leaves a muted author's notes out and says the person is muted where it would otherwise report none.
+The home tab also merges `extra` events while its Popular toggle is on, which is what
+`makePopularFeed` holds: the notes her follows liked, reposted or zapped, drawn in time order with
+the rest rather than on a tab of their own.
 
 `ProfileFeed` still drives welshman's `FeedController` through
 `$app.use(Feeds).makeFeedController` and `createScroller`, but 27fa25c3 moved the home feed onto

@@ -4,14 +4,12 @@
   import Bell from "@assets/icons/bell.svg?dataurl"
   import Planet from "@assets/icons/planet.svg?dataurl"
   import Settings from "@assets/icons/settings.svg?dataurl"
-  import Telescope from "@assets/icons/telescope.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import UnderlineTabs from "@lib/components/UnderlineTabs.svelte"
   import type {UnderlineTab} from "@lib/components/UnderlineTabs.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HomeActivity from "@app/components/HomeActivity.svelte"
-  import HomeDiscoverRecent from "@app/components/HomeDiscoverRecent.svelte"
   import HomeNetworkRecent from "@app/components/HomeNetworkRecent.svelte"
   import HealthCheckList from "@app/components/HealthCheckList.svelte"
   import PostCreateButton from "@app/components/PostCreateButton.svelte"
@@ -22,7 +20,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {homeNotificationsUnread} from "@app/features/activity"
 
-  type HomeTab = "activity" | "network" | "discover"
+  type HomeTab = "activity" | "network"
 
   type Props = {
     class?: string
@@ -38,23 +36,17 @@
       notification: $homeNotificationsUnread,
     },
     {value: "network", label: "Network", icon: Planet},
-    {value: "discover", label: "Discover", icon: Telescope},
   ])
 
   // The network feed asks every follow's relays for their posts, so it loads when it is asked for.
   let tab = $state<HomeTab>("activity")
 
-  // Once loaded, the network and discover feeds stay mounted so switching back finds them where they were left.
+  // Once loaded, the network feed stays mounted so switching back finds it where it was left.
   let networkOpened = $state(false)
-  let discoverOpened = $state(false)
 
   $effect(() => {
     if (tab === "network") {
       networkOpened = true
-    }
-
-    if (tab === "discover") {
-      discoverOpened = true
     }
   })
 
@@ -97,11 +89,6 @@
   {#if networkOpened}
     <div class={cx({hidden: tab !== "network"})}>
       <HomeNetworkRecent />
-    </div>
-  {/if}
-  {#if discoverOpened}
-    <div class={cx({hidden: tab !== "discover"})}>
-      <HomeDiscoverRecent onbrowse={() => (tab = "network")} />
     </div>
   {/if}
 </HomeSection>
