@@ -130,10 +130,12 @@ test("US-062 see images and video inline", async ({seed, as}) => {
   await inlineImage.click()
 
   const preview = page.getByRole("dialog", {name: "Content preview"})
+  const backdrop = preview.getByRole("button", {name: "Close preview"})
 
   await expect(preview.locator("img")).toBeVisible()
 
-  await page.keyboard.press("Escape")
+  // The dark background closes it, as a tap on the image itself does.
+  await backdrop.click({position: {x: 4, y: 4}})
 
   await expect(preview).toHaveCount(0)
   await expect(clipMessage.locator("video")).toBeVisible()
@@ -143,7 +145,12 @@ test("US-062 see images and video inline", async ({seed, as}) => {
 
   await expect(preview.locator("video")).toBeVisible()
 
-  await page.keyboard.press("Escape")
+  // A tap on the player plays it, and a tap on the background beside it closes the preview.
+  await preview.locator("video").click()
+
+  await expect(preview).toHaveCount(1)
+
+  await backdrop.click({position: {x: 4, y: 4}})
 
   await expect(preview).toHaveCount(0)
 
@@ -153,6 +160,11 @@ test("US-062 see images and video inline", async ({seed, as}) => {
   await mentionedLink.click()
 
   await expect(preview.locator("video")).toBeVisible()
+
+  // Escape still closes it, whichever way the preview was opened.
+  await page.keyboard.press("Escape")
+
+  await expect(preview).toHaveCount(0)
 })
 
 test("US-063 preview a shared link", async ({seed, as}) => {
