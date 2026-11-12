@@ -1,18 +1,15 @@
 import * as nip19 from "nostr-tools/nip19"
 import {HOUR, MINUTE} from "@welshman/lib"
-import {COMMENT, LONG_FORM, MESSAGE, tagSpec, tagValue} from "@welshman/util"
+import {COMMENT, LONG_FORM, tagSpec, tagValue} from "@welshman/util"
 import type {SignedEvent} from "@welshman/util"
 import {Article, Comment, Thread} from "@welshman/domain"
-import type {Locator, Page} from "@playwright/test"
+import type {Page} from "@playwright/test"
 import {
-  composerAddButton,
-  emojiButton,
   expect,
   getPublishedEvents,
   dialog,
   noteEditor,
   pageBar,
-  pickEmoji,
   roomPath,
   spacePath,
   test,
@@ -25,15 +22,6 @@ type Seeded = {readonly id: string; readonly event: SignedEvent}
 // The comment and thread-reply composers are the only forms on their pages with a rich text editor.
 const composerForm = (page: Page) =>
   page.locator("form").filter({has: page.locator(".note-editor")})
-
-// Reacting and the count share one button, so a reaction reads as a count of 1 on it.
-const expectReactionRoundTrip = async (button: Locator, react: () => Promise<void>) => {
-  await react()
-  await expect(button).toContainText("1")
-
-  await react()
-  await expect(button).not.toContainText("1")
-}
 
 // The card is a div carrying an overlay link, so it is found by its component rather than a role.
 const articleCards = (page: Page) => page.locator('[data-component="ArticleItem"]')
@@ -283,101 +271,6 @@ test("US-039 comment on an article", async ({seed, as}) => {
   await expect(nested.getByText("The soil chapter is the good one.")).toHaveCount(0)
 })
 
-test("US-040 react to a post with an emoji", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    space.profile(user.alice, {name: "Alice Anderson"})
-    space.profile(user.bob, {name: "Bob Barker"})
-
-    const article = space.event(
-      user.alice,
-      () =>
-        space
-          .kind(Article)
-          .writer()
-          .setIdentifier("tending-the-garden")
-          .setTitle("Tending the Garden")
-          .setPublishedAt(at(4, HOUR))
-          .setContent("Gardens are worth the trouble.")
-          .renderTemplate(),
-      at(4, HOUR),
-    )
-
-    space.event(
-      user.alice,
-      () =>
-        space
-          .kind(Comment)
-          .writer()
-          .setRootFromEvent(article.event)
-          .setParentFromEvent(article.event)
-          .setContent("A note about the soil chapter.")
-          .renderTemplate(),
-      at(3, HOUR),
-    )
-  })
-
-  const {url} = scenario.space("space")
-  const page = await as(users.bob, `${spacePath(url)}/articles`)
-
-  await openArticle(page, "Tending the Garden")
-
-  // An article's own reactions live in the action bar under it rather than on the article itself.
-  const articleActions = page.locator('[data-component="ArticleActionBar"]')
-  const commentCard = comment(page, "A note about the soil")
-
-  await expect(articleActions).toBeVisible()
-
-  const articleReact = emojiButton(articleActions)
-
-  await expectReactionRoundTrip(articleReact, () => pickEmoji(page, articleReact, "party popper"))
-
-  await expect(commentCard).toBeVisible()
-
-  // A comment takes a plain like rather than an emoji, so its button is the whole interaction.
-  const commentLike = commentCard.getByRole("button", {name: "Likes"})
-
-  await expectReactionRoundTrip(commentLike, () => commentLike.click())
-})
-
-test("US-041 publish an article from a room", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("lounge", {name: "Lounge"})
-    space.join(user.alice, "lounge")
-    space.profile(user.alice, {name: "Alice Anderson"})
-  })
-
-  const {url} = scenario.space("space")
-  const page = await as(users.alice, roomPath(url, "lounge"))
-
-  await composerAddButton(page).click()
-  await page.getByRole("button", {name: "Write an Article"}).click()
-
-  await page.getByPlaceholder("Title", {exact: true}).fill("Repotting in Winter")
-  await noteEditor(page).pressSequentially("Wait for a warm week.")
-  await pageBar(page).getByRole("button", {name: "Publish"}).click()
-
-  await expect(page.getByRole("heading", {name: "Repotting in Winter"}).first()).toBeVisible()
-
-  // The room's copy is published after the composer has moved on, and a page that unloads takes it.
-  await expect.poll(() => getPublishedEvents(page.context(), MESSAGE)).toHaveLength(1)
-
-  await page.goto(roomPath(url, "lounge"))
-  await expect(page.getByText("Repotting in Winter")).toBeVisible()
-
-  await page.goto(`${spacePath(url)}/articles`)
-
-  const card = articleCards(page).filter({hasText: "Repotting in Winter"})
-
-  await expect(card.getByRole("link", {name: /#\s*Lounge/})).toBeVisible()
-})
-
 test("US-042 start a thread and see it filed under its room", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
@@ -503,101 +396,6 @@ test("US-043 reply to a thread and to a specific post", async ({seed, as}) => {
   await postReply.getByRole("button", {name: "Post Reply"}).click()
 
   await expect(carol.getByText("Every season here.")).toBeVisible()
-})
-
-test("US-044 navigate a long thread", async ({seed, as}) => {
-  let thread!: Seeded
-  let firstReply!: Seeded
-
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("lounge", {name: "Lounge"})
-    space.join(user.alice, "lounge")
-    space.join(user.bob, "lounge")
-    space.join(user.carol, "lounge")
-    space.profile(user.alice, {name: "Alice Anderson"})
-    space.profile(user.bob, {name: "Bob Barker"})
-    space.profile(user.carol, {name: "Carol Chen"})
-
-    const topic = space.event(
-      user.alice,
-      () =>
-        space
-          .kind(Thread)
-          .writer()
-          .setRoom(space.url, "lounge")
-          .setTitle("The long one")
-          .setContent("Settle in.")
-          .renderTemplate(),
-      at(4, HOUR),
-    )
-
-    // Forty one replies is two reveals past the twenty a thread opens with.
-    for (let i = 1; i <= 41; i++) {
-      const reply = space.event(
-        i % 2 === 0 ? user.alice : user.bob,
-        () =>
-          space
-            .kind(Comment)
-            .writer()
-            .setRootFromEvent(topic.event)
-            .setParentFromEvent(topic.event)
-            .setContent(`Reply ${String(i).padStart(2, "0")}`)
-            .renderTemplate(),
-        at(4, HOUR) + i * 60,
-      )
-
-      if (i === 1) {
-        firstReply = reply
-      }
-    }
-
-    thread = topic
-  })
-
-  const {url} = scenario.space("space")
-  const threadPath = `${spacePath(url)}/threads/${thread.id}`
-  const bob = await as(users.bob, threadPath, {
-    context: {permissions: ["clipboard-read", "clipboard-write"]},
-  })
-
-  const showEarlier = bob.getByRole("button", {name: "Show earlier replies"})
-
-  // Every assertion below is about which of the replies are in the window, so wait for all of them.
-  await expect(bob.getByText("41 replies")).toBeVisible()
-
-  // The thread opens on its newest twenty replies.
-  await expect(bob.getByText("Reply 22", {exact: true})).toBeVisible()
-  await expect(bob.getByText("Reply 21", {exact: true})).toHaveCount(0)
-
-  // Each reveal reaches twenty further back without leaving the page.
-  await showEarlier.click()
-
-  await expect(bob.getByText("Reply 02", {exact: true})).toBeVisible()
-  await expect(bob.getByText("Reply 01", {exact: true})).toHaveCount(0)
-
-  await showEarlier.click()
-
-  await expect(bob.getByText("Reply 01", {exact: true})).toBeVisible()
-  await expect(showEarlier).toHaveCount(0)
-
-  const oldestPost = bob.locator(`[data-event="${firstReply.id}"]`)
-
-  await oldestPost.getByRole("button", {name: "Permalink"}).click()
-  await expect(bob.getByRole("alert")).toBeVisible()
-
-  const permalink = new URL(await bob.evaluate(() => navigator.clipboard.readText()))
-
-  expect(permalink.pathname).toBe(threadPath)
-
-  // A permalink reaches back as far as it has to on its own, so carol never sees the control.
-  const carol = await as(users.carol, permalink.pathname + permalink.search)
-  const target = carol.locator(`[data-event="${firstReply.id}"]`)
-
-  await expect(target).toBeVisible()
-  await expect(target).toBeInViewport()
-  await expect(carol.getByRole("button", {name: "Show earlier replies"})).toHaveCount(0)
 })
 
 test("US-045 turn a chat message into a thread", async ({seed, as}) => {

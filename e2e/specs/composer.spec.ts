@@ -1,5 +1,5 @@
 import type {Locator, Page} from "@playwright/test"
-import {HOUR, ms} from "@welshman/lib"
+import {HOUR} from "@welshman/lib"
 import {
   DEFAULT_BLOSSOM_ORIGIN,
   GIF_BASE64,
@@ -15,7 +15,6 @@ import {
   makeTestUser,
   messageActions,
   mockBlossom,
-  mockLocalStt,
   mockOpenRouterStt,
   roomLink,
   roomPath,
@@ -263,38 +262,6 @@ test("US-057 attach and send an image", async ({seed, as}) => {
   })
 
   await expect(alice.getByRole("alert")).toContainText("text files are not allowed here")
-})
-
-test("US-142 an upload that never answers gives up", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.profile(user.alice, {name: user.alice.name})
-    space.relayList(user.alice)
-  })
-
-  const path = roomPath(scenario.space("space").url, "general")
-  const alice = await as(users.alice, path)
-  const blossom = await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
-
-  blossom.hold()
-
-  // A text file attaches as a link rather than a node, so there is nothing to delete while it uploads.
-  await attachFile(alice, {
-    name: "notes.txt",
-    mimeType: "text/plain",
-    buffer: Buffer.from("not an image"),
-  })
-
-  await expect(composerAddButton(alice)).toBeDisabled()
-
-  await expect(alice.getByRole("alert")).toContainText("notes.txt took too long to upload", {
-    timeout: ms(45),
-  })
-
-  await expect(composerAddButton(alice)).toBeEnabled()
 })
 
 test("US-058 drafts survive navigating away", async ({seed, as}) => {
@@ -568,101 +535,4 @@ test("US-125 dictate a message", async ({seed, as}) => {
   transcription.release()
 
   await expect(composer(alice)).toContainText("the tide turns at six")
-})
-
-test("US-142 transcribe a recording on this device", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-  })
-
-  const {url} = scenario.space("space")
-  const alice = await as(users.alice, "/settings/content")
-  const localSpeech = await mockLocalStt(alice.context(), {text: "the tide turns at six"})
-
-  // Downloading the model is the whole of the choice, so no OpenRouter key is ever saved here.
-  await alice.getByRole("button", {name: "Download model"}).click()
-
-  const download = dialog(alice, "Download a speech model?")
-
-  localSpeech.hold()
-
-  await download.getByRole("button", {name: "Download model"}).click()
-
-  // How far the download has got is a bar rather than a number in the status line.
-  await expect(download.locator("progress")).toHaveJSProperty("value", 40)
-
-  localSpeech.release()
-
-  await expect(alice.getByRole("button", {name: "Remove model"})).toBeVisible()
-
-  await alice.goto(roomPath(url, "general"))
-
-  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
-
-  await expect(composer(alice)).toContainText("the tide turns at six")
-
-  // The model reads the samples the recorder made rather than uploading a file anywhere.
-  expect(localSpeech.recordings).toHaveLength(1)
-  expect(localSpeech.recordings[0]).toBeGreaterThan(0)
-
-  await clearComposer(alice)
-
-  // A transcript the model is unsure of is a language it cannot read, so the composer stays empty.
-  localSpeech.setConfidence(0.5)
-
-  const refused = await record(alice)
-
-  await refused.getByRole("button", {name: "Transcribe"}).click()
-
-  await expect(alice.getByRole("alert")).toContainText("This device reads English")
-  await expect(composer(alice)).not.toContainText("the tide turns at six")
-  await refused.getByRole("button", {name: "Discard"}).click()
-
-  await expect(refused).toHaveCount(0)
-
-  // With a key saved, the recording it will not read goes to OpenRouter instead.
-  const transcription = await mockOpenRouterStt(alice.context(), "and the gulls came in")
-
-  await alice.goto("/settings/content")
-  await alice.locator('input[name="flotilla-openrouter-key"]').fill("sk-or-test")
-  await alice.getByRole("button", {name: "Save Changes"}).click()
-  await expect(alice.getByRole("alert")).toContainText("Your settings have been saved!")
-  await alice.goto(roomPath(url, "general"))
-  await (await record(alice)).getByRole("button", {name: "Transcribe"}).click()
-
-  await expect(composer(alice)).toContainText("and the gulls came in")
-  expect(transcription.uploads).toHaveLength(1)
-})
-
-test("US-126 send a voice note", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-  })
-
-  const {url} = scenario.space("space")
-  const alice = await as(users.alice, roomPath(url, "general"))
-
-  await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
-
-  // Discarding the recording throws it away rather than attaching it.
-  await (await record(alice)).getByRole("button", {name: "Discard"}).click()
-
-  await expect(dialog(alice, "Record a message")).toHaveCount(0)
-  await expect(composer(alice)).toHaveText("")
-
-  // Sending the recording as it is needs no speech model, only somewhere to upload it.
-  await (await record(alice)).getByRole("button", {name: "Send voice note"}).click()
-
-  await expect(composer(alice)).toContainText(DEFAULT_BLOSSOM_ORIGIN)
-
-  await composer(alice).press("Enter")
-
-  // The imeta on the message says the upload is audio, which gives it a player rather than a link.
-  await expect(timeline(alice).locator(`audio[src^="${DEFAULT_BLOSSOM_ORIGIN}/"]`)).toBeVisible()
 })

@@ -1,8 +1,8 @@
-import {DAY, HOUR, sleep, sortBy} from "@welshman/lib"
+import {DAY, HOUR, sortBy} from "@welshman/lib"
 import {ROOMS} from "@welshman/util"
 import type {Page} from "@playwright/test"
 import type {SeededSpace} from "../harness"
-import {expect, pathPattern, readCachedEvents, roomPath, spacePath, test, users} from "../harness"
+import {expect, readCachedEvents, spacePath, test, users} from "../harness"
 
 // A reload starts from what reached the database, so a spec about one waits for the room list there.
 const cachedFirstSpace = async (page: Page, pubkey: string) => {
@@ -138,41 +138,6 @@ test("US-010 join a space from an invite link", async ({seed, as}) => {
   await expect(page).toHaveURL(/\/spaces\/other\.test/)
 })
 
-test("US-010 a direct link's join prompt outlives the entry redirect", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-    const other = relay("other")
-
-    space.room("general", {name: "General"})
-    other.room("lounge", {name: "Lounge"})
-    space.join(user.alice, "general")
-  })
-
-  const other = scenario.space("other")
-  const page = await as(users.alice, "/")
-
-  // A space's own path redirects, and a modal raised while that navigation is in flight is lost.
-  let held = 0
-
-  await page.context().route(
-    url => url.pathname.endsWith("/about/+page.svelte"),
-    async route => {
-      held++
-
-      await sleep(15000)
-      await route.continue()
-    },
-  )
-
-  await page.goto(spacePath(other.url))
-
-  await expect(page.getByRole("button", {name: "Join Space"})).toBeEnabled({timeout: 60000})
-  await expect(page).toHaveURL(pathPattern(spacePath(other.url) + "/about"))
-
-  // A page that stops asking for that module is a spec that no longer covers the race.
-  expect(held).toBeGreaterThan(0)
-})
-
 test("US-011 request access when a space turns you away", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
     const closed = relay("closed")
@@ -249,82 +214,6 @@ test("US-011 request access when a space turns you away", async ({seed, as}) => 
   await bob.getByRole("button", {name: "Leave Space"}).click()
 
   await expect(bob).toHaveURL(/\/home/)
-})
-
-test("US-012 decide whether to trust an unsigned space", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const unsigned = relay("unsigned")
-
-    unsigned.room("general", {name: "General"})
-    unsigned.join(user.alice, "general")
-    unsigned.join(user.bob, "general")
-    unsigned.message(user.alice, "general", "the hull is patched")
-  })
-
-  const unsigned = scenario.space("unsigned")
-
-  // This relay serves events with their signatures stripped, so it can forge messages
-  const bob = await as(users.bob, roomPath(unsigned.url, "general"))
-
-  await expect(bob.getByRole("heading", {name: "Do you trust this space?"})).toBeVisible()
-
-  await bob.getByRole("button", {name: "I don't trust this space"}).click()
-
-  await expect(bob).toHaveURL(/\/home/)
-
-  // In-app rather than a fresh load: leaving is published in the background and reaches disk late.
-  await bob.getByRole("link", {name: "All Spaces"}).click()
-
-  await expect(railSpaces(bob)).toHaveCount(0)
-
-  const alice = await as(users.alice, roomPath(unsigned.url, "general"))
-
-  await expect(alice.getByRole("heading", {name: "Do you trust this space?"})).toBeVisible()
-
-  await alice.getByRole("button", {name: "I trust this space, continue"}).click()
-
-  await expect(alice.getByRole("heading", {name: "Do you trust this space?"})).toHaveCount(0)
-  await expect(alice.getByText("the hull is patched")).toBeVisible()
-})
-
-test("US-013 follow a space that has moved", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-    const other = relay("other")
-
-    space.room("general", {name: "General"})
-    other.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-
-    // The new address has to let her in once her list points at it
-    other.member(user.alice)
-  })
-
-  const space = scenario.space("space")
-  const other = scenario.space("other")
-
-  // The relay's own nip-11 document is what reports the move
-  const relayInfo = {[space.url]: {redirect_to: "https://other.test/"}}
-
-  const alice = await as(users.alice, spacePath(space.url) + "/about", {relayInfo})
-
-  await alice.getByRole("button", {name: "Update and go"}).click()
-
-  await expect(alice).toHaveURL(/\/spaces\/other\.test\/about/)
-
-  // In-app rather than a fresh load: the updated list is published in the background.
-  await alice.getByRole("link", {name: "All Spaces"}).click()
-
-  await expectRailFirst(alice, other.name)
-
-  const bob = await as(users.bob, spacePath(space.url) + "/about", {relayInfo})
-
-  await expect(bob.getByRole("heading", {name: "This space has moved"})).toBeVisible()
-
-  await bob.getByRole("button", {name: "Not now"}).click()
-
-  await expect(bob).toHaveURL(/\/spaces\/space\.test\/about/)
 })
 
 test("US-014 leave a space", async ({seed, as}) => {

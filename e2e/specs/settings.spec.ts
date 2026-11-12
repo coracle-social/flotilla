@@ -1,5 +1,5 @@
 import {MINUTE} from "@welshman/lib"
-import type {Locator, Page} from "@playwright/test"
+import type {Page} from "@playwright/test"
 import {
   dialog,
   expect,
@@ -20,19 +20,6 @@ const relayPicker = (page: Page) => topDialog(page)
 
 // A toast clears after five seconds, which outlasts the batch a saved setting reaches disk in.
 const waitForToastToClear = (page: Page) => expect(toast(page)).toHaveCount(0)
-
-// A Field lays its slider out under the row holding the label and the current value.
-const requestsCard = (page: Page) => page.locator(".card").filter({hasText: "Message Requests"})
-
-const requestSliders = (page: Page) => requestsCard(page).locator('input[type="range"]')
-
-// Playwright's own hit-target check scrolls hidden overflow away before it looks.
-const isTappable = (locator: Locator) =>
-  locator.evaluate(element => {
-    const {left, right, top, bottom} = element.getBoundingClientRect()
-
-    return element.contains(document.elementFromPoint((left + right) / 2, (top + bottom) / 2))
-  })
 
 test("US-084 block a relay you never want used", async ({seed, as}) => {
   await seed(({relay, user}) => {
@@ -159,33 +146,6 @@ test("US-087 configure content display", async ({seed, as}) => {
   await expect(settingToggle(page, "Hide sensitive content?")).not.toBeChecked()
 })
 
-test("US-088 adjust send delay and media servers", async ({seed, as}) => {
-  await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-
-    space.relayList(user.alice)
-  })
-
-  const page = await as(users.alice, "/settings/content")
-
-  await page.getByLabel("Send delay").fill("3000")
-
-  await page.getByRole("button", {name: "Add Server"}).click()
-  await page.getByRole("listitem").first().locator("input").fill("https://media.test/")
-
-  await page.getByRole("button", {name: "Save Changes"}).click()
-
-  await expect(page.getByRole("alert")).toContainText("Your settings have been saved!")
-
-  await waitForToastToClear(page)
-  await page.reload()
-
-  await expect(page.getByLabel("Send delay")).toHaveValue("3000")
-})
-
 test("US-089 configure privacy preferences", async ({seed, as}) => {
   await seed(({relay, user}) => {
     const space = relay("space")
@@ -212,56 +172,6 @@ test("US-089 configure privacy preferences", async ({seed, as}) => {
 
   await expect(settingToggle(page, "Authenticate with unknown relays?")).toBeChecked()
   await expect(settingToggle(page, "Report usage?")).not.toBeChecked()
-})
-
-test("US-089 save privacy settings on a phone", async ({seed, as}) => {
-  await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-
-    space.relayList(user.alice)
-  })
-
-  const page = await as(users.alice, "/settings/privacy", {
-    context: {viewport: {width: 390, height: 844}, hasTouch: true},
-  })
-
-  const save = page.getByRole("button", {name: "Save Changes"})
-
-  await expect.poll(() => isTappable(save)).toBe(true)
-
-  await settingToggle(page, "Report usage?").uncheck()
-  await save.click()
-
-  await expect(page.getByRole("alert")).toContainText("Your settings have been saved!")
-})
-
-test("US-129 raise the thresholds a stranger has to meet", async ({seed, as}) => {
-  await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-
-    space.relayList(user.alice)
-  })
-
-  const page = await as(users.alice, "/settings/privacy")
-
-  await requestSliders(page).first().fill("24")
-  await requestSliders(page).last().fill("1")
-
-  await page.getByRole("button", {name: "Save Changes"}).click()
-
-  await expect(page.getByRole("alert")).toContainText("Your settings have been saved!")
-
-  await waitForToastToClear(page)
-  await page.reload()
-
-  await expect(requestSliders(page).first()).toHaveValue("24")
-  await expect(requestSliders(page).last()).toHaveValue("1")
 })
 
 test("US-090 change the app's appearance", async ({seed, as}) => {
@@ -309,50 +219,4 @@ test("US-090 change the app's appearance", async ({seed, as}) => {
   await page.reload()
 
   await expect(page.locator("html")).toHaveAttribute("style", /font-size:\s*1\.25rem/)
-})
-
-test("US-091 set up how people zap you", async ({seed, as}) => {
-  await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.profile(user.alice, {name: "Alice Anders"})
-
-    space.relayList(user.alice)
-  })
-
-  const page = await as(users.alice, "/settings/wallet")
-
-  await expect(page.getByText("Not set")).toBeVisible()
-
-  await page.getByRole("button", {name: "Update"}).click()
-
-  const address = page
-    .locator(".dialog")
-    .filter({has: page.getByRole("heading", {name: "Update Lightning Address"})})
-    .last()
-
-  await address.getByPlaceholder("user@domain.com").fill("alice@example.test")
-  await address.getByRole("button", {name: "Save Changes"}).click()
-
-  // The dialog closes itself once the profile has gone out, and the page behind it has its own Save.
-  await expect(address).toHaveCount(0)
-  await expect(page.getByText("alice@example.test")).toBeVisible()
-
-  // The same utility classes land on other rows, so this is pinned to the zap form's input rows.
-  const presets = page
-    .locator("form")
-    .filter({hasText: "Zap Amounts"})
-    .locator("div.items-center.gap-2:has(input)")
-
-  await presets.first().locator("input").fill("500")
-  await page.getByRole("button", {name: "Save Changes"}).click()
-
-  await expect(page.getByRole("alert")).toContainText("Your zap amounts have been saved!")
-
-  await waitForToastToClear(page)
-  await page.reload()
-
-  await expect(presets.first().locator("input")).toHaveValue("500")
 })

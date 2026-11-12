@@ -56,7 +56,7 @@ const getUrlExtension = (url: string) => {
 }
 
 export const isImageUrl = (url: string, event: TrustedEvent) =>
-  Boolean(url.match(/\.(jpe?g|png|gif|webp)$/)) ||
+  ["gif", "jpeg", "jpg", "png", "webp"].includes(getUrlExtension(url)) ||
   IMAGE_CONTENT_TYPES.includes(getUrlContentType(url, event))
 
 export const isVideoUrl = (url: string, event: TrustedEvent) =>

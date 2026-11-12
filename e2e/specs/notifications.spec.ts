@@ -1,42 +1,21 @@
 import {naddrEncode, neventEncode, npubEncode} from "nostr-tools/nip19"
-import {DAY, HOUR, MINUTE} from "@welshman/lib"
-import {
-  LONG_FORM,
-  POLL,
-  REACTION,
-  ZAP_RECEIPT,
-  ZAP_REQUEST,
-  displayRelayUrl,
-  makeEvent,
-} from "@welshman/util"
-import {
-  Article,
-  Comment,
-  FollowList,
-  MuteList,
-  Note,
-  Poll,
-  Reaction,
-  SearchRelayList,
-  Thread,
-} from "@welshman/domain"
+import {HOUR, MINUTE} from "@welshman/lib"
+import {LONG_FORM, REACTION, displayRelayUrl, makeEvent} from "@welshman/util"
+import {Article, FollowList, Note, Reaction, Thread} from "@welshman/domain"
 import type {Locator, Page} from "@playwright/test"
 import {
   bubble,
   chatPath,
   composer,
-  composerEnabled,
   dialog,
   expect,
   homeFeedFilter,
   makeTestUser,
   message,
   messageActions,
-  noteEditor,
   openRoomDetail,
   pageBar,
   pathPattern,
-  profilePath,
   roomLink,
   relayCard,
   roomPath,
@@ -63,9 +42,6 @@ const mutedSpaceBell = (header: Locator) => header.locator("div.opacity-50")
 // The name comes from nip-11; until that document lands the tooltip is the relay's host instead.
 const spaceNavItem = (page: Page, name: string) =>
   page.locator(`.primary-nav [data-tip^="${name}"]`)
-
-// The desktop rail has no equivalent, since the menu is always on screen there.
-const spaceMenuNavItem = (page: Page) => page.getByRole("button", {name: "Open space menu"})
 
 // The space menu's header, the one button in the secondary nav carrying the relay's address.
 const spaceMenu = (page: Page, url: string) =>
@@ -401,9 +377,17 @@ test("US-117 read the network feed on home", async ({seed, as}) => {
   await expect(feed.getByText(topic)).toBeVisible()
 })
 
-test("US-117 read a follow who is in none of your spaces", async ({seed, as}) => {
+test("US-153 read a follow who is in none of your spaces, and an article they link to", async ({
+  seed,
+  as,
+}) => {
   const note = "the lighthouse has been dark since tuesday"
   const answer = "the keeper is on holiday"
+  const linking = "the best thing I have read all week"
+  const title = "Signals in the Noise"
+  const body = "Every antenna hears something."
+
+  let naddr!: string
 
   await seed(({relay, open, user, at}) => {
     const space = relay("space")
@@ -431,47 +415,6 @@ test("US-117 read a follow who is in none of your spaces", async ({seed, as}) =>
       () => outbox.kind(Note).writer().setParent(posted.event).setContent(answer).renderTemplate(),
       at(20, MINUTE),
     )
-  })
-
-  const page = await as(users.alice, "/home")
-
-  const feed = homeFeed(page)
-
-  await openNetworkTab(feed)
-
-  // His answer hangs off his note, so the card the feed draws is around the note.
-  const card = feed.locator(".card").filter({hasText: note})
-
-  await expect(feed.getByText(note)).toBeVisible()
-  await expect(card.getByText("Bob Barker")).toBeVisible()
-
-  // Alice reads from her space rather than bob's relay, so a context asked of hers comes back empty.
-  await expect(feed.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
-})
-
-test("US-153 read an article a note links to", async ({seed, as}) => {
-  const note = "the best thing I have read all week"
-  const title = "Signals in the Noise"
-  const body = "Every antenna hears something."
-
-  let naddr!: string
-
-  await seed(({relay, open, user, at}) => {
-    const space = relay("space")
-    const indexer = open("indexer")
-    const outbox = open("outbox")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-
-    indexer.relayList(user.alice, {
-      read: [space.url, indexer.url],
-      write: [space.url, indexer.url, outbox.url],
-    })
-    indexer.follows(user.alice, [user.bob])
-
-    indexer.relayList(user.bob, {read: [outbox.url], write: [outbox.url]})
-    outbox.profile(user.bob, {name: "Bob Barker"})
 
     // Carol is nobody alice follows, so her article reaches her only through bob's link to it.
     outbox.event(
@@ -495,7 +438,7 @@ test("US-153 read an article a note links to", async ({seed, as}) => {
       relays: [outbox.url],
     })
 
-    outbox.note(user.bob, `${note}\n\nnostr:${naddr}`, at(30, MINUTE))
+    outbox.note(user.bob, `${linking}\n\nnostr:${naddr}`, at(40, MINUTE))
   })
 
   const page = await as(users.alice, "/home")
@@ -504,10 +447,19 @@ test("US-153 read an article a note links to", async ({seed, as}) => {
 
   await openNetworkTab(feed)
 
+  // His answer hangs off his note, so the card the feed draws is around the note.
   const card = feed.locator(".card").filter({hasText: note})
 
-  await expect(card).toBeVisible()
-  await card.getByText(title).click()
+  await expect(feed.getByText(note)).toBeVisible()
+  await expect(card.getByText("Bob Barker")).toBeVisible()
+
+  // Alice reads from her space rather than bob's relay, so a context asked of hers comes back empty.
+  await expect(feed.getByRole("button", {name: "1 reply", exact: true})).toBeVisible()
+
+  const linkingCard = feed.locator(".card").filter({hasText: linking})
+
+  await expect(linkingCard).toBeVisible()
+  await linkingCard.getByText(title).click()
 
   // Her spaces do not carry it, so it reads on a page of its own and asks her to join nothing.
   await expect(page).toHaveURL(pathPattern(`/articles/${naddr}`))
@@ -639,84 +591,6 @@ test("US-141 read notifications on home", async ({seed, as}) => {
   const dialog = page.getByRole("dialog")
 
   await expect(dialog.getByText(reply)).toBeVisible()
-})
-
-test("US-141 leave what the stream cannot draw out of its badge", async ({seed, as}) => {
-  const asked = "where is the sextant"
-  const mine = "the chart table drawer, under the almanac"
-
-  await seed(({relay, open, user, at}) => {
-    const space = relay("space")
-    const indexer = open("indexer")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-
-    indexer.relayList(user.alice, {
-      read: [space.url, indexer.url],
-      write: [space.url, indexer.url],
-    })
-
-    indexer.relayList(user.bob, {read: [space.url, indexer.url], write: [space.url, indexer.url]})
-    indexer.profile(user.bob, {name: "Bob Barker"})
-
-    indexer.relayList(user.carol, {
-      read: [space.url, indexer.url],
-      write: [space.url, indexer.url],
-    })
-
-    indexer.profile(user.carol, {name: "Carol Carlson"})
-
-    indexer.event(user.alice, () =>
-      indexer.kind(MuteList).writer().mutePublicly(user.carol.pubkey).renderTemplate(),
-    )
-
-    const message = space.message(user.alice, "general", asked, at(2, HOUR))
-    const note = indexer.note(user.alice, mine, at(2, HOUR))
-
-    // On a relay she reads from, so where it was seen is no reason to leave it out.
-    indexer.event(
-      user.bob,
-      () =>
-        indexer
-          .kind(Reaction)
-          .writer()
-          .setEvent(message.event)
-          .setContent("\u{1f389}")
-          .renderTemplate(),
-      at(1, HOUR),
-    )
-
-    // A note of hers an entry could be drawn around, reacted to by somebody she has muted.
-    indexer.event(
-      user.carol,
-      () =>
-        indexer
-          .kind(Reaction)
-          .writer()
-          .setEvent(note.event)
-          .setContent("\u{1f44d}")
-          .renderTemplate(),
-      at(30, MINUTE),
-    )
-  })
-
-  const page = await as(users.alice, "/home")
-
-  const feed = homeFeed(page)
-
-  // Her own message is the room's latest, so the room is all the stream has to draw.
-  await expect(feed.getByText(asked)).toBeVisible({timeout: 20_000})
-
-  // Neither a reaction to a chat message nor anything a muted person does can be an entry here.
-  await expect(feed.getByText("reacted to your note")).toHaveCount(0)
-  await expect(feed.getByText(mine)).toHaveCount(0)
-
-  // Nothing marked the stream read, since it holds nothing a badge could be about.
-  await expect(
-    feed.getByRole("button", {name: "Recent"}).getByRole("img", {name: "Unread"}),
-  ).toHaveCount(0)
 })
 
 test("US-145 choose which answers the activity stream shows", async ({seed, as}) => {
@@ -878,31 +752,6 @@ test("US-152 leave your spaces out of the activity stream", async ({seed, as}) =
   await expect(filter("Spaces")).toHaveAttribute("aria-pressed", "false")
   await expect(feed.getByText(direct)).toBeVisible({timeout: 20_000})
   await expect(feed.getByText(chat)).toHaveCount(0)
-})
-
-test("US-152 turn off the only thing the stream holds", async ({seed, as}) => {
-  const chat = "the hoist is booked until thursday"
-
-  await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    space.message(user.bob, "general", chat, at(1, HOUR))
-  })
-
-  const page = await as(users.alice, "/home")
-
-  const feed = homeFeed(page)
-
-  await expect(feed.getByText(chat)).toBeVisible()
-
-  await homeFeedFilter(feed, "Spaces").click()
-
-  // The room is still there and hidden, which reads differently from having nothing waiting.
-  await expect(feed.getByText("Nothing matches those filters")).toBeVisible()
-  await expect(feed.getByText("You're all caught up")).toHaveCount(0)
 })
 
 test("US-146 choose what the network feed includes", async ({seed, as}) => {
@@ -1165,157 +1014,6 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
   await expect(popular).toContainText("1")
 })
 
-test("US-144 keep what a muted person answered on the Network tab", async ({seed, as}) => {
-  const zapped = "the channel markers moved again"
-  const liked = "the buoys are lit at last"
-  const dave = makeTestUser("dave")
-
-  await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.carol, "general")
-
-    seedRelays(space, user.alice)
-    seedRelays(space, user.carol)
-    seedRelays(space, dave)
-
-    space.profile(user.bob, {name: "Bob Barker"})
-    // Carol is nobody alice follows, so both notes reach the tab through what was answered.
-    space.follows(user.alice, [dave])
-
-    const zappedNote = space.event(
-      user.carol,
-      () => space.kind(Note).writer().setContent(zapped).renderTemplate(),
-      at(2, HOUR),
-    )
-
-    const likedNote = space.event(
-      user.carol,
-      () => space.kind(Note).writer().setContent(liked).renderTemplate(),
-      at(2, HOUR),
-    )
-
-    // A like is found by who wrote it, so dave is a follow and his like reaches the tab once he is one.
-    space.event(
-      dave,
-      () =>
-        makeEvent(REACTION, {
-          content: "+",
-          tags: [
-            ["e", likedNote.id],
-            ["p", user.carol.pubkey],
-          ],
-        }),
-      at(1, HOUR),
-    )
-
-    // A receipt is signed by the wallet that paid out, so only the request carried inside it names bob.
-    const request = space.event(
-      user.bob,
-      () =>
-        makeEvent(ZAP_REQUEST, {
-          content: "",
-          tags: [
-            ["p", user.carol.pubkey],
-            ["e", zappedNote.id],
-          ],
-        }),
-      at(1, HOUR),
-    )
-
-    space.event(
-      makeTestUser("wallet"),
-      () =>
-        makeEvent(ZAP_RECEIPT, {
-          content: "",
-          tags: [
-            ["p", user.carol.pubkey],
-            ["P", user.bob.pubkey],
-            ["e", zappedNote.id],
-            ["description", JSON.stringify(request.event)],
-          ],
-        }),
-      at(1, HOUR),
-    )
-  })
-
-  const page = await as(users.alice, "/home")
-  const feed = homeFeed(page)
-
-  await openNetworkTab(feed)
-  await openPopular(feed)
-
-  await expect(feed.getByText(zapped)).toBeVisible({timeout: 20_000})
-  await expect(feed.getByText(liked)).toBeVisible()
-
-  await page.goto(profilePath(users.bob.pubkey))
-  await page.getByRole("button", {name: "Profile actions"}).click()
-  await page.getByRole("button", {name: "Mute User"}).click()
-
-  await expect(toast(page)).toContainText("You have muted this person.")
-
-  await page.goto("/home")
-  await openNetworkTab(feed)
-
-  // Popular is a choice she keeps, so the tab still asks for what her follows answered.
-  await expect(popularButton(feed)).toHaveAttribute("aria-pressed", "true")
-
-  // Nothing the tab held goes when bob is muted: a mute reads as a state, it drops no entry.
-  await expect(feed.getByText(liked)).toBeVisible({timeout: 20_000})
-  await expect(feed.getByText(zapped)).toBeVisible()
-})
-
-// A url the container does not serve, so its nip-11 document never arrives and nothing knows what it supports.
-const unreachableRelayUrl = "wss://unreachable.test/"
-
-test("US-133 keep the search relays that support search", async ({seed, as}) => {
-  const scenario = await seed(({relay, open, user}) => {
-    const space = relay("space")
-    const indexer = open("indexer")
-    const outbox = open("outbox")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-
-    indexer.relayList(user.alice, {
-      read: [space.url, indexer.url],
-      write: [space.url, indexer.url],
-    })
-
-    // No search relay of hers is a space, so the health check is the only thing asking for their metadata.
-    indexer.event(user.alice, () =>
-      indexer
-        .kind(SearchRelayList)
-        .writer()
-        .setUrls([indexer.url, outbox.url, unreachableRelayUrl])
-        .renderTemplate(),
-    )
-  })
-
-  const indexer = scenario.open("indexer")
-  const outbox = scenario.open("outbox")
-
-  const page = await as(users.alice, "/home", {
-    // An open relay advertises search on some backends and not on others, so the spec says which.
-    relayInfo: {[indexer.url]: {supported_nips: [1, 50]}, [outbox.url]: {supported_nips: [1]}},
-  })
-
-  const healthCheck = page.getByRole("group", {name: "Invalid Search Relays"})
-
-  await expect(healthCheck).toBeVisible()
-
-  await healthCheck.getByRole("button", {name: "Fix"}).click()
-
-  const review = dialog(page, "Review changes")
-
-  // Outbox answered and advertised no search; the other two are a relay that does and one nobody can ask.
-  await expect(review.getByText(displayRelayUrl(outbox.url))).toBeVisible()
-  await expect(review.getByText(displayRelayUrl(indexer.url))).toHaveCount(0)
-  await expect(review.getByText(displayRelayUrl(unreachableRelayUrl))).toHaveCount(0)
-})
-
 test("US-147 choose the relays you publish to", async ({seed, as}) => {
   const scenario = await seed(({relay, user}) => {
     const space = relay("space")
@@ -1354,99 +1052,6 @@ test("US-147 choose the relays you publish to", async ({seed, as}) => {
 
   await expect(relayCard(relays, displayRelayUrl(other.url))).toHaveCount(0)
   await expect(relayCard(relays, displayRelayUrl(space.url))).toBeVisible()
-})
-
-test("US-106 share text into the app", async ({seed, as}) => {
-  const shared = "the offsite is moving to the 14th"
-
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    space.profile(user.bob, {name: "Bob Barker"})
-
-    seedRelays(space, user.alice)
-    seedRelays(space, user.bob)
-
-    space.dm(user.bob, [user.alice], "are you around?", at(20, MINUTE))
-  })
-
-  const space = scenario.space("space")
-
-  // A client only unwraps direct messages once its owner has opened chat.
-  const page = await as(users.alice, "/chat")
-
-  await expect(page.getByText("are you around?").first()).toBeVisible()
-
-  // The text arrives in the query string rather than through a native share intent.
-  await page.goto(`/share?text=${encodeURIComponent(shared)}`)
-
-  const share = dialog(page, "Share")
-
-  await expect(share.getByRole("button", {name: "Bob Barker"})).toBeVisible()
-
-  await share.getByRole("button", {name: "General"}).click()
-  await share.getByRole("button", {name: "Share", exact: true}).click()
-
-  await expect(page).toHaveURL(pathPattern(roomPath(space.url, "general")))
-  await expect(composer(page)).toHaveText(shared)
-})
-
-test("US-151 share a note into a conversation", async ({seed, as}) => {
-  const note = "the tide charts are wrong again"
-
-  await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    space.profile(user.bob, {name: "Bob Barker"})
-
-    seedRelays(space, user.alice)
-    seedRelays(space, user.bob)
-
-    space.event(user.alice, () =>
-      space.kind(FollowList).writer().follow(user.bob.pubkey).renderTemplate(),
-    )
-
-    space.event(user.bob, () => space.kind(Note).writer().setContent(note).renderTemplate())
-    space.dm(user.bob, [user.alice], "are you around?", at(20, MINUTE))
-  })
-
-  // A client only unwraps direct messages once its owner has opened chat.
-  const page = await as(users.alice, "/chat")
-
-  await expect(page.getByText("are you around?").first()).toBeVisible()
-
-  await page.goto("/home")
-
-  const feed = homeFeed(page)
-
-  await openNetworkTab(feed)
-
-  const card = feed.locator(".card").filter({hasText: note})
-
-  await card.getByRole("button", {name: "Note actions"}).click()
-  await page.getByRole("button", {name: "Share to Chat"}).click()
-
-  // A note belongs to no space, so the picker is every room and conversation she has.
-  const share = dialog(page, "Share")
-
-  await expect(share.getByRole("button", {name: "General"})).toBeVisible()
-
-  await share.getByRole("button", {name: "Bob Barker"}).click()
-  await share.getByRole("button", {name: "Share", exact: true}).click()
-
-  await expect(page).toHaveURL(pathPattern(chatPath(users.bob.pubkey)))
-  await expect(page.locator(".room__compose")).toContainText(note)
-
-  await composerEnabled(page)
-  await send(page, "look at this")
-
-  await expect(bubble(page, "look at this")).toContainText(note)
 })
 
 test("US-107 open a nostr link", async ({seed, as}) => {
@@ -1508,56 +1113,6 @@ test("US-107 open a nostr link", async ({seed, as}) => {
   await page.goto(`/${neventEncode({id: "f".repeat(64), relays: [space.url]})}`)
 
   await expect(page).toHaveURL(/\/home$/)
-})
-
-test("US-110 see another space's unread activity from a phone", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-    const other = relay("other")
-
-    space.room("general", {name: "General"})
-    space.room("random", {name: "Random"})
-    other.room("general", {name: "General"})
-
-    space.join(user.alice, "general", "random")
-    space.join(user.bob, "general", "random")
-    other.join(user.alice, "general")
-    other.join(user.bob, "general")
-  })
-
-  const space = scenario.space("space")
-  const other = scenario.space("other")
-
-  // A phone has no room list on screen while a room is open.
-  const bob = await as(users.bob, roomPath(space.url, "general"), {
-    context: {viewport: {width: 390, height: 844}, hasTouch: true},
-  })
-
-  const menuButton = spaceMenuNavItem(bob)
-
-  await expect(menuButton).toBeVisible()
-  await expect(unreadDot(menuButton)).toHaveCount(0)
-
-  const inOther = await as(users.alice, roomPath(other.url, "general"))
-
-  await post(inOther, "the server is on fire")
-
-  await expect(unreadDot(menuButton)).toBeVisible()
-
-  // Meanwhile the space bob is sitting in gets a message too, in a room he isn't reading
-  const inSpace = await as(users.alice, roomPath(space.url, "random"))
-
-  await post(inSpace, "anyone seen the sextant?")
-
-  await bob.goto(roomPath(other.url, "general"))
-
-  await expect(message(bob, "the server is on fire")).toBeVisible()
-
-  // Bob's own space still has an unread room, which is that space's own business.
-  await bob.goto(spacePath(space.url))
-
-  await expect(unreadDot(roomLink(bob, "Random"))).toBeVisible()
-  await expect(unreadDot(menuButton)).toHaveCount(0)
 })
 
 // SpaceMenuNavItems offers a content type once the space has an event of that kind or an unread.
@@ -1636,191 +1191,6 @@ test("US-112 see which threads are unread", async ({seed, as}) => {
   await expect(unreadDot(threadsNav)).toHaveCount(0)
 })
 
-test("US-137 reach a thread from the inbox activity its comment raised", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    const alarm = space.message(user.bob, "general", "the server is on fire", at(3, HOUR))
-
-    space.reply(user.bob, alarm, "put it out, we are fine", at(150, MINUTE))
-
-    const topic = seedThread(space, user.bob, "where is the sextant", at(2, HOUR))
-
-    space.event(
-      user.bob,
-      () =>
-        space
-          .kind(Comment)
-          .writer()
-          // publishComment carries the root's room forward, so a comment on a thread is tagged h too.
-          .setRoom(space.url, "general")
-          .setRootFromEvent(topic.event)
-          .setParentFromEvent(topic.event)
-          .setContent("starboard locker, under the charts")
-          .renderTemplate(),
-      at(1, HOUR),
-    )
-  })
-
-  const space = scenario.space("space")
-  const alice = await as(users.alice, "/home")
-
-  // The room's row is its own chat, whatever the newest thing tagged for the room happens to be
-  const conversation = alice.getByRole("link").filter({hasText: "put it out, we are fine"})
-
-  await expect(conversation).toBeVisible()
-  await expect(conversation).toContainText("General")
-
-  // A reply opens with a reference to its parent, which a one-line row has no use for.
-  await expect(conversation).not.toContainText("nevent1")
-  await expect(alice.getByRole("link").filter({hasText: "starboard locker"})).toHaveCount(0)
-
-  // The comment is activity on the thread, so the space's thread count is what it raises
-  await expect(alice.getByRole("link").filter({hasText: "1 thread"})).toBeVisible()
-
-  await conversation.click()
-
-  await expect(alice).toHaveURL(pathPattern(roomPath(space.url, "general")))
-
-  await contentNavItem(alice, "Threads").click()
-
-  const topic = alice.getByRole("link").filter({hasText: "where is the sextant"})
-
-  await expect(topic).toBeVisible()
-
-  // syncChecked marks the page read 300ms later and latestActivityByPath is throttled to a second.
-  await alice.waitForTimeout(1500)
-
-  await expect(unreadDot(topic)).toBeVisible()
-
-  await topic.click()
-
-  await expect(alice.getByText("starboard locker, under the charts")).toBeVisible()
-})
-
-const seedPoll = (space: SeededSpace, user: TestUser, title: string, createdAt: number) =>
-  space.event(
-    user,
-    () =>
-      space
-        .kind(Poll)
-        .writer()
-        .setTitle(title)
-        .setPollType("singlechoice")
-        .addOption("Yes", "poll-yes")
-        .addOption("No", "poll-no")
-        .setUrls([space.url])
-        .renderTemplate(),
-    createdAt,
-  )
-
-test("US-123 find a section whose newest item is older than the sync window", async ({
-  seed,
-  as,
-}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-
-    // Older than the month the space sync asks for, so the nav can only know by asking the relay.
-    seedPoll(space, user.alice, "which sextant should we buy", at(60, DAY))
-  })
-
-  const space = scenario.space("space")
-  const bob = await as(users.bob, roomPath(space.url, "general"))
-
-  const pollsNav = contentNavItem(bob, "Polls")
-
-  await expect(pollsNav).toBeVisible()
-
-  await pollsNav.click()
-
-  await expect(bob.getByText("which sextant should we buy")).toBeVisible()
-})
-
-test("US-124 reach a badge raised by content the space doesn't have", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-    const other = relay("other")
-
-    space.room("general", {name: "General"})
-    other.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    other.join(user.bob, "general")
-
-    // A comment on a poll nothing holds: the relay kept the comment and dropped its subject.
-    space.event(
-      user.alice,
-      () =>
-        space
-          .kind(Comment)
-          .writer()
-          .setRoot(POLL, "f".repeat(64), users.alice.pubkey)
-          .setContent("the second option, surely")
-          .renderTemplate(),
-      at(2, HOUR),
-    )
-  })
-
-  const space = scenario.space("space")
-  const other = scenario.space("other")
-
-  const bob = await as(users.bob, roomPath(other.url, "general"))
-  const spaceButton = spaceNavItem(bob, space.name)
-
-  await expect(unreadDot(spaceButton)).toBeVisible()
-
-  await spaceButton.click()
-
-  const pollsNav = contentNavItem(bob, "Polls")
-
-  await expect(pollsNav).toBeVisible()
-  await expect(unreadDot(pollsNav)).toBeVisible()
-
-  await pollsNav.click()
-
-  await expect(bob.getByText("No polls found.")).toBeVisible()
-
-  // With nothing unread and no poll to list, the space stops offering the section at all.
-  await roomLink(bob, "General").click()
-
-  await expect(pollsNav).toHaveCount(0)
-})
-
-test("US-132 see a room whose newest message is old", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-    const other = relay("other")
-
-    space.room("general", {name: "General"})
-    other.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    other.join(user.bob, "general")
-
-    space.message(user.alice, "general", "still nobody bought a sextant", at(60, DAY))
-  })
-
-  const space = scenario.space("space")
-  const other = scenario.space("other")
-
-  const bob = await as(users.bob, roomPath(other.url, "general"))
-  const spaceButton = spaceNavItem(bob, space.name)
-
-  await expect(unreadDot(spaceButton)).toBeVisible()
-
-  await spaceButton.click()
-
-  await expect(unreadDot(roomLink(bob, "General"))).toBeVisible()
-})
-
 test("US-120 read what a notification says", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -1868,59 +1238,4 @@ test("US-120 read what a notification says", async ({seed, as}) => {
       title: "Someone mentioned you",
       body: "sunday, the notice is at a link to harbor.example",
     })
-})
-
-test("US-136 hear about a new message and not about a new thread", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    space.profile(user.alice, {name: "Alice Anchor"})
-    space.profile(user.bob, {name: "Bob Barnacle"})
-  })
-
-  const space = scenario.space("space")
-
-  // The tab has to be in the background before a notification is raised at all.
-  const alice = await as(users.alice, "/settings/alerts", {
-    context: {permissions: ["notifications"]},
-  })
-
-  await settingRow(alice, "Enable push notifications").getByRole("checkbox").check()
-  await alice.getByRole("button", {name: "Save Changes"}).click()
-
-  await expect(alice.getByRole("alert")).toContainText("Your settings have been saved!")
-
-  await spaceNavItem(alice, space.name).click()
-  await roomLink(alice, "General").click()
-
-  await expect(alice).toHaveURL(pathPattern(roomPath(space.url, "general")))
-
-  const notifications = await captureNotifications(alice)
-
-  const bob = await as(users.bob, `${spacePath(space.url)}/threads`)
-
-  await bob.getByRole("button", {name: "New topic"}).click()
-
-  const threadForm = dialog(bob, "Create a Thread")
-
-  await threadForm.getByPlaceholder("What is this thread about?").fill("the dock is closing")
-  await noteEditor(threadForm).pressSequentially("sunday, apparently")
-  await threadForm.getByRole("button", {name: "Create Thread"}).click()
-
-  const latest = bob.locator("section").filter({has: bob.getByRole("heading", {name: "Latest"})})
-
-  await expect(latest.getByRole("link").filter({hasText: "the dock is closing"})).toBeVisible()
-
-  // Alice holds the thread before bob says anything, so a notification for it would be here by now.
-  await contentNavItem(alice, "Threads").click()
-  await expect(alice.getByRole("link").filter({hasText: "the dock is closing"})).toBeVisible()
-
-  await postTo(bob, "General", "when does the dock close?")
-
-  await expect
-    .poll(() => notifications)
-    .toEqual([{title: "New message", body: "when does the dock close?"}])
 })

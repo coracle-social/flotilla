@@ -1,4 +1,4 @@
-import {ago, MINUTE, MONTH, on, spec, throttle} from "@welshman/lib"
+import {ago, MINUTE, MONTH, on, throttle} from "@welshman/lib"
 import {
   DELETE,
   MESSAGE,
@@ -13,6 +13,7 @@ import {
   ROOM_PINS,
   ROOM_REMOVE_MEMBER,
 } from "@welshman/util"
+import type {TrustedEvent} from "@welshman/util"
 import type {RepositoryUpdate} from "@welshman/store"
 import {throttled} from "@welshman/store"
 import {app} from "@app/core/app"
@@ -52,8 +53,13 @@ export const syncSpaceRooms = (url: string) => {
       .catch(console.error),
   )
 
-  const unsubscribeDeletes = on(app.get().repository, "update", ({added}: RepositoryUpdate) => {
-    if (added.some(spec({kind: DELETE}))) {
+  const {repository} = app.get()
+
+  const isDeleteHere = (event: TrustedEvent) =>
+    event.kind === DELETE && repository.tracker.getRelays(event.id).has(url)
+
+  const unsubscribeDeletes = on(repository, "update", ({added}: RepositoryUpdate) => {
+    if (added.some(isDeleteHere)) {
       reloadRecent()
     }
   })

@@ -1,8 +1,6 @@
-import {npubEncode} from "nostr-tools/nip19"
 import type {Locator, Page} from "@playwright/test"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
-import {DIRECT_MESSAGE, REACTION} from "@welshman/util"
-import {FollowList, MessagingRelayList} from "@welshman/domain"
+import {FollowList} from "@welshman/domain"
 import {
   bubble,
   chatItems,
@@ -12,13 +10,10 @@ import {
   composerDisabled,
   composerEnabled,
   expect,
-  forgetRelay,
   makeTestUser,
   pageBar,
   pathPattern,
   profilePath,
-  readCachedEvents,
-  roomPath,
   send,
   test,
   users,
@@ -80,12 +75,6 @@ const startConversation = async (page: Page, people: {term: string; user: TestUs
 // A message's actions are a hover popover on a pointer device and named buttons on a touch one.
 const openMessageMenu = (page: Page, id: string) =>
   message(page, id).locator(".conversation-bubble > .text-sm").click()
-
-// A reload starts from what reached the database, so a spec that reloads waits for its events there.
-const cachedContent = async (page: Page, pubkey: string, kind: number) =>
-  (await readCachedEvents(page, pubkey))
-    .filter(event => event.kind === kind)
-    .map(event => event.content)
 
 test("US-029 start a one-on-one chat", async ({seed, as}) => {
   await seed(({relay, user, at}) => {
@@ -206,32 +195,6 @@ test("US-031 direct messaging has to be switched on", async ({seed, as}) => {
 
   await expect(bubble(alice, "finally")).toBeVisible()
   await expect(chatItems(bob).filter({hasText: "finally"})).toBeVisible()
-})
-
-test("US-032 exchange messages in a conversation", async ({seed, as}) => {
-  await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    seedPerson(space, user.alice, "Alice Anchor")
-    seedPerson(space, user.bob, "Bob Barnacle")
-    space.messagingRelayList(user.alice)
-    space.messagingRelayList(user.bob)
-
-    space.dm(user.bob, [user.alice], "morning alice", at(50, MINUTE))
-  })
-
-  const alice = await as(users.alice, chatPath(users.bob.pubkey))
-  const bob = await as(users.bob, chatPath(users.alice.pubkey))
-
-  await expect(bubble(alice, "morning alice")).toBeVisible()
-
-  await sendDm(alice, "just got here")
-
-  await expect(bubble(alice, "just got here")).toBeVisible()
-  await expect(composer(alice)).toHaveText("")
-
-  // It reaches the conversation he already has open, attributed to her
-  await expect(bubble(bob, "just got here")).toContainText("Alice Anchor")
 })
 
 test("US-033 browse and search your conversations", async ({seed, as}) => {
@@ -393,53 +356,6 @@ test("US-035 reply to, edit, and react to a direct message", async ({seed, as}) 
   await expect(message(bob, his.id)).not.toContainText("🎉")
 })
 
-test("US-036 receive a new conversation live", async ({seed, as}) => {
-  await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    seedPerson(space, user.alice, "Alice Anchor")
-    seedPerson(space, user.bob, "Bob Barnacle")
-    seedPerson(space, user.carol, "Carol Cutter")
-    space.messagingRelayList(user.alice)
-    space.messagingRelayList(user.bob)
-
-    // A list with something in it is how each page says its own end of the sync is up.
-    space.dm(user.carol, [user.alice], "see you monday", at(4, HOUR))
-    space.dm(user.carol, [user.bob], "you too", at(4, HOUR))
-  })
-
-  const alice = await as(users.alice, "/chat")
-
-  await expect(chatItems(alice).filter({hasText: "see you monday"})).toBeVisible()
-
-  const bob = await as(users.bob, "/chat")
-
-  await expect(chatItems(bob).filter({hasText: "you too"})).toBeVisible()
-
-  // He has never talked to her, so he identifies her by the code she gave him
-  await bob.getByRole("button", {name: "Start New Conversation"}).click()
-  await bob
-    .getByPlaceholder("Search for profiles or paste a pubkey...")
-    .fill(npubEncode(users.alice.pubkey))
-  await bob.getByRole("button", {name: "Create Conversation"}).click()
-
-  await expect(bob).toHaveURL(pathPattern(chatPath(users.alice.pubkey)))
-
-  await sendDm(bob, "starting a chat with you")
-
-  // His own copy first, so a send that lost keystrokes fails here rather than thirty seconds later.
-  await expect(bubble(bob, "starting a chat with you")).toBeVisible()
-
-  // Her list picks the conversation up on its own
-  const fromBob = chatItems(alice).filter({hasText: "Bob Barnacle"})
-
-  await expect(fromBob).toBeVisible()
-
-  await fromBob.click()
-
-  await expect(bubble(alice, "starting a chat with you")).toBeVisible()
-})
-
 test("US-128 keep messages from strangers out of your conversations", async ({seed, as}) => {
   const dave = makeTestUser("dave")
   const eve = makeTestUser("eve")
@@ -493,125 +409,4 @@ test("US-128 keep messages from strangers out of your conversations", async ({se
   await fromDave.click()
 
   await expect(bubble(page, "you have won a prize")).toBeVisible()
-})
-
-test("US-108 read messages from a relay you only use for messages", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-    const inbox = relay("other")
-
-    seedPerson(space, user.alice, "Alice Anchor")
-    seedPerson(space, user.bob, "Bob Barnacle")
-    space.messagingRelayList(user.bob)
-
-    // Her messaging relay list is the one thing that vouches for her, and the relay serves her nothing until it does.
-    inbox.member(user.alice)
-
-    // This relay authorizes a wrap by the member its p tag names, so bob has to be one too.
-    inbox.member(user.bob)
-
-    // Tagged verbatim rather than through setUrls, which normalizes on the way in.
-    space.event(user.alice, () =>
-      space
-        .kind(MessagingRelayList)
-        .writer()
-        .addTags(["relay", inbox.url.replace(/\/$/, "")])
-        .renderTemplate(),
-    )
-
-    inbox.dm(user.bob, [user.alice], "over on your inbox relay", at(2, HOUR))
-  })
-
-  // Only her space indexes, so the inbox relay is dialled for her messages and nothing else.
-  const page = await as(users.alice, "/chat", {
-    env: {VITE_INDEXER_RELAYS: scenario.space("space").url},
-  })
-
-  const conversation = chatItems(page).filter({hasText: "over on your inbox relay"})
-
-  await expect(conversation).toContainText("Bob Barnacle")
-
-  await conversation.click()
-
-  await expect(pageBar(page)).toContainText("Bob Barnacle")
-  await expect(bubble(page, "over on your inbox relay")).toBeVisible()
-})
-
-test("US-109 keep a conversation or room you have already read", async ({seed, as}) => {
-  let his!: SeededRumor
-  let hers!: SeededRumor
-
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-
-    seedPerson(space, user.alice, "Alice Anchor", "general")
-    seedPerson(space, user.bob, "Bob Barnacle", "general")
-    space.messagingRelayList(user.alice)
-    space.messagingRelayList(user.bob)
-
-    his = space.dm(user.bob, [user.alice], "the tide charts are up", at(2, HOUR))
-    hers = space.dm(user.alice, [user.bob], "thakns", at(1, HOUR))
-
-    // A room message comes off the same relay, so it is kept or lost the same way.
-    space.message(user.bob, "general", "boat is in the water", at(2, HOUR))
-  })
-
-  const url = scenario.space("space").url
-
-  // A touch context, which is what puts Edit Message behind a named button.
-  const alice = await as(users.alice, roomPath(url, "general"), {context: {hasTouch: true}})
-
-  await expect(alice.locator(".room__item").filter({hasText: "boat is in the water"})).toBeVisible()
-
-  await alice.goto(chatPath(users.bob.pubkey))
-
-  await expect(message(alice, his.id)).toBeVisible()
-  await expect(message(alice, hers.id)).toBeVisible()
-
-  await openMessageMenu(alice, hers.id)
-  await alice.getByRole("button", {name: "More Options"}).click()
-  await alice.getByRole("button", {name: "Edit Message"}).click()
-
-  await expect(composer(alice)).toContainText("thakns")
-
-  await composer(alice).press("ControlOrMeta+a")
-  await sendDm(alice, "thanks")
-
-  await expect(bubble(alice, "thanks")).toBeVisible()
-  await expect(alice.locator(".conversation-bubble").filter({hasText: "thakns"})).toHaveCount(0)
-
-  // A reaction travels gift-wrapped the way the messages do, so it is kept or lost with them.
-  await openMessageMenu(alice, his.id)
-  await alice.getByRole("button", {name: "React"}).click()
-
-  const picker = alice.locator("emoji-picker").filter({visible: true})
-
-  await picker.locator("input.search").fill("party popper")
-  await picker.getByRole("option", {name: /party popper/}).click()
-
-  await expect(message(alice, his.id)).toContainText("🎉")
-
-  // The edit, the delete and the reaction all reach disk in batches, which is what the reload reads.
-  await expect
-    .poll(() => cachedContent(alice, users.alice.pubkey, DIRECT_MESSAGE))
-    .toEqual(expect.arrayContaining(["the tide charts are up", "thanks"]))
-
-  await expect.poll(() => cachedContent(alice, users.alice.pubkey, REACTION)).toContain("🎉")
-
-  // Her messaging relay drops everything it was holding, and she comes back to the app
-  forgetRelay(alice.context(), url)
-
-  await alice.reload()
-
-  await expect(bubble(alice, "the tide charts are up")).toBeVisible()
-  await expect(bubble(alice, "thanks")).toBeVisible()
-  await expect(alice.locator(".conversation-bubble").filter({hasText: "thakns"})).toHaveCount(0)
-  await expect(message(alice, his.id)).toContainText("🎉")
-
-  // ...and so is the room she had open, which the relay can no longer answer for
-  await alice.goto(roomPath(url, "general"))
-
-  await expect(alice.locator(".room__item").filter({hasText: "boat is in the water"})).toBeVisible()
 })

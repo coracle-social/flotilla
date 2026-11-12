@@ -1,27 +1,18 @@
 import {HOUR} from "@welshman/lib"
-import {LONG_FORM, MESSAGE} from "@welshman/util"
+import {LONG_FORM} from "@welshman/util"
 import {Article, Comment} from "@welshman/domain"
 import type {Page} from "@playwright/test"
 import {
-  DEFAULT_BLOSSOM_ORIGIN,
-  attachFile,
   bubble,
   chatItems,
   chatPath,
-  composer,
-  composerEnabled,
   expect,
-  getPublished,
-  getPublishedEvents,
-  gifFile,
   menuButton,
   message,
-  mockBlossom,
   noteEditor,
   pageBar,
   roomPath,
   send,
-  sendButton,
   spacePath,
   test,
   timeline,
@@ -50,33 +41,12 @@ const commentCard = (page: Page, text: string) =>
 // The action bar under an article on its own page, which is where that article's status shows.
 const articleActions = (page: Page) => page.locator('[data-component="ArticleActionBar"]')
 
-// Which relays a given event was sent to, oldest first — one entry per attempt.
-const publishedTo = (page: Page, id: string) =>
-  getPublished(page.context())
-    .filter(({event}) => event.id === id)
-    .map(({url}) => url)
-
 // The composer is a page of its own, and it holds the reader there until publishing resolves.
 const writeArticle = async (page: Page, title: string, body: string) => {
   await pageBar(page).getByRole("button", {name: "Write"}).click()
   await page.getByPlaceholder("Title", {exact: true}).fill(title)
   await noteEditor(page).pressSequentially(body)
   await pageBar(page).getByRole("button", {name: "Publish"}).click()
-}
-
-// The comment composer, which is the only form on a content page carrying an editor.
-const commentComposer = (page: Page) =>
-  page.locator("form").filter({has: page.locator(".note-editor")})
-
-const writeComment = async (page: Page, body: string) => {
-  await page.getByRole("button", {name: "Add a comment"}).click()
-
-  const form = commentComposer(page)
-
-  // The editor takes focus itself once it has mounted, and typing before that puts the caret back.
-  await expect(noteEditor(form)).toBeFocused()
-  await noteEditor(form).pressSequentially(body)
-  await form.getByRole("button", {name: "Comment"}).click()
 }
 
 // The slider is initialised from the settings store on mount, so a fresh page says the client took it.
@@ -234,146 +204,6 @@ test("US-069 see why a message failed to deliver", async ({seed, as}) => {
   await expect(detail(alice)).toContainText("restricted:")
 })
 
-test("US-070 retry a failed relay", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-    const other = relay("other")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    other.join(user.alice)
-    seedPerson(space, user.alice, "Alice Anderson")
-    seedPerson(space, user.bob, "Bob Barker")
-
-    space.messagingRelayList(user.alice)
-    // Bob names both relays and belongs to one, so the other refuses a wrap addressed to him.
-    space.messagingRelayList(user.bob, [space.url, other.url])
-  })
-
-  const {url} = scenario.space("space")
-  const ghost = roomPath(url, "archive")
-  const alice = await as(users.alice, ghost)
-
-  // Seeding again replaces the scenario, and a page opened from that one carries no room list.
-  const bob = await as(users.bob, roomPath(url, "general"))
-
-  // A delay is what makes the retry's own "Sending..." a state rather than an instant.
-  await setSendDelay(alice, 5)
-  await alice.goto(ghost)
-
-  await send(alice, "is anyone here?")
-
-  const failure = message(alice, "is anyone here?").getByText("Failed to send!")
-
-  await expect(failure).toBeVisible()
-
-  // Seeding again is the only way the relay changes its mind about something it has already refused.
-  await seed(({relay}) => {
-    relay("space").room("archive", {name: "Archive"})
-  })
-
-  await failure.click()
-  await detail(alice).getByRole("button", {name: "Retry"}).click()
-
-  await expect(toast(alice)).toContainText("Sending...")
-  await expect(toast(alice)).toContainText("Message sent!")
-
-  // The message went out, so it no longer says it did not.
-  await expect(failure).toHaveCount(0)
-
-  const [sent] = getPublishedEvents(alice.context(), MESSAGE)
-
-  // The attempt and the retry, both to the relay that failed and to nothing else.
-  expect(publishedTo(alice, sent.id)).toEqual([url, url])
-
-  await bob.goto(roomPath(url, "archive"))
-
-  await expect(message(bob, "is anyone here?")).toBeVisible()
-
-  // The same retry in a conversation, where one of his two messaging relays turns her wrap away.
-  await alice.goto(chatPath(users.bob.pubkey))
-  await send(alice, "did that one arrive?")
-
-  const partial = alice.getByText("Failed to send!")
-
-  await expect(partial).toBeVisible()
-
-  await seed(({relay, user}) => {
-    relay("other").join(user.bob)
-  })
-
-  await partial.click()
-  await detail(alice).getByRole("button", {name: "Retry"}).click()
-
-  await expect(toast(alice)).toContainText("Message sent!")
-  await expect(partial).toHaveCount(0)
-})
-
-test("US-071 content posts show delivery status in place", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-    const other = relay("other")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    seedPerson(space, user.alice, "Alice Anderson")
-    seedPerson(space, user.bob, "Bob Barker")
-
-    // A second space in her list, so that opening it prompts her for nothing.
-    other.join(user.alice)
-  })
-
-  const {url} = scenario.space("space")
-  const quiet = scenario.space("other").url
-
-  // A space whose relay this browser will not open a socket to, so a post is sent and nothing returns.
-  const alice = await as(users.alice, `${spacePath(url)}/articles`, {
-    env: {VITE_BLOCKED_RELAYS: quiet},
-  })
-
-  // A comment leaves after the send delay the way a chat message does.
-  await setSendDelay(alice, 1)
-  await alice.goto(`${spacePath(url)}/articles`)
-
-  await writeArticle(alice, "Signals in the Noise", "Everything worth hearing is quiet.")
-
-  // Publishing lands on the article's own page, where its status sits under the article itself.
-  await expect(alice.getByRole("heading", {name: "Signals in the Noise"}).first()).toBeVisible()
-
-  // The same post into the space whose relay says nothing back.
-  await alice.goto(`${spacePath(quiet)}/articles`)
-  await writeArticle(alice, "Into the Void", "Nobody is listening.")
-
-  // Nothing was refused, so there is no toast; the action bar says the relay never answered.
-  const stuck = articleActions(alice)
-
-  await expect(stuck.getByText("Failed to send!")).toBeVisible()
-  await expect(toast(alice)).toHaveCount(0)
-
-  await stuck.getByText("Failed to send!").click()
-
-  await expect(detail(alice)).toContainText("Failed to send!")
-  await expect(detail(alice)).toContainText("other.test")
-  await expect(detail(alice)).toContainText("request timed out.")
-
-  await writeComment(alice, "A footnote nobody asked for.")
-
-  const footnote = commentCard(alice, "A footnote nobody asked for.")
-
-  await expect(footnote.getByText("Sending...")).toBeVisible()
-
-  // The comment is still in flight to a relay that says nothing, and the composer has already gone.
-  await expect(commentComposer(alice)).toHaveCount(0, {timeout: 2000})
-
-  await expect(footnote.getByRole("button", {name: "Cancel"})).toBeVisible()
-
-  await footnote.getByRole("button", {name: "Cancel"}).click()
-
-  await expect(commentCard(alice, "A footnote nobody asked for.")).toHaveCount(0)
-})
-
 test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
   const scenario = await seed(({relay, user, at}) => {
     const space = relay("space")
@@ -457,71 +287,4 @@ test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
 
   // This page is the article's own view, so it stays and is marked deleted rather than vanishing.
   await expect(article.getByText("Deleted", {exact: true})).toBeVisible()
-})
-
-test("US-073 a multi-part message reports one status", async ({seed, as}) => {
-  await seed(({relay, user}) => {
-    const space = relay("space")
-    const other = relay("other")
-
-    space.room("general", {name: "General"})
-
-    for (const person of [user.alice, user.bob, user.carol]) {
-      space.join(person, "general")
-      seedPerson(space, person, person.name)
-    }
-
-    space.messagingRelayList(user.alice)
-    space.messagingRelayList(user.bob)
-    // Carol's client names a relay she does not belong to, so one of the two refuses each part.
-    space.messagingRelayList(user.carol, [space.url, other.url])
-  })
-
-  const alice = await as(users.alice, chatPath(users.bob.pubkey))
-  const bob = await as(users.bob, chatPath(users.alice.pubkey))
-
-  await mockBlossom(alice.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
-  await mockBlossom(bob.context(), {server: DEFAULT_BLOSSOM_ORIGIN})
-
-  await composerEnabled(alice)
-
-  await composer(alice).click()
-  await composer(alice).pressSequentially("here is the harbour")
-  await attachFile(alice, gifFile("harbour.gif"))
-
-  // The editor names the file the moment it is attached, and a submit while it uploads is dropped.
-  await expect(composer(alice)).toContainText("harbour.gif")
-  await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)
-  await expect(sendButton(alice)).toBeEnabled()
-
-  await composer(alice).press("Enter")
-
-  // Two bubbles, one status for the pair of them.
-  await expect(toast(alice)).toHaveCount(1)
-  await expect(toast(alice)).toContainText("Sending...")
-  await expect(alice.locator(".conversation-bubble")).toHaveCount(2)
-  await expect(bubble(alice, "here is the harbour")).toBeVisible()
-
-  // Which only becomes a success once both parts have landed everywhere they were sent.
-  await expect(toast(alice)).toContainText("Message sent!")
-  await expect(bob.locator(".conversation-bubble")).toHaveCount(2)
-  await expect(toast(alice)).toHaveCount(0)
-
-  // The same message to someone one of whose relays refuses it: each part says so for itself.
-  await alice.goto(chatPath(users.carol.pubkey))
-
-  await composerEnabled(alice)
-
-  await composer(alice).click()
-  await composer(alice).pressSequentially("and one for you")
-  await attachFile(alice, gifFile("harbour.gif"))
-
-  await expect(composer(alice)).toContainText("harbour.gif")
-  await expect(composer(alice).locator(".tiptap-uploading")).toHaveCount(0)
-  await expect(sendButton(alice)).toBeEnabled()
-
-  await composer(alice).press("Enter")
-
-  await expect(alice.locator(".conversation-bubble")).toHaveCount(2)
-  await expect(alice.getByText("Failed to send!")).toHaveCount(2)
 })

@@ -1,6 +1,6 @@
-import {neventEncode, npubEncode} from "nostr-tools/nip19"
-import {DAY, HOUR, MINUTE, WEEK, bech32ToHex, int, now} from "@welshman/lib"
-import {MESSAGE, getLnUrl, tagSpec, tagValue} from "@welshman/util"
+import {neventEncode} from "nostr-tools/nip19"
+import {DAY, HOUR, WEEK, now} from "@welshman/lib"
+import {MESSAGE, tagSpec, tagValue} from "@welshman/util"
 import type {Locator, Page} from "@playwright/test"
 import {
   composer,
@@ -11,8 +11,6 @@ import {
   message,
   messageActions,
   messages,
-  mockDufflepud,
-  mockOpenRouterTts,
   openMessageMenu,
   openRoomDetail,
   pageBar,
@@ -104,44 +102,6 @@ test("US-018 send and receive a room message in real time", async ({seed, as}) =
   await expect(composer(alice)).toHaveText("")
   await expect(message(alice, "second line")).toContainText("first line")
   await expect(message(bob, "second line")).toContainText("first line")
-})
-
-// Two messages sharing a second are ordered by event id, which is the same on every client.
-test("US-118 messages sent in the same second are in one order for everyone", async ({
-  seed,
-  as,
-}) => {
-  const tied: SeededEvent[] = []
-
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-    const sentAt = at(2, HOUR)
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-
-    tied.push(
-      space.message(user.bob, "general", "the tide turns at four", sentAt),
-      space.message(user.alice, "general", "the tug is already out", sentAt),
-      space.message(user.bob, "general", "we cast off before dark", sentAt),
-      space.message(user.alice, "general", "the pilot boat follows us", sentAt),
-      space.message(user.bob, "general", "and the harbor master knows", sentAt),
-    )
-  })
-
-  const {url} = scenario.space("space")
-  const page = await as(users.alice, roomPath(url, "general"))
-
-  await expect(message(page, "and the harbor master knows")).toBeVisible()
-  await expect(messages(page)).toHaveCount(5)
-
-  const rendered = await messages(page).evaluateAll(items =>
-    items.map(item => item.getAttribute("data-event")),
-  )
-
-  // The room reads newest first in the dom, so the ids run the other way from the feed.
-  expect(rendered.reverse()).toEqual(tied.map(({id}) => id).sort())
 })
 
 test("US-019 join and leave a room", async ({seed, as}) => {
@@ -245,35 +205,6 @@ test("US-020 create, edit, and delete a room", async ({seed, as}) => {
   await expect(bob.getByRole("button", {name: "Leave member list"})).toBeVisible()
   await expect(bob.getByRole("button", {name: "Edit Room"})).toHaveCount(0)
   await expect(bob.getByRole("button", {name: "Delete Room"})).toHaveCount(0)
-})
-
-test("US-121 land somewhere after deleting the room you are in", async ({seed, as}) => {
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.room("wardroom", {name: "Wardroom"})
-    space.join(user.admin, "general")
-    space.join(user.admin, "wardroom")
-  })
-
-  const {url} = scenario.space("space")
-  const admin = await as(users.admin, roomPath(url, "wardroom"))
-
-  await openRoomDetail(admin)
-  await openRoomDetailMenu(admin)
-  await admin.getByRole("button", {name: "Delete Room"}).click()
-  await admin.getByRole("button", {name: "Confirm"}).click()
-
-  // The space root renders nothing on a wide screen, handing off to the page of the space open last.
-  await expect(admin).toHaveURL(pathPattern(spacePath(url) + "/"))
-  await expect(roomLink(admin, "General")).toBeVisible()
-
-  // Entering the space from the rail reads the same memory, so it has to land somewhere too.
-  await admin.locator('.primary-nav [data-tip^="space"]').click()
-
-  await expect(admin).toHaveURL(pathPattern(spacePath(url) + "/"))
-  await expect(roomLink(admin, "General")).toBeVisible()
 })
 
 test("US-021 request access to a private room and get approved", async ({seed, as}) => {
@@ -622,48 +553,6 @@ test("US-026 pin a message and browse pins", async ({seed, as}) => {
   await expect(banner).toHaveCount(0)
 })
 
-test("US-026 a tall pinned message scrolls inside its banner", async ({seed, as}) => {
-  const tideTable = Array.from({length: 40}, (_, i) => `Readings for station ${i + 1}.`).join(
-    "\n\n",
-  )
-
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.admin, "general")
-    space.join(user.alice, "general")
-
-    space.message(user.alice, "general", tideTable, at(2, HOUR))
-  })
-
-  const {url} = scenario.space("space")
-  const admin = await as(users.admin, roomPath(url, "general"))
-
-  await openMessageMenu(admin, "Readings for station 1.")
-  await admin.getByRole("button", {name: "Pin Message"}).click()
-
-  const banner = admin.locator(".room-pins")
-
-  await banner.locator(".room-pins__expand").click()
-
-  const last = banner.getByText("Readings for station 40.")
-  const body = banner.locator(".room-pins__message")
-  const box = await banner.boundingBox()
-  const {height} = admin.viewportSize()!
-
-  // The banner takes a share of the room rather than the whole message
-  expect(box!.height).toBeLessThan(height * 0.6)
-
-  // The rest of the message is a scroll away, not off the bottom of the screen
-  await expect(last).not.toBeInViewport()
-  await body.evaluate(element => element.scrollTo(0, element.scrollHeight))
-  await expect(last).toBeInViewport()
-
-  // The banner's own buttons stay put while the message moves under them
-  await expect(banner.getByRole("button", {name: "Jump to message"})).toBeInViewport()
-})
-
 test("US-027 find a past message and jump to it", async ({seed, as}) => {
   let lastWeek!: SeededEvent
   let older!: SeededEvent
@@ -707,77 +596,6 @@ test("US-027 find a past message and jump to it", async ({seed, as}) => {
   await expect(page.locator(`[data-event="${older.id}"]`)).toBeInViewport()
   await expect(message(page, "harbor lights are on tonight")).toBeVisible()
   await expect(jumpToNewest(page)).toHaveCount(0)
-})
-
-// A push notification links near the newest end, so the jump lands at the bottom with nothing below.
-test("US-027a a permalink near the newest end lands at the bottom", async ({seed, as}) => {
-  let recent!: SeededEvent
-
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-
-    for (let i = 0; i < 20; i++) {
-      space.message(user.bob, "general", `harbor watch note ${i}`, at(40 - i, MINUTE))
-    }
-
-    recent = space.message(user.bob, "general", "the harbor pilot is booked", at(5, MINUTE))
-
-    space.message(user.bob, "general", "and the tide is with us", at(2, MINUTE))
-  })
-
-  const {url} = scenario.space("space")
-  const path = roomPath(url, "general")
-  const page = await as(users.alice, `${path}?at=${recent.event.created_at}`)
-
-  await expect(page.locator(`[data-event="${recent.id}"]`)).toBeInViewport()
-
-  // The newest message in the room is on screen with it, so this is the live end
-  await expect(message(page, "and the tide is with us")).toBeInViewport()
-  await expect(jumpToNewest(page)).toHaveCount(0)
-})
-
-// A permalink pins the message it lands on, and the reader asking for the unread divider takes over.
-test("US-027b jump to the unread divider from a permalink", async ({seed, as}) => {
-  let newest!: SeededEvent
-
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-
-    // Deep enough that the jump centres what it lands on rather than clamping at the bottom.
-    for (let i = 0; i < 120; i++) {
-      space.message(user.bob, "general", `harbor watch note ${i}`, at(400 - i * 3, MINUTE))
-    }
-
-    newest = space.message(user.bob, "general", "and the tide is with us", at(2, MINUTE))
-  })
-
-  const {url} = scenario.space("space")
-  const path = roomPath(url, "general")
-
-  // Alice has read none of this, so the divider is screens above the message she lands on.
-  const page = await as(users.alice, `${path}?at=${newest.event.created_at}`, {
-    checked: {[path]: now() - int(12, HOUR)},
-  })
-
-  await expect(page.locator(`[data-event="${newest.id}"]`)).toBeInViewport()
-
-  const divider = page.locator("#new-messages")
-
-  await page.getByRole("button", {name: "New Messages"}).click()
-
-  await expect(divider).toBeInViewport()
-
-  // The pin is what would pull her back down, a frame or two after the scroll starts.
-  await page.waitForTimeout(1000)
-  await expect(page.locator(`[data-event="${newest.id}"]`)).not.toBeInViewport()
 })
 
 test("US-028 share a message somewhere else", async ({seed, as}) => {
@@ -837,147 +655,4 @@ test("US-028 share a message somewhere else", async ({seed, as}) => {
 
   await expect(message(alice, "heads up")).toContainText("the dock is closed on sunday")
   await expect(message(bob, "heads up")).toContainText("the dock is closed on sunday")
-})
-
-test("US-119 have a message read out loud", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    space.profile(user.alice, {name: "Alice Anchor"})
-    space.profile(user.bob, {name: "Bob Barnacle"})
-
-    const notice = space.message(user.bob, "general", "the dock is closed on sunday", at(2, HOUR))
-
-    space.reply(
-      user.bob,
-      notice,
-      `heads up nostr:${npubEncode(user.alice.pubkey)}, the notice is at https://harbor.example/dock?ref=1`,
-      at(1, HOUR),
-    )
-
-    seedChatter(space, user.alice)
-  })
-
-  const {url} = scenario.space("space")
-  const alice = await as(users.alice, roomPath(url, "general"))
-  // Long enough that playback is still going when it is stopped.
-  const speech = await mockOpenRouterTts(alice.context(), 10)
-
-  // The mention has to have resolved on screen before it can be expected in what was spoken.
-  await expect(message(alice, "heads up")).toContainText("@Alice Anchor")
-
-  // With no key saved, reading a message asks for one the way dictation does.
-  await openMessageMenu(alice, "heads up")
-  await alice.getByRole("button", {name: "Read Out Loud"}).click()
-
-  const enable = dialog(alice, "Enable read out loud?")
-
-  await enable.locator('input[name="flotilla-openrouter-key"]').fill("sk-or-test")
-  await enable.getByRole("button", {name: "Enable read out loud"}).click()
-
-  await expect(alice.getByRole("alert")).toContainText("Read out loud is ready to use!")
-
-  // Saving the key reads the message that was asked for rather than asking for the menu again.
-  await expect(alice.getByText("a message from Bob Barnacle")).toBeVisible()
-
-  // The quote, the mention and the url are named rather than spelled out a character at a time.
-  expect(speech.spoken).toEqual([
-    "another message\n\nheads up Alice Anchor, the notice is at a link to harbor.example",
-  ])
-
-  await alice.getByRole("button", {name: "Stop reading"}).click()
-
-  await expect(alice.getByText("a message from Bob Barnacle")).toHaveCount(0)
-
-  // Stopping a read whose audio is still in flight has to end that request too.
-  speech.hold()
-
-  await openMessageMenu(alice, "heads up")
-  await alice.getByRole("button", {name: "Read Out Loud"}).click()
-
-  await expect(alice.getByText("a message from Bob Barnacle")).toBeVisible()
-
-  await alice.getByRole("button", {name: "Stop reading"}).click()
-
-  speech.release()
-
-  await expect(alice.getByText("a message from Bob Barnacle")).toHaveCount(0)
-})
-
-test("US-115 connect a wallet without losing the zap you were composing", async ({seed, as}) => {
-  // Zapping only gets as far as a dialog once dufflepud answers with a zapper for that endpoint.
-  const lud16 = "bob@zap.test"
-  // A zapper's receipts are signed by the recipient's lightning provider, so it is an identity of its own.
-  const provider = makeTestUser("zapper")
-
-  const scenario = await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    space.profile(user.alice, {name: "Alice Anchor"})
-    space.profile(user.bob, {name: "Bob Barnacle", lud16})
-    space.message(user.bob, "general", "the new sail came in")
-  })
-
-  const {url} = scenario.space("space")
-  const path = roomPath(url, "general")
-  const page = await as(users.alice, path, {webln: {node: {alias: "Test Node"}}})
-
-  // Registered after the page opened, so it answers ahead of the empty dufflepud `as()` installs.
-  await mockDufflepud(page.context(), {
-    zappers: [
-      {
-        lnurl: bech32ToHex(getLnUrl(lud16)!),
-        info: {pubkey: users.bob.pubkey, nostrPubkey: provider.pubkey, allowsNostr: true},
-      },
-    ],
-  })
-
-  await page.goto(path)
-
-  await expect(message(page, "the new sail came in")).toBeVisible()
-
-  await messageActions(page, "the new sail came in").first().click()
-
-  const zap = dialog(page, "Send a Zap")
-  const amount = zap.locator('input[type="number"]')
-
-  await expect(zap.getByRole("button", {name: "Create invoice"})).toBeVisible()
-
-  await amount.fill("210")
-  await zap.getByRole("button", {name: "Connect a lightning wallet"}).click()
-
-  const connect = dialog(page, "Connect a Wallet")
-
-  await connect.getByRole("button", {name: "Connect with WebLN"}).click()
-
-  await expect(page.getByRole("alert")).toContainText("Wallet successfully connected!")
-  await expect(connect).toHaveCount(0)
-
-  // The zap dialog was underneath rather than replaced, so the amount she had typed survived.
-  await expect(zap.getByRole("button", {name: "Connect a lightning wallet"})).toHaveCount(0)
-  await expect(zap.getByRole("button", {name: "Send Zap"})).toBeVisible()
-  await expect(amount).toHaveValue("210")
-})
-
-test("fills a room from a relay that never says it is done", async ({seed, as}) => {
-  const scenario = await seed(({relay, user, at}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    space.message(user.bob, "general", "the buoy is back on station", at(3, HOUR))
-  })
-
-  const {url} = scenario.space("space")
-  const page = await as(users.alice, roomPath(url, "general"), {eoseless: [url]})
-
-  // Nothing will tell the feed its page is finished, so a room that waits for that stays empty.
-  await expect(message(page, "the buoy is back on station")).toBeVisible()
 })

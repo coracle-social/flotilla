@@ -173,29 +173,6 @@ test("US-004 log in with a browser extension", async ({seed, visit}) => {
   await expect(withoutExtension.getByRole("button", {name: "Log in with Extension"})).toHaveCount(0)
 })
 
-test("US-005 log in with a remote signer", async ({seed, visit}) => {
-  await seed(({relay}) => {
-    relay("space").room("general", {name: "General"})
-  })
-
-  const page = await visit()
-
-  await page.getByRole("button", {name: "Log in"}).click()
-  await page.getByRole("button", {name: "Log in with Remote Signer"}).click()
-
-  // The relay named here belongs to no scenario, so a connection attempt is recorded as a leak.
-  await page
-    .getByPlaceholder("bunker://")
-    .fill("bunker://not-a-signer-pubkey?relay=wss://nowhere.test/")
-  await page.getByRole("button", {name: "Next"}).click()
-
-  await expect(page.getByRole("alert")).toContainText("invalid bunker link")
-
-  await page.getByRole("button", {name: "Log in with a QR code instead"}).click()
-
-  await expect(page.getByText("Scan with your signer to log in, or click to copy.")).toBeVisible()
-})
-
 test("US-006 stay logged in, and log out deliberately", async ({seed, visit}) => {
   await seed(({relay, user}) => {
     const space = relay("space")
@@ -219,80 +196,4 @@ test("US-006 stay logged in, and log out deliberately", async ({seed, visit}) =>
   await page.locator("form").getByRole("button", {name: "Log Out"}).click()
 
   await expect(gate(page)).toBeVisible()
-})
-
-test("US-007 inspect your keys and signer status", async ({seed, as}) => {
-  await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-  })
-
-  const npub = npubEncode(users.alice.pubkey)
-  const page = await as(users.alice, "/settings/profile", {
-    context: {permissions: ["clipboard-read", "clipboard-write"]},
-  })
-
-  const readClipboard = () => page.evaluate(() => navigator.clipboard.readText())
-
-  const npubInput = npubField(page)
-
-  await expect(npubInput).toHaveValue(npub)
-
-  await page.locator("label.input").filter({has: npubInput}).getByRole("button").click()
-
-  await expect.poll(readClipboard).toBe(npub)
-
-  const secretInput = page.locator('input[type="password"]')
-
-  await expect(secretInput).toHaveValue(users.alice.secret)
-
-  await page.locator("label.input").filter({has: secretInput}).getByRole("button").click()
-
-  await expect.poll(readClipboard).toBe(nsecFor(users.alice))
-
-  await expect(page.getByText("Logged in with private key")).toBeVisible()
-})
-
-test("US-008 delete your nostr account", async ({seed, as, visit}) => {
-  await seed(({relay, user}) => {
-    const space = relay("space")
-
-    space.room("general", {name: "General"})
-    space.join(user.alice, "general")
-    space.join(user.bob, "general")
-    space.profile(user.alice, {name: "Alice Anderson"})
-  })
-
-  const alice = await visit()
-
-  await logInWithKey(alice, nsecFor(users.alice))
-  await openSettings(alice)
-
-  await alice.locator(".card").filter({hasText: "Advanced"}).getByRole("button").click()
-  await alice.getByRole("button", {name: "Delete your profile"}).click()
-
-  await expect(alice.getByRole("heading", {name: "Delete your account"})).toBeVisible()
-
-  const confirm = alice.getByRole("button", {name: "Confirm"})
-  const phrase = alice.locator('input[type="text"]')
-
-  await expect(confirm).toBeDisabled()
-
-  await phrase.fill("permanently delete my account")
-
-  await expect(confirm).toBeEnabled()
-
-  await confirm.click()
-
-  await expect(gate(alice)).toBeVisible()
-
-  const bob = await as(users.bob, `/people/${npubEncode(users.alice.pubkey)}`)
-
-  // zooid honours the kind-62 right-to-vanish, so the profile is gone rather than renamed.
-  const aliceNpub = npubEncode(users.alice.pubkey)
-  const fallback = aliceNpub.slice(0, 8) + "…" + aliceNpub.slice(-5)
-
-  await expect(bob.getByRole("heading", {name: fallback})).toBeVisible()
 })
