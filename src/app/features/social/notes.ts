@@ -1,4 +1,4 @@
-import {derived, readable} from "svelte/store"
+import {derived, readable, writable} from "svelte/store"
 import {first, spec} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {EventRef, hexTags, outbox, tagValues} from "@welshman/util"
@@ -16,14 +16,7 @@ import type {CommentNode} from "@app/features/social/replies"
 
 // Where a note lives, and the stores a page reads it and its conversation from.
 export class Notes {
-  // A note opened from the screen is in hand, so it draws before the repository read.
-  private seeded?: TrustedEvent
-
   constructor(private readonly app: IApp) {}
-
-  seed = (event: TrustedEvent) => {
-    this.seeded = event
-  }
 
   // A reply's e tag can name neither author nor relay, but NIP-10 has the reply p-tag the author.
   relays = (ref: IEventRef, replies: TrustedEvent[] = []) => {
@@ -70,19 +63,23 @@ export class Notes {
   // A pointer carrying no hints would never resolve, so the load beside it asks the author's relays.
   deriveEvent = (ref: IEventRef) => {
     const idOrAddress = new EventRef(ref).getIdOrAddress()
-    const seeded = this.seeded
-    const seed =
-      seeded && new EventRef(seeded).getIdOrAddress() === idOrAddress ? seeded : undefined
+    const loaded = writable<Maybe<TrustedEvent>>(undefined)
 
-    this.load(ref).catch(error => console.error(error))
+    this.load(ref)
+      .then(event => loaded.set(event))
+      .catch(error => console.error(error))
 
-    if (idOrAddress) {
-      const events = this.app.use(Events).one(idOrAddress, ref.relays ?? [])
-
-      return derived(events.$, ($event: Maybe<TrustedEvent>) => $event ?? seed)
+    if (!idOrAddress) {
+      return loaded
     }
 
-    return readable<Maybe<TrustedEvent>>(seed)
+    const events = this.app.use(Events).one(idOrAddress, ref.relays ?? []).$
+
+    // The observe drops what a plain read still serves, so the load's answer stands in behind it.
+    return derived(
+      [events, loaded],
+      ([$event, $loaded]: Maybe<TrustedEvent>[]) => $event ?? $loaded,
+    )
   }
 
   resolveRelays = (event: TrustedEvent) =>

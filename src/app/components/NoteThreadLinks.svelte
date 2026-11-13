@@ -30,8 +30,6 @@
   }
 
   const openThread = () => {
-    notes.get().seed(event)
-
     pushModal(NoteDetail, {ref: EventRef.fromEvent(event, relays), thread: true}, {size: "large"})
   }
 </script>
