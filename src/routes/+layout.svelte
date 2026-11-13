@@ -38,6 +38,7 @@
   import {forceHealthChecks} from "@app/features/healthChecks"
   import {setupShareIntents} from "@app/features/share"
   import {setupWebViewDownloads} from "@app/features/downloads"
+  import {setupAudioPlayback} from "@app/features/audioPlayback"
   import {syncApplicationData} from "@app/core/sync"
   import {shouldUnwrap} from "@app/features/messages"
   import * as env from "@app/core/env"
@@ -137,6 +138,9 @@
 
     // Take the downloads the web view's own player offers, which it cannot carry out itself
     unsubscribers.push(setupWebViewDownloads())
+
+    // Keep audio playing once the app is in the background or the screen is off
+    unsubscribers.push(setupAudioPlayback())
 
     // Initialize keyboard state tracking
     unsubscribers.push(syncKeyboard())

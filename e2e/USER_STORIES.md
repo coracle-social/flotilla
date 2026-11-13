@@ -1155,6 +1155,7 @@ Acceptance:
 - Tapping the dark background around an image or a video closes the lightbox,
   while a tap on the video itself plays it.
 - A video url mid-sentence opens that lightbox rather than downloading the file.
+- Playing audio keeps going when the screen sleeps or the app goes to the background, on the phone apps.
 
 ### US-063 — Preview a shared link
 

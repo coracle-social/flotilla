@@ -7,6 +7,7 @@ import android.os.Bundle;
 
 import com.getcapacitor.BridgeActivity;
 
+import social.flotilla.audio.AudioPlaybackPlugin;
 import social.flotilla.downloads.WebViewDownloadPlugin;
 import social.flotilla.notifications.AndroidPushFallbackPlugin;
 import social.flotilla.screenshare.ScreenSharePlugin;
@@ -16,6 +17,7 @@ public class MainActivity extends BridgeActivity {
   @Override
   public void onCreate(Bundle savedInstanceState) {
     registerPlugin(AndroidPushFallbackPlugin.class);
+    registerPlugin(AudioPlaybackPlugin.class);
     registerPlugin(WebViewDownloadPlugin.class);
     registerPlugin(ScreenSharePlugin.class);
     registerPlugin(ShareIntentPlugin.class);
