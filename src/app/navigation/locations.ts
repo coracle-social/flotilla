@@ -145,6 +145,6 @@ export const goToEvent = (event: TrustedEvent, options: NavigateOptions = {}) =>
     }
   } else {
     // A kind with no page of its own opens there too, rather than in another client.
-    openNote(EventRef.fromEvent(event, urls), {replaceState: options.replaceState})
+    openNote(EventRef.fromEvent(event, urls), {replaceState: options.replaceState, event})
   }
 }

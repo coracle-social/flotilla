@@ -20,13 +20,16 @@
     ref: IEventRef
     reply?: boolean
     thread?: boolean
+    event?: TrustedEvent
   }
 
-  const {ref, reply = false, thread = false}: Props = $props()
+  const {ref, reply = false, thread = false, event: providedEvent}: Props = $props()
 
   const context = makeFeedContext({withReplies: true})
-  const event = $notes.deriveEvent(ref)
-  const replies = $derived($event ? $notes.deriveReplies($event) : readable<CommentNode[]>([]))
+  const loaded = $notes.deriveEvent(ref)
+  // A note opened from the feed is already in hand, so its card doesn't wait on a repository read.
+  const event = $derived($loaded ?? providedEvent)
+  const replies = $derived(event ? $notes.deriveReplies(event) : readable<CommentNode[]>([]))
 
   const setReplyTo = (comment?: TrustedEvent) => {
     replyTo = comment
@@ -69,16 +72,16 @@
 
   // A reply button opens this modal composing, and cancelling it must not raise the composer again.
   $effect(() => {
-    if (reply && $event && !composerRaised) {
+    if (reply && event && !composerRaised) {
       composerRaised = true
-      setReplyTo($event)
+      setReplyTo(event)
     }
   })
 
   $effect(() => {
-    if (thread && $event && !threadRequested) {
+    if (thread && event && !threadRequested) {
       threadRequested = true
-      loadThread($event).finally(() => {
+      loadThread(event).finally(() => {
         loading = false
       })
     }
@@ -97,8 +100,8 @@
 
 <Modal label={thread ? "Thread" : "Note"}>
   <ModalBody>
-    {#if $event}
-      {@const note = $event}
+    {#if event}
+      {@const note = event}
       {@const replyToNote = () => setReplyTo(note)}
       {#if loading}
         <Spinner class="justify-center py-4" />

@@ -33,7 +33,11 @@
   const openThread = () => {
     const relays = Array.from(app.get().repository.tracker.getRelays(event.id))
 
-    pushModal(NoteDetail, {ref: EventRef.fromEvent(event, relays), thread: true}, {size: "large"})
+    pushModal(
+      NoteDetail,
+      {ref: EventRef.fromEvent(event, relays), event, thread: true},
+      {size: "large"},
+    )
   }
 </script>
 
