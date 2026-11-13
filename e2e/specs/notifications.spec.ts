@@ -13,6 +13,8 @@ import {
   makeTestUser,
   message,
   messageActions,
+  modalForm,
+  noteEditor,
   openRoomDetail,
   pageBar,
   pathPattern,
@@ -56,8 +58,8 @@ const homeFeed = (page: Page) => page.getByRole("region", {name: "Recent"})
 // The network tab asks every follow's relays for their posts only once it is open.
 const openNetworkTab = (feed: Locator) => feed.getByRole("button", {name: "Network"}).click()
 
-// Popular adds what the follows answered, and asks for them only once it is turned on. Its label
-// carries a count of the notes it adds, so it is matched by its label alone.
+// Popular folds what the follows answered into the same stream, so its label carries the notes it
+// counts and it is matched by its label alone.
 const popularButton = (feed: Locator) => feed.getByRole("button", {name: /^Popular/})
 const openPopular = (feed: Locator) => popularButton(feed).click()
 
@@ -987,7 +989,7 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
   await expect(popular).toHaveAttribute("aria-pressed", "true")
   await expect(feed.getByText(theirs)).toBeVisible({timeout: 20_000})
 
-  // The toggle sits beside the types and counts the notes it adds, as they do.
+  // The toggle sits beside the types and counts the notes it brings, as they do.
   await expect(popular).toContainText("1")
 
   // Her name on the card is the way to the profile the mute is reached from.
@@ -1238,4 +1240,59 @@ test("US-120 read what a notification says", async ({seed, as}) => {
       title: "Someone mentioned you",
       body: "sunday, the notice is at a link to harbor.example",
     })
+})
+
+test("US-136 hear about a new message and not about a new thread", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.profile(user.alice, {name: "Alice Anchor"})
+    space.profile(user.bob, {name: "Bob Barnacle"})
+  })
+
+  const space = scenario.space("space")
+
+  // The tab has to be in the background before a notification is raised at all.
+  const alice = await as(users.alice, "/settings/alerts", {
+    context: {permissions: ["notifications"]},
+  })
+
+  await settingRow(alice, "Enable push notifications").getByRole("checkbox").check()
+  await alice.getByRole("button", {name: "Save Changes"}).click()
+
+  await expect(alice.getByRole("alert")).toContainText("Your settings have been saved!")
+
+  await spaceNavItem(alice, space.name).click()
+  await roomLink(alice, "General").click()
+
+  await expect(alice).toHaveURL(pathPattern(roomPath(space.url, "general")))
+
+  const notifications = await captureNotifications(alice)
+
+  const bob = await as(users.bob, `${spacePath(space.url)}/threads`)
+
+  await bob.getByRole("button", {name: "New topic"}).click()
+
+  const threadForm = modalForm(bob, "Create a Thread")
+
+  await threadForm.getByPlaceholder("What is this thread about?").fill("the dock is closing")
+  await noteEditor(threadForm).pressSequentially("sunday, apparently")
+  await threadForm.getByRole("button", {name: "Create Thread"}).click()
+
+  const latest = bob.locator("section").filter({has: bob.getByRole("heading", {name: "Latest"})})
+
+  await expect(latest.getByRole("link").filter({hasText: "the dock is closing"})).toBeVisible()
+
+  // Alice holds the thread before bob says anything, so a notification for it would be here by now.
+  await contentNavItem(alice, "Threads").click()
+  await expect(alice.getByRole("link").filter({hasText: "the dock is closing"})).toBeVisible()
+
+  await postTo(bob, "General", "when does the dock close?")
+
+  await expect
+    .poll(() => notifications)
+    .toEqual([{title: "New message", body: "when does the dock close?"}])
 })

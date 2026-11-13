@@ -14,12 +14,9 @@ export const displayReadingTime = (content: string) => {
   return `${minutes} minute${minutes === 1 ? "" : "s"}`
 }
 
-// An article is addressable, so its created_at moves with every edit. published_at is when it went out.
-const getArticleTimestamp = (event: TrustedEvent) => reader(Article)(event).publishedAt()
-
-// When a post went out: an article's publication date, a note's creation time.
+// An article's created_at moves with every edit, so published_at is when it went out.
 export const getPublishedTimestamp = (event: TrustedEvent) =>
-  event.kind === LONG_FORM ? getArticleTimestamp(event) : event.created_at
+  event.kind === LONG_FORM ? reader(Article)(event).publishedAt() : event.created_at
 
 export const sortArticles = (events: TrustedEvent[]) =>
-  sortBy(event => -getArticleTimestamp(event), events)
+  sortBy(event => -getPublishedTimestamp(event), events)

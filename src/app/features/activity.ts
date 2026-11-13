@@ -33,6 +33,7 @@ import {
   getRelayHints,
   hexTags,
   matchTag,
+  outbox,
   tagSpec,
   tagValue,
   tagValues,
@@ -56,7 +57,6 @@ import {checked, setChecked} from "@app/features/checked"
 import {allNotifications, latestActivityByPath} from "@app/features/notifications"
 import type {Activity} from "@app/features/notifications"
 import {getReplyRefs, isReplyKind} from "@app/features/social/replies"
-import {Notes} from "@app/features/social/notes"
 import {isEventMuted} from "@app/features/social/muting"
 
 // Every conversation, read or not, so the stream reads as history rather than as a queue to drain.
@@ -342,12 +342,15 @@ const homeNotificationCandidates = derived(
 // Notes being looked for, so candidates landing meanwhile don't ask for them again.
 const loadingTargets = new Set<string>()
 
+// Notes already asked for, so a target the relays don't hold isn't resolved again on every update.
+const attemptedTargets = new Set<string>()
+
 // Every note the stream is missing goes out in one request rather than one per note.
 const loadHomeNotificationTargets = async ($app: IApp, refs: EventRef[]) => {
   const pending = refs.flatMap(ref => {
     const key = ref.getAddressOrId()
 
-    return key && !loadingTargets.has(key) ? [{ref, key}] : []
+    return key && !loadingTargets.has(key) && !attemptedTargets.has(key) ? [{ref, key}] : []
   })
 
   const keys = pending.map(({key}) => key)
@@ -355,18 +358,38 @@ const loadHomeNotificationTargets = async ($app: IApp, refs: EventRef[]) => {
   keys.forEach(key => loadingTargets.add(key))
 
   try {
-    const stored = await $app.repository.query(getIdFilters(keys))
-    const storedKeys = new Set(stored.flatMap(getIdAndAddress))
-    const missing = pending.filter(({key}) => !storedKeys.has(key))
+    if (keys.length > 0) {
+      const stored = await $app.repository.query(getIdFilters(keys))
+      const storedKeys = new Set(stored.flatMap(getIdAndAddress))
+      const missing = pending.filter(({key}) => !storedKeys.has(key))
 
-    if (missing.length > 0) {
-      const relaysByRef = await Promise.all(missing.map(({ref}) => $app.use(Notes).relays(ref)))
+      if (missing.length > 0) {
+        // A missing note's own route is its hints, where it was seen, and its author's outbox.
+        const urls = new Set<string>()
 
-      await $app.use(Network).load({
-        relays: uniq(relaysByRef.flat()),
-        filters: getIdFilters(missing.map(({key}) => key)),
-        timeout: 3000,
-      })
+        for (const {ref} of missing) {
+          for (const url of ref.relays ?? []) {
+            urls.add(url)
+          }
+
+          if (ref.id) {
+            for (const url of $app.repository.tracker.getRelays(ref.id)) {
+              urls.add(url)
+            }
+          }
+        }
+
+        const authors = uniq(missing.flatMap(({ref}) => (ref.pubkey ? [ref.pubkey] : [])))
+        const outboxes = await router.get().resolver.relays(authors.map(pubkey => outbox(pubkey)))
+
+        await $app.use(Network).load({
+          relays: uniq([...urls, ...outboxes]),
+          filters: getIdFilters(missing.map(({key}) => key)),
+          timeout: 3000,
+        })
+      }
+
+      keys.forEach(key => attemptedTargets.add(key))
     }
   } finally {
     keys.forEach(key => loadingTargets.delete(key))

@@ -4,7 +4,7 @@ import type {PluginListenerHandle} from "@capacitor/core"
 import {downloadBlob} from "@lib/html"
 import {pushToast} from "@app/features/toast"
 
-type NativeDownload = {url: string; name: string; type: string}
+type NativeDownload = {url: string; name: string}
 
 type WebViewDownloadPlugin = {
   addListener(

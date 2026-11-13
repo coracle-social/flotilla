@@ -40,3 +40,32 @@ test("authenticates over nip-42 before a members-only relay serves anything", as
   // Until the client proves who it is, the relay hands it nothing at all.
   expect(firstEventAt).toBeGreaterThan(authenticatedAt)
 })
+
+test("answers an expired auth challenge again rather than reporting a denial", async ({
+  seed,
+  as,
+}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+
+    space.room("backroom", {name: "Backroom"})
+    space.join(user.alice, "backroom")
+    space.message(user.alice, "backroom", "the secret handshake")
+  })
+
+  const {url} = scenario.space("space")
+  const page = await as(users.alice, roomPath(url, "backroom"), {staleAuth: [url]})
+
+  // Nothing is served until the second signature lands, so this is the whole proof it did.
+  await expect(page.getByText("the secret handshake")).toBeVisible()
+  await expect(page.getByText("Access Error")).toBeHidden()
+
+  const answers = getTranscript(page.context()).filter(
+    entry =>
+      entry.url === url &&
+      entry.direction === "toRelay" &&
+      entry.message[0] === ClientMessageType.Auth,
+  )
+
+  expect(answers.length).toBe(2)
+})

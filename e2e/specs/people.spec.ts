@@ -1,8 +1,9 @@
 import {createHash} from "node:crypto"
 import type {Locator, Page} from "@playwright/test"
-import {HOUR, now, uniq} from "@welshman/lib"
+import {HOUR, MINUTE, MONTH, now, uniq} from "@welshman/lib"
 import {FOLLOWS, NOTE, STATUS, makeEvent} from "@welshman/util"
-import {Profile} from "@welshman/domain"
+import type {SignedEvent} from "@welshman/util"
+import {Note, PinList, Profile} from "@welshman/domain"
 import {
   DEFAULT_BLOSSOM_ORIGIN,
   GIF,
@@ -45,6 +46,11 @@ const searchTerm = (page: Page) => page.getByPlaceholder("Search your spaces..."
 const searchResults = (page: Page) => topDialog(page).locator(".card.card-interactive")
 
 const notes = (page: Page) => pageContent(page).locator(".cv.card")
+
+const entries = (page: Page) => pageContent(page).locator('[data-component="NoteEntry"]')
+
+// A handle to a seeded event, which only reads once seed() has drained its queue.
+type Seeded = {readonly id: string; readonly event: SignedEvent}
 
 // PeopleItem renders its link twice, once for each breakpoint; the wide one comes first.
 const viewProfile = (card: Locator) => card.getByRole("link", {name: "View Profile"}).first()
@@ -415,4 +421,86 @@ test("US-082 mute an account", async ({seed, as}) => {
   await expect(list).toHaveCount(2)
   await expect(pageContent(page).getByText("Salt on the rigging this morning")).toBeVisible()
   await expect(pageContent(page).getByText("The gulls have taken the mainsail")).toBeVisible()
+})
+
+test("US-079 read a person's notes", async ({seed, as}) => {
+  let carolNote!: Seeded
+  let pinned!: Seeded
+
+  await seed(({relay, user, at}) => {
+    const space = relay("space")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    space.join(user.carol, "general")
+    space.profile(user.alice, {name: "Alice Anderson"})
+    space.profile(user.carol, {name: "Carol Cutter"})
+    space.relayList(user.alice)
+    space.relayList(user.carol)
+
+    carolNote = space.event(
+      user.carol,
+      makeEvent(NOTE, {content: "Anyone seen the tide charts?", created_at: at(4, HOUR)}),
+    )
+
+    // Older than the feed's first window, so the pin is fetched by id while the feed only pages to it.
+    pinned = space.event(
+      user.alice,
+      makeEvent(NOTE, {content: "PINNED how to read a tide chart", created_at: at(2, MONTH)}),
+    )
+
+    space.event(
+      user.alice,
+      makeEvent(NOTE, {content: "MIDDLE rigging notes from this morning", created_at: at(2, HOUR)}),
+    )
+
+    space.event(
+      user.alice,
+      makeEvent(NOTE, {content: "NEWEST the wind has finally turned", created_at: at(1, HOUR)}),
+    )
+
+    // Older than the window the feed opens with, so reaching it is the feed paging backwards.
+    space.event(
+      user.alice,
+      makeEvent(NOTE, {content: "OLDEST from the spring refit", created_at: at(8, MONTH)}),
+    )
+
+    // A reply to carol, which the list draws under her note.
+    space.event(
+      user.alice,
+      () =>
+        space
+          .kind(Note)
+          .writer()
+          .setParent(carolNote.event)
+          .setContent("REPLY they are in the chart drawer")
+          .renderTemplate(),
+      at(90, MINUTE),
+    )
+
+    space.event(user.alice, () =>
+      space.kind(PinList).writer().pinPublicly(["e", pinned.id]).renderTemplate(),
+    )
+  })
+
+  const page = await as(users.bob, profilePath(users.alice.pubkey), {context: DESKTOP})
+  const list = notes(page)
+
+  await expect(list.filter({hasText: "NEWEST"})).toBeVisible()
+  await expect(list.filter({hasText: "MIDDLE"})).toBeVisible()
+
+  // The pin outranks the newer notes.
+  await expect(list.first()).toContainText("PINNED")
+  await expect(list.filter({hasText: "PINNED"})).toHaveCount(1)
+
+  // Nothing is scrolled here: the feed keeps widening its window until the page is full.
+  await expect(list.filter({hasText: "OLDEST"})).toBeVisible()
+
+  // A reply is drawn in the entry of the note it answers rather than as a card of its own.
+  const answered = entries(page).filter({hasText: "Anyone seen the tide charts?"})
+
+  await expect(answered).toHaveCount(1)
+  await expect(answered).toContainText("REPLY they are in the chart drawer")
+  await expect(list.filter({hasText: "REPLY they are in the chart drawer"})).toHaveCount(0)
 })

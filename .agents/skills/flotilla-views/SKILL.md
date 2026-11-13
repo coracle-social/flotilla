@@ -407,14 +407,17 @@ every event the feed yields, rows get the same `context`, and their action rows 
 and an `{#if}` chain over loading, empty and exhausted. Calendars use
 `makeCalendarFeed`, which pages by date tag rather than `created_at`.
 
-`makeNetworkFeed` in `src/app/features/social/networkFeed.ts` builds on those helpers to draw each reply under
-the note it answers. The home Network section and `ProfilePageNotes` both use it. The home tab passes
-`includeMuted`, so a muted note stays on the tab and `NoteCard` draws the mute, while `ProfilePageNotes`
-leaves a muted author's notes out and says the person is muted where it would otherwise report none.
-The home tab also merges `extra` events while its Popular toggle is on, which is what
-`makePopularFeed` holds: the notes her follows liked, reposted or zapped, drawn in time order with
-the rest rather than on a tab of their own. That toggle sits beside Notes and Replies and carries the
-feed's `extraCount`, so it says how many notes it adds beyond what the follows wrote.
+`makeNoteFeed` in `src/app/features/social/noteFeed.ts` builds on those helpers to draw each reply
+under the note it answers. A content source (`makeNotesTimeline`) brings events the feed draws
+itself; a reference source (`makePopularFeed`) brings events that only name a note, which the feed
+resolves in the background and folds into the same stream. It also takes an optional `pinned` list
+and the `NetworkFeedType[]` to show. The home Network section passes the persisted
+`includedNetworkFeedTypes`, so the Notes, Replies and Popular buttons count and toggle through the
+same store; a note a follow both wrote and liked counts under both, and is drawn once.
+`ProfilePageNotes` passes one source and a pin list, and keeps pinned notes above the rest. A muted
+note stays in the feed and `NoteCard` draws it, while `ProfilePageNotes` says the person is muted
+instead of drawing the list. Missing notes never hold the feed up: entries draw without them and
+are filled in as they arrive.
 
 `ProfileFeed` still drives welshman's `FeedController` through
 `$app.use(Feeds).makeFeedController` and `createScroller`, but 27fa25c3 moved the home feed onto

@@ -5,84 +5,68 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
   import NoteEntry from "@app/components/NoteEntry.svelte"
-  import {user} from "@app/core/user"
+  import {userFollowList} from "@app/core/user"
   import {PLATFORM_RELAYS} from "@app/core/env"
-  import {followLists} from "@app/core/plugins"
   import {makeFeedContext} from "@app/features/feeds"
-  import {makePopularFeed} from "@app/features/social/popularFeed"
   import {
-    countNetworkFeedTypes,
-    includePopularNotes,
-    isIncludedNetworkFeedEvent,
-    makeNetworkFeed,
-  } from "@app/features/social/networkFeed"
+    includedNetworkFeedTypes,
+    makeNoteFeed,
+    makeNotesTimeline,
+  } from "@app/features/social/noteFeed"
+  import {makePopularFeed} from "@app/features/social/popularFeed"
 
   const context = makeFeedContext({withReplies: true})
 
+  const popularIncluded = derived(includedNetworkFeedTypes, $types => $types.includes("popular"))
+
+  const notes = makeNotesTimeline({onEvent: context.add})
+
   const popular = makePopularFeed()
 
-  const feed = makeNetworkFeed({
-    context,
-    isIncluded: isIncludedNetworkFeedEvent,
-    // A muted note stays on the tab and reads as a muted card rather than being dropped from it.
-    includeMuted: true,
-    extra: popular.notes,
-    includeExtra: includePopularNotes,
-  })
+  const feed = makeNoteFeed({sources: [notes, popular], included: includedNetworkFeedTypes})
 
-  const {candidates, items, entries, loading, exhausted, extraCount} = feed
+  const {counts, items, entries, loading, exhausted} = feed
 
-  // Popular pages behind the same scroll, so its spinner counts while it is on.
-  const spinning = derived(
-    [loading, popular.loading, includePopularNotes],
-    ([$loading, $popularLoading, $includePopular]) =>
-      $loading || ($includePopular && $popularLoading),
+  const follows = $derived($userFollowList?.pubkeys())
+
+  const total = $derived(Array.from($counts.values()).reduce((sum, count) => sum + count, 0))
+  const anyTypeIncluded = $derived($includedNetworkFeedTypes.length > 0)
+
+  const isEmpty = $derived(
+    follows?.length === 0 || ($exhausted && total === 0 && anyTypeIncluded && !$loading),
   )
-
-  const followList = $derived($followLists.one($user.pubkey))
-  const follows = $derived($followList?.pubkeys())
-
-  const togglePopular = () => includePopularNotes.update($includePopular => !$includePopular)
+  const hidden = $derived($items.length === 0 && total > 0 && !$loading)
 
   let element: HTMLElement | undefined = $state()
   let started = false
   let popularStarted = false
 
-  const isEmpty = $derived(
-    follows?.length === 0 || ($exhausted && $candidates.length === 0 && !$spinning),
-  )
-  const hidden = $derived($items.length === 0 && $candidates.length > 0)
-
   // The follow list is what the feed is made of, and follows added later don't rebuild it.
   $effect(() => {
     if (!started && element && follows && follows.length > 0) {
       started = true
-      feed.start(element, follows)
+      notes.start(follows)
+      feed.start(element)
     }
   })
 
   // Popular asks the same relays what the follows answered, and starts when it is first asked for.
   $effect(() => {
-    if ($includePopularNotes && !popularStarted && element && follows && follows.length > 0) {
+    if ($popularIncluded && !popularStarted && follows && follows.length > 0) {
       popularStarted = true
-      popular.start(element, follows)
+      popular.start(follows)
     }
   })
 
   onDestroy(() => {
     feed.stop()
-    popular.stop()
     context.cleanup()
   })
 </script>
 
 <div class="flex flex-col border-t border-line bg-surface-less">
   <div class="border-b border-line px-4 py-3">
-    <HomeNetworkRecentFilters
-      counts={countNetworkFeedTypes($candidates)}
-      popular={$includePopularNotes}
-      popularCount={$extraCount}
-      onpopular={togglePopular} />
+    <HomeNetworkRecentFilters counts={$counts} />
   </div>
   <div class="flex flex-col gap-3 p-4" bind:this={element}>
     {#if isEmpty}
@@ -99,7 +83,7 @@
       {#each $entries as entry (entry.key)}
         <NoteEntry {entry} {context} />
       {/each}
-      {#if $spinning}
+      {#if $loading}
         <div class="flex justify-center py-8">
           <Spinner loading />
         </div>

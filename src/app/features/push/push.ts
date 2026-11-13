@@ -60,11 +60,13 @@ export const checkPushPermission = () => getAdapter().check()
 export const requestPushPermission = async (): Promise<PushPermission> => {
   const permission = await getAdapter().request()
 
-  if (isGranted(permission) || getTransport() !== "capacitor") {
+  // Only an Android device with the plugin can be reached by the polling worker after FCM refuses.
+  const canPoll = Capacitor.getPlatform() === "android" && getTransport() === "capacitor"
+
+  if (isGranted(permission) || !canPoll) {
     return permission
   }
 
-  // A device whose FCM permission is refused can still be reached by the polling worker.
   useFallback.set(true)
 
   return getAdapter().request()

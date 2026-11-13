@@ -197,3 +197,26 @@ test("US-006 stay logged in, and log out deliberately", async ({seed, visit}) =>
 
   await expect(gate(page)).toBeVisible()
 })
+
+test("US-005 log in with a remote signer", async ({seed, visit}) => {
+  await seed(({relay}) => {
+    relay("space").room("general", {name: "General"})
+  })
+
+  const page = await visit()
+
+  await page.getByRole("button", {name: "Log in"}).click()
+  await page.getByRole("button", {name: "Log in with Remote Signer"}).click()
+
+  // The relay named here belongs to no scenario, so a connection attempt is recorded as a leak.
+  await page
+    .getByPlaceholder("bunker://")
+    .fill("bunker://not-a-signer-pubkey?relay=wss://nowhere.test/")
+  await page.getByRole("button", {name: "Next"}).click()
+
+  await expect(page.getByRole("alert")).toContainText("invalid bunker link")
+
+  await page.getByRole("button", {name: "Log in with a QR code instead"}).click()
+
+  await expect(page.getByText("Scan with your signer to log in, or click to copy.")).toBeVisible()
+})

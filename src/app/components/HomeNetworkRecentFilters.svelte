@@ -1,17 +1,14 @@
 <script lang="ts">
   import {remove} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
-  import {includedNetworkFeedTypes, networkFeedTypes} from "@app/features/social/networkFeed"
-  import type {NetworkFeedType} from "@app/features/social/networkFeed"
+  import {includedNetworkFeedTypes, networkFeedTypes} from "@app/features/social/noteFeed"
+  import type {NetworkFeedType} from "@app/features/social/noteFeed"
 
   type Props = {
     counts: Map<NetworkFeedType, number>
-    popular: boolean
-    popularCount: number
-    onpopular: () => void
   }
 
-  const {counts, popular, popularCount, onpopular}: Props = $props()
+  const {counts}: Props = $props()
 
   const toggle = (type: NetworkFeedType) => () =>
     includedNetworkFeedTypes.update($types =>
@@ -28,10 +25,4 @@
       pressed={$includedNetworkFeedTypes.includes(option.value)}
       onclick={toggle(option.value)} />
   {/each}
-  <SegmentedButton
-    label="Popular"
-    count={popularCount}
-    size="xs"
-    pressed={popular}
-    onclick={onpopular} />
 </div>

@@ -65,20 +65,29 @@
       {/if}
     </PrimaryNavItem>
     {#if PLATFORM_RELAYS.length === 0}
-      <PrimaryNavItem href="/spaces" title="All Spaces" prefix="no-highlight">
+      <PrimaryNavItem
+        href="/spaces"
+        title="All Spaces"
+        prefix="no-highlight"
+        aria-label="All Spaces">
         <Icon icon={Compass} size={10} />
       </PrimaryNavItem>
     {/if}
     <PrimaryNavItem
       title="Messages"
+      aria-label="Messages"
       onclick={chatHandler}
       notification={$notifications.has("/chat")}>
       <Icon icon={Letter} size={10} />
     </PrimaryNavItem>
-    <PrimaryNavItem title="Bookmarks" href="/bookmarks" prefix="no-highlight">
+    <PrimaryNavItem
+      title="Bookmarks"
+      href="/bookmarks"
+      prefix="no-highlight"
+      aria-label="Bookmarks">
       <Icon icon={Bookmark} size={10} />
     </PrimaryNavItem>
-    <PrimaryNavItem title="Search" onclick={showSearch}>
+    <PrimaryNavItem title="Search" onclick={showSearch} aria-label="Search">
       <Icon icon={Magnifier} size={10} />
     </PrimaryNavItem>
   </div>
@@ -99,17 +108,18 @@
           notification={otherSpaceNotifications}>
           <ImageIcon alt={spaceMenuLabel} src={Sidebar} size={8} />
         </PrimaryNavItem>
-        <PrimaryNavItem onclick={showSearch}>
+        <PrimaryNavItem onclick={showSearch} aria-label="Search">
           <Icon icon={Magnifier} size={8} />
         </PrimaryNavItem>
         <PrimaryNavItem
           href="/chat"
+          aria-label="Messages"
           onclick={chatHandler}
           notification={$notifications.has("/chat")}>
           <Icon icon={Letter} size={8} />
         </PrimaryNavItem>
         {#if PLATFORM_RELAYS.length === 0}
-          <PrimaryNavItem href="/spaces">
+          <PrimaryNavItem href="/spaces" aria-label="All Spaces">
             <Icon icon={Compass} size={8} />
           </PrimaryNavItem>
         {/if}

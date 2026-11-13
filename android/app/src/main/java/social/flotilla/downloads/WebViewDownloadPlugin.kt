@@ -14,8 +14,7 @@ class WebViewDownloadPlugin : Plugin() {
         "downloadRequested",
         JSObject()
           .put("url", url)
-          .put("name", URLUtil.guessFileName(url, contentDisposition, mimeType))
-          .put("type", mimeType),
+          .put("name", URLUtil.guessFileName(url, contentDisposition, mimeType)),
       )
     }
   }

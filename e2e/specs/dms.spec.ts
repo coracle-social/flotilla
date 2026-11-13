@@ -1,6 +1,6 @@
 import type {Locator, Page} from "@playwright/test"
 import {DAY, HOUR, MINUTE} from "@welshman/lib"
-import {FollowList} from "@welshman/domain"
+import {FollowList, MessagingRelayList} from "@welshman/domain"
 import {
   bubble,
   chatItems,
@@ -409,4 +409,46 @@ test("US-128 keep messages from strangers out of your conversations", async ({se
   await fromDave.click()
 
   await expect(bubble(page, "you have won a prize")).toBeVisible()
+})
+
+test("US-108 read messages from a relay you only use for messages", async ({seed, as}) => {
+  const scenario = await seed(({relay, user, at}) => {
+    const space = relay("space")
+    const inbox = relay("other")
+
+    seedPerson(space, user.alice, "Alice Anchor")
+    seedPerson(space, user.bob, "Bob Barnacle")
+    space.messagingRelayList(user.bob)
+
+    // Her messaging relay list is the one thing that vouches for her, and the relay serves her nothing until it does.
+    inbox.member(user.alice)
+
+    // This relay authorizes a wrap by the member its p tag names, so bob has to be one too.
+    inbox.member(user.bob)
+
+    // Tagged verbatim rather than through setUrls, which normalizes on the way in.
+    space.event(user.alice, () =>
+      space
+        .kind(MessagingRelayList)
+        .writer()
+        .addTags(["relay", inbox.url.replace(/\/$/, "")])
+        .renderTemplate(),
+    )
+
+    inbox.dm(user.bob, [user.alice], "over on your inbox relay", at(2, HOUR))
+  })
+
+  // Only her space indexes, so the inbox relay is dialled for her messages and nothing else.
+  const page = await as(users.alice, "/chat", {
+    env: {VITE_INDEXER_RELAYS: scenario.space("space").url},
+  })
+
+  const conversation = chatItems(page).filter({hasText: "over on your inbox relay"})
+
+  await expect(conversation).toContainText("Bob Barnacle")
+
+  await conversation.click()
+
+  await expect(pageBar(page)).toContainText("Bob Barnacle")
+  await expect(bubble(page, "over on your inbox relay")).toBeVisible()
 })

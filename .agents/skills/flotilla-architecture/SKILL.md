@@ -172,8 +172,10 @@ Outside `spaces/`:
   what was done to your own notes with its sync, grouping and unread state, and the types the
   stream is narrowed to)
 - `social/`: `replies.ts` reads a conversation's shape off its tags, `notes.ts` holds the `Notes`
-  plugin; `muting.ts`, `networkFeed.ts` (`makeNetworkFeed`) and `reactions.ts` (reacting outside
-  a space)
+  plugin, `timeline.ts` pages one group of relays at a time, `noteFeed.ts` (`makeNoteFeed`,
+  `makeNotesTimeline`) combines paged sources into a note feed with its types and counts,
+  `popularFeed.ts` supplies the notes her follows answered, and `muting.ts` and `reactions.ts`
+  cover mutes and reacting outside a space
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)

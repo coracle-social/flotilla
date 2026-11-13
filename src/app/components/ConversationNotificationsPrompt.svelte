@@ -11,7 +11,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {enableMessageNotifications, getPermissionMessage} from "@app/features/push"
+  import {enableMessageNotifications, getPermissionMessage, isGranted} from "@app/features/push"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
 
@@ -21,12 +21,15 @@
     try {
       const permission = await enableMessageNotifications()
 
-      if (permission.startsWith("granted")) {
+      if (isGranted(permission)) {
         await popModal()
         pushToast({message: "You'll be notified about new direct messages."})
       } else {
         pushToast({theme: "error", message: getPermissionMessage(permission)})
       }
+    } catch (error) {
+      console.error(error)
+      pushToast({theme: "error", message: "Failed to enable notifications."})
     } finally {
       loading = false
     }

@@ -1,5 +1,5 @@
 import {HOUR} from "@welshman/lib"
-import {LONG_FORM} from "@welshman/util"
+import {LONG_FORM, MESSAGE} from "@welshman/util"
 import {Article, Comment} from "@welshman/domain"
 import type {Page} from "@playwright/test"
 import {
@@ -7,6 +7,8 @@ import {
   chatItems,
   chatPath,
   expect,
+  getPublished,
+  getPublishedEvents,
   menuButton,
   message,
   noteEditor,
@@ -40,6 +42,11 @@ const commentCard = (page: Page, text: string) =>
 
 // The action bar under an article on its own page, which is where that article's status shows.
 const articleActions = (page: Page) => page.locator('[data-component="ArticleActionBar"]')
+
+const publishedTo = (page: Page, id: string) =>
+  getPublished(page.context())
+    .filter(({event}) => event.id === id)
+    .map(({url}) => url)
 
 // The composer is a page of its own, and it holds the reader there until publishing resolves.
 const writeArticle = async (page: Page, title: string, body: string) => {
@@ -287,4 +294,80 @@ test("US-072 a deleted post is marked deleted", async ({seed, as}) => {
 
   // This page is the article's own view, so it stays and is marked deleted rather than vanishing.
   await expect(article.getByText("Deleted", {exact: true})).toBeVisible()
+})
+
+test("US-070 retry a failed relay", async ({seed, as}) => {
+  const scenario = await seed(({relay, user}) => {
+    const space = relay("space")
+    const other = relay("other")
+
+    space.room("general", {name: "General"})
+    space.join(user.alice, "general")
+    space.join(user.bob, "general")
+    other.join(user.alice)
+    seedPerson(space, user.alice, "Alice Anderson")
+    seedPerson(space, user.bob, "Bob Barker")
+
+    space.messagingRelayList(user.alice)
+    // Bob names both relays and belongs to one, so the other refuses a wrap addressed to him.
+    space.messagingRelayList(user.bob, [space.url, other.url])
+  })
+
+  const {url} = scenario.space("space")
+  const ghost = roomPath(url, "archive")
+  const alice = await as(users.alice, ghost)
+
+  // Seeding again replaces the scenario, and a page opened from that one carries no room list.
+  const bob = await as(users.bob, roomPath(url, "general"))
+
+  // A delay is what makes the retry's own "Sending..." a state rather than an instant.
+  await setSendDelay(alice, 5)
+  await alice.goto(ghost)
+
+  await send(alice, "is anyone here?")
+
+  const failure = message(alice, "is anyone here?").getByText("Failed to send!")
+
+  await expect(failure).toBeVisible()
+
+  // Seeding again is the only way the relay changes its mind about something it has already refused.
+  await seed(({relay}) => {
+    relay("space").room("archive", {name: "Archive"})
+  })
+
+  await failure.click()
+  await detail(alice).getByRole("button", {name: "Retry"}).click()
+
+  await expect(toast(alice)).toContainText("Sending...")
+  await expect(toast(alice)).toContainText("Message sent!")
+
+  // The message went out, so it no longer says it did not.
+  await expect(failure).toHaveCount(0)
+
+  const [sent] = getPublishedEvents(alice.context(), MESSAGE)
+
+  // The attempt and the retry, both to the relay that failed and to nothing else.
+  expect(publishedTo(alice, sent.id)).toEqual([url, url])
+
+  await bob.goto(roomPath(url, "archive"))
+
+  await expect(message(bob, "is anyone here?")).toBeVisible()
+
+  // The same retry in a conversation, where one of his two messaging relays turns her wrap away.
+  await alice.goto(chatPath(users.bob.pubkey))
+  await send(alice, "did that one arrive?")
+
+  const partial = alice.getByText("Failed to send!")
+
+  await expect(partial).toBeVisible()
+
+  await seed(({relay, user}) => {
+    relay("other").join(user.bob)
+  })
+
+  await partial.click()
+  await detail(alice).getByRole("button", {name: "Retry"}).click()
+
+  await expect(toast(alice)).toContainText("Message sent!")
+  await expect(partial).toHaveCount(0)
 })

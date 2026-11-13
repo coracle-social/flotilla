@@ -10,10 +10,10 @@
     class?: string
   }
 
-  const {count, onclick, ...props}: Props = $props()
+  const {count, onclick, class: className}: Props = $props()
 </script>
 
-<Button class={cx("button button-neutral button-xs rounded-full", props.class)} {onclick}>
+<Button class={cx("button button-neutral button-xs rounded-full", className)} {onclick}>
   <Icon icon={Reply} size={4} />
   {#if count === 0}
     Reply
