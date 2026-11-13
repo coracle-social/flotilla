@@ -37,13 +37,14 @@
   } from "@app/features/spaces/calendar"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import {makeCalendarFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeCalendarFeed, makeScrollLoader} from "@app/features/feeds"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.calendar.decode(params)
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
 
   const makeEvent = () => pushModal(CalendarEventCreate, {url})
 
@@ -86,7 +87,7 @@
   }
 
   let element: HTMLElement | undefined = $state()
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
   let newer: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
@@ -148,7 +149,7 @@
   onMount(() => {
     feed = makeCalendarFeed({
       relays: [url],
-      onEvent: context.add,
+      onEvent: engagement.add,
       filters: [{kinds: [EVENT_TIME]}, makeCommentFilter([EVENT_TIME])],
     })
 
@@ -220,11 +221,11 @@
       </div>
     {/if}
     {#if view === "agenda"}
-      <CalendarAgenda {url} events={$events} {element} {loading} {context} />
+      <CalendarAgenda {url} events={$events} {element} {loading} {engagement} />
     {:else if view === "week"}
-      <CalendarWeek {url} {events} {eventsByDay} date={cursor} {context} />
+      <CalendarWeek {url} {events} {eventsByDay} date={cursor} {engagement} />
     {:else}
-      <CalendarMonth {url} {events} {eventsByDay} date={cursor} {context} />
+      <CalendarMonth {url} {events} {eventsByDay} date={cursor} {engagement} />
     {/if}
   </div>
 </PageContent>

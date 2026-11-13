@@ -1,28 +1,28 @@
 <script lang="ts">
   import {remove} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
-  import {includedNetworkFeedTypes, networkFeedTypes} from "@app/features/social/noteFeed"
-  import type {NetworkFeedType} from "@app/features/social/noteFeed"
+  import {includedNoteFacets, noteFacets} from "@app/features/social"
+  import type {FeedCounts, NoteFacet} from "@app/features/social"
 
   type Props = {
-    counts: Map<NetworkFeedType, number>
+    counts: FeedCounts
   }
 
   const {counts}: Props = $props()
 
-  const toggle = (type: NetworkFeedType) => () =>
-    includedNetworkFeedTypes.update($types =>
-      $types.includes(type) ? remove(type, $types) : [...$types, type],
+  const toggle = (facet: NoteFacet) => () =>
+    includedNoteFacets.update($facets =>
+      $facets.includes(facet) ? remove(facet, $facets) : [...$facets, facet],
     )
 </script>
 
 <div class="flex flex-wrap items-center gap-2">
-  {#each networkFeedTypes as option (option.value)}
+  {#each noteFacets as option (option.value)}
     <SegmentedButton
       label={option.label}
       count={counts.get(option.value) ?? 0}
       size="xs"
-      pressed={$includedNetworkFeedTypes.includes(option.value)}
+      pressed={$includedNoteFacets.includes(option.value)}
       onclick={toggle(option.value)} />
   {/each}
 </div>

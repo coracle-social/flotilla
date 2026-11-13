@@ -12,7 +12,7 @@
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import {user} from "@app/core/user"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
   import {publishReaction, retractReaction} from "@app/features/spaces"
@@ -22,7 +22,7 @@
   type Props = {
     url: string
     event: TrustedEvent
-    context: FeedContext
+    engagement: EngagementIndex
     noun: string
     showRoom?: boolean
     showActivity?: boolean
@@ -35,7 +35,7 @@
   const {
     url,
     event,
-    context,
+    engagement,
     noun,
     showRoom,
     showActivity,
@@ -66,18 +66,18 @@
     </div>
     <span class="h-6 w-px shrink-0 bg-line"></span>
   {/if}
-  <PublicationStatusOrDeleted {event} {context} {status}>
+  <PublicationStatusOrDeleted {event} {engagement} {status}>
     <ReactionSummary
       {url}
       {event}
-      {context}
+      {engagement}
       {deleteReaction}
       {createReaction}
       hideZaps={hideZap}
       placement="left"
       emojiMenu />
     {#if showActivity}
-      <EventActivity {event} {context} />
+      <EventActivity {event} {engagement} />
     {/if}
     <EventMenuButton {url} {event} {noun} class="rounded-full">
       {#snippet customActions()}

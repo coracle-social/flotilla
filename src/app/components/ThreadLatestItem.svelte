@@ -11,20 +11,20 @@
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import {reader} from "@app/core/domain"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
     event: TrustedEvent
-    context: FeedContext
+    engagement: EngagementIndex
     // The row's board, left off a page that already says which board it is.
     showRoom?: boolean
   }
 
-  const {url, event, context, showRoom = true}: Props = $props()
+  const {url, event, engagement, showRoom = true}: Props = $props()
 
-  const related = context.related(event)
+  const related = engagement.related(event)
   const replies = derived(related, $related => filter(spec({kind: COMMENT}), $related))
   const replyCount = $derived($replies.length)
   const lastActive = $derived(max([...$replies, event].map(e => e.created_at)))

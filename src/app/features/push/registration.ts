@@ -26,11 +26,7 @@ export const pushRegistration = withGetter(
   synced<PushRegistration>({key: "pushRegistration", storage: kv, defaultValue: {}}),
 )
 
-type LegacyPushState = {
-  token?: string
-  subscription?: PushSubscription
-  useFallback?: boolean
-}
+type LegacyPushState = PushRegistration & {useFallback?: boolean}
 
 // The registration and the fallback flag shared one record before they were separated.
 export const migratePushState = async () => {

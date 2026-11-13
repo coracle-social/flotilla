@@ -15,7 +15,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import {user} from "@app/core/user"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {
     deletePins,
@@ -31,10 +31,10 @@
     url: string
     address: string
     pins: PinReader[]
-    context: FeedContext
+    engagement: EngagementIndex
   }
 
-  const {url, address, pins, context}: Props = $props()
+  const {url, address, pins, engagement}: Props = $props()
 
   const shelves = deriveShelves(url)
   const permissions = deriveSpacePermissions(url)
@@ -63,7 +63,8 @@
     selection = allSelected ? new Set() : new Set(pins.map(pin => pin.event.id))
   }
 
-  const open = (pin: PinReader) => () => pushModal(PinDetail, {url, pin, context}, {size: "large"})
+  const open = (pin: PinReader) => () =>
+    pushModal(PinDetail, {url, pin, engagement}, {size: "large"})
 
   const run = async (action: () => Promise<(string | undefined)[]>, message: string) => {
     loading = true

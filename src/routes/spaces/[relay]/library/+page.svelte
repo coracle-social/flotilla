@@ -15,7 +15,7 @@
   import PinboardItem from "@app/components/PinboardItem.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
   import {network} from "@app/core/plugins"
-  import {makeFeedContext} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
   import {
     derivePins,
     deriveShelves,
@@ -29,7 +29,7 @@
   const {params}: PageProps = $props()
 
   const {url} = pages.library.decode(params)
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
   const shelves = deriveShelves(url)
   const pins = derivePins(url)
 
@@ -88,7 +88,7 @@
     return () => controller.abort()
   })
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 </script>
 
 <SpaceBar>
@@ -130,7 +130,7 @@
     {#if matchingShelves.length > 0}
       <div class="grid gap-4 @2xl:grid-cols-2 @4xl:grid-cols-3">
         {#each matchingShelves as board (board.address())}
-          <PinboardItem {url} {board} {context} pins={pinsByShelf.get(board.address()) ?? []} />
+          <PinboardItem {url} {board} {engagement} pins={pinsByShelf.get(board.address()) ?? []} />
         {/each}
       </div>
     {:else}
@@ -144,7 +144,7 @@
       </h2>
       <div class="grid gap-4 @2xl:grid-cols-2 @4xl:grid-cols-3">
         {#each matchingPins as pin (pin.event.id)}
-          <PinItem {url} {pin} {context} />
+          <PinItem {url} {pin} {engagement} />
         {/each}
       </div>
     {/if}

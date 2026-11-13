@@ -1,24 +1,23 @@
 <script lang="ts">
   import {remove} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {includedHomeActivityTypes} from "@app/features/activity"
-  import type {HomeActivityType} from "@app/features/activity"
+  import {includedHomeActivityTypes} from "@app/features/notifications"
+  import type {NotificationFacet} from "@app/features/notifications"
 
   type Props = {
-    counts: Map<Maybe<HomeActivityType>, number>
+    counts: Map<NotificationFacet, number>
   }
 
   const {counts}: Props = $props()
 
-  const toggle = (type: HomeActivityType) => () =>
+  const toggle = (type: NotificationFacet) => () =>
     includedHomeActivityTypes.update($types =>
       $types.includes(type) ? remove(type, $types) : [...$types, type],
     )
 </script>
 
-{#snippet filter(type: HomeActivityType, label: string)}
+{#snippet filter(type: NotificationFacet, label: string)}
   <SegmentedButton
     {label}
     count={counts.get(type) ?? 0}

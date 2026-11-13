@@ -43,8 +43,8 @@
   import * as env from "@app/core/env"
   import {applySavedTheme, flTheme, syncTheme, theme} from "@app/features/theme"
   import {checked, syncChecked, syncCheckedRemote} from "@app/features/checked"
+  import {unreadCount, backgroundUnreadCount} from "@app/features/activity"
   import * as notifications from "@app/features/notifications"
-  import {backgroundNotificationCount, notificationCount} from "@app/features/notifications"
   import {syncBadges} from "@app/features/badges"
   import {alertSettings} from "@app/features/alerts"
   import {migratePushState, pushRegistration, syncPush, useFallback} from "@app/features/push"
@@ -187,7 +187,7 @@
   })
 
   $effect(() => {
-    const count = $documentActive ? $notificationCount : $backgroundNotificationCount
+    const count = $documentActive ? $unreadCount : $backgroundUnreadCount
     let current = true
 
     // A title can wait on the repository, by which time the page may have moved on

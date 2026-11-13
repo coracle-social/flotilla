@@ -10,13 +10,13 @@
   import NoteThreadLinks from "@app/components/NoteThreadLinks.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
   import Cv from "@lib/components/Cv.svelte"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {
     event: TrustedEvent
     children?: Snippet
-    context: FeedContext
+    engagement: EngagementIndex
     url?: string
     customActions?: Snippet<[TrustedEvent]>
     card?: boolean
@@ -31,7 +31,7 @@
     url,
     event,
     children,
-    context,
+    engagement,
     customActions,
     card = true,
     interactive = card,
@@ -41,7 +41,7 @@
     showThreadLinks = false,
   }: Props = $props()
 
-  const related = context.related(event)
+  const related = engagement.related(event)
 
   // Kind 1 notes are replied to with notes as well as with NIP-22 comments.
   const replyCount = $derived($related.filter(e => e.kind === COMMENT || e.kind === NOTE).length)
@@ -59,7 +59,7 @@
   {/if}
   <NoteContent {event} {showEntire} expandMode="inline" />
   <div class="flex w-full justify-between gap-2">
-    <EventReactions {event} {context} {url} placement="right" />
+    <EventReactions {event} {engagement} {url} placement="right" />
     <div class="flex shrink-0 items-center gap-2">
       {#if showReply}
         <ReplyButton count={replyCount} onclick={openReplies} />

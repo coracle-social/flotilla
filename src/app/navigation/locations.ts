@@ -22,6 +22,7 @@ import {DM_KINDS} from "@lib/util"
 import {app} from "@app/core/app"
 import {reader} from "@app/core/domain"
 import {PLATFORM_URL} from "@app/core/env"
+import {notes} from "@app/features/social/notes"
 import {userSpaceUrls} from "@app/features/spaces/urls"
 import {navigate} from "@app/navigation/navigate"
 import type {NavigateOptions} from "@app/navigation/navigate"
@@ -145,6 +146,8 @@ export const goToEvent = (event: TrustedEvent, options: NavigateOptions = {}) =>
     }
   } else {
     // A kind with no page of its own opens there too, rather than in another client.
-    openNote(EventRef.fromEvent(event, urls), {replaceState: options.replaceState, event})
+    notes.get().seed(event)
+
+    openNote(EventRef.fromEvent(event, urls), {replaceState: options.replaceState})
   }
 }

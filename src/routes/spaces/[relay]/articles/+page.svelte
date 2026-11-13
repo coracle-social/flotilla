@@ -21,16 +21,17 @@
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
   import {reader} from "@app/core/domain"
   import {sortArticles} from "@app/features/spaces/articles"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
+  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.articles.decode(params)
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
 
@@ -55,7 +56,7 @@
   onMount(() => {
     const feed = makeFeed({
       relays: [url],
-      onEvent: context.add,
+      onEvent: engagement.add,
       filters: [{kinds: [LONG_FORM]}, makeCommentFilter([LONG_FORM])],
     })
 
@@ -90,7 +91,7 @@
   <div class="flex min-w-0 grow flex-col gap-2 sm:gap-4 p-2 sm:p-4 lg:pr-0">
     {#each filtered as event (getAddress(event))}
       <div in:fly>
-        <ArticleItem {url} {event} {context} />
+        <ArticleItem {url} {event} {engagement} />
       </div>
     {/each}
     <p class="flex h-10 items-center justify-center py-20">

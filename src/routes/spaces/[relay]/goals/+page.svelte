@@ -17,14 +17,15 @@
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import {makeCommentFilter} from "@lib/util"
+  import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import GoalItem from "@app/components/GoalItem.svelte"
   import GoalCreate from "@app/components/GoalCreate.svelte"
   import * as pages from "@app/navigation/pages"
   import {partitionByActivity} from "@app/features/spaces"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
+  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
   import {
     deriveGoalProgressById,
     filterGoals,
@@ -38,9 +39,9 @@
   const {params}: PageProps = $props()
 
   const {url} = pages.goals.decode(params)
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   const tabs: SegmentedOption<GoalFilter>[] = [
     {value: "all", label: "All"},
@@ -82,7 +83,7 @@
   onMount(() => {
     const feed = makeFeed({
       relays: [url],
-      onEvent: context.add,
+      onEvent: engagement.add,
       filters: [{kinds: [ZAP_GOAL]}, makeCommentFilter([ZAP_GOAL])],
     })
 
@@ -147,7 +148,7 @@
   <div class="columns-1 gap-2 sm:gap-4 @2xl:columns-2 @6xl:columns-3">
     {#each items as event (event.id)}
       <div in:fly class="mb-2 min-w-0 break-inside-avoid sm:mb-4">
-        <GoalItem {url} {context} event={$state.snapshot(event)} />
+        <GoalItem {url} {engagement} event={$state.snapshot(event)} />
       </div>
     {/each}
   </div>
@@ -164,16 +165,12 @@
       </Button>
     </div>
   {:else}
-    <p class="flex h-10 items-center justify-center py-20">
-      <Spinner {loading}>
-        {#if loading}
-          Looking for goals...
-        {:else if exhausted && items.length === 0}
-          No goals match this filter.
-        {:else if exhausted}
-          That's all!
-        {/if}
-      </Spinner>
-    </p>
+    <FeedFooter
+      {loading}
+      {exhausted}
+      isEmpty={items.length === 0}
+      loadingMessage="Looking for goals..."
+      emptyMessage="No goals match this filter."
+      doneMessage="That's all!" />
   {/if}
 </PageContent>

@@ -5,7 +5,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {network} from "@app/core/plugins"
-  import {makeFeedContext} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
 
   type Props = {
     url: string
@@ -16,9 +16,9 @@
 
   const {url, pubkey, limit = 1, fallback}: Props = $props()
 
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   const events = $network.load({
     relays: [url],
@@ -35,7 +35,7 @@
       </p>
     {:then events}
       {#each events as event (event.id)}
-        <NoteItem {url} {event} {context} />
+        <NoteItem {url} {event} {engagement} />
       {:else}
         <div class="min-h-6">
           {@render fallback?.()}

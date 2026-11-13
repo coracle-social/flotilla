@@ -6,7 +6,7 @@
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import {normalizeTopic} from "@lib/util"
   import {rooms} from "@app/core/plugins"
-  import {notifications} from "@app/features/notifications"
+  import {notifications} from "@app/features/activity"
   import {displayRoom} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
 

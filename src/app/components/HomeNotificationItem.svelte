@@ -1,6 +1,6 @@
 <script lang="ts">
   import {call, removeUndefined, uniq} from "@welshman/lib"
-  import {REACTION, ZAP_RECEIPT, sortEventsDesc, tagSpec, tagValue} from "@welshman/util"
+  import {REACTION, ZAP_RECEIPT, tagSpec, tagValue} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
@@ -8,22 +8,23 @@
   import NoteStats from "@app/components/NoteStats.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
+  import ReplyList from "@app/components/ReplyList.svelte"
   import {user} from "@app/core/user"
-  import type {FeedContext} from "@app/features/feeds"
-  import {REPOST_KINDS, displayActivityTimestamp} from "@app/features/activity"
-  import type {HomeNotification} from "@app/features/activity"
+  import {displayActivityTimestamp} from "@app/features/activity"
+  import type {EngagementIndex} from "@app/features/engagement"
+  import {REPOST_KINDS} from "@app/features/notifications"
+  import type {HomeNotification} from "@app/features/notifications"
   import {pushModal} from "@app/navigation/dialogs"
-  import {openEventNote} from "@app/navigation/overlays"
 
   type Part = {pubkey?: string; text?: string}
 
   type Props = {
     notification: HomeNotification
     note: TrustedEvent
-    context: FeedContext
+    engagement: EngagementIndex
   }
 
-  const {notification, note, context}: Props = $props()
+  const {notification, note, engagement}: Props = $props()
 
   // A notification keeps its key while it collects answers, so the component has to follow its prop.
   const replies = $derived(notification.replies)
@@ -121,23 +122,11 @@
     }),
   )
 
-  let showEvery = $state(false)
-
-  const sorted = $derived(sortEventsDesc(replies))
-
-  const shown = $derived(showEvery ? sorted : sorted.slice(0, 3))
-
   const open = () => {
     pushModal(NoteStats, {event: note})
   }
 
   const openProfile = (pubkey: string) => () => pushModal(ProfileDetail, {pubkey})
-
-  const openReply = (reply: TrustedEvent) => () => openEventNote(reply)
-
-  const showAll = () => {
-    showEvery = true
-  }
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) {
@@ -172,24 +161,6 @@
       {displayActivityTimestamp(notification.timestamp)}
     </span>
   </div>
-  <NoteItem event={note} {context} customActions={quoteNote} showReply showThreadLinks />
-  {#if shown.length > 0}
-    <div class="border-line-less ml-4 flex flex-col gap-3 border-l pt-3 pl-4">
-      {#each shown as reply (reply.id)}
-        <NoteItem
-          event={reply}
-          {context}
-          customActions={quoteNote}
-          card={false}
-          interactive
-          showReply
-          onOpen={openReply(reply)} />
-      {/each}
-      {#if shown.length < replies.length}
-        <Button class="link self-start text-sm" onclick={showAll}>
-          Show {replies.length - shown.length} more
-        </Button>
-      {/if}
-    </div>
-  {/if}
+  <NoteItem event={note} {engagement} customActions={quoteNote} showReply showThreadLinks />
+  <ReplyList {replies} {engagement} {quoteNote} />
 </div>

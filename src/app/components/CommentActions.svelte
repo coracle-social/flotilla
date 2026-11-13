@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
@@ -11,10 +11,10 @@
     url: string
     event: TrustedEvent
     showActivity?: boolean
-    context: FeedContext
+    engagement: EngagementIndex
   }
 
-  const {url, event, showActivity = false, context}: Props = $props()
+  const {url, event, showActivity = false, engagement}: Props = $props()
 
   const deleteReaction = (reaction: TrustedEvent) => retractReaction(url, reaction)
 
@@ -23,10 +23,16 @@
 
 <div class="flex flex-wrap items-center justify-between gap-2">
   <div class="flex grow flex-wrap justify-end gap-2">
-    <PublicationStatusOrDeleted {event} {context}>
-      <ReactionSummary {url} {event} {context} {deleteReaction} {createReaction} placement="left" />
+    <PublicationStatusOrDeleted {event} {engagement}>
+      <ReactionSummary
+        {url}
+        {event}
+        {engagement}
+        {deleteReaction}
+        {createReaction}
+        placement="left" />
       {#if showActivity}
-        <EventActivity {event} {context} />
+        <EventActivity {event} {engagement} />
       {/if}
       <EventMenuButton {url} {event} noun="Comment" class="rounded-full" />
     </PublicationStatusOrDeleted>

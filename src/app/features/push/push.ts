@@ -82,13 +82,15 @@ export const enablePush = async () => {
     enabled = undefined
   }
 
-  // Permission can be revoked outside the app, so this turns the setting off instead of going quiet.
-  if (isGranted(await adapter.check())) {
+  // Permission can be revoked outside the app, so report it and let the caller turn the setting off.
+  const permission = await adapter.check()
+
+  if (isGranted(permission)) {
     await adapter.enable()
     enabled = adapter
-  } else {
-    setAlertChannels({push: false})
   }
+
+  return permission
 }
 
 export const disablePush = async () => {
@@ -99,10 +101,15 @@ export const disablePush = async () => {
 }
 
 export const syncPush = () =>
-  alertSettings.subscribe(({push}) => {
+  alertSettings.subscribe(async ({push}) => {
     if (push) {
-      enablePush()
+      const permission = await enablePush()
+
+      if (!isGranted(permission)) {
+        // Recording the refusal re-enters this subscriber, which disables the adapter.
+        setAlertChannels({push: false})
+      }
     } else {
-      disablePush()
+      await disablePush()
     }
   })

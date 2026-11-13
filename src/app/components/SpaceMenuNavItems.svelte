@@ -20,7 +20,7 @@
   import {ENABLE_ZAPS} from "@app/core/env"
   import {CONTENT_KINDS} from "@app/features/spaces"
   import * as pages from "@app/navigation/pages"
-  import {allNotifications, notifications} from "@app/features/notifications"
+  import {notifications, unreadPaths} from "@app/features/activity"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
@@ -50,7 +50,7 @@
 
   // A comment can name content this space doesn't have, and it counts toward the space either way.
   const showSection = (kind: number, path: string) =>
-    $spaceKinds.has(kind) || $allNotifications.has(path) || $page.url.pathname.startsWith(path)
+    $spaceKinds.has(kind) || $unreadPaths.has(path) || $page.url.pathname.startsWith(path)
 
   const openSearch = () => pushModal(SpaceSearch, {url})
 

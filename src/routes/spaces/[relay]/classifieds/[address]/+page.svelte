@@ -17,14 +17,14 @@
   import EventComments from "@app/components/EventComments.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeFeedContext} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, address} = pages.classified.decode(params)
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
   const event = $events.one(address, [url]).$
   const classified = derived(event, $event => ($event ? reader(Classified)($event) : undefined))
 
@@ -32,7 +32,7 @@
 
   const back = () => history.back()
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 </script>
 
 {#snippet topicLinks()}
@@ -63,14 +63,14 @@
           labels={topics.length > 0 ? topicLinks : undefined}
           event={$event}
           {url}
-          {context}>
+          {engagement}>
           {#snippet status()}
             <ClassifiedStatus event={$event} />
           {/snippet}
         </ContentActions>
       </div>
     </NoteCard>
-    <EventComments event={$event} {url} {context} />
+    <EventComments event={$event} {url} {engagement} />
   {:else}
     <LoadingFallback
       loadingMessage="Loading listing..."

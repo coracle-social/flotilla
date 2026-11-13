@@ -4,18 +4,18 @@
   import {PublishStatus} from "@welshman/net"
   import PublicationStatus from "@app/components/PublicationStatus.svelte"
   import {publisher} from "@app/core/plugins"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
 
   type Props = {
     event: TrustedEvent
-    context: FeedContext
+    engagement: EngagementIndex
     status?: Snippet
     children?: Snippet
   }
 
-  const {event, context, status, children}: Props = $props()
-  const deleted = $derived(context.deleted(event))
+  const {event, engagement, status, children}: Props = $props()
+  const deleted = $derived(engagement.deleted(event))
   const pending = $derived($publicationsByEventId.get(event.id) ?? noPublications)
   const group = $derived($publisher.merge(pending))
 </script>

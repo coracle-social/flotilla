@@ -2,7 +2,7 @@ import {setSpaceNotifications} from "@app/core/settings"
 import {alertSettings, setAlertChannels, setAlertTypes} from "@app/features/alerts"
 import type {AlertSettings} from "@app/features/alerts"
 import {getPermissionMessage, isGranted} from "@app/features/push/permission"
-import {requestPushPermission} from "@app/features/push/push"
+import {checkPushPermission, requestPushPermission} from "@app/features/push/push"
 import {pushToast} from "@app/features/toast"
 
 export const optInSpaceNotifications = async (url: string, notify: boolean) => {
@@ -20,7 +20,7 @@ export const optInSpaceNotifications = async (url: string, notify: boolean) => {
 }
 
 export const saveAlertSettings = async (values: AlertSettings) => {
-  const permission = values.push ? await requestPushPermission() : "granted"
+  const permission = values.push ? await requestPushPermission() : await checkPushPermission()
   const push = values.push && isGranted(permission)
 
   alertSettings.set({...values, push})

@@ -18,7 +18,7 @@
   import {relayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
-  import {homeNotificationsUnread} from "@app/features/activity"
+  import {homeNotificationsUnread} from "@app/features/notifications"
 
   type HomeTab = "activity" | "network"
 

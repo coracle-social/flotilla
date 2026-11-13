@@ -27,7 +27,7 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import Reaction from "@app/components/Reaction.svelte"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {deriveNoteStats} from "@app/features/social/stats"
+  import {deriveNoteStats} from "@app/features/social"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

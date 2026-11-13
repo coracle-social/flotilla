@@ -1,4 +1,4 @@
-import {ms, parseJson, poll, throttle} from "@welshman/lib"
+import {equals, ms, parseJson, poll, throttle} from "@welshman/lib"
 import {LOCAL_RELAY_URL} from "@welshman/net"
 import {getIdFilters, verifyEvent, WRAP} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
@@ -67,19 +67,37 @@ export const onPushNotificationAction = async (action: {
   }
 }
 
+export type RelaySubscription = {
+  relay: string
+  key: string
+  filters: Filter[]
+  ignore: Filter[]
+}
+
 // NIP-9a: asks a relay to post matching events to the push server's callback
 export const syncRelaySubscriptions = (
   signal: AbortSignal,
-  sync: (url: string, key: string, filters: Filter[], ignore: Filter[]) => void,
+  sync: (added: RelaySubscription[], removed: RelaySubscription[]) => void,
 ) => {
   const $pubkey = User.require(app.get()).pubkey
+  let subscriptions = new Map<string, RelaySubscription>()
 
-  const unsubscribeSpaces = merged([
+  const unsubscribe = merged([
     roomLists.get().urls($pubkey).$,
+    messagingRelayLists.get().urls($pubkey).$,
     alertSettings,
     userSettingsValues,
   ]).subscribe(
-    throttle(3000, ([$spaceUrls, $types, $settings]) => {
+    throttle(3000, ([$spaceUrls, $messagingUrls, $types, $settings]) => {
+      const next = new Map<string, RelaySubscription>()
+      const messageFilters = getMessageAlertFilters($types, $pubkey)
+
+      const addSubscription = (relay: string, key: string, filters: Filter[], ignore: Filter[]) => {
+        if (filters.length > 0) {
+          next.set(`${relay}:${key}`, {relay, key, filters, ignore})
+        }
+      }
+
       for (const url of $spaceUrls) {
         const {include, ignore} = getSpaceAlertFilters({
           url,
@@ -88,24 +106,35 @@ export const syncRelaySubscriptions = (
           pubkey: $pubkey,
         })
 
-        sync(url, "spaces", include, ignore)
+        addSubscription(url, "spaces", include, ignore)
       }
-    }),
-  )
 
-  const unsubscribeMessages = merged([
-    messagingRelayLists.get().urls($pubkey).$,
-    alertSettings,
-  ]).subscribe(
-    throttle(3000, ([$messagingUrls, $types]) => {
       for (const url of $messagingUrls) {
-        sync(url, "messages", getMessageAlertFilters($types, $pubkey), [])
+        addSubscription(url, "messages", messageFilters, [])
+      }
+
+      const added: RelaySubscription[] = []
+      const removed: RelaySubscription[] = []
+
+      for (const [id, subscription] of next) {
+        if (!equals(subscription, subscriptions.get(id))) {
+          added.push(subscription)
+        }
+      }
+
+      for (const [id, subscription] of subscriptions) {
+        if (!next.has(id)) {
+          removed.push(subscription)
+        }
+      }
+
+      subscriptions = next
+
+      if (added.length > 0 || removed.length > 0) {
+        sync(added, removed)
       }
     }),
   )
 
-  signal.addEventListener("abort", () => {
-    unsubscribeSpaces()
-    unsubscribeMessages()
-  })
+  signal.addEventListener("abort", unsubscribe)
 }

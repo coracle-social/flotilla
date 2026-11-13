@@ -1,135 +1,109 @@
 import {derived, get, readable, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {first, groupBy, min, ms, partition, sortBy, take, uniq, uniqBy} from "@welshman/lib"
+import {ms, partition, sortBy, take, uniq} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {EventRef, NOTE, getIdOrAddress} from "@welshman/util"
+import {EventRef, sortEventsDesc} from "@welshman/util"
 import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {synced} from "@welshman/store"
-import {Note} from "@welshman/domain"
 import {createScroller} from "@lib/html"
-import {reader} from "@app/core/domain"
 import {kv} from "@app/core/storage"
-import {CONTENT_KINDS} from "@app/features/spaces"
 import {getPublishedTimestamp} from "@app/features/spaces/articles"
-import {getReplyRefs} from "@app/features/social/replies"
+import {classifyNote, getNoteAnswer} from "@app/features/social/noteSources"
+import type {
+  ContentSource,
+  NoteFacet,
+  NoteSource,
+  ReferenceSource,
+} from "@app/features/social/noteSources"
 import {notes} from "@app/features/social/notes"
-import {makeTimeline} from "@app/features/social/timeline"
-import type {Timeline} from "@app/features/social/timeline"
 
 // What the feed can be narrowed to: what the follows wrote, and what they answered elsewhere.
-export const networkFeedTypes = [
+export const noteFacets = [
   {value: "notes", label: "Notes"},
   {value: "replies", label: "Replies"},
-  {value: "popular", label: "Popular"},
+  {value: "engaged", label: "Interactions"},
 ] as const
 
-export type NetworkFeedType = (typeof networkFeedTypes)[number]["value"]
+// The key outlives the facet's name, so a session that stored popular comes back as engaged.
+const readIncludedNoteFacets = async (key: string): Promise<Maybe<NoteFacet[]>> => {
+  const stored = await kv.get<unknown[]>(key)
 
-export const includedNetworkFeedTypes = synced<NetworkFeedType[]>({
+  if (Array.isArray(stored)) {
+    return stored
+      .map(value => (value === "popular" ? "engaged" : value))
+      .filter((value): value is NoteFacet => noteFacets.some(facet => facet.value === value))
+  }
+}
+
+export const includedNoteFacets = synced<NoteFacet[]>({
   key: "includedNetworkFeedTypes",
   defaultValue: ["notes", "replies"],
-  storage: kv,
+  storage: {get: readIncludedNoteFacets, set: kv.set},
 })
 
-// Only a kind 1 carries NIP-10 reply tags, so an article or a poll in the feed is a note.
-const networkFeedType = (event: TrustedEvent): NetworkFeedType =>
-  event.kind === NOTE && reader(Note)(event).parent() ? "replies" : "notes"
+export type FeedCounts = Map<NoteFacet, number>
 
-type NoteSourceBase = {
-  events: Readable<TrustedEvent[]>
+export type NoteFeedStatus = "loading" | "ready" | "empty" | "filtered"
+
+// One card in the feed: the note it is drawn around, and the replies answering it.
+export type NoteEntry = {
+  key: string
+  ref: EventRef
+  note: TrustedEvent
+  replies: TrustedEvent[]
+}
+
+// A card waiting on its note: what the feed would draw, and how much hangs off it.
+export type PendingNote = {
+  key: string
+  ref: EventRef
+  replies: number
+}
+
+export type NoteFeed = {
+  counts: Readable<FeedCounts>
+  noteCount: Readable<number>
+  entries: Readable<NoteEntry[]>
+  pending: Readable<PendingNote[]>
   loading: Readable<boolean>
   exhausted: Readable<boolean>
-  page: () => Promise<unknown>
-  settle: () => void
+  status: Readable<NoteFeedStatus>
+  start: (element: HTMLElement) => void
   stop: () => void
 }
 
-// A source whose events are drawn as they are.
-export type ContentSource = NoteSourceBase & {
-  type?: NetworkFeedType
-  target?: undefined
-}
-
-// A source whose events name a note, which has to be loaded before it can be drawn.
-export type ReferenceSource = NoteSourceBase & {
-  type: NetworkFeedType
-  target: (event: TrustedEvent) => Maybe<EventRef>
-}
-
-export type NoteSource = ContentSource | ReferenceSource
-
-export type NotesTimeline = ContentSource & Pick<Timeline, "start">
-
-// The notes a set of follows published, alongside the content kinds their spaces give a page of their own.
-export const makeNotesTimeline = ({
-  onEvent,
-}: {
-  onEvent: (event: TrustedEvent) => void
-}): NotesTimeline =>
-  makeTimeline({
-    getFilters: pubkeys => [{kinds: [NOTE, ...CONTENT_KINDS], authors: pubkeys}],
-    onEvent,
-  })
-
-type FeedCandidate = {
+// An event and the note its card is drawn around, as a source named it.
+type NoteCandidate = {
+  key: string
+  ref: EventRef
+  facets: NoteFacet[]
   event: TrustedEvent
-  // Every filter the event belongs under, so a note can be both written by a follow and liked by one.
-  types: NetworkFeedType[]
 }
 
-type FeedTarget = {
+// What a source's events point at, as a note the feed has to load first.
+type NoteTarget = {
   key: string
   ref: EventRef
-  type: NetworkFeedType
+  facets: NoteFacet[]
 }
 
-// One card in the feed: the note it is drawn around, and the replies answering it.
-export type NetworkFeedEntry = {
+// Everything the feed knows about one note: what it belongs under, the note, and what answers it.
+type NoteGroup = {
   key: string
   ref: EventRef
+  facets: NoteFacet[]
   note?: TrustedEvent
   replies: TrustedEvent[]
 }
 
 // What a feed event is drawn under: the note a reply answers, or the event itself.
-const getNetworkFeedRef = (event: TrustedEvent) => {
-  const answered = networkFeedType(event) === "replies" ? getReplyRefs(event).parent : undefined
+const getEntryRef = (event: TrustedEvent) => getNoteAnswer(event) ?? EventRef.fromEvent(event)
 
-  return answered ?? EventRef.fromEvent(event)
-}
-
-// Where an entry sits in the feed: its note, or the oldest reply when the note is not loaded.
-const getNetworkFeedTimestamp = (entry: NetworkFeedEntry) =>
-  entry.note ? getPublishedTimestamp(entry.note) : min(entry.replies.map(reply => reply.created_at))
-
-// A reply collapses into the entry for the note it answers, so two replies to one note share it.
-const groupNetworkFeedEvents = (events: TrustedEvent[]): NetworkFeedEntry[] => {
-  const items = events.flatMap(event => {
-    const ref = getNetworkFeedRef(event)
-    const key = ref.getAddressOrId()
-
-    return key ? [{key, ref, event}] : []
-  })
-
-  const entries = Array.from(
-    groupBy(item => item.key, items),
-    ([key, group]): NetworkFeedEntry => {
-      const [anchors, replies] = partition(({ref, event}) => ref.id === event.id, group)
-
-      return {
-        key,
-        ref: group.map(({ref}) => ref).reduce(EventRef.merge),
-        note: first(anchors)?.event,
-        replies: replies.map(({event}) => event),
-      }
-    },
-  )
-
-  return sortBy(entry => -getNetworkFeedTimestamp(entry), entries)
-}
+// An addressable note is keyed by its address, so a reply naming only its latest version lands on it.
+const getNoteKey = (ref: IEventRef) => new EventRef(ref).getAddressOrId()
 
 // A note an entry can't draw its card without, given up on rather than holding up the feed.
-const loadFeedNote = async (ref: IEventRef, signal: AbortSignal, replies: TrustedEvent[] = []) => {
+const loadFeedNote = async (ref: IEventRef, signal: AbortSignal, replies: TrustedEvent[]) => {
   try {
     return await notes.get().load(ref, {replies, priority: 1, signal, timeout: ms(15)})
   } catch (error) {
@@ -139,178 +113,186 @@ const loadFeedNote = async (ref: IEventRef, signal: AbortSignal, replies: Truste
   }
 }
 
-const allTypes = readable<NetworkFeedType[]>(networkFeedTypes.map(({value}) => value))
-
-// An ordinary source is shown while either of its types is, and one with a type of its own while that is.
-const isSourceIncluded = (source: NoteSource, $included: NetworkFeedType[]) =>
-  source.type
-    ? $included.includes(source.type)
-    : $included.includes("notes") || $included.includes("replies")
+const allFacets = readable<NoteFacet[]>(noteFacets.map(({value}) => value))
 
 const isReference = (source: NoteSource): source is ReferenceSource => Boolean(source.target)
+
+const isSourceIncluded = (source: NoteSource, $included: NoteFacet[]) =>
+  source.produces.some(facet => $included.includes(facet))
 
 export type NoteFeedOptions = {
   sources: NoteSource[]
   pinned?: Readable<TrustedEvent[]>
-  included?: Readable<NetworkFeedType[]>
+  included?: Readable<NoteFacet[]>
 }
 
 /** Notes with each reply drawn under the note it answers, from every source the caller passes. */
 export const makeNoteFeed = ({
   sources,
   pinned = readable<TrustedEvent[]>([]),
-  included = allTypes,
-}: NoteFeedOptions) => {
-  const drawable = sources.filter((source): source is ContentSource => !isReference(source))
-  const references = sources.filter(isReference)
+  included = allFacets,
+}: NoteFeedOptions): NoteFeed => {
+  const contentSources = sources.filter((source): source is ContentSource => !isReference(source))
+  const referenceSources = sources.filter(isReference)
 
-  // Notes each source draws itself, classified by kind when it doesn't name a type.
+  // The events each source draws itself, classified into the facet it belongs under.
   const drawn = derived(
-    [...drawable.map(source => source.events), pinned],
-    ($events: TrustedEvent[][]) => {
-      const $pinned = $events[$events.length - 1]
-      const candidates = $pinned.map(
-        (event): FeedCandidate => ({event, types: [networkFeedType(event)]}),
-      )
+    [pinned, ...contentSources.map(source => source.events)],
+    ($pages: TrustedEvent[][]) => {
+      const [$pinned, ...$sources] = $pages
+      const candidates = new Map<string, NoteCandidate>()
 
-      for (const [index, source] of drawable.entries()) {
-        for (const event of $events[index]) {
-          candidates.push({event, types: [source.type ?? networkFeedType(event)]})
+      const add = (event: TrustedEvent, facets: NoteFacet[]) => {
+        const existing = candidates.get(event.id)
+
+        if (existing) {
+          existing.facets = uniq([...existing.facets, ...facets])
+          return
+        }
+
+        const ref = getEntryRef(event)
+        const key = getNoteKey(ref)
+
+        if (key) {
+          candidates.set(event.id, {key, ref, facets: [...facets], event})
         }
       }
 
-      return candidates
+      $pinned.forEach(event => add(event, [classifyNote(event)]))
+
+      for (const [index, source] of contentSources.entries()) {
+        $sources[index].forEach(event => add(event, [source.classify(event)]))
+      }
+
+      return Array.from(candidates.values())
     },
   )
 
   // What each reference source's events point at, as notes the feed has to load first.
-  const targets = writable(new Map<string, Maybe<TrustedEvent>>())
-
-  const refs: Readable<FeedTarget[]> =
-    references.length > 0
+  const referenced: Readable<NoteTarget[]> =
+    referenceSources.length > 0
       ? derived(
-          references.map(source => source.events),
-          ($events: TrustedEvent[][]) => {
-            const targets: FeedTarget[] = []
+          referenceSources.map(source => source.events),
+          ($pages: TrustedEvent[][]) => {
+            const targets: NoteTarget[] = []
 
-            for (const [index, source] of references.entries()) {
-              for (const event of $events[index]) {
+            for (const [index, source] of referenceSources.entries()) {
+              for (const event of $pages[index]) {
                 const ref = source.target(event)
-                const key = ref?.getAddressOrId()
+                const key = ref && getNoteKey(ref)
 
                 if (ref && key) {
-                  targets.push({key, ref, type: source.type})
+                  targets.push({key, ref, facets: [...source.produces]})
                 }
               }
             }
 
-            return uniqBy(target => target.key, targets)
+            return targets
           },
         )
       : readable([])
 
-  const resolved = derived([refs, targets], ([$refs, $targets]) =>
-    $refs.flatMap(({key, type}): FeedCandidate[] => {
-      const note = $targets.get(key)
+  // Candidates as their sources named them, one per note a reference or an answer points at.
+  const candidates = derived([drawn, referenced], ([$drawn, $referenced]) => {
+    const groups = new Map<string, NoteGroup>()
 
-      return note ? [{event: note, types: [type]}] : []
-    }),
-  )
+    const getGroup = (key: string, ref: EventRef, facets: NoteFacet[]) => {
+      const group = groups.get(key) ?? {key, ref, facets: [], replies: []}
 
-  // A reference to a note the stream already holds labels it without loading it again.
-  const refTypes = derived(refs, $refs => {
-    const types = new Map<string, NetworkFeedType[]>()
+      group.ref = EventRef.merge(group.ref, ref)
+      group.facets = uniq([...group.facets, ...facets])
 
-    for (const {key, type} of $refs) {
-      types.set(key, uniq([...(types.get(key) ?? []), type]))
+      groups.set(key, group)
+
+      return group
     }
 
-    return types
+    for (const {key, ref, facets, event} of $drawn) {
+      const group = getGroup(key, ref, facets)
+
+      if (getNoteAnswer(event)) {
+        group.replies.push(event)
+      } else if (!group.note) {
+        group.note = event
+      }
+    }
+
+    for (const {key, ref, facets} of $referenced) {
+      getGroup(key, ref, facets)
+    }
+
+    return Array.from(groups.values())
   })
 
-  const drawnKeys = derived(
-    drawn,
-    $drawn => new Set($drawn.map(candidate => getIdOrAddress(candidate.event))),
-  )
+  // Notes the feed asked for, by the key it asked under, so a miss is not asked for twice.
+  const resolved = writable(new Map<string, Maybe<TrustedEvent>>())
 
-  // One candidate per event, carrying every filter it belongs under.
-  const candidates = derived([drawn, resolved, refTypes], ([$drawn, $resolved, $refTypes]) => {
-    const candidates = new Map<string, FeedCandidate>()
+  // Candidates that name one note by different keys are one card once the note tells them apart.
+  const groups = derived([candidates, resolved], ([$candidates, $resolved]) => {
+    const groups = new Map<string, NoteGroup>()
 
-    for (const candidate of [...$drawn, ...$resolved]) {
-      const key = getIdOrAddress(candidate.event)
-      const existing = candidates.get(key)
+    for (const group of $candidates) {
+      const note = group.note ?? $resolved.get(group.key)
+      const key = note ? (getNoteKey(EventRef.fromEvent(note)) ?? group.key) : group.key
+      const existing = groups.get(key)
 
       if (existing) {
-        existing.types = uniq([...existing.types, ...candidate.types])
+        existing.ref = EventRef.merge(existing.ref, group.ref)
+        existing.facets = uniq([...existing.facets, ...group.facets])
+        existing.note = existing.note ?? note
+        existing.replies.push(...group.replies)
       } else {
-        candidates.set(key, {event: candidate.event, types: [...candidate.types]})
+        groups.set(key, {...group, key, note, replies: [...group.replies]})
       }
     }
 
-    for (const [key, types] of $refTypes) {
-      const existing = candidates.get(key)
-
-      if (existing) {
-        existing.types = uniq([...existing.types, ...types])
-      }
-    }
-
-    return Array.from(candidates.values())
+    return Array.from(groups.values())
   })
 
-  // Each filter counts every note it would show, so a note a follow wrote and liked counts for both.
-  const counts = derived(candidates, $candidates => {
-    const counts = new Map<NetworkFeedType, number>()
+  // Each facet counts every distinct note it would show, so a note a follow wrote and liked counts for both.
+  const counts: Readable<FeedCounts> = derived(groups, $groups => {
+    const counts: FeedCounts = new Map()
 
-    for (const {types} of $candidates) {
-      for (const type of types) {
-        counts.set(type, (counts.get(type) ?? 0) + 1)
+    for (const {facets} of $groups) {
+      for (const facet of facets) {
+        counts.set(facet, (counts.get(facet) ?? 0) + 1)
       }
     }
 
     return counts
   })
 
-  const items = derived([candidates, included], ([$candidates, $included]) =>
-    $candidates
-      .filter(candidate => candidate.types.some(type => $included.includes(type)))
-      .map(({event}) => event),
+  const noteCount = derived(groups, $groups => $groups.length)
+
+  const visible = derived([groups, included], ([$groups, $included]) =>
+    $groups.filter(group => group.facets.some(facet => $included.includes(facet))),
   )
 
-  const pinnedKeys = derived(pinned, $pinned => new Set($pinned.map(getIdOrAddress)))
+  const pinnedKeys = derived(
+    pinned,
+    $pinned => new Set($pinned.map(event => getNoteKey(EventRef.fromEvent(event)))),
+  )
 
-  const grouped = derived([items, pinnedKeys], ([$items, $pinnedKeys]) => {
-    const [pinnedEntries, others] = partition(
-      entry => $pinnedKeys.has(entry.key),
-      groupNetworkFeedEvents($items),
+  const entries = derived([visible, pinnedKeys], ([$visible, $pinnedKeys]) => {
+    const entries = sortBy(
+      entry => -getPublishedTimestamp(entry.note),
+      $visible.flatMap(({key, ref, note, replies}): NoteEntry[] =>
+        note ? [{key, ref, note, replies: sortEventsDesc(replies)}] : [],
+      ),
     )
+
+    const [pinnedEntries, others] = partition(entry => $pinnedKeys.has(entry.key), entries)
 
     return [...pinnedEntries, ...others]
   })
 
-  // Entries missing the note they answer are drawn without it and filled in as the note arrives.
-  const anchors = writable(new Map<string, Maybe<TrustedEvent>>())
-
-  const missing = derived([grouped, anchors], ([$grouped, $anchors]) =>
-    $grouped.filter(entry => !entry.note && !$anchors.has(entry.key)),
+  // A group whose note is not in hand yet: what the feed has to load, and how much waits on it.
+  const unloadedNotes = derived([visible, resolved], ([$visible, $resolved]) =>
+    $visible.filter(group => !group.note && !$resolved.has(group.key)),
   )
 
-  const entries = derived([grouped, anchors], ([$grouped, $anchors]) =>
-    $grouped.map(entry => ({
-      ...entry,
-      // A note the feed carries itself still belongs on its card when the load missed it.
-      note: $anchors.get(entry.key) ?? entry.note,
-    })),
-  )
-
-  // Reference targets whose filter is on, and which the stream doesn't already hold.
-  const pendingTargets = derived(
-    [refs, targets, included, drawnKeys],
-    ([$refs, $targets, $included, $drawnKeys]) =>
-      $refs.filter(
-        ({key, type}) => $included.includes(type) && !$targets.has(key) && !$drawnKeys.has(key),
-      ),
+  const pending = derived(unloadedNotes, $unloaded =>
+    $unloaded.map(({key, ref, replies}) => ({key, ref, replies: replies.length})),
   )
 
   const sourcesLoading = derived(
@@ -323,11 +305,10 @@ export const makeNoteFeed = ({
     $loading => $loading.some(Boolean),
   )
 
-  // Pending targets count as loading only while nothing is drawn, so the feed never waits on them.
+  // A note still on its way holds the feed only while nothing is drawn, so the feed never waits on one.
   const loading = derived(
-    [sourcesLoading, pendingTargets, entries],
-    ([$loading, $pendingTargets, $entries]) =>
-      $loading || ($entries.length === 0 && $pendingTargets.length > 0),
+    [sourcesLoading, pending, entries],
+    ([$loading, $pending, $entries]) => $loading || ($entries.length === 0 && $pending.length > 0),
   )
 
   const exhausted = derived(
@@ -340,13 +321,27 @@ export const makeNoteFeed = ({
     $exhausted => $exhausted.every(Boolean),
   )
 
+  const status: Readable<NoteFeedStatus> = derived(
+    [entries, loading, exhausted, groups],
+    ([$entries, $loading, $exhausted, $groups]) => {
+      if ($entries.length > 0) {
+        return "ready"
+      }
+
+      if ($loading || !$exhausted) {
+        return "loading"
+      }
+
+      return $groups.length === 0 ? "empty" : "filtered"
+    },
+  )
+
   const controller = new AbortController()
 
   let resolving = false
-  let hydrating = false
 
   // Load what the feed is missing in the background, in small batches, so drawn entries never wait.
-  const resolveTargets = async () => {
+  const resolveNotes = async () => {
     if (resolving) {
       return
     }
@@ -355,18 +350,18 @@ export const makeNoteFeed = ({
 
     try {
       while (!controller.signal.aborted) {
-        const batch = take(10, get(pendingTargets))
+        const batch = take(10, get(unloadedNotes))
 
         if (batch.length === 0) {
           break
         }
 
         await Promise.all(
-          batch.map(async ({key, ref}) => {
-            const note = await loadFeedNote(ref, controller.signal)
+          batch.map(async ({key, ref, replies}) => {
+            const note = await loadFeedNote(ref, controller.signal, replies)
 
             if (!controller.signal.aborted) {
-              targets.update($targets => new Map($targets).set(key, note))
+              resolved.update($resolved => new Map($resolved).set(key, note))
             }
           }),
         )
@@ -376,45 +371,10 @@ export const makeNoteFeed = ({
     }
   }
 
-  const hydrate = async () => {
-    if (hydrating) {
-      return
-    }
-
-    hydrating = true
-
-    try {
-      while (!controller.signal.aborted) {
-        const batch = take(10, get(missing))
-
-        if (batch.length === 0) {
-          break
-        }
-
-        await Promise.all(
-          batch.map(async entry => {
-            const note = await loadFeedNote(entry.ref, controller.signal, entry.replies)
-
-            if (!controller.signal.aborted) {
-              anchors.update($anchors => new Map($anchors).set(entry.key, note))
-            }
-          }),
-        )
-      }
-    } finally {
-      hydrating = false
-    }
-  }
-
   const unsubscribers = [
-    pendingTargets.subscribe($pending => {
-      if ($pending.length > 0) {
-        resolveTargets()
-      }
-    }),
-    missing.subscribe($missing => {
-      if ($missing.length > 0) {
-        hydrate()
+    unloadedNotes.subscribe($unloaded => {
+      if ($unloaded.length > 0) {
+        resolveNotes()
       }
     }),
   ]
@@ -443,5 +403,5 @@ export const makeNoteFeed = ({
     sources.forEach(source => source.stop())
   }
 
-  return {counts, items, entries, loading, exhausted, start, stop}
+  return {counts, noteCount, entries, pending, loading, exhausted, status, start, stop}
 }

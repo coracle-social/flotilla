@@ -1,15 +1,19 @@
-import {derived, get, readable, writable} from "svelte/store"
+import {debounce} from "throttle-debounce"
+import {derived, get, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {
   batch,
   call,
-  groupBy,
+  chunks,
+  initArray,
   int,
   ms,
+  noop,
   now,
   on,
-  pushToMapKey,
+  partition,
   range,
+  shuffle,
   sleep,
   uniq,
   uniqBy,
@@ -17,27 +21,8 @@ import {
   MONTH,
   YEAR,
 } from "@welshman/lib"
-import {
-  COMMENT,
-  DELETE,
-  EVENT_TIME,
-  NOTE,
-  REACTION,
-  REPORT,
-  ZAP_RECEIPT,
-  addressTags,
-  compareEventsAsc,
-  getAddress,
-  getCommentFiltersForRoot,
-  getIdAndAddress,
-  getIdOrAddress,
-  getReplyFilters,
-  inbox,
-  hexTags,
-  matchFilters,
-  tagValues,
-} from "@welshman/util"
-import {Comment, TimeEvent} from "@welshman/domain"
+import {EVENT_TIME, compareEventsAsc, getAddress, matchFilters, outbox} from "@welshman/util"
+import {TimeEvent} from "@welshman/domain"
 import type {Maybe} from "@welshman/lib"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {mergeRepositoryUpdates} from "@welshman/store"
@@ -45,13 +30,9 @@ import type {RepositoryUpdate} from "@welshman/store"
 import {createScroller} from "@lib/html"
 import type {ScrollerOpts} from "@lib/html"
 import {app} from "@app/core/app"
-import {network, router} from "@app/core/plugins"
+import {network, relayLists, router} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
-import {REACTION_KINDS} from "@app/core/env"
-
-const EVENT_CONTEXT_KINDS = [REPORT, REACTION, ZAP_RECEIPT, COMMENT]
-
-const noEvents: TrustedEvent[] = []
+import {PLATFORM_RELAYS} from "@app/core/env"
 
 const mergeSorted = <T>(left: T[], right: T[], compare: (a: T, b: T) => number) => {
   const merged: T[] = []
@@ -71,258 +52,6 @@ const mergeSorted = <T>(left: T[], right: T[], compare: (a: T, b: T) => number) 
 
   return merged
 }
-
-// A NIP-22 comment points at its thread root with `E`/`A`, which is the scope a reply count wants.
-const getTargets = (event: TrustedEvent) => {
-  if (event.kind === COMMENT) {
-    return reader(Comment)(event).root()?.getIdAndAddress() ?? []
-  }
-
-  // A direct reply marks its parent as both root and reply, so the same id arrives twice.
-  return uniq([...tagValues(hexTags("e"), event.tags), ...tagValues(addressTags("a"), event.tags)])
-}
-
-// A space's own relay holds everything about its events, and elsewhere what answers a note goes to its author's inbox.
-export const makeFeedContext = ({
-  relays,
-  withReplies = false,
-}: {
-  relays?: string[]
-  withReplies?: boolean
-} = {}) => {
-  // Kind 1 notes reply with `e` tags rather than as NIP-22 comments.
-  const contextKinds = withReplies ? [...EVENT_CONTEXT_KINDS, NOTE] : EVENT_CONTEXT_KINDS
-  const requestKinds = withReplies ? [...REACTION_KINDS, NOTE] : REACTION_KINDS
-  const {repository} = app.get()
-  const controller = new AbortController()
-  const targets = new Set<string>()
-  const eventsByTarget = new Map<string, TrustedEvent[]>()
-  const targetsByEventId = new Map<string, string[]>()
-  const subscribersByTarget = new Map<string, Set<(events: TrustedEvent[]) => void>>()
-  const deletedChecks = new Map<string, Set<() => void>>()
-
-  const addEvent = (event: TrustedEvent, touched: Set<string>) => {
-    // An event seen before its target stays unfiled, so adding the target picks it up from the repository.
-    if (!targetsByEventId.has(event.id)) {
-      const eventTargets = getTargets(event).filter(target => targets.has(target))
-
-      if (eventTargets.length > 0) {
-        targetsByEventId.set(event.id, eventTargets)
-
-        for (const target of eventTargets) {
-          eventsByTarget.set(target, [...(eventsByTarget.get(target) || []), event])
-          touched.add(target)
-        }
-      }
-    }
-  }
-
-  const removeEvent = (id: string, touched: Set<string>) => {
-    const eventTargets = targetsByEventId.get(id)
-
-    if (eventTargets) {
-      targetsByEventId.delete(id)
-
-      for (const target of eventTargets) {
-        const events = eventsByTarget.get(target)!.filter(event => event.id !== id)
-
-        if (events.length > 0) {
-          eventsByTarget.set(target, events)
-        } else {
-          eventsByTarget.delete(target)
-        }
-
-        touched.add(target)
-      }
-    }
-  }
-
-  const notifyDeleted = (added: TrustedEvent[], removed: Set<string>) => {
-    if (deletedChecks.size > 0) {
-      if (removed.size > 0) {
-        for (const checks of deletedChecks.values()) {
-          for (const check of checks) {
-            check()
-          }
-        }
-      } else {
-        for (const event of added) {
-          for (const check of deletedChecks.get(getIdOrAddress(event)) || []) {
-            check()
-          }
-        }
-      }
-    }
-  }
-
-  const notify = (touched: Set<string>) => {
-    for (const target of touched) {
-      for (const subscriber of subscribersByTarget.get(target) || []) {
-        subscriber(eventsByTarget.get(target) || noEvents)
-      }
-    }
-  }
-
-  const loadFrom = async (urls: string[], events: TrustedEvent[]) => {
-    const context = await network.get().load({
-      relays: urls,
-      signal: controller.signal,
-      filters: [
-        ...getReplyFilters(events, {kinds: requestKinds}),
-        ...getCommentFiltersForRoot(events),
-      ],
-      timeout: 3000,
-    })
-
-    if (context.length > 0) {
-      network.get().load({
-        relays: urls,
-        signal: controller.signal,
-        filters: getReplyFilters(context, {kinds: [DELETE]}),
-      })
-    }
-  }
-
-  const loadContext = batch(100, async (events: TrustedEvent[]) => {
-    const touched = new Set<string>()
-
-    // Local events never come through the update listener, so file them before asking the network.
-    const stored = await repository.query([
-      ...getReplyFilters(events, {kinds: contextKinds}),
-      ...getCommentFiltersForRoot(events),
-    ])
-
-    for (const event of stored) {
-      addEvent(event, touched)
-    }
-
-    notify(touched)
-
-    const eventsByRelay = new Map<string, TrustedEvent[]>()
-
-    if (relays) {
-      for (const url of relays) {
-        eventsByRelay.set(url, events)
-      }
-    } else {
-      const byAuthor = groupBy(event => event.pubkey, events)
-
-      await Promise.all(
-        Array.from(byAuthor, async ([pubkey, authored]) => {
-          const urls = await router.get().resolver.relays([inbox(pubkey)])
-
-          for (const url of urls) {
-            for (const event of authored) {
-              pushToMapKey(eventsByRelay, url, event)
-            }
-          }
-        }),
-      )
-    }
-
-    await Promise.all(Array.from(eventsByRelay, ([url, targets]) => loadFrom([url], targets)))
-  })
-
-  const unsubscribe = on(
-    repository,
-    "update",
-    batch(150, (updates: RepositoryUpdate[]) => {
-      const {added, removed} = mergeRepositoryUpdates(updates)
-      const touched = new Set<string>()
-
-      for (const event of added) {
-        if (contextKinds.includes(event.kind)) {
-          addEvent(event, touched)
-        }
-      }
-
-      for (const id of removed) {
-        removeEvent(id, touched)
-      }
-
-      notify(touched)
-      notifyDeleted(added, removed)
-    }),
-  )
-
-  // Track an event so its context gets requested with the rest of the batch
-  const add = (event: TrustedEvent) => {
-    if (!targets.has(event.id)) {
-      for (const key of getIdAndAddress(event)) {
-        targets.add(key)
-      }
-
-      loadContext(event)
-    }
-  }
-
-  const relatedForKey = (key: string) =>
-    readable(eventsByTarget.get(key) || noEvents, set => {
-      let subscribers = subscribersByTarget.get(key)
-
-      if (!subscribers) {
-        subscribers = new Set()
-        subscribersByTarget.set(key, subscribers)
-      }
-
-      subscribers.add(set)
-      set(eventsByTarget.get(key) || noEvents)
-
-      return () => {
-        subscribers.delete(set)
-
-        if (subscribers.size === 0) {
-          subscribersByTarget.delete(key)
-        }
-      }
-    })
-
-  return {
-    add,
-    deleted: (event: TrustedEvent) =>
-      readable(repository.isDeleted(event), set => {
-        const key = getIdOrAddress(event)
-        const check = () => set(repository.isDeleted(event))
-
-        let checks = deletedChecks.get(key)
-
-        if (!checks) {
-          checks = new Set()
-          deletedChecks.set(key, checks)
-        }
-
-        checks.add(check)
-        check()
-
-        return () => {
-          checks.delete(check)
-
-          if (checks.size === 0) {
-            deletedChecks.delete(key)
-          }
-        }
-      }),
-    related: (event: TrustedEvent): Readable<TrustedEvent[]> => {
-      add(event)
-
-      // A related event may point at a replaceable one by either id or address, so both are keys.
-      const [key, ...rest] = getIdAndAddress(event)
-
-      // A replaceable event collects both buckets, and something tagging it by id and address lands in both.
-      return rest.length > 0
-        ? derived([relatedForKey(key), ...rest.map(relatedForKey)], buckets =>
-            uniqBy(event => event.id, buckets.flat()),
-          )
-        : relatedForKey(key)
-    },
-    cleanup: () => {
-      controller.abort()
-      unsubscribe()
-    },
-  }
-}
-
-export type FeedContext = ReturnType<typeof makeFeedContext>
 
 // Keeps a feed's store in step with the repository: later arrivals, deletions, and events newly seen.
 const syncFeed = ({
@@ -413,12 +142,12 @@ const nextInterval = (interval: number, found: number) =>
 export const isFeedLoading = (state: Maybe<FeedLoadState>) =>
   state?.status === "loading" || state?.status === "searching"
 
-export const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
+export const makePager = (load: () => Promise<FeedSpan>) => {
   const state = writable<FeedLoadState>({status: "idle"})
 
   let running = false
 
-  const run = async () => {
+  const page = async () => {
     if (running || get(state).status === "exhausted") {
       return
     }
@@ -451,14 +180,14 @@ export const makeFeedLoader = (load: () => Promise<FeedSpan>) => {
     }
   }
 
-  // A run covers a few spans, so settling at the end of one blinks the spinner once per page.
+  // A page covers a few spans, so settling at the end of one blinks the spinner once per page.
   const settle = () => {
     if (!running && isFeedLoading(get(state))) {
       state.set({status: "idle"})
     }
   }
 
-  return {subscribe: state.subscribe, run, settle}
+  return {subscribe: state.subscribe, page, settle}
 }
 
 // The container's orientation decides which direction `reverse` reaches, so the caller passes it.
@@ -470,7 +199,7 @@ export const makeScrollLoader = (
   // Whether the feed has drawn further than the relays have answered, which the cache does before any answer.
   let behind: Maybe<boolean> = true
 
-  const loader = makeFeedLoader(async () => {
+  const pager = makePager(async () => {
     const span = await load()
 
     behind = span.behind
@@ -481,9 +210,9 @@ export const makeScrollLoader = (
   // Drawn events fill the runway whether or not they're complete, so a hole in the cache never comes into reach.
   const settle = async () => {
     if (behind) {
-      await loader.run()
+      await pager.page()
     } else {
-      loader.settle()
+      pager.settle()
     }
   }
 
@@ -493,12 +222,12 @@ export const makeScrollLoader = (
     delay: 300,
     ...options,
     threshold: runway,
-    onScroll: loader.run,
+    onScroll: pager.page,
     onSettle: settle,
   })
 
-  // A virtual list this loader feeds has to grow as far as the loader fetches, so it reads it back.
-  return {subscribe: loader.subscribe, stop: scroller.stop, runway}
+  // A virtual list this pager feeds has to grow as far as it fetches, so it reads it back.
+  return {subscribe: pager.subscribe, stop: scroller.stop, runway}
 }
 
 // Holds what a view has loaded and knows how to ask for the next span, while the view decides when.
@@ -738,6 +467,184 @@ export const makeFeed = ({
       unsubscribers.forEach(call)
     },
   }
+}
+
+export type GroupedFeed = {
+  events: Readable<TrustedEvent[]>
+  loading: Readable<boolean>
+  exhausted: Readable<boolean>
+  page: () => Promise<void>
+  settle: () => void
+  stop: () => void
+}
+
+// A set of follows, paged one group of relays at a time so a slow group holds up no other.
+export const makeGroupedFeed = ({
+  getFilters,
+  onEvent,
+  pubkeys,
+}: {
+  getFilters: (pubkeys: string[]) => Filter[]
+  onEvent?: (event: TrustedEvent) => void
+  pubkeys: Readable<string[]>
+}): GroupedFeed => {
+  const pages = writable<TrustedEvent[][]>([])
+  const states = writable<FeedLoadState[]>([])
+
+  let pagers: ReturnType<typeof makePager>[] = []
+  let unsubscribers: (() => void)[] = []
+  let generation = 0
+
+  const events = derived(pages, $pages => $pages.flat())
+
+  const loading = derived(states, $states => $states.some(isFeedLoading))
+
+  const exhausted = derived(
+    states,
+    $states => $states.length > 0 && $states.every(state => state.status === "exhausted"),
+  )
+
+  const page = async () => {
+    await Promise.all(pagers.map(pager => pager.page().catch(error => console.error(error))))
+  }
+
+  const settle = () => pagers.forEach(pager => pager.settle())
+
+  // Each group walks its own timeline, so a slow group holds up nobody else's next page.
+  const startGroup = async (group: string[], index: number, turn: number) => {
+    const scenario = await router.get().resolve(group.map(pubkey => outbox(pubkey)))
+
+    if (turn === generation) {
+      const feed = makeFeed({
+        relays: scenario.limit(10).getUrls(),
+        // Half the group's relays answering is enough to show its page, since the rest get asked again.
+        quorum: 0.5,
+        useCache: false,
+        filters: getFilters(group),
+        onEvent,
+      })
+
+      const pager = makePager(feed.loadOlder)
+
+      pagers.push(pager)
+      unsubscribers.push(
+        feed.events.subscribe($events =>
+          pages.update($pages => $pages.map((grouped, i) => (i === index ? $events : grouped))),
+        ),
+        pager.subscribe($state =>
+          states.update($states => $states.map((state, i) => (i === index ? $state : state))),
+        ),
+        feed.cleanup,
+      )
+    }
+  }
+
+  const startGroups = async (groups: string[][], turn: number) => {
+    if (turn !== generation) {
+      return
+    }
+
+    const offset = get(pages).length
+
+    pages.update($pages => [...$pages, ...initArray(groups.length, (): TrustedEvent[] => [])])
+    states.update($states => [
+      ...$states,
+      ...initArray(groups.length, (): FeedLoadState => ({status: "idle"})),
+    ])
+
+    await Promise.all(groups.map((group, index) => startGroup(group, offset + index, turn)))
+  }
+
+  // One selection over every follow lands on the few biggest relays, so each group scores its own.
+  const build = async (authors: string[]) => {
+    const turn = generation
+
+    if (PLATFORM_RELAYS.length > 0) {
+      await startGroups([authors], turn)
+    } else {
+      const [known, unknown] = partition(pubkey => Boolean(relayLists.get().get(pubkey)), authors)
+
+      await startGroups(
+        chunks(3, shuffle(known)).filter(group => group.length > 0),
+        turn,
+      )
+
+      // What can be asked for goes out now, while the rest look for a relay list to name.
+      if (turn === generation) {
+        page()
+      }
+
+      // Every follow asked in its own group once its relay list is in, rather than all on one set.
+      await Promise.all(unknown.map(pubkey => relayLists.get().load(pubkey).catch(noop)))
+
+      if (turn !== generation) {
+        return
+      }
+
+      const loaded = unknown.filter(pubkey => relayLists.get().get(pubkey))
+
+      await startGroups(
+        chunks(3, shuffle(loaded)).filter(group => group.length > 0),
+        turn,
+      )
+    }
+
+    if (turn !== generation) {
+      return
+    }
+
+    // A follow with no relays to ask means nothing to show, rather than a spinner that never stops.
+    if (get(states).length === 0) {
+      states.set([{status: "exhausted"}])
+    }
+
+    await page()
+  }
+
+  // Bumping the generation is what keeps an await in flight from writing into the run that replaced it.
+  const reset = () => {
+    generation += 1
+    unsubscribers.forEach(call)
+    unsubscribers = []
+    pagers = []
+
+    pages.set([])
+    states.set([])
+  }
+
+  // Follow and unfollow bursts land on the same rebuild, which asks every relay again from the top.
+  const rebuild = debounce(1000, (authors: string[]) => {
+    reset()
+    build(authors)
+  })
+
+  let currentKey: string | undefined
+
+  // The first list starts at once, and a change to a feed already running waits for the burst to end.
+  const unsubscribePubkeys = pubkeys.subscribe($pubkeys => {
+    const key = $pubkeys.join(",")
+
+    if (key !== currentKey) {
+      currentKey = key
+
+      if ($pubkeys.length === 0) {
+        rebuild.cancel()
+        reset()
+      } else if (get(states).length === 0) {
+        build($pubkeys)
+      } else {
+        rebuild($pubkeys)
+      }
+    }
+  })
+
+  const stop = () => {
+    rebuild.cancel()
+    unsubscribePubkeys()
+    reset()
+  }
+
+  return {events, loading, exhausted, page, settle, stop}
 }
 
 // Calendar events are addressed by the days they cover, so the spans are date hashes.

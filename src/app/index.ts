@@ -5,9 +5,9 @@ import {registerRelays} from "@app/core/relays"
 import {registerSettings} from "@app/core/settings"
 import {registerPluginCaches} from "@app/core/storage"
 import {registerUser} from "@app/core/user"
-import {registerActivity} from "@app/features/activity"
 import {registerBookmarks} from "@app/features/bookmarks"
 import {registerMessages} from "@app/features/messages"
+import {registerNotifications} from "@app/features/notifications"
 import {registerPomade} from "@app/features/pomade"
 import {registerPush} from "@app/features/push"
 import {registerSpaces} from "@app/features/spaces"
@@ -33,9 +33,9 @@ export const registerAll = () => {
     registerPluginCaches()
     registerSettings()
     registerUser()
-    registerActivity()
     registerBookmarks()
     registerMessages()
+    registerNotifications()
     registerPomade()
     registerPush()
     registerWallet()

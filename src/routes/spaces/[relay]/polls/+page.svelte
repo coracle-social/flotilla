@@ -11,23 +11,24 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import {makeCommentFilter} from "@lib/util"
+  import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import PollItem from "@app/components/PollItem.svelte"
   import PollCreate from "@app/components/PollCreate.svelte"
   import * as pages from "@app/navigation/pages"
   import {partitionByActivity} from "@app/features/spaces"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
+  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.polls.decode(params)
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
 
@@ -43,7 +44,7 @@
   onMount(() => {
     const feed = makeFeed({
       relays: [url],
-      onEvent: context.add,
+      onEvent: engagement.add,
       filters: [{kinds: [POLL]}, makeCommentFilter([POLL])],
     })
 
@@ -77,18 +78,14 @@
 <PageContent bind:element class="flex flex-col gap-2 p-2 sm:gap-4 sm:p-4">
   {#each items as event (event.id)}
     <div in:fly>
-      <PollItem {url} {context} event={$state.snapshot(event)} />
+      <PollItem {url} {engagement} event={$state.snapshot(event)} />
     </div>
   {/each}
-  <p class="flex h-10 items-center justify-center py-20">
-    <Spinner {loading}>
-      {#if loading}
-        Looking for polls...
-      {:else if exhausted && items.length === 0}
-        No polls found.
-      {:else if exhausted}
-        That's all!
-      {/if}
-    </Spinner>
-  </p>
+  <FeedFooter
+    {loading}
+    {exhausted}
+    isEmpty={items.length === 0}
+    loadingMessage="Looking for polls..."
+    emptyMessage="No polls found."
+    doneMessage="That's all!" />
 </PageContent>

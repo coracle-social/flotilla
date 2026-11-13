@@ -7,7 +7,7 @@
   import ContentActions from "@app/components/ContentActions.svelte"
   import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
   import {reader} from "@app/core/domain"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
@@ -17,10 +17,10 @@
   type Props = {
     url: string
     event: TrustedEvent
-    context: FeedContext
+    engagement: EngagementIndex
   }
 
-  const {url, event, context}: Props = $props()
+  const {url, event, engagement}: Props = $props()
 
   const path = $derived(pages.calendarEvent.path({url, address: getAddress(event)}))
   const h = $derived(reader(TimeEvent)(event).room())
@@ -42,6 +42,6 @@
       editForm={CalendarEventEdit}
       {url}
       {event}
-      {context} />
+      {engagement} />
   </div>
 </Cv>

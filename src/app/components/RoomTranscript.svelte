@@ -26,7 +26,8 @@
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
   import {user} from "@app/core/user"
   import {groupRoomMessages} from "@app/features/spaces/rooms"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
+  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
   import {pageLoading} from "@app/features/loading"
   import {checked} from "@app/features/checked"
   import {getPermalinkTarget, highlightedEvent} from "@app/navigation/locations"
@@ -39,9 +40,9 @@
 
   let {url, h, locked, replyTo, canEdit, onEdit, events = $bindable(readable([]))}: Props = $props()
 
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   const addMemberKind = h ? ROOM_ADD_MEMBER : RELAY_ADD_MEMBER
   const at = $derived(parseInt($page.url.searchParams.get("at") ?? "") || undefined)
@@ -291,7 +292,7 @@
       filters: [
         h ? {kinds: [MESSAGE, addMemberKind], "#h": [h]} : {kinds: [MESSAGE, addMemberKind]},
       ],
-      onEvent: context.add,
+      onEvent: engagement.add,
     })
 
     // The container is reversed, so scrolling away from the origin reaches older messages.
@@ -376,7 +377,7 @@
             <RoomItem
               {url}
               {replyTo}
-              {context}
+              {engagement}
               {canEdit}
               {onEdit}
               event={item.value}

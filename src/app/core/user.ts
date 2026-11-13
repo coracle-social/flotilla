@@ -58,6 +58,11 @@ export const userSearchRelayUrls = derived(userSearchRelayList, $searchRelayList
   return urls.length > 0 ? urls : DEFAULT_SEARCH_RELAYS
 })
 
+export const userFollowPubkeys = derived(
+  userFollowList,
+  $followList => $followList?.pubkeys() ?? [],
+)
+
 // Syncing
 
 // The user's lists are read from their outbox, so each is loaded again once the relay list arrives.

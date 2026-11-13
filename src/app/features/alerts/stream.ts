@@ -1,5 +1,5 @@
 import type {Subscriber, Unsubscriber} from "svelte/store"
-import {call, now, on} from "@welshman/lib"
+import {call, now, on, remove} from "@welshman/lib"
 import {matchFilters, MESSAGE, tagSpec, tagValue} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import type {RepositoryUpdate} from "@welshman/store"
@@ -17,7 +17,7 @@ export type Alert = {
 }
 
 export const onAlert = call(() => {
-  const subscribers: Subscriber<Alert>[] = []
+  let subscribers: Subscriber<Alert>[] = []
 
   let unsubscribe: Unsubscriber | undefined
 
@@ -66,7 +66,7 @@ export const onAlert = call(() => {
     }
 
     return () => {
-      subscribers.splice(subscribers.indexOf(f), 1)
+      subscribers = remove(f, subscribers)
 
       if (subscribers.length === 0) {
         unsubscribe?.()

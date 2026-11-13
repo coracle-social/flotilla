@@ -87,7 +87,9 @@ export class CapacitorNotifications implements IPushAdapter {
     const {token, subscription} = pushRegistration.get()
 
     if (!token) {
-      throw new Error("Attempted to sync push server without a token")
+      console.warn("Skipping push server sync: no token")
+
+      return false
     }
 
     if (!subscription) {
@@ -110,6 +112,8 @@ export class CapacitorNotifications implements IPushAdapter {
         console.warn("Failed to register with push server:", e)
       }
     }
+
+    return true
   }
 
   _getSubscriptionIdentifier = (relay: string, key: string) =>
@@ -189,24 +193,31 @@ export class CapacitorNotifications implements IPushAdapter {
 
   async enable() {
     if (!this._controller) {
-      this._controller = new AbortController()
+      const controller = new AbortController()
+
+      this._controller = controller
 
       PushNotifications.addListener("pushNotificationActionPerformed", onPushNotificationAction)
 
-      this._controller.signal.addEventListener("abort", () => {
+      controller.signal.addEventListener("abort", () => {
         PushNotifications.removeAllListeners()
       })
 
       try {
-        await this._syncServer(this._controller.signal)
+        const synced = await this._syncServer(controller.signal)
 
-        syncRelaySubscriptions(this._controller.signal, (url, key, filters, ignore) => {
-          if (filters.length > 0) {
-            this._syncRelay(url, key, filters, ignore)
-          } else {
-            this._unsyncRelay(url, key)
-          }
-        })
+        // A disable during the server sync leaves nothing to install.
+        if (synced && !controller.signal.aborted) {
+          syncRelaySubscriptions(controller.signal, (added, removed) => {
+            for (const {relay, key, filters, ignore} of added) {
+              this._syncRelay(relay, key, filters, ignore)
+            }
+
+            for (const {relay, key} of removed) {
+              this._unsyncRelay(relay, key)
+            }
+          })
+        }
       } catch (e) {
         console.error(e)
       }

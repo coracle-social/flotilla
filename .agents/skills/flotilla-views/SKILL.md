@@ -284,8 +284,8 @@ stores, so a component takes the key and looks up the rest: `RoomName` takes `{u
 
 Events are the exception, and 66 components take `event: TrustedEvent`, since the parent already
 holds the event from a feed or `$events.one`. An event prop usually travels with `url`, the
-relay it lives on, which routes its replies and reactions, and with `context: FeedContext`, the
-shared loader below. A component takes a pointer instead only when it has to load the event
+relay it lives on, which routes its replies and reactions, and with `engagement: EngagementIndex`,
+the shared index below. A component takes a pointer instead only when it has to load the event
 itself, as `ContentQuote` does. Anything with neither a store nor an event is passed as its
 domain reader: `RoleEdit` takes `role: RelayRoleReader`.
 
@@ -371,14 +371,15 @@ onMount(() => {
 
 That is `EventComments`. The thread detail page does the same in an `$effect`.
 
-**A list that pages as you scroll:** `makeFeed`, `makeScrollLoader` and `makeFeedContext` from
-`src/app/features/feeds.ts`. Every space list page uses them, as do `HomeNetworkRecent` and `RoomChat`.
+**A list that pages as you scroll:** `makeFeed` and `makeScrollLoader` from
+`src/app/features/feeds.ts`, and `makeEngagementIndex` from `src/app/features/engagement.ts`.
+Every space list page uses them, as do `HomeNetworkRecent` and `RoomChat`.
 The threads and classifieds pages are the reference:
 
 ```typescript
-const context = makeFeedContext({relays: [url]})
+const engagement = makeEngagementIndex({relays: [url]})
 
-onDestroy(context.cleanup)
+onDestroy(engagement.stop)
 
 let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
 let element: HTMLElement | undefined = $state()
@@ -388,7 +389,7 @@ const loading = $derived(isFeedLoading($older))
 const exhausted = $derived($older?.status === "exhausted")
 
 onMount(() => {
-  const feed = makeFeed({relays: [url], onEvent: context.add, filters})
+  const feed = makeFeed({relays: [url], onEvent: engagement.add, filters})
 
   events = feed.events
   older = makeScrollLoader(element!, feed.loadOlder)
@@ -401,23 +402,23 @@ onMount(() => {
 ```
 
 The feed is built in `onMount` because the loader needs the bound scroll element from
-`<PageContent bind:element>`. `context.add` batches the reactions, comments and deletions for
-every event the feed yields, rows get the same `context`, and their action rows read
-`context.related(event)` and `context.deleted(event)`. Close the list with `<Spinner {loading}>`
+`<PageContent bind:element>`. `engagement.add` batches the reactions, comments and deletions for
+every event the feed yields, rows get the same `engagement`, and their action rows read
+`engagement.related(event)` and `engagement.deleted(event)`. Close the list with `<Spinner {loading}>`
 and an `{#if}` chain over loading, empty and exhausted. Calendars use
 `makeCalendarFeed`, which pages by date tag rather than `created_at`.
 
 `makeNoteFeed` in `src/app/features/social/noteFeed.ts` builds on those helpers to draw each reply
-under the note it answers. A content source (`makeNotesTimeline`) brings events the feed draws
-itself; a reference source (`makePopularFeed`) brings events that only name a note, which the feed
+under the note it answers. A content source (`makeNotesSource`) brings events the feed draws
+itself; a reference source (`makeEngagedSource`) brings events that only name a note, which the feed
 resolves in the background and folds into the same stream. It also takes an optional `pinned` list
-and the `NetworkFeedType[]` to show. The home Network section passes the persisted
-`includedNetworkFeedTypes`, so the Notes, Replies and Popular buttons count and toggle through the
+and the `NoteFacet[]` to show. The home Network section passes the persisted
+`includedNoteFacets`, so the Notes, Replies and Interactions buttons count and toggle through the
 same store; a note a follow both wrote and liked counts under both, and is drawn once.
 `ProfilePageNotes` passes one source and a pin list, and keeps pinned notes above the rest. A muted
 note stays in the feed and `NoteCard` draws it, while `ProfilePageNotes` says the person is muted
-instead of drawing the list. Missing notes never hold the feed up: entries draw without them and
-are filled in as they arrive.
+instead of drawing the list. Missing notes never hold the feed up: an entry draws once its note is
+in hand, and the ones still being fetched wait off to the side.
 
 `ProfileFeed` still drives welshman's `FeedController` through
 `$app.use(Feeds).makeFeedController` and `createScroller`, but 27fa25c3 moved the home feed onto

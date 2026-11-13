@@ -25,14 +25,14 @@
   import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/features/spaces/calendar"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeFeedContext} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, address} = pages.calendarEvent.decode(params)
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
   const event = $events.one(address, [url]).$
   const timeEvent = derived(event, $event => ($event ? reader(TimeEvent)($event) : undefined))
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
@@ -51,7 +51,7 @@
     tab = "people"
   }
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   let tab = $state<EventTab>("about")
 
@@ -100,7 +100,7 @@
           editForm={CalendarEventEdit}
           {url}
           event={$event}
-          {context} />
+          {engagement} />
       </div>
     </div>
     <!-- One event carries three unrelated conversations, so give each its own tab instead of
@@ -121,7 +121,7 @@
         {/if}
       </div>
     {:else if tab === "discussion"}
-      <EventComments {url} event={$event} {context} />
+      <EventComments {url} event={$event} {engagement} />
     {:else}
       <CalendarEventPeople {url} event={$event} rsvps={$rsvps} />
     {/if}

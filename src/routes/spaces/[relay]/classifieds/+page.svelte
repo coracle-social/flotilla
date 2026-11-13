@@ -18,13 +18,14 @@
   import Button from "@lib/components/Button.svelte"
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import {makeCommentFilter} from "@lib/util"
+  import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ClassifiedItem from "@app/components/ClassifiedItem.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
   import {partitionByActivity} from "@app/features/spaces"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
+  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"
   import {
     CLASSIFIED_STATUS_TABS,
@@ -40,9 +41,9 @@
   const {params}: PageProps = $props()
 
   const {url} = pages.classifieds.decode(params)
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   const createClassified = () => pushModal(ClassifiedCreate, {url})
 
@@ -102,7 +103,7 @@
   onMount(() => {
     const feed = makeFeed({
       relays: [url],
-      onEvent: context.add,
+      onEvent: engagement.add,
       filters: [{kinds: [CLASSIFIED]}, makeCommentFilter([CLASSIFIED])],
     })
 
@@ -171,7 +172,7 @@
   <div class="grid gap-3 @2xl:grid-cols-2 @2xl:gap-4 @4xl:grid-cols-3 @7xl:grid-cols-4">
     {#each items as event (event.id)}
       <div in:fly class="h-full min-w-0">
-        <ClassifiedItem {url} {context} event={$state.snapshot(event)} />
+        <ClassifiedItem {url} {engagement} event={$state.snapshot(event)} />
       </div>
     {/each}
   </div>
@@ -188,16 +189,12 @@
       </Button>
     </div>
   {:else}
-    <p class="flex h-10 items-center justify-center py-20">
-      <Spinner {loading}>
-        {#if loading}
-          Looking for listings...
-        {:else if exhausted && items.length === 0}
-          No listings match your filters.
-        {:else if exhausted}
-          That's all!
-        {/if}
-      </Spinner>
-    </p>
+    <FeedFooter
+      {loading}
+      {exhausted}
+      isEmpty={items.length === 0}
+      loadingMessage="Looking for listings..."
+      emptyMessage="No listings match your filters."
+      doneMessage="That's all!" />
   {/if}
 </PageContent>

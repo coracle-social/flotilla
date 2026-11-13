@@ -7,7 +7,7 @@
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import GoalSummary from "@app/components/GoalSummary.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
@@ -16,10 +16,10 @@
   type Props = {
     url: string
     event: TrustedEvent
-    context: FeedContext
+    engagement: EngagementIndex
   }
 
-  const {url, event, context}: Props = $props()
+  const {url, event, engagement}: Props = $props()
 
   const goal = reader(ZapGoal)(event)
 
@@ -54,6 +54,6 @@
         in <RoomLink {url} {h} />
       {/if}
     </span>
-    <ContentActions showActivity hideZap noun="Goal" {url} {event} {context} />
+    <ContentActions showActivity hideZap noun="Goal" {url} {event} {engagement} />
   </div>
 </Cv>

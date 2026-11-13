@@ -50,14 +50,14 @@
 
       const permission = await saveAlertSettings($state.snapshot(settings))
 
-      if (isGranted(permission)) {
-        pushToast({message: "Your settings have been saved!"})
-      } else {
+      if (settings.push && !isGranted(permission)) {
         await sleep(300)
 
         settings.push = false
 
         pushToast({theme: "error", message: getPermissionMessage(permission)})
+      } else {
+        pushToast({message: "Your settings have been saved!"})
       }
     } catch (e) {
       console.error(e)

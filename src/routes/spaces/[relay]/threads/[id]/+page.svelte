@@ -20,7 +20,7 @@
   import EventReply from "@app/components/EventReply.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeFeedContext} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
   import {getChecked} from "@app/features/checked"
   import * as pages from "@app/navigation/pages"
   import {getPermalinkTarget, scrollToEvent} from "@app/navigation/locations"
@@ -34,7 +34,7 @@
   const event = $events.one(id, [url]).$
   const threadTitle = $derived($event ? reader(Thread)($event).title() : "")
   // Rows register themselves with `related`, so the whole page's reactions load in one batch
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
   const replies = $derived($events.asc(filters).$)
 
@@ -99,7 +99,7 @@
     }
   }
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   let showReply = $state(false)
   let replyTo: TrustedEvent | undefined = $state()
@@ -175,7 +175,7 @@
             <div bind:this={root} class="flex flex-col last:grow">
               <ThreadPost
                 {url}
-                {context}
+                {engagement}
                 event={$event}
                 threadPubkey={$event.pubkey}
                 replyCount={$replies.length}
@@ -203,7 +203,7 @@
               {/if}
               <ThreadPost
                 {url}
-                {context}
+                {engagement}
                 event={reply}
                 threadPubkey={$event.pubkey}
                 onReply={openReply} />

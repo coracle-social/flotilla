@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {readable} from "svelte/store"
-  import {removeUndefined, spec, uniqBy} from "@welshman/lib"
+  import {removeUndefined, uniqBy} from "@welshman/lib"
   import type {IEventRef, TrustedEvent} from "@welshman/util"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
@@ -12,23 +12,21 @@
   import CommentTree from "@app/components/CommentTree.svelte"
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {makeFeedContext} from "@app/features/feeds"
-  import {getReplyRefs, notes} from "@app/features/social"
+  import {makeEngagementIndex} from "@app/features/engagement"
+  import {notes} from "@app/features/social"
   import type {CommentNode} from "@app/features/social"
 
   type Props = {
     ref: IEventRef
     reply?: boolean
     thread?: boolean
-    event?: TrustedEvent
   }
 
-  const {ref, reply = false, thread = false, event: providedEvent}: Props = $props()
+  const {ref, reply = false, thread = false}: Props = $props()
 
-  const context = makeFeedContext({withReplies: true})
+  const engagement = makeEngagementIndex({withReplies: true})
   const loaded = $notes.deriveEvent(ref)
-  // A note opened from the feed is already in hand, so its card doesn't wait on a repository read.
-  const event = $derived($loaded ?? providedEvent)
+  const event = $derived($loaded)
   const replies = $derived(event ? $notes.deriveReplies(event) : readable<CommentNode[]>([]))
 
   const setReplyTo = (comment?: TrustedEvent) => {
@@ -37,29 +35,12 @@
 
   const clearReplyTo = () => setReplyTo(undefined)
 
-  // A reply names only the event it answers, so the thread is walked up one parent at a time.
-  const loadParents = async (child: TrustedEvent) => {
-    const {parent} = getReplyRefs(child)
-    const ancestor = parent ? await $notes.load(parent, {replies: [child]}) : undefined
-
-    if (ancestor && !parents.some(spec({id: ancestor.id}))) {
-      parents = [ancestor, ...parents]
-
-      await loadParents(ancestor)
-    }
-  }
-
-  // The root is fetched on its own, so a missing note partway up doesn't lose it.
-  const loadThread = async (event: TrustedEvent) => {
-    const {parent, root} = getReplyRefs(event)
-    const parentsLoaded = loadParents(event)
-
-    if (root && root.getIdOrAddress() !== parent?.getIdOrAddress()) {
-      threadRoot = await $notes.load(root, {replies: [event]})
-    }
-
-    await parentsLoaded
-  }
+  // The ancestors of a threaded note arrive root first, nearest parent last.
+  const loadThread = (event: TrustedEvent) =>
+    $notes.loadThread(event, chain => {
+      threadRoot = chain.threadRoot
+      parents = chain.parents
+    })
 
   let replyTo: TrustedEvent | undefined = $state()
   let threadRoot: TrustedEvent | undefined = $state()
@@ -81,13 +62,15 @@
   $effect(() => {
     if (thread && event && !threadRequested) {
       threadRequested = true
-      loadThread(event).finally(() => {
-        loading = false
-      })
+      loadThread(event)
+        .catch(error => console.error(error))
+        .finally(() => {
+          loading = false
+        })
     }
   })
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 </script>
 
 {#snippet quoteNote(event: TrustedEvent)}
@@ -105,23 +88,22 @@
       {@const replyToNote = () => setReplyTo(note)}
       {#if loading}
         <Spinner class="justify-center py-4" />
-      {:else}
-        {#each ancestors as event (event.id)}
-          <div class="border-line border-b pb-4">
-            <NoteItem
-              {event}
-              {context}
-              customActions={quoteNote}
-              card={false}
-              interactive
-              showReply />
-          </div>
-        {/each}
       {/if}
+      {#each ancestors as ancestor (ancestor.id)}
+        <div class="border-line border-b pb-4">
+          <NoteItem
+            event={ancestor}
+            {engagement}
+            customActions={quoteNote}
+            card={false}
+            interactive
+            showReply />
+        </div>
+      {/each}
       <div class="border-line flex flex-col gap-4 border-b pb-4">
         <NoteItem
           event={note}
-          {context}
+          {engagement}
           customActions={quoteNote}
           card={false}
           showEntire
@@ -146,7 +128,7 @@
             {replyTo}
             {setReplyTo}
             customActions={quoteComment}
-            {context} />
+            {engagement} />
         {/each}
         {#if $replies.length === 0}
           <p class="py-2 text-sm opacity-75">No replies yet.</p>

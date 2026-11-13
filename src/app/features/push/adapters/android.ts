@@ -2,28 +2,20 @@ import {throttle} from "throttle-debounce"
 import {App} from "@capacitor/app"
 import {registerPlugin} from "@capacitor/core"
 import {maybe, now} from "@welshman/lib"
-import type {Filter} from "@welshman/util"
 import type {Session} from "@welshman/app"
 import {app} from "@app/core/app"
 import {session} from "@app/core/session"
-import type {IPushAdapter} from "@app/features/push/adapters/common"
+import type {IPushAdapter, RelaySubscription} from "@app/features/push/adapters/common"
 import {syncRelaySubscriptions} from "@app/features/push/adapters/common"
 import {toPermission} from "@app/features/push/permission"
 import {requiresFallback, useFallback} from "@app/features/push/registration"
-
-type AndroidFallbackSubscription = {
-  relay: string
-  key: string
-  filters: Array<Filter>
-  ignore: Array<Filter>
-}
 
 // The worker needs the pubkey to build auth events. Keep in sync with AndroidPushFallbackWorker.kt.
 type AndroidPushFallbackState = {
   pubkey?: string
   session?: Session
   activeSince?: number
-  subscriptions?: Array<AndroidFallbackSubscription>
+  subscriptions?: Array<RelaySubscription>
 }
 
 type AndroidPushFallbackPlugin = {
@@ -36,7 +28,7 @@ const AndroidPushFallback = registerPlugin<AndroidPushFallbackPlugin>("AndroidPu
 
 export class AndroidFallbackNotifications implements IPushAdapter {
   _controller = maybe<AbortController>()
-  _subscriptions = new Map<string, AndroidFallbackSubscription>()
+  _subscriptions = new Map<string, RelaySubscription>()
   _activeSince = now()
 
   async check() {
@@ -81,11 +73,13 @@ export class AndroidFallbackNotifications implements IPushAdapter {
         appStateListener?.remove()
       })
 
-      syncRelaySubscriptions(this._controller.signal, async (relay, key, filters, ignore) => {
-        if (filters.length > 0) {
-          this._subscriptions.set(`${relay}:${key}`, {relay, key, filters, ignore})
-        } else {
-          this._subscriptions.delete(`${relay}:${key}`)
+      syncRelaySubscriptions(this._controller.signal, (added, removed) => {
+        for (const subscription of added) {
+          this._subscriptions.set(`${subscription.relay}:${subscription.key}`, subscription)
+        }
+
+        for (const subscription of removed) {
+          this._subscriptions.delete(`${subscription.relay}:${subscription.key}`)
         }
 
         doSync()

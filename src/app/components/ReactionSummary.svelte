@@ -35,7 +35,7 @@
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {deriveDisplaysByPubkey} from "@app/features/people"
@@ -51,7 +51,7 @@
     hideZaps?: boolean
     noTooltip?: boolean
     innerEvent?: TrustedEvent
-    context: FeedContext
+    engagement: EngagementIndex
   }
 
   const {
@@ -65,13 +65,16 @@
     hideZaps = false,
     noTooltip = false,
     innerEvent = undefined,
-    context,
+    engagement,
   }: Props = $props()
 
-  const ownRelated = context.related(event)
+  const ownRelated = engagement.related(event)
 
   const related = innerEvent
-    ? derived([ownRelated, context.related(innerEvent)], ([$own, $inner]) => [...$own, ...$inner])
+    ? derived([ownRelated, engagement.related(innerEvent)], ([$own, $inner]) => [
+        ...$own,
+        ...$inner,
+      ])
     : ownRelated
 
   const reports = derived(ownRelated, $ownRelated => filter(spec({kind: REPORT}), $ownRelated))

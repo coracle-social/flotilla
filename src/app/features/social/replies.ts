@@ -1,14 +1,25 @@
-import {call, pushToMapKey, removeUndefined, sortBy, uniq, uniqBy} from "@welshman/lib"
+import {call, last, pushToMapKey, removeUndefined, sortBy, uniq, uniqBy} from "@welshman/lib"
+import type {Maybe} from "@welshman/lib"
 import {
   COMMENT,
+  EventRef,
+  GENERIC_REPOST,
   NOTE,
+  REACTION,
+  REPOST,
+  ZAP_RECEIPT,
+  addressTags,
   getCommentFiltersForRoot,
   getIdAndAddress,
+  getRelayHints,
   hexTags,
-  tagValues,
+  matchTag,
+  matchTags,
+  tagSpec,
+  tagValue,
 } from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {Comment, Note} from "@welshman/domain"
+import {Comment, Note, ZapReceipt} from "@welshman/domain"
 import {reader} from "@app/core/domain"
 
 // The shape of a conversation, read off tags alone.
@@ -29,16 +40,37 @@ export const getReplyRefs = (event: TrustedEvent) => {
   return {parent: thread?.parent(), root: thread?.root()}
 }
 
-// Ids and addresses of what an event answers; NIP-25 has a reaction name its target last, as reposts and zaps do.
-export const getParents = (event: TrustedEvent) => {
+// NIP-25 names a reaction's target last, or its address when the target is addressable.
+const getTargetRef = (tags: string[][]): Maybe<EventRef> => {
+  const tag = matchTag(addressTags("a"), tags) ?? last(matchTags(hexTags("e"), tags))
+
+  if (tag) {
+    const target = EventRef.fromString(tag[1], getRelayHints(tag))
+
+    return EventRef.merge({pubkey: tagValue(tagSpec("p"), tags)}, target)
+  }
+}
+
+// A receipt is signed by the recipient's wallet, so the request inside names what was zapped.
+export const getAnsweredRef = (event: TrustedEvent): Maybe<EventRef> => {
   if (isReplyKind(event)) {
     const {parent, root} = getReplyRefs(event)
 
-    return (parent ?? root)?.getIdAndAddress() ?? []
+    return parent ?? root
   }
 
-  return tagValues(hexTags("e"), event.tags).slice(-1)
+  if (event.kind === ZAP_RECEIPT) {
+    const receipt = reader(ZapReceipt)(event).parse()
+
+    return getTargetRef(event.tags) ?? getTargetRef(receipt.request()?.tags ?? [])
+  }
+
+  if (event.kind === REACTION || event.kind === REPOST || event.kind === GENERIC_REPOST) {
+    return getTargetRef(event.tags)
+  }
 }
+
+export const getParents = (event: TrustedEvent) => getAnsweredRef(event)?.getIdAndAddress() ?? []
 
 // A reply names the note it answers with an `e` tag, and a deeper one names the thread root too.
 export const getThreadFilters = (event: TrustedEvent) => {

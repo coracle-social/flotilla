@@ -5,7 +5,7 @@
   import Divider from "@lib/components/Divider.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import {getEventStart} from "@app/features/spaces/calendar"
 
   type Props = {
@@ -13,10 +13,10 @@
     events: TrustedEvent[]
     element?: HTMLElement
     loading: boolean
-    context: FeedContext
+    engagement: EngagementIndex
   }
 
-  const {url, events, element, loading, context}: Props = $props()
+  const {url, events, element, loading, engagement}: Props = $props()
 
   let contentEl: HTMLElement | undefined = $state()
 
@@ -140,7 +140,7 @@
       {#if dateDisplay}
         <Divider>{dateDisplay}</Divider>
       {/if}
-      <CalendarEventItem {url} {event} {context} />
+      <CalendarEventItem {url} {event} {engagement} />
     </div>
   {/each}
   {#if loading}

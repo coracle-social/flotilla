@@ -6,7 +6,7 @@
   import {navigate} from "@app/navigation/navigate"
   import * as pages from "@app/navigation/pages"
   import {hasSpacePage, makeSpaceEntryPath} from "@app/navigation/history"
-  import {notifications} from "@app/features/notifications"
+  import {notifications} from "@app/features/activity"
 
   type Props = {
     url: string

@@ -6,7 +6,7 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import {reader} from "@app/core/domain"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import RoomLink from "@app/components/RoomLink.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
@@ -15,10 +15,10 @@
   type Props = {
     url: string
     event: TrustedEvent
-    context: FeedContext
+    engagement: EngagementIndex
   }
 
-  const {url, event, context}: Props = $props()
+  const {url, event, engagement}: Props = $props()
 
   const path = pages.poll.path({url, id: event.id})
   const h = reader(Poll)(event).room()
@@ -34,6 +34,6 @@
         in <RoomLink {url} {h} />
       {/if}
     </span>
-    <ContentActions showActivity noun="Poll" {url} {event} {context} />
+    <ContentActions showActivity noun="Poll" {url} {event} {engagement} />
   </div>
 </Cv>

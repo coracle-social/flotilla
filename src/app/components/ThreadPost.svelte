@@ -11,7 +11,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import ContentActions from "@app/components/ContentActions.svelte"
   import {handles, profiles} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
@@ -24,7 +24,7 @@
     event: TrustedEvent
     threadPubkey: string
     onReply: (event: TrustedEvent) => void
-    context: FeedContext
+    engagement: EngagementIndex
     replyCount?: number
     hideTitle?: boolean
   }
@@ -34,7 +34,7 @@
     event,
     threadPubkey,
     onReply,
-    context,
+    engagement,
     replyCount,
     hideTitle = false,
   }: Props = $props()
@@ -102,9 +102,9 @@
           Reply
         </Button>
         {#if isComment}
-          <CommentActions {event} {url} {context} />
+          <CommentActions {event} {url} {engagement} />
         {:else}
-          <ContentActions noun="Thread" {event} {url} {context} />
+          <ContentActions noun="Thread" {event} {url} {engagement} />
         {/if}
       </div>
     </div>

@@ -1,40 +1,40 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
   import {sortBy} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import Spinner from "@lib/components/Spinner.svelte"
+  import HomeActivityFilters from "@app/components/HomeActivityFilters.svelte"
   import HomeActivityItem from "@app/components/HomeActivityItem.svelte"
   import HomeActivityItemSpace from "@app/components/HomeActivityItemSpace.svelte"
-  import HomeActivityFilters from "@app/components/HomeActivityFilters.svelte"
   import HomeNotificationItem from "@app/components/HomeNotificationItem.svelte"
-  import {makeFeedContext} from "@app/features/feeds"
-  import type {Activity} from "@app/features/notifications"
   import {
-    countHomeNotificationTypes,
-    groupNotifications,
-    homeNotificationEvents,
-    homeNotificationTargets,
-    homeNotificationsLoaded,
-    homeNotificationsUnread,
-    includedHomeActivityTypes,
-    includedHomeNotificationEvents,
+    displayActivityTimestamp,
     isSpaceActivity,
-    readHomeNotifications,
     recentConversations,
     unreadSpaceContent,
   } from "@app/features/activity"
-  import type {HomeActivityType, HomeNotification, SpaceContent} from "@app/features/activity"
+  import type {Activity, SpaceContent} from "@app/features/activity"
+  import {makeEngagementIndex} from "@app/features/engagement"
+  import {
+    countHomeNotificationTypes,
+    homeNotificationEntries,
+    homeNotificationEvents,
+    homeNotificationsLoaded,
+    homeNotificationsUnread,
+    includedHomeActivityTypes,
+    pendingHomeNotifications,
+    readHomeNotifications,
+  } from "@app/features/notifications"
+  import type {HomeNotification, NotificationFacet} from "@app/features/notifications"
 
   type Entry = {key: string; timestamp: number} & (
     | {type: "conversation"; activity: Activity}
     | {type: "space"; content: SpaceContent}
     | {type: "notification"; notification: HomeNotification; note: TrustedEvent}
+    | {type: "pending"}
   )
 
-  const context = makeFeedContext({withReplies: true})
-
-  const notifications = $derived(groupNotifications($includedHomeNotificationEvents))
+  const engagement = makeEngagementIndex({withReplies: true})
 
   const includeSpaces = $derived($includedHomeActivityTypes.includes("spaces"))
 
@@ -48,7 +48,7 @@
   const spaceContent = $derived(includeSpaces ? $unreadSpaceContent : [])
 
   const counts = $derived(
-    new Map<Maybe<HomeActivityType>, number>([
+    new Map<NotificationFacet, number>([
       ...countHomeNotificationTypes($homeNotificationEvents),
       ["spaces", $recentConversations.filter(isSpaceActivity).length + $unreadSpaceContent.length],
     ]),
@@ -74,25 +74,23 @@
             content,
           }),
         ),
-        ...notifications.flatMap((notification): Entry[] => {
-          // Drawn from the note the stream already holds, so a row never waits on a second read.
-          const key = notification.ref.getAddressOrId()
-          const note = key && $homeNotificationTargets.get(key)
-
-          if (note) {
-            return [
-              {
-                type: "notification",
-                key: notification.key,
-                timestamp: notification.timestamp,
-                notification,
-                note,
-              },
-            ]
-          }
-
-          return []
-        }),
+        ...$homeNotificationEntries.map(
+          ({notification, note}): Entry => ({
+            type: "notification",
+            key: notification.key,
+            timestamp: notification.timestamp,
+            notification,
+            note,
+          }),
+        ),
+        // A row whose note is still on its way keeps its place rather than vanishing from the stream.
+        ...$pendingHomeNotifications.map(
+          (notification): Entry => ({
+            type: "pending",
+            key: notification.key,
+            timestamp: notification.timestamp,
+          }),
+        ),
       ],
     ),
   )
@@ -110,7 +108,7 @@
     }
   })
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 </script>
 
 <div class="flex flex-col divide-y divide-line border-t border-line bg-surface-less">
@@ -122,9 +120,15 @@
       <HomeActivityItem activity={entry.activity} />
     {:else if entry.type === "space"}
       <HomeActivityItemSpace content={entry.content} />
-    {:else}
+    {:else if entry.type === "notification"}
       <div class="p-4">
-        <HomeNotificationItem notification={entry.notification} note={entry.note} {context} />
+        <HomeNotificationItem notification={entry.notification} note={entry.note} {engagement} />
+      </div>
+    {:else}
+      <div class="flex items-center gap-2 p-4 text-sm opacity-50">
+        <Spinner loading />
+        <span>Loading a notification…</span>
+        <span class="ml-auto shrink-0 text-xs">{displayActivityTimestamp(entry.timestamp)}</span>
       </div>
     {/if}
   {/each}

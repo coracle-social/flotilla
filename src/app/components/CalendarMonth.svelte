@@ -6,7 +6,7 @@
   import Button from "@lib/components/Button.svelte"
   import CalendarDay from "@app/components/CalendarDay.svelte"
   import CalendarEventChip from "@app/components/CalendarEventChip.svelte"
-  import type {FeedContext} from "@app/features/feeds"
+  import type {EngagementIndex} from "@app/features/engagement"
   import {
     formatDay,
     formatWeekday,
@@ -23,10 +23,10 @@
     events: Readable<TrustedEvent[]>
     eventsByDay: Map<string, TrustedEvent[]>
     date: Date
-    context: FeedContext
+    engagement: EngagementIndex
   }
 
-  const {url, events, eventsByDay, date, context}: Props = $props()
+  const {url, events, eventsByDay, date, engagement}: Props = $props()
 
   // A modal's props are frozen at push time, so pass the feed's store rather than a filtered list.
   const showDay = (day: Date) => () =>
@@ -34,7 +34,7 @@
       url,
       date: day,
       events,
-      context,
+      engagement,
     })
 
   const weeks = $derived(chunk(7, getMonthDays(date)))

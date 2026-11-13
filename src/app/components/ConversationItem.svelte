@@ -11,7 +11,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import * as pages from "@app/navigation/pages"
   import {goToMessages} from "@app/features/messages"
-  import {notifications} from "@app/features/notifications"
+  import {notifications} from "@app/features/activity"
   import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
 

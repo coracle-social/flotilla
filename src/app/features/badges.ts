@@ -2,7 +2,7 @@ import {writable} from "svelte/store"
 import {Badge} from "@capawesome/capacitor-badge"
 import {merged} from "@welshman/store"
 import {alertSettings} from "@app/features/alerts"
-import {notificationCount} from "@app/features/notifications"
+import {unreadCount} from "@app/features/activity"
 
 // Firefox and most desktops can't draw an icon badge, and the plugin has no other way to say so.
 export const badgesSupported = writable(false)
@@ -16,7 +16,7 @@ const setBadge = async (count?: number) => {
     } else {
       await Badge.set({count})
     }
-  } catch (e) {
+  } catch {
     // pass - the plugin rejects on platforms without icon badges
   }
 }
@@ -24,7 +24,7 @@ const setBadge = async (count?: number) => {
 export const syncBadges = () => {
   let shown: number | undefined
 
-  return merged([notificationCount, alertSettings]).subscribe(([count, {badge}]) => {
+  return merged([unreadCount, alertSettings]).subscribe(([count, {badge}]) => {
     const next = badge ? count : undefined
 
     if (next !== shown) {

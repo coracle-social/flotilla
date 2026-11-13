@@ -15,8 +15,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import Spinner from "@lib/components/Spinner.svelte"
   import {makeCommentFilter} from "@lib/util"
+  import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ThreadBoard from "@app/components/ThreadBoard.svelte"
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
@@ -26,16 +26,17 @@
   import * as pages from "@app/navigation/pages"
   import {displayRoom} from "@app/features/spaces/rooms"
   import {partitionByActivity} from "@app/features/spaces"
-  import {isFeedLoading, makeFeed, makeFeedContext, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagementIndex} from "@app/features/engagement"
+  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.threads.decode(params)
-  const context = makeFeedContext({relays: [url]})
+  const engagement = makeEngagementIndex({relays: [url]})
 
-  onDestroy(context.cleanup)
+  onDestroy(engagement.stop)
 
   let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
 
@@ -91,7 +92,7 @@
   onMount(() => {
     const feed = makeFeed({
       relays: [url],
-      onEvent: context.add,
+      onEvent: engagement.add,
       filters: [{kinds: [THREAD]}, makeCommentFilter([THREAD])],
     })
 
@@ -139,7 +140,7 @@
       </div>
       {#if visibleItems.length > 0}
         {#each visibleItems as event (event.id)}
-          <ThreadLatestItem {url} {event} {context} showRoom={false} />
+          <ThreadLatestItem {url} {event} {engagement} showRoom={false} />
         {/each}
       {:else if term}
         <p class="text-content-muted p-4 text-sm">No topics match your search.</p>
@@ -154,16 +155,13 @@
           <ThreadBoard {url} {h} {threads} />
         {/each}
       </div>
-      <ThreadLatest {url} items={threadFeed.items} {context} />
+      <ThreadLatest {url} items={threadFeed.items} {engagement} />
     </div>
   {/if}
-  <p class="flex h-10 items-center justify-center py-20">
-    <Spinner {loading}>
-      {#if loading}
-        Looking for threads...
-      {:else if exhausted && (inBoard ? boardItems.length : threadFeed.items.length) === 0}
-        No threads found.
-      {/if}
-    </Spinner>
-  </p>
+  <FeedFooter
+    {loading}
+    {exhausted}
+    isEmpty={(inBoard ? boardItems.length : threadFeed.items.length) === 0}
+    loadingMessage="Looking for threads..."
+    emptyMessage="No threads found." />
 </PageContent>

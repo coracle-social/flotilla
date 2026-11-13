@@ -57,10 +57,10 @@ const homeFeed = (page: Page) => page.getByRole("region", {name: "Recent"})
 // The network tab asks every follow's relays for their posts only once it is open.
 const openNetworkTab = (feed: Locator) => feed.getByRole("button", {name: "Network"}).click()
 
-// Popular folds what the follows answered into the same stream, so its label carries the notes it
-// counts and it is matched by its label alone.
-const popularButton = (feed: Locator) => feed.getByRole("button", {name: /^Popular/})
-const openPopular = (feed: Locator) => popularButton(feed).click()
+// Interactions folds what the follows answered into the same stream, so its label carries the notes
+// it counts and it is matched by its label alone.
+const engagedButton = (feed: Locator) => feed.getByRole("button", {name: /^Interactions/})
+const openEngaged = (feed: Locator) => engagedButton(feed).click()
 
 // Every story here depends on the message having landed, so posting is finished once it renders.
 const post = async (page: Page, content: string) => {
@@ -928,7 +928,7 @@ test("US-144 mute somebody and read their notes as muted on the home page", asyn
   await expect(feed.getByText("You're all caught up")).toBeVisible({timeout: 20_000})
 })
 
-test("US-144 add what her follows answered with Popular, and read a mute as a state", async ({
+test("US-144 add what her follows answered with Interactions, and read a mute as a state", async ({
   seed,
   as,
 }) => {
@@ -984,7 +984,7 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
 
   const page = await as(users.alice, "/home")
   const feed = homeFeed(page)
-  const popular = popularButton(feed)
+  const engaged = engagedButton(feed)
 
   await openNetworkTab(feed)
 
@@ -993,15 +993,15 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
     timeout: 20_000,
   })
   await expect(feed.getByText(theirs)).toHaveCount(0)
-  await expect(popular).toHaveAttribute("aria-pressed", "false")
+  await expect(engaged).toHaveAttribute("aria-pressed", "false")
 
-  await openPopular(feed)
+  await openEngaged(feed)
 
-  await expect(popular).toHaveAttribute("aria-pressed", "true")
+  await expect(engaged).toHaveAttribute("aria-pressed", "true")
   await expect(feed.getByText(theirs)).toBeVisible({timeout: 20_000})
 
-  // The toggle sits beside the types and counts the notes it brings, as they do.
-  await expect(popular).toContainText("1")
+  // The toggle sits beside the facets and counts the notes it brings, as they do.
+  await expect(engaged).toContainText("1")
 
   // Her name on the card is the way to the profile the mute is reached from.
   await feed.getByRole("button", {name: "Carol Carlson"}).first().click()
@@ -1020,11 +1020,11 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
 
   await expect(feed.getByText(theirs)).toBeVisible()
 
-  // The count stays beside the toggle when it is turned off, as the type counts do.
-  await popular.click()
+  // The count stays beside the toggle when it is turned off, as the facet counts do.
+  await engaged.click()
 
-  await expect(popular).toHaveAttribute("aria-pressed", "false")
-  await expect(popular).toContainText("1")
+  await expect(engaged).toHaveAttribute("aria-pressed", "false")
+  await expect(engaged).toContainText("1")
 })
 
 test("US-147 choose the relays you publish to", async ({seed, as}) => {

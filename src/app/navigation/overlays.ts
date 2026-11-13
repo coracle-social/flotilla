@@ -2,7 +2,7 @@ import {EventRef} from "@welshman/util"
 import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {goto, pushState, replaceState} from "$app/navigation"
 import {page} from "$app/state"
-import {app} from "@app/core/app"
+import {notes} from "@app/features/social/notes"
 import {popHistory, traverse} from "@app/navigation/dialogs"
 import {getHomePath} from "@app/navigation/history"
 import {navigate} from "@app/navigation/navigate"
@@ -20,39 +20,27 @@ const withNote = (url: URL, nevent?: string) => {
   return next
 }
 
-// A note opened from the screen is in hand, so its overlay doesn't wait on a repository read.
-let openedNote: {key: string; event: TrustedEvent} | undefined
-
 // Shallow routing keeps page.url at the page's own url, so only a real load reads the note from it.
 export const getNoteOverlay = () => {
   const nevent = page.state.note ?? page.url.searchParams.get("note")
   const ref = nevent ? EventRef.fromNip19(nevent) : undefined
 
   if (ref) {
-    const key = ref.getIdOrAddress()
-    const event = key && openedNote?.key === key ? openedNote.event : undefined
-
-    return {ref, reply: Boolean(page.state.reply), event}
+    return {ref, reply: Boolean(page.state.reply)}
   }
 }
 
 export type OpenNoteOptions = {
   reply?: boolean
   replaceState?: boolean
-  event?: TrustedEvent
 }
 
 // The note covers any dialog that was open, which comes back once the note is closed.
 export const openNote = (ref: IEventRef, options: OpenNoteOptions = {}) =>
   traverse(() => {
     const note = new EventRef(ref).toNip19()
-    const key = new EventRef(ref).getIdOrAddress()
     const url = withNote(page.url, note)
     const state = {...page.state, modals: [], note, reply: options.reply}
-
-    if (key && options.event) {
-      openedNote = {key, event: options.event}
-    }
 
     if (options.replaceState) {
       replaceState(url, {...state, ownsNote: Boolean(page.state.ownsNote)})
@@ -62,17 +50,15 @@ export const openNote = (ref: IEventRef, options: OpenNoteOptions = {}) =>
   })
 
 // An event already on screen opens as a note, pointed at the relays it was seen on.
-export const openEventNote = (event: TrustedEvent, options: OpenNoteOptions = {}) =>
-  openNote(
-    EventRef.fromEvent(event, Array.from(app.get().repository.tracker.getRelays(event.id))),
-    {...options, event},
-  )
+export const openEventNote = (event: TrustedEvent, options: OpenNoteOptions = {}) => {
+  notes.get().seed(event)
+
+  return openNote(EventRef.fromEvent(event, notes.get().resolveRelays(event)), options)
+}
 
 // A note opened by a link or a reload has no entry of its own, so closing it reloads the page without it.
 export const closeNote = () =>
   traverse(async () => {
-    openedNote = undefined
-
     if (page.state.ownsNote) {
       await popHistory()
     } else {

@@ -2057,7 +2057,7 @@ Acceptance:
   Show anyway to open that one, and the people she has not muted are unaffected.
 - The activity stream drops an entry drawn around a muted person's note as well
   as anything the muted person did.
-- The Network tab carries a Popular toggle beside Notes and Replies, in place of
+- The Network tab carries an Interactions toggle beside Notes and Replies, in place of
   the Discover tab, which counts the notes her follows liked, reposted or zapped
   and folds them into the same stream, so a note she also follows is drawn once
   and counted under both. A mute drops none of them, since a muted person's

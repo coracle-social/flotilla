@@ -7,7 +7,7 @@ import {command, writer} from "@app/core/domain"
 import {publishRoomList} from "@app/features/spaces/rooms/lists"
 
 // "duplicate:" and "already a member" both leave us where we wanted to be.
-const isMembershipRefusal = (error: string) =>
+const isRealFailure = (error: string) =>
   !error.startsWith("duplicate:") && !error.includes("already")
 
 // Joining takes two publishes: the NIP-29 request the relay can refuse, and the user's room list.
@@ -28,7 +28,7 @@ export const joinRoom = async (url: string, h: string, code?: string) => {
   const publication = await command(eventWriter).then(publish)
   const error = await publication.getError()
 
-  if (error && isMembershipRefusal(error)) {
+  if (error && isRealFailure(error)) {
     return error
   }
 
@@ -39,7 +39,7 @@ export const leaveRoom = async (url: string, h: string) => {
   const publication = await command(writer(RoomLeave).setRoom(url, h)).then(publish)
   const error = await publication.getError()
 
-  if (error && isMembershipRefusal(error)) {
+  if (error && isRealFailure(error)) {
     return error
   }
 

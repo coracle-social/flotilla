@@ -158,8 +158,9 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 Outside `spaces/`:
 
-- Content: `feeds.ts` (`makeFeed`, `makeFeedContext`, `makeScrollLoader`, `makeCalendarFeed`),
-  `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38),
+- Content: `feeds.ts` (`makeFeed`, `makeGroupedFeed`, `makeScrollLoader`, `makeCalendarFeed`),
+  `engagement.ts` (the replies, reactions and zaps an event collected, held live off the
+  repository), `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38),
   `uploads.ts` (Blossom, image compression)
 - `people.ts`: display names for any list of pubkeys, and `bootstrapPubkeys`
 - `render.ts`: events as plain text or a one-line summary, for push notifications and reading aloud
@@ -167,14 +168,14 @@ Outside `spaces/`:
 - `signerAlerts.ts`: the toast that offers help when the signer stops answering
 - `toast.ts` (`pushToast`, one at a time), `theme.ts` (the active theme and font size)
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
-  `notifications.ts` (the latest activity per path, and which paths are unread), `badges.ts`
-  (the app icon badge) and `activity.ts` (the home stream: its conversations and space content,
-  what was done to your own notes with its sync, grouping and unread state, and the types the
+  `activity.ts` (the home stream's conversations and space content, the latest activity per path,
+  and which paths are unread), `badges.ts` (the app icon badge) and `notifications.ts` (what was
+  done to your own notes and who mentioned you: its sync, grouping, targets and the facets the
   stream is narrowed to)
-- `social/`: `replies.ts` reads a conversation's shape off its tags, `notes.ts` holds the `Notes`
-  plugin, `timeline.ts` pages one group of relays at a time, `noteFeed.ts` (`makeNoteFeed`,
-  `makeNotesTimeline`) combines paged sources into a note feed with its types and counts,
-  `popularFeed.ts` supplies the notes her follows answered, and `muting.ts` and `reactions.ts`
+- `social/`: `replies.ts` reads a conversation's shape off its tags and names the event an event
+  answers, `notes.ts` holds the `Notes` plugin, `noteSources.ts` builds the paged sources
+  (`makeNotesSource`, `makeEngagedSource`) over `makeGroupedFeed`, `noteFeed.ts` (`makeNoteFeed`)
+  combines them into a note feed with its facets and counts, and `muting.ts` and `reactions.ts`
   cover mutes and reacting outside a space
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),

@@ -6,10 +6,9 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import NoteDetail from "@app/components/NoteDetail.svelte"
-  import {app} from "@app/core/app"
+  import {getReplyRefs, notes} from "@app/features/social"
   import {pushModal} from "@app/navigation/dialogs"
   import {openNote} from "@app/navigation/overlays"
-  import {getReplyRefs, notes} from "@app/features/social"
 
   type Props = {
     event: TrustedEvent
@@ -23,21 +22,17 @@
 
   const hasThread = $derived(refs.root?.getAddressOrId() !== parent?.getAddressOrId())
 
-  // The note opens from a url, so the relays this reply points to have to travel as hints.
-  const open = (target: EventRef) => async () => {
-    const relays = await $notes.relays(target, [event])
+  const relays = notes.get().resolveRelays(event)
 
+  // Seen relays stand in as hints; the note's own routing resolves behind the overlay.
+  const open = (target: EventRef) => () => {
     openNote(EventRef.merge(target, {relays}))
   }
 
   const openThread = () => {
-    const relays = Array.from(app.get().repository.tracker.getRelays(event.id))
+    notes.get().seed(event)
 
-    pushModal(
-      NoteDetail,
-      {ref: EventRef.fromEvent(event, relays), event, thread: true},
-      {size: "large"},
-    )
+    pushModal(NoteDetail, {ref: EventRef.fromEvent(event, relays), thread: true}, {size: "large"})
   }
 </script>
 
