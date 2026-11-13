@@ -75,7 +75,6 @@ export {
   message,
   messageActions,
   messages,
-  modalForm,
   noteEditor,
   openMessageMenu,
   openRoomDetail,
@@ -262,10 +261,12 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         ...options.context,
       })
 
-      contexts.push({name: user?.name ?? "anonymous", context})
+      const who = user?.name ?? "anonymous"
+
+      contexts.push({name: who, context})
 
       // use.trace and the built-in reporting only cover contexts playwright made itself.
-      faults.observe(context, user?.name ?? "anonymous")
+      faults.observe(context, who)
 
       // Playwright matches the most recently registered route first, so the block-all goes in first.
       await installHttpRoutes(context)
@@ -313,7 +314,7 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         })
       }
 
-      return boot(context, {
+      const page = await boot(context, {
         user,
         nip07: Boolean(options.nip07),
         path,
@@ -324,6 +325,11 @@ export const test = base.extend<HarnessFixtures, HarnessWorkerFixtures>({
         spaces: urls,
         events: user ? cache(user) : [],
       })
+
+      // boot() has done its own loads before it hands the page over, so a load here is the test's or the dev server's.
+      page.on("load", () => faults.loaded(who))
+
+      return page
     }
 
     await use({

@@ -27,6 +27,8 @@ export type FaultWatch = {
   // The subset of it that means the app broke rather than the box being noisy.
   found: string[]
   observe(context: BrowserContext, who: string): void
+  // A document swap drops every open dialog and says nothing in the console, so the account says it.
+  loaded(who: string): void
   // Throws on an uncaught exception or code the browser refused to run, not on a failed request.
   assertNone(): void
 }
@@ -61,6 +63,9 @@ export const watchFaults = (): FaultWatch => {
 
         record(`[${who}] uncaught: ${text}`, !isChunkLoss(text) && !isCloseOnUnload(text))
       })
+    },
+    loaded(who) {
+      record(`[${who}] reloaded: a document swap drops every open dialog`, false)
     },
     assertNone() {
       if (found.length > 0) {

@@ -1591,8 +1591,8 @@ Acceptance:
 - Selecting "Dark" applies the dark theme to the document immediately, and
   "System" follows the OS color-scheme preference.
 - Choosing a different app theme applies it and persists after a reload.
-- Dragging the font-size slider updates the displayed percentage, and saving the
-  page applies it and persists it across a reload.
+- Dragging the font-size slider updates the displayed percentage, and the
+  size applies and persists across a reload as soon as the slider is released.
 
 ### US-091 — Set up how people zap you
 

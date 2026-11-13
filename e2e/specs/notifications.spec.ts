@@ -13,7 +13,6 @@ import {
   makeTestUser,
   message,
   messageActions,
-  modalForm,
   noteEditor,
   openRoomDetail,
   pageBar,
@@ -936,16 +935,27 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
   const theirs = "the channel markers moved again"
   const dave = makeTestUser("dave")
 
-  await seed(({relay, user, at}) => {
+  await seed(({relay, open, user, at}) => {
     const space = relay("space")
+    const indexer = open("indexer")
+    const outbox = open("outbox")
 
     space.room("general", {name: "General"})
     space.join(user.alice, "general")
     space.join(user.carol, "general")
 
-    seedRelays(space, user.alice)
-    seedRelays(space, user.carol)
-    seedRelays(space, dave)
+    // Somewhere she writes and nowhere she reads, which is what lets her client identify to them.
+    indexer.relayList(user.alice, {
+      read: [space.url, indexer.url],
+      write: [space.url, indexer.url, outbox.url],
+    })
+
+    // Carol's list is on her space and on the indexer a reader resolves it from, as one event.
+    space.relayList(user.carol)
+    indexer.relayList(user.carol, {read: [space.url], write: [space.url]})
+
+    // Dave is in none of alice's spaces, so his fixtures go where a non-member may write.
+    indexer.relayList(dave, {read: [outbox.url], write: [outbox.url]})
 
     space.profile(user.carol, {name: "Carol Carlson"})
     // Carol is nobody alice follows, so her note only reaches the tab through what dave answered.
@@ -957,7 +967,8 @@ test("US-144 add what her follows answered with Popular, and read a mute as a st
       at(2, HOUR),
     )
 
-    space.event(
+    // The like sits on the relay his list names, which is where the tab resolves him to.
+    outbox.event(
       dave,
       () =>
         makeEvent(REACTION, {
@@ -1276,11 +1287,11 @@ test("US-136 hear about a new message and not about a new thread", async ({seed,
 
   await bob.getByRole("button", {name: "New topic"}).click()
 
-  const threadForm = modalForm(bob, "Create a Thread")
+  const threadDialog = dialog(bob, "Create a Thread")
 
-  await threadForm.getByPlaceholder("What is this thread about?").fill("the dock is closing")
-  await noteEditor(threadForm).pressSequentially("sunday, apparently")
-  await threadForm.getByRole("button", {name: "Create Thread"}).click()
+  await threadDialog.getByPlaceholder("What is this thread about?").fill("the dock is closing")
+  await noteEditor(threadDialog).pressSequentially("sunday, apparently")
+  await threadDialog.getByRole("button", {name: "Create Thread"}).click()
 
   const latest = bob.locator("section").filter({has: bob.getByRole("heading", {name: "Latest"})})
 

@@ -9,10 +9,6 @@ export const dialog = (page: Page, title: string) =>
 // The modal on top, for one with no heading of its own or one pushed over another.
 export const topDialog = (page: Page) => page.getByRole("dialog").last()
 
-// A dialog that submits as a form, like a confirmation; a composer is a plain dialog instead.
-export const modalForm = (page: Page, title: string) =>
-  page.locator("form").filter({has: page.getByRole("heading", {name: title})})
-
 // Named rather than counted, since a card is free to put a join of its own above it.
 export const emojiButton = (scope: Locator) => scope.getByRole("button", {name: "Add a reaction"})
 

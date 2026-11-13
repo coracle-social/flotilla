@@ -208,14 +208,11 @@ test("US-090 change the app's appearance", async ({seed, as}) => {
 
   await expect(body).toHaveAttribute("data-fl-theme", "navy")
 
-  // Font size is a setting, so it goes out with the rest of the page.
+  // The slider saves as it is released, so the size never waits on the save bar.
   await page.getByLabel("Font size").fill("1.25")
-  await page.getByRole("button", {name: "Save Changes"}).click()
 
-  await expect(page.getByRole("alert")).toContainText("Your settings have been saved!")
   await expect(page.locator("html")).toHaveAttribute("style", /font-size:\s*1\.25rem/)
 
-  await waitForToastToClear(page)
   await page.reload()
 
   await expect(page.locator("html")).toHaveAttribute("style", /font-size:\s*1\.25rem/)

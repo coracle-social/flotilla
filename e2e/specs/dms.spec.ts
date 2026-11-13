@@ -9,6 +9,7 @@ import {
   composer,
   composerDisabled,
   composerEnabled,
+  dialog,
   expect,
   makeTestUser,
   pageBar,
@@ -64,6 +65,8 @@ const startConversation = async (page: Page, people: {term: string; user: TestUs
       .getByPlaceholder("Search for profiles or paste a pubkey...")
       .pressSequentially(term, {delay: 150})
 
+    // A dialog is page state plus an in-memory record, so a reload takes it with the document.
+    await expect(dialog(page, "Start a Conversation")).toBeVisible()
     await expect(suggestion).toContainText(term)
 
     await suggestion.click()
