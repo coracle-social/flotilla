@@ -273,11 +273,14 @@ export const makeNoteFeed = ({
     $pinned => new Set($pinned.map(event => getNoteKey(EventRef.fromEvent(event)))),
   )
 
-  const entries = derived([visible, pinnedKeys], ([$visible, $pinnedKeys]) => {
+  const entries = derived([visible, pinnedKeys, included], ([$visible, $pinnedKeys, $included]) => {
+    // Any facet lets a card in, but the replies drawn under it are the replies facet's alone.
+    const showReplies = $included.includes("replies")
+
     const entries = sortBy(
       entry => -getPublishedTimestamp(entry.note),
       $visible.flatMap(({key, ref, note, replies}): NoteEntry[] =>
-        note ? [{key, ref, note, replies: sortEventsDesc(replies)}] : [],
+        note ? [{key, ref, note, replies: showReplies ? sortEventsDesc(replies) : []}] : [],
       ),
     )
 
@@ -322,17 +325,25 @@ export const makeNoteFeed = ({
   )
 
   const status: Readable<NoteFeedStatus> = derived(
-    [entries, loading, exhausted, groups],
-    ([$entries, $loading, $exhausted, $groups]) => {
+    [entries, loading, exhausted, groups, resolved, included],
+    ([$entries, $loading, $exhausted, $groups, $resolved, $included]) => {
       if ($entries.length > 0) {
         return "ready"
+      }
+
+      // With every facet the sources produce turned off, the feed is filtered before anything arrives.
+      if (!sources.some(source => isSourceIncluded(source, $included))) {
+        return "filtered"
       }
 
       if ($loading || !$exhausted) {
         return "loading"
       }
 
-      return $groups.length === 0 ? "empty" : "filtered"
+      // A note that failed to load can't be drawn whatever the facets say, so it isn't one they hide.
+      const hidden = $groups.some(group => group.note || !$resolved.has(group.key))
+
+      return hidden ? "filtered" : "empty"
     },
   )
 

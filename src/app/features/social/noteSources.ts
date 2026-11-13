@@ -56,9 +56,9 @@ export const makeEngagedSource = ({pubkeys}: {pubkeys: Readable<string[]>}): Ref
       // A like and a repost both name what they answer.
       const filters: Filter[] = [{kinds: [REACTION, REPOST, GENERIC_REPOST], authors}]
 
-      // A receipt pays its recipient rather than being published by the zapper, so it is found by who it names.
+      // A receipt is published by the recipient's wallet and names the zapper in its P tag.
       if (ENABLE_ZAPS) {
-        filters.push({kinds: [ZAP_RECEIPT], "#p": authors})
+        filters.push({kinds: [ZAP_RECEIPT], "#P": authors})
       }
 
       return filters

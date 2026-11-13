@@ -451,31 +451,24 @@ export type HomeNotificationEntry = {
   note: TrustedEvent
 }
 
-// Both halves of the stream, so a row whose note has not landed yet still takes its place.
-const homeNotificationRows = derived(
+// isHomeNotification admits an event only once its note has landed, so no row waits here on one.
+export const homeNotificationEntries = derived(
   [includedHomeNotificationEvents, homeNotificationTargets],
   ([$events, $targets]) => {
-    const resolved: HomeNotificationEntry[] = []
-    const pending: HomeNotification[] = []
+    const entries: HomeNotificationEntry[] = []
 
     for (const notification of groupNotifications($events)) {
       const key = notification.ref.getAddressOrId()
       const note = key && $targets.get(key)
 
       if (note) {
-        resolved.push({notification, note})
-      } else {
-        pending.push(notification)
+        entries.push({notification, note})
       }
     }
 
-    return {resolved, pending}
+    return entries
   },
 )
-
-export const homeNotificationEntries = derived(homeNotificationRows, $rows => $rows.resolved)
-
-export const pendingHomeNotifications = derived(homeNotificationRows, $rows => $rows.pending)
 
 export const registerNotifications = () => {
   registerSync(syncHomeNotifications)

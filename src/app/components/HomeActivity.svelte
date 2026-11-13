@@ -7,12 +7,7 @@
   import HomeActivityItem from "@app/components/HomeActivityItem.svelte"
   import HomeActivityItemSpace from "@app/components/HomeActivityItemSpace.svelte"
   import HomeNotificationItem from "@app/components/HomeNotificationItem.svelte"
-  import {
-    displayActivityTimestamp,
-    isSpaceActivity,
-    recentConversations,
-    unreadSpaceContent,
-  } from "@app/features/activity"
+  import {isSpaceActivity, recentConversations, unreadSpaceContent} from "@app/features/activity"
   import type {Activity, SpaceContent} from "@app/features/activity"
   import {makeEngagementIndex} from "@app/features/engagement"
   import {
@@ -22,7 +17,6 @@
     homeNotificationsLoaded,
     homeNotificationsUnread,
     includedHomeActivityTypes,
-    pendingHomeNotifications,
     readHomeNotifications,
   } from "@app/features/notifications"
   import type {HomeNotification, NotificationFacet} from "@app/features/notifications"
@@ -31,7 +25,6 @@
     | {type: "conversation"; activity: Activity}
     | {type: "space"; content: SpaceContent}
     | {type: "notification"; notification: HomeNotification; note: TrustedEvent}
-    | {type: "pending"}
   )
 
   const engagement = makeEngagementIndex({withReplies: true})
@@ -83,14 +76,6 @@
             note,
           }),
         ),
-        // A row whose note is still on its way keeps its place rather than vanishing from the stream.
-        ...$pendingHomeNotifications.map(
-          (notification): Entry => ({
-            type: "pending",
-            key: notification.key,
-            timestamp: notification.timestamp,
-          }),
-        ),
       ],
     ),
   )
@@ -120,15 +105,9 @@
       <HomeActivityItem activity={entry.activity} />
     {:else if entry.type === "space"}
       <HomeActivityItemSpace content={entry.content} />
-    {:else if entry.type === "notification"}
+    {:else}
       <div class="p-4">
         <HomeNotificationItem notification={entry.notification} note={entry.note} {engagement} />
-      </div>
-    {:else}
-      <div class="flex items-center gap-2 p-4 text-sm opacity-50">
-        <Spinner loading />
-        <span>Loading a notification…</span>
-        <span class="ml-auto shrink-0 text-xs">{displayActivityTimestamp(entry.timestamp)}</span>
       </div>
     {/if}
   {/each}

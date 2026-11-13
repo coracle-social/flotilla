@@ -15,8 +15,7 @@ import {
   hexTags,
   matchTag,
   matchTags,
-  tagSpec,
-  tagValue,
+  tagValues,
 } from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {Comment, Note, ZapReceipt} from "@welshman/domain"
@@ -40,14 +39,14 @@ export const getReplyRefs = (event: TrustedEvent) => {
   return {parent: thread?.parent(), root: thread?.root()}
 }
 
-// NIP-25 names a reaction's target last, or its address when the target is addressable.
+// NIP-25 names a reaction's target and its author last, though an address carries its own author.
 const getTargetRef = (tags: string[][]): Maybe<EventRef> => {
   const tag = matchTag(addressTags("a"), tags) ?? last(matchTags(hexTags("e"), tags))
 
   if (tag) {
     const target = EventRef.fromString(tag[1], getRelayHints(tag))
 
-    return EventRef.merge({pubkey: tagValue(tagSpec("p"), tags)}, target)
+    return EventRef.merge(target, {pubkey: last(tagValues(hexTags("p"), tags))})
   }
 }
 
