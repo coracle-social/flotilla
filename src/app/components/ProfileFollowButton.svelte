@@ -18,22 +18,32 @@
   const follows = $derived($followLists.one($user.pubkey))
   const isFollowing = $derived(Boolean($follows?.includes(pubkey)))
 
-  let loading = $state(false)
+  let wanted = $state<boolean>()
+
+  const loading = $derived(wanted !== undefined)
 
   const toggleFollow = async () => {
-    loading = true
+    wanted = !isFollowing
 
     try {
-      if (isFollowing) {
-        await $followLists.unfollow(pubkey).then(publish)
-      } else {
-        await $followLists.follow(["p", pubkey]).then(publish)
-      }
+      const command = wanted
+        ? await $followLists.follow(["p", pubkey])
+        : await $followLists.unfollow(pubkey)
+      const publication = publish(command)
+
+      // `publish` returns before the repository holds the new list, which is what the label reads.
+      await publication.written()
+
+      publication.settled().then(({state}) => {
+        if (state.stage === "failed") {
+          pushToast({theme: "error", message: "Failed to update your follows."})
+        }
+      })
     } catch (e) {
       console.error(e)
       pushToast({theme: "error", message: "Failed to update your follows."})
     } finally {
-      loading = false
+      wanted = undefined
     }
   }
 </script>
@@ -44,5 +54,5 @@
   {:else}
     <Icon icon={UserPlus} size={4} />
   {/if}
-  {isFollowing ? "Unfollow" : "Follow"}
+  {(wanted ?? isFollowing) ? "Unfollow" : "Follow"}
 </Button>

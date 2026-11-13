@@ -103,6 +103,7 @@ callbacks and hot paths.
 - Return status that should be displayed to user
 - Allow cancellation and error handling
 - Immediately publish to local repository for optimistic updates
+- A control shows the state it was asked for from the click, and keeps its spinner until `await publication.written()`, since `publish` returns before the repository holds the event and `settled()` waits on the relays
 
 ## Nostr Integration
 
