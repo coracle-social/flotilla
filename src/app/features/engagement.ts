@@ -2,7 +2,7 @@
 
 import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {batch, groupBy, on, pushToMapKey, uniq, uniqBy} from "@welshman/lib"
+import {batch, groupBy, on, pushToMapKey, removeUndefined, uniq, uniqBy} from "@welshman/lib"
 import {
   COMMENT,
   DELETE,
@@ -32,10 +32,13 @@ const EVENT_CONTEXT_KINDS = [REPORT, REACTION, ZAP_RECEIPT, COMMENT]
 
 const noEvents: TrustedEvent[] = []
 
-// A NIP-22 comment points at its thread root with `E`/`A`, which is the scope a reply count wants.
+// A NIP-22 comment is filed under its thread root and under the event it answers, which both draw it.
 const getTargets = (event: TrustedEvent) => {
   if (event.kind === COMMENT) {
-    return reader(Comment)(event).root()?.getIdAndAddress() ?? []
+    const comment = reader(Comment)(event)
+    const refs = removeUndefined([comment.root(), comment.parent()])
+
+    return uniq(refs.flatMap(ref => ref.getIdAndAddress()))
   }
 
   // A direct reply marks its parent as both root and reply, so the same id arrives twice.
@@ -61,19 +64,20 @@ export const makeEngagementIndex = ({
   const subscribersByTarget = new Map<string, Set<(events: TrustedEvent[]) => void>>()
   const deletedChecks = new Map<string, Set<() => void>>()
 
+  // A target tracked after the event was filed still takes it, reading it back from the repository.
   const addEvent = (event: TrustedEvent, touched: Set<string>) => {
-    // An event seen before its target stays unfiled, so adding the target picks it up from the repository.
-    if (!targetsByEventId.has(event.id)) {
-      const eventTargets = getTargets(event).filter(target => targets.has(target))
+    const filed = targetsByEventId.get(event.id) ?? []
 
-      if (eventTargets.length > 0) {
-        targetsByEventId.set(event.id, eventTargets)
-
-        for (const target of eventTargets) {
-          eventsByTarget.set(target, [...(eventsByTarget.get(target) || []), event])
-          touched.add(target)
-        }
+    for (const target of getTargets(event)) {
+      if (targets.has(target) && !filed.includes(target)) {
+        filed.push(target)
+        eventsByTarget.set(target, [...(eventsByTarget.get(target) || []), event])
+        touched.add(target)
       }
+    }
+
+    if (filed.length > 0) {
+      targetsByEventId.set(event.id, filed)
     }
   }
 

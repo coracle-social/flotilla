@@ -1,7 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
   import type {Snippet} from "svelte"
-  import {COMMENT, NOTE} from "@welshman/util"
   import type {TrustedEvent} from "@welshman/util"
   import ReplyButton from "@lib/components/ReplyButton.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
@@ -11,6 +10,7 @@
   import EventReactions from "@app/components/EventReactions.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import type {EngagementIndex} from "@app/features/engagement"
+  import {isReplyTo} from "@app/features/social"
   import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {
@@ -43,8 +43,8 @@
 
   const related = engagement.related(event)
 
-  // Kind 1 notes are replied to with notes as well as with NIP-22 comments.
-  const replyCount = $derived($related.filter(e => e.kind === COMMENT || e.kind === NOTE).length)
+  // The index files an answer under every note above it, so only the ones naming this note count.
+  const replyCount = $derived($related.filter(e => isReplyTo(e, event)).length)
 
   const openReplies = () => openEventNote(event, {reply: true})
 </script>

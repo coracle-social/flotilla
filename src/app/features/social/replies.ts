@@ -72,6 +72,13 @@ export const getAnsweredRef = (event: TrustedEvent): Maybe<EventRef> => {
 
 export const getParents = (event: TrustedEvent) => getAnsweredRef(event)?.getIdAndAddress() ?? []
 
+// Only an event naming the target as its parent replies to it, as deeper ones name it as their root.
+export const isReplyTo = (event: TrustedEvent, target: TrustedEvent) => {
+  const values = getIdAndAddress(target)
+
+  return isReplyKind(event) && getParents(event).some(value => values.includes(value))
+}
+
 // A reply names the note it answers with an `e` tag, and a deeper one names the thread root too.
 export const getThreadFilters = (event: TrustedEvent) => {
   const root = event.kind === NOTE ? reader(Note)(event).root()?.id : undefined

@@ -1925,6 +1925,7 @@ Acceptance:
   row per space counting what it has waiting that isn't a message - threads,
   events, classifieds and the rest - and the replies and reactions to her own
   notes.
+- A note carries the number of answers to it alone, so a reply to a reply does not add to the note the whole conversation hangs off.
 - The stream is history rather than a queue, so a conversation she has read
   keeps its row and loses its unread dot.
 - The stream spends its first second and a half as a spinner, so its rows are
@@ -1980,6 +1981,7 @@ Acceptance:
   or zapped.
 - An entry whose note is itself a reply links to the note it answers and to the
   root of its thread.
+- An entry is drawn around a note, a comment or any other content item of hers, so a comment on her article and a reply to a comment of hers both reach the stream.
 - A reply shown under an entry opens its own note when she clicks it.
 - The stream holds notes and what was done to them, so a reaction to one of her
   room messages lights neither the stream nor its badge.

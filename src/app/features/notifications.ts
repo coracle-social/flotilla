@@ -35,11 +35,9 @@ import {
 import type {TrustedEvent} from "@welshman/util"
 import {observeEventsById, synced, throttled} from "@welshman/store"
 import type {EventsById} from "@welshman/store"
-import {Comment} from "@welshman/domain"
 import {Events, Network} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {app} from "@app/core/app"
-import {reader} from "@app/core/domain"
 import {network, router} from "@app/core/plugins"
 import {ENABLE_ZAPS} from "@app/core/env"
 import {registerRetention} from "@app/core/database"
@@ -47,6 +45,7 @@ import {kv} from "@app/core/storage"
 import {makeKeyedSyncs, registerSync} from "@app/core/sync"
 import {userRelayList} from "@app/core/user"
 import {checked, setChecked} from "@app/features/checked"
+import {CONTENT_KINDS} from "@app/features/spaces/content"
 import {getAnsweredRef, isReplyKind} from "@app/features/social/replies"
 import {isEventMuted} from "@app/features/social/muting"
 
@@ -101,9 +100,9 @@ const getNotificationFacet = (event: TrustedEvent): NotificationFacet => {
   return isAnswer(event) ? "replies" : "mentions"
 }
 
-// A notification is a note and what was done to it, so nothing else can be the note one is drawn around.
+// A notification is drawn around a note, a comment or a content item, and never around a room message.
 const isNotificationTarget = (event: TrustedEvent) =>
-  event.kind === NOTE || (event.kind === COMMENT && reader(Comment)(event).root()?.kind === NOTE)
+  event.kind === NOTE || event.kind === COMMENT || CONTENT_KINDS.includes(event.kind)
 
 // Two notifications in a row about one note read as a duplicate, whatever bucket split them.
 const mergeAdjacent = (notifications: HomeNotification[]) => {
