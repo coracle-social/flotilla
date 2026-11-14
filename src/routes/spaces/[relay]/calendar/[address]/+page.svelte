@@ -25,14 +25,14 @@
   import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/features/spaces/calendar"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, address} = pages.calendarEvent.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
   const event = $events.one(address, [url]).$
   const timeEvent = derived(event, $event => ($event ? reader(TimeEvent)($event) : undefined))
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])

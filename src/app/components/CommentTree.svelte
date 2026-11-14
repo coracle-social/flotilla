@@ -12,7 +12,7 @@
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import type {CommentNode} from "@app/features/social"
 
   type Props = {
@@ -24,7 +24,7 @@
     setReplyTo?: (comment?: TrustedEvent) => void
     url?: string
     customActions?: Snippet<[TrustedEvent]>
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {
@@ -89,7 +89,7 @@
         <div class="flex w-full justify-between gap-2">
           <EventReactions event={node.comment} {engagement} placement="right" />
           <div class="flex shrink-0 items-center gap-2">
-            <PublicationStatusOrDeleted event={node.comment} {engagement}>
+            <PublicationStatusOrDeleted event={node.comment}>
               {#if setReplyTo}
                 <ReplyButton count={node.children.length} onclick={reply} />
               {/if}

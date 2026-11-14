@@ -284,7 +284,7 @@ stores, so a component takes the key and looks up the rest: `RoomName` takes `{u
 
 Events are the exception, and 66 components take `event: TrustedEvent`, since the parent already
 holds the event from a feed or `$events.one`. An event prop usually travels with `url`, the
-relay it lives on, which routes its replies and reactions, and with `engagement: EngagementIndex`,
+relay it lives on, which routes its replies and reactions, and with `engagement: Engagement`,
 the shared index below. A component takes a pointer instead only when it has to load the event
 itself, as `ContentQuote` does. Anything with neither a store nor an event is passed as its
 domain reader: `RoleEdit` takes `role: RelayRoleReader`.
@@ -371,62 +371,29 @@ onMount(() => {
 
 That is `EventComments`. The thread detail page does the same in an `$effect`.
 
-**A list that pages as you scroll:** `makeFeed` and `makeScrollLoader` from
-`src/app/features/feeds.ts`, and `makeEngagementIndex` from `src/app/features/engagement.ts`.
-Every space list page uses them, as do `HomeNetworkRecent` and `RoomChat`.
-The threads and classifieds pages are the reference:
+**A list that pages as you scroll:** a feed from `@app/features/feeds`, `followScroll` from `@lib/pager`, and `makeEngagement` from `src/app/features/engagement.ts`. Every space list page uses them, as do `RoomTranscript` and the calendar. The threads and classifieds pages are the reference:
 
 ```typescript
-const engagement = makeEngagementIndex({relays: [url]})
+const engagement = makeEngagement({relays: [url]})
+const feed = makeRelayFeed({url, filters, onEvent: engagement.track})
+const {events} = feed
+const status = feed.older.status
 
-onDestroy(engagement.stop)
-
-let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
 let element: HTMLElement | undefined = $state()
-let events: Readable<TrustedEvent[]> = $state(readable([]))
 
-const loading = $derived(isFeedLoading($older))
-const exhausted = $derived($older?.status === "exhausted")
+onMount(() => followScroll(element!, feed.older))
 
-onMount(() => {
-  const feed = makeFeed({relays: [url], onEvent: engagement.add, filters})
-
-  events = feed.events
-  older = makeScrollLoader(element!, feed.loadOlder)
-
-  return () => {
-    older?.stop()
-    feed.cleanup()
-  }
+onDestroy(() => {
+  feed.stop()
+  engagement.stop()
 })
 ```
 
-The feed is built in `onMount` because the loader needs the bound scroll element from
-`<PageContent bind:element>`. `engagement.add` batches the reactions, comments and deletions for
-every event the feed yields, rows get the same `engagement`, and their action rows read
-`engagement.related(event)` and `engagement.deleted(event)`. Close the list with `<Spinner {loading}>`
-and an `{#if}` chain over loading, empty and exhausted. Calendars use
-`makeCalendarFeed`, which pages by date tag rather than `created_at`.
+A feed is a timeline: what the repository holds for its relay, from its floor up. Paging asks the relay for the next window back and lowers the floor, so the list never shows a gap; nothing is stored in the feed itself. Only the scroll binding needs the element from `<PageContent bind:element>`, so it alone waits for `onMount`. `engagement.track` batches the reactions, comments and deletions for every event the feed draws, rows get the same `engagement`, and their action rows read `engagement.related(event)`; whether an event was deleted is `$events.isDeleted(event).$`. Close the list with `<FeedFooter status={$status} ...>`, which shows the spinner while the pager loads and the empty or done message once it is exhausted. `RoomTranscript` pages both ways from a permalink with `feed.older` and `feed.newer`. Calendars use `makeCalendarFeed`, which windows by day rather than `created_at`, and whose `load(since, until)` serves the month and week grids.
 
-`makeNoteFeed` in `src/app/features/social/noteFeed.ts` builds on those helpers to draw each reply
-under the note it answers. A content source (`makeNotesSource`) brings events the feed draws
-itself; a reference source (`makeEngagedSource`) brings events that only name a note, which the feed
-resolves in the background and folds into the same stream. It also takes an optional `pinned` list
-and the `NoteFacet[]` to show. The home Network section passes the persisted
-`includedNoteFacets`, so the Notes, Replies and Interactions buttons count and toggle through the
-same store; a note a follow both wrote and liked counts under both, and is drawn once.
-`ProfilePageNotes` passes one source and a pin list, and keeps pinned notes above the rest. A muted
-note stays in the feed and `NoteCard` draws it, while `ProfilePageNotes` says the person is muted
-instead of drawing the list. Missing notes never hold the feed up: an entry draws once its note is
-in hand, and the ones still being fetched wait off to the side.
+`makeNoteFeed` in `src/app/features/social/noteFeed.ts` draws each reply under the note it answers. It takes a notes source and optionally an interactions source, both `makeAuthorFeed`s: the first brings events the feed draws itself, the second likes, reposts and zaps that only name a note, which the feed resolves in the background (`noteResolver.ts`) and folds into the same cards. It also takes an optional `pinned` list and the `NoteFacet[]` to show. `makeNetworkFeed` and `makeProfileFeed` in `networkFeed.ts` build the two feeds the app draws: the home Network section passes the persisted `includedNoteFacets`, so the Notes, Replies and Interactions buttons count and toggle through the same store, and a note a follow both wrote and liked counts under both and is drawn once. `ProfilePageNotes` gets one source and a pin list, and keeps pinned notes above the rest. A muted note stays in the feed and `NoteCard` draws it, while `ProfilePageNotes` says the person is muted instead of drawing the list. Missing notes never hold the feed up: an entry draws once its note is in hand, and the ones still being fetched wait off to the side. `NoteFeedFooter` renders the note feed's status.
 
-`ProfileFeed` still drives welshman's `FeedController` through
-`$app.use(Feeds).makeFeedController` and `createScroller`, but 27fa25c3 moved the home feed onto
-the app helpers, which is the direction for new lists. Only `RoomChat` virtualizes; other long
-lists wrap each row's root in `Cv`, which applies `content-visibility` and paints two viewports
-ahead. All ten `*Item` components that appear in a list use it. A virtualized list takes its
-`threshold` from the loader paging it, since a list that stops growing short of the loader's
-runway leaves the loader fetching history the list never draws.
+Flotilla doesn't use welshman's `FeedController`: it keeps no load state, reports no per-relay results, and has no floor, so it can't draw the cache ahead of the relays without gaps (27fa25c3). Only `RoomTranscript` virtualizes; other long lists wrap each row's root in `Cv`, which applies `content-visibility` and paints two viewports ahead. All ten `*Item` components that appear in a list use it. A virtualized list grows as far as its pager fetches, so `RoomTranscript` passes one `runway` to both `followScroll` and `VirtualList`; a list that stops growing short of the pager's runway leaves the pager fetching history the list never draws.
 
 ## Mutations from a component
 

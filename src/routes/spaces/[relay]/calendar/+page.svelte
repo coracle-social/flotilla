@@ -1,11 +1,6 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import type {Readable} from "svelte/store"
-  import {readable} from "svelte/store"
   import {dateToSeconds} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
-  import type {TrustedEvent} from "@welshman/util"
-  import {EVENT_TIME} from "@welshman/util"
   import CalendarMinimalistic from "@assets/icons/calendar-minimalistic.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import AltArrowRight from "@assets/icons/alt-arrow-right.svg?dataurl"
@@ -16,12 +11,13 @@
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
-  import {makeCommentFilter} from "@lib/util"
+  import {followScroll} from "@lib/pager"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import CalendarAgenda from "@app/components/CalendarAgenda.svelte"
   import CalendarMonth from "@app/components/CalendarMonth.svelte"
   import CalendarWeek from "@app/components/CalendarWeek.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
+  import {makeCalendarFeed} from "@app/features/feeds"
   import type {CalendarView} from "@app/features/spaces/calendar"
   import {
     addDays,
@@ -37,14 +33,16 @@
   } from "@app/features/spaces/calendar"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import {makeEngagementIndex} from "@app/features/engagement"
-  import {makeCalendarFeed, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagement} from "@app/features/engagement"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.calendar.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
+  const feed = makeCalendarFeed({url, onEvent: engagement.track})
+  const {events} = feed
+  const olderStatus = feed.older.status
 
   const makeEvent = () => pushModal(CalendarEventCreate, {url})
 
@@ -87,19 +85,18 @@
   }
 
   let element: HTMLElement | undefined = $state()
-  onDestroy(engagement.stop)
-
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-  let newer: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-
-  // A digest fills in across many spans, so a spinner keyed on a request in flight would blink.
-  const loading = $derived(!$older || $older.status !== "exhausted")
-  let events: Readable<TrustedEvent[]> = $state(readable([]))
-  let feed: ReturnType<typeof makeCalendarFeed> | undefined = $state()
   let cursor = $state(new Date())
   let rangeLoading = $state(false)
   let latestRange = 0
   let width = $state(0)
+
+  // A digest fills in across many windows, so a spinner keyed on a request in flight would blink.
+  const loading = $derived($olderStatus !== "exhausted")
+
+  onDestroy(() => {
+    feed.stop()
+    engagement.stop()
+  })
 
   // Month renders poorly in a narrow column, so that gets week — without touching the preference
   const isNarrow = $derived(width > 0 && width < 768)
@@ -129,7 +126,7 @@
 
   // The month and week grids show a fixed range instead of scrolling into one, so ask for it directly
   $effect(() => {
-    if (feed && view !== "agenda") {
+    if (view !== "agenda") {
       const days = visibleDays
       const range = ++latestRange
 
@@ -137,6 +134,7 @@
 
       feed
         .load(dateToSeconds(days[0]), dateToSeconds(addDays(days[days.length - 1], 1)))
+        .catch(error => console.error(error))
         .finally(() => {
           // Paging faster than the relay answers would otherwise clear a newer range's spinner
           if (range === latestRange) {
@@ -147,22 +145,13 @@
   })
 
   onMount(() => {
-    feed = makeCalendarFeed({
-      relays: [url],
-      onEvent: engagement.add,
-      filters: [{kinds: [EVENT_TIME]}, makeCommentFilter([EVENT_TIME])],
-    })
-
-    events = feed.events
-
     // The calendar runs in both directions from today, so both ends fetch as they are reached
-    older = makeScrollLoader(element!, feed.loadOlder, {reverse: true})
-    newer = makeScrollLoader(element!, feed.loadNewer)
+    const stopOlder = followScroll(element!, feed.older, {reverse: true})
+    const stopNewer = followScroll(element!, feed.newer)
 
     return () => {
-      older?.stop()
-      newer?.stop()
-      feed?.cleanup()
+      stopOlder()
+      stopNewer()
     }
   })
 </script>

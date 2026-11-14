@@ -12,7 +12,7 @@
   import CommentTree from "@app/components/CommentTree.svelte"
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import {notes} from "@app/features/social"
   import type {CommentNode} from "@app/features/social"
 
@@ -24,7 +24,7 @@
 
   const {ref, reply = false, thread = false}: Props = $props()
 
-  const engagement = makeEngagementIndex({withReplies: true})
+  const engagement = makeEngagement({withReplies: true})
   const loaded = $notes.deriveEvent(ref)
   const event = $derived($loaded)
   const replies = $derived(event ? $notes.deriveReplies(event) : readable<CommentNode[]>([]))

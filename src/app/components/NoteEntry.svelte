@@ -3,12 +3,12 @@
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import ReplyList from "@app/components/ReplyList.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import type {NoteEntry} from "@app/features/social"
 
   type Props = {
     entry: NoteEntry
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {entry, engagement}: Props = $props()

@@ -10,37 +10,31 @@ const ALERT_TYPES = ["spaces", "mentions", "messages"] as const
 
 export type AlertType = (typeof ALERT_TYPES)[number]
 
-type AlertTypeFilter = {
-  kinds: number[]
-  wireKinds: number[]
-  addressed: boolean
-}
-
-// One definition per type, read here as an event and on a relay as a subscription filter.
-const typeFilters: Record<AlertType, AlertTypeFilter> = {
-  spaces: {kinds: [MESSAGE], wireKinds: [MESSAGE], addressed: false},
-  mentions: {kinds: [MESSAGE], wireKinds: [MESSAGE], addressed: true},
-  messages: {kinds: DM_KINDS, wireKinds: [WRAP], addressed: true},
-}
-
-const makeFilter = (kinds: number[], addressed: boolean, pubkey: string): Filter =>
-  addressed ? {kinds, "#p": [pubkey]} : {kinds}
-
-const getTypeFilter = (type: AlertType, pubkey: string) => {
-  const {kinds, addressed} = typeFilters[type]
-
-  return makeFilter(kinds, addressed, pubkey)
+export const getAlertTypeFilter = (type: AlertType, pubkey: string): Filter => {
+  switch (type) {
+    case "spaces":
+      return {kinds: [MESSAGE]}
+    case "mentions":
+      return {kinds: [MESSAGE], "#p": [pubkey]}
+    case "messages":
+      return {kinds: DM_KINDS, "#p": [pubkey]}
+  }
 }
 
 // A relay sees a direct message as the gift wrap, while we see the rumor inside it.
-const getWireFilter = (type: AlertType, pubkey: string) => {
-  const {wireKinds, addressed} = typeFilters[type]
-
-  return makeFilter(wireKinds, addressed, pubkey)
+export const getAlertWireFilter = (type: AlertType, pubkey: string): Filter => {
+  switch (type) {
+    case "spaces":
+      return {kinds: [MESSAGE]}
+    case "mentions":
+      return {kinds: [MESSAGE], "#p": [pubkey]}
+    case "messages":
+      return {kinds: [WRAP], "#p": [pubkey]}
+  }
 }
 
-export const getEventAlertTypes = (event: TrustedEvent, pubkey: string): AlertType[] =>
-  ALERT_TYPES.filter(type => matchFilter(getTypeFilter(type, pubkey), event))
+export const getAlertTypes = (event: TrustedEvent, pubkey: string): AlertType[] =>
+  ALERT_TYPES.filter(type => matchFilter(getAlertTypeFilter(type, pubkey), event))
 
 // A space's rooms, minus the ones the space doesn't notify for or has muted.
 export const getSpaceAlertFilters = ({
@@ -67,22 +61,22 @@ export const getSpaceAlertFilters = ({
         ignore.push({"#h": skipped})
       }
 
-      include.push(getWireFilter("spaces", pubkey))
+      include.push(getAlertWireFilter("spaces", pubkey))
     } else {
       const included = exceptions.filter(h => !muted.includes(h))
 
       if (included.length > 0) {
-        include.push({...getWireFilter("spaces", pubkey), "#h": included})
+        include.push({...getAlertWireFilter("spaces", pubkey), "#h": included})
       }
     }
   }
 
   if (types.mentions) {
-    include.push(getWireFilter("mentions", pubkey))
+    include.push(getAlertWireFilter("mentions", pubkey))
   }
 
   return {include, ignore}
 }
 
 export const getMessageAlertFilters = (types: AlertTypes, pubkey: string): Filter[] =>
-  types.messages ? [getWireFilter("messages", pubkey)] : []
+  types.messages ? [getAlertWireFilter("messages", pubkey)] : []

@@ -41,7 +41,7 @@
   import {loadSendDelay} from "@app/core/settings"
   import {messages} from "@app/features/messages"
   import {makeConversationId} from "@app/navigation/pages"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import {navigate} from "@app/navigation/navigate"
   import {pushModal} from "@app/navigation/dialogs"
   import {prependParent} from "@app/features/spaces/rooms"
@@ -56,7 +56,7 @@
 
   const conversationId = makeConversationId(pubkeys)
   // Reactions in a conversation arrive gift-wrapped, so no relay holds them as plain events.
-  const engagement = makeEngagementIndex({relays: []})
+  const engagement = makeEngagement({relays: []})
 
   onDestroy(engagement.stop)
   const conversation = $messages.one(conversationId)

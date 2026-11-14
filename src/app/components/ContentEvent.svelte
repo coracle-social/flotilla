@@ -3,7 +3,7 @@
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {events} from "@app/core/plugins"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
 
   type Props = {
     url?: string
@@ -14,7 +14,7 @@
   const {url, value, relays}: Props = $props()
 
   const event = $events.one(value, relays).$
-  const engagement = makeEngagementIndex({relays: url ? [url] : undefined})
+  const engagement = makeEngagement({relays: url ? [url] : undefined})
 
   onDestroy(engagement.stop)
 </script>

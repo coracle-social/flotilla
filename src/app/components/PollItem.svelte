@@ -6,7 +6,7 @@
   import NoteContent from "@app/components/NoteContent.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import {reader} from "@app/core/domain"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import RoomLink from "@app/components/RoomLink.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
@@ -15,7 +15,7 @@
   type Props = {
     url: string
     event: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, event, engagement}: Props = $props()

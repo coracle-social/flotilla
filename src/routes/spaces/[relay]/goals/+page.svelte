@@ -1,9 +1,6 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {readable} from "svelte/store"
-  import type {Readable} from "svelte/store"
   import {equals, pluck, spec} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {ZAP_GOAL} from "@welshman/util"
   import {fly} from "@lib/transition"
@@ -17,6 +14,7 @@
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import type {SegmentedOption} from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import {followScroll} from "@lib/pager"
   import {makeCommentFilter} from "@lib/util"
   import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
@@ -24,8 +22,8 @@
   import GoalCreate from "@app/components/GoalCreate.svelte"
   import * as pages from "@app/navigation/pages"
   import {partitionByActivity} from "@app/features/spaces"
-  import {makeEngagementIndex} from "@app/features/engagement"
-  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
+  import {makeRelayFeed} from "@app/features/feeds"
+  import {makeEngagement} from "@app/features/engagement"
   import {
     deriveGoalProgressById,
     filterGoals,
@@ -39,9 +37,14 @@
   const {params}: PageProps = $props()
 
   const {url} = pages.goals.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
-
-  onDestroy(engagement.stop)
+  const engagement = makeEngagement({relays: [url]})
+  const feed = makeRelayFeed({
+    url,
+    filters: [{kinds: [ZAP_GOAL]}, makeCommentFilter([ZAP_GOAL])],
+    onEvent: engagement.track,
+  })
+  const {events} = feed
+  const status = feed.older.status
 
   const tabs: SegmentedOption<GoalFilter>[] = [
     {value: "all", label: "All"},
@@ -50,15 +53,9 @@
     {value: "ended", label: "Ended"},
   ]
 
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-
-  const loading = $derived(isFeedLoading($older))
-  const exhausted = $derived($older?.status === "exhausted")
-  let element: HTMLElement | undefined = $state()
-  let events: Readable<TrustedEvent[]> = $state(readable([]))
-
   const createGoal = () => pushModal(GoalCreate, {url})
 
+  let element: HTMLElement | undefined = $state()
   let tab: GoalFilter = $state("all")
   let sort: GoalSort = $state("active")
 
@@ -80,22 +77,11 @@
     sortGoals(sort, filterGoals(tab, goals, $progressById), $progressById, activeAt),
   )
 
-  onMount(() => {
-    const feed = makeFeed({
-      relays: [url],
-      onEvent: engagement.add,
-      filters: [{kinds: [ZAP_GOAL]}, makeCommentFilter([ZAP_GOAL])],
-    })
+  onMount(() => followScroll(element!, feed.older))
 
-    events = feed.events
-
-    // These lists are newest first, so the bottom is the oldest thing loaded.
-    older = makeScrollLoader(element!, feed.loadOlder)
-
-    return () => {
-      older?.stop()
-      feed.cleanup()
-    }
+  onDestroy(() => {
+    feed.stop()
+    engagement.stop()
   })
 </script>
 
@@ -152,7 +138,7 @@
       </div>
     {/each}
   </div>
-  {#if exhausted && goals.length === 0}
+  {#if $status === "exhausted" && goals.length === 0}
     <div class="flex flex-col items-center gap-3 card w-full py-16 text-center">
       <Icon icon={StarFallMinimalistic} size={10} class="text-primary" />
       <h2 class="text-xl font-bold">No funding goals yet</h2>
@@ -166,8 +152,7 @@
     </div>
   {:else}
     <FeedFooter
-      {loading}
-      {exhausted}
+      status={$status}
       isEmpty={items.length === 0}
       loadingMessage="Looking for goals..."
       emptyMessage="No goals match this filter."

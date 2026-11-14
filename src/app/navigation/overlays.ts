@@ -2,7 +2,7 @@ import {EventRef} from "@welshman/util"
 import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {goto, pushState, replaceState} from "$app/navigation"
 import {page} from "$app/state"
-import {notes} from "@app/features/social/notes"
+import {app} from "@app/core/app"
 import {popHistory, traverse} from "@app/navigation/dialogs"
 import {getHomePath} from "@app/navigation/history"
 import {navigate} from "@app/navigation/navigate"
@@ -50,8 +50,11 @@ export const openNote = (ref: IEventRef, options: OpenNoteOptions = {}) =>
   })
 
 // An event already on screen opens as a note, pointed at the relays it was seen on.
-export const openEventNote = (event: TrustedEvent, options: OpenNoteOptions = {}) =>
-  openNote(EventRef.fromEvent(event, notes.get().resolveRelays(event)), options)
+export const openEventNote = (event: TrustedEvent, options: OpenNoteOptions = {}) => {
+  const relays = Array.from(app.get().repository.tracker.getRelays(event.id))
+
+  return openNote(EventRef.fromEvent(event, relays), options)
+}
 
 // A note opened by a link or a reload has no entry of its own, so closing it reloads the page without it.
 export const closeNote = () =>

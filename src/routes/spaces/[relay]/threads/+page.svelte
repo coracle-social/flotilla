@@ -1,9 +1,6 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {readable} from "svelte/store"
-  import type {Readable} from "svelte/store"
   import {sortBy, groupBy} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
   import {THREAD} from "@welshman/util"
   import {Thread} from "@welshman/domain"
@@ -15,6 +12,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import {followScroll} from "@lib/pager"
   import {makeCommentFilter} from "@lib/util"
   import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
@@ -26,24 +24,22 @@
   import * as pages from "@app/navigation/pages"
   import {displayRoom} from "@app/features/spaces/rooms"
   import {partitionByActivity} from "@app/features/spaces"
-  import {makeEngagementIndex} from "@app/features/engagement"
-  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
+  import {makeRelayFeed} from "@app/features/feeds"
+  import {makeEngagement} from "@app/features/engagement"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.threads.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
-
-  onDestroy(engagement.stop)
-
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-
-  const loading = $derived(isFeedLoading($older))
-  const exhausted = $derived($older?.status === "exhausted")
-  let element: HTMLElement | undefined = $state()
-  let events: Readable<TrustedEvent[]> = $state(readable([]))
+  const engagement = makeEngagement({relays: [url]})
+  const feed = makeRelayFeed({
+    url,
+    filters: [{kinds: [THREAD]}, makeCommentFilter([THREAD])],
+    onEvent: engagement.track,
+  })
+  const {events} = feed
+  const status = feed.older.status
 
   const threadFeed = $derived.by(() => {
     const {items} = partitionByActivity(THREAD, $events)
@@ -79,6 +75,7 @@
   )
 
   let search = $state("")
+  let element: HTMLElement | undefined = $state()
 
   const term = $derived(search.trim())
   const visibleItems = $derived(boardSearch.searchOptions(term))
@@ -89,22 +86,11 @@
     }
   })
 
-  onMount(() => {
-    const feed = makeFeed({
-      relays: [url],
-      onEvent: engagement.add,
-      filters: [{kinds: [THREAD]}, makeCommentFilter([THREAD])],
-    })
+  onMount(() => followScroll(element!, feed.older))
 
-    events = feed.events
-
-    // These lists are newest first, so the bottom is the oldest thing loaded.
-    older = makeScrollLoader(element!, feed.loadOlder)
-
-    return () => {
-      older?.stop()
-      feed.cleanup()
-    }
+  onDestroy(() => {
+    feed.stop()
+    engagement.stop()
   })
 </script>
 
@@ -159,8 +145,7 @@
     </div>
   {/if}
   <FeedFooter
-    {loading}
-    {exhausted}
+    status={$status}
     isEmpty={(inBoard ? boardItems.length : threadFeed.items.length) === 0}
     loadingMessage="Looking for threads..."
     emptyMessage="No threads found." />

@@ -1,16 +1,19 @@
 <script lang="ts">
   import Spinner from "@lib/components/Spinner.svelte"
+  import type {PagerStatus} from "@lib/pager"
 
   type Props = {
-    loading: boolean
-    exhausted: boolean
+    status: PagerStatus
     isEmpty: boolean
     loadingMessage: string
     emptyMessage: string
     doneMessage?: string
   }
 
-  const {loading, exhausted, isEmpty, loadingMessage, emptyMessage, doneMessage}: Props = $props()
+  const {status, isEmpty, loadingMessage, emptyMessage, doneMessage}: Props = $props()
+
+  const loading = $derived(status === "loading")
+  const exhausted = $derived(status === "exhausted")
 </script>
 
 <p class="flex h-10 items-center justify-center py-20">

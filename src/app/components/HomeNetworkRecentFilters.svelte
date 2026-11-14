@@ -1,28 +1,40 @@
 <script lang="ts">
-  import {remove} from "@welshman/lib"
+  import {toggle} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
-  import {includedNoteFacets, noteFacets} from "@app/features/social"
-  import type {FeedCounts, NoteFacet} from "@app/features/social"
+  import {includedNoteFacets} from "@app/features/social"
+  import type {FacetCounts} from "@app/features/social"
 
   type Props = {
-    counts: FeedCounts
+    counts: FacetCounts
   }
 
   const {counts}: Props = $props()
 
-  const toggle = (facet: NoteFacet) => () =>
-    includedNoteFacets.update($facets =>
-      $facets.includes(facet) ? remove(facet, $facets) : [...$facets, facet],
-    )
+  const toggleNotes = () => includedNoteFacets.update($facets => toggle("notes", $facets))
+
+  const toggleReplies = () => includedNoteFacets.update($facets => toggle("replies", $facets))
+
+  const toggleInteractions = () =>
+    includedNoteFacets.update($facets => toggle("interactions", $facets))
 </script>
 
 <div class="flex flex-wrap items-center gap-2">
-  {#each noteFacets as option (option.value)}
-    <SegmentedButton
-      label={option.label}
-      count={counts.get(option.value) ?? 0}
-      size="xs"
-      pressed={$includedNoteFacets.includes(option.value)}
-      onclick={toggle(option.value)} />
-  {/each}
+  <SegmentedButton
+    label="Notes"
+    count={counts.get("notes") ?? 0}
+    size="xs"
+    pressed={$includedNoteFacets.includes("notes")}
+    onclick={toggleNotes} />
+  <SegmentedButton
+    label="Replies"
+    count={counts.get("replies") ?? 0}
+    size="xs"
+    pressed={$includedNoteFacets.includes("replies")}
+    onclick={toggleReplies} />
+  <SegmentedButton
+    label="Interactions"
+    count={counts.get("interactions") ?? 0}
+    size="xs"
+    pressed={$includedNoteFacets.includes("interactions")}
+    onclick={toggleInteractions} />
 </div>

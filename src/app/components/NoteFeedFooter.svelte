@@ -1,6 +1,6 @@
 <script lang="ts">
   import Spinner from "@lib/components/Spinner.svelte"
-  import type {NoteFeedStatus} from "@app/features/social/noteFeed"
+  import type {NoteFeedStatus} from "@app/features/social"
 
   type Props = {
     status: NoteFeedStatus

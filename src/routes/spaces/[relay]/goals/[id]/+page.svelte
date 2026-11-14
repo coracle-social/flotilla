@@ -23,14 +23,14 @@
   import {reader} from "@app/core/domain"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {deriveGoalProgress} from "@app/features/spaces/goals"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, id} = pages.goal.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
   const event = $events.one(id, [url]).$
   const goal = derived(event, $event => ($event ? reader(ZapGoal)($event) : undefined))
   const progress = $derived($event ? deriveGoalProgress($event, url) : undefined)

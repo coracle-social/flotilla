@@ -4,11 +4,11 @@
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import * as social from "@app/features/social"
   import * as spaces from "@app/features/spaces"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
 
   type Props = {
     event: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
     url?: string
     placement?: Placement
     emojiMenu?: boolean

@@ -20,14 +20,16 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import VirtualList from "@lib/components/VirtualList.svelte"
   import type {VirtualListController} from "@lib/components/VirtualList.svelte"
+  import {followScroll} from "@lib/pager"
+  import type {PagerStatus} from "@lib/pager"
   import {navigate} from "@app/navigation/navigate"
   import RoomItem from "@app/components/RoomItem.svelte"
   import RoomItemAddMember from "@app/components/RoomItemAddMember.svelte"
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
   import {user} from "@app/core/user"
   import {groupRoomMessages} from "@app/features/spaces/rooms"
-  import {makeEngagementIndex} from "@app/features/engagement"
-  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagement} from "@app/features/engagement"
+  import {makeRelayFeed} from "@app/features/feeds"
   import {pageLoading} from "@app/features/loading"
   import {checked} from "@app/features/checked"
   import {getPermalinkTarget, highlightedEvent} from "@app/navigation/locations"
@@ -40,11 +42,12 @@
 
   let {url, h, locked, replyTo, canEdit, onEdit, events = $bindable(readable([]))}: Props = $props()
 
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
 
   onDestroy(engagement.stop)
 
   const addMemberKind = h ? ROOM_ADD_MEMBER : RELAY_ADD_MEMBER
+  const runway = 5000
   const at = $derived(parseInt($page.url.searchParams.get("at") ?? "") || undefined)
   const target = $derived(getPermalinkTarget($page.url))
 
@@ -199,8 +202,8 @@
   let isProgrammaticScroll = $state(false)
   let isUserScrolling = $state(false)
   let virtualList: Maybe<VirtualListController> = $state()
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-  let newer: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
+  let olderStatus: Readable<PagerStatus> = $state(readable("idle"))
+  let newerStatus: Readable<PagerStatus> = $state(readable("idle"))
   let element: HTMLElement | undefined = $state()
   let lastVisibleAt = now()
   let newMessagesAfter = $state($checked[$page.url.pathname])
@@ -213,13 +216,13 @@
   // A link into history renders the newest messages first and only then scrolls.
   const awaitingJump = $derived(Boolean(at) && !jumpSettled)
 
-  const reachedStartOfHistory = $derived($older?.status === "exhausted")
+  const reachedStartOfHistory = $derived($olderStatus === "exhausted")
 
   // A private room nobody has joined draws a join card rather than a transcript, so it waits on nothing.
   const awaitingContent = $derived(!(h && locked) && (awaitingJump || $events.length === 0))
 
   $effect(() => {
-    pageLoading.set(awaitingContent && (isFeedLoading($older) || isFeedLoading($newer)))
+    pageLoading.set(awaitingContent && ($olderStatus === "loading" || $newerStatus === "loading"))
 
     return () => pageLoading.set(false)
   })
@@ -239,7 +242,7 @@
   )
 
   // The window only stops short of the present after jumping into history.
-  const windowStopsShort = $derived(Boolean(at) && $newer?.status !== "exhausted")
+  const windowStopsShort = $derived(Boolean(at) && $newerStatus !== "exhausted")
 
   // While the window stops short, the bottom of the container isn't the bottom of the conversation.
   const showScrollButton = $derived(scrolledUp || windowStopsShort)
@@ -286,24 +289,27 @@
   const start = (anchor: number) => {
     cleanup?.()
 
-    const feed = makeFeed({
-      relays: [url],
+    const feed = makeRelayFeed({
+      url,
       at: anchor,
       filters: [
         h ? {kinds: [MESSAGE, addMemberKind], "#h": [h]} : {kinds: [MESSAGE, addMemberKind]},
       ],
-      onEvent: engagement.add,
+      onEvent: engagement.track,
     })
 
     // The container is reversed, so scrolling away from the origin reaches older messages.
-    older = makeScrollLoader(element!, feed.loadOlder)
-    newer = makeScrollLoader(element!, feed.loadNewer, {reverse: true})
+    const stopOlder = followScroll(element!, feed.older, {threshold: runway})
+    const stopNewer = followScroll(element!, feed.newer, {reverse: true, threshold: runway})
 
     events = feed.events
+    olderStatus = feed.older.status
+    newerStatus = feed.newer.status
+
     cleanup = () => {
-      older?.stop()
-      newer?.stop()
-      feed.cleanup()
+      stopOlder()
+      stopNewer()
+      feed.stop()
     }
   }
 
@@ -342,7 +348,7 @@
         items={elements}
         getKey={getElementKey}
         container={element}
-        threshold={older?.runway}
+        threshold={runway}
         bind:controller={virtualList}>
         {#snippet row(item)}
           {#if item.type === "new-messages"}

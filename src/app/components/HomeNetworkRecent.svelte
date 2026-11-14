@@ -1,38 +1,15 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {derived} from "svelte/store"
   import Link from "@lib/components/Link.svelte"
-  import FeedStatus from "@app/components/FeedStatus.svelte"
+  import {followScroll} from "@lib/pager"
   import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
   import NoteEntry from "@app/components/NoteEntry.svelte"
-  import {userFollowList, userFollowPubkeys} from "@app/core/user"
+  import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"
   import {PLATFORM_RELAYS} from "@app/core/env"
-  import {makeEngagementIndex} from "@app/features/engagement"
-  import {
-    includedNoteFacets,
-    makeEngagedSource,
-    makeNoteFeed,
-    makeNotesSource,
-  } from "@app/features/social"
+  import {userFollowList} from "@app/core/user"
+  import {makeNetworkFeed} from "@app/features/social"
 
-  const engagement = makeEngagementIndex({withReplies: true})
-
-  const notes = makeNotesSource({onEvent: engagement.add, pubkeys: userFollowPubkeys})
-
-  // Interactions is asked for once its facet is first shown, and keeps flowing once it has been.
-  let engagedAsked = false
-
-  const engagedPubkeys = derived([userFollowPubkeys, includedNoteFacets], ([$pubkeys, $facets]) => {
-    if ($facets.includes("engaged")) {
-      engagedAsked = true
-    }
-
-    return engagedAsked ? $pubkeys : []
-  })
-
-  const engaged = makeEngagedSource({pubkeys: engagedPubkeys})
-
-  const feed = makeNoteFeed({sources: [notes, engaged], included: includedNoteFacets})
+  const feed = makeNetworkFeed()
 
   const {counts, entries, loading, status} = feed
 
@@ -42,14 +19,9 @@
 
   let element: HTMLElement | undefined = $state()
 
-  onMount(() => {
-    feed.start(element!)
-  })
+  onMount(() => followScroll(element!, feed.older, {threshold: 2000}))
 
-  onDestroy(() => {
-    feed.stop()
-    engagement.stop()
-  })
+  onDestroy(feed.stop)
 </script>
 
 <div class="flex flex-col border-t border-line bg-surface-less">
@@ -71,9 +43,9 @@
       <div class="pb-4 text-center font-medium">Nothing matches those filters</div>
     {:else}
       {#each $entries as entry (entry.key)}
-        <NoteEntry {entry} {engagement} />
+        <NoteEntry {entry} engagement={feed.engagement} />
       {/each}
-      <FeedStatus
+      <NoteFeedFooter
         status={$status}
         loading={$loading}
         emptyMessage="Follow a few people to fill this out"

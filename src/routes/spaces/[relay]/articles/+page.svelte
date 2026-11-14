@@ -1,11 +1,7 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {readable} from "svelte/store"
-  import type {Readable} from "svelte/store"
   import {goto} from "$app/navigation"
   import {spec} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
-  import type {TrustedEvent} from "@welshman/util"
   import {LONG_FORM, getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
   import {fly} from "@lib/transition"
@@ -15,34 +11,38 @@
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import {followScroll} from "@lib/pager"
   import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ArticleItem from "@app/components/ArticleItem.svelte"
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
   import {reader} from "@app/core/domain"
   import {sortArticles} from "@app/features/spaces/articles"
-  import {makeEngagementIndex} from "@app/features/engagement"
-  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
+  import {makeEngagement} from "@app/features/engagement"
+  import {makeRelayFeed} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.articles.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
+  const feed = makeRelayFeed({
+    url,
+    filters: [{kinds: [LONG_FORM]}, makeCommentFilter([LONG_FORM])],
+    onEvent: engagement.track,
+  })
+  const {events} = feed
+  const status = feed.older.status
 
-  onDestroy(engagement.stop)
+  const loading = $derived($status === "loading")
+  const exhausted = $derived($status === "exhausted")
 
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
+  const createArticle = () => goto(pages.articleCreate.path({url}))
 
-  const loading = $derived(isFeedLoading($older))
-  const exhausted = $derived($older?.status === "exhausted")
   let author: string | undefined = $state()
   let topic: string | undefined = $state()
   let element: HTMLElement | undefined = $state()
-  let events: Readable<TrustedEvent[]> = $state(readable([]))
-
-  const createArticle = () => goto(pages.articleCreate.path({url}))
 
   const articles = $derived(sortArticles($events.filter(spec({kind: LONG_FORM}))))
 
@@ -53,22 +53,11 @@
     ),
   )
 
-  onMount(() => {
-    const feed = makeFeed({
-      relays: [url],
-      onEvent: engagement.add,
-      filters: [{kinds: [LONG_FORM]}, makeCommentFilter([LONG_FORM])],
-    })
+  onMount(() => followScroll(element!, feed.older))
 
-    events = feed.events
-
-    // These lists are newest first, so the bottom is the oldest thing loaded.
-    older = makeScrollLoader(element!, feed.loadOlder)
-
-    return () => {
-      older?.stop()
-      feed.cleanup()
-    }
+  onDestroy(() => {
+    feed.stop()
+    engagement.stop()
   })
 </script>
 

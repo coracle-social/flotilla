@@ -8,12 +8,13 @@ import {app} from "@app/core/app"
 import {messagingRelayLists, publisher, roomLists} from "@app/core/plugins"
 import {device} from "@app/core/device"
 import {PUSH_BRIDGE} from "@app/core/env"
-import type {IPushAdapter} from "@app/features/push/adapters/common"
-import {onPushNotificationAction, syncRelaySubscriptions} from "@app/features/push/adapters/common"
+import type {PushAdapter} from "@app/features/push/adapter"
 import {isGranted, toPermission} from "@app/features/push/permission"
 import type {PushPermission} from "@app/features/push/permission"
 import {pushRegistration} from "@app/features/push/registration"
+import {syncRelaySubscriptions} from "@app/features/push/relaySubscriptions"
 import {createPushSubscription, deletePushSubscription} from "@app/features/push/server"
+import {onPushNotificationAction} from "@app/features/push/taps"
 
 // NIP-9a: asks a relay to post matching events to the push server's callback
 const PUSH_SUBSCRIPTION = 30390
@@ -64,7 +65,7 @@ const requestToken = async () => {
   return token
 }
 
-export class CapacitorNotifications implements IPushAdapter {
+export class CapacitorNotifications implements PushAdapter {
   _controller = maybe<AbortController>()
 
   async check(): Promise<PushPermission> {

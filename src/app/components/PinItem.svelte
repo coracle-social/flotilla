@@ -14,13 +14,13 @@
   import PinSave from "@app/components/PinSave.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
     pin: PinReader
-    engagement: EngagementIndex
+    engagement: Engagement
     card?: boolean
   }
 

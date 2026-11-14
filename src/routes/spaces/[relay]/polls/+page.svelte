@@ -1,9 +1,5 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {readable} from "svelte/store"
-  import type {Readable} from "svelte/store"
-  import type {Maybe} from "@welshman/lib"
-  import type {TrustedEvent} from "@welshman/util"
   import {POLL} from "@welshman/util"
   import {fly} from "@lib/transition"
   import PollIcon from "@assets/icons/revote.svg?dataurl"
@@ -11,6 +7,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import {followScroll} from "@lib/pager"
   import {makeCommentFilter} from "@lib/util"
   import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
@@ -18,45 +15,34 @@
   import PollCreate from "@app/components/PollCreate.svelte"
   import * as pages from "@app/navigation/pages"
   import {partitionByActivity} from "@app/features/spaces"
-  import {makeEngagementIndex} from "@app/features/engagement"
-  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
+  import {makeRelayFeed} from "@app/features/feeds"
+  import {makeEngagement} from "@app/features/engagement"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.polls.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
-
-  onDestroy(engagement.stop)
-
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-
-  const loading = $derived(isFeedLoading($older))
-  const exhausted = $derived($older?.status === "exhausted")
-  let element: HTMLElement | undefined = $state()
-  let events: Readable<TrustedEvent[]> = $state(readable([]))
+  const engagement = makeEngagement({relays: [url]})
+  const feed = makeRelayFeed({
+    url,
+    filters: [{kinds: [POLL]}, makeCommentFilter([POLL])],
+    onEvent: engagement.track,
+  })
+  const {events} = feed
+  const status = feed.older.status
 
   const createPoll = () => pushModal(PollCreate, {url})
 
   const {items} = $derived(partitionByActivity(POLL, $events))
 
-  onMount(() => {
-    const feed = makeFeed({
-      relays: [url],
-      onEvent: engagement.add,
-      filters: [{kinds: [POLL]}, makeCommentFilter([POLL])],
-    })
+  let element: HTMLElement | undefined = $state()
 
-    events = feed.events
+  onMount(() => followScroll(element!, feed.older))
 
-    // These lists are newest first, so the bottom is the oldest thing loaded.
-    older = makeScrollLoader(element!, feed.loadOlder)
-
-    return () => {
-      older?.stop()
-      feed.cleanup()
-    }
+  onDestroy(() => {
+    feed.stop()
+    engagement.stop()
   })
 </script>
 
@@ -82,8 +68,7 @@
     </div>
   {/each}
   <FeedFooter
-    {loading}
-    {exhausted}
+    status={$status}
     isEmpty={items.length === 0}
     loadingMessage="Looking for polls..."
     emptyMessage="No polls found."

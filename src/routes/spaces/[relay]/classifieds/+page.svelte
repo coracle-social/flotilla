@@ -1,13 +1,9 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import {readable} from "svelte/store"
-  import type {Readable} from "svelte/store"
   import cx from "classnames"
   import {goto} from "$app/navigation"
   import {page} from "$app/stores"
   import {sortBy} from "@welshman/lib"
-  import type {Maybe} from "@welshman/lib"
-  import type {TrustedEvent} from "@welshman/util"
   import {CLASSIFIED} from "@welshman/util"
   import {Classified} from "@welshman/domain"
   import {fly} from "@lib/transition"
@@ -18,14 +14,15 @@
   import Button from "@lib/components/Button.svelte"
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import {followScroll} from "@lib/pager"
   import {makeCommentFilter} from "@lib/util"
   import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ClassifiedItem from "@app/components/ClassifiedItem.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
   import {partitionByActivity} from "@app/features/spaces"
-  import {makeEngagementIndex} from "@app/features/engagement"
-  import {isFeedLoading, makeFeed, makeScrollLoader} from "@app/features/feeds"
+  import {makeRelayFeed} from "@app/features/feeds"
+  import {makeEngagement} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
   import {
     CLASSIFIED_STATUS_TABS,
@@ -41,9 +38,14 @@
   const {params}: PageProps = $props()
 
   const {url} = pages.classifieds.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
-
-  onDestroy(engagement.stop)
+  const engagement = makeEngagement({relays: [url]})
+  const feed = makeRelayFeed({
+    url,
+    filters: [{kinds: [CLASSIFIED]}, makeCommentFilter([CLASSIFIED])],
+    onEvent: engagement.track,
+  })
+  const {events} = feed
+  const status = feed.older.status
 
   const createClassified = () => pushModal(ClassifiedCreate, {url})
 
@@ -53,16 +55,10 @@
     goto(path, {replaceState: true, noScroll: true})
   }
 
-  let older: Maybe<ReturnType<typeof makeScrollLoader>> = $state()
-
-  const loading = $derived(isFeedLoading($older))
-  const exhausted = $derived($older?.status === "exhausted")
-
   let tab = $state("all")
   let sort = $state("active")
   let query = $state("")
   let element: HTMLElement | undefined = $state()
-  let events: Readable<TrustedEvent[]> = $state(readable([]))
 
   const topic = $derived($page.url.searchParams.get("topic") ?? "")
 
@@ -100,22 +96,11 @@
     return sortBy(event => -(activeAt.get(event.id) ?? event.created_at), matches)
   })
 
-  onMount(() => {
-    const feed = makeFeed({
-      relays: [url],
-      onEvent: engagement.add,
-      filters: [{kinds: [CLASSIFIED]}, makeCommentFilter([CLASSIFIED])],
-    })
+  onMount(() => followScroll(element!, feed.older))
 
-    events = feed.events
-
-    // These lists are newest first, so the bottom is the oldest thing loaded.
-    older = makeScrollLoader(element!, feed.loadOlder)
-
-    return () => {
-      older?.stop()
-      feed.cleanup()
-    }
+  onDestroy(() => {
+    feed.stop()
+    engagement.stop()
   })
 </script>
 
@@ -176,7 +161,7 @@
       </div>
     {/each}
   </div>
-  {#if exhausted && listings.length === 0}
+  {#if $status === "exhausted" && listings.length === 0}
     <div class="flex flex-col items-center gap-3 card w-full py-16 text-center">
       <Icon icon={CaseMinimalistic} size={10} class="text-primary" />
       <h2 class="text-xl font-bold">No listings yet</h2>
@@ -190,8 +175,7 @@
     </div>
   {:else}
     <FeedFooter
-      {loading}
-      {exhausted}
+      status={$status}
       isEmpty={items.length === 0}
       loadingMessage="Looking for listings..."
       emptyMessage="No listings match your filters."

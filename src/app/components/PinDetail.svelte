@@ -17,13 +17,13 @@
   import PinSave from "@app/components/PinSave.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import {events, network} from "@app/core/plugins"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {buildCommentTree} from "@app/features/social"
 
   type Props = {
     url: string
     pin: PinReader
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, pin, engagement}: Props = $props()

@@ -11,7 +11,7 @@
   import Link from "@lib/components/Link.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {shelfCoverImages} from "@app/features/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
 
@@ -19,7 +19,7 @@
     url: string
     board: PinboardReader
     pins: PinReader[]
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, board, pins, engagement}: Props = $props()

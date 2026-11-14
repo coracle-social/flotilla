@@ -1,11 +1,12 @@
 <script lang="ts">
-  import {onDestroy} from "svelte"
   import {Thread} from "@welshman/domain"
+  import {THREAD} from "@welshman/util"
   import {indexDocuments, rankDocuments} from "@lib/similarity"
   import Link from "@lib/components/Link.svelte"
   import {reader} from "@app/core/domain"
+  import {events} from "@app/core/plugins"
   import * as pages from "@app/navigation/pages"
-  import {makeThreadFeed, threadText} from "@app/features/spaces"
+  import {threadText} from "@app/features/spaces"
 
   type Props = {
     url: string
@@ -14,12 +15,9 @@
 
   const {url, query}: Props = $props()
 
-  const feed = makeThreadFeed(url)
-  const threads = feed.events
+  const threads = $derived($events.forUrl(url, [{kinds: [THREAD], limit: 100}]).$)
   const index = $derived(indexDocuments($threads, threadText))
   const matches = $derived(rankDocuments(index, query))
-
-  onDestroy(feed.cleanup)
 </script>
 
 {#if matches.length > 0}

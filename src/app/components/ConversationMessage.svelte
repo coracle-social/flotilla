@@ -13,7 +13,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import Content from "@app/components/Content.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import PublicationFailure from "@app/components/PublicationFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ConversationMessageMenu from "@app/components/ConversationMessageMenu.svelte"
@@ -33,7 +33,7 @@
     onEdit?: (event: TrustedEvent) => void
     pubkeys: string[]
     showPubkey?: boolean
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {event, replyTo, canEdit, onEdit, pubkeys, showPubkey = false, engagement}: Props = $props()

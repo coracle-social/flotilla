@@ -12,7 +12,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {formatDay, groupEventsByDay, makeDayKey} from "@app/features/spaces/calendar"
   import {pushModal} from "@app/navigation/dialogs"
 
@@ -20,7 +20,7 @@
     url: string
     date: Date
     events: Readable<TrustedEvent[]>
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, date, events, engagement}: Props = $props()

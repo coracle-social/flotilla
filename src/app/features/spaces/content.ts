@@ -12,7 +12,6 @@ import {
 import type {TrustedEvent} from "@welshman/util"
 import {Comment, Thread} from "@welshman/domain"
 import {reader} from "@app/core/domain"
-import {makeFeed} from "@app/features/feeds"
 
 // The kinds that each have a section of their own in a space.
 export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD, CLASSIFIED, POLL, PINBOARD, LONG_FORM]
@@ -44,6 +43,3 @@ export const threadText = (event: TrustedEvent) => {
 
   return `${title} ${title} ${event.content}`
 }
-
-export const makeThreadFeed = (url: string) =>
-  makeFeed({relays: [url], filters: [{kinds: [THREAD]}]})

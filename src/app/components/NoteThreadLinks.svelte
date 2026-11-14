@@ -6,7 +6,8 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import NoteDetail from "@app/components/NoteDetail.svelte"
-  import {getReplyRefs, notes} from "@app/features/social"
+  import {app} from "@app/core/app"
+  import {getThreadRefs} from "@app/features/social"
   import {pushModal} from "@app/navigation/dialogs"
   import {openNote} from "@app/navigation/overlays"
 
@@ -16,13 +17,13 @@
 
   const {event}: Props = $props()
 
-  const refs = $derived(getReplyRefs(event))
+  const refs = $derived(getThreadRefs(event))
 
   const parent = $derived(refs.parent ?? refs.root)
 
   const hasThread = $derived(refs.root?.getAddressOrId() !== parent?.getAddressOrId())
 
-  const relays = notes.get().resolveRelays(event)
+  const relays = Array.from($app.repository.tracker.getRelays(event.id))
 
   // Seen relays stand in as hints; the note's own routing resolves behind the overlay.
   const open = (target: EventRef) => () => {

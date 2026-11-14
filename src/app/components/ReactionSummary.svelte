@@ -35,7 +35,7 @@
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {deriveDisplaysByPubkey} from "@app/features/people"
@@ -51,7 +51,7 @@
     hideZaps?: boolean
     noTooltip?: boolean
     innerEvent?: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {

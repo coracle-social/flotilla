@@ -319,7 +319,7 @@ These predate the rule or are waiting on welshman. Don't copy them; fix one when
   relay lists in `SignUp.svelte` (`RelayList`, `MessagingRelayList`); deletes in
   `ProfileDelete.svelte` and the push adapter (`Delete`); the vanish request as a literal `62`
   (`VANISH`).
-- **Getter exists but bypassed:** calendar `start`/`end` in `src/app/features/feeds.ts` and the calendar page; poll `response`
+- **Getter exists but bypassed:** calendar `start`/`end` on the calendar page; poll `response`
   tags in `PollVotes`; `p` tags of `RELAY_ADD_MEMBER` and `ROOM_ADD_MEMBER` (`RoomItemAddMember`);
   comment `E`/`A` tags in the list pages and `src/app/features/spaces/classifieds.ts`; `imeta` unpacking in
   `src/lib/media.ts` and `Conversation.svelte`.

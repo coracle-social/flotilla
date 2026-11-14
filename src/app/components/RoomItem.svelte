@@ -42,7 +42,7 @@
   import {CONTENT_KINDS, publishReaction, retractReaction} from "@app/features/spaces"
   import {colorFor} from "@app/features/theme"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {isQuote} from "@app/features/quotes"
   import * as pages from "@app/navigation/pages"
   import {highlightedEvent} from "@app/navigation/locations"
@@ -53,7 +53,7 @@
     event: TrustedEvent
     replyTo?: (event: TrustedEvent) => void
     showPubkey?: boolean
-    engagement: EngagementIndex
+    engagement: Engagement
     canEdit: (event: TrustedEvent) => boolean
     onEdit: (event: TrustedEvent) => void
   }

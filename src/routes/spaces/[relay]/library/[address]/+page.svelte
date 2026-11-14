@@ -21,7 +21,7 @@
   import ProfileList from "@app/components/ProfileList.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import {network} from "@app/core/plugins"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import {derivePins, deriveShelf, pinMatchesTerm} from "@app/features/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
@@ -30,7 +30,7 @@
   const {params}: PageProps = $props()
 
   const {url, address} = pages.board.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
   const board = deriveShelf(url, address)
   const pins = derivePins(url)
 

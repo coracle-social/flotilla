@@ -133,7 +133,10 @@ test("US-019 join and leave a room", async ({seed, as}) => {
   // The membership events a client listens for live are the ones naming itself.
   await alice.reload()
 
-  await expect(alice.getByText("joined the room").filter({hasText: "Bob Barnacle"})).toBeVisible()
+  // Her own seeded join and his arrive with nothing between them, so they share one line.
+  await alice.getByRole("button", {name: "2 people"}).click()
+
+  await expect(dialog(alice, "New members")).toContainText("Bob Barnacle")
 
   await openRoomDetailMenu(bob)
   await bob.getByRole("button", {name: "Leave member list"}).click()

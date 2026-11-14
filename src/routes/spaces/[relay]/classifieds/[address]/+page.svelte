@@ -17,14 +17,14 @@
   import EventComments from "@app/components/EventComments.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, address} = pages.classified.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
   const event = $events.one(address, [url]).$
   const classified = derived(event, $event => ($event ? reader(Classified)($event) : undefined))
 

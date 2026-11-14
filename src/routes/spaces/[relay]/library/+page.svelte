@@ -15,7 +15,7 @@
   import PinboardItem from "@app/components/PinboardItem.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
   import {network} from "@app/core/plugins"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import {
     derivePins,
     deriveShelves,
@@ -29,7 +29,7 @@
   const {params}: PageProps = $props()
 
   const {url} = pages.library.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
   const shelves = deriveShelves(url)
   const pins = derivePins(url)
 

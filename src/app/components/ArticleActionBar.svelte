@@ -7,12 +7,12 @@
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import {events} from "@app/core/plugins"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {shareEvent} from "@app/features/share"
 
   type Props = {
     event: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
     url?: string
   }
 
@@ -24,7 +24,7 @@
 </script>
 
 <div data-component="ArticleActionBar" class="flex w-full min-w-0 flex-col gap-3">
-  <PublicationStatusOrDeleted {event} {engagement}>
+  <PublicationStatusOrDeleted {event}>
     <EventReactions {url} {event} {engagement} placement="top" emojiMenu />
   </PublicationStatusOrDeleted>
   {#if !$deleted}

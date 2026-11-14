@@ -1,8 +1,8 @@
 <script lang="ts">
-  import {remove} from "@welshman/lib"
+  import {toggle} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {includedHomeActivityTypes} from "@app/features/notifications"
+  import {includedNotificationFacets} from "@app/features/notifications"
   import type {NotificationFacet} from "@app/features/notifications"
 
   type Props = {
@@ -11,10 +11,8 @@
 
   const {counts}: Props = $props()
 
-  const toggle = (type: NotificationFacet) => () =>
-    includedHomeActivityTypes.update($types =>
-      $types.includes(type) ? remove(type, $types) : [...$types, type],
-    )
+  const toggleFacet = (facet: NotificationFacet) => () =>
+    includedNotificationFacets.update($facets => toggle(facet, $facets))
 </script>
 
 {#snippet filter(type: NotificationFacet, label: string)}
@@ -22,8 +20,8 @@
     {label}
     count={counts.get(type) ?? 0}
     size="xs"
-    pressed={$includedHomeActivityTypes.includes(type)}
-    onclick={toggle(type)} />
+    pressed={$includedNotificationFacets.includes(type)}
+    onclick={toggleFacet(type)} />
 {/snippet}
 
 <div class="flex flex-wrap items-center gap-2">

@@ -9,14 +9,14 @@
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventComments from "@app/components/EventComments.svelte"
   import {events, network} from "@app/core/plugins"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, id} = pages.poll.decode(params)
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
   const event = $events.one(id, [url]).$
 
   const back = () => history.back()

@@ -1,12 +1,10 @@
 <script lang="ts">
   import {onMount} from "svelte"
-  import {readable} from "svelte/store"
+  import {followScroll} from "@lib/pager"
   import {fly} from "@lib/transition"
-  import FeedStatus from "@app/components/FeedStatus.svelte"
   import NoteEntry from "@app/components/NoteEntry.svelte"
-  import {makeEngagementIndex} from "@app/features/engagement"
-  import {derivePinnedEvents} from "@app/features/pins"
-  import {derivePubkeyMuted, makeNoteFeed, makeNotesSource} from "@app/features/social"
+  import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"
+  import {derivePubkeyMuted, makeProfileFeed} from "@app/features/social"
 
   type Props = {
     pubkey: string
@@ -14,24 +12,20 @@
 
   const {pubkey}: Props = $props()
 
-  const engagement = makeEngagementIndex({withReplies: true})
-
   const muted = derivePubkeyMuted(pubkey)
 
-  const notes = makeNotesSource({onEvent: engagement.add, pubkeys: readable([pubkey])})
-
-  const feed = makeNoteFeed({sources: [notes], pinned: derivePinnedEvents(pubkey)})
+  const feed = makeProfileFeed(pubkey)
 
   const {entries, loading, status} = feed
 
   let element: HTMLElement | undefined = $state()
 
   onMount(() => {
-    feed.start(element!)
+    const stopScroll = followScroll(element!, feed.older, {threshold: 2000})
 
     return () => {
+      stopScroll()
       feed.stop()
-      engagement.stop()
     }
   })
 </script>
@@ -42,10 +36,10 @@
   {:else}
     {#each $entries as entry (entry.key)}
       <div in:fly>
-        <NoteEntry {entry} {engagement} />
+        <NoteEntry {entry} engagement={feed.engagement} />
       </div>
     {/each}
-    <FeedStatus
+    <NoteFeedFooter
       status={$status}
       loading={$loading}
       emptyMessage="No notes found for this profile."

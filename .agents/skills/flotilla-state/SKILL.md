@@ -213,7 +213,7 @@ does with `byIdByUrl`.
 Plugin reads (`get`, `one`, `load`, `index`) are documented in welshman-app.
 
 A relay-scoped read passes `relay: url` to the query, so SQLite applies the relay before any
-`limit`. `makeFeed` reads one page per relay that way before any relay answers.
+`limit`. A relay feed's source is `Events.byIdForUrl`, read that way, so what the relay was seen holding draws before the relay answers.
 
 ### Free functions in an app module
 
@@ -255,7 +255,7 @@ A derivation that every row subscribes to, or that joins large sets, is built by
   profiles index.
 - `publicationsByEventId` (`publications.ts`) indexes publish history once, and hands back the
   previous array wherever an event's publications are unchanged so rows don't churn.
-- `latestActivityByPath` (`features/notifications.ts`) joins conversations, room lists, relay info, events and
+- `latestActivityByPath` (`features/activity.ts`) joins conversations, room lists, relay info, events and
   settings behind `throttled(1000, …)`.
 
 ## Local and persisted state
@@ -357,8 +357,7 @@ or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. T
 
 - `theme`, `flTheme` (`theme.ts`), `checked` (`checked.ts`), `shouldUnwrap` (`messages.ts`),
   `device` (`device.ts`), `forceHealthChecks` (`healthChecks.ts`) in `kv`
-- `pushState` (key `notificationState`) and `notificationSettings` in `kv`, both in
-  `push/adapters/common.ts` and re-exported from `@app/features/push`
+- `pushRegistration` (`push/registration.ts`, which migrates the legacy `notificationState` key) and `alertSettings` (`alerts/settings.ts`, key `notificationSettings`) in `kv`
 - `wallet` (`wallet.ts`) in `ss`
 
 The root layout awaits `.ready` for the stores boot code reads (`device`, `shouldUnwrap`,
@@ -502,7 +501,7 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
 
 ## Other app-level stores
 
-- **A join over many sources.** `features/notifications.ts` derives `latestActivityByPath`,
+- **A join over many sources.** `features/activity.ts` derives `latestActivityByPath`,
   then `allNotifications`, then `notifications` and the counts. The home stream derives
   `recentConversations` and `unreadSpaceContent` in `activity.ts` from the same two, so the stream
   matches the badges.

@@ -5,12 +5,12 @@
   import type {TrustedEvent} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {
     replies: TrustedEvent[]
-    engagement: EngagementIndex
+    engagement: Engagement
     quoteNote: Snippet<[TrustedEvent]>
   }
 

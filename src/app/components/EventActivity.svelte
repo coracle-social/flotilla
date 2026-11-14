@@ -5,11 +5,11 @@
   import type {TrustedEvent} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
 
   type Props = {
     event: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
     size?: "xs" | "sm"
     hideLastActive?: boolean
   }

@@ -1,12 +1,12 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import ThreadLatestItem from "@app/components/ThreadLatestItem.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
 
   type Props = {
     url: string
     items: TrustedEvent[]
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, items, engagement}: Props = $props()

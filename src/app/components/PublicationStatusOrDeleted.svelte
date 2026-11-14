@@ -3,19 +3,17 @@
   import type {TrustedEvent} from "@welshman/util"
   import {PublishStatus} from "@welshman/net"
   import PublicationStatus from "@app/components/PublicationStatus.svelte"
-  import {publisher} from "@app/core/plugins"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import {events, publisher} from "@app/core/plugins"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
 
   type Props = {
     event: TrustedEvent
-    engagement: EngagementIndex
     status?: Snippet
     children?: Snippet
   }
 
-  const {event, engagement, status, children}: Props = $props()
-  const deleted = $derived(engagement.deleted(event))
+  const {event, status, children}: Props = $props()
+  const deleted = $derived($events.isDeleted(event).$)
   const pending = $derived($publicationsByEventId.get(event.id) ?? noPublications)
   const group = $derived($publisher.merge(pending))
 </script>

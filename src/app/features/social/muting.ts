@@ -4,7 +4,7 @@ import type {TrustedEvent} from "@welshman/util"
 import {withGetter} from "@welshman/store"
 import {user, userMuteList} from "@app/core/user"
 import {profiles} from "@app/core/plugins"
-import {getParents} from "@app/features/social/replies"
+import {getTargetKeys} from "@app/features/social/targets"
 
 export const isEventMuted = withGetter(
   derived([user, userMuteList], ([$user, $muteList]) => {
@@ -35,7 +35,7 @@ export const isEventMuted = withGetter(
       if (mutedAddresses.has(getAddress(e))) {
         return true
       }
-      if (getParents(e).some(v => mutedEvents.has(v) || mutedAddresses.has(v))) {
+      if (getTargetKeys(e).some(v => mutedEvents.has(v) || mutedAddresses.has(v))) {
         return true
       }
       if (tagValues(topicTags("t"), e.tags).some(t => mutedTopics.has(t))) {

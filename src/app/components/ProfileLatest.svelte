@@ -5,7 +5,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {network} from "@app/core/plugins"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
 
   type Props = {
     url: string
@@ -16,7 +16,7 @@
 
   const {url, pubkey, limit = 1, fallback}: Props = $props()
 
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
 
   onDestroy(engagement.stop)
 

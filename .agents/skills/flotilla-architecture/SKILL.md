@@ -158,10 +158,7 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 Outside `spaces/`:
 
-- Content: `feeds.ts` (`makeFeed`, `makeGroupedFeed`, `makeScrollLoader`, `makeCalendarFeed`),
-  `engagement.ts` (the replies, reactions and zaps an event collected, held live off the
-  repository), `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38),
-  `uploads.ts` (Blossom, image compression)
+- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day; `windows.ts` asks the relays for one time range), `engagement.ts` (the replies, reactions, zaps and comments an event collected, indexed by the event they answer and loaded in batches), `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38), `uploads.ts` (Blossom, image compression)
 - `people.ts`: display names for any list of pubkeys, and `bootstrapPubkeys`
 - `render.ts`: events as plain text or a one-line summary, for push notifications and reading aloud
 - `share.ts`: sharing an event into a room or conversation, and native share intents
@@ -169,19 +166,12 @@ Outside `spaces/`:
 - `toast.ts` (`pushToast`, one at a time), `theme.ts` (the active theme and font size)
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
   `activity.ts` (the home stream's conversations and space content, the latest activity per path,
-  and which paths are unread), `badges.ts` (the app icon badge) and `notifications.ts` (what was
-  done to your own notes and who mentioned you: its sync, grouping, targets and the facets the
-  stream is narrowed to)
-- `social/`: `replies.ts` reads a conversation's shape off its tags and names the event an event
-  answers, `notes.ts` holds the `Notes` plugin, `noteSources.ts` builds the paged sources
-  (`makeNotesSource`, `makeEngagedSource`) over `makeGroupedFeed`, `noteFeed.ts` (`makeNoteFeed`)
-  combines them into a note feed with its facets and counts, and `muting.ts` and `reactions.ts`
-  cover mutes and reacting outside a space
+  and which paths are unread), `badges.ts` (the app icon badge) and `notifications/` (what was done to your own notes and who mentioned you: `model.ts` is the pure part, which events count, their facets and how they group into rows; `sync.ts` polls your inbox relays; `stream.ts` holds the stores the Recent tab renders)
+- `social/`: `targets.ts` names the event an event is about (what a reply answers, a reaction reacts to, a zap zaps) and a note's place in its thread, `threads.ts` builds a thread's filters and comment tree, `notes.ts` holds the `Notes` plugin (loading a note, or many at once, from the relays its refs point at), `noteResolver.ts` loads in the background the notes a list names but doesn't hold, `noteGroups.ts` is the pure core of a note feed (grouping replies and interactions under the note they answer, facets, counts, entries, status), `noteFeed.ts` (`makeNoteFeed`) wires that core to author feeds, and `networkFeed.ts` builds the home Network tab's feed and a profile's, with the persisted facet toggles. `muting.ts` and `reactions.ts` cover mutes and reacting outside a space
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)
-- Platform and voice: `push/` (`push.ts` picks a notification adapter, `settings.ts` saves the
-  user's choices, and `server.ts` talks to the push server's HTTP API), `deepLinks.ts`, `reminders.ts`
+- Platform and voice: `alerts/` (which events alert and the user's alert settings, and `stream.ts`, the in-app stream of alerting messages), `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `deepLinks.ts`, `reminders.ts`
 - `voice/`: speech to text (stt) and text to speech (tts). `dictation.ts` holds a composer's
   dictation, kept across navigation and sent as a voice note or transcribed, and `readAloud.ts`
   reads a message aloud. `providers/` runs each task on the device's stt model or on OpenRouter,
@@ -206,8 +196,8 @@ client.
 - `icons.ts` (the icon picker's options, globbed from `@assets/icons`), `markdown.ts`
   (`markdownToText`), `keyboard.ts` (`syncKeyboard`, which marks the body `keyboard-open` while the native
   keyboard is up)
-- `feeds.ts`: saved feed definitions (kind `FEED`) over `@welshman/feeds`. It is unrelated to
-  `@app/features/feeds`, which loads events.
+- `pager.ts`: a `Pager` (the load state of one direction of a list, and the `page`/`settle` actions a scroll container drives), `combinePagers`, and `followScroll`, which binds a pager to a scroll container
+- `repository.ts`: `deriveEventsByIdForUrls`, the set-of-relays version of welshman's `deriveEventsByIdForUrl`
 - `audio.ts`: recording from the microphone, device lists, a live input level, decoding to mono
   samples at a model's rate, and WAV encoding
 - `stt/`: the on-device stt model (Whistle over a wasm engine, run in a worker), its download and
@@ -409,7 +399,7 @@ new listing into the room. Its `ContentActions` row opens `ClassifiedEdit` throu
 card, and `NoteContentClassified` renders a listing wherever `NoteContent` is used.
 
 **Routes.** `src/routes/spaces/[relay]/classifieds/+page.svelte` loads listings and their comments
-with `makeFeed` and filters them with the `classifieds.ts` helpers. `[address]/+page.svelte` reads
+with `makeRelayFeed` and filters them with the `classifieds.ts` helpers. `[address]/+page.svelte` reads
 one listing with `$events.one(address, [url]).$`.
 
 Articles are composed on a full page (`spaces/[relay]/articles/create`, whose

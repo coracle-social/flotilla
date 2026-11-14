@@ -9,14 +9,14 @@
   import NoteThreadLinks from "@app/components/NoteThreadLinks.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
   import Cv from "@lib/components/Cv.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {isReplyTo} from "@app/features/social"
   import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {
     event: TrustedEvent
     children?: Snippet
-    engagement: EngagementIndex
+    engagement: Engagement
     url?: string
     customActions?: Snippet<[TrustedEvent]>
     card?: boolean

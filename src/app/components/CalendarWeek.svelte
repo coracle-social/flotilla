@@ -6,7 +6,7 @@
   import Button from "@lib/components/Button.svelte"
   import CalendarDay from "@app/components/CalendarDay.svelte"
   import CalendarEventChip from "@app/components/CalendarEventChip.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {
     formatDay,
     formatWeekday,
@@ -23,7 +23,7 @@
     events: Readable<TrustedEvent[]>
     eventsByDay: Map<string, TrustedEvent[]>
     date: Date
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, events, eventsByDay, date, engagement}: Props = $props()

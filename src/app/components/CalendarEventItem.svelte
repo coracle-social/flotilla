@@ -7,7 +7,7 @@
   import ContentActions from "@app/components/ContentActions.svelte"
   import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
   import {reader} from "@app/core/domain"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
@@ -17,7 +17,7 @@
   type Props = {
     url: string
     event: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, event, engagement}: Props = $props()

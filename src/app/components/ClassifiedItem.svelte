@@ -15,14 +15,14 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
     event: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, event, engagement}: Props = $props()

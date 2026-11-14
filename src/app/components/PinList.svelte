@@ -15,7 +15,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import {user} from "@app/core/user"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {
     deletePins,
@@ -31,7 +31,7 @@
     url: string
     address: string
     pins: PinReader[]
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, address, pins, engagement}: Props = $props()

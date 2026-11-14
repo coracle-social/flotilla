@@ -20,7 +20,7 @@
   import ReadingProgress from "@app/components/ReadingProgress.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import {displayReadingTime} from "@app/features/spaces/articles"
   import * as pages from "@app/navigation/pages"
 
@@ -32,7 +32,7 @@
 
   const {address, relays, url}: Props = $props()
 
-  const engagement = makeEngagementIndex({relays: url ? [url] : undefined})
+  const engagement = makeEngagement({relays: url ? [url] : undefined})
   const event = $events.one(address, relays).$
   const article = derived(event, $event => ($event ? reader(Article)($event) : undefined))
   const h = $derived($article?.room())

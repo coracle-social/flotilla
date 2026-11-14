@@ -9,27 +9,27 @@
   import HomeNotificationItem from "@app/components/HomeNotificationItem.svelte"
   import {isSpaceActivity, recentConversations, unreadSpaceContent} from "@app/features/activity"
   import type {Activity, SpaceContent} from "@app/features/activity"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import {
-    countHomeNotificationTypes,
-    homeNotificationEntries,
-    homeNotificationEvents,
-    homeNotificationsLoaded,
-    homeNotificationsUnread,
-    includedHomeActivityTypes,
-    readHomeNotifications,
+    countNotificationFacets,
+    includedNotificationFacets,
+    notificationEntries,
+    notificationEvents,
+    notificationsLoaded,
+    notificationsUnread,
+    readNotifications,
   } from "@app/features/notifications"
-  import type {HomeNotification, NotificationFacet} from "@app/features/notifications"
+  import type {NotificationFacet, NotificationGroup} from "@app/features/notifications"
 
   type Entry = {key: string; timestamp: number} & (
     | {type: "conversation"; activity: Activity}
     | {type: "space"; content: SpaceContent}
-    | {type: "notification"; notification: HomeNotification; note: TrustedEvent}
+    | {type: "notification"; group: NotificationGroup; note: TrustedEvent}
   )
 
-  const engagement = makeEngagementIndex({withReplies: true})
+  const engagement = makeEngagement({withReplies: true})
 
-  const includeSpaces = $derived($includedHomeActivityTypes.includes("spaces"))
+  const includeSpaces = $derived($includedNotificationFacets.includes("spaces"))
 
   // Enough chat to see what is going on, not enough to push every reply off the page.
   const conversations = $derived(
@@ -42,7 +42,7 @@
 
   const counts = $derived(
     new Map<NotificationFacet, number>([
-      ...countHomeNotificationTypes($homeNotificationEvents),
+      ...countNotificationFacets($notificationEvents),
       ["spaces", $recentConversations.filter(isSpaceActivity).length + $unreadSpaceContent.length],
     ]),
   )
@@ -67,12 +67,12 @@
             content,
           }),
         ),
-        ...$homeNotificationEntries.map(
-          ({notification, note}): Entry => ({
+        ...$notificationEntries.map(
+          ({group, note}): Entry => ({
             type: "notification",
-            key: notification.key,
-            timestamp: notification.timestamp,
-            notification,
+            key: group.key,
+            timestamp: group.timestamp,
+            group,
             note,
           }),
         ),
@@ -83,13 +83,13 @@
   // Something is waiting and the filters are what is keeping it off the screen.
   const hidden = $derived(
     entries.length === 0 &&
-      $homeNotificationEvents.length + $recentConversations.length + $unreadSpaceContent.length > 0,
+      $notificationEvents.length + $recentConversations.length + $unreadSpaceContent.length > 0,
   )
 
   // Anything that lands while the stream is showing has been read by the time it is drawn.
   $effect(() => {
-    if ($homeNotificationsUnread) {
-      readHomeNotifications()
+    if ($notificationsUnread) {
+      readNotifications()
     }
   })
 
@@ -107,13 +107,13 @@
       <HomeActivityItemSpace content={entry.content} />
     {:else}
       <div class="p-4">
-        <HomeNotificationItem notification={entry.notification} note={entry.note} {engagement} />
+        <HomeNotificationItem group={entry.group} note={entry.note} {engagement} />
       </div>
     {/if}
   {/each}
   {#if hidden}
     <div class="px-4 py-12 text-center font-medium">Nothing matches those filters</div>
-  {:else if entries.length === 0 && !$homeNotificationsLoaded}
+  {:else if entries.length === 0 && !$notificationsLoaded}
     <div class="flex justify-center px-4 py-12">
       <Spinner loading />
     </div>

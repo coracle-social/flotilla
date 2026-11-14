@@ -1,6 +1,6 @@
 import {Capacitor} from "@capacitor/core"
 import {alertSettings, setAlertChannels} from "@app/features/alerts"
-import type {IPushAdapter} from "@app/features/push/adapters/common"
+import type {PushAdapter} from "@app/features/push/adapter"
 import {AndroidFallbackNotifications} from "@app/features/push/adapters/android"
 import {CapacitorNotifications} from "@app/features/push/adapters/capacitor"
 import {ElectronNotifications} from "@app/features/push/adapters/electron"
@@ -27,7 +27,7 @@ const getTransport = (): PushTransport => {
   return "web"
 }
 
-const makeAdapter = (transport: PushTransport): IPushAdapter => {
+const makeAdapter = (transport: PushTransport): PushAdapter => {
   switch (transport) {
     case "electron":
       return new ElectronNotifications()
@@ -40,7 +40,7 @@ const makeAdapter = (transport: PushTransport): IPushAdapter => {
   }
 }
 
-const adapters = new Map<PushTransport, IPushAdapter>()
+const adapters = new Map<PushTransport, PushAdapter>()
 
 // Kept per transport, since an adapter holds the listeners and controllers its enable installed.
 const getAdapter = () => {
@@ -72,7 +72,7 @@ export const requestPushPermission = async (): Promise<PushPermission> => {
   return getAdapter().request()
 }
 
-let enabled: IPushAdapter | undefined
+let enabled: PushAdapter | undefined
 
 export const enablePush = async () => {
   const adapter = getAdapter()

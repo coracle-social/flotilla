@@ -1,18 +1,16 @@
 import {derived, readable, writable} from "svelte/store"
-import {first, spec} from "@welshman/lib"
+import {first, removeUndefined, spec, uniq} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {EventRef, hexTags, outbox, tagValues} from "@welshman/util"
+import {EventRef, getIdAndAddress, getIdFilters, hexTags, outbox, tagValues} from "@welshman/util"
 import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {Events, Network, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {usePlugin} from "@app/core/plugins"
-import {
-  buildCommentTree,
-  getDescendants,
-  getReplyRefs,
-  getThreadFilters,
-} from "@app/features/social/replies"
-import type {CommentNode} from "@app/features/social/replies"
+import {getThreadRefs} from "@app/features/social/targets"
+import {buildCommentTree, getDescendants, getThreadFilters} from "@app/features/social/threads"
+import type {CommentNode} from "@app/features/social/threads"
+
+export type NoteRequest = {ref: EventRef; replies?: TrustedEvent[]}
 
 // Where a note lives, and the stores a page reads it and its conversation from.
 export class Notes {
@@ -60,6 +58,59 @@ export class Notes {
     }
   }
 
+  loadMany = async (
+    requests: NoteRequest[],
+    {
+      signal,
+      timeout = 3000,
+      priority,
+    }: {signal?: AbortSignal; timeout?: number; priority?: number} = {},
+  ): Promise<Map<string, TrustedEvent>> => {
+    const events = new Map<string, TrustedEvent>()
+
+    const file = (event: TrustedEvent) => {
+      for (const key of getIdAndAddress(event)) {
+        events.set(key, event)
+      }
+    }
+
+    const keys = uniq(removeUndefined(requests.map(({ref}) => ref.getAddressOrId())))
+
+    if (keys.length === 0) {
+      return events
+    }
+
+    for (const event of await this.app.repository.query(getIdFilters(keys))) {
+      file(event)
+    }
+
+    const missing = requests.filter(({ref}) => {
+      const key = ref.getAddressOrId()
+
+      return !key || !events.has(key)
+    })
+
+    if (missing.length > 0) {
+      const selections = await Promise.all(
+        missing.map(({ref, replies}) => this.relays(ref, replies)),
+      )
+
+      const loaded = await this.app.use(Network).load({
+        relays: uniq(selections.flat()),
+        filters: getIdFilters(removeUndefined(missing.map(({ref}) => ref.getAddressOrId()))),
+        timeout,
+        priority,
+        signal,
+      })
+
+      for (const event of loaded) {
+        file(event)
+      }
+    }
+
+    return events
+  }
+
   // A pointer carrying no hints would never resolve, so the load beside it asks the author's relays.
   deriveEvent = (ref: IEventRef) => {
     const idOrAddress = new EventRef(ref).getIdOrAddress()
@@ -82,9 +133,6 @@ export class Notes {
     )
   }
 
-  resolveRelays = (event: TrustedEvent) =>
-    Array.from(this.app.repository.tracker.getRelays(event.id))
-
   // A reply names only the event it answers, so the thread is walked up one hop at a time.
   loadThread = async (
     event: TrustedEvent,
@@ -97,7 +145,7 @@ export class Notes {
     const report = () => onLoad?.({threadRoot, parents: [...parents]})
 
     const walk = async (child: TrustedEvent) => {
-      const {parent} = getReplyRefs(child)
+      const {parent} = getThreadRefs(child)
 
       if (parent) {
         const ancestor = await this.load(parent, {replies: [child]})
@@ -111,7 +159,7 @@ export class Notes {
       }
     }
 
-    const {parent, root} = getReplyRefs(event)
+    const {parent, root} = getThreadRefs(event)
 
     const rootLoad =
       root && root.getIdOrAddress() !== parent?.getIdOrAddress()

@@ -8,7 +8,7 @@ import {goToMessages} from "@app/features/messages"
 import {goToHome} from "@app/navigation/history"
 import {shareFromNative} from "@app/features/share"
 import {pushToast} from "@app/features/toast"
-import {onPushNotificationAction} from "@app/features/push/adapters/common"
+import {onPushNotificationAction} from "@app/features/push/taps"
 import Search from "@app/components/Search.svelte"
 
 const openShortcut = (pathname: string) => {

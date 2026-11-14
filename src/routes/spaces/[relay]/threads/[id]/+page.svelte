@@ -20,7 +20,7 @@
   import EventReply from "@app/components/EventReply.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeEngagementIndex} from "@app/features/engagement"
+  import {makeEngagement} from "@app/features/engagement"
   import {getChecked} from "@app/features/checked"
   import * as pages from "@app/navigation/pages"
   import {getPermalinkTarget, scrollToEvent} from "@app/navigation/locations"
@@ -34,7 +34,7 @@
   const event = $events.one(id, [url]).$
   const threadTitle = $derived($event ? reader(Thread)($event).title() : "")
   // Rows register themselves with `related`, so the whole page's reactions load in one batch
-  const engagement = makeEngagementIndex({relays: [url]})
+  const engagement = makeEngagement({relays: [url]})
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
   const replies = $derived($events.asc(filters).$)
 

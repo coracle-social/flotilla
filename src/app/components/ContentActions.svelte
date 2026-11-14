@@ -12,7 +12,7 @@
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import {user} from "@app/core/user"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
   import {publishReaction, retractReaction} from "@app/features/spaces"
@@ -22,7 +22,7 @@
   type Props = {
     url: string
     event: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
     noun: string
     showRoom?: boolean
     showActivity?: boolean
@@ -66,7 +66,7 @@
     </div>
     <span class="h-6 w-px shrink-0 bg-line"></span>
   {/if}
-  <PublicationStatusOrDeleted {event} {engagement} {status}>
+  <PublicationStatusOrDeleted {event} {status}>
     <ReactionSummary
       {url}
       {event}

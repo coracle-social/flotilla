@@ -11,7 +11,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import ContentActions from "@app/components/ContentActions.svelte"
   import {handles, profiles} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
@@ -24,7 +24,7 @@
     event: TrustedEvent
     threadPubkey: string
     onReply: (event: TrustedEvent) => void
-    engagement: EngagementIndex
+    engagement: Engagement
     replyCount?: number
     hideTitle?: boolean
   }

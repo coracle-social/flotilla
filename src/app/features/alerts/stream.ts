@@ -1,77 +1,84 @@
-import type {Subscriber, Unsubscriber} from "svelte/store"
-import {call, now, on, remove} from "@welshman/lib"
-import {matchFilters, MESSAGE, tagSpec, tagValue} from "@welshman/util"
+import {noop, now} from "@welshman/lib"
+import type {Maybe} from "@welshman/lib"
+import {MESSAGE, tagSpec, tagValue} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import type {RepositoryUpdate} from "@welshman/store"
+import type {IApp} from "@welshman/app"
+import type {RepositoryUpdate, Unsubscriber} from "@welshman/store"
 import {DM_KINDS} from "@lib/util"
 import {app} from "@app/core/app"
 import {shouldNotify} from "@app/core/settings"
-import {getEventAlertTypes} from "@app/features/alerts/policy"
+import {getAlertTypes} from "@app/features/alerts/policy"
 import type {AlertType} from "@app/features/alerts/policy"
 import {alertSettings} from "@app/features/alerts/settings"
 
-// An event that raises an alert, with the alert types the user still has turned on.
-export type Alert = {
-  event: TrustedEvent
-  types: AlertType[]
+export type Alert = {event: TrustedEvent; types: AlertType[]}
+
+type Subscriber = (alert: Alert) => void
+
+const subscribers = new Set<Subscriber>()
+
+const notify = (alert: Alert) => {
+  for (const subscriber of subscribers) {
+    subscriber(alert)
+  }
 }
 
-export const onAlert = call(() => {
-  let subscribers: Subscriber<Alert>[] = []
+const onUpdate = ($app: IApp, {added}: RepositoryUpdate) => {
+  const pubkey = $app.user?.pubkey
 
-  let unsubscribe: Unsubscriber | undefined
+  if (pubkey) {
+    for (const event of added) {
+      if (event.pubkey !== pubkey) {
+        const h = tagValue(tagSpec("h"), event.tags)
+        const relays = $app.repository.tracker.getRelays(event.id)
 
-  return (f: (alert: Alert) => void) => {
-    subscribers.push(f)
+        if (Array.from(relays).some(url => shouldNotify(url, h))) {
+          const types = getAlertTypes(event, pubkey).filter(type => alertSettings.get()[type])
 
-    if (!unsubscribe) {
-      let unsubscribeRepository: Unsubscriber | undefined
-      const unsubscribeApp = app.subscribe($app => {
-        unsubscribeRepository?.()
-        const filters = [{kinds: [MESSAGE, ...DM_KINDS], since: now()}]
-        unsubscribeRepository = on($app.repository, "update", ({added}: RepositoryUpdate) => {
-          const $pubkey = $app.user?.pubkey
-
-          if (!$pubkey) {
-            return
+          if (types.length > 0) {
+            notify({event, types})
           }
-
-          for (const event of added) {
-            if (event.pubkey === $pubkey || !matchFilters(filters, event)) {
-              continue
-            }
-
-            const h = tagValue(tagSpec("h"), event.tags)
-            const notified = Array.from($app.repository.tracker.getRelays(event.id)).some(url =>
-              shouldNotify(url, h),
-            )
-
-            if (notified) {
-              const settings = alertSettings.get()
-              const types = getEventAlertTypes(event, $pubkey).filter(type => settings[type])
-
-              if (types.length > 0) {
-                for (const f of subscribers) {
-                  f({event, types})
-                }
-              }
-            }
-          }
-        })
-      })
-      unsubscribe = () => {
-        unsubscribeApp()
-        unsubscribeRepository?.()
-      }
-    }
-
-    return () => {
-      subscribers = remove(f, subscribers)
-
-      if (subscribers.length === 0) {
-        unsubscribe?.()
-        unsubscribe = undefined
+        }
       }
     }
   }
-})
+}
+
+const start = (): Unsubscriber => {
+  let stopObserving: Unsubscriber = noop
+
+  const unsubscribeApp = app.subscribe($app => {
+    stopObserving()
+
+    stopObserving = $app.repository.observe({
+      // `since` is taken here and `onLoad` is ignored, so only events arriving from now on alert.
+      filters: [{kinds: [MESSAGE, ...DM_KINDS], since: now()}],
+      onLoad: noop,
+      onUpdate: update => onUpdate($app, update),
+    })
+  })
+
+  return () => {
+    unsubscribeApp()
+    stopObserving()
+  }
+}
+
+let stopSharing: Maybe<Unsubscriber>
+
+export const onAlert = (subscriber: Subscriber): Unsubscriber => {
+  subscribers.add(subscriber)
+
+  if (subscribers.size === 1) {
+    stopSharing = start()
+  }
+
+  return () => {
+    subscribers.delete(subscriber)
+
+    if (subscribers.size === 0) {
+      stopSharing?.()
+      stopSharing = undefined
+    }
+  }
+}

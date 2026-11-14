@@ -5,7 +5,7 @@
   import Divider from "@lib/components/Divider.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {getEventStart} from "@app/features/spaces/calendar"
 
   type Props = {
@@ -13,7 +13,7 @@
     events: TrustedEvent[]
     element?: HTMLElement
     loading: boolean
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
   const {url, events, element, loading, engagement}: Props = $props()

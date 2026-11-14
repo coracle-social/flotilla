@@ -1,5 +1,3 @@
-// The replies, reactions, zaps and comments an event collected, held live off the repository.
-
 import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {batch, groupBy, on, pushToMapKey, removeUndefined, uniq, uniqBy} from "@welshman/lib"
@@ -13,10 +11,9 @@ import {
   addressTags,
   getCommentFiltersForRoot,
   getIdAndAddress,
-  getIdOrAddress,
   getReplyFilters,
-  inbox,
   hexTags,
+  inbox,
   tagValues,
 } from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
@@ -24,16 +21,24 @@ import {Comment} from "@welshman/domain"
 import {mergeRepositoryUpdates} from "@welshman/store"
 import type {RepositoryUpdate} from "@welshman/store"
 import {app} from "@app/core/app"
-import {network, router} from "@app/core/plugins"
 import {reader} from "@app/core/domain"
 import {REACTION_KINDS} from "@app/core/env"
+import {network, router} from "@app/core/plugins"
 
-const EVENT_CONTEXT_KINDS = [REPORT, REACTION, ZAP_RECEIPT, COMMENT]
+export type Engagement = {
+  track: (event: TrustedEvent) => void
+  related: (event: TrustedEvent) => Readable<TrustedEvent[]>
+  stop: () => void
+}
 
-const noEvents: TrustedEvent[] = []
+export type EngagementOptions = {relays?: string[]; withReplies?: boolean}
 
-// A NIP-22 comment is filed under its thread root and under the event it answers, which both draw it.
-const getTargets = (event: TrustedEvent) => {
+type Subscriber = (events: TrustedEvent[]) => void
+
+// One shared array, so a key with nothing filed doesn't churn its subscribers.
+const EMPTY: TrustedEvent[] = []
+
+export const getEngagementKeys = (event: TrustedEvent): string[] => {
   if (event.kind === COMMENT) {
     const comment = reader(Comment)(event)
     const refs = removeUndefined([comment.root(), comment.parent()])
@@ -41,153 +46,175 @@ const getTargets = (event: TrustedEvent) => {
     return uniq(refs.flatMap(ref => ref.getIdAndAddress()))
   }
 
-  // A direct reply marks its parent as both root and reply, so the same id arrives twice.
+  // A direct reply names its parent as both root and reply, so the same id arrives twice.
   return uniq([...tagValues(hexTags("e"), event.tags), ...tagValues(addressTags("a"), event.tags)])
 }
 
-// A space's own relay holds everything about its events, and elsewhere what answers a note goes to its author's inbox.
-export const makeEngagementIndex = ({
-  relays,
-  withReplies = false,
-}: {
-  relays?: string[]
-  withReplies?: boolean
-} = {}) => {
-  // Kind 1 notes reply with `e` tags rather than as NIP-22 comments.
-  const contextKinds = withReplies ? [...EVENT_CONTEXT_KINDS, NOTE] : EVENT_CONTEXT_KINDS
-  const requestKinds = withReplies ? [...REACTION_KINDS, NOTE] : REACTION_KINDS
-  const {repository} = app.get()
+export const makeEngagement = (options: EngagementOptions = {}): Engagement => {
+  const repository = app.get().repository
   const controller = new AbortController()
-  const targets = new Set<string>()
-  const eventsByTarget = new Map<string, TrustedEvent[]>()
-  const targetsByEventId = new Map<string, string[]>()
-  const subscribersByTarget = new Map<string, Set<(events: TrustedEvent[]) => void>>()
-  const deletedChecks = new Map<string, Set<() => void>>()
 
-  // A target tracked after the event was filed still takes it, reading it back from the repository.
-  const addEvent = (event: TrustedEvent, touched: Set<string>) => {
-    const filed = targetsByEventId.get(event.id) ?? []
+  const indexKinds = [REPORT, REACTION, ZAP_RECEIPT, COMMENT]
+  const requestKinds = [...REACTION_KINDS]
 
-    for (const target of getTargets(event)) {
-      if (targets.has(target) && !filed.includes(target)) {
-        filed.push(target)
-        eventsByTarget.set(target, [...(eventsByTarget.get(target) || []), event])
-        touched.add(target)
-      }
-    }
-
-    if (filed.length > 0) {
-      targetsByEventId.set(event.id, filed)
-    }
+  if (options.withReplies) {
+    indexKinds.push(NOTE)
+    requestKinds.push(NOTE)
   }
 
-  const removeEvent = (id: string, touched: Set<string>) => {
-    const eventTargets = targetsByEventId.get(id)
+  const index = new Map<string, TrustedEvent[]>()
+  const keysById = new Map<string, string[]>()
+  const subscribers = new Map<string, Set<Subscriber>>()
+  const tracked = new Set<string>()
 
-    if (eventTargets) {
-      targetsByEventId.delete(id)
+  const file = (event: TrustedEvent) => {
+    const filed = keysById.get(event.id) ?? []
+    // A key tracked after this was filed still takes it, from the repository read in fileStored.
+    const keys = getEngagementKeys(event).filter(key => tracked.has(key) && !filed.includes(key))
 
-      for (const target of eventTargets) {
-        const events = eventsByTarget.get(target)!.filter(event => event.id !== id)
-
-        if (events.length > 0) {
-          eventsByTarget.set(target, events)
-        } else {
-          eventsByTarget.delete(target)
-        }
-
-        touched.add(target)
+    if (keys.length) {
+      for (const key of keys) {
+        pushToMapKey(index, key, event)
       }
+
+      keysById.set(event.id, [...filed, ...keys])
     }
+
+    return keys
   }
 
-  const notifyDeleted = (added: TrustedEvent[], removed: Set<string>) => {
-    if (deletedChecks.size > 0) {
-      if (removed.size > 0) {
-        for (const checks of deletedChecks.values()) {
-          for (const check of checks) {
-            check()
-          }
-        }
+  const unfile = (id: string) => {
+    const keys = keysById.get(id) ?? []
+
+    for (const key of keys) {
+      const remaining = (index.get(key) ?? []).filter(event => event.id !== id)
+
+      if (remaining.length) {
+        index.set(key, remaining)
       } else {
-        for (const event of added) {
-          for (const check of deletedChecks.get(getIdOrAddress(event)) || []) {
-            check()
-          }
+        index.delete(key)
+      }
+    }
+
+    keysById.delete(id)
+
+    return keys
+  }
+
+  const notify = (keys: Iterable<string>) => {
+    for (const key of keys) {
+      const subscribersForKey = subscribers.get(key)
+
+      if (subscribersForKey) {
+        const events = index.get(key) ?? EMPTY
+
+        for (const subscriber of subscribersForKey) {
+          subscriber(events)
         }
       }
     }
   }
 
-  const notify = (touched: Set<string>) => {
-    for (const target of touched) {
-      for (const subscriber of subscribersByTarget.get(target) || []) {
-        subscriber(eventsByTarget.get(target) || noEvents)
-      }
-    }
-  }
-
-  const loadFrom = async (urls: string[], events: TrustedEvent[]) => {
-    const context = await network.get().load({
-      relays: urls,
-      signal: controller.signal,
-      filters: [
-        ...getReplyFilters(events, {kinds: requestKinds}),
-        ...getCommentFiltersForRoot(events),
-      ],
-      timeout: 3000,
-    })
-
-    if (context.length > 0) {
-      network.get().load({
-        relays: urls,
-        signal: controller.signal,
-        filters: getReplyFilters(context, {kinds: [DELETE]}),
-      })
-    }
-  }
-
-  const loadContext = batch(100, async (events: TrustedEvent[]) => {
-    const touched = new Set<string>()
-
-    // Local events never come through the update listener, so file them before asking the network.
-    const stored = await repository.query([
-      ...getReplyFilters(events, {kinds: contextKinds}),
+  const fileStored = async (events: TrustedEvent[]) => {
+    const filters = [
+      ...getReplyFilters(events, {kinds: indexKinds}),
       ...getCommentFiltersForRoot(events),
-    ])
+    ]
 
-    for (const event of stored) {
-      addEvent(event, touched)
-    }
+    // Local events never come through the update listener, so notify as we file them.
+    notify((await repository.query(filters)).flatMap(file))
+  }
 
-    notify(touched)
+  const loadEngagement = batch(100, async (events: TrustedEvent[]) => {
+    await fileStored(events)
 
     const eventsByRelay = new Map<string, TrustedEvent[]>()
 
-    if (relays) {
-      for (const url of relays) {
+    if (options.relays) {
+      for (const url of options.relays) {
         eventsByRelay.set(url, events)
       }
     } else {
-      const byAuthor = groupBy(event => event.pubkey, events)
-
-      await Promise.all(
-        Array.from(byAuthor, async ([pubkey, authored]) => {
-          const urls = await router.get().resolver.relays([inbox(pubkey)])
-
-          for (const url of urls) {
-            for (const event of authored) {
-              pushToMapKey(eventsByRelay, url, event)
-            }
-          }
-        }),
+      const byAuthor = groupBy((event: TrustedEvent) => event.pubkey, events)
+      const inboxes = await Promise.all(
+        Array.from(byAuthor, async ([pubkey, authorEvents]) => ({
+          relays: await router.get().resolver.relays([inbox(pubkey)]),
+          events: authorEvents,
+        })),
       )
+
+      for (const {relays, events} of inboxes) {
+        for (const url of relays) {
+          for (const event of events) {
+            pushToMapKey(eventsByRelay, url, event)
+          }
+        }
+      }
     }
 
-    await Promise.all(Array.from(eventsByRelay, ([url, targets]) => loadFrom([url], targets)))
+    await Promise.all(
+      Array.from(eventsByRelay, async ([url, relayEvents]) => {
+        const found = await network.get().load({
+          relays: [url],
+          signal: controller.signal,
+          timeout: 3000,
+          filters: [
+            ...getReplyFilters(relayEvents, {kinds: requestKinds}),
+            ...getCommentFiltersForRoot(relayEvents),
+          ],
+        })
+
+        if (found.length) {
+          network.get().load({
+            relays: [url],
+            signal: controller.signal,
+            filters: getReplyFilters(found, {kinds: [DELETE]}),
+          })
+        }
+      }),
+    )
   })
 
-  const unsubscribe = on(
+  const track = (event: TrustedEvent) => {
+    if (!tracked.has(event.id)) {
+      for (const key of getIdAndAddress(event)) {
+        tracked.add(key)
+      }
+
+      loadEngagement(event)
+    }
+  }
+
+  const relatedForKey = (key: string): Readable<TrustedEvent[]> =>
+    readable<TrustedEvent[]>(EMPTY, set => {
+      const subscribersForKey = subscribers.get(key) ?? new Set<Subscriber>()
+
+      subscribers.set(key, subscribersForKey)
+      subscribersForKey.add(set)
+      set(index.get(key) ?? EMPTY)
+
+      return () => {
+        subscribersForKey.delete(set)
+
+        if (!subscribersForKey.size) {
+          subscribers.delete(key)
+        }
+      }
+    })
+
+  const related = (event: TrustedEvent): Readable<TrustedEvent[]> => {
+    track(event)
+
+    const perKey = getIdAndAddress(event).map(relatedForKey)
+
+    if (perKey.length === 1) {
+      return perKey[0]
+    }
+
+    return derived(perKey, events => uniqBy(e => e.id, events.flat()))
+  }
+
+  const off = on(
     repository,
     "update",
     batch(150, (updates: RepositoryUpdate[]) => {
@@ -195,95 +222,27 @@ export const makeEngagementIndex = ({
       const touched = new Set<string>()
 
       for (const event of added) {
-        if (contextKinds.includes(event.kind)) {
-          addEvent(event, touched)
+        if (indexKinds.includes(event.kind)) {
+          for (const key of file(event)) {
+            touched.add(key)
+          }
         }
       }
 
       for (const id of removed) {
-        removeEvent(id, touched)
+        for (const key of unfile(id)) {
+          touched.add(key)
+        }
       }
 
       notify(touched)
-      notifyDeleted(added, removed)
     }),
   )
 
-  // Track an event so its context gets requested with the rest of the batch
-  const add = (event: TrustedEvent) => {
-    if (!targets.has(event.id)) {
-      for (const key of getIdAndAddress(event)) {
-        targets.add(key)
-      }
-
-      loadContext(event)
-    }
+  const stop = () => {
+    controller.abort()
+    off()
   }
 
-  const relatedForKey = (key: string) =>
-    readable(eventsByTarget.get(key) || noEvents, set => {
-      let subscribers = subscribersByTarget.get(key)
-
-      if (!subscribers) {
-        subscribers = new Set()
-        subscribersByTarget.set(key, subscribers)
-      }
-
-      subscribers.add(set)
-      set(eventsByTarget.get(key) || noEvents)
-
-      return () => {
-        subscribers.delete(set)
-
-        if (subscribers.size === 0) {
-          subscribersByTarget.delete(key)
-        }
-      }
-    })
-
-  return {
-    add,
-    deleted: (event: TrustedEvent) =>
-      readable(repository.isDeleted(event), set => {
-        const key = getIdOrAddress(event)
-        const check = () => set(repository.isDeleted(event))
-
-        let checks = deletedChecks.get(key)
-
-        if (!checks) {
-          checks = new Set()
-          deletedChecks.set(key, checks)
-        }
-
-        checks.add(check)
-        check()
-
-        return () => {
-          checks.delete(check)
-
-          if (checks.size === 0) {
-            deletedChecks.delete(key)
-          }
-        }
-      }),
-    related: (event: TrustedEvent): Readable<TrustedEvent[]> => {
-      add(event)
-
-      // A related event may point at a replaceable one by either id or address, so both are keys.
-      const [key, ...rest] = getIdAndAddress(event)
-
-      // A replaceable event collects both buckets, and something tagging it by id and address lands in both.
-      return rest.length > 0
-        ? derived([relatedForKey(key), ...rest.map(relatedForKey)], buckets =>
-            uniqBy(event => event.id, buckets.flat()),
-          )
-        : relatedForKey(key)
-    },
-    stop: () => {
-      controller.abort()
-      unsubscribe()
-    },
-  }
+  return {track, related, stop}
 }
-
-export type EngagementIndex = ReturnType<typeof makeEngagementIndex>

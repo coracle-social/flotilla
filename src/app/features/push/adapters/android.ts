@@ -5,10 +5,11 @@ import {maybe, now} from "@welshman/lib"
 import type {Session} from "@welshman/app"
 import {app} from "@app/core/app"
 import {session} from "@app/core/session"
-import type {IPushAdapter, RelaySubscription} from "@app/features/push/adapters/common"
-import {syncRelaySubscriptions} from "@app/features/push/adapters/common"
+import type {PushAdapter} from "@app/features/push/adapter"
 import {toPermission} from "@app/features/push/permission"
 import {requiresFallback, useFallback} from "@app/features/push/registration"
+import type {RelaySubscription} from "@app/features/push/relaySubscriptions"
+import {syncRelaySubscriptions} from "@app/features/push/relaySubscriptions"
 
 // The worker needs the pubkey to build auth events. Keep in sync with AndroidPushFallbackWorker.kt.
 type AndroidPushFallbackState = {
@@ -26,7 +27,7 @@ type AndroidPushFallbackPlugin = {
 
 const AndroidPushFallback = registerPlugin<AndroidPushFallbackPlugin>("AndroidPushFallback")
 
-export class AndroidFallbackNotifications implements IPushAdapter {
+export class AndroidFallbackNotifications implements PushAdapter {
   _controller = maybe<AbortController>()
   _subscriptions = new Map<string, RelaySubscription>()
   _activeSince = now()

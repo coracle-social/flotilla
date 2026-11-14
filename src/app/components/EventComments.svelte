@@ -8,7 +8,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import CommentCompose from "@app/components/CommentCompose.svelte"
   import {events, network} from "@app/core/plugins"
   import {buildCommentTree} from "@app/features/social"
@@ -17,7 +17,7 @@
     event: TrustedEvent
     url?: string
     relays?: string[]
-    engagement: EngagementIndex
+    engagement: Engagement
     columnClass?: string
     noun?: string
   }

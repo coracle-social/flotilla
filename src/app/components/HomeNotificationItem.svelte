@@ -11,25 +11,25 @@
   import ReplyList from "@app/components/ReplyList.svelte"
   import {user} from "@app/core/user"
   import {displayActivityTimestamp} from "@app/features/activity"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import {REPOST_KINDS} from "@app/features/notifications"
-  import type {HomeNotification} from "@app/features/notifications"
+  import type {NotificationGroup} from "@app/features/notifications"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Part = {pubkey?: string; text?: string}
 
   type Props = {
-    notification: HomeNotification
+    group: NotificationGroup
     note: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
   }
 
-  const {notification, note, engagement}: Props = $props()
+  const {group, note, engagement}: Props = $props()
 
-  // A notification keeps its key while it collects answers, so the component has to follow its prop.
-  const replies = $derived(notification.replies)
+  // A group keeps its key while it collects answers, so the component has to follow its prop.
+  const replies = $derived(group.replies)
 
-  const interactions = $derived(notification.reactions)
+  const interactions = $derived(group.reactions)
 
   const repliers = $derived(uniq(replies.map(e => e.pubkey)))
 
@@ -158,7 +158,7 @@
       {/each}
     </div>
     <span class="shrink-0 text-xs opacity-50">
-      {displayActivityTimestamp(notification.timestamp)}
+      {displayActivityTimestamp(group.timestamp)}
     </span>
   </div>
   <NoteItem event={note} {engagement} customActions={quoteNote} showReply showThreadLinks />

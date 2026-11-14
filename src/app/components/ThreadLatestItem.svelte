@@ -11,13 +11,13 @@
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import {reader} from "@app/core/domain"
-  import type {EngagementIndex} from "@app/features/engagement"
+  import type {Engagement} from "@app/features/engagement"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
     event: TrustedEvent
-    engagement: EngagementIndex
+    engagement: Engagement
     // The row's board, left off a page that already says which board it is.
     showRoom?: boolean
   }
