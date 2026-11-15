@@ -120,7 +120,7 @@ test("US-019 join and leave a room", async ({seed, as}) => {
   const path = roomPath(url, "general")
 
   const bob = await as(users.bob, path)
-  const alice = await as(users.alice, path)
+  const alice = await as(users.alice, spacePath(url) + "/about")
 
   await expect(message(bob, "morning all")).toBeVisible()
 
@@ -130,10 +130,9 @@ test("US-019 join and leave a room", async ({seed, as}) => {
 
   await expect(bob.getByText("You have joined the room.")).toBeVisible()
 
-  // The membership events a client listens for live are the ones naming itself.
-  await alice.reload()
+  // Unread since a visit, his join would sit below a divider; opened only now, it shares her own join's line.
+  await roomLink(alice, "General").click()
 
-  // Her own seeded join and his arrive with nothing between them, so they share one line.
   await alice.getByRole("button", {name: "2 people"}).click()
 
   await expect(dialog(alice, "New members")).toContainText("Bob Barnacle")
