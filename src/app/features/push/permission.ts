@@ -8,12 +8,8 @@ export const isBlocked = (permission: PushPermission) =>
 
 // Platforms spell the pending states differently, and anything else means we can't notify at all.
 export const toPermission = (permission: string): PushPermission => {
-  if (permission === "granted") {
-    return "granted"
-  }
-
-  if (permission === "denied") {
-    return "denied"
+  if (permission === "granted" || permission === "denied") {
+    return permission
   }
 
   if (["default", "prompt", "prompt-with-rationale"].includes(permission)) {

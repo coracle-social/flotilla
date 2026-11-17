@@ -1,31 +1,32 @@
 import {registerPlugin} from "@capacitor/core"
 import type {Unsubscriber} from "svelte/store"
-import type {TrustedEvent} from "@welshman/util"
 import {app} from "@app/core/app"
-import {WebNotifications} from "@app/features/push/adapters/web"
-import {goToEvent} from "@app/navigation/locations"
+import type {PushAdapter} from "@app/features/push/adapter"
+import {createWebNotifications} from "@app/features/push/adapters/web"
+import type {Notify} from "@app/features/push/adapters/web"
 import {pushToast} from "@app/features/toast"
+import {goToEvent} from "@app/navigation/locations"
 
 const DesktopWindow = registerPlugin<{show: () => Promise<void>}>("DesktopWindow")
 
-export class ElectronNotifications extends WebNotifications {
-  _unsubscribeApp: Unsubscriber | undefined
-  _notifications = new Set<Notification>()
+export const createElectronNotifications = (): PushAdapter => {
+  const notifications = new Set<Notification>()
+  let unsubscribeApp: Unsubscriber | undefined
 
-  _closeNotifications = () => {
-    for (const notification of this._notifications) {
+  const closeNotifications = () => {
+    for (const notification of notifications) {
       notification.close()
     }
-    this._notifications.clear()
+    notifications.clear()
   }
 
-  _onVisibilityChange = () => {
+  const onVisibilityChange = () => {
     if (document.visibilityState === "visible") {
-      this._closeNotifications()
+      closeNotifications()
     }
   }
 
-  _notify(event: TrustedEvent, title: string, body: string) {
+  const notify: Notify = (event, title, body) => {
     const owner = app.get()
     const notification = new Notification(title, {
       body,
@@ -34,8 +35,8 @@ export class ElectronNotifications extends WebNotifications {
       badge: "/icon.png",
     })
 
-    this._notifications.add(notification)
-    notification.onclose = () => this._notifications.delete(notification)
+    notifications.add(notification)
+    notification.onclose = () => notifications.delete(notification)
     notification.onclick = async () => {
       try {
         if (app.get() === owner) {
@@ -49,24 +50,29 @@ export class ElectronNotifications extends WebNotifications {
         pushToast({message: "Unable to open the notification", theme: "error"})
       } finally {
         notification.close()
-        this._notifications.delete(notification)
+        notifications.delete(notification)
       }
     }
   }
 
-  async enable() {
-    if (!this._unsubscriber) {
-      this._unsubscribeApp = app.subscribe(this._closeNotifications)
-      document.addEventListener("visibilitychange", this._onVisibilityChange)
+  const web = createWebNotifications(notify)
+
+  const enable = async () => {
+    if (!unsubscribeApp) {
+      unsubscribeApp = app.subscribe(closeNotifications)
+      document.addEventListener("visibilitychange", onVisibilityChange)
     }
-    return super.enable()
+
+    await web.enable()
   }
 
-  async disable() {
-    this._unsubscribeApp?.()
-    this._unsubscribeApp = undefined
-    document.removeEventListener("visibilitychange", this._onVisibilityChange)
-    this._closeNotifications()
-    return super.disable()
+  const disable = async () => {
+    unsubscribeApp?.()
+    unsubscribeApp = undefined
+    document.removeEventListener("visibilitychange", onVisibilityChange)
+    closeNotifications()
+    await web.disable()
   }
+
+  return {...web, enable, disable}
 }

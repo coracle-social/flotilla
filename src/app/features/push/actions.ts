@@ -1,5 +1,5 @@
 import {setSpaceNotifications} from "@app/core/settings"
-import {alertSettings, setAlertChannels, setAlertTypes} from "@app/features/alerts"
+import {alertSettings, updateAlertSettings} from "@app/features/alerts"
 import type {AlertSettings} from "@app/features/alerts"
 import {getPermissionMessage, isGranted} from "@app/features/push/permission"
 import {checkPushPermission, requestPushPermission} from "@app/features/push/push"
@@ -11,7 +11,7 @@ export const optInSpaceNotifications = async (url: string, notify: boolean) => {
 
     // A refused permission leaves the space's own choice alone, for when notifications are allowed.
     if (!isGranted(permission)) {
-      setAlertChannels({push: false})
+      updateAlertSettings({push: false})
       pushToast({theme: "error", message: getPermissionMessage(permission)})
     }
   }
@@ -32,8 +32,8 @@ export const enableMessageNotifications = async () => {
   const permission = await requestPushPermission()
 
   if (isGranted(permission)) {
-    setAlertChannels({push: true})
-    setAlertTypes({messages: true})
+    updateAlertSettings({push: true})
+    updateAlertSettings({messages: true})
   }
 
   return permission

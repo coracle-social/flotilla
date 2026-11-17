@@ -40,7 +40,7 @@ const handleDeepLink = (rawUrl: string) => {
   const id = url.searchParams.get("id")
 
   if (relay && id) {
-    onPushNotificationAction({notification: {data: {relay, id}}})
+    onPushNotificationAction({relay, id})
   } else if (url.protocol === "flotilla:" && url.host === "shortcut") {
     if (app.get().user) {
       openShortcut(url.pathname)

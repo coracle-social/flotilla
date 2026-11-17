@@ -12,7 +12,7 @@
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
   import {setChecked} from "@app/features/checked"
-  import {alertSettings, setAlertTypes} from "@app/features/alerts"
+  import {alertSettings, updateAlertSettings} from "@app/features/alerts"
 
   type Props = {
     onClick: () => void
@@ -22,7 +22,7 @@
 
   const markAsRead = () => setChecked("/chat/*")
 
-  const toggleAlerts = () => setAlertTypes({messages: !$alertSettings.messages})
+  const toggleAlerts = () => updateAlertSettings({messages: !$alertSettings.messages})
 
   const showRelays = () =>
     pushModal(RelayList, {

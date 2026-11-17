@@ -16,17 +16,17 @@ const ingestNotification = async (relay: string, id: string, json?: string) => {
     await app.get().ingestEvent(pushed, relay)
 
     return pushed
-  } else {
-    const events = await network.get().load({
-      filters: getIdFilters([id]),
-      relays: [relay, LOCAL_RELAY_URL],
-      // The local relay closes immediately, so anything less waits on it alone
-      threshold: 1,
-      signal: AbortSignal.timeout(ms(5)),
-    })
-
-    return events[0]
   }
+
+  const events = await network.get().load({
+    filters: getIdFilters([id]),
+    relays: [relay, LOCAL_RELAY_URL],
+    // The local relay closes immediately, so anything less waits on it alone
+    threshold: 1,
+    signal: AbortSignal.timeout(ms(5)),
+  })
+
+  return events[0]
 }
 
 // Wraps are ingested into the repository and unwrapped in the background, so wait for the rumor
@@ -38,10 +38,13 @@ const loadNotificationRumor = async (wrap: TrustedEvent) => {
   return wrapManager.getRumor(wrap.id)
 }
 
-export const onPushNotificationAction = async (action: {
-  notification: {data: {relay: string; id: string; event?: string}}
-}) => {
-  const {relay, id, event: json} = action.notification.data
+type NotificationAction = {
+  relay: string
+  id: string
+  event?: string
+}
+
+export const onPushNotificationAction = async ({relay, id, event: json}: NotificationAction) => {
   const event = await ingestNotification(relay, id, json)
   const target = event?.kind === WRAP ? await loadNotificationRumor(event) : event
   const path = target && getEventPath(target, [relay])

@@ -12,7 +12,6 @@ export type AlertSettings = {
   reminder_minutes: number[]
 }
 
-export type AlertChannels = Pick<AlertSettings, "push" | "sound" | "badge">
 export type AlertTypes = Pick<AlertSettings, "spaces" | "mentions" | "messages">
 
 const defaultAlertSettings: AlertSettings = {
@@ -40,8 +39,5 @@ alertSettings.ready.then(() =>
   alertSettings.update(settings => ({...defaultAlertSettings, ...settings})),
 )
 
-export const setAlertChannels = (channels: Partial<AlertChannels>) =>
-  alertSettings.update(settings => ({...settings, ...channels}))
-
-export const setAlertTypes = (types: Partial<AlertTypes>) =>
-  alertSettings.update(settings => ({...settings, ...types}))
+export const updateAlertSettings = (values: Partial<AlertSettings>) =>
+  alertSettings.update(settings => ({...settings, ...values}))

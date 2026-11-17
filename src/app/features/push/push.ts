@@ -1,10 +1,10 @@
 import {Capacitor} from "@capacitor/core"
-import {alertSettings, setAlertChannels} from "@app/features/alerts"
+import {alertSettings, updateAlertSettings} from "@app/features/alerts"
 import type {PushAdapter} from "@app/features/push/adapter"
 import {AndroidFallbackNotifications} from "@app/features/push/adapters/android"
 import {CapacitorNotifications} from "@app/features/push/adapters/capacitor"
-import {ElectronNotifications} from "@app/features/push/adapters/electron"
-import {WebNotifications} from "@app/features/push/adapters/web"
+import {createElectronNotifications} from "@app/features/push/adapters/electron"
+import {createWebNotifications} from "@app/features/push/adapters/web"
 import {isGranted} from "@app/features/push/permission"
 import type {PushPermission} from "@app/features/push/permission"
 import {useFallback} from "@app/features/push/registration"
@@ -30,13 +30,13 @@ const getTransport = (): PushTransport => {
 const makeAdapter = (transport: PushTransport): PushAdapter => {
   switch (transport) {
     case "electron":
-      return new ElectronNotifications()
+      return createElectronNotifications()
     case "poll":
       return new AndroidFallbackNotifications()
     case "capacitor":
       return new CapacitorNotifications()
     default:
-      return new WebNotifications()
+      return createWebNotifications()
   }
 }
 
@@ -107,7 +107,7 @@ export const syncPush = () =>
 
       if (!isGranted(permission)) {
         // Recording the refusal re-enters this subscriber, which disables the adapter.
-        setAlertChannels({push: false})
+        updateAlertSettings({push: false})
       }
     } else {
       await disablePush()

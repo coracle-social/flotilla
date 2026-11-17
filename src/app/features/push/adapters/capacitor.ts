@@ -19,16 +19,6 @@ import {onPushNotificationAction} from "@app/features/push/taps"
 // NIP-9a: asks a relay to post matching events to the push server's callback
 const PUSH_SUBSCRIPTION = 30390
 
-const requestPermissions = async () => {
-  let status = await PushNotifications.checkPermissions()
-
-  if (["prompt", "prompt-with-rationale"].includes(status.receive)) {
-    status = await PushNotifications.requestPermissions()
-  }
-
-  return status.receive
-}
-
 const requestToken = async () => {
   let {token} = pushRegistration.get()
   let error = "failed to retrieve token"
@@ -75,7 +65,13 @@ export class CapacitorNotifications implements PushAdapter {
   }
 
   async request(): Promise<PushPermission> {
-    const permission = toPermission(await requestPermissions())
+    let status = await PushNotifications.checkPermissions()
+
+    if (["prompt", "prompt-with-rationale"].includes(status.receive)) {
+      status = await PushNotifications.requestPermissions()
+    }
+
+    const permission = toPermission(status.receive)
 
     if (isGranted(permission) && !(await requestToken())) {
       return "unavailable"
@@ -93,25 +89,27 @@ export class CapacitorNotifications implements PushAdapter {
       return false
     }
 
-    if (!subscription) {
-      try {
-        const channel = Capacitor.getPlatform() === "ios" ? "apns" : "fcm"
-        const res = await createPushSubscription(channel, token, signal)
+    if (subscription) {
+      return true
+    }
 
-        if (!res.ok) {
-          console.warn(`Failed to register with push server (status ${res.status})`)
+    try {
+      const channel = Capacitor.getPlatform() === "ios" ? "apns" : "fcm"
+      const res = await createPushSubscription(channel, token, signal)
+
+      if (res.ok) {
+        const json = await res.json()
+
+        if (json?.callback && json?.key) {
+          pushRegistration.update(assoc("subscription", json))
         } else {
-          const json = await res.json()
-
-          if (json?.callback && json?.key) {
-            pushRegistration.update(assoc("subscription", json))
-          } else {
-            console.warn("Failed to register with push server (bad response)")
-          }
+          console.warn("Failed to register with push server (bad response)")
         }
-      } catch (e) {
-        console.warn("Failed to register with push server:", e)
+      } else {
+        console.warn(`Failed to register with push server (status ${res.status})`)
       }
+    } catch (e) {
+      console.warn("Failed to register with push server:", e)
     }
 
     return true
@@ -130,7 +128,7 @@ export class CapacitorNotifications implements PushAdapter {
     }
   }
 
-  _syncRelay = async (relay: string, key: string, filters: Filter[], ignore: Filter[] = []) => {
+  _syncRelay = async (relay: string, key: string, filters: Filter[], ignore: Filter[]) => {
     const {subscription} = pushRegistration.get()
 
     if (!subscription) {
@@ -198,7 +196,9 @@ export class CapacitorNotifications implements PushAdapter {
 
       this._controller = controller
 
-      PushNotifications.addListener("pushNotificationActionPerformed", onPushNotificationAction)
+      PushNotifications.addListener("pushNotificationActionPerformed", ({notification}) =>
+        onPushNotificationAction(notification.data),
+      )
 
       controller.signal.addEventListener("abort", () => {
         PushNotifications.removeAllListeners()
@@ -244,21 +244,11 @@ export class CapacitorNotifications implements PushAdapter {
     const $pubkey = app.get().user?.pubkey
 
     if ($pubkey) {
-      await Promise.all(
-        roomLists
-          .get()
-          .urls($pubkey)
-          .get()
-          .map(url => this._unsyncRelay(url, "spaces")),
-      )
+      const unsyncAll = (urls: string[], key: string) =>
+        Promise.all(urls.map(url => this._unsyncRelay(url, key)))
 
-      await Promise.all(
-        messagingRelayLists
-          .get()
-          .urls($pubkey)
-          .get()
-          .map(url => this._unsyncRelay(url, "messages")),
-      )
+      await unsyncAll(roomLists.get().urls($pubkey).get(), "spaces")
+      await unsyncAll(messagingRelayLists.get().urls($pubkey).get(), "messages")
     }
   }
 }
