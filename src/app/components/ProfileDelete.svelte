@@ -15,7 +15,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {INDEXER_RELAYS} from "@app/core/env"
   import {userSpaceUrls} from "@app/features/spaces"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {logout} from "@app/core/session"
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"

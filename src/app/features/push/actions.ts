@@ -3,7 +3,7 @@ import {alertSettings, updateAlertSettings} from "@app/features/alerts"
 import type {AlertSettings} from "@app/features/alerts"
 import {getPermissionMessage, isGranted} from "@app/features/push/permission"
 import {checkPushPermission, requestPushPermission} from "@app/features/push/push"
-import {pushToast} from "@app/features/toast"
+import {pushToast} from "@app/navigation/toast"
 
 export const optInSpaceNotifications = async (url: string, notify: boolean) => {
   if (notify && alertSettings.get().push) {

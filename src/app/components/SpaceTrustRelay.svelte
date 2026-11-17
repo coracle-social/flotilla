@@ -17,7 +17,7 @@
   import {navigate} from "@app/navigation/navigate"
   import {popModal} from "@app/navigation/dialogs"
   import {roomLists} from "@app/core/plugins"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

@@ -15,7 +15,7 @@
   import EmojiPicker from "@lib/components/EmojiPicker.svelte"
   import EventInfo from "@app/components/EventInfo.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {clip} from "@app/features/toast"
+  import {clip} from "@app/navigation/toast"
   import {publishReaction} from "@app/features/messages"
   import {HIDE_NOSTR} from "@app/core/env"
 

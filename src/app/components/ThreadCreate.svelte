@@ -21,7 +21,7 @@
   import {makeEditor} from "@app/features/editor"
   import {displayRoom, publishToSpace} from "@app/features/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Values = {
     content?: string | object

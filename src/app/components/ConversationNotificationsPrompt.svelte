@@ -13,7 +13,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {enableMessageNotifications, getPermissionMessage, isGranted} from "@app/features/push"
   import {popModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   const enable = async () => {
     loading = true

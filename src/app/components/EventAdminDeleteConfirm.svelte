@@ -5,7 +5,7 @@
   import {app} from "@app/core/app"
   import {relayManagement, rooms} from "@app/core/plugins"
   import {AdminDelete, deriveUserAdminDelete} from "@app/features/spaces/rooms"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

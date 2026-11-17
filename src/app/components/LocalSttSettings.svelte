@@ -7,7 +7,7 @@
   import Button from "@lib/components/Button.svelte"
   import LocalSttEnable from "@app/components/LocalSttEnable.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   const refresh = async () => {
     try {

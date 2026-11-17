@@ -17,7 +17,7 @@
   import {user} from "@app/core/user"
   import {blockedRelayLists} from "@app/core/plugins"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {PLATFORM_NAME, HIDE_NOSTR} from "@app/core/env"
   import {analyticsAvailable} from "@app/shell/analytics"
   import {sendLogs} from "@app/core/logger"

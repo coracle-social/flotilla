@@ -18,7 +18,7 @@
   import * as pages from "@app/navigation/pages"
   import {makeEventPermalink} from "@app/navigation/locations"
   import {shareTo} from "@app/features/share"
-  import {clip} from "@app/features/toast"
+  import {clip} from "@app/navigation/toast"
   import {rooms} from "@app/core/plugins"
 
   type Props = {

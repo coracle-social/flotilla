@@ -2,7 +2,7 @@ import {noop} from "@welshman/lib"
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import type {PluginListenerHandle} from "@capacitor/core"
 import {downloadBlob} from "@lib/html"
-import {pushToast} from "@app/features/toast"
+import {pushToast} from "@app/navigation/toast"
 
 type NativeDownload = {url: string; name: string}
 

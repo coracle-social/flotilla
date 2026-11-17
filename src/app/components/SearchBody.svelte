@@ -16,7 +16,7 @@
   import {app} from "@app/core/app"
   import {network, profiles} from "@app/core/plugins"
   import {popModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {goToEvent} from "@app/navigation/locations"
 
   type Props = {

@@ -226,7 +226,7 @@ Svelte's delegated `onclick` on the `<ul>` would never see the click. On mobile,
 
 ### Toasts
 
-`pushToast` in `src/app/features/toast.ts` shows one toast at a time:
+`pushToast` in `src/app/navigation/toast.ts` shows one toast at a time:
 
 ```typescript
 pushToast({message: "Role created!"})

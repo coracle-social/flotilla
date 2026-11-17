@@ -5,7 +5,7 @@ import {makeCommentFilter} from "@lib/util"
 import {network, relays} from "@app/core/plugins"
 import {REACTION_KINDS} from "@app/core/env"
 import {pullAndListen, syncEach} from "@app/core/sync"
-import {hasBlossomSupport} from "@app/features/uploads"
+import {hasBlossomSupport} from "@app/tools/uploads"
 import {CONTENT_KINDS} from "@app/features/spaces/content"
 import {currentSpaceUrls, userSpaceUrls} from "@app/features/spaces/urls"
 

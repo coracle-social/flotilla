@@ -17,7 +17,7 @@
   import RelayAdd from "@app/components/RelayAdd.svelte"
   import RelayItem from "@app/components/RelayItem.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     title: string

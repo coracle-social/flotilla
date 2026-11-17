@@ -20,7 +20,7 @@
   import {login} from "@app/core/session"
   import {clearModals} from "@app/navigation/dialogs"
   import {setChecked} from "@app/features/checked"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   let loading = $state(false)
   let keyInput = $state("")

@@ -7,7 +7,7 @@ import {PublishStatus} from "@welshman/net"
 import {publisher} from "@app/core/plugins"
 import {SCHEDULER_RELAY} from "@app/core/env"
 import {userSpaceUrls} from "@app/features/spaces"
-import {SCHEDULE_UNSUPPORTED} from "@app/features/scheduling"
+import {SCHEDULE_UNSUPPORTED} from "@app/tools/scheduling"
 
 // publishToSpace's counterpart: a post with no space behind it goes to the author's relays and spaces.
 // A scheduled one is dated ahead of now and handed to the scheduler relay, which forwards it when due.

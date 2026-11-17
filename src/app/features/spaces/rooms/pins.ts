@@ -3,7 +3,7 @@ import type {Readable} from "svelte/store"
 import {getIdFilters, getIdOrAddress} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {events, network, roomPinLists} from "@app/core/plugins"
-import {pushToast} from "@app/features/toast"
+import {pushToast} from "@app/navigation/toast"
 
 export const deriveRoomPinnedEvents = (url: string, h: string): Readable<TrustedEvent[]> =>
   readable<TrustedEvent[]>([], set => {

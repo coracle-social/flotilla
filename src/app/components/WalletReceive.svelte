@@ -16,7 +16,7 @@
   import {errorMessage} from "@lib/util"
   import QRCode from "@app/components/QRCode.svelte"
   import {createInvoice} from "@app/tools/wallet"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   const back = () => history.back()
 

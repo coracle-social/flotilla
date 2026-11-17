@@ -4,7 +4,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {relayManagement} from "@app/core/plugins"
 
   type Props = {

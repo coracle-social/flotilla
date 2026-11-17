@@ -1,7 +1,7 @@
 import {record} from "@lib/audio"
 import type {Recording} from "@lib/audio"
 import {errorMessage} from "@lib/util"
-import {pushToast} from "@app/features/toast"
+import {pushToast} from "@app/navigation/toast"
 import {VoiceDeclined} from "@app/features/voice/providers/common"
 import type {VoiceProviderFor} from "@app/features/voice/providers/common"
 import {resolveVoiceProvider} from "@app/features/voice/resolve"

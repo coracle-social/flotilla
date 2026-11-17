@@ -20,7 +20,7 @@
   import {setEventReminders} from "@app/features/reminders"
   import {makeEditor} from "@app/features/editor"
   import {DraftKey} from "@app/tools/drafts"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {writer} from "@app/core/domain"
 
   type Values = {

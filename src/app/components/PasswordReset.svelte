@@ -15,7 +15,7 @@
   import StringMultiInput from "@lib/components/StringMultiInput.svelte"
   import PasswordResetConfirm from "@app/components/PasswordResetConfirm.svelte"
   import {session} from "@app/core/session"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {pushModal} from "@app/navigation/dialogs"
   import {getPomadeClient} from "@app/features/pomade"
 

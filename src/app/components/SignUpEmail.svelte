@@ -19,7 +19,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import SignUpEmailConfirm from "@app/components/SignUpEmailConfirm.svelte"
   import ProgressBar from "@app/components/ProgressBar.svelte"
-  import {pushToast, popToast} from "@app/features/toast"
+  import {pushToast, popToast} from "@app/navigation/toast"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

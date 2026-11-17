@@ -22,7 +22,7 @@
   import {makeEditor} from "@app/features/editor"
   import {app} from "@app/core/app"
   import {getDictation} from "@app/features/voice"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {DraftKey, type Draft} from "@app/tools/drafts"
   import type {Share} from "@app/features/share"
   import {pushModal} from "@app/navigation/dialogs"

@@ -5,7 +5,7 @@
   import {deletes, relays, router} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {clearModals} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url?: string

@@ -126,6 +126,7 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
   `getActivityTarget`
 - `dialogs.ts`: `pushModal`, `popModal`, `clearModals` and the dialog stack in page state
 - `overlays.ts`: the note overlay, carried in the url as `?note=`
+- `toast.ts`: `pushToast`, which shows one toast at a time
 - `navigate.ts`: `navigate`, which gives dialog entries back before it moves
 - `history.ts`: the last page per space and in messages, `goToSpace`, `goToHome`
 
@@ -161,12 +162,9 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 Outside `spaces/`:
 
-- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `targets.ts` names the event an event is about: what a reply answers, a reaction reacts to, a zap zaps, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `publish.ts` (`publishToNetwork`, posting outside a space), `pins.ts` (a person's pinned notes), `quotes.ts`, `statuses.ts` (NIP-38), `uploads.ts` (Blossom, image compression)
+- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `targets.ts` names the event an event is about: what a reply answers, a reaction reacts to, a zap zaps, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `publish.ts` (`publishToNetwork`, posting outside a space), `pins.ts` (a person's pinned notes), `quotes.ts`, `statuses.ts` (NIP-38)
 - `people/`: `people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts` has `isEventMuted` and `derivePubkeyMuted`
-- `render.ts`: events as plain text or a one-line summary, for push notifications and reading aloud
 - `share.ts`: sharing an event into a room or conversation, and native share intents
-- `signerAlerts.ts`: the toast that offers help when the signer stops answering
-- `toast.ts` (`pushToast`, one at a time)
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
   `activity.ts` (the home stream's conversations and space content, the latest activity per path,
   and which paths are unread), `badges.ts` (the app icon badge) and `notifications/` (what was done to your own notes and who mentioned you: `model.ts` is the pure part, which events count, their facets and how they group into rows; `sync.ts` polls your inbox relays; `stream.ts` holds the stores the Recent tab renders)
@@ -185,9 +183,12 @@ Outside `spaces/`:
 **`tools/`, `areas/` and `shell/`: the layers `features/` is moving into**
 
 - `tools/`: `drafts.ts` (`DraftKey`, unsent form values held in memory), `wallet.ts` (wallet,
-  invoices), `theme.ts` (`colorFor`, the active theme and font size)
+  invoices), `theme.ts` (`colorFor`, the active theme and font size), `uploads.ts` (Blossom, image
+  compression), `scheduling.ts` (the message and error for a scheduled post a relay refuses), `render.ts` (events as
+  plain text or a one-line summary, for push notifications and reading aloud)
 - `areas/`: `bookmarks.ts` (bookmark folders and search)
-- `shell/`: `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar)
+- `shell/`: `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
+  `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering)
 
 A feature gets a `src/app/features/<feature>.ts` only when it has non-UI logic to hold. Polls, goals,
 threads and calendar events have no module; their components use domain readers directly.
@@ -324,7 +325,7 @@ names a relay or host, the e2e harness has to override or mock it (see "Containm
 ## Principles behind placement
 
 **Check welshman before writing flotilla code.** Several commits replace app code with welshman
-primitives: `features/render.ts` uses welshman's `summarize` (`9b0d8a55`), `spaces/actionItems.ts` uses
+primitives: `tools/render.ts` uses welshman's `summarize` (`9b0d8a55`), `spaces/actionItems.ts` uses
 `rooms.get().pendingJoins` (`3d66fb31`), and `spaces/rooms` uses the membership helpers (`847d8984`).
 
 **When welshman lacks something, add it there.** The maintainer also maintains welshman, so a

@@ -6,7 +6,7 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import {user} from "@app/core/user"
   import {followLists} from "@app/core/plugins"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     pubkey: string

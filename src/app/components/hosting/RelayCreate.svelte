@@ -7,7 +7,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {publishRoomList} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {
     createHostedRelay,
     getHostedRelayUrl,

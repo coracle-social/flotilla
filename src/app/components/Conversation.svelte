@@ -46,7 +46,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {prependParent} from "@app/features/spaces/rooms"
   import type {RoomRow} from "@app/features/spaces/rooms"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     pubkeys: string[]

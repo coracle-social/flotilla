@@ -2,7 +2,7 @@
   import Confirm from "@lib/components/Confirm.svelte"
   import {deleteBookmarkFolder} from "@app/areas/bookmarks"
   import {clearModals} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     address: string

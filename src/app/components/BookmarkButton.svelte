@@ -10,7 +10,7 @@
     eventToBookmark,
     removeBookmark,
   } from "@app/areas/bookmarks"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url?: string

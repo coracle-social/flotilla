@@ -30,7 +30,7 @@
   import {setupLogging} from "@app/core/logger"
   import * as coreSession from "@app/core/session"
   import {restoreSession, syncLogout} from "@app/core/session"
-  import {syncSignerAlerts} from "@app/features/signerAlerts"
+  import {syncSignerAlerts} from "@app/shell/signer/signerAlerts"
   import {wallet} from "@app/tools/wallet"
   import {pluginCaches} from "@app/core/storage"
   import {EventDatabase} from "@app/core/database"

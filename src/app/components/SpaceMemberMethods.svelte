@@ -19,7 +19,7 @@
     spaceManagement,
     syncAssignments,
   } from "@app/features/spaces/management"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

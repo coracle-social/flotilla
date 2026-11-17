@@ -113,7 +113,7 @@ Bookkeeping for one identity lives on a plugin instance, so it is discarded with
 Module-level caches are fine when their contents do not depend on who is signed in, or when what
 they cache is itself a rebinding store. `deriveCommandsForUrl` (`spaces/rooms/commands.ts`) caches `fromApp`
 stores with `simpleCache`.
-`hasBlossomSupport` (`features/uploads.ts`) and `deriveHasLivekit` (`spaces/calls`) use `simpleCache` from
+`hasBlossomSupport` (`tools/uploads.ts`) and `deriveHasLivekit` (`spaces/calls`) use `simpleCache` from
 `@welshman/lib` to share one store per url across every component that asks.
 
 ## Flotilla's own plugins
@@ -497,7 +497,7 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
   matches the badges.
 - **Singleton session state.** `spaces/calls` keeps call state in plain writables (`callState`,
   `currentCallSession`, …).
-- **UI signals.** `toast` in `toast.ts`, and `relaysPendingTrust` in `core/ingest.ts`.
+- **UI signals.** `toast` in `navigation/toast.ts`, and `relaysPendingTrust` in `core/ingest.ts`.
 - **A controller per flow.** `Nip46Controller` (`nip46.ts`) is a class a component instantiates.
   It holds the writables and actions for a multi-step flow.
 - **Module-owned values.** `wallet` in `wallet.ts` persists itself to `ss` with

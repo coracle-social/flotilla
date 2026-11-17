@@ -8,7 +8,7 @@ import {publish} from "@welshman/app"
 import {publisher, relays, router} from "@app/core/plugins"
 import {command, writer} from "@app/core/domain"
 import {loadSendDelay} from "@app/core/settings"
-import {SCHEDULE_UNSUPPORTED} from "@app/features/scheduling"
+import {SCHEDULE_UNSUPPORTED} from "@app/tools/scheduling"
 
 export const prependParent = async (
   parent: Maybe<TrustedEvent>,

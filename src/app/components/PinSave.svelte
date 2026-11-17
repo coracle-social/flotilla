@@ -26,8 +26,8 @@
   import {HIDE_NOSTR} from "@app/core/env"
   import {parsePinReference, pinToReference} from "@app/features/spaces/pinboards"
   import {addressWriterToSpace} from "@app/features/spaces/rooms"
-  import {compressFileForUpload, uploadFile} from "@app/features/uploads"
-  import {pushToast} from "@app/features/toast"
+  import {compressFileForUpload, uploadFile} from "@app/tools/uploads"
+  import {pushToast} from "@app/navigation/toast"
   import {clearModals} from "@app/navigation/dialogs"
 
   type Props = {

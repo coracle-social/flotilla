@@ -37,8 +37,8 @@
   import {publishToSpace} from "@app/features/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import * as pages from "@app/navigation/pages"
-  import {compressFileForUpload, uploadFile} from "@app/features/uploads"
-  import {pushToast} from "@app/features/toast"
+  import {compressFileForUpload, uploadFile} from "@app/tools/uploads"
+  import {pushToast} from "@app/navigation/toast"
   import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {

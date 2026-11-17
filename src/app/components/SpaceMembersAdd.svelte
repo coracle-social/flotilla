@@ -13,7 +13,7 @@
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
   import {allowPubkeys} from "@app/features/spaces/management"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

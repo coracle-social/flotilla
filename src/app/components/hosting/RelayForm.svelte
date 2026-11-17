@@ -25,8 +25,8 @@
   import PricingTable from "@app/components/hosting/PricingTable.svelte"
   import {hosting, hostingErrorMessage} from "@app/features/hosting"
   import {HOSTING_RELAY_DOMAIN} from "@app/core/env"
-  import {pushToast} from "@app/features/toast"
-  import {resolveImageInput} from "@app/features/uploads"
+  import {pushToast} from "@app/navigation/toast"
+  import {resolveImageInput} from "@app/tools/uploads"
   import IconInput from "@app/components/IconInput.svelte"
 
   type Props = {

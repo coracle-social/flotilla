@@ -22,7 +22,7 @@
     spaceManagement,
   } from "@app/features/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

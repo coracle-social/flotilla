@@ -34,7 +34,7 @@ app/features/              (modules not yet moved into shell, areas, tools or li
   ↓
 app/tools/                 (building blocks shared by areas; may import other tools without a cycle)
   ↓
-app/navigation/            (routes, dialogs and overlays, history)
+app/navigation/            (routes, dialogs, overlays, toasts, history)
   ↓
 app/core/                  (the App, plugins, session, storage, sync, settings, env)
   ↓
@@ -220,7 +220,7 @@ return a `Command`, so `.then(publish)` is usually all you need.
 
 ### Managing Modals/Toasts
 
-- Import from `app/navigation/dialogs.ts` or `app/features/toast.ts`
+- Import from `app/navigation/dialogs.ts` or `app/navigation/toast.ts`
 - Pass component objects with parameters
 - Use `$state.snapshot` if calling component might unmount
 - Navigate with `navigate` from `app/navigation/navigate.ts` rather than `goto` — an open modal owns a history

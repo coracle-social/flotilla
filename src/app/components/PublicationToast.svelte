@@ -2,8 +2,8 @@
   import type {Publishable} from "@welshman/app"
   import {PublishStatus} from "@welshman/net"
   import PublicationPending from "@app/components/PublicationPending.svelte"
-  import type {Toast} from "@app/features/toast"
-  import {popToast} from "@app/features/toast"
+  import type {Toast} from "@app/navigation/toast"
+  import {popToast} from "@app/navigation/toast"
 
   type Props = {
     toast: Toast

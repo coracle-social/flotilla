@@ -15,7 +15,7 @@
   import {HIDE_NOSTR} from "@app/core/env"
   import {derivePubkeyMuted} from "@app/features/people"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     pubkey: string

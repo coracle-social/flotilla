@@ -17,7 +17,7 @@
   import {HIDE_NOSTR} from "@app/core/env"
   import {highlightedEvent, makeEventPermalink} from "@app/navigation/locations"
   import {pushModal} from "@app/navigation/dialogs"
-  import {clip} from "@app/features/toast"
+  import {clip} from "@app/navigation/toast"
 
   type Props = {
     url: string

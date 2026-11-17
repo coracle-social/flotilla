@@ -20,7 +20,7 @@
   import {relayManagement, rooms} from "@app/core/plugins"
   import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
   import {deriveMemberModeration} from "@app/features/spaces/rooms"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

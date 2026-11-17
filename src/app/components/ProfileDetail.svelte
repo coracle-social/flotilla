@@ -29,7 +29,7 @@
   import {deriveMemberModeration} from "@app/features/spaces/rooms"
   import {navigate} from "@app/navigation/navigate"
   import {popModal, pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import * as pages from "@app/navigation/pages"
   import {goToMessages} from "@app/features/messages"
 

@@ -7,7 +7,7 @@
   import {popModal} from "@app/navigation/dialogs"
   import {goToEvent} from "@app/navigation/locations"
   import {loadQuote} from "@app/features/quotes"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     ref: IEventRef

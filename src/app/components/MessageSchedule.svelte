@@ -16,8 +16,8 @@
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
   import EditorContent from "@app/features/editor/EditorContent.svelte"
   import {makeEditor} from "@app/features/editor"
-  import {ScheduleError} from "@app/features/scheduling"
-  import {pushToast} from "@app/features/toast"
+  import {ScheduleError} from "@app/tools/scheduling"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

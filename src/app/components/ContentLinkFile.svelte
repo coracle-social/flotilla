@@ -8,7 +8,7 @@
   import {downloadBlob, preventDefault, stopPropagation} from "@lib/html"
   import {fetchUrlBlob, getUrlFileName, getUrlTags} from "@lib/media"
   import {formatBytes} from "@lib/util"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

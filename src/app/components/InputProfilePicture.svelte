@@ -6,8 +6,8 @@
   import GallerySend from "@assets/icons/gallery-send.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {compressFileForUpload, uploadFileOrFallback} from "@app/features/uploads"
-  import {pushToast} from "@app/features/toast"
+  import {compressFileForUpload, uploadFileOrFallback} from "@app/tools/uploads"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     file?: File | undefined

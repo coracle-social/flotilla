@@ -20,7 +20,7 @@
   import {PLATFORM_NAME} from "@app/core/env"
   import {popModal} from "@app/navigation/dialogs"
   import {getSetting, publishSettings} from "@app/core/settings"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     feature: string

@@ -15,7 +15,7 @@
   import {roomLists} from "@app/core/plugins"
   import {publishRoomList} from "@app/features/spaces/rooms"
   import {goToMovedSpace} from "@app/navigation/history"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

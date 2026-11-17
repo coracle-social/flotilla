@@ -4,7 +4,7 @@ import {app} from "@app/core/app"
 import type {PushAdapter} from "@app/features/push/adapter"
 import {createWebNotifications} from "@app/features/push/adapters/web"
 import type {Notify} from "@app/features/push/adapters/web"
-import {pushToast} from "@app/features/toast"
+import {pushToast} from "@app/navigation/toast"
 import {goToEvent} from "@app/navigation/locations"
 
 const DesktopWindow = registerPlugin<{show: () => Promise<void>}>("DesktopWindow")

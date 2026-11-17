@@ -9,7 +9,7 @@
   import WotScore from "@app/components/WotScore.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {clip} from "@app/features/toast"
+  import {clip} from "@app/navigation/toast"
   import {handles, profiles} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
 

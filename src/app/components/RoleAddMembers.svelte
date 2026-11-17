@@ -14,7 +14,7 @@
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import {relayManagement} from "@app/core/plugins"
   import {allowPubkeys} from "@app/features/spaces/management"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
 
   type Props = {
     url: string

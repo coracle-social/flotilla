@@ -22,8 +22,8 @@
   import {navigate} from "@app/navigation/navigate"
   import {addressWriterToSpace} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
-  import {pushToast} from "@app/features/toast"
-  import {resolveImageInput} from "@app/features/uploads"
+  import {pushToast} from "@app/navigation/toast"
+  import {resolveImageInput} from "@app/tools/uploads"
 
   type Props = {
     url: string

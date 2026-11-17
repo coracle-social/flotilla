@@ -38,8 +38,8 @@
   import {loadSendDelay} from "@app/core/settings"
   import {deferredRoomPath, setChecked} from "@app/features/checked"
   import * as pages from "@app/navigation/pages"
-  import {pushToast} from "@app/features/toast"
-  import {SCHEDULE_UNSUPPORTED, ScheduleError} from "@app/features/scheduling"
+  import {pushToast} from "@app/navigation/toast"
+  import {SCHEDULE_UNSUPPORTED, ScheduleError} from "@app/tools/scheduling"
 
   type Props = {
     url: string

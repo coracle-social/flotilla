@@ -5,7 +5,7 @@ import {alertSettings, onAlert} from "@app/features/alerts"
 import type {PushAdapter} from "@app/features/push/adapter"
 import {isGranted, toPermission} from "@app/features/push/permission"
 import type {PushPermission} from "@app/features/push/permission"
-import {renderEventAsSummary} from "@app/features/render"
+import {renderEventAsSummary} from "@app/tools/render"
 import {goToEvent} from "@app/navigation/locations"
 
 export type Notify = (event: TrustedEvent, title: string, body: string) => void

@@ -12,7 +12,7 @@
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import SettingsFooter from "@app/components/SettingsFooter.svelte"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {badgesSupported} from "@app/features/badges"
   import {alertSettings} from "@app/features/alerts"
   import {getPermissionMessage, isGranted, saveAlertSettings} from "@app/features/push"

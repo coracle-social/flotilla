@@ -10,7 +10,7 @@ import {reader} from "@app/core/domain"
 import {alertSettings} from "@app/features/alerts"
 import {deleteReminderSchedule, putReminderSchedule, pushRegistration} from "@app/features/push"
 import type {Reminder} from "@app/features/push"
-import {pushToast} from "@app/features/toast"
+import {pushToast} from "@app/navigation/toast"
 
 const getLeadTimes = () => {
   const {events, reminder_minutes} = alertSettings.get()

@@ -16,7 +16,7 @@
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
   import {attemptRelayAccess, completeSpaceJoin} from "@app/features/spaces/membership"
   import {pushModal} from "@app/navigation/dialogs"
-  import {pushToast} from "@app/features/toast"
+  import {pushToast} from "@app/navigation/toast"
   import {goToSpace} from "@app/navigation/history"
 
   type Props = {
