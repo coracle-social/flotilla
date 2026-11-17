@@ -6,7 +6,7 @@ import type {BaseEventReader, EventWriter} from "@welshman/domain"
 import {PublishStatus} from "@welshman/net"
 import {publisher} from "@app/core/plugins"
 import {SCHEDULER_RELAY} from "@app/core/env"
-import {userSpaceUrls} from "@app/features/spaces"
+import {userSpaceUrls} from "@app/core/user"
 import {SCHEDULE_UNSUPPORTED} from "@app/tools/scheduling"
 
 // publishToSpace's counterpart: a post with no space behind it goes to the author's relays and spaces.

@@ -12,7 +12,7 @@
   import {deriveSpaceActionItems} from "@app/features/spaces/actionItems"
   import {deriveShouldNotify} from "@app/core/settings"
   import {HIDE_NOSTR} from "@app/core/env"
-  import {alertSettings} from "@app/features/alerts"
+  import {alertSettings} from "@app/tools/alerts/settings"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

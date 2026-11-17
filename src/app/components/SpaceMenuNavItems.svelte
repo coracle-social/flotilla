@@ -18,7 +18,7 @@
   import SpaceSearch from "@app/components/SpaceSearch.svelte"
   import {events, relays} from "@app/core/plugins"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {CONTENT_KINDS} from "@app/features/spaces"
+  import {CONTENT_KINDS} from "@app/tools/content"
   import * as pages from "@app/navigation/pages"
   import {notifications, unreadPaths} from "@app/features/activity"
   import {pushModal} from "@app/navigation/dialogs"

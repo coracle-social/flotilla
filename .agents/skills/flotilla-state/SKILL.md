@@ -347,7 +347,7 @@ or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. T
 
 - `theme`, `flTheme` (`theme.ts`), `checked` (`checked.ts`), `shouldUnwrap` (`messages.ts`),
   `device` (`device.ts`), `forceHealthChecks` (`healthChecks.ts`) in `kv`
-- `pushRegistration` (`push/registration.ts`, which migrates the legacy `notificationState` key) and `alertSettings` (`alerts/settings.ts`, key `notificationSettings`) in `kv`
+- `pushRegistration` (`push/registration.ts`, which migrates the legacy `notificationState` key) and `alertSettings` (`tools/alerts/settings.ts`, key `notificationSettings`) in `kv`
 - `wallet` (`wallet.ts`) in `ss`
 
 The root layout awaits `.ready` for the stores boot code reads (`device`, `shouldUnwrap`,

@@ -21,7 +21,7 @@
   import {user} from "@app/core/user"
   import {relays, roomLists} from "@app/core/plugins"
   import {deriveSpaceSearch} from "@app/features/spaces/rooms"
-  import {userSpaceUrls} from "@app/features/spaces"
+  import {userSpaceUrls} from "@app/core/user"
   import {PLATFORM_RELAYS, DEFAULT_RELAYS, INDEXER_RELAYS} from "@app/core/env"
   import {bootstrapPubkeys} from "@app/features/people"
   import {parseInviteLink} from "@app/features/spaces/invites"

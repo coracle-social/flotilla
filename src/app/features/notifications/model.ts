@@ -11,8 +11,8 @@ import {
 } from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {ENABLE_ZAPS} from "@app/core/env"
-import {CONTENT_KINDS} from "@app/features/spaces/content"
-import {getTargetRef, isReplyKind} from "@app/features/interactions/targets"
+import {CONTENT_KINDS} from "@app/tools/content"
+import {getTargetRef, isReplyKind} from "@app/tools/targets"
 
 export type NotificationFacet = "mentions" | "spaces" | "replies" | "reactions" | "zaps"
 

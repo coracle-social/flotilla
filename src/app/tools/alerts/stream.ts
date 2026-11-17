@@ -7,9 +7,9 @@ import type {RepositoryUpdate, Unsubscriber} from "@welshman/store"
 import {DM_KINDS} from "@lib/util"
 import {app} from "@app/core/app"
 import {shouldNotify} from "@app/core/settings"
-import {getAlertTypes} from "@app/features/alerts/policy"
-import type {AlertType} from "@app/features/alerts/policy"
-import {alertSettings} from "@app/features/alerts/settings"
+import {getAlertTypes} from "@app/tools/alerts/policy"
+import type {AlertType} from "@app/tools/alerts/policy"
+import {alertSettings} from "@app/tools/alerts/settings"
 
 export type Alert = {event: TrustedEvent; types: AlertType[]}
 

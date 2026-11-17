@@ -1,5 +1,6 @@
 <script module lang="ts">
   import {synced} from "@welshman/store"
+  import {isBlocked} from "@lib/push/permission"
   import {kv} from "@app/core/storage"
 
   const dmNotificationsPrompted = synced({
@@ -15,8 +16,8 @@
   import Chat from "@app/components/Conversation.svelte"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
-  import {alertSettings} from "@app/features/alerts"
-  import {checkPushPermission, isBlocked} from "@app/features/push"
+  import {alertSettings} from "@app/tools/alerts/settings"
+  import {checkPushPermission} from "@app/features/push"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()

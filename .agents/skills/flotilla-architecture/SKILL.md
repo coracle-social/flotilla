@@ -89,7 +89,8 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
 **`core/`: the app, session and background machinery**
 - `app.ts`: the `App` store, `appPolicies`, `fromApp`
 - `user.ts`: `user`, `deriveUserItem`, the user's own entries (`userProfile`, `userRelayList`,
-  `userFollowList`, `userMuteList`, `userSearchRelayList`, `userSearchRelayUrls`), `syncUserList`,
+  `userFollowList`, `userMuteList`, `userSearchRelayList`, `userSearchRelayUrls`, `userRoomList`,
+  `userSpaceUrls`, and `activeSpaceUrls`, which is the platform's relays when configured), `syncUserList`,
   and the sync of the user's lists and their follows' lists
 - `plugins.ts`: `usePlugin` and the plugin stores (`profiles`, `rooms`, `events`, …)
 - `domain.ts`: the `reader`/`writer`/`command` shortcuts
@@ -127,17 +128,15 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
 - `overlays.ts`: the note overlay, carried in the url as `?note=`
 - `toast.ts`: `pushToast`, which shows one toast at a time
 - `navigate.ts`: `navigate`, which gives dialog entries back before it moves
-- `history.ts`: the last page per space and in messages, `goToSpace`, `goToHome`
+- `history.ts`: the last page per space and in messages, `goToSpace`, `goToHome`,
+  `goToMessages`, and `currentSpaceUrls` (the space on screen) and `syncedSpaceUrls` (the user's
+  spaces plus that one, which space syncs run over)
 
 **`features/`: one feature each**
 
 The app's sections are DMs (`messages.ts`), spaces (`spaces/`), the home page, and
 hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature under `spaces/`:
 
-- `spaces/urls.ts`: the user's room list, `userSpaceUrls`, `activeSpaceUrls` (platform relays
-  when configured), `currentSpaceUrls` and `syncedSpaceUrls` (what space syncs run over)
-- `spaces/content.ts`: `CONTENT_KINDS` (the kinds with a section of their own) and
-  `partitionByActivity`, which the list pages use to sort a kind by latest comment
 - `spaces/sync.ts` (`syncCurrentSpace`, the space-wide relay and content syncs) and
   `spaces/reactions.ts` (reacting inside a space). `spaces/index.ts` registers the syncs and
   retention.
@@ -161,7 +160,7 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 Outside `spaces/`:
 
-- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `targets.ts` names the event an event is about: what a reply answers, a reaction reacts to, a zap zaps, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `publish.ts` (`publishToNetwork`, posting outside a space), `pins.ts` (a person's pinned notes), `quotes.ts`, `statuses.ts` (NIP-38)
+- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `publish.ts` (`publishToNetwork`, posting outside a space), `pins.ts` (a person's pinned notes), `quotes.ts`, `statuses.ts` (NIP-38)
 - `people/`: `people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts` has `isEventMuted` and `derivePubkeyMuted`
 - `share.ts`: the `Share` type, `pendingShare`, and `shareTo`, which hands a share to a room or conversation
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
@@ -171,7 +170,7 @@ Outside `spaces/`:
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)
-- Platform and voice: `alerts/` (which events alert and the user's alert settings, and `stream.ts`, the in-app stream of alerting messages), `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `reminders.ts`
+- Platform and voice: `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `reminders.ts`
 - `voice/`: speech to text (stt) and text to speech (tts). `dictation.ts` holds a composer's
   dictation, kept across navigation and sent as a voice note or transcribed, and `readAloud.ts`
   reads a message aloud. `providers/` runs each task on the device's stt model or on OpenRouter,
@@ -184,7 +183,11 @@ Outside `spaces/`:
 - `tools/`: `drafts.ts` (`DraftKey`, unsent form values held in memory), `wallet.ts` (wallet,
   invoices), `theme.ts` (`colorFor`, the active theme and font size), `uploads.ts` (Blossom, image
   compression), `scheduling.ts` (the message and error for a scheduled post a relay refuses), `render.ts` (events as
-  plain text or a one-line summary, for push notifications and reading aloud)
+  plain text or a one-line summary, for push notifications and reading aloud), `content.ts`
+  (`CONTENT_KINDS`, the kinds with a section of their own, and `partitionByActivity`, which the
+  list pages use to sort a kind by latest comment), `targets.ts` (what an event is about: what a
+  reply answers, a reaction reacts to, a zap zaps), and `alerts/` (which events alert, the user's
+  alert settings, and `stream.ts`, the in-app stream of alerting messages)
 - `areas/`: `bookmarks.ts` (bookmark folders and search)
 - `shell/`: `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
   `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering)
@@ -208,6 +211,7 @@ client.
 - `pager.ts`: a `Pager` (the load state of one direction of a list, and the `page`/`settle` actions a scroll container drives), `combinePagers`, and `followScroll`, which binds a pager to a scroll container
 - `audio.ts`: recording from the microphone, device lists, a live input level, decoding to mono
   samples at a model's rate, and WAV encoding
+- `push/permission.ts`: the push permission states and the message for each
 - `stt/`: the on-device stt model (Whistle over a wasm engine, run in a worker), its download and
   cache, and `transcribeLocally`
 - `tileGrid.ts` (the call grid's geometry), `location.ts` (place search, geohashes and a profile's
@@ -389,7 +393,7 @@ app module.
 `summary()`, `price()`, `status()`, `images()`, `topics()`) with a `ClassifiedWriter` that has the
 matching setters.
 
-**Kind registries.** `CONTENT_KINDS` in `src/app/features/spaces/content.ts` drives sync, notifications, push,
+**Kind registries.** `CONTENT_KINDS` in `src/app/tools/content.ts` drives sync, notifications, push,
 search and the space nav entry. The kind also appears in the noun switch in `HomeActivity`, the kind dispatch in
 `NoteContent.svelte` and `NoteContentMinimal.svelte`, the `classifieds` and `classified` routes
 and `makeContentPath` in `navigation/pages.ts`, `NIP46_PERMS` in `nip46.ts`, and the section regexes in `server.js`.

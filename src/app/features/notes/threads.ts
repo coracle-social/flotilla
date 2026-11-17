@@ -3,7 +3,7 @@ import {pushToMapKey, removeUndefined, sortBy, uniq, uniqBy} from "@welshman/lib
 import {NOTE, getCommentFiltersForRoot, getIdAndAddress} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {reader} from "@app/core/domain"
-import {getTargetKeys} from "@app/features/interactions/targets"
+import {getTargetKeys} from "@app/tools/targets"
 
 export const getThreadFilters = (event: TrustedEvent): Filter[] => {
   const rootId = event.kind === NOTE ? reader(Note)(event).root()?.id : undefined

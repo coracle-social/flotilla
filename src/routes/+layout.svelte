@@ -47,7 +47,7 @@
   import {unreadCount, backgroundUnreadCount} from "@app/features/activity"
   import * as notifications from "@app/features/notifications"
   import {syncBadges} from "@app/features/badges"
-  import {alertSettings} from "@app/features/alerts"
+  import {alertSettings} from "@app/tools/alerts/settings"
   import {migratePushState, pushRegistration, syncPush, useFallback} from "@app/features/push"
   import {syncReminders} from "@app/features/reminders"
   import {setupDeepLinks} from "@app/components/flows/deepLinks"

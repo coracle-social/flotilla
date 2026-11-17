@@ -5,7 +5,7 @@ import type {Command} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {roomLists} from "@app/core/plugins"
 import {INDEXER_RELAYS} from "@app/core/env"
-import {userSpaceUrls} from "@app/features/spaces/urls"
+import {userSpaceUrls} from "@app/core/user"
 import {RoomType, getRoomType, roomComparator} from "@app/features/spaces/rooms/room"
 
 // Room lists also go to the indexers, which is where the space browser looks for them.

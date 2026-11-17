@@ -4,7 +4,7 @@ import type {Filter, TrustedEvent} from "@welshman/util"
 import {DM_KINDS} from "@lib/util"
 import {getMutedRooms} from "@app/core/settings"
 import type {SettingsValues} from "@app/core/settings"
-import type {AlertTypes} from "@app/features/alerts/settings"
+import type {AlertTypes} from "@app/tools/alerts/settings"
 
 const ALERT_TYPES = ["spaces", "mentions", "messages"] as const
 

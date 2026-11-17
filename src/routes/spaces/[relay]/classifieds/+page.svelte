@@ -19,7 +19,7 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ClassifiedItem from "@app/components/ClassifiedItem.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
-  import {partitionByActivity} from "@app/features/spaces"
+  import {partitionByActivity} from "@app/tools/content"
   import {makeSpaceFeed} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"
   import {

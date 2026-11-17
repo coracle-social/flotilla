@@ -6,7 +6,7 @@
   import {reader} from "@app/core/domain"
   import {events} from "@app/core/plugins"
   import * as pages from "@app/navigation/pages"
-  import {threadText} from "@app/features/spaces"
+  import {threadText} from "@app/tools/content"
 
   type Props = {
     url: string

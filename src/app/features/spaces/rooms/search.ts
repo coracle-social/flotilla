@@ -8,7 +8,7 @@ import {RoomLists, Rooms, Relays, createSearch} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {relays} from "@app/core/plugins"
 import * as pages from "@app/navigation/pages"
-import {userRoomList, userSpaceUrls} from "@app/features/spaces/urls"
+import {userRoomList, userSpaceUrls} from "@app/core/user"
 import {displayRoom} from "@app/features/spaces/rooms/room"
 
 // `RoomList.urls()` throws on a room tag with no relay hint, so skip those tags rather than the list.

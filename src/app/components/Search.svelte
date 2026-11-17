@@ -12,13 +12,13 @@
   import RelayList from "@app/components/RelayList.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import SearchBody from "@app/components/SearchBody.svelte"
-  import {CONTENT_KINDS} from "@app/features/spaces"
+  import {CONTENT_KINDS} from "@app/tools/content"
   import {app} from "@app/core/app"
   import {user, userSearchRelayUrls} from "@app/core/user"
   import {relays, searchRelayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
-  import {userSpaceUrls} from "@app/features/spaces"
+  import {userSpaceUrls} from "@app/core/user"
 
   const filter = {kinds: [MESSAGE, ...CONTENT_KINDS]}
 

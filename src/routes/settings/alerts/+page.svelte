@@ -11,11 +11,12 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
+  import {getPermissionMessage, isGranted} from "@lib/push/permission"
   import SettingsFooter from "@app/components/SettingsFooter.svelte"
   import {pushToast} from "@app/navigation/toast"
   import {badgesSupported} from "@app/features/badges"
-  import {alertSettings} from "@app/features/alerts"
-  import {getPermissionMessage, isGranted, saveAlertSettings} from "@app/features/push"
+  import {alertSettings} from "@app/tools/alerts/settings"
+  import {saveAlertSettings} from "@app/features/push"
 
   const showSound = !Capacitor.isNativePlatform()
 

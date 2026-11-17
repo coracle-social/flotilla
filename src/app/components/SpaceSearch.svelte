@@ -7,7 +7,7 @@
   import RoomName from "@app/components/RoomName.svelte"
   import SearchBody from "@app/components/SearchBody.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {CONTENT_KINDS} from "@app/features/spaces"
+  import {CONTENT_KINDS} from "@app/tools/content"
   import {relayMemberLists} from "@app/core/plugins"
 
   type Props = {

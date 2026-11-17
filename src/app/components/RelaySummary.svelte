@@ -8,7 +8,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {user} from "@app/core/user"
   import {spacePubkeysForUrl} from "@app/features/spaces/rooms/search"
-  import {userSpaceUrls} from "@app/features/spaces"
+  import {userSpaceUrls} from "@app/core/user"
 
   type Props = {
     url: string

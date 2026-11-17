@@ -11,7 +11,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {enableMessageNotifications, getPermissionMessage, isGranted} from "@app/features/push"
+  import {getPermissionMessage, isGranted} from "@lib/push/permission"
+  import {enableMessageNotifications} from "@app/features/push"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

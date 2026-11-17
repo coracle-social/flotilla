@@ -1,5 +1,5 @@
+import type {PushPermission} from "@lib/push/permission"
 import type {PushAdapter} from "@app/features/push/adapter"
-import type {PushPermission} from "@app/features/push/permission"
 
 // Resolves the static import after the push plugin is removed; Android selects the fallback adapter.
 export class CapacitorNotifications implements PushAdapter {

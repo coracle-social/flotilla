@@ -22,7 +22,7 @@ import {removeTrustedRelay} from "@app/core/settings"
 import {registerRetention} from "@app/core/database"
 import {pullAndListen, registerSync, syncApplicationData, syncEach} from "@app/core/sync"
 import {optInSpaceNotifications} from "@app/features/push"
-import {syncedSpaceUrls} from "@app/features/spaces/urls"
+import {syncedSpaceUrls} from "@app/navigation/history"
 import {publishRoomList} from "@app/features/spaces/rooms/lists"
 
 // A relay can refuse a join for reasons that still leave the user able to use the space.

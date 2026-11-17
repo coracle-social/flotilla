@@ -12,7 +12,7 @@ import {
 } from "@welshman/util"
 import {registerRetention} from "@app/core/database"
 import {registerSync, syncEach} from "@app/core/sync"
-import {currentSpaceUrls, syncedSpaceUrls} from "@app/features/spaces/urls"
+import {currentSpaceUrls, syncedSpaceUrls} from "@app/navigation/history"
 import {syncCurrentSpaceRooms, syncSpaceRooms} from "@app/features/spaces/rooms/sync"
 
 export * from "@app/features/spaces/rooms/room"

@@ -6,8 +6,9 @@ import {network, relays} from "@app/core/plugins"
 import {REACTION_KINDS} from "@app/core/env"
 import {pullAndListen, syncEach} from "@app/core/sync"
 import {hasBlossomSupport} from "@app/tools/uploads"
-import {CONTENT_KINDS} from "@app/features/spaces/content"
-import {currentSpaceUrls, userSpaceUrls} from "@app/features/spaces/urls"
+import {CONTENT_KINDS} from "@app/tools/content"
+import {currentSpaceUrls} from "@app/navigation/history"
+import {userSpaceUrls} from "@app/core/user"
 
 export const syncCurrentSpace = (filters: Filter[]) =>
   syncEach(currentSpaceUrls, url => pullAndListen(url, filters))

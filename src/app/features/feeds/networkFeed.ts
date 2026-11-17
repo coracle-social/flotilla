@@ -31,11 +31,11 @@ import {makeAuthorFeed} from "@app/features/feeds/authorFeed"
 import type {AuthorFeed} from "@app/features/feeds/authorFeed"
 import {makeInteractions} from "@app/features/interactions/interactions"
 import type {Interactions} from "@app/features/interactions/interactions"
-import {getTargetRef} from "@app/features/interactions/targets"
+import {getTargetRef} from "@app/tools/targets"
 import {makeNoteResolver} from "@app/features/notes/resolver"
 import {derivePinnedEvents} from "@app/features/pins"
 import {getPublishedTimestamp} from "@app/features/spaces/articles"
-import {CONTENT_KINDS} from "@app/features/spaces/content"
+import {CONTENT_KINDS} from "@app/tools/content"
 
 export type NoteFacet = "notes" | "replies" | "interactions"
 

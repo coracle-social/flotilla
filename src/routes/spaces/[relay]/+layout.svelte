@@ -25,7 +25,7 @@
   import {authenticate} from "@app/core/auth"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {relays, roomLists} from "@app/core/plugins"
-  import {userSpaceUrls} from "@app/features/spaces"
+  import {userSpaceUrls} from "@app/core/user"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
   import type {LayoutProps} from "./$types"

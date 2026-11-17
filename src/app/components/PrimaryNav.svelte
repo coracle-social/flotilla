@@ -18,7 +18,7 @@
   import {PLATFORM_RELAYS} from "@app/core/env"
   import {getModal, popModal, pushModal} from "@app/navigation/dialogs"
   import {notifications} from "@app/features/activity"
-  import {userSpaceUrls} from "@app/features/spaces"
+  import {userSpaceUrls} from "@app/core/user"
   import * as pages from "@app/navigation/pages"
   import {openMessages} from "@app/components/flows/messages"
   import {lastSpaceUrl} from "@app/navigation/history"

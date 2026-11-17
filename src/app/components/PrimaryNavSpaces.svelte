@@ -8,7 +8,7 @@
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
   import {notificationsUnread} from "@app/features/notifications"
   import {reorderSpaceUrls} from "@app/features/spaces/rooms"
-  import {userSpaceUrls} from "@app/features/spaces"
+  import {userSpaceUrls} from "@app/core/user"
   import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/env"
 
   const fadeSize = 24

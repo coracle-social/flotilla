@@ -10,7 +10,7 @@
   import EventReactions from "@app/components/EventReactions.svelte"
   import Cv from "@lib/components/Cv.svelte"
   import type {Interactions} from "@app/features/interactions"
-  import {isReplyTo} from "@app/features/interactions"
+  import {isReplyTo} from "@app/tools/targets"
   import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {

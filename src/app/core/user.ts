@@ -4,7 +4,15 @@ import type {Maybe} from "@welshman/lib"
 import {withGetter} from "@welshman/store"
 import {FOLLOWS, MUTES, outbox} from "@welshman/util"
 import type {FollowListReader} from "@welshman/domain"
-import {FollowLists, MuteLists, Profiles, RelayLists, SearchRelayLists, User} from "@welshman/app"
+import {
+  FollowLists,
+  MuteLists,
+  Profiles,
+  RelayLists,
+  RoomLists,
+  SearchRelayLists,
+  User,
+} from "@welshman/app"
 import type {DerivedPlugin, Plugin} from "@welshman/app"
 import {app} from "@app/core/app"
 import {
@@ -19,7 +27,7 @@ import {
   router,
   searchRelayLists,
 } from "@app/core/plugins"
-import {DEFAULT_SEARCH_RELAYS} from "@app/core/env"
+import {DEFAULT_SEARCH_RELAYS, PLATFORM_RELAYS} from "@app/core/env"
 import {Settings} from "@app/core/settings"
 import {registerSync} from "@app/core/sync"
 
@@ -61,6 +69,15 @@ export const userSearchRelayUrls = derived(userSearchRelayList, $searchRelayList
 export const userFollowPubkeys = derived(
   userFollowList,
   $followList => $followList?.pubkeys() ?? [],
+)
+
+export const userRoomList = deriveUserItem(RoomLists)
+
+export const userSpaceUrls = derived(userRoomList, $userRoomList => $userRoomList?.urls() ?? [])
+
+// Platform relays, where configured, stand in for the spaces the user has joined.
+export const activeSpaceUrls = derived(userSpaceUrls, $userSpaceUrls =>
+  PLATFORM_RELAYS.length > 0 ? PLATFORM_RELAYS : $userSpaceUrls,
 )
 
 // Syncing

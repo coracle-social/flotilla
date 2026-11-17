@@ -1,4 +1,4 @@
-import type {PushPermission} from "@app/features/push/permission"
+import type {PushPermission} from "@lib/push/permission"
 
 export type PushAdapter = {
   check: () => Promise<PushPermission>

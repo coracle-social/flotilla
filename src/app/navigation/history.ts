@@ -1,6 +1,7 @@
-import {get, writable} from "svelte/store"
+import {derived, get, writable} from "svelte/store"
 import {page} from "$app/stores"
 import {PLATFORM_RELAYS} from "@app/core/env"
+import {activeSpaceUrls} from "@app/core/user"
 import {navigate} from "@app/navigation/navigate"
 import * as pages from "@app/navigation/pages"
 
@@ -10,6 +11,16 @@ const lastPageBySpaceUrl = new Map<string, string>()
 
 // The space the user was in most recently, so the space menu opens from a page outside a space.
 export const lastSpaceUrl = writable<string | undefined>(undefined)
+
+// The space on screen, as a list so it syncs the same way as the others.
+export const currentSpaceUrls = derived(page, $page =>
+  $page.params.relay ? [pages.decodeRelay($page.params.relay)] : [],
+)
+
+export const syncedSpaceUrls = derived(
+  [activeSpaceUrls, currentSpaceUrls],
+  ([$activeSpaceUrls, $currentSpaceUrls]) => [...$activeSpaceUrls, ...$currentSpaceUrls],
+)
 
 // The page store notifies on a modal opening as well as on a navigation, and a modal leaves the url where it is.
 export const setupHistory = () => {

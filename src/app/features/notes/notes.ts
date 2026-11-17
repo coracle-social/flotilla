@@ -6,7 +6,7 @@ import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {Events, Network, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {usePlugin} from "@app/core/plugins"
-import {getThreadRefs} from "@app/features/interactions/targets"
+import {getThreadRefs} from "@app/tools/targets"
 import {buildCommentTree, getDescendants, getThreadFilters} from "@app/features/notes/threads"
 import type {CommentNode} from "@app/features/notes/threads"
 

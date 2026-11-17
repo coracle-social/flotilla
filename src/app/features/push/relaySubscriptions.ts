@@ -5,7 +5,8 @@ import {User} from "@welshman/app"
 import {app} from "@app/core/app"
 import {messagingRelayLists, roomLists} from "@app/core/plugins"
 import {userSettingsValues} from "@app/core/settings"
-import {alertSettings, getMessageAlertFilters, getSpaceAlertFilters} from "@app/features/alerts"
+import {alertSettings} from "@app/tools/alerts/settings"
+import {getMessageAlertFilters, getSpaceAlertFilters} from "@app/tools/alerts/policy"
 
 export type RelaySubscription = {
   relay: string

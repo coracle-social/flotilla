@@ -1,7 +1,7 @@
+import {getPermissionMessage, isGranted} from "@lib/push/permission"
 import {setSpaceNotifications} from "@app/core/settings"
-import {alertSettings, updateAlertSettings} from "@app/features/alerts"
-import type {AlertSettings} from "@app/features/alerts"
-import {getPermissionMessage, isGranted} from "@app/features/push/permission"
+import {alertSettings, updateAlertSettings} from "@app/tools/alerts/settings"
+import type {AlertSettings} from "@app/tools/alerts/settings"
 import {checkPushPermission, requestPushPermission} from "@app/features/push/push"
 import {pushToast} from "@app/navigation/toast"
 

@@ -30,11 +30,11 @@ carries `["h", h]`; content with no `h` belongs to the whole space. `/spaces/[re
 
 **The user's spaces are their kind 10009 `ROOMS` list** (`RoomList` factory, `RoomLists` plugin):
 `r` tags for spaces, `group` tags for rooms with the space URL as the hint. `userSpaceUrls` in
-`src/app/features/spaces/urls.ts` and `deriveUserRooms(url)` in `spaces/rooms/lists.ts` read
+`src/app/core/user.ts` and `deriveUserRooms(url)` in `spaces/rooms/lists.ts` read
 it. "Joined" in the UI means "in this list", which is separate from NIP-43 membership on the
 relay: `src/routes/spaces/[relay]/+layout.svelte` prompts `SpaceJoin` for any URL not in
 `userSpaceUrls`. A deployment with `VITE_PLATFORM_RELAYS` uses `PLATFORM_RELAYS` in place of the
-list for sync and navigation. `activeSpaceUrls` in `spaces/urls.ts` is that choice, read by
+list for sync and navigation. `activeSpaceUrls` in `core/user.ts` is that choice, read by
 background sync, notifications and editor suggestions.
 
 ### NIP-11 relay info
@@ -263,7 +263,7 @@ background; see flotilla-state.
 
 ## Content kinds
 
-The space sections are the kinds in `CONTENT_KINDS` (`src/app/features/spaces/content.ts`): `ZAP_GOAL`,
+The space sections are the kinds in `CONTENT_KINDS` (`src/app/tools/content.ts`): `ZAP_GOAL`,
 `EVENT_TIME`, `THREAD`, `CLASSIFIED`, `POLL`, `PINBOARD` and `LONG_FORM`. Each has list and detail
 routes under `spaces/[relay]/`, reached through `makeContentPath` in `src/app/navigation/pages.ts`. Chat is
 `MESSAGE` (kind 9). Comments (`COMMENT`, NIP-22) thread under any content kind, and

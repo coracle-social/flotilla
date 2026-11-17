@@ -22,7 +22,7 @@
   import {reader} from "@app/core/domain"
   import * as pages from "@app/navigation/pages"
   import {displayRoom} from "@app/features/spaces/rooms"
-  import {partitionByActivity} from "@app/features/spaces"
+  import {partitionByActivity} from "@app/tools/content"
   import {makeSpaceFeed} from "@app/features/feeds"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"

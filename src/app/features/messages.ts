@@ -31,7 +31,7 @@ import {userSettingsValues} from "@app/core/settings"
 import {registerRetention} from "@app/core/database"
 import {kv} from "@app/core/storage"
 import {makeKeyedSyncs, pullAndListen, registerSync} from "@app/core/sync"
-import {userRoomList} from "@app/features/spaces"
+import {userRoomList} from "@app/core/user"
 import {getConversationPubkeys, makeConversationId} from "@app/navigation/pages"
 
 export type Conversation = {
