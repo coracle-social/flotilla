@@ -1,11 +1,14 @@
 <script lang="ts">
+  import type {Command} from "@welshman/app"
   import Stars from "@assets/icons/stars.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import HealthCheckItem from "@app/components/HealthCheckItem.svelte"
   import HealthCheckReview from "@app/components/HealthCheckReview.svelte"
-  import type {HealthCheck} from "@app/features/healthChecks"
-  import {healthChecks} from "@app/features/healthChecks"
+  import KeyDownload from "@app/components/KeyDownload.svelte"
+  import type {HealthCheck, HealthCheckPrompt} from "@app/features/healthChecks"
+  import {completeKeyBackup, healthChecks} from "@app/features/healthChecks"
+  import {session} from "@app/core/session"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
@@ -16,12 +19,27 @@
 
   const pending = $healthChecks.pending.$
 
+  const finishKeyBackup = () => {
+    completeKeyBackup()
+    history.back()
+  }
+
+  const openPrompt = (result: Command | HealthCheckPrompt | void) => {
+    if (result === "backupKey") {
+      pushModal(KeyDownload, {
+        secret: (session.get()!.data as {secret: string}).secret,
+        next: finishKeyBackup,
+        submitText: "Done",
+      })
+    }
+  }
+
   // Changes are confirmed first, and fixes that change nothing to review run once they're saved.
   const review = (checks: HealthCheck[]) => {
     const plans = checks.map(check => $healthChecks.plan(check))
     const reviewed = plans.filter(plan => plan.changes.length > 0)
     const applyRest = () =>
-      plans.filter(plan => plan.changes.length === 0).forEach(plan => plan.apply())
+      plans.filter(plan => plan.changes.length === 0).forEach(plan => plan.apply().then(openPrompt))
 
     if (reviewed.length > 0) {
       pushModal(HealthCheckReview, {plans: reviewed, next: applyRest})

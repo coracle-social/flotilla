@@ -55,3 +55,9 @@ export const getHomePath = () =>
   PLATFORM_RELAYS.length > 0 ? makeSpaceEntryPath(PLATFORM_RELAYS[0]) : pages.home.path()
 
 export const goToHome = () => navigate(getHomePath(), {keepModal: true, replaceState: true})
+
+export const goToMessages = (pubkeys: string[] = [], options: {replaceState?: boolean} = {}) =>
+  navigate(
+    pubkeys.length > 0 ? pages.conversation.path({pubkeys}) : (lastMessagesUrl ?? "/chat"),
+    options,
+  )

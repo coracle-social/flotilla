@@ -6,11 +6,8 @@ import type {Projection} from "@welshman/store"
 import {MessagingRelayLists, RelayLists, Relays, SearchRelayLists} from "@welshman/app"
 import type {Command, IApp} from "@welshman/app"
 import {usePlugin} from "@app/core/plugins"
-import {session} from "@app/core/session"
 import {DEFAULT_RELAYS, HIDE_NOSTR} from "@app/core/env"
 import {kv} from "@app/core/storage"
-import {pushModal} from "@app/navigation/dialogs"
-import KeyDownload from "@app/components/KeyDownload.svelte"
 
 export type HealthCheckContext = {
   readRelays: string[]
@@ -25,11 +22,14 @@ export type HealthCheckChange = {
   removed: string[]
 }
 
-// A plan with changes is reviewed and returns the Command to publish; one without does the fix itself.
+// A fix that needs the user, which the caller of apply opens.
+export type HealthCheckPrompt = "backupKey"
+
+// A plan with changes is reviewed and returns the Command to publish; one without does the fix itself or returns a prompt.
 export type HealthCheckPlan = {
   summary: string
   changes: HealthCheckChange[]
-  apply: () => Promise<Command | void>
+  apply: () => Promise<Command | HealthCheckPrompt | void>
 }
 
 export type HealthCheck = {
@@ -105,6 +105,8 @@ export const forceHealthChecks = synced<Record<string, boolean>>({
   storage: kv,
   defaultValue: {},
 })
+
+export const completeKeyBackup = () => forceHealthChecks.update(assoc("backup-key", false))
 
 export class HealthChecks {
   context: Projection<HealthCheckContext>
@@ -207,23 +209,12 @@ export class HealthChecks {
       plan: () => ({
         summary: "Opens the key backup dialog, where you choose how to save your key.",
         changes: [],
-        apply: async () => {
-          pushModal(KeyDownload, {
-            secret: (session.get()!.data as {secret: string}).secret,
-            next: this.finishKeyBackup,
-            submitText: "Done",
-          })
-        },
+        apply: async () => "backupKey",
       }),
     },
   ]
 
   private checks = HIDE_NOSTR ? this.keyChecks : [...this.relayChecks, ...this.keyChecks]
-
-  private finishKeyBackup = () => {
-    forceHealthChecks.update(assoc("backup-key", false))
-    history.back()
-  }
 
   plan = (healthCheck: HealthCheck) => healthCheck.plan(this.context.get())
 }

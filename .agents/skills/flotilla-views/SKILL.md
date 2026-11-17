@@ -115,10 +115,11 @@ mobile. Pages outside a space use `Page`, `PageBar` and `PageContent` themselves
   to the first platform space.
 - `overlays.ts`: the note overlay (below).
 
-`goToMessages(pubkeys)` lives in `src/app/features/messages.ts`, since it first asks for messaging
-relays with `MessagesEnable`.
+`goToMessages(pubkeys)` in `history.ts` goes to the messages page or a conversation.
+`openMessages(pubkeys)` in `src/app/components/flows/messages.ts` first asks for messaging relays
+with `MessagesEnable`, and components use it.
 
-Deep links arrive in `handleDeepLink` in `src/app/features/deepLinks.ts`: push-notification links
+Deep links arrive in `handleDeepLink` in `src/app/components/flows/deepLinks.ts`: push-notification links
 (`?relay=&id=`), the iOS share extension (the `share` host), signer returns (`x-callback-url`), and
 otherwise a plain path. Nostr entities go through `/[bech32]`, which sends profiles to their
 page, and loads events before calling `goToEvent`.
@@ -198,7 +199,7 @@ Modal components take identifiers like any other component. `Dialog` supplies th
 A modal closes itself with `history.back()`, in 116 call sites. `clearModals()` ends a flow that
 may sit on top of other modals, such as a delete confirmed from a menu. `popModal()` closes the
 modal before doing something else in the same handler, where `history.back()` would race it:
-`ProfileDetail` pops before `goToMessages`, and `SearchBody` pops before `goToEvent`.
+`ProfileDetail` pops before `openMessages`, and `SearchBody` pops before `goToEvent`.
 
 For yes/no questions, push `Confirm` from lib with `{title, message, confirm}`; it runs `confirm`
 behind its own loading state. Reusable confirmations get a `*Confirm` wrapper

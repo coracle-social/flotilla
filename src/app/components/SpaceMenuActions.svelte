@@ -34,7 +34,7 @@
   import {alertSettings} from "@app/features/alerts"
   import {popModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import {goToMessages} from "@app/features/messages"
+  import {openMessages} from "@app/components/flows/messages"
 
   type Props = {
     url: string
@@ -63,7 +63,7 @@
 
   const showConnectionStatus = () => pushModal(SpaceConnectionStatus, {url}, {replaceState: sheet})
 
-  const contactOwner = () => goToMessages([$relay!.pubkey!], {replaceState: sheet})
+  const contactOwner = () => openMessages([$relay!.pubkey!], {replaceState: sheet})
 
   const manageMembership = () => {
     popModal()

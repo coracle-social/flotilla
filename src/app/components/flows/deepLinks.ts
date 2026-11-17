@@ -4,17 +4,17 @@ import {goto} from "$app/navigation"
 import {app} from "@app/core/app"
 import {clearModals, getModal, pushModal} from "@app/navigation/dialogs"
 import {navigate} from "@app/navigation/navigate"
-import {goToMessages} from "@app/features/messages"
 import {goToHome} from "@app/navigation/history"
-import {shareFromNative} from "@app/features/share"
 import {pushToast} from "@app/navigation/toast"
 import {onPushNotificationAction} from "@app/features/push/taps"
 import Search from "@app/components/Search.svelte"
+import {openMessages} from "@app/components/flows/messages"
+import {shareFromNative} from "@app/components/flows/share"
 
 const openShortcut = (pathname: string) => {
   switch (pathname) {
     case "/messages":
-      goToMessages()
+      openMessages()
       break
     case "/search": {
       const modal = getModal()

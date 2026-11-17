@@ -4,10 +4,9 @@ import {getIdFilters, verifyEvent, WRAP} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {app} from "@app/core/app"
 import {network} from "@app/core/plugins"
-import {goToMessages} from "@app/features/messages"
 import {navigate} from "@app/navigation/navigate"
 import {getEventPath} from "@app/navigation/locations"
-import {goToSpace} from "@app/navigation/history"
+import {goToMessages, goToSpace} from "@app/navigation/history"
 
 const ingestNotification = async (relay: string, id: string, json?: string) => {
   const pushed = parseJson<TrustedEvent>(json)

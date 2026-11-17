@@ -10,7 +10,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import * as pages from "@app/navigation/pages"
-  import {goToMessages} from "@app/features/messages"
+  import {openMessages} from "@app/components/flows/messages"
   import {notifications} from "@app/features/activity"
   import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
@@ -27,7 +27,7 @@
   const others = uniq(remove($user.pubkey, props.pubkeys))
   const active = $derived($page.params.chat === props.id)
   const path = pages.conversation.path({pubkeys: props.pubkeys})
-  const openChat = () => goToMessages(props.pubkeys)
+  const openChat = () => openMessages(props.pubkeys)
 
   onMount(() => {
     for (const pk of others) {

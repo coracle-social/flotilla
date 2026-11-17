@@ -27,7 +27,7 @@
   import {compressFileForUpload, uploadFile} from "@app/tools/uploads"
   import {pushModal} from "@app/navigation/dialogs"
   import {clip, pushToast} from "@app/navigation/toast"
-  import {goToMessages} from "@app/features/messages"
+  import {openMessages} from "@app/components/flows/messages"
   import {user} from "@app/core/user"
   import {profiles, relayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
@@ -55,7 +55,7 @@
 
   const startEdit = () => pushModal(ProfileEdit)
 
-  const openChat = () => goToMessages([target])
+  const openChat = () => openMessages([target])
 
   const openBannerPicker = () => bannerInput?.click()
 

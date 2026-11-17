@@ -1,13 +1,10 @@
-import {get, writable} from "svelte/store"
+import {writable} from "svelte/store"
 import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
 import {errorMessage} from "@lib/util"
-import Confirm from "@lib/components/Confirm.svelte"
 import {profiles} from "@app/core/plugins"
-import {popModal, pushModal} from "@app/navigation/dialogs"
 import {renderEventAsText} from "@app/tools/render"
 import {pushToast} from "@app/navigation/toast"
-import {endCall, isCallActive} from "@app/features/spaces/calls"
 import type {Tts} from "@app/features/voice/providers/common"
 import {resolveVoiceProvider} from "@app/features/voice/resolve"
 
@@ -70,19 +67,7 @@ export const readAloud = async (event: TrustedEvent) => {
     const provider = providers[0]
 
     if (provider) {
-      if (get(isCallActive)) {
-        pushModal(Confirm, {
-          title: "Leave the call?",
-          message: "Reading a message out loud would talk over the call you are in.",
-          confirm: async () => {
-            await endCall()
-            popModal()
-            await play(provider.tts, event, text)
-          },
-        })
-      } else {
-        await play(provider.tts, event, text)
-      }
+      await play(provider.tts, event, text)
     } else {
       setup.enable("tts", {onReady: () => readAloud(event)})
     }

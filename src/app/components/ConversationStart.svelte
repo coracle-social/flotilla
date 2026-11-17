@@ -16,12 +16,12 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
-  import {goToMessages} from "@app/features/messages"
+  import {openMessages} from "@app/components/flows/messages"
   import {messagingRelayLists} from "@app/core/plugins"
 
   const back = () => history.back()
 
-  const onSubmit = () => goToMessages(pubkeys)
+  const onSubmit = () => openMessages(pubkeys)
 
   const addPubkey = (pubkey: string) => {
     pubkeys = uniq([...pubkeys, pubkey])

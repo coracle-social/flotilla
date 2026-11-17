@@ -32,11 +32,7 @@ import {registerRetention} from "@app/core/database"
 import {kv} from "@app/core/storage"
 import {makeKeyedSyncs, pullAndListen, registerSync} from "@app/core/sync"
 import {userRoomList} from "@app/features/spaces"
-import {pushModal} from "@app/navigation/dialogs"
-import {lastMessagesUrl} from "@app/navigation/history"
-import {navigate} from "@app/navigation/navigate"
-import {conversation, getConversationPubkeys, makeConversationId} from "@app/navigation/pages"
-import MessagesEnable from "@app/components/MessagesEnable.svelte"
+import {getConversationPubkeys, makeConversationId} from "@app/navigation/pages"
 
 export type Conversation = {
   id: string
@@ -305,15 +301,4 @@ export const registerMessages = () => {
       DM_KINDS.includes(event.kind) ||
       ([DELETE, REACTION].includes(event.kind) && !isSignedEvent(event)),
   })
-}
-
-// Messages are read from the user's messaging relays, so they're asked to set some up first.
-export const goToMessages = (pubkeys: string[] = [], options: {replaceState?: boolean} = {}) => {
-  if (messagingRelayLists.get().urls(user.get().pubkey).get().length === 0) {
-    pushModal(MessagesEnable, {next: () => goToMessages(pubkeys, options)})
-  } else if (pubkeys.length === 0) {
-    navigate(lastMessagesUrl ?? "/chat", options)
-  } else {
-    navigate(conversation.path({pubkeys}), options)
-  }
 }

@@ -32,8 +32,9 @@
   const back = () => history.back()
 
   const save = async (plan: HealthCheckPlan) => {
+    // A reviewed plan has changes, so what it returns is the Command that saves them.
     const command = await plan.apply()
-    const error = command && (await publish(command).getError())
+    const error = typeof command === "object" && (await publish(command).getError())
 
     if (error) {
       pushToast({theme: "error", message: `Your relays couldn't be saved: ${errorMessage(error)}`})

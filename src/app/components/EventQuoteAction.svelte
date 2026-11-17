@@ -3,7 +3,7 @@
   import PenNewSquare from "@assets/icons/pen-new-square.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import {quoteEvent} from "@app/features/quotes"
+  import {quoteEvent} from "@app/components/flows/quotes"
 
   type Props = {
     event: TrustedEvent

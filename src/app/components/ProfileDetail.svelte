@@ -31,7 +31,7 @@
   import {popModal, pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import * as pages from "@app/navigation/pages"
-  import {goToMessages} from "@app/features/messages"
+  import {openMessages} from "@app/components/flows/messages"
 
   export type Props = {
     pubkey: string
@@ -54,7 +54,7 @@
 
   const sendMessage = () => {
     popModal()
-    goToMessages([pubkey])
+    openMessages([pubkey])
   }
 
   const loadBans = () => {

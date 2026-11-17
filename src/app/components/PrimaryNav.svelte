@@ -20,7 +20,7 @@
   import {notifications} from "@app/features/activity"
   import {userSpaceUrls} from "@app/features/spaces"
   import * as pages from "@app/navigation/pages"
-  import {goToMessages} from "@app/features/messages"
+  import {openMessages} from "@app/components/flows/messages"
   import {lastSpaceUrl} from "@app/navigation/history"
   import {userProfile} from "@app/core/user"
 
@@ -30,7 +30,7 @@
 
   const {children}: Props = $props()
 
-  const chatHandler = () => goToMessages()
+  const chatHandler = () => openMessages()
 
   const showSettingsMenu = () => pushModal(MenuSettings)
 

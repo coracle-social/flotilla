@@ -8,7 +8,7 @@
   import EventActivity from "@app/components/EventActivity.svelte"
   import {events} from "@app/core/plugins"
   import type {Interactions} from "@app/features/interactions"
-  import {shareEvent} from "@app/features/share"
+  import {shareEvent} from "@app/components/flows/share"
 
   type Props = {
     event: TrustedEvent

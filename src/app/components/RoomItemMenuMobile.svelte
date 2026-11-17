@@ -38,8 +38,8 @@
   import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
   import {ENABLE_ZAPS, HIDE_NOSTR} from "@app/core/env"
   import {makeContentPath} from "@app/navigation/pages"
-  import {shareEvent} from "@app/features/share"
-  import {readAloud} from "@app/features/voice"
+  import {shareEvent} from "@app/components/flows/share"
+  import {readEventAloud} from "@app/components/flows/readAloud"
   import {pushModal} from "@app/navigation/dialogs"
   import {publishReaction} from "@app/features/spaces"
 
@@ -95,7 +95,7 @@
 
   const read = () => {
     history.back()
-    readAloud(event)
+    readEventAloud(event)
   }
 
   const showInfo = () => pushModal(EventInfo, {url, event}, {replaceState: true})

@@ -55,13 +55,12 @@ only gate.
 - **lib → app.** `Link.svelte` imports `navigate` from `@app/navigation/navigate`. Don't copy it. A lib
   component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
   `IconInput` and its picker buttons did.
-- **app → components.** `features/messages.ts` (`goToMessages` opens `MessagesEnable`),
-  `features/share.ts` (`Share`, `ShareEvent`), `deepLinks.ts` (`Search`), the voice providers
-  (`OpenRouterEnable`, `LocalSttEnable`) and `healthChecks.ts` (`KeyDownload`, the fix for the key backup check)
-  import a component so they can open a modal mid-flow. Push adapters and
-  deep links reach those flows from outside any component, and the rest have several component
-  callers, so each stays in one module. `editor/` holds `.svelte` files of its own (suggestion
-  popovers), which `makeEditor` mounts.
+- **app → components.** The voice providers (`OpenRouterEnable`, `LocalSttEnable`) and the
+  Electron screen-share adapter (`ScreenSharePicker`) import a component to open a prompt in the
+  middle of a flow that no component wraps. They are due to return a refusal that a flow maps to
+  the prompt instead. `editor/` holds `.svelte` files of its own (suggestion popovers), which
+  `makeEditor` mounts, and they render `ProfileCircle`, `ProfileName`, `WotScore` and
+  `RoomNameWithImage`.
 - Nothing under `src/app` or `src/lib` imports from `src/routes`.
 
 ## Top-level layout
@@ -83,7 +82,7 @@ only gate.
 
 ## `src/app` by directory
 
-`src/app/components` is flat except for `hosting/`. It also holds the CSS families for app
+`src/app/components` is flat except for `hosting/` and `flows/`. `flows/` holds the UI that several components share or that a route or the root layout starts: `share.ts` (sharing an event, native shares and the Android share intent), `quotes.ts` (`goToQuote`, `quoteEvent`), `messages.ts` (`openMessages`, which asks for messaging relays first), `readAloud.ts` (`readEventAloud`, which asks to leave a call first) and `deepLinks.ts`. It also holds the CSS families for app
 concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), which
 `src/app.css` imports. `flotilla-views` covers component conventions.
 
@@ -164,7 +163,7 @@ Outside `spaces/`:
 
 - Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `targets.ts` names the event an event is about: what a reply answers, a reaction reacts to, a zap zaps, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `publish.ts` (`publishToNetwork`, posting outside a space), `pins.ts` (a person's pinned notes), `quotes.ts`, `statuses.ts` (NIP-38)
 - `people/`: `people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts` has `isEventMuted` and `derivePubkeyMuted`
-- `share.ts`: sharing an event into a room or conversation, and native share intents
+- `share.ts`: the `Share` type, `pendingShare`, and `shareTo`, which hands a share to a room or conversation
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
   `activity.ts` (the home stream's conversations and space content, the latest activity per path,
   and which paths are unread), `badges.ts` (the app icon badge) and `notifications/` (what was done to your own notes and who mentioned you: `model.ts` is the pure part, which events count, their facets and how they group into rows; `sync.ts` polls your inbox relays; `stream.ts` holds the stores the Recent tab renders)
@@ -172,7 +171,7 @@ Outside `spaces/`:
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)
-- Platform and voice: `alerts/` (which events alert and the user's alert settings, and `stream.ts`, the in-app stream of alerting messages), `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `deepLinks.ts`, `reminders.ts`
+- Platform and voice: `alerts/` (which events alert and the user's alert settings, and `stream.ts`, the in-app stream of alerting messages), `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `reminders.ts`
 - `voice/`: speech to text (stt) and text to speech (tts). `dictation.ts` holds a composer's
   dictation, kept across navigation and sent as a voice note or transcribed, and `readAloud.ts`
   reads a message aloud. `providers/` runs each task on the device's stt model or on OpenRouter,
@@ -270,9 +269,9 @@ Flotilla's own native code:
 
 - `android/app/src/main/java/social/flotilla/`: `AndroidPushFallbackPlugin` and its worker (push
   without FCM), and `ShareIntentPlugin`. `MainActivity.java` registers them, and JS binds them with
-  `registerPlugin` (`push/adapters/android.ts`, `share.ts`).
+  `registerPlugin` (`push/adapters/android.ts`, `components/flows/share.ts`).
 - `ios/App/ShareExtension/`: the extension can't call into the app, so it opens a
-  `flotilla://share` URL. `handleDeepLink` in `src/app/features/deepLinks.ts` passes that to
+  `flotilla://share` URL. `handleDeepLink` in `src/app/components/flows/deepLinks.ts` passes that to
   `shareFromNative`.
 
 `Push` in `src/app/features/push/push.ts` chooses an adapter at runtime: the Android fallback, Capacitor
