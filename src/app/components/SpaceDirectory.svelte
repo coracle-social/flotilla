@@ -12,6 +12,7 @@
   import MenuButton from "@lib/components/MenuButton.svelte"
   import {decodeGeohash} from "@lib/geohash"
   import {createScroller} from "@lib/html"
+  import {getProfileGeohash} from "@lib/location"
   import SpaceMember from "@app/components/SpaceMember.svelte"
   import SpaceMemberMap, {type MemberPin} from "@app/components/SpaceMemberMap.svelte"
   import SpaceInvite from "@app/components/SpaceInvite.svelte"
@@ -19,7 +20,6 @@
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {deriveSpaceMemberRoles} from "@app/features/spaces/roles"
   import {relayMemberLists, relayRoles} from "@app/core/plugins"
-  import {getProfileGeohash} from "@app/features/location"
   import {deriveProfilesByPubkey} from "@app/features/people"
   import {pushModal} from "@app/navigation/dialogs"
 

@@ -9,8 +9,8 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {createBookmarkFolder, renameBookmarkFolder} from "@app/features/bookmarks"
-  import type {BookmarkFolder} from "@app/features/bookmarks"
+  import {createBookmarkFolder, renameBookmarkFolder} from "@app/areas/bookmarks"
+  import type {BookmarkFolder} from "@app/areas/bookmarks"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
 

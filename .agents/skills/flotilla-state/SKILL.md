@@ -379,7 +379,7 @@ push permission is not.
 dufflepud's `kv/checked` with NIP-98 auth. That makes it cross-device without publishing an
 event on every read.
 
-### Drafts (`src/app/features/drafts.ts`)
+### Drafts (`src/app/tools/drafts.ts`)
 
 `DraftKey<T>` is a typed handle over an in-memory `Map`. A draft survives the composer
 unmounting and a navigation, but not a reload. Key it by context: `RoomCompose` uses

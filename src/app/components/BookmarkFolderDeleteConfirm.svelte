@@ -1,6 +1,6 @@
 <script lang="ts">
   import Confirm from "@lib/components/Confirm.svelte"
-  import {deleteBookmarkFolder} from "@app/features/bookmarks"
+  import {deleteBookmarkFolder} from "@app/areas/bookmarks"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
 

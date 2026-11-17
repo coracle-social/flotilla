@@ -22,7 +22,7 @@
   import WalletDisconnect from "@app/components/WalletDisconnect.svelte"
   import WalletUpdateReceivingAddress from "@app/components/WalletUpdateReceivingAddress.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {displayLnurl, getNwcClient, getWebLn, wallet} from "@app/features/wallet"
+  import {displayLnurl, getNwcClient, getWebLn, wallet} from "@app/tools/wallet"
   import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
   import {pushToast} from "@app/features/toast"
   import {user} from "@app/core/user"

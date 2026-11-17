@@ -24,22 +24,28 @@ The project follows a **strict acyclic dependency hierarchy**:
 ```
 routes/                    (top layer - can depend on anything)
   ↓
-app/components/            (can depend on app/* and lib/*)
+app/components/            (the only layer that imports app components)
   ↓
-app/features/              (one feature each, with few callers)
+app/shell/                 (spans several areas, or serves the whole app from the root layout)
+  ↓
+app/areas/                 (one section of the app each; never imports another area)
+  ↓
+app/features/              (modules not yet moved into shell, areas, tools or lib)
+  ↓
+app/tools/                 (building blocks shared by areas; may import other tools without a cycle)
   ↓
 app/navigation/            (routes, dialogs and overlays, history)
   ↓
 app/core/                  (the App, plugins, session, storage, sync, settings, env)
   ↓
-lib/                       (can only depend on external libraries)
+lib/                       (stateless and configurable; can only depend on external libraries)
   ↓
 external libraries         (bottom layer)
 ```
 
-Core and navigation never import a feature. A feature reaches into core through hooks such as
-`registerSync` and `registerRetention`, called from its own `registerX`, which `registerAll` in
-`src/app/index.ts` calls before the app is built.
+Each layer imports only its own layer and the layers below it. `app/features` is being emptied into the layers around it, so new code goes in shell, areas, tools or lib. Lib code takes what it needs from the app as options, and a tool is usually the app's binding of a lib module to app state.
+
+A module reaches into a lower layer through hooks such as `registerSync` and `registerRetention`, called from its own `registerX`, which `registerAll` in `src/app/index.ts` calls before the app is built. The `flotilla-architecture` skill lists the imports that still break the hierarchy.
 
 An `index.ts` holds nothing but exports and initialization: it re-exports the files in its
 directory and defines the directory's `registerX`. Code goes in a file named for what it does.

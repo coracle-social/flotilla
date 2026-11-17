@@ -19,7 +19,7 @@
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
   import {PLATFORM_NAME, HIDE_NOSTR} from "@app/core/env"
-  import {analyticsAvailable} from "@app/features/analytics"
+  import {analyticsAvailable} from "@app/shell/analytics"
   import {sendLogs} from "@app/core/logger"
   import {
     RelayAuthMode,

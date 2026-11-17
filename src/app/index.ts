@@ -5,7 +5,7 @@ import {registerRelays} from "@app/core/relays"
 import {registerSettings} from "@app/core/settings"
 import {registerStorage} from "@app/core/storage"
 import {registerUser} from "@app/core/user"
-import {registerBookmarks} from "@app/features/bookmarks"
+import {registerBookmarks} from "@app/areas/bookmarks"
 import {registerMessages} from "@app/features/messages"
 import {registerNotifications} from "@app/features/notifications"
 import {registerPomade} from "@app/features/pomade"
@@ -17,7 +17,7 @@ import {registerMembership} from "@app/features/spaces/membership"
 import {registerPinboards} from "@app/features/spaces/pinboards"
 import {registerCommands} from "@app/features/spaces/rooms/commands"
 import {registerRooms} from "@app/features/spaces/rooms"
-import {registerWallet} from "@app/features/wallet"
+import {registerWallet} from "@app/tools/wallet"
 
 let registered = false
 

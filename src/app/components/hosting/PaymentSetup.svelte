@@ -17,7 +17,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {user} from "@app/core/user"
   import {pushToast} from "@app/features/toast"
-  import {getNwcClient, wallet} from "@app/features/wallet"
+  import {getNwcClient, wallet} from "@app/tools/wallet"
   import {
     hosting,
     hostingErrorMessage,

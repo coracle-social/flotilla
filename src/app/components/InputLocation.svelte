@@ -5,8 +5,8 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import {displayPlace, placeGeohash, searchPlaces} from "@app/features/location"
-  import type {Place} from "@app/features/location"
+  import {displayPlace, placeGeohash, searchPlaces} from "@lib/location"
+  import type {Place} from "@lib/location"
 
   type Props = {
     location?: string

@@ -17,7 +17,7 @@
   import EditorContent from "@app/features/editor/EditorContent.svelte"
   import ThreadSuggestions from "@app/components/ThreadSuggestions.svelte"
   import {writer} from "@app/core/domain"
-  import {DraftKey} from "@app/features/drafts"
+  import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/features/editor"
   import {displayRoom, publishToSpace} from "@app/features/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"

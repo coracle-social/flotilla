@@ -23,7 +23,7 @@
   import {publishToSpace} from "@app/features/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {makeEditor} from "@app/features/editor"
-  import {DraftKey} from "@app/features/drafts"
+  import {DraftKey} from "@app/tools/drafts"
   import {compressFileForUpload, uploadFile} from "@app/features/uploads"
 
   type Values = {

@@ -12,7 +12,7 @@
   import ComposeParent from "@app/components/ComposeParent.svelte"
   import {prependParent, publishComment} from "@app/features/spaces/rooms"
   import {makeEditor} from "@app/features/editor"
-  import {DraftKey} from "@app/features/drafts"
+  import {DraftKey} from "@app/tools/drafts"
   import {pushToast} from "@app/features/toast"
 
   type Values = {

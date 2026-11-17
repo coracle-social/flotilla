@@ -5,7 +5,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import BookmarkFolderDeleteConfirm from "@app/components/BookmarkFolderDeleteConfirm.svelte"
   import BookmarkFolderEdit from "@app/components/BookmarkFolderEdit.svelte"
-  import type {BookmarkFolder} from "@app/features/bookmarks"
+  import type {BookmarkFolder} from "@app/areas/bookmarks"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

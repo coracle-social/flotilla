@@ -25,7 +25,7 @@
   import {publishToNetwork} from "@app/features/publish"
   import {publishToSpace} from "@app/features/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
-  import {DraftKey} from "@app/features/drafts"
+  import {DraftKey} from "@app/tools/drafts"
 
   type Option = {
     id: string

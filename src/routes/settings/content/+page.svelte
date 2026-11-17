@@ -26,7 +26,7 @@
   import {blossomServerLists, muteLists} from "@app/core/plugins"
   import {pushToast} from "@app/features/toast"
   import {PLATFORM_NAME, HIDE_NOSTR} from "@app/core/env"
-  import {flTheme, flThemes, theme} from "@app/features/theme"
+  import {flTheme, flThemes, theme} from "@app/tools/theme"
   import {userSettingsValues, publishSettings, createSettingsForm} from "@app/core/settings"
 
   const userBlossomServerList = deriveUserItem(BlossomServerLists)

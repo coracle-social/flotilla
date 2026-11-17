@@ -17,7 +17,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {dufflepud} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
-  import {activeTheme} from "@app/features/theme"
+  import {activeTheme} from "@app/tools/theme"
 
   type Props = {
     url: string

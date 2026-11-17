@@ -23,7 +23,7 @@
   import {app} from "@app/core/app"
   import {getDictation} from "@app/features/voice"
   import {pushToast} from "@app/features/toast"
-  import {DraftKey, type Draft} from "@app/features/drafts"
+  import {DraftKey, type Draft} from "@app/tools/drafts"
   import type {Share} from "@app/features/share"
   import {pushModal} from "@app/navigation/dialogs"
 

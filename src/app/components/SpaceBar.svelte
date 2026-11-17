@@ -8,7 +8,7 @@
   import PageBar from "@lib/components/PageBar.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {pageLoading} from "@app/features/loading"
+  import {pageLoading} from "@app/shell/loading"
   import {decodeRelay} from "@app/navigation/pages"
 
   type Props = {

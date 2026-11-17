@@ -4,8 +4,8 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import BookmarkMove from "@app/components/BookmarkMove.svelte"
-  import {removeBookmark} from "@app/features/bookmarks"
-  import type {BookmarkFolder} from "@app/features/bookmarks"
+  import {removeBookmark} from "@app/areas/bookmarks"
+  import type {BookmarkFolder} from "@app/areas/bookmarks"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
 

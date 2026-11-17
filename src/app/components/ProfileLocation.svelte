@@ -1,8 +1,8 @@
 <script lang="ts">
   import MapPoint from "@assets/icons/map-point.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
+  import {getProfileLocation} from "@lib/location"
   import {profiles} from "@app/core/plugins"
-  import {getProfileLocation} from "@app/features/location"
 
   type Props = {
     pubkey: string

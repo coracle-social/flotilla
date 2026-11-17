@@ -11,7 +11,7 @@
   import EditorContent from "@app/features/editor/EditorContent.svelte"
   import {publisher} from "@app/core/plugins"
   import {writer} from "@app/core/domain"
-  import {DraftKey} from "@app/features/drafts"
+  import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/features/editor"
   import {publishComment} from "@app/features/spaces/rooms"
   import {loadSendDelay} from "@app/core/settings"

@@ -1,6 +1,6 @@
 ---
 name: flotilla-architecture
-description: "Use this skill when deciding where new code belongs in flotilla: which layer (routes, app/components, app/features, app/navigation, app/core, lib) or welshman package owns it, which src/app module to extend, or how a kind-based space feature is laid out across the layers. Also use it for the layer and import rules, path aliases, the boot sequence, platform-specific behavior (Capacitor, Android, iOS, Electron, PWA), the link-preview server, env and branding variables, the e2e harness, and the lint/check tooling."
+description: "Use this skill when deciding where new code belongs in flotilla: which layer (routes, app/components, app/shell, app/areas, app/features, app/tools, app/navigation, app/core, lib) or welshman package owns it, which src/app module to extend, or how a kind-based space feature is laid out across the layers. Also use it for the layer and import rules, path aliases, the boot sequence, platform-specific behavior (Capacitor, Android, iOS, Electron, PWA), the link-preview server, env and branding variables, the e2e harness, and the lint/check tooling."
 ---
 
 # Flotilla architecture
@@ -17,7 +17,10 @@ and UI.
 |---|---|---|---|
 | Routes | `src/routes` | — | anything |
 | App components | `src/app/components` | `@app/components/X.svelte` | `@app`, `@lib` |
-| Features | `src/app/features` | `@app/features/x` | `@app/navigation`, `@app/core`, `@lib` |
+| Shell | `src/app/shell` | `@app/shell/x` | areas, features, tools, `@app/navigation`, `@app/core`, `@lib` |
+| Areas | `src/app/areas` | `@app/areas/x` | features, tools, `@app/navigation`, `@app/core`, `@lib`; never another area |
+| Features | `src/app/features` | `@app/features/x` | tools, `@app/navigation`, `@app/core`, `@lib` |
+| Tools | `src/app/tools` | `@app/tools/x` | other tools, `@app/navigation`, `@app/core`, `@lib` |
 | Navigation | `src/app/navigation` | `@app/navigation/x` | `@app/core`, `@lib` |
 | Core | `src/app/core` | `@app/core/x` | `@lib` |
 | Lib | `src/lib` | `@lib/x` | external packages only |
@@ -38,7 +41,7 @@ unrelated to flotilla's `@app/*`. App modules use it freely, for example `naviga
   sequence) without pulling in UI.
 - An `index.ts` only re-exports its directory's files and defines its `registerX`; files in the
   directory import each other directly, not through the index. AGENTS.md has the rule.
-- Core and navigation never import features. A feature reaches into core through hooks (`registerSync`,
+- Core and navigation never import shell, areas, features or tools. A module above them reaches into core through hooks (`registerSync`,
   `registerRetention`, `registerLogoutHandler`) from its own `registerX`,
   and `registerAll` in `src/app/index.ts` calls every `registerX`. The root layout calls
   `registerAll` first, and `core/app.ts` builds the `App` lazily after it.
@@ -158,18 +161,18 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 Outside `spaces/`:
 
-- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `targets.ts` names the event an event is about: what a reply answers, a reaction reacts to, a zap zaps, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `publish.ts` (`publishToNetwork`, posting outside a space), `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38), `uploads.ts` (Blossom, image compression)
+- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `targets.ts` names the event an event is about: what a reply answers, a reaction reacts to, a zap zaps, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `publish.ts` (`publishToNetwork`, posting outside a space), `pins.ts` (a person's pinned notes), `quotes.ts`, `statuses.ts` (NIP-38), `uploads.ts` (Blossom, image compression)
 - `people/`: `people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts` has `isEventMuted` and `derivePubkeyMuted`
 - `render.ts`: events as plain text or a one-line summary, for push notifications and reading aloud
 - `share.ts`: sharing an event into a room or conversation, and native share intents
 - `signerAlerts.ts`: the toast that offers help when the signer stops answering
-- `toast.ts` (`pushToast`, one at a time), `theme.ts` (the active theme and font size)
+- `toast.ts` (`pushToast`, one at a time)
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
   `activity.ts` (the home stream's conversations and space content, the latest activity per path,
   and which paths are unread), `badges.ts` (the app icon badge) and `notifications/` (what was done to your own notes and who mentioned you: `model.ts` is the pure part, which events count, their facets and how they group into rows; `sync.ts` polls your inbox relays; `stream.ts` holds the stores the Recent tab renders)
 - `notes/`: kind 1 notes and the replies and comments under them. `notes.ts` holds the `Notes` plugin (loading a note, or many at once, from the relays its refs point at, and a reply's thread), `resolver.ts` loads in the background the notes a list names but doesn't hold, and `threads.ts` builds a thread's filters and comment tree
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
-- `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
+- `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)
 - Platform and voice: `alerts/` (which events alert and the user's alert settings, and `stream.ts`, the in-app stream of alerting messages), `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `deepLinks.ts`, `reminders.ts`
 - `voice/`: speech to text (stt) and text to speech (tts). `dictation.ts` holds a composer's
@@ -178,7 +181,13 @@ Outside `spaces/`:
   and `resolveVoiceProvider` (`resolve.ts`) picks one or asks the user to set one up
 - `editor/`: flotilla's `@welshman/editor` setup (`makeEditor.ts`), with its suggestion popovers
   and node views
-- `analytics.ts` (Plausible pageviews), `drafts.ts`, `loading.ts`, `location.ts`
+
+**`tools/`, `areas/` and `shell/`: the layers `features/` is moving into**
+
+- `tools/`: `drafts.ts` (`DraftKey`, unsent form values held in memory), `wallet.ts` (wallet,
+  invoices), `theme.ts` (`colorFor`, the active theme and font size)
+- `areas/`: `bookmarks.ts` (bookmark folders and search)
+- `shell/`: `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar)
 
 A feature gets a `src/app/features/<feature>.ts` only when it has non-UI logic to hold. Polls, goals,
 threads and calendar events have no module; their components use domain readers directly.
@@ -201,7 +210,8 @@ client.
   samples at a model's rate, and WAV encoding
 - `stt/`: the on-device stt model (Whistle over a wasm engine, run in a worker), its download and
   cache, and `transcribeLocally`
-- `tileGrid.ts` (the call grid's geometry)
+- `tileGrid.ts` (the call grid's geometry), `location.ts` (place search, geohashes and a profile's
+  location)
 - `currency.ts`, `transition.ts`, `implicit.ts` (hands state from one page to the next)
 - `test/`: the DEV-only hooks the e2e harness injects through
 - `components/`: the design system, entered through `theme.css` (see `flotilla-views`), which
@@ -336,8 +346,10 @@ rather than a persisted store.
   `CONTENT_KINDS`. The walkthrough below names every file involved, and `flotilla-model` ("Adding
   a kind") and `flotilla-views` ("Adding a space content page") have the checklists. Add the
   section to the regexes in `server.js`, or its link previews are titled as a room.
-- **Non-UI logic for one feature** (scoring, filtering, stores keyed by URL) →
-  `src/app/features/<feature>.ts`, with no component imports.
+- **Non-UI logic** (scoring, filtering, stores keyed by URL), with no component imports →
+  `src/app/areas/<area>` when one section of the app owns it, `src/app/tools` when several areas
+  build on it, `src/app/shell` when it spans areas or serves the whole app from the root layout,
+  and `src/lib` when it needs nothing from the app once its dependencies are passed in.
 - **A keyed collection of one kind** → a plugin. A generic kind's plugin goes upstream in
   `@welshman/app`; a flotilla-specific one is a `DerivedPlugin` in `src/app`, exposed with
   `usePlugin`. See `flotilla-state`.
@@ -356,15 +368,15 @@ rather than a persisted store.
 - **A non-nostr HTTP service** → its own module with typed request functions, a typed error class
   and a base URL from env, as in `hosting.ts` (`hostingFetch`, `HostingError`,
   `HOSTING_BACKEND_URL`).
-- **A native capability** → JS in `src/app/features/<capability>.ts`, with inline `Capacitor` checks and a
-  web fallback. If no Capacitor plugin fits, write one under
+- **A native capability** → JS in `src/lib/<capability>.ts`, or `src/app/tools/<capability>.ts` when it
+  needs app state, with inline `Capacitor` checks and a web fallback. If no Capacitor plugin fits, write one under
   `android/app/src/main/java/social/flotilla/`, register it in `MainActivity.java`, and bind it
   with `registerPlugin`. An iOS extension reaches the app through a `flotilla://` deep link.
 - **A deployment setting** → a `VITE_` variable (see Env and branding).
 - **Startup wiring** → a `setup*` or `sync*` function in the owning module that returns an
   `Unsubscriber`, called from the root layout (`setupHistory`, `syncKeyboard`, `Push.sync`).
-- **A feature's contribution to core** (background sync, what storage keeps, logout cleanup) → a
-  `registerX` in the feature module that calls core's hooks, added to `registerAll` in
+- **A module's contribution to core** (background sync, what storage keeps, logout cleanup) → a
+  `registerX` in the module that calls core's hooks, added to `registerAll` in
   `src/app/index.ts`.
 
 ## Walkthrough: classifieds

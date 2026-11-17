@@ -9,11 +9,7 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import BookmarkFolderEdit from "@app/components/BookmarkFolderEdit.svelte"
   import BookmarkFolderSection from "@app/components/BookmarkFolderSection.svelte"
-  import {
-    userBookmarkedEvents,
-    userBookmarkFolders,
-    userBookmarkSearch,
-  } from "@app/features/bookmarks"
+  import {userBookmarkedEvents, userBookmarkFolders, userBookmarkSearch} from "@app/areas/bookmarks"
   import {pushModal} from "@app/navigation/dialogs"
 
   const createFolder = () => pushModal(BookmarkFolderEdit)

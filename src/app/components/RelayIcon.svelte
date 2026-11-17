@@ -2,7 +2,7 @@
   import {normalizeRelayUrl} from "@welshman/util"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import {relays} from "@app/core/plugins"
-  import {colorFor} from "@app/features/theme"
+  import {colorFor} from "@app/tools/theme"
 
   type Props = {
     url: string

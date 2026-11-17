@@ -9,7 +9,7 @@
     deriveIsBookmarked,
     eventToBookmark,
     removeBookmark,
-  } from "@app/features/bookmarks"
+  } from "@app/areas/bookmarks"
   import {pushToast} from "@app/features/toast"
 
   type Props = {

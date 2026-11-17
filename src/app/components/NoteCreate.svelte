@@ -15,7 +15,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import EditorContent from "@app/features/editor/EditorContent.svelte"
   import {writer} from "@app/core/domain"
-  import {DraftKey} from "@app/features/drafts"
+  import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/features/editor"
   import {publishToNetwork} from "@app/features/publish"
   import {pushToast} from "@app/features/toast"

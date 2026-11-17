@@ -17,7 +17,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {errorMessage} from "@lib/util"
-  import {payInvoice} from "@app/features/wallet"
+  import {payInvoice} from "@app/tools/wallet"
   import {pushToast} from "@app/features/toast"
   import {clearModals} from "@app/navigation/dialogs"
 

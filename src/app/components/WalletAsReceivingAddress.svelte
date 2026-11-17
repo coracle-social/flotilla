@@ -10,7 +10,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {userProfile} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
-  import {wallet} from "@app/features/wallet"
+  import {wallet} from "@app/tools/wallet"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
 

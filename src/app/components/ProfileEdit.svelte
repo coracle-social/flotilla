@@ -5,13 +5,13 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
+  import {getProfileGeohash} from "@lib/location"
   import ProfileEditForm from "@app/components/ProfileEditForm.svelte"
   import type {Values} from "@app/components/ProfileEditForm.svelte"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/features/toast"
   import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
-  import {getProfileGeohash} from "@app/features/location"
 
   const existingProfile = $profiles.get($user.pubkey)
 

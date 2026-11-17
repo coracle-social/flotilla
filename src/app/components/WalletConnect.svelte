@@ -24,7 +24,7 @@
   import Divider from "@lib/components/Divider.svelte"
   import WalletAsReceivingAddress from "@app/components/WalletAsReceivingAddress.svelte"
   import {userProfile} from "@app/core/user"
-  import {getWebLn, wallet} from "@app/features/wallet"
+  import {getWebLn, wallet} from "@app/tools/wallet"
   import {pushToast} from "@app/features/toast"
   import {pushModal} from "@app/navigation/dialogs"
 
