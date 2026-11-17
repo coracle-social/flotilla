@@ -454,7 +454,7 @@ Create/edit pairs come in three shapes:
   on a full page: it renders the `SpaceBar` with its Publish button, takes the title as `header`,
   and lands on the published article.
 
-Rich text uses `makeEditor` from `src/app/features/editor` with `EditorContent`.
+Rich text uses `makeEditor` from `src/app/components/editor` with `EditorContent`.
 
 ## Styling
 

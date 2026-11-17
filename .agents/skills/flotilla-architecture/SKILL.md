@@ -58,9 +58,7 @@ only gate.
 - **app → components.** The voice providers (`OpenRouterEnable`, `LocalSttEnable`) and the
   Electron screen-share adapter (`ScreenSharePicker`) import a component to open a prompt in the
   middle of a flow that no component wraps. They are due to return a refusal that a flow maps to
-  the prompt instead. `editor/` holds `.svelte` files of its own (suggestion popovers), which
-  `makeEditor` mounts, and they render `ProfileCircle`, `ProfileName`, `WotScore` and
-  `RoomNameWithImage`.
+  the prompt instead.
 - Nothing under `src/app` or `src/lib` imports from `src/routes`.
 
 ## Top-level layout
@@ -82,7 +80,7 @@ only gate.
 
 ## `src/app` by directory
 
-`src/app/components` is flat except for `hosting/` and `flows/`. `flows/` holds the UI that several components share or that a route or the root layout starts: `share.ts` (sharing an event, native shares and the Android share intent), `quotes.ts` (`goToQuote`, `quoteEvent`), `messages.ts` (`openMessages`, which asks for messaging relays first), `readAloud.ts` (`readEventAloud`, which asks to leave a call first) and `deepLinks.ts`. It also holds the CSS families for app
+`src/app/components` is flat except for `hosting/`, `editor/` and `flows/`. `editor/` is flotilla's `@welshman/editor` setup (`makeEditor.ts`, mounted by `EditorContent.svelte`), with its suggestion rows and node views. `flows/` holds the UI that several components share or that a route or the root layout starts: `share.ts` (sharing an event, native shares and the Android share intent), `quotes.ts` (`goToQuote`, `quoteEvent`), `messages.ts` (`openMessages`, which asks for messaging relays first), `readAloud.ts` (`readEventAloud`, which asks to leave a call first) and `deepLinks.ts`. It also holds the CSS families for app
 concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), which
 `src/app.css` imports. `flotilla-views` covers component conventions.
 
@@ -173,8 +171,6 @@ Outside `spaces/`:
   dictation, kept across navigation and sent as a voice note or transcribed, and `readAloud.ts`
   reads a message aloud. `providers/` runs each task on the device's stt model or on OpenRouter,
   and `resolveVoiceProvider` (`resolve.ts`) picks one or asks the user to set one up
-- `editor/`: flotilla's `@welshman/editor` setup (`makeEditor.ts`), with its suggestion popovers
-  and node views
 
 **`tools/`, `areas/` and `shell/`: the layers `features/` is moving into**
 

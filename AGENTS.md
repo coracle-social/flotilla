@@ -24,7 +24,7 @@ The project follows a **strict acyclic dependency hierarchy**:
 ```
 routes/                    (top layer - can depend on anything)
   ↓
-app/components/            (the only layer that imports app components; flows/ maps results to UI)
+app/components/            (the only layer that imports app components; editor/ and flows/ live here)
   ↓
 app/shell/                 (spans several areas, or serves the whole app from the root layout)
   ↓

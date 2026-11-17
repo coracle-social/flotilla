@@ -8,10 +8,10 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
-  import EditorContent from "@app/features/editor/EditorContent.svelte"
+  import EditorContent from "@app/components/editor/EditorContent.svelte"
   import ComposeParent from "@app/components/ComposeParent.svelte"
   import {prependParent, publishComment} from "@app/features/spaces/rooms"
-  import {makeEditor} from "@app/features/editor"
+  import {makeEditor} from "@app/components/editor/makeEditor"
   import {DraftKey} from "@app/tools/drafts"
   import {pushToast} from "@app/navigation/toast"
 

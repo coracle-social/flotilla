@@ -1,5 +1,5 @@
 import {mergeAttributes, Node} from "@tiptap/core"
-import {RoomReferenceNodeView} from "@app/features/editor/RoomReferenceNodeView"
+import {RoomReferenceNodeView} from "@app/components/editor/RoomReferenceNodeView"
 
 export const RoomReferenceExtension = Node.create({
   name: "roomref",

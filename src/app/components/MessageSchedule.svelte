@@ -14,8 +14,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
-  import EditorContent from "@app/features/editor/EditorContent.svelte"
-  import {makeEditor} from "@app/features/editor"
+  import EditorContent from "@app/components/editor/EditorContent.svelte"
+  import {makeEditor} from "@app/components/editor/makeEditor"
   import {ScheduleError} from "@app/tools/scheduling"
   import {pushToast} from "@app/navigation/toast"
 
