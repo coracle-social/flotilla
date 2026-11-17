@@ -1,6 +1,6 @@
-import {derived, get, readable, writable} from "svelte/store"
+import {derived, get, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {MONTH, call, int, now, on} from "@welshman/lib"
+import {MONTH, int, now, on} from "@welshman/lib"
 import type {AsyncProjection, EventsById, RepositoryUpdate} from "@welshman/store"
 import {sortEventsAsc} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
@@ -32,43 +32,15 @@ export type Timeline = {
   stop: () => void
 }
 
-// A relay that refuses a publish leaves the source, but the event stays listed with its failure until the repository removes it.
-const keepUntilRemoved = (source: AsyncProjection<EventsById>) =>
-  readable<EventsById>(new Map(), set => {
-    const kept: EventsById = new Map()
-
-    const onUpdate = ({removed}: RepositoryUpdate) => {
-      const before = kept.size
-
-      for (const id of removed) {
-        kept.delete(id)
-      }
-
-      if (kept.size < before) {
-        set(kept)
-      }
-    }
-
-    const unsubscribers = [
-      source.$.subscribe($events => {
-        for (const [id, event] of $events) {
-          kept.set(id, event)
-        }
-
-        set(kept)
-      }),
-      on(app.get().repository, "update", onUpdate),
-    ]
-
-    return () => unsubscribers.forEach(call)
-  })
-
 export const makeTimeline = (options: TimelineOptions): Timeline => {
   const {source, relays, filters, at = now(), quorum, useCache, onEvent} = options
 
   const floor = writable(at)
   const controller = new AbortController()
   const reported = new Set<string>()
+  // A relay that refuses a publish leaves the source, but the event stays listed with its failure until the repository removes it.
+  const kept: EventsById = new Map()
+  const keptEvents = writable(kept)
 
   let olderCursor = {until: at, interval: int(MONTH)}
   let newerCursor = {since: at, interval: int(MONTH)}
@@ -77,8 +49,30 @@ export const makeTimeline = (options: TimelineOptions): Timeline => {
     floor.update($floor => Math.min($floor, timestamp))
   }
 
-  const events = derived([keepUntilRemoved(source), floor], ([$events, $floor]) =>
-    sortEventsAsc(Array.from($events.values()).filter(event => event.created_at >= $floor)),
+  const onRepositoryUpdate = ({removed}: RepositoryUpdate) => {
+    const before = kept.size
+
+    for (const id of removed) {
+      kept.delete(id)
+    }
+
+    if (kept.size < before) {
+      keptEvents.set(kept)
+    }
+  }
+
+  const stopKept = source.$.subscribe($events => {
+    for (const [id, event] of $events) {
+      kept.set(id, event)
+    }
+
+    keptEvents.set(kept)
+  })
+
+  const stopRepositoryUpdates = on(app.get().repository, "update", onRepositoryUpdate)
+
+  const events = derived([keptEvents, floor], ([$kept, $floor]) =>
+    sortEventsAsc(Array.from($kept.values()).filter(event => event.created_at >= $floor)),
   )
 
   const loadOlder = async (): Promise<PageResult> => {
@@ -105,9 +99,8 @@ export const makeTimeline = (options: TimelineOptions): Timeline => {
       const nextUntil = edge === undefined ? since : Math.min(edge, until - 1)
 
       olderCursor = {until: nextUntil, interval: nextInterval(interval, found)}
+      lowerFloor(olderCursor.until)
     }
-
-    lowerFloor(olderCursor.until)
 
     return {found, answered, exhausted: false, behind: olderCursor.until > get(floor)}
   }
@@ -168,6 +161,8 @@ export const makeTimeline = (options: TimelineOptions): Timeline => {
   const stop = () => {
     controller.abort()
     stopEvents()
+    stopKept()
+    stopRepositoryUpdates()
   }
 
   return {events, older: makePager(loadOlder), newer: makePager(loadNewer), stop}

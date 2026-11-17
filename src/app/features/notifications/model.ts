@@ -1,5 +1,5 @@
 import type {Maybe} from "@welshman/lib"
-import {HOUR, countBy, int, max, now, sortBy} from "@welshman/lib"
+import {HOUR, int, max, now, sortBy} from "@welshman/lib"
 import {
   COMMENT,
   EventRef,
@@ -9,7 +9,7 @@ import {
   REPOST,
   ZAP_RECEIPT,
 } from "@welshman/util"
-import type {TrustedEvent} from "@welshman/util"
+import type {Filter, TrustedEvent} from "@welshman/util"
 import {ENABLE_ZAPS} from "@app/core/env"
 import {CONTENT_KINDS} from "@app/features/spaces/content"
 import {getTargetRef, isReplyKind} from "@app/features/social/targets"
@@ -25,6 +25,10 @@ if (ENABLE_ZAPS) {
   NOTIFICATION_KINDS.push(ZAP_RECEIPT)
 }
 
+export const getNotificationFilters = (pubkey: string): Filter[] => [
+  {kinds: NOTIFICATION_KINDS, "#p": [pubkey]},
+]
+
 export type NotificationGroup = {
   key: string
   ref: EventRef
@@ -32,8 +36,6 @@ export type NotificationGroup = {
   reactions: TrustedEvent[]
   timestamp: number
 }
-
-const isMention = (event: TrustedEvent) => isReplyKind(event) && !getTargetRef(event)
 
 const isAnswer = (event: TrustedEvent) => isReplyKind(event) && Boolean(getTargetRef(event))
 
@@ -111,16 +113,8 @@ export const groupNotifications = (events: TrustedEvent[]) => {
       // The bucket is measured back from now, so two answers minutes apart never straddle an edge.
       const key = `${target}:${Math.round((now() - event.created_at) / int(3, HOUR))}`
       const group = groups.get(key) ?? {key, ref, replies: [], reactions: [], timestamp: 0}
-      const replies = [...group.replies]
-      const reactions = [...group.reactions]
-
-      if (!isMention(event)) {
-        if (isReplyKind(event)) {
-          replies.push(event)
-        } else {
-          reactions.push(event)
-        }
-      }
+      const replies = isAnswer(event) ? [...group.replies, event] : group.replies
+      const reactions = isReplyKind(event) ? group.reactions : [...group.reactions, event]
 
       groups.set(key, {
         key,
@@ -134,6 +128,3 @@ export const groupNotifications = (events: TrustedEvent[]) => {
 
   return mergeAdjacent(sortBy(group => -group.timestamp, groups.values()))
 }
-
-export const countNotificationFacets = (events: TrustedEvent[]) =>
-  countBy(getNotificationFacet, events)

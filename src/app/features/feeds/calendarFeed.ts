@@ -1,12 +1,11 @@
 import {derived} from "svelte/store"
-import type {Readable} from "svelte/store"
 import {Events} from "@welshman/app"
 import {TimeEvent} from "@welshman/domain"
-import {DAY, MONTH, YEAR, int, ms, now, range} from "@welshman/lib"
+import {DAY, MONTH, YEAR, int, ms, now, range, removeUndefined, sortBy, uniqBy} from "@welshman/lib"
 import {EVENT_TIME, compareEventsAsc, getAddress} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {makePager} from "@lib/pager"
-import type {PageResult, Pager} from "@lib/pager"
+import type {PageResult} from "@lib/pager"
 import {app} from "@app/core/app"
 import {reader} from "@app/core/domain"
 import {network} from "@app/core/plugins"
@@ -14,17 +13,9 @@ import {isPastHistory} from "@app/features/feeds/windows"
 
 export type CalendarFeedOptions = {url: string; onEvent?: (event: TrustedEvent) => void}
 
-export type CalendarFeed = {
-  events: Readable<TrustedEvent[]>
-  older: Pager
-  newer: Pager
-  load: (since: number, until: number) => Promise<void>
-  stop: () => void
-}
-
 type CalendarEntry = {event: TrustedEvent; start: number}
 
-export const makeCalendarFeed = (options: CalendarFeedOptions): CalendarFeed => {
+export const makeCalendarFeed = (options: CalendarFeedOptions) => {
   const {url, onEvent} = options
 
   const source = app
@@ -50,26 +41,13 @@ export const makeCalendarFeed = (options: CalendarFeedOptions): CalendarFeed => 
   }
 
   const events = derived(source.$, $events => {
-    const byAddress = new Map<string, CalendarEntry>()
+    const entries = removeUndefined(Array.from($events.values(), getEntry))
+    const newestFirst = sortBy(entry => -entry.event.created_at, entries)
+    const latestByAddress = uniqBy(entry => getAddress(entry.event), newestFirst)
 
-    for (const event of $events.values()) {
-      const entry = getEntry(event)
+    latestByAddress.sort((a, b) => a.start - b.start || compareEventsAsc(a.event, b.event))
 
-      if (entry) {
-        const address = getAddress(event)
-        const current = byAddress.get(address)
-
-        if (!current || current.event.created_at < event.created_at) {
-          byAddress.set(address, entry)
-        }
-      }
-    }
-
-    const entries = Array.from(byAddress.values())
-
-    entries.sort((a, b) => a.start - b.start || compareEventsAsc(a.event, b.event))
-
-    return entries.map(entry => entry.event)
+    return latestByAddress.map(entry => entry.event)
   })
 
   const requestDays = async (since: number, until: number) => {
@@ -122,10 +100,6 @@ export const makeCalendarFeed = (options: CalendarFeedOptions): CalendarFeed => 
     return {found, answered, exhausted: false, behind: false}
   }
 
-  const load = async (since: number, until: number) => {
-    await requestDays(since, until)
-  }
-
   const stopEvents = events.subscribe($events => {
     for (const event of $events) {
       if (!reported.has(event.id)) {
@@ -140,5 +114,5 @@ export const makeCalendarFeed = (options: CalendarFeedOptions): CalendarFeed => 
     stopEvents()
   }
 
-  return {events, older: makePager(loadOlder), newer: makePager(loadNewer), load, stop}
+  return {events, older: makePager(loadOlder), newer: makePager(loadNewer), load: requestDays, stop}
 }

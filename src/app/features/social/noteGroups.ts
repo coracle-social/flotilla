@@ -1,5 +1,5 @@
 import type {Maybe} from "@welshman/lib"
-import {partition, sortBy, uniq} from "@welshman/lib"
+import {countBy, groupBy, identity, partition, sortBy, uniq} from "@welshman/lib"
 import {EventRef, sortEventsDesc} from "@welshman/util"
 import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {getNoteParentRef} from "@app/features/social/targets"
@@ -23,17 +23,6 @@ export type NoteFeedStatus = "loading" | "ready" | "empty" | "filtered"
 
 export type DrawnEvent = {event: TrustedEvent; facet: NoteFacet}
 
-export type NoteTarget = {ref: EventRef; facet: NoteFacet}
-
-type NoteFeedState = {
-  entries: NoteEntry[]
-  groups: NoteGroup[]
-  resolved: Map<string, Maybe<TrustedEvent>>
-  loading: boolean
-  exhausted: boolean
-  anyIncluded: boolean
-}
-
 type Candidate = {event: TrustedEvent; facets: NoteFacet[]}
 
 // An addressable note is keyed by its address, so a reply naming only its latest version lands on it.
@@ -41,6 +30,9 @@ export const getNoteKey = (ref: IEventRef): string => new EventRef(ref).getAddre
 
 export const classifyNote = (event: TrustedEvent): NoteFacet =>
   getNoteParentRef(event) ? "replies" : "notes"
+
+export const includesAnyFacet = (included: NoteFacet[], facets: NoteFacet[]): boolean =>
+  facets.some(facet => included.includes(facet))
 
 const mergeInto = (
   groups: Map<string, NoteGroup>,
@@ -57,23 +49,16 @@ const mergeInto = (
   return group
 }
 
-const dedupeDrawn = (drawn: DrawnEvent[]): Candidate[] => {
-  const candidates = new Map<string, Candidate>()
+const dedupeDrawn = (drawn: DrawnEvent[]): Candidate[] =>
+  Array.from(
+    groupBy(({event}) => event.id, drawn),
+    ([, items]) => ({
+      event: items[0].event,
+      facets: uniq(items.map(({facet}) => facet)),
+    }),
+  )
 
-  for (const {event, facet} of drawn) {
-    const existing = candidates.get(event.id)
-
-    if (existing) {
-      existing.facets = uniq([...existing.facets, facet])
-    } else {
-      candidates.set(event.id, {event, facets: [facet]})
-    }
-  }
-
-  return Array.from(candidates.values())
-}
-
-const groupByCandidate = (drawn: DrawnEvent[], targets: NoteTarget[]): NoteGroup[] => {
+const groupByCandidate = (drawn: DrawnEvent[], targets: EventRef[]): NoteGroup[] => {
   const groups = new Map<string, NoteGroup>()
 
   for (const {event, facets} of dedupeDrawn(drawn)) {
@@ -92,11 +77,11 @@ const groupByCandidate = (drawn: DrawnEvent[], targets: NoteTarget[]): NoteGroup
     }
   }
 
-  for (const {ref, facet} of targets) {
+  for (const ref of targets) {
     const key = getNoteKey(ref)
 
     if (key) {
-      mergeInto(groups, key, ref, [facet])
+      mergeInto(groups, key, ref, ["interactions"])
     }
   }
 
@@ -124,41 +109,35 @@ const groupByNote = (
 
 export const groupNotes = (
   drawn: DrawnEvent[],
-  targets: NoteTarget[],
+  targets: EventRef[],
   resolved: Map<string, Maybe<TrustedEvent>>,
 ): NoteGroup[] => groupByNote(groupByCandidate(drawn, targets), resolved)
 
 // Each facet counts every distinct note it would show, whatever is included.
-export const countFacets = (groups: NoteGroup[]): FacetCounts => {
-  const counts: FacetCounts = new Map()
-
-  for (const group of groups) {
-    for (const facet of group.facets) {
-      counts.set(facet, (counts.get(facet) ?? 0) + 1)
-    }
-  }
-
-  return counts
-}
+export const countFacets = (groups: NoteGroup[]): FacetCounts =>
+  countBy(
+    identity,
+    groups.flatMap(group => group.facets),
+  )
 
 export const getVisibleGroups = (groups: NoteGroup[], included: NoteFacet[]): NoteGroup[] =>
-  groups.filter(group => group.facets.some(facet => included.includes(facet)))
+  groups.filter(group => includesAnyFacet(included, group.facets))
 
 export const getEntries = (
   visible: NoteGroup[],
   included: NoteFacet[],
   pinnedKeys: Set<string>,
 ): NoteEntry[] => {
-  const entries: NoteEntry[] = []
-
-  for (const group of visible) {
+  const entries = visible.flatMap(group => {
     if (group.note) {
       // The replies drawn under a card belong to the replies facet alone.
       const replies = included.includes("replies") ? sortEventsDesc(group.replies) : []
 
-      entries.push({key: group.key, note: group.note, replies})
+      return [{key: group.key, note: group.note, replies}]
     }
-  }
+
+    return []
+  })
 
   const sorted = sortBy(entry => -getPublishedTimestamp(entry.note), entries)
   const [pinned, rest] = partition(entry => pinnedKeys.has(entry.key), sorted)
@@ -170,31 +149,3 @@ export const getUnresolved = (
   visible: NoteGroup[],
   resolved: Map<string, Maybe<TrustedEvent>>,
 ): NoteGroup[] => visible.filter(group => !group.note && !resolved.has(group.key))
-
-export const getNoteFeedStatus = ({
-  entries,
-  groups,
-  resolved,
-  loading,
-  exhausted,
-  anyIncluded,
-}: NoteFeedState): NoteFeedStatus => {
-  if (entries.length > 0) {
-    return "ready"
-  }
-
-  if (!anyIncluded) {
-    return "filtered"
-  }
-
-  if (loading || !exhausted) {
-    return "loading"
-  }
-
-  // A note that failed to load can't be drawn whatever the facets say, so it isn't one they hide.
-  if (groups.some(group => group.note || !resolved.has(group.key))) {
-    return "filtered"
-  }
-
-  return "empty"
-}

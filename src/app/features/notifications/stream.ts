@@ -2,7 +2,7 @@ import {derived} from "svelte/store"
 import {ms, removeUndefined, uniqBy} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {getIdAndAddress, getIdFilters} from "@welshman/util"
-import type {Filter, TrustedEvent} from "@welshman/util"
+import type {TrustedEvent} from "@welshman/util"
 import {Events} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {observeEventsById, synced, throttled} from "@welshman/store"
@@ -10,8 +10,8 @@ import {app} from "@app/core/app"
 import {kv} from "@app/core/storage"
 import {checked, setChecked} from "@app/features/checked"
 import {
-  NOTIFICATION_KINDS,
   getNotificationFacet,
+  getNotificationFilters,
   getNotificationRef,
   groupNotifications,
   isNotification,
@@ -32,15 +32,13 @@ const notificationsPath = "/home/notifications"
 
 export const readNotifications = () => setChecked(notificationsPath)
 
-const filtersFor = (pubkey: string): Filter[] => [{kinds: NOTIFICATION_KINDS, "#p": [pubkey]}]
-
 const notificationCandidates = derived(
   app,
   ($app, set) => {
     const pubkey = $app.user?.pubkey
 
     if (pubkey) {
-      return $app.use(Events).desc(filtersFor(pubkey)).$.subscribe(set)
+      return $app.use(Events).desc(getNotificationFilters(pubkey)).$.subscribe(set)
     }
 
     set([])
@@ -65,6 +63,14 @@ const getTargetResolver = ($app: IApp) => {
   return resolver
 }
 
+// A ref names its target by id or by address, so the map answers to either.
+const indexTargets = (events: TrustedEvent[]) =>
+  new Map(
+    events.flatMap(event =>
+      getIdAndAddress(event).map((key): [string, TrustedEvent] => [key, event]),
+    ),
+  )
+
 const notificationTargets = derived(
   [app, throttled(ms(1), notificationCandidates)],
   ([$app, $candidates], set) => {
@@ -81,18 +87,7 @@ const notificationTargets = derived(
       return observeEventsById({
         repository: $app.repository,
         filters: getIdFilters(keys),
-        onEvents: $byId => {
-          const targets = new Map<string, TrustedEvent>()
-
-          // A ref names its target by id or by address, so the map answers to either.
-          for (const event of $byId.values()) {
-            for (const key of getIdAndAddress(event)) {
-              targets.set(key, event)
-            }
-          }
-
-          set(targets)
-        },
+        onEvents: $byId => set(indexTargets([...$byId.values()])),
       })
     }
 
@@ -101,10 +96,10 @@ const notificationTargets = derived(
   new Map<string, TrustedEvent>(),
 )
 
-const isNotificationEvent = derived(
-  [app, notificationTargets, isEventMuted],
-  ([$app, $targets, $isEventMuted]) =>
-    (event: TrustedEvent) => {
+export const notificationEvents = derived(
+  [app, notificationCandidates, notificationTargets, isEventMuted],
+  ([$app, $candidates, $targets, $isEventMuted]) =>
+    $candidates.filter(event => {
       const key = getNotificationRef(event)?.getAddressOrId()
 
       if (key) {
@@ -115,12 +110,7 @@ const isNotificationEvent = derived(
       }
 
       return false
-    },
-)
-
-export const notificationEvents = derived(
-  [notificationCandidates, isNotificationEvent],
-  ([$candidates, $isNotificationEvent]) => $candidates.filter($isNotificationEvent),
+    }),
 )
 
 const includedNotificationEvents = derived(
@@ -142,18 +132,11 @@ export type NotificationEntry = {group: NotificationGroup; note: TrustedEvent}
 
 export const notificationEntries = derived(
   [includedNotificationEvents, notificationTargets],
-  ([$events, $targets]) => {
-    const entries: NotificationEntry[] = []
-
-    for (const group of groupNotifications($events)) {
+  ([$events, $targets]) =>
+    groupNotifications($events).flatMap(group => {
       const key = group.ref.getAddressOrId()
       const note = key ? $targets.get(key) : undefined
 
-      if (note) {
-        entries.push({group, note})
-      }
-    }
-
-    return entries
-  },
+      return note ? [{group, note}] : []
+    }),
 )

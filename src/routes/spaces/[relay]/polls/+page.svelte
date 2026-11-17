@@ -8,28 +8,21 @@
   import Button from "@lib/components/Button.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import {followScroll} from "@lib/pager"
-  import {makeCommentFilter} from "@lib/util"
   import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import PollItem from "@app/components/PollItem.svelte"
   import PollCreate from "@app/components/PollCreate.svelte"
   import * as pages from "@app/navigation/pages"
   import {partitionByActivity} from "@app/features/spaces"
-  import {makeRelayFeed} from "@app/features/feeds"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeSpaceFeed} from "@app/features/feeds"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.polls.decode(params)
-  const engagement = makeEngagement({relays: [url]})
-  const feed = makeRelayFeed({
-    url,
-    filters: [{kinds: [POLL]}, makeCommentFilter([POLL])],
-    onEvent: engagement.track,
-  })
-  const {events} = feed
+  const feed = makeSpaceFeed(url, POLL)
+  const {events, engagement} = feed
   const status = feed.older.status
 
   const createPoll = () => pushModal(PollCreate, {url})
@@ -40,10 +33,7 @@
 
   onMount(() => followScroll(element!, feed.older))
 
-  onDestroy(() => {
-    feed.stop()
-    engagement.stop()
-  })
+  onDestroy(feed.stop)
 </script>
 
 <SpaceBar>

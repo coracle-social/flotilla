@@ -6,13 +6,6 @@ import type {TrustedEvent} from "@welshman/util"
 import {notes} from "@app/features/social/notes"
 import type {NoteRequest} from "@app/features/social/notes"
 
-export type NoteResolverOptions = {
-  batchSize?: number
-  maxAttempts?: number
-  timeout?: number
-  priority?: number
-}
-
 export type NoteResolver = {
   notes: Readable<Map<string, Maybe<TrustedEvent>>>
   resolve: (requests: NoteRequest[]) => void
@@ -24,10 +17,15 @@ export const makeNoteResolver = ({
   maxAttempts = 1,
   timeout,
   priority,
-}: NoteResolverOptions = {}): NoteResolver => {
+}: {
+  batchSize?: number
+  maxAttempts?: number
+  timeout?: number
+  priority?: number
+} = {}): NoteResolver => {
   const resolved = writable(new Map<string, Maybe<TrustedEvent>>())
   const queue: NoteRequest[] = []
-  const inFlight = new Set<string>()
+  const pending = new Set<string>()
   const attempts = new Map<string, number>()
   const controller = new AbortController()
   let running = false
@@ -66,11 +64,6 @@ export const makeNoteResolver = ({
     try {
       while (queue.length > 0 && !controller.signal.aborted) {
         const batch = queue.splice(0, batchSize)
-        const keys = removeUndefined(batch.map(request => request.ref.getAddressOrId()))
-
-        for (const key of keys) {
-          inFlight.add(key)
-        }
 
         let found: Map<string, TrustedEvent>
 
@@ -84,8 +77,10 @@ export const makeNoteResolver = ({
           found = new Map()
         }
 
+        const keys = removeUndefined(batch.map(request => request.ref.getAddressOrId()))
+
         for (const key of keys) {
-          inFlight.delete(key)
+          pending.delete(key)
         }
 
         settle(batch, found)
@@ -97,14 +92,13 @@ export const makeNoteResolver = ({
 
   const resolve = (requests: NoteRequest[]) => {
     const settled = get(resolved)
-    const queued = new Set(removeUndefined(queue.map(request => request.ref.getAddressOrId())))
 
     for (const request of requests) {
       const key = request.ref.getAddressOrId()
 
-      if (key && !settled.has(key) && !queued.has(key) && !inFlight.has(key)) {
+      if (key && !settled.has(key) && !pending.has(key)) {
         queue.push(request)
-        queued.add(key)
+        pending.add(key)
       }
     }
 
@@ -115,5 +109,5 @@ export const makeNoteResolver = ({
 
   const stop = () => controller.abort()
 
-  return {notes: {subscribe: resolved.subscribe}, resolve, stop}
+  return {notes: resolved, resolve, stop}
 }

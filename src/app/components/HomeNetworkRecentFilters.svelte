@@ -2,7 +2,7 @@
   import {toggle} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
   import {includedNoteFacets} from "@app/features/social"
-  import type {FacetCounts} from "@app/features/social"
+  import type {FacetCounts, NoteFacet} from "@app/features/social"
 
   type Props = {
     counts: FacetCounts
@@ -10,12 +10,8 @@
 
   const {counts}: Props = $props()
 
-  const toggleNotes = () => includedNoteFacets.update($facets => toggle("notes", $facets))
-
-  const toggleReplies = () => includedNoteFacets.update($facets => toggle("replies", $facets))
-
-  const toggleInteractions = () =>
-    includedNoteFacets.update($facets => toggle("interactions", $facets))
+  const toggleFacet = (facet: NoteFacet) => () =>
+    includedNoteFacets.update($facets => toggle(facet, $facets))
 </script>
 
 <div class="flex flex-wrap items-center gap-2">
@@ -24,17 +20,17 @@
     count={counts.get("notes") ?? 0}
     size="xs"
     pressed={$includedNoteFacets.includes("notes")}
-    onclick={toggleNotes} />
+    onclick={toggleFacet("notes")} />
   <SegmentedButton
     label="Replies"
     count={counts.get("replies") ?? 0}
     size="xs"
     pressed={$includedNoteFacets.includes("replies")}
-    onclick={toggleReplies} />
+    onclick={toggleFacet("replies")} />
   <SegmentedButton
     label="Interactions"
     count={counts.get("interactions") ?? 0}
     size="xs"
     pressed={$includedNoteFacets.includes("interactions")}
-    onclick={toggleInteractions} />
+    onclick={toggleFacet("interactions")} />
 </div>

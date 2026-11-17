@@ -371,22 +371,18 @@ onMount(() => {
 
 That is `EventComments`. The thread detail page does the same in an `$effect`.
 
-**A list that pages as you scroll:** a feed from `@app/features/feeds`, `followScroll` from `@lib/pager`, and `makeEngagement` from `src/app/features/engagement.ts`. Every space list page uses them, as do `RoomTranscript` and the calendar. The threads and classifieds pages are the reference:
+**A list that pages as you scroll:** a feed from `@app/features/feeds`, `followScroll` from `@lib/pager`, and `makeEngagement` from `src/app/features/engagement.ts`. Every space list page uses them, as do `RoomTranscript` and the calendar. A list of one kind and its comments takes both from `makeSpaceFeed(url, kind)`, and the threads and classifieds pages are the reference:
 
 ```typescript
-const engagement = makeEngagement({relays: [url]})
-const feed = makeRelayFeed({url, filters, onEvent: engagement.track})
-const {events} = feed
+const feed = makeSpaceFeed(url, THREAD)
+const {events, engagement} = feed
 const status = feed.older.status
 
 let element: HTMLElement | undefined = $state()
 
 onMount(() => followScroll(element!, feed.older))
 
-onDestroy(() => {
-  feed.stop()
-  engagement.stop()
-})
+onDestroy(feed.stop)
 ```
 
 A feed is a timeline: what the repository holds for its relay, from its floor up. Paging asks the relay for the next window back and lowers the floor, so the list never shows a gap; nothing is stored in the feed itself. Only the scroll binding needs the element from `<PageContent bind:element>`, so it alone waits for `onMount`. `engagement.track` batches the reactions, comments and deletions for every event the feed draws, rows get the same `engagement`, and their action rows read `engagement.related(event)`; whether an event was deleted is `$events.isDeleted(event).$`. Close the list with `<FeedFooter status={$status} ...>`, which shows the spinner while the pager loads and the empty or done message once it is exhausted. `RoomTranscript` pages both ways from a permalink with `feed.older` and `feed.newer`. Calendars use `makeCalendarFeed`, which windows by day rather than `created_at`, and whose `load(since, until)` serves the month and week grids.

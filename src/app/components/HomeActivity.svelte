@@ -1,7 +1,6 @@
 <script lang="ts">
   import {onDestroy} from "svelte"
-  import {sortBy} from "@welshman/lib"
-  import type {TrustedEvent} from "@welshman/util"
+  import {countBy, sortBy} from "@welshman/lib"
   import Spinner from "@lib/components/Spinner.svelte"
   import HomeActivityFilters from "@app/components/HomeActivityFilters.svelte"
   import HomeActivityItem from "@app/components/HomeActivityItem.svelte"
@@ -11,7 +10,7 @@
   import type {Activity, SpaceContent} from "@app/features/activity"
   import {makeEngagement} from "@app/features/engagement"
   import {
-    countNotificationFacets,
+    getNotificationFacet,
     includedNotificationFacets,
     notificationEntries,
     notificationEvents,
@@ -19,12 +18,12 @@
     notificationsUnread,
     readNotifications,
   } from "@app/features/notifications"
-  import type {NotificationFacet, NotificationGroup} from "@app/features/notifications"
+  import type {NotificationEntry, NotificationFacet} from "@app/features/notifications"
 
   type Entry = {key: string; timestamp: number} & (
     | {type: "conversation"; activity: Activity}
     | {type: "space"; content: SpaceContent}
-    | {type: "notification"; group: NotificationGroup; note: TrustedEvent}
+    | ({type: "notification"} & NotificationEntry)
   )
 
   const engagement = makeEngagement({withReplies: true})
@@ -42,7 +41,7 @@
 
   const counts = $derived(
     new Map<NotificationFacet, number>([
-      ...countNotificationFacets($notificationEvents),
+      ...countBy(getNotificationFacet, $notificationEvents),
       ["spaces", $recentConversations.filter(isSpaceActivity).length + $unreadSpaceContent.length],
     ]),
   )

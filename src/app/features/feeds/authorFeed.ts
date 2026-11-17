@@ -1,12 +1,14 @@
 import {derived, get, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {debounce} from "throttle-debounce"
+import {Events} from "@welshman/app"
 import {chunks, partition, shuffle} from "@welshman/lib"
+import {projectAsync} from "@welshman/store"
+import type {AsyncProjection, EventsById} from "@welshman/store"
 import {outbox} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {combinePagers} from "@lib/pager"
 import type {Pager} from "@lib/pager"
-import {deriveEventsByIdForUrls} from "@lib/repository"
 import {app} from "@app/core/app"
 import {PLATFORM_RELAYS} from "@app/core/env"
 import {relayLists, router} from "@app/core/plugins"
@@ -22,8 +24,21 @@ export type AuthorFeedOptions = {
 export type AuthorFeed = {events: Readable<TrustedEvent[]>; older: Pager; stop: () => void}
 
 // One selection over every follow lands on the few biggest relays, so each group scores its own.
-export const groupAuthors = (authors: string[]): string[][] =>
+const groupAuthors = (authors: string[]): string[][] =>
   chunks(3, shuffle(authors)).filter(group => group.length > 0)
+
+const eventsOnUrls = (urls: string[], filters: Filter[]): AsyncProjection<EventsById> =>
+  projectAsync(app.get().use(Events).byIdByUrl(filters), $byUrl => {
+    const eventsById: EventsById = new Map()
+
+    for (const url of urls) {
+      for (const [id, event] of $byUrl.get(url) ?? []) {
+        eventsById.set(id, event)
+      }
+    }
+
+    return eventsById
+  })
 
 export const makeAuthorFeed = ({pubkeys, getFilters, onEvent}: AuthorFeedOptions): AuthorFeed => {
   const groups = writable<Timeline[]>([])
@@ -44,7 +59,7 @@ export const makeAuthorFeed = ({pubkeys, getFilters, onEvent}: AuthorFeedOptions
     const filters = getFilters(authors)
 
     const group = makeTimeline({
-      source: deriveEventsByIdForUrls({urls, filters, repository: app.get().repository}),
+      source: eventsOnUrls(urls, filters),
       relays: urls,
       filters,
       // Half a group's relays answering is enough to show its page; the rest are asked again next page.
@@ -97,45 +112,35 @@ export const makeAuthorFeed = ({pubkeys, getFilters, onEvent}: AuthorFeedOptions
 
     if (PLATFORM_RELAYS.length > 0) {
       await startGroup(authors, signal)
-
-      if (signal.aborted) {
-        return
-      }
     } else {
       const [known, unknown] = partition(hasRelayList, authors)
 
       await startGroups(groupAuthors(known), signal)
 
-      if (signal.aborted) {
-        return
+      if (!signal.aborted) {
+        // Known groups ask while the rest look for a relay list.
+        older.page()
+
+        await Promise.all(
+          unknown.map(pubkey =>
+            relayLists
+              .get()
+              .load(pubkey)
+              .catch(error => console.error(error)),
+          ),
+        )
       }
 
-      // Known groups ask while the rest look for a relay list.
-      older.page()
-
-      await Promise.all(
-        unknown.map(pubkey =>
-          relayLists
-            .get()
-            .load(pubkey)
-            .catch(error => console.error(error)),
-        ),
-      )
-
-      if (signal.aborted) {
-        return
-      }
-
-      await startGroups(groupAuthors(unknown.filter(hasRelayList)), signal)
-
-      if (signal.aborted) {
-        return
+      if (!signal.aborted) {
+        await startGroups(groupAuthors(unknown.filter(hasRelayList)), signal)
       }
     }
 
-    built.set(true)
+    if (!signal.aborted) {
+      built.set(true)
 
-    await older.page()
+      await older.page()
+    }
   }
 
   // A burst of follows lands on one rebuild.

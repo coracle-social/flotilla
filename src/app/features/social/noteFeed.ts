@@ -1,6 +1,6 @@
 import {derived, readable} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {ms} from "@welshman/lib"
+import {ms, removeUndefined} from "@welshman/lib"
 import {EventRef} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
 import {combinePagers} from "@lib/pager"
@@ -11,11 +11,11 @@ import {
   classifyNote,
   countFacets,
   getEntries,
-  getNoteFeedStatus,
   getNoteKey,
   getUnresolved,
   getVisibleGroups,
   groupNotes,
+  includesAnyFacet,
 } from "@app/features/social/noteGroups"
 import type {
   DrawnEvent,
@@ -24,7 +24,6 @@ import type {
   NoteFacet,
   NoteFeedStatus,
   NoteGroup,
-  NoteTarget,
 } from "@app/features/social/noteGroups"
 import {makeNoteResolver} from "@app/features/social/noteResolver"
 import {getTargetRef} from "@app/features/social/targets"
@@ -47,23 +46,6 @@ export type NoteFeed = {
   stop: () => void
 }
 
-const sourceIncluded = (included: NoteFacet[], facets: NoteFacet[]) =>
-  facets.some(facet => included.includes(facet))
-
-const getInteractionTargets = (events: TrustedEvent[]): NoteTarget[] => {
-  const targets: NoteTarget[] = []
-
-  for (const event of events) {
-    const ref = getTargetRef(event)
-
-    if (ref) {
-      targets.push({ref, facet: "interactions"})
-    }
-  }
-
-  return targets
-}
-
 export const makeNoteFeed = ({
   notes,
   interactions,
@@ -79,8 +61,8 @@ export const makeNoteFeed = ({
     [...$pinned, ...$events].map(event => ({event, facet: classifyNote(event)})),
   )
 
-  const targets: Readable<NoteTarget[]> = interactions
-    ? derived(interactions.events, ($events): NoteTarget[] => getInteractionTargets($events))
+  const targets: Readable<EventRef[]> = interactions
+    ? derived(interactions.events, $events => removeUndefined($events.map(getTargetRef)))
     : readable([])
 
   // A note the feed can't draw its card without is given up on rather than holding up the feed.
@@ -95,7 +77,7 @@ export const makeNoteFeed = ({
     getVisibleGroups($groups, $included),
   )
 
-  const counts = derived(groups, ($groups): FacetCounts => countFacets($groups))
+  const counts = derived(groups, countFacets)
 
   const pinnedKeys = derived(
     pinned,
@@ -120,11 +102,11 @@ export const makeNoteFeed = ({
     derived(included, $included => {
       const pagers: Pager[] = []
 
-      if (sourceIncluded($included, ["notes", "replies"])) {
+      if (includesAnyFacet($included, ["notes", "replies"])) {
         pagers.push(notes.older)
       }
 
-      if (interactions && sourceIncluded($included, ["interactions"])) {
+      if (interactions && includesAnyFacet($included, ["interactions"])) {
         pagers.push(interactions.older)
       }
 
@@ -141,17 +123,25 @@ export const makeNoteFeed = ({
 
   const status = derived(
     [entries, groups, resolver.notes, loading, older.status, included],
-    ([$entries, $groups, $resolved, $loading, $olderStatus, $included]) => {
-      const anyIncluded = sourceIncluded($included, sourceFacets)
+    ([$entries, $groups, $resolved, $loading, $olderStatus, $included]): NoteFeedStatus => {
+      if ($entries.length > 0) {
+        return "ready"
+      }
 
-      return getNoteFeedStatus({
-        entries: $entries,
-        groups: $groups,
-        resolved: $resolved,
-        loading: $loading,
-        exhausted: $olderStatus === "exhausted" || !anyIncluded,
-        anyIncluded,
-      })
+      if (!includesAnyFacet($included, sourceFacets)) {
+        return "filtered"
+      }
+
+      if ($loading || $olderStatus !== "exhausted") {
+        return "loading"
+      }
+
+      // A note that failed to load can't be drawn whatever the facets say, so it isn't one they hide.
+      if ($groups.some(group => group.note || !$resolved.has(group.key))) {
+        return "filtered"
+      }
+
+      return "empty"
     },
   )
 

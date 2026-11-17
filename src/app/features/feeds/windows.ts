@@ -1,5 +1,4 @@
 import {MONTH, YEAR, ago, int, max, sortBy} from "@welshman/lib"
-import type {Maybe} from "@welshman/lib"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {network} from "@app/core/plugins"
 
@@ -18,15 +17,7 @@ export const getCacheFloor = (events: Iterable<TrustedEvent>) => {
   }
 }
 
-export type RelayPage = {count: number; lowest: number}
-
-export const getWindowEdge = (pages: Map<string, RelayPage>, limit: number) => {
-  const full = Array.from(pages.values()).filter(page => page.count >= limit)
-
-  if (full.length > 0) {
-    return max(full.map(page => page.lowest))
-  }
-}
+type RelayPage = {count: number; lowest: number}
 
 export type WindowRequest = {
   relays: string[]
@@ -39,9 +30,7 @@ export type WindowRequest = {
   onCover?: (timestamp: number) => void
 }
 
-export type WindowAnswer = {found: number; answered: boolean; edge: Maybe<number>}
-
-export const requestWindow = async (request: WindowRequest): Promise<WindowAnswer> => {
+export const requestWindow = async (request: WindowRequest) => {
   const {relays, filters, since, until, limit, quorum, signal, onCover} = request
   const pages = new Map<string, RelayPage>()
   const distinctRelays = new Set(relays).size
@@ -80,5 +69,11 @@ export const requestWindow = async (request: WindowRequest): Promise<WindowAnswe
     },
   })
 
-  return {found: events.length, answered, edge: limit ? getWindowEdge(pages, limit) : undefined}
+  const fullPages = limit ? Array.from(pages.values()).filter(page => page.count >= limit) : []
+
+  return {
+    found: events.length,
+    answered,
+    edge: fullPages.length > 0 ? max(fullPages.map(page => page.lowest)) : undefined,
+  }
 }

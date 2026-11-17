@@ -15,14 +15,12 @@
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import PageContent from "@lib/components/PageContent.svelte"
   import {followScroll} from "@lib/pager"
-  import {makeCommentFilter} from "@lib/util"
   import FeedFooter from "@app/components/FeedFooter.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ClassifiedItem from "@app/components/ClassifiedItem.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
   import {partitionByActivity} from "@app/features/spaces"
-  import {makeRelayFeed} from "@app/features/feeds"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeSpaceFeed} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"
   import {
     CLASSIFIED_STATUS_TABS,
@@ -38,13 +36,8 @@
   const {params}: PageProps = $props()
 
   const {url} = pages.classifieds.decode(params)
-  const engagement = makeEngagement({relays: [url]})
-  const feed = makeRelayFeed({
-    url,
-    filters: [{kinds: [CLASSIFIED]}, makeCommentFilter([CLASSIFIED])],
-    onEvent: engagement.track,
-  })
-  const {events} = feed
+  const feed = makeSpaceFeed(url, CLASSIFIED)
+  const {events, engagement} = feed
   const status = feed.older.status
 
   const createClassified = () => pushModal(ClassifiedCreate, {url})
@@ -98,10 +91,7 @@
 
   onMount(() => followScroll(element!, feed.older))
 
-  onDestroy(() => {
-    feed.stop()
-    engagement.stop()
-  })
+  onDestroy(feed.stop)
 </script>
 
 <SpaceBar>

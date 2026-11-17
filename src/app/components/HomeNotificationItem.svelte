@@ -50,41 +50,27 @@
 
   const target = $derived(note.pubkey === $user.pubkey ? "your note" : "a thread you are in")
 
-  const actions = $derived(
-    call(() => {
-      const actions: {pubkeys: string[]; verb: string; object: string}[] = []
-
-      if (repliers.length > 0) {
-        actions.push({pubkeys: repliers, verb: "replied", object: `to ${target}`})
-      }
-      if (reactors.length > 0) {
-        actions.push({pubkeys: reactors, verb: "reacted", object: `to ${target}`})
-      }
-      if (reposters.length > 0) {
-        actions.push({pubkeys: reposters, verb: "reposted", object: "this"})
-      }
-      if (zappers.length > 0) {
-        actions.push({pubkeys: zappers, verb: "zapped", object: "this"})
-      }
-
-      return actions
-    }),
-  )
-
   // Whoever did the same things shares a clause, so nobody is named twice.
   const clauses = $derived(
     call(() => {
       const clauses = new Map<string, {pubkeys: string[]; verbsByObject: Map<string, string[]>}>()
 
-      for (const {pubkeys, verb, object} of actions) {
-        const key = pubkeys.toSorted().join()
-        const clause = clauses.get(key) ?? {pubkeys, verbsByObject: new Map<string, string[]>()}
-        const verbs = clause.verbsByObject.get(object) ?? []
+      const addClause = (pubkeys: string[], verb: string, object: string) => {
+        if (pubkeys.length > 0) {
+          const key = pubkeys.toSorted().join()
+          const clause = clauses.get(key) ?? {pubkeys, verbsByObject: new Map<string, string[]>()}
+          const verbs = clause.verbsByObject.get(object) ?? []
 
-        verbs.push(verb)
-        clause.verbsByObject.set(object, verbs)
-        clauses.set(key, clause)
+          verbs.push(verb)
+          clause.verbsByObject.set(object, verbs)
+          clauses.set(key, clause)
+        }
       }
+
+      addClause(repliers, "replied", `to ${target}`)
+      addClause(reactors, "reacted", `to ${target}`)
+      addClause(reposters, "reposted", "this")
+      addClause(zappers, "zapped", "this")
 
       return Array.from(clauses.values())
     }),

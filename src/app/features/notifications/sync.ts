@@ -3,12 +3,11 @@ import type {Unsubscriber, Writable} from "svelte/store"
 import {int, MINUTE, ms, noop, now} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {userInbox} from "@welshman/util"
-import type {Filter} from "@welshman/util"
 import {app} from "@app/core/app"
 import {network, router} from "@app/core/plugins"
 import {makeKeyedSyncs} from "@app/core/sync"
 import {userRelayList} from "@app/core/user"
-import {NOTIFICATION_KINDS} from "@app/features/notifications/model"
+import {getNotificationFilters} from "@app/features/notifications/model"
 
 // Whether every inbox relay has answered its first poll, which tells an empty stream from a loading one.
 export const notificationsLoaded: Writable<boolean> = writable(false)
@@ -18,8 +17,6 @@ const getInboxUrls = async () => {
 
   return scenario.limit(10).getUrls()
 }
-
-const filtersFor = (pubkey: string): Filter[] => [{kinds: NOTIFICATION_KINDS, "#p": [pubkey]}]
 
 const pollRelay = (url: string, pubkey: string, onAnswered: () => void): Unsubscriber => {
   const controller = new AbortController()
@@ -33,7 +30,7 @@ const pollRelay = (url: string, pubkey: string, onAnswered: () => void): Unsubsc
       relays: [url],
       signal: controller.signal,
       priority: since ? -1 : 0,
-      filters: filtersFor(pubkey).map(filter =>
+      filters: getNotificationFilters(pubkey).map(filter =>
         since ? {...filter, since} : {...filter, limit: 100},
       ),
     })

@@ -197,7 +197,6 @@ client.
   (`markdownToText`), `keyboard.ts` (`syncKeyboard`, which marks the body `keyboard-open` while the native
   keyboard is up)
 - `pager.ts`: a `Pager` (the load state of one direction of a list, and the `page`/`settle` actions a scroll container drives), `combinePagers`, and `followScroll`, which binds a pager to a scroll container
-- `repository.ts`: `deriveEventsByIdForUrls`, the set-of-relays version of welshman's `deriveEventsByIdForUrl`
 - `audio.ts`: recording from the microphone, device lists, a live input level, decoding to mono
   samples at a model's rate, and WAV encoding
 - `stt/`: the on-device stt model (Whistle over a wasm engine, run in a worker), its download and
@@ -399,7 +398,7 @@ new listing into the room. Its `ContentActions` row opens `ClassifiedEdit` throu
 card, and `NoteContentClassified` renders a listing wherever `NoteContent` is used.
 
 **Routes.** `src/routes/spaces/[relay]/classifieds/+page.svelte` loads listings and their comments
-with `makeRelayFeed` and filters them with the `classifieds.ts` helpers. `[address]/+page.svelte` reads
+with `makeSpaceFeed` and filters them with the `classifieds.ts` helpers. `[address]/+page.svelte` reads
 one listing with `$events.one(address, [url]).$`.
 
 Articles are composed on a full page (`spaces/[relay]/articles/create`, whose

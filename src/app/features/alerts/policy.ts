@@ -1,4 +1,4 @@
-import {spec, uniq} from "@welshman/lib"
+import {difference, spec, union} from "@welshman/lib"
 import {matchFilter, MESSAGE, WRAP} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {DM_KINDS} from "@lib/util"
@@ -10,7 +10,7 @@ const ALERT_TYPES = ["spaces", "mentions", "messages"] as const
 
 export type AlertType = (typeof ALERT_TYPES)[number]
 
-export const getAlertTypeFilter = (type: AlertType, pubkey: string): Filter => {
+const getAlertTypeFilter = (type: AlertType, pubkey: string): Filter => {
   switch (type) {
     case "spaces":
       return {kinds: [MESSAGE]}
@@ -23,14 +23,9 @@ export const getAlertTypeFilter = (type: AlertType, pubkey: string): Filter => {
 
 // A relay sees a direct message as the gift wrap, while we see the rumor inside it.
 export const getAlertWireFilter = (type: AlertType, pubkey: string): Filter => {
-  switch (type) {
-    case "spaces":
-      return {kinds: [MESSAGE]}
-    case "mentions":
-      return {kinds: [MESSAGE], "#p": [pubkey]}
-    case "messages":
-      return {kinds: [WRAP], "#p": [pubkey]}
-  }
+  const filter = getAlertTypeFilter(type, pubkey)
+
+  return type === "messages" ? {...filter, kinds: [WRAP]} : filter
 }
 
 export const getAlertTypes = (event: TrustedEvent, pubkey: string): AlertType[] =>
@@ -55,7 +50,7 @@ export const getSpaceAlertFilters = ({
 
   if (types.spaces) {
     if (notify) {
-      const skipped = uniq([...exceptions, ...muted])
+      const skipped = union(exceptions, muted)
 
       if (skipped.length > 0) {
         ignore.push({"#h": skipped})
@@ -63,7 +58,7 @@ export const getSpaceAlertFilters = ({
 
       include.push(getAlertWireFilter("spaces", pubkey))
     } else {
-      const included = exceptions.filter(h => !muted.includes(h))
+      const included = difference(exceptions, muted)
 
       if (included.length > 0) {
         include.push({...getAlertWireFilter("spaces", pubkey), "#h": included})

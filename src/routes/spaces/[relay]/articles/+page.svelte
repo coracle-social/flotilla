@@ -12,27 +12,20 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {followScroll} from "@lib/pager"
-  import {makeCommentFilter} from "@lib/util"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import ArticleItem from "@app/components/ArticleItem.svelte"
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
   import {reader} from "@app/core/domain"
   import {sortArticles} from "@app/features/spaces/articles"
-  import {makeEngagement} from "@app/features/engagement"
-  import {makeRelayFeed} from "@app/features/feeds"
+  import {makeSpaceFeed} from "@app/features/feeds"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.articles.decode(params)
-  const engagement = makeEngagement({relays: [url]})
-  const feed = makeRelayFeed({
-    url,
-    filters: [{kinds: [LONG_FORM]}, makeCommentFilter([LONG_FORM])],
-    onEvent: engagement.track,
-  })
-  const {events} = feed
+  const feed = makeSpaceFeed(url, LONG_FORM)
+  const {events, engagement} = feed
   const status = feed.older.status
 
   const loading = $derived($status === "loading")
@@ -55,10 +48,7 @@
 
   onMount(() => followScroll(element!, feed.older))
 
-  onDestroy(() => {
-    feed.stop()
-    engagement.stop()
-  })
+  onDestroy(feed.stop)
 </script>
 
 <SpaceBar>

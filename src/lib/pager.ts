@@ -70,7 +70,7 @@ const combineStatuses = (statuses: PagerStatus[]): PagerStatus => {
     return "loading"
   }
 
-  if (statuses.length > 0 && statuses.every(status => status === "exhausted")) {
+  if (statuses.every(status => status === "exhausted")) {
     return "exhausted"
   }
 
@@ -79,13 +79,13 @@ const combineStatuses = (statuses: PagerStatus[]): PagerStatus => {
 
 export const combinePagers = (pagers: Readable<Pager[]>): Pager => {
   const status: Readable<PagerStatus> = derived(pagers, ($pagers, set) => {
-    if ($pagers.length === 0) {
-      set("idle")
-    } else {
+    if ($pagers.length > 0) {
       const statuses = $pagers.map(pager => pager.status)
 
       return derived(statuses, combineStatuses).subscribe(set)
     }
+
+    set("idle")
   })
 
   const page = async () => {
@@ -99,7 +99,7 @@ export const combinePagers = (pagers: Readable<Pager[]>): Pager => {
   return {status, page, settle}
 }
 
-export type FollowScrollOptions = {reverse?: boolean; threshold?: number}
+type FollowScrollOptions = {reverse?: boolean; threshold?: number}
 
 export const followScroll = (
   element: HTMLElement,
