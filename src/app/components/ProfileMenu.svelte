@@ -13,7 +13,7 @@
   import {user} from "@app/core/user"
   import {muteLists, profiles} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
-  import {derivePubkeyMuted} from "@app/features/people"
+  import {derivePubkeyMuted} from "@app/tools/people/muting"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

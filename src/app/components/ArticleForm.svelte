@@ -33,7 +33,7 @@
   import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/features/editor"
-  import {publishToNetwork} from "@app/features/publish"
+  import {publishToNetwork} from "@app/tools/publish"
   import {publishToSpace} from "@app/features/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import * as pages from "@app/navigation/pages"

@@ -116,6 +116,8 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
   `signerHealth`), `notify.ts`
 - `env.ts`: every `VITE_` value, parsed
 - `nip46.ts`
+- `pomade.ts`: email login through pomade, the pomade session type, and deactivating the session on
+  logout
 - `logger.ts` (log capture and sending), `device.ts` (a device id)
 
 **`navigation/`: routing**
@@ -160,16 +162,13 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 Outside `spaces/`:
 
-- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `publish.ts` (`publishToNetwork`, posting outside a space), `pins.ts` (a person's pinned notes), `quotes.ts`, `statuses.ts` (NIP-38)
-- `people/`: `people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts` has `isEventMuted` and `derivePubkeyMuted`
-- `share.ts`: the `Share` type, `pendingShare`, and `shareTo`, which hands a share to a room or conversation
+- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `pins.ts` (a person's pinned notes), `statuses.ts` (NIP-38)
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
   `activity.ts` (the home stream's conversations and space content, the latest activity per path,
   and which paths are unread), `badges.ts` (the app icon badge) and `notifications/` (what was done to your own notes and who mentioned you: `model.ts` is the pure part, which events count, their facets and how they group into rows; `sync.ts` polls your inbox relays; `stream.ts` holds the stores the Recent tab renders)
 - `notes/`: kind 1 notes and the replies and comments under them. `notes.ts` holds the `Notes` plugin (loading a note, or many at once, from the relays its refs point at, and a reply's thread), `resolver.ts` loads in the background the notes a list names but doesn't hold, and `threads.ts` builds a thread's filters and comment tree
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
-- `healthChecks.ts` (prompts for missing inbox/outbox relays),
-  `pomade.ts` (email login, and deactivating the pomade session on logout)
+- `healthChecks.ts` (prompts for missing inbox/outbox relays)
 - Platform and voice: `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `reminders.ts`
 - `voice/`: speech to text (stt) and text to speech (tts). `dictation.ts` holds a composer's
   dictation, kept across navigation and sent as a voice note or transcribed, and `readAloud.ts`
@@ -187,10 +186,15 @@ Outside `spaces/`:
   (`CONTENT_KINDS`, the kinds with a section of their own, and `partitionByActivity`, which the
   list pages use to sort a kind by latest comment), `targets.ts` (what an event is about: what a
   reply answers, a reaction reacts to, a zap zaps), and `alerts/` (which events alert, the user's
-  alert settings, and `stream.ts`, the in-app stream of alerting messages)
+  alert settings, and `stream.ts`, the in-app stream of alerting messages), `publish.ts`
+  (`publishToNetwork`, posting outside a space), `quotes.ts`, `share.ts` (the `Share` type,
+  `pendingShare`, and `shareTo`, which hands a share to a room or conversation), and `people/`
+  (`people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts`
+  has `isEventMuted` and `derivePubkeyMuted`)
 - `areas/`: `bookmarks.ts` (bookmark folders and search)
 - `shell/`: `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
-  `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering)
+  `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering),
+  `downloads.ts` (saving files the native app's web view downloads)
 
 A feature gets a `src/app/features/<feature>.ts` only when it has non-UI logic to hold. Polls, goals,
 threads and calendar events have no module; their components use domain readers directly.

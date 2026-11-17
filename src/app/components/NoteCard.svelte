@@ -8,7 +8,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
-  import {isEventMuted} from "@app/features/people"
+  import {isEventMuted} from "@app/tools/people/muting"
   import {goToEvent} from "@app/navigation/locations"
   import {getPublishedTimestamp} from "@app/features/spaces/articles"
 

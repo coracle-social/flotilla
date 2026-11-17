@@ -36,7 +36,7 @@
   import ContentMention from "@app/components/ContentMention.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import * as pages from "@app/navigation/pages"
-  import {isQuote} from "@app/features/quotes"
+  import {isQuote} from "@app/tools/quotes"
   import {deriveValidCommands, getCommandsForInvocation} from "@app/features/spaces/rooms/commands"
   import {userSettingsValues} from "@app/core/settings"
 

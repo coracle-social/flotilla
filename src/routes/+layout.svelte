@@ -37,7 +37,7 @@
   import {device} from "@app/core/device"
   import {forceHealthChecks} from "@app/features/healthChecks"
   import {setupShareIntents} from "@app/components/flows/share"
-  import {setupWebViewDownloads} from "@app/features/downloads"
+  import {setupWebViewDownloads} from "@app/shell/downloads"
   import {setupAudioPlayback} from "@app/features/audioPlayback"
   import {syncApplicationData} from "@app/core/sync"
   import {shouldUnwrap} from "@app/features/messages"

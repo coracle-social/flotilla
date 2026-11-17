@@ -23,7 +23,7 @@
   import {deriveSpaceSearch} from "@app/features/spaces/rooms"
   import {userSpaceUrls} from "@app/core/user"
   import {PLATFORM_RELAYS, DEFAULT_RELAYS, INDEXER_RELAYS} from "@app/core/env"
-  import {bootstrapPubkeys} from "@app/features/people"
+  import {bootstrapPubkeys} from "@app/tools/people/people"
   import {parseInviteLink} from "@app/features/spaces/invites"
   import {pushModal} from "@app/navigation/dialogs"
 

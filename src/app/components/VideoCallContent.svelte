@@ -23,7 +23,7 @@
   } from "@app/features/spaces/calls"
   import {getVideoTileKey, getVideoTiles} from "@app/features/spaces/calls/engine"
   import type {VideoTile} from "@app/features/spaces/calls/engine"
-  import {deriveDisplaysByPubkey} from "@app/features/people"
+  import {deriveDisplaysByPubkey} from "@app/tools/people/people"
 
   type Props = {
     url: string

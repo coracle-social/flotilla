@@ -3,7 +3,7 @@ import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {app} from "@app/core/app"
 import {pushModal} from "@app/navigation/dialogs"
 import {goToEvent} from "@app/navigation/locations"
-import {makeQuoteContent} from "@app/features/quotes"
+import {makeQuoteContent} from "@app/tools/quotes"
 import NoteCreate from "@app/components/NoteCreate.svelte"
 import QuoteLoading from "@app/components/QuoteLoading.svelte"
 

@@ -6,7 +6,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {popModal} from "@app/navigation/dialogs"
   import {goToEvent} from "@app/navigation/locations"
-  import {loadQuote} from "@app/features/quotes"
+  import {loadQuote} from "@app/tools/quotes"
   import {pushToast} from "@app/navigation/toast"
 
   type Props = {

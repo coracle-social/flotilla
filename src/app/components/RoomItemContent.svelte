@@ -10,7 +10,7 @@
   import ContentQuote from "@app/components/ContentQuote.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import {reader} from "@app/core/domain"
-  import {isQuote} from "@app/features/quotes"
+  import {isQuote} from "@app/tools/quotes"
   import {makeContentPath} from "@app/navigation/pages"
 
   const props: ComponentProps<typeof NoteContent> = $props()

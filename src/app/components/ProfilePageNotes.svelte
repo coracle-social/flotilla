@@ -5,7 +5,7 @@
   import NoteEntry from "@app/components/NoteEntry.svelte"
   import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"
   import {makeProfileFeed} from "@app/features/feeds"
-  import {derivePubkeyMuted} from "@app/features/people"
+  import {derivePubkeyMuted} from "@app/tools/people/muting"
 
   type Props = {
     pubkey: string

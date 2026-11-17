@@ -38,7 +38,7 @@
   import type {Interactions} from "@app/features/interactions"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
-  import {deriveDisplaysByPubkey} from "@app/features/people"
+  import {deriveDisplaysByPubkey} from "@app/tools/people/people"
 
   type Props = {
     event: TrustedEvent

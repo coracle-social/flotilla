@@ -14,7 +14,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import {pushModal} from "@app/navigation/dialogs"
   import {session} from "@app/core/session"
-  import {requirePomadeSession} from "@app/features/pomade"
+  import {requirePomadeSession} from "@app/core/pomade"
   import KeyRecoveryConfirm from "@app/components/KeyRecoveryConfirm.svelte"
   import {pushToast} from "@app/navigation/toast"
 

@@ -22,7 +22,7 @@
   import ModalBody from "@lib/components/ModalBody.svelte"
   import {writer} from "@app/core/domain"
   import {pushToast} from "@app/navigation/toast"
-  import {publishToNetwork} from "@app/features/publish"
+  import {publishToNetwork} from "@app/tools/publish"
   import {publishToSpace} from "@app/features/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {DraftKey} from "@app/tools/drafts"

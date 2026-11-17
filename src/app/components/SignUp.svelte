@@ -28,7 +28,7 @@
     HIDE_NOSTR,
   } from "@app/core/env"
   import {forceHealthChecks} from "@app/features/healthChecks"
-  import {loginWithPomade} from "@app/features/pomade"
+  import {loginWithPomade} from "@app/core/pomade"
   import {publishRoomList} from "@app/features/spaces/rooms"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
   import {app} from "@app/core/app"

@@ -17,7 +17,7 @@
   import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/features/editor"
-  import {publishToNetwork} from "@app/features/publish"
+  import {publishToNetwork} from "@app/tools/publish"
   import {pushToast} from "@app/navigation/toast"
   import {openEventNote} from "@app/navigation/overlays"
   import PublishButton from "@app/components/PublishButton.svelte"

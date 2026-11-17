@@ -28,7 +28,7 @@
   import ContentNewline from "@app/components/ContentNewline.svelte"
   import ContentTopic from "@app/components/ContentTopic.svelte"
   import ContentMention from "@app/components/ContentMention.svelte"
-  import {isQuote} from "@app/features/quotes"
+  import {isQuote} from "@app/tools/quotes"
   import {goToQuote} from "@app/components/flows/quotes"
   import {userSettingsValues} from "@app/core/settings"
 

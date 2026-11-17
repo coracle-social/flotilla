@@ -14,11 +14,11 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import {loginWithPomade, deleteCurrentPomadeSession} from "@app/features/pomade"
+  import {loginWithPomade, deleteCurrentPomadeSession} from "@app/core/pomade"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {session} from "@app/core/session"
-  import {requirePomadeSession} from "@app/features/pomade"
+  import {requirePomadeSession} from "@app/core/pomade"
 
   type Props = {
     userSecret: string

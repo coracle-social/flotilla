@@ -15,7 +15,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import LogInOTPConfirm from "@app/components/LogInOTPConfirm.svelte"
-  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
+  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

@@ -20,7 +20,7 @@
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {deriveSpaceMemberRoles} from "@app/features/spaces/roles"
   import {relayMemberLists, relayRoles} from "@app/core/plugins"
-  import {deriveProfilesByPubkey} from "@app/features/people"
+  import {deriveProfilesByPubkey} from "@app/tools/people/people"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

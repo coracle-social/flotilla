@@ -10,7 +10,7 @@
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
   import {events, network} from "@app/core/plugins"
-  import {getQuoteRelays} from "@app/features/quotes"
+  import {getQuoteRelays} from "@app/tools/quotes"
   import {goToQuote} from "@app/components/flows/quotes"
 
   type Props = {

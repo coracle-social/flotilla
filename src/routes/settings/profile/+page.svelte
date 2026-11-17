@@ -27,14 +27,14 @@
   import PasswordReset from "@app/components/PasswordReset.svelte"
   import InfoKeys from "@app/components/InfoKeys.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/features/pomade"
+  import {POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
   import * as pages from "@app/navigation/pages"
   import {clip, pushToast} from "@app/navigation/toast"
   import {user} from "@app/core/user"
   import {profiles} from "@app/core/plugins"
   import {session} from "@app/core/session"
   import {HIDE_NOSTR} from "@app/core/env"
-  import {isPomadeSession, requirePomadeSession} from "@app/features/pomade"
+  import {isPomadeSession, requirePomadeSession} from "@app/core/pomade"
 
   const npub = nip19.npubEncode($user.pubkey)
   const profile = $profiles.one($user.pubkey)
