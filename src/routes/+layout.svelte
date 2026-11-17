@@ -43,7 +43,7 @@
   import {shouldUnwrap} from "@app/features/messages"
   import * as env from "@app/core/env"
   import {applySavedTheme, flTheme, syncTheme, theme} from "@app/tools/theme"
-  import {checked, syncChecked, syncCheckedRemote} from "@app/features/checked"
+  import {checked, syncChecked, syncCheckedRemote} from "@app/tools/checked"
   import {unreadCount, backgroundUnreadCount} from "@app/features/activity"
   import * as notifications from "@app/features/notifications"
   import {syncBadges} from "@app/features/badges"

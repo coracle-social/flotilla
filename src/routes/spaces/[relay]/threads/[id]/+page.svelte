@@ -21,7 +21,7 @@
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {makeInteractions} from "@app/features/interactions"
-  import {getChecked} from "@app/features/checked"
+  import {getChecked} from "@app/tools/checked"
   import * as pages from "@app/navigation/pages"
   import {getPermalinkTarget, scrollToEvent} from "@app/navigation/locations"
   import type {PageProps} from "./$types"

@@ -36,7 +36,7 @@
     addressWriterToSpace,
   } from "@app/features/spaces/rooms"
   import {loadSendDelay} from "@app/core/settings"
-  import {deferredRoomPath, setChecked} from "@app/features/checked"
+  import {holdChecked, releaseChecked, setChecked} from "@app/tools/checked"
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/navigation/toast"
   import {SCHEDULE_UNSUPPORTED, ScheduleError} from "@app/tools/scheduling"
@@ -64,13 +64,21 @@
   const closeChat = () => videoCallLayout.set(VideoCallLayout.Video)
 
   $effect(() => {
-    deferredRoomPath.set(callChatHidden ? roomPath : undefined)
+    if (roomPath && callChatHidden) {
+      holdChecked(roomPath)
+    } else if (roomPath) {
+      releaseChecked(roomPath)
+    }
     if (roomPath && callChatOpen) {
       setChecked(roomPath)
     }
   })
 
-  onDestroy(() => deferredRoomPath.set(undefined))
+  onDestroy(() => {
+    if (roomPath) {
+      releaseChecked(roomPath)
+    }
+  })
 
   let wasConnectedHere = $state(false)
 

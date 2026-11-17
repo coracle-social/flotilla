@@ -11,7 +11,7 @@
   import {messagingRelayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
-  import {setChecked} from "@app/features/checked"
+  import {setChecked} from "@app/tools/checked"
   import {alertSettings, updateAlertSettings} from "@app/tools/alerts/settings"
 
   type Props = {

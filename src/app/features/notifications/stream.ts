@@ -8,7 +8,7 @@ import type {IApp} from "@welshman/app"
 import {observeEventsById, synced, throttled} from "@welshman/store"
 import {app} from "@app/core/app"
 import {kv} from "@app/core/storage"
-import {checked, setChecked} from "@app/features/checked"
+import {checked, isChecked, setChecked} from "@app/tools/checked"
 import {
   getNotificationFacet,
   getNotificationFilters,
@@ -125,7 +125,8 @@ const includedNotificationEvents = derived(
 
 export const notificationsUnread = derived(
   [includedNotificationEvents, checked],
-  ([$events, $checked]) => ($events[0]?.created_at ?? 0) > ($checked[notificationsPath] ?? 0),
+  ([$events, $checked]) =>
+    $events.length > 0 && !isChecked($checked, notificationsPath, $events[0].created_at),
 )
 
 export type NotificationEntry = {group: NotificationGroup; note: TrustedEvent}

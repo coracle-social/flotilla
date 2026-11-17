@@ -23,7 +23,7 @@
   import {login} from "@app/core/session"
   import {Nip46Controller} from "@app/core/nip46"
   import {clearModals} from "@app/navigation/dialogs"
-  import {setChecked} from "@app/features/checked"
+  import {setChecked} from "@app/tools/checked"
   import {pushToast} from "@app/navigation/toast"
   import {NIP46_PERMS} from "@app/core/nip46"
 

@@ -163,8 +163,7 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 Outside `spaces/`:
 
 - Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `pins.ts` (a person's pinned notes), `statuses.ts` (NIP-38)
-- Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
-  `activity.ts` (the home stream's conversations and space content, the latest activity per path,
+- Unread state: `activity.ts` (the home stream's conversations and space content, the latest activity per path,
   and which paths are unread), `badges.ts` (the app icon badge) and `notifications/` (what was done to your own notes and who mentioned you: `model.ts` is the pure part, which events count, their facets and how they group into rows; `sync.ts` polls your inbox relays; `stream.ts` holds the stores the Recent tab renders)
 - `notes/`: kind 1 notes and the replies and comments under them. `notes.ts` holds the `Notes` plugin (loading a note, or many at once, from the relays its refs point at, and a reply's thread), `resolver.ts` loads in the background the notes a list names but doesn't hold, and `threads.ts` builds a thread's filters and comment tree
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
@@ -190,7 +189,9 @@ Outside `spaces/`:
   (`publishToNetwork`, posting outside a space), `quotes.ts`, `share.ts` (the `Share` type,
   `pendingShare`, and `shareTo`, which hands a share to a room or conversation), and `people/`
   (`people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts`
-  has `isEventMuted` and `derivePubkeyMuted`)
+  has `isEventMuted` and `derivePubkeyMuted`), and `checked.ts` (what has been read, per path, synced
+  to dufflepud, with `isChecked`, the rule for reading it, and `holdChecked`, which keeps a path
+  unread while it's on screen)
 - `areas/`: `bookmarks.ts` (bookmark folders and search)
 - `shell/`: `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
   `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering),

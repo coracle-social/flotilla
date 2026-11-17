@@ -15,7 +15,7 @@
   import Profile from "@app/components/Profile.svelte"
   import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/core/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
-  import {setChecked} from "@app/features/checked"
+  import {setChecked} from "@app/tools/checked"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

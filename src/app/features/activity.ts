@@ -25,7 +25,7 @@ import {getActivityTarget} from "@app/navigation/locations"
 import {activeSpaceUrls} from "@app/core/user"
 import {CONTENT_KINDS} from "@app/tools/content"
 import {Messages} from "@app/features/messages"
-import {checked, deferredRoomPath, getPaths} from "@app/features/checked"
+import {checked, getPaths, heldPaths, isChecked} from "@app/tools/checked"
 
 // The content item an event belongs to, when it belongs to one at all.
 const getContentTarget = (event: TrustedEvent) => {
@@ -134,23 +134,8 @@ export const latestActivityByPath = derived(
 export const unreadPaths = derived(
   [app, latestActivityByPath, checked],
   ([$app, $latestActivityByPath, $checked]) => {
-    const isUnread = (path: string, latestEvent: TrustedEvent) => {
-      if (latestEvent.pubkey === $app.user?.pubkey) {
-        return false
-      }
-
-      for (const [entryPath, ts] of Object.entries($checked)) {
-        const isMatch = entryPath.endsWith("*")
-          ? path.startsWith(entryPath.slice(0, -1))
-          : entryPath.startsWith(path)
-
-        if (isMatch && ts > latestEvent.created_at) {
-          return false
-        }
-      }
-
-      return true
-    }
+    const isUnread = (path: string, latestEvent: TrustedEvent) =>
+      latestEvent.pubkey !== $app.user?.pubkey && !isChecked($checked, path, latestEvent.created_at)
 
     const paths = new Set<string>()
 
@@ -172,11 +157,9 @@ export const unreadPaths = derived(
 
 // The unread paths the reader is not looking at, which is what the dots draw.
 export const notifications = derived(
-  [page, unreadPaths, deferredRoomPath],
-  ([$page, $unreadPaths, $deferredRoomPath]) =>
-    new Set(
-      [...$unreadPaths].filter(p => !$page.url.pathname.startsWith(p) || p === $deferredRoomPath),
-    ),
+  [page, unreadPaths, heldPaths],
+  ([$page, $unreadPaths, $heldPaths]) =>
+    new Set([...$unreadPaths].filter(p => !$page.url.pathname.startsWith(p) || $heldPaths.has(p))),
 )
 
 const countActivity = (activity: Map<string, Activity>, paths: Set<string>) =>

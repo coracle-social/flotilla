@@ -31,7 +31,7 @@
   import {makeInteractions} from "@app/features/interactions"
   import {makeRelayFeed} from "@app/features/feeds"
   import {pageLoading} from "@app/shell/loading"
-  import {checked} from "@app/features/checked"
+  import {checked} from "@app/tools/checked"
   import {getPermalinkTarget, highlightedEvent} from "@app/navigation/locations"
 
   type Props = Pick<ComponentProps<typeof RoomItem>, "url" | "replyTo" | "canEdit" | "onEdit"> & {

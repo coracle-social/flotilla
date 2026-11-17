@@ -19,8 +19,23 @@ export const getChecked = (key: string) => checked.get()[key]
 
 export const setChecked = (key: string) => checked.update(assoc(key, now()))
 
-/** Room path while video call UI hides chat; checked + badge stay active until chat is shown. */
-export const deferredRoomPath = writable<string | undefined>(undefined)
+// A wildcard entry covers every path with its prefix, and any other entry covers its own path and its parents.
+export const isChecked = ($checked: Record<string, number>, path: string, timestamp: number) =>
+  Object.entries($checked).some(([entryPath, ts]) => {
+    const isMatch = entryPath.endsWith("*")
+      ? path.startsWith(entryPath.slice(0, -1))
+      : entryPath.startsWith(path)
+
+    return isMatch && ts > timestamp
+  })
+
+// Paths that stay unread while they're on screen, such as a room whose chat a call hides.
+export const heldPaths = writable(new Set<string>())
+
+export const holdChecked = (path: string) => heldPaths.update($paths => new Set($paths).add(path))
+
+export const releaseChecked = (path: string) =>
+  heldPaths.update($paths => new Set([...$paths].filter(p => p !== path)))
 
 export const getPaths = (path: string) =>
   path
@@ -45,11 +60,11 @@ export const syncChecked = () => {
 
     // Set checked when we visit a given page - but delay it a tad
     setTimeout(() => {
-      const $deferredRoomPath = get(deferredRoomPath)
+      const $heldPaths = get(heldPaths)
 
       checked.update($checked => {
         for (const path of paths) {
-          if (path !== $deferredRoomPath) {
+          if (!$heldPaths.has(path)) {
             $checked[path] = now()
           }
         }

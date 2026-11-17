@@ -21,7 +21,7 @@
   import {deleteDeactivatedPomadeSessions, loginWithPomade} from "@app/core/pomade"
   import {getPomadeLoginFailureMessage, POMADE_NETWORK_ERROR_MESSAGE} from "@app/core/pomade"
   import {clearModals, pushModal} from "@app/navigation/dialogs"
-  import {setChecked} from "@app/features/checked"
+  import {setChecked} from "@app/tools/checked"
   import {pushToast} from "@app/navigation/toast"
 
   type Props = {
