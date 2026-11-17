@@ -51,7 +51,7 @@ const getTaggedRef = (tags: string[][]): Maybe<EventRef> => {
   }
 }
 
-export const getTargetRef = (event: TrustedEvent): Maybe<EventRef> => {
+const readTargetRef = (event: TrustedEvent): Maybe<EventRef> => {
   if (isReplyKind(event)) {
     const {parent, root} = getThreadRefs(event)
 
@@ -67,6 +67,21 @@ export const getTargetRef = (event: TrustedEvent): Maybe<EventRef> => {
   if (event.kind === REACTION || event.kind === REPOST || event.kind === GENERIC_REPOST) {
     return getTaggedRef(event.tags)
   }
+}
+
+// Reading a ref parses every relay hint, and a feed asks again for each event whenever it redraws
+const targetRefs = new WeakMap<TrustedEvent, Maybe<EventRef>>()
+
+export const getTargetRef = (event: TrustedEvent): Maybe<EventRef> => {
+  if (targetRefs.has(event)) {
+    return targetRefs.get(event)
+  }
+
+  const ref = readTargetRef(event)
+
+  targetRefs.set(event, ref)
+
+  return ref
 }
 
 export const getTargetKeys = (event: TrustedEvent) => getTargetRef(event)?.getIdAndAddress() ?? []

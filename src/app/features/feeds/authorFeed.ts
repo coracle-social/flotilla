@@ -3,7 +3,7 @@ import type {Readable} from "svelte/store"
 import {debounce} from "throttle-debounce"
 import {Events} from "@welshman/app"
 import {chunks, partition, shuffle} from "@welshman/lib"
-import {projectAsync} from "@welshman/store"
+import {projectAsync, throttled} from "@welshman/store"
 import type {AsyncProjection, EventsById} from "@welshman/store"
 import {outbox} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
@@ -80,7 +80,11 @@ export const makeAuthorFeed = ({pubkeys, getFilters, onEvent}: AuthorFeedOptions
     if ($groups.length > 0) {
       const pages = $groups.map(group => group.events)
 
-      return derived(pages, $pages => $pages.flat()).subscribe(set)
+      // Groups answer a page together, so the merged list redraws once for all of them
+      return throttled(
+        150,
+        derived(pages, $pages => $pages.flat()),
+      ).subscribe(set)
     }
 
     set([])

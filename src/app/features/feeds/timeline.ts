@@ -1,6 +1,7 @@
 import {derived, get, writable} from "svelte/store"
 import type {Readable} from "svelte/store"
 import {MONTH, int, now, on} from "@welshman/lib"
+import {throttled} from "@welshman/store"
 import type {AsyncProjection, EventsById, RepositoryUpdate} from "@welshman/store"
 import {sortEventsAsc} from "@welshman/util"
 import type {Filter, TrustedEvent} from "@welshman/util"
@@ -61,17 +62,23 @@ export const makeTimeline = (options: TimelineOptions): Timeline => {
     }
   }
 
-  const stopKept = source.$.subscribe($events => {
+  // A page lands as a burst of events, which redraws the timeline once rather than once per event
+  const stopKept = throttled(150, source.$).subscribe($events => {
+    const before = kept.size
+
     for (const [id, event] of $events) {
       kept.set(id, event)
     }
 
-    keptEvents.set(kept)
+    if (kept.size > before) {
+      keptEvents.set(kept)
+    }
   })
 
   const stopRepositoryUpdates = on(app.get().repository, "update", onRepositoryUpdate)
 
-  const events = derived([keptEvents, floor], ([$kept, $floor]) =>
+  // The floor drops with each event a window brings, so the list follows it at most every 150ms
+  const events = derived([keptEvents, throttled(150, floor)], ([$kept, $floor]) =>
     sortEventsAsc(Array.from($kept.values()).filter(event => event.created_at >= $floor)),
   )
 
