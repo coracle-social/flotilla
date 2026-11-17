@@ -42,7 +42,7 @@
   import {CONTENT_KINDS, publishReaction, retractReaction} from "@app/features/spaces"
   import {colorFor} from "@app/features/theme"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
   import {isQuote} from "@app/features/quotes"
   import * as pages from "@app/navigation/pages"
   import {highlightedEvent} from "@app/navigation/locations"
@@ -53,7 +53,7 @@
     event: TrustedEvent
     replyTo?: (event: TrustedEvent) => void
     showPubkey?: boolean
-    engagement: Engagement
+    interactions: Interactions
     canEdit: (event: TrustedEvent) => boolean
     onEdit: (event: TrustedEvent) => void
   }
@@ -63,7 +63,7 @@
     event,
     replyTo = undefined,
     showPubkey = false,
-    engagement,
+    interactions,
     canEdit,
     onEdit,
   }: Props = $props()
@@ -157,7 +157,7 @@
     <ReactionSummary
       {url}
       {event}
-      {engagement}
+      {interactions}
       {deleteReaction}
       {createReaction}
       placement="right"

@@ -7,7 +7,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import NoteDetail from "@app/components/NoteDetail.svelte"
   import {app} from "@app/core/app"
-  import {getThreadRefs} from "@app/features/social"
+  import {getThreadRefs} from "@app/features/interactions"
   import {pushModal} from "@app/navigation/dialogs"
   import {openNote} from "@app/navigation/overlays"
 

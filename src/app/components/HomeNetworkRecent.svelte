@@ -7,7 +7,7 @@
   import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"
   import {PLATFORM_RELAYS} from "@app/core/env"
   import {userFollowList} from "@app/core/user"
-  import {makeNetworkFeed} from "@app/features/social"
+  import {makeNetworkFeed} from "@app/features/feeds"
 
   const feed = makeNetworkFeed()
 
@@ -43,7 +43,7 @@
       <div class="pb-4 text-center font-medium">Nothing matches those filters</div>
     {:else}
       {#each $entries as entry (entry.key)}
-        <NoteEntry {entry} engagement={feed.engagement} />
+        <NoteEntry {entry} interactions={feed.interactions} />
       {/each}
       <NoteFeedFooter
         status={$status}

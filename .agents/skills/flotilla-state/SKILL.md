@@ -71,7 +71,7 @@ This code reads `app.get().user?.pubkey` and bails when it is missing, as
 `src/app/features/checked.ts` do.
 
 Stores derived from `user` throw as soon as they are subscribed signed out. That includes
-`isEventMuted` (`social/muting`), `deriveRoomPermissions` (`spaces/rooms`) and `deriveUserCanCreateRoom`
+`isEventMuted` (`people/muting`), `deriveRoomPermissions` (`spaces/rooms`) and `deriveUserCanCreateRoom`
 (`spaces/management`), so only use them from gated components.
 
 ## Reaching plugins

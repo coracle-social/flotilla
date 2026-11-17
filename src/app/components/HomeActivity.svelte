@@ -8,7 +8,7 @@
   import HomeNotificationItem from "@app/components/HomeNotificationItem.svelte"
   import {isSpaceActivity, recentConversations, unreadSpaceContent} from "@app/features/activity"
   import type {Activity, SpaceContent} from "@app/features/activity"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeInteractions} from "@app/features/interactions"
   import {
     getNotificationFacet,
     includedNotificationFacets,
@@ -26,7 +26,7 @@
     | ({type: "notification"} & NotificationEntry)
   )
 
-  const engagement = makeEngagement({withReplies: true})
+  const interactions = makeInteractions({withReplies: true})
 
   const includeSpaces = $derived($includedNotificationFacets.includes("spaces"))
 
@@ -92,7 +92,7 @@
     }
   })
 
-  onDestroy(engagement.stop)
+  onDestroy(interactions.stop)
 </script>
 
 <div class="flex flex-col divide-y divide-line border-t border-line bg-surface-less">
@@ -106,7 +106,7 @@
       <HomeActivityItemSpace content={entry.content} />
     {:else}
       <div class="p-4">
-        <HomeNotificationItem group={entry.group} note={entry.note} {engagement} />
+        <HomeNotificationItem group={entry.group} note={entry.note} {interactions} />
       </div>
     {/if}
   {/each}

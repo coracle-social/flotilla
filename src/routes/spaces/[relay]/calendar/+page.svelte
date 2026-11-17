@@ -33,14 +33,14 @@
   } from "@app/features/spaces/calendar"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeInteractions} from "@app/features/interactions"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.calendar.decode(params)
-  const engagement = makeEngagement({relays: [url]})
-  const feed = makeCalendarFeed({url, onEvent: engagement.track})
+  const interactions = makeInteractions({relays: [url]})
+  const feed = makeCalendarFeed({url, onEvent: interactions.track})
   const {events} = feed
   const olderStatus = feed.older.status
 
@@ -95,7 +95,7 @@
 
   onDestroy(() => {
     feed.stop()
-    engagement.stop()
+    interactions.stop()
   })
 
   // Month renders poorly in a narrow column, so that gets week — without touching the preference
@@ -210,11 +210,11 @@
       </div>
     {/if}
     {#if view === "agenda"}
-      <CalendarAgenda {url} events={$events} {element} {loading} {engagement} />
+      <CalendarAgenda {url} events={$events} {element} {loading} {interactions} />
     {:else if view === "week"}
-      <CalendarWeek {url} {events} {eventsByDay} date={cursor} {engagement} />
+      <CalendarWeek {url} {events} {eventsByDay} date={cursor} {interactions} />
     {:else}
-      <CalendarMonth {url} {events} {eventsByDay} date={cursor} {engagement} />
+      <CalendarMonth {url} {events} {eventsByDay} date={cursor} {interactions} />
     {/if}
   </div>
 </PageContent>

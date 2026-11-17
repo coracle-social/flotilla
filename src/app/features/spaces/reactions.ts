@@ -3,7 +3,7 @@ import type {EventContent, TrustedEvent} from "@welshman/util"
 import {publishToRelays} from "@welshman/app"
 import {command} from "@app/core/domain"
 import {deletes, relays} from "@app/core/plugins"
-import {makeReactionWriter} from "@app/features/social/reactions"
+import {makeReactionWriter} from "@app/features/interactions/reactions"
 
 // A reaction to a room message is drawn from the repository immediately, so its writer names the
 // relay the message was seen on rather than resolving the author's relays first.

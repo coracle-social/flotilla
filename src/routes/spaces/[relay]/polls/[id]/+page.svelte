@@ -9,19 +9,19 @@
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventComments from "@app/components/EventComments.svelte"
   import {events, network} from "@app/core/plugins"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeInteractions} from "@app/features/interactions"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, id} = pages.poll.decode(params)
-  const engagement = makeEngagement({relays: [url]})
+  const interactions = makeInteractions({relays: [url]})
   const event = $events.one(id, [url]).$
 
   const back = () => history.back()
 
-  onDestroy(engagement.stop)
+  onDestroy(interactions.stop)
 
   onMount(() => {
     const controller = new AbortController()
@@ -52,10 +52,10 @@
     <NoteCard event={$event} {url} class="card z-feature w-full">
       <div class="ml-12 flex flex-col gap-3">
         <NoteContent showEntire event={$event} {url} />
-        <CommentActions showActivity {url} event={$event} {engagement} />
+        <CommentActions showActivity {url} event={$event} {interactions} />
       </div>
     </NoteCard>
-    <EventComments event={$event} {url} {engagement} />
+    <EventComments event={$event} {url} {interactions} />
   {:else}
     <LoadingFallback
       loadingMessage="Loading poll..."

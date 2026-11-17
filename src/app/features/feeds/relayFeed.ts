@@ -2,7 +2,7 @@ import {Events} from "@welshman/app"
 import type {Filter, TrustedEvent} from "@welshman/util"
 import {makeCommentFilter} from "@lib/util"
 import {app} from "@app/core/app"
-import {makeEngagement} from "@app/features/engagement"
+import {makeInteractions} from "@app/features/interactions/interactions"
 import type {Timeline} from "@app/features/feeds/timeline"
 import {makeTimeline} from "@app/features/feeds/timeline"
 
@@ -28,18 +28,18 @@ export const makeRelayFeed = (options: RelayFeedOptions): Timeline => {
 }
 
 export const makeSpaceFeed = (url: string, kind: number) => {
-  const engagement = makeEngagement({relays: [url]})
+  const interactions = makeInteractions({relays: [url]})
 
   const feed = makeRelayFeed({
     url,
     filters: [{kinds: [kind]}, makeCommentFilter([kind])],
-    onEvent: engagement.track,
+    onEvent: interactions.track,
   })
 
   const stop = () => {
     feed.stop()
-    engagement.stop()
+    interactions.stop()
   }
 
-  return {...feed, engagement, stop}
+  return {...feed, interactions, stop}
 }

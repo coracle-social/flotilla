@@ -8,16 +8,16 @@
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
   import CommentTree from "@app/components/CommentTree.svelte"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
   import CommentCompose from "@app/components/CommentCompose.svelte"
   import {events, network} from "@app/core/plugins"
-  import {buildCommentTree} from "@app/features/social"
+  import {buildCommentTree} from "@app/features/notes"
 
   type Props = {
     event: TrustedEvent
     url?: string
     relays?: string[]
-    engagement: Engagement
+    interactions: Interactions
     columnClass?: string
     noun?: string
   }
@@ -26,7 +26,7 @@
     event,
     url,
     relays = removeUndefined([url]),
-    engagement,
+    interactions,
     columnClass,
     noun = "post",
   }: Props = $props()
@@ -81,7 +81,7 @@
         </div>
       {/if}
       {#each nodes as node (node.comment.id)}
-        <CommentTree {node} root={event} {replyTo} {setReplyTo} {url} {engagement} />
+        <CommentTree {node} root={event} {replyTo} {setReplyTo} {url} {interactions} />
       {/each}
       {#if nodes.length === 0 && replyTo?.id !== event.id}
         <p class="py-6 text-sm opacity-60">No comments yet.</p>

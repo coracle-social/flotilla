@@ -4,6 +4,7 @@ import {noop} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import {
   COMMENT,
+  EventRef,
   GENERIC_REPOST,
   NOTE,
   REACTION,
@@ -18,8 +19,7 @@ import {ZapReceipt} from "@welshman/domain"
 import {fromApp} from "@app/core/app"
 import {ENABLE_ZAPS} from "@app/core/env"
 import {reader} from "@app/core/domain"
-import {network} from "@app/core/plugins"
-import {notes} from "@app/features/social/notes"
+import {network, router} from "@app/core/plugins"
 
 export type ZapStat = {
   pubkey: string
@@ -57,9 +57,9 @@ const readZap = (event: TrustedEvent): Maybe<ZapStat> => {
 const loadStats = (event: TrustedEvent) => {
   const filters = getStatFilters(event)
 
-  notes
+  router
     .get()
-    .relays(event)
+    .resolver.relays(EventRef.fromEvent(event).getRelaySelections())
     .then(relays => network.get().request({relays, filters}))
     .catch(noop)
 }

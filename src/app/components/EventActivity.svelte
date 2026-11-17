@@ -5,20 +5,20 @@
   import type {TrustedEvent} from "@welshman/util"
   import Reply from "@assets/icons/reply-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
 
   type Props = {
     event: TrustedEvent
-    engagement: Engagement
+    interactions: Interactions
     size?: "xs" | "sm"
     hideLastActive?: boolean
   }
 
-  const {event, engagement, size = "xs", hideLastActive}: Props = $props()
+  const {event, interactions, size = "xs", hideLastActive}: Props = $props()
 
   const buttonClass = `button button-neutral button-${size} rounded-full`
 
-  const related = engagement.related(event)
+  const related = interactions.related(event)
   const replies = derived(related, $related => filter(spec({kind: COMMENT}), $related))
   const lastActive = $derived(max([...$replies, event].map(e => e.created_at)))
 </script>

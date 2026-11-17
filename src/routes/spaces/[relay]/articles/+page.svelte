@@ -25,7 +25,7 @@
 
   const {url} = pages.articles.decode(params)
   const feed = makeSpaceFeed(url, LONG_FORM)
-  const {events, engagement} = feed
+  const {events, interactions} = feed
   const status = feed.older.status
 
   const loading = $derived($status === "loading")
@@ -70,7 +70,7 @@
   <div class="flex min-w-0 grow flex-col gap-2 sm:gap-4 p-2 sm:p-4 lg:pr-0">
     {#each filtered as event (getAddress(event))}
       <div in:fly>
-        <ArticleItem {url} {event} {engagement} />
+        <ArticleItem {url} {event} {interactions} />
       </div>
     {/each}
     <p class="flex h-10 items-center justify-center py-20">

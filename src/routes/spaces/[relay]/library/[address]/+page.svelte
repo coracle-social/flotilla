@@ -21,7 +21,7 @@
   import ProfileList from "@app/components/ProfileList.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import {network} from "@app/core/plugins"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeInteractions} from "@app/features/interactions"
   import {derivePins, deriveShelf, pinMatchesTerm} from "@app/features/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
@@ -30,7 +30,7 @@
   const {params}: PageProps = $props()
 
   const {url, address} = pages.board.decode(params)
-  const engagement = makeEngagement({relays: [url]})
+  const interactions = makeInteractions({relays: [url]})
   const board = deriveShelf(url, address)
   const pins = derivePins(url)
 
@@ -79,7 +79,7 @@
     return () => controller.abort()
   })
 
-  onDestroy(engagement.stop)
+  onDestroy(interactions.stop)
 </script>
 
 <SpaceBar {back}>
@@ -176,14 +176,14 @@
     {:else if layout === "cards"}
       <div class="bg-surface">
         {#each visible as pin (pin.event.id)}
-          <PinItem {url} {pin} {engagement} card={false} />
+          <PinItem {url} {pin} {interactions} card={false} />
         {/each}
       </div>
     {:else}
-      <PinList {url} {address} pins={visible} {engagement} />
+      <PinList {url} {address} pins={visible} {interactions} />
     {/if}
     <div class="border-t border-line bg-surface pt-1">
-      <EventComments noun="shelf" event={$board.event} {url} {engagement} />
+      <EventComments noun="shelf" event={$board.event} {url} {interactions} />
     </div>
   {:else}
     <LoadingFallback loadingMessage="Loading shelf..." failureMessage="Failed to load shelf." />

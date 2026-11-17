@@ -3,15 +3,17 @@ import type {Readable} from "svelte/store"
 import {removeUndefined} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {TrustedEvent} from "@welshman/util"
-import {notes} from "@app/features/social/notes"
-import type {NoteRequest} from "@app/features/social/notes"
+import {notes} from "@app/features/notes/notes"
+import type {NoteRequest} from "@app/features/notes/notes"
 
+/** Loads the notes a list names but lacks; one it gives up on is `undefined` in `notes`. */
 export type NoteResolver = {
   notes: Readable<Map<string, Maybe<TrustedEvent>>>
   resolve: (requests: NoteRequest[]) => void
   stop: () => void
 }
 
+/** Loads queued notes in batches, giving up on each after `maxAttempts` loads miss it. */
 export const makeNoteResolver = ({
   batchSize = 10,
   maxAttempts = 1,
@@ -30,6 +32,7 @@ export const makeNoteResolver = ({
   const controller = new AbortController()
   let running = false
 
+  // Records what a batch found, and gives up on a missing note once it has used its attempts.
   const settle = (batch: NoteRequest[], found: Map<string, TrustedEvent>) => {
     resolved.update(current => {
       const next = new Map(current)
@@ -58,6 +61,7 @@ export const makeNoteResolver = ({
     })
   }
 
+  // Drains the queue a batch at a time, and `running` keeps a second loop from starting.
   const loop = async () => {
     running = true
 
@@ -90,6 +94,7 @@ export const makeNoteResolver = ({
     }
   }
 
+  // Queues each note not already settled or waiting, and starts the loop if it's idle.
   const resolve = (requests: NoteRequest[]) => {
     const settled = get(resolved)
 

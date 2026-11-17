@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
@@ -11,10 +11,10 @@
     url: string
     event: TrustedEvent
     showActivity?: boolean
-    engagement: Engagement
+    interactions: Interactions
   }
 
-  const {url, event, showActivity = false, engagement}: Props = $props()
+  const {url, event, showActivity = false, interactions}: Props = $props()
 
   const deleteReaction = (reaction: TrustedEvent) => retractReaction(url, reaction)
 
@@ -27,12 +27,12 @@
       <ReactionSummary
         {url}
         {event}
-        {engagement}
+        {interactions}
         {deleteReaction}
         {createReaction}
         placement="left" />
       {#if showActivity}
-        <EventActivity {event} {engagement} />
+        <EventActivity {event} {interactions} />
       {/if}
       <EventMenuButton {url} {event} noun="Comment" class="rounded-full" />
     </PublicationStatusOrDeleted>

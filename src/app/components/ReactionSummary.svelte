@@ -35,7 +35,7 @@
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {deriveDisplaysByPubkey} from "@app/features/people"
@@ -51,7 +51,7 @@
     hideZaps?: boolean
     noTooltip?: boolean
     innerEvent?: TrustedEvent
-    engagement: Engagement
+    interactions: Interactions
   }
 
   const {
@@ -65,13 +65,13 @@
     hideZaps = false,
     noTooltip = false,
     innerEvent = undefined,
-    engagement,
+    interactions,
   }: Props = $props()
 
-  const ownRelated = engagement.related(event)
+  const ownRelated = interactions.related(event)
 
   const related = innerEvent
-    ? derived([ownRelated, engagement.related(innerEvent)], ([$own, $inner]) => [
+    ? derived([ownRelated, interactions.related(innerEvent)], ([$own, $inner]) => [
         ...$own,
         ...$inner,
       ])

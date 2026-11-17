@@ -11,7 +11,7 @@
   import Link from "@lib/components/Link.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
   import {shelfCoverImages} from "@app/features/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
 
@@ -19,13 +19,13 @@
     url: string
     board: PinboardReader
     pins: PinReader[]
-    engagement: Engagement
+    interactions: Interactions
   }
 
-  const {url, board, pins, engagement}: Props = $props()
+  const {url, board, pins, interactions}: Props = $props()
 
   const path = pages.board.path({url, address: board.address()})
-  const related = engagement.related(board.event)
+  const related = interactions.related(board.event)
   const comments = derived(related, $related => filter(spec({kind: COMMENT}), $related))
 
   const title = $derived(board.title() || "Untitled shelf")

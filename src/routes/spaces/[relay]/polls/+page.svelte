@@ -22,7 +22,7 @@
 
   const {url} = pages.polls.decode(params)
   const feed = makeSpaceFeed(url, POLL)
-  const {events, engagement} = feed
+  const {events, interactions} = feed
   const status = feed.older.status
 
   const createPoll = () => pushModal(PollCreate, {url})
@@ -54,7 +54,7 @@
 <PageContent bind:element class="flex flex-col gap-2 p-2 sm:gap-4 sm:p-4">
   {#each items as event (event.id)}
     <div in:fly>
-      <PollItem {url} {engagement} event={$state.snapshot(event)} />
+      <PollItem {url} {interactions} event={$state.snapshot(event)} />
     </div>
   {/each}
   <FeedFooter

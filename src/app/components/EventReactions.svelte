@@ -2,31 +2,31 @@
   import type {Placement} from "tippy.js"
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import * as social from "@app/features/social"
+  import {publishReaction, retractReaction} from "@app/features/interactions"
+  import type {Interactions} from "@app/features/interactions"
   import * as spaces from "@app/features/spaces"
-  import type {Engagement} from "@app/features/engagement"
 
   type Props = {
     event: TrustedEvent
-    engagement: Engagement
+    interactions: Interactions
     url?: string
     placement?: Placement
     emojiMenu?: boolean
   }
 
-  const {event, engagement, url, placement = "top", emojiMenu = false}: Props = $props()
+  const {event, interactions, url, placement = "top", emojiMenu = false}: Props = $props()
 
   const deleteReaction = (reaction: TrustedEvent) =>
-    url ? spaces.retractReaction(url, reaction) : social.retractReaction(reaction)
+    url ? spaces.retractReaction(url, reaction) : retractReaction(reaction)
 
   const createReaction = (values: EventContent) =>
-    url ? spaces.publishReaction(url, event, values) : social.publishReaction(event, values)
+    url ? spaces.publishReaction(url, event, values) : publishReaction(event, values)
 </script>
 
 <ReactionSummary
   {url}
   {event}
-  {engagement}
+  {interactions}
   {deleteReaction}
   {createReaction}
   {placement}

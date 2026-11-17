@@ -91,9 +91,3 @@ export const isReplyTo = (event: TrustedEvent, target: TrustedEvent) => {
 
   return isReplyKind(event) && getTargetKeys(event).some(key => targetKeys.includes(key))
 }
-
-export const getNoteParentRef = (event: TrustedEvent): Maybe<EventRef> => {
-  if (event.kind === NOTE) {
-    return getTargetRef(event)
-  }
-}

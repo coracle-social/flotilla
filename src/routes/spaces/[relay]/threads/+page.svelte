@@ -31,7 +31,7 @@
 
   const {url} = pages.threads.decode(params)
   const feed = makeSpaceFeed(url, THREAD)
-  const {events, engagement} = feed
+  const {events, interactions} = feed
   const status = feed.older.status
 
   const threadFeed = $derived.by(() => {
@@ -116,7 +116,7 @@
       </div>
       {#if visibleItems.length > 0}
         {#each visibleItems as event (event.id)}
-          <ThreadLatestItem {url} {event} {engagement} showRoom={false} />
+          <ThreadLatestItem {url} {event} {interactions} showRoom={false} />
         {/each}
       {:else if term}
         <p class="text-content-muted p-4 text-sm">No topics match your search.</p>
@@ -131,7 +131,7 @@
           <ThreadBoard {url} {h} {threads} />
         {/each}
       </div>
-      <ThreadLatest {url} items={threadFeed.items} {engagement} />
+      <ThreadLatest {url} items={threadFeed.items} {interactions} />
     </div>
   {/if}
   <FeedFooter

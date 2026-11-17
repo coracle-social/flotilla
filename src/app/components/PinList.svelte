@@ -15,7 +15,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import {user} from "@app/core/user"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {
     deletePins,
@@ -31,10 +31,10 @@
     url: string
     address: string
     pins: PinReader[]
-    engagement: Engagement
+    interactions: Interactions
   }
 
-  const {url, address, pins, engagement}: Props = $props()
+  const {url, address, pins, interactions}: Props = $props()
 
   const shelves = deriveShelves(url)
   const permissions = deriveSpacePermissions(url)
@@ -64,7 +64,7 @@
   }
 
   const open = (pin: PinReader) => () =>
-    pushModal(PinDetail, {url, pin, engagement}, {size: "large"})
+    pushModal(PinDetail, {url, pin, interactions}, {size: "large"})
 
   const run = async (action: () => Promise<(string | undefined)[]>, message: string) => {
     loading = true

@@ -12,9 +12,9 @@
   import CommentTree from "@app/components/CommentTree.svelte"
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {makeEngagement} from "@app/features/engagement"
-  import {notes} from "@app/features/social"
-  import type {CommentNode} from "@app/features/social"
+  import {makeInteractions} from "@app/features/interactions"
+  import {notes} from "@app/features/notes"
+  import type {CommentNode} from "@app/features/notes"
 
   type Props = {
     ref: IEventRef
@@ -24,7 +24,7 @@
 
   const {ref, reply = false, thread = false}: Props = $props()
 
-  const engagement = makeEngagement({withReplies: true})
+  const interactions = makeInteractions({withReplies: true})
   const loaded = $notes.deriveEvent(ref)
   const event = $derived($loaded)
   const replies = $derived(event ? $notes.deriveReplies(event) : readable<CommentNode[]>([]))
@@ -70,7 +70,7 @@
     }
   })
 
-  onDestroy(engagement.stop)
+  onDestroy(interactions.stop)
 </script>
 
 {#snippet quoteNote(event: TrustedEvent)}
@@ -93,7 +93,7 @@
         <div class="border-line border-b pb-4">
           <NoteItem
             event={ancestor}
-            {engagement}
+            {interactions}
             customActions={quoteNote}
             card={false}
             interactive
@@ -103,7 +103,7 @@
       <div class="border-line flex flex-col gap-4 border-b pb-4">
         <NoteItem
           event={note}
-          {engagement}
+          {interactions}
           customActions={quoteNote}
           card={false}
           showEntire
@@ -128,7 +128,7 @@
             {replyTo}
             {setReplyTo}
             customActions={quoteComment}
-            {engagement} />
+            {interactions} />
         {/each}
         {#if $replies.length === 0}
           <p class="py-2 text-sm opacity-75">No replies yet.</p>

@@ -17,9 +17,9 @@ import {
   isNotification,
 } from "@app/features/notifications/model"
 import type {NotificationFacet, NotificationGroup} from "@app/features/notifications/model"
-import {makeNoteResolver} from "@app/features/social/noteResolver"
-import type {NoteResolver} from "@app/features/social/noteResolver"
-import {isEventMuted} from "@app/features/social/muting"
+import {makeNoteResolver} from "@app/features/notes/resolver"
+import type {NoteResolver} from "@app/features/notes/resolver"
+import {isEventMuted} from "@app/features/people/muting"
 
 export const includedNotificationFacets = synced<NotificationFacet[]>({
   key: "includedHomeActivityTypes",

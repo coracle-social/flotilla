@@ -11,7 +11,7 @@
   import ReplyList from "@app/components/ReplyList.svelte"
   import {user} from "@app/core/user"
   import {displayActivityTimestamp} from "@app/features/activity"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
   import {REPOST_KINDS} from "@app/features/notifications"
   import type {NotificationGroup} from "@app/features/notifications"
   import {pushModal} from "@app/navigation/dialogs"
@@ -21,29 +21,29 @@
   type Props = {
     group: NotificationGroup
     note: TrustedEvent
-    engagement: Engagement
+    interactions: Interactions
   }
 
-  const {group, note, engagement}: Props = $props()
+  const {group, note, interactions}: Props = $props()
 
   // A group keeps its key while it collects answers, so the component has to follow its prop.
   const replies = $derived(group.replies)
 
-  const interactions = $derived(group.reactions)
+  const reactions = $derived(group.reactions)
 
   const repliers = $derived(uniq(replies.map(e => e.pubkey)))
 
-  const reactors = $derived(uniq(interactions.filter(e => e.kind === REACTION).map(e => e.pubkey)))
+  const reactors = $derived(uniq(reactions.filter(e => e.kind === REACTION).map(e => e.pubkey)))
 
   const reposters = $derived(
-    uniq(interactions.filter(e => REPOST_KINDS.includes(e.kind)).map(e => e.pubkey)),
+    uniq(reactions.filter(e => REPOST_KINDS.includes(e.kind)).map(e => e.pubkey)),
   )
 
   // A zap receipt is signed by the lnurl server, so the zapper is in the `P` tag.
   const zappers = $derived(
     uniq(
       removeUndefined(
-        interactions.filter(e => e.kind === ZAP_RECEIPT).map(e => tagValue(tagSpec("P"), e.tags)),
+        reactions.filter(e => e.kind === ZAP_RECEIPT).map(e => tagValue(tagSpec("P"), e.tags)),
       ),
     ),
   )
@@ -147,6 +147,6 @@
       {displayActivityTimestamp(group.timestamp)}
     </span>
   </div>
-  <NoteItem event={note} {engagement} customActions={quoteNote} showReply showThreadLinks />
-  <ReplyList {replies} {engagement} {quoteNote} />
+  <NoteItem event={note} {interactions} customActions={quoteNote} showReply showThreadLinks />
+  <ReplyList {replies} {interactions} {quoteNote} />
 </div>

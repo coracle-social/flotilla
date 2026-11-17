@@ -9,14 +9,14 @@
   import NoteThreadLinks from "@app/components/NoteThreadLinks.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
   import Cv from "@lib/components/Cv.svelte"
-  import type {Engagement} from "@app/features/engagement"
-  import {isReplyTo} from "@app/features/social"
+  import type {Interactions} from "@app/features/interactions"
+  import {isReplyTo} from "@app/features/interactions"
   import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {
     event: TrustedEvent
     children?: Snippet
-    engagement: Engagement
+    interactions: Interactions
     url?: string
     customActions?: Snippet<[TrustedEvent]>
     card?: boolean
@@ -31,7 +31,7 @@
     url,
     event,
     children,
-    engagement,
+    interactions,
     customActions,
     card = true,
     interactive = card,
@@ -41,7 +41,7 @@
     showThreadLinks = false,
   }: Props = $props()
 
-  const related = engagement.related(event)
+  const related = interactions.related(event)
 
   // The index files an answer under every note above it, so only the ones naming this note count.
   const replyCount = $derived($related.filter(e => isReplyTo(e, event)).length)
@@ -59,7 +59,7 @@
   {/if}
   <NoteContent {event} {showEntire} expandMode="inline" />
   <div class="flex w-full justify-between gap-2">
-    <EventReactions {event} {engagement} {url} placement="right" />
+    <EventReactions {event} {interactions} {url} placement="right" />
     <div class="flex shrink-0 items-center gap-2">
       {#if showReply}
         <ReplyButton count={replyCount} onclick={openReplies} />

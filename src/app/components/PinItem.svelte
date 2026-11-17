@@ -14,23 +14,23 @@
   import PinSave from "@app/components/PinSave.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
     pin: PinReader
-    engagement: Engagement
+    interactions: Interactions
     card?: boolean
   }
 
-  const {url, pin, engagement, card = true}: Props = $props()
+  const {url, pin, interactions, card = true}: Props = $props()
 
   const topics = $derived(uniq(pin.topics().map(normalizeTopic)))
-  const related = engagement.related(pin.event)
+  const related = interactions.related(pin.event)
   const comments = derived(related, $related => filter(spec({kind: COMMENT}), $related))
 
-  const discuss = () => pushModal(PinDetail, {url, pin, engagement}, {size: "large"})
+  const discuss = () => pushModal(PinDetail, {url, pin, interactions}, {size: "large"})
 </script>
 
 {#snippet topicLabels()}
@@ -67,7 +67,7 @@
       labels={topics.length > 0 ? topicLabels : undefined}
       {url}
       event={pin.event}
-      {engagement} />
+      {interactions} />
   </div>
 {/snippet}
 

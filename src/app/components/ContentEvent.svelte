@@ -3,7 +3,7 @@
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import {events} from "@app/core/plugins"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeInteractions} from "@app/features/interactions"
 
   type Props = {
     url?: string
@@ -14,13 +14,13 @@
   const {url, value, relays}: Props = $props()
 
   const event = $events.one(value, relays).$
-  const engagement = makeEngagement({relays: url ? [url] : undefined})
+  const interactions = makeInteractions({relays: url ? [url] : undefined})
 
-  onDestroy(engagement.stop)
+  onDestroy(interactions.stop)
 </script>
 
 {#if $event}
-  <NoteItem {url} {engagement} event={$event} />
+  <NoteItem {url} {interactions} event={$event} />
 {:else}
   <LoadingFallback
     class="py-8"

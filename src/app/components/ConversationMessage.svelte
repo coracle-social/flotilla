@@ -13,7 +13,7 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import Content from "@app/components/Content.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
   import PublicationFailure from "@app/components/PublicationFailure.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import ConversationMessageMenu from "@app/components/ConversationMessageMenu.svelte"
@@ -33,10 +33,18 @@
     onEdit?: (event: TrustedEvent) => void
     pubkeys: string[]
     showPubkey?: boolean
-    engagement: Engagement
+    interactions: Interactions
   }
 
-  const {event, replyTo, canEdit, onEdit, pubkeys, showPubkey = false, engagement}: Props = $props()
+  const {
+    event,
+    replyTo,
+    canEdit,
+    onEdit,
+    pubkeys,
+    showPubkey = false,
+    interactions,
+  }: Props = $props()
 
   const isOwn = event.pubkey === $user.pubkey
   const profileDisplay = $profiles.display(event.pubkey).$
@@ -112,7 +120,13 @@
       </div>
     </TapTarget>
     <div class="flex gap-2 z-feature -mt-4 ml-4">
-      <ReactionSummary {event} {engagement} {deleteReaction} {createReaction} noTooltip perEmoji />
+      <ReactionSummary
+        {event}
+        {interactions}
+        {deleteReaction}
+        {createReaction}
+        noTooltip
+        perEmoji />
     </div>
   </div>
 </div>

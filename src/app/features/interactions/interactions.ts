@@ -25,20 +25,18 @@ import {reader} from "@app/core/domain"
 import {REACTION_KINDS} from "@app/core/env"
 import {network, router} from "@app/core/plugins"
 
-export type Engagement = {
+export type Interactions = {
   track: (event: TrustedEvent) => void
   related: (event: TrustedEvent) => Readable<TrustedEvent[]>
   stop: () => void
 }
-
-export type EngagementOptions = {relays?: string[]; withReplies?: boolean}
 
 type Subscriber = (events: TrustedEvent[]) => void
 
 // One shared array, so a key with nothing filed doesn't churn its subscribers.
 const EMPTY: TrustedEvent[] = []
 
-export const getEngagementKeys = (event: TrustedEvent): string[] => {
+const getInteractionKeys = (event: TrustedEvent): string[] => {
   if (event.kind === COMMENT) {
     const comment = reader(Comment)(event)
     const refs = removeUndefined([comment.root(), comment.parent()])
@@ -50,7 +48,9 @@ export const getEngagementKeys = (event: TrustedEvent): string[] => {
   return uniq([...tagValues(hexTags("e"), event.tags), ...tagValues(addressTags("a"), event.tags)])
 }
 
-export const makeEngagement = (options: EngagementOptions = {}): Engagement => {
+export const makeInteractions = (
+  options: {relays?: string[]; withReplies?: boolean} = {},
+): Interactions => {
   const repository = app.get().repository
   const controller = new AbortController()
 
@@ -70,7 +70,7 @@ export const makeEngagement = (options: EngagementOptions = {}): Engagement => {
   const file = (event: TrustedEvent) => {
     const filed = keysById.get(event.id) ?? []
     // A key tracked after this was filed still takes it, from the repository read in fileStored.
-    const keys = getEngagementKeys(event).filter(key => tracked.has(key) && !filed.includes(key))
+    const keys = getInteractionKeys(event).filter(key => tracked.has(key) && !filed.includes(key))
 
     if (keys.length) {
       for (const key of keys) {
@@ -125,7 +125,7 @@ export const makeEngagement = (options: EngagementOptions = {}): Engagement => {
     notify((await repository.query(filters)).flatMap(file))
   }
 
-  const loadEngagement = batch(100, async (events: TrustedEvent[]) => {
+  const loadInteractions = batch(100, async (events: TrustedEvent[]) => {
     await fileStored(events)
 
     const eventsByRelay = new Map<string, TrustedEvent[]>()
@@ -181,7 +181,7 @@ export const makeEngagement = (options: EngagementOptions = {}): Engagement => {
         tracked.add(key)
       }
 
-      loadEngagement(event)
+      loadInteractions(event)
     }
   }
 

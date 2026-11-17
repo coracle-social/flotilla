@@ -128,7 +128,7 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
 
 **`features/`: one feature each**
 
-The app's sections are DMs (`messages.ts`), spaces (`spaces/`), the social home page, and
+The app's sections are DMs (`messages.ts`), spaces (`spaces/`), the home page, and
 hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature under `spaces/`:
 
 - `spaces/urls.ts`: the user's room list, `userSpaceUrls`, `activeSpaceUrls` (platform relays
@@ -158,8 +158,8 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 Outside `spaces/`:
 
-- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day; `windows.ts` asks the relays for one time range), `engagement.ts` (the replies, reactions, zaps and comments an event collected, indexed by the event they answer and loaded in batches), `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38), `uploads.ts` (Blossom, image compression)
-- `people.ts`: display names for any list of pubkeys, and `bootstrapPubkeys`
+- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `targets.ts` names the event an event is about: what a reply answers, a reaction reacts to, a zap zaps, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `publish.ts` (`publishToNetwork`, posting outside a space), `pins.ts` (a person's pinned notes), `bookmarks.ts`, `quotes.ts`, `statuses.ts` (NIP-38), `uploads.ts` (Blossom, image compression)
+- `people/`: `people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts` has `isEventMuted` and `derivePubkeyMuted`
 - `render.ts`: events as plain text or a one-line summary, for push notifications and reading aloud
 - `share.ts`: sharing an event into a room or conversation, and native share intents
 - `signerAlerts.ts`: the toast that offers help when the signer stops answering
@@ -167,7 +167,7 @@ Outside `spaces/`:
 - Unread state: `checked.ts` (what has been read, per path, synced to dufflepud),
   `activity.ts` (the home stream's conversations and space content, the latest activity per path,
   and which paths are unread), `badges.ts` (the app icon badge) and `notifications/` (what was done to your own notes and who mentioned you: `model.ts` is the pure part, which events count, their facets and how they group into rows; `sync.ts` polls your inbox relays; `stream.ts` holds the stores the Recent tab renders)
-- `social/`: `targets.ts` names the event an event is about (what a reply answers, a reaction reacts to, a zap zaps) and a note's place in its thread, `threads.ts` builds a thread's filters and comment tree, `notes.ts` holds the `Notes` plugin (loading a note, or many at once, from the relays its refs point at), `noteResolver.ts` loads in the background the notes a list names but doesn't hold, `noteGroups.ts` is the pure core of a note feed (grouping replies and interactions under the note they answer, facets, counts, entries, status), `noteFeed.ts` (`makeNoteFeed`) wires that core to author feeds, and `networkFeed.ts` builds the home Network tab's feed and a profile's, with the persisted facet toggles. `muting.ts` and `reactions.ts` cover mutes and reacting outside a space
+- `notes/`: kind 1 notes and the replies and comments under them. `notes.ts` holds the `Notes` plugin (loading a note, or many at once, from the relays its refs point at, and a reply's thread), `resolver.ts` loads in the background the notes a list names but doesn't hold, and `threads.ts` builds a thread's filters and comment tree
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `wallet.ts` (wallet, invoices), `healthChecks.ts` (prompts for missing inbox/outbox relays),
   `pomade.ts` (email login, and deactivating the pomade session on logout)

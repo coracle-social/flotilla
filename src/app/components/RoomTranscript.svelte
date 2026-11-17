@@ -28,7 +28,7 @@
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
   import {user} from "@app/core/user"
   import {groupRoomMessages} from "@app/features/spaces/rooms"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeInteractions} from "@app/features/interactions"
   import {makeRelayFeed} from "@app/features/feeds"
   import {pageLoading} from "@app/features/loading"
   import {checked} from "@app/features/checked"
@@ -42,9 +42,9 @@
 
   let {url, h, locked, replyTo, canEdit, onEdit, events = $bindable(readable([]))}: Props = $props()
 
-  const engagement = makeEngagement({relays: [url]})
+  const interactions = makeInteractions({relays: [url]})
 
-  onDestroy(engagement.stop)
+  onDestroy(interactions.stop)
 
   const addMemberKind = h ? ROOM_ADD_MEMBER : RELAY_ADD_MEMBER
   const runway = 5000
@@ -295,7 +295,7 @@
       filters: [
         h ? {kinds: [MESSAGE, addMemberKind], "#h": [h]} : {kinds: [MESSAGE, addMemberKind]},
       ],
-      onEvent: engagement.track,
+      onEvent: interactions.track,
     })
 
     // The container is reversed, so scrolling away from the origin reaches older messages.
@@ -383,7 +383,7 @@
             <RoomItem
               {url}
               {replyTo}
-              {engagement}
+              {interactions}
               {canEdit}
               {onEdit}
               event={item.value}

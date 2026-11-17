@@ -6,18 +6,20 @@ import type {IEventRef, TrustedEvent} from "@welshman/util"
 import {Events, Network, Router} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {usePlugin} from "@app/core/plugins"
-import {getThreadRefs} from "@app/features/social/targets"
-import {buildCommentTree, getDescendants, getThreadFilters} from "@app/features/social/threads"
-import type {CommentNode} from "@app/features/social/threads"
+import {getThreadRefs} from "@app/features/interactions/targets"
+import {buildCommentTree, getDescendants, getThreadFilters} from "@app/features/notes/threads"
+import type {CommentNode} from "@app/features/notes/threads"
 
+/** A note to load, with the replies whose p tags name its author when its ref doesn't. */
 export type NoteRequest = {ref: EventRef; replies?: TrustedEvent[]}
 
-// Where a note lives, and the stores a page reads it and its conversation from.
+/** Loads notes, the thread above a reply and the comments under a note from where they live. */
 export class Notes {
   constructor(private readonly app: IApp) {}
 
-  // A reply's e tag can name neither author nor relay, but NIP-10 has the reply p-tag the author.
+  /** The relays a note lives on, from its ref and from the authors its replies tag. */
   relays = (ref: IEventRef, replies: TrustedEvent[] = []) => {
+    // A reply's e tag can name neither author nor relay, but NIP-10 has the reply p-tag the author.
     const pubkeys = replies.flatMap(reply => tagValues(hexTags("p"), reply.tags))
 
     return this.app
@@ -28,6 +30,7 @@ export class Notes {
       ])
   }
 
+  /** One note, from the repository when it holds it and from the relays it lives on otherwise. */
   load = async (
     ref: IEventRef,
     {
@@ -58,6 +61,7 @@ export class Notes {
     }
   }
 
+  /** Many notes at once, filed by id and address; relays are asked only for what's missing. */
   loadMany = async (
     requests: NoteRequest[],
     {
@@ -111,11 +115,12 @@ export class Notes {
     return events
   }
 
-  // A pointer carrying no hints would never resolve, so the load beside it asks the author's relays.
+  /** A store of the note a ref names, read live from the repository and loaded if missing. */
   deriveEvent = (ref: IEventRef) => {
     const idOrAddress = new EventRef(ref).getIdOrAddress()
     const loaded = writable<Maybe<TrustedEvent>>(undefined)
 
+    // A pointer with no hints would never resolve, so the load beside it asks the author's relays.
     this.load(ref)
       .then(event => loaded.set(event))
       .catch(error => console.error(error))
@@ -133,7 +138,7 @@ export class Notes {
     )
   }
 
-  // A reply names only the event it answers, so the thread is walked up one hop at a time.
+  /** The thread above a reply: its root, and each parent up to it, reported as each one arrives. */
   loadThread = async (
     event: TrustedEvent,
     onLoad?: (thread: {threadRoot?: TrustedEvent; parents: TrustedEvent[]}) => void,
@@ -144,6 +149,7 @@ export class Notes {
     // Each hop is reported as it arrives, so a deep thread fills in from the top.
     const report = () => onLoad?.({threadRoot, parents: [...parents]})
 
+    // A reply names only the event it answers, so the thread is walked up one hop at a time.
     const walk = async (child: TrustedEvent) => {
       const {parent} = getThreadRefs(child)
 
@@ -174,9 +180,10 @@ export class Notes {
     return {threadRoot, parents}
   }
 
-  // The filters reach past direct replies, so the tree is built from what hangs off the note.
+  /** A store of the comment tree under a note, kept current as comments arrive from its relays. */
   deriveReplies = (event: TrustedEvent) =>
     readable<CommentNode[]>([], set => {
+      // The filters reach past direct replies, so the tree is built from what hangs off the note.
       const filters = getThreadFilters(event)
       const controller = new AbortController()
 
@@ -196,4 +203,5 @@ export class Notes {
     })
 }
 
+/** A store of the current app's `Notes` plugin. */
 export const notes = usePlugin(Notes)

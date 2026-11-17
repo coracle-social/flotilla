@@ -1,15 +1,15 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import ThreadLatestItem from "@app/components/ThreadLatestItem.svelte"
-  import type {Engagement} from "@app/features/engagement"
+  import type {Interactions} from "@app/features/interactions"
 
   type Props = {
     url: string
     items: TrustedEvent[]
-    engagement: Engagement
+    interactions: Interactions
   }
 
-  const {url, items, engagement}: Props = $props()
+  const {url, items, interactions}: Props = $props()
 </script>
 
 <section class="card card-flat hidden p-0 lg:block">
@@ -21,7 +21,7 @@
   {:else}
     <div>
       {#each items as event (event.id)}
-        <ThreadLatestItem {url} {event} {engagement} />
+        <ThreadLatestItem {url} {event} {interactions} />
       {/each}
     </div>
   {/if}

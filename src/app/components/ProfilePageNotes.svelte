@@ -4,7 +4,8 @@
   import {fly} from "@lib/transition"
   import NoteEntry from "@app/components/NoteEntry.svelte"
   import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"
-  import {derivePubkeyMuted, makeProfileFeed} from "@app/features/social"
+  import {makeProfileFeed} from "@app/features/feeds"
+  import {derivePubkeyMuted} from "@app/features/people"
 
   type Props = {
     pubkey: string
@@ -36,7 +37,7 @@
   {:else}
     {#each $entries as entry (entry.key)}
       <div in:fly>
-        <NoteEntry {entry} engagement={feed.engagement} />
+        <NoteEntry {entry} interactions={feed.interactions} />
       </div>
     {/each}
     <NoteFeedFooter

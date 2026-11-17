@@ -20,7 +20,7 @@
   import ReadingProgress from "@app/components/ReadingProgress.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeInteractions} from "@app/features/interactions"
   import {displayReadingTime} from "@app/features/spaces/articles"
   import * as pages from "@app/navigation/pages"
 
@@ -32,7 +32,7 @@
 
   const {address, relays, url}: Props = $props()
 
-  const engagement = makeEngagement({relays: url ? [url] : undefined})
+  const interactions = makeInteractions({relays: url ? [url] : undefined})
   const event = $events.one(address, relays).$
   const article = derived(event, $event => ($event ? reader(Article)($event) : undefined))
   const h = $derived($article?.room())
@@ -42,7 +42,7 @@
 
   let contentElement = $state<Element>()
 
-  onDestroy(engagement.stop)
+  onDestroy(interactions.stop)
 </script>
 
 <SpaceBar {back} class="!h-auto min-h-20 py-3">
@@ -121,7 +121,7 @@
         </article>
         <div class="border-t px-5 py-4 sm:px-8 border-line">
           <div class="mx-auto flex w-full max-w-[68ch]">
-            <ArticleActionBar event={$event} {url} {engagement} />
+            <ArticleActionBar event={$event} {url} {interactions} />
           </div>
         </div>
         <!-- The sidebar carries this on a wide space page; without one it shows here instead. -->
@@ -136,7 +136,7 @@
             event={$event}
             {url}
             {relays}
-            {engagement}
+            {interactions}
             columnClass="mx-auto max-w-[68ch]" />
         </div>
       </div>

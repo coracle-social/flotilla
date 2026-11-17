@@ -23,14 +23,14 @@
   import {reader} from "@app/core/domain"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {deriveGoalProgress} from "@app/features/spaces/goals"
-  import {makeEngagement} from "@app/features/engagement"
+  import {makeInteractions} from "@app/features/interactions"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, id} = pages.goal.decode(params)
-  const engagement = makeEngagement({relays: [url]})
+  const interactions = makeInteractions({relays: [url]})
   const event = $events.one(id, [url]).$
   const goal = derived(event, $event => ($event ? reader(ZapGoal)($event) : undefined))
   const progress = $derived($event ? deriveGoalProgress($event, url) : undefined)
@@ -45,7 +45,7 @@
 
   const back = () => history.back()
 
-  onDestroy(engagement.stop)
+  onDestroy(interactions.stop)
 </script>
 
 <SpaceBar {back}>
@@ -105,7 +105,7 @@
             {$progress.isFunded ? "Chip in anyway" : "Contribute to this goal"}
           </ZapButton>
         {/if}
-        <ContentActions hideZap noun="Goal" event={$event} {url} {engagement} />
+        <ContentActions hideZap noun="Goal" event={$event} {url} {interactions} />
       </div>
     </NoteCard>
     {#if $goal.summary()}
@@ -115,7 +115,7 @@
       </div>
     {/if}
     <GoalSupporters {url} event={$event} progress={$progress} />
-    <EventComments event={$event} {url} {engagement} />
+    <EventComments event={$event} {url} {interactions} />
   {:else}
     <LoadingFallback
       loadingMessage="Loading funding goal..."
