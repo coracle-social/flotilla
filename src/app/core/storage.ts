@@ -3,7 +3,7 @@ import type {Unsubscriber} from "svelte/store"
 import {SecureStorage} from "@aparajita/capacitor-secure-storage"
 import {Capacitor, registerPlugin} from "@capacitor/core"
 import {Preferences} from "@capacitor/preferences"
-import {noop, batch, call, makeQueue} from "@welshman/lib"
+import {noop, batch, call, makeQueue, ms} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
 import type {Handle} from "@welshman/util"
 import {MemoryRepository, withGetter} from "@welshman/store"
@@ -127,6 +127,8 @@ export const hasCachedIdentity = async () => {
 
 const onSweepError = (error: unknown) => console.error("Failed to sweep the event database", error)
 
+const onRestoreError = (error: unknown) => console.error("Failed to read the wrap index", error)
+
 const onClearError = (error: unknown) => console.error("Failed to clear the event database", error)
 
 const onCacheError = (error: unknown): [string, string][] => {
@@ -136,27 +138,22 @@ const onCacheError = (error: unknown): [string, string][] => {
   return []
 }
 
-/** The user's events in sqlite with the wraps already read from them, or memory alone if that fails. */
+/** The user's events in sqlite once it's open, or memory alone if it can't be. */
 export const openRepository = async (
   pubkey: string,
 ): Promise<Pick<AppOptions, "repository" | "wrapManager">> => {
   // Preferences go with the app container on every platform, and the keychain the session lives in does not
   await kv.set(IDENTITY, pubkey)
 
-  let database: Maybe<EventDatabase>
-
   try {
-    database = await EventDatabase.open(pubkey)
+    const database = await EventDatabase.open(pubkey)
 
-    // Neither is needed to read and write, so a failure leaves the database in use
-    await database.sweep().catch(onSweepError)
-    await database.restoreWraps()
+    // The worker answers calls in order, so the index is back before the app can read a wrap
+    database.restoreWraps().catch(onRestoreError)
 
     return {repository: database.repository, wrapManager: database.wrapManager}
   } catch (e) {
     console.error("Failed to open the event database", e)
-
-    void database?.repository.close()
 
     return {repository: new MemoryRepository()}
   }
@@ -219,8 +216,8 @@ class PluginCaches {
     fromRow: (row: Row) => Maybe<[string, T]>,
     toRow: (key: string, item: T) => Row,
   ) => {
-    const {repository} = this.database
-    const rows = await repository.call("getPluginItems", name).catch(onCacheError)
+    const {sqlite} = this.database
+    const rows = await sqlite.call("getPluginItems", name).catch(onCacheError)
 
     for (const [, json] of rows) {
       const entry = fromRow(JSON.parse(json))
@@ -233,7 +230,7 @@ class PluginCaches {
     const enqueue = batch(
       FLUSH_INTERVAL,
       idleWrite((items: PluginItems) =>
-        repository.call("putPluginItems", name, items).catch(onCacheError),
+        sqlite.call("putPluginItems", name, items).catch(onCacheError),
       ),
     )
 
@@ -307,6 +304,19 @@ export const pluginCachesPolicy: AppPolicy = $app => {
   return noop
 }
 
-export const registerPluginCaches = () => {
-  appPolicies.push(pluginCachesPolicy)
+// A sweep holds up every read queued behind it in the worker, so it waits until the app has started
+export const sweepPolicy: AppPolicy = $app => {
+  const database = EventDatabase.of($app.repository)
+
+  if (database) {
+    const timeout = setTimeout(() => database.sweep().catch(onSweepError), ms(10))
+
+    return () => clearTimeout(timeout)
+  }
+
+  return noop
+}
+
+export const registerStorage = () => {
+  appPolicies.push(pluginCachesPolicy, sweepPolicy)
 }

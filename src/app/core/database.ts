@@ -1,7 +1,21 @@
 import {DAY, MONTH, ago, int, isDefined, max, now} from "@welshman/lib"
-import {BLOSSOM_SERVERS, FOLLOWS, MESSAGING_RELAYS, MUTES, PROFILE, RELAYS} from "@welshman/util"
+import {
+  BLOSSOM_SERVERS,
+  FOLLOWS,
+  MESSAGING_RELAYS,
+  MUTES,
+  PROFILE,
+  RELAYS,
+  isReplaceable,
+} from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {SqliteRepository, connectSqlite} from "@welshman/store"
+import {
+  MemoryRepository,
+  MultiplexRepository,
+  SqliteRepository,
+  connectSqlite,
+  makeMultiplexDispatch,
+} from "@welshman/store"
 import type {Repository, RepositoryUpdate} from "@welshman/store"
 import {WrapManager} from "@welshman/net"
 import type {WrapItem} from "@welshman/net"
@@ -66,6 +80,21 @@ const getRetention = (event: TrustedEvent, pubkey: string): Retention => {
   return release(event.id)
 }
 
+// Whether a rule keeps the event past now, which is what earns it a place in sqlite
+const isKept = (event: TrustedEvent, pubkey: string) => {
+  const matching = rules.filter(rule => rule.match(event, pubkey))
+
+  return matching.some(rule => {
+    const deadline = getDeadline(rule, event, pubkey)
+
+    return !deadline || deadline > now()
+  })
+}
+
+// Every version of an address must reach the same child, so sqlite takes every replaceable
+const isStored = (event: TrustedEvent, pubkey: string) =>
+  isReplaceable(event) || isKept(event, pubkey)
+
 type DatabaseMethods = ReturnType<typeof extend>
 
 const onRetainError = (error: unknown) => console.error("Failed to record what to keep", error)
@@ -77,26 +106,35 @@ const databases = new WeakMap<Repository, EventDatabase>()
 
 /** One identity's events in sqlite, with the tables flotilla keeps beside them. */
 export class EventDatabase {
-  // Restored before the app is built, or the app unwraps every stored wrap again
+  // Asked for its index before the app is built, or the app unwraps every stored wrap again
   wrapManager: WrapManager
 
   private constructor(
     readonly pubkey: string,
-    readonly repository: SqliteRepository<DatabaseMethods>,
+    readonly repository: Repository,
+    readonly sqlite: SqliteRepository<DatabaseMethods>,
   ) {
     this.wrapManager = new WrapManager({repository})
 
-    repository.on("update", this.retain)
+    sqlite.on("update", this.retain)
   }
 
   static open = async (pubkey: string) => {
-    const repository = await SqliteRepository.open({
-      connection: connectSqlite<DatabaseMethods>({
-        name: `flotilla-${pubkey}`,
-        createWorker: () => new DatabaseWorker(),
-      }),
+    const connection = connectSqlite<DatabaseMethods>({
+      name: `flotilla-${pubkey}`,
+      createWorker: () => new DatabaseWorker(),
     })
-    const database = new EventDatabase(pubkey, repository)
+    const repository = await MultiplexRepository.open({
+      children: {
+        sqlite: options => SqliteRepository.open({...options, connection}),
+        memory: options => new MemoryRepository(options),
+      },
+      dispatch: makeMultiplexDispatch((event, {sqlite, memory}) =>
+        isStored(event, pubkey) ? sqlite : memory,
+      ),
+    })
+    const {sqlite} = repository.repositories
+    const database = new EventDatabase(pubkey, repository, sqlite)
 
     databases.set(repository, database)
 
@@ -114,22 +152,24 @@ export class EventDatabase {
     ]
 
     if (retentions.length > 0) {
-      this.repository.call("retain", retentions).catch(onRetainError)
+      this.sqlite.call("retain", retentions).catch(onRetainError)
     }
   }
 
   // Nothing cached in the last day goes, since another tab may be showing it.
   sweep = async () => {
-    const ids = await this.repository.call("getEvictable", ago(1, DAY))
+    await this.sqlite.prune()
+
+    const ids = await this.sqlite.call("getEvictable", ago(1, DAY))
 
     if (ids.length > 0) {
-      await this.repository.evict([{ids}])
+      await this.sqlite.evict([{ids}])
     }
   }
 
   // Read the wrap index back, and keep its table in step from then on.
   restoreWraps = async () => {
-    const wraps = await this.repository.call("getWraps")
+    const wraps = await this.sqlite.call("getWraps")
 
     this.wrapManager.load(wraps)
     this.wrapManager.on("add", this.putWrap)
@@ -141,17 +181,17 @@ export class EventDatabase {
     this.wrapManager.off("add", this.putWrap)
     this.wrapManager.off("remove", this.deleteWrap)
 
-    await this.repository.call("wipe")
+    await this.sqlite.call("wipe")
   }
 
   // Releasing the lock lets another tab lead the database, or this one open it again
-  close = () => this.repository.close()
+  close = () => this.sqlite.close()
 
   private putWrap = (item: WrapItem) => {
-    this.repository.call("putWraps", [item]).catch(onWrapsError)
+    this.sqlite.call("putWraps", [item]).catch(onWrapsError)
   }
 
   private deleteWrap = (item: WrapItem) => {
-    this.repository.call("deleteWraps", [item.id]).catch(onWrapsError)
+    this.sqlite.call("deleteWraps", [item.id]).catch(onWrapsError)
   }
 }

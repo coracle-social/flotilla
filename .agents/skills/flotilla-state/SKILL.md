@@ -166,7 +166,7 @@ that owns them, from `registerAll` before anything touches the app:
 | `registerAuth` | `core/auth.ts` | NIP-42 by the `relay_auth` setting, conservative or aggressive, through welshman's `makeAppPolicyAuth` |
 | `registerRelays` | `core/relays.ts` | keeps blocked relays closed, and marks a relay denied once it refuses several requests in a row, for `deriveRelayAccess` |
 | `registerNotify` | `core/notify.ts` | welshman's `appPolicyNotify` |
-| `registerPluginCaches` | `core/storage.ts` | the per-user cache of plugin items in the event database, only when the app has a user and a database |
+| `registerStorage` | `core/storage.ts` | the per-user cache of plugin items in the event database, only when the app has a user and a database, and the sweep, ten seconds after the app is built |
 
 A socket policy is registered as `$app => $app.pool.addSocketPolicy(policy)`, which adds it to the
 app's pool and returns the cleanup that removes it. To add a policy:
@@ -280,19 +280,16 @@ the map-backed caches (`database.plugins.ts`). `database.worker.ts` composes the
 cannot be opened leaves the app on a `MemoryRepository`, running on relay data alone, and no
 `PluginCaches` at all.
 
-Before the app is built, `openRepository`:
-
-1. sweeps what retention no longer keeps.
-2. restores the wrap index into the `WrapManager` the app is built with, so the app doesn't unwrap
-   every stored wrap again.
+`openRepository` waits only for the worker to open the database. Before the app is built, it asks for the wrap index the `WrapManager` is built with, without waiting for the answer. The worker answers calls in order, so the index arrives before the app can read a wrap, and the app doesn't unwrap every stored wrap again.
 
 It also records the identity in `kv` first, so `restoreSession` can tell whether the rest of an
 install is still there before it restores a session whose signer needs this device. The keychain
 that `ss` lives in outlives the app container holding everything else, and an install from before
 that marker is recognised by the cache it left in IndexedDB, which its first login replaces.
 
-SQLite stores whatever the repository takes, and retention decides what the sweep evicts. A rule
-is a `match(event, pubkey)` predicate, given the database owner's pubkey, with an optional
+The app is built over a welshman `MultiplexRepository` with two children that share one tracker. SQLite stores what a retention rule keeps past now, and every replaceable event, since every version of an address has to reach the same child. A `MemoryRepository` holds everything else, which is gone on reload and never written to SQLite. A kind 5 delete goes to both, so a reload can't bring back what it hides. `EventDatabase.sqlite` is the SQLite child, for the calls only it has (`call`, `prune`, `evict`, `close`), and `EventDatabase.of` finds the database from the multiplexer the app holds.
+
+A rule is a `match(event, pubkey)` predicate, given the database owner's pubkey, with an optional
 `maxAge` (by `created_at`), `ttl` (by when it was cached, and never for the user's own events) and
 `provenance` (evicted without a relay). `database.ts` keeps profiles and the lists every part of
 the app reads (follows, mutes, relay lists) from any author. Everything else is registered by its
@@ -307,16 +304,9 @@ owner with `registerRetention`:
 - `COMMAND` definitions (`registerCommands`)
 - what was done to the user's notes, and the notes themselves, for a month (`registerActivity`)
 
-- A trigger on `events` gives every stored event a `retention` row. `EventDatabase` judges each
-  event the repository adds against the rules, which live in the main thread, and records how long
-  to keep it. An event no rule keeps, such as a note from the wider network with no `h` tag, goes
-  at the first sweep after it was cached, as does anything an update reports deleted, superseded
-  or expired.
-- The sweep runs when the database opens, and leaves anything cached in the last day, since
-  another tab may be showing it. It never evicts a delete while an event it names is stored,
-  since that would bring the event back, nor a rumor the wrap index names.
-- `COMMAND` definitions expire a week after they were cached, and a space's content a month after
-  it was created. Scrolling a room further back keeps what it loads until the next sweep.
+- A trigger on `events` gives every stored event a `retention` row. `EventDatabase` judges each event SQLite adds against the rules, which live in the main thread, and records how long to keep it. An event no rule keeps, such as a note from the wider network with no `h` tag, stays in memory. What SQLite stores without a rule, which is a delete or a replaceable event, goes at the first sweep after it was cached, as does anything an update reports deleted, superseded or expired.
+- The sweep prunes expired events, then evicts what retention lets go of. It runs ten seconds after the app is built rather than at startup, because every read waits behind it in the worker. It leaves anything cached in the last day, since another tab may be showing it. It never evicts a delete while an event it names is stored, since that would bring the event back, nor a rumor the wrap index names.
+- `COMMAND` definitions expire a week after they were cached, and a space's content a month after it was created. Scrolling a room further back than a month keeps what it loads in memory only.
 - Another author's metadata expires a month after it was cached. The user's own never expires. It
   is the rail and the follow list, and a quiet month would otherwise empty both until a relay
   answers. An author who republishes gets a fresh month, and one who does not is fetched again.
