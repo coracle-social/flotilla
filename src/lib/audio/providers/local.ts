@@ -1,11 +1,9 @@
 import {int, MINUTE} from "@welshman/lib"
-import {decodeMono} from "@lib/audio"
 import {hasLocalStt, transcribeLocally} from "@lib/stt"
 import {sttModel} from "@lib/stt/models"
-import LocalSttEnable from "@app/components/LocalSttEnable.svelte"
-import {pushModal} from "@app/navigation/dialogs"
-import {VoiceDeclined} from "@app/features/voice/providers/common"
-import type {VoiceEnable, VoiceProvider} from "@app/features/voice/providers/common"
+import {decodeMono} from "@lib/audio/codec"
+import {VoiceDeclined} from "@lib/audio/voice"
+import type {VoiceProvider} from "@lib/audio/voice"
 
 /**
  * The model answers a language it does not read as fluent nonsense in one it does, and the mean
@@ -16,10 +14,9 @@ import type {VoiceEnable, VoiceProvider} from "@app/features/voice/providers/com
 const minimumConfidence = 0.76
 
 // Generating speech on a phone is slower than playing it, so only stt runs here.
-export const local: VoiceProvider = {
+export const makeLocalProvider = ({declinedMessage}: {declinedMessage: string}): VoiceProvider => ({
+  name: "local",
   ready: () => hasLocalStt(),
-  enable: (_task, {onReady, onCancel, nested}: VoiceEnable) =>
-    pushModal(LocalSttEnable, {onReady, onCancel}, {nested}),
   stt: async (audio: File, signal?: AbortSignal) => {
     const samples = await decodeMono(audio, sttModel.sampleRate)
 
@@ -32,11 +29,9 @@ export const local: VoiceProvider = {
     const {text, confidence} = await transcribeLocally(samples, signal)
 
     if (text && confidence < minimumConfidence) {
-      throw new VoiceDeclined(
-        `This device reads ${sttModel.languages}. Add an OpenRouter key in Content Settings to transcribe anything else.`,
-      )
+      throw new VoiceDeclined(declinedMessage)
     }
 
     return text
   },
-}
+})

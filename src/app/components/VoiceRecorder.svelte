@@ -12,8 +12,8 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
-  import type {Dictation} from "@app/features/voice"
-  import {clearDictation, getDictation, startDictation} from "@app/features/voice"
+  import type {Dictation} from "@app/tools/audio/stt"
+  import {clearDictation, getDictation, startDictation} from "@app/tools/audio/stt"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 
@@ -46,7 +46,7 @@
   const start = async () => {
     try {
       dictation = await startDictation(key)
-      track = dictation.track
+      track = dictation.recorder.track
       started = Date.now()
       timer = setInterval(() => {
         elapsed = (Date.now() - started) / 1000
@@ -65,7 +65,7 @@
   // A recording that has stopped is listenable, whether it was just made or handed back.
   const review = async (recorded: Dictation) => {
     if (!source) {
-      source = URL.createObjectURL(await recorded.audio)
+      source = URL.createObjectURL(await recorded.recorder.audio)
     }
 
     busy = false
@@ -73,7 +73,7 @@
 
   const stop = () => {
     if (recording) {
-      dictation?.stop()
+      dictation?.recorder.stop()
       clearInterval(timer)
       recording = false
       track = undefined
@@ -106,7 +106,7 @@
       working = "send"
       pending = false
 
-      const file = await dictation.audio
+      const file = await dictation.recorder.audio
 
       clearDictation(key)
 
@@ -129,7 +129,7 @@
     clearInterval(timer)
 
     if (recording) {
-      dictation?.stop()
+      dictation?.recorder.stop()
     }
 
     if (source) {

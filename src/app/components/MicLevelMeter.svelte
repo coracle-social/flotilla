@@ -2,7 +2,7 @@
   import cx from "classnames"
   import Microphone from "@assets/icons/microphone.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import {watchAudioLevel} from "@lib/audio"
+  import {watchAudioLevel} from "@lib/audio/devices"
 
   type Props = {
     track: MediaStreamTrack | undefined

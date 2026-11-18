@@ -21,7 +21,7 @@
   import EditorContent from "@app/components/editor/EditorContent.svelte"
   import {makeEditor} from "@app/components/editor/makeEditor"
   import {app} from "@app/core/app"
-  import {getDictation} from "@app/features/voice"
+  import {getDictation} from "@app/tools/audio/stt"
   import {pushToast} from "@app/navigation/toast"
   import {DraftKey, type Draft} from "@app/tools/drafts"
   import type {Share} from "@app/tools/share"

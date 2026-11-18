@@ -384,7 +384,7 @@ event on every read.
 `DraftKey<T>` is a typed handle over an in-memory `Map`. A draft survives the composer
 unmounting and a navigation, but not a reload. Key it by context: `RoomCompose` uses
 `room:${url ?? ""}:${h ?? ""}` and `EventReply` uses `reply:${event.id}:${parent?.id || ""}`.
-The dictation registry in `features/voice` works the same way, so a transcription can finish after
+The dictation registry in `tools/audio/stt.ts` works the same way, so a transcription can finish after
 its composer has gone.
 
 ## Background sync (`src/app/core/sync.ts`)

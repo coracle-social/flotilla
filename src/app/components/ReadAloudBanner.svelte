@@ -7,12 +7,14 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import Banner from "@app/components/Banner.svelte"
-  import {readingAloud, stopReadingAloud} from "@app/features/voice"
+  import {reading, stopReadingAloud} from "@app/tools/audio/tts"
 
   let audio: HTMLAudioElement | undefined = $state()
   let playing = $state(false)
   let currentTime = $state(0)
   let duration = $state(0)
+
+  const src = $derived($reading?.audio ? URL.createObjectURL($reading.audio) : undefined)
 
   // Duration is NaN until the browser has read the metadata.
   const scrubbable = $derived(Number.isFinite(duration) ? duration : 0)
@@ -32,16 +34,26 @@
 
     return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`
   }
+
+  $effect(() => {
+    const url = src
+
+    return () => {
+      if (url) {
+        URL.revokeObjectURL(url)
+      }
+    }
+  })
 </script>
 
-{#if $readingAloud}
+{#if $reading}
   <Banner>
-    {#if $readingAloud.src}
+    {#if src}
       <audio
         bind:this={audio}
         bind:currentTime
         bind:duration
-        src={$readingAloud.src}
+        {src}
         autoplay
         onplay={onPlay}
         onpause={onStop}
@@ -58,10 +70,10 @@
     <div class="flex min-w-0 flex-1 flex-col gap-1">
       <span class="flex min-w-0 items-center gap-2 truncate text-sm">
         <Icon icon={VolumeLoud} size={4} />
-        <span class="font-semibold">{$readingAloud.src ? "Reading" : "Preparing"}</span>
-        <span class="truncate text-content-muted">a message from {$readingAloud.title}</span>
+        <span class="font-semibold">{src ? "Reading" : "Preparing"}</span>
+        <span class="truncate text-content-muted">a message from {$reading.title}</span>
       </span>
-      {#if $readingAloud.src}
+      {#if src}
         <span class="flex items-center gap-2 text-xs text-content-muted">
           <input
             aria-label="Seek within the message"

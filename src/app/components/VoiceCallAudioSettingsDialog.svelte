@@ -8,7 +8,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
-  import {listMediaDevices, requestDevicePermission, selectableDevices} from "@lib/audio"
+  import {listMediaDevices, requestDevicePermission, selectableDevices} from "@lib/audio/devices"
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import {currentCallSession, DeviceKind, type CallSession} from "@app/features/spaces/calls"
   import {switchCallActiveDevice} from "@app/features/spaces/calls/engine"

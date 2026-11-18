@@ -55,10 +55,10 @@ only gate.
 - **lib → app.** `Link.svelte` imports `navigate` from `@app/navigation/navigate`. Don't copy it. A lib
   component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
   `IconInput` and its picker buttons did.
-- **app → components.** The voice providers (`OpenRouterEnable`, `LocalSttEnable`) and the
-  Electron screen-share adapter (`ScreenSharePicker`) import a component to open a prompt in the
-  middle of a flow that no component wraps. They are due to return a refusal that a flow maps to
-  the prompt instead.
+- **app → components.** The Electron screen-share adapter imports `ScreenSharePicker` to open a
+  prompt in the middle of a flow that no component wraps. It is due to return a refusal that a flow
+  maps to the prompt instead, as the voice tools return the provider to set up and
+  `components/flows/voice.ts` opens its prompt.
 - Nothing under `src/app` or `src/lib` imports from `src/routes`.
 
 ## Top-level layout
@@ -167,10 +167,6 @@ Outside `spaces/`:
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
 - `healthChecks.ts` (prompts for missing inbox/outbox relays)
 - Platform and voice: `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `reminders.ts`
-- `voice/`: speech to text (stt) and text to speech (tts). `dictation.ts` holds a composer's
-  dictation, kept across navigation and sent as a voice note or transcribed, and `readAloud.ts`
-  reads a message aloud. `providers/` runs each task on the device's stt model or on OpenRouter,
-  and `resolveVoiceProvider` (`resolve.ts`) picks one or asks the user to set one up
 
 **`tools/`, `areas/` and `shell/`: the layers `features/` is moving into**
 
@@ -187,7 +183,11 @@ Outside `spaces/`:
   (`people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts`
   has `isEventMuted` and `derivePubkeyMuted`), and `checked.ts` (what has been read, per path, synced
   to dufflepud, with `isChecked`, the rule for reading it, and `holdChecked`, which keeps a path
-  unread while it's on screen)
+  unread while it's on screen), and `audio/` (speech to text and text to speech: `providers.ts`
+  builds the voice providers with the user's settings, `stt.ts` holds a composer's dictation, kept
+  across navigation and sent as a voice note or transcribed, and `tts.ts` holds the message being
+  read aloud. Both return the provider to set up when none is ready, and `components/flows/voice.ts`
+  opens its prompt)
 - `areas/`: `bookmarks.ts` (bookmark folders and search)
 - `shell/`: `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
   `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering),
@@ -210,8 +210,11 @@ client.
   (`markdownToText`), `keyboard.ts` (`syncKeyboard`, which marks the body `keyboard-open` while the native
   keyboard is up)
 - `pager.ts`: a `Pager` (the load state of one direction of a list, and the `page`/`settle` actions a scroll container drives), `combinePagers`, and `followScroll`, which binds a pager to a scroll container
-- `audio.ts`: recording from the microphone, device lists, a live input level, decoding to mono
-  samples at a model's rate, and WAV encoding
+- `audio/`: `recorder.ts` (recording from the microphone), `devices.ts` (device lists and a live
+  input level), `codec.ts` (decoding to mono samples at a model's rate, and WAV encoding),
+  `playback.ts` (keeping Android awake while media plays), and `voice.ts` with `providers/` (the
+  voice provider contract, `resolveVoiceProvider`, and the on-device and OpenRouter providers,
+  configured with options). Speech to text takes a `File`, and text to speech returns one
 - `push/permission.ts`: the push permission states and the message for each
 - `stt/`: the on-device stt model (Whistle over a wasm engine, run in a worker), its download and
   cache, and `transcribeLocally`

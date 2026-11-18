@@ -8,8 +8,9 @@
   import Spinner from "@lib/components/Spinner.svelte"
   import {errorMessage} from "@lib/util"
   import VoiceRecorder from "@app/components/VoiceRecorder.svelte"
-  import type {Dictation} from "@app/features/voice"
-  import {clearDictation, getDictation, transcribeDictation} from "@app/features/voice"
+  import {setupVoice} from "@app/components/flows/voice"
+  import type {Dictation} from "@app/tools/audio/stt"
+  import {clearDictation, getDictation, transcribeDictation} from "@app/tools/audio/stt"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 
@@ -33,11 +34,33 @@
     })
   }
 
+  // Asks for a provider first when none is ready, with the prompt over the recorder rather than replacing it.
+  const startTranscript = async (dictation: Dictation): Promise<boolean> => {
+    try {
+      const setup = await transcribeDictation(dictation)
+
+      if (setup) {
+        if (await setupVoice("stt", setup, {nested: true})) {
+          return startTranscript(dictation)
+        }
+
+        return false
+      }
+
+      return true
+    } catch (error) {
+      console.error(error)
+      pushToast({theme: "error", message: `Failed to prepare dictation: ${errorMessage(error)}`})
+
+      return false
+    }
+  }
+
   // The recorder waits on this, so it settles once the transcript lands or comes back empty.
   const transcribe = async () => {
     const dictation = getDictation(key)
 
-    if (dictation && (await transcribeDictation(dictation))) {
+    if (dictation && (await startTranscript(dictation))) {
       return deliver(dictation)
     }
 
