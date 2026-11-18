@@ -14,7 +14,7 @@
   import PollCreate from "@app/components/PollCreate.svelte"
   import * as pages from "@app/navigation/pages"
   import {partitionByActivity} from "@app/tools/content"
-  import {makeSpaceFeed} from "@app/features/feeds"
+  import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 

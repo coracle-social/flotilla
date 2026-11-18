@@ -21,7 +21,7 @@
   import GoalCreate from "@app/components/GoalCreate.svelte"
   import * as pages from "@app/navigation/pages"
   import {partitionByActivity} from "@app/tools/content"
-  import {makeSpaceFeed} from "@app/features/feeds"
+  import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import {
     deriveGoalProgressById,
     filterGoals,

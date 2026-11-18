@@ -12,8 +12,8 @@ import type {Pager} from "@lib/pager"
 import {app} from "@app/core/app"
 import {PLATFORM_RELAYS} from "@app/core/env"
 import {relayLists, router} from "@app/core/plugins"
-import {makeTimeline} from "@app/features/feeds/timeline"
-import type {Timeline} from "@app/features/feeds/timeline"
+import {makeTimeline} from "@app/tools/feeds/timeline"
+import type {Timeline} from "@app/tools/feeds/timeline"
 
 export type AuthorFeedOptions = {
   pubkeys: Readable<string[]>

@@ -10,7 +10,7 @@
   import ContentActions from "@app/components/ContentActions.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import {reader} from "@app/core/domain"
-  import {getPublishedTimestamp} from "@app/features/spaces/articles"
+  import {getPublishedTimestamp} from "@app/tools/content"
   import * as pages from "@app/navigation/pages"
 
   type Props = {

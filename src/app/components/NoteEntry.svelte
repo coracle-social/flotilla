@@ -3,7 +3,7 @@
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
   import ReplyList from "@app/components/ReplyList.svelte"
-  import type {NoteEntry} from "@app/features/feeds"
+  import type {NoteEntry} from "@app/tools/feeds/network"
 
   type Props = {
     entry: NoteEntry

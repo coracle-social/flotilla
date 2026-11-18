@@ -28,7 +28,7 @@
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
   import {user} from "@app/core/user"
   import {groupRoomMessages} from "@app/features/spaces/rooms"
-  import {makeRelayFeed} from "@app/features/feeds"
+  import {makeRelayFeed} from "@app/tools/feeds/relay"
   import {pageLoading} from "@app/shell/loading"
   import {checked} from "@app/tools/checked"
   import {getPermalinkTarget, highlightedEvent} from "@app/navigation/locations"

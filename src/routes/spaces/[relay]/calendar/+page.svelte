@@ -17,7 +17,7 @@
   import CalendarMonth from "@app/components/CalendarMonth.svelte"
   import CalendarWeek from "@app/components/CalendarWeek.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import {makeCalendarFeed} from "@app/features/feeds"
+  import {makeCalendarFeed} from "@app/tools/feeds/calendar"
   import type {CalendarView} from "@app/features/spaces/calendar"
   import {
     addDays,

@@ -20,7 +20,7 @@
   import ClassifiedItem from "@app/components/ClassifiedItem.svelte"
   import ClassifiedCreate from "@app/components/ClassifiedCreate.svelte"
   import {partitionByActivity} from "@app/tools/content"
-  import {makeSpaceFeed} from "@app/features/feeds"
+  import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import * as pages from "@app/navigation/pages"
   import {
     CLASSIFIED_STATUS_TABS,

@@ -10,7 +10,7 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import {isEventMuted} from "@app/tools/people/muting"
   import {goToEvent} from "@app/navigation/locations"
-  import {getPublishedTimestamp} from "@app/features/spaces/articles"
+  import {getPublishedTimestamp} from "@app/tools/content"
 
   type Props = {
     event: TrustedEvent

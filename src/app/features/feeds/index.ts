@@ -1,5 +1,0 @@
-export * from "@app/features/feeds/timeline"
-export * from "@app/features/feeds/relayFeed"
-export * from "@app/features/feeds/authorFeed"
-export * from "@app/features/feeds/calendarFeed"
-export * from "@app/features/feeds/networkFeed"

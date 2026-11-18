@@ -1,8 +1,8 @@
 <script lang="ts">
   import {toggle} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
-  import {includedNoteFacets} from "@app/features/feeds"
-  import type {FacetCounts, NoteFacet} from "@app/features/feeds"
+  import {includedNoteFacets} from "@app/tools/feeds/network"
+  import type {FacetCounts, NoteFacet} from "@app/tools/feeds/network"
 
   type Props = {
     counts: FacetCounts

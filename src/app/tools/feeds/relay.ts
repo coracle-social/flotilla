@@ -2,8 +2,8 @@ import {Events} from "@welshman/app"
 import type {Filter} from "@welshman/util"
 import {makeCommentFilter} from "@lib/util"
 import {app} from "@app/core/app"
-import type {Timeline} from "@app/features/feeds/timeline"
-import {makeTimeline} from "@app/features/feeds/timeline"
+import type {Timeline} from "@app/tools/feeds/timeline"
+import {makeTimeline} from "@app/tools/feeds/timeline"
 
 export type RelayFeedOptions = {
   url: string

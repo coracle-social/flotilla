@@ -7,7 +7,7 @@
   import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"
   import {PLATFORM_RELAYS} from "@app/core/env"
   import {userFollowList} from "@app/core/user"
-  import {makeNetworkFeed} from "@app/features/feeds"
+  import {makeNetworkFeed} from "@app/tools/feeds/network"
 
   const feed = makeNetworkFeed()
 

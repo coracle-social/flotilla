@@ -162,7 +162,6 @@ hosting (`areas/hosting/`, with its own auth). Each space concern is a sub-featu
 
 Outside `spaces/`:
 
-- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range)
 - Platform: `reminders.ts`
 
 **`tools/`, `areas/` and `shell/`: the layers `features/` is moving into**
@@ -171,8 +170,8 @@ Outside `spaces/`:
   invoices), `theme.ts` (`colorFor`, the active theme and font size), `uploads.ts` (Blossom, image
   compression), `scheduling.ts` (the message and error for a scheduled post a relay refuses), `render.ts` (events as
   plain text or a one-line summary, for push notifications and reading aloud), `content.ts`
-  (`CONTENT_KINDS`, the kinds with a section of their own, and `partitionByActivity`, which the
-  list pages use to sort a kind by latest comment), `targets.ts` (what an event is about: what a
+  (`CONTENT_KINDS`, the kinds with a section of their own, `getPublishedTimestamp`, when content went out, and `partitionByActivity`, which the
+  list pages use to sort a kind by latest comment), `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relay.ts` is one relay's timeline, `author.ts` pages a set of authors in groups over their outboxes, `calendar.ts` windows calendar events by day, `network.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `targets.ts` (what an event is about: what a
   reply answers, a reaction reacts to, a zap zaps), and `alerts/` (which events alert, the user's
   alert settings, and `stream.ts`, the in-app stream of alerting messages), `publish.ts`
   (`publishToNetwork`, posting outside a space), `quotes.ts`, `share.ts` (the `Share` type,

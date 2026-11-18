@@ -14,7 +14,7 @@ import {
   isPastHistory,
   nextInterval,
   requestWindow,
-} from "@app/features/feeds/windows"
+} from "@app/tools/feeds/windows"
 
 export type TimelineOptions = {
   source: AsyncProjection<EventsById>

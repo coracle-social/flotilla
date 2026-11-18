@@ -9,7 +9,7 @@ import type {PageResult} from "@lib/pager"
 import {app} from "@app/core/app"
 import {reader} from "@app/core/domain"
 import {network} from "@app/core/plugins"
-import {isPastHistory} from "@app/features/feeds/windows"
+import {isPastHistory} from "@app/tools/feeds/windows"
 
 export type CalendarFeedOptions = {url: string}
 

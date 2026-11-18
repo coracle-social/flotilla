@@ -4,7 +4,7 @@
   import {fly} from "@lib/transition"
   import NoteEntry from "@app/components/NoteEntry.svelte"
   import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"
-  import {makeProfileFeed} from "@app/features/feeds"
+  import {makeProfileFeed} from "@app/tools/feeds/network"
   import {derivePubkeyMuted} from "@app/tools/people/muting"
 
   type Props = {

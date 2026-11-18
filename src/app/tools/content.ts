@@ -10,11 +10,15 @@ import {
   getIdOrAddress,
 } from "@welshman/util"
 import type {TrustedEvent} from "@welshman/util"
-import {Comment, Thread} from "@welshman/domain"
+import {Article, Comment, Thread} from "@welshman/domain"
 import {reader} from "@app/core/domain"
 
 // The kinds that each have a section of their own in a space.
 export const CONTENT_KINDS = [ZAP_GOAL, EVENT_TIME, THREAD, CLASSIFIED, POLL, PINBOARD, LONG_FORM]
+
+// An article's created_at moves with every edit, so published_at is when it went out.
+export const getPublishedTimestamp = (event: TrustedEvent) =>
+  event.kind === LONG_FORM ? reader(Article)(event).publishedAt() : event.created_at
 
 // An event is active as of its own creation or the newest comment on it, keyed by address when addressable.
 export const partitionByActivity = (kind: number, events: TrustedEvent[]) => {
