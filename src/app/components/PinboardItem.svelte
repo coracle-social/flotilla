@@ -8,7 +8,7 @@
   import GalleryWide from "@assets/icons/gallery-wide.svg?dataurl"
   import Cv from "@lib/components/Cv.svelte"
   import Icon from "@lib/components/Icon.svelte"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import type {Interactions} from "@app/features/interactions"

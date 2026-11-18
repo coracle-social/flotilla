@@ -2,8 +2,8 @@
   import type {Snippet} from "svelte"
   import cx from "classnames"
   import {page} from "$app/stores"
-  import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
+  import Link from "@app/components/Link.svelte"
 
   type Props = {
     children?: Snippet

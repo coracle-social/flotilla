@@ -3,7 +3,7 @@
   import Server from "@assets/icons/server.svg?dataurl"
   import {ucFirst} from "@lib/util"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import {canonicalRelayHost, getHostedRelayUrl, type HostedRelay} from "@app/features/hosting"
   import * as pages from "@app/navigation/pages"
 

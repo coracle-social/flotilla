@@ -4,7 +4,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import {getAddress} from "@welshman/util"
   import {TimeEvent} from "@welshman/domain"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import {reader} from "@app/core/domain"
   import {getEventStart, startsOnDay} from "@app/features/spaces/calendar"
   import * as pages from "@app/navigation/pages"

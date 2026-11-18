@@ -4,7 +4,7 @@
   import {splitRoomKey} from "@welshman/app"
   import LinkRound from "@assets/icons/link-round.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {PLATFORM_URL} from "@app/core/env"
   import {isRoomId} from "@app/features/spaces/rooms"

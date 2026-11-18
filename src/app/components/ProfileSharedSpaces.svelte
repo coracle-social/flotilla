@@ -2,7 +2,7 @@
   import cx from "classnames"
   import UsersGroup from "@assets/icons/users-group-rounded.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {userSpaceUrls} from "@app/core/user"

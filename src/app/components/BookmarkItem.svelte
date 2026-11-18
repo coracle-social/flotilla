@@ -1,8 +1,8 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
-  import Link from "@lib/components/Link.svelte"
   import MenuButton from "@lib/components/MenuButton.svelte"
+  import Link from "@app/components/Link.svelte"
   import BookmarkItemMenu from "@app/components/BookmarkItemMenu.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"

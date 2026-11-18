@@ -4,7 +4,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import {COMMENT} from "@welshman/util"
   import {Thread} from "@welshman/domain"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"

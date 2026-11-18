@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {relays} from "@app/core/plugins"

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
+  import Link from "@app/components/Link.svelte"
 
   const back = () => history.back()
 </script>

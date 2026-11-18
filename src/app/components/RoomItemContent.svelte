@@ -6,7 +6,7 @@
   import {Message} from "@welshman/domain"
   import {parse} from "@welshman/content"
   import {isMobile} from "@lib/html"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import ContentQuote from "@app/components/ContentQuote.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import {reader} from "@app/core/domain"

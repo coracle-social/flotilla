@@ -1,6 +1,6 @@
 <script lang="ts">
   import cx from "classnames"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import * as pages from "@app/navigation/pages"
 

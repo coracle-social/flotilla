@@ -242,13 +242,13 @@ to the clipboard and toasts.
 
 `src/lib/components` knows nothing about the app instance, stores, or nostr kinds. Its components
 import third-party libraries, `@welshman/lib` helpers, `@lib/*` and `@assets/*`, plus
-`$app/stores` in `PrimaryNavItem` and `SecondaryNavItem`, which highlight the active path. What
+`$app/stores` in `SecondaryNavItem`, which highlights the active path. What
 lives there:
 
-- page chrome: `Page`, `PageBar`, `PageContent`, `SecondaryNav*`, `PrimaryNavItem`, `FAB`
+- page chrome: `Page`, `PageBar`, `PageContent`, `SecondaryNav*`, `FAB`
 - modal chrome: `Dialog`, `Drawer`, `Modal`, `ModalBody`, `ModalHeader`, `ModalTitle`,
   `ModalSubtitle`, `ModalFooter`, `Confirm`
-- controls: `Button`, `Link`, `Field`, `FieldInline`, `InputList`, `ToggleInput`,
+- controls: `Button`, `Field`, `FieldInline`, `InputList`, `ToggleInput`,
   `DateTimeInput`, `ImagesInput`, `EmojiPicker`, `MenuButton`, `SegmentedButtons`
 - display and lists: `Icon`, `ImageIcon`, `Divider`, `Spinner`, `LoadingFallback`, `Tooltip`,
   `Tippy`, `Cv`, `VirtualList`, `Masonry`, `DragList`, `ScrollToTop`
@@ -259,11 +259,10 @@ lives there:
 
 Anything that takes an identifier and reads a store, publishes, or knows a kind is an app
 component. A lib component that needs app behavior takes it as a prop, such as `MenuButton`'s
-`component`. `Link` imports `@app` anyway; flotilla-architecture lists it under its layer
-exceptions.
+`component`, or moves into the app, as `Link` did, since it routes every click through `navigate`.
 
-`src/app/components` is flat, and `hosting/` is the only subdirectory it has ever had, brought in
-whole by the caravel port (cf938c63) with names that would blur into the flat `Relay*` family.
+`src/app/components` is flat apart from `hosting/`, brought in whole by the caravel port (cf938c63)
+with names that would blur into the flat `Relay*` family, and `editor/` and `flows/`.
 New components go in the flat folder.
 
 ## Naming

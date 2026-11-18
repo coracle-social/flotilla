@@ -1,11 +1,11 @@
 <script lang="ts">
-  import Link from "@lib/components/Link.svelte"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import Code from "@assets/icons/code-2.svg?dataurl"
   import Planet from "@assets/icons/planet.svg?dataurl"
   import Pen from "@assets/icons/pen.svg?dataurl"
   import HeadphonesRound from "@assets/icons/headphones-round.svg?dataurl"
+  import Link from "@app/components/Link.svelte"
   import Zap from "@app/components/Zap.svelte"
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import {ENABLE_ZAPS, PLATFORM_NAME, PLATFORM_ABOUT} from "@app/core/env"

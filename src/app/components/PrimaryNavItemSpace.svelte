@@ -1,6 +1,6 @@
 <script lang="ts">
   import {page} from "$app/stores"
-  import PrimaryNavItem from "@lib/components/PrimaryNavItem.svelte"
+  import PrimaryNavItem from "@app/components/PrimaryNavItem.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import {relays} from "@app/core/plugins"
   import {navigate} from "@app/navigation/navigate"

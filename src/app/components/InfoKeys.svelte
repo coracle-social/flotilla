@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Link from "@lib/components/Link.svelte"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import CheckCircle from "@assets/icons/check-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
@@ -9,6 +8,7 @@
   import ModalHeader from "@lib/components/ModalHeader.svelte"
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
+  import Link from "@app/components/Link.svelte"
   import KeyRecoveryRequest from "@app/components/KeyRecoveryRequest.svelte"
   import {isPomadeSession} from "@app/core/pomade"
   import {PLATFORM_NAME} from "@app/core/env"

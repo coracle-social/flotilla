@@ -1,7 +1,7 @@
 <script lang="ts">
   import type {Snippet} from "svelte"
   import type {TrustedEvent} from "@welshman/util"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"

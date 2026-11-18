@@ -5,7 +5,7 @@
   import Pen2 from "@assets/icons/pen-2.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"

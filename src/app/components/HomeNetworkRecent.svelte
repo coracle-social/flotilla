@@ -1,7 +1,7 @@
 <script lang="ts">
   import {onDestroy, onMount} from "svelte"
-  import Link from "@lib/components/Link.svelte"
   import {followScroll} from "@lib/pager"
+  import Link from "@app/components/Link.svelte"
   import HomeNetworkRecentFilters from "@app/components/HomeNetworkRecentFilters.svelte"
   import NoteEntry from "@app/components/NoteEntry.svelte"
   import NoteFeedFooter from "@app/components/NoteFeedFooter.svelte"

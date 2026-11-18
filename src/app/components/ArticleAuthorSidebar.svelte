@@ -4,7 +4,7 @@
   import type {TrustedEvent} from "@welshman/util"
   import {LONG_FORM, getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"

@@ -1,8 +1,8 @@
 <script lang="ts">
   import type {TrustedEvent} from "@welshman/util"
   import {ZapGoal} from "@welshman/domain"
-  import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
+  import Link from "@app/components/Link.svelte"
   import {reader} from "@app/core/domain"
   import Content from "@app/components/Content.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"

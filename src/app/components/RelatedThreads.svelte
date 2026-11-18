@@ -4,7 +4,7 @@
   import {THREAD} from "@welshman/util"
   import {Thread} from "@welshman/domain"
   import {indexDocuments, rankDocuments} from "@lib/similarity"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import {reader} from "@app/core/domain"
   import {events} from "@app/core/plugins"

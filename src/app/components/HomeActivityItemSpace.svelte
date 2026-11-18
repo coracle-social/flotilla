@@ -1,6 +1,6 @@
 <script lang="ts">
   import {CLASSIFIED, EVENT_TIME, LONG_FORM, PINBOARD, POLL, THREAD, ZAP_GOAL} from "@welshman/util"
-  import Link from "@lib/components/Link.svelte"
+  import Link from "@app/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import {displayActivityTimestamp} from "@app/areas/home"

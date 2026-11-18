@@ -52,9 +52,10 @@ unrelated to flotilla's `@app/*`. App modules use it freely, for example `naviga
 No lint rule enforces the layers (`eslint.config.js` has no import restrictions), so review is the
 only gate.
 
-- **lib → app.** `Link.svelte` imports `navigate` from `@app/navigation/navigate`. Don't copy it. A lib
-  component that needs app behavior takes it as a prop, or moves to `src/app/components`, as
-  `IconInput` and its picker buttons did.
+- **lib → app.** None. A lib component that needs app behavior takes it as a prop, or moves to
+  `src/app/components`, as `IconInput` and its picker buttons did, and as `Link` did, which routes a
+  click through `navigate`, with `PrimaryNavItem`, which renders it. Their CSS families stay in
+  `lib/components`.
 - **app → components.** The Electron screen-share adapter imports `ScreenSharePicker` to open a
   prompt in the middle of a flow that no component wraps. It is due to return a refusal that a flow
   maps to the prompt instead, as the voice tools return the provider to set up and

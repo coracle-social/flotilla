@@ -1,8 +1,8 @@
 <script lang="ts">
   import UserCircle from "@assets/icons/user-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
-  import Link from "@lib/components/Link.svelte"
   import Cv from "@lib/components/Cv.svelte"
+  import Link from "@app/components/Link.svelte"
   import Profile from "@app/components/Profile.svelte"
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import ProfileBadges from "@app/components/ProfileBadges.svelte"
