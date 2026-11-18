@@ -30,7 +30,7 @@
     reconcileTenant,
     selectPayableInvoice,
     type Invoice,
-  } from "@app/features/hosting"
+  } from "@app/areas/hosting"
 
   type PaymentMethodState = {kind: "not_set_up"} | {kind: "ok"} | {kind: "error"; message: string}
 

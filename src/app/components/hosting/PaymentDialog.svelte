@@ -33,7 +33,7 @@
     formatPeriod,
     type Invoice,
     type InvoiceItem,
-  } from "@app/features/hosting"
+  } from "@app/areas/hosting"
 
   type Props = {
     invoice: Invoice

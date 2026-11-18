@@ -14,8 +14,7 @@
   import Profile from "@app/components/Profile.svelte"
   import LogOut from "@app/components/LogOut.svelte"
   import {user} from "@app/core/user"
-  import {ENABLE_ZAPS} from "@app/core/env"
-  import {HOSTING_ENABLED} from "@app/features/hosting"
+  import {ENABLE_ZAPS, ENABLE_HOSTING} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
 
@@ -55,7 +54,7 @@
             Wallet
           </Link>
         {/if}
-        {#if HOSTING_ENABLED}
+        {#if ENABLE_HOSTING}
           <Link
             href="/settings/hosting"
             class="aspect-square button button-neutral h-[unset] flex flex-col gap-2 text-center text-xs">

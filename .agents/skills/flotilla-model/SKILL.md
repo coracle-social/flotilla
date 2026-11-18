@@ -201,10 +201,10 @@ Room controls are gated on `deriveRoomPermissions` instead, and room creation on
 `deriveUserCanCreateRoom`: the owner (`deriveUserIsSpaceOwner`, the NIP-11 `pubkey`), or a
 `ROOM_CREATE_PERMISSION` grant.
 
-The hosting backend in `src/app/features/hosting.ts` is a separate HTTP API at `HOSTING_BACKEND_URL` for
-relays the platform hosts. It authenticates with one NIP-98 header per pubkey, cached for a TTL,
+The hosting backend, called from `src/app/areas/hosting/api.ts`, is a separate HTTP API at `HOSTING_BACKEND_URL` for
+relays the platform hosts. It trades one NIP-98 signature for a bearer token, cached per pubkey until it expires,
 instead of signing every call. `spaces/[relay]/admin` is its page, not a NIP-86 console. Hosting is
-off on iOS (`HOSTING_ENABLED`).
+off on iOS (`ENABLE_HOSTING`).
 
 ## Auth, trust and protected events
 

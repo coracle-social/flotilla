@@ -18,12 +18,7 @@
   import {user} from "@app/core/user"
   import {pushToast} from "@app/navigation/toast"
   import {getNwcClient, wallet} from "@app/tools/wallet"
-  import {
-    hosting,
-    hostingErrorMessage,
-    updateTenant,
-    createPortalSession,
-  } from "@app/features/hosting"
+  import {hosting, hostingErrorMessage, updateTenant, createPortalSession} from "@app/areas/hosting"
 
   type Tab = "nwc" | "card"
 

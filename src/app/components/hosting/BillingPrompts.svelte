@@ -18,7 +18,7 @@
     hostingErrorMessage,
     type Invoice,
     type Tenant,
-  } from "@app/features/hosting"
+  } from "@app/areas/hosting"
 
   type Props = {
     tenant: Tenant | undefined

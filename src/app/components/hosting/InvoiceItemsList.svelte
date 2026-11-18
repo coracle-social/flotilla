@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {formatUsd, type InvoiceItem} from "@app/features/hosting"
+  import {formatUsd, type InvoiceItem} from "@app/areas/hosting"
 
   type Props = {
     items: InvoiceItem[]

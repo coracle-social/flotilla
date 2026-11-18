@@ -39,7 +39,7 @@
     type HostedRelay,
     type RelayFlag,
     type UpdateRelayInput,
-  } from "@app/features/hosting"
+  } from "@app/areas/hosting"
 
   type Props = {
     relay: HostedRelay

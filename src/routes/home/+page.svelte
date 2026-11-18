@@ -11,8 +11,7 @@
   import HomeHosting from "@app/components/HomeHosting.svelte"
   import HomeSpaces from "@app/components/HomeSpaces.svelte"
   import PostCreateFab from "@app/components/PostCreateFab.svelte"
-  import {HOSTING_ENABLED} from "@app/features/hosting"
-  import {PLATFORM_RELAYS} from "@app/core/env"
+  import {PLATFORM_RELAYS, ENABLE_HOSTING} from "@app/core/env"
 
   let element: Element | undefined = $state()
 </script>
@@ -38,7 +37,7 @@
           <HomeHealthChecks class="@max-3xl:hidden" />
           {#if PLATFORM_RELAYS.length > 0}
             <HomeSpaces class="@max-3xl:hidden" />
-          {:else if HOSTING_ENABLED}
+          {:else if ENABLE_HOSTING}
             <HomeHosting class="@max-3xl:hidden" />
           {/if}
         </div>

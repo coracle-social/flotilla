@@ -4,7 +4,7 @@
   import {ucFirst} from "@lib/util"
   import ImageIcon from "@lib/components/ImageIcon.svelte"
   import Link from "@app/components/Link.svelte"
-  import {canonicalRelayHost, getHostedRelayUrl, type HostedRelay} from "@app/features/hosting"
+  import {canonicalRelayHost, getHostedRelayUrl, type HostedRelay} from "@app/areas/hosting"
   import * as pages from "@app/navigation/pages"
 
   type Props = {

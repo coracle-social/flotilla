@@ -23,6 +23,9 @@ if (ENABLE_ZAPS) {
 
 export const ENABLE_PAID_SPACES = Capacitor.getPlatform() !== "ios"
 
+// Apple doesn't allow selling hosting outside their payment system.
+export const ENABLE_HOSTING = Capacitor.getPlatform() !== "ios"
+
 export const SIGNER_RELAYS = fromCsv(env("VITE_SIGNER_RELAYS")).map(normalizeRelayUrl)
 
 export const BLOCKED_RELAYS = fromCsv(env("VITE_BLOCKED_RELAYS")).map(normalizeRelayUrl)

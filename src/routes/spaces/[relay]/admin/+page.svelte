@@ -9,7 +9,7 @@
   import RelayDetailCard from "@app/components/hosting/RelayDetailCard.svelte"
   import ActivityFeed from "@app/components/hosting/ActivityFeed.svelte"
   import {PLATFORM_NAME} from "@app/core/env"
-  import {deriveHostedRelay, deriveRelayActivity} from "@app/features/hosting"
+  import {deriveHostedRelay, deriveRelayActivity} from "@app/areas/hosting"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 

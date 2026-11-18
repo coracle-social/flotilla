@@ -136,7 +136,7 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
 **`features/`: one feature each**
 
 The app's sections are DMs (`areas/messages.ts`), spaces (`spaces/`), the home page (`areas/home/`), and
-hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature under `spaces/`:
+hosting (`areas/hosting/`, with its own auth). Each space concern is a sub-feature under `spaces/`:
 
 - `spaces/activity.ts` (each space's latest activity per room, chat and content item, registered with `tools/activity.ts`)
 - `spaces/sync.ts` (`syncCurrentSpace`, the space-wide relay and content syncs) and
@@ -185,7 +185,7 @@ Outside `spaces/`:
   across navigation and sent as a voice note or transcribed, and `tts.ts` holds the message being
   read aloud. Both return the provider to set up when none is ready, and `components/flows/voice.ts`
   opens its prompt), and `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, each made by a `create*Notifications` factory, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API)
-- `areas/`: `messages.ts` (DM conversations, the gift-wrap sync and `shouldUnwrap`, and the conversations' activity), `home/` (the home page: `activity/` builds the Recent stream's rows, which are `ActivityItem`s of three types, a chat at its latest message, a space's unread content and what was done to one of your notes, with `model.ts` the pure part, `sync.ts` polling your inbox relays for what tags you, and `stream.ts` the stores the stream renders, `activityItems` and `activityCounts`; `healthChecks.ts` is the page's account checklist; `index.ts` defines `registerHome`), and `bookmarks.ts` (bookmark folders and search)
+- `areas/`: `hosting/` (the relay hosting service: `model.ts` has the backend's types and the rules and formatting over them, `api.ts` the authenticated requests, and `hosting.ts` the `Hosting` plugin, which holds the tenant's plans, relays and billing, with `followHostedRelay`, which moves the room list when a hosted relay's address changes), `messages.ts` (DM conversations, the gift-wrap sync and `shouldUnwrap`, and the conversations' activity), `home/` (the home page: `activity/` builds the Recent stream's rows, which are `ActivityItem`s of three types, a chat at its latest message, a space's unread content and what was done to one of your notes, with `model.ts` the pure part, `sync.ts` polling your inbox relays for what tags you, and `stream.ts` the stores the stream renders, `activityItems` and `activityCounts`; `healthChecks.ts` is the page's account checklist; `index.ts` defines `registerHome`), and `bookmarks.ts` (bookmark folders and search)
 - `shell/`: `badges.ts` (the app icon badge, drawn from the unread count), `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
   `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering),
   `downloads.ts` (saving files the native app's web view downloads)
@@ -261,13 +261,13 @@ Platform checks call Capacitor directly. There is no wrapper module:
 
 ```ts
 export const ENABLE_ZAPS = Capacitor.getPlatform() !== "ios" // src/app/core/env.ts
-export const HOSTING_ENABLED = Capacitor.getPlatform() !== "ios" // src/app/features/hosting.ts
+export const ENABLE_HOSTING = Capacitor.getPlatform() !== "ios" // src/app/core/env.ts
 
 if (!Capacitor.isPluginAvailable("Keyboard")) return noop // src/lib/keyboard.ts
 ```
 
 The iOS flags exist because of App Store payment policy, so anything that takes money checks
-`ENABLE_ZAPS` or `HOSTING_ENABLED`. `isMobile` from `@lib/html` detects a touch screen and says
+`ENABLE_ZAPS`, `ENABLE_PAID_SPACES` or `ENABLE_HOSTING`. `isMobile` from `@lib/html` detects a touch screen and says
 nothing about the platform.
 
 Flotilla's own native code:
@@ -371,7 +371,7 @@ rather than a persisted store.
 - **A generic UI primitive** → `src/lib/components/<Name>.svelte` with a CSS family file next to it
   (`Button.svelte` and `button.css`), and no `@app` imports. See `flotilla-views`.
 - **A non-nostr HTTP service** → its own module with typed request functions, a typed error class
-  and a base URL from env, as in `hosting.ts` (`hostingFetch`, `HostingError`,
+  and a base URL from env, as in `areas/hosting/api.ts` (`hostingFetch`, `HostingError`,
   `HOSTING_BACKEND_URL`).
 - **A native capability** → JS in `src/lib/<capability>.ts`, or `src/app/tools/<capability>.ts` when it
   needs app state, with inline `Capacitor` checks and a web fallback. If no Capacitor plugin fits, write one under

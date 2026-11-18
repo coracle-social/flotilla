@@ -9,8 +9,7 @@
   import PageContent from "@lib/components/PageContent.svelte"
   import Link from "@app/components/Link.svelte"
   import RelayCreate from "@app/components/hosting/RelayCreate.svelte"
-  import {PLATFORM_LOGO, PLATFORM_NAME, PLATFORM_URL} from "@app/core/env"
-  import {HOSTING_ENABLED} from "@app/features/hosting"
+  import {PLATFORM_LOGO, PLATFORM_NAME, PLATFORM_URL, ENABLE_HOSTING} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
 
   const openCreate = () => pushModal(RelayCreate, {}, {size: "large"})
@@ -61,7 +60,7 @@
               Priority support
             </li>
           </ul>
-          {#if HOSTING_ENABLED}
+          {#if ENABLE_HOSTING}
             <Button class="button button-primary mt-auto" onclick={openCreate}>
               Start for free
               <Icon icon={ArrowRight} />

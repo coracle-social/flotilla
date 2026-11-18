@@ -9,7 +9,7 @@
   import RelayListItem from "@app/components/hosting/RelayListItem.svelte"
   import RelayCreate from "@app/components/hosting/RelayCreate.svelte"
   import {pushModal} from "@app/navigation/dialogs"
-  import {hosting} from "@app/features/hosting"
+  import {hosting} from "@app/areas/hosting"
   import {PLATFORM_NAME} from "@app/core/env"
 
   type Props = {

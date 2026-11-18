@@ -25,8 +25,8 @@
   import {openCheckout} from "@app/features/spaces/payments"
   import {user} from "@app/core/user"
   import {relays} from "@app/core/plugins"
-  import {ENABLE_PAID_SPACES, HIDE_NOSTR} from "@app/core/env"
-  import {deriveHostedRelay, HOSTING_ENABLED} from "@app/features/hosting"
+  import {ENABLE_PAID_SPACES, HIDE_NOSTR, ENABLE_HOSTING} from "@app/core/env"
+  import {deriveHostedRelay} from "@app/areas/hosting"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {userSpaceUrls} from "@app/core/user"
   import {deriveSpaceActionItems} from "@app/features/spaces/actionItems"
@@ -165,7 +165,7 @@
 {#if canManageMembership}
   {@render actionButton(manageMembership, CreditCard, "Manage membership")}
 {/if}
-{#if HOSTING_ENABLED && $hostedRelay.value}
+{#if ENABLE_HOSTING && $hostedRelay.value}
   {@render actionLink(pages.spaceAdmin.path({url}), ServerPath, "Hosting settings")}
 {:else if $permissions.editSpace}
   {@render actionButton(startEdit, Pen, "Edit Space")}

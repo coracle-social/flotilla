@@ -14,7 +14,7 @@
     hosting,
     hostingErrorMessage,
     isPaidPlan,
-  } from "@app/features/hosting"
+  } from "@app/areas/hosting"
 
   // The space exists by now, so a failed billing check mustn't keep the user on the create form.
   const onPaymentLookupError = (e: unknown) => {

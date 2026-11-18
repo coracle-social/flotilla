@@ -22,7 +22,7 @@
     hostingErrorMessage,
     type HostedRelay,
     type ImportResult,
-  } from "@app/features/hosting"
+  } from "@app/areas/hosting"
 
   type Props = {
     relay: HostedRelay

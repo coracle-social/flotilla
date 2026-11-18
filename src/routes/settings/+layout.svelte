@@ -14,8 +14,7 @@
   import SecondaryNavItem from "@lib/components/SecondaryNavItem.svelte"
   import SecondaryNavSection from "@lib/components/SecondaryNavSection.svelte"
   import LogOut from "@app/components/LogOut.svelte"
-  import {ENABLE_ZAPS} from "@app/core/env"
-  import {HOSTING_ENABLED} from "@app/features/hosting"
+  import {ENABLE_ZAPS, ENABLE_HOSTING} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
@@ -43,7 +42,7 @@
         <Icon icon={Wallet} /> Wallet
       </SecondaryNavItem>
     {/if}
-    {#if HOSTING_ENABLED}
+    {#if ENABLE_HOSTING}
       <SecondaryNavItem href="/settings/hosting">
         <Icon icon={ServerPath} /> Hosting
       </SecondaryNavItem>
