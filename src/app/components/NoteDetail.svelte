@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onDestroy} from "svelte"
   import {readable} from "svelte/store"
   import {removeUndefined, uniqBy} from "@welshman/lib"
   import type {IEventRef, TrustedEvent} from "@welshman/util"
@@ -12,7 +11,6 @@
   import CommentTree from "@app/components/CommentTree.svelte"
   import EventQuoteAction from "@app/components/EventQuoteAction.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import {makeInteractions} from "@app/features/interactions"
   import {deriveNote, deriveReplies, loadNote, loadThread} from "@app/tools/notes"
   import type {CommentNode} from "@app/tools/notes"
 
@@ -24,7 +22,6 @@
 
   const {ref, reply = false, thread = false}: Props = $props()
 
-  const interactions = makeInteractions({withReplies: true})
   const loaded = deriveNote(ref)
   const event = $derived($loaded)
   const replies = $derived(event ? deriveReplies(event) : readable<CommentNode[]>([]))
@@ -68,8 +65,6 @@
         })
     }
   })
-
-  onDestroy(interactions.stop)
 </script>
 
 {#snippet quoteNote(event: TrustedEvent)}
@@ -90,19 +85,12 @@
       {/if}
       {#each ancestors as ancestor (ancestor.id)}
         <div class="border-line border-b pb-4">
-          <NoteItem
-            event={ancestor}
-            {interactions}
-            customActions={quoteNote}
-            card={false}
-            interactive
-            showReply />
+          <NoteItem event={ancestor} customActions={quoteNote} card={false} interactive showReply />
         </div>
       {/each}
       <div class="border-line flex flex-col gap-4 border-b pb-4">
         <NoteItem
           event={note}
-          {interactions}
           customActions={quoteNote}
           card={false}
           showEntire
@@ -121,13 +109,7 @@
       </div>
       <div class="flex flex-col">
         {#each $replies as node (node.comment.id)}
-          <CommentTree
-            {node}
-            root={note}
-            {replyTo}
-            {setReplyTo}
-            customActions={quoteComment}
-            {interactions} />
+          <CommentTree {node} root={note} {replyTo} {setReplyTo} customActions={quoteComment} />
         {/each}
         {#if $replies.length === 0}
           <p class="py-2 text-sm opacity-75">No replies yet.</p>

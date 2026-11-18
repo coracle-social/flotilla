@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
+  import {onMount} from "svelte"
   import type {ComponentProps} from "svelte"
   import {readable} from "svelte/store"
   import type {Readable} from "svelte/store"
@@ -28,7 +28,6 @@
   import RoomMembershipButton from "@app/components/RoomMembershipButton.svelte"
   import {user} from "@app/core/user"
   import {groupRoomMessages} from "@app/features/spaces/rooms"
-  import {makeInteractions} from "@app/features/interactions"
   import {makeRelayFeed} from "@app/features/feeds"
   import {pageLoading} from "@app/shell/loading"
   import {checked} from "@app/tools/checked"
@@ -41,10 +40,6 @@
   }
 
   let {url, h, locked, replyTo, canEdit, onEdit, events = $bindable(readable([]))}: Props = $props()
-
-  const interactions = makeInteractions({relays: [url]})
-
-  onDestroy(interactions.stop)
 
   const addMemberKind = h ? ROOM_ADD_MEMBER : RELAY_ADD_MEMBER
   const runway = 5000
@@ -295,7 +290,6 @@
       filters: [
         h ? {kinds: [MESSAGE, addMemberKind], "#h": [h]} : {kinds: [MESSAGE, addMemberKind]},
       ],
-      onEvent: interactions.track,
     })
 
     // The container is reversed, so scrolling away from the origin reaches older messages.
@@ -383,7 +377,6 @@
             <RoomItem
               {url}
               {replyTo}
-              {interactions}
               {canEdit}
               {onEdit}
               event={item.value}

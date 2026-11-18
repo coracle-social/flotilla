@@ -43,7 +43,7 @@
       <div class="pb-4 text-center font-medium">Nothing matches those filters</div>
     {:else}
       {#each $entries as entry (entry.key)}
-        <NoteEntry {entry} interactions={feed.interactions} />
+        <NoteEntry {entry} />
       {/each}
       <NoteFeedFooter
         status={$status}

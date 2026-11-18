@@ -5,7 +5,6 @@
   import Divider from "@lib/components/Divider.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
-  import type {Interactions} from "@app/features/interactions"
   import {getEventStart} from "@app/features/spaces/calendar"
 
   type Props = {
@@ -13,10 +12,9 @@
     events: TrustedEvent[]
     element?: HTMLElement
     loading: boolean
-    interactions: Interactions
   }
 
-  const {url, events, element, loading, interactions}: Props = $props()
+  const {url, events, element, loading}: Props = $props()
 
   let contentEl: HTMLElement | undefined = $state()
 
@@ -140,7 +138,7 @@
       {#if dateDisplay}
         <Divider>{dateDisplay}</Divider>
       {/if}
-      <CalendarEventItem {url} {event} {interactions} />
+      <CalendarEventItem {url} {event} />
     </div>
   {/each}
   {#if loading}

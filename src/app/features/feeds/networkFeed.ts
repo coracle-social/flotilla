@@ -29,8 +29,6 @@ import {kv} from "@app/core/storage"
 import {userFollowPubkeys} from "@app/core/user"
 import {makeAuthorFeed} from "@app/features/feeds/authorFeed"
 import type {AuthorFeed} from "@app/features/feeds/authorFeed"
-import {makeInteractions} from "@app/features/interactions/interactions"
-import type {Interactions} from "@app/features/interactions/interactions"
 import {getTargetRef} from "@app/tools/targets"
 import {makeNoteResolver} from "@app/tools/notes"
 import {derivePinnedEvents} from "@app/tools/people/pins"
@@ -51,7 +49,6 @@ export type NoteFeed = {
   status: Readable<NoteFeedStatus>
   loading: Readable<boolean>
   older: Pager
-  interactions: Interactions
   stop: () => void
 }
 
@@ -199,13 +196,11 @@ const makeNoteFeed = ({
   interactionSource,
   pinned = readable<TrustedEvent[]>([]),
   included = readable<NoteFacet[]>(["notes", "replies", "interactions"]),
-  interactions,
 }: {
   noteSource: AuthorFeed
   interactionSource?: AuthorFeed
   pinned?: Readable<TrustedEvent[]>
   included?: Readable<NoteFacet[]>
-  interactions: Interactions
 }): NoteFeed => {
   const sourceFacets: NoteFacet[] = interactionSource
     ? ["notes", "replies", "interactions"]
@@ -312,26 +307,19 @@ const makeNoteFeed = ({
     unsubscribe()
     noteSource.stop()
     interactionSource?.stop()
-    interactions.stop()
   }
 
-  return {entries, counts, status, loading, older, interactions, stop}
+  return {entries, counts, status, loading, older, stop}
 }
 
-const makeNoteSource = (
-  pubkeys: Readable<string[]>,
-  onEvent?: (event: TrustedEvent) => void,
-): AuthorFeed =>
+const makeNoteSource = (pubkeys: Readable<string[]>): AuthorFeed =>
   makeAuthorFeed({
     pubkeys,
-    onEvent,
     getFilters: authors => [{kinds: [NOTE, ...CONTENT_KINDS], authors}],
   })
 
 export const makeNetworkFeed = (): NoteFeed => {
-  const interactions = makeInteractions({withReplies: true})
-
-  const noteSource = makeNoteSource(userFollowPubkeys, interactions.track)
+  const noteSource = makeNoteSource(userFollowPubkeys)
 
   // Follows' interactions are asked for once their facet is first shown, and stay live after.
   const shown = readable(false, set =>
@@ -356,15 +344,12 @@ export const makeNetworkFeed = (): NoteFeed => {
     },
   })
 
-  return makeNoteFeed({noteSource, interactionSource, included: includedNoteFacets, interactions})
+  return makeNoteFeed({noteSource, interactionSource, included: includedNoteFacets})
 }
 
 export const makeProfileFeed = (pubkey: string): NoteFeed => {
-  const interactions = makeInteractions({withReplies: true})
-
   return makeNoteFeed({
-    noteSource: makeNoteSource(readable([pubkey]), interactions.track),
+    noteSource: makeNoteSource(readable([pubkey])),
     pinned: derivePinnedEvents(pubkey),
-    interactions,
   })
 }

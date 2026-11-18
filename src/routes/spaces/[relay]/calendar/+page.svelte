@@ -33,14 +33,12 @@
   } from "@app/features/spaces/calendar"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
-  import {makeInteractions} from "@app/features/interactions"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url} = pages.calendar.decode(params)
-  const interactions = makeInteractions({relays: [url]})
-  const feed = makeCalendarFeed({url, onEvent: interactions.track})
+  const feed = makeCalendarFeed({url})
   const {events} = feed
   const olderStatus = feed.older.status
 
@@ -95,7 +93,6 @@
 
   onDestroy(() => {
     feed.stop()
-    interactions.stop()
   })
 
   // Month renders poorly in a narrow column, so that gets week — without touching the preference
@@ -210,11 +207,11 @@
       </div>
     {/if}
     {#if view === "agenda"}
-      <CalendarAgenda {url} events={$events} {element} {loading} {interactions} />
+      <CalendarAgenda {url} events={$events} {element} {loading} />
     {:else if view === "week"}
-      <CalendarWeek {url} {events} {eventsByDay} date={cursor} {interactions} />
+      <CalendarWeek {url} {events} {eventsByDay} date={cursor} />
     {:else}
-      <CalendarMonth {url} {events} {eventsByDay} date={cursor} {interactions} />
+      <CalendarMonth {url} {events} {eventsByDay} date={cursor} />
     {/if}
   </div>
 </PageContent>

@@ -13,17 +13,15 @@
   import {displayActivityTimestamp} from "@app/areas/home/activity/stream"
   import {REPOST_KINDS} from "@app/areas/home/activity/model"
   import type {ActivityItem} from "@app/areas/home/activity/model"
-  import type {Interactions} from "@app/features/interactions"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Part = {pubkey?: string; text?: string}
 
   type Props = {
     item: Extract<ActivityItem, {type: "note"}>
-    interactions: Interactions
   }
 
-  const {item, interactions}: Props = $props()
+  const {item}: Props = $props()
 
   // An item keeps its key while it collects answers, so the component has to follow its prop.
   const {note, replies, reactions} = $derived(item)
@@ -144,6 +142,6 @@
       {displayActivityTimestamp(item.timestamp)}
     </span>
   </div>
-  <NoteItem event={note} {interactions} customActions={quoteNote} showReply showThreadLinks />
-  <ReplyList {replies} {interactions} {quoteNote} />
+  <NoteItem event={note} customActions={quoteNote} showReply showThreadLinks />
+  <ReplyList {replies} {quoteNote} />
 </div>

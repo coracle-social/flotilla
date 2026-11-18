@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {onMount} from "svelte"
   import cx from "classnames"
   import {derived, readable} from "svelte/store"
   import type {Placement} from "tippy.js"
@@ -35,7 +36,8 @@
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import type {Interactions} from "@app/features/interactions"
+  import {events} from "@app/core/plugins"
+  import {getReactionFilters, loadReactions} from "@app/tools/interactions/interactions"
   import {deriveSpacePermissions} from "@app/features/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {deriveDisplaysByPubkey} from "@app/tools/people/people"
@@ -51,7 +53,6 @@
     hideZaps?: boolean
     noTooltip?: boolean
     innerEvent?: TrustedEvent
-    interactions: Interactions
   }
 
   const {
@@ -65,17 +66,12 @@
     hideZaps = false,
     noTooltip = false,
     innerEvent = undefined,
-    interactions,
   }: Props = $props()
 
-  const ownRelated = interactions.related(event)
+  const ownRelated = $events.desc(getReactionFilters([event])).$
 
-  const related = innerEvent
-    ? derived([ownRelated, interactions.related(innerEvent)], ([$own, $inner]) => [
-        ...$own,
-        ...$inner,
-      ])
-    : ownRelated
+  // A zap or reaction to the event this one wraps counts here too, but its reports don't.
+  const related = innerEvent ? $events.desc(getReactionFilters([event, innerEvent])).$ : ownRelated
 
   const reports = derived(ownRelated, $ownRelated => filter(spec({kind: REPORT}), $ownRelated))
   const reactions = derived(related, $related => filter(spec({kind: REACTION}), $related))
@@ -203,6 +199,14 @@
   const shown = $derived(
     !perEmoji || $reports.length > 0 || $reactions.length > 0 || $zaps.length > 0,
   )
+
+  onMount(() => {
+    loadReactions(event, url)
+
+    if (innerEvent) {
+      loadReactions(innerEvent, url)
+    }
+  })
 </script>
 
 {#snippet reactLabel()}

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
+  import {onMount} from "svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import {createScroller} from "@lib/html"
   import HomeActivityFilters from "@app/components/HomeActivityFilters.svelte"
@@ -13,9 +13,6 @@
     activityUnread,
     readActivity,
   } from "@app/areas/home/activity/stream"
-  import {makeInteractions} from "@app/features/interactions"
-
-  const interactions = makeInteractions({withReplies: true})
 
   // Something is waiting and the filters are what is keeping it off the screen.
   const hidden = $derived(
@@ -45,8 +42,6 @@
 
     return () => scroller.stop()
   })
-
-  onDestroy(interactions.stop)
 </script>
 
 <div
@@ -62,7 +57,7 @@
       <HomeActivityItemSpace {item} />
     {:else}
       <div class="p-4">
-        <HomeActivityNote {item} {interactions} />
+        <HomeActivityNote {item} />
       </div>
     {/if}
   {/each}

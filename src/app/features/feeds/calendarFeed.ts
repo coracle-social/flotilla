@@ -11,19 +11,18 @@ import {reader} from "@app/core/domain"
 import {network} from "@app/core/plugins"
 import {isPastHistory} from "@app/features/feeds/windows"
 
-export type CalendarFeedOptions = {url: string; onEvent?: (event: TrustedEvent) => void}
+export type CalendarFeedOptions = {url: string}
 
 type CalendarEntry = {event: TrustedEvent; start: number}
 
 export const makeCalendarFeed = (options: CalendarFeedOptions) => {
-  const {url, onEvent} = options
+  const {url} = options
 
   const source = app
     .get()
     .use(Events)
     .byIdForUrl(url, [{kinds: [EVENT_TIME]}])
   const controller = new AbortController()
-  const reported = new Set<string>()
 
   let olderCursor = now()
   let newerCursor = now()
@@ -100,19 +99,7 @@ export const makeCalendarFeed = (options: CalendarFeedOptions) => {
     return {found, answered, exhausted: false, behind: false}
   }
 
-  const stopEvents = events.subscribe($events => {
-    for (const event of $events) {
-      if (!reported.has(event.id)) {
-        reported.add(event.id)
-        onEvent?.(event)
-      }
-    }
-  })
-
-  const stop = () => {
-    controller.abort()
-    stopEvents()
-  }
+  const stop = () => controller.abort()
 
   return {events, older: makePager(loadOlder), newer: makePager(loadNewer), load: requestDays, stop}
 }

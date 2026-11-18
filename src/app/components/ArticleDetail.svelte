@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onDestroy} from "svelte"
   import cx from "classnames"
   import {derived} from "svelte/store"
   import {formatTimestamp, uniq} from "@welshman/lib"
@@ -20,7 +19,6 @@
   import ReadingProgress from "@app/components/ReadingProgress.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeInteractions} from "@app/features/interactions"
   import {displayReadingTime} from "@app/features/spaces/articles"
   import * as pages from "@app/navigation/pages"
 
@@ -32,7 +30,6 @@
 
   const {address, relays, url}: Props = $props()
 
-  const interactions = makeInteractions({relays: url ? [url] : undefined})
   const event = $events.one(address, relays).$
   const article = derived(event, $event => ($event ? reader(Article)($event) : undefined))
   const h = $derived($article?.room())
@@ -41,8 +38,6 @@
   const back = () => history.back()
 
   let contentElement = $state<Element>()
-
-  onDestroy(interactions.stop)
 </script>
 
 <SpaceBar {back} class="!h-auto min-h-20 py-3">
@@ -121,7 +116,7 @@
         </article>
         <div class="border-t px-5 py-4 sm:px-8 border-line">
           <div class="mx-auto flex w-full max-w-[68ch]">
-            <ArticleActionBar event={$event} {url} {interactions} />
+            <ArticleActionBar event={$event} {url} />
           </div>
         </div>
         <!-- The sidebar carries this on a wide space page; without one it shows here instead. -->
@@ -132,12 +127,7 @@
           </div>
         </div>
         <div class="border-t border-line">
-          <EventComments
-            event={$event}
-            {url}
-            {relays}
-            {interactions}
-            columnClass="mx-auto max-w-[68ch]" />
+          <EventComments event={$event} {url} {relays} columnClass="mx-auto max-w-[68ch]" />
         </div>
       </div>
       {#if url}

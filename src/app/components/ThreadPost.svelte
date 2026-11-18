@@ -11,7 +11,6 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import NoteContent from "@app/components/NoteContent.svelte"
   import CommentActions from "@app/components/CommentActions.svelte"
-  import type {Interactions} from "@app/features/interactions"
   import ContentActions from "@app/components/ContentActions.svelte"
   import {handles, profiles} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
@@ -24,20 +23,11 @@
     event: TrustedEvent
     threadPubkey: string
     onReply: (event: TrustedEvent) => void
-    interactions: Interactions
     replyCount?: number
     hideTitle?: boolean
   }
 
-  const {
-    url,
-    event,
-    threadPubkey,
-    onReply,
-    interactions,
-    replyCount,
-    hideTitle = false,
-  }: Props = $props()
+  const {url, event, threadPubkey, onReply, replyCount, hideTitle = false}: Props = $props()
 
   const profileDisplay = $profiles.display(event.pubkey).$
   const handle = $handles.forPubkey(event.pubkey).$
@@ -102,9 +92,9 @@
           Reply
         </Button>
         {#if isComment}
-          <CommentActions {event} {url} {interactions} />
+          <CommentActions {event} {url} />
         {:else}
-          <ContentActions noun="Thread" {event} {url} {interactions} />
+          <ContentActions noun="Thread" {event} {url} />
         {/if}
       </div>
     </div>

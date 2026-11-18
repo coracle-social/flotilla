@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
+  import {onMount} from "svelte"
   import {POLL, POLL_RESPONSE, getIdFilters} from "@welshman/util"
   import PageContent from "@lib/components/PageContent.svelte"
   import LoadingFallback from "@lib/components/LoadingFallback.svelte"
@@ -9,19 +9,15 @@
   import CommentActions from "@app/components/CommentActions.svelte"
   import EventComments from "@app/components/EventComments.svelte"
   import {events, network} from "@app/core/plugins"
-  import {makeInteractions} from "@app/features/interactions"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, id} = pages.poll.decode(params)
-  const interactions = makeInteractions({relays: [url]})
   const event = $events.one(id, [url]).$
 
   const back = () => history.back()
-
-  onDestroy(interactions.stop)
 
   onMount(() => {
     const controller = new AbortController()
@@ -52,10 +48,10 @@
     <NoteCard event={$event} {url} class="card z-feature w-full">
       <div class="ml-12 flex flex-col gap-3">
         <NoteContent showEntire event={$event} {url} />
-        <CommentActions showActivity {url} event={$event} {interactions} />
+        <CommentActions showActivity {url} event={$event} />
       </div>
     </NoteCard>
-    <EventComments event={$event} {url} {interactions} />
+    <EventComments event={$event} {url} />
   {:else}
     <LoadingFallback
       loadingMessage="Loading poll..."

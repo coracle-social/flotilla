@@ -7,7 +7,6 @@
   import ContentActions from "@app/components/ContentActions.svelte"
   import CalendarEventEdit from "@app/components/CalendarEventEdit.svelte"
   import {reader} from "@app/core/domain"
-  import type {Interactions} from "@app/features/interactions"
   import CalendarEventHeader from "@app/components/CalendarEventHeader.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import RoomLink from "@app/components/RoomLink.svelte"
@@ -17,10 +16,9 @@
   type Props = {
     url: string
     event: TrustedEvent
-    interactions: Interactions
   }
 
-  const {url, event, interactions}: Props = $props()
+  const {url, event}: Props = $props()
 
   const path = $derived(pages.calendarEvent.path({url, address: getAddress(event)}))
   const h = $derived(reader(TimeEvent)(event).room())
@@ -36,12 +34,6 @@
         in <RoomLink {url} {h} />
       {/if}
     </span>
-    <ContentActions
-      showActivity
-      noun="Event"
-      editForm={CalendarEventEdit}
-      {url}
-      {event}
-      {interactions} />
+    <ContentActions showActivity noun="Event" editForm={CalendarEventEdit} {url} {event} />
   </div>
 </Cv>

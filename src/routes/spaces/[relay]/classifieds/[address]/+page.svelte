@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onDestroy} from "svelte"
   import {derived} from "svelte/store"
   import {uniq} from "@welshman/lib"
   import {Classified} from "@welshman/domain"
@@ -17,22 +16,18 @@
   import EventComments from "@app/components/EventComments.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeInteractions} from "@app/features/interactions"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, address} = pages.classified.decode(params)
-  const interactions = makeInteractions({relays: [url]})
   const event = $events.one(address, [url]).$
   const classified = derived(event, $event => ($event ? reader(Classified)($event) : undefined))
 
   const topics = $derived(uniq(($classified?.topics() ?? []).map(normalizeTopic)))
 
   const back = () => history.back()
-
-  onDestroy(interactions.stop)
 </script>
 
 {#snippet topicLinks()}
@@ -62,15 +57,14 @@
           editForm={ClassifiedEdit}
           labels={topics.length > 0 ? topicLinks : undefined}
           event={$event}
-          {url}
-          {interactions}>
+          {url}>
           {#snippet status()}
             <ClassifiedStatus event={$event} />
           {/snippet}
         </ContentActions>
       </div>
     </NoteCard>
-    <EventComments event={$event} {url} {interactions} />
+    <EventComments event={$event} {url} />
   {:else}
     <LoadingFallback
       loadingMessage="Loading listing..."

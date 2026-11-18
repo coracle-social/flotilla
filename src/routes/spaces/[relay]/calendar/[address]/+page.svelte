@@ -3,7 +3,6 @@
 </script>
 
 <script lang="ts">
-  import {onDestroy} from "svelte"
   import {derived, readable} from "svelte/store"
   import type {TrustedEvent} from "@welshman/util"
   import {getCommentFiltersForRoot, getIdFilters} from "@welshman/util"
@@ -25,14 +24,12 @@
   import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/features/spaces/calendar"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeInteractions} from "@app/features/interactions"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, address} = pages.calendarEvent.decode(params)
-  const interactions = makeInteractions({relays: [url]})
   const event = $events.one(address, [url]).$
   const timeEvent = derived(event, $event => ($event ? reader(TimeEvent)($event) : undefined))
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
@@ -50,8 +47,6 @@
   const showPeople = () => {
     tab = "people"
   }
-
-  onDestroy(interactions.stop)
 
   let tab = $state<EventTab>("about")
 
@@ -94,13 +89,7 @@
         <CalendarEventHeader event={$event} />
         <CalendarEventMeta event={$event} {url} />
         <CalendarRsvp {url} event={$event} rsvps={$rsvps} onShowPeople={showPeople} />
-        <ContentActions
-          showRoom
-          noun="Event"
-          editForm={CalendarEventEdit}
-          {url}
-          event={$event}
-          {interactions} />
+        <ContentActions showRoom noun="Event" editForm={CalendarEventEdit} {url} event={$event} />
       </div>
     </div>
     <!-- One event carries three unrelated conversations, so give each its own tab instead of
@@ -121,7 +110,7 @@
         {/if}
       </div>
     {:else if tab === "discussion"}
-      <EventComments {url} event={$event} {interactions} />
+      <EventComments {url} event={$event} />
     {:else}
       <CalendarEventPeople {url} event={$event} rsvps={$rsvps} />
     {/if}

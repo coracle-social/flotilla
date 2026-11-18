@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {onMount} from "svelte"
   import {derived} from "svelte/store"
   import {filter, formatTimestamp, max, spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
@@ -11,26 +12,28 @@
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import ContentMinimal from "@app/components/ContentMinimal.svelte"
   import {reader} from "@app/core/domain"
-  import type {Interactions} from "@app/features/interactions"
+  import {events} from "@app/core/plugins"
+  import {getRepliesFilters, loadReplies} from "@app/tools/interactions/interactions"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
     event: TrustedEvent
-    interactions: Interactions
     // The row's board, left off a page that already says which board it is.
     showRoom?: boolean
   }
 
-  const {url, event, interactions, showRoom = true}: Props = $props()
+  const {url, event, showRoom = true}: Props = $props()
 
-  const related = interactions.related(event)
+  const related = $events.desc(getRepliesFilters([event])).$
   const replies = derived(related, $related => filter(spec({kind: COMMENT}), $related))
   const replyCount = $derived($replies.length)
   const lastActive = $derived(max([...$replies, event].map(e => e.created_at)))
   const title = reader(Thread)(event).title()
   const path = pages.thread.path({url, id: event.id})
   const h = reader(Thread)(event).room() || ""
+
+  onMount(() => loadReplies(event, url))
 </script>
 
 <Link

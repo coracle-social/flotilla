@@ -38,7 +38,7 @@
 
   const showInfo = () => pushModal(EventInfo, {url, event})
 
-  const showStats = () => pushModal(NoteStats, {event, noun})
+  const showStats = () => pushModal(NoteStats, {event, url, noun})
 
   const showDelete = () => pushModal(EventDeleteConfirm, {url, event})
 

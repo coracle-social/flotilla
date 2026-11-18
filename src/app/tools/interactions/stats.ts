@@ -1,25 +1,19 @@
 import {derived} from "svelte/store"
 import type {Readable} from "svelte/store"
-import {noop} from "@welshman/lib"
 import type {Maybe} from "@welshman/lib"
-import {
-  COMMENT,
-  EventRef,
-  GENERIC_REPOST,
-  NOTE,
-  REACTION,
-  REPOST,
-  ZAP_RECEIPT,
-  getCommentFiltersForRoot,
-  getReplyFilters,
-} from "@welshman/util"
-import type {Filter, TrustedEvent} from "@welshman/util"
+import {COMMENT, GENERIC_REPOST, NOTE, REACTION, REPOST, ZAP_RECEIPT} from "@welshman/util"
+import type {TrustedEvent} from "@welshman/util"
 import {Events} from "@welshman/app"
 import {ZapReceipt} from "@welshman/domain"
 import {fromApp} from "@app/core/app"
 import {ENABLE_ZAPS} from "@app/core/env"
 import {reader} from "@app/core/domain"
-import {network, router} from "@app/core/plugins"
+import {
+  getReactionFilters,
+  getRepliesFilters,
+  loadReactions,
+  loadReplies,
+} from "@app/tools/interactions/interactions"
 
 export type ZapStat = {
   pubkey: string
@@ -34,17 +28,6 @@ export type NoteStats = {
   zaps: ZapStat[]
 }
 
-// A note's comments point at it as their root, a comment's answers point at it as their parent.
-const getStatFilters = (event: TrustedEvent): Filter[] => {
-  const kinds = [NOTE, COMMENT, REACTION, REPOST, GENERIC_REPOST]
-
-  if (ENABLE_ZAPS) {
-    kinds.push(ZAP_RECEIPT)
-  }
-
-  return [...getReplyFilters([event], {kinds}), ...getCommentFiltersForRoot([event])]
-}
-
 // The zapper and the amount are in the receipt itself, so this needs no lnurl round trip.
 const readZap = (event: TrustedEvent): Maybe<ZapStat> => {
   const receipt = reader(ZapReceipt)(event)
@@ -54,21 +37,14 @@ const readZap = (event: TrustedEvent): Maybe<ZapStat> => {
   return pubkey && amount ? {pubkey, msats: amount, timestamp: event.created_at} : undefined
 }
 
-const loadStats = (event: TrustedEvent) => {
-  const filters = getStatFilters(event)
+export const deriveNoteStats = (event: TrustedEvent, url?: string): Readable<NoteStats> => {
+  loadReactions(event, url)
+  loadReplies(event, url)
 
-  router
-    .get()
-    .resolver.relays(EventRef.fromEvent(event).getRelaySelections())
-    .then(relays => network.get().request({relays, filters}))
-    .catch(noop)
-}
-
-export const deriveNoteStats = (event: TrustedEvent): Readable<NoteStats> => {
-  loadStats(event)
+  const filters = [...getReactionFilters([event]), ...getRepliesFilters([event])]
 
   return derived(
-    fromApp($app => $app.use(Events).desc(getStatFilters(event)).$),
+    fromApp($app => $app.use(Events).desc(filters).$),
     events => {
       const stats: NoteStats = {comments: [], reactions: [], reposts: [], zaps: []}
 
@@ -79,7 +55,7 @@ export const deriveNoteStats = (event: TrustedEvent): Readable<NoteStats> => {
           stats.reactions.push(related)
         } else if (related.kind === REPOST || related.kind === GENERIC_REPOST) {
           stats.reposts.push(related)
-        } else if (related.kind === ZAP_RECEIPT) {
+        } else if (related.kind === ZAP_RECEIPT && ENABLE_ZAPS) {
           const zap = readZap(related)
 
           if (zap) {

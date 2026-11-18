@@ -17,16 +17,14 @@
   import PinSave from "@app/components/PinSave.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import {events, network} from "@app/core/plugins"
-  import type {Interactions} from "@app/features/interactions"
   import {buildCommentTree} from "@app/tools/notes"
 
   type Props = {
     url: string
     pin: PinReader
-    interactions: Interactions
   }
 
-  const {url, pin, interactions}: Props = $props()
+  const {url, pin}: Props = $props()
 
   const filters = getCommentFiltersForRoot([pin.event])
   const comments = $events.asc(filters).$
@@ -80,8 +78,7 @@
           editForm={PinSave}
           labels={topics.length > 0 ? topicLabels : undefined}
           {url}
-          event={pin.event}
-          {interactions} />
+          event={pin.event} />
       </div>
       {#if replyTo?.id === pin.event.id}
         <CommentCompose {url} event={pin.event} onCancel={clearReplyTo} onSubmit={clearReplyTo} />
@@ -89,7 +86,7 @@
     </div>
     <div class="flex flex-col">
       {#each nodes as node (node.comment.id)}
-        <CommentTree {node} root={pin.event} {replyTo} {setReplyTo} {url} {interactions} />
+        <CommentTree {node} root={pin.event} {replyTo} {setReplyTo} {url} />
       {/each}
       {#if nodes.length === 0}
         <p class="py-2 text-sm opacity-75">No comments yet.</p>

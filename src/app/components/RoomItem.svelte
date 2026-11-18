@@ -43,7 +43,6 @@
   import {publishReaction, retractReaction} from "@app/features/spaces"
   import {colorFor} from "@app/tools/theme"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import type {Interactions} from "@app/features/interactions"
   import {isQuote} from "@app/tools/quotes"
   import * as pages from "@app/navigation/pages"
   import {highlightedEvent} from "@app/navigation/locations"
@@ -54,20 +53,11 @@
     event: TrustedEvent
     replyTo?: (event: TrustedEvent) => void
     showPubkey?: boolean
-    interactions: Interactions
     canEdit: (event: TrustedEvent) => boolean
     onEdit: (event: TrustedEvent) => void
   }
 
-  const {
-    url,
-    event,
-    replyTo = undefined,
-    showPubkey = false,
-    interactions,
-    canEdit,
-    onEdit,
-  }: Props = $props()
+  const {url, event, replyTo = undefined, showPubkey = false, canEdit, onEdit}: Props = $props()
 
   const today = formatTimestampAsDate(now())
   const profileDisplay = $profiles.display(event.pubkey).$
@@ -158,7 +148,6 @@
     <ReactionSummary
       {url}
       {event}
-      {interactions}
       {deleteReaction}
       {createReaction}
       placement="right"

@@ -37,7 +37,7 @@
   {:else}
     {#each $entries as entry (entry.key)}
       <div in:fly>
-        <NoteEntry {entry} interactions={feed.interactions} />
+        <NoteEntry {entry} />
       </div>
     {/each}
     <NoteFeedFooter

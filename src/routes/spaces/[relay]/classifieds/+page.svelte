@@ -37,7 +37,7 @@
 
   const {url} = pages.classifieds.decode(params)
   const feed = makeSpaceFeed(url, CLASSIFIED)
-  const {events, interactions} = feed
+  const {events} = feed
   const status = feed.older.status
 
   const createClassified = () => pushModal(ClassifiedCreate, {url})
@@ -147,7 +147,7 @@
   <div class="grid gap-3 @2xl:grid-cols-2 @2xl:gap-4 @4xl:grid-cols-3 @7xl:grid-cols-4">
     {#each items as event (event.id)}
       <div in:fly class="h-full min-w-0">
-        <ClassifiedItem {url} {interactions} event={$state.snapshot(event)} />
+        <ClassifiedItem {url} event={$state.snapshot(event)} />
       </div>
     {/each}
   </div>

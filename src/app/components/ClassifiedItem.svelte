@@ -15,17 +15,15 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import ClassifiedEdit from "@app/components/ClassifiedEdit.svelte"
-  import type {Interactions} from "@app/features/interactions"
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
     url: string
     event: TrustedEvent
-    interactions: Interactions
   }
 
-  const {url, event, interactions}: Props = $props()
+  const {url, event}: Props = $props()
 
   const path = $derived(pages.classified.path({url, address: getAddress(event)}))
   const classified = $derived(reader(Classified)(event))
@@ -100,6 +98,6 @@
       </span>
       <span class="truncate">{formatTimestampRelative(event.created_at)}</span>
     </span>
-    <ContentActions noun="Listing" editForm={ClassifiedEdit} {url} {event} {interactions} />
+    <ContentActions noun="Listing" editForm={ClassifiedEdit} {url} {event} />
   </div>
 </Cv>

@@ -1,6 +1,5 @@
 <script lang="ts">
   import {
-    call,
     groupBy,
     int,
     max,
@@ -27,17 +26,18 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import Reaction from "@app/components/Reaction.svelte"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {deriveNoteStats} from "@app/features/interactions"
+  import {deriveNoteStats} from "@app/tools/interactions/stats"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     event: TrustedEvent
+    url?: string
     noun?: string
   }
 
-  const {event, noun = "Note"}: Props = $props()
+  const {event, url, noun = "Note"}: Props = $props()
 
-  const stats = deriveNoteStats(event)
+  const stats = deriveNoteStats(event, url)
 
   const comments = $derived($stats.comments)
 
@@ -90,32 +90,30 @@
   const total = $derived(sum(types.map(type => type.count)))
 
   // Activity clusters at the end for most notes, so the empty run before it is left out.
-  const chart = $derived(
-    call(() => {
-      const activity = [
-        ...comments.map(event => ({timestamp: event.created_at, label: "Comments"})),
-        ...reactions.map(event => ({timestamp: event.created_at, label: "Reactions"})),
-        ...reposts.map(event => ({timestamp: event.created_at, label: "Reposts"})),
-        ...zaps.map(zap => ({timestamp: zap.timestamp, label: "Zaps"})),
-      ]
+  const chart = $derived.by(() => {
+    const activity = [
+      ...comments.map(event => ({timestamp: event.created_at, label: "Comments"})),
+      ...reactions.map(event => ({timestamp: event.created_at, label: "Reactions"})),
+      ...reposts.map(event => ({timestamp: event.created_at, label: "Reposts"})),
+      ...zaps.map(zap => ({timestamp: zap.timestamp, label: "Zaps"})),
+    ]
 
-      if (activity.length === 0) {
-        return []
-      }
+    if (activity.length === 0) {
+      return []
+    }
 
-      const start = min(activity.map(item => item.timestamp))
-      const size = max([(now() - start) / 24, int(1, HOUR)])
-      const buckets = Array.from({length: 24}, () => new Map<string, number>())
+    const start = min(activity.map(item => item.timestamp))
+    const size = max([(now() - start) / 24, int(1, HOUR)])
+    const buckets = Array.from({length: 24}, () => new Map<string, number>())
 
-      for (const {timestamp, label} of activity) {
-        const index = Math.min(23, Math.floor((timestamp - start) / size))
+    for (const {timestamp, label} of activity) {
+      const index = Math.min(23, Math.floor((timestamp - start) / size))
 
-        buckets[index].set(label, (buckets[index].get(label) ?? 0) + 1)
-      }
+      buckets[index].set(label, (buckets[index].get(label) ?? 0) + 1)
+    }
 
-      return buckets.slice(buckets.findIndex(bucket => bucket.size > 0))
-    }),
-  )
+    return buckets.slice(buckets.findIndex(bucket => bucket.size > 0))
+  })
 
   const peak = $derived(max(chart.map(bucket => sum(Array.from(bucket.values())))))
 

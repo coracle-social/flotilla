@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {onMount} from "svelte"
   import {derived} from "svelte/store"
   import {filter, formatTimestampRelative, max, spec, uniq} from "@welshman/lib"
   import {COMMENT} from "@welshman/util"
@@ -11,7 +12,8 @@
   import Link from "@app/components/Link.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import type {Interactions} from "@app/features/interactions"
+  import {events} from "@app/core/plugins"
+  import {getRepliesFilters, loadReplies} from "@app/tools/interactions/interactions"
   import {shelfCoverImages} from "@app/features/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
 
@@ -19,13 +21,12 @@
     url: string
     board: PinboardReader
     pins: PinReader[]
-    interactions: Interactions
   }
 
-  const {url, board, pins, interactions}: Props = $props()
+  const {url, board, pins}: Props = $props()
 
   const path = pages.board.path({url, address: board.address()})
-  const related = interactions.related(board.event)
+  const related = $events.desc(getRepliesFilters([board.event])).$
   const comments = derived(related, $related => filter(spec({kind: COMMENT}), $related))
 
   const title = $derived(board.title() || "Untitled shelf")
@@ -45,6 +46,8 @@
       ...$comments.map(comment => comment.created_at),
     ]),
   )
+
+  onMount(() => loadReplies(board.event, url))
 </script>
 
 <Cv

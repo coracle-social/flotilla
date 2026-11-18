@@ -12,7 +12,6 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
-  import type {Interactions} from "@app/features/interactions"
   import {formatDay, groupEventsByDay, makeDayKey} from "@app/features/spaces/calendar"
   import {pushModal} from "@app/navigation/dialogs"
 
@@ -20,10 +19,9 @@
     url: string
     date: Date
     events: Readable<TrustedEvent[]>
-    interactions: Interactions
   }
 
-  const {url, date, events, interactions}: Props = $props()
+  const {url, date, events}: Props = $props()
 
   // A modal's props are frozen at push time, so re-derive from the feed's own store.
   const dayEvents = $derived(groupEventsByDay($events).get(makeDayKey(date)) ?? [])
@@ -42,7 +40,7 @@
       </ModalSubtitle>
     </ModalHeader>
     {#each dayEvents as event (event.id)}
-      <CalendarEventItem {url} {event} {interactions} />
+      <CalendarEventItem {url} {event} />
     {/each}
   </ModalBody>
   <ModalFooter>

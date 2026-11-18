@@ -36,9 +36,10 @@
 </script>
 
 <Button onclick={open} class={className} {...restProps}>
+  <!-- The tooltip's anchor sits between the button and its contents, so it lays them out the way the button would -->
   <Tippy
     bind:controller={tippy}
-    class="flex"
+    class="flex items-center gap-[inherit]"
     component={EmojiPicker}
     strayMargin={allowKaomoji ? undefined : 100}
     props={{onClick, allowKaomoji}}

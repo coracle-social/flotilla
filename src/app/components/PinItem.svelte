@@ -1,4 +1,5 @@
 <script lang="ts">
+  import {onMount} from "svelte"
   import {derived} from "svelte/store"
   import {filter, formatTimestampRelative, spec, uniq} from "@welshman/lib"
   import {COMMENT} from "@welshman/util"
@@ -14,23 +15,25 @@
   import PinSave from "@app/components/PinSave.svelte"
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
-  import type {Interactions} from "@app/features/interactions"
+  import {events} from "@app/core/plugins"
+  import {getRepliesFilters, loadReplies} from "@app/tools/interactions/interactions"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
     url: string
     pin: PinReader
-    interactions: Interactions
     card?: boolean
   }
 
-  const {url, pin, interactions, card = true}: Props = $props()
+  const {url, pin, card = true}: Props = $props()
 
   const topics = $derived(uniq(pin.topics().map(normalizeTopic)))
-  const related = interactions.related(pin.event)
+  const related = $events.desc(getRepliesFilters([pin.event])).$
   const comments = derived(related, $related => filter(spec({kind: COMMENT}), $related))
 
-  const discuss = () => pushModal(PinDetail, {url, pin, interactions}, {size: "large"})
+  const discuss = () => pushModal(PinDetail, {url, pin}, {size: "large"})
+
+  onMount(() => loadReplies(pin.event, url))
 </script>
 
 {#snippet topicLabels()}
@@ -66,8 +69,7 @@
       editForm={PinSave}
       labels={topics.length > 0 ? topicLabels : undefined}
       {url}
-      event={pin.event}
-      {interactions} />
+      event={pin.event} />
   </div>
 {/snippet}
 

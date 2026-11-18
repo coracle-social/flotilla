@@ -9,7 +9,6 @@
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import ContentActions from "@app/components/ContentActions.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import type {Interactions} from "@app/features/interactions"
   import {reader} from "@app/core/domain"
   import {getPublishedTimestamp} from "@app/features/spaces/articles"
   import * as pages from "@app/navigation/pages"
@@ -17,10 +16,9 @@
   type Props = {
     url: string
     event: TrustedEvent
-    interactions: Interactions
   }
 
-  const {url, event, interactions}: Props = $props()
+  const {url, event}: Props = $props()
 
   const path = $derived(pages.article.path({url, address: getAddress(event)}))
   const article = $derived(reader(Article)(event))
@@ -63,8 +61,7 @@
           noun="Article"
           labels={topics.length > 0 ? topicLabels : undefined}
           {url}
-          {event}
-          {interactions} />
+          {event} />
       </div>
     </div>
   </div>

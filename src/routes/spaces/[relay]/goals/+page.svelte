@@ -36,7 +36,7 @@
 
   const {url} = pages.goals.decode(params)
   const feed = makeSpaceFeed(url, ZAP_GOAL)
-  const {events, interactions} = feed
+  const {events} = feed
   const status = feed.older.status
 
   const tabs: SegmentedOption<GoalFilter>[] = [
@@ -124,7 +124,7 @@
   <div class="columns-1 gap-2 sm:gap-4 @2xl:columns-2 @6xl:columns-3">
     {#each items as event (event.id)}
       <div in:fly class="mb-2 min-w-0 break-inside-avoid sm:mb-4">
-        <GoalItem {url} {interactions} event={$state.snapshot(event)} />
+        <GoalItem {url} event={$state.snapshot(event)} />
       </div>
     {/each}
   </div>

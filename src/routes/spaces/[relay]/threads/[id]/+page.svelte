@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onDestroy} from "svelte"
   import {page} from "$app/state"
   import {spec} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
@@ -20,7 +19,6 @@
   import EventReply from "@app/components/EventReply.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {makeInteractions} from "@app/features/interactions"
   import {getChecked} from "@app/tools/checked"
   import * as pages from "@app/navigation/pages"
   import {getPermalinkTarget, scrollToEvent} from "@app/navigation/locations"
@@ -34,7 +32,6 @@
   const event = $events.one(id, [url]).$
   const threadTitle = $derived($event ? reader(Thread)($event).title() : "")
   // Rows register themselves with `related`, so the whole page's reactions load in one batch
-  const interactions = makeInteractions({relays: [url]})
   const filters = $derived($event ? getCommentFiltersForRoot([$event]) : [])
   const replies = $derived($events.asc(filters).$)
 
@@ -98,8 +95,6 @@
       replyTo = $event
     }
   }
-
-  onDestroy(interactions.stop)
 
   let showReply = $state(false)
   let replyTo: TrustedEvent | undefined = $state()
@@ -175,7 +170,6 @@
             <div bind:this={root} class="flex flex-col last:grow">
               <ThreadPost
                 {url}
-                {interactions}
                 event={$event}
                 threadPubkey={$event.pubkey}
                 replyCount={$replies.length}
@@ -201,12 +195,7 @@
                   <div class="h-px grow bg-primary"></div>
                 </div>
               {/if}
-              <ThreadPost
-                {url}
-                {interactions}
-                event={reply}
-                threadPubkey={$event.pubkey}
-                onReply={openReply} />
+              <ThreadPost {url} event={reply} threadPubkey={$event.pubkey} onReply={openReply} />
             {/each}
           </div>
           <RelatedThreads {url} event={$event} />

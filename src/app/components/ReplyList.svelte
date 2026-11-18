@@ -5,16 +5,14 @@
   import type {TrustedEvent} from "@welshman/util"
   import Button from "@lib/components/Button.svelte"
   import NoteItem from "@app/components/NoteItem.svelte"
-  import type {Interactions} from "@app/features/interactions"
   import {openEventNote} from "@app/navigation/overlays"
 
   type Props = {
     replies: TrustedEvent[]
-    interactions: Interactions
     quoteNote: Snippet<[TrustedEvent]>
   }
 
-  const {replies, interactions, quoteNote}: Props = $props()
+  const {replies, quoteNote}: Props = $props()
 
   let showEvery = $state(false)
 
@@ -34,7 +32,6 @@
     {#each shown as reply (reply.id)}
       <NoteItem
         event={reply}
-        {interactions}
         customActions={quoteNote}
         card={false}
         interactive

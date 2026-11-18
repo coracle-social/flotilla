@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
+  import {onMount} from "svelte"
   import {max, pushToMapKey, sortBy} from "@welshman/lib"
   import {PIN, PINBOARD} from "@welshman/util"
   import type {PinReader} from "@welshman/domain"
@@ -15,7 +15,6 @@
   import PinboardItem from "@app/components/PinboardItem.svelte"
   import PinboardEdit from "@app/components/PinboardEdit.svelte"
   import {network} from "@app/core/plugins"
-  import {makeInteractions} from "@app/features/interactions"
   import {
     derivePins,
     deriveShelves,
@@ -29,7 +28,6 @@
   const {params}: PageProps = $props()
 
   const {url} = pages.library.decode(params)
-  const interactions = makeInteractions({relays: [url]})
   const shelves = deriveShelves(url)
   const pins = derivePins(url)
 
@@ -87,8 +85,6 @@
 
     return () => controller.abort()
   })
-
-  onDestroy(interactions.stop)
 </script>
 
 <SpaceBar>
@@ -130,11 +126,7 @@
     {#if matchingShelves.length > 0}
       <div class="grid gap-4 @2xl:grid-cols-2 @4xl:grid-cols-3">
         {#each matchingShelves as board (board.address())}
-          <PinboardItem
-            {url}
-            {board}
-            {interactions}
-            pins={pinsByShelf.get(board.address()) ?? []} />
+          <PinboardItem {url} {board} pins={pinsByShelf.get(board.address()) ?? []} />
         {/each}
       </div>
     {:else}
@@ -148,7 +140,7 @@
       </h2>
       <div class="grid gap-4 @2xl:grid-cols-2 @4xl:grid-cols-3">
         {#each matchingPins as pin (pin.event.id)}
-          <PinItem {url} {pin} {interactions} />
+          <PinItem {url} {pin} />
         {/each}
       </div>
     {/if}

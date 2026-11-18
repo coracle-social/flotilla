@@ -12,7 +12,6 @@
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
   import EventReactions from "@app/components/EventReactions.svelte"
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
-  import type {Interactions} from "@app/features/interactions"
   import type {CommentNode} from "@app/tools/notes"
 
   type Props = {
@@ -24,20 +23,9 @@
     setReplyTo?: (comment?: TrustedEvent) => void
     url?: string
     customActions?: Snippet<[TrustedEvent]>
-    interactions: Interactions
   }
 
-  const {
-    node,
-    root,
-    parent,
-    depth = 1,
-    replyTo,
-    setReplyTo,
-    url,
-    customActions,
-    interactions,
-  }: Props = $props()
+  const {node, root, parent, depth = 1, replyTo, setReplyTo, url, customActions}: Props = $props()
 
   // A level costs the text column about 50px, so indentation stops two levels in on a phone and four on a desktop.
   const phoneIndentCap = 2
@@ -83,11 +71,11 @@
           {#if setReplyTo}
             <ReplyButton count={node.children.length} onclick={reply} class="mr-auto" />
           {/if}
-          <CommentActions event={node.comment} {url} {interactions} />
+          <CommentActions event={node.comment} {url} />
         </div>
       {:else}
         <div class="flex w-full justify-between gap-2">
-          <EventReactions event={node.comment} {interactions} placement="right" />
+          <EventReactions event={node.comment} placement="right" />
           <div class="flex shrink-0 items-center gap-2">
             <PublicationStatusOrDeleted event={node.comment}>
               {#if setReplyTo}
@@ -128,8 +116,7 @@
           {replyTo}
           {setReplyTo}
           {url}
-          {customActions}
-          {interactions} />
+          {customActions} />
       {/each}
     </div>
   {/if}

@@ -18,7 +18,6 @@ import type {Timeline} from "@app/features/feeds/timeline"
 export type AuthorFeedOptions = {
   pubkeys: Readable<string[]>
   getFilters: (authors: string[]) => Filter[]
-  onEvent?: (event: TrustedEvent) => void
 }
 
 export type AuthorFeed = {events: Readable<TrustedEvent[]>; older: Pager; stop: () => void}
@@ -40,7 +39,7 @@ const eventsOnUrls = (urls: string[], filters: Filter[]): AsyncProjection<Events
     return eventsById
   })
 
-export const makeAuthorFeed = ({pubkeys, getFilters, onEvent}: AuthorFeedOptions): AuthorFeed => {
+export const makeAuthorFeed = ({pubkeys, getFilters}: AuthorFeedOptions): AuthorFeed => {
   const groups = writable<Timeline[]>([])
   const built = writable(false)
 
@@ -66,7 +65,6 @@ export const makeAuthorFeed = ({pubkeys, getFilters, onEvent}: AuthorFeedOptions
       quorum: 0.5,
       // The cache would draw a group's history out of order.
       useCache: false,
-      onEvent,
     })
 
     groups.update($groups => [...$groups, group])

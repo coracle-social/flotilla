@@ -284,8 +284,7 @@ stores, so a component takes the key and looks up the rest: `RoomName` takes `{u
 
 Events are the exception, and 66 components take `event: TrustedEvent`, since the parent already
 holds the event from a feed or `$events.one`. An event prop usually travels with `url`, the
-relay it lives on, which routes its replies and reactions, and with `interactions: Interactions`,
-the shared index below. A component takes a pointer instead only when it has to load the event
+relay it lives on, which routes its replies and reactions. A component takes a pointer instead only when it has to load the event
 itself, as `ContentQuote` does. Anything with neither a store nor an event is passed as its
 domain reader: `RoleEdit` takes `role: RelayRoleReader`.
 
@@ -371,11 +370,11 @@ onMount(() => {
 
 That is `EventComments`. The thread detail page does the same in an `$effect`.
 
-**A list that pages as you scroll:** a feed from `@app/features/feeds`, `followScroll` from `@lib/pager`, and `makeInteractions` from `src/app/features/interactions`. Every space list page uses them, as do `RoomTranscript` and the calendar. A list of one kind and its comments takes both from `makeSpaceFeed(url, kind)`, and the threads and classifieds pages are the reference:
+**A list that pages as you scroll:** a feed from `@app/features/feeds` and `followScroll` from `@lib/pager`. Every space list page uses them, as do `RoomTranscript` and the calendar. A list of one kind and its comments takes both from `makeSpaceFeed(url, kind)`, and the threads and classifieds pages are the reference:
 
 ```typescript
 const feed = makeSpaceFeed(url, THREAD)
-const {events, interactions} = feed
+const {events} = feed
 const status = feed.older.status
 
 let element: HTMLElement | undefined = $state()
@@ -385,7 +384,7 @@ onMount(() => followScroll(element!, feed.older))
 onDestroy(feed.stop)
 ```
 
-A feed is a timeline: what the repository holds for its relay, from its floor up. Paging asks the relay for the next window back and lowers the floor, so the list never shows a gap; nothing is stored in the feed itself. Only the scroll binding needs the element from `<PageContent bind:element>`, so it alone waits for `onMount`. `interactions.track` batches the reactions, comments and deletions for every event the feed draws, rows get the same `interactions`, and their action rows read `interactions.related(event)`; whether an event was deleted is `$events.isDeleted(event).$`. Close the list with `<FeedFooter status={$status} ...>`, which shows the spinner while the pager loads and the empty or done message once it is exhausted. `RoomTranscript` pages both ways from a permalink with `feed.older` and `feed.newer`. Calendars use `makeCalendarFeed`, which windows by day rather than `created_at`, and whose `load(since, until)` serves the month and week grids.
+A feed is a timeline: what the repository holds for its relay, from its floor up. Paging asks the relay for the next window back and lowers the floor, so the list never shows a gap; nothing is stored in the feed itself. Only the scroll binding needs the element from `<PageContent bind:element>`, so it alone waits for `onMount`. Each row's action row reads what answers its event from the repository (`$events.desc(getReactionFilters([event])).$` in `ReactionSummary`, `getRepliesFilters` for reply counts) and calls `loadReactions(event, url)` or `loadReplies(event, url)` from `tools/interactions` on mount, which batch every row's request into one load per relay; whether an event was deleted is `$events.isDeleted(event).$`. Close the list with `<FeedFooter status={$status} ...>`, which shows the spinner while the pager loads and the empty or done message once it is exhausted. `RoomTranscript` pages both ways from a permalink with `feed.older` and `feed.newer`. Calendars use `makeCalendarFeed`, which windows by day rather than `created_at`, and whose `load(since, until)` serves the month and week grids.
 
 `makeNoteFeed` in `src/app/features/feeds/networkFeed.ts` draws each reply under the note it answers. It takes a note source and optionally an interaction source, both `makeAuthorFeed`s: the first brings events the feed draws itself, the second likes, reposts and zaps that only name a note, which the feed resolves in the background (`notes/resolver.ts`) and folds into the same cards. It also takes an optional `pinned` list and the `NoteFacet[]` to show. `makeNetworkFeed` and `makeProfileFeed` in the same file build the two feeds the app draws: the home Network section passes the persisted `includedNoteFacets`, so the Notes, Replies and Interactions buttons count and toggle through the same store, and a note a follow both wrote and liked counts under both and is drawn once. `ProfilePageNotes` gets one source and a pin list, and keeps pinned notes above the rest. A muted note stays in the feed and `NoteCard` draws it, while `ProfilePageNotes` says the person is muted instead of drawing the list. Missing notes never hold the feed up: an entry draws once its note is in hand, and the ones still being fetched wait off to the side. `NoteFeedFooter` renders the note feed's status.
 

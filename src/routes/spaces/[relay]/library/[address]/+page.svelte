@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {onDestroy, onMount} from "svelte"
+  import {onMount} from "svelte"
   import {sortBy, uniq} from "@welshman/lib"
   import {PIN, PINBOARD} from "@welshman/util"
   import {normalizeTopic} from "@lib/util"
@@ -21,7 +21,6 @@
   import ProfileList from "@app/components/ProfileList.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import {network} from "@app/core/plugins"
-  import {makeInteractions} from "@app/features/interactions"
   import {derivePins, deriveShelf, pinMatchesTerm} from "@app/features/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
@@ -30,7 +29,6 @@
   const {params}: PageProps = $props()
 
   const {url, address} = pages.board.decode(params)
-  const interactions = makeInteractions({relays: [url]})
   const board = deriveShelf(url, address)
   const pins = derivePins(url)
 
@@ -78,8 +76,6 @@
 
     return () => controller.abort()
   })
-
-  onDestroy(interactions.stop)
 </script>
 
 <SpaceBar {back}>
@@ -176,14 +172,14 @@
     {:else if layout === "cards"}
       <div class="bg-surface">
         {#each visible as pin (pin.event.id)}
-          <PinItem {url} {pin} {interactions} card={false} />
+          <PinItem {url} {pin} card={false} />
         {/each}
       </div>
     {:else}
-      <PinList {url} {address} pins={visible} {interactions} />
+      <PinList {url} {address} pins={visible} />
     {/if}
     <div class="border-t border-line bg-surface pt-1">
-      <EventComments noun="shelf" event={$board.event} {url} {interactions} />
+      <EventComments noun="shelf" event={$board.event} {url} />
     </div>
   {:else}
     <LoadingFallback loadingMessage="Loading shelf..." failureMessage="Failed to load shelf." />

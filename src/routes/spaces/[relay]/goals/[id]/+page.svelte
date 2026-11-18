@@ -1,5 +1,4 @@
 <script lang="ts">
-  import {onDestroy} from "svelte"
   import {derived} from "svelte/store"
   import {DAY, formatTimestampRelative, now} from "@welshman/lib"
   import {ZapGoal} from "@welshman/domain"
@@ -23,14 +22,12 @@
   import {reader} from "@app/core/domain"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {deriveGoalProgress} from "@app/features/spaces/goals"
-  import {makeInteractions} from "@app/features/interactions"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 
   const {params}: PageProps = $props()
 
   const {url, id} = pages.goal.decode(params)
-  const interactions = makeInteractions({relays: [url]})
   const event = $events.one(id, [url]).$
   const goal = derived(event, $event => ($event ? reader(ZapGoal)($event) : undefined))
   const progress = $derived($event ? deriveGoalProgress($event, url) : undefined)
@@ -44,8 +41,6 @@
   )
 
   const back = () => history.back()
-
-  onDestroy(interactions.stop)
 </script>
 
 <SpaceBar {back}>
@@ -105,7 +100,7 @@
             {$progress.isFunded ? "Chip in anyway" : "Contribute to this goal"}
           </ZapButton>
         {/if}
-        <ContentActions hideZap noun="Goal" event={$event} {url} {interactions} />
+        <ContentActions hideZap noun="Goal" event={$event} {url} />
       </div>
     </NoteCard>
     {#if $goal.summary()}
@@ -115,7 +110,7 @@
       </div>
     {/if}
     <GoalSupporters {url} event={$event} progress={$progress} />
-    <EventComments event={$event} {url} {interactions} />
+    <EventComments event={$event} {url} />
   {:else}
     <LoadingFallback
       loadingMessage="Loading funding goal..."
