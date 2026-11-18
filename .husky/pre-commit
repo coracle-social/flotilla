@@ -1,5 +1,6 @@
 pnpm run lint
 pnpm run check
+pnpm run check:layers
 
 if [[ ! -z $(grep 'link:' package.json pnpm-workspace.yaml) ]]; then
   echo "Some packages are linked to local files!"

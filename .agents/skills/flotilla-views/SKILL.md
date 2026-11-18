@@ -370,6 +370,20 @@ onMount(() => {
 
 That is `EventComments`. The thread detail page does the same in an `$effect`.
 
+**Reactions and replies under a row:** a list mounts many rows at once, so the loaders batch their requests into one per relay. A row reads the events from the repository and calls the loader on mount:
+
+```typescript
+const reactions = $events.desc(getReactionFilters([event])).$
+const replies = $events.desc(getRepliesFilters([event])).$
+
+onMount(() => {
+  loadReactions(event, url)
+  loadReplies(event, url)
+})
+```
+
+`ReactionSummary` reads reactions this way, and `NoteItem` reads replies. The loaders use welshman's `batcher`, which the `welshman-lib` skill compares with `batch`.
+
 **A list that pages as you scroll:** a feed from `src/app/tools/feeds/` and `followScroll` from `@lib/pager`. Every space list page uses them, as do `RoomTranscript` and the calendar. A list of one kind and its comments takes both from `makeSpaceFeed(url, kind)`, and the threads and classifieds pages are the reference:
 
 ```typescript
@@ -466,6 +480,7 @@ Rich text uses `makeEditor` from `src/app/components/editor` with `EditorContent
   `text-content`, `text-content-muted`, `border-line`, `text-primary`, `text-error`. The clay,
   flat, navy and nature themes supply the values through `data-fl-theme`.
 - Classes are built with `cx`; no `class:` directives remain.
+- When a component wraps the caller's children in an element of its own, the caller's flex classes lay out that one element instead of the children. The wrapper then needs the root's layout. `EmojiButton` gives its picker anchor `flex items-center gap-[inherit]`, so a reaction count sits beside its icon.
 - Container queries go on the `PageContent`, as in `@2xl:grid-cols-2` for the classifieds grid.
   Beside the navs a page is about 326px narrower than the screen, so a screen `lg:` layout switch
   becomes `@2xl:` inside a page, as on the home, about, goals, article and settings pages.

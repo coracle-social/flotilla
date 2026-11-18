@@ -263,13 +263,7 @@ background; see flotilla-state.
 
 ## Content kinds
 
-The space sections are the kinds in `CONTENT_KINDS` (`src/app/tools/content.ts`): `ZAP_GOAL`,
-`EVENT_TIME`, `THREAD`, `CLASSIFIED`, `POLL`, `PINBOARD` and `LONG_FORM`. Each has list and detail
-routes under `spaces/[relay]/`, reached through `makeContentPath` in `src/app/navigation/pages.ts`. Chat is
-`MESSAGE` (kind 9). Comments (`COMMENT`, NIP-22) thread under any content kind, and
-`makeCommentFilter(kinds)` selects them by `#K`. A content form with `shareToChat` set also posts
-a kind 9 quoting the new event (`publishRoomQuote`), so clients that only render chat still see
-it. Zaps and goals are off on iOS (`ENABLE_ZAPS` in `src/app/core/env.ts`).
+The space sections are the kinds in `CONTENT_KINDS` (`src/app/tools/content.ts`): `ZAP_GOAL`, `EVENT_TIME`, `THREAD`, `CLASSIFIED`, `POLL`, `PINBOARD` and `LONG_FORM`. Each has list and detail routes under `spaces/[relay]/`, reached through `makeContentPath` in `src/app/navigation/pages.ts`. Chat is `MESSAGE` (kind 9). Comments (`COMMENT`, NIP-22) thread under any content kind, and `makeCommentFilter(kinds)` selects them by `#K`. `getCommentFiltersForParent` matches an event's direct comments by their lowercase `e` or `a` tag, and `getCommentFiltersForRoot` matches a whole thread by `E` or `A`. A direct comment names the event in both tags. NIP-10 replies (`getReplyFilters`) apply only to kind 1 notes that answer kind 1 notes. `getRepliesFilters` in `src/app/tools/interactions/interactions.ts` combines the two for any event. A content form with `shareToChat` set also posts a kind 9 quoting the new event (`publishRoomQuote`), so clients that only render chat still see it. Zaps and goals are off on iOS (`ENABLE_ZAPS` in `src/app/core/env.ts`).
 
 [kinds.md](kinds.md) lists every kind by feature, with its factory, module and route.
 

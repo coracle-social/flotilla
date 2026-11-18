@@ -45,12 +45,9 @@ Each layer imports only its own layer and the layers below it. Lib code takes wh
 
 Code below components returns its result and leaves the UI to its caller. `app/components/flows/` holds the UI that several components share, or that a route or the root layout starts, such as sharing, deep links and the guarded way into messages: a flow maps that result to a dialog, a toast or a navigation, holds no state, and is imported only by components and routes. UI with one component caller goes in that component.
 
-A module reaches into a lower layer through hooks such as `registerSync` and `registerRetention`, called from its own `registerX`, which `registerAll` in `src/app/index.ts` calls before the app is built. The `flotilla-architecture` skill lists the imports that still break the hierarchy.
+A module reaches into a lower layer through hooks such as `registerSync` and `registerRetention`, called from its own `registerX`, which `registerAll` in `src/app/index.ts` calls before the app is built. A tool that collects data from several areas defines a hook of the same kind, such as `registerActivity` or `registerReminders`, and each area registers with it. The tool then imports no area. `pnpm run check:layers` checks every import against this graph.
 
-An `index.ts` holds nothing but exports and initialization: it re-exports the files in its
-directory and defines the directory's `registerX`. Code goes in a file named for what it does.
-Files inside a directory import each other directly, never through their own index, which would
-make an import cycle.
+An `index.ts` holds nothing but exports and initialization: it re-exports the files in its directory and defines the directory's `registerX`. Code goes in a file named for what it does. Files inside a directory import each other directly, never through their own index, which would make an import cycle. A directory without a `registerX` has an index only when its callers use several of its files, as with `areas/hosting`. Otherwise callers import the file they use.
 
 **Import Ordering Convention (CRITICAL):**
 Always sort imports by dependency level:
@@ -94,6 +91,7 @@ Conventions below.
   `userFollowList` are in `app/core/user.ts`. The plugin stores are in `app/core/plugins.ts`, `reader`/`writer`/`command` in `app/core/domain.ts`, and the `session`
   store and `login` in `app/core/session.ts`.
 - Most global state flows through the app's `repository` (unidirectional)
+- Read events related to another event, such as its reactions and replies, from the repository with a filter. Fetch them with a batched loader called on mount, such as `loadReactions` or `loadReplies` from `tools/interactions`. Don't keep a separate index of events the repository already holds
 - Query state with a plugin's `one(key)` / `index` / `all`, or `deriveEventsById` /
   `deriveItemsByKey` from `@welshman/store` against `app.repository`
 - Update state by building a domain writer and publishing the resulting `Command`
@@ -151,6 +149,7 @@ callbacks and hot paths.
 - **No `null`** - only use `undefined`
 - Never hard-code the app's name. The brand is a build-time `VITE_PLATFORM_*` variable, so user-facing copy interpolates `PLATFORM_NAME` from `@app/core/env`, and `PLATFORM_URL`, `PLATFORM_LOGO`, `PLATFORM_ABOUT` for the rest of it. Each is set by the deployment, so don't write a `"Flotilla"` fallback behind one either.
 - Svelte 5 runes (`$state`, `$derived`, `$effect`) only in UI components
+- `$derived(expr)` takes an expression, and `$derived.by(() => {...})` takes a block of statements. `$derived(() => {...})` stores the function itself as the value
 - TailwindCSS styling with css components customized by theme. See lib/components for examples.
 - A component class goes in `@layer components`, in its own file under `lib/components`. An unlayered rule beats a layered one whatever the specificity, so a class outside the layer can never be overridden by a utility in markup. The third-party overrides in `base.css` stay unlayered. The library defaults they beat are unlayered too.
 - Comments, naming, conditionals and single-use indirection are covered by the Cleanup Pass above.
@@ -221,7 +220,7 @@ return a `Command`, so `.then(publish)` is usually all you need.
 ### Managing Modals/Toasts
 
 - Import from `app/navigation/dialogs.ts` or `app/navigation/toast.ts`
-- Open dialogs from components and flows, never from tools, areas or shell. Code below components that needs the user's answer mid-flow takes it as a function, as `toggleScreenShare(pickSource)` does
+- Open dialogs from components and flows, never from tools, areas or shell. Code below components that needs an answer from the user takes a function that asks for it
 - Pass component objects with parameters
 - Use `$state.snapshot` if calling component might unmount
 - Navigate with `navigate` from `app/navigation/navigate.ts` rather than `goto` — an open modal owns a history
@@ -239,7 +238,10 @@ Agents should not run the dev server or build the app. Instead, use the followin
 pnpm run format           # Format changed files
 pnpm run lint             # Check formatting and linting
 pnpm run check            # Type check
+pnpm run check:layers     # Check imports against the dependency graph
 ```
+
+To check that a refactor keeps behavior, run the old and new modules side by side with Node 24, which runs TypeScript directly. Get the old module from `git show HEAD:path`. Replace the app modules they import with stubs that record calls. Import welshman packages by absolute path, because pnpm links them through symlinks that `readlink -f node_modules/@welshman/lib` resolves. Run both modules with the same inputs and diff the recordings.
 
 **Welshman Development:**
 
@@ -251,7 +253,7 @@ pnpm run check            # Type check
 
 - `master` branch auto-deploys to production
 - Work on feature branches based on `dev` branch
-- Pre-commit hooks run lint/typecheck automatically
+- Pre-commit hooks run lint, the type check and the layering check
 
 ## Environment Variables
 
@@ -262,6 +264,7 @@ See `.env.template` for all options.
 **Capacitor Integration:**
 
 - Android: Full support, release builds via `pnpm release:local` (see README for the release flow)
+- F-Droid: before a build, `fdroid/prepare.mjs` copies the files in `fdroid/overlay/` over `src/app/shell/analytics.ts` and `src/app/tools/push/adapters/capacitor.ts`. `pnpm run check` doesn't type-check the overlays. A change that moves either target or changes its exports needs the same change in the overlay and in the script. To type-check an overlay, copy it over its target, run the check, and restore the original
 - iOS: Full support (zaps disabled due to App Store policy)
 - PWA: Progressive Web App with service worker
 

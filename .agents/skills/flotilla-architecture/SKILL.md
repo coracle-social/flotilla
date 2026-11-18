@@ -46,16 +46,21 @@ unrelated to flotilla's `@app/*`. App modules use it freely, for example `naviga
   `registerAll` first, and `core/app.ts` builds the `App` lazily after it.
   `flotilla-state` covers this under "App policies".
 
-### Exceptions
+### Enforcement and exceptions
 
-No lint rule enforces the layers (`eslint.config.js` has no import restrictions), so review is the
-only gate.
+`scripts/layers.mjs` enforces the layers. It runs as `pnpm run check:layers` and in the pre-commit hook. It reads every import in `src`, including dynamic imports, re-exports and the `<script>` blocks of Svelte files, and it fails when:
+
+- an import points to a higher layer;
+- an area imports another area;
+- code below components imports a component.
+
+`src/app/index.ts` is exempt because `registerAll` calls into every layer.
 
 - **lib → app.** None. A lib component that needs app behavior takes it as a prop, or moves to
   `src/app/components`, as `IconInput` and its picker buttons did, and as `Link` did, which routes a
   click through `navigate`, with `PrimaryNavItem`, which renders it. Their CSS families stay in
   `lib/components`.
-- **app → components.** None. Code below components that needs the user's answer in the middle of a flow takes it as a function, as `toggleScreenShare(pickSource)` does: `CallControlBar` passes one that opens `ScreenSharePicker`, and the Electron adapter calls it when the system has no picker of its own.
+- **app → components.** None. `CallControlBar` passes the call engine's `toggleScreenShare` a function that opens `ScreenSharePicker`. The Electron screen-share adapter calls that function when the system has no picker of its own.
 - Nothing under `src/app` or `src/lib` imports from `src/routes`.
 
 ## Top-level layout
@@ -189,6 +194,8 @@ threads have none; their components use domain readers directly.
 Lib code is app-agnostic. It may use svelte, SvelteKit, Capacitor and welshman, but never `@app`,
 env, or the `App` instance. A good test is whether it would work unchanged in another nostr
 client.
+
+Lib code takes app state as options only when that makes it reusable. The push adapters and the hosting client each bind one platform or service to app state and have no other user, so they live in `tools/push/` and `areas/hosting/`.
 
 - `util.ts`: small helpers (`errorMessage`, `buildUrl`, `normalizeTopic`, `makeCommentFilter`)
 - `media.ts`: content types, a url's `imeta` tags, `isImageUrl`, and decrypting an encrypted
