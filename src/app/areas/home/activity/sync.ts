@@ -7,10 +7,10 @@ import {app} from "@app/core/app"
 import {network, router} from "@app/core/plugins"
 import {makeKeyedSyncs} from "@app/core/sync"
 import {userRelayList} from "@app/core/user"
-import {getNotificationFilters} from "@app/features/notifications/model"
+import {getActivityFilters} from "@app/areas/home/activity/model"
 
 // Whether every inbox relay has answered its first poll, which tells an empty stream from a loading one.
-export const notificationsLoaded: Writable<boolean> = writable(false)
+export const activityLoaded: Writable<boolean> = writable(false)
 
 const getInboxUrls = async () => {
   const scenario = await router.get().resolve([userInbox()])
@@ -30,7 +30,7 @@ const pollRelay = (url: string, pubkey: string, onAnswered: () => void): Unsubsc
       relays: [url],
       signal: controller.signal,
       priority: since ? -1 : 0,
-      filters: getNotificationFilters(pubkey).map(filter =>
+      filters: getActivityFilters(pubkey).map(filter =>
         since ? {...filter, since} : {...filter, limit: 100},
       ),
     })
@@ -49,8 +49,8 @@ const pollRelay = (url: string, pubkey: string, onAnswered: () => void): Unsubsc
   }
 }
 
-export const syncNotifications = (): Unsubscriber => {
-  notificationsLoaded.set(false)
+export const syncActivity = (): Unsubscriber => {
+  activityLoaded.set(false)
 
   const pubkey = app.get().user?.pubkey
 
@@ -63,7 +63,7 @@ export const syncNotifications = (): Unsubscriber => {
         unanswered.delete(url)
 
         if (unanswered.size === 0) {
-          notificationsLoaded.set(true)
+          activityLoaded.set(true)
         }
       }
     }
@@ -78,7 +78,7 @@ export const syncNotifications = (): Unsubscriber => {
           unanswered = new Set(urls)
 
           if (urls.length === 0) {
-            notificationsLoaded.set(true)
+            activityLoaded.set(true)
           }
         }
 

@@ -1,18 +1,23 @@
 <script lang="ts">
+  import {remove, uniq} from "@welshman/lib"
   import HomeActivityItemRow from "@app/components/HomeActivityItemRow.svelte"
-  import HomeActivityItemConversation from "@app/components/HomeActivityItemConversation.svelte"
+  import ConversationTitle from "@app/components/ConversationTitle.svelte"
+  import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import type {Activity} from "@app/tools/activity"
+  import {user} from "@app/core/user"
+  import type {ActivityItem} from "@app/areas/home/activity/model"
 
   type Props = {
-    activity: Activity
+    item: Extract<ActivityItem, {type: "chat"}>
   }
 
-  const {activity}: Props = $props()
+  const {item}: Props = $props()
 
-  const {path, url, h, pubkeys = [], event} = $derived(activity)
+  const {path, url, h, pubkeys = [], event} = $derived(item.activity)
+
+  const others = $derived(uniq(remove($user.pubkey, pubkeys)))
 </script>
 
 {#if url}
@@ -32,5 +37,15 @@
     {/snippet}
   </HomeActivityItemRow>
 {:else}
-  <HomeActivityItemConversation {path} {pubkeys} {event} />
+  <HomeActivityItemRow {path} {event}>
+    {#snippet icon()}
+      <ProfileCircle pubkey={others[0] || $user.pubkey} size={9} class="shrink-0" />
+    {/snippet}
+    {#snippet title()}
+      <ConversationTitle {pubkeys} />
+    {/snippet}
+    {#snippet subtitle()}
+      direct message
+    {/snippet}
+  </HomeActivityItemRow>
 {/if}

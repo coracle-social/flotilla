@@ -27,7 +27,7 @@
     DEFAULT_SPACES,
     HIDE_NOSTR,
   } from "@app/core/env"
-  import {forceHealthChecks} from "@app/areas/healthChecks"
+  import {forceHealthChecks} from "@app/areas/home/healthChecks"
   import {loginWithPomade} from "@app/core/pomade"
   import {publishRoomList} from "@app/features/spaces/rooms"
   import {clearModals, pushModal} from "@app/navigation/dialogs"

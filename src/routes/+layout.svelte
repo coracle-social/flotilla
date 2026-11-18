@@ -35,7 +35,7 @@
   import {pluginCaches} from "@app/core/storage"
   import {EventDatabase} from "@app/core/database"
   import {device} from "@app/core/device"
-  import {forceHealthChecks} from "@app/areas/healthChecks"
+  import {forceHealthChecks} from "@app/areas/home/healthChecks"
   import {setupShareIntents} from "@app/components/flows/share"
   import {setupWebViewDownloads} from "@app/shell/downloads"
   import {setupAudioPlayback} from "@lib/audio/playback"
@@ -45,7 +45,7 @@
   import {applySavedTheme, flTheme, syncTheme, theme} from "@app/tools/theme"
   import {checked, syncChecked, syncCheckedRemote} from "@app/tools/checked"
   import {unreadCount, backgroundUnreadCount} from "@app/tools/activity"
-  import * as notifications from "@app/features/notifications"
+  import * as home from "@app/areas/home"
   import {syncBadges} from "@app/shell/badges"
   import {alertSettings} from "@app/tools/alerts/settings"
   import {migratePushState, pushRegistration, syncPush, useFallback} from "@app/features/push"
@@ -65,7 +65,7 @@
     get,
     nip19,
     theme,
-    notifications,
+    home,
     kinds: domain,
     ...plugins,
     ...lib,

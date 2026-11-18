@@ -5,7 +5,7 @@
   import NoteContentMinimal from "@app/components/NoteContentMinimal.svelte"
   import ProfileName from "@app/components/ProfileName.svelte"
   import UnreadDot from "@app/components/UnreadDot.svelte"
-  import {displayActivityTimestamp} from "@app/areas/home"
+  import {displayActivityTimestamp} from "@app/areas/home/activity/stream"
   import {user} from "@app/core/user"
 
   type Props = {

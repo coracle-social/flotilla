@@ -2,25 +2,19 @@
   import {toggle} from "@welshman/lib"
   import SegmentedButton from "@lib/components/SegmentedButton.svelte"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {includedNotificationFacets} from "@app/features/notifications"
-  import type {NotificationFacet} from "@app/features/notifications"
+  import {activityCounts, includedActivityFacets} from "@app/areas/home/activity/stream"
+  import type {ActivityFacet} from "@app/areas/home/activity/model"
 
-  type Props = {
-    counts: Map<NotificationFacet, number>
-  }
-
-  const {counts}: Props = $props()
-
-  const toggleFacet = (facet: NotificationFacet) => () =>
-    includedNotificationFacets.update($facets => toggle(facet, $facets))
+  const toggleFacet = (facet: ActivityFacet) => () =>
+    includedActivityFacets.update($facets => toggle(facet, $facets))
 </script>
 
-{#snippet filter(type: NotificationFacet, label: string)}
+{#snippet filter(type: ActivityFacet, label: string)}
   <SegmentedButton
     {label}
-    count={counts.get(type) ?? 0}
+    count={$activityCounts.get(type) ?? 0}
     size="xs"
-    pressed={$includedNotificationFacets.includes(type)}
+    pressed={$includedActivityFacets.includes(type)}
     onclick={toggleFacet(type)} />
 {/snippet}
 

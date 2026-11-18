@@ -7,7 +7,7 @@ import {registerStorage} from "@app/core/storage"
 import {registerUser} from "@app/core/user"
 import {registerBookmarks} from "@app/areas/bookmarks"
 import {registerMessages} from "@app/areas/messages"
-import {registerNotifications} from "@app/features/notifications"
+import {registerHome} from "@app/areas/home"
 import {registerPomade} from "@app/core/pomade"
 import {registerPush} from "@app/features/push"
 import {registerSpaces} from "@app/features/spaces"
@@ -35,7 +35,7 @@ export const registerAll = () => {
     registerUser()
     registerBookmarks()
     registerMessages()
-    registerNotifications()
+    registerHome()
     registerPomade()
     registerPush()
     registerWallet()

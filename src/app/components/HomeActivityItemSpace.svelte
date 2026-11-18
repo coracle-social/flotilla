@@ -3,17 +3,17 @@
   import Link from "@app/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {displayActivityTimestamp} from "@app/areas/home"
-  import type {SpaceContent} from "@app/areas/home"
+  import {displayActivityTimestamp} from "@app/areas/home/activity/stream"
+  import type {ActivityItem} from "@app/areas/home/activity/model"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
-    content: SpaceContent
+    item: Extract<ActivityItem, {type: "space"}>
   }
 
-  const {content}: Props = $props()
+  const {item}: Props = $props()
 
-  const {url, timestamp, countsByKind} = $derived(content)
+  const {url, timestamp, countsByKind} = $derived(item)
 
   const displayCount = ([kind, count]: [number, number]) => {
     switch (kind) {

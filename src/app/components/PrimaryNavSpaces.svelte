@@ -6,7 +6,7 @@
   import DragList from "@lib/components/DragList.svelte"
   import PrimaryNavItem from "@app/components/PrimaryNavItem.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
-  import {notificationsUnread} from "@app/features/notifications"
+  import {activityUnread} from "@app/areas/home/activity/stream"
   import {reorderSpaceUrls} from "@app/features/spaces/rooms"
   import {userSpaceUrls} from "@app/core/user"
   import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/env"
@@ -41,7 +41,7 @@
 </script>
 
 <div class={cx("flex min-h-0 flex-col items-center", {"flex-1": PLATFORM_RELAYS.length === 0})}>
-  <PrimaryNavItem title="Home" href="/home" notification={$notificationsUnread}>
+  <PrimaryNavItem title="Home" href="/home" notification={$activityUnread}>
     <ImageIcon alt="Home" src={PLATFORM_LOGO} class="rounded-full" size={10} />
   </PrimaryNavItem>
   <Divider class="w-full" />

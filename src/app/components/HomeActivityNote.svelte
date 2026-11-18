@@ -10,26 +10,23 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import ReplyList from "@app/components/ReplyList.svelte"
   import {user} from "@app/core/user"
-  import {displayActivityTimestamp} from "@app/areas/home"
+  import {displayActivityTimestamp} from "@app/areas/home/activity/stream"
+  import {REPOST_KINDS} from "@app/areas/home/activity/model"
+  import type {ActivityItem} from "@app/areas/home/activity/model"
   import type {Interactions} from "@app/features/interactions"
-  import {REPOST_KINDS} from "@app/features/notifications"
-  import type {NotificationGroup} from "@app/features/notifications"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Part = {pubkey?: string; text?: string}
 
   type Props = {
-    group: NotificationGroup
-    note: TrustedEvent
+    item: Extract<ActivityItem, {type: "note"}>
     interactions: Interactions
   }
 
-  const {group, note, interactions}: Props = $props()
+  const {item, interactions}: Props = $props()
 
-  // A group keeps its key while it collects answers, so the component has to follow its prop.
-  const replies = $derived(group.replies)
-
-  const reactions = $derived(group.reactions)
+  // An item keeps its key while it collects answers, so the component has to follow its prop.
+  const {note, replies, reactions} = $derived(item)
 
   const repliers = $derived(uniq(replies.map(e => e.pubkey)))
 
@@ -144,7 +141,7 @@
       {/each}
     </div>
     <span class="shrink-0 text-xs opacity-50">
-      {displayActivityTimestamp(group.timestamp)}
+      {displayActivityTimestamp(item.timestamp)}
     </span>
   </div>
   <NoteItem event={note} {interactions} customActions={quoteNote} showReply showThreadLinks />

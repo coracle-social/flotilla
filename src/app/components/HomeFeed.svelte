@@ -18,7 +18,7 @@
   import {relayLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
   import {pushModal} from "@app/navigation/dialogs"
-  import {notificationsUnread} from "@app/features/notifications"
+  import {activityUnread} from "@app/areas/home/activity/stream"
 
   type HomeTab = "activity" | "network"
 
@@ -33,7 +33,7 @@
       value: "activity",
       label: "Recent",
       icon: Bell,
-      notification: $notificationsUnread,
+      notification: $activityUnread,
     },
     {value: "network", label: "Network", icon: Planet},
   ])

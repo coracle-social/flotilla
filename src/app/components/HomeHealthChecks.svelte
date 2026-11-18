@@ -4,7 +4,7 @@
   import Icon from "@lib/components/Icon.svelte"
   import HomeSection from "@app/components/HomeSection.svelte"
   import HealthCheckList from "@app/components/HealthCheckList.svelte"
-  import {healthChecks} from "@app/areas/healthChecks"
+  import {healthChecks} from "@app/areas/home/healthChecks"
 
   type Props = {
     class?: string

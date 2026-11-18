@@ -135,7 +135,7 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
 
 **`features/`: one feature each**
 
-The app's sections are DMs (`areas/messages.ts`), spaces (`spaces/`), the home page (`areas/home.ts` and `notifications/`), and
+The app's sections are DMs (`areas/messages.ts`), spaces (`spaces/`), the home page (`areas/home/`), and
 hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature under `spaces/`:
 
 - `spaces/activity.ts` (each space's latest activity per room, chat and content item, registered with `tools/activity.ts`)
@@ -163,7 +163,6 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 Outside `spaces/`:
 
 - Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space)
-- Mentions and replies: `notifications/` (what was done to your own notes and who mentioned you: `model.ts` is the pure part, which events count, their facets and how they group into rows; `sync.ts` polls your inbox relays; `stream.ts` holds the stores the Recent tab renders)
 - `notes/`: kind 1 notes and the replies and comments under them. `notes.ts` holds the `Notes` plugin (loading a note, or many at once, from the relays its refs point at, and a reply's thread), `resolver.ts` loads in the background the notes a list names but doesn't hold, and `threads.ts` builds a thread's filters and comment tree
 - Platform and voice: `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `reminders.ts`
 
@@ -187,7 +186,7 @@ Outside `spaces/`:
   across navigation and sent as a voice note or transcribed, and `tts.ts` holds the message being
   read aloud. Both return the provider to set up when none is ready, and `components/flows/voice.ts`
   opens its prompt)
-- `areas/`: `messages.ts` (DM conversations, the gift-wrap sync and `shouldUnwrap`, and the conversations' activity), `home.ts` (the home stream's conversations and unread space content), `bookmarks.ts` (bookmark folders and search) and `healthChecks.ts` (the home page's account checklist: missing relay lists and an unsaved key, with a plan to fix each)
+- `areas/`: `messages.ts` (DM conversations, the gift-wrap sync and `shouldUnwrap`, and the conversations' activity), `home/` (the home page: `activity/` builds the Recent stream's rows, which are `ActivityItem`s of three types, a chat at its latest message, a space's unread content and what was done to one of your notes, with `model.ts` the pure part, `sync.ts` polling your inbox relays for what tags you, and `stream.ts` the stores the stream renders, `activityItems` and `activityCounts`; `healthChecks.ts` is the page's account checklist; `index.ts` defines `registerHome`), and `bookmarks.ts` (bookmark folders and search)
 - `shell/`: `badges.ts` (the app icon badge, drawn from the unread count), `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
   `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering),
   `downloads.ts` (saving files the native app's web view downloads)

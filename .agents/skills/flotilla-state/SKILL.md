@@ -60,7 +60,7 @@ everything under `PrimaryNav`, can assume a user.
 The following run outside that gate:
 
 - the root `src/routes/+layout.svelte` and what it starts: `restoreSession`,
-  `syncApplicationData`, the `notifications.sync*` functions, `Push.sync`, logging
+  `syncApplicationData`, `syncActivity` for the home stream, `Push.sync`, logging
 - `ModalContainer` and every modal, including the `LogIn*`/`SignUp*` flows. Modals stay mounted
   across a login.
 - `Toast`, `CallBanner`, `ReadAloudBanner`, `NewNotificationSound`
@@ -123,7 +123,7 @@ stores with `simpleCache`.
 | `Settings` (`settings.ts`) | `DerivedPlugin` | encrypted app-data settings, plus a `values` projection |
 | `Statuses` (`tools/people/statuses.ts`) | `DerivedPlugin` | NIP-38 general status, keyed by pubkey |
 | `Commands` (`spaces/rooms/commands.ts`) | `RelayScopedDerivedPlugin` | slash-command definitions, keyed per relay |
-| `HealthChecks` (`areas/healthChecks.ts`) | none | a plain class over `IApp` exposing `Projection`s |
+| `HealthChecks` (`areas/home/healthChecks.ts`) | none | a plain class over `IApp` exposing `Projection`s |
 | `SpaceManagement` (`spaces/management`) | none | NIP-86 supported methods (5-minute TTL), admins and bans per URL |
 | `Messages` (`areas/messages.ts`) | none | DM conversations by chat id (`index`, `one`), and a fuzzy `search` |
 | `GoalProgresses` (`goals.ts`) | none | one memoized NIP-75 progress store per goal and relay, behind `deriveGoalProgress` |
@@ -347,7 +347,7 @@ or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. T
 `.ready` resolves once it has arrived:
 
 - `theme`, `flTheme` (`theme.ts`), `checked` (`checked.ts`), `shouldUnwrap` (`areas/messages.ts`),
-  `device` (`device.ts`), `forceHealthChecks` (`areas/healthChecks.ts`) in `kv`
+  `device` (`device.ts`), `forceHealthChecks` (`areas/home/healthChecks.ts`) in `kv`
 - `pushRegistration` (`push/registration.ts`, which migrates the legacy `notificationState` key) and `alertSettings` (`tools/alerts/settings.ts`, key `notificationSettings`) in `kv`
 - `wallet` (`wallet.ts`) in `ss`
 
@@ -494,8 +494,8 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
 
 - **A join over registered sources.** `tools/activity.ts` merges the sources the areas register with
   `registerActivity` into `latestActivityByPath`, then derives `unreadPaths`, `unreadDots` and the
-  counts. The home stream derives `recentConversations` and `unreadSpaceContent` in `areas/home.ts`
-  from the same two, so the stream matches the dots.
+  counts. The home stream's chat and space rows (`areas/home/activity/stream.ts`) derive from the
+  same two, so the stream matches the dots.
 - **Singleton session state.** `spaces/calls` keeps call state in plain writables (`callState`,
   `currentCallSession`, …).
 - **UI signals.** `toast` in `navigation/toast.ts`, and `relaysPendingTrust` in `core/ingest.ts`.
@@ -508,7 +508,7 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
 
 Modules in `src/app` use svelte stores. The navigation modules read the open dialogs from
 `page.state` in `$app/state`, SvelteKit's rune-based replacement for the deprecated `$app/stores`,
-since that state has no store. `sync.ts`, `checked.ts`, `notifications.ts` and `navigation/history.ts` read
+since that state has no store. `tools/checked.ts`, `tools/activity.ts`, `shell/analytics.ts` and `navigation/history.ts` read
 `page` from `$app/stores` because they subscribe to it outside a component.
 
 Component-local `$state` covers UI state that dies with the component. Everything else is a
