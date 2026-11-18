@@ -35,7 +35,7 @@
   import {pluginCaches} from "@app/core/storage"
   import {EventDatabase} from "@app/core/database"
   import {device} from "@app/core/device"
-  import {forceHealthChecks} from "@app/features/healthChecks"
+  import {forceHealthChecks} from "@app/areas/healthChecks"
   import {setupShareIntents} from "@app/components/flows/share"
   import {setupWebViewDownloads} from "@app/shell/downloads"
   import {setupAudioPlayback} from "@lib/audio/playback"

@@ -160,12 +160,11 @@ hosting (`hosting.ts`, with its own auth). Each space concern is a sub-feature u
 
 Outside `spaces/`:
 
-- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space), `pins.ts` (a person's pinned notes), `statuses.ts` (NIP-38)
+- Content: `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relayFeed.ts` is one relay's timeline, `authorFeed.ts` pages a set of authors in groups over their outboxes, `calendarFeed.ts` windows calendar events by day, `networkFeed.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `interactions/` (`interactions.ts` indexes the replies, reactions, zaps and comments an event collected by the event they answer and loads them in batches, `stats.ts` counts an event's comments, reactions, reposts and zaps, and `reactions.ts` reacts outside a space)
 - Unread state: `activity.ts` (the home stream's conversations and space content, the latest activity per path,
   and which paths are unread), `badges.ts` (the app icon badge) and `notifications/` (what was done to your own notes and who mentioned you: `model.ts` is the pure part, which events count, their facets and how they group into rows; `sync.ts` polls your inbox relays; `stream.ts` holds the stores the Recent tab renders)
 - `notes/`: kind 1 notes and the replies and comments under them. `notes.ts` holds the `Notes` plugin (loading a note, or many at once, from the relays its refs point at, and a reply's thread), `resolver.ts` loads in the background the notes a list names but doesn't hold, and `threads.ts` builds a thread's filters and comment tree
 - `messages.ts`: DM conversations, `DM_KINDS`, the gift-wrap sync and `shouldUnwrap`
-- `healthChecks.ts` (prompts for missing inbox/outbox relays)
 - Platform and voice: `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), `reminders.ts`
 
 **`tools/`, `areas/` and `shell/`: the layers `features/` is moving into**
@@ -181,14 +180,14 @@ Outside `spaces/`:
   (`publishToNetwork`, posting outside a space), `quotes.ts`, `share.ts` (the `Share` type,
   `pendingShare`, and `shareTo`, which hands a share to a room or conversation), and `people/`
   (`people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts`
-  has `isEventMuted` and `derivePubkeyMuted`), and `checked.ts` (what has been read, per path, synced
+  has `isEventMuted` and `derivePubkeyMuted`, `statuses.ts` has the NIP-38 `Statuses` plugin, and `pins.ts` has a person's pinned notes), and `checked.ts` (what has been read, per path, synced
   to dufflepud, with `isChecked`, the rule for reading it, and `holdChecked`, which keeps a path
   unread while it's on screen), and `audio/` (speech to text and text to speech: `providers.ts`
   builds the voice providers with the user's settings, `stt.ts` holds a composer's dictation, kept
   across navigation and sent as a voice note or transcribed, and `tts.ts` holds the message being
   read aloud. Both return the provider to set up when none is ready, and `components/flows/voice.ts`
   opens its prompt)
-- `areas/`: `bookmarks.ts` (bookmark folders and search)
+- `areas/`: `bookmarks.ts` (bookmark folders and search) and `healthChecks.ts` (the home page's account checklist: missing relay lists and an unsaved key, with a plan to fix each)
 - `shell/`: `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
   `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering),
   `downloads.ts` (saving files the native app's web view downloads)

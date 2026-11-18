@@ -33,7 +33,7 @@ import {makeInteractions} from "@app/features/interactions/interactions"
 import type {Interactions} from "@app/features/interactions/interactions"
 import {getTargetRef} from "@app/tools/targets"
 import {makeNoteResolver} from "@app/features/notes/resolver"
-import {derivePinnedEvents} from "@app/features/pins"
+import {derivePinnedEvents} from "@app/tools/people/pins"
 import {getPublishedTimestamp} from "@app/features/spaces/articles"
 import {CONTENT_KINDS} from "@app/tools/content"
 

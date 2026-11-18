@@ -121,9 +121,9 @@ stores with `simpleCache`.
 | Plugin | Base | What it is |
 |---|---|---|
 | `Settings` (`settings.ts`) | `DerivedPlugin` | encrypted app-data settings, plus a `values` projection |
-| `Statuses` (`statuses.ts`) | `DerivedPlugin` | NIP-38 general status, keyed by pubkey |
+| `Statuses` (`tools/people/statuses.ts`) | `DerivedPlugin` | NIP-38 general status, keyed by pubkey |
 | `Commands` (`spaces/rooms/commands.ts`) | `RelayScopedDerivedPlugin` | slash-command definitions, keyed per relay |
-| `HealthChecks` (`healthChecks.ts`) | none | a plain class over `IApp` exposing `Projection`s |
+| `HealthChecks` (`areas/healthChecks.ts`) | none | a plain class over `IApp` exposing `Projection`s |
 | `SpaceManagement` (`spaces/management`) | none | NIP-86 supported methods (5-minute TTL), admins and bans per URL |
 | `Messages` (`messages.ts`) | none | DM conversations by chat id (`index`, `one`), and a fuzzy `search` |
 | `GoalProgresses` (`goals.ts`) | none | one memoized NIP-75 progress store per goal and relay, behind `deriveGoalProgress` |
@@ -346,7 +346,7 @@ or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. T
 `.ready` resolves once it has arrived:
 
 - `theme`, `flTheme` (`theme.ts`), `checked` (`checked.ts`), `shouldUnwrap` (`messages.ts`),
-  `device` (`device.ts`), `forceHealthChecks` (`healthChecks.ts`) in `kv`
+  `device` (`device.ts`), `forceHealthChecks` (`areas/healthChecks.ts`) in `kv`
 - `pushRegistration` (`push/registration.ts`, which migrates the legacy `notificationState` key) and `alertSettings` (`tools/alerts/settings.ts`, key `notificationSettings`) in `kv`
 - `wallet` (`wallet.ts`) in `ss`
 

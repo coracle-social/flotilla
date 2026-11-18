@@ -5,7 +5,7 @@
   import Pulse from "@assets/icons/pulse.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Link from "@lib/components/Link.svelte"
-  import {statuses} from "@app/features/statuses"
+  import {statuses} from "@app/tools/people/statuses"
 
   type Props = {
     pubkey: string

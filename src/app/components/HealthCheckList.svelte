@@ -6,8 +6,8 @@
   import HealthCheckItem from "@app/components/HealthCheckItem.svelte"
   import HealthCheckReview from "@app/components/HealthCheckReview.svelte"
   import KeyDownload from "@app/components/KeyDownload.svelte"
-  import type {HealthCheck, HealthCheckPrompt} from "@app/features/healthChecks"
-  import {completeKeyBackup, healthChecks} from "@app/features/healthChecks"
+  import type {HealthCheck, HealthCheckPrompt} from "@app/areas/healthChecks"
+  import {completeKeyBackup, healthChecks} from "@app/areas/healthChecks"
   import {session} from "@app/core/session"
   import {pushModal} from "@app/navigation/dialogs"
 

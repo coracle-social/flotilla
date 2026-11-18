@@ -312,7 +312,7 @@ tag spec is the right tool only for a tag nothing else will read.
 These predate the rule or are waiting on welshman. Don't copy them; fix one when you touch it.
 
 - **No factory yet:** `MESSAGE` (9) in `RoomChat` and `publishRoomQuote`; `LIVEKIT_PARTICIPANTS`
-  (39004, a local constant in `src/app/features/spaces/calls/participants.ts`); `STATUS` (30315) in `src/app/features/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
+  (39004, a local constant in `src/app/features/spaces/calls/participants.ts`); `STATUS` (30315) in `src/app/tools/people/statuses.ts`, where `ProfileStatus` still uses `tags.find`; push
   subscriptions (`PUSH_SUBSCRIPTION`, 30390, local to `src/app/features/push/adapters/capacitor.ts`); `DIRECT_MESSAGE_FILE`
   (15) in `Conversation.svelte`.
 - **Factory exists but bypassed:** DMs built with `makeEvent` in `Conversation.svelte` (`DirectMessage`);

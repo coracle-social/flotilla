@@ -16,7 +16,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
-  import type {HealthCheckPlan} from "@app/features/healthChecks"
+  import type {HealthCheckPlan} from "@app/areas/healthChecks"
   import {clearModals} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

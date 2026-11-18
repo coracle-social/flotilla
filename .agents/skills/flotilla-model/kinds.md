@@ -53,8 +53,8 @@ Gift wraps are only synced once the user opts in (`shouldUnwrap` in `src/app/fea
 |---|---|---|---|---|
 | Profile | `PROFILE` (0) | `Profile` | none | `settings/profile`, `SignUp`, `ProfileDelete` |
 | Settings | `APP_DATA` (30078), `d` = `flotilla/settings`, encrypted | `AppData` | `src/app/core/settings.ts` | `settings/*` |
-| Status (NIP-38) | `STATUS` (30315), `d` = `general` | none | `src/app/features/statuses.ts` | `ProfileStatus` |
-| Profile pins | `PINS` (10001) | `PinList` | `src/app/features/pins.ts` | profile pages |
+| Status (NIP-38) | `STATUS` (30315), `d` = `general` | none | `src/app/tools/people/statuses.ts` | `ProfileStatus` |
+| Profile pins | `PINS` (10001) | `PinList` | `src/app/tools/people/pins.ts` | profile pages |
 | Spaces and rooms | `ROOMS` (10009) | `RoomList` | `src/app/core/user.ts`, `spaces/rooms/lists.ts` | the sidebar, `spaces` |
 | Follows and mutes | `FOLLOWS` (3), `MUTES` (10000) | `FollowList`, `MuteList` | `src/app/tools/people/` | people pages, muting |
 | Relay lists | `RELAYS` (10002), `MESSAGING_RELAYS` (10050), `SEARCH_RELAYS` (10007), `BLOCKED_RELAYS` (10006), `BLOSSOM_SERVERS` (10063) | `RelayList`, `MessagingRelayList`, `SearchRelayList`, `BlockedRelayList`, `BlossomServerList` | plugins in `src/app/core/plugins.ts` | `settings/*` |
