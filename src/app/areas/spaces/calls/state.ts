@@ -1,7 +1,7 @@
 import {derived, get, writable} from "svelte/store"
 import type {Room} from "@welshman/app"
 import type {Room as LiveKitRoom} from "livekit-client"
-import type {CallParticipant} from "@app/features/spaces/calls/participants"
+import type {CallParticipant} from "@app/areas/spaces/calls/participants"
 
 export type CallSession = {
   url: string
@@ -58,7 +58,7 @@ export const deriveIsCallActiveElsewhere = (url: string | undefined, h: string |
 
 // leaveVoiceRoom no-ops during Joining, so cancel the in-flight join instead.
 export const endCall = async () => {
-  const engine = await import("@app/features/spaces/calls/engine")
+  const engine = await import("@app/areas/spaces/calls/engine")
 
   if (get(callState) === CallState.Joining) {
     engine.cancelJoinVoiceRoom()

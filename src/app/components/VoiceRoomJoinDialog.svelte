@@ -14,9 +14,9 @@
   import MicLevelMeter from "@app/components/MicLevelMeter.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {displayRoom} from "@app/features/spaces/rooms"
-  import {deriveCallParticipants, loadCallParticipants} from "@app/features/spaces/calls"
-  import {AbortError, TimeoutError, joinVoiceRoom} from "@app/features/spaces/calls/engine"
+  import {displayRoom} from "@app/areas/spaces/rooms"
+  import {deriveCallParticipants, loadCallParticipants} from "@app/areas/spaces/calls"
+  import {AbortError, TimeoutError, joinVoiceRoom} from "@app/areas/spaces/calls/engine"
   import {popModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

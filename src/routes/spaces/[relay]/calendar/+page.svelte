@@ -18,7 +18,7 @@
   import CalendarWeek from "@app/components/CalendarWeek.svelte"
   import CalendarEventCreate from "@app/components/CalendarEventCreate.svelte"
   import {makeCalendarFeed} from "@app/tools/feeds/calendar"
-  import type {CalendarView} from "@app/features/spaces/calendar"
+  import type {CalendarView} from "@app/areas/spaces/calendar"
   import {
     addDays,
     addMonths,
@@ -30,7 +30,7 @@
     groupEventsByDay,
     isCurrentMonth,
     isCurrentWeek,
-  } from "@app/features/spaces/calendar"
+  } from "@app/areas/spaces/calendar"
   import {getModal, pushModal} from "@app/navigation/dialogs"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"

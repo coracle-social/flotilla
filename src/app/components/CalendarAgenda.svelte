@@ -5,7 +5,7 @@
   import Divider from "@lib/components/Divider.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import CalendarEventItem from "@app/components/CalendarEventItem.svelte"
-  import {getEventStart} from "@app/features/spaces/calendar"
+  import {getEventStart} from "@app/areas/spaces/calendar"
 
   type Props = {
     url: string

@@ -5,7 +5,7 @@
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import VoiceRoomItem from "@app/components/VoiceRoomItem.svelte"
   import {rooms} from "@app/core/plugins"
-  import {RoomType, getRoomType} from "@app/features/spaces/rooms"
+  import {RoomType, getRoomType} from "@app/areas/spaces/rooms"
   import {deriveIsMuted} from "@app/core/settings"
   import {unreadDots} from "@app/tools/activity"
   import * as pages from "@app/navigation/pages"

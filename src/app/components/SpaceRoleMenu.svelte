@@ -9,7 +9,7 @@
   import RoleEdit from "@app/components/RoleEdit.svelte"
   import RoleAddMembers from "@app/components/RoleAddMembers.svelte"
   import {relayManagement} from "@app/core/plugins"
-  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

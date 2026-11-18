@@ -8,7 +8,7 @@ import {app, fromApp} from "@app/core/app"
 import {relayMemberLists, relays} from "@app/core/plugins"
 import {PLATFORM_URL} from "@app/core/env"
 import * as pages from "@app/navigation/pages"
-import {completeSpaceJoin, deriveUserIsSpaceMember} from "@app/features/spaces/membership"
+import {completeSpaceJoin, deriveUserIsSpaceMember} from "@app/areas/spaces/membership"
 
 /**
  * A subscription is what a space charges; an admission fee is the fallback for a

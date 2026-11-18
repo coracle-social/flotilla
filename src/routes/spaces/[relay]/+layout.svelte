@@ -20,7 +20,7 @@
   import SpaceNotify from "@app/components/SpaceNotify.svelte"
   import SpacePaymentGate from "@app/components/SpacePaymentGate.svelte"
   import SpaceRedirect from "@app/components/SpaceRedirect.svelte"
-  import {derivePaidGated} from "@app/features/spaces/payments"
+  import {derivePaidGated} from "@app/areas/spaces/payments"
   import {user} from "@app/core/user"
   import {authenticate} from "@app/core/auth"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"

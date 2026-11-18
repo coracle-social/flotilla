@@ -1,13 +1,13 @@
 import {registerPlugin} from "@capacitor/core"
 import {PLATFORM_NAME} from "@app/core/env"
-import {WebScreenShare} from "@app/features/spaces/calls/screenShare/adapters/web"
+import {WebScreenShare} from "@app/areas/spaces/calls/screenShare/adapters/web"
 import {
   ScreenShareDenied,
   errorCode,
   type PickSource,
   type ScreenShareContext,
   type ScreenShareSource,
-} from "@app/features/spaces/calls/screenShare/adapters/common"
+} from "@app/areas/spaces/calls/screenShare/adapters/common"
 
 type DesktopScreenSharePlugin = {
   getSources: () => Promise<{requiresPicker: boolean; sources: ScreenShareSource[]}>

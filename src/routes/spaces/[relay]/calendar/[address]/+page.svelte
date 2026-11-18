@@ -21,7 +21,7 @@
   import EventComments from "@app/components/EventComments.svelte"
   import CalendarEventPeople from "@app/components/CalendarEventPeople.svelte"
   import CalendarRsvp from "@app/components/CalendarRsvp.svelte"
-  import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/features/spaces/calendar"
+  import {deriveRsvps, getRsvpsByStatus, makeRsvpFilter} from "@app/areas/spaces/calendar"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import * as pages from "@app/navigation/pages"

@@ -2,7 +2,7 @@ import {derived} from "svelte/store"
 import {REPORT, sortEventsDesc} from "@welshman/util"
 import {Events, Rooms} from "@welshman/app"
 import {fromApp} from "@app/core/app"
-import {deriveSpacePermissions} from "@app/features/spaces/management"
+import {deriveSpacePermissions} from "@app/areas/spaces/management"
 
 // Action items (admin review queue)
 

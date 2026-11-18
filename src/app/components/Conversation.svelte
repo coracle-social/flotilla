@@ -43,8 +43,8 @@
   import {makeConversationId} from "@app/navigation/pages"
   import {navigate} from "@app/navigation/navigate"
   import {pushModal} from "@app/navigation/dialogs"
-  import {prependParent} from "@app/features/spaces/rooms"
-  import type {RoomRow} from "@app/features/spaces/rooms"
+  import {prependParent} from "@app/areas/spaces/rooms"
+  import type {RoomRow} from "@app/areas/spaces/rooms"
   import {pushToast} from "@app/navigation/toast"
 
   type Props = {

@@ -3,7 +3,7 @@
   import type {TrustedEvent, EventContent} from "@welshman/util"
   import ReactionSummary from "@app/components/ReactionSummary.svelte"
   import {publishReaction, retractReaction} from "@app/tools/interactions/reactions"
-  import * as spaces from "@app/features/spaces"
+  import * as spaces from "@app/areas/spaces"
 
   type Props = {
     event: TrustedEvent

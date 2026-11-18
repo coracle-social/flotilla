@@ -4,8 +4,8 @@ import {User} from "@welshman/app"
 import {app} from "@app/core/app"
 import {roomLists} from "@app/core/plugins"
 import {PLATFORM_URL} from "@app/core/env"
-import {attemptRelayAccess, completeSpaceJoin} from "@app/features/spaces/membership"
-import {joinRoom} from "@app/features/spaces/rooms/membership"
+import {attemptRelayAccess, completeSpaceJoin} from "@app/areas/spaces/membership"
+import {joinRoom} from "@app/areas/spaces/rooms/membership"
 
 export type InviteData = {
   url: string

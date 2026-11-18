@@ -14,8 +14,8 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import RoomItemContent from "@app/components/RoomItemContent.svelte"
   import RoomName from "@app/components/RoomName.svelte"
-  import {deriveRoomPermissions} from "@app/features/spaces/rooms"
-  import {deriveRoomPinnedEvents, toggleRoomPin} from "@app/features/spaces/rooms/pins"
+  import {deriveRoomPermissions} from "@app/areas/spaces/rooms"
+  import {deriveRoomPinnedEvents, toggleRoomPin} from "@app/areas/spaces/rooms/pins"
   import {goToEvent} from "@app/navigation/locations"
 
   type Props = {

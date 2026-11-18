@@ -21,7 +21,7 @@
   import ProfileList from "@app/components/ProfileList.svelte"
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import {network} from "@app/core/plugins"
-  import {derivePins, deriveShelf, pinMatchesTerm} from "@app/features/spaces/pinboards"
+  import {derivePins, deriveShelf, pinMatchesTerm} from "@app/areas/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"

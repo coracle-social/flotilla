@@ -15,8 +15,8 @@ import {user} from "@app/core/user"
 import {deletes, relayManagement, relays} from "@app/core/plugins"
 import {command, reader, writer} from "@app/core/domain"
 import {registerSync} from "@app/core/sync"
-import {syncCurrentSpace} from "@app/features/spaces/sync"
-import {addressWriterToSpace} from "@app/features/spaces/rooms/publish"
+import {syncCurrentSpace} from "@app/areas/spaces/sync"
+import {addressWriterToSpace} from "@app/areas/spaces/rooms/publish"
 
 // A pin's reference as the user would type it: a nostr link for an event, and the external id otherwise.
 export const pinToReference = (pin: PinReader) => {

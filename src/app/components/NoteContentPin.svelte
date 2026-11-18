@@ -5,7 +5,7 @@
   import Content from "@app/components/Content.svelte"
   import ContentEvent from "@app/components/ContentEvent.svelte"
   import {reader} from "@app/core/domain"
-  import {pinToReference} from "@app/features/spaces/pinboards"
+  import {pinToReference} from "@app/areas/spaces/pinboards"
 
   const props: ComponentProps<typeof Content> = $props()
 

@@ -26,7 +26,7 @@ import {
   createCommandSearch,
   getCommandByAddress,
   getCommandsForTarget,
-} from "@app/features/spaces/rooms/commands"
+} from "@app/areas/spaces/rooms/commands"
 import {CommandNodeView} from "@app/components/editor/CommandNodeView"
 import CommandSuggestionItem from "@app/components/editor/CommandSuggestion.svelte"
 import {MentionNodeView} from "@app/components/editor/MentionNodeView"

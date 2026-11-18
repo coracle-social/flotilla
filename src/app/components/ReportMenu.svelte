@@ -12,7 +12,7 @@
   import {user} from "@app/core/user"
   import {deletes, profiles, relayManagement, relays} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {pushToast} from "@app/navigation/toast"
   import {popModal, pushModal} from "@app/navigation/dialogs"
 

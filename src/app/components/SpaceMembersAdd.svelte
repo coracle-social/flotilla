@@ -12,7 +12,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import ProfileMultiSelect from "@app/components/ProfileMultiSelect.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {allowPubkeys} from "@app/features/spaces/management"
+  import {allowPubkeys} from "@app/areas/spaces/management"
   import {pushToast} from "@app/navigation/toast"
 
   type Props = {

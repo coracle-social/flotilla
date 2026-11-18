@@ -20,7 +20,7 @@
   import RelayName from "@app/components/RelayName.svelte"
   import {command, writer} from "@app/core/domain"
   import {navigate} from "@app/navigation/navigate"
-  import {addressWriterToSpace} from "@app/features/spaces/rooms"
+  import {addressWriterToSpace} from "@app/areas/spaces/rooms"
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/navigation/toast"
   import {resolveImageInput} from "@app/tools/uploads"

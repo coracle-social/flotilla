@@ -11,7 +11,7 @@
   import ModalTitle from "@lib/components/ModalTitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {leaveSpace} from "@app/features/spaces/membership"
+  import {leaveSpace} from "@app/areas/spaces/membership"
   import {pushToast} from "@app/navigation/toast"
 
   type Props = {

@@ -27,8 +27,8 @@
     filterGoals,
     getGoalTotals,
     sortGoals,
-  } from "@app/features/spaces/goals"
-  import type {GoalFilter, GoalSort} from "@app/features/spaces/goals"
+  } from "@app/areas/spaces/goals"
+  import type {GoalFilter, GoalSort} from "@app/areas/spaces/goals"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"
 

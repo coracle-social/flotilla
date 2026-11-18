@@ -1,6 +1,6 @@
 ---
 name: flotilla-architecture
-description: "Use this skill when deciding where new code belongs in flotilla: which layer (routes, app/components, app/shell, app/areas, app/features, app/tools, app/navigation, app/core, lib) or welshman package owns it, which src/app module to extend, or how a kind-based space feature is laid out across the layers. Also use it for the layer and import rules, path aliases, the boot sequence, platform-specific behavior (Capacitor, Android, iOS, Electron, PWA), the link-preview server, env and branding variables, the e2e harness, and the lint/check tooling."
+description: "Use this skill when deciding where new code belongs in flotilla: which layer (routes, app/components, app/shell, app/areas, app/tools, app/navigation, app/core, lib) or welshman package owns it, which src/app module to extend, or how a kind-based space feature is laid out across the layers. Also use it for the layer and import rules, path aliases, the boot sequence, platform-specific behavior (Capacitor, Android, iOS, Electron, PWA), the link-preview server, env and branding variables, the e2e harness, and the lint/check tooling."
 ---
 
 # Flotilla architecture
@@ -17,9 +17,8 @@ and UI.
 |---|---|---|---|
 | Routes | `src/routes` | — | anything |
 | App components | `src/app/components` | `@app/components/X.svelte` | `@app`, `@lib` |
-| Shell | `src/app/shell` | `@app/shell/x` | areas, features, tools, `@app/navigation`, `@app/core`, `@lib` |
-| Areas | `src/app/areas` | `@app/areas/x` | features, tools, `@app/navigation`, `@app/core`, `@lib`; never another area |
-| Features | `src/app/features` | `@app/features/x` | tools, `@app/navigation`, `@app/core`, `@lib` |
+| Shell | `src/app/shell` | `@app/shell/x` | areas, tools, `@app/navigation`, `@app/core`, `@lib` |
+| Areas | `src/app/areas` | `@app/areas/x` | tools, `@app/navigation`, `@app/core`, `@lib`; never another area |
 | Tools | `src/app/tools` | `@app/tools/x` | other tools, `@app/navigation`, `@app/core`, `@lib` |
 | Navigation | `src/app/navigation` | `@app/navigation/x` | `@app/core`, `@lib` |
 | Core | `src/app/core` | `@app/core/x` | `@lib` |
@@ -41,7 +40,7 @@ unrelated to flotilla's `@app/*`. App modules use it freely, for example `naviga
   sequence) without pulling in UI.
 - An `index.ts` only re-exports its directory's files and defines its `registerX`; files in the
   directory import each other directly, not through the index. AGENTS.md has the rule.
-- Core and navigation never import shell, areas, features or tools. A module above them reaches into core through hooks (`registerSync`,
+- Core and navigation never import shell, areas or tools. A module above them reaches into core through hooks (`registerSync`,
   `registerRetention`, `registerLogoutHandler`) from its own `registerX`,
   and `registerAll` in `src/app/index.ts` calls every `registerX`. The root layout calls
   `registerAll` first, and `core/app.ts` builds the `App` lazily after it.
@@ -130,10 +129,10 @@ concepts (`conversation.css`, `room.css`, `role-badge.css`, `space-menu.css`), w
   `goToMessages`, and `currentSpaceUrls` (the space on screen) and `syncedSpaceUrls` (the user's
   spaces plus that one, which space syncs run over)
 
-**`features/`: one feature each**
+**`areas/spaces/`: the spaces area**
 
-The app's sections are DMs (`areas/messages.ts`), spaces (`spaces/`), the home page (`areas/home/`), and
-hosting (`areas/hosting/`, with its own auth). Each space concern is a sub-feature under `spaces/`:
+The app's sections are DMs (`areas/messages.ts`), spaces (`areas/spaces/`), the home page (`areas/home/`),
+hosting (`areas/hosting/`, with its own auth) and bookmarks (`areas/bookmarks.ts`). Each space concern is a module under `areas/spaces/`:
 
 - `spaces/activity.ts` (each space's latest activity per room, chat and content item, registered with `tools/activity.ts`)
 - `spaces/sync.ts` (`syncCurrentSpace`, the space-wide relay and content syncs) and
@@ -155,13 +154,9 @@ hosting (`areas/hosting/`, with its own auth). Each space concern is a sub-featu
   livekit values, since the root layout loads `calls/index.ts` and `engine.ts` is imported
   lazily.
 - Content types: `spaces/articles.ts`, `calendar.ts`, `classifieds.ts`, `goals.ts`,
-  `pinboards.ts`
+  `pinboards.ts`, and `reminders.ts` (the calendar's reminder source, the events the user attends or hosts, and `setEventReminders`, which the RSVP and event forms call)
 
-Outside `spaces/`:
-
-- Platform: `reminders.ts`
-
-**`tools/`, `areas/` and `shell/`: the layers `features/` is moving into**
+**`tools/`, `areas/` and `shell/`**
 
 - `tools/`: `interactions/` (`interactions.ts` has the filters for what answers an event, reactions and replies, and `loadReactions` and `loadReplies`, which batch every row's request into one load per relay so rows read the answers from the repository; `stats.ts` counts a note's comments, reactions, reposts and zaps from the repository; `reactions.ts` has the reaction writer the spaces build on and the reactions sent outside a space), `notes.ts` (kind 1 notes and the comments under any event: `loadNote`, `deriveNote`, `loadThread` and `deriveReplies` load a note, its thread and the comment tree under it from the relays its ref points at, and `makeNoteResolver` loads in the background, in batches, the notes a list names but doesn't hold), `activity.ts` (the latest activity per path, joined from the sources each area registers with `registerActivity`, and what is unread: `unreadPaths`, `unreadDots`, which the nav's dots draw, and the counts), `drafts.ts` (`DraftKey`, unsent form values held in memory), `wallet.ts` (wallet,
   invoices), `theme.ts` (`colorFor`, the active theme and font size), `uploads.ts` (Blossom, image
@@ -180,14 +175,14 @@ Outside `spaces/`:
   builds the voice providers with the user's settings, `stt.ts` holds a composer's dictation, kept
   across navigation and sent as a voice note or transcribed, and `tts.ts` holds the message being
   read aloud. Both return the provider to set up when none is ready, and `components/flows/voice.ts`
-  opens its prompt), and `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, each made by a `create*Notifications` factory, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API)
-- `areas/`: `hosting/` (the relay hosting service: `model.ts` has the backend's types and the rules and formatting over them, `api.ts` the authenticated requests, and `hosting.ts` the `Hosting` plugin, which holds the tenant's plans, relays and billing, with `followHostedRelay`, which moves the room list when a hosted relay's address changes), `messages.ts` (DM conversations, the gift-wrap sync and `shouldUnwrap`, and the conversations' activity), `home/` (the home page: `activity/` builds the Recent stream's rows, which are `ActivityItem`s of three types, a chat at its latest message, a space's unread content and what was done to one of your notes, with `model.ts` the pure part, `sync.ts` polling your inbox relays for what tags you, and `stream.ts` the stores the stream renders, `activityItems` and `activityCounts`; `healthChecks.ts` is the page's account checklist; `index.ts` defines `registerHome`), and `bookmarks.ts` (bookmark folders and search)
+  opens its prompt), `push/` (`push.ts` picks a `PushAdapter` from `adapters/`, each made by a `create*Notifications` factory, `actions.ts` holds the user's actions, `relaySubscriptions.ts` keeps the NIP-9a subscriptions on each relay, `taps.ts` opens what a tapped notification names, and `server.ts` talks to the push server's HTTP API), and `reminders.ts` (scheduled push reminders: areas register a `ReminderSource` with `registerReminders`, which says whether the user wants its reminders and loads what is coming up, and `syncReminders`, started by the root layout, rebuilds every schedule when the push subscription or the settings change)
+- `areas/`: `spaces/` (above), `hosting/` (the relay hosting service: `model.ts` has the backend's types and the rules and formatting over them, `api.ts` the authenticated requests, and `hosting.ts` the `Hosting` plugin, which holds the tenant's plans, relays and billing, with `followHostedRelay`, which moves the room list when a hosted relay's address changes), `messages.ts` (DM conversations, the gift-wrap sync and `shouldUnwrap`, and the conversations' activity), `home/` (the home page: `activity/` builds the Recent stream's rows, which are `ActivityItem`s of three types, a chat at its latest message, a space's unread content and what was done to one of your notes, with `model.ts` the pure part, `sync.ts` polling your inbox relays for what tags you, and `stream.ts` the stores the stream renders, `activityItems` and `activityCounts`; `healthChecks.ts` is the page's account checklist; `index.ts` defines `registerHome`), and `bookmarks.ts` (bookmark folders and search)
 - `shell/`: `badges.ts` (the app icon badge, drawn from the unread count), `analytics.ts` (Plausible pageviews), `loading.ts` (the page loading bar),
   `signer/signerAlerts.ts` (the toast that offers help when the signer stops answering),
   `downloads.ts` (saving files the native app's web view downloads)
 
-A feature gets a `src/app/features/<feature>.ts` only when it has non-UI logic to hold. Polls, goals,
-threads and calendar events have no module; their components use domain readers directly.
+A content kind gets a module under `src/app/areas/spaces/` only when it has non-UI logic to hold. Polls and
+threads have none; their components use domain readers directly.
 
 ## `src/lib`
 
@@ -396,7 +391,7 @@ search and the space nav entry. The kind also appears in the noun switch in `Hom
 and `makeContentPath` in `navigation/pages.ts`, `NIP46_PERMS` in `nip46.ts`, and the section regexes in `server.js`.
 `NIP46_PERMS` leaves out polls, articles and goals, so listing a new kind there is optional.
 
-**App module.** `src/app/features/spaces/classifieds.ts` holds the listing logic the page would otherwise inline
+**App module.** `src/app/areas/spaces/classifieds.ts` holds the listing logic the page would otherwise inline
 (`deriveTopicCounts`, `getStatus`, `matchesTopic`, `matchesQuery`). Each is a
 small function over a domain reader:
 

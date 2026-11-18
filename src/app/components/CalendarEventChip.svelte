@@ -6,7 +6,7 @@
   import {TimeEvent} from "@welshman/domain"
   import Link from "@app/components/Link.svelte"
   import {reader} from "@app/core/domain"
-  import {getEventStart, startsOnDay} from "@app/features/spaces/calendar"
+  import {getEventStart, startsOnDay} from "@app/areas/spaces/calendar"
   import * as pages from "@app/navigation/pages"
 
   type Props = {

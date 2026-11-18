@@ -7,7 +7,7 @@
   import Link from "@app/components/Link.svelte"
   import {rooms} from "@app/core/plugins"
   import {unreadDots} from "@app/tools/activity"
-  import {displayRoom} from "@app/features/spaces/rooms"
+  import {displayRoom} from "@app/areas/spaces/rooms"
   import * as pages from "@app/navigation/pages"
 
   type Props = {

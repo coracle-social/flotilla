@@ -7,7 +7,7 @@
   import PrimaryNavItem from "@app/components/PrimaryNavItem.svelte"
   import PrimaryNavItemSpace from "@app/components/PrimaryNavItemSpace.svelte"
   import {activityUnread} from "@app/areas/home/activity/stream"
-  import {reorderSpaceUrls} from "@app/features/spaces/rooms"
+  import {reorderSpaceUrls} from "@app/areas/spaces/rooms"
   import {userSpaceUrls} from "@app/core/user"
   import {PLATFORM_RELAYS, PLATFORM_LOGO} from "@app/core/env"
 

@@ -4,7 +4,7 @@ import {Rooms, makeRoomKey} from "@welshman/app"
 import type {Room, RoomMeta} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {rooms} from "@app/core/plugins"
-import {allowPubkeys} from "@app/features/spaces/management"
+import {allowPubkeys} from "@app/areas/spaces/management"
 
 export enum RoomType {
   Text = "text",

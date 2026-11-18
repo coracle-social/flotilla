@@ -38,7 +38,7 @@
   import {ENABLE_ZAPS} from "@app/core/env"
   import {events} from "@app/core/plugins"
   import {getReactionFilters, loadReactions} from "@app/tools/interactions/interactions"
-  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {deriveDisplaysByPubkey} from "@app/tools/people/people"
 

@@ -22,10 +22,10 @@
   import {user} from "@app/core/user"
   import {roomPinLists} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
-  import {deriveRoomPermissions, deriveUserAdminDelete} from "@app/features/spaces/rooms"
+  import {deriveRoomPermissions, deriveUserAdminDelete} from "@app/areas/spaces/rooms"
   import {shareEvent} from "@app/components/flows/share"
   import {readEventAloud} from "@app/components/flows/readAloud"
-  import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
+  import {toggleRoomPin} from "@app/areas/spaces/rooms/pins"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

@@ -12,7 +12,7 @@
   import RoomMembersAdd from "@app/components/RoomMembersAdd.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {deriveRoomPermissions} from "@app/features/spaces/rooms"
+  import {deriveRoomPermissions} from "@app/areas/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

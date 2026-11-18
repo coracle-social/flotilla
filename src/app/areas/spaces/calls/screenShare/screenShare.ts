@@ -1,12 +1,12 @@
 import {Capacitor} from "@capacitor/core"
-import {ElectronScreenShare} from "@app/features/spaces/calls/screenShare/adapters/electron"
-import {NativeScreenShare} from "@app/features/spaces/calls/screenShare/adapters/native"
-import {WebScreenShare} from "@app/features/spaces/calls/screenShare/adapters/web"
+import {ElectronScreenShare} from "@app/areas/spaces/calls/screenShare/adapters/electron"
+import {NativeScreenShare} from "@app/areas/spaces/calls/screenShare/adapters/native"
+import {WebScreenShare} from "@app/areas/spaces/calls/screenShare/adapters/web"
 import type {
   IScreenShareAdapter,
   PickSource,
   ScreenShareContext,
-} from "@app/features/spaces/calls/screenShare/adapters/common"
+} from "@app/areas/spaces/calls/screenShare/adapters/common"
 
 export class ScreenShare {
   static _adapter: IScreenShareAdapter | undefined

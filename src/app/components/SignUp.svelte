@@ -18,7 +18,7 @@
   import SignUpProfile from "@app/components/SignUpProfile.svelte"
   import type {ProfileValues} from "@app/components/ProfileEditForm.svelte"
   import SignUpComplete from "@app/components/SignUpComplete.svelte"
-  import {attemptRelayAccess} from "@app/features/spaces/membership"
+  import {attemptRelayAccess} from "@app/areas/spaces/membership"
   import {
     POMADE_SIGNERS,
     INDEXER_RELAYS,

@@ -3,7 +3,7 @@
   import CloseCircle from "@assets/icons/close-circle.svg?dataurl"
   import Icon from "@lib/components/Icon.svelte"
   import Button from "@lib/components/Button.svelte"
-  import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
+  import {deriveSpacePermissions, spaceManagement} from "@app/areas/spaces/management"
   import {pushToast} from "@app/navigation/toast"
   import {relayManagement} from "@app/core/plugins"
 

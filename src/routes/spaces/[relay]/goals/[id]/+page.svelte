@@ -21,7 +21,7 @@
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
   import {ENABLE_ZAPS} from "@app/core/env"
-  import {deriveGoalProgress} from "@app/features/spaces/goals"
+  import {deriveGoalProgress} from "@app/areas/spaces/goals"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"
 

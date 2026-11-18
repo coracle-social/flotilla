@@ -21,7 +21,7 @@
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import {conversationSearch} from "@app/areas/messages"
   import {user} from "@app/core/user"
-  import {deriveUserRoomSearch} from "@app/features/spaces/rooms"
+  import {deriveUserRoomSearch} from "@app/areas/spaces/rooms"
   import * as pages from "@app/navigation/pages"
   import {shareTo, type Share} from "@app/tools/share"
 

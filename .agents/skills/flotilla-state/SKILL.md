@@ -27,7 +27,7 @@ runs (see [App policies](#app-policies)).
   `login` only runs while signed out: `restoreSession` at boot, the `LogIn*`/`SignUp*` flows,
   and `loginWithPomade`.
 - **Logout reloads the page, here and in every other tab.** `logout` in `src/app/core/session.ts`
-  runs the handlers features register with `registerLogoutHandler` (pomade deactivates its session,
+  runs the handlers modules register with `registerLogoutHandler` (pomade deactivates its session,
   push disables itself), clears `kv`, `ss`, the user's event database, and `localStorage`, leaves a
   marker in `localStorage` that `syncLogout` reloads the other tabs on, then sets
   `window.location.href = "/"`.
@@ -68,7 +68,7 @@ The following run outside that gate:
 
 This code reads `app.get().user?.pubkey` and bails when it is missing, as
 `syncUserSpaceMembership` in `src/app/core/sync.ts` and `syncCheckedRemote` in
-`src/app/features/checked.ts` do.
+`src/app/tools/checked.ts` do.
 
 Stores derived from `user` throw as soon as they are subscribed signed out. That includes
 `isEventMuted` (`people/muting`), `deriveRoomPermissions` (`spaces/rooms`) and `deriveUserCanCreateRoom`
@@ -108,7 +108,7 @@ there is one. Add an export when several modules need the plugin, and otherwise 
 ### Per-identity caches
 
 Bookkeeping for one identity lives on a plugin instance, so it is discarded with the app.
-`Commands` in `src/app/features/spaces/rooms/commands.ts` keeps its `pulled` set on the plugin for this reason.
+`Commands` in `src/app/areas/spaces/rooms/commands.ts` keeps its `pulled` set on the plugin for this reason.
 
 Module-level caches are fine when their contents do not depend on who is signed in, or when what
 they cache is itself a rebinding store. `deriveCommandsForUrl` (`spaces/rooms/commands.ts`) caches `fromApp`
@@ -221,7 +221,7 @@ Most derived state is a plain function in the app module that owns its domain, c
 projections and repository derivations:
 
 ```typescript
-// src/app/features/spaces/actionItems.ts
+// src/app/areas/spaces/actionItems.ts
 export const deriveSpaceActionItems = (url: string) =>
   derived(
     [
@@ -237,7 +237,7 @@ export const deriveSpaceActionItems = (url: string) =>
   )
 ```
 
-`src/app/features/spaces/rooms` (`lists.ts`, `permissions.ts`) is the fullest example. Names follow the return type:
+`src/app/areas/spaces/rooms` (`lists.ts`, `permissions.ts`) is the fullest example. Names follow the return type:
 
 - `derive*` returns a store: `deriveUserRooms`, `deriveUserRoomMembershipStatus`
 - `get*` and `display*` return a snapshot: `displayRoom`
@@ -256,7 +256,7 @@ A derivation that every row subscribes to, or that joins large sets, is built by
 - `publicationsByEventId` (`publications.ts`) indexes publish history once, and hands back the
   previous array wherever an event's publications are unchanged so rows don't churn.
 - `latestActivityByPath` (`tools/activity.ts`) joins the sources the areas register. The spaces source
-  (`features/spaces/activity.ts`) reads relay info, events and settings behind `throttled(1000, …)`, and
+  (`areas/spaces/activity.ts`) reads relay info, events and settings behind `throttled(1000, …)`, and
   the conversations source in `areas/messages.ts` throttles the `Messages` index the same way.
 
 ## Local and persisted state
@@ -422,7 +422,7 @@ changes. A sync reads the pubkey once when it starts, since login triggers a fre
 `syncApplicationData`.
 
 Space syncs run `syncEach` over `syncedSpaceUrls` (the user's spaces plus the one on screen) or
-`currentSpaceUrls`, both from `@app/features/spaces`, and `syncCurrentSpace(filters)` pulls a
+`currentSpaceUrls`, both from `@app/areas/spaces`, and `syncCurrentSpace(filters)` pulls a
 fixed set of filters from the space on screen. Syncs that start together reach each relay as one
 subscription, since welshman's `socketPolicyMultiplex` merges requests queued at the same time.
 

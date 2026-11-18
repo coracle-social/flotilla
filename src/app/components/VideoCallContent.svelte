@@ -20,9 +20,9 @@
     participantMediaState,
     pubkeyFromLiveKitIdentity,
     videoTrackRevision,
-  } from "@app/features/spaces/calls"
-  import {getVideoTileKey, getVideoTiles} from "@app/features/spaces/calls/engine"
-  import type {VideoTile} from "@app/features/spaces/calls/engine"
+  } from "@app/areas/spaces/calls"
+  import {getVideoTileKey, getVideoTiles} from "@app/areas/spaces/calls/engine"
+  import type {VideoTile} from "@app/areas/spaces/calls/engine"
   import {deriveDisplaysByPubkey} from "@app/tools/people/people"
 
   type Props = {

@@ -20,7 +20,7 @@
     deriveShelves,
     pinMatchesTerm,
     shelfMatchesTerm,
-  } from "@app/features/spaces/pinboards"
+  } from "@app/areas/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"

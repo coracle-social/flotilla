@@ -21,7 +21,7 @@
   import ThreadLatestItem from "@app/components/ThreadLatestItem.svelte"
   import {reader} from "@app/core/domain"
   import * as pages from "@app/navigation/pages"
-  import {displayRoom} from "@app/features/spaces/rooms"
+  import {displayRoom} from "@app/areas/spaces/rooms"
   import {partitionByActivity} from "@app/tools/content"
   import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import {pushModal} from "@app/navigation/dialogs"

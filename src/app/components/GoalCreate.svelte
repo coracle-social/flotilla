@@ -23,7 +23,7 @@
   import EditorContent from "@app/components/editor/EditorContent.svelte"
   import {writer} from "@app/core/domain"
   import {pushToast} from "@app/navigation/toast"
-  import {publishToSpace} from "@app/features/spaces/rooms"
+  import {publishToSpace} from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {makeEditor} from "@app/components/editor/makeEditor"
   import {DraftKey} from "@app/tools/drafts"

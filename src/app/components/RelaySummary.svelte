@@ -7,7 +7,7 @@
   import RelayDescription from "@app/components/RelayDescription.svelte"
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import {user} from "@app/core/user"
-  import {spacePubkeysForUrl} from "@app/features/spaces/rooms/search"
+  import {spacePubkeysForUrl} from "@app/areas/spaces/rooms/search"
   import {userSpaceUrls} from "@app/core/user"
 
   type Props = {

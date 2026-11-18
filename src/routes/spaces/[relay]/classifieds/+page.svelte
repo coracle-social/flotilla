@@ -28,7 +28,7 @@
     getStatus,
     matchesTopic,
     matchesQuery,
-  } from "@app/features/spaces/classifieds"
+  } from "@app/areas/spaces/classifieds"
   import {reader} from "@app/core/domain"
   import {pushModal} from "@app/navigation/dialogs"
   import type {PageProps} from "./$types"

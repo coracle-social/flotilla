@@ -37,7 +37,7 @@
   import RoomName from "@app/components/RoomName.svelte"
   import * as pages from "@app/navigation/pages"
   import {isQuote} from "@app/tools/quotes"
-  import {deriveValidCommands, getCommandsForInvocation} from "@app/features/spaces/rooms/commands"
+  import {deriveValidCommands, getCommandsForInvocation} from "@app/areas/spaces/rooms/commands"
   import {userSettingsValues} from "@app/core/settings"
 
   type Props = {

@@ -34,7 +34,7 @@
   import ContentLinkFile from "@app/components/ContentLinkFile.svelte"
   import {pushModal} from "@app/navigation/dialogs"
   import {PLATFORM_URL, THUMBNAIL_URL} from "@app/core/env"
-  import {isRoomId} from "@app/features/spaces/rooms"
+  import {isRoomId} from "@app/areas/spaces/rooms"
 
   type Props = {
     url: string

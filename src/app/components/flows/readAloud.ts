@@ -7,7 +7,7 @@ import {popModal, pushModal} from "@app/navigation/dialogs"
 import {pushToast} from "@app/navigation/toast"
 import {renderEventAsText} from "@app/tools/render"
 import {readAloud} from "@app/tools/audio/tts"
-import {endCall, isCallActive} from "@app/features/spaces/calls"
+import {endCall, isCallActive} from "@app/areas/spaces/calls"
 import {setupVoice} from "@app/components/flows/voice"
 
 const read = async (event: TrustedEvent) => {

@@ -9,13 +9,8 @@
   import SpaceMenuRoomItem from "@app/components/SpaceMenuRoomItem.svelte"
   import RoomCreate from "@app/components/RoomCreate.svelte"
   import {relays} from "@app/core/plugins"
-  import {deriveUserCanCreateRoom} from "@app/features/spaces/management"
-  import {
-    RoomType,
-    deriveUserRooms,
-    deriveOtherRooms,
-    displayRoom,
-  } from "@app/features/spaces/rooms"
+  import {deriveUserCanCreateRoom} from "@app/areas/spaces/management"
+  import {RoomType, deriveUserRooms, deriveOtherRooms, displayRoom} from "@app/areas/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

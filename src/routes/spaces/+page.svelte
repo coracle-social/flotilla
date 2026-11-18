@@ -20,11 +20,11 @@
   import {app} from "@app/core/app"
   import {user} from "@app/core/user"
   import {relays, roomLists} from "@app/core/plugins"
-  import {deriveSpaceSearch} from "@app/features/spaces/rooms"
+  import {deriveSpaceSearch} from "@app/areas/spaces/rooms"
   import {userSpaceUrls} from "@app/core/user"
   import {PLATFORM_RELAYS, DEFAULT_RELAYS, INDEXER_RELAYS} from "@app/core/env"
   import {bootstrapPubkeys} from "@app/tools/people/people"
-  import {parseInviteLink} from "@app/features/spaces/invites"
+  import {parseInviteLink} from "@app/areas/spaces/invites"
   import {pushModal} from "@app/navigation/dialogs"
 
   const addSpace = () => pushModal(SpaceAdd)

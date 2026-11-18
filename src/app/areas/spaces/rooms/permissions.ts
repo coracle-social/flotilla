@@ -15,8 +15,8 @@ import type {TrustedEvent} from "@welshman/util"
 import {MembershipStatus, Rooms} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {user} from "@app/core/user"
-import {deriveSpacePermissions, deriveUserIsSpaceOwner} from "@app/features/spaces/management"
-import {deriveRoomMembers} from "@app/features/spaces/rooms/room"
+import {deriveSpacePermissions, deriveUserIsSpaceOwner} from "@app/areas/spaces/management"
+import {deriveRoomMembers} from "@app/areas/spaces/rooms/room"
 
 // The room's admin list names the moderation kinds each admin may publish.
 export const deriveRoomPermissions = (url: string, h: string) =>

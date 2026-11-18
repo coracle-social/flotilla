@@ -20,7 +20,7 @@
     deriveSpacePermissions,
     displayManagementMethod,
     spaceManagement,
-  } from "@app/features/spaces/management"
+  } from "@app/areas/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

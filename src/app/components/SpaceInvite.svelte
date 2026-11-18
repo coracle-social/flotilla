@@ -11,7 +11,7 @@
   import InviteLink from "@app/components/InviteLink.svelte"
   import SpaceMembersAdd from "@app/components/SpaceMembersAdd.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

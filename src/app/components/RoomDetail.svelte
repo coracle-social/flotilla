@@ -26,11 +26,7 @@
   import RoomImage from "@app/components/RoomImage.svelte"
   import {roomLists, rooms} from "@app/core/plugins"
   import {HIDE_NOSTR} from "@app/core/env"
-  import {
-    deriveRoomMembers,
-    deriveRoomPermissions,
-    deriveUserRooms,
-  } from "@app/features/spaces/rooms"
+  import {deriveRoomMembers, deriveRoomPermissions, deriveUserRooms} from "@app/areas/spaces/rooms"
   import {publishRoomList} from "@app/tools/publish"
   import {
     deriveIsMuted,

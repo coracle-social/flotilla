@@ -15,10 +15,10 @@ import {Capacitor, type PluginListenerHandle} from "@capacitor/core"
 import {get} from "svelte/store"
 import {not, nthEq, reject, spec} from "@welshman/lib"
 import {makeRoomKey} from "@welshman/app"
-import {ScreenShare, ScreenShareDenied} from "@app/features/spaces/calls/screenShare"
-import type {PickSource} from "@app/features/spaces/calls/screenShare"
+import {ScreenShare, ScreenShareDenied} from "@app/areas/spaces/calls/screenShare"
+import type {PickSource} from "@app/areas/spaces/calls/screenShare"
 import {pushToast} from "@app/navigation/toast"
-import {fetchLivekitToken} from "@app/features/spaces/calls/endpoint"
+import {fetchLivekitToken} from "@app/areas/spaces/calls/endpoint"
 import {
   CallState,
   DeviceKind,
@@ -31,9 +31,9 @@ import {
   triggerVideoTrackRevision,
   type CallSession,
   type ParticipantMediaState,
-} from "@app/features/spaces/calls/state"
-import {participantFromLiveKitIdentity} from "@app/features/spaces/calls/participants"
-import {resetVideoCallLayout, resetVideoSpotlight} from "@app/features/spaces/calls/layout"
+} from "@app/areas/spaces/calls/state"
+import {participantFromLiveKitIdentity} from "@app/areas/spaces/calls/participants"
+import {resetVideoCallLayout, resetVideoSpotlight} from "@app/areas/spaces/calls/layout"
 
 const LIVEKIT_DEFAULT_DEVICE_ID = "default"
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]

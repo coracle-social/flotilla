@@ -15,14 +15,14 @@
   import ProfileCircle from "@app/components/ProfileCircle.svelte"
   import ProfileLink from "@app/components/ProfileLink.svelte"
   import {user} from "@app/core/user"
-  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {
     deletePins,
     deriveShelves,
     displayPin,
     movePinsToShelf,
     removePinsFromShelf,
-  } from "@app/features/spaces/pinboards"
+  } from "@app/areas/spaces/pinboards"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
 

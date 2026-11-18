@@ -7,7 +7,7 @@
   import ProfileDetail from "@app/components/ProfileDetail.svelte"
   import SpaceMemberMenu from "@app/components/SpaceMemberMenu.svelte"
   import RoleBadge from "@app/components/RoleBadge.svelte"
-  import {deriveSpacePermissions} from "@app/features/spaces/management"
+  import {deriveSpacePermissions} from "@app/areas/spaces/management"
   import {pushModal} from "@app/navigation/dialogs"
   import {profiles} from "@app/core/plugins"
 

@@ -13,14 +13,14 @@ import {
 import {registerRetention} from "@app/core/database"
 import {registerSync, syncEach} from "@app/core/sync"
 import {currentSpaceUrls, syncedSpaceUrls} from "@app/navigation/history"
-import {syncCurrentSpaceRooms, syncSpaceRooms} from "@app/features/spaces/rooms/sync"
+import {syncCurrentSpaceRooms, syncSpaceRooms} from "@app/areas/spaces/rooms/sync"
 
-export * from "@app/features/spaces/rooms/room"
-export * from "@app/features/spaces/rooms/publish"
-export * from "@app/features/spaces/rooms/lists"
-export * from "@app/features/spaces/rooms/permissions"
-export * from "@app/features/spaces/rooms/search"
-export * from "@app/features/spaces/rooms/transcript"
+export * from "@app/areas/spaces/rooms/room"
+export * from "@app/areas/spaces/rooms/publish"
+export * from "@app/areas/spaces/rooms/lists"
+export * from "@app/areas/spaces/rooms/permissions"
+export * from "@app/areas/spaces/rooms/search"
+export * from "@app/areas/spaces/rooms/transcript"
 
 export const registerRooms = () => {
   registerSync(() => syncEach(syncedSpaceUrls, syncSpaceRooms))

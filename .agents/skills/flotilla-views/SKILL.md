@@ -327,8 +327,8 @@ How you bind depends on what the method returns:
 ```
 
 In a handler, call `.get()` on a projection instead of subscribing. The app modules add `derive*`
-factories over the same data: `deriveSpaceActionItems` in `src/app/features/spaces/actionItems.ts`,
-`deriveSpaceSupportedMethods` in `src/app/features/spaces/management.ts`, `deriveRelayAccess` in
+factories over the same data: `deriveSpaceActionItems` in `src/app/areas/spaces/actionItems.ts`,
+`deriveSpaceSupportedMethods` in `src/app/areas/spaces/management.ts`, `deriveRelayAccess` in
 `src/app/core/relays.ts`. Call them at the top of the script with fixed arguments, and wrap one in
 `$derived` only when its arguments change, as the thread page does for filters that wait on the
 root event.

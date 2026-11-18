@@ -19,7 +19,7 @@
   import {writer} from "@app/core/domain"
   import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/components/editor/makeEditor"
-  import {displayRoom, publishToSpace} from "@app/features/spaces/rooms"
+  import {displayRoom, publishToSpace} from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {pushToast} from "@app/navigation/toast"
 

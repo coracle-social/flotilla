@@ -9,7 +9,7 @@ import {fromApp} from "@app/core/app"
 import {relays} from "@app/core/plugins"
 import * as pages from "@app/navigation/pages"
 import {userRoomList, userSpaceUrls} from "@app/core/user"
-import {displayRoom} from "@app/features/spaces/rooms/room"
+import {displayRoom} from "@app/areas/spaces/rooms/room"
 
 // `RoomList.urls()` throws on a room tag with no relay hint, so skip those tags rather than the list.
 const listUrls = (list: RoomListReader) =>

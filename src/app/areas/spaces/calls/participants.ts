@@ -9,7 +9,7 @@ import {
   callTargetRoom,
   participantMediaState,
   speakingParticipants,
-} from "@app/features/spaces/calls/state"
+} from "@app/areas/spaces/calls/state"
 
 export const LIVEKIT_PARTICIPANTS = 39004
 

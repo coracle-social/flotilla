@@ -18,7 +18,7 @@
     deriveMemberModeration,
     deriveRoomMembers,
     deriveRoomPermissions,
-  } from "@app/features/spaces/rooms"
+  } from "@app/areas/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

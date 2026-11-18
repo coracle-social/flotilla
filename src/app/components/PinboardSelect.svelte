@@ -17,7 +17,7 @@
   import PinSave from "@app/components/PinSave.svelte"
   import {events} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {eventToReference} from "@app/features/spaces/pinboards"
+  import {eventToReference} from "@app/areas/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
 

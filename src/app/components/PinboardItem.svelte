@@ -14,7 +14,7 @@
   import UnreadDot from "@app/components/UnreadDot.svelte"
   import {events} from "@app/core/plugins"
   import {getRepliesFilters, loadReplies} from "@app/tools/interactions/interactions"
-  import {shelfCoverImages} from "@app/features/spaces/pinboards"
+  import {shelfCoverImages} from "@app/areas/spaces/pinboards"
   import * as pages from "@app/navigation/pages"
 
   type Props = {

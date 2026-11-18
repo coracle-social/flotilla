@@ -14,7 +14,7 @@
   import SpaceAccessRequest from "@app/components/SpaceAccessRequest.svelte"
   import SpaceJoinNotifications from "@app/components/SpaceJoinNotifications.svelte"
   import SpaceJoinStatus from "@app/components/SpaceJoinStatus.svelte"
-  import {attemptRelayAccess, completeSpaceJoin} from "@app/features/spaces/membership"
+  import {attemptRelayAccess, completeSpaceJoin} from "@app/areas/spaces/membership"
   import {pushModal} from "@app/navigation/dialogs"
   import {pushToast} from "@app/navigation/toast"
   import {goToSpace} from "@app/navigation/history"

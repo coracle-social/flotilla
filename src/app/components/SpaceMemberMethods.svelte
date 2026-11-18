@@ -18,7 +18,7 @@
     deriveSpacePermissions,
     spaceManagement,
     syncAssignments,
-  } from "@app/features/spaces/management"
+  } from "@app/areas/spaces/management"
   import {pushToast} from "@app/navigation/toast"
 
   type Props = {

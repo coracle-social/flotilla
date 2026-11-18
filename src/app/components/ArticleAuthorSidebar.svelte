@@ -10,7 +10,7 @@
   import ProfileAbout from "@app/components/ProfileAbout.svelte"
   import {events, network} from "@app/core/plugins"
   import {reader} from "@app/core/domain"
-  import {displayReadingTime, sortArticles} from "@app/features/spaces/articles"
+  import {displayReadingTime, sortArticles} from "@app/areas/spaces/articles"
   import * as pages from "@app/navigation/pages"
 
   type Props = {

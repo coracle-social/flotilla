@@ -40,7 +40,7 @@
   import {reader} from "@app/core/domain"
   import {noPublications, publicationsByEventId} from "@app/core/publications"
   import {CONTENT_KINDS} from "@app/tools/content"
-  import {publishReaction, retractReaction} from "@app/features/spaces"
+  import {publishReaction, retractReaction} from "@app/areas/spaces"
   import {colorFor} from "@app/tools/theme"
   import {ENABLE_ZAPS} from "@app/core/env"
   import {isQuote} from "@app/tools/quotes"

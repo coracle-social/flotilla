@@ -17,9 +17,9 @@
   import VoiceRoomJoinDialog from "@app/components/VoiceRoomJoinDialog.svelte"
   import ScreenSharePicker from "@app/components/ScreenSharePicker.svelte"
   import {rooms} from "@app/core/plugins"
-  import {ScreenShare} from "@app/features/spaces/calls/screenShare"
-  import type {PickSource} from "@app/features/spaces/calls/screenShare"
-  import {RoomType, getRoomType} from "@app/features/spaces/rooms"
+  import {ScreenShare} from "@app/areas/spaces/calls/screenShare"
+  import type {PickSource} from "@app/areas/spaces/calls/screenShare"
+  import {RoomType, getRoomType} from "@app/areas/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
   import {unreadDots} from "@app/tools/activity"
   import * as pages from "@app/navigation/pages"
@@ -30,14 +30,14 @@
     currentCallSession,
     callMicMuted,
     deriveRoomCallState,
-  } from "@app/features/spaces/calls"
+  } from "@app/areas/spaces/calls"
   import {
     cancelJoinVoiceRoom,
     leaveVoiceRoom,
     toggleCamera,
     toggleMute,
     toggleScreenShare,
-  } from "@app/features/spaces/calls/engine"
+  } from "@app/areas/spaces/calls/engine"
 
   type Props = {
     url: string

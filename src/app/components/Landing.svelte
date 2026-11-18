@@ -12,7 +12,7 @@
   import LogIn from "@app/components/LogIn.svelte"
   import SignUp from "@app/components/SignUp.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {parseInviteLink} from "@app/features/spaces/invites"
+  import {parseInviteLink} from "@app/areas/spaces/invites"
   import {
     PLATFORM_ABOUT,
     PLATFORM_TERMS,

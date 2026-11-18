@@ -13,7 +13,7 @@
   import Profile from "@app/components/Profile.svelte"
   import SpaceMemberBannedMenu from "@app/components/SpaceMemberBannedMenu.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
+  import {deriveSpacePermissions, spaceManagement} from "@app/areas/spaces/management"
 
   type Props = {
     url: string

@@ -15,15 +15,18 @@ import {registerRetention} from "@app/core/database"
 import {registerSync, syncEach} from "@app/core/sync"
 import {registerActivity} from "@app/tools/activity"
 import {CONTENT_KINDS} from "@app/tools/content"
+import {registerReminders} from "@app/tools/reminders"
 import {currentSpaceUrls, syncedSpaceUrls} from "@app/navigation/history"
-import {syncCurrentSpaceContent, syncSpaceContent, syncSpaceRelays} from "@app/features/spaces/sync"
-import {spaceActivity} from "@app/features/spaces/activity"
+import {syncCurrentSpaceContent, syncSpaceContent, syncSpaceRelays} from "@app/areas/spaces/sync"
+import {spaceActivity} from "@app/areas/spaces/activity"
+import {calendarReminders} from "@app/areas/spaces/reminders"
 
-export * from "@app/features/spaces/reactions"
-export {syncCurrentSpace} from "@app/features/spaces/sync"
+export * from "@app/areas/spaces/reactions"
+export {syncCurrentSpace} from "@app/areas/spaces/sync"
 
 export const registerSpaces = () => {
   registerActivity(spaceActivity)
+  registerReminders(calendarReminders)
   registerSync(syncSpaceRelays)
   registerSync(() => syncUserList(pubkey => roomLists.get().load(pubkey)))
   registerSync(() => syncEach(syncedSpaceUrls, syncSpaceContent))

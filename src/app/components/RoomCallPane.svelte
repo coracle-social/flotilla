@@ -2,7 +2,7 @@
   import cx from "classnames"
   import VideoCallContent from "@app/components/VideoCallContent.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
-  import {VideoCallLayout, videoCallLayout} from "@app/features/spaces/calls"
+  import {VideoCallLayout, videoCallLayout} from "@app/areas/spaces/calls"
 
   type Props = {
     url: string

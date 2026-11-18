@@ -30,8 +30,6 @@ app/shell/                 (spans several areas, or serves the whole app from th
   ↓
 app/areas/                 (one section of the app each; never imports another area)
   ↓
-app/features/              (modules not yet moved into shell, areas, tools or lib)
-  ↓
 app/tools/                 (building blocks shared by areas; may import other tools without a cycle)
   ↓
 app/navigation/            (routes, dialogs, overlays, toasts, history)
@@ -43,9 +41,9 @@ lib/                       (stateless and configurable; can only depend on exter
 external libraries         (bottom layer)
 ```
 
-Each layer imports only its own layer and the layers below it. `app/features` is being emptied into the layers around it, so new code goes in shell, areas, tools or lib. Lib code takes what it needs from the app as options, and a tool is usually the app's binding of a lib module to app state.
+Each layer imports only its own layer and the layers below it. Lib code takes what it needs from the app as options, and a tool is usually the app's binding of a lib module to app state.
 
-A feature returns its result and leaves the UI to its caller. `app/components/flows/` holds the UI that several components share, or that a route or the root layout starts, such as sharing, deep links and the guarded way into messages: a flow maps a feature's result to a dialog, a toast or a navigation, holds no state, and is imported only by components and routes. UI with one component caller goes in that component.
+Code below components returns its result and leaves the UI to its caller. `app/components/flows/` holds the UI that several components share, or that a route or the root layout starts, such as sharing, deep links and the guarded way into messages: a flow maps that result to a dialog, a toast or a navigation, holds no state, and is imported only by components and routes. UI with one component caller goes in that component.
 
 A module reaches into a lower layer through hooks such as `registerSync` and `registerRetention`, called from its own `registerX`, which `registerAll` in `src/app/index.ts` calls before the app is built. The `flotilla-architecture` skill lists the imports that still break the hierarchy.
 
@@ -223,7 +221,7 @@ return a `Command`, so `.then(publish)` is usually all you need.
 ### Managing Modals/Toasts
 
 - Import from `app/navigation/dialogs.ts` or `app/navigation/toast.ts`
-- Open dialogs from components and flows, never from tools, areas, shell or features
+- Open dialogs from components and flows, never from tools, areas or shell. Code below components that needs the user's answer mid-flow takes it as a function, as `toggleScreenShare(pickSource)` does
 - Pass component objects with parameters
 - Use `$state.snapshot` if calling component might unmount
 - Navigate with `navigate` from `app/navigation/navigate.ts` rather than `goto` — an open modal owns a history

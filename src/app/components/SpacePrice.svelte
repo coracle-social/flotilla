@@ -1,7 +1,7 @@
 <script lang="ts">
   import {fromApp} from "@app/core/app"
   import {Relays} from "@welshman/app"
-  import {displayRelayFee, getRelayFee} from "@app/features/spaces/payments"
+  import {displayRelayFee, getRelayFee} from "@app/areas/spaces/payments"
 
   type Props = {
     url: string

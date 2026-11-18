@@ -23,7 +23,7 @@
   import {writer} from "@app/core/domain"
   import {pushToast} from "@app/navigation/toast"
   import {publishToNetwork} from "@app/tools/publish"
-  import {publishToSpace} from "@app/features/spaces/rooms"
+  import {publishToSpace} from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {DraftKey} from "@app/tools/drafts"
 

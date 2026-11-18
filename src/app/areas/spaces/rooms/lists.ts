@@ -5,7 +5,7 @@ import {fromApp} from "@app/core/app"
 import {roomLists} from "@app/core/plugins"
 import {userSpaceUrls} from "@app/core/user"
 import {publishRoomList} from "@app/tools/publish"
-import {RoomType, getRoomType, roomComparator} from "@app/features/spaces/rooms/room"
+import {RoomType, getRoomType, roomComparator} from "@app/areas/spaces/rooms/room"
 
 // Spaces get reordered from lists showing only some of them, so urls go back in the slots they replace.
 export const reorderSpaceUrls = (urls: string[]) => {

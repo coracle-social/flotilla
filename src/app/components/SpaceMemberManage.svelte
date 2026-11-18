@@ -18,8 +18,8 @@
   import Profile from "@app/components/Profile.svelte"
   import RoomName from "@app/components/RoomName.svelte"
   import {relayManagement, rooms} from "@app/core/plugins"
-  import {deriveSpacePermissions, spaceManagement} from "@app/features/spaces/management"
-  import {deriveMemberModeration} from "@app/features/spaces/rooms"
+  import {deriveSpacePermissions, spaceManagement} from "@app/areas/spaces/management"
+  import {deriveMemberModeration} from "@app/areas/spaces/rooms"
   import {pushToast} from "@app/navigation/toast"
 
   type Props = {

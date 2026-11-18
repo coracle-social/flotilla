@@ -14,7 +14,7 @@
   import {user} from "@app/core/user"
   import * as pages from "@app/navigation/pages"
   import {pushModal} from "@app/navigation/dialogs"
-  import {publishReaction, retractReaction} from "@app/features/spaces"
+  import {publishReaction, retractReaction} from "@app/areas/spaces"
 
   type EditForm = Component<{url: string; event: TrustedEvent}>
 

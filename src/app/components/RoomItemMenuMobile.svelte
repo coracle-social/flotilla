@@ -34,14 +34,14 @@
   import ThreadCreate from "@app/components/ThreadCreate.svelte"
   import {user} from "@app/core/user"
   import {roomPinLists} from "@app/core/plugins"
-  import {deriveRoomPermissions, deriveUserAdminDelete} from "@app/features/spaces/rooms"
-  import {toggleRoomPin} from "@app/features/spaces/rooms/pins"
+  import {deriveRoomPermissions, deriveUserAdminDelete} from "@app/areas/spaces/rooms"
+  import {toggleRoomPin} from "@app/areas/spaces/rooms/pins"
   import {ENABLE_ZAPS, HIDE_NOSTR} from "@app/core/env"
   import {makeContentPath} from "@app/navigation/pages"
   import {shareEvent} from "@app/components/flows/share"
   import {readEventAloud} from "@app/components/flows/readAloud"
   import {pushModal} from "@app/navigation/dialogs"
-  import {publishReaction} from "@app/features/spaces"
+  import {publishReaction} from "@app/areas/spaces"
 
   type Props = {
     url: string

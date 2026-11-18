@@ -7,7 +7,7 @@
   import RoomName from "@app/components/RoomName.svelte"
   import SearchBody from "@app/components/SearchBody.svelte"
   import {CONTENT_KINDS} from "@app/tools/content"
-  import {deriveRoomMembers} from "@app/features/spaces/rooms"
+  import {deriveRoomMembers} from "@app/areas/spaces/rooms"
 
   type Props = {
     url: string

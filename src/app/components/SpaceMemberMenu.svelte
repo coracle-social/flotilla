@@ -7,8 +7,8 @@
   import SpaceMemberMethods from "@app/components/SpaceMemberMethods.svelte"
   import SpaceMemberRoles from "@app/components/SpaceMemberRoles.svelte"
   import SpaceMemberManage from "@app/components/SpaceMemberManage.svelte"
-  import {deriveSpacePermissions} from "@app/features/spaces/management"
-  import {deriveMemberModeration} from "@app/features/spaces/rooms"
+  import {deriveSpacePermissions} from "@app/areas/spaces/management"
+  import {deriveMemberModeration} from "@app/areas/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

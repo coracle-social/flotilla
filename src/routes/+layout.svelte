@@ -50,7 +50,7 @@
   import {alertSettings} from "@app/tools/alerts/settings"
   import {migratePushState, pushRegistration, useFallback} from "@app/tools/push/registration"
   import {syncPush} from "@app/tools/push/push"
-  import {syncReminders} from "@app/features/reminders"
+  import {syncReminders} from "@app/tools/reminders"
   import {setupDeepLinks} from "@app/components/flows/deepLinks"
   import {getPageTitle} from "@app/navigation/pages"
   import NewNotificationSound from "@src/app/components/NewNotificationSound.svelte"

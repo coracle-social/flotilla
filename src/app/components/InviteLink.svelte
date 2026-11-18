@@ -10,12 +10,12 @@
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
   import QRCode from "@app/components/QRCode.svelte"
-  import {makeInviteLink} from "@app/features/spaces/invites"
-  import {publishRoomInvite} from "@app/features/spaces/rooms/membership"
+  import {makeInviteLink} from "@app/areas/spaces/invites"
+  import {publishRoomInvite} from "@app/areas/spaces/rooms/membership"
   import {relayManagement} from "@app/core/plugins"
   import {RelayAccessStatus, deriveRelayAccess} from "@app/core/relays"
   import {PLATFORM_NAME} from "@app/core/env"
-  import {spaceManagement} from "@app/features/spaces/management"
+  import {spaceManagement} from "@app/areas/spaces/management"
   import {clip} from "@app/navigation/toast"
 
   type Props = {

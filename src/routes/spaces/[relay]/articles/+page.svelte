@@ -16,7 +16,7 @@
   import ArticleItem from "@app/components/ArticleItem.svelte"
   import ArticleSidebar from "@app/components/ArticleSidebar.svelte"
   import {reader} from "@app/core/domain"
-  import {sortArticles} from "@app/features/spaces/articles"
+  import {sortArticles} from "@app/areas/spaces/articles"
   import {makeSpaceFeed} from "@app/tools/feeds/relay"
   import * as pages from "@app/navigation/pages"
   import type {PageProps} from "./$types"

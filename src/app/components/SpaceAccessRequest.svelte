@@ -15,8 +15,8 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
   import {pushToast} from "@app/navigation/toast"
-  import {attemptRelayAccess} from "@app/features/spaces/membership"
-  import {parseInviteLink} from "@app/features/spaces/invites"
+  import {attemptRelayAccess} from "@app/areas/spaces/membership"
+  import {parseInviteLink} from "@app/areas/spaces/invites"
 
   type Props = {
     url: string

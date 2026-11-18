@@ -8,18 +8,18 @@ and NIP-43 tables in [SKILL.md](SKILL.md). Routes are under `src/routes/`.
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| Chat | `MESSAGE` (9) | none | `src/app/features/spaces/rooms/publish.ts` | `spaces/[relay]/chat`, `spaces/[relay]/[h]` (`RoomChat`) |
+| Chat | `MESSAGE` (9) | none | `src/app/areas/spaces/rooms/publish.ts` | `spaces/[relay]/chat`, `spaces/[relay]/[h]` (`RoomChat`) |
 | Threads | `THREAD` (11) | `Thread` | none | `spaces/[relay]/threads`, `threads/[id]` (`ThreadCreate`) |
-| Comments | `COMMENT` (1111) | `Comment` | `src/lib/util.ts` (`makeCommentFilter`), `src/app/features/spaces/rooms/publish.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
-| Articles | `LONG_FORM` (30023) | `Article` | `src/app/features/spaces/articles.ts` | `spaces/[relay]/articles`, `articles/create`, `articles/[address]` |
+| Comments | `COMMENT` (1111) | `Comment` | `src/lib/util.ts` (`makeCommentFilter`), `src/app/areas/spaces/rooms/publish.ts` (`publishComment`) | `CommentCompose`, `EventReply`, `EventComments` |
+| Articles | `LONG_FORM` (30023) | `Article` | `src/app/areas/spaces/articles.ts` | `spaces/[relay]/articles`, `articles/create`, `articles/[address]` |
 | Calendar | `EVENT_TIME` (31923) | `TimeEvent` | `src/app/tools/feeds/calendar.ts` (`makeCalendarFeed`) | `spaces/[relay]/calendar`, `calendar/[address]` (`CalendarEventForm`) |
-| Classifieds | `CLASSIFIED` (30402) | `Classified` | `src/app/features/spaces/classifieds.ts` | `spaces/[relay]/classifieds`, `classifieds/[address]` (`ClassifiedForm`) |
+| Classifieds | `CLASSIFIED` (30402) | `Classified` | `src/app/areas/spaces/classifieds.ts` | `spaces/[relay]/classifieds`, `classifieds/[address]` (`ClassifiedForm`) |
 | Goals | `ZAP_GOAL` (9041) | `ZapGoal` | none | `spaces/[relay]/goals`, `goals/[id]` (`GoalCreate`) |
 | Polls | `POLL` (1068), `POLL_RESPONSE` (1018) | `Poll`, `PollResponse` | none | `spaces/[relay]/polls`, `polls/[id]` (`PollCreate`, `PollVotes`) |
-| Library | `PINBOARD` (30067), `PIN` (39067) | `Pinboard`, `Pin` | `src/app/features/spaces/pinboards.ts` | `spaces/[relay]/library` (`PinboardEdit`, `PinSave`); published by any member |
-| Room pins | `ROOM_PINS` (39005), `ROOM_UPDATE_PINS` (9010) | `RoomPins`, `RoomUpdatePins` | `src/app/features/spaces/rooms/pins.ts` | `RoomItemMenu`, `RoomItemMenuMobile`, `RoomPinnedMessagesAll` |
-| Bot commands (NIP-CD) | `COMMAND` (31992) | `Command` | `src/app/features/spaces/rooms/commands.ts` | `RoomCompose`, `ContentCommand` |
-| Voice room participants | `LIVEKIT_PARTICIPANTS` (39004, defined in `src/app/features/spaces/calls/participants.ts`) | none | `src/app/features/spaces/calls/participants.ts` | rooms where `meta.hasLivekit()` |
+| Library | `PINBOARD` (30067), `PIN` (39067) | `Pinboard`, `Pin` | `src/app/areas/spaces/pinboards.ts` | `spaces/[relay]/library` (`PinboardEdit`, `PinSave`); published by any member |
+| Room pins | `ROOM_PINS` (39005), `ROOM_UPDATE_PINS` (9010) | `RoomPins`, `RoomUpdatePins` | `src/app/areas/spaces/rooms/pins.ts` | `RoomItemMenu`, `RoomItemMenuMobile`, `RoomPinnedMessagesAll` |
+| Bot commands (NIP-CD) | `COMMAND` (31992) | `Command` | `src/app/areas/spaces/rooms/commands.ts` | `RoomCompose`, `ContentCommand` |
+| Voice room participants | `LIVEKIT_PARTICIPANTS` (39004, defined in `src/app/areas/spaces/calls/participants.ts`) | none | `src/app/areas/spaces/calls/participants.ts` | rooms where `meta.hasLivekit()` |
 
 ## Read-only content
 
@@ -33,9 +33,9 @@ Kinds flotilla renders but never publishes.
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `publishReaction`/`retractReaction` in `src/app/features/spaces`, `src/app/tools/interactions/reactions.ts` and `src/app/areas/messages.ts` | `RoomItem`, `ReactionSummary`, `ContentActions`, `CommentActions`, `ArticleActionBar` |
+| Reactions | `REACTION` (7) | `Reaction`, through the `Reactions` plugin | `publishReaction`/`retractReaction` in `src/app/areas/spaces`, `src/app/tools/interactions/reactions.ts` and `src/app/areas/messages.ts` | `RoomItem`, `ReactionSummary`, `ContentActions`, `CommentActions`, `ArticleActionBar` |
 | Zaps | `ZAP_REQUEST` (9734), `ZAP_RECEIPT` (9735) | `ZapRequest`; receipts checked by `Zappers.validZapReceipts` | `src/app/tools/wallet.ts` (wallets) | `Zap`, `ZapButton`, `GoalSummary`; off on iOS |
-| Reports | `REPORT` (1984) | `Report` | `src/app/features/spaces/actionItems.ts` | `Report`, `ReportMenu` |
+| Reports | `REPORT` (1984) | `Report` | `src/app/areas/spaces/actionItems.ts` | `Report`, `ReportMenu` |
 | Deletes | `DELETE` (5) | `Delete`, through the `Deletes` plugin | none | `EventDeleteConfirm`, `ReportMenu` |
 
 ## Direct messages

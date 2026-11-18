@@ -4,7 +4,7 @@
   import PublicationStatusOrDeleted from "@app/components/PublicationStatusOrDeleted.svelte"
   import EventActivity from "@app/components/EventActivity.svelte"
   import EventMenuButton from "@app/components/EventMenuButton.svelte"
-  import {publishReaction, retractReaction} from "@app/features/spaces"
+  import {publishReaction, retractReaction} from "@app/areas/spaces"
 
   type Props = {
     url: string

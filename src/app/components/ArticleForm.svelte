@@ -34,7 +34,7 @@
   import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/components/editor/makeEditor"
   import {publishToNetwork} from "@app/tools/publish"
-  import {publishToSpace} from "@app/features/spaces/rooms"
+  import {publishToSpace} from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import * as pages from "@app/navigation/pages"
   import {compressFileForUpload, uploadFile} from "@app/tools/uploads"
