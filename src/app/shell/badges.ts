@@ -2,7 +2,7 @@ import {writable} from "svelte/store"
 import {Badge} from "@capawesome/capacitor-badge"
 import {merged} from "@welshman/store"
 import {alertSettings} from "@app/tools/alerts/settings"
-import {unreadCount} from "@app/features/activity"
+import {unreadCount} from "@app/tools/activity"
 
 // Firefox and most desktops can't draw an icon badge, and the plugin has no other way to say so.
 export const badgesSupported = writable(false)

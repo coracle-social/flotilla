@@ -19,7 +19,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import RelayName from "@app/components/RelayName.svelte"
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
-  import {conversationSearch} from "@app/features/messages"
+  import {conversationSearch} from "@app/areas/messages"
   import {user} from "@app/core/user"
   import {deriveUserRoomSearch} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"

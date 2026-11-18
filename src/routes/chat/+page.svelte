@@ -17,7 +17,7 @@
     messagesContext,
     conversationSearch,
     groupConversationsByTab,
-  } from "@app/features/messages"
+  } from "@app/areas/messages"
   import {pushModal} from "@app/navigation/dialogs"
 
   let term = $state("")

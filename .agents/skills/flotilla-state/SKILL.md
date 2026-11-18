@@ -94,7 +94,7 @@ The rule is about when a binding is made:
 - **Module scope, and anything outside the gate**, goes through `app`, `usePlugin`, `fromApp`
   or `deriveUserItem`. A module-level `app.get()` builds the first app before the policies
   register, and a binding made that way keeps reading the discarded app after login. A
-  long-lived listener over the repository belongs on a plugin, as in `Messages` (`messages.ts`), so
+  long-lived listener over the repository belongs on a plugin, as in `Messages` (`areas/messages.ts`), so
   it is dropped with the app. Other listeners re-bind on `app.subscribe`, as
   `syncCheckedRemote` in `checked.ts` and the resync in the root layout do.
 - **A store handed to `derived`** goes through `fromApp($app => $app.use(X).forUrl(url).$)`,
@@ -125,7 +125,7 @@ stores with `simpleCache`.
 | `Commands` (`spaces/rooms/commands.ts`) | `RelayScopedDerivedPlugin` | slash-command definitions, keyed per relay |
 | `HealthChecks` (`areas/healthChecks.ts`) | none | a plain class over `IApp` exposing `Projection`s |
 | `SpaceManagement` (`spaces/management`) | none | NIP-86 supported methods (5-minute TTL), admins and bans per URL |
-| `Messages` (`messages.ts`) | none | DM conversations by chat id (`index`, `one`), and a fuzzy `search` |
+| `Messages` (`areas/messages.ts`) | none | DM conversations by chat id (`index`, `one`), and a fuzzy `search` |
 | `GoalProgresses` (`goals.ts`) | none | one memoized NIP-75 progress store per goal and relay, behind `deriveGoalProgress` |
 | `Hosting` (`hosting.ts`) | none | the hosting backend's plans, the tenant's relays and billing, shared by every hosting view |
 
@@ -250,13 +250,14 @@ Rules that involve more than one plugin belong in these functions rather than in
 
 A derivation that every row subscribes to, or that joins large sets, is built by hand:
 
-- `Messages` (`messages.ts`) keeps its `index` with `repository.observe`, updating conversations
+- `Messages` (`areas/messages.ts`) keeps its `index` with `repository.observe`, updating conversations
   as events arrive rather than re-querying. Its `search` reads profile names when it is rebuilt, so it also follows the
   profiles index.
 - `publicationsByEventId` (`publications.ts`) indexes publish history once, and hands back the
   previous array wherever an event's publications are unchanged so rows don't churn.
-- `latestActivityByPath` (`features/activity.ts`) joins conversations, room lists, relay info, events and
-  settings behind `throttled(1000, …)`.
+- `latestActivityByPath` (`tools/activity.ts`) joins the sources the areas register. The spaces source
+  (`features/spaces/activity.ts`) reads relay info, events and settings behind `throttled(1000, …)`, and
+  the conversations source in `areas/messages.ts` throttles the `Messages` index the same way.
 
 ## Local and persisted state
 
@@ -345,7 +346,7 @@ Each persisted store is declared in its owner module with `synced({key, storage,
 or `withGetter(synced(...))` when callers need `.get()`, which keeps `.ready`. The store emits the default first and loads the stored value in the background, so
 `.ready` resolves once it has arrived:
 
-- `theme`, `flTheme` (`theme.ts`), `checked` (`checked.ts`), `shouldUnwrap` (`messages.ts`),
+- `theme`, `flTheme` (`theme.ts`), `checked` (`checked.ts`), `shouldUnwrap` (`areas/messages.ts`),
   `device` (`device.ts`), `forceHealthChecks` (`areas/healthChecks.ts`) in `kv`
 - `pushRegistration` (`push/registration.ts`, which migrates the legacy `notificationState` key) and `alertSettings` (`tools/alerts/settings.ts`, key `notificationSettings`) in `kv`
 - `wallet` (`wallet.ts`) in `ss`
@@ -491,10 +492,10 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
 
 ## Other app-level stores
 
-- **A join over many sources.** `features/activity.ts` derives `latestActivityByPath`,
-  then `allNotifications`, then `notifications` and the counts. The home stream derives
-  `recentConversations` and `unreadSpaceContent` in `activity.ts` from the same two, so the stream
-  matches the badges.
+- **A join over registered sources.** `tools/activity.ts` merges the sources the areas register with
+  `registerActivity` into `latestActivityByPath`, then derives `unreadPaths`, `unreadDots` and the
+  counts. The home stream derives `recentConversations` and `unreadSpaceContent` in `areas/home.ts`
+  from the same two, so the stream matches the dots.
 - **Singleton session state.** `spaces/calls` keeps call state in plain writables (`callState`,
   `currentCallSession`, …).
 - **UI signals.** `toast` in `navigation/toast.ts`, and `relaysPendingTrust` in `core/ingest.ts`.

@@ -14,7 +14,7 @@
   import {getPermissionMessage, isGranted} from "@lib/push/permission"
   import SettingsFooter from "@app/components/SettingsFooter.svelte"
   import {pushToast} from "@app/navigation/toast"
-  import {badgesSupported} from "@app/features/badges"
+  import {badgesSupported} from "@app/shell/badges"
   import {alertSettings} from "@app/tools/alerts/settings"
   import {saveAlertSettings} from "@app/features/push"
 

@@ -3,8 +3,8 @@
   import Link from "@lib/components/Link.svelte"
   import RelayIcon from "@app/components/RelayIcon.svelte"
   import RelayName from "@app/components/RelayName.svelte"
-  import {displayActivityTimestamp} from "@app/features/activity"
-  import type {SpaceContent} from "@app/features/activity"
+  import {displayActivityTimestamp} from "@app/areas/home"
+  import type {SpaceContent} from "@app/areas/home"
   import * as pages from "@app/navigation/pages"
 
   type Props = {

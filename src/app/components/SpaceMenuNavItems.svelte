@@ -20,7 +20,7 @@
   import {ENABLE_ZAPS} from "@app/core/env"
   import {CONTENT_KINDS} from "@app/tools/content"
   import * as pages from "@app/navigation/pages"
-  import {notifications, unreadPaths} from "@app/features/activity"
+  import {unreadDots, unreadPaths} from "@app/tools/activity"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {
@@ -61,42 +61,42 @@
   <Icon icon={Home} /> About
 </SecondaryNavItem>
 {#if !$relay?.hasNip(29)}
-  <SecondaryNavItem href={chatPath} notification={$notifications.has(chatPath)}>
+  <SecondaryNavItem href={chatPath} notification={$unreadDots.has(chatPath)}>
     <Icon icon={ChatRound} /> Chat
   </SecondaryNavItem>
 {/if}
 {#if showSection(PINBOARD, libraryPath)}
-  <SecondaryNavItem href={libraryPath} notification={$notifications.has(libraryPath)}>
+  <SecondaryNavItem href={libraryPath} notification={$unreadDots.has(libraryPath)}>
     <Icon icon={GalleryWide} /> Library
   </SecondaryNavItem>
 {/if}
 {#if ENABLE_ZAPS && showSection(ZAP_GOAL, goalsPath)}
-  <SecondaryNavItem href={goalsPath} notification={$notifications.has(goalsPath)}>
+  <SecondaryNavItem href={goalsPath} notification={$unreadDots.has(goalsPath)}>
     <Icon icon={StarFallMinimalistic} /> Goals
   </SecondaryNavItem>
 {/if}
 {#if showSection(THREAD, threadsPath)}
-  <SecondaryNavItem href={threadsPath} notification={$notifications.has(threadsPath)}>
+  <SecondaryNavItem href={threadsPath} notification={$unreadDots.has(threadsPath)}>
     <Icon icon={NotesMinimalistic} /> Threads
   </SecondaryNavItem>
 {/if}
 {#if showSection(LONG_FORM, articlesPath)}
-  <SecondaryNavItem href={articlesPath} notification={$notifications.has(articlesPath)}>
+  <SecondaryNavItem href={articlesPath} notification={$unreadDots.has(articlesPath)}>
     <Icon icon={DocumentText} /> Articles
   </SecondaryNavItem>
 {/if}
 {#if showSection(CLASSIFIED, classifiedsPath)}
-  <SecondaryNavItem href={classifiedsPath} notification={$notifications.has(classifiedsPath)}>
+  <SecondaryNavItem href={classifiedsPath} notification={$unreadDots.has(classifiedsPath)}>
     <Icon icon={CaseMinimalistic} /> Classifieds
   </SecondaryNavItem>
 {/if}
 {#if showSection(EVENT_TIME, calendarPath)}
-  <SecondaryNavItem href={calendarPath} notification={$notifications.has(calendarPath)}>
+  <SecondaryNavItem href={calendarPath} notification={$unreadDots.has(calendarPath)}>
     <Icon icon={CalendarMinimalistic} /> Calendar
   </SecondaryNavItem>
 {/if}
 {#if showSection(POLL, pollsPath)}
-  <SecondaryNavItem href={pollsPath} notification={$notifications.has(pollsPath)}>
+  <SecondaryNavItem href={pollsPath} notification={$unreadDots.has(pollsPath)}>
     <Icon icon={Revote} /> Polls
   </SecondaryNavItem>
 {/if}

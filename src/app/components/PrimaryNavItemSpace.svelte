@@ -6,7 +6,7 @@
   import {navigate} from "@app/navigation/navigate"
   import * as pages from "@app/navigation/pages"
   import {hasSpacePage, makeSpaceEntryPath} from "@app/navigation/history"
-  import {notifications} from "@app/features/activity"
+  import {unreadDots} from "@app/tools/activity"
 
   type Props = {
     url: string
@@ -33,6 +33,6 @@
   href={path}
   onclick={onClick}
   title={showTooltip ? $display : ""}
-  notification={$notifications.has(path)}>
+  notification={$unreadDots.has(path)}>
   <RelayIcon {url} size={10} />
 </PrimaryNavItem>

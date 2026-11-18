@@ -13,14 +13,17 @@ import {syncUserList} from "@app/core/user"
 import {roomLists} from "@app/core/plugins"
 import {registerRetention} from "@app/core/database"
 import {registerSync, syncEach} from "@app/core/sync"
+import {registerActivity} from "@app/tools/activity"
 import {CONTENT_KINDS} from "@app/tools/content"
 import {currentSpaceUrls, syncedSpaceUrls} from "@app/navigation/history"
 import {syncCurrentSpaceContent, syncSpaceContent, syncSpaceRelays} from "@app/features/spaces/sync"
+import {spaceActivity} from "@app/features/spaces/activity"
 
 export * from "@app/features/spaces/reactions"
 export {syncCurrentSpace} from "@app/features/spaces/sync"
 
 export const registerSpaces = () => {
+  registerActivity(spaceActivity)
   registerSync(syncSpaceRelays)
   registerSync(() => syncUserList(pubkey => roomLists.get().load(pubkey)))
   registerSync(() => syncEach(syncedSpaceUrls, syncSpaceContent))

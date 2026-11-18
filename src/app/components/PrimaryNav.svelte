@@ -17,7 +17,7 @@
   import SpaceMenuDrawer from "@app/components/SpaceMenuDrawer.svelte"
   import {PLATFORM_RELAYS} from "@app/core/env"
   import {getModal, popModal, pushModal} from "@app/navigation/dialogs"
-  import {notifications} from "@app/features/activity"
+  import {unreadDots} from "@app/tools/activity"
   import {userSpaceUrls} from "@app/core/user"
   import * as pages from "@app/navigation/pages"
   import {openMessages} from "@app/components/flows/messages"
@@ -47,7 +47,7 @@
     spaceMenuIsOpen ? popModal() : pushModal(SpaceMenuDrawer, {url: spaceUrl}, {drawer: true})
 
   const otherSpaceNotifications = $derived(
-    $userSpaceUrls.some(url => url !== spaceUrl && $notifications.has(pages.space.path({url}))),
+    $userSpaceUrls.some(url => url !== spaceUrl && $unreadDots.has(pages.space.path({url}))),
   )
 </script>
 
@@ -77,7 +77,7 @@
       title="Messages"
       aria-label="Messages"
       onclick={chatHandler}
-      notification={$notifications.has("/chat")}>
+      notification={$unreadDots.has("/chat")}>
       <Icon icon={Letter} size={10} />
     </PrimaryNavItem>
     <PrimaryNavItem
@@ -115,7 +115,7 @@
           href="/chat"
           aria-label="Messages"
           onclick={chatHandler}
-          notification={$notifications.has("/chat")}>
+          notification={$unreadDots.has("/chat")}>
           <Icon icon={Letter} size={8} />
         </PrimaryNavItem>
         {#if PLATFORM_RELAYS.length === 0}

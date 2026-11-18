@@ -7,7 +7,7 @@
   import {rooms} from "@app/core/plugins"
   import {RoomType, getRoomType} from "@app/features/spaces/rooms"
   import {deriveIsMuted} from "@app/core/settings"
-  import {notifications} from "@app/features/activity"
+  import {unreadDots} from "@app/tools/activity"
   import * as pages from "@app/navigation/pages"
 
   type Props = {
@@ -22,7 +22,7 @@
   const roomType = $derived(getRoomType($room))
   const path = pages.room.path({url, h})
   const isMuted = deriveIsMuted(url, h)
-  const notification = $derived($notifications.has(path))
+  const notification = $derived($unreadDots.has(path))
   const roomName = $derived($room?.meta?.name() || h)
 </script>
 

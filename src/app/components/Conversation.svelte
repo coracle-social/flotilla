@@ -39,7 +39,7 @@
   import {user} from "@app/core/user"
   import {deletes, wraps} from "@app/core/plugins"
   import {loadSendDelay} from "@app/core/settings"
-  import {messages} from "@app/features/messages"
+  import {messages} from "@app/areas/messages"
   import {makeConversationId} from "@app/navigation/pages"
   import {makeInteractions} from "@app/features/interactions"
   import {navigate} from "@app/navigation/navigate"

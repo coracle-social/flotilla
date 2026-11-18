@@ -11,7 +11,7 @@
   import ProfileCircles from "@app/components/ProfileCircles.svelte"
   import * as pages from "@app/navigation/pages"
   import {openMessages} from "@app/components/flows/messages"
-  import {notifications} from "@app/features/activity"
+  import {unreadDots} from "@app/tools/activity"
   import {user} from "@app/core/user"
   import {messagingRelayLists} from "@app/core/plugins"
 
@@ -55,7 +55,7 @@
             <ConversationTitle pubkeys={props.pubkeys} />
           </p>
         </div>
-        {#if !active && $notifications.has(path)}
+        {#if !active && $unreadDots.has(path)}
           <div class="h-2 w-2 rounded-full bg-primary text-primary-content" transition:fade></div>
         {/if}
       </div>

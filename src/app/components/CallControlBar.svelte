@@ -19,7 +19,7 @@
   import {ScreenShare} from "@app/features/spaces/calls/screenShare"
   import {RoomType, getRoomType} from "@app/features/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
-  import {notifications} from "@app/features/activity"
+  import {unreadDots} from "@app/tools/activity"
   import * as pages from "@app/navigation/pages"
   import {
     VideoCallLayout,
@@ -58,7 +58,7 @@
   const openCallSettings = () => pushModal(VoiceCallAudioSettingsDialog)
 
   const roomPath = $derived(pages.room.path({url, h}))
-  const chatUnread = $derived($notifications.has(roomPath))
+  const chatUnread = $derived($unreadDots.has(roomPath))
   const isChatPanelActive = $derived($videoCallLayout === VideoCallLayout.Split)
 
   const canShareScreen = ScreenShare.isSupported()

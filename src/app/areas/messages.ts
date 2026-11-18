@@ -32,7 +32,9 @@ import {registerRetention} from "@app/core/database"
 import {kv} from "@app/core/storage"
 import {makeKeyedSyncs, pullAndListen, registerSync} from "@app/core/sync"
 import {userRoomList} from "@app/core/user"
-import {getConversationPubkeys, makeConversationId} from "@app/navigation/pages"
+import * as pages from "@app/navigation/pages"
+import {registerActivity} from "@app/tools/activity"
+import type {Activity} from "@app/tools/activity"
 
 export type Conversation = {
   id: string
@@ -42,7 +44,7 @@ export type Conversation = {
 }
 
 export const getConversationPubkeysFromEvent = (event: TrustedEvent) =>
-  getConversationPubkeys(tagValues(hexTags("p"), event.tags).concat(event.pubkey))
+  pages.getConversationPubkeys(tagValues(hexTags("p"), event.tags).concat(event.pubkey))
 
 // Anything else decrypted out of a wrap addressed to the user is a rumor about other people.
 export const isUserMessage = (event: TrustedEvent) => {
@@ -110,7 +112,7 @@ export class Messages {
     for (const event of events) {
       if (DM_KINDS.includes(event.kind) && isUserMessage(event)) {
         const pubkeys = getConversationPubkeysFromEvent(event)
-        const id = makeConversationId(pubkeys)
+        const id = pages.makeConversationId(pubkeys)
         const conversation = this.conversationsById.get(id)
         const messages = sortBy(
           e => -e.created_at,
@@ -292,8 +294,25 @@ export const retractReaction = async (pubkeys: string[], reaction: TrustedEvent)
   return wraps.get().publish({event: command.event, recipients: pubkeys, pow: 16})
 }
 
+// The latest message in each conversation.
+const conversationActivity = derived(
+  throttled(
+    1000,
+    fromApp($app => $app.use(Messages).index.$),
+  ),
+  $conversationsById =>
+    [...$conversationsById.values()].map(
+      ({pubkeys, messages}): Activity => ({
+        path: pages.conversation.path({pubkeys}),
+        pubkeys,
+        event: messages[0],
+      }),
+    ),
+)
+
 export const registerMessages = () => {
   registerSync(syncMessages)
+  registerActivity(conversationActivity)
 
   // A deletion or reaction inside a gift wrap is unsigned, which is what sets it apart from a public one.
   registerRetention({

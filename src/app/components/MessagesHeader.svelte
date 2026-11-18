@@ -7,8 +7,8 @@
   import SegmentedButtons from "@lib/components/SegmentedButtons.svelte"
   import ConversationStart from "@app/components/ConversationStart.svelte"
   import MessagesMenu from "@app/components/MessagesMenu.svelte"
-  import {MESSAGES_TABS, MessagesTab} from "@app/features/messages"
-  import type {ConversationsByTab} from "@app/features/messages"
+  import {MESSAGES_TABS, MessagesTab} from "@app/areas/messages"
+  import type {ConversationsByTab} from "@app/areas/messages"
   import {pushModal} from "@app/navigation/dialogs"
 
   type Props = {

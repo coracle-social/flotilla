@@ -6,8 +6,9 @@
   import HomeActivityItem from "@app/components/HomeActivityItem.svelte"
   import HomeActivityItemSpace from "@app/components/HomeActivityItemSpace.svelte"
   import HomeNotificationItem from "@app/components/HomeNotificationItem.svelte"
-  import {isSpaceActivity, recentConversations, unreadSpaceContent} from "@app/features/activity"
-  import type {Activity, SpaceContent} from "@app/features/activity"
+  import {isSpaceActivity, recentConversations, unreadSpaceContent} from "@app/areas/home"
+  import type {Activity} from "@app/tools/activity"
+  import type {SpaceContent} from "@app/areas/home"
   import {makeInteractions} from "@app/features/interactions"
   import {
     getNotificationFacet,

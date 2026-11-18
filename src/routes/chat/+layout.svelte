@@ -17,9 +17,9 @@
     messagesContext,
     conversationSearch,
     groupConversationsByTab,
-  } from "@app/features/messages"
+  } from "@app/areas/messages"
   import {pushModal} from "@app/navigation/dialogs"
-  import {shouldUnwrap} from "@app/features/messages"
+  import {shouldUnwrap} from "@app/areas/messages"
   import type {LayoutProps} from "./$types"
 
   const {children, params}: LayoutProps = $props()

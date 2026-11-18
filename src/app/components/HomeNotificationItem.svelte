@@ -10,7 +10,7 @@
   import ProfileName from "@app/components/ProfileName.svelte"
   import ReplyList from "@app/components/ReplyList.svelte"
   import {user} from "@app/core/user"
-  import {displayActivityTimestamp} from "@app/features/activity"
+  import {displayActivityTimestamp} from "@app/areas/home"
   import type {Interactions} from "@app/features/interactions"
   import {REPOST_KINDS} from "@app/features/notifications"
   import type {NotificationGroup} from "@app/features/notifications"

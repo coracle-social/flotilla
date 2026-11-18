@@ -24,7 +24,7 @@
   import {highlightedEvent} from "@app/navigation/locations"
   import {colorFor} from "@app/tools/theme"
   import {pushModal} from "@app/navigation/dialogs"
-  import {publishReaction, retractReaction} from "@app/features/messages"
+  import {publishReaction, retractReaction} from "@app/areas/messages"
 
   type Props = {
     event: TrustedEvent

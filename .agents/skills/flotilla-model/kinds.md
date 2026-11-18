@@ -42,9 +42,9 @@ Kinds flotilla renders but never publishes.
 
 | Feature | Constant (kind) | Factory | Module | Where |
 |---|---|---|---|---|
-| DMs | `DIRECT_MESSAGE` (14), `DIRECT_MESSAGE_FILE` (15), wrapped as `WRAP` (1059) | `DirectMessage` for 14, bypassed in `Conversation.svelte`; none for 15 | `src/app/features/messages.ts` | `chat`, `chat/[chat]` (`Chat`) |
+| DMs | `DIRECT_MESSAGE` (14), `DIRECT_MESSAGE_FILE` (15), wrapped as `WRAP` (1059) | `DirectMessage` for 14, bypassed in `Conversation.svelte`; none for 15 | `src/app/areas/messages.ts` | `chat`, `chat/[chat]` (`Chat`) |
 
-Gift wraps are only synced once the user opts in (`shouldUnwrap` in `src/app/features/messages.ts`), and
+Gift wraps are only synced once the user opts in (`shouldUnwrap` in `src/app/areas/messages.ts`), and
 `openMessages` in `src/app/components/flows/messages.ts` asks for messaging relays (`MessagesEnable`) before opening a chat.
 
 ## User data

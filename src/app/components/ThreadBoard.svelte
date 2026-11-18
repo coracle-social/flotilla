@@ -6,7 +6,7 @@
   import RoomNameWithImage from "@app/components/RoomNameWithImage.svelte"
   import {normalizeTopic} from "@lib/util"
   import {rooms} from "@app/core/plugins"
-  import {notifications} from "@app/features/activity"
+  import {unreadDots} from "@app/tools/activity"
   import {displayRoom} from "@app/features/spaces/rooms"
   import * as pages from "@app/navigation/pages"
 
@@ -35,7 +35,7 @@
   )
   // The rows that carry a dot are the latest list, which a phone leaves off, so the board says it too.
   const unread = $derived(
-    threads.filter(e => $notifications.has(pages.thread.path({url, id: e.id}))).length,
+    threads.filter(e => $unreadDots.has(pages.thread.path({url, id: e.id}))).length,
   )
 </script>
 

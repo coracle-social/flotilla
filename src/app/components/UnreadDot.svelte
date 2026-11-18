@@ -1,7 +1,7 @@
 <script lang="ts">
   import cx from "classnames"
   import {fade} from "@lib/transition"
-  import {notifications} from "@app/features/activity"
+  import {unreadDots} from "@app/tools/activity"
 
   type Props = {
     path: string
@@ -11,6 +11,6 @@
   const {path, class: className}: Props = $props()
 </script>
 
-{#if $notifications.has(path)}
+{#if $unreadDots.has(path)}
   <div class={cx("inline-block h-2 w-2 rounded-full bg-primary", className)} transition:fade></div>
 {/if}
