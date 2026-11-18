@@ -50,14 +50,14 @@
     room.picture = await resolveImageInput(imageFile, imagePreview, {...compressOptions, url})
 
     const createCommand = await $rooms.createRoom(url, room)
-    const createMessage = await createCommand.publish().getError()
+    const createMessage = await createCommand.publish().getFatalError()
 
     if (createMessage && !createMessage.includes("already")) {
       return pushToast({theme: "error", message: createMessage})
     }
 
     const editCommand = await $rooms.editRoom(url, room)
-    const editMessage = await editCommand.publish().getError()
+    const editMessage = await editCommand.publish().getFatalError()
 
     if (editMessage) {
       return pushToast({theme: "error", message: editMessage})
@@ -66,7 +66,7 @@
     // editRoom leaves out an empty picture, and relays keep any field an edit leaves out.
     if (initialValues.picture && !room.picture) {
       const clearCommand = await command(writer(RoomEdit).setRoom(url, room.h).setPicture(""))
-      const clearMessage = await clearCommand.publish().getError()
+      const clearMessage = await clearCommand.publish().getFatalError()
 
       if (clearMessage) {
         return pushToast({theme: "error", message: clearMessage})

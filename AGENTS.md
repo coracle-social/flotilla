@@ -212,7 +212,9 @@ callbacks and hot paths.
 1. Build a writer: `app.use(Domain).writer(Kind, reader?)`, then chain its setters
 2. Wrap it: `const command = await app.use(Domain).command(writer)`
 3. Publish it: `command.publish()` or `.publishToRelays(urls)`
-4. Display publication status to user (for cancel/error handling)
+4. Display publication status to user (for cancel/error handling). `getFatalError()` reports an error only when no relay accepted the event, and `getAnyError()` reports any relay's refusal or timeout
+
+Transformers between the steps live in `tools/publish.ts`. `scheduleWriter(writer, at)` dates a writer ahead and forces the scheduler relay. A post in a space is addressed after that with `addressWriterToSpace(writer, url)`, or `addressWriterToRoom(writer, url, h)` for a room, which force the space's relay instead. `publishWithDelay(delay)` publishes a command with a send delay.
 
 Plugin mutators (`app.use(FollowLists).follow(...)`, `app.use(Rooms).joinRoom(...)`, …) already
 return a `Command`, so `.then(publish)` is usually all you need.

@@ -1,6 +1,7 @@
 <script lang="ts">
   import {writable} from "svelte/store"
   import {Note} from "@welshman/domain"
+  import {publish} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
@@ -14,10 +15,10 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
-  import {writer} from "@app/core/domain"
+  import {command, writer} from "@app/core/domain"
   import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/components/editor/makeEditor"
-  import {publishToNetwork} from "@app/tools/publish"
+  import {scheduleWriter} from "@app/tools/publish"
   import {pushToast} from "@app/navigation/toast"
   import {openEventNote} from "@app/navigation/overlays"
   import PublishButton from "@app/components/PublishButton.svelte"
@@ -43,7 +44,7 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  const publish = async (scheduleAt?: number) => {
+  const submit = async (scheduleAt?: number) => {
     if ($uploading || loading) {
       return
     }
@@ -58,12 +59,16 @@
     loading = true
 
     try {
-      const {publication, error} = await publishToNetwork(
-        writer(Note)
-          .setContent(text)
-          .addTags(...ed.storage.nostr.getEditorTags()),
-        scheduleAt,
-      )
+      const eventWriter = writer(Note)
+        .setContent(text)
+        .addTags(...ed.storage.nostr.getEditorTags())
+
+      if (scheduleAt) {
+        scheduleWriter(eventWriter, scheduleAt)
+      }
+
+      const publication = await command(eventWriter).then(publish)
+      const error = await publication.getFatalError()
 
       if (error) {
         return pushToast({theme: "error", message: error})
@@ -93,7 +98,7 @@
   }
 
   const editor = makeEditor({
-    submit: publish,
+    submit,
     empty,
     uploading,
     onChange,
@@ -134,7 +139,7 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <PublishButton onPublish={publish} disabled={$uploading || loading || $empty}>
+    <PublishButton onPublish={submit} disabled={$uploading || loading || $empty}>
       <Spinner {loading}>Post</Spinner>
     </PublishButton>
   </ModalFooter>

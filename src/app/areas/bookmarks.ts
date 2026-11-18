@@ -16,7 +16,7 @@ import {registerSync} from "@app/core/sync"
 const settle = async (pending: Promise<Command>) => {
   const publication = await pending.then(publish)
 
-  return publication.getError()
+  return publication.getFatalError()
 }
 
 // Folders

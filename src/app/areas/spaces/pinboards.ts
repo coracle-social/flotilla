@@ -108,20 +108,20 @@ export const shelfCoverImages = (pins: PinReader[]) => {
 }
 
 // A library pin is published to the space rather than to an author outbox, so every write goes there.
-const publishToSpace = async (url: string, eventWriter: PinWriter) => {
+const publishPin = async (url: string, eventWriter: PinWriter) => {
   await addressWriterToSpace(eventWriter, url)
 
   const publication = await command(eventWriter).then(publish)
 
-  return publication.getError()
+  return publication.getFatalError()
 }
 
 // One write per pin: a second update built from the same reader would undo the first.
 export const movePinsToShelf = (url: string, pins: PinReader[], from: string, to: string) =>
-  Promise.all(pins.map(pin => publishToSpace(url, writer(Pin, pin).addBoard(to).removeBoard(from))))
+  Promise.all(pins.map(pin => publishPin(url, writer(Pin, pin).addBoard(to).removeBoard(from))))
 
 export const removePinsFromShelf = (url: string, pins: PinReader[], address: string) =>
-  Promise.all(pins.map(pin => publishToSpace(url, writer(Pin, pin).removeBoard(address))))
+  Promise.all(pins.map(pin => publishPin(url, writer(Pin, pin).removeBoard(address))))
 
 // Your own goes as a kind 5; anyone else's is a NIP-86 ban, which the repository never hears about.
 export const deleteLibraryEvent = async (url: string, event: TrustedEvent) => {
@@ -131,7 +131,7 @@ export const deleteLibraryEvent = async (url: string, event: TrustedEvent) => {
       .get()
       .deleteEvent(event, deleteWriter => deleteWriter.setProtected(relay?.hasNip(70)))
 
-    return request.publishToRelays([url]).getError()
+    return request.publishToRelays([url]).getFatalError()
   }
 
   const {error} = await relayManagement.get().forUrl(url).banEvent(event.id)

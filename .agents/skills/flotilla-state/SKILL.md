@@ -447,7 +447,7 @@ if (room) {
 }
 
 const publication = await command(eventWriter).then(publish)
-const error = await publication.getError()
+const error = await publication.getFatalError()
 
 if (error) {
   return pushToast({theme: "error", message: error})
@@ -487,8 +487,7 @@ NIP-86 calls (`relayManagement.get().forUrl(url)`) don't go through the `Publish
   pass `$publisher.merge(...)` to `PublicationStatus`, or to `PublicationFailure`, which retries per
   relay. A retry drops the publications it replaces from `history`, so the row shows the retry's
   outcome. `PublicationStatusOrDeleted` combines publish status with deletion.
-- **Status in forms.** Forms await `getError()`, which waits for the publication to settle, and toast the message, as in the excerpt
-  above.
+- **Status in forms.** Forms await `getFatalError()`, which waits for the publication to settle and reports an error only when no relay accepted the event, and toast the message, as in the excerpt above. A refusal is reported ahead of a timeout.
 
 ## Other app-level stores
 

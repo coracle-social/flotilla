@@ -1,46 +1,21 @@
-import {get} from "svelte/store"
 import {uniq} from "@welshman/lib"
-import {stamp} from "@welshman/util"
-import {PollWriter} from "@welshman/domain"
-import type {Command} from "@welshman/app"
+import {relay} from "@welshman/util"
 import type {BaseEventReader, EventWriter} from "@welshman/domain"
-import {PublishStatus} from "@welshman/net"
+import type {Command} from "@welshman/app"
 import {publisher} from "@app/core/plugins"
 import {INDEXER_RELAYS, SCHEDULER_RELAY} from "@app/core/env"
-import {userSpaceUrls} from "@app/core/user"
-import {SCHEDULE_UNSUPPORTED} from "@app/tools/scheduling"
 
-// publishToSpace's counterpart: a post with no space behind it goes to the author's relays and spaces.
-// A scheduled one is dated ahead of now and handed to the scheduler relay, which forwards it when due.
-export const publishToNetwork = async (
-  eventWriter: EventWriter<BaseEventReader>,
-  scheduleAt?: number,
-) => {
-  const relays = scheduleAt
-    ? [SCHEDULER_RELAY]
-    : uniq([...(await eventWriter.relays()), ...get(userSpaceUrls)])
+// The scheduler relay holds a post dated ahead of now, and forwards it to the author's relays when it's due.
+export const scheduleWriter = <W extends EventWriter<BaseEventReader>>(
+  eventWriter: W,
+  at: number,
+) => eventWriter.setCreatedAt(at).forceRoutes(relay(SCHEDULER_RELAY))
 
-  // A poll names the relays its votes live on, which are the ones it goes out to.
-  if (eventWriter instanceof PollWriter) {
-    eventWriter.setUrls(relays)
-  }
+// welshman's Command.publish takes no options, so a send delay goes to the publisher directly.
+export const publishWithDelay = (delay?: number) => (command: Command) =>
+  publisher.get().publish({event: command.event, relays: command.relays, delay})
 
-  const publication = publisher
-    .get()
-    .publish({event: stamp(await eventWriter.renderTemplate(), scheduleAt), relays})
-
-  await publication.settled()
-
-  if (publication.getUrlsWithStatus(PublishStatus.Success).length > 0) {
-    return {publication}
-  }
-
-  const error = scheduleAt
-    ? SCHEDULE_UNSUPPORTED
-    : ((await publication.getError()) ?? "Failed to post.")
-
-  return {publication, error}
-}
+export class ScheduleError extends Error {}
 
 // Room lists also go to the indexers, which is where the space browser looks for them.
 export const publishRoomList = (command: Command) =>

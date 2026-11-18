@@ -179,7 +179,8 @@ publication.subscribe(p => console.log(p.state.stage, p.results))
 publication.abort()                           // unwinds the optimistic write; does nothing once settled
 publication.canAbort()                        // true until any relay has been sent to
 await publication.settled()                   // resolves on a terminal stage
-await publication.getError()                  // string | undefined, once settled
+await publication.getAnyError()               // once settled: a refusal, else a timeout, even if another relay accepted
+await publication.getFatalError()             // the same, but only when no relay accepted the event
 publication.event                             // current event (mined/signed as it goes); the rumor for a wrap
 app.use(Publisher).history                    // writable<Publication[]> — optimistic log
 app.use(Publisher).retry(publication)         // re-sends publication.event, same id

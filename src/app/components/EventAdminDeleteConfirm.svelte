@@ -24,7 +24,7 @@
     if ($adminDelete === AdminDelete.Room) {
       const command = await $rooms.deleteEvent(url, {h}, event.id)
 
-      return command.publish().getError()
+      return command.publish().getFatalError()
     }
 
     const {error} = await $relayManagement.forUrl(url).banEvent(event.id)

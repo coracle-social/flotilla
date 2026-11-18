@@ -134,7 +134,7 @@ const syncRelay = async (relay: string, key: string, filters: Filter[], ignore: 
     }),
   })
 
-  const error = await publication.getError()
+  const error = await publication.getFatalError()
 
   if (error) {
     console.warn(`Failed to subscribe ${relay} to ${key} notifications:`, error)
@@ -158,7 +158,7 @@ const unsyncRelay = async (relay: string, key: string) => {
   ).toString()
   const event = makeEvent(DELETE, {tags: [["a", address]]})
   const publication = publisher.get().publish({relays, event})
-  const error = await publication.getError()
+  const error = await publication.getFatalError()
 
   if (error) {
     console.warn(`Failed to unsubscribe ${relay} from notifications:`, error)

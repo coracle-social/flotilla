@@ -3,6 +3,7 @@
   import {now} from "@welshman/lib"
   import {toMsats} from "@welshman/util"
   import {ZapGoal} from "@welshman/domain"
+  import {publish} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import Bolt from "@assets/icons/bolt.svg?dataurl"
@@ -21,9 +22,14 @@
   import Modal from "@lib/components/Modal.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
-  import {writer} from "@app/core/domain"
+  import {command, writer} from "@app/core/domain"
+  import {scheduleWriter} from "@app/tools/publish"
   import {pushToast} from "@app/navigation/toast"
-  import {publishToSpace} from "@app/areas/spaces/rooms"
+  import {
+    addressWriterToRoom,
+    addressWriterToSpace,
+    publishRoomQuote,
+  } from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {makeEditor} from "@app/components/editor/makeEditor"
   import {DraftKey} from "@app/tools/drafts"
@@ -55,7 +61,7 @@
 
   const selectFiles = () => editor.then(ed => ed.commands.selectFiles())
 
-  const publish = async (scheduleAt?: number) => {
+  const submit = async (scheduleAt?: number) => {
     if ($uploading || loading) {
       return
     }
@@ -116,10 +122,25 @@
         eventWriter.setClosedAt(closedAt)
       }
 
-      const {error} = await publishToSpace(eventWriter, {url, h, shareToChat, scheduleAt})
+      if (scheduleAt) {
+        scheduleWriter(eventWriter, scheduleAt)
+      }
+
+      if (h) {
+        await addressWriterToRoom(eventWriter, url, h)
+      } else {
+        await addressWriterToSpace(eventWriter, url)
+      }
+
+      const publication = await command(eventWriter).then(publish)
+      const error = await publication.getFatalError()
 
       if (error) {
         return pushToast({theme: "error", message: error})
+      }
+
+      if (shareToChat && !scheduleAt) {
+        publishRoomQuote({url, h, parent: publication.event})
       }
 
       draftKey.clear()
@@ -146,7 +167,7 @@
 
   const editor = makeEditor({
     url,
-    submit: publish,
+    submit,
     uploading,
     onChange,
     placeholder: "What's on your mind?",
@@ -253,7 +274,7 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <PublishButton onPublish={publish} disabled={$uploading || loading}>
+    <PublishButton onPublish={submit} disabled={$uploading || loading}>
       <Spinner {loading}>Create Goal</Spinner>
     </PublishButton>
   </ModalFooter>

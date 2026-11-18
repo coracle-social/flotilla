@@ -31,7 +31,7 @@
 
         return geohash ? writer.addTags(["g", geohash]) : writer
       })
-      const error = await command.publish().getError()
+      const error = await command.publish().getFatalError()
 
       if (error) {
         pushToast({

@@ -26,7 +26,7 @@ export const joinRoom = async (url: string, h: string, code?: string) => {
   }
 
   const publication = await command(eventWriter).then(publish)
-  const error = await publication.getError()
+  const error = await publication.getFatalError()
 
   if (error && isRealFailure(error)) {
     return error
@@ -37,7 +37,7 @@ export const joinRoom = async (url: string, h: string, code?: string) => {
 
 export const leaveRoom = async (url: string, h: string) => {
   const publication = await command(writer(RoomLeave).setRoom(url, h)).then(publish)
-  const error = await publication.getError()
+  const error = await publication.getFatalError()
 
   if (error && isRealFailure(error)) {
     return error
@@ -50,7 +50,7 @@ export const publishRoomInvite = async (url: string, h: string) => {
   const code = randomId()
   const eventWriter = writer(RoomCreateInvite).setRoom(url, h).setCode(code)
   const publication = await command(eventWriter).then(publish)
-  const error = await publication.getError()
+  const error = await publication.getFatalError()
 
   if (error) {
     return {error, code: undefined}

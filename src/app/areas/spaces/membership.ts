@@ -34,7 +34,7 @@ export const requestMembership = async (url: string, claim = "") => {
   }
 
   const publication = await command(eventWriter).then(publish)
-  const error = await publication.getError()
+  const error = await publication.getFatalError()
 
   if (error) {
     const isIgnored = matchReason(RelayReasonPrefix.Mute, error)

@@ -14,11 +14,11 @@ import type {TrustedEvent} from "@welshman/util"
 import {CalendarRsvp, TimeEvent} from "@welshman/domain"
 import type {RsvpStatus} from "@welshman/domain"
 import {synced} from "@welshman/store"
-import {Events} from "@welshman/app"
+import {Events, publish} from "@welshman/app"
 import {fromApp} from "@app/core/app"
-import {deletes, publisher, relays} from "@app/core/plugins"
-import {reader, writer} from "@app/core/domain"
-import {addressWriterToSpace} from "@app/areas/spaces/rooms/publish"
+import {deletes, relays} from "@app/core/plugins"
+import {command, reader, writer} from "@app/core/domain"
+import {addressWriterToRoom, addressWriterToSpace} from "@app/areas/spaces/rooms/publish"
 import {kv} from "@app/core/storage"
 
 // Views
@@ -260,23 +260,26 @@ export const getRsvpsByStatus = (rsvps: TrustedEvent[]) => {
 
 // An RSVP is addressable, so identifying it by its target makes a new one supersede the old.
 export const publishRsvp = async (url: string, event: TrustedEvent, status: RsvpStatus) => {
-  const eventWriter = await addressWriterToSpace(
-    writer(CalendarRsvp)
-      .setIdentifier(getAddress(event))
-      .setCalendarEventFromEvent(event, url)
-      .setStatus(status),
-    url,
-    reader(TimeEvent)(event).room(),
-  )
+  const eventWriter = writer(CalendarRsvp)
+    .setIdentifier(getAddress(event))
+    .setCalendarEventFromEvent(event, url)
+    .setStatus(status)
+  const room = reader(TimeEvent)(event).room()
 
-  return publisher.get().publish({relays: [url], event: await eventWriter.renderTemplate()})
+  if (room) {
+    await addressWriterToRoom(eventWriter, url, room)
+  } else {
+    await addressWriterToSpace(eventWriter, url)
+  }
+
+  return command(eventWriter).then(publish)
 }
 
 export const retractRsvp = async (url: string, rsvp: TrustedEvent) => {
   const relay = await relays.get().load(url)
-  const command = await deletes
+  const deletion = await deletes
     .get()
     .deleteEvent(rsvp, writer => writer.setProtected(relay?.hasNip(70)))
 
-  return command.publishToRelays([url])
+  return deletion.publishToRelays([url])
 }

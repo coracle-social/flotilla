@@ -9,8 +9,8 @@
   import Button from "@lib/components/Button.svelte"
   import Spinner from "@lib/components/Spinner.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
-  import {publisher} from "@app/core/plugins"
-  import {writer} from "@app/core/domain"
+  import {command, writer} from "@app/core/domain"
+  import {publishWithDelay} from "@app/tools/publish"
   import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/components/editor/makeEditor"
   import {publishComment} from "@app/areas/spaces/rooms"
@@ -44,15 +44,13 @@
       return publishComment({url, event, parent, content, tags})
     }
 
-    return $publisher.publish({
-      ...(await writer(Comment)
-        .setContent(content)
-        .addTags(...tags)
-        .setRootFromEvent(event)
-        .setParentFromEvent(parent ?? event)
-        .render()),
-      delay: await loadSendDelay(),
-    })
+    const eventWriter = writer(Comment)
+      .setContent(content)
+      .addTags(...tags)
+      .setRootFromEvent(event)
+      .setParentFromEvent(parent ?? event)
+
+    return command(eventWriter).then(publishWithDelay(await loadSendDelay()))
   }
 
   const submit = async () => {

@@ -39,7 +39,7 @@
 
     try {
       const publication = await addRelay(url)
-      const error = await publication.getError()
+      const error = await publication.getFatalError()
 
       if (error) {
         pushToast({

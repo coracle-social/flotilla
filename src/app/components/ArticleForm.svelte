@@ -17,6 +17,7 @@
   import {now, randomId} from "@welshman/lib"
   import {getAddress} from "@welshman/util"
   import {Article} from "@welshman/domain"
+  import {publish} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import Paperclip from "@assets/icons/paperclip-2.svg?dataurl"
   import DocumentText from "@assets/icons/document-text.svg?dataurl"
@@ -30,11 +31,15 @@
   import SpaceBar from "@app/components/SpaceBar.svelte"
   import TopicMultiSelect from "@app/components/TopicMultiSelect.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
-  import {writer} from "@app/core/domain"
+  import {command, writer} from "@app/core/domain"
   import {DraftKey} from "@app/tools/drafts"
   import {makeEditor} from "@app/components/editor/makeEditor"
-  import {publishToNetwork} from "@app/tools/publish"
-  import {publishToSpace} from "@app/areas/spaces/rooms"
+  import {scheduleWriter} from "@app/tools/publish"
+  import {
+    addressWriterToRoom,
+    addressWriterToSpace,
+    publishRoomQuote,
+  } from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import * as pages from "@app/navigation/pages"
   import {compressFileForUpload, uploadFile} from "@app/tools/uploads"
@@ -93,7 +98,7 @@
     }
   }
 
-  const publish = async (scheduleAt?: number) => {
+  const submit = async (scheduleAt?: number) => {
     if ($uploading || uploadingCover || loading) {
       return
     }
@@ -134,12 +139,25 @@
         eventWriter.setImage(image)
       }
 
-      const {publication, error} = url
-        ? await publishToSpace(eventWriter, {url, h, shareToChat, scheduleAt})
-        : await publishToNetwork(eventWriter, scheduleAt)
+      if (scheduleAt) {
+        scheduleWriter(eventWriter, scheduleAt)
+      }
+
+      if (url && h) {
+        await addressWriterToRoom(eventWriter, url, h)
+      } else if (url) {
+        await addressWriterToSpace(eventWriter, url)
+      }
+
+      const publication = await command(eventWriter).then(publish)
+      const error = await publication.getFatalError()
 
       if (error) {
         return pushToast({theme: "error", message: error})
+      }
+
+      if (url && shareToChat && !scheduleAt) {
+        publishRoomQuote({url, h, parent: publication.event})
       }
 
       draftKey.clear()
@@ -185,7 +203,7 @@
 
   const editor = makeEditor({
     url,
-    submit: publish,
+    submit,
     uploading,
     onChange,
     placeholder: "Write your article...",
@@ -206,7 +224,7 @@
   {/snippet}
   {#snippet action()}
     <PublishButton
-      onPublish={publish}
+      onPublish={submit}
       class="button-sm"
       disabled={$uploading || uploadingCover || loading}>
       <Spinner {loading}>Publish</Spinner>

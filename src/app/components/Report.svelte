@@ -44,7 +44,7 @@
         .setContent(content)
 
       const reportCommand = await command(eventWriter)
-      const error = await reportCommand.publishToRelays([url]).getError()
+      const error = await reportCommand.publishToRelays([url]).getFatalError()
 
       if (error) {
         return pushToast({theme: "error", message: error})

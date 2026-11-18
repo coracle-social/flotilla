@@ -90,7 +90,7 @@
           .setContent(ed.getText({blockSeparator: "\n"}).trim())
 
         const publication = await command(eventWriter).then(publish)
-        const error = await publication.getError()
+        const error = await publication.getFatalError()
 
         if (error) {
           pushToast({theme: "error", message: error})

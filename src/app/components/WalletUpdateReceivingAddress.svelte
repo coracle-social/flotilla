@@ -38,7 +38,7 @@
         writer.update({lud06: undefined, lud16: address.trim() || undefined}),
       )
 
-      const error = await command.publish().getError()
+      const error = await command.publish().getFatalError()
 
       if (error) {
         pushToast({theme: "error", message: `Failed to update profile: ${errorMessage(error)}`})

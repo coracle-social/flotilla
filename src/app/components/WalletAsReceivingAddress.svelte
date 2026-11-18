@@ -21,7 +21,7 @@
 
     try {
       const command = await $profiles.update(writer => writer.update({lud06: undefined, lud16}))
-      const error = await command.publish().getError()
+      const error = await command.publish().getFatalError()
 
       if (error) {
         pushToast({theme: "error", message: `Failed to update profile: ${errorMessage(error)}`})

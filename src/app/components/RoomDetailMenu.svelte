@@ -61,7 +61,7 @@
       confirm: async () => {
         const command = await $rooms.deleteRoom(url, {h})
         const publication = command.publish()
-        const message = await publication.getError()
+        const message = await publication.getFatalError()
 
         if (message) {
           await $app.repository.removeEvent(publication.event.id)

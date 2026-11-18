@@ -2,6 +2,7 @@
   import {now, randomId, removeUndefined} from "@welshman/lib"
   import {Poll} from "@welshman/domain"
   import type {PollType} from "@welshman/domain"
+  import {publish} from "@welshman/app"
   import {isMobile} from "@lib/html"
   import AltArrowLeft from "@assets/icons/alt-arrow-left.svg?dataurl"
   import HamburgerMenu from "@assets/icons/hamburger-menu.svg?dataurl"
@@ -20,10 +21,14 @@
   import Modal from "@lib/components/Modal.svelte"
   import DragList from "@lib/components/DragList.svelte"
   import ModalBody from "@lib/components/ModalBody.svelte"
-  import {writer} from "@app/core/domain"
+  import {command, writer} from "@app/core/domain"
   import {pushToast} from "@app/navigation/toast"
-  import {publishToNetwork} from "@app/tools/publish"
-  import {publishToSpace} from "@app/areas/spaces/rooms"
+  import {scheduleWriter} from "@app/tools/publish"
+  import {
+    addressWriterToRoom,
+    addressWriterToSpace,
+    publishRoomQuote,
+  } from "@app/areas/spaces/rooms"
   import PublishButton from "@app/components/PublishButton.svelte"
   import {DraftKey} from "@app/tools/drafts"
 
@@ -69,7 +74,7 @@
     options = newOptions
   }
 
-  const publish = async (scheduleAt?: number) => {
+  const submit = async (scheduleAt?: number) => {
     if (loading) {
       return
     }
@@ -101,12 +106,28 @@
         eventWriter.setEndsAt(endsAt)
       }
 
-      const {error} = url
-        ? await publishToSpace(eventWriter.setUrls([url]), {url, h, shareToChat, scheduleAt})
-        : await publishToNetwork(eventWriter, scheduleAt)
+      if (scheduleAt) {
+        scheduleWriter(eventWriter, scheduleAt)
+      }
+
+      if (url && h) {
+        await addressWriterToRoom(eventWriter, url, h)
+      } else if (url) {
+        await addressWriterToSpace(eventWriter, url)
+      }
+
+      // A poll names the relays its votes live on, which are the ones it goes out to.
+      eventWriter.setUrls(await eventWriter.relays())
+
+      const publication = await command(eventWriter).then(publish)
+      const error = await publication.getFatalError()
 
       if (error) {
         return pushToast({theme: "error", message: error})
+      }
+
+      if (url && shareToChat && !scheduleAt) {
+        publishRoomQuote({url, h, parent: publication.event})
       }
 
       draftKey.clear()
@@ -226,7 +247,7 @@
       <Icon icon={AltArrowLeft} />
       Go back
     </Button>
-    <PublishButton onPublish={publish} disabled={loading}>
+    <PublishButton onPublish={submit} disabled={loading}>
       <Spinner {loading}>Create Poll</Spinner>
     </PublishButton>
   </ModalFooter>

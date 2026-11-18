@@ -16,7 +16,7 @@
   import DateTimeInput from "@lib/components/DateTimeInput.svelte"
   import EditorContent from "@app/components/editor/EditorContent.svelte"
   import {makeEditor} from "@app/components/editor/makeEditor"
-  import {ScheduleError} from "@app/tools/scheduling"
+  import {ScheduleError} from "@app/tools/publish"
   import {pushToast} from "@app/navigation/toast"
 
   type Props = {

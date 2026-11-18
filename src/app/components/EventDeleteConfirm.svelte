@@ -23,7 +23,7 @@
     const command = await $deletes.deleteEvent(event, writer =>
       writer.setProtected(relay?.hasNip(70)),
     )
-    const error = await command.publishToRelays(await getRelays()).getError()
+    const error = await command.publishToRelays(await getRelays()).getFatalError()
 
     if (error) {
       return pushToast({theme: "error", message: error})

@@ -39,7 +39,7 @@
   const removeFromRoom = async () => {
     const command = await $rooms.removeMember(url, {h}, pubkey)
 
-    return command.publish().getError()
+    return command.publish().getFatalError()
   }
 
   const removeFromSpace = async () => {

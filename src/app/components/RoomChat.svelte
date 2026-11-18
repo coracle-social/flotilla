@@ -5,9 +5,8 @@
   import cx from "classnames"
   import {ago, MINUTE} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {stamp} from "@welshman/util"
   import {Message} from "@welshman/domain"
-  import {MembershipStatus} from "@welshman/app"
+  import {MembershipStatus, publish} from "@welshman/app"
   import Close from "@assets/icons/close.svg?dataurl"
   import Button from "@lib/components/Button.svelte"
   import Icon from "@lib/components/Icon.svelte"
@@ -19,8 +18,8 @@
   import PublicationToast from "@app/components/PublicationToast.svelte"
   import CallControlBar from "@app/components/CallControlBar.svelte"
   import {user} from "@app/core/user"
-  import {deletes, events, publisher, relays, rooms} from "@app/core/plugins"
-  import {reader, writer} from "@app/core/domain"
+  import {deletes, events, relays, rooms} from "@app/core/plugins"
+  import {command, reader, writer} from "@app/core/domain"
   import {
     CallState,
     callState,
@@ -33,13 +32,14 @@
     deriveUserRoomMembershipStatus,
     getRoomType,
     prependParent,
+    addressWriterToRoom,
     addressWriterToSpace,
   } from "@app/areas/spaces/rooms"
   import {loadSendDelay} from "@app/core/settings"
   import {holdChecked, releaseChecked, setChecked} from "@app/tools/checked"
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/navigation/toast"
-  import {SCHEDULE_UNSUPPORTED, ScheduleError} from "@app/tools/scheduling"
+  import {ScheduleError, publishWithDelay, scheduleWriter} from "@app/tools/publish"
 
   type Props = {
     url: string
@@ -115,11 +115,11 @@
       const relay = await $relays.load(url)
 
       // Delete the previous message, to be republished below with the same timestamp
-      const command = await $deletes.deleteEvent($state.snapshot(edit), w =>
+      const deletion = await $deletes.deleteEvent($state.snapshot(edit), w =>
         w.setProtected(relay?.hasNip(70)),
       )
 
-      command.publishToRelays([url])
+      deletion.publishToRelays([url])
     }
 
     // A share is a quote rather than a reply, so setParent tags the reply's own parent ahead of it.
@@ -127,13 +127,22 @@
       ;({content, tags} = await prependParent(share, {content, tags}, url))
     }
 
-    const eventWriter = await addressWriterToSpace(
-      writer(Message)
-        .setContent(content)
-        .addTags(...tags),
-      url,
-      h,
-    )
+    const eventWriter = writer(Message)
+      .setContent(content)
+      .addTags(...tags)
+
+    // Scheduling forces the scheduler relay, so the space relay has to be forced after it.
+    if (scheduleAt) {
+      scheduleWriter(eventWriter, scheduleAt)
+    } else if (edit) {
+      eventWriter.setCreatedAt(edit.created_at)
+    }
+
+    if (h) {
+      await addressWriterToRoom(eventWriter, url, h)
+    } else {
+      await addressWriterToSpace(eventWriter, url)
+    }
 
     // The composer builds tags from the content alone, so an edit carries over the parent it replied to.
     const editParent = edit ? reader(Message)(edit).parent() : undefined
@@ -144,27 +153,20 @@
       eventWriter.setParent(parentEvent)
     }
 
-    // A scheduled message is dated ahead of now and held by the relay until its time.
+    // A scheduled message is held by the space relay until its time.
     if (scheduleAt) {
-      const publication = $publisher.publish({
-        relays: [url],
-        event: stamp(await eventWriter.renderTemplate(), scheduleAt),
-      })
+      const publication = await command(eventWriter).then(publish)
+      const error = await publication.getFatalError()
 
-      if (await publication.getError()) {
-        throw new ScheduleError(SCHEDULE_UNSUPPORTED)
+      if (error) {
+        throw new ScheduleError(error)
       }
 
       return
     }
 
     const delay = await loadSendDelay()
-
-    const publication = $publisher.publish({
-      relays: [url],
-      event: stamp(await eventWriter.renderTemplate(), edit?.created_at),
-      delay,
-    })
+    const publication = await command(eventWriter).then(publishWithDelay(delay))
 
     if (delay) {
       pushToast({

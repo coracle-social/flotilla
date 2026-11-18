@@ -2,13 +2,14 @@
   import {onDestroy} from "svelte"
   import {formatTimestampRelative, now} from "@welshman/lib"
   import type {TrustedEvent} from "@welshman/util"
-  import {POLL_RESPONSE, relay, stamp, tagSpec, tagValues} from "@welshman/util"
+  import {POLL_RESPONSE, relay, tagSpec, tagValues} from "@welshman/util"
   import {Poll, PollResponse} from "@welshman/domain"
   import type {Publication} from "@welshman/app"
   import PollOption from "@app/components/PollOption.svelte"
   import {user} from "@app/core/user"
-  import {events, publisher} from "@app/core/plugins"
+  import {events} from "@app/core/plugins"
   import {command, reader, writer} from "@app/core/domain"
+  import {publishWithDelay} from "@app/tools/publish"
 
   type Props = {
     urls: string[]
@@ -47,17 +48,13 @@
         eventWriter.addSelection(id)
       }
 
-      const responseCommand = await command(eventWriter)
+      // A vote is read by its timestamp, so a change within the same second has to sort after it.
+      eventWriter.setCreatedAt(Math.max(now(), (ownResponse?.created_at ?? 0) + 1))
 
       // Give the user time to check more boxes before the vote actually goes out.
-      // A vote is read by its timestamp, so a change within the same second has to sort after it.
-      const created_at = Math.max(now(), (ownResponse?.created_at ?? 0) + 1)
+      const delay = pollType === "multiplechoice" ? 1000 : undefined
 
-      activePublication = $publisher.publish({
-        event: stamp(responseCommand.event, created_at),
-        relays: responseCommand.relays,
-        delay: pollType === "multiplechoice" ? 1000 : undefined,
-      })
+      activePublication = await command(eventWriter).then(publishWithDelay(delay))
     }
   }
 
