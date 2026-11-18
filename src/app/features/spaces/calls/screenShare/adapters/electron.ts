@@ -1,11 +1,10 @@
 import {registerPlugin} from "@capacitor/core"
-import ScreenSharePicker from "@app/components/ScreenSharePicker.svelte"
 import {PLATFORM_NAME} from "@app/core/env"
-import {pushModal} from "@app/navigation/dialogs"
 import {WebScreenShare} from "@app/features/spaces/calls/screenShare/adapters/web"
 import {
   ScreenShareDenied,
   errorCode,
+  type PickSource,
   type ScreenShareContext,
   type ScreenShareSource,
 } from "@app/features/spaces/calls/screenShare/adapters/common"
@@ -17,17 +16,12 @@ type DesktopScreenSharePlugin = {
 
 const DesktopScreenShare = registerPlugin<DesktopScreenSharePlugin>("DesktopScreenShare")
 
-const selectSource = (sources: ScreenShareSource[]) =>
-  new Promise<ScreenShareSource | undefined>(resolve => {
-    pushModal(ScreenSharePicker, {sources, onSelect: resolve}, {size: "large"})
-  })
-
 export class ElectronScreenShare extends WebScreenShare {
   isSupported() {
     return true
   }
 
-  async start(context: ScreenShareContext) {
+  async start(context: ScreenShareContext, pickSource: PickSource) {
     let sources: ScreenShareSource[]
     let requiresPicker: boolean
 
@@ -44,7 +38,7 @@ export class ElectronScreenShare extends WebScreenShare {
 
     // Wayland runs its own picker in the portal, so there is nothing to choose here.
     if (requiresPicker) {
-      const source = await selectSource(sources)
+      const source = await pickSource(sources)
 
       if (!source) {
         return false
@@ -53,6 +47,6 @@ export class ElectronScreenShare extends WebScreenShare {
       await DesktopScreenShare.select({id: source.id})
     }
 
-    return super.start(context)
+    return super.start(context, pickSource)
   }
 }

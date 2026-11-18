@@ -13,6 +13,9 @@ export type ScreenShareSource = {
   thumbnail: string
 }
 
+// Asks the user which screen or window to share, resolving undefined when they dismiss the choice.
+export type PickSource = (sources: ScreenShareSource[]) => Promise<ScreenShareSource | undefined>
+
 /** Thrown when the OS or the browser refuses capture. The message is shown to the user. */
 export class ScreenShareDenied extends Error {
   constructor(message: string) {
@@ -23,7 +26,7 @@ export class ScreenShareDenied extends Error {
 
 export interface IScreenShareAdapter {
   isSupported: () => boolean
-  start: (context: ScreenShareContext) => Promise<boolean>
+  start: (context: ScreenShareContext, pickSource: PickSource) => Promise<boolean>
   stop: (context: ScreenShareContext) => Promise<void>
   onStopped: (handler: () => void) => () => void
 }

@@ -13,7 +13,7 @@
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
   import {roomLists} from "@app/core/plugins"
-  import {publishRoomList} from "@app/features/spaces/rooms"
+  import {publishRoomList} from "@app/tools/publish"
   import {goToMovedSpace} from "@app/navigation/history"
   import {pushToast} from "@app/navigation/toast"
 

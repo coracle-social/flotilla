@@ -1,16 +1,11 @@
 import {derived, get} from "svelte/store"
 import {sortBy, uniq} from "@welshman/lib"
 import {RoomLists, Rooms, User} from "@welshman/app"
-import type {Command} from "@welshman/app"
 import {fromApp} from "@app/core/app"
 import {roomLists} from "@app/core/plugins"
-import {INDEXER_RELAYS} from "@app/core/env"
 import {userSpaceUrls} from "@app/core/user"
+import {publishRoomList} from "@app/tools/publish"
 import {RoomType, getRoomType, roomComparator} from "@app/features/spaces/rooms/room"
-
-// Room lists also go to the indexers, which is where the space browser looks for them.
-export const publishRoomList = (command: Command) =>
-  command.publishToRelays(uniq([...command.relays, ...INDEXER_RELAYS]))
 
 // Spaces get reordered from lists showing only some of them, so urls go back in the slots they replace.
 export const reorderSpaceUrls = (urls: string[]) => {

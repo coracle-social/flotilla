@@ -16,6 +16,7 @@ import {get} from "svelte/store"
 import {not, nthEq, reject, spec} from "@welshman/lib"
 import {makeRoomKey} from "@welshman/app"
 import {ScreenShare, ScreenShareDenied} from "@app/features/spaces/calls/screenShare"
+import type {PickSource} from "@app/features/spaces/calls/screenShare"
 import {pushToast} from "@app/navigation/toast"
 import {fetchLivekitToken} from "@app/features/spaces/calls/endpoint"
 import {
@@ -307,7 +308,7 @@ const stopScreenShare = async (session: CallSession) => {
   }
 }
 
-export const toggleScreenShare = async () => {
+export const toggleScreenShare = async (pickSource: PickSource) => {
   const session = get(currentCallSession)
   if (!session) {
     return
@@ -319,7 +320,7 @@ export const toggleScreenShare = async () => {
   }
 
   try {
-    if (await ScreenShare.start(screenShareContext(session))) {
+    if (await ScreenShare.start(screenShareContext(session), pickSource)) {
       currentCallSession.update(s => s && {...s, screenShareOn: true})
     }
   } catch (error) {

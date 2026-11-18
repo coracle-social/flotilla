@@ -1,5 +1,6 @@
 import type {
   IScreenShareAdapter,
+  PickSource,
   ScreenShareContext,
 } from "@app/features/spaces/calls/screenShare/adapters/common"
 
@@ -12,7 +13,7 @@ export class WebScreenShare implements IScreenShareAdapter {
     return Boolean(navigator.mediaDevices?.getDisplayMedia)
   }
 
-  async start({participant}: ScreenShareContext) {
+  async start({participant}: ScreenShareContext, pickSource: PickSource) {
     try {
       await participant.setScreenShareEnabled(true)
     } catch (error) {

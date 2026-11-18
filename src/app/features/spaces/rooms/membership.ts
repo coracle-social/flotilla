@@ -4,7 +4,7 @@ import {publish} from "@welshman/app"
 import {roomLists} from "@app/core/plugins"
 import {authenticate} from "@app/core/auth"
 import {command, writer} from "@app/core/domain"
-import {publishRoomList} from "@app/features/spaces/rooms/lists"
+import {publishRoomList} from "@app/tools/publish"
 
 // "duplicate:" and "already a member" both leave us where we wanted to be.
 const isRealFailure = (error: string) =>

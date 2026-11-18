@@ -30,8 +30,8 @@
     deriveRoomMembers,
     deriveRoomPermissions,
     deriveUserRooms,
-    publishRoomList,
   } from "@app/features/spaces/rooms"
+  import {publishRoomList} from "@app/tools/publish"
   import {
     deriveIsMuted,
     deriveShouldNotify,

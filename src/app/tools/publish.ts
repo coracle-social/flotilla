@@ -2,10 +2,11 @@ import {get} from "svelte/store"
 import {uniq} from "@welshman/lib"
 import {stamp} from "@welshman/util"
 import {PollWriter} from "@welshman/domain"
+import type {Command} from "@welshman/app"
 import type {BaseEventReader, EventWriter} from "@welshman/domain"
 import {PublishStatus} from "@welshman/net"
 import {publisher} from "@app/core/plugins"
-import {SCHEDULER_RELAY} from "@app/core/env"
+import {INDEXER_RELAYS, SCHEDULER_RELAY} from "@app/core/env"
 import {userSpaceUrls} from "@app/core/user"
 import {SCHEDULE_UNSUPPORTED} from "@app/tools/scheduling"
 
@@ -40,3 +41,7 @@ export const publishToNetwork = async (
 
   return {publication, error}
 }
+
+// Room lists also go to the indexers, which is where the space browser looks for them.
+export const publishRoomList = (command: Command) =>
+  command.publishToRelays(uniq([...command.relays, ...INDEXER_RELAYS]))

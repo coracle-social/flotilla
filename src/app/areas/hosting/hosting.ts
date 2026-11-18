@@ -6,7 +6,7 @@ import {User} from "@welshman/app"
 import type {IApp} from "@welshman/app"
 import {roomLists, usePlugin} from "@app/core/plugins"
 import {goToMovedSpace} from "@app/navigation/history"
-import {publishRoomList} from "@app/features/spaces/rooms"
+import {publishRoomList} from "@app/tools/publish"
 import type {Activity, HostedRelay, Invoice, Plan, Tenant} from "@app/areas/hosting/model"
 import {autopayConfigured, getHostedRelayUrl, selectPayableInvoice} from "@app/areas/hosting/model"
 import {

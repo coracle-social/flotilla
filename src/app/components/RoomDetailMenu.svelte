@@ -13,11 +13,8 @@
   import {app} from "@app/core/app"
   import {roomLists, rooms} from "@app/core/plugins"
   import {joinRoom, leaveRoom} from "@app/features/spaces/rooms/membership"
-  import {
-    deriveRoomPermissions,
-    deriveUserRoomMembershipStatus,
-    publishRoomList,
-  } from "@app/features/spaces/rooms"
+  import {deriveRoomPermissions, deriveUserRoomMembershipStatus} from "@app/features/spaces/rooms"
+  import {publishRoomList} from "@app/tools/publish"
   import * as pages from "@app/navigation/pages"
   import {forgetSpacePage} from "@app/navigation/history"
   import {navigate} from "@app/navigation/navigate"

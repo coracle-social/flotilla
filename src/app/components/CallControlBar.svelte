@@ -15,8 +15,10 @@
   import Button from "@lib/components/Button.svelte"
   import VoiceCallAudioSettingsDialog from "@app/components/VoiceCallAudioSettingsDialog.svelte"
   import VoiceRoomJoinDialog from "@app/components/VoiceRoomJoinDialog.svelte"
+  import ScreenSharePicker from "@app/components/ScreenSharePicker.svelte"
   import {rooms} from "@app/core/plugins"
   import {ScreenShare} from "@app/features/spaces/calls/screenShare"
+  import type {PickSource} from "@app/features/spaces/calls/screenShare"
   import {RoomType, getRoomType} from "@app/features/spaces/rooms"
   import {pushModal} from "@app/navigation/dialogs"
   import {unreadDots} from "@app/tools/activity"
@@ -56,6 +58,13 @@
 
   const openJoinDialog = () => pushModal(VoiceRoomJoinDialog, {url, h})
   const openCallSettings = () => pushModal(VoiceCallAudioSettingsDialog)
+
+  const pickScreenShareSource: PickSource = sources =>
+    new Promise(resolve => {
+      pushModal(ScreenSharePicker, {sources, onSelect: resolve}, {size: "large"})
+    })
+
+  const onScreenShareClick = () => toggleScreenShare(pickScreenShareSource)
 
   const roomPath = $derived(pages.room.path({url, h}))
   const chatUnread = $derived($unreadDots.has(roomPath))
@@ -133,7 +142,7 @@
                 buttonClass,
                 $currentCallSession.screenShareOn ? "button-primary" : "button-neutral",
               )}
-              onclick={toggleScreenShare}>
+              onclick={onScreenShareClick}>
               <Icon icon={Monitor} size={4.5} />
             </Button>
           {/if}

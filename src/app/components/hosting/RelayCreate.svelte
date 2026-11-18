@@ -5,7 +5,7 @@
   import {roomLists} from "@app/core/plugins"
   import {navigate} from "@app/navigation/navigate"
   import {pushModal} from "@app/navigation/dialogs"
-  import {publishRoomList} from "@app/features/spaces/rooms"
+  import {publishRoomList} from "@app/tools/publish"
   import * as pages from "@app/navigation/pages"
   import {pushToast} from "@app/navigation/toast"
   import {

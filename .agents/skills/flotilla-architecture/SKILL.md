@@ -56,10 +56,7 @@ only gate.
   `src/app/components`, as `IconInput` and its picker buttons did, and as `Link` did, which routes a
   click through `navigate`, with `PrimaryNavItem`, which renders it. Their CSS families stay in
   `lib/components`.
-- **app → components.** The Electron screen-share adapter imports `ScreenSharePicker` to open a
-  prompt in the middle of a flow that no component wraps. It is due to return a refusal that a flow
-  maps to the prompt instead, as the voice tools return the provider to set up and
-  `components/flows/voice.ts` opens its prompt.
+- **app → components.** None. Code below components that needs the user's answer in the middle of a flow takes it as a function, as `toggleScreenShare(pickSource)` does: `CallControlBar` passes one that opens `ScreenSharePicker`, and the Electron adapter calls it when the system has no picker of its own.
 - Nothing under `src/app` or `src/lib` imports from `src/routes`.
 
 ## Top-level layout
@@ -143,7 +140,7 @@ hosting (`areas/hosting/`, with its own auth). Each space concern is a sub-featu
   `spaces/reactions.ts` (reacting inside a space). `spaces/index.ts` registers the syncs and
   retention.
 - `spaces/rooms/`: chat rooms. `room.ts` (one room's type, name and members), `publish.ts`
-  (writing into a space or room), `lists.ts` (the user's room list), `permissions.ts`,
+  (writing into a space or room), `lists.ts` (reordering the user's spaces, and a space's rooms the user has and hasn't joined), `permissions.ts`,
   `search.ts`, `transcript.ts` (grouping a room's messages into rows), `sync.ts`,
   `membership.ts` (joining and leaving a room, room invite codes), `pins.ts`, `commands.ts`
   (NIP-CD slash commands)
@@ -174,7 +171,7 @@ Outside `spaces/`:
   list pages use to sort a kind by latest comment), `feeds/` (lists that page as you scroll: `timeline.ts` is the core, a welshman projection of what the repository holds for some relays shown above a floor that paging lowers; `relay.ts` is one relay's timeline, `author.ts` pages a set of authors in groups over their outboxes, `calendar.ts` windows calendar events by day, `network.ts` builds the home Network tab's feed and a profile's, grouping notes, replies and follows' interactions into one card per note, with the persisted facet toggles; `windows.ts` asks the relays for one time range), `targets.ts` (what an event is about: what a
   reply answers, a reaction reacts to, a zap zaps), and `alerts/` (which events alert, the user's
   alert settings, and `stream.ts`, the in-app stream of alerting messages), `publish.ts`
-  (`publishToNetwork`, posting outside a space), `quotes.ts`, `share.ts` (the `Share` type,
+  (where things go out: `publishToNetwork` for posting outside a space, and `publishRoomList`, which adds the indexers the space browser reads room lists from), `quotes.ts`, `share.ts` (the `Share` type,
   `pendingShare`, and `shareTo`, which hands a share to a room or conversation), and `people/`
   (`people.ts` has display names for any list of pubkeys and `bootstrapPubkeys`, and `muting.ts`
   has `isEventMuted` and `derivePubkeyMuted`, `statuses.ts` has the NIP-38 `Statuses` plugin, and `pins.ts` has a person's pinned notes), and `checked.ts` (what has been read, per path, synced

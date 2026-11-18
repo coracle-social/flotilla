@@ -12,7 +12,7 @@
   import ModalSubtitle from "@lib/components/ModalSubtitle.svelte"
   import ModalFooter from "@lib/components/ModalFooter.svelte"
   import RelayLabel from "@app/components/RelayLabel.svelte"
-  import {publishRoomList} from "@app/features/spaces/rooms"
+  import {publishRoomList} from "@app/tools/publish"
   import {addTrustedRelay, removeTrustedRelay} from "@app/core/settings"
   import {navigate} from "@app/navigation/navigate"
   import {popModal} from "@app/navigation/dialogs"

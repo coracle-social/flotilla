@@ -4,6 +4,7 @@ import {NativeScreenShare} from "@app/features/spaces/calls/screenShare/adapters
 import {WebScreenShare} from "@app/features/spaces/calls/screenShare/adapters/web"
 import type {
   IScreenShareAdapter,
+  PickSource,
   ScreenShareContext,
 } from "@app/features/spaces/calls/screenShare/adapters/common"
 
@@ -29,8 +30,8 @@ export class ScreenShare {
   }
 
   /** Resolves false when the user dismissed the picker, throws ScreenShareDenied when blocked. */
-  static start(context: ScreenShareContext) {
-    return ScreenShare._getAdapter().start(context)
+  static start(context: ScreenShareContext, pickSource: PickSource) {
+    return ScreenShare._getAdapter().start(context, pickSource)
   }
 
   static stop(context: ScreenShareContext) {
